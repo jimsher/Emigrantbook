@@ -27,23 +27,51 @@
  padding: 0 15px !important; 
  z-index: 10000 !important;
 }
- #main-feed {
- height: 100vh !important; /* მთელი ეკრანი */
- width: 100vw !important; 
- overflow-y: scroll !important;
- scroll-snap-type: y mandatory !important; 
- scrollbar-width: none !important; 
- padding-top: 0 !important; /* არანაირი დაშორება ზემოდან */
- margin-top: 0 !important;
- scroll-padding-top: 0 !important;
+
+ /* 1. მთავარი კონტეინერი - ვკეტავთ გვერდზე გაქცევას */
+#main-feed {
+    height: 100dvh !important; 
+    width: 100vw !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important; /* ეს კრძალავს გვერდზე გაწევას */
+    scroll-snap-type: y mandatory !important; 
+    -webkit-overflow-scrolling: touch;
+    background: #000;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
- .video-card {
- height: 100vh !important; 
- width: 100% !important; 
- scroll-snap-align: start !important; /* ყოველთვის ზედა კიდეზე გასწორდეს */
- scroll-snap-stop: always !important; 
- position: relative !important; 
- background: #000 !important;
+
+/* 2. ვიდეო ბარათი - ვაიძულებთ ეკრანის ზომაზე დაჯდომას */
+.video-card {
+    height: 100dvh !important;
+    width: 100vw !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: always !important;
+    position: relative !important;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 3. თავად ვიდეო - რომ არ "გაიჭიმოს" და პროპორცია დაიცვას */
+.video-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ეს უზრუნველყოფს TikTok-ის ეფექტს გაწელვის გარეშე */
+    pointer-events: auto;
+}
+
+/* 4. გვერდითა ღილაკების პოზიცია */
+.side-actions {
+    position: absolute;
+    right: 12px;
+    bottom: 100px; /* აწეულია, რომ მენიუს არ დაეფაროს */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 10;
 }
 @keyframes pulse-live {
     0% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
