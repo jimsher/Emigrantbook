@@ -1421,3 +1421,21 @@ function openActiveLivesModal() { document.getElementById('activeLivesModal').st
 function closeActiveLivesModal() { document.getElementById('activeLivesModal').style.display = 'none'; }
 listenToActiveLives();
  
+const feed = document.getElementById('main-feed');
+let isScrolling = false;
+
+feed.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (isScrolling) return;
+
+    isScrolling = true;
+    const direction = e.deltaY > 0 ? 1 : -1;
+    const scrollAmount = window.innerHeight * direction;
+
+    feed.scrollBy({
+        top: scrollAmount,
+        behavior: 'smooth'
+    });
+
+    setTimeout(() => { isScrolling = false; }, 500); // 0.5 წამიანი პაუზა სქროლებს შორის
+}, { passive: false });
