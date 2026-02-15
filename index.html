@@ -11,6 +11,53 @@
 <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
 
  <style>
+ .navbar {
+ position: fixed !important; 
+ top: 0 !important; 
+ left: 0 !important; 
+ width: 100% !important; 
+ height: 56px !important;
+ background: transparent !important; /* საერთოდ არანაირი ფერი */
+ backdrop-filter: none !important; /* მოვაშორეთ დაბურვა */
+ -webkit-backdrop-filter: none !important;
+ border-bottom: none !important; /* მოვაშორეთ ხაზიც */
+ box-shadow: none !important;
+ display: flex !important; 
+ align-items: center !important; 
+ justify-content: space-between !important;
+ padding: 0 15px !important; 
+ z-index: 10000 !important;
+}
+ #main-feed {
+ height: 100vh !important; /* მთელი ეკრანი */
+ width: 100vw !important; 
+ overflow-y: scroll !important;
+ scroll-snap-type: y mandatory !important; 
+ scrollbar-width: none !important; 
+ padding-top: 0 !important; /* არანაირი დაშორება ზემოდან */
+ margin-top: 0 !important;
+ scroll-padding-top: 0 !important;
+}
+ .video-card {
+ height: 100vh !important; 
+ width: 100% !important; 
+ scroll-snap-align: start !important; /* ყოველთვის ზედა კიდეზე გასწორდეს */
+ scroll-snap-stop: always !important; 
+ position: relative !important; 
+ background: #000 !important;
+}
+@keyframes pulse-live {
+    0% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
+    70% { border-color: #ff0000; box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+    100% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+}
+
+
+
+
+
+
+
 :root {
  --gold: #D4AF37;
  --bg: #000000;
@@ -444,57 +491,6 @@
  transition: 0.3s;
  }
  .social-msg-btn:hover { background: var(--gold); color: black; }
-
- 
- 
- 
- 
- 
- 
- .navbar {
- position: fixed !important; 
- top: 0 !important; 
- left: 0 !important; 
- width: 100% !important; 
- height: 56px !important;
- background: transparent !important; /* საერთოდ არანაირი ფერი */
- backdrop-filter: none !important; /* მოვაშორეთ დაბურვა */
- -webkit-backdrop-filter: none !important;
- border-bottom: none !important; /* მოვაშორეთ ხაზიც */
- box-shadow: none !important;
- display: flex !important; 
- align-items: center !important; 
- justify-content: space-between !important;
- padding: 0 15px !important; 
- z-index: 10000 !important;
-}
- #main-feed {
- height: 100vh !important; /* მთელი ეკრანი */
- width: 100vw !important; 
- overflow-y: scroll !important;
- scroll-snap-type: y mandatory !important; 
- scrollbar-width: none !important; 
- padding-top: 0 !important; /* არანაირი დაშორება ზემოდან */
- margin-top: 0 !important;
- scroll-padding-top: 0 !important;
-}
- .video-card {
- height: 100vh !important; 
- width: 100% !important; 
- scroll-snap-align: start !important; /* ყოველთვის ზედა კიდეზე გასწორდეს */
- scroll-snap-stop: always !important; 
- position: relative !important; 
- background: #000 !important;
-}
-// ამ ანიმაციას CSS-ში ჩაამატებ, რომ "LIVE" წრე აციმციმდეს
-const style = document.createElement('style');
-style.innerHTML = `
-@keyframes pulse-live {
-    0% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
-    70% { border-color: #ff0000; box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
-    100% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
-}`;
-document.head.appendChild(style);
  </style>
 </head>
 
@@ -518,7 +514,6 @@ document.head.appendChild(style);
             </div>
     </div>
 </div>
-<audio id="ringtone" src="https://emigrantbook.com/ringtone.mp3" loop preload="auto"></audio>
 <body>
  <audio id="msgSound" src="https://emigrantbook.com/messenger_notification.mp3" preload="auto"></audio>
  <audio id="typingSound" src="https://emigrantbook.com/messenger_typing.mp3" preload="auto"></audio>
@@ -1026,7 +1021,7 @@ document.head.appendChild(style);
             </div>
         </div>
 
-        <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:70%; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; pointer-events:none;"></div>
+        <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:70%; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; pointer-events:auto;"></div>
         
         <div style="position:absolute; bottom:20px; left:0; width:100%; padding:0 15px; display:flex; gap:10px;">
             <input type="text" id="liveMsgInp" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:10px 15px; color:white; outline:none;" placeholder="თქვი რამე...">
@@ -1071,7 +1066,7 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
  in_rel: "ურთიერთობაში", phone: "ტელეფონი", save: "შენახვა", info: "ინფორმაცია", profile_manage: "პროფილის მართვა",
  public: "საჯარო", friends: "მეგობრებისთვის", private: "პრივატული", finish: "დასრულება", videos: "ვიდეო",
  followers: "გამომწერი", following: "გამოწერა", photos: "ფოტოები", live: "ლაივი", real_balance: "რეალური ბალანსი",
- editor: "რედაქტორი", balance: "ბალანსი", logout: "გასვლა", chats: "ჩატები", upload_token: "ატვირთვა", upload: "ატვირთვა",
+ editor: "რედაქტორი", balance: "Wallet", logout: "გასვლა", chats: "ჩატები", upload_token: "ატვირთვა", upload: "ატვირთვა",
  cancel: "გაუქმება", home: "მთავარი", people: "ხალხი", chat: "ჩატი", profile: "პროფილი", search_p: "მოძებნე ემიგრანტი...",
  private_profile: "ეს პროფილი პრივატულია", follow: "გამოწერა", following_btn: "გამოწერილია", write: "მიწერა"
  },
@@ -1210,7 +1205,6 @@ auth.onAuthStateChanged(user => {
  updatePresence();
  listenToGlobalMessages();
  
- // --- ვიდეო ზარის მოსმენის დამატება ---
  db.ref(`video_calls/${user.uid}`).on('value', snap => {
  const call = snap.val();
  if (call && call.status === 'calling') {
@@ -1223,7 +1217,6 @@ auth.onAuthStateChanged(user => {
  }
  }
  });
- // --------------------------------------
 
  document.getElementById('authUI').style.display = 'none';
  db.ref('users/' + user.uid).on('value', snap => {
@@ -1595,18 +1588,11 @@ auth.onAuthStateChanged(user => {
  function listenToGlobalMessages() {
  const myUid = auth.currentUser.uid;
  db.ref('messages').on('child_added', snap => {
- // Listen to all chat rooms
  snap.ref.limitToLast(1).on('child_added', mSnap => {
  const msg = mSnap.val();
  if (!msg || msg.senderId === myUid) return;
- 
- // Only notify if message is new (within last 10 seconds)
  if (Date.now() - msg.ts > 10000) return;
-
- // Check if current chat is not already open
  if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
-
- // Find sender name and photo
  db.ref(`users/${msg.senderId}`).once('value', uSnap => {
  const u = uSnap.val();
  showGlobalPush(u.name, u.photo, msg.text);
@@ -1620,10 +1606,8 @@ auth.onAuthStateChanged(user => {
  document.getElementById('pushName').innerText = name;
  document.getElementById('pushAva').src = photo;
  document.getElementById('pushTxt').innerText = text.substring(0, 40) + (text.length > 40 ? '...' : '');
- 
  push.classList.add('show');
  document.getElementById('msgSound').play().catch(e => {});
- 
  setTimeout(() => push.classList.remove('show'), 4000);
  }
 
@@ -1631,16 +1615,12 @@ auth.onAuthStateChanged(user => {
  const myUid = auth.currentUser.uid;
  const chatId = getChatId(myUid, targetUid);
  const box = document.getElementById('chatMessages');
-
  db.ref(`messages/${chatId}`).on('value', snap => {
  box.innerHTML = "";
  snap.forEach(child => {
  const msg = child.val();
  const type = msg.senderId === myUid ? 'sent' : 'received';
- 
- // ვამოწმებთ, ტექსტია თუ აუდიო შეტყობინება
  let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; outline:none;"></audio>`;
- 
  box.innerHTML += `<div class="msg-bubble msg-${type}">${content}</div>`;
  });
  box.scrollTop = box.scrollHeight;
@@ -1705,23 +1685,18 @@ auth.onAuthStateChanged(user => {
  }
 
  function openProfile(uid) {
-     window.lastOpenedUid = uid;
  stopMainFeedVideos();
  document.getElementById('profileUI').style.display = 'flex';
- 
  if(uid !== auth.currentUser.uid) {
  db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
  uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
  });
  }
-
  db.ref('users/' + uid).on('value', async snap => {
  const user = snap.val();
  if(!user) return;
- 
  const dot = document.getElementById('profStatusDot');
  const lastSeenSpan = document.getElementById('profLastSeenText');
-
  if(user.presence === 'online') {
  dot.className = 'status-dot online';
  lastSeenSpan.innerText = '';
@@ -1734,27 +1709,20 @@ auth.onAuthStateChanged(user => {
  dot.className = 'status-dot';
  }
  }
-
  document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
  document.getElementById('profName').innerText = user.name;
  const followersCount = user.followers ? Object.keys(user.followers).length : 0;
  const followingCount = user.following ? Object.keys(user.following).length : 0;
  document.getElementById('statFollowersCount').innerText = followersCount;
  document.getElementById('statFollowingCount').innerText = followingCount;
- 
- // Bind social lists clicks
  document.getElementById('followersStatBtn').onclick = () => openSocialList(uid, 'followers');
  document.getElementById('followingStatBtn').onclick = () => openSocialList(uid, 'following');
-
  const controls = document.getElementById('profControls');
  controls.innerHTML = "";
- 
  document.querySelector('.profile-nav').style.display = 'flex';
  document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
  document.getElementById('profTabs').style.display = 'flex';
-
  document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
-
  if(uid === auth.currentUser.uid) {
  controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
  loadUserVideos(uid);
@@ -1762,11 +1730,9 @@ auth.onAuthStateChanged(user => {
  } else {
  const isFollowing = user.followers && user.followers[auth.currentUser.uid];
  const isFriend = user.following && user.following[auth.currentUser.uid] && isFollowing;
- 
  let canView = false;
  if(!user.privacy || user.privacy === 'public') canView = true;
  if(user.privacy === 'friends' && isFriend) canView = true;
- 
  if(canView) {
  loadUserVideos(uid);
  if(isFollowing) {
@@ -1794,7 +1760,6 @@ auth.onAuthStateChanged(user => {
  document.getElementById('visitorsUI').style.display = 'flex';
  const list = document.getElementById('visitorsList');
  list.innerHTML = "Loading...";
- 
  db.ref(`profile_views/${auth.currentUser.uid}`).once('value', async snap => {
  const data = snap.val();
  if(!data) { list.innerHTML = "No views"; return; }
@@ -1806,7 +1771,6 @@ auth.onAuthStateChanged(user => {
  const followBtn = isFollowing ? 
  `<button class="profile-btn btn-outline" style="padding: 5px 12px; font-size: 11px;">${translations[currentLang].following_btn}</button>` :
  `<button class="profile-btn btn-gold" style="padding: 5px 12px; font-size: 11px;" onclick="followFromVisitors('${v.uid}', '${v.name}', '${v.photo}')">${translations[currentLang].follow}</button>`;
-
  list.innerHTML += `
  <div class="visitor-row">
  <div class="visitor-info" onclick="openProfile('${v.uid}'); document.getElementById('visitorsUI').style.display='none'">
@@ -1850,7 +1814,6 @@ auth.onAuthStateChanged(user => {
  const content = document.getElementById('infoContent');
  panel.style.display = 'flex';
  content.innerHTML = "Loading...";
-
  db.ref('users/' + uid).once('value', snap => {
  const u = snap.val();
  if(!u) return;
@@ -1961,7 +1924,6 @@ auth.onAuthStateChanged(user => {
  ui.style.display = 'flex';
  title.innerText = type === 'followers' ? 'გამომწერები' : 'გამოწერილია';
  content.innerHTML = "იტვირთება...";
-
  db.ref(`users/${uid}/${type}`).once('value', snap => {
  const list = snap.val();
  if(!list) { content.innerHTML = "<p style='text-align:center; margin-top:50px; color:gray;'>სია ცარიელია</p>"; return; }
@@ -2020,7 +1982,6 @@ auth.onAuthStateChanged(user => {
  function toggleAuthBox(type) {
  const loginBox = document.getElementById('loginBox');
  const regBox = document.getElementById('regBox');
- 
  if (type === 'reg') {
  loginBox.style.display = 'none';
  regBox.style.display = 'block';
@@ -2075,21 +2036,18 @@ auth.onAuthStateChanged(user => {
  }
 
 function renderTokenFeed() {
+ // --- ეს ხაზი ბლოკავს ლაივიდან გაგდებას ---
+ if (document.getElementById('liveUI').style.display === 'flex') return;
+
  const feed = document.getElementById('main-feed');
  db.ref('posts').on('value', snap => {
  feed.innerHTML = "";
  const data = snap.val(); if (!data) return;
-
- // 1. მონაცემების მასივად გადაქცევა
  let postEntries = Object.entries(data);
-
- // 2. მასივის არევა (რომ ყოველთვის სხვადასხვა ვიდეო იყოს პირველი)
  for (let i = postEntries.length - 1; i > 0; i--) {
  const j = Math.floor(Math.random() * (i + 1));
  [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
  }
-
- // 3. უკვე არეული მასივის გამოტანა
  postEntries.forEach(([id, post]) => {
  if (post.media && post.media.some(m => m.type === 'video')) {
  const videoUrl = post.media.find(m => m.type === 'video').url;
@@ -2101,7 +2059,6 @@ function renderTokenFeed() {
  card.id = `card-${id}`;
  const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
  const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
-
  card.innerHTML = `
  <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
  <div class="side-actions">
@@ -2137,12 +2094,10 @@ function renderTokenFeed() {
  <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
  </div>`;
  feed.appendChild(card);
- 
  db.ref(`comments/${id}`).on('value', cSnap => {
  const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
  if(document.getElementById(`comm-count-${id}`)) document.getElementById(`comm-count-${id}`).innerText = count;
  });
-
  db.ref(`users/${post.authorId}`).on('value', uSnap => {
  const u = uSnap.val();
  if(u && u.photo) document.getElementById(`ava-${id}`).src = u.photo;
@@ -2177,24 +2132,15 @@ function renderTokenFeed() {
  if (!canAfford(0.1)) return;
  const user = auth.currentUser;
  if (!user) return;
-
  const likeRef = db.ref(`posts/${postId}/likedBy/${user.uid}`);
  likeRef.once('value', snap => {
  if (snap.exists()) {
- // თუ უკვე დალაიქებულია, ვაშორებთ ლაიქს (თანხა აღარ ბრუნდება)
  likeRef.remove();
  } else {
- // ახალი ლაიქის დადება
  likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
- 
- // 1. ყოველთვის ვაკლებთ 0.1-ს მას, ვინც აჭერს (რომ "უფასო" არ იყოს)
  spendAkho(0.1, 'Like'); 
-
- // 2. მთავარი დაცვა: მხოლოდ თუ სხვის ვიდეოს ვალაიქებთ, მაშინ ირიცხება 2.00
  if (ownerUid !== user.uid) {
  earnAkho(ownerUid, 2.00, 'Impact (Like)'); 
- } else {
- console.log("საკუთარ ვიდეოზე AKHO არ ირიცხება.");
  }
  }
  });
@@ -2226,20 +2172,15 @@ function renderTokenFeed() {
  }
  }
  
- 
- // გვერდის მართვა
 function openCommunityWall() {
- stopMainFeedVideos(); // ვაჩერებთ ვიდეოებს, რომ ხმა არ მოგვესმას
+ stopMainFeedVideos(); 
  document.getElementById('communityWallUI').style.display = 'flex';
  document.getElementById('wallMyAva').src = myPhoto;
  loadCommunityPosts();
 }
-
 function closeCommunityWall() {
  document.getElementById('communityWallUI').style.display = 'none';
 }
-
-// ფოტოს არჩევა და პრევიუ
 function previewWallImage(input) {
  if (input.files && input.files[0]) {
  const reader = new FileReader();
@@ -2250,77 +2191,41 @@ function previewWallImage(input) {
  reader.readAsDataURL(input.files[0]);
  }
 }
-
 function cancelWallImg() {
  document.getElementById('wallImgInput').value = "";
  document.getElementById('wallImgPreviewBox').style.display = 'none';
 }
-
 async function submitWallPost() {
  const text = document.getElementById('wallPostText').value;
  const file = document.getElementById('wallImgInput').files[0];
- 
- if(!text.trim() && !file) return alert("დაწერეთ რამე ან აირჩიეთ ფოტო");
+ if(!text.trim() && !file) return alert("დაწერეთ რამე");
  if(!canAfford(2)) return; 
-
  const btn = document.querySelector('[onclick="submitWallPost()"]');
  btn.disabled = true; btn.innerText = "...";
-
  let finalUrl = "";
- 
  if(file) {
  const formData = new FormData();
- formData.append("file", file);
- formData.append("upload_preset", "Emigrantbook.video"); 
- 
+ formData.append("file", file); formData.append("upload_preset", "Emigrantbook.video"); 
  try {
- // აქ დავამატეთ resource_type=auto, რომ Cloudinary-მ ფოტო აღარ დაბლოკოს
- const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
- method: 'POST', 
- body: formData 
- });
+ const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
  const data = await res.json();
- 
- if (data.secure_url) {
- finalUrl = data.secure_url;
- } else {
- console.error("Upload failed:", data);
- alert("ფოტოს ატვირთვა ვერ მოხერხდა. შეამოწმე Cloudinary Preset.");
- btn.disabled = false; btn.innerText = "გამოქვეყნება";
- return;
+ if (data.secure_url) finalUrl = data.secure_url;
+ } catch (err) { alert("კავშირის შეცდომა!"); btn.disabled = false; btn.innerText = "გამოქვეყნება"; return; }
  }
- } catch (err) {
- console.error("Fetch error:", err);
- alert("კავშირის შეცდომა!");
- btn.disabled = false; btn.innerText = "გამოქვეყნება";
- return;
- }
- }
-
- // Firebase-ში შენახვა
  await db.ref('community_posts').push({
- authorId: auth.currentUser.uid,
- authorName: myName,
- authorPhoto: myPhoto,
- text: text,
- image: finalUrl,
- timestamp: Date.now()
+ authorId: auth.currentUser.uid, authorName: myName, authorPhoto: myPhoto,
+ text: text, image: finalUrl, timestamp: Date.now()
  });
-
  spendAkho(2, 'Community Post');
  document.getElementById('wallPostText').value = "";
  cancelWallImg();
  btn.disabled = false; btn.innerText = "გამოქვეყნება";
 }
-
-// პოსტების ჩატვირთვა იმავე გვერდზე
 function loadCommunityPosts() {
  const box = document.getElementById('communityPostsList');
  db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
  box.innerHTML = "";
- const data = snap.val();
- if(!data) return;
- 
+ const data = snap.val(); if(!data) return;
  Object.entries(data).reverse().forEach(([id, post]) => {
  const card = document.createElement('div');
  card.style = "background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px;";
@@ -2334,261 +2239,139 @@ function loadCommunityPosts() {
  <div style="display: flex; gap: 20px; color: var(--gold); border-top: 1px solid #333; padding-top: 10px;">
  <i class="far fa-heart" style="cursor:pointer;"></i>
  <i class="far fa-comment" style="cursor:pointer;" onclick="openComments('${id}')"></i>
- </div>
- `;
+ </div>`;
  box.appendChild(card);
  });
  });
 }
 
-
-
-
-
 let mediaRecorder;
 let audioChunks = [];
-
 async function toggleVoiceRecord() {
  const micIcon = document.getElementById('micIcon');
- 
  if (!mediaRecorder || mediaRecorder.state === "inactive") {
- // ჩაწერის დაწყება
  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
  mediaRecorder = new MediaRecorder(stream);
  audioChunks = [];
-
  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
  mediaRecorder.onstop = async () => {
  const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
  sendVoiceMessage(audioBlob);
  };
-
  mediaRecorder.start();
  micIcon.classList.replace('fa-microphone', 'fa-stop-circle');
  micIcon.style.color = "var(--red)";
- console.log("ჩაწერა დაიწყო...");
  } else {
- // ჩაწერის დასრულება
  mediaRecorder.stop();
  micIcon.classList.replace('fa-stop-circle', 'fa-microphone');
  micIcon.style.color = "var(--gold)";
  }
 }
-
 async function sendVoiceMessage(blob) {
- if (!canAfford(0.5)) return; // ხმოვანი შეტყობინება 0.5 AKHO
-
+ if (!canAfford(0.5)) return; 
  const formData = new FormData();
- formData.append("file", blob);
- formData.append("upload_preset", "Emigrantbook.video"); 
-
+ formData.append("file", blob); formData.append("upload_preset", "Emigrantbook.video"); 
  try {
  const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
  const data = await res.json();
- 
  if (data.secure_url) {
  const myUid = auth.currentUser.uid;
  const chatId = getChatId(myUid, currentChatId);
- db.ref(`messages/${chatId}`).push({
- senderId: myUid,
- audio: data.secure_url,
- ts: Date.now()
- });
+ db.ref(`messages/${chatId}`).push({ senderId: myUid, audio: data.secure_url, ts: Date.now() });
  spendAkho(0.5, 'Voice Message');
  }
  } catch (err) { alert("ხმის გაგზავნა ვერ მოხერხდა"); }
 }
-
-
-
-
-
-
 function deleteMyVideo(postId) {
  if(confirm("ნამდვილად გსურთ წაშლა?")) {
- db.ref(`posts/${postId}`).remove().then(() => {
- console.log("ვიდეო წაიშალა");
- });
+ db.ref(`posts/${postId}`).remove();
  }
 }
 
-
-
-// --- ვიდეო ზარის ფუნქციების სრული ბლოკი ---
 let localTracks = { videoTrack: null, audioTrack: null };
-
 async function startVideoCall(existingChannel = null) {
-    const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYHjuUsbf/kPswi7dW9OuT2ywvjBtv5XPYkdtPofrzS5ztX4oMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgkMk/ryWwIZGRotNBnYmSAQBCfmyEnsyw1vrikKDUxl4EBAEnPIfQ=";
-    const channel = "live_stream"; 
-    
-    // ზარის ხმის ჩართვა
-    const ring = document.getElementById('ringtone');
-    if (ring) ring.play().catch(e => console.log("Audio play blocked"));
-
-    const ui = document.getElementById('videoCallUI');
-    ui.style.display = 'flex';
-    ui.style.zIndex = "200000"; // ყველაზე ზემოთ ამოწევა
-    ui.style.width = '100%';
-    ui.style.height = '100%';
-
-    try {
-        const uid = Math.floor(Math.random() * 10000);
-        await client.join(appId, channel, token, uid);
-        
-        localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-        localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
-        
-        localTracks.videoTrack.play("local-video");
-        await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
-
-        if (!existingChannel) {
-            db.ref(`video_calls/${currentChatId}`).set({
-                callerName: myName,
-                callerPhoto: myPhoto,
-                callerUid: auth.currentUser.uid,
-                channel: channel,
-                status: 'calling',
-                ts: Date.now()
-            });
-        }
-    } catch (err) {
-        if (ring) ring.pause();
-        alert("შეცდომა კამერის ჩართვისას!");
-        endVideoCall(); 
-    }
+ const appId = "7290502fac7f4feb82b021ccde79988a"; 
+ const token = "007eJxTYHjuUsbf/kPswi7dW9OuT2ywvjBtv5XPYkdtPofrzS5ztX4oMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgkMk/ryWwIZGRotNBnYmSAQBCfmyEnsyw1vrikKDUxl4EBAEnPIfQ=";
+ const channel = "live_stream"; 
+ const ui = document.getElementById('videoCallUI');
+ ui.style.display = 'flex'; ui.style.zIndex = "200000";
+ try {
+ const uid = Math.floor(Math.random() * 10000);
+ await client.join(appId, channel, token, uid);
+ localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+ localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+ localTracks.videoTrack.play("local-video");
+ await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
+ if (!existingChannel) {
+ db.ref(`video_calls/${currentChatId}`).set({ callerName: myName, callerPhoto: myPhoto, callerUid: auth.currentUser.uid, channel: channel, status: 'calling', ts: Date.now() });
+ }
+ } catch (err) { endVideoCall(); }
 }
-
-// ამ ფუნქციაში დავამატე ხმის გათიშვა
 async function endVideoCall() {
-    // ზარის ხმის გათიშვა
-    const ring = document.getElementById('ringtone');
-    if (ring) { ring.pause(); ring.currentTime = 0; }
-
-    if (localTracks.audioTrack) { localTracks.audioTrack.stop(); localTracks.audioTrack.close(); }
-    if (localTracks.videoTrack) { localTracks.videoTrack.stop(); localTracks.videoTrack.close(); }
-    localTracks = { videoTrack: null, audioTrack: null };
-
-    await client.leave();
-    document.getElementById('videoCallUI').style.display = 'none';
-    
-    if(currentChatId) db.ref(`video_calls/${currentChatId}`).remove();
-    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+ if (localTracks.audioTrack) { localTracks.audioTrack.stop(); localTracks.audioTrack.close(); }
+ if (localTracks.videoTrack) { localTracks.videoTrack.stop(); localTracks.videoTrack.close(); }
+ localTracks = { videoTrack: null, audioTrack: null };
+ await client.leave();
+ document.getElementById('videoCallUI').style.display = 'none';
+ if(currentChatId) db.ref(`video_calls/${currentChatId}`).remove();
+ db.ref(`video_calls/${auth.currentUser.uid}`).remove();
 }
-
 function minimizeVideoCall() {
  const ui = document.getElementById('videoCallUI');
  if(ui.style.width === '100%') {
- ui.style.width = '140px'; ui.style.height = '200px';
- ui.style.top = '70px'; ui.style.left = '10px';
- ui.style.borderRadius = '15px';
- ui.style.border = '2px solid var(--gold)';
+ ui.style.width = '140px'; ui.style.height = '200px'; ui.style.top = '70px'; ui.style.left = '10px'; ui.style.borderRadius = '15px'; ui.style.border = '2px solid var(--gold)';
  } else {
- ui.style.width = '100%'; ui.style.height = '100%';
- ui.style.top = '0'; ui.style.left = '0';
- ui.style.borderRadius = '0';
- ui.style.border = 'none';
+ ui.style.width = '100%'; ui.style.height = '100%'; ui.style.top = '0'; ui.style.left = '0'; ui.style.borderRadius = '0'; ui.style.border = 'none';
  }
 }
 
-
-
-
-
-
-
-// --- TIKTOK STYLE LIVE LOGIC (FINAL UPDATED) ---
+// --- TIKTOK STYLE LIVE LOGIC ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
 
-// მენიუდან გამოძახება
-function startLiveFunc() {
- toggleSideMenu(false);
- startLive();
-}
-
+function startLiveFunc() { toggleSideMenu(false); startLive(); }
 async function startLive() {
- // შენი მონაცემები ჩასმულია აქ
  const appId = "7290502fac7f4feb82b021ccde79988a"; 
- const token = "007eJxTYNhXO5N5SfvCzGM3PX7ELlx/wl3aS2uOSOv9qBmvGXn+z+RQYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBIdH3Sm9kQyMiw8mwpIyMDBIL43Aw5mWWp8cUlRamJuQwMAHdWI2c=";
- 
- // მნიშვნელოვანი: ტოკენის აღებისას თუ ჩენელს სახელი არ დაარქვი, აქ "live_stream" უნდა იყოს
- currentLiveChannel = "live_stream"; 
- 
+ const token = "007eJxTYJCJDClhfz5XMXb3vpfqFU8l31bKlrHO3sDbt+LzEhlT81oFBnMjSwNTA6O0xGTzNJO01CQLoyQDI8Pk5JRUc0tLC4vEKrO+zIZARgbe89EsjAwQCOJzM+RklqXGF5cUpSbmMjAAAMI9INc=";
+ currentLiveChannel = "live_" + auth.currentUser.uid; 
  document.getElementById('liveUI').style.display = 'flex';
  document.getElementById('liveHostName').innerText = myName;
  document.getElementById('liveHostAva').src = myPhoto;
-
  try {
  await liveClient.setClientRole("host");
- 
- // ტოკენით შესვლა
  await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
- 
  liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
  liveTracks.video = await AgoraRTC.createCameraVideoTrack();
- 
  liveTracks.video.play("remote-live-video");
  await liveClient.publish([liveTracks.audio, liveTracks.video]);
-
- // Firebase-ში ლაივის გააქტიურება
- db.ref(`lives/${auth.currentUser.uid}`).set({
- hostId: auth.currentUser.uid,
- hostName: myName,
- hostPhoto: myPhoto,
- channel: currentLiveChannel,
- status: 'active',
- ts: Date.now()
- });
-
+ db.ref(`lives/${auth.currentUser.uid}`).set({ hostId: auth.currentUser.uid, hostName: myName, hostPhoto: myPhoto, channel: currentLiveChannel, status: 'active', ts: Date.now() });
  listenToLiveChat(currentLiveChannel);
- } catch (e) {
- console.error("Agora Error:", e);
- alert("ლაივი ვერ დაიწყო. შეამოწმე HTTPS ან ტოკენი!");
- endLive();
- }
+ } catch (e) { endLive(); }
 }
-
 function listenToLiveChat(channel) {
-    const chatBox = document.getElementById('liveChatBox');
-    // მოვაშოროთ pointer-events: none, რომ სქროლი შეძლოს მომხმარებელმა
-    chatBox.style.pointerEvents = "auto"; 
-    
-    db.ref(`live_chats/${channel}`).limitToLast(20).on('child_added', snap => {
-        const msg = snap.val();
-        const div = document.createElement('div');
-        
-        // სტილი სისტემური და ჩვეულებრივი მესიჯებისთვის
-        if(msg.name === "SYSTEM") {
-            div.style = "background:rgba(212,175,55,0.2); padding:8px 12px; border-radius:10px; margin-bottom:5px; border:1px solid var(--gold); animation: flash 1s;";
-            div.innerHTML = `<span style="color:var(--gold); font-size:13px; font-weight:bold;">${msg.text}</span>`;
-        } else {
-            div.style = "background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; margin-bottom:5px; width:fit-content; border-left:3px solid var(--gold);";
-            div.innerHTML = `<b style="color:var(--gold); font-size:12px;">${msg.name}:</b> <span style="color:white; font-size:13px;">${msg.text}</span>`;
-        }
-        
-        chatBox.appendChild(div);
-        
-        // ავტომატური სქროლი ბოლო მესიჯზე
-        chatBox.scrollTo({
-            top: chatBox.scrollHeight,
-            behavior: 'smooth'
-        });
-    });
+ const chatBox = document.getElementById('liveChatBox');
+ chatBox.innerHTML = "";
+ db.ref(`live_chats/${channel}`).on('child_added', snap => {
+ const msg = snap.val();
+ const div = document.createElement('div');
+ if(msg.name === "SYSTEM") {
+ div.style = "background:rgba(212,175,55,0.2); padding:8px 12px; border-radius:10px; margin-bottom:5px; border:1px solid var(--gold); text-align:center;";
+ div.innerHTML = `<span style="color:var(--gold); font-size:13px; font-weight:bold;">${msg.text}</span>`;
+ } else {
+ div.style = "background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; margin-bottom:5px; width:fit-content; border-left:3px solid var(--gold);";
+ div.innerHTML = `<b style="color:var(--gold); font-size:11px;">${msg.name}:</b> <span style="color:white; font-size:13px;">${msg.text}</span>`;
+ }
+ chatBox.appendChild(div);
+ chatBox.scrollTop = chatBox.scrollHeight;
+ });
 }
-
 function sendLiveComment() {
  const inp = document.getElementById('liveMsgInp');
  if(!inp.value.trim() || !currentLiveChannel) return;
- db.ref(`live_chats/${currentLiveChannel}`).push({
- name: myName,
- text: inp.value,
- ts: Date.now()
- });
+ db.ref(`live_chats/${currentLiveChannel}`).push({ name: myName, text: inp.value, ts: Date.now() });
  inp.value = "";
 }
-
 async function endLive() {
  if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); }
  if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); }
@@ -2600,191 +2383,97 @@ async function endLive() {
  }
 }
 
-// გულების ანიმაცია (TikTok Style)
+async function joinLive(hostUid, channelName) {
+ const appId = "7290502fac7f4feb82b021ccde79988a"; 
+ const token = "007eJxTYJCJDClhfz5XMXb3vpfqFU8l31bKlrHO3sDbt+LzEhlT81oFBnMjSwNTA6O0xGTzNJO01CQLoyQDI8Pk5JRUc0tLC4vEKrO+zIZARgbe89EsjAwQCOJzM+RklqXGF5cUpSbmMjAAAMI9INc=";
+ currentLiveChannel = channelName;
+ document.getElementById('liveUI').style.display = 'flex';
+ document.getElementById('activeLivesModal').style.display = 'none';
+ db.ref(`users/${hostUid}`).once('value', snap => {
+ const host = snap.val();
+ if(host) {
+ document.getElementById('liveHostName').innerText = host.name;
+ document.getElementById('liveHostAva').src = host.photo || "https://ui-avatars.com/api/?name=" + host.name;
+ }
+ });
+ try {
+ await liveClient.leave(); // აზღვევს დუბლირებას
+ await liveClient.setClientRole("audience");
+ await liveClient.join(appId, channelName, token, auth.currentUser.uid);
+ liveClient.on("user-published", async (user, mediaType) => {
+ await liveClient.subscribe(user, mediaType);
+ if (mediaType === "video") user.videoTrack.play("remote-live-video");
+ if (mediaType === "audio") user.audioTrack.play();
+ });
+ listenToLiveChat(channelName);
+ db.ref(`live_chats/${channelName}`).push({ name: "SYSTEM", text: `👋 ${myName} შემოვიდა`, ts: Date.now() });
+ } catch (e) { console.log(e); }
+}
+
 function sendLiveHeart() {
  const container = document.getElementById('live-video-container');
  const heart = document.createElement('i');
- heart.className = "fas fa-heart";
- heart.style.position = "absolute";
- heart.style.right = "20px";
- heart.style.bottom = "150px";
- heart.style.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
- heart.style.fontSize = "24px";
- heart.style.transition = "all 1s ease-out";
- heart.style.zIndex = "100";
- 
+ heart.className = "fas fa-heart"; heart.style = `position:absolute; right:20px; bottom:150px; color:hsl(${Math.random()*360},100%,50%); font-size:24px; transition:all 1s ease-out; z-index:100;`;
  container.appendChild(heart);
- 
- setTimeout(() => {
- heart.style.bottom = "400px";
- heart.style.right = (Math.random() * 100) + "px";
- heart.style.opacity = "0";
- }, 50);
- 
+ setTimeout(() => { heart.style.bottom = "400px"; heart.style.right = (Math.random()*100)+"px"; heart.style.opacity = "0"; }, 50);
  setTimeout(() => heart.remove(), 1000);
 }
-
-// --- სხვა დამხმარე ფუნქციები ---
-function nextObSlide(n) {
- document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
- document.getElementById('obSlide' + n).style.display = 'block';
-}
-
-function runSuccessAndFinish() {
- document.getElementById('rulesList').style.display = 'none';
- document.getElementById('finishBtn').style.display = 'none';
- const animBox = document.getElementById('tokenSuccessAnim');
- animBox.style.display = 'block';
- animBox.classList.add('token-pop');
- setTimeout(() => finishOnboarding(), 1800);
-}
-
-function finishOnboarding() {
- const user = auth.currentUser;
- if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
- document.getElementById('onboardingUI').style.display = 'none';
-}
-
-
-
-// საჩუქრების პანელის გამოჩენა/დამალვა
-function toggleGiftPanel() {
-    const p = document.getElementById('giftPanel');
-    p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
-
-// საჩუქრის გაგზავნის ძირითადი ფუნქცია
+function toggleGiftPanel() { const p = document.getElementById('giftPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
 function sendGift(emoji, price, giftName) {
-    // 1. ვამოწმებთ, აქვს თუ არა მომხმარებელს საკმარისი AKHO
-    if (myAkho < price) {
-        alert(currentLang === 'ka' ? "ბალანსი არ გაქვს საკმარისი!" : "Not enough balance!");
-        openWalletUI();
-        return;
-    }
-
-    // 2. ვადგენთ ვინ არის ლაივის ჰოსტი (ვის უნდა ჩაერიცხოს ფული)
-    // ჩენელის სახელიდან (live_UID) ვიღებთ ჰოსტის ID-ს
-    const hostUid = currentLiveChannel.replace("live_", "");
-
-    // 3. ვაკლებთ ფულს გამგზავნს
-    spendAkho(price, `Sent Gift: ${giftName}`);
-
-    // 4. ვუმატებთ ფულს ჰოსტს
-    earnAkho(hostUid, price, `Received Gift: ${giftName}`);
-
-    // 5. ვაგზავნით ინფორმაციას Firebase-ში, რომ ყველამ დაინახოს საჩუქარი
-    db.ref(`live_chats/${currentLiveChannel}`).push({
-        name: "SYSTEM",
-        text: `🎁 ${myName}-მა გაჩუქა ${giftName} ${emoji}`,
-        ts: Date.now()
-    });
-
-    // 6. ვუშვებთ ვიზუალურ ანიმაციას ეკრანზე
-    showGiftAnimation(emoji);
-    
-    // ვხურავთ პანელს
-    toggleGiftPanel();
+ if (myAkho < price) { alert("ბალანსი!"); openWalletUI(); return; }
+ const hostUid = currentLiveChannel.replace("live_", "");
+ spendAkho(price, `Gift: ${giftName}`); earnAkho(hostUid, price, `Gift: ${giftName}`);
+ db.ref(`live_chats/${currentLiveChannel}`).push({ name: "SYSTEM", text: `🎁 ${myName}-მა გაჩუქა ${giftName}`, ts: Date.now() });
+ showGiftAnimation(emoji); toggleGiftPanel();
 }
-
-// საჩუქრის ანიმაცია (ეკრანის ცენტრში ამოხტომა)
 function showGiftAnimation(emoji) {
-    const container = document.getElementById('live-video-container');
-    const giftEl = document.createElement('div');
-    
-    giftEl.style = `
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 100px;
-        z-index: 100001;
-        pointer-events: none;
-        animation: gift-pop-up 2s ease-out forwards;
-    `;
-    
-    giftEl.innerText = emoji;
-    container.appendChild(giftEl);
-
-    // 2 წამში ვაშორებთ ელემენტს
-    setTimeout(() => giftEl.remove(), 2000);
+ const container = document.getElementById('live-video-container');
+ const giftEl = document.createElement('div');
+ giftEl.style = "position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:100px; z-index:100001; animation:gift-pop-up 2s ease-out forwards;";
+ giftEl.innerText = emoji; container.appendChild(giftEl);
+ setTimeout(() => giftEl.remove(), 2000);
 }
-// ანიმაციის ეფექტი (CSS JavaScript-იდან)
 const styleSheet = document.createElement("style");
-styleSheet.innerText = `
-@keyframes gift-pop-up {
-    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-    20% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
-    80% { transform: translate(-50%, -100%) scale(1.2); opacity: 1; }
-    100% { transform: translate(-50%, -200%) scale(1); opacity: 0; }
-}`;
+styleSheet.innerText = "@keyframes gift-pop-up { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; } 100% { transform: translate(-50%, -200%) scale(1); opacity: 0; } }";
 document.head.appendChild(styleSheet);
 
-
-
 function listenToActiveLives() {
-    const floatBtn = document.getElementById('liveFloatingBtn');
-    const lastAva = document.getElementById('lastLiveAva');
-    const modalList = document.getElementById('modalLivesList');
-
-    db.ref('lives').on('value', snap => {
-        const lives = snap.val();
-        modalList.innerHTML = "";
-        
-        if (!lives || Object.keys(lives).length === 0) {
-            floatBtn.style.display = 'none';
-            return;
-        }
-
-        // ვაჩვენებთ მცურავ ღილაკს
-        floatBtn.style.display = 'block';
-        
-        const liveEntries = Object.entries(lives);
-        // ბოლო დაწყებული ლაივის ავატარი ღილაკზე
-        const lastLive = liveEntries[liveEntries.length - 1][1];
-        lastAva.src = lastLive.hostPhoto || 'https://ui-avatars.com/api/?name=' + lastLive.hostName;
-
-        // ვავსებთ მოდალს ლაივებით
-        liveEntries.forEach(([uid, data]) => {
-            const item = document.createElement('div');
-            item.style = "display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px; border:1px solid rgba(212,175,55,0.1);";
-            item.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <img src="${data.hostPhoto}" style="width:45px; height:45px; border-radius:50%; border:1px solid var(--gold);">
-                    <b style="color:white; font-size:14px;">${data.hostName}</b>
-                </div>
-                <button onclick="joinLive('${uid}', '${data.channel}'); closeActiveLivesModal();" style="background:var(--gold); border:none; padding:7px 15px; border-radius:10px; font-weight:900; font-size:12px; cursor:pointer;">WATCH</button>
-            `;
-            modalList.appendChild(item);
-        });
-    });
+ const floatBtn = document.getElementById('liveFloatingBtn');
+ const lastAva = document.getElementById('lastLiveAva');
+ const modalList = document.getElementById('modalLivesList');
+ db.ref('lives').on('value', snap => {
+ const lives = snap.val(); modalList.innerHTML = "";
+ if (!lives || Object.keys(lives).length === 0) { floatBtn.style.display = 'none'; return; }
+ floatBtn.style.display = 'block';
+ const liveEntries = Object.entries(lives);
+ const lastLive = liveEntries[liveEntries.length - 1][1];
+ lastAva.src = lastLive.hostPhoto || 'https://ui-avatars.com/api/?name=' + lastLive.hostName;
+ liveEntries.forEach(([uid, data]) => {
+ const item = document.createElement('div');
+ item.style = "display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px; margin-bottom:10px;";
+ item.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${data.hostPhoto}" style="width:45px; height:45px; border-radius:50%; border:1px solid var(--gold);"><b style="color:white;">${data.hostName}</b></div><button onclick="joinLive('${uid}', '${data.channel}'); closeActiveLivesModal();" style="background:var(--gold); border:none; padding:7px 15px; border-radius:10px; font-weight:900;">WATCH</button>`;
+ modalList.appendChild(item);
+ });
+ });
 }
-
-function openActiveLivesModal() {
-    document.getElementById('activeLivesModal').style.display = 'flex';
-}
-
-function closeActiveLivesModal() {
-    document.getElementById('activeLivesModal').style.display = 'none';
-}
+function openActiveLivesModal() { document.getElementById('activeLivesModal').style.display = 'flex'; }
+function closeActiveLivesModal() { document.getElementById('activeLivesModal').style.display = 'none'; }
+listenToActiveLives();
  </script>
 <div id="communityWallUI" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 15000; display: none; flex-direction: column;">
- 
  <div style="padding: 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5);">
  <h2 style="color: var(--gold); font-weight: 900; font-size: 18px;">COMMUNITY</h2>
  <i class="fas fa-times" style="font-size: 24px; color: gray; cursor: pointer;" onclick="closeCommunityWall()"></i>
  </div>
-
  <div style="background: rgba(20,20,20,0.4); padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
  <div style="display: flex; gap: 10px; margin-bottom: 15px;">
  <img id="wallMyAva" src="" style="width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--gold); object-fit: cover;">
  <textarea id="wallPostText" style="flex: 1; background: transparent; border: none; color: white; resize: none; outline: none; font-size: 16px; padding-top: 5px;" placeholder="რას ფიქრობ?"></textarea>
  </div>
- 
  <div id="wallImgPreviewBox" style="display: none; width: 100%; position: relative; margin-bottom: 15px;">
  <img id="wallImgPreview" style="width: 100%; border-radius: 10px; border: 1px solid var(--gold); max-height: 200px; object-fit: cover;">
  <i class="fas fa-times-circle" style="position: absolute; top: 5px; right: 5px; color: white; font-size: 20px; cursor: pointer;" onclick="cancelWallImg()"></i>
  </div>
-
  <div style="display: flex; justify-content: space-between; align-items: center;">
  <div onclick="document.getElementById('wallImgInput').click()" style="color: var(--gold); cursor: pointer; font-size: 14px; font-weight: bold; background: rgba(212,175,55,0.1); padding: 8px 15px; border-radius: 20px;">
  <i class="fas fa-image"></i> ფოტო
@@ -2793,18 +2482,14 @@ function closeActiveLivesModal() {
  <button onclick="submitWallPost()" style="background: var(--gold); border: none; padding: 8px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; color: black;">გამოქვეყნება</button>
  </div>
  </div>
-
  <div id="communityPostsList" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; background: transparent;">
  </div>
- 
  <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
  <div style="position:absolute; top:20px; right:20px; z-index:10; display:flex; gap:15px;">
- <i class="fas fa-compress-alt" onclick="minimizeVideoCall()" style="color:white; font-size:24px; cursor:pointer;" title="ჩაკეცვა"></i>
- <i class="fas fa-phone-slash" onclick="endVideoCall()" style="color:#ff4d4d; font-size:24px; cursor:pointer;" title="გათიშვა"></i>
+ <i class="fas fa-compress-alt" onclick="minimizeVideoCall()" style="color:white; font-size:24px; cursor:pointer;"></i>
+ <i class="fas fa-phone-slash" onclick="endVideoCall()" style="color:#ff4d4d; font-size:24px; cursor:pointer;"></i>
  </div>
-
  <div id="remote-video" style="width:100%; height:100%; background:#111;"></div>
-
  <div id="local-video" style="position:absolute; bottom:100px; right:20px; width:120px; height:160px; background:#222; border-radius:12px; border:2px solid var(--gold); overflow:hidden; z-index:5;"></div>
 </div>
 </div>
