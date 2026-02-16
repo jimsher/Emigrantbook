@@ -1730,7 +1730,7 @@ async function startLottoDraw() {
 // --- GAME AUDIO SYSTEM ---
 
 // 1. ფონური მუსიკა (Musical Pop Beat)
-const bgMusic = new Audio('https://pixabay.com/sound-effects/musical-pop-beat-62044/');
+const bgMusic = new Audio('https://codeskulptor-demos.commondatastorage.googleapis.com/descent/background%20music.mp3');
 bgMusic.loop = true; 
 bgMusic.volume = 0.3; // ფონური ხმა 30%-ზე
 
