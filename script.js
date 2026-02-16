@@ -2036,6 +2036,7 @@ function triggerBurning5Spin() {
 
     isSpinning5 = true;
     spendAkho(burningStake5, 'Burning Slots 5-Reel Bet');
+    
     document.getElementById('slot5BalanceVal').innerText = (myAkho - burningStake5).toFixed(2);
     document.getElementById('slot5WinVal').innerText = "0.00";
     
@@ -2045,7 +2046,7 @@ function triggerBurning5Spin() {
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 1. მოგების დაგეგმვა (იგივე ლოგიკა)
+    // 1. მოგების დაგეგმვა
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
@@ -2059,41 +2060,48 @@ function triggerBurning5Spin() {
     } else if (rand < 0.06) { 
         result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = burningStake5 * 12;
     } else if (rand < 0.15) { 
-        let icon = slot5Icons[Math.floor(Math.random() * 4 + 4)]; // ხილი
-        result = [icon, icon, icon, '🍋', '🍊']; winAmt = burningStake5 * 4;
-    } else { 
-        // წაგება - ყოველთვის სხვადასხვა სიმბოლოები
-        result = [];
-        for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
+        // მცირე მოგება - 3 სიმბოლო
+        let fruit = slot5Icons[Math.floor(Math.random() * 4 + 1)];
+        result = [fruit, fruit, fruit, slot5Icons[5], slot5Icons[6]]; 
+        winAmt = burningStake5 * 4;
+    } else {
+        // წაგება - აქ ვაკეთებთ სრულ რანდომიზაციას, რომ ერთი და იგივე არ დაჯდეს
+        let tempIcons = [...slot5Icons];
+        // ავურიოთ მასივი
+        tempIcons.sort(() => Math.random() - 0.5);
+        result = [tempIcons[0], tempIcons[1], tempIcons[2], tempIcons[3], tempIcons[4]];
         winAmt = 0;
     }
 
-    // 2. რილების რესეტი და ახალი სიმბოლოების ჩასმა (რომ არ განმეორდეს)
+    // 2. რილების მომზადება და დატრიალება
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         
-        // ანიმაციის გარეშე დაბრუნება თავში
+        // მნიშვნელოვანი: ვაბრუნებთ 0-ზე და ვცვლით შიგთავსს მომენტალურად
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
         
-        // რილის შიგთავსის გადაჩეხვა ყოველ სპინზე
-        const divs = r.getElementsByTagName('div');
+        // რილის შიგნით არსებული ყველა Div-ის გადაჩეხვა
+        const divs = r.children;
         for (let j = 0; j < divs.length; j++) {
             divs[j].innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
         }
 
-        const stopIdx = 45; // გაჩერების წერტილი
-        // ვსვამთ დაგეგმილ მოგებას შუა ხაზზე
-        if(divs[stopIdx]) divs[stopIdx].innerText = result[i-1];
+        // ვსვამთ ჩვენს დაგეგმილ შედეგს მე-40 პოზიციაზე
+        const stopIdx = 40;
+        if (divs[stopIdx]) {
+            divs[stopIdx].innerText = result[i-1];
+        }
 
-        // პატარა დაყოვნება რომ რესეტი აღიქვას
+        // ვაძლევთ ბრაუზერს 50ms-ს, რომ აღიქვას Reset და მერე ვიწყებთ სპინს
         setTimeout(() => {
             const move = stopIdx * 70;
-            r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.15, 0, 0.15, 1)`;
             r.style.transform = `translateY(-${move}px)`;
         }, 50);
     }
 
+    // 3. შედეგის დაფიქსირება
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
@@ -2108,5 +2116,5 @@ function triggerBurning5Spin() {
             document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
             document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
         }
-    }, 4000);
+    }, 3800);
 }
