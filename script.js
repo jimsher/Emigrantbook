@@ -1828,3 +1828,77 @@ async function startLottoDraw() {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+let slotBet = 0.15;
+const slotIcons = ['🍋', '🍉', '🍇', '🍒', '🔔', '7️⃣', '⭐'];
+
+// სლოტის გახსნა
+function openBurningSlots() {
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('burningSlotsContainer').style.display = 'flex';
+    initSlotReels();
+}
+
+// უკან დაბრუნება
+function backFromSlots() {
+    document.getElementById('burningSlotsContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+// ფსონის არჩევა
+function updateBet(val, btn) {
+    slotBet = val;
+    document.querySelectorAll('.bet-opt').forEach(b => {
+        b.style.background = '#222';
+        b.style.color = 'gold';
+    });
+    btn.style.background = 'gold';
+    btn.style.color = 'black';
+}
+
+// რილების შევსება
+function initSlotReels() {
+    [1, 2, 3].forEach(i => {
+        const reel = document.getElementById('reel_'+i);
+        reel.innerHTML = '';
+        for(let j=0; j<40; j++) {
+            const div = document.createElement('div');
+            div.style.height = '60px';
+            div.style.fontSize = '35px';
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.innerText = slotIcons[Math.floor(Math.random() * slotIcons.length)];
+            reel.appendChild(div);
+        }
+    });
+}
+
+// დატრიალება
+function triggerBurningSpin() {
+    // 1. აქ დააკელი ბალანსს slotBet
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play();
+
+    [1, 2, 3].forEach((i, idx) => {
+        const reel = document.getElementById('reel_'+i);
+        const scroll = (Math.floor(Math.random() * 10) + 20) * 70;
+        reel.style.transform = `translateY(-${scroll}px)`;
+    });
+
+    setTimeout(() => {
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play();
+        // 2. აქ გამოთვალე მოგება და განაახლე ბაზა
+    }, 4000);
+}
