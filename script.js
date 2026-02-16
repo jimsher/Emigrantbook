@@ -2165,12 +2165,3 @@ function updateAllGameBalances() {
     if(document.getElementById('slot5RealBalance')) document.getElementById('slot5RealBalance').innerText = "(" + (myAkho/10).toFixed(2) + " €)";
 }
 
-
-
-
-
-
-
-
-
-
