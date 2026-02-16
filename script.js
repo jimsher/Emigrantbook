@@ -1727,6 +1727,57 @@ async function startLottoDraw() {
 
 
 
+// --- GAME AUDIO SYSTEM ---
+
+// 1. ფონური მუსიკა (Musical Pop Beat)
+const bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/05/16/audio_412384a59d.mp3');
+bgMusic.loop = true; 
+bgMusic.volume = 0.3; // ფონური ხმა 30%-ზე
+
+// 2. ლოტოს ბურთის ამოვარდნის ხმა (Tick)
+const ballPopSnd = new Audio('https://raw.githubusercontent.com/rafaelrinaldi/where-is-the-mouse/master/audio/click.mp3');
+ballPopSnd.crossOrigin = "anonymous";
+
+// 3. მოგების ხმა
+const winSnd = new Audio('https://raw.githubusercontent.com/Anis-Khemakhem/Funny-Animal-Sounds/master/Sounds/tada.mp3');
+winSnd.crossOrigin = "anonymous";
+
+// 4. წაგების ხმა
+const loseSnd = new Audio('https://raw.githubusercontent.com/Kuntal-Das/Slot-Machine/master/sounds/lose.mp3');
+loseSnd.crossOrigin = "anonymous";
+
+// -------------------------
+
+
+
+
+// თამაშების გვერდის გახსნა
+function openGamesPage() {
+    document.getElementById('gamesPage').style.display = 'flex';
+    
+    // მუსიკის ჩართვა (ბრაუზერმა შეიძლება მოითხოვოს ერთი კლიკი ეკრანზე)
+    bgMusic.play().catch(e => console.log("Music play pending user interaction"));
+    
+    // ბალანსის განახლება
+    updateGameBalance();
+}
+
+// თამაშების გვერდის დახურვა
+function closeGamesPage() {
+    document.getElementById('gamesPage').style.display = 'none';
+    
+    // მუსიკის სრული გაჩერება
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+}
+
+
+
+
+
+
+
+
 async function startLottoDraw() {
     if(selectedNumbers.length < 5) { alert("გთხოვთ აირჩიოთ 5 ციფრი!"); return; }
     if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის (5.00 AKHO)"); return; }
@@ -1734,7 +1785,6 @@ async function startLottoDraw() {
     spendAkho(5.00, "Lotto Bet");
     const btn = document.getElementById('playLottoBtn');
     btn.disabled = true;
-    btn.style.opacity = "0.5";
 
     const container = document.getElementById('lottoBalls');
     container.innerHTML = ""; 
@@ -1745,18 +1795,13 @@ async function startLottoDraw() {
         if(!winningNumbers.includes(n)) winningNumbers.push(n);
     }
 
-    // ხმის ელემენტები
-    const popSnd = document.getElementById('ballPopSound');
-    const winSnd = document.getElementById('winSound');
-    const loseSnd = document.getElementById('loseSound');
-
-    // ბურთების ამოყრის ანიმაცია და ხმა
-    for(let i=0; i<5; i++) {
-        await new Promise(r => setTimeout(r, 1000)); 
+    // ბურთების ამოყრა და ხმები
+    for(let i = 0; i < 5; i++) {
+        await new Promise(r => setTimeout(r, 800)); 
         
-        // ხმის დაკვრა (reset-ით, რომ ზედიზედ სწრაფად დაუკრას)
-        popSnd.currentTime = 0;
-        popSnd.play().catch(e => console.log("Audio play blocked by browser"));
+        // ბურთის ამოვარდნის ხმა
+        ballPopSnd.currentTime = 0;
+        ballPopSnd.play();
 
         const ball = document.createElement('div');
         ball.className = 'lotto-ball';
@@ -1764,24 +1809,16 @@ async function startLottoDraw() {
         container.appendChild(ball);
     }
 
-    // მოგების შემოწმება
+    // შედეგის ხმები
     setTimeout(() => {
         const matches = selectedNumbers.filter(n => winningNumbers.includes(n)).length;
-        let prize = 0;
-        if(matches === 2) prize = 2;
-        if(matches === 3) prize = 10;
-        if(matches === 4) prize = 50;
-        if(matches === 5) prize = 250;
-
-        if(prize > 0) {
+        if(matches >= 2) {
             winSnd.play(); // მოგების ხმა
-            earnAkho(auth.currentUser.uid, prize, `Lotto Win (${matches} matches)`);
-            alert(`🎉 გილოცავ! შენ დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
+            alert(`🎉 მოიგე! ${matches} ციფრი დაემთხვა!`);
         } else {
             loseSnd.play(); // წაგების ხმა
-            alert(`ამჯერად მხოლოდ ${matches} ციფრი დაემთხვა. სცადე კიდევ ერთხელ!`);
+            alert(`ამჯერად ვერ მოიგე. სცადე კიდევ ერთხელ!`);
         }
         btn.disabled = false;
-        btn.style.opacity = "1";
-    }, 1000);
+    }, 500);
 }
