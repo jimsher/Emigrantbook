@@ -1948,3 +1948,34 @@ function triggerBurning5Spin() {
         }
     }, 4200);
 }
+
+
+
+
+
+// --- ამას ვწერთ სკრიპტის სულ ბოლოში ---
+
+function openBurningSlots5() {
+    const list = document.getElementById('gamesList');
+    const container = document.getElementById('burningSlots5Container');
+    
+    if (list && container) {
+        list.style.display = 'none'; // მალავს მენიუს
+        container.style.display = 'flex'; // აჩენს სლოტს
+        
+        // ბალანსის განახლება
+        updateAllGameBalances();
+        
+        // რილების მომზადება
+        if (typeof initBurning5Reels === "function") {
+            initBurning5Reels();
+        }
+    } else {
+        alert("შეცდომა: სლოტის ფანჯარა (ID: burningSlots5Container) ვერ მოიძებნა HTML-ში!");
+    }
+}
+
+function backFromSlots5() {
+    document.getElementById('burningSlots5Container').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
