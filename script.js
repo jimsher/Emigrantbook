@@ -1898,7 +1898,7 @@ async function startLottoDraw() {
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 1. შედეგის განსაზღვრა (იგივე რჩება)
+    // 1. შედეგის დაგეგმვა
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
@@ -1907,42 +1907,36 @@ async function startLottoDraw() {
         result = ['7️⃣', '7️⃣', '7️⃣']; winAmt = 50.00;
     } else if (rand < 0.08) { 
         result = ['🍇', '🍇', '🍇']; winAmt = 10.00;
-    } else if (rand < 0.20) { 
+    } else if (rand < 0.18) { 
         const middleIcon = burningIcons[Math.floor(Math.random() * burningIcons.length)];
         result = ['🍒', middleIcon, '⭐']; winAmt = 5.00;
     } else {
         result = [burningIcons[1], burningIcons[3], burningIcons[5]]; winAmt = 0;
     }
 
-    // 2. უსასრულო რილის ლოგიკა
+    // 2. რილების ტრიალი (RESET პრინციპით)
     for (let i = 1; i <= 3; i++) {
         const r = document.getElementById('reel_' + i);
         
-        // ვამატებთ კიდევ 50 ახალ სიმბოლოს არსებულის ქვევით
-        for (let j = 0; j < 50; j++) {
-            const s = document.createElement('div');
-            s.style.height = '60px'; s.style.display = 'flex'; 
-            s.style.alignItems = 'center'; s.style.justifyContent = 'center'; 
-            s.style.fontSize = '35px';
-            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
-            r.appendChild(s);
+        // ჯერ ვაბრუნებთ 0-ზე მომენტალურად (ანიმაციის გარეშე)
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+        
+        // ვსვამთ სიმბოლოს მე-30 პოზიციაზე
+        const stopIdx = 30;
+        if(r.children[stopIdx]) {
+            r.children[stopIdx].innerText = result[i-1];
         }
 
-        // ზუსტად იმ სიმბოლოს ჩასმა, რომელიც უნდა გამოჩნდეს
-        // 45-ე სიმბოლო ახალი დამატებულებიდან
-        const stopIdx = (r.children.length - 5); 
-        r.children[stopIdx].innerText = result[i-1];
-
-        // ანიმაცია მიდის ამ ახალ წერტილამდე
-        const move = stopIdx * 70;
-        r.style.transition = `transform ${2 + (i * 0.5)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-        r.style.transform = `translateY(-${move}px)`;
-        
-        // ვინახავთ პოზიციას, რომ შემდეგი სპინი აქედან გაგრძელდეს
-        slotPositions[i-1] = move;
+        // ვაძლევთ ბრაუზერს დროს, რომ აღიქვას 0-ზე დაბრუნება
+        setTimeout(() => {
+            const move = stopIdx * 70;
+            r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${move}px)`;
+        }, 20);
     }
 
-    // 3. გაჩერება და მოგება
+    // 3. გაჩერება
     setTimeout(() => {
         isSpinningNow = false;
         if (winAmt > 0) {
@@ -1957,11 +1951,5 @@ async function startLottoDraw() {
             document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
             document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
         }
-
-        // ოპტიმიზაცია: თუ რილი ძალიან გაიზარდა (მაგ. 500 სიმბოლო), მხოლოდ მაშინ ვარესეტებთ
-        if (document.getElementById('reel_1').children.length > 500) {
-            initBurningReels();
-            slotPositions = [0, 0, 0];
-        }
-    }, 3500);
+    }, 3200);
 }
