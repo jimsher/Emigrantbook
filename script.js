@@ -2173,3 +2173,110 @@ function backFromSlots() {
         gamesList.style.display = 'grid';     // აჩენს მთავარ სიას
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function triggerBurning5Spin() {
+    // 1. შემოწმება: ტრიალებს თუ არა ან გვყოფნის თუ არა ბალანსი
+    if (isSpinning5) return;
+    if (!canAfford(burningStake5)) {
+        alert("ბალანსი არ გყოფნის! ფსონი: " + burningStake5 + " ₳");
+        return;
+    }
+
+    isSpinning5 = true;
+
+    // თანხის ჩამოჭრა ბაზიდან და UI-ს განახლება
+    spendAkho(burningStake5, 'Burning Slots 5 Bet');
+    updateAllGameBalances(); 
+    updateWinUI(0); // მოგების ველის განულება
+
+    // ხმის ეფექტი
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+    // 2. მოგების მათემატიკა (5 რილისთვის)
+    const rand = Math.random();
+    let result = [];
+    let winAmt = 0;
+
+    if (rand < 0.02) { 
+        // ჯეკპოტი: 5 ცალი 7️⃣ (x200 ფსონზე)
+        result = ['7️⃣', '7️⃣', '7️⃣', '7️⃣', '7️⃣']; 
+        winAmt = burningStake5 * 200; 
+    } else if (rand < 0.07) {
+        // საშუალო მოგება: 5 ერთნაირი ხილი (x30 ფსონზე)
+        let fruitIcons = ['🍉', '🍇', '🔔', '🍒'];
+        let icon = fruitIcons[Math.floor(Math.random() * fruitIcons.length)];
+        result = [icon, icon, icon, icon, icon];
+        winAmt = burningStake5 * 30;
+    } else if (rand < 0.15) {
+        // მცირე მოგება: 4 ერთნაირი (x5 ფსონზე)
+        let icon = slot5Icons[Math.floor(Math.random() * 5)];
+        result = [icon, icon, icon, icon, slot5Icons[8]]; 
+        winAmt = burningStake5 * 5;
+    } else {
+        // წაგება: გარანტირებული რანდომიზაცია
+        while(true) {
+            result = [];
+            for(let k=0; k<5; k++) {
+                result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
+            }
+            // ვამოწმებთ, რომ შემთხვევით 5-ვე არ დაემთხვას
+            if (!result.every(v => v === result[0])) break;
+        }
+        winAmt = 0;
+    }
+
+    // 3. რილების მომზადება და დატრიალება
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        if(!r) continue;
+
+        // აუცილებელი: რილის გასუფთავება და ახალი სიმბოლოებით შევსება
+        r.innerHTML = ''; 
+        for (let j = 0; j < 60; j++) {
+            const s = document.createElement('div');
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+            r.appendChild(s);
+        }
+
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+        
+        const stopIdx = 45; // გაჩერების წერტილი (ინდექსი)
+        r.children[stopIdx].innerText = result[i-1];
+
+        // ანიმაციის გაშვება მცირე დაგვიანებით (რილის თითოეული სვეტისთვის სხვადასხვა დრო)
+        setTimeout(() => {
+            r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${stopIdx * 70}px)`;
+        }, 50);
+    }
+
+    // 4. დასრულება და მოგების დარიცხვა
+    setTimeout(() => {
+        isSpinning5 = false;
+        if (winAmt > 0) {
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            
+            // თანხის დარიცხვა ბაზაში
+            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots 5 Win');
+            
+            // ვიზუალური განახლება
+            updateWinUI(winAmt);
+            setTimeout(updateAllGameBalances, 500);
+        }
+    }, 4500); // 5-იანი სლოტი უფრო დიდხანს ტრიალებს ეფექტისთვის
+}
