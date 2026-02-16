@@ -1831,226 +1831,103 @@ async function startLottoDraw() {
 
 
 
+function triggerBurningSpin() {
+    if (isSpinningNow) return;
+    if (!canAfford(burningStake)) return;
 
-
-
-
-
-
-
-
-
-
-
-// --- GLOBAL GAME STATE ---
-var burningStake5 = 0.20;
-var burningStake3 = 0.20;
-var isSpinning5 = false;
-var isSpinning3 = false;
-var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
-
-// --- AUDIO SYSTEM ---
-const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3');
-const ballPopSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
-bgMusic.loop = true; bgMusic.volume = 0.3;
-
-// --- CORE FUNCTIONS ---
-function openGamesPage() {
-    document.getElementById('gamesPage').style.display = 'flex';
-    bgMusic.play().catch(() => {
-        window.addEventListener('click', () => { bgMusic.play(); }, { once: true });
-    });
-    updateAllGameBalances();
-}
-
-function closeGamesPage() {
-    document.getElementById('gamesPage').style.display = 'none';
-    bgMusic.pause(); bgMusic.currentTime = 0;
-}
-
-function updateAllGameBalances() {
-    const akhoStr = myAkho.toFixed(2);
-    const euroStr = "(" + (myAkho / 10).toFixed(2) + " €)";
-
-    if (document.getElementById('gameBalance')) document.getElementById('gameBalance').innerText = akhoStr + " AKHO";
-    if (document.getElementById('slotBalanceVal')) document.getElementById('slotBalanceVal').innerText = akhoStr;
-    if (document.getElementById('slot5BalanceVal')) document.getElementById('slot5BalanceVal').innerText = akhoStr;
-    if (document.getElementById('slot5RealBalance')) document.getElementById('slot5RealBalance').innerText = euroStr;
-}
-
-// --- 5-REEL SLOT LOGIC ---
-function openBurningSlots5() {
-    document.getElementById('gamesList').style.display = 'none';
-    document.getElementById('burningSlots5Container').style.display = 'flex';
-    updateAllGameBalances();
-    initBurning5Reels();
-}
-
-function backFromSlots5() {
-    document.getElementById('burningSlots5Container').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
-function initBurning5Reels() {
-    for (let i = 1; i <= 5; i++) {
-        const r = document.getElementById('reel5_' + i);
-        if(!r) continue;
-        r.innerHTML = '';
-        for (let j = 0; j < 60; j++) {
-            const s = document.createElement('div');
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
-            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
-            r.appendChild(s);
-        }
-    }
-}
-
-function triggerBurning5Spin() {
-    if (isSpinning5 || !canAfford(burningStake5)) return;
-    isSpinning5 = true;
+    isSpinningNow = true;
+    spendAkho(burningStake, 'Burning Slots Bet');
     
-    spendAkho(burningStake5, '5-Reel Slot Bet');
-    updateAllGameBalances();
-    document.querySelectorAll('.win-line-5').forEach(l => l.remove());
-    ballPopSnd.play().catch(()=>{});
+    document.getElementById('slotBalanceVal').innerText = (myAkho - burningStake).toFixed(2);
+    document.getElementById('slotWinVal').innerText = "0.00";
 
-    // 10% მოგების მათემატიკა
+    const wrapper = document.getElementById('reelsWrapper');
+    const oldLine = document.getElementById('winLine');
+    if(oldLine) oldLine.remove();
+
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+    // 1. მოგების დაგეგმვა სურათების ლოგიკით
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
 
-    if (rand < 0.10) { 
-        let icon = slot5Icons[Math.floor(Math.random() * 4)];
-        result = [icon, icon, icon, slot5Icons[5], slot5Icons[6]];
-        winAmt = burningStake5 * 10;
+    // შენი ფსონი (Stake) არის burningStake (მაგ: 0.15, 0.30, 0.60, 1.00)
+    // სურათების მიხედვით კოეფიციენტები (x3 დასმაზე):
+    if (rand < 0.01) { 
+        // 7️⃣7️⃣7️⃣ - ყველაზე მაღალი (x20-დან x100-მდე ფსონზე)
+        result = ['7️⃣', '7️⃣', '7️⃣']; 
+        winAmt = burningStake * 100; // მაგ: 1.00-ზე იგებს 100-ს
+    } else if (rand < 0.03) {
+        // 🍉🍉🍉 ან 🍇🍇🍇 (x15-x20 ფსონზე)
+        let icon = Math.random() < 0.5 ? '🍉' : '🍇';
+        result = [icon, icon, icon];
+        winAmt = burningStake * 20;
+    } else if (rand < 0.06) {
+        // 🔔🔔🔔 (x8 ფსონზე)
+        result = ['🔔', '🔔', '🔔'];
+        winAmt = burningStake * 8;
+    } else if (rand < 0.12) {
+        // 🍒🍒🍒, 🍋🍋🍋, 🍊🍊🍊 (x4 ფსონზე)
+        let fruitIcons = ['🍒', '🍋', '🍇']; // აქ 🍇-ს ნაცვლად 🍊 უნდა იყოს, თუ გაქვს
+        let icon = fruitIcons[Math.floor(Math.random() * fruitIcons.length)];
+        result = [icon, icon, icon];
+        winAmt = burningStake * 4;
+    } else if (rand < 0.20) {
+        // SCATTER (⭐) - ნებისმიერ ადგილას (x3 ფსონზე)
+        result = ['⭐', burningIcons[0], '⭐']; // ვარსკვლავები გვერდებზე
+        winAmt = burningStake * 3;
     } else {
-        let s = [...slot5Icons].sort(() => Math.random() - 0.5);
-        result = [s[0], s[1], s[2], s[3], s[4]];
+        // წაგება
+        result = [burningIcons[0], burningIcons[2], burningIcons[4]];
         winAmt = 0;
     }
 
-    for (let i = 1; i <= 5; i++) {
-        const r = document.getElementById('reel5_' + i);
+    // 2. რილების ტრიალი (RESET-ით, რომ არ გაქრეს)
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
-        const stopIdx = 45;
-        r.children[stopIdx].innerText = result[i-1];
         
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-                r.style.transform = `translateY(-${stopIdx * 70}px)`;
-            }, 50);
-        });
+        const stopIdx = 35; // ყოველთვის 35-ე სიმბოლოზე ვაჩერებთ
+        if(r.children[stopIdx]) {
+            r.children[stopIdx].innerText = result[i-1];
+        }
+
+        setTimeout(() => {
+            const move = stopIdx * 70;
+            r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${move}px)`;
+        }, 30);
     }
 
+    // 3. გაჩერება და მოგების ხაზი
     setTimeout(() => {
-        isSpinning5 = false;
+        isSpinningNow = false;
         if (winAmt > 0) {
-            winSnd.play().catch(()=>{});
-            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Slot Win');
-            document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
-            document.getElementById('slot5RealWin').innerText = "(" + (winAmt / 10).toFixed(2) + " €)";
-            setTimeout(updateAllGameBalances, 500);
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            
+            const line = document.createElement('div');
+            line.id = 'winLine';
+            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:10; transform:translateY(-50%); animation: lineFlash 0.5s infinite;";
+            wrapper.appendChild(line);
+
+            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots Win');
+            document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
+            document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
         }
-    }, 4200);
+    }, 3200);
 }
 
-// --- 3-REEL SLOT LOGIC ---
+
+
 function openBurningSlots() {
     document.getElementById('gamesList').style.display = 'none';
     document.getElementById('burningSlotsContainer').style.display = 'flex';
-    updateAllGameBalances();
-    // 3-რილიანის ინიციალიზაცია თუ გაქვს
-}
-
-function backToGamesList() {
-    document.getElementById('wheelGameContainer').style.display = 'none';
-    document.getElementById('burningSlotsContainer').style.display = 'none';
-    document.getElementById('lottoGameContainer').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
-// --- WHEEL GAME ---
-function drawWheel() {
-    const canvas = document.getElementById('wheelCanvas');
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const center = 140;
-    const sliceAngle = (2 * Math.PI) / prizes.length;
-    ctx.clearRect(0, 0, 280, 280);
-    prizes.forEach((prize, i) => {
-        ctx.beginPath();
-        ctx.fillStyle = colors[i];
-        ctx.moveTo(center, center);
-        ctx.arc(center, center, center, i * sliceAngle, (i + 1) * sliceAngle);
-        ctx.fill();
-        ctx.save(); ctx.translate(center, center); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-        ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
-        ctx.fillText(prize + " ₳", center - 20, 5); ctx.restore();
-    });
-}
-
-function spinWheel() {
-    if(isSpinning || !canAfford(1.00)) return;
-    spendAkho(1.00, "Wheel Bet");
-    isSpinning = true;
-    const canvas = document.getElementById('wheelCanvas');
-    const extraDegrees = Math.floor(Math.random() * 360) + 2160;
-    currentRotation += extraDegrees;
-    canvas.style.transition = "transform 5s cubic-bezier(0.15, 0, 0.2, 1)";
-    canvas.style.transform = `rotate(${currentRotation}deg)`;
-
-    setTimeout(() => {
-        isSpinning = false;
-        const actualDeg = currentRotation % 360;
-        const sliceSize = 360 / prizes.length;
-        const prizeIndex = Math.floor(((360 - actualDeg + 270) % 360) / sliceSize) % prizes.length;
-        const win = prizes[prizeIndex];
-        if(win > 0) {
-            winSnd.play().catch(()=>{});
-            earnAkho(auth.currentUser.uid, win, "Wheel Win");
-            alert("🎉 მოიგე " + win + " AKHO!");
-        } else { alert("😢 სცადე კიდევ ერთხელ!"); }
-        updateAllGameBalances();
-    }, 5000);
-}
-
-// --- LOTTO GAME ---
-function toggleNumber(num, btn) {
-    if(selectedNumbers.includes(num)) {
-        selectedNumbers = selectedNumbers.filter(n => n !== num);
-        btn.classList.remove('selected');
-    } else if(selectedNumbers.length < 5) {
-        selectedNumbers.push(num);
-        btn.classList.add('selected');
-    }
-}
-
-async function startLottoDraw() {
-    if(selectedNumbers.length < 5) { alert("აირჩიეთ 5 ციფრი!"); return; }
-    if(!canAfford(5.00)) return;
-    spendAkho(5.00, "Lotto Bet");
-    const container = document.getElementById('lottoBalls');
-    container.innerHTML = "";
-    let winNums = [];
-    while(winNums.length < 5) {
-        let n = Math.floor(Math.random() * 25) + 1;
-        if(!winNums.includes(n)) winNums.push(n);
-    }
-    for(let n of winNums) {
-        await new Promise(r => setTimeout(r, 800));
-        ballPopSnd.play().catch(()=>{});
-        const ball = document.createElement('div');
-        ball.className = 'lotto-ball'; ball.innerText = n;
-        container.appendChild(ball);
-    }
-    const matches = selectedNumbers.filter(n => winNums.includes(n)).length;
-    if(matches >= 2) {
-        winSnd.play();
-        let p = matches === 5 ? 250 : matches === 4 ? 50 : matches === 3 ? 10 : 2;
-        earnAkho(auth.currentUser.uid, p, "Lotto Win");
-    }
-    updateAllGameBalances();
+    
+    // ბალანსის სწორი ID-ები (შეამოწმე, რომ HTML-შიც ასე გიწერია)
+    const balElem = document.getElementById('slotBalanceVal');
+    if(balElem) balElem.innerText = myAkho.toFixed(2);
+    
+    if (slotPositions[0] === 0) initBurningReels();
 }
