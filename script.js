@@ -1843,7 +1843,8 @@ async function startLottoDraw() {
 
 
     
-// სლოტის ლოგიკა
+
+    // სლოტის ლოგიკა
     var burningStake = 0.15;
     var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
     var isSpinningNow = false;
@@ -1870,10 +1871,18 @@ async function startLottoDraw() {
     function initBurningReels() {
         for (let i = 1; i <= 3; i++) {
             const r = document.getElementById('reel_' + i);
-            r.innerHTML = ''; r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-            for (let j = 0; j < 60; j++) {
+            r.innerHTML = ''; 
+            r.style.transition = 'none'; 
+            r.style.transform = 'translateY(0)';
+            
+            // ვამატებთ 80 სიმბოლოს, რომ ტრიალი იყოს ხანგრძლივი და სწრაფი
+            for (let j = 0; j < 80; j++) {
                 const s = document.createElement('div');
-                s.style.height = '60px'; s.style.display = 'flex'; s.style.alignItems = 'center'; s.style.justifyContent = 'center'; s.style.fontSize = '35px';
+                s.style.height = '60px'; 
+                s.style.display = 'flex'; 
+                s.style.alignItems = 'center'; 
+                s.style.justifyContent = 'center'; 
+                s.style.fontSize = '35px';
                 s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
                 r.appendChild(s);
             }
@@ -1882,29 +1891,47 @@ async function startLottoDraw() {
 
     function triggerBurningSpin() {
         if (isSpinningNow) return;
+
         let currentBalance = parseFloat(document.getElementById('gameBalance').innerText) || 0;
         if (currentBalance < burningStake) { alert("ბალანსი არ გყოფნის!"); return; }
-        isSpinningNow = true;
-        currentBalance -= burningStake;
-        document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
-        document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
-        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
-        for (let i = 1; i <= 3; i++) {
-            const r = document.getElementById('reel_' + i);
-            const move = (Math.floor(Math.random() * 20) + 30) * 70;
-            r.style.transition = `transform ${2 + (i * 0.5)}s cubic-bezier(0.15, 0, 0.15, 1)`;
-            r.style.transform = `translateY(-${move}px)`;
-        }
+
+        // ყოველ სპინზე ვარესეტებთ რილებს, რომ ანიმაცია თავიდან დაიწყოს
+        initBurningReels();
+
+        // მცირე დაყოვნება, რომ ბრაუზერმა "დაინახოს" რესეტი და ანიმაცია გაეშვას
         setTimeout(() => {
-            isSpinningNow = false;
-            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
-            if (Math.random() < 0.2) {
-                let win = burningStake * 5;
-                let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
-                document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
-                document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
-                document.getElementById('slotWinVal').innerText = win.toFixed(2);
-                alert("🔥 BIG WIN: " + win.toFixed(2) + " AKHO");
+            isSpinningNow = true;
+            currentBalance -= burningStake;
+            document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
+            document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
+            document.getElementById('slotWinVal').innerText = "0.00";
+
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+            for (let i = 1; i <= 3; i++) {
+                const r = document.getElementById('reel_' + i);
+                // 70px მათემატიკა (60px სიმაღლე + 10px gap)
+                // ვამატებთ idx-ს რომ თითოეული რილი მიყოლებით გაჩერდეს
+                const move = (50 + (i * 5)) * 70; 
+                
+                // სიჩქარე: 1.5s - 2.5s (ძალიან სწრაფი ტრიალი)
+                r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+                r.style.transform = `translateY(-${move}px)`;
             }
-        }, 3500);
+
+            setTimeout(() => {
+                isSpinningNow = false;
+                new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+
+                // მოგების შანსი (20%)
+                if (Math.random() < 0.2) {
+                    let win = burningStake * 5;
+                    let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
+                    document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
+                    document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
+                    document.getElementById('slotWinVal').innerText = win.toFixed(2);
+                    alert("🔥 BIG WIN: " + win.toFixed(2) + " AKHO");
+                }
+            }, 3000);
+        }, 50); 
     }
