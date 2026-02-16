@@ -1969,3 +1969,128 @@ async function startLottoDraw() {
         }
     }, 3200);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var burningStake5 = 0.20;
+var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
+var isSpinning5 = false;
+var slot5Pos = [0, 0, 0, 0, 0];
+
+function openBurningSlots5() {
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('burningSlots5Container').style.display = 'flex';
+    document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
+    initBurning5Reels();
+}
+
+function backFromSlots5() {
+    document.getElementById('burningSlots5Container').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+function updateBet5(val, btn) {
+    burningStake5 = parseFloat(val);
+    document.querySelectorAll('.bet5-opt').forEach(b => {
+        b.style.background = '#222'; b.style.color = 'gold';
+    });
+    btn.style.background = 'gold'; btn.style.color = 'black';
+}
+
+function initBurning5Reels() {
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        r.innerHTML = ''; r.style.transition = 'none'; r.style.transform = 'translateY(0)';
+        for (let j = 0; j < 100; j++) {
+            const s = document.createElement('div');
+            s.style = "height:60px; display:flex; align-items:center; justify-content:center; font-size:32px; filter: drop-shadow(0 2px 2px black);";
+            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+            r.appendChild(s);
+        }
+    }
+}
+
+function triggerBurning5Spin() {
+    if (isSpinning5) return;
+    if (!canAfford(burningStake5)) return;
+
+    isSpinning5 = true;
+    spendAkho(burningStake5, 'Burning Slots 5-Reel Bet');
+    document.getElementById('slot5BalanceVal').innerText = (myAkho - burningStake5).toFixed(2);
+    document.getElementById('slot5WinVal').innerText = "0.00";
+    
+    const wrapper = document.getElementById('reels5Wrapper');
+    const oldLine = document.getElementById('winLine5');
+    if(oldLine) oldLine.remove();
+
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+    // მოგების დაგეგმვა (5-რილიანი კოეფიციენტებით)
+    const rand = Math.random();
+    let result = [];
+    let winAmt = 0;
+
+    if (rand < 0.005) { // 77777 (x200)
+        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 200;
+    } else if (rand < 0.02) { // $$$$$ (x40)
+        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 40;
+    } else if (rand < 0.05) { // 🍉🍉🍉🍉🍉 (x20)
+        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 20;
+    } else if (rand < 0.15) { // 🍒🍒🍒 (x3)
+        result = ['🍒','🍒','🍒', slot5Icons[5], slot5Icons[6]]; winAmt = burningStake5 * 3;
+    } else {
+        result = [slot5Icons[1], slot5Icons[3], slot5Icons[5], slot5Icons[7], slot5Icons[0]]; winAmt = 0;
+    }
+
+    // რილების ტრიალი
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+        
+        const stopIdx = 45;
+        r.children[stopIdx].innerText = result[i-1];
+
+        setTimeout(() => {
+            const move = stopIdx * 70;
+            r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${move}px)`;
+        }, 30);
+    }
+
+    setTimeout(() => {
+        isSpinning5 = false;
+        if (winAmt > 0) {
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            
+            const line = document.createElement('div');
+            line.id = 'winLine5';
+            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:white; box-shadow:0 0 15px gold; z-index:10; transform:translateY(-50%);";
+            wrapper.appendChild(line);
+
+            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Slot Win');
+            document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
+            document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
+        }
+    }, 4000);
+}
