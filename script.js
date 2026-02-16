@@ -2130,26 +2130,23 @@ function triggerBurningSpin() {
             r.style.transform = `translateY(-${move}px)`;
         }, 50);
     }
-
-    // 3. გაჩერება
+    
+    // 3. გაჩერება და მოგება (3-იანის სპინის ბოლოში)
     setTimeout(() => {
         isSpinningNow = false;
         if (winAmt > 0) {
             new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
             
-            const line = document.createElement('div');
-            line.id = 'winLine';
-            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:10; transform:translateY(-50%); animation: lineFlash 0.5s infinite;";
-            wrapper.appendChild(line);
-
-            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots Win');
+            // ფულის დარიცხვა
+            earnAkho(auth.currentUser.uid, winAmt, '3-Reel Win');
             
-            // UI განახლება
-            document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
-            updateAllGameBalances(); // <--- შენი ახალი ბალანსის ფუნქცია
+            // აი აქ ხდება ჯადოქრობა - ანახლებს ზედა პანელსაც!
+            updateWinUI(winAmt);
+            
+            // ბალანსების საერთო სინქრონიზაცია
+            setTimeout(updateAllGameBalances, 500);
         }
-    }, 3500);
-}
+    }, 3200);
 
 // 3-რილიანი სლოტიდან გამოსვლა
 function backFromSlots() {
