@@ -1842,3 +1842,93 @@ async function startLottoDraw() {
 
 
 
+// უნიკალური ცვლადები, რომ არაფერს შეეჯახოს
+var burningStake = 0.15;
+var burningSymbols = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
+var burningActive = false;
+
+// 1. თამაშის გახსნა
+function openBurningSlots() {
+    const list = document.getElementById('gamesList');
+    const container = document.getElementById('burningSlotsContainer');
+    
+    if (list && container) {
+        list.style.display = 'none';
+        container.style.display = 'flex';
+        
+        // რილების მომზადება
+        for (let i = 1; i <= 3; i++) {
+            const r = document.getElementById('reel_' + i);
+            if (r) {
+                r.innerHTML = '';
+                r.style.transform = 'translateY(0)';
+                r.style.transition = 'none';
+                // ვავსებთ 50 სიმბოლოთი
+                for (let j = 0; j < 50; j++) {
+                    const s = document.createElement('div');
+                    s.style.height = '60px';
+                    s.style.display = 'flex';
+                    s.style.alignItems = 'center';
+                    s.style.justifyContent = 'center';
+                    s.style.fontSize = '35px';
+                    s.innerText = burningSymbols[Math.floor(Math.random() * burningSymbols.length)];
+                    r.appendChild(s);
+                }
+            }
+        }
+    }
+}
+
+// 2. უკან დაბრუნება
+function backFromSlots() {
+    document.getElementById('burningSlotsContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+// 3. ფსონის შეცვლა
+function updateBet(val, btn) {
+    burningStake = val;
+    document.querySelectorAll('.bet-opt').forEach(b => {
+        b.style.background = '#222';
+        b.style.color = 'gold';
+    });
+    btn.style.background = 'gold';
+    btn.style.color = 'black';
+}
+
+// 4. ტრიალი
+function triggerBurningSpin() {
+    if (burningActive) return;
+    
+    burningActive = true;
+    const reels = [
+        document.getElementById('reel_1'),
+        document.getElementById('reel_2'),
+        document.getElementById('reel_3')
+    ];
+
+    // ხმა (შენი GitHub)
+    const sSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
+    sSnd.play().catch(() => {});
+
+    reels.forEach((r, i) => {
+        if (r) {
+            const dist = (Math.floor(Math.random() * 15) + 25) * 60;
+            r.style.transition = `transform ${2.5 + (i * 0.5)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${dist}px)`;
+        }
+    });
+
+    setTimeout(() => {
+        burningActive = false;
+        const wSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
+        wSnd.play().catch(() => {});
+        
+        // მოგების მარტივი ლოგიკა (მაგ: 20% შანსი)
+        if (Math.random() < 0.2) {
+            let win = burningStake * 5;
+            document.getElementById('slotWinVal').innerText = win.toFixed(2);
+            alert("🔥 BIG WIN: " + win.toFixed(2) + " AKHO");
+        }
+    }, 4000);
+}
