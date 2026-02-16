@@ -1837,7 +1837,12 @@ async function startLottoDraw() {
 // ==========================================
 var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐']; 
 var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
-// --- ეს არის ფსონის შეცვლის ოთახი ---
+
+var burningStake = 0.20;  
+var burningStake5 = 0.20; 
+var isSpinningNow = false; 
+var isSpinning5 = false;   
+
 function updateBet(amount, btn) {
     if (isSpinningNow) return; 
     
@@ -1852,11 +1857,6 @@ function updateBet(amount, btn) {
     btn.style.background = 'gold';
     btn.style.color = 'black';
 }
-
-var burningStake = 0.20;  
-var burningStake5 = 0.20; 
-var isSpinningNow = false; 
-var isSpinning5 = false;   
 
 // ==========================================
 // 2. UI-ს განახლების ცენტრალური სისტემა (AKHO & EURO)
