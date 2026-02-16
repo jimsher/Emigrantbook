@@ -1977,62 +1977,6 @@ async function startLottoDraw() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var burningStake5 = 0.20;
-var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
-var isSpinning5 = false;
-var slot5Pos = [0, 0, 0, 0, 0];
-
-function openBurningSlots5() {
-    document.getElementById('gamesList').style.display = 'none';
-    document.getElementById('burningSlots5Container').style.display = 'flex';
-    document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
-    initBurning5Reels();
-}
-
-function backFromSlots5() {
-    document.getElementById('burningSlots5Container').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
-function updateBet5(val, btn) {
-    burningStake5 = parseFloat(val);
-    document.querySelectorAll('.bet5-opt').forEach(b => {
-        b.style.background = '#222'; b.style.color = 'gold';
-    });
-    btn.style.background = 'gold'; btn.style.color = 'black';
-}
-
-function initBurning5Reels() {
-    for (let i = 1; i <= 5; i++) {
-        const r = document.getElementById('reel5_' + i);
-        r.innerHTML = ''; r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-        for (let j = 0; j < 100; j++) {
-            const s = document.createElement('div');
-            s.style = "height:60px; display:flex; align-items:center; justify-content:center; font-size:32px; filter: drop-shadow(0 2px 2px black);";
-            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
-            r.appendChild(s);
-        }
-    }
-}
-
-
-
-
 function triggerBurning5Spin() {
     if (isSpinning5) return;
     if (!canAfford(burningStake5)) return;
