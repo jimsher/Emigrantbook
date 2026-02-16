@@ -1730,12 +1730,12 @@ async function startLottoDraw() {
 // --- GAME AUDIO SYSTEM ---
 
 // 1. ფონური მუსიკა (Musical Pop Beat)
-const bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/05/16/audio_412384a59d.mp3');
+const bgMusic = new Audio('https://pixabay.com/sound-effects/musical-pop-beat-62044/');
 bgMusic.loop = true; 
 bgMusic.volume = 0.3; // ფონური ხმა 30%-ზე
 
 // 2. ლოტოს ბურთის ამოვარდნის ხმა (Tick)
-const ballPopSnd = new Audio('https://raw.githubusercontent.com/rafaelrinaldi/where-is-the-mouse/master/audio/click.mp3');
+const ballPopSnd = new Audio('https://pixabay.com/sound-effects/film-special-effects-pop-331049/');
 ballPopSnd.crossOrigin = "anonymous";
 
 // 3. მოგების ხმა
