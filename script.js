@@ -1841,107 +1841,76 @@ async function startLottoDraw() {
 
 
 
-   // ცვლადები სლოტისთვის
-let currentSlotBet = 0.15;
-let isSpinning = false;
-const slotIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
 
-// 1. თამაშის გახსნა - გარანტირებული გადართვა
+    // 1. ცვლადები (მხოლოდ ერთხელ გამოაცხადე)
+var slotBetAmount = 0.15;
+var slotIconsList = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
+
+// 2. გახსნის ფუნქცია
 function openBurningSlots() {
-    // ვმალავთ მთავარ სიას და სხვა კონტეინერებს
-    document.getElementById('gamesList').style.display = 'none';
-    document.getElementById('wheelGameContainer').style.display = 'none';
-    document.getElementById('lottoGameContainer').style.display = 'none';
-    
-    // ვხსნით სლოტის კონტეინერს
+    // ელემენტების მოძებნა
+    const list = document.getElementById('gamesList');
     const container = document.getElementById('burningSlotsContainer');
-    container.style.display = 'flex';
     
-    // ვავსებთ რილებს სიმბოლოებით ყოველი გახსნისას
-    initSlotReels();
+    if(list && container) {
+        list.style.display = 'none';
+        container.style.display = 'flex';
+        
+        // რილების შევსება
+        [1, 2, 3].forEach(i => {
+            const reel = document.getElementById('reel_' + i);
+            if(reel) {
+                reel.innerHTML = '';
+                for(let j=0; j<40; j++) {
+                    const d = document.createElement('div');
+                    d.style.height = '60px';
+                    d.style.lineHeight = '60px';
+                    d.style.fontSize = '35px';
+                    d.innerText = slotIconsList[Math.floor(Math.random() * slotIconsList.length)];
+                    reel.appendChild(d);
+                }
+            }
+        });
+    }
 }
 
-// 2. უკან დაბრუნება
+// 3. უკან დაბრუნება
 function backFromSlots() {
     document.getElementById('burningSlotsContainer').style.display = 'none';
     document.getElementById('gamesList').style.display = 'grid';
 }
 
-// 3. ფსონის განახლება (მუშაობს შენს .bet-opt კლასებზე)
-function updateBet(amount, btn) {
-    currentSlotBet = amount;
-    
-    // ყველა ღილაკის სტილის ჩამოყრა
+// 4. ფსონის შეცვლა
+function updateBet(val, btn) {
+    slotBetAmount = val;
     document.querySelectorAll('.bet-opt').forEach(b => {
         b.style.background = '#222';
         b.style.color = 'gold';
     });
-    
-    // არჩეული ღილაკის მონიშვნა
     btn.style.background = 'gold';
     btn.style.color = 'black';
 }
 
-// 4. რილების შევსება (უზრუნველყოფს გლუვ ტრიალს)
-function initSlotReels() {
-    for (let i = 1; i <= 3; i++) {
-        const reel = document.getElementById('reel_' + i);
-        reel.innerHTML = ''; // გასუფთავება
-        reel.style.transform = 'translateY(0)'; // პოზიციის დარესეტება
-        
-        // ვამატებთ 60 სიმბოლოს, რომ ტრიალი იყოს ხანგრძლივი
-        for (let j = 0; j < 60; j++) {
-            const symbol = document.createElement('div');
-            symbol.style.height = '60px';
-            symbol.style.display = 'flex';
-            symbol.style.alignItems = 'center';
-            symbol.style.justifyContent = 'center';
-            symbol.style.fontSize = '35px';
-            symbol.innerText = slotIcons[Math.floor(Math.random() * slotIcons.length)];
-            reel.appendChild(symbol);
-        }
-    }
-}
-
-// 5. ტრიალის მთავარი ფუნქცია
+// 5. დატრიალება
 function triggerBurningSpin() {
-    if (isSpinning) return; // თუ უკვე ტრიალებს, არაფერი ქნას
+    const s1 = document.getElementById('reel_1');
+    const s2 = document.getElementById('reel_2');
+    const s3 = document.getElementById('reel_3');
 
-    // აქ შეგიძლია ჩაამატო ბალანსის შემოწმება: 
-    // if(userBalance < currentSlotBet) return alert('ბალანსი არ გყოფნის!');
+    if(!s1 || !s2 || !s3) return;
 
-    isSpinning = true;
-    
-    // ხმების გაშვება (შენი GitHub)
-    const spinSound = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-    spinSound.play().catch(e => console.log("Sound error"));
+    // ხმა
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // თითოეული რილის დატრიალება
-    for (let i = 1; i <= 3; i++) {
-        const reel = document.getElementById('reel_' + i);
-        // შემთხვევითი მანძილი (მინიმუმ 30 სიმბოლო)
-        const randomMove = (Math.floor(Math.random() * 20) + 35) * 60; 
-        
-        // დინამიური ანიმაცია (cubic-bezier აძლევს კაზინოს ეფექტს)
-        reel.style.transition = `transform ${2.5 + (i * 0.5)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-        reel.style.transform = `translateY(-${randomMove}px)`;
-    }
+    // ტრიალი
+    [s1, s2, s3].forEach((r, idx) => {
+        const move = (Math.floor(Math.random() * 10) + 20) * 60;
+        r.style.transition = `transform ${2 + idx}s cubic-bezier(0.1, 0, 0.1, 1)`;
+        r.style.transform = `translateY(-${move}px)`;
+    });
 
-    // შედეგის დაფიქსირება 4 წამში
     setTimeout(() => {
-        isSpinning = false;
-        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(e => {});
-
-        // მოგების შანსი (მაგალითად 25%)
-        if (Math.random() < 0.25) {
-            const multipliers = [2, 5, 10];
-            const mult = multipliers[Math.floor(Math.random() * multipliers.length)];
-            const win = currentSlotBet * mult;
-            
-            document.getElementById('slotWinVal').innerText = win.toFixed(2);
-            alert(`🔥 BIG WIN! მოიგე ${win.toFixed(2)} AKHO!`);
-        } else {
-            document.getElementById('slotWinVal').innerText = "0.00";
-        }
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+        // აქ შეგიძლია დაამატო მოგების ალერტი
     }, 4000);
 }
