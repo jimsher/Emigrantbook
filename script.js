@@ -1889,19 +1889,23 @@ function updateAllGameBalances() {
         document.getElementById('slot5RealBalance').innerText = euroStr;
 }
 
+
 function updateWinUI(winAmt) {
     const akhoStr = winAmt.toFixed(2);
     const euroStr = "(" + (winAmt / 10).toFixed(2) + " €)";
 
-    // ყველა მოგების ველის განახლება
+    // ყველა მოგების ID, რაც შენს HTML-შია (ზედა პანელი + შიდა ველები)
     const wTargets = ['slot5WinVal', 'slot5WinVal_inner', 'slotWinVal'];
+    
     wTargets.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.innerText = akhoStr;
     });
 
-    if(document.getElementById('slot5RealWin')) 
+    // ევროს განახლება ზედა პანელში
+    if(document.getElementById('slot5RealWin')) {
         document.getElementById('slot5RealWin').innerText = euroStr;
+    }
 }
 
 // ==========================================
