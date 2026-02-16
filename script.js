@@ -1852,3 +1852,99 @@ function updateAllGameBalances() {
 
 
 
+
+
+
+
+
+
+
+
+
+function triggerBurning5Spin() {
+    if (isSpinning5) return;
+    if (!canAfford(burningStake5)) return;
+
+    isSpinning5 = true;
+    spendAkho(burningStake5, '5-Reel Slot Bet');
+    
+    // ბალანსის განახლება AKHO-ში და ევროში მომენტალურად
+    const currentBal = myAkho - burningStake5;
+    document.getElementById('slot5BalanceVal').innerText = currentBal.toFixed(2);
+    if(document.getElementById('slot5RealBalance')) {
+        document.getElementById('slot5RealBalance').innerText = "(" + (currentBal / 10).toFixed(2) + " €)";
+    }
+
+    document.getElementById('slot5WinVal').innerText = "0.00";
+    if(document.getElementById('slot5RealWin')) {
+        document.getElementById('slot5RealWin').innerText = "(0.00 €)";
+    }
+    
+    const wrapper = document.getElementById('reels5Wrapper');
+    document.querySelectorAll('.win-line-5').forEach(l => l.remove());
+
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+    // --- მათემატიკური ლოგიკა (იგივე რჩება) ---
+    const rand = Math.random();
+    let result = [];
+    let winAmt = 0;
+
+    if (rand < 0.005) { 
+        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 1200;
+    } else if (rand < 0.02) { 
+        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 200;
+    } else if (rand < 0.05) { 
+        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 200;
+    } else if (rand < 0.12) { 
+        result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = burningStake5 * 80;
+    } else {
+        let shuffle = [...slot5Icons].sort(() => Math.random() - 0.5);
+        result = [shuffle[0], shuffle[1], shuffle[2], shuffle[3], shuffle[4]];
+        winAmt = 0;
+    }
+
+    // --- რილების ტრიალი (იგივე რჩება) ---
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+        const divs = r.children;
+        for (let j = 0; j < divs.length; j++) {
+            divs[j].innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+        }
+        const stopIdx = 45; 
+        if(divs[stopIdx]) divs[stopIdx].innerText = result[i-1];
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const move = stopIdx * 70;
+                r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+                r.style.transform = `translateY(-${move}px)`;
+            });
+        });
+    }
+
+    // --- მოგების დარიცხვა და ევროების განახლება ---
+    setTimeout(() => {
+        isSpinning5 = false;
+        if (winAmt > 0) {
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            
+            const line = document.createElement('div');
+            line.className = 'win-line-5';
+            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:100; animation: flash 0.5s infinite;";
+            wrapper.appendChild(line);
+
+            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Win');
+            
+            // ეკრანზე ციფრების განახლება
+            document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
+            document.getElementById('slot5RealWin').innerText = "(" + (winAmt / 10).toFixed(2) + " €)";
+            
+            // მთავარი ბალანსის და ევროს განახლება
+            document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
+            document.getElementById('slot5RealBalance').innerText = "(" + (myAkho / 10).toFixed(2) + " €)";
+        }
+    }, 4200);
+}
