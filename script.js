@@ -1841,95 +1841,87 @@ async function startLottoDraw() {
 
 
 
-let currentSlotBet = 0.15; // ნაგულისხმევი ფსონი
+   let currentSlotBet = 0.15; // ინახავს არჩეულ ფსონს
 const slotIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
 
-// 1. ფსონის დამახსოვრება და ვიზუალური მონიშვნა
+// 1. თამაშის გახსნა (ეს ფუნქცია გამოიძახება ბარათზე დაჭერისას)
+function openBurningSlots() {
+    // ვმალავთ სიას და ვხსნით სლოტს
+    const list = document.getElementById('gamesList');
+    const slotContainer = document.getElementById('burningSlotsContainer');
+    
+    if(list && slotContainer) {
+        list.style.display = 'none';
+        slotContainer.style.display = 'flex';
+        initSlotReels(); // ვავსებთ რილებს სიმბოლოებით
+    }
+}
+
+// 2. უკან დაბრუნება
+function backFromSlots() {
+    document.getElementById('burningSlotsContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+// 3. ფსონის არჩევა (ინახავს და აფერადებს ღილაკს)
 function updateBet(val, btn) {
     currentSlotBet = val;
-    // ყველა ღილაკს მოვაშოროთ აქტიური სტილი
+    // ყველა ღილაკის ფონის გასუფთავება
     document.querySelectorAll('.bet-opt').forEach(b => {
         b.style.background = '#111';
         b.style.color = 'gold';
-        b.style.borderColor = '#333';
     });
-    // მონიშნულ ღილაკს მივცეთ "აქტიური" სახე
+    // მონიშნული ღილაკის გაფერადება
     btn.style.background = 'gold';
     btn.style.color = 'black';
-    btn.style.borderColor = 'white';
-    console.log("არჩეული ფსონი: " + currentSlotBet);
 }
 
-// 2. რილების მომზადება (რომ ბევრი სიმბოლო იყოს უწყვეტი ტრიალისთვის)
+// 4. რილების შევსება
 function initSlotReels() {
     [1, 2, 3].forEach(i => {
         const reel = document.getElementById('reel_'+i);
-        reel.innerHTML = '';
-        reel.style.transform = 'translateY(0)'; // საწყისი პოზიცია
-        
-        // ვამატებთ 50 სიმბოლოს, რომ ტრიალი დიდხანს გაგრძელდეს
-        for(let j=0; j<60; j++) {
-            const div = document.createElement('div');
-            div.style.height = '60px';
-            div.style.fontSize = '35px';
-            div.style.display = 'flex';
-            div.style.alignItems = 'center';
-            div.style.justifyContent = 'center';
-            div.innerText = slotIcons[Math.floor(Math.random() * slotIcons.length)];
-            reel.appendChild(div);
+        if(reel) {
+            reel.innerHTML = '';
+            reel.style.transform = 'translateY(0)';
+            // ვამატებთ ბევრ სიმბოლოს ტრიალისთვის
+            for(let j=0; j<50; j++) {
+                const div = document.createElement('div');
+                div.style.height = '60px';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'center';
+                div.style.fontSize = '35px';
+                div.innerText = slotIcons[Math.floor(Math.random() * slotIcons.length)];
+                reel.appendChild(div);
+            }
         }
     });
 }
 
-// 3. მთავარი სპინის ლოგიკა
+// 5. დატრიალება
 function triggerBurningSpin() {
-    // აქ შეამოწმე ბალანსი (მაგალითად: if(userBalance < currentSlotBet) ... )
+    // აქ ბალანსის შემოწმება: if (userBalance < currentSlotBet) ...
     
     const spinSound = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-    const winSound = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
-    
-    spinSound.play();
+    spinSound.play().catch(() => {});
 
     [1, 2, 3].forEach((i, idx) => {
         const reel = document.getElementById('reel_'+i);
+        // შემთხვევითი მანძილი (მინიმუმ 20 სიმბოლო)
+        const move = (Math.floor(Math.random() * 10) + 20) * 60;
         
-        // მოძრაობა ყოველთვის ქვემოთ (დიდი მანძილით)
-        // 70 არის სიმბოლოს სიმაღლე + დაშორება (60+10)
-        const totalSymbols = 60;
-        const stopAt = Math.floor(Math.random() * (totalSymbols - 5)) + 5; 
-        const moveDistance = stopAt * 70;
-
-        // აჩქარება და შენელება (Cubic Bezier)
-        reel.style.transition = `transform ${2.5 + (idx * 0.5)}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
-        reel.style.transform = `translateY(-${moveDistance}px)`;
+        reel.style.transition = `transform ${2 + (idx * 0.5)}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
+        reel.style.transform = `translateY(-${move}px)`;
     });
 
-    // შედეგის გამოთვლა ტრიალის დამთავრებისას
     setTimeout(() => {
-        winSound.play();
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(() => {});
         
-        // მოგების ლოგიკა (მაგალითად 20% შანსი)
-        const isWin = Math.random() < 0.2; 
-        if(isWin) {
-            const multiplier = [2, 5, 10, 50][Math.floor(Math.random() * 4)];
-            const winAmount = currentSlotBet * multiplier;
-            
-            document.getElementById('slotWinVal').innerText = winAmount.toFixed(2);
-            alert(`🎉 BIG WIN! მოიგე ${winAmount.toFixed(2)} AKHO!`);
-            
-            // აქ დაამატე ბალანსის განახლება Firebase-ში
-        } else {
-            document.getElementById('slotWinVal').innerText = "0.00";
+        // მოგების სიმულაცია (მაგალითად 30% შანსი)
+        if(Math.random() < 0.3) {
+            const win = currentSlotBet * 5;
+            document.getElementById('slotWinVal').innerText = win.toFixed(2);
+            alert("🎉 BIG WIN: " + win.toFixed(2) + " AKHO");
         }
-
-        // რილების "დარესეტება" ვიზუალურად (ანიმაციის გარეშე)
-        setTimeout(() => {
-            [1, 2, 3].forEach(i => {
-                const reel = document.getElementById('reel_'+i);
-                reel.style.transition = 'none';
-                reel.style.transform = 'translateY(0)';
-            });
-        }, 500);
-        
-    }, 4000);
+    }, 3500);
 }
