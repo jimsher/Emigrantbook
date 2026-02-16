@@ -1846,7 +1846,6 @@ async function syncBalanceWithFirebase(newBalance) {
 
 
 
-       <script>
     var burningStake = 0.15;
     var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
     var isSpinningNow = false;
@@ -1944,4 +1943,4 @@ async function syncBalanceWithFirebase(newBalance) {
             }
         }, 3500);
     }
-</script> 
+<
