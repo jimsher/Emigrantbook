@@ -1978,3 +1978,199 @@ function openBurningSlots() {
     
     if (slotPositions[0] === 0) initBurningReels();
 }
+
+
+
+
+
+
+
+// ==========================================
+// 1. გლობალური ცვლადები და მასივები (საწვავი)
+// ==========================================
+var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐']; 
+var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
+
+var burningStake = 0.20;  // 3-იანის ფსონი
+var burningStake5 = 0.20; // 5-იანის ფსონი
+var isSpinningNow = false; // 3-იანის სტატუსი
+var isSpinning5 = false;   // 5-იანის სტატუსი
+
+// ==========================================
+// 2. ფანჯრების გახსნა და სიმბოლოების ჩატვირთვა
+// ==========================================
+
+// 3-რილიანი სლოტის გახსნა
+function openBurningSlots() {
+    const list = document.getElementById('gamesList');
+    const container = document.getElementById('burningSlotsContainer');
+    if (list && container) {
+        list.style.display = 'none';
+        container.style.display = 'flex';
+        initBurningReels(); // ხატავს სიმბოლოებს
+        updateAllGameBalances();
+    }
+}
+
+function initBurningReels() {
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
+        if (!r) continue;
+        r.innerHTML = '';
+        for (let j = 0; j < 50; j++) {
+            const s = document.createElement('div');
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:45px;";
+            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            r.appendChild(s);
+        }
+    }
+}
+
+// 5-რილიანი სლოტის გახსნა
+function openBurningSlots5() {
+    const list = document.getElementById('gamesList');
+    const container = document.getElementById('burningSlots5Container');
+    if (list && container) {
+        list.style.display = 'none';
+        container.style.display = 'flex';
+        initBurning5Reels(); // ხატავს სიმბოლოებს
+        updateAllGameBalances();
+    }
+}
+
+function initBurning5Reels() {
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        if (!r) continue;
+        r.innerHTML = '';
+        for (let j = 0; j < 60; j++) {
+            const s = document.createElement('div');
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+            r.appendChild(s);
+        }
+    }
+}
+
+// ==========================================
+// 3. თამაშების გაშვება (SPIN LOGIC)
+// ==========================================
+
+// 3-REEL SPIN
+function triggerBurningSpin() {
+    if (isSpinningNow || !canAfford(burningStake)) return;
+    isSpinningNow = true;
+    spendAkho(burningStake, 'Burning Slots Bet');
+    
+    document.getElementById('slotBalanceVal').innerText = (myAkho - burningStake).toFixed(2);
+    document.getElementById('slotWinVal').innerText = "0.00";
+    const wrapper = document.getElementById('reelsWrapper');
+    const oldLine = document.getElementById('winLine');
+    if(oldLine) oldLine.remove();
+
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+    let result = [], winAmt = 0;
+    const rand = Math.random();
+    if (rand < 0.05) { result = ['7️⃣', '7️⃣', '7️⃣']; winAmt = burningStake * 50; }
+    else if (rand < 0.15) { result = ['🍉', '🍉', '🍉']; winAmt = burningStake * 10; }
+    else { result = [burningIcons[0], burningIcons[2], burningIcons[4]]; winAmt = 0; }
+
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+        const stopIdx = 35;
+        r.children[stopIdx].innerText = result[i-1];
+        setTimeout(() => {
+            r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${stopIdx * 70}px)`;
+        }, 30);
+    }
+
+    setTimeout(() => {
+        isSpinningNow = false;
+        if (winAmt > 0) {
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            const line = document.createElement('div');
+            line.id = 'winLine';
+            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:10; transform:translateY(-50%); animation: lineFlash 0.5s infinite;";
+            wrapper.appendChild(line);
+            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots Win');
+            updateAllGameBalances();
+        }
+    }, 3200);
+}
+
+// 5-REEL SPIN
+function triggerBurning5Spin() {
+    if (isSpinning5 || !canAfford(burningStake5)) return;
+    isSpinning5 = true;
+    spendAkho(burningStake5, '5-Reel Slot Bet');
+    
+    document.getElementById('slot5BalanceVal').innerText = (myAkho - burningStake5).toFixed(2);
+    document.getElementById('slot5WinVal').innerText = "0.00";
+    const wrapper = document.getElementById('reels5Wrapper');
+    document.querySelectorAll('.win-line-5').forEach(l => l.remove());
+
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+    let result = [], winAmt = 0;
+    const rand = Math.random();
+    if (rand < 0.05) { result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 100; }
+    else { result = [slot5Icons[0], slot5Icons[1], slot5Icons[2], slot5Icons[3], slot5Icons[4]]; winAmt = 0; }
+
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+        const stopIdx = 45;
+        r.children[stopIdx].innerText = result[i-1];
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+                r.style.transform = `translateY(-${stopIdx * 70}px)`;
+            }, 50);
+        });
+    }
+
+    setTimeout(() => {
+        isSpinning5 = false;
+        if (winAmt > 0) {
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Win');
+            updateAllGameBalances();
+        }
+    }, 4200);
+}
+
+// ==========================================
+// 4. დამხმარე ფუნქციები (BACK & BALANCE)
+// ==========================================
+function backFromSlots3() {
+    document.getElementById('burningSlotsContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+function backFromSlots5() {
+    document.getElementById('burningSlots5Container').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+function updateAllGameBalances() {
+    const val = (typeof myAkho !== 'undefined') ? myAkho.toFixed(2) : "0.00";
+    if(document.getElementById('gameBalance')) document.getElementById('gameBalance').innerText = val + " AKHO";
+    if(document.getElementById('slotBalanceVal')) document.getElementById('slotBalanceVal').innerText = val;
+    if(document.getElementById('slot5BalanceVal')) document.getElementById('slot5BalanceVal').innerText = val;
+    if(document.getElementById('slot5RealBalance')) document.getElementById('slot5RealBalance').innerText = "(" + (myAkho/10).toFixed(2) + " €)";
+}
+
+
+
+
+
+
+
+
+
+
