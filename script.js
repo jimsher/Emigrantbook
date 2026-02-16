@@ -1843,14 +1843,40 @@ var burningStake5 = 0.20;
 var isSpinningNow = false; 
 var isSpinning5 = false;   
 
+
+
+// ==========================================
+// 1. გლობალური კონფიგურაცია და მასივები
+// ==========================================
+var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐']; 
+var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
+
+var burningStake = 0.20;  
+var burningStake5 = 0.20; 
+var isSpinningNow = false; 
+var isSpinning5 = false;   
+
+// --- ფსონის შეცვლის ფუნქციები (ჩამატებულია აქ) ---
+
 function updateBet(amount, btn) {
     if (isSpinningNow) return; 
-    
-    // 1. ვცვლით ციფრს, რომელსაც სპინი გამოიყენებს
     burningStake = parseFloat(amount);
-    
-    // 2. ვიზუალურად ვაფერადებთ ღილაკს
+    console.log("3-Reel Stake Changed to:", burningStake);
+
     document.querySelectorAll('.bet-opt').forEach(b => {
+        b.style.background = '#222';
+        b.style.color = 'gold';
+    });
+    btn.style.background = 'gold';
+    btn.style.color = 'black';
+}
+
+function updateBet5(amount, btn) {
+    if (isSpinning5) return;
+    burningStake5 = parseFloat(amount);
+    console.log("5-Reel Stake Changed to:", burningStake5);
+
+    document.querySelectorAll('.bet5-opt').forEach(b => {
         b.style.background = '#222';
         b.style.color = 'gold';
     });
