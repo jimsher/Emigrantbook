@@ -2130,7 +2130,8 @@ function triggerBurningSpin() {
         }, 50);
     }
     
-    // 3. გაჩერება და მოგება (3-იანის სპინის ბოლოში)
+    
+    // 3. გაჩერება და მოგება (მუშა ორიგინალი)
     setTimeout(() => {
         isSpinningNow = false;
         if (winAmt > 0) {
@@ -2139,11 +2140,16 @@ function triggerBurningSpin() {
             // ფულის დარიცხვა
             earnAkho(auth.currentUser.uid, winAmt, '3-Reel Win');
             
-            // აი აქ ხდება ჯადოქრობა - ანახლებს ზედა პანელსაც!
-            updateWinUI(winAmt);
+            // პირდაპირი განახლება 3-იანის ველის
+            document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
             
-            // ბალანსების საერთო სინქრონიზაცია
-            setTimeout(updateAllGameBalances, 500);
+            // პირდაპირი განახლება ზედა პანელის (იმისთვის რომ იქაც აისახოს)
+            if(document.getElementById('slot5WinVal')) {
+                document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
+            }
+
+            // ბალანსის განახლება
+            updateAllGameBalances();
         }
     }, 3200);
 
