@@ -2036,15 +2036,25 @@ function triggerBurning5Spin() {
 
     isSpinning5 = true;
     spendAkho(burningStake5, '5-Reel Slot Bet');
-    document.getElementById('slot5BalanceVal').innerText = (myAkho - burningStake5).toFixed(2);
+
+    // განახლებული ბალანსი AKHO-ში და ევროში
+    const currentBal = myAkho - burningStake5;
+    document.getElementById('slot5BalanceVal').innerText = currentBal.toFixed(2);
+    if(document.getElementById('slot5RealBalance')) {
+        document.getElementById('slot5RealBalance').innerText = "(" + (currentBal / 10).toFixed(2) + " €)";
+    }
+
     document.getElementById('slot5WinVal').innerText = "0.00";
+    if(document.getElementById('slot5RealWin')) {
+        document.getElementById('slot5RealWin').innerText = "(0.00 €)";
+    }
     
     const wrapper = document.getElementById('reels5Wrapper');
     document.querySelectorAll('.win-line-5').forEach(l => l.remove());
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 1. მათემატიკური შედეგის მომზადება (სურათების მიხედვით)
+    // 1. მათემატიკური შედეგის მომზადება
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
@@ -2058,7 +2068,6 @@ function triggerBurning5Spin() {
     } else if (rand < 0.12) { 
         result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = burningStake5 * 80;
     } else {
-        // წაგება: გარანტირებულად განსხვავებული სიმბოლოები
         let shuffle = [...slot5Icons].sort(() => Math.random() - 0.5);
         result = [shuffle[0], shuffle[1], shuffle[2], shuffle[3], shuffle[4]];
         winAmt = 0;
@@ -2067,22 +2076,17 @@ function triggerBurning5Spin() {
     // 2. რილების "გადატვირთვა" და ტრიალი
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
-        
-        // აუცილებელი ნაბიჯი: ანიმაციის სრული გათიშვა და ნულზე დაბრუნება
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
         
-        // შიგთავსის სრული რანდომიზაცია ყოველ ჯერზე
         const divs = r.children;
         for (let j = 0; j < divs.length; j++) {
             divs[j].innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
         }
 
-        // ჩვენი დაგეგმილი სიმბოლოს დასმა გაჩერების წერტილში
         const stopIdx = 45; 
         if(divs[stopIdx]) divs[stopIdx].innerText = result[i-1];
 
-        // ვიყენებთ ორმაგ requestAnimationFrame-ს, რომ ბრაუზერმა აუცილებლად დაინახოს ცვლილება
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 const move = stopIdx * 70;
@@ -2104,8 +2108,17 @@ function triggerBurning5Spin() {
             wrapper.appendChild(line);
 
             earnAkho(auth.currentUser.uid, winAmt, '5-Reel Win');
+            
+            // AKHO და რეალური თანხის განახლება
             document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
             document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
+            
+            if(document.getElementById('slot5RealWin')) {
+                document.getElementById('slot5RealWin').innerText = "(" + (winAmt / 10).toFixed(2) + " €)";
+            }
+            if(document.getElementById('slot5RealBalance')) {
+                document.getElementById('slot5RealBalance').innerText = "(" + (myAkho / 10).toFixed(2) + " €)";
+            }
         }
     }, 4200);
 }
