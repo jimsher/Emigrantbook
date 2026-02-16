@@ -1953,25 +1953,39 @@ function triggerBurning5Spin() {
 
 
 
-// --- ამას ვწერთ სკრიპტის სულ ბოლოში ---
+// --- ეს არის ის ნაწილი, რომელიც სიმბოლოებს აჩენს და ფანჯარას ხსნის ---
+
+function initBurning5Reels() {
+    for (let i = 1; i <= 5; i++) {
+        const r = document.getElementById('reel5_' + i);
+        if (!r) continue;
+        
+        r.innerHTML = ''; // ვასუფთავებთ ძველ შიგთავსს
+        
+        // ვქმნით 60 სიმბოლოს თითო რილში (სიმაღლე 70px)
+        for (let j = 0; j < 60; j++) {
+            const s = document.createElement('div');
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            // რანდომული სიმბოლო მასივიდან
+            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+            r.appendChild(s);
+        }
+    }
+}
 
 function openBurningSlots5() {
     const list = document.getElementById('gamesList');
     const container = document.getElementById('burningSlots5Container');
     
     if (list && container) {
-        list.style.display = 'none'; // მალავს მენიუს
-        container.style.display = 'flex'; // აჩენს სლოტს
+        list.style.display = 'none'; 
+        container.style.display = 'flex';
         
-        // ბალანსის განახლება
+        // 1. ჯერ ვხატავთ სიმბოლოებს
+        initBurning5Reels();
+        
+        // 2. მერე ვანახლებთ ბალანსს
         updateAllGameBalances();
-        
-        // რილების მომზადება
-        if (typeof initBurning5Reels === "function") {
-            initBurning5Reels();
-        }
-    } else {
-        alert("შეცდომა: სლოტის ფანჯარა (ID: burningSlots5Container) ვერ მოიძებნა HTML-ში!");
     }
 }
 
