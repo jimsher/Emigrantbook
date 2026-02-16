@@ -2032,96 +2032,87 @@ function initBurning5Reels() {
 
 
 
-            
-    function triggerBurning5Spin() {
-    if (isSpinning5) return;
-    if (!canAfford(burningStake5)) return;
 
-    isSpinning5 = true;
-    spendAkho(burningStake5, '5-Reel Slot Bet');
 
-    const currentBal = myAkho - burningStake5;
-    document.getElementById('slot5BalanceVal').innerText = currentBal.toFixed(2);
-    if(document.getElementById('slot5RealBalance')) {
-        document.getElementById('slot5RealBalance').innerText = "(" + (currentBal / 10).toFixed(2) + " €)";
-    }
+function triggerBurning5Spin() {
+    try {
+        if (isSpinning5) return;
+        if (!canAfford(burningStake5)) return;
 
-    document.getElementById('slot5WinVal').innerText = "0.00";
-    if(document.getElementById('slot5RealWin')) {
-        document.getElementById('slot5RealWin').innerText = "(0.00 €)";
-    }
-    
-    const wrapper = document.getElementById('reels5Wrapper');
-    document.querySelectorAll('.win-line-5').forEach(l => l.remove());
+        isSpinning5 = true;
+        spendAkho(burningStake5, '5-Reel Slot Bet');
 
-    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+        // ეკრანის მომენტალური განახლება
+        const currentBal = myAkho - burningStake5;
+        document.getElementById('slot5BalanceVal').innerText = currentBal.toFixed(2);
+        if(document.getElementById('slot5RealBalance')) {
+            document.getElementById('slot5RealBalance').innerText = "(" + (currentBal / 10).toFixed(2) + " €)";
+        }
+        document.getElementById('slot5WinVal').innerText = "0.00";
 
-    // 1. ახალი "მკაცრი" მათემატიკა: 10% მოგება, 90% წაგება
-    const rand = Math.random();
-    let result = [];
-    let winAmt = 0;
+        // ძველი ხაზების და ანიმაციების სრული წაშლა
+        const wrapper = document.getElementById('reels5Wrapper');
+        wrapper.querySelectorAll('.win-line-5').forEach(l => l.remove());
 
-    if (rand < 0.001) { // Jackpot (0.1% შანსი)
-        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 1000;
-    } else if (rand < 0.005) { // Big Win (0.4% შანსი)
-        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 150;
-    } else if (rand < 0.02) { // Medium Win (1.5% შანსი)
-        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 50;
-    } else if (rand < 0.10) { // Small Win (8% შანსი) - ჯამში 10%
-        let fruit = slot5Icons[Math.floor(Math.random() * 3 + 4)];
-        result = [fruit, fruit, fruit, slot5Icons[0], slot5Icons[2]]; 
-        winAmt = burningStake5 * 3;
-    } else {
-        // 90% წაგება - სიმბოლოები ისე ლაგდება, რომ არაფერი დაემთხვეს
-        result = ['7️⃣', '🍒', '🔔', '🍉', '💲'];
-        winAmt = 0;
-    }
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 2. რილების რესეტი და ტრიალი
-    for (let i = 1; i <= 5; i++) {
-        const r = document.getElementById('reel5_' + i);
-        r.style.transition = 'none';
-        r.style.transform = 'translateY(0)';
-        
-        const divs = r.children;
-        for (let j = 0; j < divs.length; j++) {
-            divs[j].innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+        // 10% მოგების მათემატიკა
+        const rand = Math.random();
+        let result = [];
+        let winAmt = 0;
+
+        if (rand < 0.001) { 
+            result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 1000;
+        } else if (rand < 0.005) { 
+            result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 150;
+        } else if (rand < 0.02) { 
+            result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 50;
+        } else if (rand < 0.10) { 
+            let fruit = slot5Icons[Math.floor(Math.random() * 3 + 4)];
+            result = [fruit, fruit, fruit, slot5Icons[0], slot5Icons[1]]; 
+            winAmt = burningStake5 * 3;
+        } else {
+            result = ['7️⃣', '🍒', '🔔', '🍉', '💲']; winAmt = 0;
         }
 
-        const stopIdx = 45; 
-        if(divs[stopIdx]) divs[stopIdx].innerText = result[i-1];
+        // რილების ტრიალი requestAnimationFrame-ით
+        for (let i = 1; i <= 5; i++) {
+            const r = document.getElementById('reel5_' + i);
+            r.style.transition = 'none';
+            r.style.transform = 'translateY(0)';
+            
+            const divs = r.children;
+            const stopIdx = 45; 
+            if(divs[stopIdx]) divs[stopIdx].innerText = result[i-1];
 
-        requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                const move = stopIdx * 70;
-                r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-                r.style.transform = `translateY(-${move}px)`;
+                setTimeout(() => {
+                    r.style.transition = `transform ${1.2 + (i * 0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+                    r.style.transform = `translateY(-${stopIdx * 70}px)`;
+                }, 20);
             });
-        });
-    }
-
-    // 3. შედეგის დაფიქსირება
-    setTimeout(() => {
-        isSpinning5 = false;
-        if (winAmt > 0) {
-            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
-            
-            const line = document.createElement('div');
-            line.className = 'win-line-5';
-            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:100; animation: flash 0.5s infinite;";
-            wrapper.appendChild(line);
-
-            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Slot Win');
-            
-            document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
-            document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
-            
-            if(document.getElementById('slot5RealWin')) {
-                document.getElementById('slot5RealWin').innerText = "(" + (winAmt / 10).toFixed(2) + " €)";
-            }
-            if(document.getElementById('slot5RealBalance')) {
-                document.getElementById('slot5RealBalance').innerText = "(" + (myAkho / 10).toFixed(2) + " €)";
-            }
         }
-    }, 4200);
-}        
+
+        setTimeout(() => {
+            isSpinning5 = false;
+            if (winAmt > 0) {
+                new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+                const line = document.createElement('div');
+                line.className = 'win-line-5';
+                line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:100; animation: flash5 0.5s infinite;";
+                wrapper.appendChild(line);
+
+                earnAkho(auth.currentUser.uid, winAmt, '5-Reel Slot Win');
+                document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
+                document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
+                
+                if(document.getElementById('slot5RealWin')) document.getElementById('slot5RealWin').innerText = "(" + (winAmt / 10).toFixed(2) + " €)";
+                if(document.getElementById('slot5RealBalance')) document.getElementById('slot5RealBalance').innerText = "(" + (myAkho / 10).toFixed(2) + " €)";
+            }
+        }, 3500);
+
+    } catch (e) {
+        console.error("Slot Error:", e);
+        isSpinning5 = false; // გაჭედვის შემთხვევაში სპინის სტატუსს ვხსნით
+    }
+}
