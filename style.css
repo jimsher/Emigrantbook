@@ -28,28 +28,29 @@
     padding-top: 0 !important;
     margin-top: 0 !important;
     scroll-padding-top: 0 !important;
+ scroll-padding-bottom: 50px; /* ეხმარება Snap-ს უკეთ გაჩერებაში */
+    touch-action: pan-y; /* აუმჯობესებს მობილურზე სქროლის კონტროლს */
 }
 
 .video-card {
     height: 100vh !important;
     width: 100% !important;
     scroll-snap-align: start !important;
-    /* ეს უკვე გაქვს, მაგრამ მნიშვნელოვანია დარჩეს */
-    scroll-snap-stop: always !important; 
+    scroll-snap-stop: always !important;
     position: relative !important;
     background: #000 !important;
+    display: flex;
+    align-items: center; /* ვიდეოს ვერტიკალური გაცენტრვა */
+    justify-content: center; /* ვიდეოს ჰორიზონტალური გაცენტრვა */
+    overflow: hidden;
 }
 
-/* 3. თავად ვიდეო - ყველაზე მნიშვნელოვანი ნაწილი */
+/* დაამატე ეს სტილი ვიდეო ელემენტისთვის */
 .video-card video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); /* ცენტრში დასმა */
     width: 100%;
-    height: 100%;
-    object-fit: cover; /* ეს "მოჭრის" გვერდებს, რომ პროპორცია არ დაირღვეს */
-    z-index: 1;
+    height: 90%; /* 100%-ის ნაცვლად 90%, რომ ოდნავ დაპატარავდეს */
+    object-fit: contain !important; /* cover-ის ნაცვლად contain, რომ მთლიანი კადრი გამოჩნდეს */
+    border-radius: 12px; /* სურვილისამებრ, ოდნავ მომრგვალებული კუთხეები */
 }
 
 @keyframes pulse-live {
