@@ -1837,6 +1837,21 @@ async function startLottoDraw() {
 // ==========================================
 var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐']; 
 var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
+// --- ეს არის ფსონის შეცვლის ოთახი ---
+function updateBet(amount, btn) {
+    if (isSpinningNow) return; 
+    
+    // 1. ვცვლით ციფრს, რომელსაც სპინი გამოიყენებს
+    burningStake = parseFloat(amount);
+    
+    // 2. ვიზუალურად ვაფერადებთ ღილაკს
+    document.querySelectorAll('.bet-opt').forEach(b => {
+        b.style.background = '#222';
+        b.style.color = 'gold';
+    });
+    btn.style.background = 'gold';
+    btn.style.color = 'black';
+}
 
 var burningStake = 0.20;  
 var burningStake5 = 0.20; 
