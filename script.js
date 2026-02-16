@@ -1729,23 +1729,27 @@ async function startLottoDraw() {
 
 // --- GAME AUDIO SYSTEM ---
 
-// 1. ფონური მუსიკა (Musical Pop Beat)
-const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
-bgMusic.loop = true; 
-bgMusic.volume = 0.3; // ფონური ხმა 30%-ზე
-
-// 2. ლოტოს ბურთის ამოვარდნის ხმა (Tick)
+// ხმების მომზადება შენი GitHub-იდან
+const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3');
 const ballPopSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-ballPopSnd.crossOrigin = "anonymous";
+const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
 
-// 3. მოგების ხმა
-const winSnd = new Audio('https://raw.githubusercontent.com/Anis-Khemakhem/Funny-Animal-Sounds/master/Sounds/tada.mp3');
+// აუცილებელი პარამეტრები
+bgMusic.loop = true;
+bgMusic.volume = 0.3;
+bgMusic.crossOrigin = "anonymous";
+ballPopSnd.crossOrigin = "anonymous";
 winSnd.crossOrigin = "anonymous";
 
-// 4. წაგების ხმა
-const loseSnd = new Audio('https://raw.githubusercontent.com/Kuntal-Das/Slot-Machine/master/sounds/lose.mp3');
-loseSnd.crossOrigin = "anonymous";
-
+// ფუნქცია, რომელიც რთავს მუსიკას თამაშში შესვლისას
+function openGamesPage() {
+    document.getElementById('gamesPage').style.display = 'flex';
+    
+    // ბრაუზერის ბლოკის მოსახსნელად
+    bgMusic.play().catch(() => {
+        window.addEventListener('click', () => { bgMusic.play(); }, { once: true });
+    });
+}
 // -------------------------
 
 
