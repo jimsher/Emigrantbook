@@ -2033,7 +2033,6 @@ function initBurning5Reels() {
 
 
 
-
 function triggerBurning5Spin() {
     if (isSpinning5) return;
     if (!canAfford(burningStake5)) return;
@@ -2041,7 +2040,7 @@ function triggerBurning5Spin() {
     isSpinning5 = true;
     spendAkho(burningStake5, '5-Reel Slot Bet');
 
-    // განახლებული ბალანსი AKHO-ში და ევროში
+    // რეალური ბალანსის განახლება (ევროებშიც)
     const currentBal = myAkho - burningStake5;
     document.getElementById('slot5BalanceVal').innerText = currentBal.toFixed(2);
     if(document.getElementById('slot5RealBalance')) {
@@ -2058,26 +2057,28 @@ function triggerBurning5Spin() {
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 1. მათემატიკური შედეგის მომზადება
+    // 1. ახალი მათემატიკა: 25% მოგების შანსი, 75% წაგება
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
 
-    if (rand < 0.005) { 
-        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 1200;
-    } else if (rand < 0.02) { 
-        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 200;
-    } else if (rand < 0.05) { 
-        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 200;
-    } else if (rand < 0.12) { 
-        result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = burningStake5 * 80;
+    if (rand < 0.002) { // Jackpot (ძალიან იშვიათი - 0.2%)
+        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 1000;
+    } else if (rand < 0.01) { // Big Win (1%)
+        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 150;
+    } else if (rand < 0.05) { // Medium Win (4%)
+        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 50;
+    } else if (rand < 0.25) { // Small Win (20%) - ჯამში 25% მოგება
+        let fruit = slot5Icons[Math.floor(Math.random() * 3 + 4)];
+        result = [fruit, fruit, fruit, slot5Icons[0], slot5Icons[1]]; 
+        winAmt = burningStake5 * 3;
     } else {
-        let shuffle = [...slot5Icons].sort(() => Math.random() - 0.5);
-        result = [shuffle[0], shuffle[1], shuffle[2], shuffle[3], shuffle[4]];
+        // 75% წაგება - გარანტირებულად არაფერი ემთხვევა
+        result = ['7️⃣', '🍒', '🔔', '🍉', '💲'];
         winAmt = 0;
     }
 
-    // 2. რილების "გადატვირთვა" და ტრიალი
+    // 2. რილების ტრიალი
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         r.style.transition = 'none';
@@ -2100,7 +2101,7 @@ function triggerBurning5Spin() {
         });
     }
 
-    // 3. გაჩერება და მოგების ხაზი
+    // 3. შედეგი
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
@@ -2111,9 +2112,8 @@ function triggerBurning5Spin() {
             line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:100; animation: flash 0.5s infinite;";
             wrapper.appendChild(line);
 
-            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Win');
+            earnAkho(auth.currentUser.uid, winAmt, '5-Reel Slot Win');
             
-            // AKHO და რეალური თანხის განახლება
             document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
             document.getElementById('slot5BalanceVal').innerText = myAkho.toFixed(2);
             
