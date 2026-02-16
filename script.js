@@ -2051,61 +2051,71 @@ function triggerBurningSpin() {
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 1. მოგების დაგეგმვა სურათების ლოგიკით
+    // 1. მოგების დაგეგმვა
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
 
-    // შენი ფსონი (Stake) არის burningStake (მაგ: 0.15, 0.30, 0.60, 1.00)
-    // სურათების მიხედვით კოეფიციენტები (x3 დასმაზე):
     if (rand < 0.01) { 
-        // 7️⃣7️⃣7️⃣ - ყველაზე მაღალი (x20-დან x100-მდე ფსონზე)
         result = ['7️⃣', '7️⃣', '7️⃣']; 
-        winAmt = burningStake * 100; // მაგ: 1.00-ზე იგებს 100-ს
+        winAmt = burningStake * 100;
     } else if (rand < 0.03) {
-        // 🍉🍉🍉 ან 🍇🍇🍇 (x15-x20 ფსონზე)
         let icon = Math.random() < 0.5 ? '🍉' : '🍇';
         result = [icon, icon, icon];
         winAmt = burningStake * 20;
     } else if (rand < 0.06) {
-        // 🔔🔔🔔 (x8 ფსონზე)
         result = ['🔔', '🔔', '🔔'];
         winAmt = burningStake * 8;
     } else if (rand < 0.12) {
-        // 🍒🍒🍒, 🍋🍋🍋, 🍊🍊🍊 (x4 ფსონზე)
-        let fruitIcons = ['🍒', '🍋', '🍇']; // აქ 🍇-ს ნაცვლად 🍊 უნდა იყოს, თუ გაქვს
+        let fruitIcons = ['🍒', '🍋', '🍇']; 
         let icon = fruitIcons[Math.floor(Math.random() * fruitIcons.length)];
         result = [icon, icon, icon];
         winAmt = burningStake * 4;
     } else if (rand < 0.20) {
-        // SCATTER (⭐) - ნებისმიერ ადგილას (x3 ფსონზე)
-        result = ['⭐', burningIcons[0], '⭐']; // ვარსკვლავები გვერდებზე
+        result = ['⭐', burningIcons[Math.floor(Math.random() * burningIcons.length)], '⭐'];
         winAmt = burningStake * 3;
     } else {
-        // წაგება
-        result = [burningIcons[0], burningIcons[2], burningIcons[4]];
+        // --- აი აქ გამოსწორდა! ---
+        // ვაკეთებთ "უსასრულო" ციკლს, სანამ სამივე განსხვავებულს არ ამოაგდებს
+        while(true) {
+            result = [
+                burningIcons[Math.floor(Math.random() * burningIcons.length)],
+                burningIcons[Math.floor(Math.random() * burningIcons.length)],
+                burningIcons[Math.floor(Math.random() * burningIcons.length)]
+            ];
+            // თუ შემთხვევით სამივე დაემთხვა, თავიდან არევს (რომ წაგებისას მოგება არ დაჯდეს)
+            if (!(result[0] === result[1] && result[1] === result[2])) break;
+        }
         winAmt = 0;
     }
 
-    // 2. რილების ტრიალი (RESET-ით, რომ არ გაქრეს)
+    // 2. რილების ტრიალი (RESET + ფიზიკური შევსება)
     for (let i = 1; i <= 3; i++) {
         const r = document.getElementById('reel_' + i);
+        
+        // ყოველ ტრიალზე რილს თავიდან ვავსებთ რანდომული ხილით, რომ ტრიალისას სხვადასხვა რამე ჩანდეს
+        r.innerHTML = ''; 
+        for (let j = 0; j < 50; j++) {
+            const s = document.createElement('div');
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:45px;";
+            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            r.appendChild(s);
+        }
+
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
         
-        const stopIdx = 35; // ყოველთვის 35-ე სიმბოლოზე ვაჩერებთ
-        if(r.children[stopIdx]) {
-            r.children[stopIdx].innerText = result[i-1];
-        }
+        const stopIdx = 35;
+        r.children[stopIdx].innerText = result[i-1];
 
         setTimeout(() => {
             const move = stopIdx * 70;
             r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${move}px)`;
-        }, 30);
+        }, 50);
     }
 
-    // 3. გაჩერება და მოგების ხაზი
+    // 3. გაჩერება
     setTimeout(() => {
         isSpinningNow = false;
         if (winAmt > 0) {
@@ -2117,11 +2127,10 @@ function triggerBurningSpin() {
             wrapper.appendChild(line);
 
             earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots Win');
+            
+            // UI განახლება
             document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
-            document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
+            updateAllGameBalances(); // <--- შენი ახალი ბალანსის ფუნქცია
         }
-    }, 3200);
+    }, 3500);
 }
-
-
-
