@@ -1921,6 +1921,53 @@ function triggerBurningSpin() {
 
 
 
+// 3-რილიანი სლოტის ინიციალიზაცია (სიმბოლოების ჩატვირთვა)
+function initBurningReels() {
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
+        if (!r) continue;
+        
+        r.innerHTML = ''; // ვასუფთავებთ ძველ შიგთავსს
+        
+        // ვქმნით 50 სიმბოლოს თითო რილში (სიმაღლე 70px)
+        for (let j = 0; j < 50; j++) {
+            const s = document.createElement('div');
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:45px;";
+            // რანდომული სიმბოლო 3-იანის მასივიდან
+            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            r.appendChild(s);
+        }
+    }
+}
+
+// 3-რილიანი სლოტის ფანჯრის გახსნა
+function openBurningSlots() {
+    const list = document.getElementById('gamesList');
+    const container = document.getElementById('burningSlotsContainer');
+    
+    if (list && container) {
+        list.style.display = 'none'; 
+        container.style.display = 'flex';
+        
+        // 1. ჯერ ვხატავთ სიმბოლოებს
+        initBurningReels();
+        
+        // 2. ვანახლებთ ბალანსებს
+        updateAllGameBalances();
+    } else {
+        console.error("3-იანი სლოტის კონტეინერი ვერ მოიძებნა!");
+    }
+}
+
+// 3-რილიანიდან უკან გამოსვლა
+function backFromSlots3() {
+    document.getElementById('burningSlotsContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+
+
+
 function openBurningSlots() {
     document.getElementById('gamesList').style.display = 'none';
     document.getElementById('burningSlotsContainer').style.display = 'flex';
