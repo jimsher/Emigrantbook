@@ -1972,6 +1972,25 @@ async function startLottoDraw() {
 
 
 
+async function syncBalanceWithFirebase(newBalance) {
+    const user = auth.currentUser;
+    if (user) {
+        const userRef = db.ref('users/' + user.uid);
+        try {
+            await userRef.update({
+                balance: newBalance
+            });
+            console.log("ბალანსი სინქრონიზებულია Firebase-თან.");
+        } catch (error) {
+            console.error("Firebase Sync Error:", error);
+        }
+    }
+}
+
+
+
+
+
 
 
 
