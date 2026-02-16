@@ -2045,37 +2045,53 @@ function triggerBurning5Spin() {
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // მოგების დაგეგმვა (5-რილიანი კოეფიციენტებით)
+    // 1. მოგების დაგეგმვა (იგივე ლოგიკა)
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
 
-    if (rand < 0.005) { // 77777 (x200)
-        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 200;
-    } else if (rand < 0.02) { // $$$$$ (x40)
-        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 40;
-    } else if (rand < 0.05) { // 🍉🍉🍉🍉🍉 (x20)
-        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 20;
-    } else if (rand < 0.15) { // 🍒🍒🍒 (x3)
-        result = ['🍒','🍒','🍒', slot5Icons[5], slot5Icons[6]]; winAmt = burningStake5 * 3;
-    } else {
-        result = [slot5Icons[1], slot5Icons[3], slot5Icons[5], slot5Icons[7], slot5Icons[0]]; winAmt = 0;
+    if (rand < 0.005) { 
+        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 180;
+    } else if (rand < 0.015) { 
+        result = ['💲','💲','💲','💲','💲']; winAmt = burningStake5 * 30;
+    } else if (rand < 0.03) { 
+        result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = burningStake5 * 30;
+    } else if (rand < 0.06) { 
+        result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = burningStake5 * 12;
+    } else if (rand < 0.15) { 
+        let icon = slot5Icons[Math.floor(Math.random() * 4 + 4)]; // ხილი
+        result = [icon, icon, icon, '🍋', '🍊']; winAmt = burningStake5 * 4;
+    } else { 
+        // წაგება - ყოველთვის სხვადასხვა სიმბოლოები
+        result = [];
+        for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
+        winAmt = 0;
     }
 
-    // რილების ტრიალი
+    // 2. რილების რესეტი და ახალი სიმბოლოების ჩასმა (რომ არ განმეორდეს)
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
+        
+        // ანიმაციის გარეშე დაბრუნება თავში
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
         
-        const stopIdx = 45;
-        r.children[stopIdx].innerText = result[i-1];
+        // რილის შიგთავსის გადაჩეხვა ყოველ სპინზე
+        const divs = r.getElementsByTagName('div');
+        for (let j = 0; j < divs.length; j++) {
+            divs[j].innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+        }
 
+        const stopIdx = 45; // გაჩერების წერტილი
+        // ვსვამთ დაგეგმილ მოგებას შუა ხაზზე
+        if(divs[stopIdx]) divs[stopIdx].innerText = result[i-1];
+
+        // პატარა დაყოვნება რომ რესეტი აღიქვას
         setTimeout(() => {
             const move = stopIdx * 70;
             r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${move}px)`;
-        }, 30);
+        }, 50);
     }
 
     setTimeout(() => {
@@ -2085,7 +2101,7 @@ function triggerBurning5Spin() {
             
             const line = document.createElement('div');
             line.id = 'winLine5';
-            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:white; box-shadow:0 0 15px gold; z-index:10; transform:translateY(-50%);";
+            line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:white; box-shadow:0 0 15px gold; z-index:10; transform:translateY(-50%); animation: flash5 0.5s infinite;";
             wrapper.appendChild(line);
 
             earnAkho(auth.currentUser.uid, winAmt, '5-Reel Slot Win');
