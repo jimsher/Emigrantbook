@@ -1846,31 +1846,18 @@ async function syncBalanceWithFirebase(newBalance) {
 
 
 
-
-
-
-
-
-
-
-
-
-    
-
-    
-            
-    
+       <script>
     var burningStake = 0.15;
     var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
     var isSpinningNow = false;
-    var slotPositions = [0, 0, 0]; // ინახავს ამჟამინდელ პოზიციას
+    var slotPositions = [0, 0, 0]; 
 
     function openBurningSlots() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('burningSlotsContainer').style.display = 'flex';
         
-        let mainBal = document.getElementById('gameBalance').innerText;
-        document.getElementById('slotBalanceVal').innerText = parseFloat(mainBal) || "0.00";
+        // ბალანსის ვიზუალური სინქრონიზაცია გახსნისას
+        document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
         
         if (slotPositions[0] === 0) initBurningReels();
     }
@@ -1891,10 +1878,7 @@ async function syncBalanceWithFirebase(newBalance) {
     function initBurningReels() {
         for (let i = 1; i <= 3; i++) {
             const r = document.getElementById('reel_' + i);
-            r.innerHTML = '';
-            r.style.transition = 'none';
-            r.style.transform = 'translateY(0)';
-            // 400 სიმბოლო, რომ არასოდეს გათავდეს
+            r.innerHTML = ''; r.style.transition = 'none'; r.style.transform = 'translateY(0)';
             for (let j = 0; j < 400; j++) {
                 const s = document.createElement('div');
                 s.style.height = '60px'; s.style.display = 'flex'; 
@@ -1909,27 +1893,24 @@ async function syncBalanceWithFirebase(newBalance) {
     function triggerBurningSpin() {
         if (isSpinningNow) return;
 
-        let mainBalEl = document.getElementById('gameBalance');
-        let slotBalEl = document.getElementById('slotBalanceVal');
-        let currentBal = parseFloat(mainBalEl.innerText) || 0;
-
-        if (currentBal < burningStake) { alert("ბალანსი არ გყოფნის!"); return; }
+        // 1. ვიყენებთ შენს canAfford ფუნქციას შემოწმებისთვის
+        if (!canAfford(burningStake)) return;
 
         isSpinningNow = true;
-        currentBal -= burningStake;
+
+        // 2. ვიყენებთ შენს spendAkho ფუნქციას - ის ავტომატურად ანახლებს Firebase-ს და ეკრანს
+        spendAkho(burningStake, 'Burning Slots Bet');
         
-        mainBalEl.innerText = currentBal.toFixed(2) + " AKHO";
-        slotBalEl.innerText = currentBal.toFixed(2);
+        // სლოტის შიდა ბალანსის განახლება
+        document.getElementById('slotBalanceVal').innerText = (myAkho - burningStake).toFixed(2);
         document.getElementById('slotWinVal').innerText = "0.00";
 
         new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
         for (let i = 1; i <= 3; i++) {
             const r = document.getElementById('reel_' + i);
-            // შემთხვევითი მანძილი, რომელიც ყოველთვის 70-ის ჯერადია (60px + 10px gap)
             const move = (Math.floor(Math.random() * 30) + 60) * 70;
             slotPositions[i-1] += move;
-            
             r.style.transition = `transform ${1.5 + (i * 0.5)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${slotPositions[i-1]}px)`;
         }
@@ -1940,24 +1921,27 @@ async function syncBalanceWithFirebase(newBalance) {
 
             const rand = Math.random(); 
             let mult = 0;
-            if (rand < 0.02) mult = 50;
-            else if (rand < 0.08) mult = 10;
-            else if (rand < 0.20) mult = 2.5;
+            // ალბათობები
+            if (rand < 0.02) mult = 50;      // Jackpot
+            else if (rand < 0.07) mult = 10; // Big Win
+            else if (rand < 0.18) mult = 3;  // Small Win
 
             if (mult > 0) {
                 let win = burningStake * mult;
-                let finalBal = parseFloat(mainBalEl.innerText) + win;
                 
-                mainBalEl.innerText = finalBal.toFixed(2) + " AKHO";
-                slotBalEl.innerText = finalBal.toFixed(2);
+                // 3. ვიყენებთ შენს earnAkho ფუნქციას - ის მომენტალურად წერს ბაზაში და ანახლებს ეკრანს
+                earnAkho(auth.currentUser.uid, win, 'Burning Slots Win');
+                
                 document.getElementById('slotWinVal').innerText = win.toFixed(2);
-                alert("🔥 მოგება: " + win.toFixed(2) + " AKHO");
+                document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
+                
+                alert("🔥 გილოცავ! მოიგე " + win.toFixed(2) + " AKHO");
             }
             
-            // თუ პოზიცია ძალიან დიდია, ვაბრუნებთ 0-ზე უჩუმრად
             if (slotPositions[0] > 20000) {
                 slotPositions = [0, 0, 0];
                 initBurningReels();
             }
         }, 3500);
-    }         
+    }
+</script> 
