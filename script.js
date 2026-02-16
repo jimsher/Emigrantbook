@@ -1439,3 +1439,276 @@ feed.addEventListener('wheel', (e) => {
 
     setTimeout(() => { isScrolling = false; }, 500); // 0.5 წამიანი პაუზა სქროლებს შორის
 }, { passive: false });
+
+
+
+
+
+
+
+
+function openGamesPage() {
+ document.getElementById('gamesPage').style.display = 'flex';
+ // განვაახლოთ ბალანსი
+ db.ref(`users/${auth.currentUser.uid}/akho`).on('value', snap => {
+ document.getElementById('gameBalance').innerText = (snap.val() || 0).toFixed(2) + " AKHO";
+ });
+}
+
+function closeGamesPage() {
+ document.getElementById('gamesPage').style.display = 'none';
+}
+
+function playGame(gameType) {
+ // აქ დაიწერება თამაშის ლოგიკა, მაგალითად:
+ if (confirm("ნამდვილად გსურთ თამაშის დაწყება? (1.00 AKHO)")) {
+ // ბალანსის შემოწმება და თამაშის გაშვება
+ if(canAfford(1.00)) {
+ spendAkho(1.00, 'Game: ' + gameType);
+ // აქ გამოიძახებ კონკრეტულ თამაშს
+ }
+ }
+}
+
+
+
+
+
+// ბალანსის განახლების ფუნქცია (რომ სულ ნული არ ეწეროს)
+function updateGameBalance() {
+ const user = auth.currentUser;
+ if (user) {
+ db.ref(`users/${user.uid}/akho`).on('value', snap => {
+ const bal = snap.val() || 0;
+ const balElem = document.getElementById('gameBalance');
+ if(balElem) balElem.innerText = bal.toFixed(2) + " AKHO";
+ });
+ }
+}
+
+// გამოიძახე ეს ფუნქცია, როცა გვერდი იხსნება
+document.querySelector('.game-btn-container').addEventListener('click', updateGameBalance);
+
+
+
+
+
+
+
+
+
+const prizes = [0.5, 2, 0, 5, 1, 0.5, 10, 0]; 
+const colors = ["#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#ff4d4d", "#1a1a1a"];
+let currentRotation = 0;
+let isSpinning = false;
+
+function closeGamesPage() {
+ document.getElementById('gamesPage').style.display = 'none';
+}
+
+function backToGamesList() {
+ document.getElementById('wheelGameContainer').style.display = 'none';
+ document.getElementById('gamesList').style.display = 'grid';
+}
+
+function playGame(type) {
+ if(type === 'spin') {
+ document.getElementById('gamesList').style.display = 'none';
+ document.getElementById('wheelGameContainer').style.display = 'flex';
+ // აუცილებელია პატარა პაუზა, რომ Canvas-მა დახატვა მოასწროს
+ setTimeout(drawWheel, 100);
+ }
+}
+
+function drawWheel() {
+ const canvas = document.getElementById('wheelCanvas');
+ if(!canvas) return;
+ const ctx = canvas.getContext('2d');
+ const center = 140;
+ const sliceAngle = (2 * Math.PI) / prizes.length;
+
+ ctx.clearRect(0, 0, 280, 280);
+
+ prizes.forEach((prize, i) => {
+ ctx.beginPath();
+ ctx.fillStyle = colors[i];
+ ctx.moveTo(center, center);
+ ctx.arc(center, center, center, i * sliceAngle, (i + 1) * sliceAngle);
+ ctx.fill();
+ 
+ ctx.save();
+ ctx.translate(center, center);
+ ctx.rotate(i * sliceAngle + sliceAngle / 2);
+ ctx.fillStyle = "white";
+ ctx.font = "bold 14px Arial";
+ ctx.textAlign = "right";
+ ctx.fillText(prize + " ₳", center - 20, 5);
+ ctx.restore();
+ });
+}
+
+function spinWheel() {
+ if(isSpinning) return;
+ 
+ // აქ შენი ბალანსის შემოწმება (მაგალითად 1 AKHO)
+ // if(userBalance < 1) { alert("ბალანსი არ გყოფნის!"); return; }
+
+ isSpinning = true;
+ const canvas = document.getElementById('wheelCanvas');
+ const extraDegrees = Math.floor(Math.random() * 360) + 1800; 
+ currentRotation += extraDegrees;
+ 
+ canvas.style.transition = "transform 4s cubic-bezier(0.15, 0, 0.15, 1)";
+ canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+ setTimeout(() => {
+ isSpinning = false;
+ const actualDeg = currentRotation % 360;
+ const sliceSize = 360 / prizes.length;
+ const prizeIndex = Math.floor((360 - actualDeg) / sliceSize) % prizes.length;
+ const win = prizes[prizeIndex];
+ 
+ alert(win > 0 ? "მოიგე " + win + " AKHO!" : "ამჯერად ვერ მოიგე!");
+ }, 4000);
+}
+
+
+
+function spinWheel() {
+ if(isSpinning) return;
+
+ // 1. ვამოწმებთ, აქვს თუ არა მომხმარებელს 1.00 AKHO
+ // ვიყენებთ შენს canAfford ფუნქციას
+ if(!canAfford(1.00)) {
+ alert("ბალანსი არ გყოფნის! (საჭიროა 1.00 AKHO)");
+ return;
+ }
+
+ // 2. ვაკლებთ 1.00 AKHO-ს ბაზიდან თამაშის დაწყებისას
+ spendAkho(1.00, "Lucky Spin Bet");
+
+ isSpinning = true;
+ const canvas = document.getElementById('wheelCanvas');
+ const btn = document.getElementById('spinBtn');
+ 
+ btn.disabled = true;
+ btn.style.opacity = "0.5";
+ btn.innerText = "ტრიალებს...";
+
+ // რანდომული ტრიალი
+ const extraDegrees = Math.floor(Math.random() * 360) + 2160; 
+ currentRotation += extraDegrees;
+ 
+ canvas.style.transition = "transform 5s cubic-bezier(0.15, 0, 0.2, 1)";
+ canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+ // 3. შედეგის დაფიქსირება
+ setTimeout(() => {
+ isSpinning = false;
+ btn.disabled = false;
+ btn.style.opacity = "1";
+ btn.innerText = "დატრიალება (1.00 AKHO)";
+ 
+ const actualDeg = currentRotation % 360;
+ const sliceSize = 360 / prizes.length;
+ // ისარი ზემოთაა (270 გრადუსი), ამიტომ ასე ვითვლით ინდექსს
+ const prizeIndex = Math.floor(((360 - actualDeg + 270) % 360) / sliceSize) % prizes.length;
+ const win = prizes[prizeIndex];
+ 
+ if(win > 0) {
+ // 4. მოგების დარიცხვა ბაზაში
+ earnAkho(auth.currentUser.uid, win, "Lucky Spin Win");
+ 
+ // ვიზუალური ეფექტი ბალანსის განახლებისთვის (თუ ავტომატურად არ ახლდება)
+ updateGameBalance(); 
+ 
+ alert("🎉 გილოცავ! შენ მოიგე " + win + " AKHO!");
+ } else {
+ alert("😢 ამჯერად ვერ მოიგე, სცადე კიდევ ერთხელ!");
+ }
+ }, 5000);
+}
+ 
+ 
+ 
+ let selectedNumbers = [];
+
+// 1. ლოტოს გვერდის გახსნა და ბადის შევსება
+function openLotto() {
+ document.getElementById('gamesList').style.display = 'none';
+ document.getElementById('lottoGameContainer').style.display = 'flex';
+ 
+ const grid = document.getElementById('lottoGrid');
+ grid.innerHTML = "";
+ selectedNumbers = [];
+ 
+ for(let i=1; i<=25; i++) {
+ const btn = document.createElement('button');
+ btn.className = 'num-btn';
+ btn.innerText = i;
+ btn.onclick = () => toggleNumber(i, btn);
+ grid.appendChild(btn);
+ }
+}
+
+// 2. ციფრების არჩევა (მაქსიმუმ 5)
+function toggleNumber(num, btn) {
+ if(selectedNumbers.includes(num)) {
+ selectedNumbers = selectedNumbers.filter(n => n !== num);
+ btn.classList.remove('selected');
+ } else {
+ if(selectedNumbers.length < 5) {
+ selectedNumbers.push(num);
+ btn.classList.add('selected');
+ }
+ }
+}
+
+// 3. გათამაშების დაწყება
+async function startLottoDraw() {
+ if(selectedNumbers.length < 5) { alert("გთხოვთ აირჩიოთ 5 ციფრი!"); return; }
+ if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის (5.00 AKHO)"); return; }
+
+ spendAkho(5.00, "Lotto Bet");
+ const btn = document.getElementById('playLottoBtn');
+ btn.disabled = true;
+ btn.style.opacity = "0.5";
+
+ const container = document.getElementById('lottoBalls');
+ container.innerHTML = ""; // ვასუფთავებთ ძველ ბურთებს
+
+ let winningNumbers = [];
+ while(winningNumbers.length < 5) {
+ let n = Math.floor(Math.random() * 25) + 1;
+ if(!winningNumbers.includes(n)) winningNumbers.push(n);
+ }
+
+ // ბურთების ამოყრის ანიმაცია (რიგრიგობით)
+ for(let i=0; i<5; i++) {
+ await new Promise(r => setTimeout(r, 1000)); // 1 წამიანი პაუზა თითო ბურთზე
+ const ball = document.createElement('div');
+ ball.className = 'lotto-ball';
+ ball.innerText = winningNumbers[i];
+ container.appendChild(ball);
+ // აქ შეგიძლია დაამატო ხმის ეფექტი: tickSound.play();
+ }
+
+ // მოგების შემოწმება
+ setTimeout(() => {
+ const matches = selectedNumbers.filter(n => winningNumbers.includes(n)).length;
+ let prize = 0;
+ if(matches === 2) prize = 2;
+ if(matches === 3) prize = 10;
+ if(matches === 4) prize = 50;
+ if(matches === 5) prize = 250;
+
+ if(prize > 0) {
+ earnAkho(auth.currentUser.uid, prize, `Lotto Win (${matches} matches)`);
+ alert(`🎉 გილოცავ! შენ დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
+ } else {
+ alert(`ამჯერად მხოლოდ ${matches} ციფრი დაემთხვა. სცადე კიდევ ერთხელ!`);
+ }
+ btn.disabled = false;
+ btn.style.opacity = "1";
+ }, 1000);
+}
