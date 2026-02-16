@@ -2152,6 +2152,7 @@ function triggerBurningSpin() {
             updateAllGameBalances();
         }
     }, 3200);
+}
 
 // 3-რილიანი სლოტიდან გამოსვლა
 function backFromSlots() {
