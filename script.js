@@ -1828,3 +1828,111 @@ async function startLottoDraw() {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+    var burningStake = 0.15;
+    var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
+    var isSpinningNow = false;
+    var slotPositions = [0, 0, 0]; 
+
+    function openBurningSlots() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('burningSlotsContainer').style.display = 'flex';
+        
+        // ბალანსის ვიზუალური სინქრონიზაცია გახსნისას
+        document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
+        
+        if (slotPositions[0] === 0) initBurningReels();
+    }
+
+    function backFromSlots() {
+        document.getElementById('burningSlotsContainer').style.display = 'none';
+        document.getElementById('gamesList').style.display = 'grid';
+    }
+
+    function updateBet(val, btn) {
+        burningStake = parseFloat(val);
+        document.querySelectorAll('.bet-opt').forEach(b => {
+            b.style.background = '#222'; b.style.color = 'gold';
+        });
+        btn.style.background = 'gold'; btn.style.color = 'black';
+    }
+
+    function initBurningReels() {
+        for (let i = 1; i <= 3; i++) {
+            const r = document.getElementById('reel_' + i);
+            r.innerHTML = ''; r.style.transition = 'none'; r.style.transform = 'translateY(0)';
+            for (let j = 0; j < 400; j++) {
+                const s = document.createElement('div');
+                s.style.height = '60px'; s.style.display = 'flex'; 
+                s.style.alignItems = 'center'; s.style.justifyContent = 'center'; 
+                s.style.fontSize = '35px';
+                s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+                r.appendChild(s);
+            }
+        }
+    }
+
+    function triggerBurningSpin() {
+        if (isSpinningNow) return;
+
+        // 1. ვიყენებთ შენს canAfford ფუნქციას შემოწმებისთვის
+        if (!canAfford(burningStake)) return;
+
+        isSpinningNow = true;
+
+        // 2. ვიყენებთ შენს spendAkho ფუნქციას - ის ავტომატურად ანახლებს Firebase-ს და ეკრანს
+        spendAkho(burningStake, 'Burning Slots Bet');
+        
+        // სლოტის შიდა ბალანსის განახლება
+        document.getElementById('slotBalanceVal').innerText = (myAkho - burningStake).toFixed(2);
+        document.getElementById('slotWinVal').innerText = "0.00";
+
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+
+        for (let i = 1; i <= 3; i++) {
+            const r = document.getElementById('reel_' + i);
+            const move = (Math.floor(Math.random() * 30) + 60) * 70;
+            slotPositions[i-1] += move;
+            r.style.transition = `transform ${1.5 + (i * 0.5)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${slotPositions[i-1]}px)`;
+        }
+
+        setTimeout(() => {
+            isSpinningNow = false;
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+
+            const rand = Math.random(); 
+            let mult = 0;
+            // ალბათობები
+            if (rand < 0.02) mult = 50;      // Jackpot
+            else if (rand < 0.07) mult = 10; // Big Win
+            else if (rand < 0.18) mult = 3;  // Small Win
+
+            if (mult > 0) {
+                let win = burningStake * mult;
+                
+                // 3. ვიყენებთ შენს earnAkho ფუნქციას - ის მომენტალურად წერს ბაზაში და ანახლებს ეკრანს
+                earnAkho(auth.currentUser.uid, win, 'Burning Slots Win');
+                
+                document.getElementById('slotWinVal').innerText = win.toFixed(2);
+                document.getElementById('slotBalanceVal').innerText = myAkho.toFixed(2);
+                
+                alert("🔥 გილოცავ! მოიგე " + win.toFixed(2) + " AKHO");
+            }
+            
+            if (slotPositions[0] > 20000) {
+                slotPositions = [0, 0, 0];
+                initBurningReels();
+            }
+        }, 3500);
+    }
