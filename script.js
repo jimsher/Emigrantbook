@@ -1842,13 +1842,16 @@ async function startLottoDraw() {
 
 
 
-// უნიკალური ცვლადები, რომ არაფერს შეეჯახოს
+    
+    // უნიკალური ცვლადები
 var burningStake = 0.15;
 var burningSymbols = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
-var burningActive = false;
+var isBurningSpinning = false;
 
-// 1. თამაშის გახსნა
+// 1. თამაშის გახსნა (ეს უნდა ემთხვეოდეს onclick-ს)
 function openBurningSlots() {
+    console.log("სლოტის გახსნა დაიწყო...");
+    
     const list = document.getElementById('gamesList');
     const container = document.getElementById('burningSlotsContainer');
     
@@ -1857,35 +1860,42 @@ function openBurningSlots() {
         container.style.display = 'flex';
         
         // რილების მომზადება
-        for (let i = 1; i <= 3; i++) {
-            const r = document.getElementById('reel_' + i);
-            if (r) {
-                r.innerHTML = '';
-                r.style.transform = 'translateY(0)';
-                r.style.transition = 'none';
-                // ვავსებთ 50 სიმბოლოთი
-                for (let j = 0; j < 50; j++) {
-                    const s = document.createElement('div');
-                    s.style.height = '60px';
-                    s.style.display = 'flex';
-                    s.style.alignItems = 'center';
-                    s.style.justifyContent = 'center';
-                    s.style.fontSize = '35px';
-                    s.innerText = burningSymbols[Math.floor(Math.random() * burningSymbols.length)];
-                    r.appendChild(s);
-                }
+        initBurningReels();
+        console.log("სლოტი გაიხსნა წარმატებით.");
+    } else {
+        console.error("ვერ ვიპოვე gamesList ან burningSlotsContainer!");
+    }
+}
+
+// 2. რილების მომზადება
+function initBurningReels() {
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
+        if (r) {
+            r.innerHTML = '';
+            r.style.transform = 'translateY(0)';
+            r.style.transition = 'none';
+            for (let j = 0; j < 50; j++) {
+                const s = document.createElement('div');
+                s.style.height = '60px';
+                s.style.display = 'flex';
+                s.style.alignItems = 'center';
+                s.style.justifyContent = 'center';
+                s.style.fontSize = '35px';
+                s.innerText = burningSymbols[Math.floor(Math.random() * burningSymbols.length)];
+                r.appendChild(s);
             }
         }
     }
 }
 
-// 2. უკან დაბრუნება
+// 3. უკან დაბრუნება
 function backFromSlots() {
     document.getElementById('burningSlotsContainer').style.display = 'none';
     document.getElementById('gamesList').style.display = 'grid';
 }
 
-// 3. ფსონის შეცვლა
+// 4. ფსონის შეცვლა
 function updateBet(val, btn) {
     burningStake = val;
     document.querySelectorAll('.bet-opt').forEach(b => {
@@ -1896,20 +1906,18 @@ function updateBet(val, btn) {
     btn.style.color = 'black';
 }
 
-// 4. ტრიალი
+// 5. ტრიალი
 function triggerBurningSpin() {
-    if (burningActive) return;
+    if (isBurningSpinning) return;
     
-    burningActive = true;
+    isBurningSpinning = true;
     const reels = [
         document.getElementById('reel_1'),
         document.getElementById('reel_2'),
         document.getElementById('reel_3')
     ];
 
-    // ხმა (შენი GitHub)
-    const sSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-    sSnd.play().catch(() => {});
+    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(() => {});
 
     reels.forEach((r, i) => {
         if (r) {
@@ -1920,11 +1928,10 @@ function triggerBurningSpin() {
     });
 
     setTimeout(() => {
-        burningActive = false;
-        const wSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
-        wSnd.play().catch(() => {});
+        isBurningSpinning = false;
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(() => {});
         
-        // მოგების მარტივი ლოგიკა (მაგ: 20% შანსი)
+        // მოგების ლოგიკა
         if (Math.random() < 0.2) {
             let win = burningStake * 5;
             document.getElementById('slotWinVal').innerText = win.toFixed(2);
