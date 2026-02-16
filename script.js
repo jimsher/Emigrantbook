@@ -1843,89 +1843,68 @@ async function startLottoDraw() {
 
 
     
-var burningStake = 0.15;
-var burningSymbols = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
-var isBurningSpinning = false;
+// სლოტის ლოგიკა
+    var burningStake = 0.15;
+    var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
+    var isSpinningNow = false;
 
-// 1. ფსონის დამახსოვრება
-function updateBet(val, btn) {
-    burningStake = parseFloat(val);
-    document.querySelectorAll('.bet-opt').forEach(b => {
-        b.style.background = '#222';
-        b.style.color = 'gold';
-    });
-    btn.style.background = 'gold';
-    btn.style.color = 'black';
-}
+    function openBurningSlots() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('burningSlotsContainer').style.display = 'flex';
+        initBurningReels();
+    }
 
-// 2. რილების მომზადება (60 სიმბოლო თითოეულში)
-function initBurningReels() {
-    for (let i = 1; i <= 3; i++) {
-        const r = document.getElementById('reel_' + i);
-        if (r) {
-            r.innerHTML = '';
-            r.style.transition = 'none';
-            r.style.transform = 'translateY(0)';
+    function backFromSlots() {
+        document.getElementById('burningSlotsContainer').style.display = 'none';
+        document.getElementById('gamesList').style.display = 'grid';
+    }
+
+    function updateBet(val, btn) {
+        burningStake = parseFloat(val);
+        document.querySelectorAll('.bet-opt').forEach(b => {
+            b.style.background = '#222'; b.style.color = 'gold';
+        });
+        btn.style.background = 'gold'; btn.style.color = 'black';
+    }
+
+    function initBurningReels() {
+        for (let i = 1; i <= 3; i++) {
+            const r = document.getElementById('reel_' + i);
+            r.innerHTML = ''; r.style.transition = 'none'; r.style.transform = 'translateY(0)';
             for (let j = 0; j < 60; j++) {
                 const s = document.createElement('div');
-                s.style.height = '60px'; // სიმბოლოს სიმაღლე
-                s.style.display = 'flex';
-                s.style.alignItems = 'center';
-                s.style.justifyContent = 'center';
-                s.style.fontSize = '35px';
-                s.innerText = burningSymbols[Math.floor(Math.random() * burningSymbols.length)];
+                s.style.height = '60px'; s.style.display = 'flex'; s.style.alignItems = 'center'; s.style.justifyContent = 'center'; s.style.fontSize = '35px';
+                s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
                 r.appendChild(s);
             }
         }
     }
-}
 
-// 3. მთავარი სპინი (ლოგიკა + ბალანსი)
-function triggerBurningSpin() {
-    if (isBurningSpinning) return;
-
-    // --- ბალანსის შემოწმება და მოკლება ---
-    let currentBalance = parseFloat(document.getElementById('gameBalance').innerText);
-    if (currentBalance < burningStake) {
-        alert("ბალანსი არ გყოფნის!");
-        return;
-    }
-
-    isBurningSpinning = true;
-    
-    // ბალანსის მოკლება ვიზუალურად და Firebase-სთვის (თუ გაქვს ფუნქცია)
-    currentBalance -= burningStake;
-    document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
-    document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
-
-    const sSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-    sSnd.play().catch(() => {});
-
-    // ტრიალის ფიზიკა
-    for (let i = 1; i <= 3; i++) {
-        const r = document.getElementById('reel_' + i);
-        // 70px = 60px(სიმბოლო) + 10px(gap)
-        const move = (Math.floor(Math.random() * 20) + 30) * 70; 
-        
-        r.style.transition = `transform ${2 + (i * 0.5)}s cubic-bezier(0.15, 0, 0.15, 1)`;
-        r.style.transform = `translateY(-${move}px)`;
-    }
-
-    setTimeout(() => {
-        isBurningSpinning = false;
-        const wSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
-        wSnd.play().catch(() => {});
-
-        // მოგების ლოგიკა (მაგ: 20% შანსი)
-        if (Math.random() < 0.2) {
-            let win = burningStake * 5;
-            let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
-            
-            document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
-            document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
-            document.getElementById('slotWinVal').innerText = win.toFixed(2);
-            
-            alert("🔥 BIG WIN: " + win.toFixed(2) + " AKHO");
+    function triggerBurningSpin() {
+        if (isSpinningNow) return;
+        let currentBalance = parseFloat(document.getElementById('gameBalance').innerText) || 0;
+        if (currentBalance < burningStake) { alert("ბალანსი არ გყოფნის!"); return; }
+        isSpinningNow = true;
+        currentBalance -= burningStake;
+        document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
+        document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+        for (let i = 1; i <= 3; i++) {
+            const r = document.getElementById('reel_' + i);
+            const move = (Math.floor(Math.random() * 20) + 30) * 70;
+            r.style.transition = `transform ${2 + (i * 0.5)}s cubic-bezier(0.15, 0, 0.15, 1)`;
+            r.style.transform = `translateY(-${move}px)`;
         }
-    }, 3500);
-}
+        setTimeout(() => {
+            isSpinningNow = false;
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            if (Math.random() < 0.2) {
+                let win = burningStake * 5;
+                let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
+                document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
+                document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
+                document.getElementById('slotWinVal').innerText = win.toFixed(2);
+                alert("🔥 BIG WIN: " + win.toFixed(2) + " AKHO");
+            }
+        }, 3500);
+    }
