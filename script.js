@@ -1712,3 +1712,76 @@ async function startLottoDraw() {
  btn.style.opacity = "1";
  }, 1000);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function startLottoDraw() {
+    if(selectedNumbers.length < 5) { alert("გთხოვთ აირჩიოთ 5 ციფრი!"); return; }
+    if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის (5.00 AKHO)"); return; }
+
+    spendAkho(5.00, "Lotto Bet");
+    const btn = document.getElementById('playLottoBtn');
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+
+    const container = document.getElementById('lottoBalls');
+    container.innerHTML = ""; 
+
+    let winningNumbers = [];
+    while(winningNumbers.length < 5) {
+        let n = Math.floor(Math.random() * 25) + 1;
+        if(!winningNumbers.includes(n)) winningNumbers.push(n);
+    }
+
+    // ხმის ელემენტები
+    const popSnd = document.getElementById('ballPopSound');
+    const winSnd = document.getElementById('winSound');
+    const loseSnd = document.getElementById('loseSound');
+
+    // ბურთების ამოყრის ანიმაცია და ხმა
+    for(let i=0; i<5; i++) {
+        await new Promise(r => setTimeout(r, 1000)); 
+        
+        // ხმის დაკვრა (reset-ით, რომ ზედიზედ სწრაფად დაუკრას)
+        popSnd.currentTime = 0;
+        popSnd.play().catch(e => console.log("Audio play blocked by browser"));
+
+        const ball = document.createElement('div');
+        ball.className = 'lotto-ball';
+        ball.innerText = winningNumbers[i];
+        container.appendChild(ball);
+    }
+
+    // მოგების შემოწმება
+    setTimeout(() => {
+        const matches = selectedNumbers.filter(n => winningNumbers.includes(n)).length;
+        let prize = 0;
+        if(matches === 2) prize = 2;
+        if(matches === 3) prize = 10;
+        if(matches === 4) prize = 50;
+        if(matches === 5) prize = 250;
+
+        if(prize > 0) {
+            winSnd.play(); // მოგების ხმა
+            earnAkho(auth.currentUser.uid, prize, `Lotto Win (${matches} matches)`);
+            alert(`🎉 გილოცავ! შენ დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
+        } else {
+            loseSnd.play(); // წაგების ხმა
+            alert(`ამჯერად მხოლოდ ${matches} ციფრი დაემთხვა. სცადე კიდევ ერთხელ!`);
+        }
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }, 1000);
+}
