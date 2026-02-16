@@ -1828,7 +1828,27 @@ async function startLottoDraw() {
 }
 
 
+function updateAllGameBalances() {
+    // 1. მთავარი გვერდის ბალანსი
+    const gameBal = document.getElementById('gameBalance');
+    if (gameBal) gameBal.innerText = myAkho.toFixed(2) + " AKHO";
 
+    // 2. 3-რილიანი სლოტის ბალანსი (თუ გაქვს)
+    const slot3Bal = document.getElementById('slotBalanceVal');
+    if (slot3Bal) slot3Bal.innerText = myAkho.toFixed(2);
+
+    // 3. 5-რილიანი სლოტის ბალანსი და ევროები
+    const slot5Bal = document.getElementById('slot5BalanceVal');
+    const slot5Real = document.getElementById('slot5RealBalance');
+    if (slot5Bal) slot5Bal.innerText = myAkho.toFixed(2);
+    if (slot5Real) slot5Real.innerText = "(" + (myAkho / 10).toFixed(2) + " €)";
+    
+    // 4. მოგების ველების გასუფთავება (როცა ახალ თამაშს ხსნი)
+    const slot5Win = document.getElementById('slot5WinVal');
+    const slot5RealWin = document.getElementById('slot5RealWin');
+    if (slot5Win) slot5Win.innerText = "0.00";
+    if (slot5RealWin) slot5RealWin.innerText = "(0.00 €)";
+}
 
 
 
