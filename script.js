@@ -1985,29 +1985,38 @@ function openBurningSlots() {
 
 
 
+
+
+
+
+
+
+
+
+
+
 // ==========================================
-// 1. გლობალური ცვლადები და მასივები (საწვავი)
+// 1. გლობალური კონფიგურაცია და მასივები
 // ==========================================
 var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐']; 
 var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
 
-var burningStake = 0.20;  // 3-იანის ფსონი
-var burningStake5 = 0.20; // 5-იანის ფსონი
-var isSpinningNow = false; // 3-იანის სტატუსი
-var isSpinning5 = false;   // 5-იანის სტატუსი
+var burningStake = 0.20;  
+var burningStake5 = 0.20; 
+var isSpinningNow = false; 
+var isSpinning5 = false;   
 
 // ==========================================
-// 2. ფანჯრების გახსნა და სიმბოლოების ჩატვირთვა
+// 2. ფანჯრების მართვა და ინიციალიზაცია
 // ==========================================
 
-// 3-რილიანი სლოტის გახსნა
 function openBurningSlots() {
     const list = document.getElementById('gamesList');
     const container = document.getElementById('burningSlotsContainer');
     if (list && container) {
         list.style.display = 'none';
         container.style.display = 'flex';
-        initBurningReels(); // ხატავს სიმბოლოებს
+        initBurningReels(); 
         updateAllGameBalances();
     }
 }
@@ -2026,14 +2035,13 @@ function initBurningReels() {
     }
 }
 
-// 5-რილიანი სლოტის გახსნა
 function openBurningSlots5() {
     const list = document.getElementById('gamesList');
     const container = document.getElementById('burningSlots5Container');
     if (list && container) {
         list.style.display = 'none';
         container.style.display = 'flex';
-        initBurning5Reels(); // ხატავს სიმბოლოებს
+        initBurning5Reels();
         updateAllGameBalances();
     }
 }
@@ -2053,14 +2061,13 @@ function initBurning5Reels() {
 }
 
 // ==========================================
-// 3. თამაშების გაშვება (SPIN LOGIC)
+// 3. 3-RILL SLOT LOGIC (გასწორებული რანდომით)
 // ==========================================
 
-// 3-REEL SPIN
 function triggerBurningSpin() {
     if (isSpinningNow || !canAfford(burningStake)) return;
     isSpinningNow = true;
-    spendAkho(burningStake, 'Burning Slots Bet');
+    spendAkho(burningStake, '3-Reel Slot Bet');
     
     document.getElementById('slotBalanceVal').innerText = (myAkho - burningStake).toFixed(2);
     document.getElementById('slotWinVal').innerText = "0.00";
@@ -2072,9 +2079,18 @@ function triggerBurningSpin() {
 
     let result = [], winAmt = 0;
     const rand = Math.random();
-    if (rand < 0.05) { result = ['7️⃣', '7️⃣', '7️⃣']; winAmt = burningStake * 50; }
-    else if (rand < 0.15) { result = ['🍉', '🍉', '🍉']; winAmt = burningStake * 10; }
-    else { result = [burningIcons[0], burningIcons[2], burningIcons[4]]; winAmt = 0; }
+
+    if (rand < 0.05) { 
+        result = ['7️⃣', '7️⃣', '7️⃣']; winAmt = burningStake * 50; 
+    } else if (rand < 0.15) { 
+        let icon = burningIcons[Math.floor(Math.random() * 3) + 1];
+        result = [icon, icon, icon]; winAmt = burningStake * 10; 
+    } else {
+        // წაგება: გარანტირებულად განსხვავებული ფიგურები
+        let s = [...burningIcons].sort(() => Math.random() - 0.5);
+        result = [s[0], s[1], s[2]];
+        winAmt = 0;
+    }
 
     for (let i = 1; i <= 3; i++) {
         const r = document.getElementById('reel_' + i);
@@ -2096,13 +2112,16 @@ function triggerBurningSpin() {
             line.id = 'winLine';
             line.style = "position:absolute; top:50%; left:0; width:100%; height:4px; background:red; box-shadow:0 0 15px red; z-index:10; transform:translateY(-50%); animation: lineFlash 0.5s infinite;";
             wrapper.appendChild(line);
-            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots Win');
+            earnAkho(auth.currentUser.uid, winAmt, '3-Reel Win');
             updateAllGameBalances();
         }
     }, 3200);
 }
 
-// 5-REEL SPIN
+// ==========================================
+// 4. 5-RILL SLOT LOGIC (გასწორებული რანდომით)
+// ==========================================
+
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
     isSpinning5 = true;
@@ -2117,8 +2136,18 @@ function triggerBurning5Spin() {
 
     let result = [], winAmt = 0;
     const rand = Math.random();
-    if (rand < 0.05) { result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 100; }
-    else { result = [slot5Icons[0], slot5Icons[1], slot5Icons[2], slot5Icons[3], slot5Icons[4]]; winAmt = 0; }
+
+    if (rand < 0.04) { 
+        let icon = slot5Icons[Math.floor(Math.random() * 3)];
+        result = [icon, icon, icon, icon, icon]; winAmt = burningStake5 * 100; 
+    } else {
+        // წაგება: თითოეულ რილს თავისი რანდომული ფიგურა
+        result = [];
+        for(let k=0; k<5; k++) {
+            result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
+        }
+        winAmt = 0;
+    }
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
@@ -2145,8 +2174,9 @@ function triggerBurning5Spin() {
 }
 
 // ==========================================
-// 4. დამხმარე ფუნქციები (BACK & BALANCE)
+// 5. დამხმარე ფუნქციები
 // ==========================================
+
 function backFromSlots3() {
     document.getElementById('burningSlotsContainer').style.display = 'none';
     document.getElementById('gamesList').style.display = 'grid';
@@ -2164,4 +2194,3 @@ function updateAllGameBalances() {
     if(document.getElementById('slot5BalanceVal')) document.getElementById('slot5BalanceVal').innerText = val;
     if(document.getElementById('slot5RealBalance')) document.getElementById('slot5RealBalance').innerText = "(" + (myAkho/10).toFixed(2) + " €)";
 }
-
