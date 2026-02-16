@@ -1860,95 +1860,100 @@ async function syncBalanceWithFirebase(newBalance) {
     
             
     
-    var burningStake = 0.15;
-    var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
-    var isSpinningNow = false;
-    // ინახავს თითოეული რილის ამჟამინდელ პოზიციას
-    var currentPositions = [0, 0, 0]; 
+ var burningStake = 0.15;
+var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
+var isSpinningNow = false;
+var currentPositions = [0, 0, 0]; 
 
-    function openBurningSlots() {
-        document.getElementById('gamesList').style.display = 'none';
-        document.getElementById('burningSlotsContainer').style.display = 'flex';
-        // მხოლოდ პირველი გახსნისას ვავსებთ
-        if (currentPositions[0] === 0) {
-            initSlotInitial();
+// 1. თამაშის გახსნა
+function openBurningSlots() {
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('burningSlotsContainer').style.display = 'flex';
+    if (currentPositions[0] === 0) {
+        initSlotInitial();
+    }
+}
+
+// 2. რილების პირველადი შევსება
+function initSlotInitial() {
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
+        if(!r) continue;
+        r.innerHTML = '';
+        for (let j = 0; j < 400; j++) {
+            const s = document.createElement('div');
+            s.style.height = '60px'; s.style.display = 'flex'; 
+            s.style.alignItems = 'center'; s.style.justifyContent = 'center'; 
+            s.style.fontSize = '35px';
+            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            r.appendChild(s);
         }
     }
+}
 
-    function backFromSlots() {
-        document.getElementById('burningSlotsContainer').style.display = 'none';
-        document.getElementById('gamesList').style.display = 'grid';
-    }
-
-    function updateBet(val, btn) {
-        burningStake = parseFloat(val);
-        document.querySelectorAll('.bet-opt').forEach(b => {
-            b.style.background = '#222'; b.style.color = 'gold';
-        });
-        btn.style.background = 'gold'; btn.style.color = 'black';
-    }
-
-    // მხოლოდ პირველი ჩატვირთვისთვის
-    function initSlotInitial() {
-        for (let i = 1; i <= 3; i++) {
-            const r = document.getElementById('reel_' + i);
-            r.innerHTML = '';
-            // ვავსებთ ბევრს, რომ პირველივე სპინზე არ გამოილიოს
-            for (let j = 0; j < 300; j++) {
-                const s = document.createElement('div');
-                s.style.height = '60px'; s.style.display = 'flex'; 
-                s.style.alignItems = 'center'; s.style.justifyContent = 'center'; 
-                s.style.fontSize = '35px';
-                s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
-                r.appendChild(s);
-            }
-        }
-    }
-
-    async function triggerBurningSpin() {
+// 3. მთავარი სპინი (Firebase-ის გარეშე, ჯერ ლოკალურად რომ ამუშავდეს)
+function triggerBurningSpin() {
     if (isSpinningNow) return;
 
-    let currentBalance = parseFloat(document.getElementById('gameBalance').innerText) || 0;
-    if (currentBalance < burningStake) { alert("ბალანსი არ გყოფნის!"); return; }
+    // ვიღებთ ბალანსს ელემენტიდან
+    let balEl = document.getElementById('gameBalance');
+    let currentBalance = parseFloat(balEl.innerText) || 0;
+
+    if (currentBalance < burningStake) { 
+        alert("ბალანსი არ გყოფნის!"); 
+        return; 
+    }
 
     isSpinningNow = true;
-    
-    // 1. ბალანსის მოკლება და ბაზაში შენახვა
+
+    // ბალანსის მოკლება ეკრანზე
     currentBalance -= burningStake;
-    document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
+    balEl.innerText = currentBalance.toFixed(2) + " AKHO";
     document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
-    
-    // სინქრონიზაცია ბაზასთან
-    await syncBalanceWithFirebase(currentBalance);
+    document.getElementById('slotWinVal').innerText = "0.00";
+
+    // აქ ჩაწერე შენი ბალანსის შენახვის ფუნქცია, თუ გაქვს (მაგ: updateDatabase())
+    if(typeof updateDatabase === "function") updateDatabase();
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // ... (აქ რჩება რილების ტრიალის კოდი უცვლელად) ...
+    // ტრიალის ანიმაცია
+    for (let i = 1; i <= 3; i++) {
+        const r = document.getElementById('reel_' + i);
+        const additionalMove = (Math.floor(Math.random() * 40) + 80) * 70;
+        currentPositions[i-1] += additionalMove;
+        
+        r.style.transition = `transform ${2 + (i * 0.5)}s cubic-bezier(0.15, 0, 0.1, 1)`;
+        r.style.transform = `translateY(-${currentPositions[i-1]}px)`;
+    }
 
-    setTimeout(async () => {
+    setTimeout(() => {
         isSpinningNow = false;
         new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
 
+        // მოგების შანსები
         const winChance = Math.random(); 
         let winMultiplier = 0;
-
         if (winChance < 0.02) winMultiplier = 50;
-        else if (winChance < 0.07) winMultiplier = 10;
-        else if (winChance < 0.15) winMultiplier = 3;
-        else if (winChance < 0.25) winMultiplier = 1.5;
+        else if (winChance < 0.08) winMultiplier = 10;
+        else if (winChance < 0.18) winMultiplier = 3;
 
         if (winMultiplier > 0) {
             let win = burningStake * winMultiplier;
+            let finalBal = parseFloat(balEl.innerText) + win;
             
-            // 2. მოგების დამატება და ბაზაში შენახვა
-            let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
-            
-            document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
+            balEl.innerText = finalBal.toFixed(2) + " AKHO";
             document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
             document.getElementById('slotWinVal').innerText = win.toFixed(2);
-
-            // სინქრონიზაცია ბაზასთან
-            await syncBalanceWithFirebase(finalBal);
+            
+            if(typeof updateDatabase === "function") updateDatabase();
+            alert("🔥 მოიგე: " + win.toFixed(2) + " AKHO");
+        }
+        
+        // თუ ბოლოში გავიდა რილი, თავიდან ვავსებთ
+        if (currentPositions[0] > 20000) {
+            currentPositions = [0, 0, 0];
+            initSlotInitial();
         }
     }, 3500);
 }
