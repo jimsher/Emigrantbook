@@ -1837,19 +1837,19 @@ async function startLottoDraw() {
 
 
 
-// ==========================================
+       // ==========================================
 // 1. კონფიგურაცია და ცვლადები
 // ==========================================
 var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
 var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
 
-var burningStake = 0.15;  // 3-იანის საწყისი ფსონი
-var burningStake5 = 0.20; // 5-იანის საწყისი ფსონი
+var burningStake = 0.15;  
+var burningStake5 = 0.20; 
 var isSpinningNow = false;
 var isSpinning5 = false;
 
 // ==========================================
-// 2. ფსონის შეცვლის ფუნქციები (STAKE)
+// 2. ფსონის შეცვლის ფუნქციები
 // ==========================================
 function updateBet(amount, btn) {
     if (isSpinningNow) return;
@@ -1870,14 +1870,13 @@ function updateBet5(amount, btn) {
 }
 
 // ==========================================
-// 3. UI განახლების ცენტრალური სისტემა
+// 3. UI განახლება
 // ==========================================
 function updateAllGameBalances() {
     const val = (typeof myAkho !== 'undefined') ? myAkho : 0;
     const akhoStr = val.toFixed(2);
     const euroStr = "(" + (val / 10).toFixed(2) + " €)";
 
-    // ყველა ბალანსის ველის განახლება (რაც შენს HTML-შია)
     const bTargets = ['slot5BalanceVal', 'slot5BalanceVal_inner', 'slotBalanceVal', 'gameBalance'];
     bTargets.forEach(id => {
         const el = document.getElementById(id);
@@ -1891,14 +1890,11 @@ function updateAllGameBalances() {
 function updateWinUI(winAmt) {
     const akhoStr = winAmt.toFixed(2);
     const euroStr = "(" + (winAmt / 10).toFixed(2) + " €)";
-
-    // ყველა მოგების ველის განახლება
     const wTargets = ['slot5WinVal', 'slot5WinVal_inner', 'slotWinVal'];
     wTargets.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.innerText = akhoStr;
     });
-
     if(document.getElementById('slot5RealWin')) 
         document.getElementById('slot5RealWin').innerText = euroStr;
 }
@@ -1910,25 +1906,32 @@ function triggerBurningSpin() {
     if (isSpinningNow || !canAfford(burningStake)) return;
     isSpinningNow = true;
 
-    spendAkho(burningStake, 'Burning Slots Bet');
+    spendAkho(burningStake, '3-Reel Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
     const wrapper = document.getElementById('reelsWrapper');
+    const oldLine = document.getElementById('winLine');
+    if(oldLine) oldLine.remove();
+
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
     let result = [], winAmt = 0;
     const rand = Math.random();
 
-    if (rand < 0.05) { result = ['7️⃣','7️⃣','7️⃣']; winAmt = burningStake * 50; }
-    else if (rand < 0.15) { let i = burningIcons[1]; result = [i,i,i]; winAmt = burningStake * 10; }
+    if (rand < 0.02) { result = ['7️⃣','7️⃣','7️⃣']; winAmt = burningStake * 100; }
+    else if (rand < 0.10) { let i = burningIcons[1]; result = [i,i,i]; winAmt = burningStake * 15; }
     else { 
-        result = [burningIcons[0], burningIcons[1], burningIcons[2]].sort(()=>Math.random()-0.5); 
+        while(true) {
+            result = [burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)]];
+            if (!(result[0] === result[1] && result[1] === result[2])) break;
+        }
         winAmt = 0; 
     }
 
     for (let i = 1; i <= 3; i++) {
         const r = document.getElementById('reel_' + i);
+        if(!r) continue;
         r.innerHTML = '';
         for(let j=0; j<40; j++) {
             const s = document.createElement('div');
@@ -1953,17 +1956,19 @@ function triggerBurningSpin() {
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 3000);
+    }, 3200);
 }
 
 // ==========================================
 // 5. BURNING SLOTS (5-RILL) LOGIC
 // ==========================================
 function triggerBurning5Spin() {
-    if (isSpinning5 || !canAfford(burningStake5)) return;
+    if (isSpinning5 || !canAfford(burningStake5)) {
+        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის!");
+        return;
+    }
     isSpinning5 = true;
-
-    spendAkho(burningStake5, 'Burning Slots 5 Bet');
+    spendAkho(burningStake5, '5-Reel Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
@@ -1974,13 +1979,17 @@ function triggerBurning5Spin() {
 
     if (rand < 0.03) { result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; winAmt = burningStake5 * 150; }
     else { 
-        for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random()*9)]);
-        if(result.every(v=>v===result[0])) result[0]=slot5Icons[1];
+        while(true) {
+            result = [];
+            for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random()*9)]);
+            if(!result.every(v => v === result[0])) break;
+        }
         winAmt = 0;
     }
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
+        if(!r) continue;
         r.innerHTML = '';
         for(let j=0; j<60; j++) {
             const s = document.createElement('div');
@@ -2009,30 +2018,26 @@ function triggerBurning5Spin() {
 }
 
 // ==========================================
-// 6. ნავიგაცია (უკან გამოსვლა)
+// 6. ნავიგაცია
 // ==========================================
 function backFromSlots() {
     document.getElementById('burningSlotsContainer').style.display = 'none';
     document.getElementById('gamesList').style.display = 'grid';
 }
-
 function backFromSlots5() {
     document.getElementById('burningSlots5Container').style.display = 'none';
     document.getElementById('gamesList').style.display = 'grid';
 }
-
 function openBurningSlots() {
     document.getElementById('gamesList').style.display = 'none';
     document.getElementById('burningSlotsContainer').style.display = 'flex';
     updateAllGameBalances();
 }
-
 function openBurningSlots5() {
     document.getElementById('gamesList').style.display = 'none';
     document.getElementById('burningSlots5Container').style.display = 'flex';
     updateAllGameBalances();
-}
-
+}     
 
     
 
