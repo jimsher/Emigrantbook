@@ -1845,6 +1845,7 @@ async function startLottoDraw() {
     
 
     
+            
     var burningStake = 0.15;
     var burningIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
     var isSpinningNow = false;
@@ -1852,7 +1853,7 @@ async function startLottoDraw() {
     function openBurningSlots() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('burningSlotsContainer').style.display = 'flex';
-        initBurningReels();
+        initBurningReels(); // პირველი გახსნისას ვავსებთ
     }
 
     function backFromSlots() {
@@ -1868,7 +1869,6 @@ async function startLottoDraw() {
         btn.style.background = 'gold'; btn.style.color = 'black';
     }
 
-    // რილების შევსება - ვამატებთ ბევრ სიმბოლოს, რომ "სიცარიელე" არ დარჩეს
     function initBurningReels() {
         for (let i = 1; i <= 3; i++) {
             const r = document.getElementById('reel_' + i);
@@ -1876,7 +1876,6 @@ async function startLottoDraw() {
             r.style.transition = 'none'; 
             r.style.transform = 'translateY(0)';
             
-            // 150 სიმბოლო, რომ ტრიალისას ბოლოში არ ავცდეთ
             for (let j = 0; j < 150; j++) {
                 const s = document.createElement('div');
                 s.style.height = '60px'; 
@@ -1896,51 +1895,53 @@ async function startLottoDraw() {
         let currentBalance = parseFloat(document.getElementById('gameBalance').innerText) || 0;
         if (currentBalance < burningStake) { alert("ბალანსი არ გყოფნის!"); return; }
 
-        isSpinningNow = true;
-        currentBalance -= burningStake;
-        document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
-        document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
-        document.getElementById('slotWinVal').innerText = "0.00";
+        // --- მნიშვნელოვანი: აქ ვარესეტებთ მხოლოდ სპინის დაწყების მომენტში ---
+        initBurningReels();
 
-        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
-
-        // რილების დატრიალება
-        for (let i = 1; i <= 3; i++) {
-            const r = document.getElementById('reel_' + i);
-            // გამოვთვლით ისეთ მანძილს, რომ რილი ყოველთვის სიმბოლოზე გაჩერდეს (70-ის ჯერადი)
-            // 40-დან 80 სიმბოლომდე გადახტება
-            const randomStop = Math.floor(Math.random() * 40) + 40; 
-            const move = randomStop * 70; 
-            
-            r.style.transition = `transform ${1.2 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
-            r.style.transform = `translateY(-${move}px)`;
-        }
-
+        // ვაძლევთ ბრაუზერს 50მს, რომ "დაინახოს" რესეტი და მერე დაიწყოს ანიმაცია
         setTimeout(() => {
-            isSpinningNow = false;
-            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            isSpinningNow = true;
+            currentBalance -= burningStake;
+            document.getElementById('gameBalance').innerText = currentBalance.toFixed(2) + " AKHO";
+            document.getElementById('slotBalanceVal').innerText = currentBalance.toFixed(2);
+            document.getElementById('slotWinVal').innerText = "0.00";
 
-            // --- რეალური მოგების ლოგიკა ---
-            const winChance = Math.random(); 
-            let winMultiplier = 0;
+            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-            if (winChance < 0.02) { winMultiplier = 50; }      // 2% შანსი - x50
-            else if (winChance < 0.07) { winMultiplier = 10; } // 5% შანსი - x10
-            else if (winChance < 0.15) { winMultiplier = 3; }  // 8% შანსი - x3
-            else if (winChance < 0.25) { winMultiplier = 1.5; } // 10% შანსი - x1.5
-
-            if (winMultiplier > 0) {
-                let win = burningStake * winMultiplier;
-                let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
-                document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
-                document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
-                document.getElementById('slotWinVal').innerText = win.toFixed(2);
+            for (let i = 1; i <= 3; i++) {
+                const r = document.getElementById('reel_' + i);
+                // ვაჩერებთ 60-დან 100 სიმბოლომდე დიაპაზონში
+                const randomStop = Math.floor(Math.random() * 40) + 60; 
+                const move = randomStop * 70; 
                 
-                if (winMultiplier >= 10) alert("🔥 JACKPOT! მოიგე " + win.toFixed(2) + " AKHO");
+                r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+                r.style.transform = `translateY(-${move}px)`;
             }
-            
-            // ვამზადებთ შემდეგი სპინისთვის - ვაბრუნებთ 0-ზე ანიმაციის გარეშე
-            setTimeout(() => { initBurningReels(); }, 500);
-            
-        }, 2800);
+
+            setTimeout(() => {
+                isSpinningNow = false;
+                new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+
+                // მოგების ლოგიკა
+                const winChance = Math.random(); 
+                let winMultiplier = 0;
+
+                if (winChance < 0.02) winMultiplier = 50;
+                else if (winChance < 0.07) winMultiplier = 10;
+                else if (winChance < 0.15) winMultiplier = 3;
+                else if (winChance < 0.25) winMultiplier = 1.5;
+
+                if (winMultiplier > 0) {
+                    let win = burningStake * winMultiplier;
+                    let finalBal = parseFloat(document.getElementById('gameBalance').innerText) + win;
+                    document.getElementById('gameBalance').innerText = finalBal.toFixed(2) + " AKHO";
+                    document.getElementById('slotBalanceVal').innerText = finalBal.toFixed(2);
+                    document.getElementById('slotWinVal').innerText = win.toFixed(2);
+                }
+                
+                // აქ აღარ ვიძახებთ initBurningReels-ს! 
+                // სიმბოლოები დარჩება ისე, როგორც გაჩერდა.
+                
+            }, 3000);
+        }, 50);
     }
