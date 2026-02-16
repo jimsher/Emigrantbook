@@ -1826,3 +1826,62 @@ async function startLottoDraw() {
         btn.disabled = false;
     }, 500);
 }
+
+
+
+
+
+
+
+
+
+let isSpinning = false;
+
+async function spinWheel() {
+    if (isSpinning) return;
+
+    // აქ შეგვიძლია დავამატოთ შემოწმება: დღეში მხოლოდ ერთხელ
+    // if (!canSpinToday()) { alert("დღევანდელი შანსი უკვე გამოიყენე!"); return; }
+
+    isSpinning = true;
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    
+    // ხმების გამოძახება (შენი GitHub ლინკები)
+    const spinSound = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
+    const winSound = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
+    
+    spinBtn.disabled = true;
+    spinSound.play();
+
+    // შემთხვევითი გრადუსი (მინიმუმ 5 წრე + შემთხვევითი კუთხე)
+    const randomDegree = Math.floor(Math.random() * 360) + 1800; 
+    wheel.style.transform = `rotate(${randomDegree}deg)`;
+
+    // გაჩერების შემდეგ (4 წამში)
+    setTimeout(() => {
+        isSpinning = false;
+        winSound.play();
+        
+        // პრიზის დაანგარიშება (მარტივი ლოგიკა)
+        const actualDegree = randomDegree % 360;
+        let prize = 0.10; // Default მინიმალური პრიზი
+        
+        if (actualDegree > 0 && actualDegree < 45) prize = 0.50;
+        else if (actualDegree >= 45 && actualDegree < 90) prize = 1.00;
+        // ... და ა.შ.
+
+        alert(`🎉 გილოცავ! შენ მოიგე ${prize.toFixed(2)} AKHO`);
+        
+        // ბალანსის განახლება ბაზაში
+        addAkho(prize, "Daily Fortune Wheel");
+        
+        spinBtn.disabled = false;
+        // აქ შევინახოთ თარიღი, რომ მომხმარებელმა დღეს ვეღარ დაატრიალოს
+        // saveLastSpinDate();
+    }, 4000);
+}
+
+
+
+
