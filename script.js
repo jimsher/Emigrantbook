@@ -2180,3 +2180,14 @@ function triggerBurningSpin() {
         }
     }, 3500);
 }
+
+// 3-რილიანი სლოტიდან გამოსვლა
+function backFromSlots() {
+    const slotContainer = document.getElementById('burningSlotsContainer');
+    const gamesList = document.getElementById('gamesList');
+    
+    if (slotContainer && gamesList) {
+        slotContainer.style.display = 'none'; // მალავს 3-იან სლოტს
+        gamesList.style.display = 'grid';     // აჩენს მთავარ სიას
+    }
+}
