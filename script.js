@@ -1841,20 +1841,24 @@ async function startLottoDraw() {
 
 
 
-   let currentSlotBet = 0.15; // ინახავს არჩეულ ფსონს
+   // ცვლადები სლოტისთვის
+let currentSlotBet = 0.15;
+let isSpinning = false;
 const slotIcons = ['7️⃣', '🍒', '🍋', '🍉', '🍇', '🔔', '⭐'];
 
-// 1. თამაშის გახსნა (ეს ფუნქცია გამოიძახება ბარათზე დაჭერისას)
+// 1. თამაშის გახსნა - გარანტირებული გადართვა
 function openBurningSlots() {
-    // ვმალავთ სიას და ვხსნით სლოტს
-    const list = document.getElementById('gamesList');
-    const slotContainer = document.getElementById('burningSlotsContainer');
+    // ვმალავთ მთავარ სიას და სხვა კონტეინერებს
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('wheelGameContainer').style.display = 'none';
+    document.getElementById('lottoGameContainer').style.display = 'none';
     
-    if(list && slotContainer) {
-        list.style.display = 'none';
-        slotContainer.style.display = 'flex';
-        initSlotReels(); // ვავსებთ რილებს სიმბოლოებით
-    }
+    // ვხსნით სლოტის კონტეინერს
+    const container = document.getElementById('burningSlotsContainer');
+    container.style.display = 'flex';
+    
+    // ვავსებთ რილებს სიმბოლოებით ყოველი გახსნისას
+    initSlotReels();
 }
 
 // 2. უკან დაბრუნება
@@ -1863,65 +1867,81 @@ function backFromSlots() {
     document.getElementById('gamesList').style.display = 'grid';
 }
 
-// 3. ფსონის არჩევა (ინახავს და აფერადებს ღილაკს)
-function updateBet(val, btn) {
-    currentSlotBet = val;
-    // ყველა ღილაკის ფონის გასუფთავება
+// 3. ფსონის განახლება (მუშაობს შენს .bet-opt კლასებზე)
+function updateBet(amount, btn) {
+    currentSlotBet = amount;
+    
+    // ყველა ღილაკის სტილის ჩამოყრა
     document.querySelectorAll('.bet-opt').forEach(b => {
-        b.style.background = '#111';
+        b.style.background = '#222';
         b.style.color = 'gold';
     });
-    // მონიშნული ღილაკის გაფერადება
+    
+    // არჩეული ღილაკის მონიშვნა
     btn.style.background = 'gold';
     btn.style.color = 'black';
 }
 
-// 4. რილების შევსება
+// 4. რილების შევსება (უზრუნველყოფს გლუვ ტრიალს)
 function initSlotReels() {
-    [1, 2, 3].forEach(i => {
-        const reel = document.getElementById('reel_'+i);
-        if(reel) {
-            reel.innerHTML = '';
-            reel.style.transform = 'translateY(0)';
-            // ვამატებთ ბევრ სიმბოლოს ტრიალისთვის
-            for(let j=0; j<50; j++) {
-                const div = document.createElement('div');
-                div.style.height = '60px';
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.justifyContent = 'center';
-                div.style.fontSize = '35px';
-                div.innerText = slotIcons[Math.floor(Math.random() * slotIcons.length)];
-                reel.appendChild(div);
-            }
+    for (let i = 1; i <= 3; i++) {
+        const reel = document.getElementById('reel_' + i);
+        reel.innerHTML = ''; // გასუფთავება
+        reel.style.transform = 'translateY(0)'; // პოზიციის დარესეტება
+        
+        // ვამატებთ 60 სიმბოლოს, რომ ტრიალი იყოს ხანგრძლივი
+        for (let j = 0; j < 60; j++) {
+            const symbol = document.createElement('div');
+            symbol.style.height = '60px';
+            symbol.style.display = 'flex';
+            symbol.style.alignItems = 'center';
+            symbol.style.justifyContent = 'center';
+            symbol.style.fontSize = '35px';
+            symbol.innerText = slotIcons[Math.floor(Math.random() * slotIcons.length)];
+            reel.appendChild(symbol);
         }
-    });
+    }
 }
 
-// 5. დატრიალება
+// 5. ტრიალის მთავარი ფუნქცია
 function triggerBurningSpin() {
-    // აქ ბალანსის შემოწმება: if (userBalance < currentSlotBet) ...
+    if (isSpinning) return; // თუ უკვე ტრიალებს, არაფერი ქნას
+
+    // აქ შეგიძლია ჩაამატო ბალანსის შემოწმება: 
+    // if(userBalance < currentSlotBet) return alert('ბალანსი არ გყოფნის!');
+
+    isSpinning = true;
     
+    // ხმების გაშვება (შენი GitHub)
     const spinSound = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-    spinSound.play().catch(() => {});
+    spinSound.play().catch(e => console.log("Sound error"));
 
-    [1, 2, 3].forEach((i, idx) => {
-        const reel = document.getElementById('reel_'+i);
-        // შემთხვევითი მანძილი (მინიმუმ 20 სიმბოლო)
-        const move = (Math.floor(Math.random() * 10) + 20) * 60;
+    // თითოეული რილის დატრიალება
+    for (let i = 1; i <= 3; i++) {
+        const reel = document.getElementById('reel_' + i);
+        // შემთხვევითი მანძილი (მინიმუმ 30 სიმბოლო)
+        const randomMove = (Math.floor(Math.random() * 20) + 35) * 60; 
         
-        reel.style.transition = `transform ${2 + (idx * 0.5)}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
-        reel.style.transform = `translateY(-${move}px)`;
-    });
+        // დინამიური ანიმაცია (cubic-bezier აძლევს კაზინოს ეფექტს)
+        reel.style.transition = `transform ${2.5 + (i * 0.5)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+        reel.style.transform = `translateY(-${randomMove}px)`;
+    }
 
+    // შედეგის დაფიქსირება 4 წამში
     setTimeout(() => {
-        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(() => {});
-        
-        // მოგების სიმულაცია (მაგალითად 30% შანსი)
-        if(Math.random() < 0.3) {
-            const win = currentSlotBet * 5;
+        isSpinning = false;
+        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(e => {});
+
+        // მოგების შანსი (მაგალითად 25%)
+        if (Math.random() < 0.25) {
+            const multipliers = [2, 5, 10];
+            const mult = multipliers[Math.floor(Math.random() * multipliers.length)];
+            const win = currentSlotBet * mult;
+            
             document.getElementById('slotWinVal').innerText = win.toFixed(2);
-            alert("🎉 BIG WIN: " + win.toFixed(2) + " AKHO");
+            alert(`🔥 BIG WIN! მოიგე ${win.toFixed(2)} AKHO!`);
+        } else {
+            document.getElementById('slotWinVal').innerText = "0.00";
         }
-    }, 3500);
+    }, 4000);
 }
