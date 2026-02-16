@@ -2030,6 +2030,52 @@ function updateAllGameBalances() {
 }
 
 
+// 1. ფსონის ჩამოჭრა (ფული რომ მოგაკლდეს)
+function spendAkho(cost, reason = 'Game Bet') {
+    if (myAkho < cost) return false;
+    
+    db.ref(`users/${auth.currentUser.uid}/akho`).transaction(current => {
+        return (current || 0) - parseFloat(cost);
+    }, (error, committed, snapshot) => {
+        if (committed) {
+            myAkho = snapshot.val(); // ლოკალური ბალანსის განახლება
+            updateAllGameBalances(); // ეკრანზე ციფრების განახლება
+            addToLog(reason, -cost); // ისტორიაში ჩაწერა
+        }
+    });
+    return true;
+}
+
+// 2. მოგების დარიცხვა (ფული რომ დაგემატოს)
+function earnAkho(targetUid, amount, reason = 'Game Win') {
+    if (!targetUid || amount <= 0) return;
+
+    db.ref(`users/${targetUid}/akho`).transaction(current => {
+        return (current || 0) + parseFloat(amount);
+    }, (error, committed, snapshot) => {
+        if (committed) {
+            myAkho = snapshot.val(); // ლოკალური ბალანსის განახლება
+            updateAllGameBalances(); // ეკრანზე ციფრების განახლება
+            
+            // მოგების ლოგი ჩაიწეროს ისტორიაში
+            db.ref(`activity_logs/${targetUid}`).push({
+                type: reason,
+                amt: parseFloat(amount),
+                ts: Date.now()
+            });
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
