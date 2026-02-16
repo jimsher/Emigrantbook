@@ -1898,45 +1898,61 @@ async function startLottoDraw() {
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 1. შედეგის დაგეგმვა
+    // 1. მოგების დაგეგმვა სურათების ლოგიკით
     const rand = Math.random();
     let result = [];
     let winAmt = 0;
 
-    if (rand < 0.02) { 
-        result = ['7️⃣', '7️⃣', '7️⃣']; winAmt = 50.00;
-    } else if (rand < 0.08) { 
-        result = ['🍇', '🍇', '🍇']; winAmt = 10.00;
-    } else if (rand < 0.18) { 
-        const middleIcon = burningIcons[Math.floor(Math.random() * burningIcons.length)];
-        result = ['🍒', middleIcon, '⭐']; winAmt = 5.00;
+    // შენი ფსონი (Stake) არის burningStake (მაგ: 0.15, 0.30, 0.60, 1.00)
+    // სურათების მიხედვით კოეფიციენტები (x3 დასმაზე):
+    if (rand < 0.01) { 
+        // 7️⃣7️⃣7️⃣ - ყველაზე მაღალი (x20-დან x100-მდე ფსონზე)
+        result = ['7️⃣', '7️⃣', '7️⃣']; 
+        winAmt = burningStake * 100; // მაგ: 1.00-ზე იგებს 100-ს
+    } else if (rand < 0.03) {
+        // 🍉🍉🍉 ან 🍇🍇🍇 (x15-x20 ფსონზე)
+        let icon = Math.random() < 0.5 ? '🍉' : '🍇';
+        result = [icon, icon, icon];
+        winAmt = burningStake * 20;
+    } else if (rand < 0.06) {
+        // 🔔🔔🔔 (x8 ფსონზე)
+        result = ['🔔', '🔔', '🔔'];
+        winAmt = burningStake * 8;
+    } else if (rand < 0.12) {
+        // 🍒🍒🍒, 🍋🍋🍋, 🍊🍊🍊 (x4 ფსონზე)
+        let fruitIcons = ['🍒', '🍋', '🍇']; // აქ 🍇-ს ნაცვლად 🍊 უნდა იყოს, თუ გაქვს
+        let icon = fruitIcons[Math.floor(Math.random() * fruitIcons.length)];
+        result = [icon, icon, icon];
+        winAmt = burningStake * 4;
+    } else if (rand < 0.20) {
+        // SCATTER (⭐) - ნებისმიერ ადგილას (x3 ფსონზე)
+        result = ['⭐', burningIcons[0], '⭐']; // ვარსკვლავები გვერდებზე
+        winAmt = burningStake * 3;
     } else {
-        result = [burningIcons[1], burningIcons[3], burningIcons[5]]; winAmt = 0;
+        // წაგება
+        result = [burningIcons[0], burningIcons[2], burningIcons[4]];
+        winAmt = 0;
     }
 
-    // 2. რილების ტრიალი (RESET პრინციპით)
+    // 2. რილების ტრიალი (RESET-ით, რომ არ გაქრეს)
     for (let i = 1; i <= 3; i++) {
         const r = document.getElementById('reel_' + i);
-        
-        // ჯერ ვაბრუნებთ 0-ზე მომენტალურად (ანიმაციის გარეშე)
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
         
-        // ვსვამთ სიმბოლოს მე-30 პოზიციაზე
-        const stopIdx = 30;
+        const stopIdx = 35; // ყოველთვის 35-ე სიმბოლოზე ვაჩერებთ
         if(r.children[stopIdx]) {
             r.children[stopIdx].innerText = result[i-1];
         }
 
-        // ვაძლევთ ბრაუზერს დროს, რომ აღიქვას 0-ზე დაბრუნება
         setTimeout(() => {
             const move = stopIdx * 70;
-            r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${move}px)`;
-        }, 20);
+        }, 30);
     }
 
-    // 3. გაჩერება
+    // 3. გაჩერება და მოგების ხაზი
     setTimeout(() => {
         isSpinningNow = false;
         if (winAmt > 0) {
