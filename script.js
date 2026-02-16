@@ -1844,13 +1844,13 @@ async function startLottoDraw() {
 var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
 var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
 
-var burningStake = 0.15;  // 3-იანის საწყისი ფსონი
-var burningStake5 = 0.20; // 5-იანის საწყისი ფსონი
+var burningStake = 0.15;  
+var burningStake5 = 0.20; 
 var isSpinningNow = false;
 var isSpinning5 = false;
 
 // ==========================================
-// 2. ფსონის შეცვლის ფუნქციები (STAKE)
+// 2. ფსონის შეცვლის ფუნქციები
 // ==========================================
 function updateBet(amount, btn) {
     if (isSpinningNow) return;
@@ -1871,14 +1871,13 @@ function updateBet5(amount, btn) {
 }
 
 // ==========================================
-// 3. UI განახლების ცენტრალური სისტემა
+// 3. UI განახლება (ბალანსი და მოგება)
 // ==========================================
 function updateAllGameBalances() {
     const val = (typeof myAkho !== 'undefined') ? myAkho : 0;
     const akhoStr = val.toFixed(2);
     const euroStr = "(" + (val / 10).toFixed(2) + " €)";
 
-    // ყველა ბალანსის ველის განახლება (რაც შენს HTML-შია)
     const bTargets = ['slot5BalanceVal', 'slot5BalanceVal_inner', 'slotBalanceVal', 'gameBalance'];
     bTargets.forEach(id => {
         const el = document.getElementById(id);
@@ -1889,27 +1888,22 @@ function updateAllGameBalances() {
         document.getElementById('slot5RealBalance').innerText = euroStr;
 }
 
-
 function updateWinUI(winAmt) {
     const akhoStr = winAmt.toFixed(2);
     const euroStr = "(" + (winAmt / 10).toFixed(2) + " €)";
 
-    // ყველა მოგების ID, რაც შენს HTML-შია (ზედა პანელი + შიდა ველები)
     const wTargets = ['slot5WinVal', 'slot5WinVal_inner', 'slotWinVal'];
-    
     wTargets.forEach(id => {
         const el = document.getElementById(id);
         if(el) el.innerText = akhoStr;
     });
 
-    // ევროს განახლება ზედა პანელში
-    if(document.getElementById('slot5RealWin')) {
+    if(document.getElementById('slot5RealWin')) 
         document.getElementById('slot5RealWin').innerText = euroStr;
-    }
 }
 
 // ==========================================
-// 4. BURNING SLOTS (3-RILL) LOGIC
+// 4. 3-RILL SLOT LOGIC
 // ==========================================
 function triggerBurningSpin() {
     if (isSpinningNow || !canAfford(burningStake)) return;
@@ -1919,7 +1913,6 @@ function triggerBurningSpin() {
     updateAllGameBalances();
     updateWinUI(0);
 
-    const wrapper = document.getElementById('reelsWrapper');
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
     let result = [], winAmt = 0;
@@ -1928,12 +1921,13 @@ function triggerBurningSpin() {
     if (rand < 0.05) { result = ['7️⃣','7️⃣','7️⃣']; winAmt = burningStake * 50; }
     else if (rand < 0.15) { let i = burningIcons[1]; result = [i,i,i]; winAmt = burningStake * 10; }
     else { 
-        result = [burningIcons[0], burningIcons[1], burningIcons[2]].sort(()=>Math.random()-0.5); 
+        result = [burningIcons[0], burningIcons[1], burningIcons[4]].sort(()=>Math.random()-0.5); 
         winAmt = 0; 
     }
 
     for (let i = 1; i <= 3; i++) {
         const r = document.getElementById('reel_' + i);
+        if(!r) continue;
         r.innerHTML = '';
         for(let j=0; j<40; j++) {
             const s = document.createElement('div');
@@ -1958,11 +1952,11 @@ function triggerBurningSpin() {
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 3000);
+    }, 3200);
 }
 
 // ==========================================
-// 5. BURNING SLOTS (5-RILL) LOGIC
+// 5. 5-RILL SLOT LOGIC
 // ==========================================
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
@@ -1986,6 +1980,7 @@ function triggerBurning5Spin() {
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
+        if(!r) continue;
         r.innerHTML = '';
         for(let j=0; j<60; j++) {
             const s = document.createElement('div');
@@ -2010,22 +2005,12 @@ function triggerBurning5Spin() {
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 4000);
+    }, 4500);
 }
 
 // ==========================================
-// 6. ნავიგაცია (უკან გამოსვლა)
+// 6. ნავიგაცია და გახსნა
 // ==========================================
-function backFromSlots() {
-    document.getElementById('burningSlotsContainer').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
-function backFromSlots5() {
-    document.getElementById('burningSlots5Container').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
 function openBurningSlots() {
     document.getElementById('gamesList').style.display = 'none';
     document.getElementById('burningSlotsContainer').style.display = 'flex';
@@ -2037,6 +2022,18 @@ function openBurningSlots5() {
     document.getElementById('burningSlots5Container').style.display = 'flex';
     updateAllGameBalances();
 }
+
+function backFromSlots() {
+    document.getElementById('burningSlotsContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+function backFromSlots5() {
+    document.getElementById('burningSlots5Container').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+    
+
 
 
 
