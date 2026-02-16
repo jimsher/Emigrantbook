@@ -1,3 +1,225 @@
+#msgBadge {
+ position: absolute;
+ top: -5px;
+ right: 8px;
+ background: #ff4d4d; /* კაშკაშა წითელი */
+ color: white;
+ font-size: 10px;
+ font-weight: 900;
+ min-width: 18px;
+ height: 18px;
+ padding: 2px;
+ border-radius: 50%;
+ display: none; /* თავიდან დამალულია */
+ align-items: center;
+ justify-content: center;
+ border: 2px solid #000; /* შავი ჩარჩო რომ მკაფიოდ გამოჩნდეს */
+ z-index: 10;
+ line-height: 1;
+}
+ 
+ 
+ .game-btn-container {
+ position: relative;
+ cursor: pointer;
+ width: 40px;
+ height: 40px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ background: linear-gradient(145deg, #ff9800, #ff5722);
+ border-radius: 10px;
+ margin-left: 10px;
+ box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+ animation: pulse-glow 2s infinite;
+}
+
+.game-icon {
+ color: white;
+ font-size: 20px;
+ z-index: 2;
+}
+
+@keyframes pulse-glow {
+ 0% { box-shadow: 0 0 5px #ff9800; transform: scale(1); }
+ 50% { box-shadow: 0 0 20px #ff5722, 0 0 30px #ff9800; transform: scale(1.05); }
+ 100% { box-shadow: 0 0 5px #ff9800; transform: scale(1); }
+}
+ 
+ .game-card {
+ background: #1a1a1a;
+ padding: 15px;
+ border-radius: 15px;
+ border: 1px solid #333;
+ transition: 0.3s;
+ cursor: pointer;
+}
+.game-card:active {
+ transform: scale(0.95);
+ border-color: var(--gold);
+}
+
+#wheelCanvas {
+ transition: transform 5s cubic-bezier(0.15, 0, 0.2, 1);
+ will-change: transform;
+}
+ 
+ .empty-slot {
+ width: 45px;
+ height: 45px;
+ border-radius: 50%;
+ background: #333;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ color: #555;
+ font-weight: bold;
+ border: 2px dashed #444;
+}
+
+.lotto-ball {
+ width: 45px;
+ height: 45px;
+ border-radius: 50%;
+ background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+ color: black;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-weight: 900;
+ font-size: 18px;
+ box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+ animation: ball-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.num-btn {
+ background: #222;
+ border: 1px solid #444;
+ color: white;
+ padding: 10px;
+ border-radius: 8px;
+ cursor: pointer;
+ font-weight: bold;
+ transition: 0.2s;
+}
+
+.num-btn.selected {
+ background: var(--gold);
+ color: black;
+ transform: scale(1.1);
+ box-shadow: 0 0 10px var(--gold);
+}
+
+@keyframes ball-pop {
+ 0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+ 100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.slot-reel {
+    width: 70px;
+    height: 90px;
+    background: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 45px;
+    position: relative;
+    border: 2px solid #555;
+}
+
+.spinning {
+    animation: slot-blur 0.1s infinite linear;
+    filter: blur(4px);
+}
+
+@keyframes slot-blur {
+    0% { transform: translateY(-5px); }
+    50% { transform: translateY(5px); }
+    100% { transform: translateY(-5px); }
+}
+
+.slot-win {
+    animation: win-glow 0.5s infinite alternate;
+}
+
+@keyframes win-glow {
+    from { box-shadow: 0 0 5px var(--gold); transform: scale(1); }
+    to { box-shadow: 0 0 20px var(--gold); transform: scale(1.05); }
+}
+
+
+.reel-3d {
+    width: 85px;
+    height: 110px;
+    background: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.3);
+    border: 1px solid #999;
+}
+
+.strip-3d {
+    transition: transform 0.1s linear;
+}
+
+.spin-fast {
+    animation: reel-rotate 0.15s infinite linear;
+    filter: blur(5px) brightness(1.2);
+}
+
+@keyframes reel-rotate {
+    0% { transform: translateY(-30px) scaleY(1.2); }
+    100% { transform: translateY(30px) scaleY(1.2); }
+}
+
+.win-flash {
+    animation: gold-flash 0.4s infinite alternate;
+}
+
+@keyframes gold-flash {
+    from { background: #fff; }
+    to { background: #ffd700; box-shadow: 0 0 25px #ffd700; }
+}
+
+
+.card-back {
+    width: 40px;
+    height: 60px;
+    background: linear-gradient(45deg, #700, #b00);
+    border: 2px solid white;
+    border-radius: 5px;
+    background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+    background-size: 5px 5px;
+}
+
+.bura-btn {
+    padding: 10px 25px;
+    border-radius: 20px;
+    border: none;
+    background: #444;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.deck-stack {
+    width: 50px;
+    height: 70px;
+    background: #800;
+    border: 2px solid white;
+    border-radius: 5px;
+    box-shadow: 3px 3px 0 #400, 6px 6px 0 #200;
+}
+
+.bet-btn { padding: 10px; border: 2px solid transparent; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; } .bet-btn.active { border-color: gold; transform: scale(1.05); box-shadow: 0 0 10px gold; } 
+
+
+
 .navbar {
  position: fixed !important; 
  top: 0 !important; 
