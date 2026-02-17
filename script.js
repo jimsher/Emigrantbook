@@ -2192,22 +2192,20 @@ function backFromSlots() {
 
 
 
-            
-    
- function triggerBurning5Spin() {
+    function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
     window.spinCount5 = (window.spinCount5 || 0) + 1;
     
-    spendAkho(burningStake5, 'Slot 5 Bet');
+    spendAkho(burningStake5, 'Burning 5 Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
     let result = [];
     let winAmt = 0;
 
-    // --- მათემატიკური ციკლი (უცვლელი) ---
+    // --- მათემატიკური ციკლი ---
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2224,29 +2222,27 @@ function backFromSlots() {
 
         r.innerHTML = '';
         // ვავსებთ რილს
-        for(let j=0; j < 50; j++) {
+        for(let j=0; j < 60; j++) {
             const s = document.createElement('div');
-            // სიმაღლე მკაცრად 70px, რომ აცდენა გამოირიცხოს
-            s.style = "height:70px; line-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box;";
+            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 35; // მოგების ინდექსი
+        const stopIdx = 40; // მოგების ინდექსი (ცოტა შორს წავიღოთ)
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
         setTimeout(() => {
-            // თანმიმდევრული გაჩერება (0.4 წამიანი ინტერვალით)
-            const duration = 1.5 + (i * 0.4); 
-            r.style.transition = `transform ${duration}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            // თანმიმდევრული გაჩერება
+            const duration = 1.2 + (i * 0.4); 
+            r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
             
-            // --- მთავარი შესწორება აქაა ---
-            // იმისთვის რომ 3 ხაზი გამოჩნდეს და მოგება იყოს შუაში:
-            // (stopIdx - 1) ნიშნავს, რომ რილი ჩამოვა ისე, რომ 34-ე სიმბოლო იქნება ზემოთ, 
-            // 35-ე (ჩვენი) იქნება შუაში და 36-ე იქნება ქვემოთ.
+            // --- აი ეს არის "ოქროს" შესწორება ---
+            // იმისთვის რომ 3 ხაზი გამოჩნდეს სრულად და მოგება დაჯდეს შუაში:
+            // რილს ვაჩერებთ ისე, რომ 39-ე სიმბოლო იყოს სლოტის თავში.
             const targetPos = (stopIdx - 1) * 70; 
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
@@ -2263,7 +2259,8 @@ function backFromSlots() {
             setTimeout(updateAllGameBalances, 500);
         }
     }, 4500); 
-}
+}        
+    
 
 
 
