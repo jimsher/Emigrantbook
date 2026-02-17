@@ -2203,7 +2203,7 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // --- მათემატიკური კონტროლი ---
+    // --- მათემატიკური ციკლი (ზუსტად ისე, როგორც გინდოდა) ---
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2216,30 +2216,28 @@ function triggerBurning5Spin() {
         if(!r) continue;
 
         r.innerHTML = '';
-        // ვქმნით 20 სიმბოლოს ტრიალისთვის
-        for(let j=0; j < 20; j++) {
+        // ვავსებთ 40 სიმბოლოთი
+        for(let j=0; j < 40; j++) {
             const s = document.createElement('div');
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
+            // არანაირ დამატებით სტილს არ ვწერთ, ვიყენებთ შენს არსებულს
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        // !!! აი აქ არის მთავარი ცვლილება: 
-        // ჩვენს "მოგებულ" სიმბოლოს ვსვამთ სულ ბოლოში (21-ე ელემენტად)
-        const sFinal = document.createElement('div');
-        sFinal.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; color:gold;";
-        sFinal.innerText = result[i-1];
-        r.appendChild(sFinal);
+        const stopIdx = 30; // წინა მუშა ვერსიის ინდექსი
+        
+        // აქ ვსვამთ ჩვენს "დაგეგმილ" სიმბოლოს
+        if(r.children[stopIdx]) {
+            r.children[stopIdx].innerText = result[i-1];
+        }
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
-        // ანიმაცია: ჩამოდის სულ ბოლოში
         setTimeout(() => {
-            r.style.transition = `transform ${1.5 + (i * 0.2)}s cubic-bezier(0.2, 0, 0.1, 1)`;
-            // scrollIntoView-ს ლოგიკით: ვწევთ რილს ისე, რომ ბოლო ელემენტი დაჯდეს ცენტრში
-            // თუ შენი სლოტის ფანჯარა 70px-ია, მაშინ:
-            r.style.transform = `translateY(-${r.scrollHeight - 70}px)`;
+            r.style.transition = `transform ${1.5 + (i * 0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
@@ -2255,7 +2253,6 @@ function triggerBurning5Spin() {
         }
     }, 3500);
 }
-
 
  
 
