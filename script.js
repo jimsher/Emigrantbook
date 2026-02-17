@@ -2251,54 +2251,20 @@ function triggerBurning5Spin() {
     updateAllGameBalances();
     updateWinUI(0);
 
-    // დატრიალების ხმა
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
+    // --- ლოგიკური ნაბიჯი 1: სიმბოლოების გენერაცია ---
+    // ჯერ ვადგენთ რა უნდა ეხატოს ეკრანზე
     let result = [];
-    let winAmt = 0;
-    const rand = Math.random();
-
-    // --- შენი მოთხოვნილი ჯეკპოტების სისტემა ---
-    if (rand < 0.005) { 
-        // 1. სრული 5 ხაზი შვიდიანებით (1000 AKHO)
-        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣'];
-        winAmt = 1000;
-        setTimeout(() => startJackpotAnimation(1000, "ULTIMATE JACKPOT!"), 3500);
-    } 
-    else if (rand < 0.015) { 
-        // 2. პირველი 3 ხაზი სრული შვიდიანებით (300 AKHO)
-        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; 
-        winAmt = 300;
-        setTimeout(() => startJackpotAnimation(300, "TRIPLE SEVENS!"), 3500);
-    } 
-    else if (rand < 0.02) { 
-        // 3. ბალი სრულად (500 AKHO)
-        result = ['🍒','🍒','🍒','🍒','🍒'];
-        winAmt = 500;
-        setTimeout(() => startJackpotAnimation(500, "CHERRY MADNESS!"), 3500);
-    }
-    else if (rand < 0.06) {
-        // 4. ვარსკვლავები შუა ხაზზე (20 AKHO)
-        result = ['⭐','⭐','⭐','⭐','⭐'];
-        winAmt = 20;
-    }
-    else if (rand < 0.20) {
-        // ჩვეულებრივი მოგება
-        let winIcon = slot5Icons[Math.floor(Math.random() * 5)];
-        result = [winIcon, winIcon, winIcon, winIcon, winIcon];
-        winAmt = burningStake5 * 10;
-    } 
-    else {
-        // წაგება
-        while(true) {
-            result = [];
-            for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random()*slot5Icons.length)]);
-            if(!result.every(v => v === result[0])) break;
-        }
-        winAmt = 0;
+    for(let k=0; k<5; k++) {
+        result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
     }
 
-    // რილების ტრიალი
+    // --- ლოგიკური ნაბიჯი 2: მოგების დათვლა სიმბოლოებით ---
+    // ვიძახებთ "მსაჯს", რომელიც ამოწმებს ამ სიმბოლოებს
+    let winAmt = checkAllWinPatterns(result);
+
+    // რილების ტრიალის ანიმაცია
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
@@ -2306,22 +2272,32 @@ function triggerBurning5Spin() {
         for(let j=0; j<60; j++) {
             const s = document.createElement('div');
             s.style="height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
-            s.innerText = slot5Icons[Math.floor(Math.random()*9)];
+            s.innerText = slot5Icons[Math.floor(Math.random()*slot5Icons.length)];
             r.appendChild(s);
         }
         r.style.transition = 'none'; r.style.transform = 'translateY(0)';
+        
         const stopIdx = 45;
+        // აქ ვსვამთ იმ სიმბოლოს, რომელიც "მსაჯმა" უკვე შეამოწმა
         r.children[stopIdx].innerText = result[i-1];
+
         setTimeout(() => {
             r.style.transition = `transform ${1.8 + (i*0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
-    // შედეგის დარიცხვა
+    // შედეგის ასახვა
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
+            // თუ 300 ან მეტია, ვრთავთ ოქროს მონეტებს
+            if (winAmt >= 300) {
+                startJackpotAnimation(winAmt, "BIG WIN!");
+            } else {
+                if(typeof winSnd !== 'undefined') winSnd.play().catch(()=>{});
+            }
+            
             earnAkho(auth.currentUser.uid, winAmt, 'Burning 5 Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
@@ -2334,26 +2310,22 @@ function triggerBurning5Spin() {
 function checkAllWinPatterns(resultMatrix) {
     let totalWin = 0;
 
-    // 1. შვიდიანების კონტროლი
-    // ვამოწმებთ არის თუ არა ხუთივე რილი შევსებული შვიდიანებით
+    // შვიდიანების შემოწმება (7️⃣)
     const allSevens = resultMatrix.every(symbol => symbol === '7️⃣');
-    
-    // ვამოწმებთ არის თუ არა პირველი 3 რილი შვიდიანი
     const threeSevens = resultMatrix.slice(0, 3).every(symbol => symbol === '7️⃣');
 
     if (allSevens) {
-        totalWin = 1000; // 5-ვე ხაზზე სრულად
+        totalWin = 1000; 
     } else if (threeSevens) {
-        totalWin = 300;  // პირველ 3 ხაზზე სრულად
+        totalWin = 300;
     }
 
-    // 2. ვარსკვლავების კონტროლი (შუა ხაზზე 3 ცალი)
-    // რადგან 5-რილიანია, ვამოწმებთ 1-ლ, მე-2 და მე-3 რილს შუაში
+    // ვარსკვლავები შუა ხაზზე (⭐)
     if (resultMatrix[0] === '⭐' && resultMatrix[1] === '⭐' && resultMatrix[2] === '⭐') {
         totalWin = 20;
     }
 
-    // 3. ბალის კონტროლი (სრულად ყველა ხაზზე)
+    // ბალი (🍒)
     const allCherries = resultMatrix.every(symbol => symbol === '🍒');
     if (allCherries) {
         totalWin = 500;
