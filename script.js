@@ -2241,30 +2241,56 @@ function startJackpotAnimation(amount, title) {
 // 2. გადაკეთებული 5-რილიანი სლოტის ლოგიკა
 // ==========================================
 function triggerBurning5Spin() {
-    if (isSpinning5 || !canAfford(burningStake5)) {
-        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის!");
-        return;
-    }
+    if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
+    spinCount5++; // ყოველ სპინზე იმატებს 1-ით
+    
     spendAkho(burningStake5, 'Burning Slots 5 Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
-    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
-
-    // --- ლოგიკური ნაბიჯი 1: სიმბოლოების გენერაცია ---
-    // ჯერ ვადგენთ რა უნდა ეხატოს ეკრანზე
     let result = [];
-    for(let k=0; k<5; k++) {
-        result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
+    let winAmt = 0;
+
+    // --- კონტროლირებული მოგების ლოგიკა ---
+    
+    if (spinCount5 % 35 === 0) {
+        // 5. ყოველ 35-ეზე: საზამთრო (50 AKHO)
+        result = ['🍉', '🍉', '🍉', '🍉', '🍉'];
+        winAmt = 50;
+    } 
+    else if (spinCount5 % 30 === 0) {
+        // 4. ყოველ 30-ეზე: ზარი (30 AKHO)
+        result = ['🔔', '🔔', '🔔', '🔔', '🔔'];
+        winAmt = 30;
+    }
+    else if (spinCount5 % 25 === 0) {
+        // 3. ყოველ 25-ეზე: ვარსკვლავი (15 AKHO)
+        result = ['⭐', '⭐', '⭐', '⭐', '⭐'];
+        winAmt = 15;
+    }
+    else if (spinCount5 % 20 === 0) {
+        // 1. ყოველ 20-ეზე: ყურძენი (20 AKHO)
+        result = ['🍇', '🍇', '🍇', '🍇', '🍇'];
+        winAmt = 20;
+    }
+    else if (spinCount5 % 10 === 0) {
+        // 2. ყოველ 10-ეზე: ფორთოხალი (7 AKHO)
+        result = ['🍊', '🍊', '🍊', '🍊', '🍊'];
+        winAmt = 7;
+    }
+    else {
+        // თუ არცერთი ციკლი არ დაემთხვა - რანდომ წაგება
+        while(true) {
+            result = [];
+            for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random()*slot5Icons.length)]);
+            if(!result.every(v => v === result[0])) break;
+        }
+        winAmt = 0;
     }
 
-    // --- ლოგიკური ნაბიჯი 2: მოგების დათვლა სიმბოლოებით ---
-    // ვიძახებთ "მსაჯს", რომელიც ამოწმებს ამ სიმბოლოებს
-    let winAmt = checkAllWinPatterns(result);
-
-    // რილების ტრიალის ანიმაცია
+    // --- რილების დატრიალება ---
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
@@ -2276,34 +2302,30 @@ function triggerBurning5Spin() {
             r.appendChild(s);
         }
         r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-        
         const stopIdx = 45;
-        // აქ ვსვამთ იმ სიმბოლოს, რომელიც "მსაჯმა" უკვე შეამოწმა
         r.children[stopIdx].innerText = result[i-1];
-
         setTimeout(() => {
             r.style.transition = `transform ${1.8 + (i*0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
-    // შედეგის ასახვა
+    // შედეგის დარიცხვა
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            // თუ 300 ან მეტია, ვრთავთ ოქროს მონეტებს
-            if (winAmt >= 300) {
-                startJackpotAnimation(winAmt, "BIG WIN!");
-            } else {
-                if(typeof winSnd !== 'undefined') winSnd.play().catch(()=>{});
+            // თუ დიდი მოგებაა (15-ზე მეტი), ჩავრთოთ მონეტების ცვენა
+            if (winAmt >= 15) {
+                startJackpotAnimation(winAmt, "SUPER WIN!");
             }
-            
-            earnAkho(auth.currentUser.uid, winAmt, 'Burning 5 Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'Cycle Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
     }, 4000);
 }
+
+    
 
 
 
