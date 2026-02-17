@@ -2713,20 +2713,22 @@ async function instantBuy(productId) {
 function addToCart(productId) {
     const p = akhoStore.find(item => item.id === productId);
     
-    // ვამოწმებთ, უკვე არის თუ არა კალათაში
-    const exists = shoppingCart.find(item => item.id === productId);
-    if (exists) {
-        alert("ეს ნივთი უკვე კალათაშია!");
-        return;
-    }
-
+    // ვამატებთ კალათაში
     shoppingCart.push(p);
     
-    // ვიზუალური შეტყობინება
+    // ციფრის განახლება ღილაკზე
+    updateCartCounter();
+    
     alert(`✅ ${p.name} დაემატა კალათაში!`);
-    updateCartCounter(); // თუ სადმე გაქვს კალათის მრიცხველი
 }
 
+function updateCartCounter() {
+    const badge = document.getElementById('cartCountBadge');
+    if (badge) {
+        badge.innerText = shoppingCart.length;
+        badge.style.display = shoppingCart.length > 0 ? 'block' : 'none';
+    }
+}
 // --- რეალური გადახდის ფუნქცია (საფულესთან მიბმული) ---
 async function instantBuy(productId) {
     const p = akhoStore.find(item => item.id === productId);
@@ -2819,4 +2821,92 @@ function openCartView() {
     const content = document.getElementById('detailsContent');
     content.innerHTML = cartHTML;
     modal.style.display = 'flex';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function openCartView() {
+    if (shoppingCart.length === 0) {
+        alert("შენი კალათა ცარიელია!");
+        return;
+    }
+
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    
+    let total = shoppingCart.reduce((sum, item) => sum + item.price, 0);
+
+    content.innerHTML = `
+        <div style="width: 100%; text-align: left; padding: 10px;">
+            <h2 style="color: var(--gold); margin-bottom: 20px;">🛒 შენი კალათა</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                ${shoppingCart.map((item, index) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid #333;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${item.image}" style="width: 40px; height: 40px; object-fit: contain;">
+                            <span>${item.name}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="color: var(--gold); font-weight: bold;">${item.price} ₳</span>
+                            <span onclick="removeFromCart(${index})" style="color: #ff4d4d; cursor: pointer; font-size: 18px;">✕</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="border-top: 2px solid #333; padding-top: 15px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;">
+                <span>ჯამი:</span>
+                <span style="color: var(--gold);">${total} AKHO</span>
+            </div>
+
+            <button onclick="checkoutFullCart(${total})" style="width: 100%; background: var(--gold); color: black; border: none; padding: 18px; border-radius: 15px; margin-top: 25px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 5px 20px rgba(212,175,55,0.3);">გადახდა ეხლავე</button>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+// ნივთის ამოღება კალათიდან
+function removeFromCart(index) {
+    shoppingCart.splice(index, 1);
+    updateCartCounter();
+    if (shoppingCart.length > 0) {
+        openCartView(); // განვაახლოთ ხედვა
+    } else {
+        closeProductDetails();
+    }
+}
+
+// ყველა ნივთის ერთიანად ყიდვა
+async function checkoutFullCart(totalAmount) {
+    const balanceText = document.getElementById('gameBalance').innerText;
+    const userBalance = parseFloat(balanceText.replace(/[^\d.]/g, '')) || 0;
+
+    if (userBalance < totalAmount) {
+        alert("ბალანსი არ გყოფნის კალათის სრულად საყიდლად!");
+        return;
+    }
+
+    if (confirm(`გსურთ გადაიხადოთ ${totalAmount} AKHO ყველა ნივთისთვის?`)) {
+        try {
+            await spendAkho(totalAmount, `BULK_SHOP_PURCHASE: ${shoppingCart.length} items`);
+            alert("✅ გადახდა წარმატებულია! ყველა ნივთი შეძენილია.");
+            shoppingCart = []; // ვასუფთავებთ კალათას
+            updateCartCounter();
+            closeProductDetails();
+            updateAllGameBalances();
+        } catch (error) {
+            alert("შეცდომა გადახდისას: " + error.message);
+        }
+    }
 }
