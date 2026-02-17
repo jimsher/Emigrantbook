@@ -2215,38 +2215,38 @@ function triggerBurning5Spin() {
         winAmt = 0;
     }
 
-    // რილების ტრიალი
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
 
         r.innerHTML = '';
-        // ვავსებთ 40 სიმბოლოთი, რომ ბევრი იტრიალოს
-        for(let j=0; j < 40; j++) {
+        for(let j=0; j < 45; j++) {
             const s = document.createElement('div');
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
+            // დავამატოთ მკაცრი სიმაღლე, რომ ბრაუზერმა არ "მოჭრას"
+            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        // ვაჩერებთ 35-ე ელემენტზე
-        const stopIdx = 35;
+        const stopIdx = 35; // მოგებული სიმბოლო
         r.children[stopIdx].innerText = result[i-1];
 
-        // თავიდანვე "ვაგდებთ" რილს ძალიან ზემოთ, რომ ტრიალი ჩანდეს
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
-        // --- ანიმაციის გაშვება რიგრიგობით ---
         setTimeout(() => {
-            // ყოველი შემდეგი რილი ჩერდება 0.5 წამით გვიან ვიდრე წინა
-            const duration = 1 + (i * 0.5); 
-            r.style.transition = `transform ${duration}s cubic-bezier(0.45, 0.05, 0.55, 0.95)`;
-            r.style.transform = `translateY(-${stopIdx * 70}px)`;
+            // თანმიმდევრული გაჩერება
+            const duration = 1.2 + (i * 0.4); 
+            r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            
+            // --- შესწორებული გამოთვლა ---
+            // იმისთვის, რომ 3 სიმბოლო სრულად ჩანდეს და მოგებული იყოს შუაში:
+            // ჩვენ რილს ვწევთ (stopIdx - 1) პოზიციაზე.
+            const targetPos = (stopIdx - 1) * 70; 
+            r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
 
-    // მოგების ასახვა (ყველაზე გვიან, როცა მე-5 რილი გაჩერდება)
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
@@ -2254,11 +2254,13 @@ function triggerBurning5Spin() {
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
             if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
-                startJackpotAnimation(winAmt, "SUPER WIN!");
+                startJackpotAnimation(winAmt, "WIN!");
             }
         }
-    }, 4500); // 4.5 წამი, რომ მეხუთე რილს დაველოდოთ
+    }, 4000); 
 }
+
+    
  
 
 
