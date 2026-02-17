@@ -2188,80 +2188,106 @@ function backFromSlots() {
 
 
 
-
-
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
-    // ათვლის მექანიზმი
-    if (typeof window.spinCount5 === 'undefined') window.spinCount5 = 0;
-    window.spinCount5++;
-    
     spendAkho(burningStake5, 'Burning 5 Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
-    let result = [];
-    let winAmt = 0;
-
-    // --- მათემატიკური ციკლი (IMPACT-ის არქიტექტურა) ---
-    if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
-    else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
-    else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
-    else if (window.spinCount5 % 20 === 0) { result = ['🍇','🍇','🍇','🍇','🍇']; winAmt = 20; }
-    else if (window.spinCount5 % 10 === 0) { result = ['🍊','🍊','🍊','🍊','🍊']; winAmt = 7; }
-    else { 
-        result = ['🍒','🍋','🍇','🔔','🍊']; 
-        winAmt = 0;
-    }
-
-    const PX = 48; // კიდევ უფრო დაწეული ზომა სრული ხილვადობისთვის
+    const PX = 48; // შენი მოთხოვნილი პატარა ზომა
+    let screenSymbols = []; // აქ შევინახავთ 15-ვე სიმბოლოს რაც გამოჩნდება
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
 
         r.innerHTML = '';
-        // 70 სიმბოლო "გაქცევის" ეფექტისთვის
+        const stopIdx = 60;
+        
+        // 1. ვავსებთ რილს რანდომ სიმბოლოებით
         for(let j=0; j < 70; j++) {
             const s = document.createElement('div');
-            s.style = `height:${PX}px; min-height:${PX}px; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; box-sizing:border-box;`;
+            s.style = `height:${PX}px; min-height:${PX}px; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0;`;
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 60; // ჩქარი ტრიალის ინდექსი
-        r.children[stopIdx].innerText = result[i-1];
+        // 2. ვიღებთ იმ 3 სიმბოლოს, რომელიც ამ რილზე გამოჩნდება (34-ე, 35-ე, 36-ე)
+        // ამას ვაკეთებთ იმისთვის, რომ მერე გადავთვალოთ მოგება
+        screenSymbols.push(r.children[stopIdx-1].innerText); // ზედა
+        screenSymbols.push(r.children[stopIdx].innerText);   // შუა
+        screenSymbols.push(r.children[stopIdx+1].innerText); // ქვედა
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
-        // --- კლასიკური თანმიმდევრული გაჩერება ---
         setTimeout(() => {
-            // ყოველი მომდევნო რელსი ჩერდება ზუსტად 0.6 წამიანი ინტერვალით
-            const stopTime = 1.0 + (i * 0.6); 
+            const stopTime = 1.0 + (i * 0.6); // კლასიკური თანმიმდევრული გაჩერება
             r.style.transition = `transform ${stopTime}s cubic-bezier(0.3, 0, 0.2, 1)`;
-            
-            // გაჩერება ისე, რომ 3 ხაზი გამოჩნდეს და მოგება იყოს შუაში
-            const targetPos = (stopIdx - 1) * PX; 
-            r.style.transform = `translateY(-${targetPos}px)`;
+            r.style.transform = `translateY(-${(stopIdx - 1) * PX}px)`;
         }, 50);
     }
 
-    // მოგების ასახვა მე-5 რელსის გაჩერების შემდეგ
+    // 3. მოგების დათვლის ლოგიკა (ეკრანზე გაჩერების შემდეგ)
     setTimeout(() => {
         isSpinning5 = false;
+        let winAmt = calculateScatterWin(screenSymbols); // სპეციალური ფუნქცია სათვლელად
+
         if (winAmt > 0) {
-            earnAkho(auth.currentUser.uid, winAmt, 'Pattern Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'Scatter Win');
             updateWinUI(winAmt);
-            if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
-                startJackpotAnimation(winAmt, "WIN!");
-            }
+            if (winAmt >= 50) startJackpotAnimation(winAmt, "BIG WIN!");
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 4500); 
+    }, 4500);
 }
+
+// 4. მოგებების გადათვლის ფუნქცია (შენი ცხრილის მიხედვით)
+function calculateScatterWin(symbols) {
+    let counts = {};
+    symbols.forEach(s => counts[s] = (counts[s] || 0) + 1);
+
+    let totalWin = 0;
+
+    // ყურძენი 🍇
+    if (counts['🍇'] >= 15) totalWin += 50;
+    else if (counts['🍇'] >= 7) totalWin += 15;
+    else if (counts['🍇'] >= 6) totalWin += 10;
+
+    // ზარი 🔔
+    if (counts['🔔'] >= 7) totalWin += 60;
+    else if (counts['🔔'] >= 5) totalWin += 10;
+    else if (counts['🔔'] >= 3) totalWin += 5;
+
+    // ფორთოხალი 🍊
+    if (counts['🍊'] >= 15) totalWin += 500;
+    else if (counts['🍊'] >= 7) totalWin += 15;
+    else if (counts['🍊'] >= 6) totalWin += 10;
+
+    // საზამთრო 🍉
+    if (counts['🍉'] >= 15) totalWin += 700;
+    else if (counts['🍉'] >= 9) totalWin += 30;
+    else if (counts['🍉'] >= 7) totalWin += 18;
+    else if (counts['🍉'] >= 6) totalWin += 15;
+
+    // ბალი 🍒
+    if (counts['🍒'] >= 15) totalWin += 50;
+    else if (counts['🍒'] >= 9) totalWin += 13;
+    else if (counts['🍒'] >= 7) totalWin += 10;
+    else if (counts['🍒'] >= 5) totalWin += 5;
+
+    // შვიდიანი 7️⃣
+    if (counts['7️⃣'] >= 15) totalWin += 1000; // ჯეკპოტი
+    else if (counts['7️⃣'] >= 9) totalWin += 80;
+    else if (counts['7️⃣'] >= 7) totalWin += 40;
+    else if (counts['7️⃣'] >= 5) totalWin += 10;
+
+    return totalWin;
+}
+
+
 
     
     
