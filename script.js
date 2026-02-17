@@ -2608,34 +2608,51 @@ function backToGamesListFromShop() {
     document.getElementById('gamesList').style.display = 'grid';
 }
 
+// 1. განახლებული რენდერი - დავამატეთ onclick ბარათზე
 function renderStore(category, btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
     grid.innerHTML = '';
 
-    // აქტიური ტაბის ვიზუალი
-    if(btn) {
-        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
     const filtered = category === 'all' ? akhoStore : akhoStore.filter(p => p.category === category);
 
     filtered.forEach(p => {
         grid.innerHTML += `
-            <div class="product-card" style="background:#111; border:1px solid #333; border-radius:15px; padding:15px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+            <div class="product-card" onclick="showProductDetails(${p.id})" style="background:#111; border:1px solid #333; border-radius:15px; padding:15px; cursor:pointer; transition:0.3s;">
                 <div style="height:90px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:10px;"></div>
                 <div style="color:white; font-size:14px; font-weight:bold; margin-bottom:5px;">${p.name}</div>
-                <div style="color:#666; font-size:11px; margin-bottom:12px; height:30px; overflow:hidden;">${p.desc}</div>
-                <div style="color:var(--gold); font-weight:bold; font-size:18px; margin-bottom:15px;">${p.price} AKHO</div>
-                
-                <div style="display:flex; gap:8px; width:100%;">
-                    <button onclick="addToCart(${p.id})" style="flex:1; background:#222; color:white; border:1px solid #444; padding:10px; border-radius:10px; cursor:pointer; font-size:12px;">კალათა</button>
-                    <button onclick="instantBuy(${p.id})" style="flex:1; background:var(--gold); color:black; border:none; padding:10px; border-radius:10px; font-weight:bold; cursor:pointer; font-size:12px;">ყიდვა</button>
-                </div>
+                <div style="color:var(--gold); font-weight:bold; font-size:16px;">${p.price} AKHO</div>
             </div>
         `;
     });
+}
+
+// 2. დეტალების ჩვენება
+function showProductDetails(productId) {
+    const p = akhoStore.find(item => item.id === productId);
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+
+    content.innerHTML = `
+        <div style="width:100%; height:250px; background:white url('${p.image}') center/contain no-repeat; border-radius:20px; box-shadow:0 0 30px rgba(212,175,55,0.2);"></div>
+        
+        <div style="width:100%; text-align:left; padding:10px;">
+            <h1 style="color:white; margin-bottom:10px;">${p.name}</h1>
+            <p style="color:#aaa; line-height:1.6; font-size:14px;">${p.desc}</p>
+            <div style="margin:20px 0; font-size:24px; color:var(--gold); font-weight:bold;">${p.price} AKHO</div>
+        </div>
+
+        <div style="width:100%; display:flex; gap:10px; position:sticky; bottom:0; background:rgba(0,0,0,0.8); padding:10px 0;">
+            <button onclick="addToCart(${p.id})" style="flex:1; background:#222; color:white; border:1px solid #444; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">კალათაში დამატება</button>
+            <button onclick="instantBuy(${p.id})" style="flex:1; background:var(--gold); color:black; border:none; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">ყიდვა ეხლავე</button>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function closeProductDetails() {
+    document.getElementById('productDetailsModal').style.display = 'none';
 }
 
 // --- 4. კალათა და გადახდა (E-commerce Core) ---
