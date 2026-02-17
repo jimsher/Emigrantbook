@@ -2187,7 +2187,6 @@ function backFromSlots() {
 
 
 
-
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
@@ -2286,6 +2285,7 @@ function calculateScatterWin(symbols) {
 
     return totalWin;
 }
+  
 
 
 
