@@ -2580,3 +2580,153 @@ function renderStore(category, btn = null) {
         `;
     });
 }
+
+
+
+
+
+
+
+// --- მაღაზიის კონფიგურაცია ---
+let freeSpinsCount = 0; // უფასო სპინების მრიცხველი
+
+const akhoStore = [
+    {
+        id: 1,
+        name: "საიდუმლო ყუთი",
+        price: 50,
+        category: "digital",
+        image: "https://cdn-icons-png.flaticon.com/512/2850/2850369.png",
+        desc: "მოიგე 10-დან 500 AKHO-მდე!",
+        type: "lootbox"
+    },
+    {
+        id: 2,
+        name: "10 უფასო სპინი",
+        price: 30,
+        category: "digital",
+        image: "https://cdn-icons-png.flaticon.com/512/8139/8139794.png",
+        desc: "გამოიყენე Burning 5 Slot-ზე",
+        type: "freespins"
+    },
+    {
+        id: 3,
+        name: "VIP დაზღვევა",
+        price: 100,
+        category: "vip",
+        image: "https://cdn-icons-png.flaticon.com/512/1162/1162951.png",
+        desc: "წაგებული თანხის 10% ქეშბექი",
+        type: "insurance"
+    }
+];
+
+// --- მაღაზიის ფუნქციები ---
+
+function openShopSection() {
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('shopSectionContainer').style.display = 'flex';
+    renderStore('all');
+}
+
+function backToGamesListFromShop() {
+    document.getElementById('shopSectionContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+function renderStore(category, btn = null) {
+    const grid = document.getElementById('productsGrid');
+    grid.innerHTML = '';
+
+    if(btn) {
+        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    const filtered = category === 'all' ? akhoStore : akhoStore.filter(p => p.category === category);
+
+    filtered.forEach(p => {
+        grid.innerHTML += `
+            <div class="product-card">
+                <div style="height:70px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:8px;"></div>
+                <div style="color:white; font-size:12px; font-weight:bold; margin-bottom:4px;">${p.name}</div>
+                <div style="color:var(--gold); font-weight:bold; font-size:14px; margin-bottom:8px;">${p.price} AKHO</div>
+                <button onclick="buyProduct(${p.id})" style="background:var(--gold); border:none; color:black; width:100%; padding:6px; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;">ყიდვა</button>
+            </div>
+        `;
+    });
+}
+
+// --- ყიდვის და ექშენების ლოგიკა ---
+
+function buyProduct(productId) {
+    const product = akhoStore.find(p => p.id === productId);
+    const userBalance = parseFloat(document.getElementById('gameBalance').innerText);
+
+    if (userBalance < product.price) {
+        alert("ბალანსი არ გყოფნის!");
+        return;
+    }
+
+    if (confirm(`გსურთ ${product.name}-ს ყიდვა ${product.price} AKHO-დ?`)) {
+        spendAkho(product.price, `Store: ${product.name}`);
+        
+        switch(product.type) {
+            case 'lootbox':
+                openLootBox();
+                break;
+            case 'freespins':
+                freeSpinsCount += 10;
+                alert("დაგემატა 10 უფასო სპინი!");
+                break;
+            case 'insurance':
+                alert("VIP დაზღვევა გააქტიურებულია!");
+                break;
+        }
+        
+        updateAllGameBalances();
+        document.getElementById('shopBalance').innerText = document.getElementById('gameBalance').innerText;
+    }
+}
+
+// --- Loot Box ანიმაცია ---
+
+function openLootBox() {
+    const rewards = [10, 20, 50, 100, 200, 500];
+    const win = rewards[Math.floor(Math.random() * rewards.length)];
+
+    const boxOverlay = document.createElement('div');
+    boxOverlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;";
+    boxOverlay.innerHTML = `
+        <div id="boxAnim" style="font-size:100px; transition: 0.5s; cursor:default;">🎁</div>
+        <h2 id="boxStatus" style="color:var(--gold); font-family:sans-serif; text-align:center;">ყუთი იხსნება...</h2>
+    `;
+    document.body.appendChild(boxOverlay);
+
+    setTimeout(() => {
+        const anim = document.getElementById('boxAnim');
+        anim.style.transform = "scale(1.5) rotate(15deg)";
+        anim.innerText = "💰";
+        
+        document.getElementById('boxStatus').innerHTML = `გილოცავ!<br><span style="font-size:50px; color:white;">${win} AKHO</span>`;
+        
+        earnAkho(auth.currentUser.uid, win, 'LootBox Win');
+        
+        setTimeout(() => {
+            boxOverlay.style.opacity = "0";
+            boxOverlay.style.transition = "1s";
+            setTimeout(() => {
+                boxOverlay.remove();
+                updateAllGameBalances();
+            }, 1000);
+        }, 2500);
+    }, 1500);
+}
+
+
+
+
+
+
+
+
+
