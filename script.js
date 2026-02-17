@@ -2189,10 +2189,7 @@ function backFromSlots() {
 
 
 
-
-
-
-    function triggerBurning5Spin() {
+function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
@@ -2205,7 +2202,7 @@ function backFromSlots() {
     let result = [];
     let winAmt = 0;
 
-    // შენი მათემატიკა (უცვლელი)
+    // მათემატიკა (ციკლი)
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2223,28 +2220,24 @@ function backFromSlots() {
         r.innerHTML = '';
         for(let j=0; j < 50; j++) {
             const s = document.createElement('div');
-            // სიმაღლეს ვსვამთ ზუსტად ისე, როგორც 3-იანშია (70px)
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
+            // სიმაღლე დავწიეთ 60px-მდე, რომ სამივე ხაზი გამოჩნდეს
+            s.style = "height:60px; min-height:60px; display:flex; align-items:center; justify-content:center; font-size:35px; flex-shrink:0;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        // რილის გაჩერების წერტილი
-        const stopIdx = 30; 
+        const stopIdx = 35; 
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
         setTimeout(() => {
-            // თანმიმდევრული გაჩერება
             const duration = 1.2 + (i * 0.4); 
             r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
             
-            // აი აქ არის მთავარი: 
-            // რილს ვაჩერებთ ისე, რომ 30-ე სიმბოლო იყოს შუაში, 29-ე თავში და 31-ე ბოლოში.
-            // ამისთვის ვიყენებთ (stopIdx - 1)
-            const targetPos = (stopIdx - 1) * 70; 
+            // პიქსელი აქაც დავაკელით (60-ზე ვამრავლებთ)
+            const targetPos = (stopIdx - 1) * 60; 
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
@@ -2258,6 +2251,9 @@ function backFromSlots() {
         }
     }, 4500); 
 }
+
+
+    
     
 
 
