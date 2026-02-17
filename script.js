@@ -2190,10 +2190,6 @@ function backFromSlots() {
 
 
 
-
-
-
- 
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) {
         if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის!");
@@ -2201,7 +2197,7 @@ function triggerBurning5Spin() {
     }
 
     isSpinning5 = true;
-    window.spinCount5++; // ყოველ დაჭერაზე იმატებს
+    window.spinCount5++; 
     
     spendAkho(burningStake5, 'Burning Slots 5 Bet');
     updateAllGameBalances();
@@ -2224,25 +2220,34 @@ function triggerBurning5Spin() {
     } else if (window.spinCount5 % 10 === 0) {
         result = ['🍊', '🍊', '🍊', '🍊', '🍊']; winAmt = 7;
     } else {
-        // წაგება - არეული სიმბოლოები
-        result = ['🍒', '🍋', '🍇', '🔔', '🍊']; 
-        winAmt = 0;
+        result = ['🍒', '🍋', '🍇', '🔔', '🍊']; winAmt = 0;
     }
 
     // რილების დატრიალება
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
+        
         r.innerHTML = '';
-        for(let j=0; j<50; j++) {
+        // ვქმნით 40 ელემენტს (საკმარისია ტრიალისთვის)
+        for(let j=0; j<40; j++) {
             const s = document.createElement('div');
             s.style="height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
             s.innerText = slot5Icons[Math.floor(Math.random()*slot5Icons.length)];
             r.appendChild(s);
         }
-        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-        const stopIdx = 45;
-        r.children[stopIdx].innerText = result[i-1];
+
+        r.style.transition = 'none'; 
+        r.style.transform = 'translateY(0)';
+
+        // ვაჩერებთ 30-ე ელემენტზე (ეს გარანტირებულად გამოჩნდება)
+        const stopIdx = 30;
+        
+        // ვამოწმებთ, რომ ელემენტი ნაღდად არსებობს, სანამ ტექსტს ჩავუწერთ
+        if(r.children[stopIdx]) {
+            r.children[stopIdx].innerText = result[i-1];
+        }
+
         setTimeout(() => {
             r.style.transition = `transform ${1.5 + (i*0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${stopIdx * 70}px)`;
@@ -2252,13 +2257,18 @@ function triggerBurning5Spin() {
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            if (winAmt >= 15) startJackpotAnimation(winAmt, "BIG WIN!");
+            if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
+                startJackpotAnimation(winAmt, "BIG WIN!");
+            }
             earnAkho(auth.currentUser.uid, winAmt, 'System Cycle Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
     }, 3500);
 }
+
+
+ 
 
 
 
