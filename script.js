@@ -2189,6 +2189,7 @@ function backFromSlots() {
 
 
 
+ 
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
@@ -2202,7 +2203,7 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // შენი მათემატიკური ციკლი (უცვლელია)
+    // --- მათემატიკური ციკლი (ზუსტად ისე, როგორც გინდოდა) ---
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2215,44 +2216,43 @@ function triggerBurning5Spin() {
         if(!r) continue;
 
         r.innerHTML = '';
-        // მნიშვნელოვანი: ვაყენებთ მკაცრ სტილს კონტეინერზე
-        r.style.display = "flex";
-        r.style.flexDirection = "column";
-
+        // ვავსებთ 40 სიმბოლოთი
         for(let j=0; j < 40; j++) {
             const s = document.createElement('div');
-            // ვიყენებთ box-sizing, რომ border-მა ზომა არ გაზარდოს
-            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; box-sizing:border-box; margin:0; padding:0; border:none;";
+            // არანაირ დამატებით სტილს არ ვწერთ, ვიყენებთ შენს არსებულს
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const targetIdx = 35; // ოდნავ მეტი ტრიალი
-        r.children[targetIdx].innerText = result[i-1];
+        const stopIdx = 30; // წინა მუშა ვერსიის ინდექსი
+        
+        // აქ ვსვამთ ჩვენს "დაგეგმილ" სიმბოლოს
+        if(r.children[stopIdx]) {
+            r.children[stopIdx].innerText = result[i-1];
+        }
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
         setTimeout(() => {
-            r.style.transition = `transform ${2 + (i * 0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-            // იძულებითი გაჩერება
-            r.style.transform = `translateY(-${targetIdx * 70}px)`;
+            r.style.transition = `transform ${1.5 + (i * 0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
+            earnAkho(auth.currentUser.uid, winAmt, 'Cycle Win');
+            updateWinUI(winAmt);
+            updateAllGameBalances();
             if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
                 startJackpotAnimation(winAmt, "WIN!");
             }
-            earnAkho(auth.currentUser.uid, winAmt, 'System Win');
-            updateWinUI(winAmt);
-            setTimeout(updateAllGameBalances, 500);
         }
-    }, 3800);
+    }, 3500);
 }
-
 
  
 
