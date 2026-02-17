@@ -2237,6 +2237,9 @@ function startJackpotAnimation(amount, title) {
     }, 30);
 }
 
+
+
+
 // ==========================================
 // 2. გადაკეთებული 5-რილიანი სლოტის ლოგიკა
 // ==========================================
@@ -2244,7 +2247,7 @@ function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
-    spinCount5++; // ყოველ სპინზე იმატებს 1-ით
+    spinCount5++; // ვზრდით ყოველ დაჭერაზე
     
     spendAkho(burningStake5, 'Burning Slots 5 Bet');
     updateAllGameBalances();
@@ -2253,77 +2256,78 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // --- კონტროლირებული მოგების ლოგიკა ---
+    // --- მათემატიკური ფილტრი: მკაცრი პრიორიტეტებით ---
     
     if (spinCount5 % 35 === 0) {
-        // 5. ყოველ 35-ეზე: საზამთრო (50 AKHO)
+        // ყოველ 35-ეზე: საზამთრო (50 AKHO)
         result = ['🍉', '🍉', '🍉', '🍉', '🍉'];
         winAmt = 50;
     } 
     else if (spinCount5 % 30 === 0) {
-        // 4. ყოველ 30-ეზე: ზარი (30 AKHO)
+        // ყოველ 30-ეზე: ზარი (30 AKHO)
         result = ['🔔', '🔔', '🔔', '🔔', '🔔'];
         winAmt = 30;
     }
     else if (spinCount5 % 25 === 0) {
-        // 3. ყოველ 25-ეზე: ვარსკვლავი (15 AKHO)
+        // ყოველ 25-ეზე: ვარსკვლავი (15 AKHO)
         result = ['⭐', '⭐', '⭐', '⭐', '⭐'];
         winAmt = 15;
     }
     else if (spinCount5 % 20 === 0) {
-        // 1. ყოველ 20-ეზე: ყურძენი (20 AKHO)
+        // ყოველ 20-ეზე: ყურძენი (20 AKHO)
         result = ['🍇', '🍇', '🍇', '🍇', '🍇'];
         winAmt = 20;
     }
     else if (spinCount5 % 10 === 0) {
-        // 2. ყოველ 10-ეზე: ფორთოხალი (7 AKHO)
+        // ყოველ 10-ეზე: ფორთოხალი (7 AKHO)
         result = ['🍊', '🍊', '🍊', '🍊', '🍊'];
         winAmt = 7;
     }
     else {
-        // თუ არცერთი ციკლი არ დაემთხვა - რანდომ წაგება
-        while(true) {
-            result = [];
-            for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random()*slot5Icons.length)]);
-            if(!result.every(v => v === result[0])) break;
-        }
-        winAmt = 0;
+        // სხვა ყველა შემთხვევაში: გარანტირებული წაგება (სხვადასხვა სიმბოლოები)
+        result = ['🍒', '🍋', '🍇', '🔔', '🍊']; // ხელით გაწერილი "არეული" ხაზი
     }
 
-    // --- რილების დატრიალება ---
+    // --- ვიზუალური დასმა რილებზე ---
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
-        r.innerHTML = '';
-        for(let j=0; j<60; j++) {
+
+        r.innerHTML = ''; // ვასუფთავებთ ძველს
+        
+        // ვავსებთ რილს რანდომით, რომ ტრიალი ჩანდეს
+        for (let j = 0; j < 60; j++) {
             const s = document.createElement('div');
-            s.style="height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
-            s.innerText = slot5Icons[Math.floor(Math.random()*slot5Icons.length)];
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
-        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
+
         const stopIdx = 45;
+        // !!! აი აქ ხდება ჯადოქრობა: ბოლო სიმბოლოდ ვსვამთ ჩვენს "დაგეგმილ" შედეგს
         r.children[stopIdx].innerText = result[i-1];
+
+        r.style.transition = 'none';
+        r.style.transform = 'translateY(0)';
+
         setTimeout(() => {
-            r.style.transition = `transform ${1.8 + (i*0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transition = `transform ${1.8 + (i * 0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
-    // შედეგის დარიცხვა
+    // შედეგის დაფიქსირება
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            // თუ დიდი მოგებაა (15-ზე მეტი), ჩავრთოთ მონეტების ცვენა
-            if (winAmt >= 15) {
-                startJackpotAnimation(winAmt, "SUPER WIN!");
-            }
-            earnAkho(auth.currentUser.uid, winAmt, 'Cycle Win');
+            if (winAmt >= 15) startJackpotAnimation(winAmt, "WINNER!");
+            earnAkho(auth.currentUser.uid, winAmt, 'Pattern Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
     }, 4000);
 }
+    
 
     
 
