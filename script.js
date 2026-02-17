@@ -2700,3 +2700,123 @@ async function instantBuy(productId) {
         }
     }
 }      
+
+
+
+
+
+
+
+
+
+// --- კალათის სისტემა ---
+function addToCart(productId) {
+    const p = akhoStore.find(item => item.id === productId);
+    
+    // ვამოწმებთ, უკვე არის თუ არა კალათაში
+    const exists = shoppingCart.find(item => item.id === productId);
+    if (exists) {
+        alert("ეს ნივთი უკვე კალათაშია!");
+        return;
+    }
+
+    shoppingCart.push(p);
+    
+    // ვიზუალური შეტყობინება
+    alert(`✅ ${p.name} დაემატა კალათაში!`);
+    updateCartCounter(); // თუ სადმე გაქვს კალათის მრიცხველი
+}
+
+// --- რეალური გადახდის ფუნქცია (საფულესთან მიბმული) ---
+async function instantBuy(productId) {
+    const p = akhoStore.find(item => item.id === productId);
+    
+    // 1. ბალანსის აღება ელემენტიდან
+    const balanceText = document.getElementById('gameBalance').innerText;
+    const userBalance = parseFloat(balanceText.replace(/[^\d.]/g, '')) || 0;
+
+    // 2. შემოწმება
+    if (userBalance < p.price) {
+        alert("❌ ბალანსი არ გაქვს საკმარისი ამ ნივთის საყიდლად!");
+        return;
+    }
+
+    // 3. ინვოისის დადასტურება
+    const confirmPurchase = confirm(`
+        გადახდის ინვოისი:
+        ------------------
+        პროდუქტი: ${p.name}
+        თანხა: ${p.price} AKHO
+        
+        გსურთ გადახდის დადასტურება?
+    `);
+
+    if (confirmPurchase) {
+        try {
+            // 4. რეალური ტრანზაქცია Firebase-ში
+            await spendAkho(p.price, `SHOP_ORDER: ${p.name}`);
+            
+            // 5. წარმატება
+            showPurchaseSuccess(p.name);
+            closeProductDetails(); // ვხურავთ დეტალების ფანჯარას
+            updateAllGameBalances(); // ვანახლებთ ბალანსს ყველგან
+            
+        } catch (error) {
+            console.error("გადახდა ჩაიშალა:", error);
+            alert("შეცდომა გადახდისას: " + error.message);
+        }
+    }
+}
+
+// წარმატების ნოტიფიკაცია
+function showPurchaseSuccess(productName) {
+    const div = document.createElement('div');
+    div.style = "position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#27ae60; color:white; padding:15px 30px; border-radius:50px; z-index:1000000; font-weight:bold; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:2px solid white;";
+    div.innerHTML = `💳 გადახდა წარმატებულია: ${productName}`;
+    document.body.appendChild(div);
+    
+    setTimeout(() => div.remove(), 4000);
+}
+
+
+
+
+
+
+
+
+
+
+
+function openCartView() {
+    if (shoppingCart.length === 0) {
+        alert("კალათა ცარიელია!");
+        return;
+    }
+
+    let cartTotal = shoppingCart.reduce((sum, p) => sum + p.price, 0);
+    
+    let cartHTML = `
+        <div style="padding:20px; color:white;">
+            <h2 style="color:var(--gold);">შენი კალათა</h2>
+            <hr border="1" color="#333">
+            ${shoppingCart.map(p => `
+                <div style="display:flex; justify-content:space-between; margin:10px 0; border-bottom:1px solid #222; padding-bottom:10px;">
+                    <span>${p.name}</span>
+                    <span style="color:var(--gold);">${p.price} AKHO</span>
+                </div>
+            `).join('')}
+            <div style="margin-top:20px; font-size:20px; font-weight:bold; display:flex; justify-content:space-between;">
+                <span>ჯამი:</span>
+                <span style="color:var(--gold);">${cartTotal} AKHO</span>
+            </div>
+            <button onclick="checkoutCart(${cartTotal})" style="width:100%; padding:15px; background:var(--gold); border:none; border-radius:10px; margin-top:20px; font-weight:bold; cursor:pointer;">ყველას ყიდვა</button>
+        </div>
+    `;
+
+    // აქ შეგიძლია გამოიყენო იგივე Modal, რაც დეტალებისთვის გვაქვს
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    content.innerHTML = cartHTML;
+    modal.style.display = 'flex';
+}
