@@ -2186,8 +2186,7 @@ function backFromSlots() {
 
 
 
-// დარწმუნდი, რომ ეს ცვლადი განსაზღვრულია კოდის დასაწყისში
-let burningStake5 = 5; 
+
 
 function triggerBurning5Spin() {
     // 1. ფსონის შემოწმება (5 AKHO)
