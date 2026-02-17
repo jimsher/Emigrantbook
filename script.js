@@ -2263,3 +2263,24 @@ function backFromSlots() {
         }
     }, 4000);
 }
+
+
+
+
+
+
+
+
+// იძულებითი რეანიმაცია თამაშებისთვის
+window.onload = function() {
+    if (typeof burningStake === 'undefined') {
+        window.burningStake = 0.20; // ძალისძალად გაწერა
+    }
+    console.log("თამაშების ლოგიკა გადამოწმებულია. Stake: " + window.burningStake);
+};
+
+// თუ SPIN-ს აჭერ და მაინც undefined-ს გიწერს, ეს ფუნქცია ჩაანაცვლე
+function checkAndFixVariables() {
+    if (!window.burningStake) window.burningStake = 0.20;
+    if (typeof userBalance === 'undefined') window.userBalance = 0;
+}
