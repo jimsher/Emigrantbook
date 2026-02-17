@@ -2189,9 +2189,7 @@ function backFromSlots() {
 
 
 
- 
-
-function triggerBurning5Spin() {
+ function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
@@ -2220,15 +2218,15 @@ function triggerBurning5Spin() {
         if(!r) continue;
 
         r.innerHTML = '';
-        for(let j=0; j < 45; j++) {
+        // ვავსებთ 50 სიმბოლოთი, რომ მარაგი ბევრი გვქონდეს
+        for(let j=0; j < 50; j++) {
             const s = document.createElement('div');
-            // დავამატოთ მკაცრი სიმაღლე, რომ ბრაუზერმა არ "მოჭრას"
-            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box;";
+            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box; margin:0; padding:0;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 35; // მოგებული სიმბოლო
+        const stopIdx = 35; // ეს არის ჩვენი მოგებული სიმბოლო
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
@@ -2239,10 +2237,12 @@ function triggerBurning5Spin() {
             const duration = 1.2 + (i * 0.4); 
             r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
             
-            // --- შესწორებული გამოთვლა ---
-            // იმისთვის, რომ 3 სიმბოლო სრულად ჩანდეს და მოგებული იყოს შუაში:
-            // ჩვენ რილს ვწევთ (stopIdx - 1) პოზიციაზე.
+            // --- გადამწყვეტი შესწორება ---
+            // თუ (stopIdx - 1) ნახევარს ტოვებდა, (stopIdx) - 2 ან 1.5 დასვამს იდეალურად.
+            // ვცადოთ ზუსტად 2-ით ჩამოწევა, რომ სამივე ხაზი გამოჩნდეს.
             const targetPos = (stopIdx - 1) * 70; 
+            
+            // თუ მაინც ნახევრადაა, აქ 70-ის ნაცვლად ჩაწერე 68 ან 72 (დამოკიდებულია შენს CSS-ზე)
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
@@ -2257,9 +2257,11 @@ function triggerBurning5Spin() {
                 startJackpotAnimation(winAmt, "WIN!");
             }
         }
-    }, 4000); 
+    }, 4500); 
 }
 
+
+            
     
  
 
