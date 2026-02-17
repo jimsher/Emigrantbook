@@ -2189,11 +2189,14 @@ function backFromSlots() {
 
 
 
+
 function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
-    window.spinCount5 = (window.spinCount5 || 0) + 1;
+    // ათვლის მექანიზმი
+    if (typeof window.spinCount5 === 'undefined') window.spinCount5 = 0;
+    window.spinCount5++;
     
     spendAkho(burningStake5, 'Burning 5 Bet');
     updateAllGameBalances();
@@ -2202,7 +2205,7 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // --- მათემატიკური ციკლი ---
+    // --- მათემატიკური ციკლი (IMPACT-ის არქიტექტურა) ---
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2213,39 +2216,40 @@ function triggerBurning5Spin() {
         winAmt = 0;
     }
 
-    const PX = 55; // შენი მოთხოვნილი ზომა
+    const PX = 48; // კიდევ უფრო დაწეული ზომა სრული ხილვადობისთვის
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
 
         r.innerHTML = '';
-        // ბევრი სიმბოლო "გაქცევის" ეფექტისთვის
+        // 70 სიმბოლო "გაქცევის" ეფექტისთვის
         for(let j=0; j < 70; j++) {
             const s = document.createElement('div');
-            s.style = `height:${PX}px; min-height:${PX}px; display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-sizing:border-box;`;
+            s.style = `height:${PX}px; min-height:${PX}px; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; box-sizing:border-box;`;
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 60; // რაც უფრო შორს არის, მით უფრო ჩქარა ტრიალებს
+        const stopIdx = 60; // ჩქარი ტრიალის ინდექსი
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
-        // --- კლასიკური "ჩხაკ-ჩხაკ" გაჩერება ---
+        // --- კლასიკური თანმიმდევრული გაჩერება ---
         setTimeout(() => {
-            // ყოველი რელსი ჩერდება ზუსტად 0.6 წამით გვიან ვიდრე წინა
+            // ყოველი მომდევნო რელსი ჩერდება ზუსტად 0.6 წამიანი ინტერვალით
             const stopTime = 1.0 + (i * 0.6); 
-            // linear-ით იწყებს ჩქარა და ბოლოში cubic-bezier-ით მკვეთრად ჩერდება
-            r.style.transition = `transform ${stopTime}s cubic-bezier(0.4, 0, 0.2, 1)`;
+            r.style.transition = `transform ${stopTime}s cubic-bezier(0.3, 0, 0.2, 1)`;
             
+            // გაჩერება ისე, რომ 3 ხაზი გამოჩნდეს და მოგება იყოს შუაში
             const targetPos = (stopIdx - 1) * PX; 
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
 
+    // მოგების ასახვა მე-5 რელსის გაჩერების შემდეგ
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
@@ -2256,9 +2260,8 @@ function triggerBurning5Spin() {
             }
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 4500); // დაველოდოთ მე-5 რელსს
+    }, 4500); 
 }
-
 
     
     
