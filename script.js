@@ -2310,3 +2310,53 @@ function checkAndFixVariables() {
     if (typeof userBalance === 'undefined') window.userBalance = 0;
 }
             
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ახალი თამაშის გამხსნელი
+// თამაშის გახსნა
+function openKingOfAkho() {
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('kingOfAkhoContainer').style.display = 'flex';
+    initializeKingGrid(); // საწყისი შევსება
+}
+
+// უკან დაბრუნება
+function backToGamesListFromKing() {
+    document.getElementById('kingOfAkhoContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+// ბადის საწყისი შევსება
+function initializeKingGrid() {
+    const grid = document.getElementById('kingGrid');
+    grid.innerHTML = '';
+    const icons = ['💎', '👑', '🦁', '💰', '⚡', '🍇'];
+    for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.style = "display:flex; align-items:center; justify-content:center; background:#1a1a1a; border-radius:5px; font-size:25px;";
+        cell.innerText = icons[Math.floor(Math.random() * icons.length)];
+        grid.appendChild(cell);
+    }
+}
