@@ -2186,17 +2186,22 @@ function backFromSlots() {
 
 
 
+// დარწმუნდი, რომ ეს ცვლადი განსაზღვრულია კოდის დასაწყისში
+let burningStake5 = 5; 
 
 function triggerBurning5Spin() {
+    // 1. ფსონის შემოწმება (5 AKHO)
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
+    
+    // ბალანსის ჩამოჭრა
     spendAkho(burningStake5, 'Burning 5 Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
-    const PX = 48; // შენი მოთხოვნილი პატარა ზომა
-    let screenSymbols = []; // აქ შევინახავთ 15-ვე სიმბოლოს რაც გამოჩნდება
+    const PX = 48; // პატარა ზომა იდეალური ხილვადობისთვის
+    let screenSymbols = []; // 15 სიმბოლოს მასივი
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
@@ -2205,47 +2210,50 @@ function triggerBurning5Spin() {
         r.innerHTML = '';
         const stopIdx = 60;
         
-        // 1. ვავსებთ რილს რანდომ სიმბოლოებით
-        for(let j=0; j < 70; j++) {
+        // რილების შევსება რანდომით
+        for(let j=0; j < 75; j++) {
             const s = document.createElement('div');
             s.style = `height:${PX}px; min-height:${PX}px; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0;`;
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        // 2. ვიღებთ იმ 3 სიმბოლოს, რომელიც ამ რილზე გამოჩნდება (34-ე, 35-ე, 36-ე)
-        // ამას ვაკეთებთ იმისთვის, რომ მერე გადავთვალოთ მოგება
-        screenSymbols.push(r.children[stopIdx-1].innerText); // ზედა
-        screenSymbols.push(r.children[stopIdx].innerText);   // შუა
-        screenSymbols.push(r.children[stopIdx+1].innerText); // ქვედა
+        // ვაგროვებთ 15 სიმბოლოს (თითო რილიდან 3-ს, რომელიც გაჩერებისას გამოჩნდება)
+        screenSymbols.push(r.children[stopIdx-1].innerText); // ზედა ხაზი
+        screenSymbols.push(r.children[stopIdx].innerText);   // შუა ხაზი
+        screenSymbols.push(r.children[stopIdx+1].innerText); // ქვედა ხაზი
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
         setTimeout(() => {
-            const stopTime = 1.0 + (i * 0.6); // კლასიკური თანმიმდევრული გაჩერება
+            const stopTime = 1.0 + (i * 0.6); // კლასიკური "ჩხაკ-ჩხაკ" თანმიმდევრობა
             r.style.transition = `transform ${stopTime}s cubic-bezier(0.3, 0, 0.2, 1)`;
             r.style.transform = `translateY(-${(stopIdx - 1) * PX}px)`;
         }, 50);
     }
 
-    // 3. მოგების დათვლის ლოგიკა (ეკრანზე გაჩერების შემდეგ)
+    // 2. მოგების დარიცხვა ანიმაციის დასრულების შემდეგ
     setTimeout(() => {
         isSpinning5 = false;
-        let winAmt = calculateScatterWin(screenSymbols); // სპეციალური ფუნქცია სათვლელად
+        let winAmt = calculateScatterWin(screenSymbols); 
 
         if (winAmt > 0) {
             earnAkho(auth.currentUser.uid, winAmt, 'Scatter Win');
             updateWinUI(winAmt);
-            if (winAmt >= 50) startJackpotAnimation(winAmt, "BIG WIN!");
+            // თუ მოგება 50-ზე მეტია, ვუშვებთ ჯეკპოტის ანიმაციას
+            if (winAmt >= 50 && typeof startJackpotAnimation === 'function') {
+                startJackpotAnimation(winAmt, "BIG WIN!");
+            }
             setTimeout(updateAllGameBalances, 500);
         }
     }, 4500);
 }
 
-// 4. მოგებების გადათვლის ფუნქცია (შენი ცხრილის მიხედვით)
+// 3. მოგებების გადათვლის ფუნქცია (შენი ცხრილი)
 function calculateScatterWin(symbols) {
     let counts = {};
+    // ვითვლით თითოეული სიმბოლოს რაოდენობას 15-ვე პოზიციაზე
     symbols.forEach(s => counts[s] = (counts[s] || 0) + 1);
 
     let totalWin = 0;
@@ -2278,15 +2286,13 @@ function calculateScatterWin(symbols) {
     else if (counts['🍒'] >= 5) totalWin += 5;
 
     // შვიდიანი 7️⃣
-    if (counts['7️⃣'] >= 15) totalWin += 1000; // ჯეკპოტი
+    if (counts['7️⃣'] >= 15) totalWin += 1000; 
     else if (counts['7️⃣'] >= 9) totalWin += 80;
     else if (counts['7️⃣'] >= 7) totalWin += 40;
     else if (counts['7️⃣'] >= 5) totalWin += 10;
 
     return totalWin;
 }
-  
-
 
 
     
