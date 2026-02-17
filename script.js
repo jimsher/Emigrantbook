@@ -2193,88 +2193,72 @@ function backFromSlots() {
 
 
 
- function triggerBurning5Spin() {
-    // 1. შემოწმება და ბალანსი
+ 
+function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) {
-        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის! ფსონი: " + burningStake5);
+        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის!");
         return;
     }
 
     isSpinning5 = true;
-    spendAkho(burningStake5, 'Burning Slots 5 Bet');
+    window.spinCount5++; // ყოველ დაჭერაზე იმატებს
     
+    spendAkho(burningStake5, 'Burning Slots 5 Bet');
     updateAllGameBalances();
     updateWinUI(0);
 
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 2. მოგების დაგეგმვა (რანდომიზაციის ფილტრით)
     let result = [];
     let winAmt = 0;
-    const rand = Math.random();
 
-    if (rand < 0.03) { 
-        // ჯეკპოტი: 5 ცალი 7️⃣
-        result = ['7️⃣', '7️⃣', '7️⃣', '7️⃣', '7️⃣']; 
-        winAmt = burningStake5 * 150; 
-    } else if (rand < 0.10) {
-        // საშუალო მოგება: 5 ერთნაირი ხილი
-        let winIcon = slot5Icons[Math.floor(Math.random() * 4) + 1]; 
-        result = [winIcon, winIcon, winIcon, winIcon, winIcon];
-        winAmt = burningStake5 * 25;
+    // --- მათემატიკური კონტროლი ---
+    if (window.spinCount5 % 35 === 0) {
+        result = ['🍉', '🍉', '🍉', '🍉', '🍉']; winAmt = 50;
+    } else if (window.spinCount5 % 30 === 0) {
+        result = ['🔔', '🔔', '🔔', '🔔', '🔔']; winAmt = 30;
+    } else if (window.spinCount5 % 25 === 0) {
+        result = ['⭐', '⭐', '⭐', '⭐', '⭐']; winAmt = 15;
+    } else if (window.spinCount5 % 20 === 0) {
+        result = ['🍇', '🍇', '🍇', '🍇', '🍇']; winAmt = 20;
+    } else if (window.spinCount5 % 10 === 0) {
+        result = ['🍊', '🍊', '🍊', '🍊', '🍊']; winAmt = 7;
     } else {
-        // წაგება: გარანტირებულად განსხვავებული ფიგურები
-        while(true) {
-            result = [];
-            for(let k=0; k<5; k++) {
-                result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
-            }
-            // ვამოწმებთ, რომ შემთხვევით 5-ვე ერთნაირი არ დაჯდეს
-            if (!result.every(v => v === result[0])) break;
-        }
+        // წაგება - არეული სიმბოლოები
+        result = ['🍒', '🍋', '🍇', '🔔', '🍊']; 
         winAmt = 0;
     }
 
-    // 3. რილების ფიზიკური განახლება და ტრიალი
+    // რილების დატრიალება
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
-
-        // ყოველ სპინზე რილს თავიდან ვავსებთ, რომ ძველი ფიგურები წაიშალოს
-        r.innerHTML = ''; 
-        for (let j = 0; j < 60; j++) {
+        r.innerHTML = '';
+        for(let j=0; j<50; j++) {
             const s = document.createElement('div');
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
-            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+            s.style="height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            s.innerText = slot5Icons[Math.floor(Math.random()*slot5Icons.length)];
             r.appendChild(s);
         }
-
-        r.style.transition = 'none';
-        r.style.transform = 'translateY(0)';
-        
+        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
         const stopIdx = 45;
         r.children[stopIdx].innerText = result[i-1];
-
-        // ანიმაციის გაშვება
         setTimeout(() => {
-            r.style.transition = `transform ${1.8 + (i * 0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transition = `transform ${1.5 + (i*0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
-    // 4. გაჩერება და მოგების დარიცხვა
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            new Audio("https://github.com/jimsher/Emigrantbook/blob/f8276fbc147b7fde8af7fb8f4e18b775ca8fa0b9/u_edtmwfwu7c-over-the-horizon-329304.mp3").play().catch(()=>{});
-            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots 5 Win');
+            if (winAmt >= 15) startJackpotAnimation(winAmt, "BIG WIN!");
+            earnAkho(auth.currentUser.uid, winAmt, 'System Cycle Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 4000);
+    }, 3500);
 }
-
-
 
 
 
