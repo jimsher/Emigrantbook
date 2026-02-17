@@ -2211,36 +2211,40 @@ function backFromSlots() {
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
     else if (window.spinCount5 % 20 === 0) { result = ['🍇','🍇','🍇','🍇','🍇']; winAmt = 20; }
     else if (window.spinCount5 % 10 === 0) { result = ['🍊','🍊','🍊','🍊','🍊']; winAmt = 7; }
-    else { result = ['🍒','🍋','🍇','🔔','🍊']; winAmt = 0; }
+    else { 
+        result = ['🍒','🍋','🍇','🔔','🍊']; 
+        winAmt = 0;
+    }
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
 
         r.innerHTML = '';
-        for(let j=0; j < 60; j++) {
+        for(let j=0; j < 50; j++) {
             const s = document.createElement('div');
-            // სიმაღლეს ვტოვებთ 70-ზე, მაგრამ ვამატებთ flex-shrink-ს
-            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
+            // სიმაღლეს ვსვამთ ზუსტად ისე, როგორც 3-იანშია (70px)
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 40; 
+        // რილის გაჩერების წერტილი
+        const stopIdx = 30; 
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
         setTimeout(() => {
+            // თანმიმდევრული გაჩერება
             const duration = 1.2 + (i * 0.4); 
-            r.style.transition = `transform ${duration}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
             
-            // აი აქ არის ხრიკი: რილის სიმაღლეს ვზომავთ რეალურად (r.scrollHeight)
-            // და რილს ვწევთ ისე, რომ 40-ე ელემენტი იყოს ზუსტად შუაში.
-            const itemHeight = r.children[0].getBoundingClientRect().height;
-            const targetPos = (stopIdx - 1) * itemHeight; 
-            
+            // აი აქ არის მთავარი: 
+            // რილს ვაჩერებთ ისე, რომ 30-ე სიმბოლო იყოს შუაში, 29-ე თავში და 31-ე ბოლოში.
+            // ამისთვის ვიყენებთ (stopIdx - 1)
+            const targetPos = (stopIdx - 1) * 70; 
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
@@ -2248,12 +2252,12 @@ function backFromSlots() {
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            earnAkho(auth.currentUser.uid, winAmt, 'Pattern Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'System Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
     }, 4500); 
-} 
+}
     
 
 
