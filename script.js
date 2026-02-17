@@ -2183,81 +2183,146 @@ function backFromSlots() {
 
 
 
- function triggerBurning5Spin() {
-    // 1. შემოწმება და ბალანსი
+// ==========================================
+// 1. ჯეკპოტის და მონეტების ანიმაცია
+// ==========================================
+function startJackpotAnimation(amount, title) {
+    // მონეტების შექმნის ფუნქცია
+    const createCoin = () => {
+        const coin = document.createElement('div');
+        coin.innerText = "🟡"; 
+        coin.style = `
+            position: fixed; top: -50px; left: ${Math.random() * 100}vw;
+            font-size: ${Math.random() * 20 + 15}px; z-index: 10000;
+            pointer-events: none; transition: transform 3s linear, opacity 3s;
+        `;
+        document.body.appendChild(coin);
+        setTimeout(() => {
+            coin.style.transform = `translateY(${window.innerHeight + 100}px) rotate(${Math.random() * 720}deg)`;
+            coin.style.opacity = "0";
+        }, 50);
+        setTimeout(() => coin.remove(), 3000);
+    };
+
+    // 100 მონეტის გამოშვება
+    for (let i = 0; i < 100; i++) {
+        setTimeout(createCoin, i * 30);
+    }
+
+    // მოგების ხმა (შენი GitHub-იდან)
+    if(typeof winSnd !== 'undefined') winSnd.play().catch(()=>{});
+
+    // დიდი ეკრანის "ოვერლეი"
+    const overlay = document.createElement('div');
+    overlay.id = "jackpotOverlay";
+    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; pointer-events:none;";
+    overlay.innerHTML = `
+        <h1 style="color:gold; font-size:60px; text-shadow:0 0 30px orange; margin:0;">${title}</h1>
+        <h2 id="jackpotCounter" style="color:white; font-size:80px; margin:0;">0</h2>
+        <p style="color:gold; font-size:24px;">AKHO COINS COLLECTED!</p>
+    `;
+    document.body.appendChild(overlay);
+
+    // ციფრების "მატება"
+    let current = 0;
+    let step = amount / 60;
+    let interval = setInterval(() => {
+        current += step;
+        document.getElementById('jackpotCounter').innerText = Math.floor(current) + " ₳";
+        if (current >= amount) {
+            document.getElementById('jackpotCounter').innerText = amount + " ₳";
+            clearInterval(interval);
+            setTimeout(() => overlay.remove(), 2500);
+        }
+    }, 30);
+}
+
+// ==========================================
+// 2. გადაკეთებული 5-რილიანი სლოტის ლოგიკა
+// ==========================================
+function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) {
-        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის! ფსონი: " + burningStake5);
+        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის!");
         return;
     }
 
     isSpinning5 = true;
     spendAkho(burningStake5, 'Burning Slots 5 Bet');
-    
     updateAllGameBalances();
     updateWinUI(0);
 
+    // დატრიალების ხმა
     new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
-    // 2. მოგების დაგეგმვა (რანდომიზაციის ფილტრით)
     let result = [];
     let winAmt = 0;
     const rand = Math.random();
 
-    if (rand < 0.03) { 
-        // ჯეკპოტი: 5 ცალი 7️⃣
-        result = ['7️⃣', '7️⃣', '7️⃣', '7️⃣', '7️⃣']; 
-        winAmt = burningStake5 * 150; 
-    } else if (rand < 0.10) {
-        // საშუალო მოგება: 5 ერთნაირი ხილი
-        let winIcon = slot5Icons[Math.floor(Math.random() * 4) + 1]; 
+    // --- შენი მოთხოვნილი ჯეკპოტების სისტემა ---
+    if (rand < 0.005) { 
+        // 1. სრული 5 ხაზი შვიდიანებით (1000 AKHO)
+        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣'];
+        winAmt = 1000;
+        setTimeout(() => startJackpotAnimation(1000, "ULTIMATE JACKPOT!"), 3500);
+    } 
+    else if (rand < 0.015) { 
+        // 2. პირველი 3 ხაზი სრული შვიდიანებით (300 AKHO)
+        result = ['7️⃣','7️⃣','7️⃣','7️⃣','7️⃣']; 
+        winAmt = 300;
+        setTimeout(() => startJackpotAnimation(300, "TRIPLE SEVENS!"), 3500);
+    } 
+    else if (rand < 0.02) { 
+        // 3. ბალი სრულად (500 AKHO)
+        result = ['🍒','🍒','🍒','🍒','🍒'];
+        winAmt = 500;
+        setTimeout(() => startJackpotAnimation(500, "CHERRY MADNESS!"), 3500);
+    }
+    else if (rand < 0.06) {
+        // 4. ვარსკვლავები შუა ხაზზე (20 AKHO)
+        result = ['⭐','⭐','⭐','⭐','⭐'];
+        winAmt = 20;
+    }
+    else if (rand < 0.20) {
+        // ჩვეულებრივი მოგება
+        let winIcon = slot5Icons[Math.floor(Math.random() * 5)];
         result = [winIcon, winIcon, winIcon, winIcon, winIcon];
-        winAmt = burningStake5 * 25;
-    } else {
-        // წაგება: გარანტირებულად განსხვავებული ფიგურები
+        winAmt = burningStake5 * 10;
+    } 
+    else {
+        // წაგება
         while(true) {
             result = [];
-            for(let k=0; k<5; k++) {
-                result.push(slot5Icons[Math.floor(Math.random() * slot5Icons.length)]);
-            }
-            // ვამოწმებთ, რომ შემთხვევით 5-ვე ერთნაირი არ დაჯდეს
-            if (!result.every(v => v === result[0])) break;
+            for(let k=0; k<5; k++) result.push(slot5Icons[Math.floor(Math.random()*slot5Icons.length)]);
+            if(!result.every(v => v === result[0])) break;
         }
         winAmt = 0;
     }
 
-    // 3. რილების ფიზიკური განახლება და ტრიალი
+    // რილების ტრიალი
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
-
-        // ყოველ სპინზე რილს თავიდან ვავსებთ, რომ ძველი ფიგურები წაიშალოს
-        r.innerHTML = ''; 
-        for (let j = 0; j < 60; j++) {
+        r.innerHTML = '';
+        for(let j=0; j<60; j++) {
             const s = document.createElement('div');
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
-            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
+            s.style="height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            s.innerText = slot5Icons[Math.floor(Math.random()*9)];
             r.appendChild(s);
         }
-
-        r.style.transition = 'none';
-        r.style.transform = 'translateY(0)';
-        
+        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
         const stopIdx = 45;
         r.children[stopIdx].innerText = result[i-1];
-
-        // ანიმაციის გაშვება
         setTimeout(() => {
-            r.style.transition = `transform ${1.8 + (i * 0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            r.style.transition = `transform ${1.8 + (i*0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
             r.style.transform = `translateY(-${stopIdx * 70}px)`;
         }, 50);
     }
 
-    // 4. გაჩერება და მოგების დარიცხვა
+    // შედეგის დარიცხვა
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            new Audio("https://github.com/jimsher/Emigrantbook/blob/f8276fbc147b7fde8af7fb8f4e18b775ca8fa0b9/u_edtmwfwu7c-over-the-horizon-329304.mp3").play().catch(()=>{});
-            earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots 5 Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'Burning 5 Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
