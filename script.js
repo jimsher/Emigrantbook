@@ -2204,7 +2204,7 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // --- შენი მათემატიკური ციკლი (უცვლელია) ---
+    // შენი მათემატიკური ციკლი (უცვლელია)
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2221,34 +2221,28 @@ function triggerBurning5Spin() {
         if(!r) continue;
 
         r.innerHTML = '';
-        // ვქმნით 40 სიმბოლოს, რომ ტრიალი გრძელი და ლამაზი იყოს
-        for(let j=0; j < 40; j++) {
+        // ვქმნით 30 სიმბოლოს
+        for(let j=0; j < 30; j++) {
             const s = document.createElement('div');
-            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box;";
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        // ვაჩერებთ 30-ე სიმბოლოზე
-        const targetIdx = 30; 
-        r.children[targetIdx].innerText = result[i-1];
-        // ვიზუალური ტესტისთვის (შეგიძლია მერე წაშალო):
-        // r.children[targetIdx].style.backgroundColor = "rgba(255,215,0,0.1)"; 
+        // ვაჩერებთ 25-ე სიმბოლოზე
+        const targetIdx = 25; 
+        const targetElement = r.children[targetIdx];
+        targetElement.innerText = result[i-1];
+        targetElement.id = `winner_${i}`; // მივანიჭოთ ID საპოვნელად
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
+        // ანიმაცია: ვიყენებთ scroll-ს ნაცვლად transform-ისა, რომ ზუსტად დასვას
         setTimeout(() => {
-            r.style.transition = `transform ${2 + (i * 0.3)}s cubic-bezier(0.15, 0, 0.05, 1)`;
-            
-            const itemHeight = r.children[0].offsetHeight || 70;
-            
-            // --- აი აქ არის მთავარი გამოსწორება ---
-            // თუ შენს სლოტში 3 ხაზი ჩანს, მაშინ targetPos-ს უნდა გამოვაკლოთ 1 სიმბოლო,
-            // რომ მოგებული სიმბოლო დაჯდეს შუაში და არა ზემოთ.
-            const targetPos = (targetIdx - 1) * itemHeight;
-            
-            r.style.transform = `translateY(-${targetPos}px)`;
+            r.style.transition = `all ${2 + (i * 0.3)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            // ეს ბრძანება აიძულებს ბრაუზერს სიმბოლო დასვას ცენტრში
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 50);
     }
 
@@ -2259,12 +2253,11 @@ function triggerBurning5Spin() {
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
             if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
-                startJackpotAnimation(winAmt, "SUPER WIN!");
+                startJackpotAnimation(winAmt, "JACKPOT!");
             }
         }
     }, 4000);
 }
-
 
  
 
