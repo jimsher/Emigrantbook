@@ -2544,86 +2544,61 @@ async function handleWin(symbol, count) {
 
 
 
-function openShopSection() {
-    // ვმალავთ თამაშების სიას და სხვა კონტეინერებს
-    document.getElementById('gamesList').style.display = 'none';
-    document.getElementById('shopSectionContainer').style.display = 'flex';
-    // ვანახლებთ მაღაზიას
-    renderStore('all');
-}
 
-function backToGamesListFromShop() {
-    document.getElementById('shopSectionContainer').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
-function renderStore(category, btn = null) {
-    const grid = document.getElementById('productsGrid');
-    grid.innerHTML = '';
-
-    // Tab-ების გააქტიურება
-    if(btn) {
-        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    const filtered = category === 'all' ? akhoStore : akhoStore.filter(p => p.category === category);
-
-    filtered.forEach(p => {
-        grid.innerHTML += `
-            <div class="product-card">
-                <div style="height:70px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:8px;"></div>
-                <div style="color:white; font-size:12px; font-weight:bold; margin-bottom:4px;">${p.name}</div>
-                <div style="color:var(--gold); font-weight:bold; font-size:14px; margin-bottom:8px;">${p.price} AKHO</div>
-                <button onclick="buyProduct(${p.id})" style="background:var(--gold); border:none; color:black; width:100%; padding:6px; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;">ყიდვა</button>
-            </div>
-        `;
-    });
-}
-
-
-
-
-
-
-
-// --- მაღაზიის კონფიგურაცია ---
-let freeSpinsCount = 0; // უფასო სპინების მრიცხველი
-
+      // --- 1. ძირითადი კონფიგურაცია და ცვლადები ---
+let shoppingCart = [];
 const akhoStore = [
-    {
-        id: 1,
-        name: "საიდუმლო ყუთი",
-        price: 50,
-        category: "digital",
-        image: "https://cdn-icons-png.flaticon.com/512/2850/2850369.png",
-        desc: "მოიგე 10-დან 500 AKHO-მდე!",
-        type: "lootbox"
-    },
-    {
-        id: 2,
-        name: "10 უფასო სპინი",
-        price: 30,
-        category: "digital",
-        image: "https://cdn-icons-png.flaticon.com/512/8139/8139794.png",
-        desc: "გამოიყენე Burning 5 Slot-ზე",
-        type: "freespins"
-    },
-    {
-        id: 3,
-        name: "VIP დაზღვევა",
-        price: 100,
-        category: "vip",
-        image: "https://cdn-icons-png.flaticon.com/512/1162/1162951.png",
-        desc: "წაგებული თანხის 10% ქეშბექი",
-        type: "insurance"
-    }
+    { id: 101, name: "Premium Headset", price: 250, category: "physical", image: "https://cdn-icons-png.flaticon.com/512/27/27130.png", desc: "პროფესიონალური ჟღერადობა და კომფორტი." },
+    { id: 102, name: "Smart Watch v2", price: 450, category: "physical", image: "https://cdn-icons-png.flaticon.com/512/610/610116.png", desc: "ჯანმრთელობისა და აქტივობის კონტროლი." },
+    { id: 103, name: "Cloud Storage (1TB)", price: 120, category: "digital", image: "https://cdn-icons-png.flaticon.com/512/2906/2906206.png", desc: "უსაფრთხო ადგილი თქვენი ფაილებისთვის." },
+    { id: 104, name: "VIP სტატუსი", price: 300, category: "digital", image: "https://cdn-icons-png.flaticon.com/512/2554/2554936.png", desc: "პრიორიტეტული მომსახურება და ბონუსები." }
 ];
 
-// --- მაღაზიის ფუნქციები ---
+// --- 2. საფულის და ბალანსის მართვა (Critical Core) ---
+// შენი არსებული ფუნქციები, რომლებიც Firebase-თან მუშაობს
+
+async function spendAkho(amount, reason) {
+    if (!auth.currentUser) return;
+    const userRef = db.collection('users').doc(auth.currentUser.uid);
+    
+    return db.runTransaction(async (transaction) => {
+        const doc = await transaction.get(userRef);
+        const newBalance = doc.data().balance - amount;
+        if (newBalance < 0) throw new Error("არასაკმარისი ბალანსი");
+        
+        transaction.update(userRef, { balance: newBalance });
+        // ტრანზაქციების ისტორიაში ჩაწერა
+        transaction.set(userRef.collection('history').doc(), {
+            amount: -amount,
+            reason: reason,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    });
+}
+
+function updateAllGameBalances() {
+    if (!auth.currentUser) return;
+    db.collection('users').doc(auth.currentUser.uid).onSnapshot(doc => {
+        const bal = doc.data().balance.toFixed(2);
+        // ყველა ბალანსის ველის განახლება საიტზე
+        const balElements = ['gameBalance', 'shopBalance', 'mainBalance'];
+        balElements.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = bal + " AKHO";
+        });
+    });
+}
+
+// --- 3. მაღაზიის მართვის ლოგიკა ---
 
 function openShopSection() {
-    document.getElementById('gamesList').style.display = 'none';
+    // ვმალავთ სხვა სექციებს
+    const sections = ['gamesList', 'wheelGameContainer', 'lottoGameContainer', 'kingOfAkhoContainer'];
+    sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
     document.getElementById('shopSectionContainer').style.display = 'flex';
     renderStore('all');
 }
@@ -2635,8 +2610,10 @@ function backToGamesListFromShop() {
 
 function renderStore(category, btn = null) {
     const grid = document.getElementById('productsGrid');
+    if (!grid) return;
     grid.innerHTML = '';
 
+    // აქტიური ტაბის ვიზუალი
     if(btn) {
         document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
@@ -2646,108 +2623,63 @@ function renderStore(category, btn = null) {
 
     filtered.forEach(p => {
         grid.innerHTML += `
-            <div class="product-card">
-                <div style="height:70px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:8px;"></div>
-                <div style="color:white; font-size:12px; font-weight:bold; margin-bottom:4px;">${p.name}</div>
-                <div style="color:var(--gold); font-weight:bold; font-size:14px; margin-bottom:8px;">${p.price} AKHO</div>
-                <button onclick="buyProduct(${p.id})" style="background:var(--gold); border:none; color:black; width:100%; padding:6px; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;">ყიდვა</button>
+            <div class="product-card" style="background:#111; border:1px solid #333; border-radius:15px; padding:15px; display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <div style="height:90px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:10px;"></div>
+                <div style="color:white; font-size:14px; font-weight:bold; margin-bottom:5px;">${p.name}</div>
+                <div style="color:#666; font-size:11px; margin-bottom:12px; height:30px; overflow:hidden;">${p.desc}</div>
+                <div style="color:var(--gold); font-weight:bold; font-size:18px; margin-bottom:15px;">${p.price} AKHO</div>
+                
+                <div style="display:flex; gap:8px; width:100%;">
+                    <button onclick="addToCart(${p.id})" style="flex:1; background:#222; color:white; border:1px solid #444; padding:10px; border-radius:10px; cursor:pointer; font-size:12px;">კალათა</button>
+                    <button onclick="instantBuy(${p.id})" style="flex:1; background:var(--gold); color:black; border:none; padding:10px; border-radius:10px; font-weight:bold; cursor:pointer; font-size:12px;">ყიდვა</button>
+                </div>
             </div>
         `;
     });
 }
 
-// --- ყიდვის და ექშენების ლოგიკა ---
+// --- 4. კალათა და გადახდა (E-commerce Core) ---
 
-function buyProduct(productId) {
+function addToCart(productId) {
     const product = akhoStore.find(p => p.id === productId);
-    const userBalance = parseFloat(document.getElementById('gameBalance').innerText);
+    shoppingCart.push(product);
+    alert(`"${product.name}" დაემატა კალათაში. ჯამში: ${shoppingCart.length} ნივთი.`);
+}
+
+
+
+async function instantBuy(productId) {
+    const product = akhoStore.find(p => p.id === productId);
+    
+    // ბალანსის შემოწმება
+    const balanceText = document.getElementById('gameBalance').innerText;
+    const userBalance = parseFloat(balanceText.replace(/[^\d.]/g, '')) || 0;
 
     if (userBalance < product.price) {
-        alert("ბალანსი არ გყოფნის!");
+        alert("ბალანსი არ არის საკმარისი ამ ტრანზაქციისთვის.");
         return;
     }
 
-    if (confirm(`გსურთ ${product.name}-ს ყიდვა ${product.price} AKHO-დ?`)) {
-        spendAkho(product.price, `Store: ${product.name}`);
+    // ინვოისის დადასტურება
+    const confirmMsg = `
+        გადახდის დადასტურება
+        --------------------
+        პროდუქტი: ${product.name}
+        ჯამი: ${product.price} AKHO
         
-        switch(product.type) {
-            case 'lootbox':
-                openLootBox();
-                break;
-            case 'freespins':
-                freeSpinsCount += 10;
-                alert("დაგემატა 10 უფასო სპინი!");
-                break;
-            case 'insurance':
-                alert("VIP დაზღვევა გააქტიურებულია!");
-                break;
-        }
-        
-        updateAllGameBalances();
-        document.getElementById('shopBalance').innerText = document.getElementById('gameBalance').innerText;
-    }
-}
-
-// --- Loot Box ანიმაცია ---
-
-function openLootBox() {
-    const rewards = [10, 20, 50, 100, 200, 500];
-    const win = rewards[Math.floor(Math.random() * rewards.length)];
-
-    const boxOverlay = document.createElement('div');
-    boxOverlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;";
-    boxOverlay.innerHTML = `
-        <div id="boxAnim" style="font-size:100px; transition: 0.5s; cursor:default;">🎁</div>
-        <h2 id="boxStatus" style="color:var(--gold); font-family:sans-serif; text-align:center;">ყუთი იხსნება...</h2>
+        გსურთ თანხის გადარიცხვა?
     `;
-    document.body.appendChild(boxOverlay);
 
-    setTimeout(() => {
-        const anim = document.getElementById('boxAnim');
-        anim.style.transform = "scale(1.5) rotate(15deg)";
-        anim.innerText = "💰";
-        
-        document.getElementById('boxStatus').innerHTML = `გილოცავ!<br><span style="font-size:50px; color:white;">${win} AKHO</span>`;
-        
-        earnAkho(auth.currentUser.uid, win, 'LootBox Win');
-        
-        setTimeout(() => {
-            boxOverlay.style.opacity = "0";
-            boxOverlay.style.transition = "1s";
-            setTimeout(() => {
-                boxOverlay.remove();
-                updateAllGameBalances();
-            }, 1000);
-        }, 2500);
-    }, 1500);
-}
-
-
-
-function triggerBurning5Spin() {
-    // --- უფასო სპინების შემოწმება ---
-    let usingFreeSpin = false;
-
-    if (freeSpinsCount > 0) {
-        freeSpinsCount--;
-        usingFreeSpin = true;
-        console.log("Using Free Spin! Remaining:", freeSpinsCount);
-    } else {
-        if (isSpinning5 || !canAfford(burningStake5)) return;
+    if (confirm(confirmMsg)) {
+        try {
+            // რეალური ტრანზაქცია საფულედან
+            await spendAkho(product.price, `SHOP_ORDER: ${product.name}`);
+            
+            // წარმატების შეტყობინება
+            alert("გადახდა წარმატებულია! თქვენი შეკვეთა მიღებულია.");
+            updateAllGameBalances();
+        } catch (error) {
+            alert("შეცდომა გადახდისას: " + error.message);
+        }
     }
-
-    isSpinning5 = true;
-    
-    // ფულს ვაკლებთ მხოლოდ მაშინ, თუ უფასო სპინი არ გვაქვს
-    if (!usingFreeSpin) {
-        spendAkho(burningStake5, 'Burning 5 Bet');
-    }
-    
-    updateAllGameBalances();
-    // ... დანარჩენი კოდი უცვლელია ...
-}
-
-
-
-
-
+}      
