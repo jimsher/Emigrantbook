@@ -2360,3 +2360,168 @@ function initializeKingGrid() {
         grid.appendChild(cell);
     }
 }
+
+
+
+
+
+// --- კონფიგურაცია ---
+let kingIcons = ['👑', '🦁', '💎', '💰', '🍇', '🍉', '🔔', '7️⃣'];
+let kingStake = 10;
+let currentMultiplier = 1;
+let isKingSpinning = false;
+
+// ფანჯრის გახსნა
+function openKingOfAkho() {
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('kingOfAkhoContainer').style.display = 'flex';
+    initializeKingGrid();
+}
+
+// უკან დაბრუნება
+function backToGamesListFromKing() {
+    if (isKingSpinning) return; // ტრიალის დროს რომ არ დაიხუროს
+    document.getElementById('kingOfAkhoContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
+}
+
+// ბადის პირველადი შევსება
+function initializeKingGrid() {
+    const grid = document.getElementById('kingGrid');
+    grid.innerHTML = '';
+    currentMultiplier = 1;
+    updateKingUI();
+    for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'king-cell';
+        cell.style = "display:flex; align-items:center; justify-content:center; background:#1a1a1a; border-radius:8px; font-size:32px; border: 1px solid #333;";
+        cell.innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)];
+        grid.appendChild(cell);
+    }
+}
+
+function updateKingUI() {
+    const multDisplay = document.getElementById('kingMultiplier');
+    multDisplay.innerText = `Multiplier: x${currentMultiplier}`;
+    if (currentMultiplier > 1) {
+        multDisplay.style.transform = "scale(1.2)";
+        multDisplay.style.color = "#fff";
+        multDisplay.style.background = "#b8860b";
+    } else {
+        multDisplay.style.transform = "scale(1)";
+        multDisplay.style.color = "gold";
+        multDisplay.style.background = "rgba(255,215,0,0.1)";
+    }
+}
+
+// --- თამაშის მთავარი ლოგიკა ---
+async function startKingSpin() {
+    if (isKingSpinning || !canAfford(kingStake)) return;
+    
+    isKingSpinning = true;
+    currentMultiplier = 1;
+    updateKingUI();
+    
+    spendAkho(kingStake, 'King Of Akho Bet');
+    updateAllGameBalances();
+
+    // ჩამოყრის ეფექტი
+    await dropNewSymbols();
+    // პირველი შემოწმება მოგებაზე
+    processRound();
+}
+
+async function dropNewSymbols() {
+    const cells = document.querySelectorAll('.king-cell');
+    for (let i = 0; i < cells.length; i++) {
+        cells[i].style.opacity = "0";
+        cells[i].style.transform = "translateY(-50px)";
+        cells[i].innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)];
+        
+        setTimeout(() => {
+            cells[i].style.transition = "all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67)";
+            cells[i].style.opacity = "1";
+            cells[i].style.transform = "translateY(0)";
+        }, i * 15);
+    }
+    await new Promise(r => setTimeout(r, 600));
+}
+
+function processRound() {
+    const cells = document.querySelectorAll('.king-cell');
+    let symbolsOnScreen = Array.from(cells).map(c => c.innerText);
+    
+    let counts = {};
+    symbolsOnScreen.forEach(s => counts[s] = (counts[s] || 0) + 1);
+
+    let winningSymbol = null;
+    let winCount = 0;
+
+    // ვეძებთ სიმბოლოს, რომელიც 8-ჯერ ან მეტჯერაა
+    for (let sym in counts) {
+        if (counts[sym] >= 8) {
+            winningSymbol = sym;
+            winCount = counts[sym];
+            break; 
+        }
+    }
+
+    if (winningSymbol) {
+        handleWin(winningSymbol, winCount);
+    } else {
+        isKingSpinning = false; // მოგებები მორჩა
+    }
+}
+
+async function handleWin(symbol, count) {
+    const cells = document.querySelectorAll('.king-cell');
+    // მოგების ფორმულა: (სიმბოლოების რაოდენობა * 0.5) * მამრავლი
+    let winAmount = (count * 0.5) * currentMultiplier;
+
+    // 1. აფეთქების ანიმაცია
+    cells.forEach(cell => {
+        if (cell.innerText === symbol) {
+            cell.style.background = "radial-gradient(circle, gold, #b8860b)";
+            cell.style.boxShadow = "0 0 20px gold";
+            cell.style.transform = "scale(0.5)";
+            cell.style.opacity = "0";
+        }
+    });
+
+    // 2. დარიცხვა
+    earnAkho(auth.currentUser.uid, winAmount, 'King Win');
+    currentMultiplier++; // მამრავლი იზრდება
+    updateKingUI();
+    updateAllGameBalances();
+    updateWinUI(winAmount);
+
+    // 3. ახალი სიმბოლოების ჩამოყრა აფეთქებულების ნაცვლად
+    setTimeout(() => {
+        cells.forEach(cell => {
+            if (cell.style.opacity === "0") {
+                cell.innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)];
+                cell.style.opacity = "1";
+                cell.style.transform = "scale(1)";
+                cell.style.background = "#1a1a1a";
+                cell.style.boxShadow = "none";
+            }
+        });
+        // ხელახალი შემოწმება ახალ სიმბოლოებზე (Cascading)
+        setTimeout(processRound, 500);
+    }, 600);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
