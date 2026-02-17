@@ -2544,96 +2544,39 @@ async function handleWin(symbol, count) {
 
 
 
-const akhoStore = [
-    {
-        id: 1,
-        name: "VIP სტატუსი (30 დღე)",
-        price: 500,
-        category: "vip",
-        image: "https://cdn-icons-png.flaticon.com/512/2554/2554936.png",
-        desc: "მიიღე 2x მოგება თამაშებში"
-    },
-    {
-        id: 2,
-        name: "iPhone 15 Pro",
-        price: 25000,
-        category: "physical",
-        image: "https://cdn-icons-png.flaticon.com/512/644/644458.png",
-        desc: "ფიზიკური ნივთის გამოტანა"
-    },
-    {
-        id: 3,
-        name: "საიდუმლო ყუთი",
-        price: 150,
-        category: "digital",
-        image: "https://cdn-icons-png.flaticon.com/512/2850/2850369.png",
-        desc: "მოიგე 10-დან 500 AKHO-მდე"
-    },
-    {
-        id: 4,
-        name: "Exclusive Avatar",
-        price: 80,
-        category: "digital",
-        image: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-        desc: "გამორჩეული ვიზუალი პროფილზე"
-    }
-];
-
-function openShopPage() {
-    document.getElementById('shopPage').style.display = 'flex';
-    document.getElementById('shopBalance').innerText = document.getElementById('gameBalance').innerText;
-    renderProducts('all');
+function openShopSection() {
+    // ვმალავთ თამაშების სიას და სხვა კონტეინერებს
+    document.getElementById('gamesList').style.display = 'none';
+    document.getElementById('shopSectionContainer').style.display = 'flex';
+    // ვანახლებთ მაღაზიას
+    renderStore('all');
 }
 
-function closeShopPage() {
-    document.getElementById('shopPage').style.display = 'none';
+function backToGamesListFromShop() {
+    document.getElementById('shopSectionContainer').style.display = 'none';
+    document.getElementById('gamesList').style.display = 'grid';
 }
 
-function renderProducts(filter) {
+function renderStore(category, btn = null) {
     const grid = document.getElementById('productsGrid');
     grid.innerHTML = '';
 
-    const filtered = filter === 'all' ? akhoStore : akhoStore.filter(p => p.category === filter);
+    // Tab-ების გააქტიურება
+    if(btn) {
+        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+    }
 
-    filtered.forEach(product => {
+    const filtered = category === 'all' ? akhoStore : akhoStore.filter(p => p.category === category);
+
+    filtered.forEach(p => {
         grid.innerHTML += `
             <div class="product-card">
-                <div style="height:100px; background:url('${product.image}') center/contain no-repeat; margin-bottom:10px;"></div>
-                <div style="color:white; font-weight:bold; font-size:14px; margin-bottom:5px;">${product.name}</div>
-                <div style="color:#666; font-size:10px; margin-bottom:10px; height:25px; overflow:hidden;">${product.desc}</div>
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:auto;">
-                    <span style="color:#d4af37; font-weight:bold;">${product.price} ₳</span>
-                    <button onclick="buyProduct(${product.id})" style="background:#d4af37; border:none; color:black; padding:5px 12px; border-radius:10px; font-weight:bold; font-size:12px; cursor:pointer;">ყიდვა</button>
-                </div>
+                <div style="height:70px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:8px;"></div>
+                <div style="color:white; font-size:12px; font-weight:bold; margin-bottom:4px;">${p.name}</div>
+                <div style="color:var(--gold); font-weight:bold; font-size:14px; margin-bottom:8px;">${p.price} AKHO</div>
+                <button onclick="buyProduct(${p.id})" style="background:var(--gold); border:none; color:black; width:100%; padding:6px; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;">ყიდვა</button>
             </div>
         `;
     });
-}
-
-
-
-
-
-
-
-
-function buyProduct(productId) {
-    const product = akhoStore.find(p => p.id === productId);
-    const userBalance = parseFloat(document.getElementById('gameBalance').innerText);
-
-    if (userBalance < product.price) {
-        alert("არასაკმარისი ბალანსი!");
-        return;
-    }
-
-    // დადასტურების ფანჯარა (Luxury Style)
-    if (confirm(`ნამდვილად გსურთ ${product.name}-ს ყიდვა ${product.price} AKHO-დ?`)) {
-        // ბალანსის ჩამოჭრა (შენს არსებულ ფუნქციას ვიყენებთ)
-        spendAkho(product.price, `Purchase: ${product.name}`);
-        
-        // ეფექტი
-        alert("გილოცავთ! შენაძენი წარმატებულია.");
-        updateAllGameBalances();
-        document.getElementById('shopBalance').innerText = document.getElementById('gameBalance').innerText;
-    }
 }
