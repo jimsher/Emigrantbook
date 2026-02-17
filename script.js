@@ -2202,7 +2202,7 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // --- მკაცრი კონტროლი ---
+    // შენი მათემატიკური ციკლი (უცვლელია)
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2210,32 +2210,32 @@ function triggerBurning5Spin() {
     else if (window.spinCount5 % 10 === 0) { result = ['🍊','🍊','🍊','🍊','🍊']; winAmt = 7; }
     else { result = ['🍒','🍋','🍇','🔔','🍊']; winAmt = 0; }
 
-    // რილების ტრიალი
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
 
-        // ვასუფთავებთ რილს და ვყრით 30 რანდომულ სიმბოლოს ტრიალისთვის
         r.innerHTML = '';
-        for(let j=0; j < 30; j++) {
+        // მნიშვნელოვანი: ვაყენებთ მკაცრ სტილს კონტეინერზე
+        r.style.display = "flex";
+        r.style.flexDirection = "column";
+
+        for(let j=0; j < 40; j++) {
             const s = document.createElement('div');
-            s.className = "slot-symbol"; // დარწმუნდი რომ CSS-ში სიმაღლე ფიქსირებულია
-            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            // ვიყენებთ box-sizing, რომ border-მა ზომა არ გაზარდოს
+            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; box-sizing:border-box; margin:0; padding:0; border:none;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        // !!! მთავარი: ბოლოში ვამატებთ ჩვენს მოგებულ სიმბოლოს
-        const targetIdx = 25; 
+        const targetIdx = 35; // ოდნავ მეტი ტრიალი
         r.children[targetIdx].innerText = result[i-1];
-        r.children[targetIdx].style.color = "gold"; // რომ დავინახოთ რომელია ჩვენი დასმული
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
-        // ანიმაცია: ზუსტად targetIdx-ზე გაჩერება
         setTimeout(() => {
-            r.style.transition = `transform ${1.5 + (i * 0.2)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transition = `transform ${2 + (i * 0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
+            // იძულებითი გაჩერება
             r.style.transform = `translateY(-${targetIdx * 70}px)`;
         }, 50);
     }
@@ -2246,11 +2246,11 @@ function triggerBurning5Spin() {
             if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
                 startJackpotAnimation(winAmt, "WIN!");
             }
-            earnAkho(auth.currentUser.uid, winAmt, 'Cycle Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'System Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 3200);
+    }, 3800);
 }
 
 
