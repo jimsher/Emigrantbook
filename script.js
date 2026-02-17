@@ -2193,7 +2193,7 @@ function triggerBurning5Spin() {
     if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
-    window.spinCount5 = (window.spinCount5 || 0) + 1;
+    window.spinCount5 = (window.spinCount5 || 0) + 1; // ათვლა
     
     spendAkho(burningStake5, 'Burning 5 Bet');
     updateAllGameBalances();
@@ -2202,7 +2202,7 @@ function triggerBurning5Spin() {
     let result = [];
     let winAmt = 0;
 
-    // მათემატიკა (ციკლი)
+    // --- მათემატიკური ციკლი (შენი პირობები) ---
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
@@ -2218,38 +2218,44 @@ function triggerBurning5Spin() {
         if(!r) continue;
 
         r.innerHTML = '';
-        for(let j=0; j < 50; j++) {
+        // 55 პიქსელიანი სიმბოლოები
+        for(let j=0; j < 60; j++) {
             const s = document.createElement('div');
-            // სიმაღლე დავწიეთ 60px-მდე, რომ სამივე ხაზი გამოჩნდეს
-            s.style = "height:60px; min-height:60px; display:flex; align-items:center; justify-content:center; font-size:35px; flex-shrink:0;";
+            s.style = "height:55px; min-height:55px; display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-sizing:border-box; margin:0; padding:0;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 35; 
+        const stopIdx = 45; // მოგების ადგილი
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
+        // --- თანმიმდევრული გაჩერება ---
         setTimeout(() => {
-            const duration = 1.2 + (i * 0.4); 
-            r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            // ყოველი მომდევნო რელსი უფრო დიდხანს ტრიალებს (0.4 წამიანი ინტერვალით)
+            const duration = 1.0 + (i * 0.4); 
+            r.style.transition = `transform ${duration}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
             
-            // პიქსელი აქაც დავაკელით (60-ზე ვამრავლებთ)
-            const targetPos = (stopIdx - 1) * 60; 
+            // გაჩერების წერტილი 55 პიქსელზე დათვლილი
+            const targetPos = (stopIdx - 1) * 55; 
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
 
+    // მოგების ასახვა მეხუთე რელსის გაჩერების შემდეგ
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            earnAkho(auth.currentUser.uid, winAmt, 'System Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'Pattern Win');
             updateWinUI(winAmt);
+            if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
+                startJackpotAnimation(winAmt, "WIN!");
+            }
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 4500); 
+    }, 4000); 
 }
 
 
