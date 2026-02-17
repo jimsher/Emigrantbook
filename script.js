@@ -1843,6 +1843,8 @@ async function startLottoDraw() {
 var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
 var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
 
+if (typeof spinCount5 === 'undefined') window.spinCount5 = 0;
+
 var burningStake = 0.15;  
 var burningStake5 = 0.20; 
 var isSpinningNow = false;
