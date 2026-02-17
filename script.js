@@ -2256,7 +2256,7 @@ function backFromSlots() {
     setTimeout(() => {
         isSpinning5 = false;
         if (winAmt > 0) {
-            new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3').play().catch(()=>{});
+            new Audio("https://github.com/jimsher/Emigrantbook/blob/f8276fbc147b7fde8af7fb8f4e18b775ca8fa0b9/u_edtmwfwu7c-over-the-horizon-329304.mp3").play().catch(()=>{});
             earnAkho(auth.currentUser.uid, winAmt, 'Burning Slots 5 Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
