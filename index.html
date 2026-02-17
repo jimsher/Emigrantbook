@@ -670,27 +670,23 @@
  
 <script>
  function resetPassword() {
-    // აიღე მეილის ინპუტის ID (დარწმუნდი რომ შენი ინპუტის ID სწორია, მაგ: loginEmail)
-    const emailField = document.getElementById('loginEmail'); 
-    const email = emailField ? emailField.value.trim() : "";
+    // შენს HTML-ში ID არის "uEmail", ამიტომ აქაც ზუსტად ეგ უნდა ეწეროს
+    const emailInput = document.getElementById('uEmail');
+    const email = emailInput ? emailInput.value.trim() : "";
 
     if (!email) {
-        alert("გთხოვთ, ჯერ შეიყვანოთ თქვენი ელ-ფოსტა მეილის ველში.");
+        alert("შეცდომა: გთხოვთ, ჯერ შეიყვანოთ ელ-ფოსტა 'Email / ელფოსტა' ველში!");
         return;
     }
 
-    // Firebase-ის აღდგენის ფუნქცია
     firebase.auth().sendPasswordResetEmail(email)
         .then(() => {
-            alert("პაროლის აღდგენის ინსტრუქცია გამოგზავნილია თქვენს ელ-ფოსტაზე: " + email);
+            alert("გაიგზავნა! ინსტრუქცია იხილეთ მეილზე: " + email);
         })
         .catch((error) => {
             console.error("აღდგენის შეცდომა:", error);
-            if (error.code === 'auth/user-not-found') {
-                alert("ამ მეილით მომხმარებელი ვერ მოიძებნა.");
-            } else {
-                alert("შეცდომა: " + error.message);
-            }
+            // თუ მეილი არასწორია ან სხვა პრობლემაა
+            alert("შეცდომა: " + error.message);
         });
 }
 </script>
