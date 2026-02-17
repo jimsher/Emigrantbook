@@ -2724,7 +2724,28 @@ function openLootBox() {
 
 
 
+function triggerBurning5Spin() {
+    // --- უფასო სპინების შემოწმება ---
+    let usingFreeSpin = false;
 
+    if (freeSpinsCount > 0) {
+        freeSpinsCount--;
+        usingFreeSpin = true;
+        console.log("Using Free Spin! Remaining:", freeSpinsCount);
+    } else {
+        if (isSpinning5 || !canAfford(burningStake5)) return;
+    }
+
+    isSpinning5 = true;
+    
+    // ფულს ვაკლებთ მხოლოდ მაშინ, თუ უფასო სპინი არ გვაქვს
+    if (!usingFreeSpin) {
+        spendAkho(burningStake5, 'Burning 5 Bet');
+    }
+    
+    updateAllGameBalances();
+    // ... დანარჩენი კოდი უცვლელია ...
+}
 
 
 
