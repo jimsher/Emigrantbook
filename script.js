@@ -2205,45 +2205,42 @@ function backFromSlots() {
     let result = [];
     let winAmt = 0;
 
-    // --- მათემატიკური ციკლი ---
+    // შენი მათემატიკა (უცვლელი)
     if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
     else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
     else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
     else if (window.spinCount5 % 20 === 0) { result = ['🍇','🍇','🍇','🍇','🍇']; winAmt = 20; }
     else if (window.spinCount5 % 10 === 0) { result = ['🍊','🍊','🍊','🍊','🍊']; winAmt = 7; }
-    else { 
-        result = ['🍒','🍋','🍇','🔔','🍊']; 
-        winAmt = 0;
-    }
+    else { result = ['🍒','🍋','🍇','🔔','🍊']; winAmt = 0; }
 
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
 
         r.innerHTML = '';
-        // ვავსებთ რილს
         for(let j=0; j < 60; j++) {
             const s = document.createElement('div');
-            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0; box-sizing:border-box;";
+            // სიმაღლეს ვტოვებთ 70-ზე, მაგრამ ვამატებთ flex-shrink-ს
+            s.style = "height:70px; min-height:70px; display:flex; align-items:center; justify-content:center; font-size:40px; flex-shrink:0;";
             s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        const stopIdx = 40; // მოგების ინდექსი (ცოტა შორს წავიღოთ)
+        const stopIdx = 40; 
         r.children[stopIdx].innerText = result[i-1];
 
         r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
         setTimeout(() => {
-            // თანმიმდევრული გაჩერება
             const duration = 1.2 + (i * 0.4); 
-            r.style.transition = `transform ${duration}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transition = `transform ${duration}s cubic-bezier(0.1, 0, 0.1, 1)`;
             
-            // --- აი ეს არის "ოქროს" შესწორება ---
-            // იმისთვის რომ 3 ხაზი გამოჩნდეს სრულად და მოგება დაჯდეს შუაში:
-            // რილს ვაჩერებთ ისე, რომ 39-ე სიმბოლო იყოს სლოტის თავში.
-            const targetPos = (stopIdx - 1) * 70; 
+            // აი აქ არის ხრიკი: რილის სიმაღლეს ვზომავთ რეალურად (r.scrollHeight)
+            // და რილს ვწევთ ისე, რომ 40-ე ელემენტი იყოს ზუსტად შუაში.
+            const itemHeight = r.children[0].getBoundingClientRect().height;
+            const targetPos = (stopIdx - 1) * itemHeight; 
+            
             r.style.transform = `translateY(-${targetPos}px)`;
         }, 50);
     }
@@ -2253,13 +2250,10 @@ function backFromSlots() {
         if (winAmt > 0) {
             earnAkho(auth.currentUser.uid, winAmt, 'Pattern Win');
             updateWinUI(winAmt);
-            if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
-                startJackpotAnimation(winAmt, "WIN!");
-            }
             setTimeout(updateAllGameBalances, 500);
         }
     }, 4500); 
-}        
+} 
     
 
 
