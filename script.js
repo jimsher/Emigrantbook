@@ -2189,68 +2189,54 @@ function backFromSlots() {
 
 
 
-
 function triggerBurning5Spin() {
-    if (isSpinning5 || !canAfford(burningStake5)) {
-        if (!canAfford(burningStake5)) alert("ბალანსი არ გყოფნის!");
-        return;
-    }
+    if (isSpinning5 || !canAfford(burningStake5)) return;
 
     isSpinning5 = true;
-    window.spinCount5++; 
+    window.spinCount5++;
     
-    spendAkho(burningStake5, 'Burning Slots 5 Bet');
+    spendAkho(burningStake5, 'Slot 5 Bet');
     updateAllGameBalances();
     updateWinUI(0);
-
-    new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
 
     let result = [];
     let winAmt = 0;
 
-    // --- მათემატიკური კონტროლი ---
-    if (window.spinCount5 % 35 === 0) {
-        result = ['🍉', '🍉', '🍉', '🍉', '🍉']; winAmt = 50;
-    } else if (window.spinCount5 % 30 === 0) {
-        result = ['🔔', '🔔', '🔔', '🔔', '🔔']; winAmt = 30;
-    } else if (window.spinCount5 % 25 === 0) {
-        result = ['⭐', '⭐', '⭐', '⭐', '⭐']; winAmt = 15;
-    } else if (window.spinCount5 % 20 === 0) {
-        result = ['🍇', '🍇', '🍇', '🍇', '🍇']; winAmt = 20;
-    } else if (window.spinCount5 % 10 === 0) {
-        result = ['🍊', '🍊', '🍊', '🍊', '🍊']; winAmt = 7;
-    } else {
-        result = ['🍒', '🍋', '🍇', '🔔', '🍊']; winAmt = 0;
-    }
+    // --- მკაცრი კონტროლი ---
+    if (window.spinCount5 % 35 === 0) { result = ['🍉','🍉','🍉','🍉','🍉']; winAmt = 50; }
+    else if (window.spinCount5 % 30 === 0) { result = ['🔔','🔔','🔔','🔔','🔔']; winAmt = 30; }
+    else if (window.spinCount5 % 25 === 0) { result = ['⭐','⭐','⭐','⭐','⭐']; winAmt = 15; }
+    else if (window.spinCount5 % 20 === 0) { result = ['🍇','🍇','🍇','🍇','🍇']; winAmt = 20; }
+    else if (window.spinCount5 % 10 === 0) { result = ['🍊','🍊','🍊','🍊','🍊']; winAmt = 7; }
+    else { result = ['🍒','🍋','🍇','🔔','🍊']; winAmt = 0; }
 
-    // რილების დატრიალება
+    // რილების ტრიალი
     for (let i = 1; i <= 5; i++) {
         const r = document.getElementById('reel5_' + i);
         if(!r) continue;
-        
+
+        // ვასუფთავებთ რილს და ვყრით 30 რანდომულ სიმბოლოს ტრიალისთვის
         r.innerHTML = '';
-        // ვქმნით 40 ელემენტს (საკმარისია ტრიალისთვის)
-        for(let j=0; j<40; j++) {
+        for(let j=0; j < 30; j++) {
             const s = document.createElement('div');
-            s.style="height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
-            s.innerText = slot5Icons[Math.floor(Math.random()*slot5Icons.length)];
+            s.className = "slot-symbol"; // დარწმუნდი რომ CSS-ში სიმაღლე ფიქსირებულია
+            s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:40px;";
+            s.innerText = slot5Icons[Math.floor(Math.random() * slot5Icons.length)];
             r.appendChild(s);
         }
 
-        r.style.transition = 'none'; 
+        // !!! მთავარი: ბოლოში ვამატებთ ჩვენს მოგებულ სიმბოლოს
+        const targetIdx = 25; 
+        r.children[targetIdx].innerText = result[i-1];
+        r.children[targetIdx].style.color = "gold"; // რომ დავინახოთ რომელია ჩვენი დასმული
+
+        r.style.transition = 'none';
         r.style.transform = 'translateY(0)';
 
-        // ვაჩერებთ 30-ე ელემენტზე (ეს გარანტირებულად გამოჩნდება)
-        const stopIdx = 30;
-        
-        // ვამოწმებთ, რომ ელემენტი ნაღდად არსებობს, სანამ ტექსტს ჩავუწერთ
-        if(r.children[stopIdx]) {
-            r.children[stopIdx].innerText = result[i-1];
-        }
-
+        // ანიმაცია: ზუსტად targetIdx-ზე გაჩერება
         setTimeout(() => {
-            r.style.transition = `transform ${1.5 + (i*0.2)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-            r.style.transform = `translateY(-${stopIdx * 70}px)`;
+            r.style.transition = `transform ${1.5 + (i * 0.2)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+            r.style.transform = `translateY(-${targetIdx * 70}px)`;
         }, 50);
     }
 
@@ -2258,13 +2244,13 @@ function triggerBurning5Spin() {
         isSpinning5 = false;
         if (winAmt > 0) {
             if (winAmt >= 15 && typeof startJackpotAnimation === 'function') {
-                startJackpotAnimation(winAmt, "BIG WIN!");
+                startJackpotAnimation(winAmt, "WIN!");
             }
-            earnAkho(auth.currentUser.uid, winAmt, 'System Cycle Win');
+            earnAkho(auth.currentUser.uid, winAmt, 'Cycle Win');
             updateWinUI(winAmt);
             setTimeout(updateAllGameBalances, 500);
         }
-    }, 3500);
+    }, 3200);
 }
 
 
