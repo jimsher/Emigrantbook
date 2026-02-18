@@ -1,41 +1,79 @@
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="en">
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
  <title>EmigrantBook | Token Impact</title>
- <link rel="stylesheet" href="style.css">
+ <link rel="stylesheet" href="https://emigrantbook.com/token/token.css">
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
  <script src="https://js.stripe.com/v3/"></script>
  
 <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
 
  <style>
+ .navbar {
+ position: fixed !important; 
+ top: 0 !important; 
+ left: 0 !important; 
+ width: 100% !important; 
+ height: 56px !important;
+ background: transparent !important; /* საერთოდ არანაირი ფერი */
+ backdrop-filter: none !important; /* მოვაშორეთ დაბურვა */
+ -webkit-backdrop-filter: none !important;
+ border-bottom: none !important; /* მოვაშორეთ ხაზიც */
+ box-shadow: none !important;
+ display: flex !important; 
+ align-items: center !important; 
+ justify-content: space-between !important;
+ padding: 0 15px !important; 
+ z-index: 10000 !important;
+}
+ #main-feed {
+ height: 100vh !important; /* მთელი ეკრანი */
+ width: 100vw !important; 
+ overflow-y: scroll !important;
+ scroll-snap-type: y mandatory !important; 
+ scrollbar-width: none !important; 
+ padding-top: 0 !important; /* არანაირი დაშორება ზემოდან */
+ margin-top: 0 !important;
+ scroll-padding-top: 0 !important;
+}
+ .video-card {
+ height: 100vh !important; 
+ width: 100% !important; 
+ scroll-snap-align: start !important; /* ყოველთვის ზედა კიდეზე გასწორდეს */
+ scroll-snap-stop: always !important; 
+ position: relative !important; 
+ background: #000 !important;
+}
 
+@keyframes pulse-live {
+ 0% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
+ 70% { border-color: #ff0000; box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+ 100% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+}
  </style>
 </head>
 
-
-
-
-<div id="liveFloatingBtn" onclick="openActiveLivesModal()" style="display:none; position:fixed; right:20px; top:100px; z-index:9999; cursor:pointer; text-align:center;">
-    <div style="width:60px; height:60px; border-radius:50%; border:3px solid #ff4d4d; padding:2px; background:#000; box-shadow: 0 0 15px rgba(255,77,77,0.5); animation: pulse-live 1.5s infinite;">
-        <img id="lastLiveAva" src="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-    </div>
-    <div style="background:#ff4d4d; color:white; font-size:10px; font-weight:900; padding:2px 8px; border-radius:10px; margin-top:-10px; position:relative; border:2px solid #000;">LIVE</div>
-</div>
-
-<div id="activeLivesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:100000; align-items:center; justify-content:center;">
-    <div style="background:#1a1a1a; width:85%; max-width:400px; border-radius:20px; border:1px solid var(--gold); padding:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <b style="color:var(--gold); letter-spacing:1px;">აქტიური ლაივები</b>
-            <i class="fas fa-times" onclick="closeActiveLivesModal()" style="color:gray; cursor:pointer; font-size:20px;"></i>
-        </div>
-        <div id="modalLivesList" style="display:flex; flex-direction:column; gap:15px; max-height:400px; overflow-y:auto;">
-            </div>
-    </div>
-</div>
 <body>
+ <div id="liveFloatingBtn" onclick="openActiveLivesModal()" style="display:none; position:fixed; right:20px; top:100px; z-index:9999; cursor:pointer; text-align:center;">
+ <div style="width:60px; height:60px; border-radius:50%; border:3px solid #ff4d4d; padding:2px; background:#000; box-shadow: 0 0 15px rgba(255,77,77,0.5); animation: pulse-live 1.5s infinite;">
+ <img id="lastLiveAva" src="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+ </div>
+ <div style="background:#ff4d4d; color:white; font-size:10px; font-weight:900; padding:2px 8px; border-radius:10px; margin-top:-10px; position:relative; border:2px solid #000;">LIVE</div>
+ </div>
+
+ <div id="activeLivesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:100000; align-items:center; justify-content:center;">
+ <div style="background:#1a1a1a; width:85%; max-width:400px; border-radius:20px; border:1px solid var(--gold); padding:20px;">
+ <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+ <b style="color:var(--gold); letter-spacing:1px;">აქტიური ლაივები</b>
+ <i class="fas fa-times" onclick="closeActiveLivesModal()" style="color:gray; cursor:pointer; font-size:20px;"></i>
+ </div>
+ <div id="modalLivesList" style="display:flex; flex-direction:column; gap:15px; max-height:400px; overflow-y:auto;">
+ </div>
+ </div>
+ </div>
+
  <audio id="msgSound" src="https://emigrantbook.com/messenger_notification.mp3" preload="auto"></audio>
  <audio id="typingSound" src="https://emigrantbook.com/messenger_typing.mp3" preload="auto"></audio>
 
@@ -101,16 +139,16 @@
  <img src="https://emigrantbook.com/1000084015-removebg-preview.png" style="height: 44px; width: auto;" alt="Tk">
  </a>
  </div>
- 
-  <div class="game-btn-container" onclick="document.getElementById('gamesPage').style.display='flex'">
- <i class="fas fa-gamepad game-icon"></i>
-</div>
-
  <div style="display: flex; align-items: center; gap: 15px;">
  <div style="position: relative;">
  <i class="fas fa-user-plus" style="color: var(--gold); font-size: 20px; cursor: pointer;" onclick="openRequestsUI()"></i>
  <span id="reqCount" class="req-badge">0</span>
  </div>
+ 
+ <div id="navLiveIndicator" onclick="openLiveFeed()" style="display:none; cursor:pointer; align-items:center; gap:5px; background:rgba(255,77,77,0.1); padding:5px 10px; border-radius:20px; border:1px solid #ff4d4d; animation: nav-pulse 1.5s infinite;">
+ <span style="width:8px; height:8px; background:#ff4d4d; border-radius:50%;"></span>
+ <b style="color:white; font-size:12px; letter-spacing:1px;">LIVE</b>
+</div>
  
  <div onclick="openCommunityWall()" style="background: var(--gold); color: #000; padding: 5px 12px; border-radius: 8px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; margin-right: 5px;">
  პოსტი
@@ -366,7 +404,7 @@
  <div id="profControls" style="margin-top:15px;"></div>
  <div id="profTabs" class="profile-nav-menu">
  <button class="p-nav-btn active" id="infoBtn" data-key="info">ინფორმაცია</button>
- <button class="p-nav-btn" data-key="photos">ფოტოები</button>
+<button class="p-nav-btn" onclick="loadUserPhotosOnly()">ფოტოები</button>
  <button class="p-nav-btn">Reels</button>
  </div>
  <div id="profGrid" class="video-grid"></div>
@@ -415,9 +453,9 @@
  <span onclick="document.getElementById('messengerUI').style.display='none'; refreshHomeFeed();" style="cursor:pointer; font-size:24px; color:gray;">✕</span>
  </div>
  <div id="chatList" style="flex:1; overflow-y:auto;"></div>
-</div>
+ </div>
 
-<div id="individualChat" style="display: none;">
+ <div id="individualChat" style="display: none;">
  <div class="chat-header">
  <div style="display:flex; align-items:center; gap:12px;">
  <i class="fas fa-arrow-left" onclick="closeChat()" style="cursor:pointer;"></i>
@@ -448,7 +486,7 @@
  <i class="fas fa-paper-plane" style="font-size:14px;"></i>
  </button>
  </div>
-</div>
+ </div>
 
  <div id="fullVideoOverlay">
  <span class="close-full-video" onclick="closeFullVideo()">✕</span>
@@ -464,9 +502,6 @@
  <button onclick="document.getElementById('uploadModal').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px; cursor:pointer;" data-key="cancel">გაუქმება</button>
  </div>
  </div>
-
-
-
 
  <div id="main-feed"></div>
 
@@ -497,70 +532,67 @@
  </div>
  </div>
 
+ <div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
+ <div id="live-video-container" style="width:100%; height:100%; background:#111; position:relative;">
+ <div id="remote-live-video" style="width:100%; height:100%;"></div>
+ 
+ <div style="position:absolute; top:20px; left:15px; display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.5); padding:5px 12px; border-radius:30px; border:1px solid rgba(212,175,55,0.3);">
+ <img id="liveHostAva" src="" style="width:32px; height:32px; border-radius:50%; border:1px solid var(--gold);">
+ <div>
+ <b id="liveHostName" style="color:white; font-size:12px; display:block;">Host Name</b>
+ <small id="liveViewerCount" style="color:var(--gold); font-size:10px;"><i class="fas fa-eye"></i> 0</small>
+ </div>
+ <button id="followHostBtn" style="background:var(--gold); border:none; border-radius:15px; padding:4px 10px; font-size:11px; font-weight:bold; margin-left:5px;">Follow</button>
+ </div>
 
+ <div style="position:absolute; right:15px; bottom:150px; display:flex; flex-direction:column; gap:20px; align-items:center;">
+ <div class="live-action" onclick="sendLiveHeart()"><i class="fas fa-heart" style="color:#ff4d4d; font-size:28px;"></i></div>
+ 
+ <div class="live-action" onclick="toggleGiftPanel()"><i class="fas fa-gift" style="color:var(--gold); font-size:28px;"></i></div>
+ 
+ <div class="live-action" onclick="shareLive()"><i class="fas fa-share" style="color:white; font-size:28px;"></i></div>
+ <div class="live-action" onclick="endLive()"><i class="fas fa-times-circle" style="color:#aaa; font-size:28px;"></i></div>
+ </div>
 
+ <div id="giftPanel" style="display:none; position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.95); border-top:2px solid var(--gold); padding:20px; border-radius:20px 20px 0 0; z-index:100000; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+ <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+ <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">გაუგზავნე საჩუქარი</b>
+ <i class="fas fa-times" onclick="toggleGiftPanel()" style="color:gray; cursor:pointer; font-size:20px;"></i>
+ </div>
+ <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; text-align:center;">
+ <div class="gift-item" onclick="sendGift('🌹', 1, 'Rose')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+ <div style="font-size:32px; margin-bottom:5px;">🌹</div>
+ <small style="color:var(--gold); font-weight:bold; display:block;">1</small>
+ </div>
+ <div class="gift-item" onclick="sendGift('💎', 10, 'Diamond')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+ <div style="font-size:32px; margin-bottom:5px;">💎</div>
+ <small style="color:var(--gold); font-weight:bold; display:block;">10</small>
+ </div>
+ <div class="gift-item" onclick="sendGift('🦁', 50, 'Lion')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+ <div style="font-size:32px; margin-bottom:5px;">🦁</div>
+ <small style="color:var(--gold); font-weight:bold; display:block;">50</small>
+ </div>
+ <div class="gift-item" onclick="sendGift('👑', 100, 'Crown')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+ <div style="font-size:32px; margin-bottom:5px;">👑</div>
+ <small style="color:var(--gold); font-weight:bold; display:block;">100</small>
+ </div>
+ </div>
+ </div>
 
-<div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
-    <div id="live-video-container" style="width:100%; height:100%; background:#111; position:relative;">
-        <div id="remote-live-video" style="width:100%; height:100%;"></div>
-        
-        <div style="position:absolute; top:20px; left:15px; display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.5); padding:5px 12px; border-radius:30px; border:1px solid rgba(212,175,55,0.3);">
-            <img id="liveHostAva" src="" style="width:32px; height:32px; border-radius:50%; border:1px solid var(--gold);">
-            <div>
-                <b id="liveHostName" style="color:white; font-size:12px; display:block;">Host Name</b>
-                <small id="liveViewerCount" style="color:var(--gold); font-size:10px;"><i class="fas fa-eye"></i> 0</small>
-            </div>
-            <button id="followHostBtn" style="background:var(--gold); border:none; border-radius:15px; padding:4px 10px; font-size:11px; font-weight:bold; margin-left:5px;">Follow</button>
-        </div>
-
-        <div style="position:absolute; right:15px; bottom:150px; display:flex; flex-direction:column; gap:20px; align-items:center;">
-            <div class="live-action" onclick="sendLiveHeart()"><i class="fas fa-heart" style="color:#ff4d4d; font-size:28px;"></i></div>
-            
-            <div class="live-action" onclick="toggleGiftPanel()"><i class="fas fa-gift" style="color:var(--gold); font-size:28px;"></i></div>
-            
-            <div class="live-action" onclick="shareLive()"><i class="fas fa-share" style="color:white; font-size:28px;"></i></div>
-            <div class="live-action" onclick="endLive()"><i class="fas fa-times-circle" style="color:#aaa; font-size:28px;"></i></div>
-        </div>
-
-        <div id="giftPanel" style="display:none; position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.95); border-top:2px solid var(--gold); padding:20px; border-radius:20px 20px 0 0; z-index:100000; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-                <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">გაუგზავნე საჩუქარი</b>
-                <i class="fas fa-times" onclick="toggleGiftPanel()" style="color:gray; cursor:pointer; font-size:20px;"></i>
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; text-align:center;">
-                <div class="gift-item" onclick="sendGift('🌹', 1, 'Rose')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
-                    <div style="font-size:32px; margin-bottom:5px;">🌹</div>
-                    <small style="color:var(--gold); font-weight:bold; display:block;">1</small>
-                </div>
-                <div class="gift-item" onclick="sendGift('💎', 10, 'Diamond')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
-                    <div style="font-size:32px; margin-bottom:5px;">💎</div>
-                    <small style="color:var(--gold); font-weight:bold; display:block;">10</small>
-                </div>
-                <div class="gift-item" onclick="sendGift('🦁', 50, 'Lion')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
-                    <div style="font-size:32px; margin-bottom:5px;">🦁</div>
-                    <small style="color:var(--gold); font-weight:bold; display:block;">50</small>
-                </div>
-                <div class="gift-item" onclick="sendGift('👑', 100, 'Crown')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
-                    <div style="font-size:32px; margin-bottom:5px;">👑</div>
-                    <small style="color:var(--gold); font-weight:bold; display:block;">100</small>
-                </div>
-            </div>
-        </div>
-
-        <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:70%; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; pointer-events:auto;"></div>
-        
-        <div style="position:absolute; bottom:20px; left:0; width:100%; padding:0 15px; display:flex; gap:10px;">
-            <input type="text" id="liveMsgInp" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:10px 15px; color:white; outline:none;" placeholder="თქვი რამე...">
-            <button onclick="sendLiveComment()" style="background:var(--gold); border:none; width:40px; height:40px; border-radius:50%; color:black;"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-</div>
+ <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:70%; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; pointer-events:none;"></div>
+ 
+ <div style="position:absolute; bottom:20px; left:0; width:100%; padding:0 15px; display:flex; gap:10px;">
+ <input type="text" id="liveMsgInp" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:10px 15px; color:white; outline:none;" placeholder="თქვი რამე...">
+ <button onclick="sendLiveComment()" style="background:var(--gold); border:none; width:40px; height:40px; border-radius:50%; color:black;"><i class="fas fa-paper-plane"></i></button>
+ </div>
+ </div>
+ </div>
 
  
  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
- <script src="script.js" defer></script>
+ 
  
  <script>
  const firebaseConfig = { 
@@ -572,23 +604,26 @@
  };
  firebase.initializeApp(firebaseConfig);
  const db = firebase.database(), auth = firebase.auth();
-</script>
-
-
-<div id="communityWallUI" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 15000; display: none; flex-direction: column;">
+ </script>
+ 
+ <div id="communityWallUI" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 15000; display: none; flex-direction: column;">
+ 
  <div style="padding: 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5);">
  <h2 style="color: var(--gold); font-weight: 900; font-size: 18px;">COMMUNITY</h2>
  <i class="fas fa-times" style="font-size: 24px; color: gray; cursor: pointer;" onclick="closeCommunityWall()"></i>
  </div>
+
  <div style="background: rgba(20,20,20,0.4); padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
  <div style="display: flex; gap: 10px; margin-bottom: 15px;">
  <img id="wallMyAva" src="" style="width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--gold); object-fit: cover;">
  <textarea id="wallPostText" style="flex: 1; background: transparent; border: none; color: white; resize: none; outline: none; font-size: 16px; padding-top: 5px;" placeholder="რას ფიქრობ?"></textarea>
  </div>
+ 
  <div id="wallImgPreviewBox" style="display: none; width: 100%; position: relative; margin-bottom: 15px;">
  <img id="wallImgPreview" style="width: 100%; border-radius: 10px; border: 1px solid var(--gold); max-height: 200px; object-fit: cover;">
  <i class="fas fa-times-circle" style="position: absolute; top: 5px; right: 5px; color: white; font-size: 20px; cursor: pointer;" onclick="cancelWallImg()"></i>
  </div>
+
  <div style="display: flex; justify-content: space-between; align-items: center;">
  <div onclick="document.getElementById('wallImgInput').click()" style="color: var(--gold); cursor: pointer; font-size: 14px; font-weight: bold; background: rgba(212,175,55,0.1); padding: 8px 15px; border-radius: 20px;">
  <i class="fas fa-image"></i> ფოტო
@@ -597,80 +632,53 @@
  <button onclick="submitWallPost()" style="background: var(--gold); border: none; padding: 8px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; color: black;">გამოქვეყნება</button>
  </div>
  </div>
+
  <div id="communityPostsList" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; background: transparent;">
  </div>
+ </div>
+
  <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
  <div style="position:absolute; top:20px; right:20px; z-index:10; display:flex; gap:15px;">
- <i class="fas fa-compress-alt" onclick="minimizeVideoCall()" style="color:white; font-size:24px; cursor:pointer;"></i>
- <i class="fas fa-phone-slash" onclick="endVideoCall()" style="color:#ff4d4d; font-size:24px; cursor:pointer;"></i>
+ <i class="fas fa-compress-alt" onclick="minimizeVideoCall()" style="color:white; font-size:24px; cursor:pointer;" title="ჩაკეცვა"></i>
+ <i class="fas fa-phone-slash" onclick="endVideoCall()" style="color:#ff4d4d; font-size:24px; cursor:pointer;" title="გათიშვა"></i>
  </div>
+
  <div id="remote-video" style="width:100%; height:100%; background:#111;"></div>
+
  <div id="local-video" style="position:absolute; bottom:100px; right:20px; width:120px; height:160px; background:#222; border-radius:12px; border:2px solid var(--gold); overflow:hidden; z-index:5;"></div>
-</div>
-</div>
+ </div>
+
+ <div id="liveFeedUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:200000; flex-direction:column; padding:20px;">
+ <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+ <h2 style="color:white; margin:0;">Active Lives</h2>
+ <i class="fas fa-times" onclick="closeLiveFeed()" style="color:gray; font-size:24px; cursor:pointer;"></i>
+ </div>
+ <div id="liveFeedGrid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px; overflow-y:auto;"></div>
+ </div>
 
 
-
-
-<div id="gamesPage" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f0f0f; z-index:400000; flex-direction:column; overflow-y:auto; padding-bottom:80px;">
+<div id="photoTikTokView" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:200000; flex-direction:column; justify-content:center; align-items:center;">
+ <span onclick="closeFullPhotoView()" style="position:absolute; top:20px; left:20px; color:white; font-size:30px; z-index:200001; cursor:pointer; text-shadow: 2px 2px 5px #000;">✕</span>
  
- <div style="padding:20px; display:flex; align-items:center; justify-content:space-between; background:#1a1a1a; border-bottom:1px solid #333;">
- <h2 style="color:var(--gold); margin:0; font-size:20px;">Premium თამაშები</h2>
- <span onclick="closeGamesPage()" style="color:white; font-size:25px; cursor:pointer;">✕</span>
+ <img id="viewedImg" src="" style="width:100%; height:100%; object-fit:contain;">
+
+ <div onclick="showPhotoViewers()" style="position:absolute; left:15px; bottom:120px; display:flex; align-items:center; gap:8px; z-index:200001; cursor:pointer; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);">
+ <i class="fas fa-eye" style="color:white; font-size:22px; filter: drop-shadow(0 0 2px #000);"></i>
+ <span id="photoViewsCount" style="color:white; font-size:16px; font-weight:900; letter-spacing: 0.5px;">0</span>
  </div>
 
- <div style="margin:15px; padding:15px; background:linear-gradient(90deg, #2c3e50, #000); border-radius:15px; border:1px solid var(--gold); display:flex; justify-content:space-between; align-items:center;">
- <span style="color:white;">შენი ბალანსი:</span>
- <span id="gameBalance" style="color:var(--gold); font-weight:bold; font-size:18px;">0.00 AKHO</span>
+ <div style="position:absolute; right:15px; bottom:120px; display:flex; flex-direction:column; gap:25px; align-items:center; z-index:200001;">
+ <div onclick="likePhotoAction()" style="text-align:center; cursor:pointer;">
+ <i class="fas fa-heart" id="imgHeartIcon" style="font-size:35px; color:white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></i>
+ <div id="imgLikesCount" style="color:white; font-size:14px; font-weight:900; margin-top:5px; text-shadow: 1px 1px 3px #000;">0</div>
  </div>
 
- <div id="gamesList" style="padding:15px; display:grid; grid-template-columns:1fr 1fr; gap:15px;">
- <div class="game-card" onclick="playGame('spin')">
- <div style="height:100px; background:url('https://cdn-icons-png.flaticon.com/512/2361/2361730.png') center/contain no-repeat; margin-bottom:10px;"></div>
- <div style="color:white; font-weight:bold; text-align:center;">იღბლიანი ბორბალი</div>
- <div style="color:var(--gold); font-size:12px; text-align:center;">ღირებულება: 1.00 AKHO</div>
+ <div onclick="sharePhotoAction()" style="text-align:center; cursor:pointer;">
+ <i class="fas fa-share" style="font-size:32px; color:white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></i>
  </div>
-
- <div class="game-card" onclick="openLotto()">
- <div style="height:100px; background:url('https://cdn-icons-png.flaticon.com/512/263/263060.png') center/contain no-repeat; margin-bottom:10px;"></div>
- <div style="color:white; font-weight:bold; text-align:center;">ციფრული ლოტო</div>
- <div style="color:var(--gold); font-size:12px; text-align:center;">ღირებულება: 5.00 AKHO</div>
- </div>
- </div>
- 
- <div id="wheelGameContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;">
- <div style="position:relative; width:280px; height:280px;">
- <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); z-index:10; color:#ff4d4d; font-size:35px; filter: drop-shadow(0 0 5px #000);">▼</div>
- <canvas id="wheelCanvas" width="280" height="280" style="border-radius:50%; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); border: 8px solid #1a1a1a;"></canvas>
- </div>
- 
- <button id="spinBtn" onclick="spinWheel()" style="background:linear-gradient(180deg, #d4af37, #b8860b); color:black; border:none; padding:15px 40px; border-radius:30px; font-weight:900; font-size:18px; cursor:pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s;">დატრიალება (1.00 AKHO)</button>
- 
- <div id="spinStatus" style="color:#aaa; font-size:14px; text-align:center; max-width: 250px;">მოიგე 0.5-დან 10 AKHO-მდე ყოველ ტრიალზე!</div>
-
- <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; margin-top:10px; font-size: 14px; text-decoration: underline;">← სხვა თამაშები</div>
- </div>
-
- <div id="lottoGameContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;">
- <h3 style="color:var(--gold); margin:0; text-shadow: 0 0 10px rgba(212,175,55,0.3);">ციფრული ლოტო</h3>
- 
- <div id="lottoMachine" style="width:100%; height:100px; background:#111; border-radius:15px; border:2px solid #333; display:flex; align-items:center; justify-content:center; gap:8px;">
- <div id="lottoBalls" style="display:flex; gap:8px;">
- <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444; font-weight:bold;">?</div>
- <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444; font-weight:bold;">?</div>
- <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444; font-weight:bold;">?</div>
- <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444; font-weight:bold;">?</div>
- <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444; font-weight:bold;">?</div>
- </div>
- </div>
-
- <div id="lottoGrid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; width:100%;">
- </div>
-
- <button id="playLottoBtn" onclick="startLottoDraw()" style="background:linear-gradient(180deg, #4CAF50, #2E7D32); color:white; border:none; padding:15px; border-radius:30px; font-weight:900; font-size:16px; cursor:pointer; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">ბილეთის დადასტურება (5.00 AKHO)</button>
-
- <div onclick="backToGamesListFromLotto()" style="color:var(--gold); cursor:pointer; font-size: 14px; text-decoration: underline;">← სხვა თამაშები</div>
  </div>
 </div>
+ 
+
 </body>
 </html>
