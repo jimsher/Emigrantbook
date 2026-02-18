@@ -178,24 +178,28 @@ function openOrderForm() {
 
 
 
+
 async function processOrderAndPay() {
     const btn = document.querySelector("#orderFormModal button");
-    
-    // 1. მონაცემების შეგროვება
+    const user = auth.currentUser;
+    if (!user) return alert("Please Login");
+
+    // 1. მონაცემების აღება ფორმიდან
     const customerInfo = {
-        firstName: document.getElementById('ordFirstName').value,
-        lastName: document.getElementById('ordLastName').value,
+        name: document.getElementById('ordFirstName').value + " " + document.getElementById('ordLastName').value,
         address: document.getElementById('ordAddress').value,
         phone: document.getElementById('ordPhone').value,
         email: document.getElementById('ordEmail').value,
-        productName: currentProduct ? currentProduct.name : "Unknown",
-        price: currentProduct ? currentProduct.price : 0,
-        uid: auth.currentUser ? auth.currentUser.uid : "guest",
+        productName: currentProduct.name,
+        price: currentProduct.price,
+        uid: user.uid,
+        status: "waiting_payment",
         timestamp: Date.now()
     };
 
-    if (!customerInfo.firstName || !customerInfo.address || !customerInfo.phone) {
-        alert("შეავსეთ აუცილებელი ველები!");
+    // ვალიდაცია
+    if (!customerInfo.address || !customerInfo.phone) {
+        alert("გთხოვთ შეავსოთ აუცილებელი ველები!");
         return;
     }
 
@@ -203,37 +207,30 @@ async function processOrderAndPay() {
     btn.disabled = true;
 
     try {
-        // 2. მონაცემების შენახვა Firebase-ში
+        // 2. შეკვეთის შენახვა Firebase-ში
         await db.ref('orders').push(customerInfo);
-        console.log("✅ მონაცემები ბაზაში შეინახა!");
 
-        // 3. გადახდის ლინკის შემოწმება
-        // ყურადღება: აქ ვამოწმებთ, საერთოდ არსებობს თუ არა ლინკი
+        // 3. 🚀 ზუსტად AKHO-ს ლოგიკა (initStripePayment-ის ანალოგი)
         if (currentProduct && currentProduct.stripeLink) {
-            console.log("🚀 გადავდივართ ლინკზე: ", currentProduct.stripeLink);
+            // ვაწყობთ ფინალურ ლინკს ისე, როგორც შენს კოდშია
+            const finalUrl = currentProduct.stripeLink + "?client_reference_id=" + user.uid;
             
-            // ვამატებთ UID-ს, როგორც AKHO-ს დროს
-            const finalUrl = currentProduct.stripeLink + "?client_reference_id=" + customerInfo.uid;
+            // ვხსნით ახალ ფანჯარაში, როგორც შენს initStripePayment-შია
+            window.open(finalUrl, "_blank");
             
-            // სცადე ეს ორივე მეთოდი, თუ ერთი არ იმუშავებს:
-            window.location.assign(finalUrl); 
-            // window.open(finalUrl, "_blank"); 
-
+            // ვხურავთ ფორმას
+            document.getElementById('orderFormModal').style.display = 'none';
         } else {
-            console.error("❌ შეცდომა: currentProduct.stripeLink ცარიელია!");
-            console.log("Product Data:", currentProduct);
-            alert("შეცდომა: ამ ნივთს გადახდის ლინკი არ აქვს მიბმული!");
-            btn.disabled = false;
-            btn.innerText = "გადახდაზე გადასვლა 🚀";
+            alert("ამ ნივთს Stripe-ის ლინკი არ აქვს!");
         }
 
     } catch (e) {
-        console.error("❌ ბაზაში შენახვის შეცდომა:", e);
-        alert("შეცდომაა!");
+        alert("შეცდომაა: " + e.message);
+    } finally {
+        btn.innerText = "გადახდაზე გადასვლა 🚀";
         btn.disabled = false;
     }
 }
-
 
 
 
