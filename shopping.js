@@ -176,54 +176,60 @@ function openOrderForm() {
     document.getElementById('finalPriceDisplay').innerText = currentProduct.price + " ₾";
 }
 
-// 3. მონაცემების დამუშავება და გადახდაზე გადასვლა
+
+
 async function processOrderAndPay() {
-    const orderData = {
+    const btn = document.querySelector("#orderFormModal button");
+    
+    // 1. მონაცემების შეგროვება
+    const customerInfo = {
         firstName: document.getElementById('ordFirstName').value,
         lastName: document.getElementById('ordLastName').value,
-        country: document.getElementById('ordCountry').value,
-        city: document.getElementById('ordCity').value,
         address: document.getElementById('ordAddress').value,
         phone: document.getElementById('ordPhone').value,
         email: document.getElementById('ordEmail').value,
-        productName: currentProduct.name,
-        price: currentProduct.price,
+        productName: currentProduct ? currentProduct.name : "Unknown",
+        price: currentProduct ? currentProduct.price : 0,
         uid: auth.currentUser ? auth.currentUser.uid : "guest",
-        status: "pending",
         timestamp: Date.now()
     };
 
-    if (!orderData.firstName || !orderData.address || !orderData.phone) {
-        alert("შეავსეთ აუცილებელი ველები (სახელი, მისამართი, ტელეფონი)!");
+    if (!customerInfo.firstName || !customerInfo.address || !customerInfo.phone) {
+        alert("შეავსეთ აუცილებელი ველები!");
         return;
     }
 
-    try {
-        // ვინახავთ შეკვეთას ადმინისთვის სანახავად
-        await db.ref('orders').push(orderData);
-        
-        alert("მონაცემები შენახულია! გადავდივართ გადახდაზე...");
+    btn.innerText = "გადამისამართება...";
+    btn.disabled = true;
 
-        // 🚀 გადახდაზე გადაყვანა (Stripe-ის ლინკი მაგალითად)
-        // აქ ჩასვი შენი გადახდის სისტემის გამოძახება
-        window.location.href = "შენი_გადახდის_ლინკი_ან_სტრიპის_ჩექაუთი";
+    try {
+        // 2. მონაცემების შენახვა Firebase-ში
+        await db.ref('orders').push(customerInfo);
+        console.log("✅ მონაცემები ბაზაში შეინახა!");
+
+        // 3. გადახდის ლინკის შემოწმება
+        // ყურადღება: აქ ვამოწმებთ, საერთოდ არსებობს თუ არა ლინკი
+        if (currentProduct && currentProduct.stripeLink) {
+            console.log("🚀 გადავდივართ ლინკზე: ", currentProduct.stripeLink);
+            
+            // ვამატებთ UID-ს, როგორც AKHO-ს დროს
+            const finalUrl = currentProduct.stripeLink + "?client_reference_id=" + customerInfo.uid;
+            
+            // სცადე ეს ორივე მეთოდი, თუ ერთი არ იმუშავებს:
+            window.location.assign(finalUrl); 
+            // window.open(finalUrl, "_blank"); 
+
+        } else {
+            console.error("❌ შეცდომა: currentProduct.stripeLink ცარიელია!");
+            console.log("Product Data:", currentProduct);
+            alert("შეცდომა: ამ ნივთს გადახდის ლინკი არ აქვს მიბმული!");
+            btn.disabled = false;
+            btn.innerText = "გადახდაზე გადასვლა 🚀";
+        }
 
     } catch (e) {
-        alert("შეცდომაა: " + e.message);
+        console.error("❌ ბაზაში შენახვის შეცდომა:", e);
+        alert("შეცდომაა!");
+        btn.disabled = false;
     }
 }
-
-function closeProductDetails() {
-    document.getElementById('productDetailsModal').style.display = 'none';
-}
-
-
-
-
-
-
-
-
-
-
-
