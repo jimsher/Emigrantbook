@@ -127,37 +127,54 @@ async function instantBuy(productId) {
 
 function openCartView() {
     if (shoppingCart.length === 0) {
-        alert("შენი კალათა ცარიელია!");
+        showPurchaseSuccess("❌ კალათა ცარიელია!"); // ლამაზი ნოტიფიკაცია alert-ის ნაცვლად
         return;
     }
+
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
     let total = shoppingCart.reduce((sum, item) => sum + item.price, 0);
 
     content.innerHTML = `
         <div style="width: 100%; text-align: left; padding: 10px;">
-            <h2 style="color: var(--gold); margin-bottom: 20px;">🛒 შენი კალათა</h2>
-            <div style="display: flex; flex-direction: column; gap: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+            <h2 style="color: var(--gold); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-shopping-cart"></i> შენი კალათა
+            </h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
                 ${shoppingCart.map((item, index) => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 12px; border-radius: 10px; border: 1px solid #333;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${item.image}" style="width: 40px; height: 40px; object-fit: contain;">
-                            <span>${item.name}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; border: 1px solid #333;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${item.image}" style="width: 50px; height: 50px; object-fit: contain;">
+                            <div>
+                                <div style="color: white; font-weight: bold; font-size: 14px;">${item.name}</div>
+                                <div style="color: var(--gold); font-size: 12px;">${item.price} AKHO</div>
+                            </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <span style="color: var(--gold); font-weight: bold;">${item.price} ₳</span>
-                            <span onclick="removeFromCart(${index})" style="color: #ff4d4d; cursor: pointer; font-size: 18px;">✕</span>
-                        </div>
+                        <button onclick="removeFromCart(${index})" style="background: rgba(255,77,77,0.1); color: #ff4d4d; border: none; width: 35px; height: 35px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 `).join('')}
             </div>
-            <div style="border-top: 2px solid #333; padding-top: 15px; display: flex; justify-content: space-between; font-size: 20px; font-weight: bold;">
-                <span>ჯამი:</span>
-                <span style="color: var(--gold);">${total} AKHO</span>
+
+            <div style="margin-top: 25px; background: #111; padding: 20px; border-radius: 15px; border: 1px dashed #444;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <span style="color: #888;">ნივთების რაოდენობა:</span>
+                    <span style="color: white; font-weight: bold;">${shoppingCart.length}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: 900;">
+                    <span style="color: white;">ჯამი:</span>
+                    <span style="color: var(--gold); text-shadow: 0 0 10px rgba(212,175,55,0.3);">${total} AKHO</span>
+                </div>
+                
+                <button onclick="checkoutFullCart(${total})" style="width: 100%; background: linear-gradient(180deg, #d4af37, #b8860b); color: black; border: none; padding: 18px; border-radius: 12px; margin-top: 20px; font-weight: 900; font-size: 18px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.4);">
+                    <i class="fas fa-check-circle"></i> გადახდის დადასტურება
+                </button>
             </div>
-            <button onclick="checkoutFullCart(${total})" style="width: 100%; background: var(--gold); color: black; border: none; padding: 18px; border-radius: 15px; margin-top: 25px; font-weight: bold; font-size: 18px; cursor: pointer;">გადახდა</button>
         </div>
     `;
+
     modal.style.display = 'flex';
 }
 
