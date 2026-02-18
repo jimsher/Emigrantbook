@@ -247,5 +247,36 @@ function openMysteryBox() {
 }
 
 
+async function showOrderHistory() {
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    
+    content.innerHTML = `<h2 style="color:var(--gold);">დაელოდე... იტვირთება...</h2>`;
+    modal.style.display = 'flex';
 
+    const snapshot = await db.collection('users').doc(auth.currentUser.uid)
+        .collection('history')
+        .where('reason', '>=', 'SHOP_ORDER')
+        .orderBy('reason')
+        .orderBy('timestamp', 'desc')
+        .limit(10)
+        .get();
+
+    let historyHTML = `<h2 style="color:var(--gold); margin-bottom:15px;">ბოლო შესყიდვები</h2>`;
+    
+    if (snapshot.empty) {
+        historyHTML += `<p style="color:gray;">ჯერ არაფერი გიყიდია.</p>`;
+    } else {
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            historyHTML += `
+                <div style="background:#1a1a1a; padding:10px; border-radius:10px; margin-bottom:8px; border-left:3px solid var(--gold);">
+                    <div style="color:white; font-size:14px;">${data.reason.replace('SHOP_ORDER: ', '')}</div>
+                    <div style="color:gray; font-size:11px;">${data.timestamp?.toDate().toLocaleString() || 'ახლახანს'}</div>
+                </div>
+            `;
+        });
+    }
+    content.innerHTML = historyHTML;
+}
 
