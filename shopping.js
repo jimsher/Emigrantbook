@@ -233,3 +233,73 @@ async function processOrderAndPay() {
         btn.disabled = false;
     }
 }
+
+
+
+
+
+
+
+
+
+
+// ადმინ პანელის ლოგიკა
+function loadIncomingOrders() {
+    const list = document.getElementById('ordersList');
+    
+    // ვუსმენთ 'orders' სექციას ბაზაში
+    db.ref('orders').on('value', snap => {
+        list.innerHTML = "";
+        const data = snap.val();
+        
+        if (!data) {
+            list.innerHTML = "<p style='color:gray; font-size:12px;'>შეკვეთები არ არის...</p>";
+            return;
+        }
+
+        // ვატრიალებთ შეკვეთებს (ახალი თავში)
+        Object.entries(data).reverse().forEach(([id, order]) => {
+            const card = document.createElement('div');
+            card.style = "background:#111; border:1px solid #333; padding:12px; border-radius:10px; font-size:13px;";
+            
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <b style="color:var(--gold);">${order.productName}</b>
+                    <span style="color:#00ff00;">${order.price} ₾</span>
+                </div>
+                <div style="color:white; line-height:1.6;">
+                    👤 <b>კლიენტი:</b> ${order.firstName} ${order.lastName || ''}<br>
+                    📍 <b>მისამართი:</b> ${order.country}, ${order.city}, ${order.address}<br>
+                    📞 <b>ტელ:</b> ${order.phone}<br>
+                    ✉️ <b>Email:</b> ${order.email || '-'}<br>
+                    <span style="color:gray; font-size:10px;">📅 ${new Date(order.timestamp).toLocaleString()}</span>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <button onclick="deleteOrder('${id}')" style="background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">წაშლა</button>
+                    <button onclick="window.location.href='tel:${order.phone}'" style="background:var(--green); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">დარეკვა</button>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    });
+}
+
+// შეკვეთის წაშლა (როცა გააგზავნი და მორჩები საქმეს)
+function deleteOrder(id) {
+    if(confirm("წავშალოთ შეკვეთა?")) {
+        db.ref(`orders/${id}`).remove();
+    }
+}
+
+// როცა ადმინ პანელს ხსნი, მაშინვე ჩაიტვირთოს შეკვეთებიც
+// ამას ჩაამატებ შენს openAdminUI() ფუნქციაში
+
+
+
+
+
+
+
+
+
+
