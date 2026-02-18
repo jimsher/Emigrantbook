@@ -107,7 +107,11 @@ async function instantBuy(productId) {
     const p = akhoStore.find(item => item.id === productId);
     const balanceText = document.getElementById('gameBalance').innerText;
     const userBalance = parseFloat(balanceText.replace(/[^\d.]/g, '')) || 0;
-
+    
+    // ... შიგნით instantBuy-ში, წარმატებული spendAkho-ს შემდეგ:
+    if (p.category === "vip" || p.name.includes("VIP")) {
+    await activateUserVIP();
+    }
     if (userBalance < p.price) {
         alert("❌ ბალანსი არ გაქვს საკმარისი!");
         return;
