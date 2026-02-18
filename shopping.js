@@ -5,7 +5,12 @@ const akhoStore = [
     { id: 102, name: "Smart Watch v2", price: 450, category: "physical", image: "https://cdn-icons-png.flaticon.com/512/610/610116.png", desc: "ჯანმრთელობისა და აქტივობის კონტროლი." },
     { id: 103, name: "Cloud Storage (1TB)", price: 120, category: "digital", image: "https://cdn-icons-png.flaticon.com/512/2906/2906206.png", desc: "უსაფრთხო ადგილი თქვენი ფაილებისთვის." },
     { id: 104, name: "VIP სტატუსი", price: 300, category: "digital", image: "https://cdn-icons-png.flaticon.com/512/2554/2554936.png", desc: "პრიორიტეტული მომსახურება და ბონუსები." }
+    { id: 105, name: "Akho Hoodie Black", price: 850, category: "physical", image: "https://cdn-icons-png.flaticon.com/512/2354/2354396.png", desc: "ლიმიტირებული გამოცემის ჰუდი Akho-ს ლოგოთი." },
+    { id: 106, name: "Mystery Box", price: 500, category: "digital", image: "https://cdn-icons-png.flaticon.com/512/10450/10450146.png", desc: "გახსენი და მოიგე შემთხვევითი პრიზები!" },
+    { id: 107, name: "Profile Frame Gold", price: 150, category: "digital", image: "https://cdn-icons-png.flaticon.com/512/4814/4814833.png", desc: "ოქროსფერი ჩარჩო შენი პროფილის სურათისთვის." },
+    { id: 108, name: "VIP Elite (Lifetime)", price: 5000, category: "vip", image: "https://cdn-icons-png.flaticon.com/512/2554/2554930.png", desc: "სამუდამო VIP სტატუსი ყველა პრივილეგიით." }
 ];
+
 
 // --- 2. მაღაზიის გახსნა და რენდერი ---
 function openShopSection() {
