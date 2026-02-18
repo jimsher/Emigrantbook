@@ -711,8 +711,7 @@
     </div>
 
     <div style="flex:1; overflow-y:auto; padding:15px;">
-        <div id="productsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-            </div>
+        <div id="productsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;"></div>
         <div onclick="document.getElementById('shopSectionContainer').style.display='none';" style="color:gray; text-align:center; padding:30px; cursor:pointer; font-size:12px;">← დახურვა</div>
     </div>
 
@@ -720,8 +719,33 @@
         <div style="width:100%; display:flex; justify-content:flex-end;">
             <span onclick="closeProductDetails()" style="font-size:30px; color:gray; cursor:pointer; padding:10px;">✕</span>
         </div>
-        <div id="detailsContent" style="display:flex; flex-direction:column; align-items:center; gap:20px; margin-top:10px;">
+        <div id="detailsContent" style="display:flex; flex-direction:column; align-items:center; gap:20px; margin-top:10px;"></div>
+    </div>
+
+    <div id="orderFormModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:2000000; flex-direction:column; overflow-y:auto; padding:20px; box-sizing:border-box;">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #222; padding-bottom:10px;">
+            <h2 style="color:var(--gold); font-size:18px; margin:0;">შეკვეთის გაფორმება</h2>
+            <span onclick="document.getElementById('orderFormModal').style.display='none'" style="font-size:25px; color:gray; cursor:pointer;">✕</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input type="text" id="ordFirstName" class="auth-input" placeholder="სახელი">
+            <input type="text" id="ordLastName" class="auth-input" placeholder="გვარი">
+            <input type="text" id="ordCountry" class="auth-input" placeholder="ქვეყანა">
+            <input type="text" id="ordCity" class="auth-input" placeholder="ქალაქი">
+            <input type="text" id="ordAddress" class="auth-input" placeholder="ზუსტი მისამართი">
+            <input type="tel" id="ordPhone" class="auth-input" placeholder="ტელეფონის ნომერი">
+            <input type="email" id="ordEmail" class="auth-input" placeholder="ელ-ფოსტა">
+            
+            <div style="background:#111; padding:15px; border-radius:12px; border:1px solid #333; margin-top:10px;">
+                <p style="color:gray; margin:0 0 5px 0; font-size:12px;">გადასახდელი ჯამი:</p>
+                <b id="finalPriceDisplay" style="color:#00ff00; font-size:20px;">0 ₾</b>
             </div>
+
+            <button onclick="processOrderAndPay()" style="width:100%; background:#d4af37; color:black; padding:18px; border:none; border-radius:15px; font-weight:900; font-size:16px; margin-top:10px; cursor:pointer; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);">
+                მონაცემების შენახვა და გადახდა 🚀
+            </button>
+        </div>
     </div>
 </div>
  
