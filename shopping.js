@@ -325,3 +325,24 @@ function updateProfileUIWithVIP() {
         }
     });
 }
+
+
+
+
+
+async function saveProductToFirebase() {
+    const name = document.getElementById('newProdName').value;
+    const price = parseFloat(document.getElementById('newProdPrice').value);
+    const image = document.getElementById('newProdImg').value;
+    const category = document.getElementById('newProdCat').value;
+    if (!name || !price || !image) return alert("შეავსე ყველაფერი!");
+
+    try {
+        await db.collection('akhoStore').add({
+            id: Date.now(), name, price, image, category,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("✅ დაემატა!");
+        location.reload(); 
+    } catch (e) { alert("შეცდომა: " + e.message); }
+}
