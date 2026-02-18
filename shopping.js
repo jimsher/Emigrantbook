@@ -31,10 +31,19 @@ function renderStore(category) {
 
     filtered.forEach(p => {
         grid.innerHTML += `
-            <div class="product-card" onclick="showProductDetails(${p.id})" style="background:#111; border:1px solid #333; border-radius:15px; padding:15px; cursor:pointer; transition:0.3s;">
-                <div style="height:90px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:10px;"></div>
-                <div style="color:white; font-size:14px; font-weight:bold; margin-bottom:5px;">${p.name}</div>
-                <div style="color:var(--gold); font-weight:bold; font-size:16px;">${p.price} AKHO</div>
+            <div class="product-card" onclick="showProductDetails(${p.id})" style="padding:15px; border-radius:15px; cursor:pointer; display:flex; flex-direction:column; align-items:center;">
+                <span style="position:absolute; top:8px; right:8px; font-size:9px; color:#555; text-transform:uppercase; letter-spacing:1px;">${p.category}</span>
+                
+                <div style="height:100px; width:100%; background:url('${p.image}') center/contain no-repeat; margin-bottom:12px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));"></div>
+                
+                <div style="color:#eee; font-size:14px; font-weight:600; text-align:center; height:34px; line-height:1.2; overflow:hidden;">${p.name}</div>
+                
+                <div style="margin-top:10px; display:flex; align-items:center; gap:5px;">
+                    <span style="color:var(--gold); font-weight:900; font-size:16px;">${p.price}</span>
+                    <span style="color:var(--gold); font-size:10px;">AKHO</span>
+                </div>
+                
+                <div style="width:100%; height:2px; background:linear-gradient(90deg, transparent, var(--gold), transparent); margin-top:12px; opacity:0.3;"></div>
             </div>
         `;
     });
