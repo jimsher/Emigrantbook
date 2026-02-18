@@ -339,19 +339,17 @@ function updateProfileUIWithVIP() {
 
 
 
-
-
-// 1. ნივთის შენახვა და Cloudinary-ზე ატვირთვა
+// 1. ატვირთვა Cloudinary-ზე და შენახვა Firebase-ში
 async function saveProductToFirebase() {
     const file = document.getElementById('newProdFile').files[0];
     const name = document.getElementById('newProdName').value;
     const price = document.getElementById('newProdPrice').value;
     const cat = document.getElementById('newProdCat').value;
 
-    if(!file || !name || !price) return alert("შეავსე ყველა ველი!");
+    if (!file || !name || !price) return alert("შეავსე ყველა ველი!");
 
-    const btn = document.querySelector('[onclick="saveProductToFirebase()"]');
-    btn.innerText = "იტვირთება..."; btn.disabled = true;
+    const btn = document.getElementById('addProdBtn');
+    btn.disabled = true; btn.innerText = "იტვირთება...";
 
     const formData = new FormData();
     formData.append("file", file);
@@ -362,46 +360,62 @@ async function saveProductToFirebase() {
         const data = await res.json();
 
         if (data.secure_url) {
-            // ვწერთ Realtime Database-ში 'akhoStore' კოლექციაში
-            await db.ref('akhoStore').push({
+            const newRef = db.ref('akhoStore').push();
+            await newRef.set({
+                id: newRef.key,
                 name: name,
                 price: parseFloat(price),
                 image: data.secure_url,
                 category: cat,
                 ts: Date.now()
             });
-            alert("✅ დაემატა!");
-            location.reload();
+            alert("✅ ნივთი წარმატებით დაემატა!");
+            document.getElementById('newProdFile').value = ""; // გასუფთავება
+            document.getElementById('newProdName').value = "";
+            document.getElementById('newProdPrice').value = "";
         }
-    } catch (e) { alert("შეცდომაა!"); }
-    btn.innerText = "დამატება 🚀"; btn.disabled = false;
+    } catch (e) { alert("შეცდომა ატვირთვისას!"); }
+    btn.disabled = false; btn.innerText = "ნივთის დამატება 🚀";
 }
 
-// 2. მაღაზიის ნივთების გამოჩენა ეკრანზე (ეს აკლდა!)
-function loadShopItems() {
+// 2. მაღაზიის ავტომატური რენდერი (₾ სიმბოლოთი)
+function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
-    if(!grid) return;
+    if (!grid) return;
 
     db.ref('akhoStore').on('value', snap => {
         grid.innerHTML = "";
         const data = snap.val();
-        if(!data) return;
+        if (!data) return;
 
-        Object.entries(data).forEach(([id, item]) => {
+        Object.entries(data).reverse().forEach(([id, item]) => {
+            if (category !== 'all' && item.category !== category) return;
+
             const card = document.createElement('div');
-            card.style = "background:#1a1a1a; border-radius:12px; border:1px solid #333; overflow:hidden; padding:10px;";
+            card.style = "background:#111; border:1px solid #222; border-radius:15px; overflow:hidden; position:relative; padding-bottom:12px; display:flex; flex-direction:column;";
             card.innerHTML = `
-                <img src="${item.image}" style="width:100%; height:120px; object-fit:cover; border-radius:8px;">
-                <b style="color:white; display:block; margin-top:8px;">${item.name}</b>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                    <span style="color:var(--gold); font-weight:bold;">${item.price} ₳</span>
-                    <button onclick="buyProduct('${id}', ${item.price})" style="background:var(--gold); border:none; padding:5px 10px; border-radius:5px; font-size:12px; font-weight:bold;">BUY</button>
+                <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat;"></div>
+                <div style="padding:12px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                    <b style="color:white; font-size:13px; display:block; margin-bottom:5px;">${item.name}</b>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <span style="color:#00ff00; font-weight:bold; font-size:15px;">${item.price} ₾</span>
+                        <button onclick="buyProduct('${id}', ${item.price})" style="background:var(--gold); border:none; padding:6px 12px; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer;">ყიდვა</button>
+                    </div>
                 </div>
+                <i class="fas fa-trash" onclick="deleteProduct('${id}')" style="position:absolute; top:8px; right:8px; color:rgba(255,0,0,0.8); background:rgba(0,0,0,0.5); padding:6px; border-radius:50%; font-size:10px; cursor:pointer;"></i>
             `;
             grid.appendChild(card);
         });
     });
 }
 
-// გაუშვი ეს ფუნქცია გვერდის ჩატვირთვისას
-document.addEventListener('DOMContentLoaded', loadShopItems);
+// წაშლის ფუნქცია
+function deleteProduct(id) {
+    if (confirm("ნამდვილად გსურთ წაშლა?")) db.ref(`akhoStore/${id}`).remove();
+}
+
+// მაღაზიის გახსნისას ეგრევე გაუშვი რენდერი
+function openShopSection() {
+    document.getElementById('shopSectionContainer').style.display = 'flex';
+    renderStore('all');
+}
