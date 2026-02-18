@@ -330,6 +330,17 @@ function updateProfileUIWithVIP() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 async function saveProductToFirebase() {
     const file = document.getElementById('newProdFile').files[0];
     const name = document.getElementById('newProdName').value;
@@ -337,49 +348,41 @@ async function saveProductToFirebase() {
     const category = document.getElementById('newProdCat').value;
 
     if (!file || !name || !price) {
-        alert("ბიჭო, ფოტო, სახელი და ფასი აუცილებელია!");
+        alert("შეავსე ყველაფერი!");
         return;
     }
 
     const btn = document.querySelector('[onclick="saveProductToFirebase()"]');
     btn.disabled = true; 
-    btn.innerText = "იტვირთება...";
+    btn.innerText = "მიმდინარეობს...";
 
     try {
-        // 1. ვამზადებთ ფაილს Cloudinary-სთვის
+        // 1. Cloudinary ატვირთვა
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("upload_preset", "Emigrantbook.video"); // შენი preset-ი რაც კოდში გიწერია
+        formData.append("upload_preset", "Emigrantbook.video");
 
-        // 2. ვაგზავნით Cloudinary-ზე
-        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
-            method: 'POST', 
-            body: formData 
-        });
-        
+        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
         const data = await res.json();
 
         if (data.secure_url) {
-            const finalUrl = data.secure_url;
-
-            // 3. მონაცემების შენახვა Firebase-ში (მაღაზიის კოლექციაში)
-            // შენი კოდიდან გამომდინარე ვიყენებ Realtime Database-ს (db.ref)
-            await db.ref('akhoStore').push({
+            // 2. აქ არის მთავარი: ვწერთ ზუსტად ისე, როგორც მაღაზია კითხულობს
+            const newProdRef = db.ref('akhoStore').push(); // ვქმნით ახალ ადგილს
+            
+            await newProdRef.set({
+                id: newProdRef.key, // აუცილებელია ID-ს მინიჭება
                 name: name,
                 price: price,
-                image: finalUrl,
+                image: data.secure_url,
                 category: category,
                 ts: Date.now()
             });
 
-            alert("✅ ნივთი წარმატებით დაემატა!");
-            location.reload();
-        } else {
-            alert("Cloudinary-ზე ატვირთვა ვერ მოხერხდა!");
+            alert("✅ ნივთი დაემატა! ახლა მაღაზიაში გამოჩნდება.");
+            location.reload(); 
         }
     } catch (err) {
-        console.error(err);
-        alert("კავშირის შეცდომა!");
+        alert("შეცდომაა!");
     } finally {
         btn.disabled = false;
         btn.innerText = "დამატება 🚀";
