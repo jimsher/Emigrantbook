@@ -341,50 +341,67 @@ function updateProfileUIWithVIP() {
 
 
 
+// 1. ნივთის შენახვა და Cloudinary-ზე ატვირთვა
 async function saveProductToFirebase() {
     const file = document.getElementById('newProdFile').files[0];
     const name = document.getElementById('newProdName').value;
-    const price = parseFloat(document.getElementById('newProdPrice').value);
-    const category = document.getElementById('newProdCat').value;
+    const price = document.getElementById('newProdPrice').value;
+    const cat = document.getElementById('newProdCat').value;
 
-    if (!file || !name || !price) {
-        alert("შეავსე ყველაფერი!");
-        return;
-    }
+    if(!file || !name || !price) return alert("შეავსე ყველა ველი!");
 
     const btn = document.querySelector('[onclick="saveProductToFirebase()"]');
-    btn.disabled = true; 
-    btn.innerText = "მიმდინარეობს...";
+    btn.innerText = "იტვირთება..."; btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "Emigrantbook.video");
 
     try {
-        // 1. Cloudinary ატვირთვა
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "Emigrantbook.video");
-
         const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
         const data = await res.json();
 
         if (data.secure_url) {
-            // 2. აქ არის მთავარი: ვწერთ ზუსტად ისე, როგორც მაღაზია კითხულობს
-            const newProdRef = db.ref('akhoStore').push(); // ვქმნით ახალ ადგილს
-            
-            await newProdRef.set({
-                id: newProdRef.key, // აუცილებელია ID-ს მინიჭება
+            // ვწერთ Realtime Database-ში 'akhoStore' კოლექციაში
+            await db.ref('akhoStore').push({
                 name: name,
-                price: price,
+                price: parseFloat(price),
                 image: data.secure_url,
-                category: category,
+                category: cat,
                 ts: Date.now()
             });
-
-            alert("✅ ნივთი დაემატა! ახლა მაღაზიაში გამოჩნდება.");
-            location.reload(); 
+            alert("✅ დაემატა!");
+            location.reload();
         }
-    } catch (err) {
-        alert("შეცდომაა!");
-    } finally {
-        btn.disabled = false;
-        btn.innerText = "დამატება 🚀";
-    }
+    } catch (e) { alert("შეცდომაა!"); }
+    btn.innerText = "დამატება 🚀"; btn.disabled = false;
 }
+
+// 2. მაღაზიის ნივთების გამოჩენა ეკრანზე (ეს აკლდა!)
+function loadShopItems() {
+    const grid = document.getElementById('productsGrid');
+    if(!grid) return;
+
+    db.ref('akhoStore').on('value', snap => {
+        grid.innerHTML = "";
+        const data = snap.val();
+        if(!data) return;
+
+        Object.entries(data).forEach(([id, item]) => {
+            const card = document.createElement('div');
+            card.style = "background:#1a1a1a; border-radius:12px; border:1px solid #333; overflow:hidden; padding:10px;";
+            card.innerHTML = `
+                <img src="${item.image}" style="width:100%; height:120px; object-fit:cover; border-radius:8px;">
+                <b style="color:white; display:block; margin-top:8px;">${item.name}</b>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <span style="color:var(--gold); font-weight:bold;">${item.price} ₳</span>
+                    <button onclick="buyProduct('${id}', ${item.price})" style="background:var(--gold); border:none; padding:5px 10px; border-radius:5px; font-size:12px; font-weight:bold;">BUY</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    });
+}
+
+// გაუშვი ეს ფუნქცია გვერდის ჩატვირთვისას
+document.addEventListener('DOMContentLoaded', loadShopItems);
