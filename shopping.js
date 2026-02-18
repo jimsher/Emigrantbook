@@ -216,3 +216,14 @@ async function processOrderAndPay() {
 function closeProductDetails() {
     document.getElementById('productDetailsModal').style.display = 'none';
 }
+
+
+
+
+
+
+
+
+
+
+
