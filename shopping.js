@@ -208,3 +208,44 @@ function showPurchaseSuccess(msg) {
     document.body.appendChild(div);
     setTimeout(() => div.remove(), 4000);
 }
+
+
+
+async function activateUserBenefit(productName) {
+    if (!auth.currentUser) return;
+    const userRef = db.collection('users').doc(auth.currentUser.uid);
+
+    if (productName.includes("VIP")) {
+        await userRef.update({
+            isVIP: true,
+            vipSince: firebase.firestore.FieldValue.serverTimestamp(),
+            role: "Premium Member"
+        });
+        showPurchaseSuccess("🌟 გილოცავთ! თქვენ ახლა VIP წევრი ხართ!");
+        // აქ შეგიძლია ჩაამატო ფუნქცია, რომელიც პროფილის UI-ს გადახატავს
+        if(typeof updateProfileUI === 'function') updateProfileUI();
+    }
+}
+
+
+function openMysteryBox() {
+    const prizes = [
+        { name: "50 AKHO", value: 50 },
+        { name: "200 AKHO", value: 200 },
+        { name: "VIP 1 დღით", value: 0 },
+        { name: "ჯეკპოტი: 1000 AKHO", value: 1000 }
+    ];
+
+    const wonPrize = prizes[Math.floor(Math.random() * prizes.length)];
+    
+    // აქ შეგიძლია გამოიყენო ლამაზი Modal
+    alert(`🎁 Mystery Box-იდან ამოვიდა: ${wonPrize.name}!`);
+    
+    if (wonPrize.value > 0) {
+        // აქ დაამატე ბალანსზე თანხის დარიცხვის ფუნქცია
+    }
+}
+
+
+
+
