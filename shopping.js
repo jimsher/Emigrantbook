@@ -90,3 +90,50 @@ function openShopSection() {
     }
     renderStore('all');
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// 1. დეტალების გახსნა
+function showProductDetails(id) {
+    // ჯერ ბაზიდან ვიღებთ ამ კონკრეტულ ნივთს
+    db.ref(`akhoStore/${id}`).once('value', snap => {
+        const item = snap.val();
+        if(!item) return;
+
+        const modal = document.getElementById('productDetailsModal');
+        const content = document.getElementById('detailsContent');
+
+        content.innerHTML = `
+            <div style="width:100%; max-width:400px; height:300px; background:url('${item.image}') center/cover no-repeat; border-radius:20px; border:1px solid #333;"></div>
+            
+            <div style="width:100%; text-align:left;">
+                <h1 style="color:white; font-size:24px; margin-bottom:10px;">${item.name}</h1>
+                <div style="color:#00ff00; font-size:22px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
+                
+                <p style="color:#aaa; line-height:1.6; font-size:14px; background:#111; padding:15px; border-radius:12px;">
+                    ეს არის პრემიუმ ხარისხის პროდუქტი IMPACT მაღაზიიდან. შეძენის შემდეგ ნივთი ავტომატურად აისახება თქვენს ინვენტარში.
+                </p>
+            </div>
+
+            <button onclick="confirmPurchase('${id}', ${item.price})" style="width:100%; background:#d4af37; color:black; padding:18px; border:none; border-radius:15px; font-weight:900; font-size:16px; margin-top:20px; cursor:pointer;">
+                ყიდვა ეხლავე 💳
+            </button>
+        `;
+
+        modal.style.display = 'flex';
+    });
+}
+
+// 2. მოდალის დახურვა
+function closeProductDetails() {
+    document.getElementById('productDetailsModal').style.display = 'none';
+}
