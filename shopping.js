@@ -39,7 +39,7 @@ async function saveProductToFirebase() {
     btn.innerText = "დამატება 🚀"; btn.disabled = false;
 }
 
-// 2. მაღაზიის რენდერი (₾ სიმბოლოთი)
+// 2. მაღაზიის რენდერი (ნივთზე დაჭერის ფუნქციით)
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -59,17 +59,21 @@ function renderStore(category = 'all', btn = null) {
 
             const card = document.createElement('div');
             card.className = "product-card";
+            // აი აქ დავამატეთ დაჭერის ფუნქცია:
+            card.onclick = () => showProductDetails(id); 
+            card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
+            
             card.innerHTML = `
                 <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
                 <div style="padding:10px 0;">
                     <b style="color:white; font-size:14px; display:block;">${item.name}</b>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                         <span style="color:#00ff00; font-weight:bold;">${item.price} ₾</span>
-                        <button onclick="buyProduct('${id}', ${item.price})" style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px;">BUY</button>
+                        <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px;">დეტალები</button>
                     </div>
                 </div>
                 ${auth.currentUser && auth.currentUser.uid === "შენი_UID_აქ" ? `
-                <i class="fas fa-trash" onclick="deleteProduct('${id}')" style="position:absolute; top:5px; right:5px; color:red; background:rgba(0,0,0,0.5); padding:5px; border-radius:50%; font-size:10px;"></i>
+                <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:5px; right:5px; color:red; background:rgba(0,0,0,0.5); padding:5px; border-radius:50%; font-size:10px;"></i>
                 ` : ''}
             `;
             grid.appendChild(card);
@@ -77,34 +81,8 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 3. წაშლა და ყიდვა
-function deleteProduct(id) {
-    if (confirm("წავშალოთ ნივთი?")) db.ref(`akhoStore/${id}`).remove();
-}
-
-function openShopSection() {
-    document.getElementById('shopSectionContainer').style.display = 'flex';
-    // ადმინ პანელის გამოჩენა მხოლოდ შენთვის
-    if (auth.currentUser && auth.currentUser.uid === "შენი_UID_აქ") {
-        document.getElementById('adminStorePanel').style.display = 'block';
-    }
-    renderStore('all');
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// 1. დეტალების გახსნა
+// 3. დეტალების გახსნა
 function showProductDetails(id) {
-    // ჯერ ბაზიდან ვიღებთ ამ კონკრეტულ ნივთს
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
         if(!item) return;
@@ -113,27 +91,36 @@ function showProductDetails(id) {
         const content = document.getElementById('detailsContent');
 
         content.innerHTML = `
-            <div style="width:100%; max-width:400px; height:300px; background:url('${item.image}') center/cover no-repeat; border-radius:20px; border:1px solid #333;"></div>
+            <div style="width:100%; max-width:400px; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
             
             <div style="width:100%; text-align:left;">
-                <h1 style="color:white; font-size:24px; margin-bottom:10px;">${item.name}</h1>
-                <div style="color:#00ff00; font-size:22px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
-                
-                <p style="color:#aaa; line-height:1.6; font-size:14px; background:#111; padding:15px; border-radius:12px;">
-                    ეს არის პრემიუმ ხარისხის პროდუქტი IMPACT მაღაზიიდან. შეძენის შემდეგ ნივთი ავტომატურად აისახება თქვენს ინვენტარში.
+                <h1 style="color:white; font-size:22px; margin-bottom:10px;">${item.name}</h1>
+                <div style="color:#00ff00; font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
+                <p style="color:#aaa; font-size:14px; background:#111; padding:15px; border-radius:12px; border:1px solid #222;">
+                    ეს პროდუქტი ხელმისაწვდომია IMPACT STORE-ში. შეძენის შემდეგ ის გააქტიურდება თქვენს პროფილზე.
                 </p>
             </div>
 
-            <button onclick="confirmPurchase('${id}', ${item.price})" style="width:100%; background:#d4af37; color:black; padding:18px; border:none; border-radius:15px; font-weight:900; font-size:16px; margin-top:20px; cursor:pointer;">
-                ყიდვა ეხლავე 💳
+            <button onclick="confirmPurchase('${id}', ${item.price})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer;">
+                ყიდვა 💳
             </button>
         `;
-
         modal.style.display = 'flex';
     });
 }
 
-// 2. მოდალის დახურვა
 function closeProductDetails() {
     document.getElementById('productDetailsModal').style.display = 'none';
+}
+
+function deleteProduct(id) {
+    if (confirm("წავშალოთ ნივთი?")) db.ref(`akhoStore/${id}`).remove();
+}
+
+function openShopSection() {
+    document.getElementById('shopSectionContainer').style.display = 'flex';
+    if (auth.currentUser && auth.currentUser.uid === "შენი_UID_აქ") {
+        document.getElementById('adminStorePanel').style.display = 'block';
+    }
+    renderStore('all');
 }
