@@ -280,3 +280,44 @@ async function showOrderHistory() {
     content.innerHTML = historyHTML;
 }
 
+async function activateUserVIP() {
+    if (!auth.currentUser) return;
+    const userRef = db.collection('users').doc(auth.currentUser.uid);
+
+    try {
+        await userRef.update({
+            isVIP: true,
+            vipSince: firebase.firestore.FieldValue.serverTimestamp(),
+            role: "VIP MEMBER"
+        });
+        
+        // ეგრევე განვაახლოთ UI, რომ მომხმარებელმა შედეგი დაინახოს
+        updateProfileUIWithVIP();
+        showPurchaseSuccess("👑 გილოცავთ! VIP სტატუსი გააქტიურებულია!");
+    } catch (error) {
+        console.error("VIP გააქტიურება ჩაიშალა:", error);
+    }
+}
+
+
+
+
+function updateProfileUIWithVIP() {
+    db.collection('users').doc(auth.currentUser.uid).get().then(doc => {
+        if (doc.exists && doc.data().isVIP) {
+            // 1. ვპოულობთ სახელის ელემენტებს (მაგალითად: profileName, headerName)
+            const nameElements = document.querySelectorAll('.user-name-display');
+            
+            nameElements.forEach(el => {
+                el.innerHTML = `
+                    ${doc.data().username} 
+                    <span class="vip-badge" title="VIP Member">
+                        <i class="fas fa-crown"></i>
+                    </span>
+                `;
+                el.style.color = "var(--gold)";
+                el.style.textShadow = "0 0 10px rgba(212, 175, 55, 0.5)";
+            });
+        }
+    });
+}
