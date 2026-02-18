@@ -647,5 +647,71 @@
  <div id="local-video" style="position:absolute; bottom:100px; right:20px; width:120px; height:160px; background:#222; border-radius:12px; border:2px solid var(--gold); overflow:hidden; z-index:5;"></div>
 </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="shopSectionContainer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100vh; background:#000; z-index:999999; flex-direction:column; overflow:hidden;">
+    
+    <div style="padding:15px; background:#000; border-bottom:1px solid #222; display:flex; flex-direction:column; gap:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="color:var(--gold); margin:0; font-size:18px; letter-spacing:1px;">IMPACT STORE</h2>
+            <div id="cartTrigger" onclick="openCartView()" style="position:relative; cursor:pointer; background:rgba(212,175,55,0.1); padding:8px 15px; border-radius:12px; border:1px solid #333;">
+                🛒 <span id="cartCountBadge" style="color:var(--gold); font-weight:bold;">0</span>
+            </div>
+        </div>
+        
+        <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:5px;">
+            <button class="shop-tab active" onclick="renderStore('all', this)">ყველა</button>
+            <button class="shop-tab" onclick="renderStore('digital', this)">ციფრული</button>
+            <button class="shop-tab" onclick="renderStore('physical', this)">ნივთები</button>
+            <button class="shop-tab" onclick="renderStore('vip', this)">VIP</button>
+        </div>
+    </div>
+
+    <div id="adminStorePanel" style="display:none; background:rgba(212,175,55,0.05); padding:15px; border-bottom:1px solid var(--gold);">
+        <b style="color:var(--gold); display:block; margin-bottom:10px; font-size:12px;">🛠 ადმინ მართვა</b>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <input type="text" id="newProdName" class="auth-input" placeholder="სახელი">
+            <input type="number" id="newProdPrice" class="auth-input" placeholder="ფასი (₾)">
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <input type="file" id="newProdFile" accept="image/*" style="flex:1; color:white; font-size:12px;">
+            <select id="newProdCat" class="auth-input" style="width:100px; margin:0;">
+                <option value="digital">ციფრული</option>
+                <option value="physical">ნივთები</option>
+                <option value="vip">VIP</option>
+            </select>
+        </div>
+        <button onclick="saveProductToFirebase()" style="width:100%; background:var(--gold); color:black; border:none; padding:10px; border-radius:8px; margin-top:10px; font-weight:bold;">დამატება 🚀</button>
+    </div>
+
+    <div style="flex:1; overflow-y:auto; padding:15px;">
+        <div id="productsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+            </div>
+        <div onclick="document.getElementById('shopSectionContainer').style.display='none';" style="color:gray; text-align:center; padding:30px; cursor:pointer; font-size:12px;">← დახურვა</div>
+    </div>
+</div>
+ 
 </body>
 </html>
