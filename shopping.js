@@ -276,8 +276,8 @@ async function processOrderAndPay() {
 // ადმინ პანელის ლოგიკა
 function loadIncomingOrders() {
     const list = document.getElementById('ordersList');
-    
-    // ვუსმენთ 'orders' სექციას ბაზაში
+    if (!list) return;
+
     db.ref('orders').on('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
@@ -287,26 +287,26 @@ function loadIncomingOrders() {
             return;
         }
 
-        // ვატრიალებთ შეკვეთებს (ახალი თავში)
         Object.entries(data).reverse().forEach(([id, order]) => {
             const card = document.createElement('div');
-            card.style = "background:#111; border:1px solid #333; padding:12px; border-radius:10px; font-size:13px;";
+            card.style = "background:#111; border:1px solid #333; padding:12px; border-radius:10px; font-size:13px; margin-bottom:10px; border-left: 4px solid var(--gold);";
             
+            // 🚀 აქ ვიყენებთ ზუსტად იმ სახელებს, რასაც შენი processOrderAndPay ინახავს
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <b style="color:var(--gold);">${order.productName}</b>
-                    <span style="color:#00ff00;">${order.price} ₾</span>
+                    <b style="color:var(--gold); font-size:14px;">📦 ${order.productName || 'უცნობი ნივთი'}</b>
+                    <span style="color:#00ff00; font-weight:bold;">${order.price || 0} ₾</span>
                 </div>
                 <div style="color:white; line-height:1.6;">
-                    👤 <b>კლიენტი:</b> ${order.firstName} ${order.lastName || ''}<br>
-                    📍 <b>მისამართი:</b> ${order.country}, ${order.city}, ${order.address}<br>
-                    📞 <b>ტელ:</b> ${order.phone}<br>
+                    👤 <b>კლიენტი:</b> ${order.name || 'სახელი არაა'}<br>
+                    📍 <b>მისამართი:</b> ${order.address || 'მისამართი არაა'}<br>
+                    📞 <b>ტელ:</b> <a href="tel:${order.phone}" style="color:var(--gold); text-decoration:none;">${order.phone || '-'}</a><br>
                     ✉️ <b>Email:</b> ${order.email || '-'}<br>
-                    <span style="color:gray; font-size:10px;">📅 ${new Date(order.timestamp).toLocaleString()}</span>
+                    <span style="color:gray; font-size:10px;">📅 ${order.timestamp ? new Date(order.timestamp).toLocaleString() : ''}</span>
                 </div>
                 <div style="margin-top:10px; display:flex; gap:10px;">
-                    <button onclick="deleteOrder('${id}')" style="background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">წაშლა</button>
-                    <button onclick="window.location.href='tel:${order.phone}'" style="background:var(--green); color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">დარეკვა</button>
+                    <button onclick="deleteOrder('${id}')" style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-size:11px; font-weight:bold;">წაშლა 🗑️</button>
+                    <button onclick="window.open('tel:${order.phone}')" style="background:#28a745; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-size:11px; font-weight:bold;">დარეკვა 📞</button>
                 </div>
             `;
             list.appendChild(card);
