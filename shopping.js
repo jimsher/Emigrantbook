@@ -2,13 +2,13 @@
 let cart = [];
 
 async function saveProductToFirebase() {
-    // 1. ველების ამოღება (დარწმუნდი, რომ HTML-შიც ეს ID-ებია!)
+    // 1. ველების ამოღება
     const fileEl = document.getElementById('newProdFile');
     const nameEl = document.getElementById('newProdName');
     const priceEl = document.getElementById('newProdPrice');
     const catEl = document.getElementById('newProdCat');
     const descEl = document.getElementById('newProdDesc');
-    const linkEl = document.getElementById('newProdStripeLink'); // <-- ნახე ეს სახელი!
+    const linkEl = document.getElementById('newProdStripeLink');
 
     // ვამოწმებთ, რომ საერთოდ არსებობს ეს ელემენტები საიტზე
     if (!fileEl || !nameEl || !priceEl || !descEl || !linkEl) {
@@ -23,12 +23,13 @@ async function saveProductToFirebase() {
     const stripeLink = linkEl.value.trim();
     const cat = catEl.value;
 
-    // 2. ვალიდაცია (აქ გიწერს "შეავსეო")
+    // 2. ვალიდაცია
     if (!file || !name || !price || !desc || !stripeLink) {
         return alert("შეავსე ყველა ველი, აღწერის და Stripe ლინკის ჩათვლით!");
     }
 
     const btn = document.querySelector('#adminStorePanel button');
+    const originalBtnText = btn.innerText;
     btn.innerText = "იტვირთება..."; btn.disabled = true;
 
     try {
@@ -36,29 +37,41 @@ async function saveProductToFirebase() {
         formData.append("file", file);
         formData.append("upload_preset", "Emigrantbook.video");
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
+        // 🚀 შევცვალე 'auto' -> 'image'-ით, რომ Cloudinary-მ ზუსტად სურათად აღიქვას
+        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/image/upload`, { 
+            method: 'POST', 
+            body: formData 
+        });
+        
         const data = await res.json();
 
         if (data.secure_url) {
             const newRef = db.ref('akhoStore').push();
+            
+            // 🚀 მონაცემების გაგზავნა Firebase-ში
             await newRef.set({
                 id: newRef.key,
                 name: name,
                 price: parseFloat(price),
                 image: data.secure_url,
                 category: cat,
-                desc: desc,
-                stripeLink: stripeLink,
+                desc: desc,        // 👈 ეს ნამდვილად გაიგზავნება
+                stripeLink: stripeLink, 
                 ts: Date.now()
             });
 
             alert("✅ ნივთი დაემატა!");
             location.reload(); 
+        } else {
+            alert("სურათის ატვირთვა ვერ მოხერხდა Cloudinary-ზე!");
+            console.log(data); // შეცდომის სანახავად
         }
     } catch (e) { 
-        alert("შეცდომა!"); 
+        console.error("Firebase Error:", e);
+        alert("შეცდომაა! ნახე კონსოლი."); 
+    } finally {
         btn.disabled = false;
-        btn.innerText = "დამატება 🚀";
+        btn.innerText = originalBtnText;
     }
 }
             
