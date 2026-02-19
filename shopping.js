@@ -98,6 +98,9 @@ function showProductDetails(id) {
         const item = snap.val();
         if(!item) return;
 
+        // 🚀 ვინახავთ მიმდინარე ნივთს მეხსიერებაში გადახდისთვის
+        currentProduct = item; 
+
         const modal = document.getElementById('productDetailsModal');
         const content = document.getElementById('detailsContent');
 
@@ -107,13 +110,14 @@ function showProductDetails(id) {
             <div style="width:100%; text-align:left;">
                 <h1 style="color:white; font-size:22px; margin-bottom:10px;">${item.name}</h1>
                 <div style="color:#00ff00; font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
-                <p style="color:#aaa; font-size:14px; background:#111; padding:15px; border-radius:12px; border:1px solid #222;">
-                    ეს პროდუქტი ხელმისაწვდომია IMPACT STORE-ში. შეძენის შემდეგ ის გააქტიურდება თქვენს პროფილზე.
-                </p>
+                
+                <div style="color:#ccc; font-size:14px; background:#111; padding:15px; border-radius:12px; border:1px solid #222; line-height:1.6; white-space: pre-wrap;">
+                    ${item.desc || 'აღწერა არ არის მითითებული.'}
+                </div>
             </div>
 
-            <button onclick="confirmPurchase('${id}', ${item.price})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer;">
-                ყიდვა 💳
+            <button onclick="openOrderForm()" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer;">
+                შეკვეთის გაფორმება 💳
             </button>
         `;
         modal.style.display = 'flex';
