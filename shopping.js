@@ -198,23 +198,11 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 2. დეტალების გახსნა და ფორმაზე გადასვლა
-function showProductDetails(id) {
-    db.ref(`akhoStore/${id}`).once('value', snap => {
-        const item = snap.val();
-        currentProduct = item;
-        const modal = document.getElementById('productDetailsModal');
-        const content = document.getElementById('detailsContent');
-        content.innerHTML = `
-            <div style="width:100%; max-width:400px; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px;"></div>
-            <h2 style="color:white;">${item.name}</h2>
-            <b style="color:#00ff00; font-size:20px;">${item.price} ₾</b>
-            <button onclick="openOrderForm()" style="width:100%; background:#d4af37; color:black; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">ყიდვა 💳</button>
-        `;
-        modal.style.display = 'flex';
-    });
-}
 
+
+
+
+// 2. დეტალების გახსნა და ფორმაზე გადასვლა
 function openOrderForm() {
     document.getElementById('productDetailsModal').style.display = 'none';
     document.getElementById('orderFormModal').style.display = 'flex';
