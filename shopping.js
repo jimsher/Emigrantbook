@@ -7,8 +7,15 @@ async function saveProductToFirebase() {
     const name = document.getElementById('newProdName').value;
     const price = document.getElementById('newProdPrice').value;
     const cat = document.getElementById('newProdCat').value;
+    
+    // 🚀 ახალი ველები: აღწერა და სტრიპის ლინკი
+    const desc = document.getElementById('newProdDesc').value;
+    const stripeLink = document.getElementById('newProdStripeLink').value;
 
-    if (!file || !name || !price) return alert("შეავსე ყველა ველი!");
+    // ვამოწმებთ, რომ ყველაფერი შევსებულია
+    if (!file || !name || !price || !desc || !stripeLink) {
+        return alert("შეავსე ყველა ველი, აღწერის და Stripe ლინკის ჩათვლით!");
+    }
 
     const btn = document.querySelector('#adminStorePanel button');
     btn.innerText = "იტვირთება..."; btn.disabled = true;
@@ -29,15 +36,33 @@ async function saveProductToFirebase() {
                 price: parseFloat(price),
                 image: data.secure_url,
                 category: cat,
+                desc: desc,        // 🚀 აღწერა მიდის ბაზაში
+                stripeLink: stripeLink, // 🚀 ლინკი მიდის ბაზაში
                 ts: Date.now()
             });
-            alert("✅ ნივთი დაემატა!");
+
+            alert("✅ ნივთი წარმატებით დაემატა!");
+
+            // 🧹 ველების გასუფთავება
             document.getElementById('newProdName').value = "";
             document.getElementById('newProdPrice').value = "";
+            document.getElementById('newProdDesc').value = "";
+            document.getElementById('newProdStripeLink').value = "";
+            document.getElementById('newProdFile').value = "";
+            
+            location.reload(); // გვერდის განახლება ახალი ნივთის გამოსაჩენად
         }
-    } catch (e) { alert("შეცდომა!"); }
-    btn.innerText = "დამატება 🚀"; btn.disabled = false;
+    } catch (e) { 
+        console.error(e);
+        alert("შეცდომა ატვირთვისას!"); 
+    }
+    
+    btn.innerText = "დამატება 🚀"; 
+    btn.disabled = false;
 }
+
+
+
 
 // 2. მაღაზიის რენდერი (ნივთზე დაჭერის ფუნქციით)
 function renderStore(category = 'all', btn = null) {
