@@ -2,16 +2,29 @@
 let cart = [];
 
 async function saveProductToFirebase() {
-    const file = document.getElementById('newProdFile').files[0];
-    const name = document.getElementById('newProdName').value;
-    const price = document.getElementById('newProdPrice').value;
-    const cat = document.getElementById('newProdCat').value;
-    
-    // 🚀 აი, ესენი წამოიღებს ინფორმაციას ახალი ველებიდან
-    const desc = document.getElementById('newProdDesc').value;
-    const stripeLink = document.getElementById('stripeLink').value;
+    // 1. ველების ამოღება (დარწმუნდი, რომ HTML-შიც ეს ID-ებია!)
+    const fileEl = document.getElementById('newProdFile');
+    const nameEl = document.getElementById('newProdName');
+    const priceEl = document.getElementById('newProdPrice');
+    const catEl = document.getElementById('newProdCat');
+    const descEl = document.getElementById('newProdDesc');
+    const linkEl = document.getElementById('newProdStripeLink'); // <-- ნახე ეს სახელი!
 
-    if (!file || !name || !price || !stripeLink || !desc) {
+    // ვამოწმებთ, რომ საერთოდ არსებობს ეს ელემენტები საიტზე
+    if (!fileEl || !nameEl || !priceEl || !descEl || !linkEl) {
+        console.error("ერთ-ერთი ველი HTML-ში ვერ მოიძებნა!");
+        return alert("სისტემური შეცდომა: HTML ველები ვერ მოიძებნა.");
+    }
+
+    const file = fileEl.files[0];
+    const name = nameEl.value.trim();
+    const price = priceEl.value.trim();
+    const desc = descEl.value.trim();
+    const stripeLink = linkEl.value.trim();
+    const cat = catEl.value;
+
+    // 2. ვალიდაცია (აქ გიწერს "შეავსეო")
+    if (!file || !name || !price || !desc || !stripeLink) {
         return alert("შეავსე ყველა ველი, აღწერის და Stripe ლინკის ჩათვლით!");
     }
 
@@ -34,16 +47,19 @@ async function saveProductToFirebase() {
                 price: parseFloat(price),
                 image: data.secure_url,
                 category: cat,
-                desc: desc,        // 🚀 ბაზაში აღწერის შენახვა
-                stripeLink: stripeLink, // 🚀 ბაზაში ლინკის შენახვა
+                desc: desc,
+                stripeLink: stripeLink,
                 ts: Date.now()
             });
 
             alert("✅ ნივთი დაემატა!");
             location.reload(); 
         }
-    } catch (e) { alert("შეცდომა!"); }
-    btn.innerText = "დამატება 🚀"; btn.disabled = false;
+    } catch (e) { 
+        alert("შეცდომა!"); 
+        btn.disabled = false;
+        btn.innerText = "დამატება 🚀";
+    }
 }
             
 
