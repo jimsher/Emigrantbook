@@ -121,13 +121,14 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
+
 // 3. დეტალების გახსნა
 function showProductDetails(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
         if(!item) return;
 
-        // 🚀 ამას ვიყენებთ, რომ ყიდვისას სწორი ლინკი აიღოს
+        // მიმდინარე ნივთის შენახვა გადახდისთვის
         currentProduct = item; 
 
         const modal = document.getElementById('productDetailsModal');
@@ -136,12 +137,12 @@ function showProductDetails(id) {
         content.innerHTML = `
             <div style="width:100%; max-width:400px; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
             
-            <div style="width:100%; text-align:left;">
-                <h1 style="color:white; font-size:22px; margin-bottom:10px;">${item.name}</h1>
+            <div style="width:100%; text-align:left; padding: 10px 0;">
+                <h1 style="color:white; font-size:22px; margin-bottom:5px;">${item.name}</h1>
                 <div style="color:#00ff00; font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
                 
-                <div style="color:#ccc; font-size:14px; background:#111; padding:15px; border-radius:12px; border:1px solid #222; line-height:1.6; white-space: pre-wrap;">
-                    ${item.desc ? item.desc : "ამ ნივთს აღწერა არ აქვს."}
+                <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222; line-height:1.6; white-space: pre-wrap;">
+                    ${item.desc ? item.desc : "აღწერა არ არის მითითებული."}
                 </div>
             </div>
 
