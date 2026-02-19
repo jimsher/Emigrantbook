@@ -114,7 +114,7 @@ function showProductDetails(id) {
         const item = snap.val();
         if(!item) return;
 
-        // 🚀 ვინახავთ მიმდინარე ნივთს მეხსიერებაში გადახდისთვის
+        // 🚀 ამას ვიყენებთ, რომ ყიდვისას სწორი ლინკი აიღოს
         currentProduct = item; 
 
         const modal = document.getElementById('productDetailsModal');
@@ -128,7 +128,7 @@ function showProductDetails(id) {
                 <div style="color:#00ff00; font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
                 
                 <div style="color:#ccc; font-size:14px; background:#111; padding:15px; border-radius:12px; border:1px solid #222; line-height:1.6; white-space: pre-wrap;">
-                    ${item.desc || 'აღწერა არ არის მითითებული.'}
+                    ${item.desc ? item.desc : "ამ ნივთს აღწერა არ აქვს."}
                 </div>
             </div>
 
