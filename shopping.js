@@ -1,77 +1,49 @@
 // 📦 IMPACT STORE CORE ENGINE
 let cart = [];
 
-async function saveProductToFirebase() {
-    // 1. ველების ამოღება
-    const fileEl = document.getElementById('newProdFile');
-    const nameEl = document.getElementById('newProdName');
-    const priceEl = document.getElementById('newProdPrice');
-    const catEl = document.getElementById('newProdCat');
-    const descEl = document.getElementById('newProdDesc');
-    const linkEl = document.getElementById('newProdStripeLink');
+// 🚀 ჩაამატე ეს შენი JS-ის დასაწყისში
+const stripe = Stripe('pk_test_51SuywEE4GEOA0VbFL1utyI4vcXZUXWCVYYWzNbG32Gxk8oZxgaxMlhJiyJzR3w0VQ8BfDuLCaaPBrHw9eM745nzc00I2i2sNvK');
 
-    // ვამოწმებთ, რომ საერთოდ არსებობს ეს ელემენტები საიტზე
-    if (!fileEl || !nameEl || !priceEl || !descEl || !linkEl) {
-        console.error("ერთ-ერთი ველი HTML-ში ვერ მოიძებნა!");
-        return alert("სისტემური შეცდომა: HTML ველები ვერ მოიძებნა.");
-    }
+async function processOrderAndPay() {
+    const user = auth.currentUser;
+    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია");
 
-    const file = fileEl.files[0];
-    const name = nameEl.value.trim();
-    const price = priceEl.value.trim();
-    const desc = descEl.value.trim();
-    const stripeLink = linkEl.value.trim();
-    const cat = catEl.value;
-
-    // 2. ვალიდაცია
-    if (!file || !name || !price || !desc || !stripeLink) {
-        return alert("შეავსე ყველა ველი, აღწერის და Stripe ლინკის ჩათვლით!");
-    }
-
-    const btn = document.querySelector('#adminStorePanel button');
-    const originalBtnText = btn.innerText;
-    btn.innerText = "იტვირთება..."; btn.disabled = true;
+    // 1. ვინახავთ შეკვეთას ბაზაში
+    const orderData = {
+        name: document.getElementById('ordFirstName').value + " " + document.getElementById('ordLastName').value,
+        productName: currentProduct.name,
+        price: currentProduct.price,
+        uid: user.uid,
+        status: "waiting_payment",
+        timestamp: Date.now()
+    };
 
     try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "Emigrantbook.video");
+        await db.ref('orders').push(orderData);
 
-        // 🚀 შევცვალე 'auto' -> 'image'-ით, რომ Cloudinary-მ ზუსტად სურათად აღიქვას
-        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/image/upload`, { 
-            method: 'POST', 
-            body: formData 
-        });
-        
-        const data = await res.json();
+        // 2. 🚀 გადახდის პროცესი
+        // ადმინ პანელში 'stripeLink'-ის ველში ჩაწერე Price ID (მაგ: price_1T2d...)
+        const priceId = currentProduct.stripeLink; 
 
-        if (data.secure_url) {
-            const newRef = db.ref('akhoStore').push();
-            
-            // 🚀 მონაცემების გაგზავნა Firebase-ში
-            await newRef.set({
-                id: newRef.key,
-                name: name,
-                price: parseFloat(price),
-                image: data.secure_url,
-                category: cat,
-                desc: desc,        // 👈 ეს ნამდვილად გაიგზავნება
-                stripeLink: stripeLink, 
-                ts: Date.now()
-            });
-
-            alert("✅ ნივთი დაემატა!");
-            location.reload(); 
+        if (!priceId || !priceId.startsWith('price_')) {
+            // თუ Price ID არ გაქვს, გამოიყენე ის ერთი ლინკი რაც მომწერე (როგორც რეზერვი)
+            window.open("https://buy.stripe.com/test_eVq8wP0bE5Y08mqf1NcbC05", "_blank");
         } else {
-            alert("სურათის ატვირთვა ვერ მოხერხდა Cloudinary-ზე!");
-            console.log(data); // შეცდომის სანახავად
+            // პროფესიონალური Checkout
+            const { error } = await stripe.redirectToCheckout({
+                lineItems: [{ price: priceId, quantity: 1 }],
+                mode: 'payment',
+                successUrl: window.location.origin + '/success',
+                cancelUrl: window.location.origin + '/cancel',
+                clientReferenceId: user.uid
+            });
+            if (error) alert(error.message);
         }
-    } catch (e) { 
-        console.error("Firebase Error:", e);
-        alert("შეცდომაა! ნახე კონსოლი."); 
-    } finally {
-        btn.disabled = false;
-        btn.innerText = originalBtnText;
+
+        document.getElementById('orderFormModal').style.display = 'none';
+
+    } catch (e) {
+        alert("შეცდომა: " + e.message);
     }
 }
             
