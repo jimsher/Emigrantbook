@@ -1,19 +1,17 @@
 // 📦 IMPACT STORE CORE ENGINE
 let cart = [];
 
-// 1. ნივთის დამატება (Cloudinary + Firebase)
 async function saveProductToFirebase() {
     const file = document.getElementById('newProdFile').files[0];
     const name = document.getElementById('newProdName').value;
     const price = document.getElementById('newProdPrice').value;
     const cat = document.getElementById('newProdCat').value;
     
-    // 🚀 ახალი ველები: აღწერა და სტრიპის ლინკი
+    // 🚀 აი, ესენი წამოიღებს ინფორმაციას ახალი ველებიდან
     const desc = document.getElementById('newProdDesc').value;
-    const stripeLink = document.getElementById('newProdStripeLink').value;
+    const stripeLink = document.getElementById('stripeLink').value;
 
-    // ვამოწმებთ, რომ ყველაფერი შევსებულია
-    if (!file || !name || !price || !desc || !stripeLink) {
+    if (!file || !name || !price || !stripeLink || !desc) {
         return alert("შეავსე ყველა ველი, აღწერის და Stripe ლინკის ჩათვლით!");
     }
 
@@ -36,30 +34,18 @@ async function saveProductToFirebase() {
                 price: parseFloat(price),
                 image: data.secure_url,
                 category: cat,
-                desc: desc,        // 🚀 აღწერა მიდის ბაზაში
-                stripeLink: stripeLink, // 🚀 ლინკი მიდის ბაზაში
+                desc: desc,        // 🚀 ბაზაში აღწერის შენახვა
+                stripeLink: stripeLink, // 🚀 ბაზაში ლინკის შენახვა
                 ts: Date.now()
             });
 
-            alert("✅ ნივთი წარმატებით დაემატა!");
-
-            // 🧹 ველების გასუფთავება
-            document.getElementById('newProdName').value = "";
-            document.getElementById('newProdPrice').value = "";
-            document.getElementById('newProdDesc').value = "";
-            document.getElementById('newProdStripeLink').value = "";
-            document.getElementById('newProdFile').value = "";
-            
-            location.reload(); // გვერდის განახლება ახალი ნივთის გამოსაჩენად
+            alert("✅ ნივთი დაემატა!");
+            location.reload(); 
         }
-    } catch (e) { 
-        console.error(e);
-        alert("შეცდომა ატვირთვისას!"); 
-    }
-    
-    btn.innerText = "დამატება 🚀"; 
-    btn.disabled = false;
+    } catch (e) { alert("შეცდომა!"); }
+    btn.innerText = "დამატება 🚀"; btn.disabled = false;
 }
+            
 
 
 
