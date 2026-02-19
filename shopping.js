@@ -288,9 +288,69 @@ function deleteOrder(id) {
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // როცა ადმინ პანელს ხსნი, მაშინვე ჩაიტვირთოს შეკვეთებიც
 // ამას ჩაამატებ შენს openAdminUI() ფუნქციაში
+// 1. სექციის გამოჩენა/დამალვა
+function toggleStoreManager() {
+    const section = document.getElementById('storeManagerSection');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        loadAdminProducts(); // ნივთების სიის ჩატვირთვა
+    } else {
+        section.style.display = 'none';
+    }
+}
 
+// 2. ნივთების სიის ჩატვირთვა ადმინისთვის (წასაშლელად)
+function loadAdminProducts() {
+    const list = document.getElementById('adminProductList');
+    db.ref('akhoStore').on('value', snap => {
+        list.innerHTML = "";
+        const data = snap.val();
+        if (!data) return;
+
+        Object.entries(data).forEach(([id, item]) => {
+            const div = document.createElement('div');
+            div.style = "display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; border-radius:8px; border:1px solid #222;";
+            div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${item.image}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;">
+                    <span style="color:white; font-size:12px;">${item.name} (${item.price}₾)</span>
+                </div>
+                <button onclick="deleteProduct('${id}')" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">წაშლა</button>
+            `;
+            list.appendChild(div);
+        });
+    });
+}
+
+// 3. ნივთის წაშლა
+function deleteProduct(id) {
+    if (confirm("ნამდვილად გინდა ამ ნივთის წაშლა?")) {
+        db.ref(`akhoStore/${id}`).remove()
+            .then(() => alert("ნივთი წაიშალა"))
+            .catch(e => alert("შეცდომაა"));
+    }
+}
 
 
 
