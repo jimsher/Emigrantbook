@@ -240,6 +240,40 @@
  <h3 style="color:var(--gold); margin: 15px 0 10px 0;">გატანის მოთხოვნები</h3>
  <div id="adminReqList" style="flex:1; overflow-y:auto;"></div>
 
+
+
+ <button onclick="toggleStoreManager()" style="background:var(--gold); color:black; border:none; padding:10px; border-radius:8px; font-weight:bold; margin:5px; cursor:pointer;">
+    🛍️ მაღაზიის მართვა
+</button>
+
+<div id="storeManagerSection" style="display:none; background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; margin-top:15px; border:1px solid rgba(212,175,55,0.3);">
+    <h3 style="color:var(--gold); margin-bottom:15px; font-size:16px;">📦 ახალი ნივთის დამატება</h3>
+    
+    <div style="display:grid; gap:10px;">
+        <input type="text" id="newProdName" class="auth-input" placeholder="ნივთის სახელი">
+        <input type="number" id="newProdPrice" class="auth-input" placeholder="ფასი (₾)">
+        <input type="text" id="newProdStripeLink" class="auth-input" placeholder="Stripe ლინკი (ყულაბა)">
+        
+        <textarea id="newProdDesc" class="auth-input" placeholder="ნივთის დეტალური აღწერა..." style="height:80px;"></textarea>
+        
+        <div style="display:flex; gap:10px; align-items:center;">
+            <select id="newProdCat" class="auth-input" style="flex:1;">
+                <option value="ნივთები">ნივთები</option>
+                <option value="ციფრული">ციფრული</option>
+            </select>
+            <input type="file" id="newProdFile" accept="image/*" style="flex:1; color:white; font-size:12px;">
+        </div>
+        
+        <button onclick="saveProductToFirebase()" id="uploadBtn" style="background:#00ff00; color:black; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">
+            გამოქვეყნება 🚀
+        </button>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+    <h3 style="color:var(--gold); font-size:14px; margin-bottom:10px;">🗑️ არსებული ნივთები:</h3>
+    <div id="adminProductList" style="display:grid; gap:10px;"></div>
+</div>
+  
  <div id="adminOrdersSection" style="margin-top:20px; border-top:1px solid #333; padding-top:20px;">
  <h3 style="color:var(--gold); font-size:16px; margin-bottom:15px;">📦 შემოსული შეკვეთები</h3>
  <div id="ordersList" style="display:flex; flex-direction:column; gap:10px;">
