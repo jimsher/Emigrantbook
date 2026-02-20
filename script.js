@@ -2574,3 +2574,40 @@ function startNotificationListener() {
         snap.ref.remove();
     });
 }
+
+
+
+
+
+function checkDailyBonus() {
+    // 1. უსაფრთხოების შემოწმება
+    if (!auth.currentUser) {
+        console.log("ბონუსის შემოწმება ვერ მოხდა: იუზერი არაა შესული.");
+        return;
+    }
+
+    const uid = auth.currentUser.uid;
+    const today = new Date().toISOString().split('T')[0];
+
+    db.ref(`users/${uid}`).once('value', snap => {
+        const user = snap.val();
+        if (!user) return; // თუ იუზერის მონაცემები ბაზაში საერთოდ არ არის
+
+        // თუ ბონუსი დღეს ჯერ არ აუღია
+        if (user.lastBonusDate !== today) {
+            const bonusAmount = 0.50;
+            const currentBal = parseFloat(user.akhoBalance || user.akho || user.balance || 0);
+            
+            // ბაზის განახლება
+            db.ref(`users/${uid}`).update({
+                akhoBalance: currentBal + bonusAmount,
+                lastBonusDate: today
+            }).then(() => {
+                // შეტყობინება მხოლოდ წარმატებული განახლების შემდეგ
+                showLiveNotification("საჩუქარი!", `დღევანდელი ბონუსი +${bonusAmount} AKHO დაგერიცხათ! 🎁`, "🎁");
+            }).catch(err => {
+                console.error("ბონუსის დარიცხვის შეცდომა:", err);
+            });
+        }
+    });
+}
