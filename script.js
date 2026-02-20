@@ -161,23 +161,30 @@ const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 }
 
 auth.onAuthStateChanged(user => {
- applyLanguage();
- if (user) {
- updatePresence();
- listenToGlobalMessages();
- 
- db.ref(`video_calls/${user.uid}`).on('value', snap => {
- const call = snap.val();
- if (call && call.status === 'calling') {
- if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
- currentChatId = call.callerUid; 
- startVideoCall(call.channel);
- db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
- } else {
- db.ref(`video_calls/${user.uid}`).remove();
- }
- }
- });
+    applyLanguage();
+    if (user) {
+        updatePresence();
+        listenToGlobalMessages();
+        
+        // --- აქ დავამატეთ ახალი ფუნქციები ---
+        startNotificationListener(); // იწყებს ლაიქების და შეტყობინებების მოსმენას
+        checkDailyBonus();            // ამოწმებს და აძლევს ყოველდღიურ 0.50 AKHO-ს
+        // ----------------------------------
+
+        db.ref(`video_calls/${user.uid}`).on('value', snap => {
+            const call = snap.val();
+            if (call && call.status === 'calling') {
+                if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
+                    currentChatId = call.callerUid; 
+                    startVideoCall(call.channel);
+                    db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+                } else {
+                    db.ref(`video_calls/${user.uid}`).remove();
+                }
+            }
+        });
+    }
+});
 
  document.getElementById('authUI').style.display = 'none';
  db.ref('users/' + user.uid).on('value', snap => {
