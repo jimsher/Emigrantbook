@@ -60,3 +60,27 @@ function openLeaderboard() {
         });
     });
 }
+
+
+
+
+
+
+
+
+
+function showLiveNotification(title, text, icon = '🔔') {
+    const el = document.getElementById('liveNotification');
+    document.getElementById('notifTitle').innerText = title;
+    document.getElementById('notifText').innerText = text;
+    document.getElementById('notifIcon').innerText = icon;
+    
+    el.style.display = 'block';
+    
+    // 5 წამში ავტომატურად ქრება
+    setTimeout(() => { hideNotification(); }, 5000);
+}
+
+function hideNotification() {
+    document.getElementById('liveNotification').style.display = 'none';
+}
