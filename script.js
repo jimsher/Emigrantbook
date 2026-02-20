@@ -167,7 +167,9 @@ auth.onAuthStateChanged(user => {
  updatePresence();
  listenToGlobalMessages();
  startNotificationListener();
- 
+ checkDailyBonus();
+
+  
  db.ref(`video_calls/${user.uid}`).on('value', snap => {
  const call = snap.val();
  if (call && call.status === 'calling') {
