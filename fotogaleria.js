@@ -1,33 +1,44 @@
 function openPhotosSection(userId) {
     // 1. ვიზუალური გადართვა
-    document.getElementById('profGrid').style.display = 'none'; // ვმალავთ ვიდეოებს
-    document.getElementById('userPhotosGrid').style.display = 'grid'; // ვაჩენთ ფოტოებს
-    
+    const grid = document.getElementById('profGrid');
     const photoGrid = document.getElementById('userPhotosGrid');
-    const noMsg = document.getElementById('noPhotosMsg');
-    photoGrid.innerHTML = '<p style="color:white; grid-column: 1/4; text-align:center;">იტვირთება...</p>';
+    
+    if(grid) grid.style.display = 'none';
+    if(photoGrid) {
+        photoGrid.style.display = 'grid';
+        photoGrid.innerHTML = '<div style="color:var(--gold); grid-column:1/4; text-align:center; padding:20px;">იძებნება ფოტოები...</div>';
+    }
 
-    // 2. ფოტოების წამოღება ბაზიდან
-    db.ref('posts').orderByChild('authorId').equalTo(userId).once('value', snap => {
+    // 2. ვეძებთ პოსტებს
+    // ჯერ ვცადოთ authorId-ით, თუ არა და გადავამოწმოთ ყველა პოსტი
+    db.ref('posts').once('value', snap => {
         photoGrid.innerHTML = '';
         let count = 0;
 
         snap.forEach(child => {
             const post = child.val();
-            if (post.imageUrl) { // ვიღებთ მხოლოდ იმ პოსტებს, რომლებსაც ფოტო აქვს
+            
+            // ვამოწმებთ: 1. არის თუ არა ეს ამ იუზერის პოსტი? 2. აქვს თუ არა ფოტო?
+            // აქ ვამატებ რამდენიმე შესაძლო ID-ს სახელს (authorId ან uid)
+            const isOwner = post.authorId === userId || post.uid === userId;
+            
+            if (isOwner && post.imageUrl) {
                 count++;
-                photoGrid.innerHTML += `
-                    <div style="aspect-ratio:1/1; overflow:hidden; border-radius:4px; background:#111;">
-                        <img src="${post.imageUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" 
-                             onclick="window.open('${post.imageUrl}', '_blank')">
-                    </div>`;
+                const imgDiv = document.createElement('div');
+                imgDiv.style.cssText = "aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222; position:relative;";
+                imgDiv.innerHTML = `
+                    <img src="${post.imageUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" 
+                         onclick="window.open('${post.imageUrl}', '_blank')">
+                `;
+                photoGrid.appendChild(imgDiv);
             }
         });
 
         if (count === 0) {
-            noMsg.style.display = 'block';
+            document.getElementById('noPhotosMsg').style.display = 'block';
+            photoGrid.style.display = 'none';
         } else {
-            noMsg.style.display = 'none';
+            document.getElementById('noPhotosMsg').style.display = 'none';
         }
     });
 }
