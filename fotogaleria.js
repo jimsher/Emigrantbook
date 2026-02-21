@@ -1,54 +1,60 @@
 function openPhotosSection(userId) {
+    // ყველაზე საიმედო გზა: თუ userId არ მოვიდა, ავიღოთ viewingUid-დან
+    let targetId = userId;
+    
+    if (!targetId || targetId === "undefined") {
+        targetId = (typeof viewingUid !== 'undefined') ? viewingUid : null;
+    }
+
+    console.log("ჩატვირთვის მცდელობა ID-სთვის:", targetId);
+
     const grid = document.getElementById('profGrid');
     const photoGrid = document.getElementById('userPhotosGrid');
     const noMsg = document.getElementById('noPhotosMsg');
     
-    // სხვა სექციების დამალვა
     if(grid) grid.style.display = 'none';
-    const infoSection = document.getElementById('userDetailedInfoUI'); // თუ გაქვს ინფოს სექცია
-    if(infoSection) infoSection.style.display = 'none';
-
     if(photoGrid) {
         photoGrid.style.display = 'grid';
-        photoGrid.innerHTML = '<div style="color:var(--gold); grid-column:1/4; text-align:center; padding:20px;">იტვირთება ფოტოები...</div>';
+        photoGrid.innerHTML = '<div style="color:var(--gold); grid-column:1/4; text-align:center; padding:20px;">იტვირთება...</div>';
+    }
+    if(noMsg) noMsg.style.display = 'none';
+
+    if (!targetId) {
+        photoGrid.innerHTML = '<div style="color:red; grid-column:1/4; text-align:center; padding:20px;">შეცდომა: მომხმარებელი ვერ იდენტიფიცირდა</div>';
+        return;
     }
 
-    db.ref('community_posts').orderByChild('authorId').equalTo(userId).once('value', snap => {
+    // ძებნა ბაზაში - ვიყენებთ ზუსტად targetId-ს
+    db.ref('community_posts').orderByChild('authorId').equalTo(targetId).once('value', snap => {
         photoGrid.innerHTML = '';
         let count = 0;
 
-        if (snap.exists()) {
-            snap.forEach(child => {
-                const post = child.val();
-                const imgUrl = post.imageUrl || post.image;
-                
-                if (imgUrl) {
-                    count++;
-                    const imgDiv = document.createElement('div');
-                    imgDiv.style.cssText = "aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222;";
-                    // აქ შევცვალე: window.open ჩანაცვლდა previewImage-ით
-                    imgDiv.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="previewImage('${imgUrl}')">`;
-                    photoGrid.appendChild(imgDiv);
-                }
-            });
-        }
+        snap.forEach(child => {
+            const post = child.val();
+            const imgUrl = post.imageUrl || post.image;
+            if (imgUrl) {
+                count++;
+                const imgDiv = document.createElement('div');
+                imgDiv.style.cssText = "aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222;";
+                imgDiv.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="previewImage('${imgUrl}')">`;
+                photoGrid.appendChild(imgDiv);
+            }
+        });
 
+        // თუ community-ში არაა, ვნახოთ "posts"-ში
         if (count === 0) {
-            db.ref('posts').orderByChild('authorId').equalTo(userId).once('value', snap2 => {
-                if (snap2.exists()) {
-                    snap2.forEach(child => {
-                        const post = child.val();
-                        const imgUrl = post.imageUrl || post.image;
-                        if (imgUrl) {
-                            count++;
-                            const imgDiv = document.createElement('div');
-                            imgDiv.style.cssText = "aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222;";
-                            // აქაც იგივე ცვლილება
-                            imgDiv.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="previewImage('${imgUrl}')">`;
-                            photoGrid.appendChild(imgDiv);
-                        }
-                    });
-                }
+            db.ref('posts').orderByChild('authorId').equalTo(targetId).once('value', snap2 => {
+                snap2.forEach(child => {
+                    const post = child.val();
+                    const imgUrl = post.imageUrl || post.image;
+                    if (imgUrl) {
+                        count++;
+                        const imgDiv = document.createElement('div');
+                        imgDiv.style.cssText = "aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222;";
+                        imgDiv.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="previewImage('${imgUrl}')">`;
+                        photoGrid.appendChild(imgDiv);
+                    }
+                });
                 finishPhotoLoad(count, photoGrid, noMsg);
             });
         } else {
@@ -56,6 +62,10 @@ function openPhotosSection(userId) {
         }
     });
 }
+
+
+
+
 
 // ეს ფუნქცია აუცილებლად გქონდეს script.js-ში
 function previewImage(url) {
