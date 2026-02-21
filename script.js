@@ -547,7 +547,7 @@ window.deleteReply = function(postId, commentId, replyId) {
     stopMainFeedVideos();
     const messengerUI = document.getElementById('messengerUI');
     messengerUI.style.display = 'flex';
-    messengerUI.style.background = '#000'; // მთლიანი ფონი შავი
+    messengerUI.style.background = '#000'; // ფონი შავი
 
     const list = document.getElementById('chatList');
     list.innerHTML = "";
@@ -557,17 +557,18 @@ window.deleteReply = function(postId, commentId, replyId) {
         const followers = snap.val();
         if(followers) {
             Object.entries(followers).forEach(([uid, data]) => {
-                // აქ დავამატე სტილები ხაზების მოსაშორებლად
-                list.innerHTML += `
-                <div class="chat-list-item" 
-                     onclick="startChat('${uid}', '${data.name}', '${data.photo}')" 
-                     style="border: none !important; border-bottom: none !important; background: #000; padding: 10px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                    <img src="${data.photo}" class="chat-list-ava" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: none;">
-                    <b style="color: white; font-size: 15px; font-weight: 600;">${data.name}</b>
-                </div>`;
+                // ვიყენებთ შენს ორიგინალ სტრუქტურას, რომ კლიკმა იმუშაოს
+                const item = document.createElement('div');
+                item.className = 'chat-list-item';
+                item.onclick = () => startChat(uid, data.name, data.photo);
+                item.innerHTML = `
+                    <img src="${data.photo}" class="chat-list-ava">
+                    <b>${data.name}</b>
+                `;
+                list.appendChild(item);
             });
         } else { 
-            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No contacts</p>"; 
+            list.innerHTML = "<p style='padding:20px; color:gray;'>No contacts</p>"; 
         }
     });
 }
