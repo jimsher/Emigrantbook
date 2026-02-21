@@ -576,8 +576,8 @@ window.deleteReply = function(postId, commentId, replyId) {
                         
                         lastMsg = msgData.text || "📷 Voice/Media";
                         
-                        // ლოგიკა: თუ ბოლო მესიჯი ჩემი არ არის (სხვისია), ავანთოთ წითელი წრე
-                        if (msgData.senderId !== auth.currentUser.uid) {
+                        // ლოგიკა: წითელი აინთოს მხოლოდ თუ მესიჯი სხვისია და თან წაუკითხავია (read === false)
+                        if (msgData.senderId !== auth.currentUser.uid && msgData.read === false) {
                             showBadge = true;
                         }
                     }
@@ -585,7 +585,7 @@ window.deleteReply = function(postId, commentId, replyId) {
                     item.innerHTML = `
                         <div style="position:relative;">
                             <img src="${data.photo}" class="chat-list-ava">
-                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
+                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">1</div>
                         </div>
                         <div style="display:flex; flex-direction:column; overflow:hidden;">
                             <b style="color:white; font-size:15px;">${data.name}</b>
@@ -603,6 +603,7 @@ window.deleteReply = function(postId, commentId, replyId) {
         }
     });
 }
+
 
  function startChat(uid, name, photo) {
  currentChatId = uid;
