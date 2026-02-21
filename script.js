@@ -543,7 +543,8 @@ window.deleteReply = function(postId, commentId, replyId) {
  }
 
 
- function openMessenger() {
+ 
+function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     ui.style.display = 'flex';
@@ -562,9 +563,13 @@ window.deleteReply = function(postId, commentId, replyId) {
                 const item = document.createElement('div');
                 item.className = 'chat-list-item';
                 item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
-                item.onclick = () => startChat(uid, data.name, data.photo);
                 
-                // ბოლო მესიჯის მოსმენა
+                // როცა აჭერ, ვიმახსოვრებთ რომ ეს ჩატი "ნახულია"
+                item.onclick = () => {
+                    localStorage.setItem('lastRead_' + chatId, Date.now());
+                    startChat(uid, data.name, data.photo);
+                };
+                
                 db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
                     let lastMsg = "No messages yet";
                     let showBadge = false;
@@ -573,11 +578,13 @@ window.deleteReply = function(postId, commentId, replyId) {
                         const msgs = mSnap.val();
                         const msgKey = Object.keys(msgs)[0];
                         const msgData = msgs[msgKey];
-                        
                         lastMsg = msgData.text || "📷 Voice/Media";
                         
-                        // ლოგიკა: წითელი აინთოს მხოლოდ თუ მესიჯი სხვისია და თან წაუკითხავია (read === false)
-                        if (msgData.senderId !== auth.currentUser.uid && msgData.read === false) {
+                        // ბოლო ნახვის დრო localStorage-დან
+                        const lastRead = localStorage.getItem('lastRead_' + chatId) || 0;
+
+                        // წითელი აინთება თუ: ბოლო მესიჯი სხვისია და მისი დრო მეტია ჩვენს ბოლო ნახვაზე
+                        if (msgData.senderId !== auth.currentUser.uid && msgData.ts > lastRead) {
                             showBadge = true;
                         }
                     }
@@ -585,7 +592,7 @@ window.deleteReply = function(postId, commentId, replyId) {
                     item.innerHTML = `
                         <div style="position:relative;">
                             <img src="${data.photo}" class="chat-list-ava">
-                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">1</div>
+                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
                         </div>
                         <div style="display:flex; flex-direction:column; overflow:hidden;">
                             <b style="color:white; font-size:15px;">${data.name}</b>
@@ -603,6 +610,7 @@ window.deleteReply = function(postId, commentId, replyId) {
         }
     });
 }
+                    
 
 
  function startChat(uid, name, photo) {
