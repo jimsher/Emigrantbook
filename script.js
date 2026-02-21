@@ -1247,6 +1247,13 @@ async function submitWallPost() {
 
 
 
+
+
+
+
+
+
+
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
@@ -1269,7 +1276,12 @@ function loadCommunityPosts() {
                         <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
                         <b style="color:white; font-size:14px;">${post.authorName}</b>
                     </div>
-                    ${post.authorId === myUid ? `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px; padding:5px;" onclick="window.deleteWallPost('${id}')"></i>` : ''}
+                    <div>
+                        ${post.authorId === myUid ? 
+                            `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px; padding:5px;" onclick="window.deleteWallPost('${id}')"></i>` : 
+                            `<i class="fas fa-flag" style="color:#666; cursor:pointer; font-size:13px; padding:5px;" onclick="window.reportPost('${id}', '${post.authorId}', '${(post.text || "ფოტო").replace(/'/g, "\\'")}')"></i>`
+                        }
+                    </div>
                 </div>
                 
                 ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB; line-height:1.4;">${post.text}</p>` : ''}
@@ -1297,8 +1309,7 @@ function loadCommunityPosts() {
     });
 }
 
-
-// კომენტარების წაშლის კონტროლი
+// კომენტარების წაშლის კონტროლი (შენი ორიგინალი)
 window.deleteComment = function(postId, commentId) {
     if (confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) {
         db.ref('comments/' + postId + '/' + commentId).remove()
@@ -1306,6 +1317,26 @@ window.deleteComment = function(postId, commentId) {
             .catch(err => alert("შეცდომა: " + err.message));
     }
 };
+
+// რეპორტის ფუნქცია (ახალი)
+window.reportPost = function(postId, authorId, content) {
+    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    if (confirm("ნამდვილად გსურთ ამ პოსტის დარეპორტება?")) {
+        db.ref('reports').push({
+            postId: postId,
+            authorId: authorId,
+            reporterId: auth.currentUser.uid,
+            reporterName: myName,
+            contentPreview: content.substring(0, 100),
+            timestamp: Date.now()
+        }).then(() => alert("მადლობა, რეპორტი გაიგზავნა."));
+    }
+};
+
+
+
+
+
 
 // ლაიქის ლოგიკა
 window.toggleWallLike = function(postId, ownerUid) {
