@@ -3,7 +3,8 @@ function openLeaderboard() {
     const listDiv = document.getElementById('leaderboardList');
     listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">იტვირთება რეიტინგი...</p>';
 
-    db.ref('users').once('value', snap => {
+    // .on('value') ნიშნავს, რომ ბაზაში ნებისმიერი ციფრის შეცვლაზე სია თავისით განახლდება
+    db.ref('users').on('value', snap => {
         listDiv.innerHTML = '';
         let players = [];
 
@@ -11,15 +12,14 @@ function openLeaderboard() {
             const v = child.val();
             let foundPhoto = "";
 
-            // 🔍 ავტომატური ძებნა: გადავუაროთ ყველა ველს და ვიპოვოთ სურათის ლინკი
+            // 🔍 ავტომატური ძებნა: ფოტოს პოვნა
             for (let key in v) {
                 if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
                     foundPhoto = v[key];
-                    break; // პირველივე სურათი რაც შეგვხვდება, ავიღოთ
+                    break;
                 }
             }
 
-            // თუ ვერაფერი ვიპოვეთ, გამოვიყენოთ დინამიური ავატარი
             if (!foundPhoto) {
                 foundPhoto = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name || 'U')}&background=d4af37&color=000&bold=true`;
             }
@@ -35,9 +35,10 @@ function openLeaderboard() {
             }
         });
 
-        // დალაგება
+        // დალაგება რეიტინგის მიხედვით
         players.sort((a, b) => b.balance - a.balance);
 
+        // ტოპ 10-ის გამოტანა
         players.slice(0, 10).forEach((p, index) => {
             const isTop = index < 3;
             const colors = ['#d4af37', '#c0c0c0', '#cd7f32'];
@@ -60,6 +61,7 @@ function openLeaderboard() {
         });
     });
 }
+        
 
 
 
