@@ -1,57 +1,50 @@
 function openPhotosSection() {
+    // 1. ყველაზე საიმედო გზა შენი კოდისთვის:
+    // ვიღებთ იმ UID-ს, რომელიც შენმა openProfile-მა უკვე დააფიქსირა
     let targetId = (typeof viewingUid !== 'undefined') ? viewingUid : null;
-    
+
+    const grid = document.getElementById('profGrid');
     const photoGrid = document.getElementById('userPhotosGrid');
-    const profGrid = document.getElementById('profGrid');
     const noMsg = document.getElementById('noPhotosMsg');
 
-    if(profGrid) profGrid.style.display = 'none';
-    if(photoGrid) {
-        photoGrid.innerHTML = '<div style="color:var(--gold); text-align:center; padding:20px; grid-column:1/4;">ვეძებ ყველა შესაძლო პოსტს...</div>';
+    // 2. ეგრევე ვმალავთ Reels-ის გრიდს და ვასუფთავებთ ფოტოებს
+    if (grid) grid.style.display = 'none';
+    if (photoGrid) {
+        photoGrid.innerHTML = ''; // ეს შლის ძველ (შენს) ფოტოებს!
         photoGrid.style.display = 'grid';
     }
 
-    // ვამოწმებთ 'community_posts'-ს
+    if (!targetId) {
+        console.error("UID ვერ მოიძებნა!");
+        return;
+    }
+
+    // 3. ვეძებთ ბაზაში - ვიყენებთ once('value')-ს, რომ ინდექსებმა არ გაჭედოს
     db.ref('community_posts').once('value', snap => {
-        photoGrid.innerHTML = '';
+        photoGrid.innerHTML = ''; // კიდევ ერთხელ ვასუფთავებთ
         let count = 0;
 
         snap.forEach(child => {
             const post = child.val();
-            // ვამოწმებთ ყველა ნაირ ID-ს: authorId, uid, userId
-            const postOwner = post.authorId || post.uid || post.userId;
-            const img = post.imageUrl || post.image;
-
-            if (postOwner === targetId && img) {
-                count++;
-                photoGrid.innerHTML += `
-                    <div style="aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222;">
-                        <img src="${img}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="previewImage('${img}')">
-                    </div>`;
+            // ვამოწმებთ, რომ პოსტი ეკუთვნოდეს იმას, ვის პროფილზეც ვართ
+            if (post.authorId === targetId) {
+                const imgUrl = post.imageUrl || post.image;
+                if (imgUrl) {
+                    count++;
+                    const imgDiv = document.createElement('div');
+                    imgDiv.style.cssText = "aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111; border:1px solid #222;";
+                    imgDiv.innerHTML = `<img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="previewImage('${imgUrl}')">`;
+                    photoGrid.appendChild(imgDiv);
+                }
             }
         });
 
-        // თუ აქ ვერ იპოვა, იქნებ უბრალოდ 'posts'-შია?
+        // 4. თუ ფოტოები საერთოდ არ არის
         if (count === 0) {
-            db.ref('posts').once('value', snap2 => {
-                snap2.forEach(c => {
-                    const p = c.val();
-                    const pOwner = p.authorId || p.uid || p.userId;
-                    const i = p.imageUrl || p.image;
-                    if (pOwner === targetId && i) {
-                        count++;
-                        photoGrid.innerHTML += `<div style="aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111;"><img src="${i}" style="width:100%; height:100%; object-fit:cover;" onclick="previewImage('${i}')"></div>`;
-                    }
-                });
-                
-                if (count === 0) {
-                    photoGrid.style.display = 'none';
-                    if(noMsg) noMsg.style.display = 'block';
-                } else {
-                    photoGrid.style.display = 'grid';
-                    if(noMsg) noMsg.style.display = 'none';
-                }
-            });
+            if (noMsg) noMsg.style.display = 'block';
+            if (photoGrid) photoGrid.style.display = 'none';
+        } else {
+            if (noMsg) noMsg.style.display = 'none';
         }
     });
 }
