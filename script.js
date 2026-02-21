@@ -417,70 +417,90 @@ auth.onAuthStateChanged(user => {
 
 
 
-function openComments(postId) {
- activePostId = postId;
- activeReplyTo = null;
- document.getElementById('commentsUI').style.display = 'flex';
- loadComments(postId);
- }
- function loadComments(postId) {
- const list = document.getElementById('commList');
- db.ref(`comments/${postId}`).on('value', snap => {
- list.innerHTML = "";
- const data = snap.val();
- if(!data) return;
- Object.entries(data).forEach(([id, comm]) => {
- const isLiked = comm.likes && comm.likes[auth.currentUser.uid];
- let html = `
- <div class="comment-item">
- <div class="comment-top">
- <img src="${comm.authorPhoto}" class="comm-ava">
- <div class="comm-body">
- <div class="comm-name">${comm.authorName}</div>
- <div class="comm-text">${comm.text}</div>
- <div class="comm-actions">
- <span class="comm-like-btn ${isLiked ? 'liked' : ''}" onclick="likeComment('${id}')">
- <i class="fas fa-heart"></i> ${comm.likes ? Object.keys(comm.likes).length : 0}
- </span>
- <span onclick="prepareReply('${id}', '${comm.authorName}')" style="cursor:pointer;">Reply/პასუხი</span>
- </div>
- </div>
- </div>
- <div id="replies-${id}" class="reply-list"></div>
- </div>`;
- list.innerHTML += html;
- if(comm.replies) {
- const rList = document.getElementById(`replies-${id}`);
- Object.values(comm.replies).forEach(r => {
- rList.innerHTML += `
- <div style="display:flex; gap:10px; margin-bottom:10px;">
- <img src="${r.authorPhoto}" style="width:28px; height:28px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
- <div>
- <div style="font-size:11px; color:var(--gold); font-weight:900;">${r.authorName}</div>
- <div style="font-size:13px; color:white;">${r.text}</div>
- </div>
- </div>`;
- });
- }
- });
- });
- }
 
+function openComments(postId, postOwnerId) {
+    activePostId = postId;
+    // ვინახავთ პოსტის პატრონის ID-ს გლობალურად
+    window.currentPostOwnerId = postOwnerId;
+    activeReplyTo = null;
+    document.getElementById('commentsUI').style.display = 'flex';
+    loadComments(postId);
+}
 
-// მთავარი კომენტარის წაშლა
+function loadComments(postId) {
+    const list = document.getElementById('commList');
+    const myUid = auth.currentUser.uid;
+    const postOwnerId = window.currentPostOwnerId; // ვიღებთ შენახულ ID-ს
+
+    db.ref(`comments/${postId}`).on('value', snap => {
+        list.innerHTML = "";
+        const data = snap.val();
+        if (!data) return;
+
+        Object.entries(data).forEach(([id, comm]) => {
+            const isLiked = comm.likes && comm.likes[myUid];
+            
+            // ლოგიკა: გამოჩნდეს ნაგვის ურნა, თუ ჩემი კომენტარია ან ჩემს პოსტზეა
+            const canDeleteComm = (myUid === comm.authorId) || (myUid === postOwnerId);
+
+            let html = `
+            <div class="comment-item">
+                <div class="comment-top">
+                    <img src="${comm.authorPhoto}" class="comm-ava">
+                    <div class="comm-body">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <div class="comm-name">${comm.authorName}</div>
+                            ${canDeleteComm ? `<i class="fas fa-trash-alt" style="color:#555; cursor:pointer; font-size:11px; padding:5px;" onclick="window.deleteComment('${postId}', '${id}')"></i>` : ''}
+                        </div>
+                        <div class="comm-text">${comm.text}</div>
+                        <div class="comm-actions">
+                            <span class="comm-like-btn ${isLiked ? 'liked' : ''}" onclick="likeComment('${id}')">
+                                <i class="fas fa-heart"></i> ${comm.likes ? Object.keys(comm.likes).length : 0}
+                            </span>
+                            <span onclick="prepareReply('${id}', '${comm.authorName}')" style="cursor:pointer;">Reply/პასუხი</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="replies-${id}" class="reply-list"></div>
+            </div>`;
+            
+            list.innerHTML += html;
+
+            if(comm.replies) {
+                const rList = document.getElementById(`replies-${id}`);
+                Object.entries(comm.replies).forEach(([rId, r]) => {
+                    // პასუხის წაშლის უფლება
+                    const canDeleteReply = (myUid === r.authorId) || (myUid === postOwnerId);
+
+                    rList.innerHTML += `
+                    <div style="display:flex; gap:10px; margin-bottom:10px; justify-content:space-between; align-items:flex-start;">
+                        <div style="display:flex; gap:10px;">
+                            <img src="${r.authorPhoto}" style="width:28px; height:28px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
+                            <div>
+                                <div style="font-size:11px; color:var(--gold); font-weight:900;">${r.authorName}</div>
+                                <div style="font-size:13px; color:white;">${r.text}</div>
+                            </div>
+                        </div>
+                        ${canDeleteReply ? `<i class="fas fa-trash-alt" style="color:#444; cursor:pointer; font-size:10px;" onclick="window.deleteReply('${postId}', '${id}', '${rId}')"></i>` : ''}
+                    </div>`;
+                });
+            }
+        });
+    });
+}
+
+// წაშლის რეალური ფუნქციები
 window.deleteComment = function(postId, commentId) {
-    if (confirm("წავშალოთ კომენტარი?")) {
+    if (confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) {
         db.ref(`comments/${postId}/${commentId}`).remove();
     }
 };
 
-// პასუხის (Reply) წაშლა
 window.deleteReply = function(postId, commentId, replyId) {
-    if (confirm("წავშალოთ პასუხი?")) {
+    if (confirm("ნამდვილად გსურთ პასუხის წაშლა?")) {
         db.ref(`comments/${postId}/${commentId}/replies/${replyId}`).remove();
     }
 };
-
 
 
 
