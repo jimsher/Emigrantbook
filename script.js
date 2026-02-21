@@ -1547,3 +1547,44 @@ function minimizeVideoCall() {
 
 
 
+
+// ქვედა ნევბარის ჩატის ლოგოზე წითელი ნიშანის გამოსაჩენი ლოგიკა
+function startGlobalUnreadCounter() {
+    const myUid = auth.currentUser.uid;
+    const chatBadge = document.getElementById('chatCountBadge'); // ეს ID უნდა ქონდეს შენს წითელ ნიშანს
+
+    // ვუსმენთ ყველა ჩატს, სადაც მე ვმონაწილეობ
+    db.ref('messages').on('value', snap => {
+        let totalUnread = 0;
+        const allChats = snap.val();
+        if (!allChats) return;
+
+        // გადავუყვებით ყველა ჩატს
+        Object.keys(allChats).forEach(chatId => {
+            if (chatId.includes(myUid)) {
+                // ვნახულობთ ამ კონკრეტულ ჩატში ბოლო ნახვის დროს
+                db.ref(`users/${myUid}/last_read/${chatId}`).once('value', readSnap => {
+                    const lastRead = readSnap.val() || 0;
+                    
+                    // ვიღებთ ამ ჩატის ბოლო მესიჯს
+                    const msgs = Object.values(allChats[chatId]);
+                    const lastMsg = msgs[msgs.length - 1];
+
+                    if (lastMsg.senderId !== myUid && lastMsg.ts > lastRead) {
+                        totalUnread++;
+                    }
+
+                    // თუ არის წაუკითხავები, ავანთოთ ნიშანი ქვევით ნავბარში
+                    if (chatBadge) {
+                        if (totalUnread > 0) {
+                            chatBadge.innerText = totalUnread;
+                            chatBadge.style.display = 'flex';
+                        } else {
+                            chatBadge.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+    });
+}
