@@ -545,9 +545,9 @@ window.deleteReply = function(postId, commentId, replyId) {
 
  function openMessenger() {
     stopMainFeedVideos();
-    const messengerUI = document.getElementById('messengerUI');
-    messengerUI.style.display = 'flex';
-    messengerUI.style.background = '#000'; // ფონი შავი
+    const ui = document.getElementById('messengerUI');
+    ui.style.display = 'flex';
+    ui.style.backgroundColor = '#000'; // მთლიანი ფონი შავი
 
     const list = document.getElementById('chatList');
     list.innerHTML = "";
@@ -557,15 +557,12 @@ window.deleteReply = function(postId, commentId, replyId) {
         const followers = snap.val();
         if(followers) {
             Object.entries(followers).forEach(([uid, data]) => {
-                // ვიყენებთ შენს ორიგინალ სტრუქტურას, რომ კლიკმა იმუშაოს
-                const item = document.createElement('div');
-                item.className = 'chat-list-item';
-                item.onclick = () => startChat(uid, data.name, data.photo);
-                item.innerHTML = `
+                // ვიყენებთ ზუსტად შენს სტრუქტურას, ოღონდ ვამატებთ "border:none"
+                list.innerHTML += `
+                <div class="chat-list-item" onclick="startChat('${uid}', '${data.name}', '${data.photo}')" style="border:none !important; background:#000 !important; margin:0; padding:10px 15px;">
                     <img src="${data.photo}" class="chat-list-ava">
-                    <b>${data.name}</b>
-                `;
-                list.appendChild(item);
+                    <b style="color:white;">${data.name}</b>
+                </div>`;
             });
         } else { 
             list.innerHTML = "<p style='padding:20px; color:gray;'>No contacts</p>"; 
