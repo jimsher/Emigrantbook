@@ -1,9 +1,9 @@
-function openLeaderboard() {
+ function openLeaderboard() {
     document.getElementById('leaderboardUI').style.display = 'flex';
     const listDiv = document.getElementById('leaderboardList');
     listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">იტვირთება რეიტინგი...</p>';
 
-    // .on('value') ნიშნავს, რომ ბაზაში ნებისმიერი ციფრის შეცვლაზე სია თავისით განახლდება
+    // შევცვალე .once -> .on-ით, რომ რეალურ დროში განახლდეს
     db.ref('users').on('value', snap => {
         listDiv.innerHTML = '';
         let players = [];
@@ -12,7 +12,7 @@ function openLeaderboard() {
             const v = child.val();
             let foundPhoto = "";
 
-            // 🔍 ავტომატური ძებნა: ფოტოს პოვნა
+            // 🔍 ავტომატური ძებნა
             for (let key in v) {
                 if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
                     foundPhoto = v[key];
@@ -35,7 +35,7 @@ function openLeaderboard() {
             }
         });
 
-        // დალაგება რეიტინგის მიხედვით
+        // დალაგება
         players.sort((a, b) => b.balance - a.balance);
 
         // ტოპ 10-ის გამოტანა
