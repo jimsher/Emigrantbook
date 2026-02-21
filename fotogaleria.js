@@ -1,28 +1,23 @@
 function openPhotosSection() {
-    // 1. ვპოულობთ ID-ს URL-იდან (ყველაზე საიმედო გზაა)
-    const urlParams = new URLSearchParams(window.location.search);
-    let targetId = urlParams.get('uid');
-
-    // 2. თუ URL-ში არაა, მაშინ გლობალური ცვლადიდან
-    if (!targetId) {
-        targetId = typeof viewingUid !== 'undefined' ? viewingUid : auth.currentUser.uid;
-    }
+    // 1. ვადგენთ ვის პროფილზე ვართ რეალურად
+    // თუ viewingUid არსებობს და ის შენი ID-სგან განსხვავებულია, ვიყენებთ მას
+    let targetId = (typeof viewingUid !== 'undefined' && viewingUid) ? viewingUid : auth.currentUser.uid;
 
     const grid = document.getElementById('profGrid');
     const photoGrid = document.getElementById('userPhotosGrid');
     const noMsg = document.getElementById('noPhotosMsg');
     
-    // ვიზუალური გადართვა
+    // 2. ვიზუალური გადართვა
     if(grid) grid.style.display = 'none';
     if(photoGrid) {
         photoGrid.style.display = 'grid';
-        photoGrid.innerHTML = ''; 
+        photoGrid.innerHTML = ''; // ვასუფთავებთ წინა იუზერის ნარჩენებს
     }
 
-    // ძებნა ბაზაში
+    // 3. ძებნა ბაზაში - მკაცრად targetId-ით
     db.ref('community_posts').orderByChild('authorId').equalTo(targetId).once('value', snap => {
-        let count = 0;
         photoGrid.innerHTML = '';
+        let count = 0;
 
         snap.forEach(child => {
             const post = child.val();
@@ -36,10 +31,21 @@ function openPhotosSection() {
             }
         });
 
+        // თუ პირველში ვერ იპოვა, ვნახოთ "posts" ტოტში
         if (count === 0) {
-            noMsg.style.display = 'block';
+            db.ref('posts').orderByChild('authorId').equalTo(targetId).once('value', snap2 => {
+                snap2.forEach(c => {
+                    const p = c.val();
+                    const img = p.imageUrl || p.image;
+                    if (img) {
+                        count++;
+                        photoGrid.innerHTML += `<div style="aspect-ratio:1/1; overflow:hidden; border-radius:8px; background:#111;"><img src="${img}" style="width:100%; height:100%; object-fit:cover;" onclick="previewImage('${img}')"></div>`;
+                    }
+                });
+                if (count === 0 && noMsg) noMsg.style.display = 'block';
+            });
         } else {
-            noMsg.style.display = 'none';
+            if (noMsg) noMsg.style.display = 'none';
         }
     });
 }
