@@ -1239,7 +1239,7 @@ function loadCommunityPosts() {
 
 
 // ლაიქის ლოგიკა
-window.toggleWallLike = function(postId) {
+window.toggleWallLike = function(postId, ownerUid) {
     if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     const myUid = auth.currentUser.uid;
     const likeRef = db.ref('community_posts/' + postId + '/likes/' + myUid);
@@ -1248,7 +1248,18 @@ window.toggleWallLike = function(postId) {
         if (snap.exists()) {
             likeRef.remove();
         } else {
-            likeRef.set(true);
+            likeRef.set(true).then(() => {
+                // ნოტიფიკაციის გაგზავნა (მხოლოდ თუ სხვის პოსტს აგულებ)
+                if (ownerUid && ownerUid !== myUid) {
+                    db.ref('notifications/' + ownerUid).push({
+                        text: myName + "-მა თქვენი პოსტი დააგულა ❤️",
+                        fromPhoto: myPhoto || '', // შენი ფოტო
+                        fromUid: myUid,
+                        timestamp: Date.now(),
+                        type: 'like'
+                    });
+                }
+            });
         }
     }).catch(err => console.error("Like Error:", err));
 };
