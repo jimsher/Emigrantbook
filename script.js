@@ -543,28 +543,58 @@ window.deleteReply = function(postId, commentId, replyId) {
  }
 
 function openMessenger() {
- stopMainFeedVideos();
- document.getElementById('messengerUI').style.display = 'flex';
- // ვამატებთ შავ ფონს მთავარ კონტეინერს
- document.getElementById('messengerUI').style.backgroundColor = '#000';
- 
- const list = document.getElementById('chatList');
- list.innerHTML = "";
- db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
- list.innerHTML = "";
- const followers = snap.val();
- if(followers) {
- Object.entries(followers).forEach(([uid, data]) => {
- // აქ მხოლოდ border:none და background:#000 დავამატე, სხვა არაფერი
- list.innerHTML += `
- <div class="chat-list-item" onclick="startChat('${uid}', '${data.name}', '${data.photo}')" style="border:none; background:#000;">
- <img src="${data.photo}" class="chat-list-ava">
- <b>${data.name}</b>
- </div>`;
- });
- } else { list.innerHTML = "<p style='padding:20px; color:gray;'>No contacts</p>"; }
- });
- }
+    stopMainFeedVideos();
+    const ui = document.getElementById('messengerUI');
+    ui.style.display = 'flex';
+    ui.style.backgroundColor = '#000';
+
+    const list = document.getElementById('chatList');
+    list.innerHTML = "";
+    
+    db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
+        list.innerHTML = "";
+        const followers = snap.val();
+        if(followers) {
+            Object.entries(followers).forEach(([uid, data]) => {
+                const chatId = getChatId(auth.currentUser.uid, uid);
+                
+                // ვქმნით ელემენტს წინასწარ, რომ მერე შიგთავსი განვაახლოთ
+                const item = document.createElement('div');
+                item.className = 'chat-list-item';
+                item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
+                item.onclick = () => startChat(uid, data.name, data.photo);
+                
+                // ბოლო მესიჯის და წაუკითხავების მოსმენა
+                db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
+                    let lastMsg = "No messages yet";
+                    let unreadCount = 0;
+                    
+                    if(mSnap.exists()) {
+                        const msgs = mSnap.val();
+                        const msgData = Object.values(msgs)[0];
+                        lastMsg = msgData.text || "📷 Voice/Media";
+                        // აქ შეგიძლია დაამატო წაუკითხავების ლოგიკა, თუ ბაზაში status: 'unread' გექნება
+                    }
+
+                    item.innerHTML = `
+                        <div style="position:relative;">
+                            <img src="${data.photo}" class="chat-list-ava">
+                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:none; align-items:center; justify-content:center; border:2px solid black;">0</div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; overflow:hidden;">
+                            <b style="color:white; font-size:15px;">${data.name}</b>
+                            <span style="color:#888; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">${lastMsg}</span>
+                        </div>
+                    `;
+                });
+
+                list.appendChild(item);
+            });
+        } else { 
+            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No contacts</p>"; 
+        }
+    });
+}
  
 
  function startChat(uid, name, photo) {
