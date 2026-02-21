@@ -1,3 +1,4 @@
+let targetId = viewingUid;
 function openPhotosSection() {
     // 1. ვიღებთ იმ იუზერის ID-ს, ვის პროფილსაც ახლა უყურებ
     // შენს კოდში ეს არის viewingUid
