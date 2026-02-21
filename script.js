@@ -411,6 +411,12 @@ auth.onAuthStateChanged(user => {
  }
 
 
+
+
+
+
+
+
 function openComments(postId) {
  activePostId = postId;
  activeReplyTo = null;
@@ -459,6 +465,25 @@ function openComments(postId) {
  });
  });
  }
+
+
+// მთავარი კომენტარის წაშლა
+window.deleteComment = function(postId, commentId) {
+    if (confirm("წავშალოთ კომენტარი?")) {
+        db.ref(`comments/${postId}/${commentId}`).remove();
+    }
+};
+
+// პასუხის (Reply) წაშლა
+window.deleteReply = function(postId, commentId, replyId) {
+    if (confirm("წავშალოთ პასუხი?")) {
+        db.ref(`comments/${postId}/${commentId}/replies/${replyId}`).remove();
+    }
+};
+
+
+
+
 
 
 
