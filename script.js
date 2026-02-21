@@ -1196,6 +1196,7 @@ async function submitWallPost() {
 
 
 
+
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
@@ -1230,14 +1231,13 @@ function loadCommunityPosts() {
                         <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
                     </div>
 
-                    <div onclick="openComments('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <div onclick="openComments('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                         <i class="far fa-comment"></i>
                         <span id="comm-count-${id}" style="font-size:14px; font-weight:bold;">0</span>
                     </div>
                 </div>`;
             box.appendChild(card);
 
-            // კომენტარების მთვლელის ლოგიკა - უყურებს ბაზას და წამიერად წერს ციფრს
             db.ref('comments/' + id).on('value', cSnap => {
                 const count = cSnap.numChildren();
                 const cElem = document.getElementById('comm-count-' + id);
@@ -1246,6 +1246,16 @@ function loadCommunityPosts() {
         });
     });
 }
+
+
+// კომენტარების წაშლის კონტროლი
+window.deleteComment = function(postId, commentId) {
+    if (confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) {
+        db.ref('comments/' + postId + '/' + commentId).remove()
+            .then(() => console.log("Comment deleted"))
+            .catch(err => alert("შეცდომა: " + err.message));
+    }
+};
 
 // ლაიქის ლოგიკა
 window.toggleWallLike = function(postId, ownerUid) {
