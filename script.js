@@ -542,7 +542,8 @@ window.deleteReply = function(postId, commentId, replyId) {
  });
  }
 
-function openMessenger() {
+
+ function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     ui.style.display = 'flex';
@@ -558,32 +559,39 @@ function openMessenger() {
             Object.entries(followers).forEach(([uid, data]) => {
                 const chatId = getChatId(auth.currentUser.uid, uid);
                 
-                // ვქმნით ელემენტს წინასწარ, რომ მერე შიგთავსი განვაახლოთ
                 const item = document.createElement('div');
                 item.className = 'chat-list-item';
                 item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
                 item.onclick = () => startChat(uid, data.name, data.photo);
                 
-                // ბოლო მესიჯის და წაუკითხავების მოსმენა
+                // ბოლო მესიჯის მოსმენა
                 db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
                     let lastMsg = "No messages yet";
-                    let unreadCount = 0;
+                    let showBadge = false;
                     
                     if(mSnap.exists()) {
                         const msgs = mSnap.val();
-                        const msgData = Object.values(msgs)[0];
+                        const msgKey = Object.keys(msgs)[0];
+                        const msgData = msgs[msgKey];
+                        
                         lastMsg = msgData.text || "📷 Voice/Media";
-                        // აქ შეგიძლია დაამატო წაუკითხავების ლოგიკა, თუ ბაზაში status: 'unread' გექნება
+                        
+                        // ლოგიკა: თუ ბოლო მესიჯი ჩემი არ არის (სხვისია), ავანთოთ წითელი წრე
+                        if (msgData.senderId !== auth.currentUser.uid) {
+                            showBadge = true;
+                        }
                     }
 
                     item.innerHTML = `
                         <div style="position:relative;">
                             <img src="${data.photo}" class="chat-list-ava">
-                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:none; align-items:center; justify-content:center; border:2px solid black;">0</div>
+                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
                         </div>
                         <div style="display:flex; flex-direction:column; overflow:hidden;">
                             <b style="color:white; font-size:15px;">${data.name}</b>
-                            <span style="color:#888; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">${lastMsg}</span>
+                            <span style="color:${showBadge ? 'white' : '#888'}; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; ${showBadge ? 'font-weight:bold;' : ''}">
+                                ${lastMsg}
+                            </span>
                         </div>
                     `;
                 });
@@ -595,7 +603,6 @@ function openMessenger() {
         }
     });
 }
- 
 
  function startChat(uid, name, photo) {
  currentChatId = uid;
