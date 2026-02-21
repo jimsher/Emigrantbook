@@ -410,7 +410,8 @@ auth.onAuthStateChanged(user => {
  });
  }
 
- function openComments(postId) {
+
+function openComments(postId) {
  activePostId = postId;
  activeReplyTo = null;
  document.getElementById('commentsUI').style.display = 'flex';
@@ -458,6 +459,10 @@ auth.onAuthStateChanged(user => {
  });
  });
  }
+
+
+
+
  function prepareReply(commId, name) {
  activeReplyTo = commId;
  document.getElementById('commInp').focus();
