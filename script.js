@@ -1190,27 +1190,42 @@ async function submitWallPost() {
  btn.disabled = false; btn.innerText = "გამოქვეყნება";
 }
 function loadCommunityPosts() {
- const box = document.getElementById('communityPostsList');
- db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
- box.innerHTML = "";
- const data = snap.val(); if(!data) return;
- Object.entries(data).reverse().forEach(([id, post]) => {
- const card = document.createElement('div');
- card.style = "background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px;";
- card.innerHTML = `
- <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
- <img src="${post.authorPhoto}" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--gold);">
- <b style="color: white; font-size: 14px;">${post.authorName}</b>
- </div>
- ${post.text ? `<p style="font-size: 15px; margin-bottom: 10px; color: #E4E6EB;">${post.text}</p>` : ''}
- ${post.image ? `<img src="${post.image}" style="width: 100%; border-radius: 10px; margin-bottom: 10px;">` : ''}
- <div style="display: flex; gap: 20px; color: var(--gold); border-top: 1px solid #333; padding-top: 10px;">
- <i class="far fa-heart" style="cursor:pointer;"></i>
- <i class="far fa-comment" style="cursor:pointer;" onclick="openComments('${id}')"></i>
- </div>`;
- box.appendChild(card);
- });
- });
+    const box = document.getElementById('communityPostsList');
+    const myUid = auth.currentUser.uid;
+
+    db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
+        box.innerHTML = "";
+        const data = snap.val();
+        if (!data) return;
+
+        Object.entries(data).reverse().forEach(([id, post]) => {
+            const isLiked = post.likes && post.likes[myUid];
+            const likeCount = post.likes ? Object.keys(post.likes).length : 0;
+
+            const card = document.createElement('div');
+            card.className = "post-card";
+            card.innerHTML = `
+                <div class="post-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:10px;" onclick="openProfile('${post.authorId}')">
+                        <img src="${post.authorPhoto}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+                        <b style="color:white; font-size:14px;">${post.authorName}</b>
+                    </div>
+                    ${post.authorId === myUid ? `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px;" onclick="deleteWallPost('${id}')"></i>` : ''}
+                </div>
+                
+                ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB;">${post.text}</p>` : ''}
+                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px;" onclick="previewImage('${post.image}')">` : ''}
+                
+                <div style="display:flex; gap:20px; color:var(--gold); border-top:1px solid #333; padding-top:10px;">
+                    <div onclick="toggleWallLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
+                        <span style="font-size:13px;">${likeCount}</span>
+                    </div>
+                    <i class="far fa-comment" style="cursor:pointer;" onclick="openComments('${id}')"></i>
+                </div>`;
+            box.appendChild(card);
+        });
+    });
 }
 
 let mediaRecorder;
