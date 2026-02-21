@@ -544,7 +544,7 @@ window.deleteReply = function(postId, commentId, replyId) {
 
 
  
-function openMessenger() {
+ function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     ui.style.display = 'flex';
@@ -564,43 +564,46 @@ function openMessenger() {
                 item.className = 'chat-list-item';
                 item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
                 
-                // როცა აჭერ, ვიმახსოვრებთ რომ ეს ჩატი "ნახულია"
+                // რეალურ დროში განახლებისთვის: როცა აჭერ, ბაზაში ვწერთ ბოლო ნახვის დროს
                 item.onclick = () => {
-                    localStorage.setItem('lastRead_' + chatId, Date.now());
+                    db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
                     startChat(uid, data.name, data.photo);
                 };
                 
-                db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
-                    let lastMsg = "No messages yet";
-                    let showBadge = false;
-                    
-                    if(mSnap.exists()) {
-                        const msgs = mSnap.val();
-                        const msgKey = Object.keys(msgs)[0];
-                        const msgData = msgs[msgKey];
-                        lastMsg = msgData.text || "📷 Voice/Media";
+                // ვუსმენთ მომხმარებლის "ბოლო ნახვის" დროს ამ კონკრეტულ ჩატში
+                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
+                    const lastRead = readSnap.val() || 0;
+
+                    // ბოლო მესიჯის მოსმენა
+                    db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
+                        let lastMsg = "No messages yet";
+                        let showBadge = false;
                         
-                        // ბოლო ნახვის დრო localStorage-დან
-                        const lastRead = localStorage.getItem('lastRead_' + chatId) || 0;
-
-                        // წითელი აინთება თუ: ბოლო მესიჯი სხვისია და მისი დრო მეტია ჩვენს ბოლო ნახვაზე
-                        if (msgData.senderId !== auth.currentUser.uid && msgData.ts > lastRead) {
-                            showBadge = true;
+                        if(mSnap.exists()) {
+                            const msgs = mSnap.val();
+                            const msgKey = Object.keys(msgs)[0];
+                            const msgData = msgs[msgKey];
+                            lastMsg = msgData.text || "📷 Voice/Media";
+                            
+                            // წითელი აინთება თუ: ბოლო მესიჯი სხვისია და მისი დრო მეტია ჩვენს ბოლო ნახვაზე
+                            if (msgData.senderId !== auth.currentUser.uid && msgData.ts > lastRead) {
+                                showBadge = true;
+                            }
                         }
-                    }
 
-                    item.innerHTML = `
-                        <div style="position:relative;">
-                            <img src="${data.photo}" class="chat-list-ava">
-                            <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
-                        </div>
-                        <div style="display:flex; flex-direction:column; overflow:hidden;">
-                            <b style="color:white; font-size:15px;">${data.name}</b>
-                            <span style="color:${showBadge ? 'white' : '#888'}; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; ${showBadge ? 'font-weight:bold;' : ''}">
-                                ${lastMsg}
-                            </span>
-                        </div>
-                    `;
+                        item.innerHTML = `
+                            <div style="position:relative;">
+                                <img src="${data.photo}" class="chat-list-ava">
+                                <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; overflow:hidden;">
+                                <b style="color:white; font-size:15px;">${data.name}</b>
+                                <span style="color:${showBadge ? 'white' : '#888'}; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; ${showBadge ? 'font-weight:bold;' : ''}">
+                                    ${lastMsg}
+                                </span>
+                            </div>
+                        `;
+                    });
                 });
 
                 list.appendChild(item);
