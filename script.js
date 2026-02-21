@@ -543,26 +543,28 @@ window.deleteReply = function(postId, commentId, replyId) {
  }
 
 function openMessenger() {
-    stopMainFeedVideos();
-    document.getElementById('messengerUI').style.display = 'flex';
-    const list = document.getElementById('chatList');
-    list.innerHTML = "";
-    db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
-        list.innerHTML = "";
-        const followers = snap.val();
-        if(followers) {
-            Object.entries(followers).forEach(([uid, data]) => {
-                list.innerHTML += `
-                <div class="chat-list-item" onclick="startChat('${uid}', '${data.name}', '${data.photo}')">
-                    <img src="${data.photo}" class="chat-list-ava">
-                    <b>${data.name}</b>
-                </div>`;
-            });
-        } else { 
-            list.innerHTML = "<p style='padding:20px; color:gray;'>No contacts</p>"; 
-        }
-    });
-}
+ stopMainFeedVideos();
+ document.getElementById('messengerUI').style.display = 'flex';
+ // ვამატებთ შავ ფონს მთავარ კონტეინერს
+ document.getElementById('messengerUI').style.backgroundColor = '#000';
+ 
+ const list = document.getElementById('chatList');
+ list.innerHTML = "";
+ db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
+ list.innerHTML = "";
+ const followers = snap.val();
+ if(followers) {
+ Object.entries(followers).forEach(([uid, data]) => {
+ // აქ მხოლოდ border:none და background:#000 დავამატე, სხვა არაფერი
+ list.innerHTML += `
+ <div class="chat-list-item" onclick="startChat('${uid}', '${data.name}', '${data.photo}')" style="border:none; background:#000;">
+ <img src="${data.photo}" class="chat-list-ava">
+ <b>${data.name}</b>
+ </div>`;
+ });
+ } else { list.innerHTML = "<p style='padding:20px; color:gray;'>No contacts</p>"; }
+ });
+ }
  
 
  function startChat(uid, name, photo) {
