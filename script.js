@@ -542,26 +542,20 @@ window.deleteReply = function(postId, commentId, replyId) {
  });
  }
 
-
- function openMessenger() {
+function openMessenger() {
     stopMainFeedVideos();
-    const ui = document.getElementById('messengerUI');
-    ui.style.display = 'flex';
-    ui.style.backgroundColor = '#000'; // მთლიანი ფონი შავი
-
+    document.getElementById('messengerUI').style.display = 'flex';
     const list = document.getElementById('chatList');
     list.innerHTML = "";
-    
     db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
         list.innerHTML = "";
         const followers = snap.val();
         if(followers) {
             Object.entries(followers).forEach(([uid, data]) => {
-                // ვიყენებთ ზუსტად შენს სტრუქტურას, ოღონდ ვამატებთ "border:none"
                 list.innerHTML += `
-                <div class="chat-list-item" onclick="startChat('${uid}', '${data.name}', '${data.photo}')" style="border:none !important; background:#000 !important; margin:0; padding:10px 15px;">
+                <div class="chat-list-item" onclick="startChat('${uid}', '${data.name}', '${data.photo}')">
                     <img src="${data.photo}" class="chat-list-ava">
-                    <b style="color:white;">${data.name}</b>
+                    <b>${data.name}</b>
                 </div>`;
             });
         } else { 
@@ -569,6 +563,7 @@ window.deleteReply = function(postId, commentId, replyId) {
         }
     });
 }
+ 
 
  function startChat(uid, name, photo) {
  currentChatId = uid;
