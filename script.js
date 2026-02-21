@@ -1189,9 +1189,16 @@ async function submitWallPost() {
  cancelWallImg();
  btn.disabled = false; btn.innerText = "გამოქვეყნება";
 }
+
+
+
+
+
+
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
-    const myUid = auth.currentUser.uid;
+    if (!box) return;
+    const myUid = auth.currentUser ? auth.currentUser.uid : null;
 
     db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
         box.innerHTML = "";
@@ -1199,34 +1206,68 @@ function loadCommunityPosts() {
         if (!data) return;
 
         Object.entries(data).reverse().forEach(([id, post]) => {
-            const isLiked = post.likes && post.likes[myUid];
+            const isLiked = (myUid && post.likes && post.likes[myUid]);
             const likeCount = post.likes ? Object.keys(post.likes).length : 0;
 
             const card = document.createElement('div');
             card.className = "post-card";
             card.innerHTML = `
-                <div class="post-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:10px;" onclick="openProfile('${post.authorId}')">
-                        <img src="${post.authorPhoto}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold);">
+                <div class="post-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
+                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
                         <b style="color:white; font-size:14px;">${post.authorName}</b>
                     </div>
-                    ${post.authorId === myUid ? `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px;" onclick="deleteWallPost('${id}')"></i>` : ''}
+                    ${post.authorId === myUid ? `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px; padding:5px;" onclick="window.deleteWallPost('${id}')"></i>` : ''}
                 </div>
                 
-                ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB;">${post.text}</p>` : ''}
-                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px;" onclick="previewImage('${post.image}')">` : ''}
+                ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB; line-height:1.4;">${post.text}</p>` : ''}
+                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px; cursor:pointer;" onclick="previewImage('${post.image}')">` : ''}
                 
-                <div style="display:flex; gap:20px; color:var(--gold); border-top:1px solid #333; padding-top:10px;">
-                    <div onclick="toggleWallLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
+                    <div onclick="window.toggleWallLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
-                        <span style="font-size:13px;">${likeCount}</span>
+                        <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
                     </div>
-                    <i class="far fa-comment" style="cursor:pointer;" onclick="openComments('${id}')"></i>
+                    <div onclick="openComments('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <i class="far fa-comment"></i>
+                    </div>
                 </div>`;
             box.appendChild(card);
         });
     });
 }
+
+
+// ლაიქის ლოგიკა
+window.toggleWallLike = function(postId) {
+    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    const myUid = auth.currentUser.uid;
+    const likeRef = db.ref('community_posts/' + postId + '/likes/' + myUid);
+
+    likeRef.once('value').then(snap => {
+        if (snap.exists()) {
+            likeRef.remove();
+        } else {
+            likeRef.set(true);
+        }
+    }).catch(err => console.error("Like Error:", err));
+};
+
+// წაშლის ლოგიკა
+window.deleteWallPost = function(postId) {
+    if (confirm("ნამდვილად გსურთ პოსტის წაშლა?")) {
+        db.ref('community_posts/' + postId).remove()
+            .then(() => console.log("Post deleted"))
+            .catch(err => alert("შეცდომა წაშლისას: " + err.message));
+    }
+};
+
+
+
+
+
+
+
 
 let mediaRecorder;
 let audioChunks = [];
