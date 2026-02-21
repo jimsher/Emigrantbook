@@ -1159,37 +1159,53 @@ function renderTokenFeed() {
  }
 
  function react(postId, ownerUid) {
- if (!canAfford(0.1)) return;
- const user = auth.currentUser;
- if (!user) return;
- const likeRef = db.ref(`posts/${postId}/likedBy/${user.uid}`);
- likeRef.once('value', snap => {
- if (snap.exists()) {
- likeRef.remove();
- } else {
- likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
- spendAkho(0.1, 'Like'); 
- if (ownerUid !== user.uid) {
- earnAkho(ownerUid, 2.00, 'Impact (Like)'); 
- }
- }
- });
+    if (!canAfford(0.1)) return;
+    const user = auth.currentUser;
+    if (!user) return;
+    const likeRef = db.ref(`posts/${postId}/likedBy/${user.uid}`);
+    const likeBtn = document.getElementById(`like-btn-${postId}`);
+    const likeSpan = document.getElementById(`like-count-${postId}`);
+
+    likeRef.once('value').then(snap => {
+        let currentLikes = parseInt(likeSpan.innerText);
+        if (snap.exists()) {
+            likeRef.remove();
+            if(likeBtn) likeBtn.classList.remove('liked');
+            likeSpan.innerText = currentLikes - 1;
+        } else {
+            likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
+            if(likeBtn) likeBtn.classList.add('liked');
+            likeSpan.innerText = currentLikes + 1;
+            spendAkho(0.1, 'Like'); 
+            if (ownerUid !== user.uid) {
+                earnAkho(ownerUid, 2.00, 'Impact (Like)'); 
+            }
+        }
+    });
 }
 
- function toggleSavePost(postId) {
- const user = auth.currentUser;
- if(!user) return;
- const saveRef = db.ref(`posts/${postId}/savedBy/${user.uid}`);
- saveRef.once('value', snap => {
- if(snap.exists()) {
- saveRef.remove();
- db.ref(`posts/${postId}/saves`).transaction(c => (c || 1) - 1);
- } else {
- saveRef.set(true);
- db.ref(`posts/${postId}/saves`).transaction(c => (c || 0) + 1);
- }
- });
- }
+function toggleSavePost(postId) {
+    const user = auth.currentUser;
+    if(!user) return;
+    const saveRef = db.ref(`posts/${postId}/savedBy/${user.uid}`);
+    const saveBtn = document.getElementById(`save-btn-${postId}`);
+    const saveSpan = document.getElementById(`save-count-${postId}`);
+
+    saveRef.once('value').then(snap => {
+        let currentSaves = parseInt(saveSpan.innerText);
+        if(snap.exists()) {
+            saveRef.remove();
+            db.ref(`posts/${postId}/saves`).transaction(c => (c || 1) - 1);
+            if(saveBtn) saveBtn.classList.remove('saved');
+            saveSpan.innerText = currentSaves - 1;
+        } else {
+            saveRef.set(true);
+            db.ref(`posts/${postId}/saves`).transaction(c => (c || 0) + 1);
+            if(saveBtn) saveBtn.classList.add('saved');
+            saveSpan.innerText = currentSaves + 1;
+        }
+    });
+}
 
  function shareVideo(postId, url) {
  if (navigator.share) {
