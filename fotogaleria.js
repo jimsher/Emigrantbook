@@ -57,15 +57,7 @@ function openPhotosSection() {
 }
 
 
-// ეს ფუნქცია აუცილებლად გქონდეს script.js-ში
-function previewImage(url) {
-    const modal = document.getElementById('photoPreviewModal');
-    const fullImg = document.getElementById('fullPhoto');
-    if(modal && fullImg) {
-        fullImg.src = url;
-        modal.style.display = 'flex';
-    }
-}
+
 
 
 
