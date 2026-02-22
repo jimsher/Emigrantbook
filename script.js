@@ -8,7 +8,7 @@ const firebaseConfig = {
  firebase.initializeApp(firebaseConfig);
  const db = firebase.database(), auth = firebase.auth();
 
-const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
  // --- LANGUAGE LOGIC ---
  const translations = {
  ka: {
