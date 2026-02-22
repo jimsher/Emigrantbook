@@ -1,9 +1,14 @@
-// --- VIDEO CALL MODULE ---
+        // --- VIDEO CALL MODULE ---
 const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 let localTracks = { videoTrack: null, audioTrack: null };
 
-// 1. ზარის დაწყება
 async function startVideoCall(existingChannel = null) {
+    // ვამოწმებთ, რომ მთავარი ცვლადები ხელმისაწვდომია
+    if (typeof db === 'undefined' || typeof auth === 'undefined') {
+        console.error("Firebase variables are not defined!");
+        return;
+    }
+
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYHjuUsbf/kPswi7dW9OuT2ywvjBtv5XPYkdtPofrzS5ztX4oMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgkMk/ryWwIZGRotNBnYmSAQBCfmyEnsyw1vrikKDUxl4EBAEnPIfQ=";
     const channel = "live_stream"; 
@@ -22,11 +27,11 @@ async function startVideoCall(existingChannel = null) {
         localTracks.videoTrack.play("local-video");
         await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
 
-        // თუ ჩვენ ვიწყებთ ზარს, ბაზაში ვაგზავნით მოთხოვნას
         if (!existingChannel) {
+            // აქ ვიყენებთ window. თავსართს, რომ ნებისმიერი ფაილიდან წაიკითხოს
             db.ref(`video_calls/${currentChatId}`).set({ 
-                callerName: myName, 
-                callerPhoto: myPhoto, 
+                callerName: window.myName || "User", 
+                callerPhoto: window.myPhoto || "", 
                 callerUid: auth.currentUser.uid, 
                 channel: channel, 
                 status: 'calling', 
@@ -39,7 +44,6 @@ async function startVideoCall(existingChannel = null) {
     }
 }
 
-// 2. ზარის დასრულება
 async function endVideoCall() {
     if (localTracks.audioTrack) { 
         localTracks.audioTrack.stop(); 
@@ -54,12 +58,10 @@ async function endVideoCall() {
     await client.leave();
     document.getElementById('videoCallUI').style.display = 'none';
     
-    // ბაზიდან ვშლით ზარის ჩანაწერს
-    if(currentChatId) db.ref(`video_calls/${currentChatId}`).remove();
+    if(typeof currentChatId !== 'undefined' && currentChatId) db.ref(`video_calls/${currentChatId}`).remove();
     if(auth.currentUser) db.ref(`video_calls/${auth.currentUser.uid}`).remove();
 }
 
-// 3. ფანჯრის დაპატარავება/გადიდება
 function minimizeVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if(ui.style.width === '100%') {
@@ -79,13 +81,12 @@ function minimizeVideoCall() {
     }
 }
 
-// 4. შემოსული ზარის მოსმენა (ეს ფუნქცია გამოიძახე auth.onAuthStateChanged-ში)
 function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
             if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
-                currentChatId = call.callerUid; 
+                window.currentChatId = call.callerUid; 
                 startVideoCall(call.channel);
                 db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
             } else {
