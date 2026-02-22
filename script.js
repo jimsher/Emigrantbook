@@ -168,28 +168,51 @@ const firebaseConfig = {
 
 
 auth.onAuthStateChanged(user => {
- applyLanguage();
- if (user) {
- updatePresence();
- listenToGlobalMessages();
- startNotificationListener();
- checkDailyBonus();
- startGlobalUnreadCounter();
- listenForIncomingCalls(user);
+    applyLanguage();
+    if (user) {
+        updatePresence();
+        listenToGlobalMessages();
+        startNotificationListener();
+        checkDailyBonus();
+        startGlobalUnreadCounter();
 
-  
- db.ref(`video_calls/${user.uid}`).on('value', snap => {
- const call = snap.val();
- if (call && call.status === 'calling') {
- if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
- currentChatId = call.callerUid; 
- startVideoCall(call.channel);
- db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
- } else {
- db.ref(`video_calls/${user.uid}`).remove();
- }
- }
- });
+        // ვიდეო ზარის მოსმენა (Real-time)
+        db.ref(`video_calls/${user.uid}`).on('value', snap => {
+            const call = snap.val();
+            if (call && call.status === 'calling') {
+                if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
+                    currentChatId = call.callerUid; 
+                    startVideoCall(call.channel);
+                    db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+                } else {
+                    db.ref(`video_calls/${user.uid}`).remove();
+                }
+            }
+        });
+
+        document.getElementById('authUI').style.display = 'none';
+        db.ref('users/' + user.uid).on('value', snap => {
+            const d = snap.val();
+            if(d) {
+                currentUserData = d;
+                myName = d.name || "User";
+                myPhoto = d.photo || "";
+                myAkho = d.akho || 0;
+                document.getElementById('userAkho').innerText = myAkho.toFixed(2);
+                document.getElementById('bottomNavAva').src = myPhoto;
+                if(d.role === 'admin') document.getElementById('adminMenuBtn').style.display = 'flex';
+                updateCashoutUI();
+                loadActivityLog();
+            }
+        });
+        renderTokenFeed();
+        loadDiscoveryUsers();
+        listenToRequests();
+    } else {
+        document.getElementById('authUI').style.display = 'flex';
+        document.getElementById('main-feed').innerHTML = "";
+    }
+});
 
 
 
