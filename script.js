@@ -630,15 +630,42 @@ window.deleteReply = function(postId, commentId, replyId) {
                     
 
 
- function startChat(uid, name, photo) {
- currentChatId = uid;
- document.getElementById('socialListsUI').style.display = 'none';
- document.getElementById('individualChat').style.display = 'flex';
- document.getElementById('chatTargetName').innerText = name;
- document.getElementById('chatTargetAva').src = photo;
- loadMessages(uid);
- listenToTyping(uid);
- }
+
+function startChat(uid, name, photo) {
+    // window.currentChatId იმიტომ, რომ სხვა ფაილებმაც (მაგ. ვიდეო ზარმა) დაინახონ
+    window.currentChatId = uid;
+    currentChatId = uid; 
+
+    document.getElementById('socialListsUI').style.display = 'none';
+    document.getElementById('individualChat').style.display = 'flex';
+    document.getElementById('chatTargetName').innerText = name;
+    document.getElementById('chatTargetAva').src = photo;
+
+    // --- აქედან იწყება სტატუსის ჩამატება ---
+    const statusEl = document.getElementById('chatTargetStatus');
+    if (statusEl) {
+        db.ref(`users/${uid}/presence`).on('value', snap => {
+            const presence = snap.val();
+            if (presence === 'online') {
+                statusEl.innerText = 'online';
+                statusEl.style.color = '#4ade80'; // მწვანე
+            } else {
+                // იყენებს შენს formatTimeShort ფუნქციას
+                const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
+                statusEl.innerText = timeAgo ? timeAgo + ' ago' : 'offline';
+                statusEl.style.color = '#888'; // ნაცრისფერი
+            }
+        });
+    }
+    // --- დასასრული ---
+
+    loadMessages(uid);
+    listenToTyping(uid);
+}
+
+
+
+
  function closeChat() {
  if (currentChatId) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
  document.getElementById('individualChat').style.display = 'none';
