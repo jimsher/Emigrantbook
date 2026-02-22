@@ -737,6 +737,7 @@ function loadMessages(targetUid) {
         box.innerHTML = "";
         snap.forEach(child => {
             const msg = child.val();
+            const msgId = child.key; // მესიჯის ID წაშლისთვის
             const type = msg.senderId === myUid ? 'sent' : 'received';
             
             // დროის და თარიღის ფორმატირება
@@ -745,16 +746,17 @@ function loadMessages(targetUid) {
             const timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
             const fullDateTime = dateStr + " " + timeStr;
             
-            // ხმოვანის სტილი რომ არ აირიოს
             let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:180px; height:30px; display:block;"></audio>`;
             
-            // მთავარი კონტეინერის სტილი - აქ ვასწორებთ მთლიან ბლოკს
+            // გასწორების სტილი
             const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
             const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
 
+            // oncontextmenu გამოიყენება წაშლისთვის (მარჯვენა ღილაკი ან დიდხანს დაჭერა)
             box.innerHTML += `
-                <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}">
-                    <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px;">
+                <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}" 
+                     oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
+                    <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px; cursor: pointer;">
                         <div class="msg-content" style="word-break: break-word;">${content}</div>
                     </div>
                     <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">
@@ -765,6 +767,17 @@ function loadMessages(targetUid) {
         box.scrollTop = box.scrollHeight;
     });
 }
+
+// წაშლის დამხმარე ფუნქცია - ჩასვი სადმე script.js-ში
+window.deleteMessage = function(chatId, msgId, senderId) {
+    if (senderId !== auth.currentUser.uid) return; // სხვისას ვერ წაშლი
+    
+    if (confirm("გსურთ შეტყობინების წაშლა ყველასთვის?")) {
+        db.ref(`messages/${chatId}/${msgId}`).remove()
+            .then(() => console.log("Deleted"))
+            .catch(err => alert("შეცდომა: " + err.message));
+    }
+};
 
 
 
