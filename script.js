@@ -739,17 +739,23 @@ function loadMessages(targetUid) {
             const msg = child.val();
             const type = msg.senderId === myUid ? 'sent' : 'received';
             
-            // დროის ფორმატირება (საათი და წუთი)
+            // დროის და თარიღის ფორმატირება
             const d = new Date(msg.ts);
+            const dateStr = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0');
             const timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+            const fullDateTime = dateStr + " " + timeStr;
             
             let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; outline:none;"></audio>`;
             
-            // ვამატებთ დროს ბუშტის შიგნით, ბოლოში
+            // ტექსტის გასწორების ლოგიკა: ჩემი მესიჯი - მარჯვნივ, სხვისი - მარცხნივ
+            const alignStyle = type === 'sent' ? 'align-self: flex-end; text-align: right;' : 'align-self: flex-start; text-align: left;';
+
             box.innerHTML += `
-                <div class="msg-bubble msg-${type}">
-                    <div class="msg-content">${content}</div>
-                    <div style="font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; width: 100%;">${timeStr}</div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 12px; ${alignStyle}">
+                    <div class="msg-bubble msg-${type}" style="margin-bottom: 2px;">
+                        <div class="msg-content">${content}</div>
+                    </div>
+                    <div style="font-size: 8px; color: gray; padding: 0 5px;">${fullDateTime}</div>
                 </div>`;
         });
         box.scrollTop = box.scrollHeight;
