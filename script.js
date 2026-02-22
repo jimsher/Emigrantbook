@@ -169,42 +169,40 @@ const firebaseConfig = {
 
 auth.onAuthStateChanged(user => {
     applyLanguage();
+
     if (user) {
-        // --- ძირითადი ფუნქციების გაშვება ---
+        // 1. ძირითადი სისტემების ჩართვა
         updatePresence();
         listenToGlobalMessages();
         startNotificationListener();
         checkDailyBonus();
         startGlobalUnreadCounter();
 
-        // --- ვიდეო ზარის რეალური დროის მსმენელი (videocall.js-დან) ---
-        // ეს ერთი ხაზი ანაცვლებს მთლიან db.ref(`video_calls/${user.uid}`).on... ბლოკს
-        listenForIncomingCalls(user);
+        // 2. ვიდეო ზარის მსმენელი (videocall.js-დან)
+        if (typeof listenForIncomingCalls === 'function') {
+            listenForIncomingCalls(user);
+        }
 
-        // --- UI და მომხმარებლის მონაცემები ---
+        // 3. მომხმარებლის მონაცემების წამოღება
         document.getElementById('authUI').style.display = 'none';
-        
+
         db.ref('users/' + user.uid).on('value', snap => {
             const d = snap.val();
-            if(d) {
+            if (d) {
                 currentUserData = d;
-                if(d.isBanned) {
-                    document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
-                    return;
-                }
                 
-                // მონაცემების მინიჭება გლობალურ ცვლადებზე
+                // გლობალური ცვლადები სხვა ფაილებისთვის
                 window.myName = d.name || "User";
-                window.myPhoto = d.photo || "https://ui-avatars.com/api/?name=" + window.myName;
+                window.myPhoto = d.photo || "";
                 myAkho = d.akho || 0;
 
-                // UI ელემენტების განახლება
+                // UI-ს განახლება
                 document.getElementById('userAkho').innerText = myAkho.toFixed(2);
-                document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
                 document.getElementById('bottomNavAva').src = window.myPhoto;
-
-                if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
-                if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
+                
+                if (d.role === 'admin') {
+                    document.getElementById('adminMenuBtn').style.display = 'flex';
+                }
                 
                 updateCashoutUI();
                 loadActivityLog();
@@ -216,11 +214,11 @@ auth.onAuthStateChanged(user => {
         listenToRequests();
 
     } else {
-        // თუ მომხმარებელი არ არის ავტორიზებული
+        // თუ იუზერი არ არის შესული
         document.getElementById('authUI').style.display = 'flex';
         document.getElementById('main-feed').innerHTML = "";
     }
-});
+}); // <--- აქ მთავრდება ყველაფერი
 
 
 
