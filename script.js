@@ -168,58 +168,28 @@ const firebaseConfig = {
 
 
 auth.onAuthStateChanged(user => {
-    applyLanguage();
+ applyLanguage();
+ if (user) {
+ updatePresence();
+ listenToGlobalMessages();
+ startNotificationListener();
+ checkDailyBonus();
+ startGlobalUnreadCounter();
+ listenForIncomingCalls(user);
 
-    if (user) {
-        // 1. ძირითადი სისტემების ჩართვა
-        updatePresence();
-        listenToGlobalMessages();
-        startNotificationListener();
-        checkDailyBonus();
-        startGlobalUnreadCounter();
-
-        // 2. ვიდეო ზარის მსმენელი (videocall.js-დან)
-        if (typeof listenForIncomingCalls === 'function') {
-            listenForIncomingCalls(user);
-        }
-
-        // 3. მომხმარებლის მონაცემების წამოღება
-        document.getElementById('authUI').style.display = 'none';
-
-        db.ref('users/' + user.uid).on('value', snap => {
-            const d = snap.val();
-            if (d) {
-                currentUserData = d;
-                
-                // გლობალური ცვლადები სხვა ფაილებისთვის
-                window.myName = d.name || "User";
-                window.myPhoto = d.photo || "";
-                myAkho = d.akho || 0;
-
-                // UI-ს განახლება
-                document.getElementById('userAkho').innerText = myAkho.toFixed(2);
-                document.getElementById('bottomNavAva').src = window.myPhoto;
-                
-                if (d.role === 'admin') {
-                    document.getElementById('adminMenuBtn').style.display = 'flex';
-                }
-                
-                updateCashoutUI();
-                loadActivityLog();
-            }
-        });
-
-        renderTokenFeed();
-        loadDiscoveryUsers();
-        listenToRequests();
-
-    } else {
-        // თუ იუზერი არ არის შესული
-        document.getElementById('authUI').style.display = 'flex';
-        document.getElementById('main-feed').innerHTML = "";
-    }
-}); // <--- აქ მთავრდება ყველაფერი
-
+  
+ db.ref(`video_calls/${user.uid}`).on('value', snap => {
+ const call = snap.val();
+ if (call && call.status === 'calling') {
+ if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
+ currentChatId = call.callerUid; 
+ startVideoCall(call.channel);
+ db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+ } else {
+ db.ref(`video_calls/${user.uid}`).remove();
+ }
+ }
+ });
 
 
 
