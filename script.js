@@ -647,12 +647,12 @@ function startChat(uid, name, photo) {
         db.ref(`users/${uid}/presence`).on('value', snap => {
             const presence = snap.val();
             if (presence === 'online') {
-                statusEl.innerText = 'online';
+                statusEl.innerText = 'საიტზეა';
                 statusEl.style.color = '#4ade80'; // მწვანე
             } else {
                 // იყენებს შენს formatTimeShort ფუნქციას
                 const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + ' საიტზე იყო' : 'offline';
+                statusEl.innerText = timeAgo ? timeAgo + ' წინ იყო' : 'offline';
                 statusEl.style.color = '#888'; // ნაცრისფერი
             }
         });
