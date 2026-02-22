@@ -726,21 +726,38 @@ function startChat(uid, name, photo) {
  setTimeout(() => push.classList.remove('show'), 4000);
  }
 
- function loadMessages(targetUid) {
- const myUid = auth.currentUser.uid;
- const chatId = getChatId(myUid, targetUid);
- const box = document.getElementById('chatMessages');
- db.ref(`messages/${chatId}`).on('value', snap => {
- box.innerHTML = "";
- snap.forEach(child => {
- const msg = child.val();
- const type = msg.senderId === myUid ? 'sent' : 'received';
- let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; outline:none;"></audio>`;
- box.innerHTML += `<div class="msg-bubble msg-${type}">${content}</div>`;
- });
- box.scrollTop = box.scrollHeight;
- });
+
+
+function loadMessages(targetUid) {
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, targetUid);
+    const box = document.getElementById('chatMessages');
+    
+    db.ref(`messages/${chatId}`).on('value', snap => {
+        box.innerHTML = "";
+        snap.forEach(child => {
+            const msg = child.val();
+            const type = msg.senderId === myUid ? 'sent' : 'received';
+            
+            // დროის ფორმატირება (საათი და წუთი)
+            const d = new Date(msg.ts);
+            const timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+            
+            let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; outline:none;"></audio>`;
+            
+            // ვამატებთ დროს ბუშტის შიგნით, ბოლოში
+            box.innerHTML += `
+                <div class="msg-bubble msg-${type}">
+                    <div class="msg-content">${content}</div>
+                    <div style="font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; width: 100%;">${timeStr}</div>
+                </div>`;
+        });
+        box.scrollTop = box.scrollHeight;
+    });
 }
+
+
+
  function sendMessage() {
  if (!canAfford(0.2)) return;
  const inp = document.getElementById('messageInp');
