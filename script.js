@@ -169,6 +169,7 @@ auth.onAuthStateChanged(user => {
  startNotificationListener();
  checkDailyBonus();
  startGlobalUnreadCounter();
+ listenForIncomingCalls(user);
 
   
  db.ref(`video_calls/${user.uid}`).on('value', snap => {
