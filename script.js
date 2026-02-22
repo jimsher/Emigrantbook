@@ -652,7 +652,7 @@ function startChat(uid, name, photo) {
             } else {
                 // იყენებს შენს formatTimeShort ფუნქციას
                 const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + ' ago' : 'offline';
+                statusEl.innerText = timeAgo ? timeAgo + ' საიტზე იყო' : 'offline';
                 statusEl.style.color = '#888'; // ნაცრისფერი
             }
         });
