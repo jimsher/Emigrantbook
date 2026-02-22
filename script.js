@@ -745,17 +745,21 @@ function loadMessages(targetUid) {
             const timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
             const fullDateTime = dateStr + " " + timeStr;
             
-            let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; outline:none;"></audio>`;
+            // ხმოვანის სტილი რომ არ აირიოს
+            let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:180px; height:30px; display:block;"></audio>`;
             
-            // ტექსტის გასწორების ლოგიკა: ჩემი მესიჯი - მარჯვნივ, სხვისი - მარცხნივ
-            const alignStyle = type === 'sent' ? 'align-self: flex-end; text-align: right;' : 'align-self: flex-start; text-align: left;';
+            // მთავარი კონტეინერის სტილი - აქ ვასწორებთ მთლიან ბლოკს
+            const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
+            const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
 
             box.innerHTML += `
-                <div style="display: flex; flex-direction: column; margin-bottom: 12px; ${alignStyle}">
-                    <div class="msg-bubble msg-${type}" style="margin-bottom: 2px;">
-                        <div class="msg-content">${content}</div>
+                <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}">
+                    <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px;">
+                        <div class="msg-content" style="word-break: break-word;">${content}</div>
                     </div>
-                    <div style="font-size: 8px; color: gray; padding: 0 5px;">${fullDateTime}</div>
+                    <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">
+                        ${fullDateTime}
+                    </div>
                 </div>`;
         });
         box.scrollTop = box.scrollHeight;
