@@ -166,8 +166,7 @@ const firebaseConfig = {
 
 
 
-
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(function(user) {
     applyLanguage();
     if (user) {
         updatePresence();
@@ -176,12 +175,12 @@ auth.onAuthStateChanged(user => {
         checkDailyBonus();
         startGlobalUnreadCounter();
         
-        // ზარის მოსმენა
         if (typeof listenForIncomingCalls === "function") {
             listenForIncomingCalls(user);
         }
     }
-}); // <-- აი აქ იყო შეცდომა, აკლდა ერთი ფრჩხილი.
+});
+
 
 
 
