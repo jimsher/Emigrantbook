@@ -175,21 +175,27 @@ auth.onAuthStateChanged(user => {
  startNotificationListener();
  checkDailyBonus();
  startGlobalUnreadCounter();
- listenForIncomingCalls(user);
-
-  
+ 
+ // ვტოვებთ მხოლოდ Firebase-ის პირდაპირ მოსმენას, რომ ზარი ეგრევე შევიდეს
  db.ref(`video_calls/${user.uid}`).on('value', snap => {
  const call = snap.val();
- if (call && call.status === 'calling') {
- if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
- currentChatId = call.callerUid; 
- startVideoCall(call.channel);
- db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
- } else {
- db.ref(`video_calls/${user.uid}`).remove();
- }
+ 
+ // ვამოწმებთ, რომ ზარი ნამდვილად ახალია (ბოლო 1 წუთის)
+ if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+  if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
+   window.currentChatId = call.callerUid; 
+   // ვადასტურებთ ბაზაში, რომ ზარი შედგა
+   db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+   // ვრთავთ ვიდეოს (ახალი ვერსია ავტომატურად იყენებს სწორ არხს)
+   startVideoCall();
+  } else {
+   // უარყოფის შემთხვევაში ვშლით ჩანაწერს
+   db.ref(`video_calls/${user.uid}`).remove();
+  }
  }
  });
+ }
+});
 
 
 
