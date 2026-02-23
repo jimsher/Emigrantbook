@@ -11,32 +11,18 @@ const FIXED_CHANNEL = "live_stream";
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
-    // 1. ვამოწმებთ, საერთოდ გვიჭირავს თუ არა იმის ID, ვისაც ვურეკავთ
-    const targetUid = window.currentChatId; 
-    
-    if (!targetUid) {
-        console.error("შეცდომა: targetUid არ არის განსაზღვრული!");
-        return alert("ჯერ აირჩიეთ მომხმარებელი (გახსენით მისი ჩატი)!");
-    }
+    const targetUid = window.currentChatId; // ვისაც ვურეკავთ
+    if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
-    console.log("ზარი იგზავნება მისამართზე: video_calls/" + targetUid);
+    await db.ref('video_calls/' + targetUid).set({
+        callerUid: auth.currentUser.uid,
+        callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+        channel: "live_stream",
+        status: 'calling',
+        ts: Date.now()
+    });
 
-    try {
-        // 2. ვწერთ Firebase-ში
-        await db.ref(`video_calls/${targetUid}`).set({
-            callerUid: auth.currentUser.uid,
-            callerName: (typeof myName !== 'undefined') ? myName : "მომხმარებელი",
-            channel: "live_stream", 
-            status: 'calling',
-            ts: Date.now()
-        });
-
-        console.log("Firebase-ში ჩანაწერი წარმატებით გაკეთდა!");
-        startVideoCall(); // ჩვენთან ვხსნით ვიდეოს
-        
-    } catch (error) {
-        console.error("Firebase-ში ჩაწერის შეცდომა:", error);
-    }
+    startVideoCall(); // ჩვენთან ვხსნით ვიდეოს
 }
 
 // 2. მთავარი ვიდეო ფუნქცია
