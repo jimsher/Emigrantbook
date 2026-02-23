@@ -750,15 +750,31 @@
  </div>
 </div>
  
- <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
- <div style="position:absolute; top:20px; right:20px; z-index:10; display:flex; gap:15px;">
- <i class="fas fa-compress-alt" onclick="minimizeVideoCall()" style="color:white; font-size:24px; cursor:pointer;"></i>
- <i class="fas fa-phone-slash" onclick="endVideoCall()" style="color:#ff4d4d; font-size:24px; cursor:pointer;"></i>
- </div>
- <div id="remote-video" style="width:100%; height:100%; background:#111;"></div>
- <div id="local-video" style="position:absolute; bottom:100px; right:20px; width:120px; height:160px; background:#222; border-radius:12px; border:2px solid var(--gold); overflow:hidden; z-index:5;"></div>
-</div>
+ 
+<div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif;">
+    
+    <div id="remote-video" style="width:100%; height:100%; background:#111; position:relative;">
+        <div id="remote-label" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; font-size:12px;">Waiting for partner...</div>
+    </div>
 
+    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:100px; right:20px; border-radius:15px; border:2px solid var(--gold); overflow:hidden; z-index:10; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
+
+    <div class="call-controls" style="position:absolute; bottom:30px; display:flex; gap:20px; z-index:20;">
+        <div onclick="toggleMic()" id="micBtn" style="width:50px; height:50px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <div onclick="endVideoCall()" style="width:65px; height:65px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:24px; box-shadow:0 0 15px rgba(255,77,77,0.5);">
+            <i class="fas fa-phone-slash"></i>
+        </div>
+        <div onclick="toggleCam()" id="camBtn" style="width:50px; height:50px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+            <i class="fas fa-video"></i>
+        </div>
+    </div>
+
+    <div onclick="minimizeVideoCall()" style="position:absolute; top:20px; right:20px; color:white; cursor:pointer; background:rgba(255,255,255,0.1); padding:10px; border-radius:50%;">
+        <i class="fas fa-expand-alt"></i>
+    </div>
+</div>
 
 
 
