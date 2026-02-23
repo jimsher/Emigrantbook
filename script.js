@@ -177,32 +177,59 @@ auth.onAuthStateChanged(user => {
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
 
-  
- 
-
 // აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
+let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
+
 db.ref(`video_calls/${user.uid}`).on('value', snap => {
     const call = snap.val();
     if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
-            
-            // აი აქ შეცვალე - ეს 4 ხაზი ჩასვი:
-            window.currentChatId = call.callerUid; 
-            db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
-            document.getElementById('videoCallUI').style.display = 'flex';
-            startVideoCall(); // ფრჩხილებში არაფერი ჩაწერო!
-
-        } else {
-            db.ref(`video_calls/${user.uid}`).remove();
-        }
+        currentIncomingCall = call; // ვინახავთ ინფორმაციას
+        
+        // ვავსებთ ფანჯარას მონაცემებით
+        document.getElementById('callerNameDisplay').innerText = call.callerName;
+        document.getElementById('callerAva').src = call.callerPhoto || 'https://ui-avatars.com/api/?name=' + call.callerName;
+        
+        // ვაჩენთ ლამაზ ფანჯარას
+        const modal = document.getElementById('incomingCallModal');
+        modal.style.display = 'flex';
+    } else {
+        // თუ ზარი გაუქმდა გამომძახებლის მიერ
+        document.getElementById('incomingCallModal').style.display = 'none';
     }
 });
 
+// ფუნქცია: ზარის აღება
+function acceptCall() {
+    if (currentIncomingCall) {
+        window.currentChatId = currentIncomingCall.callerUid; 
+        db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
+        
+        document.getElementById('incomingCallModal').style.display = 'none';
+        document.getElementById('videoCallUI').style.display = 'flex';
+        
+        if (typeof startVideoCall === "function") {
+            startVideoCall();
+        }
+    }
+}
+
+// ფუნქცია: ზარის გათიშვა
+function declineCall() {
+    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+    document.getElementById('incomingCallModal').style.display = 'none';
+}
 
 
 
 
 
+
+
+
+
+
+
+  
 
   
  document.getElementById('authUI').style.display = 'none';
