@@ -180,27 +180,23 @@ auth.onAuthStateChanged(user => {
   
  
 
+// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
 db.ref(`video_calls/${user.uid}`).on('value', snap => {
     const call = snap.val();
-    if (call && call.status === 'calling') {
+    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
         if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
             
-            // აი ეს ხაზი გადაარჩენს საქმეს:
+            // აი აქ შეცვალე - ეს 4 ხაზი ჩასვი:
             window.currentChatId = call.callerUid; 
-            
             db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+            document.getElementById('videoCallUI').style.display = 'flex';
+            startVideoCall(); // ფრჩხილებში არაფერი ჩაწერო!
 
-            // ჯერ გამოვაჩინოთ UI და მერე ჩავრთოთ Agora
-            const ui = document.getElementById('videoCallUI');
-            if(ui) ui.style.display = 'flex';
-
-            // ვიძახებთ მთავარ ფუნქციას
-            startVideoCall(); 
         } else {
             db.ref(`video_calls/${user.uid}`).remove();
         }
     }
- });
+});
 
 
 
