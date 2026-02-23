@@ -1685,26 +1685,18 @@ function startGlobalUnreadCounter() {
 
 
 
+// ეს დამხმარე ფუნქცია ჩაწერე სადმე script.js-ში
 function showFloatingLike(postId, userPhoto) {
     const card = document.getElementById(`card-${postId}`);
     if (!card) return;
-
-    const heartContainer = document.createElement('div');
-    heartContainer.className = 'floating-heart';
-    
-    // შემთხვევითი მცირე გადახრა მარცხნივ/მარჯვნივ, რომ ერთმანეთს არ დაეფარონ
-    const randomOffset = Math.floor(Math.random() * 30);
-    heartContainer.style.left = (20 + randomOffset) + 'px';
-
-    heartContainer.innerHTML = `
+    const heartWrap = document.createElement('div');
+    heartWrap.className = 'floating-heart';
+    const randomLeft = 20 + Math.floor(Math.random() * 40);
+    heartWrap.style.left = randomLeft + 'px';
+    heartWrap.innerHTML = `
         <img src="${userPhoto || 'https://ui-avatars.com/api/?name=U'}">
         <i class="fas fa-heart"></i>
     `;
-
-    card.appendChild(heartContainer);
-
-    // 2 წამში წავშალოთ ელემენტი, რომ ბრაუზერი არ გადაიტვირთოს
-    setTimeout(() => {
-        heartContainer.remove();
-    }, 2000);
+    card.appendChild(heartWrap);
+    setTimeout(() => heartWrap.remove(), 2500);
 }
