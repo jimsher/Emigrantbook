@@ -1684,19 +1684,30 @@ function startGlobalUnreadCounter() {
 
 
 
-
-// ეს დამხმარე ფუნქცია ჩაწერე სადმე script.js-ში
 function showFloatingLike(postId, userPhoto) {
-    const card = document.getElementById(`card-${postId}`);
-    if (!card) return;
+    const card = document.getElementById('card-' + postId);
+    
+    if (!card) {
+        console.error("ვერ ვიპოვე ბარათი ID-ით: card-" + postId);
+        return;
+    }
+
     const heartWrap = document.createElement('div');
     heartWrap.className = 'floating-heart';
-    const randomLeft = 20 + Math.floor(Math.random() * 40);
+    
+    // შემთხვევითი პოზიცია მარცხნივ
+    const randomLeft = 15 + Math.floor(Math.random() * 40);
     heartWrap.style.left = randomLeft + 'px';
+
     heartWrap.innerHTML = `
         <img src="${userPhoto || 'https://ui-avatars.com/api/?name=U'}">
         <i class="fas fa-heart"></i>
     `;
+
     card.appendChild(heartWrap);
-    setTimeout(() => heartWrap.remove(), 2500);
+
+    // ელემენტის წაშლა ანიმაციის შემდეგ
+    setTimeout(() => {
+        heartWrap.remove();
+    }, 2500);
 }
