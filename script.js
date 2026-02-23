@@ -185,24 +185,22 @@ db.ref(`video_calls/${user.uid}`).on('value', snap => {
     if (call && call.status === 'calling') {
         if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
             
-            // 1. აუცილებელია: მიმღებმაც უნდა იცოდეს ვის ელაპარაკება
+            // აი ეს ხაზი გადაარჩენს საქმეს:
             window.currentChatId = call.callerUid; 
             
-            // 2. ვცვლით სტატუსს ბაზაში, რომ ზარი შედგა
             db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
 
-            // 3. ვხსნით ვიდეო ზარის ინტერფეისს (UI-ს)
-            document.getElementById('videoCallUI').style.display = 'flex';
+            // ჯერ გამოვაჩინოთ UI და მერე ჩავრთოთ Agora
+            const ui = document.getElementById('videoCallUI');
+            if(ui) ui.style.display = 'flex';
 
-            // 4. ვიძახებთ Agora-ს ფუნქციას (არგუმენტის გარეშე, რადგან FIXED_CHANNEL-ს ვიყენებთ)
+            // ვიძახებთ მთავარ ფუნქციას
             startVideoCall(); 
-
         } else {
-            // თუ აჭერს "გაუქმებას"
             db.ref(`video_calls/${user.uid}`).remove();
         }
     }
-});
+ });
 
 
 
