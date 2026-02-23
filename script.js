@@ -166,21 +166,30 @@ const firebaseConfig = {
 
 
 
-auth.onAuthStateChanged(function(user) {
-    applyLanguage();
-    if (user) {
-        updatePresence();
-        listenToGlobalMessages();
-        startNotificationListener();
-        checkDailyBonus();
-        startGlobalUnreadCounter();
-        
-        if (typeof listenForIncomingCalls === "function") {
-            listenForIncomingCalls(user);
-        }
-    }
-});
 
+auth.onAuthStateChanged(user => {
+ applyLanguage();
+ if (user) {
+ updatePresence();
+ listenToGlobalMessages();
+ startNotificationListener();
+ checkDailyBonus();
+ startGlobalUnreadCounter();
+ listenForIncomingCalls(user);
+
+  
+ db.ref(`video_calls/${user.uid}`).on('value', snap => {
+ const call = snap.val();
+ if (call && call.status === 'calling') {
+ if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
+ currentChatId = call.callerUid; 
+ startVideoCall(call.channel);
+ db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+ } else {
+ db.ref(`video_calls/${user.uid}`).remove();
+ }
+ }
+ });
 
 
 
