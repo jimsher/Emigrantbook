@@ -29,7 +29,8 @@ async function requestVideoCall() {
 // 2. მთავარი Agora ფუნქცია
 async function startVideoCall(channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = null; // App ID Mode-ში null-ია
+const token = "007eJxTYNjw1J2jY5H35PN35lyqcL/8ze5Q3U+jLTZfHlux7FNbdGK3AoO5kaWBqYFRWmKyeZpJWmqShVGSgZFhcnJKqrmlpYVFYsThOZkNgYwMPWo8DIxQCOJzM+RklqXGF5cUpSbmMjAAACBWJKo="; // null-ის ნაცვლად
+const channel = "live_stream"; // დარწმუნდი რომ აქაც იგივე სახელი წერია რაც აგორაში ჩაწერე
     
     const ui = document.getElementById('videoCallUI');
     ui.style.display = 'flex';
