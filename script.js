@@ -733,72 +733,7 @@ function startChat(uid, name, photo) {
 
 
 
-function loadMessages(targetUid) {
-    const myUid = auth.currentUser.uid;
-    const chatId = getChatId(myUid, targetUid);
-    const box = document.getElementById('chatMessages');
-    
-    // 1. ჯერ ვკითხულობთ იმ მესიჯების სიას, რომლებიც შენ წაშალე შენთვის
-    db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
-        const deletedMsgs = deletedSnap.val() || {};
 
-        // 2. შემდეგ ვკითხულობთ რეალურ მესიჯებს
-        db.ref(`messages/${chatId}`).on('value', snap => {
-            box.innerHTML = "";
-            snap.forEach(child => {
-                const msgId = child.key;
-
-                // ფილტრი: თუ ეს მესიჯი შენთვის წაშლილია, გამოვტოვოთ და არ დავხატოთ
-                if (deletedMsgs[msgId]) return;
-
-                const msg = child.val();
-                const type = msg.senderId === myUid ? 'sent' : 'received';
-                
-                // დროის და თარიღის ფორმატირება
-                const d = new Date(msg.ts);
-                const dateStr = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0');
-                const timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-                const fullDateTime = dateStr + " " + timeStr;
-                
-                let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:180px; height:30px; display:block;"></audio>`;
-                
-                const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
-                const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
-
-                box.innerHTML += `
-                    <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}" 
-                         oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-                        <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px; cursor: pointer;">
-                            <div class="msg-content" style="word-break: break-word;">${content}</div>
-                        </div>
-                        <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">
-                            ${fullDateTime}
-                        </div>
-                    </div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-    });
-}
-
-// წაშლის ერთიანი ფუნქცია
-window.deleteMessage = function(chatId, msgId, senderId) {
-    const myUid = auth.currentUser.uid;
-    
-    if (senderId === myUid) {
-        // თუ ჩემი მესიჯია - იშლება ბაზიდან (ყველასთვის ქრება)
-        if (confirm("გსურთ ამ შეტყობინების წაშლა ყველასთვის?")) {
-            db.ref(`messages/${chatId}/${msgId}`).remove()
-                .catch(err => alert("შეცდომა: " + err.message));
-        }
-    } else {
-        // თუ სხვისი მესიჯია - იშლება მხოლოდ შენს პროფილში (ლოკალურად ქრება)
-        if (confirm("გსურთ ამ შეტყობინების წაშლა მხოლოდ თქვენთვის?")) {
-            db.ref(`users/${myUid}/deleted_messages/${chatId}/${msgId}`).set(true)
-                .catch(err => alert("შეცდომა: " + err.message));
-        }
-    }
-};
 
 
 
