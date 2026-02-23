@@ -1584,9 +1584,13 @@ async function toggleVoiceRecord() {
 
 
 async function sendVoiceMessage(blob) {
-    // ვიღებთ აქტიური ჩატის ID-ს
+    // 1. ვამოწმებთ, არჩეულია თუ არა ჩატი
     const targetId = window.currentChatId; 
-    if (!targetId) return; 
+    if (!targetId) {
+        console.error("Chat ID missing!");
+        return alert("ჯერ აირჩიეთ ჩატი (დააწკაპეთ მომხმარებელს)!");
+    }
+
     if (!canAfford(0.5)) return; 
 
     const formData = new FormData();
@@ -1594,23 +1598,38 @@ async function sendVoiceMessage(blob) {
     formData.append("upload_preset", "Emigrantbook.video"); 
 
     try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
+        console.log("ხმა იგზავნება Cloudinary-ზე...");
+        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
+            method: 'POST', 
+            body: formData 
+        });
         const data = await res.json();
         
         if (data.secure_url) {
+            console.log("Cloudinary-მ ატვირთა:", data.secure_url);
             const myUid = auth.currentUser.uid;
-            const chatId = getChatId(myUid, targetId); // აქ გამოვიყენოთ targetId
+            const chatId = getChatId(myUid, targetId);
             
+            // 2. ვწერთ Firebase-ში
             db.ref(`messages/${chatId}`).push({ 
                 senderId: myUid, 
                 audio: data.secure_url, 
                 ts: Date.now() 
+            }).then(() => {
+                spendAkho(0.5, 'Voice Message');
+                console.log("Firebase-ში წარმატებით ჩაიწერა!");
+            }).catch(e => {
+                console.error("Firebase Error:", e);
+                alert("Firebase შეცდომა: " + e.message);
             });
-            
-            spendAkho(0.5, 'Voice Message');
+
+        } else {
+            console.error("Cloudinary Error Data:", data);
+            alert("Cloudinary შეცდომა: " + (data.error ? data.error.message : "უცნობი"));
         }
     } catch (err) { 
-        alert("ხმის გაგზავნა ვერ მოხერხდა"); 
+        console.error("Network Error:", err);
+        alert("ინტერნეტის შეცდომა: ვერ მოხერხდა სერვერთან კავშირი"); 
     }
 }
 
