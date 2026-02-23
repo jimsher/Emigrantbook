@@ -5,7 +5,7 @@ let localTracks = { videoTrack: null, audioTrack: null };
 // 1. ზარის დაწყება
 async function startVideoCall(existingChannel = null) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYHjuUsbf/kPswi7dW9OuT2ywvjBtv5XPYkdtPofrzS5ztX4oMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgkMk/ryWwIZGRotNBnYmSAQBCfmyEnsyw1vrikKDUxl4EBAEnPIfQ=";
+    const token = "007eJxTYFgrtKl5zZcZTp8DF9l9v9mSfkjWouDEm/el4ZFBlzfvZWFQYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBI7N4wJ7MhkJFBO7KfhZEBAkF8boaczLLU+OKSotTEXAYGAN4zJBQ=";
     const channel = "live_stream"; 
     const ui = document.getElementById('videoCallUI');
     
