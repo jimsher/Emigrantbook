@@ -558,7 +558,12 @@ window.deleteReply = function(postId, commentId, replyId) {
 
 
  
- function openMessenger() {
+
+
+
+
+                    
+function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     ui.style.display = 'flex';
@@ -567,7 +572,8 @@ window.deleteReply = function(postId, commentId, replyId) {
     const list = document.getElementById('chatList');
     list.innerHTML = "";
     
-    db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
+    // ვიყენებთ .once-ს რომ სია ერთხელ წამოვიღოთ და არ აჭედოს ყოველ წამს
+    db.ref(`users/${auth.currentUser.uid}/following`).once('value', snap => {
         list.innerHTML = "";
         const followers = snap.val();
         if(followers) {
@@ -578,33 +584,34 @@ window.deleteReply = function(postId, commentId, replyId) {
                 item.className = 'chat-list-item';
                 item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
                 
-                // რეალურ დროში განახლებისთვის: როცა აჭერ, ბაზაში ვწერთ ბოლო ნახვის დროს
                 item.onclick = () => {
                     db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
                     startChat(uid, data.name, data.photo);
                 };
                 
-                // ვუსმენთ მომხმარებლის "ბოლო ნახვის" დროს ამ კონკრეტულ ჩატში
-                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
-                    const lastRead = readSnap.val() || 0;
+                // ბოლო მესიჯის და სტატუსის ჩვენება
+                db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
+                    let lastMsg = "No messages yet";
+                    let showBadge = false;
 
-                    // ბოლო მესიჯის მოსმენა
-                    db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
-                        let lastMsg = "No messages yet";
-                        let showBadge = false;
+                    if(mSnap.exists()) {
+                        const msgs = mSnap.val();
+                        const msgData = Object.values(msgs)[0];
+                        lastMsg = msgData.text || "📷 Voice/Media";
                         
-                        if(mSnap.exists()) {
-                            const msgs = mSnap.val();
-                            const msgKey = Object.keys(msgs)[0];
-                            const msgData = msgs[msgKey];
-                            lastMsg = msgData.text || "📷 Voice/Media";
-                            
-                            // წითელი აინთება თუ: ბოლო მესიჯი სხვისია და მისი დრო მეტია ჩვენს ბოლო ნახვაზე
+                        // წაკითხვის ლოგიკა
+                        db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).once('value', rs => {
+                            const lastRead = rs.val() || 0;
                             if (msgData.senderId !== auth.currentUser.uid && msgData.ts > lastRead) {
                                 showBadge = true;
                             }
-                        }
+                            updateItemHTML(); // განვაახლოთ მხოლოდ ეს ელემენტი
+                        });
+                    } else {
+                        updateItemHTML();
+                    }
 
+                    function updateItemHTML() {
                         item.innerHTML = `
                             <div style="position:relative;">
                                 <img src="${data.photo}" class="chat-list-ava">
@@ -617,9 +624,8 @@ window.deleteReply = function(postId, commentId, replyId) {
                                 </span>
                             </div>
                         `;
-                    });
+                    }
                 });
-
                 list.appendChild(item);
             });
         } else { 
@@ -627,12 +633,9 @@ window.deleteReply = function(postId, commentId, replyId) {
         }
     });
 }
-                    
-
-
 
 function startChat(uid, name, photo) {
-    // window.currentChatId იმიტომ, რომ სხვა ფაილებმაც (მაგ. ვიდეო ზარმა) დაინახონ
+    // აუცილებლად window-ზე მივაბათ, რომ ხმის ჩამწერმა დაინახოს
     window.currentChatId = uid;
     currentChatId = uid; 
 
@@ -641,27 +644,28 @@ function startChat(uid, name, photo) {
     document.getElementById('chatTargetName').innerText = name;
     document.getElementById('chatTargetAva').src = photo;
 
-    // --- აქედან იწყება სტატუსის ჩამატება ---
+    // სტატუსის განახლება ჩატის თავში
     const statusEl = document.getElementById('chatTargetStatus');
     if (statusEl) {
         db.ref(`users/${uid}/presence`).on('value', snap => {
             const presence = snap.val();
             if (presence === 'online') {
                 statusEl.innerText = 'საიტზეა';
-                statusEl.style.color = '#4ade80'; // მწვანე
+                statusEl.style.color = '#4ade80';
             } else {
-                // იყენებს შენს formatTimeShort ფუნქციას
                 const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
                 statusEl.innerText = timeAgo ? timeAgo + ' წინ იყო' : 'offline';
-                statusEl.style.color = '#888'; // ნაცრისფერი
+                statusEl.style.color = '#888';
             }
         });
     }
-    // --- დასასრული ---
 
     loadMessages(uid);
     listenToTyping(uid);
 }
+
+
+
 
 
 
