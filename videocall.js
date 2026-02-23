@@ -12,20 +12,17 @@ const FIXED_CHANNEL = "live_stream";
 // 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
     const targetUid = window.currentChatId; // ვისთანაც ვრეკავთ
-    if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
+    if (!targetUid) return alert("აირჩიეთ ჩატი!");
 
-    console.log("ზარი გადის ID-ზე:", targetUid);
-
-    // ინფორმაციას ვწერთ იმ მომხმარებლის "ყუთში", ვისაც ვურეკავთ
+    // აქ ჩაწერე ზუსტად ეს გზა: video_calls/ + targetUid
     await db.ref('video_calls/' + targetUid).set({
         callerUid: auth.currentUser.uid,
         callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
-        channel: "live_stream", // ფიქსირებული არხი ტოკენისთვის
+        channel: "live_stream",
         status: 'calling',
         ts: Date.now()
     });
 
-    // ჩვენთან ვხსნით ფანჯარას
     startVideoCall();
 }
 
