@@ -176,12 +176,12 @@ auth.onAuthStateChanged(user => {
         checkDailyBonus();
         startGlobalUnreadCounter();
         
-        // აი, მხოლოდ ეს ერთი ხაზი აკეთებს იმ ყველაფერს, რაც ზემოთ გეწერა
+        // ზარის მოსმენა
         if (typeof listenForIncomingCalls === "function") {
             listenForIncomingCalls(user);
         }
     }
-});
+}); // <-- აი აქ იყო შეცდომა, აკლდა ერთი ფრჩხილი.
 
 
 
