@@ -179,19 +179,30 @@ auth.onAuthStateChanged(user => {
 
   
  
-db.ref(`video_calls/${user.uid}`).on('value', snap => {
- const call = snap.val();
- if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
- if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
- window.currentChatId = call.callerUid; 
- db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
- startVideoCall(); // ახალი სისტემით არგუმენტი აღარ სჭირდება
- } else {
- db.ref(`video_calls/${user.uid}`).remove();
- }
- }
- });
 
+db.ref(`video_calls/${user.uid}`).on('value', snap => {
+    const call = snap.val();
+    if (call && call.status === 'calling') {
+        if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
+            
+            // 1. აუცილებელია: მიმღებმაც უნდა იცოდეს ვის ელაპარაკება
+            window.currentChatId = call.callerUid; 
+            
+            // 2. ვცვლით სტატუსს ბაზაში, რომ ზარი შედგა
+            db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+
+            // 3. ვხსნით ვიდეო ზარის ინტერფეისს (UI-ს)
+            document.getElementById('videoCallUI').style.display = 'flex';
+
+            // 4. ვიძახებთ Agora-ს ფუნქციას (არგუმენტის გარეშე, რადგან FIXED_CHANNEL-ს ვიყენებთ)
+            startVideoCall(); 
+
+        } else {
+            // თუ აჭერს "გაუქმებას"
+            db.ref(`video_calls/${user.uid}`).remove();
+        }
+    }
+});
 
 
 
