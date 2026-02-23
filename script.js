@@ -666,40 +666,6 @@ function startChat(uid, name, photo) {
 
 
 
-                    
-
-
-function startChat(uid, name, photo) {
-    // აუცილებლად window-ზე მივაბათ, რომ ხმის ჩამწერმა დაინახოს
-    window.currentChatId = uid;
-    currentChatId = uid; 
-
-    document.getElementById('socialListsUI').style.display = 'none';
-    document.getElementById('individualChat').style.display = 'flex';
-    document.getElementById('chatTargetName').innerText = name;
-    document.getElementById('chatTargetAva').src = photo;
-
-    // სტატუსის განახლება ჩატის თავში
-    const statusEl = document.getElementById('chatTargetStatus');
-    if (statusEl) {
-        db.ref(`users/${uid}/presence`).on('value', snap => {
-            const presence = snap.val();
-            if (presence === 'online') {
-                statusEl.innerText = 'საიტზეა';
-                statusEl.style.color = '#4ade80';
-            } else {
-                const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + ' წინ იყო' : 'offline';
-                statusEl.style.color = '#888';
-            }
-        });
-    }
-
-    loadMessages(uid);
-    listenToTyping(uid);
-}
-
-
 
 
 
