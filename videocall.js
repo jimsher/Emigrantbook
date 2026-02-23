@@ -11,20 +11,22 @@ const FIXED_CHANNEL = "live_stream";
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
-    if (!window.currentChatId) return alert("ჯერ აირჩიეთ მომხმარებელი!");
+    const targetUid = window.currentChatId; // ვისაც ვურეკავთ
+    if (!targetUid) return alert("აირჩიეთ ჩატი!");
 
-    try {
-        await db.ref(`video_calls/${window.currentChatId}`).set({
-            callerUid: auth.currentUser.uid,
-            callerName: typeof myName !== 'undefined' ? myName : "User",
-            channel: FIXED_CHANNEL,
-            status: 'calling',
-            ts: Date.now()
-        });
-        startVideoCall();
-    } catch (err) {
-        console.error("Firebase Call Error:", err);
-    }
+    console.log("ვურეკავთ მომხმარებელს:", targetUid);
+
+    // ვაფიქსირებთ ზარს ბაზაში იმ მომხმარებლის ID-ზე, ვინც უნდა მიიღოს ზარი
+    await db.ref(`video_calls/${targetUid}`).set({
+        callerUid: auth.currentUser.uid,
+        callerName: typeof myName !== 'undefined' ? myName : "User",
+        channel: FIXED_CHANNEL, // ჩვენი ფიქსირებული არხი "live_stream"
+        status: 'calling',
+        ts: Date.now()
+    });
+
+    // ჩვენთან ვხსნით ვიდეოს
+    startVideoCall();
 }
 
 // 2. მთავარი ვიდეო ფუნქცია
