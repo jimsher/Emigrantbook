@@ -560,76 +560,44 @@ window.deleteReply = function(postId, commentId, replyId) {
  
 
 
-
-function openMessenger() {
-    stopMainFeedVideos();
-    const ui = document.getElementById('messengerUI');
-    ui.style.display = 'flex';
-    ui.style.backgroundColor = '#000';
-
-    const list = document.getElementById('chatList');
-    list.innerHTML = "";
+function loadMessages(targetUid) {
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, targetUid);
+    const box = document.getElementById('chatMessages');
     
-    db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
-        list.innerHTML = "";
-        const followers = snap.val();
-        if(followers) {
-            Object.entries(followers).forEach(([uid, data]) => {
-                const chatId = getChatId(auth.currentUser.uid, uid);
-                
-                const item = document.createElement('div');
-                item.className = 'chat-list-item';
-                item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
-                
-                // რეალურ დროში განახლებისთვის: როცა აჭერ, ბაზაში ვწერთ ბოლო ნახვის დროს
-                item.onclick = () => {
-                    db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-                    startChat(uid, data.name, data.photo);
-                };
-                
-                // ვუსმენთ მომხმარებლის "ბოლო ნახვის" დროს ამ კონკრეტულ ჩატში
-                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
-                    const lastRead = readSnap.val() || 0;
+    db.ref(`messages/${chatId}`).on('value', snap => {
+        box.innerHTML = "";
+        snap.forEach(child => {
+            const msg = child.val();
+            const type = msg.senderId === myUid ? 'sent' : 'received';
+            
+            // დროის და თარიღის ფორმატირება
+            const d = new Date(msg.ts);
+            const dateStr = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0');
+            const timeStr = d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+            const fullDateTime = dateStr + " " + timeStr;
+            
+            // ხმოვანის სტილი რომ არ აირიოს
+            let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:180px; height:30px; display:block;"></audio>`;
+            
+            // მთავარი კონტეინერის სტილი - აქ ვასწორებთ მთლიან ბლოკს
+            const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
+            const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
 
-                    // ბოლო მესიჯის მოსმენა
-                    db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
-                        let lastMsg = "No messages yet";
-                        let showBadge = false;
-                        
-                        if(mSnap.exists()) {
-                            const msgs = mSnap.val();
-                            const msgKey = Object.keys(msgs)[0];
-                            const msgData = msgs[msgKey];
-                            lastMsg = msgData.text || "📷 Voice/Media";
-                            
-                            // წითელი აინთება თუ: ბოლო მესიჯი სხვისია და მისი დრო მეტია ჩვენს ბოლო ნახვაზე
-                            if (msgData.senderId !== auth.currentUser.uid && msgData.ts > lastRead) {
-                                showBadge = true;
-                            }
-                        }
-
-                        item.innerHTML = `
-                            <div style="position:relative;">
-                                <img src="${data.photo}" class="chat-list-ava">
-                                <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
-                            </div>
-                            <div style="display:flex; flex-direction:column; overflow:hidden;">
-                                <b style="color:white; font-size:15px;">${data.name}</b>
-                                <span style="color:${showBadge ? 'white' : '#888'}; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; ${showBadge ? 'font-weight:bold;' : ''}">
-                                    ${lastMsg}
-                                </span>
-                            </div>
-                        `;
-                    });
-                });
-
-                list.appendChild(item);
-            });
-        } else { 
-            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No contacts</p>"; 
-        }
+            box.innerHTML += `
+                <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}">
+                    <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px;">
+                        <div class="msg-content" style="word-break: break-word;">${content}</div>
+                    </div>
+                    <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">
+                        ${fullDateTime}
+                    </div>
+                </div>`;
+        });
+        box.scrollTop = box.scrollHeight;
     });
 }
+
 
 
 
