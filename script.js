@@ -1311,6 +1311,14 @@ function renderTokenFeed() {
  document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
  }
 
+
+
+
+
+
+
+
+
  function react(postId, ownerUid) {
     if (!canAfford(0.1)) return;
     const user = auth.currentUser;
@@ -1329,6 +1337,10 @@ function renderTokenFeed() {
             likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
             if(likeBtn) likeBtn.classList.add('liked');
             likeSpan.innerText = currentLikes + 1;
+            
+            // --- აი ეს ხაზი ჩავამატე ეფექტისთვის ---
+            showFloatingLike(postId, myPhoto);
+            
             spendAkho(0.1, 'Like'); 
             if (ownerUid !== user.uid) {
                 earnAkho(ownerUid, 2.00, 'Impact (Like)'); 
@@ -1336,6 +1348,15 @@ function renderTokenFeed() {
         }
     });
 }
+
+
+
+
+
+
+
+
+
 
 function toggleSavePost(postId) {
     const user = auth.currentUser;
