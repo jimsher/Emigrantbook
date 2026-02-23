@@ -1580,21 +1580,42 @@ async function toggleVoiceRecord() {
  micIcon.style.color = "var(--gold)";
  }
 }
+
+
+
 async function sendVoiceMessage(blob) {
- if (!canAfford(0.5)) return; 
- const formData = new FormData();
- formData.append("file", blob); formData.append("upload_preset", "Emigrantbook.video"); 
- try {
- const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
- const data = await res.json();
- if (data.secure_url) {
- const myUid = auth.currentUser.uid;
- const chatId = getChatId(myUid, currentChatId);
- db.ref(`messages/${chatId}`).push({ senderId: myUid, audio: data.secure_url, ts: Date.now() });
- spendAkho(0.5, 'Voice Message');
- }
- } catch (err) { alert("ხმის გაგზავნა ვერ მოხერხდა"); }
+    // ვიღებთ აქტიური ჩატის ID-ს
+    const targetId = window.currentChatId; 
+    if (!targetId) return; 
+    if (!canAfford(0.5)) return; 
+
+    const formData = new FormData();
+    formData.append("file", blob); 
+    formData.append("upload_preset", "Emigrantbook.video"); 
+
+    try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        if (data.secure_url) {
+            const myUid = auth.currentUser.uid;
+            const chatId = getChatId(myUid, targetId); // აქ გამოვიყენოთ targetId
+            
+            db.ref(`messages/${chatId}`).push({ 
+                senderId: myUid, 
+                audio: data.secure_url, 
+                ts: Date.now() 
+            });
+            
+            spendAkho(0.5, 'Voice Message');
+        }
+    } catch (err) { 
+        alert("ხმის გაგზავნა ვერ მოხერხდა"); 
+    }
 }
+
+
+
 function deleteMyVideo(postId) {
  if(confirm("ნამდვილად გსურთ წაშლა?")) {
  db.ref(`posts/${postId}`).remove();
