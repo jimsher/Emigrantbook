@@ -647,14 +647,12 @@ function startChat(uid, name, photo) {
 
 
 
+
 function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
     const box = document.getElementById('chatMessages');
     
-    // აუცილებელია ხმოვანისთვის
-    window.currentChatId = targetUid;
-
     db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
         const deletedMsgs = deletedSnap.val() || {};
 
@@ -670,33 +668,25 @@ function loadMessages(targetUid) {
                 const d = new Date(msg.ts);
                 const fullDateTime = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0') + " " + d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
                 
-                // --- ხმოვანის ლოგიკის გასწორება ---
-                let content = "";
-                if (msg.text) {
-                    content = msg.text;
-                } else if (msg.audio) {
-                    // აქ დავამატე სტილი და preload, რომ მკრთალი აღარ იყოს
-                    content = `<audio src="${msg.audio}" controls preload="metadata" style="width:210px; height:40px; display:block; filter: sepia(20%) saturate(150%); outline:none;"></audio>`;
-                } else {
-                    content = "Unsupported message";
-                }
+                let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
                 
                 const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
                 const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
 
                 box.innerHTML += `
-                    <div style="display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; ${wrapperStyle}" 
+                    <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}" 
                          oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-                        <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 85%; margin-bottom: 4px; cursor: pointer; padding: 8px 12px; border-radius: 15px;">
-                            <div class="msg-content" style="word-break: break-word; color: white;">${content}</div>
+                        <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px; cursor: pointer;">
+                            <div class="msg-content" style="word-break: break-word;">${content}</div>
                         </div>
-                        <div style="font-size: 9px; color: #aaa; padding: 0 5px; width: fit-content; ${timeAlign}">${fullDateTime}</div>
+                        <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">${fullDateTime}</div>
                     </div>`;
             });
             box.scrollTop = box.scrollHeight;
         });
     });
 }
+
 
 
 
