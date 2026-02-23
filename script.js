@@ -178,19 +178,19 @@ auth.onAuthStateChanged(user => {
  listenForIncomingCalls(user);
 
   
- db.ref(`video_calls/${user.uid}`).on('value', snap => {
+ 
+db.ref(`video_calls/${user.uid}`).on('value', snap => {
  const call = snap.val();
- if (call && call.status === 'calling') {
+ if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
  if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
- currentChatId = call.callerUid; 
- startVideoCall(call.channel);
+ window.currentChatId = call.callerUid; 
  db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
+ startVideoCall(); // ახალი სისტემით არგუმენტი აღარ სჭირდება
  } else {
  db.ref(`video_calls/${user.uid}`).remove();
  }
  }
  });
-
 
 
 
