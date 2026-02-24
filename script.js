@@ -1726,13 +1726,3 @@ function startGlobalUnreadCounter() {
 
 
 
-
-
-
-
-
-
-
-
-
-
