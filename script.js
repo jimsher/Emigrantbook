@@ -1726,3 +1726,51 @@ function startGlobalUnreadCounter() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ზარის მესიჯის და ვიდიეო ჩატის ხმები
+const messaging = firebase.messaging();
+
+function requestPushPermission() {
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            console.log('შეტყობინებებზე უფლება მიღებულია.');
+            // ვიღებთ უნიკალურ Token-ს ამ მომხმარებლისთვის
+            messaging.getToken({ vapidKey: 'აქ_უნდა_ჩაისვას_შენი_VAPID_KEY' })
+            .then((currentToken) => {
+                if (currentToken) {
+                    // ვინახავთ ამ ტოკენს ბაზაში მომხმარებლის ID-სთან ერთად
+                    if (auth.currentUser) {
+                        db.ref('users/' + auth.currentUser.uid).update({
+                            pushToken: currentToken
+                        });
+                    }
+                }
+            });
+        }
+    });
+}
+
+// გამოიძახე ეს ფუნქცია როცა მომხმარებელი შედის სისტემაში
+auth.onAuthStateChanged(user => {
+    if (user) {
+        requestPushPermission();
+    }
+});
