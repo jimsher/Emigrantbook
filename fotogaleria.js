@@ -48,3 +48,33 @@ function viewFullPhoto(url) {
     document.getElementById('fullPhoto').src = url;
     modal.style.display = 'flex';
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function viewFullPhoto(url, postId, likes = 0, comms = 0, views = 0) {
+    const modal = document.getElementById('photoPreviewModal');
+    document.getElementById('fullPhoto').src = url;
+    
+    // ციფრების ჩაწერა (თუ ბაზიდან მოგაქვს)
+    document.getElementById('photoLikeCount').innerText = likes;
+    document.getElementById('photoCommCount').innerText = comms;
+    document.getElementById('photoViewCount').innerText = views;
+
+    modal.style.display = 'flex';
+
+    // ნახვების მომატება ბაზაში (Firebase)
+    if(postId) {
+        db.ref('community_posts/' + postId + '/views').transaction(current => (current || 0) + 1);
+    }
+}
