@@ -43,25 +43,6 @@ function openPhotosSection() {
 }
 
 // ფოტოს გადიდების ფუნქცია
-function viewFullPhoto(url) {
-    const modal = document.getElementById('photoPreviewModal');
-    document.getElementById('fullPhoto').src = url;
-    modal.style.display = 'flex';
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function viewFullPhoto(url, postId, likes = 0, comms = 0, views = 0) {
     const modal = document.getElementById('photoPreviewModal');
     document.getElementById('fullPhoto').src = url;
