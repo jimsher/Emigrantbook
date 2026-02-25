@@ -122,15 +122,12 @@ function openPhotoComments(event) {
     event.stopPropagation();
     if (!currentOpenedPostId) return;
 
-    // ვხსნით კომენტარების პანელს
     const commUI = document.getElementById('commentsUI');
+    commUI.style.zIndex = "500000"; // პირდაპირ კოდიდან ვანიჭებთ უმაღლეს ფენას
     commUI.style.display = 'flex';
     
-    // გლობალურ ცვლადს, რომელსაც შენი სისტემა იყენებს კომენტარებისთვის, 
-    // მივანიჭოთ მიმდინარე პოსტის ID
     currentPostId = currentOpenedPostId; 
     
-    // გამოვიძახოთ კომენტარების ჩატვირთვის ფუნქცია (თუ ასე გქვია script.js-ში)
     if (typeof loadComments === "function") {
         loadComments(currentOpenedPostId);
     }
