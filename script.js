@@ -867,14 +867,33 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  db.ref(`users/${auth.currentUser.uid}`).update({ privacy: val });
  }
 
- function openProfile(uid) {
+
+
+
+
+
+function openProfile(uid) {
  stopMainFeedVideos();
  document.getElementById('profileUI').style.display = 'flex';
+ 
+ // ვინახავთ UID-ს, რომ ფოტოების სექციამ იცოდეს ვისი სურათები წამოიღოს
+ const profNameEl = document.getElementById('profName');
+ profNameEl.setAttribute('data-view-uid', uid);
+
+ // პროფილის გახსნისას ვასუფთავებთ ძველ მდგომარეობას (Default: ვიდეოები ჩანს, ფოტოები დამალულია)
+ document.getElementById('userPhotosGrid').style.display = 'none';
+ document.getElementById('profGrid').style.display = 'grid';
+ document.getElementById('noPhotosMsg').style.display = 'none';
+ // ვაბრუნებთ აქტიურ კლასს "ინფორმაცია"-ზე ან Reels-ზე (სურვილისამებრ)
+ document.querySelectorAll('.p-nav-btn').forEach(btn => btn.classList.remove('active'));
+ document.getElementById('infoBtn').classList.add('active');
+
  if(uid !== auth.currentUser.uid) {
  db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
  uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
  });
  }
+ 
  db.ref('users/' + uid).on('value', async snap => {
  const user = snap.val();
  if(!user) return;
@@ -893,7 +912,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  }
  }
  document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
- document.getElementById('profName').innerText = user.name;
+ profNameEl.innerText = user.name;
  const followersCount = user.followers ? Object.keys(user.followers).length : 0;
  const followingCount = user.following ? Object.keys(user.following).length : 0;
  document.getElementById('statFollowersCount').innerText = followersCount;
@@ -906,6 +925,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
  document.getElementById('profTabs').style.display = 'flex';
  document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
+ 
  if(uid === auth.currentUser.uid) {
  controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
  loadUserVideos(uid);
@@ -938,6 +958,12 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  }
  });
  }
+
+
+
+
+
+
 
  function showProfileVisitors() {
  document.getElementById('visitorsUI').style.display = 'flex';
