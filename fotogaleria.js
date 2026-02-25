@@ -74,27 +74,48 @@ function viewFullPhoto(url, postId, likes, comms, views) {
     }
 }
 
-// ლაიქის დაჭერის ფუნქცია
-function handlePhotoLike(event) {
-    event.stopPropagation(); // რომ მოდალი არ დაიხუროს დაჭერისას
-    if (!currentOpenedPostId) return;
 
+
+
+// ლაიქის დაჭერის ფუნქცია
+async function handlePhotoLike(event) {
+    event.stopPropagation();
+    if (!currentOpenedPostId || !auth.currentUser) return;
+
+    const myUid = auth.currentUser.uid;
     const likeIcon = document.getElementById('photoLikeIcon');
     const likeCountSpan = document.getElementById('photoLikeCount');
-    const postRef = db.ref('community_posts/' + currentOpenedPostId);
+    
+    // გზა ბაზაში, სადაც ვინახავთ ვინ რა დაალაიქა
+    const likeRef = db.ref(`post_likes/${currentOpenedPostId}/${myUid}`);
+    const postRef = db.ref(`community_posts/${currentOpenedPostId}`);
 
-    // მარტივი ლაიქის ლოგიკა Firebase-ში
-    postRef.child('likesCount').transaction(current => {
-        let newValue = (current || 0) + 1;
-        likeCountSpan.innerText = newValue; // მომენტალური ასახვა ეკრანზე
-        return newValue;
-    });
+    const snap = await likeRef.once('value');
 
-    // ვიზუალური ეფექტი
-    likeIcon.style.color = '#ff4d4d';
-    likeIcon.style.transform = 'scale(1.3)';
-    setTimeout(() => likeIcon.style.transform = 'scale(1)', 200);
+    if (snap.exists()) {
+        // თუ უკვე დალაიქებულია -> ლაიქის მოხსნა (Unlike)
+        await likeRef.remove();
+        postRef.child('likesCount').transaction(c => (c || 1) - 1);
+        
+        likeIcon.style.color = 'white';
+        likeCountSpan.innerText = Math.max(0, parseInt(likeCountSpan.innerText) - 1);
+    } else {
+        // თუ არ არის დალაიქებული -> დალაიქება
+        await likeRef.set(true);
+        postRef.child('likesCount').transaction(c => (c || 0) + 1);
+        
+        likeIcon.style.color = '#ff4d4d';
+        likeCountSpan.innerText = parseInt(likeCountSpan.innerText) + 1;
+        
+        // პატარა ვიზუალური ანიმაცია
+        likeIcon.style.transform = 'scale(1.4)';
+        setTimeout(() => likeIcon.style.transform = 'scale(1)', 200);
+    }
 }
+
+
+
+
 
 // კომენტარების გახსნის ფუნქცია
 function openPhotoComments(event) {
