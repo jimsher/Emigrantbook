@@ -51,19 +51,63 @@ function openPhotosSection() {
 }
 
 // ფოტოს გადიდების ფუნქცია
-function viewFullPhoto(url, postId, likes = 0, comms = 0, views = 0) {
+// ცვლადი, რომელიც დაიმახსოვრებს რომელ ფოტოს ვუყურებთ ახლა
+let currentOpenedPostId = null;
+
+// ფოტოს გახსნის განახლებული ფუნქცია
+function viewFullPhoto(url, postId, likes, comms, views) {
+    currentOpenedPostId = postId; // ვინახავთ პოსტის ID-ს
+    
     const modal = document.getElementById('photoPreviewModal');
     document.getElementById('fullPhoto').src = url;
     
-    // ციფრების ჩაწერა (თუ ბაზიდან მოგაქვს)
-    document.getElementById('photoLikeCount').innerText = likes;
-    document.getElementById('photoCommCount').innerText = comms;
-    document.getElementById('photoViewCount').innerText = views;
+    // ციფრების ასახვა
+    document.getElementById('photoLikeCount').innerText = likes || 0;
+    document.getElementById('photoCommCount').innerText = comms || 0;
+    document.getElementById('photoViewCount').innerText = views || 0;
 
     modal.style.display = 'flex';
 
-    // ნახვების მომატება ბაზაში (Firebase)
+    // ნახვების მომატება ბაზაში
     if(postId) {
-        db.ref('community_posts/' + postId + '/views').transaction(current => (current || 0) + 1);
+        db.ref('community_posts/' + postId + '/views').transaction(c => (c || 0) + 1);
+    }
+}
+
+// ლაიქის დაჭერის ფუნქცია
+function handlePhotoLike(event) {
+    event.stopPropagation(); // რომ მოდალი არ დაიხუროს დაჭერისას
+    if (!currentOpenedPostId) return;
+
+    const likeIcon = document.getElementById('photoLikeIcon');
+    const likeCountSpan = document.getElementById('photoLikeCount');
+    const postRef = db.ref('community_posts/' + currentOpenedPostId);
+
+    // მარტივი ლაიქის ლოგიკა Firebase-ში
+    postRef.child('likesCount').transaction(current => {
+        let newValue = (current || 0) + 1;
+        likeCountSpan.innerText = newValue; // მომენტალური ასახვა ეკრანზე
+        return newValue;
+    });
+
+    // ვიზუალური ეფექტი
+    likeIcon.style.color = '#ff4d4d';
+    likeIcon.style.transform = 'scale(1.3)';
+    setTimeout(() => likeIcon.style.transform = 'scale(1)', 200);
+}
+
+// კომენტარების გახსნის ფუნქცია
+function openPhotoComments(event) {
+    event.stopPropagation();
+    if (!currentOpenedPostId) return;
+
+    // აქ ვიყენებთ შენს უკვე არსებულ კომენტარების UI-ს
+    // გადავცემთ პოსტის ID-ს შენს მთავარ კომენტარების ფუნქციას
+    if (typeof openComments === "function") {
+        openComments(currentOpenedPostId); 
+    } else {
+        // თუ ფუნქციას სხვა სახელი ჰქვია, მაგალითად:
+        document.getElementById('commentsUI').style.display = 'flex';
+        loadComments(currentOpenedPostId); // ეს ფუნქცია შენს script.js-ში უნდა იყოს
     }
 }
