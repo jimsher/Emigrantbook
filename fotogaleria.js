@@ -122,13 +122,16 @@ function openPhotoComments(event) {
     event.stopPropagation();
     if (!currentOpenedPostId) return;
 
-    // აქ ვიყენებთ შენს უკვე არსებულ კომენტარების UI-ს
-    // გადავცემთ პოსტის ID-ს შენს მთავარ კომენტარების ფუნქციას
-    if (typeof openComments === "function") {
-        openComments(currentOpenedPostId); 
-    } else {
-        // თუ ფუნქციას სხვა სახელი ჰქვია, მაგალითად:
-        document.getElementById('commentsUI').style.display = 'flex';
-        loadComments(currentOpenedPostId); // ეს ფუნქცია შენს script.js-ში უნდა იყოს
+    // ვხსნით კომენტარების პანელს
+    const commUI = document.getElementById('commentsUI');
+    commUI.style.display = 'flex';
+    
+    // გლობალურ ცვლადს, რომელსაც შენი სისტემა იყენებს კომენტარებისთვის, 
+    // მივანიჭოთ მიმდინარე პოსტის ID
+    currentPostId = currentOpenedPostId; 
+    
+    // გამოვიძახოთ კომენტარების ჩატვირთვის ფუნქცია (თუ ასე გქვია script.js-ში)
+    if (typeof loadComments === "function") {
+        loadComments(currentOpenedPostId);
     }
 }
