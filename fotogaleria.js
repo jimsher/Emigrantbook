@@ -18,14 +18,20 @@ function openPhotosSection() {
         let hasPhotos = false;
 
         if (posts) {
-            Object.values(posts).reverse().forEach(post => {
+            // გადავაქციოთ ობიექტი მასივად, რომ ID-ებიც შევინახოთ
+            const postsArray = Object.keys(posts).map(key => ({ id: key, ...posts[key] }));
+
+            postsArray.reverse().forEach(post => {
                 if (post.image) {
                     hasPhotos = true;
-                    // ვქმნით ელემენტს ზუსტად ვიდეოს დიზაინით
                     const photoDiv = document.createElement('div');
-                    photoDiv.className = 'grid-item'; // ვიყენებთ ვიდეოების კლასს
+                    photoDiv.className = 'grid-item'; 
+                    
+                    // აქ ჩავამატეთ მონაცემების გადაცემა (ID, ლაიქები, კომენტარები, ნახვები)
                     photoDiv.innerHTML = `
-                        <img src="${post.image}" style="width:100%; height:100%; object-fit:cover;" onclick="viewFullPhoto('${post.image}')">
+                        <img src="${post.image}" 
+                             style="width:100%; height:100%; object-fit:cover;" 
+                             onclick="viewFullPhoto('${post.image}', '${post.id}', ${post.likesCount || 0}, ${post.commentsCount || 0}, ${post.views || 0})">
                     `;
                     photosGrid.appendChild(photoDiv);
                 }
@@ -38,8 +44,10 @@ function openPhotosSection() {
     });
 
     // ტაბის გააქტიურება (ვიზუალურად)
-    document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) {
+        document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
 }
 
 // ფოტოს გადიდების ფუნქცია
