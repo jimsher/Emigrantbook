@@ -55,20 +55,37 @@ function openPhotosSection() {
 let currentOpenedPostId = null;
 
 // ფოტოს გახსნის განახლებული ფუნქცია
-function viewFullPhoto(url, postId, likes, comms, views) {
-    currentOpenedPostId = postId; // ვინახავთ პოსტის ID-ს
+async function viewFullPhoto(url, postId, likes, comms, views) {
+    currentOpenedPostId = postId;
     
     const modal = document.getElementById('photoPreviewModal');
+    const likeIcon = document.getElementById('photoLikeIcon');
+    
     document.getElementById('fullPhoto').src = url;
     
-    // ციფრების ასახვა
+    // ციფრების დასმა
     document.getElementById('photoLikeCount').innerText = likes || 0;
     document.getElementById('photoCommCount').innerText = comms || 0;
     document.getElementById('photoViewCount').innerText = views || 0;
 
+    // --- ახალი ნაწილი: ლაიქის სტატუსის შემოწმება ---
+    if (auth.currentUser && postId) {
+        const myUid = auth.currentUser.uid;
+        // ვამოწმებთ, გვიდევს თუ არა ლაიქი ამ პოსტზე
+        db.ref(`post_likes/${postId}/${myUid}`).once('value', snap => {
+            if (snap.exists()) {
+                likeIcon.style.color = '#ff4d4d'; // თუ დალაიქებულია - წითელი
+            } else {
+                likeIcon.style.color = 'white';   // თუ არა - თეთრი
+            }
+        });
+    } else {
+        likeIcon.style.color = 'white';
+    }
+
     modal.style.display = 'flex';
 
-    // ნახვების მომატება ბაზაში
+    // ნახვების მომატება
     if(postId) {
         db.ref('community_posts/' + postId + '/views').transaction(c => (c || 0) + 1);
     }
