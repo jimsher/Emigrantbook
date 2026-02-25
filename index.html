@@ -956,16 +956,41 @@
 
 
 
-
- <div id="photoPreviewModal" onclick="this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:300000; justify-content:center; align-items:center; cursor:pointer; backdrop-filter: blur(8px);">
+<div id="photoPreviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:300000; justify-content:center; align-items:center; backdrop-filter: blur(8px);">
     
-    <div style="position: relative; width: 90%; max-width: 500px; aspect-ratio: 9 / 16; background: #000; border: 1px solid var(--gold); border-radius: 15px; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+    <div style="position: relative; width: 95%; max-width: 450px; aspect-ratio: 9 / 16; background: #000; border-radius: 15px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(212,175,55,0.3);">
         
-        <img id="fullPhoto" src="" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
-        
-        <span style="position:absolute; top:15px; right:20px; color:white; font-size:25px; background: rgba(0,0,0,0.5); width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">✕</span>
+        <img id="fullPhoto" src="" style="width: 100%; height: 100%; object-fit: cover;">
+
+        <div style="position: absolute; right: 15px; bottom: 100px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10;">
+            
+            <div onclick="handlePhotoLike(event)" style="text-align: center; cursor: pointer;">
+                <div style="width: 45px; height: 45px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                    <i id="photoLikeIcon" class="fas fa-heart" style="color: white; font-size: 22px; transition: 0.3s;"></i>
+                </div>
+                <span id="photoLikeCount" style="color: white; font-size: 12px; font-weight: bold;">0</span>
+            </div>
+
+            <div onclick="openPhotoComments(event)" style="text-align: center; cursor: pointer;">
+                <div style="width: 45px; height: 45px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                    <i class="fas fa-comment-dots" style="color: white; font-size: 22px;"></i>
+                </div>
+                <span id="photoCommCount" style="color: white; font-size: 12px; font-weight: bold;">0</span>
+            </div>
+
+            <div style="text-align: center;">
+                <div style="width: 45px; height: 45px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                    <i class="fas fa-eye" style="color: white; font-size: 20px;"></i>
+                </div>
+                <span id="photoViewCount" style="color: white; font-size: 12px; font-weight: bold;">0</span>
+            </div>
+
+        </div>
+
+        <span onclick="document.getElementById('photoPreviewModal').style.display='none'" style="position:absolute; top:20px; left:20px; color:white; font-size:22px; cursor:pointer; background:rgba(0,0,0,0.5); width:35px; height:35px; display:flex; align-items:center; justify-content:center; border-radius:50%; z-index:11;">✕</span>
     </div>
 </div>
+ 
 
 
 
