@@ -1234,43 +1234,77 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
-async function startTokenUpload() {
-    if (!canAfford(5)) return;
-    const file = document.getElementById('videoInput').files[0];
-    const btn = document.getElementById('upBtn');
-    btn.disabled = true; btn.innerText = "Uploading to BayFiles...";
 
-    const formData = new FormData();
-    formData.append('file', file);
+async function startTokenUpload() {
+    // 1. შემოწმება აქვს თუ არა იუზერს 5 აკჰო
+    if (!canAfford(5)) return;
+
+    const file = document.getElementById('videoInput').files[0];
+    if (!file) return alert("გთხოვთ, აირჩიოთ ვიდეო");
+
+    const btn = document.getElementById('upBtn');
+    btn.disabled = true; 
+    btn.innerText = "კავშირი Streamtape-თან...";
+
+    // შენი პირადი მონაცემები
+    const apiLogin = "3e533929d9a26c12777c"; 
+    const apiKey = "rxXRjB8mXQSbjA0";
 
     try {
-        const res = await fetch('https://api.bayfiles.com/upload', {
+        // 2. ატვირთვის სპეციალური მისამართის მიღება
+        const res = await fetch(`https://api.streamtape.com/file/ul?login=${apiLogin}&key=${apiKey}`);
+        const data = await res.json();
+        
+        if (!data.result || !data.result.url) {
+            throw new Error("ვერ მოხერხდა ატვირთვის ლინკის მიღება");
+        }
+        
+        const uploadUrl = data.result.url;
+        btn.innerText = "ვიდეო იტვირთება (გთხოვთ, არ დახუროთ)...";
+
+        // 3. ფაილის გაგზავნა სერვერზე
+        const formData = new FormData();
+        formData.append("file1", file);
+
+        const uploadRes = await fetch(uploadUrl, {
             method: 'POST',
             body: formData
         });
-        const data = await res.json();
+        const uploadResult = await uploadRes.json();
 
-        if (data.status) {
-            const videoUrl = data.data.file.url.full; // პირდაპირი ლინკი
+        if (uploadResult.status === 200) {
+            const fileId = uploadResult.result.id;
+            // ეს არის "Embed" ლინკი, რომელიც პირდაპირ ფლეიერს აჩვენებს
+            const finalLink = `https://streamtape.com/e/${fileId}`;
 
+            // 4. პოსტის შენახვა Firebase-ში
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: videoUrl, type: 'video' }],
+                media: [{ 
+                    url: finalLink, 
+                    type: 'video_embed' // ტიპი მივუთითოთ, რომ iframe-ით გამოვაჩინოთ
+                }],
                 timestamp: Date.now()
             });
-            alert("წარმატებით აიტვირთა 20GB საცავში!");
+
+            // 5. ბალანსის ჩამოჭრა და დასრულება
+            spendAkho(5, 'Token Upload');
+            alert("ვიდეო წარმატებით აიტვირთა!");
             location.reload();
+        } else {
+            alert("სერვერმა უარი თქვა ატვირთვაზე. სინჯეთ სხვა ვიდეო.");
         }
     } catch (err) {
-        alert("სერვერი დაკავებულია.");
+        console.error("Streamtape Error:", err);
+        alert("შეცდომა! დარწმუნდით, რომ ინტერნეტი სტაბილურია.");
     } finally {
         btn.disabled = false;
+        btn.innerText = "Upload";
     }
 }
-
 
 
 
