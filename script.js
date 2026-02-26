@@ -1144,23 +1144,59 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  document.getElementById('statVidsCount').innerText = vCount;
  });
  }
- function playFullVideo(url) {
- const overlay = document.getElementById('fullVideoOverlay');
- const vid = document.getElementById('fullVideoTag');
- vid.src = url; overlay.style.display = 'flex'; vid.play();
- }
- function closeFullVideo() {
- const overlay = document.getElementById('fullVideoOverlay');
- const vid = document.getElementById('fullVideoTag');
- vid.pause(); overlay.style.display = 'none';
- }
- function searchUsers(q) {
- const cards = document.querySelectorAll('.user-card');
- cards.forEach(c => {
- const name = c.querySelector('.discover-name').innerText.toLowerCase();
- c.style.display = name.includes(q.toLowerCase()) ? "block" : "none";
- });
- }
+
+
+
+
+
+
+
+
+function playFullVideo(url, isEmbed) {
+    const overlay = document.getElementById('fullVideoOverlay');
+    const vidTag = document.getElementById('fullVideoTag');
+    
+    // 1. ვპოულობთ კონტეინერს, სადაც ვიდეო ან იფრეიმი უნდა იჯდეს
+    let container = overlay.querySelector('.full-video-container');
+    if (!container) container = overlay; // თუ კლასი არ გაქვს, პირდაპირ ოვერლეიში ჩაჯდება
+
+    // 2. ვასუფთავებთ ძველ იფრეიმს, თუ რამე იყო დარჩენილი
+    const oldIframe = document.getElementById('embedIframe');
+    if(oldIframe) oldIframe.remove();
+
+    if (isEmbed) {
+        // --- თუ Streamtape-ია ---
+        vidTag.style.display = 'none'; // ვმალავთ სტანდარტულ ფლეიერს
+        
+        const iframe = document.createElement('iframe');
+        iframe.id = 'embedIframe';
+        iframe.src = url;
+        iframe.style = "width:100%; height:75vh; border:none; border-radius:15px; background:#000;";
+        iframe.allowFullscreen = true;
+        iframe.scrolling = "no";
+        
+        // ჩავსვამთ ეკრანზე
+        container.appendChild(iframe);
+    } else {
+        // --- თუ ძველი პირდაპირი ვიდეოა ---
+        if(document.getElementById('embedIframe')) document.getElementById('embedIframe').style.display = 'none';
+        vidTag.style.display = 'block';
+        vidTag.src = url;
+        vidTag.play();
+    }
+    
+    overlay.style.display = 'flex';
+}
+
+
+
+
+
+
+
+
+
+
 
  function openSocialList(uid, type) {
  const ui = document.getElementById('socialListsUI');
