@@ -166,34 +166,45 @@ function openPhotoComments(event) {
 // 2. კომენტარის გაგზავნის ერთიანი ფუნქცია (ჩაანაცვლე შენი handleSendComment ან postComment ამით)
 function handleSendComment() {
     const inp = document.getElementById('commInp');
+    if (!inp) {
+        alert("კომენტარის ველი ვერ მოიძებნა!");
+        return;
+    }
+
     const txt = inp.value.trim();
-    
-    // ვიყენებთ იმ ID-ს, რომელიც ფოტოს გახსნისას დავიმახსოვრეთ
-    if (!txt || !currentOpenedPostId || !auth.currentUser) {
-        console.log("შეცდომა: ტექსტი ცარიელია ან პოსტის ID არ არსებობს");
+    if (!txt) {
+        alert("ტექსტი ცარიელია!");
+        return;
+    }
+
+    // ვამოწმებთ არის თუ არა გახსნილი პოსტის ID
+    if (!currentOpenedPostId) {
+        alert("შეცდომა: პოსტის ID არ არსებობს. სცადე ფოტოს ხელახლა გახსნა.");
         return;
     }
 
     const commData = {
         text: txt,
         authorId: auth.currentUser.uid,
-        authorName: document.getElementById('profName').innerText, // შენი სახელი
-        timestamp: firebase.database.ServerValue.TIMESTAMP
+        authorName: document.getElementById('profName').innerText || "User",
+        timestamp: Date.now() // შევცვალე უფრო მარტივი ფორმატით, რომ არ გაჭედოს
     };
 
-    // 1. ვინახავთ კომენტარს ბაზაში კონკრეტულ ფოლდერში
-    db.ref(`post_comments/${currentOpenedPostId}`).push(commData).then(() => {
-        console.log("კომენტარი წარმატებით გაიგზავნა!");
-        inp.value = ""; // ვასუფთავებთ ველს
+    // გაგზავნა ბაზაში
+    db.ref('post_comments/' + currentOpenedPostId).push(commData)
+    .then(() => {
+        inp.value = ""; // ველის გასუფთავება
+        
+        // რაოდენობის მომატება
+        db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
 
-        // 2. ვზრდით კომენტარების რაოდენობას პოსტზე
-        db.ref(`community_posts/${currentOpenedPostId}/commentsCount`).transaction(c => (c || 0) + 1);
-
-        // 3. თუ გაქვს კომენტარების ჩამტვირთავი ფუნქცია, გამოვიძახოთ
+        // კომენტარების ჩატვირთვა (თუ გაქვს loadComments ფუნქცია)
         if (typeof loadComments === "function") {
             loadComments(currentOpenedPostId);
         }
-    }).catch(err => {
-        console.error("გაგზავნის შეცდომა:", err);
+        alert("კომენტარი გაიგზავნა!");
+    })
+    .catch(err => {
+        alert("ბაზის შეცდომა: " + err.message);
     });
 }
