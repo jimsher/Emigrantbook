@@ -1235,52 +1235,44 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
-    if (!file) return alert("Select video");
+    if (!file) return alert("აირჩიეთ ვიდეო");
+
+    // შემოწმება: თუ ვიდეო ძალიან დიდია (მაგ: 50MB-ზე მეტი), იუზერს გავაფრთხილებთ
+    if (file.size > 52428800) return alert("ვიდეო ზედმეტად დიდია (Max 50MB)");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "ატვირთვა...";
-
-    const formData = new FormData();
-    formData.append("file", file);
+    btn.innerText = "მიმდინარეობს ატვირთვა...";
 
     try {
-        // ვიყენებთ Transloadit-ის უფასო ატვირთვის სერვისს (არ სჭირდება გასაღები სატესტოდ)
-        const res = await fetch("https://api2.transloadit.com/instances/resurrect", {
-            method: "GET"
+        // ვიყენებთ Firebase Storage-ს, რომელიც შენს კონფიგურაციაში უკვე არის
+        const storageRef = firebase.storage().ref();
+        const fileName = 'tokens/' + Date.now() + '_' + file.name;
+        const fileRef = storageRef.child(fileName);
+
+        // ატვირთვის პროცესი
+        const uploadTask = await fileRef.put(file);
+        
+        // ვიღებთ პირდაპირ ლინკს
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+
+        // ვინახავთ პოსტს ბაზაში
+        await db.ref('posts').push({
+            authorId: auth.currentUser.uid,
+            authorName: myName,
+            authorPhoto: myPhoto,
+            text: document.getElementById('videoDesc').value,
+            media: [{ url: downloadURL, type: 'video' }],
+            timestamp: Date.now()
         });
-        const instance = await res.json();
-        const uploadUrl = instance.api2_host;
 
-        const uploadRes = await fetch(`https://${uploadUrl}/files/`, {
-            method: 'POST',
-            body: formData
-        });
-        const data = await uploadRes.json();
-
-        if (data.ssl_url || data.url) {
-            const finalUrl = data.ssl_url || data.url;
-
-            await db.ref('posts').push({
-                authorId: auth.currentUser.uid,
-                authorName: myName,
-                authorPhoto: myPhoto,
-                text: document.getElementById('videoDesc').value,
-                media: [{ url: finalUrl, type: 'video' }],
-                timestamp: Date.now()
-            });
-
-            spendAkho(5, 'Token Upload');
-            alert("Success!");
-            location.reload();
-        } else {
-            throw new Error("Upload failed");
-        }
+        spendAkho(5, 'Token Upload');
+        alert("ვიდეო წარმატებით აიტვირთა!");
+        location.reload();
 
     } catch (err) {
-        console.error(err);
-        // თუ მაინც ერორი დაწერა, მაშინ ერთადერთი გზაა იუზერმა ჩასვას პირდაპირ YouTube ლინკი
-        alert("სერვერმა უარი თქვა. სინჯეთ სხვა ვიდეო.");
+        console.error("Storage Error:", err);
+        alert("ვერ მოხერხდა ატვირთვა. შეამოწმეთ Firebase Storage Rules!");
         btn.disabled = false;
         btn.innerText = "Upload";
     }
