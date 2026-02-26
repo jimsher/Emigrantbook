@@ -1246,14 +1246,17 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "მიმდინარეობს ატვირთვა...";
+    btn.innerText = "ატვირთვა (ბლოკირების გვერდის ავლით)...";
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-        // PixelDrain-ზე გაგზავნა (არ სჭირდება არანაირი გასაღები ან რეგისტრაცია)
-        const res = await fetch('https://pixeldrain.com/api/file', {
+        // ვიყენებთ CORS ხიდს, რომ ინტერნეტის შეცდომა აღარ ამოაგდოს
+        const proxyUrl = "https://corsproxy.io/?";
+        const targetUrl = encodeURIComponent("https://pixeldrain.com/api/file");
+
+        const res = await fetch(proxyUrl + targetUrl, {
             method: 'POST',
             body: formData
         });
@@ -1261,7 +1264,6 @@ window.deleteMessage = function(chatId, msgId, senderId) {
         const data = await res.json();
         
         if (data.success) {
-            // ვიღებთ ფაილის ID-ს და ვქმნით პირდაპირ ლინკს
             const fileId = data.id;
             const directVideoUrl = `https://pixeldrain.com/api/file/${fileId}`;
 
@@ -1279,11 +1281,11 @@ window.deleteMessage = function(chatId, msgId, senderId) {
             alert("ვიდეო წარმატებით აიტვირთა!");
             location.reload();
         } else {
-            alert("სერვერმა უარი თქვა ატვირთვაზე.");
+            alert("სერვერმა უარი თქვა. სინჯეთ უფრო პატარა ვიდეო.");
         }
     } catch (err) {
-        console.error("Upload Error:", err);
-        alert("ინტერნეტის შეცდომა. სინჯეთ თავიდან.");
+        console.error("ბრაუზერის ბლოკი:", err);
+        alert("შეცდომა! ბრაუზერი ისევ ბლოკავს. სინჯეთ სხვა ბრაუზერიდან ან გამორთეთ VPN.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
