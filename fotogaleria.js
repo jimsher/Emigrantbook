@@ -55,38 +55,44 @@ function openPhotosSection() {
 let currentOpenedPostId = null;
 
 // ფოტოს გახსნის განახლებული ფუნქცია
+let currentPhotoListener = null; // ძველი "მოსმენების" მოსაშორებლად
+
 async function viewFullPhoto(url, postId, likes, comms, views) {
     currentOpenedPostId = postId;
-    
     const modal = document.getElementById('photoPreviewModal');
     const likeIcon = document.getElementById('photoLikeIcon');
+    const likeCountSpan = document.getElementById('photoLikeCount');
+    const viewCountSpan = document.getElementById('photoViewCount');
     
     document.getElementById('fullPhoto').src = url;
-    
-    // ციფრების დასმა
-    document.getElementById('photoLikeCount').innerText = likes || 0;
-    document.getElementById('photoCommCount').innerText = comms || 0;
-    document.getElementById('photoViewCount').innerText = views || 0;
-
-    // --- ახალი ნაწილი: ლაიქის სტატუსის შემოწმება ---
-    if (auth.currentUser && postId) {
-        const myUid = auth.currentUser.uid;
-        // ვამოწმებთ, გვიდევს თუ არა ლაიქი ამ პოსტზე
-        db.ref(`post_likes/${postId}/${myUid}`).once('value', snap => {
-            if (snap.exists()) {
-                likeIcon.style.color = '#ff4d4d'; // თუ დალაიქებულია - წითელი
-            } else {
-                likeIcon.style.color = 'white';   // თუ არა - თეთრი
-            }
-        });
-    } else {
-        likeIcon.style.color = 'white';
-    }
-
     modal.style.display = 'flex';
 
-    // ნახვების მომატება
-    if(postId) {
+    // თუ წინა ფოტოზე რამე "მოსმენა" გვქონდა ჩართული, ვთიშავთ
+    if (currentPhotoListener) {
+        db.ref('community_posts/' + currentOpenedPostId).off();
+    }
+
+    // --- რეალურ დროში განახლება (Real-time Sync) ---
+    currentPhotoListener = db.ref('community_posts/' + postId).on('value', snap => {
+        const data = snap.val();
+        if (data) {
+            likeCountSpan.innerText = data.likesCount || 0;
+            viewCountSpan.innerText = data.views || 0;
+            // თუ გინდა კომენტარების რაოდენობაც რეალურ დროში განახლდეს:
+            document.getElementById('photoCommCount').innerText = data.commentsCount || 0;
+        }
+    });
+
+    // --- ლაიქის სტატუსის შემოწმება (რომ გული წითელი დაგხვდეს) ---
+    if (auth.currentUser && postId) {
+        const myUid = auth.currentUser.uid;
+        db.ref(`post_likes/${postId}/${myUid}`).on('value', snap => {
+            likeIcon.style.color = snap.exists() ? '#ff4d4d' : 'white';
+        });
+    }
+
+    // ნახვების მომატება (ეს მხოლოდ ერთხელ უნდა მოხდეს გახსნისას)
+    if (postId) {
         db.ref('community_posts/' + postId + '/views').transaction(c => (c || 0) + 1);
     }
 }
