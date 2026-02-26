@@ -171,36 +171,43 @@ function gallery_openComments(event) {
 
 async function gallery_handleFileUpload(input) {
     const file = input.files[0];
-    if (!file || !auth.currentUser) return;
-
-    // ბალანსის შემოწმება
-    if (!canAfford(2)) return; 
+    if (!file) return;
+    
+    // 1. ვამოწმებთ ავტორიზაციას
+    if (!auth.currentUser) {
+        alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+        return;
+    }
 
     const btnIcon = document.querySelector('#galleryUploadBtnContainer i');
-    if(btnIcon) btnIcon.className = "fas fa-spinner fa-spin";
+    if(btnIcon) btnIcon.className = "fas fa-spinner fa-spin"; // დატრიალება
 
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "Emigrantbook.video"); 
 
     try {
+        console.log("Cloudinary-ზე გაგზავნა...");
         const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
             method: 'POST', 
             body: formData 
         });
+        
         const data = await res.json();
+        console.log("Cloudinary-ს პასუხი:", data);
 
         if (data.secure_url) {
             const myUid = auth.currentUser.uid;
-            // ვიღებთ სახელს პირდაპირ პროფილიდან, რომ ცარიელი არ დარჩეს
-            const currentProfileName = document.getElementById('profName').innerText;
+            const myNameEl = document.getElementById('profName');
+            const currentProfileName = myNameEl ? myNameEl.innerText : "User";
 
-            // ვქმნით პოსტს community_posts-ში
-            const newPostRef = db.ref('community_posts').push();
+            console.log("Firebase-ში ჩაწერა დაიწყო...");
             
+            // ვქმნით ჩანაწერს
+            const newPostRef = db.ref('community_posts').push();
             const postData = {
                 id: newPostRef.key,
-                authorId: myUid, // ეს არის უმნიშვნელოვანესი ფილტრაციისთვის!
+                authorId: myUid,
                 authorName: currentProfileName,
                 authorPhoto: myPhoto || "",
                 image: data.secure_url, 
@@ -211,18 +218,20 @@ async function gallery_handleFileUpload(input) {
             };
 
             await newPostRef.set(postData);
+            console.log("Firebase-ში წარმატებით ჩაიწერა!");
 
-            spendAkho(2, 'Gallery Upload');
             alert("ფოტო წარმატებით აიტვირთა!");
-
-            // აი აქ არის მთავარი: ეგრევე გადავრთოთ ფოტოების ტაბზე, რომ იუზერმა დაინახოს
+            
+            // ეგრევე განახლება
             if (typeof openPhotosSection === "function") {
                 openPhotosSection(); 
             }
+        } else {
+            alert("Cloudinary-მ ლინკი არ დააბრუნა. შეამოწმეთ Upload Preset.");
         }
     } catch (err) {
-        console.error("Upload Error:", err);
-        alert("ატვირთვის შეცდომა!");
+        console.error("კრიტიკული შეცდომა:", err);
+        alert("შეცდომა: " + err.message);
     } finally {
         if(btnIcon) btnIcon.className = "fas fa-camera";
         input.value = "";
