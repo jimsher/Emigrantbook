@@ -103,29 +103,37 @@ async function handlePhotoLike(event) {
     const likeIcon = document.getElementById('photoLikeIcon');
     const likeCountSpan = document.getElementById('photoLikeCount');
     
-    // გზა ბაზაში, სადაც ვინახავთ ვინ რა დაალაიქა
     const likeRef = db.ref(`post_likes/${currentOpenedPostId}/${myUid}`);
     const postRef = db.ref(`community_posts/${currentOpenedPostId}`);
 
+    // 1. ვამოწმებთ არსებულ სტატუსს
     const snap = await likeRef.once('value');
 
     if (snap.exists()) {
-        // თუ უკვე დალაიქებულია -> ლაიქის მოხსნა (Unlike)
+        // თუ უკვე არის -> წაშლა
         await likeRef.remove();
+        // ვაკლებთ ბაზაში
         postRef.child('likesCount').transaction(c => (c || 1) - 1);
         
+        // ვიზუალი
         likeIcon.style.color = 'white';
-        likeCountSpan.innerText = Math.max(0, parseInt(likeCountSpan.innerText) - 1);
+        // ეკრანზეც ვაკლებთ მომენტალურად
+        let currentNum = parseInt(likeCountSpan.innerText) || 0;
+        likeCountSpan.innerText = Math.max(0, currentNum - 1);
     } else {
-        // თუ არ არის დალაიქებული -> დალაიქება
+        // თუ არ არის -> დამატება
         await likeRef.set(true);
+        // ვუმატებთ ბაზაში
         postRef.child('likesCount').transaction(c => (c || 0) + 1);
         
+        // ვიზუალი
         likeIcon.style.color = '#ff4d4d';
-        likeCountSpan.innerText = parseInt(likeCountSpan.innerText) + 1;
-        
-        // პატარა ვიზუალური ანიმაცია
-        likeIcon.style.transform = 'scale(1.4)';
+        // ეკრანზეც ვუმატებთ
+        let currentNum = parseInt(likeCountSpan.innerText) || 0;
+        likeCountSpan.innerText = currentNum + 1;
+
+        // ანიმაცია
+        likeIcon.style.transform = 'scale(1.5)';
         setTimeout(() => likeIcon.style.transform = 'scale(1)', 200);
     }
 }
