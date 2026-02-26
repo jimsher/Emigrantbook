@@ -65,6 +65,45 @@
     word-wrap: break-word;
 }
 
+
+
+
+
+
+  /* ფოტოების ბადე - ზუსტად იმეორებს ვიდეოებისას */
+#userPhotosGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 სვეტი */
+    gap: 2px;
+    margin-top: 20px;
+}
+
+/* თუ გინდა რომ ფოტოებიც Reels-ივით გრძელი იყოს */
+#userPhotosGrid .grid-item {
+    aspect-ratio: 9 / 16; /* ვერტიკალური ფორმატი */
+    background: #111;
+    overflow: hidden;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+
+  /* ვაძლევთ კომენტარებს უფრო მაღალ z-index-ს, რომ ფოტოს გადაეფაროს */
+/* კომენტარების პანელი უნდა იყოს ყველაზე ზემოთ */
+#commentsUI {
+    z-index: 500000 !important; 
+}
+
+/* თუ იყენებ რაიმე ფონს (overlay) კომენტარებისთვის, იმასაც მოუმატე */
+.comments-overlay {
+    z-index: 499999 !important;
+}
+
+
+  #photoLikeIcon {
+    transition: transform 0.2s ease-in-out, color 0.2s;
+}
  </style>
 </head>
 
@@ -548,7 +587,7 @@
         </div>
 
         <div style="display:flex; gap:18px; align-items:center;">
-            <i class="fas fa-video" onclick="startVideoCall()" style="cursor:pointer; color:var(--gold); font-size:18px;"></i>
+            <i class="fas fa-video" onclick="requestVideoCall()" style="cursor:pointer; color:var(--gold); font-size:18px;"></i>
             <i class="fas fa-times" onclick="closeChat()" style="cursor:pointer; font-size:20px; color:var(--soft-text);"></i>
         </div>
     </div>
@@ -750,15 +789,31 @@
  </div>
 </div>
  
- <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
- <div style="position:absolute; top:20px; right:20px; z-index:10; display:flex; gap:15px;">
- <i class="fas fa-compress-alt" onclick="minimizeVideoCall()" style="color:white; font-size:24px; cursor:pointer;"></i>
- <i class="fas fa-phone-slash" onclick="endVideoCall()" style="color:#ff4d4d; font-size:24px; cursor:pointer;"></i>
- </div>
- <div id="remote-video" style="width:100%; height:100%; background:#111;"></div>
- <div id="local-video" style="position:absolute; bottom:100px; right:20px; width:120px; height:160px; background:#222; border-radius:12px; border:2px solid var(--gold); overflow:hidden; z-index:5;"></div>
-</div>
+ 
+<div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif;">
+    
+    <div id="remote-video" style="width:100%; height:100%; background:#111; position:relative;">
+        <div id="remote-label" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; font-size:12px;">Waiting for partner...</div>
+    </div>
 
+    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:100px; right:20px; border-radius:15px; border:2px solid var(--gold); overflow:hidden; z-index:10; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
+
+    <div class="call-controls" style="position:absolute; bottom:30px; display:flex; gap:20px; z-index:20;">
+        <div onclick="toggleMic()" id="micBtn" style="width:50px; height:50px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <div onclick="endVideoCall()" style="width:65px; height:65px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:24px; box-shadow:0 0 15px rgba(255,77,77,0.5);">
+            <i class="fas fa-phone-slash"></i>
+        </div>
+        <div onclick="toggleCam()" id="camBtn" style="width:50px; height:50px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+            <i class="fas fa-video"></i>
+        </div>
+    </div>
+
+    <div onclick="minimizeVideoCall()" style="position:absolute; top:20px; right:20px; color:white; cursor:pointer; background:rgba(255,255,255,0.1); padding:10px; border-radius:50%;">
+        <i class="fas fa-expand-alt"></i>
+    </div>
+</div>
 
 
 
@@ -916,14 +971,41 @@
 
 
 
+<div id="photoPreviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:200000;">
+    <div style="position: relative; width: 95%; max-width: 450px; aspect-ratio: 9 / 16; background: #000; border-radius: 15px; overflow: hidden; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(212,175,55,0.3);">
+        <img id="fullPhoto" src="" style="width: 100%; height: 100%; object-fit: cover;">
+        
+        <div style="position: absolute; right: 15px; bottom: 120px; display: flex; flex-direction: column; gap: 20px; align-items: center; z-index: 10;">
+            <div onclick="handlePhotoLike(event)" style="text-align: center; cursor: pointer;">
+                <div style="width: 45px; height: 45px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                    <i id="photoLikeIcon" class="fas fa-heart" style="color: white; font-size: 22px; transition: 0.3s;"></i>
+                </div>
+                <span id="photoLikeCount" style="color: white; font-size: 12px; font-weight: bold;">0</span>
+            </div>
+            <div onclick="openPhotoComments(event)" style="text-align: center; cursor: pointer;">
+                <div style="width: 45px; height: 45px; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                    <i class="fas fa-comment-dots" style="color: white; font-size: 22px;"></i>
+                </div>
+                <span id="photoCommCount" style="color: white; font-size: 12px; font-weight: bold;">0</span>
+            </div>
+        </div>
 
+        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; display: flex; gap: 10px; align-items: center; z-index: 20;">
+            <input type="text" id="photoCommInp" placeholder="დაწერე კომენტარი..." 
+                   style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 20px; padding: 10px 15px; color: white; outline: none; font-size: 14px;">
+            <button onclick="sendPhotoCommentDirectly()" 
+                    style="background: #d4af37; border: none; width: 40px; height: 40px; border-radius: 50%; color: black; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
 
-
-
- <div id="photoPreviewModal" onclick="this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:300000; justify-content:center; align-items:center; cursor:pointer;">
-    <img id="fullPhoto" src="" style="max-width:95%; max-height:95%; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5);">
-    <span style="position:absolute; top:20px; right:20px; color:white; font-size:30px;">✕</span>
+        <span onclick="document.getElementById('photoPreviewModal').style.display='none'" style="position:absolute; top:20px; left:20px; color:white; font-size:22px; cursor:pointer; background:rgba(0,0,0,0.5); width:35px; height:35px; display:flex; align-items:center; justify-content:center; border-radius:50%; z-index:11;">✕</span>
+    </div>
 </div>
+
+
+
+ 
 
 
 
@@ -939,6 +1021,33 @@
 
 
 
+
+
  
+
+ <div id="incomingCallModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:1000000; align-items:center; justify-content:center; flex-direction:column; font-family:sans-serif;">
+    <div style="background:#1a1a1a; width:280px; padding:40px 20px; border-radius:30px; border:1px solid var(--gold); text-align:center; box-shadow:0 0 30px rgba(212,175,55,0.3);">
+        <img id="callerAva" src="" style="width:100px; height:100px; border-radius:50%; border:3px solid var(--gold); margin-bottom:20px; object-fit:cover;">
+        <h2 id="callerNameDisplay" style="color:white; margin:0 0 10px 0; font-size:20px;">Levani...</h2>
+        <p style="color:var(--gold); font-size:14px; margin-bottom:30px; letter-spacing:1px; animation: pulse-text 1.5s infinite;">ვიდეო ზარი შემოდის...</p>
+        
+        <div style="display:flex; justify-content:space-around; width:100%;">
+            <div onclick="declineCall()" style="width:60px; height:60px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:24px;">
+                <i class="fas fa-phone-slash"></i>
+            </div>
+            <div onclick="acceptCall()" style="width:60px; height:60px; background:#4ade80; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:24px; box-shadow:0 0 15px rgba(74,222,128,0.5);">
+                <i class="fas fa-video"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes pulse-text {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+</style>
 </body>
 </html>
