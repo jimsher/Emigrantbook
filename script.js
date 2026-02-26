@@ -1236,7 +1236,8 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
  
- async function startTokenUpload() {
+ 
+async function startTokenUpload() {
     if (!canAfford(5)) return;
     
     const fileInput = document.getElementById('videoInput');
@@ -1245,37 +1246,46 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "Gofile პრემიუმ ატვირთვა...";
+    btn.innerText = "პრემიუმ ატვირთვა...";
 
     try {
-        // 1. ჯერ ვიგებთ საუკეთესო პრემიუმ სერვერს
-        const serverRes = await fetch('https://api.gofile.io/getServer');
+        // 1. ჯერ ვიგებთ საუკეთესო სერვერს ატვირთვისთვის
+        const serverRes = await fetch('https://api.gofile.io/servers');
         const serverData = await serverRes.json();
-        const serverName = serverData.data.server;
+        
+        if (serverData.status !== 'ok') throw new Error("სერვერების სია ვერ მოიძებნა");
+        
+        // ვიღებთ პირველივე თავისუფალ სერვერს
+        const serverName = serverData.data.servers[0].name;
 
         // 2. ვამზადებთ ფაილს გასაგზავნად
         const formData = new FormData();
         formData.append('file', file);
-        
-        // აქ ჩასვი შენი GOFILE API TOKEN (Settings-დან აიღე)
-        const gofileToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh"; 
-        formData.append('token', gofileToken);
 
-        // 3. ატვირთვა პრემიუმ სერვერზე
-        const uploadRes = await fetch(`https://${serverName}.gofile.io/uploadFile`, {
+        // შენი ტოკენი პირველი სკრინშოტიდან
+        const myToken = "P9pv2cyOn7rVXcCpqbc1Jc14bf7DJvdl";
+
+        // 3. ატვირთვა პრემიუმ წესით
+        const uploadRes = await fetch(`https://${serverName}.gofile.io/contents/uploadfile`, {
             method: 'POST',
+            headers: {
+                // აუთენტიფიკაცია სკრინშოტის მოთხოვნის მიხედვით
+                'Authorization': `Bearer ${myToken}`
+            },
             body: formData
         });
 
         const uploadData = await uploadRes.json();
 
-        if (uploadData.status === 'success') {
-            // ვიღებთ პირდაპირ ლინკს (Gofile Direct Download)
-            const fileId = uploadData.data.fileId;
+        if (uploadData.status === 'ok') {
+            // Gofile-ის პრემიუმ ფაილის პირდაპირი ლინკის ფორმირება
+            const fileId = uploadData.data.id;
             const fileName = uploadData.data.fileName;
-            // პრემიუმ ლინკი, რომელიც მომენტალურად ჩაირთვება
+            
+            // ეს ლინკი იმუშავებს შენს საიტზე ვიდეო ფლეიერში
             const directVideoUrl = `https://${serverName}.gofile.io/download/web/${fileId}/${fileName}`;
 
+            // Firebase-ში შენახვა
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
@@ -1286,20 +1296,19 @@ window.deleteMessage = function(chatId, msgId, senderId) {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა Gofile პრემიუმზე!");
+            alert("ვიდეო წარმატებით აიტვირთა შენს 3TB პრემიუმ საცავში!");
             location.reload();
         } else {
-            alert("Gofile-ის შეცდომა: " + uploadData.data);
+            alert("შეცდომა ატვირთვისას: " + uploadData.status);
         }
     } catch (err) {
-        console.error("Gofile Premium Error:", err);
-        alert("ინტერნეტის შეცდომა! შეამოწმეთ Gofile ტოკენი.");
+        console.error("Gofile Error:", err);
+        alert("ინტერნეტის შეცდომა! სცადეთ Chrome-ის ინკოგნიტო რეჟიმიდან.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
-
 
 
                 
