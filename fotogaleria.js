@@ -157,3 +157,31 @@ function gallery_openComments(event) {
         loadComments(gallery_currentOpenedPostId);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+function gallery_handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // ვამოწმებთ არის თუ არა ნამდვილად ფოტო
+    if (!file.type.startsWith('image/')) {
+        alert("გთხოვთ აირჩიოთ მხოლოდ ფოტოსურათი!");
+        return;
+    }
+
+    // აქ უკვე შეგვიძლია გამოვიძახოთ ატვირთვის მთავარი ფუნქცია
+    // რომელსაც შემდეგ ეტაპზე დავწერთ
+    if (confirm("გსურთ ამ ფოტოს ატვირთვა თქვენს გალერეაში?")) {
+        gallery_startUploadProcess(file);
+    }
+}
