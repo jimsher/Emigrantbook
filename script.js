@@ -1242,42 +1242,50 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "ატვირთვა პროფესიონალურ სერვერზე...";
+    btn.innerText = "ავტორიზებული ატვირთვა...";
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('anonymous', 'false'); // შენს ექაუნთზე რომ დაჯდეს
 
     try {
-        // ვიყენებთ file.io-ს, რომელიც ბრაუზერის ბლოკებს გვერდს უვლის
-        const res = await fetch('https://file.io', {
+        // ვიყენებთ Basic Auth-ს შენი ტოკენით, რომ ბლოკირება არ მოხდეს
+        const token = "P9pv2cyOn7rVXcCpqbc1Jc14bf7DJvdl"; // შენი Account Token
+        
+        const res = await fetch('https://pixeldrain.com/api/file', {
             method: 'POST',
+            headers: {
+                // ეს კოდი სერვერს ეუბნება ვინ ხარ
+                'Authorization': 'Basic ' + btoa(":" + token)
+            },
             body: formData
         });
 
         const data = await res.json();
 
         if (data.success) {
-            // ვიღებთ პირდაპირ ლინკს
-            const videoUrl = data.link;
+            const fileId = data.id;
+            // პირდაპირი ლინკი, რომელიც მომენტალურად ჩაირთვება
+            const directVideoUrl = `https://pixeldrain.com/api/file/${fileId}`;
 
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: videoUrl, type: 'video' }],
+                media: [{ url: directVideoUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
+            alert("ვიდეო წარმატებით აიტვირთა შენს ექაუნთზე!");
             location.reload();
         } else {
-            alert("სერვერი დაკავებულია, სინჯეთ 1 წუთში.");
+            alert("სერვერის შეცდომა! სინჯეთ სხვა ფაილი.");
         }
     } catch (err) {
-        console.error("Upload Error:", err);
-        alert("შეცდომა! სინჯეთ სხვა ბრაუზერიდან (მაგ: Chrome-დან).");
+        console.error("PixelDrain Auth Error:", err);
+        alert("შეცდომა! შეამოწმეთ ინტერნეტი ან სცადეთ პატარა ვიდეო.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
