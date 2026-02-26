@@ -1236,77 +1236,80 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
  async function startTokenUpload() {
+    // 1. შემოწმება აქვს თუ არა იუზერს 5 აკჰო
     if (!canAfford(5)) return;
-    
-    const fileInput = document.getElementById('videoInput');
-    const file = fileInput.files[0];
+
+    const file = document.getElementById('videoInput').files[0];
     if (!file) return alert("გთხოვთ, აირჩიოთ ვიდეო");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "პრემიუმ ატვირთვა...";
+    btn.innerText = "კავშირი Gofile-თან...";
+
+    // შენი პირადი პრემიუმ მონაცემები სკრინშოტიდან
+    const gofileToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh"; 
 
     try {
-        // 1. ჯერ ვიგებთ საუკეთესო სერვერს ატვირთვისთვის
+        // 2. ატვირთვის სპეციალური სერვერის მიღება Gofile-სგან
         const serverRes = await fetch('https://api.gofile.io/servers');
         const serverData = await serverRes.json();
         
-        if (serverData.status !== 'ok') throw new Error("სერვერების სია ვერ მოიძებნა");
+        if (serverData.status !== 'ok') {
+            throw new Error("ვერ მოხერხდა ატვირთვის სერვერის მიღება");
+        }
         
-        // ვიღებთ პირველივე თავისუფალ სერვერს
         const serverName = serverData.data.servers[0].name;
+        btn.innerText = "ვიდეო იტვირთება (გთხოვთ, არ დახუროთ)...";
 
-        // 2. ვამზადებთ ფაილს გასაგზავნად
+        // 3. ფაილის გაგზავნა პრემიუმ სერვერზე
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append("file", file);
 
-        // შენი ტოკენი ბოლო სკრინშოტიდან (Screenshot_20260226_222637)
-        const myToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh";
-
-        // 3. ატვირთვა პრემიუმ წესით
         const uploadRes = await fetch(`https://${serverName}.gofile.io/contents/uploadfile`, {
             method: 'POST',
             headers: {
-                // აუთენტიფიკაცია სკრინშოტის მოთხოვნის მიხედვით
-                'Authorization': `Bearer ${myToken}`
+                'Authorization': `Bearer ${gofileToken}`
             },
             body: formData
         });
+        const uploadResult = await uploadRes.json();
 
-        const uploadData = await uploadRes.json();
-
-        if (uploadData.status === 'ok') {
-            // Gofile-ის პრემიუმ ფაილის პირდაპირი ლინკის ფორმირება
-            const fileId = uploadData.data.id;
-            const fileName = uploadData.data.fileName;
+        if (uploadResult.status === 'ok') {
+            const fileId = uploadResult.data.id;
+            const fileName = uploadResult.data.fileName;
             
-            // პრემიუმ ლინკი პირდაპირი ყურებისთვის (Ads-ის გარეშე)
-            const directVideoUrl = `https://${serverName}.gofile.io/download/web/${fileId}/${fileName}`;
+            // პირდაპირი ლინკი, რომელიც ფლეიერში იმუშავებს
+            const finalLink = `https://${serverName}.gofile.io/download/web/${fileId}/${fileName}`;
 
-            // Firebase-ში შენახვა
+            // 4. პოსტის შენახვა Firebase-ში
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: directVideoUrl, type: 'video' }],
+                media: [{ 
+                    url: finalLink, 
+                    type: 'video' // Gofile-ის შემთხვევაში პირდაპირ ვიდეოა და არა embed
+                }],
                 timestamp: Date.now()
             });
 
+            // 5. ბალანსის ჩამოჭრა და დასრულება
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა შენს 3TB პრემიუმ საცავში!");
+            alert("ვიდეო წარმატებით აიტვირთა პრემიუმ საცავში!");
             location.reload();
         } else {
-            alert("შეცდომა ატვირთვისას: " + uploadData.status);
+            alert("სერვერმა უარი თქვა ატვირთვაზე. სინჯეთ სხვა ვიდეო.");
         }
     } catch (err) {
         console.error("Gofile Error:", err);
-        alert("ინტერნეტის შეცდომა! სცადეთ Chrome-ის ინკოგნიტო რეჟიმიდან (Incognito).");
+        alert("შეცდომა! დარწმუნდით, რომ ინტერნეტი სტაბილურია.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
+ 
  
 
 
