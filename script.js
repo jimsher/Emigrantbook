@@ -1240,63 +1240,46 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "კავშირის დამყარება...";
+    btn.innerText = "სერვერზე იგზავნება...";
 
-    const accessKey = "Ffsgyqoq4Gl4LF9C";
-    const secretKey = "6pMdn9aklSVW3nEYEIB7Ibx2PQYfG467OdYuAZNq";
-    const bucketName = "emigrant";
-    const fileName = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
-    const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
+    const formData = new FormData();
+    formData.append("file", file);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', uploadUrl, true);
-    
-    // ავტორიზაცია
-    const auth = btoa(accessKey + ":" + secretKey);
-    xhr.setRequestHeader('Authorization', 'Basic ' + auth);
-    xhr.setRequestHeader('Content-Type', file.type);
+    try {
+        // ვიყენებთ საჯარო ატვირთვის სერვისს
+        const res = await fetch('https://filepush.co/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await res.json();
 
-    // ატვირთვის პროგრესის კონტროლი
-    xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            btn.innerText = `ატვირთვა: ${percent}%`;
-            console.log("Progress:", percent);
-        }
-    };
-
-    xhr.onload = async () => {
-        if (xhr.status === 200 || xhr.status === 201) {
-            console.log("Success! URL:", uploadUrl);
+        if (data.url) {
+            // ბაზაში ვინახავთ პირდაპირ ლინკს
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: uploadUrl, type: 'video' }],
+                media: [{ url: data.url, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
+            alert("წარმატებით აიტვირთა!");
             location.reload();
         } else {
-            console.error("Tebi Error Status:", xhr.status);
-            alert("სერვერმა უარი თქვა (Error " + xhr.status + "). შეამოწმეთ CORS!");
-            btn.disabled = false;
-            btn.innerText = "Upload";
+            alert("სერვერი გადატვირთულია, სინჯეთ 1 წუთში");
         }
-    };
-
-    xhr.onerror = (err) => {
-        console.error("XHR Network Error:", err);
-        alert("კავშირის შეცდომა! სერვერი არ გვპასუხობს.");
+    } catch (err) {
+        console.error(err);
+        alert("შეცდომა! სინჯეთ სხვა ვიდეო.");
+    } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
-    };
-
-    xhr.send(file);
+    }
 }
+
 
 
 
