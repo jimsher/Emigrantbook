@@ -161,3 +161,25 @@ function openPhotoComments(event) {
         loadComments(currentOpenedPostId);
     }
 }
+
+
+
+
+
+
+
+function handleSendComment() { 
+    const inp = document.getElementById('commInp');
+    // ვამოწმებთ, აქვს თუ არა ინპუტს ფოტოს ნიშანი (რომელიც openPhotoComments-მა დაადო)
+    const isPhoto = inp.getAttribute('data-target-post'); 
+
+    if (isPhoto) {
+        submitPhotoComment(); // თუ ფოტოა, გამოიძახებს ფოტოს გაგზავნის ლოგიკას
+        return; // აქ წყვეტს მუშაობას, რომ ზედმეტი რამ არ გააკეთოს
+    }
+    
+    // --- აქედან გააგრძელე შენი ძველი კოდი, რაც გქონდა ჩვეულებრივი პოსტებისთვის ---
+    const txt = inp.value.trim();
+    // ... და ა.შ.
+}
+
