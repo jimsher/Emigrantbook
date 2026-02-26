@@ -143,18 +143,19 @@ async function handlePhotoLike(event) {
 
 
 // კომენტარების გახსნის ფუნქცია
+// 1. ფოტოს კომენტარების გახსნა
 function openPhotoComments(event) {
     event.stopPropagation();
     if (!currentOpenedPostId) return;
 
     const commUI = document.getElementById('commentsUI');
-    commUI.style.zIndex = "500000"; // პირდაპირ კოდიდან ვანიჭებთ უმაღლეს ფენას
+    const inp = document.getElementById('commInp');
+
+    commUI.style.zIndex = "500000"; 
     commUI.style.display = 'flex';
     
+    // ვანიჭებთ ID-ს, რომ გაგზავნისას კოდმა იცოდეს სად წაიღოს ტექსტი
     currentPostId = currentOpenedPostId; 
-    
-    // აი ეს ხაზი ჩავამატე - ინპუტს აძლევს ნიშანს, რომ ეს ფოტოს კომენტარია
-    const inp = document.getElementById('commInp');
     if (inp) inp.setAttribute('data-target-post', currentOpenedPostId);
     
     if (typeof loadComments === "function") {
@@ -162,24 +163,33 @@ function openPhotoComments(event) {
     }
 }
 
-
-
-
-
-
-
-function handleSendComment() { 
+// 2. კომენტარის გაგზავნის ერთიანი ფუნქცია (ჩაანაცვლე შენი handleSendComment ან postComment ამით)
+function handleSendComment() {
     const inp = document.getElementById('commInp');
-    // ვამოწმებთ, აქვს თუ არა ინპუტს ფოტოს ნიშანი (რომელიც openPhotoComments-მა დაადო)
-    const isPhoto = inp.getAttribute('data-target-post'); 
-
-    if (isPhoto) {
-        submitPhotoComment(); // თუ ფოტოა, გამოიძახებს ფოტოს გაგზავნის ლოგიკას
-        return; // აქ წყვეტს მუშაობას, რომ ზედმეტი რამ არ გააკეთოს
-    }
-    
-    // --- აქედან გააგრძელე შენი ძველი კოდი, რაც გქონდა ჩვეულებრივი პოსტებისთვის ---
     const txt = inp.value.trim();
-    // ... და ა.შ.
-}
+    
+    // ვამოწმებთ, ფოტოს ID აწერია თუ ჩვეულებრივი პოსტისაა
+    const targetId = inp.getAttribute('data-target-post') || currentPostId;
 
+    if (!txt || !targetId || !auth.currentUser) return;
+
+    const commData = {
+        text: txt,
+        authorId: auth.currentUser.uid,
+        authorName: document.getElementById('profName').innerText,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    // აგზავნის ბაზაში
+    db.ref(`post_comments/${targetId}`).push(commData).then(() => {
+        inp.value = ""; // ასუფთავებს ველს
+        
+        // ზრდის რაოდენობას ბაზაში
+        db.ref(`community_posts/${targetId}/commentsCount`).transaction(c => (c || 0) + 1);
+        
+        // ეგრევე აახლებს სიას ეკრანზე
+        if (typeof loadComments === "function") {
+            loadComments(targetId);
+        }
+    });
+}
