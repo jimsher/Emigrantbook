@@ -1460,31 +1460,61 @@ function cancelWallImg() {
  document.getElementById('wallImgInput').value = "";
  document.getElementById('wallImgPreviewBox').style.display = 'none';
 }
+
 async function submitWallPost() {
- const text = document.getElementById('wallPostText').value;
- const file = document.getElementById('wallImgInput').files[0];
- if(!text.trim() && !file) return alert("დაწერეთ რამე");
- if(!canAfford(2)) return; 
- const btn = document.querySelector('[onclick="submitWallPost()"]');
- btn.disabled = true; btn.innerText = "...";
- let finalUrl = "";
- if(file) {
- const formData = new FormData();
- formData.append("file", file); formData.append("upload_preset", "Emigrantbook.video"); 
- try {
- const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { method: 'POST', body: formData });
- const data = await res.json();
- if (data.secure_url) finalUrl = data.secure_url;
- } catch (err) { alert("კავშირის შეცდომა!"); btn.disabled = false; btn.innerText = "გამოქვეყნება"; return; }
- }
- await db.ref('community_posts').push({
- authorId: auth.currentUser.uid, authorName: myName, authorPhoto: myPhoto,
- text: text, image: finalUrl, timestamp: Date.now()
- });
- spendAkho(2, 'Community Post');
- document.getElementById('wallPostText').value = "";
- cancelWallImg();
- btn.disabled = false; btn.innerText = "გამოქვეყნება";
+    const text = document.getElementById('wallPostText').value;
+    const file = document.getElementById('wallImgInput').files[0];
+    
+    if(!text.trim() && !file) return alert("დაწერეთ რამე");
+    if(!canAfford(2)) return; 
+
+    const btn = document.querySelector('[onclick="submitWallPost()"]');
+    btn.disabled = true; btn.innerText = "...";
+    
+    let finalUrl = "";
+
+    try {
+        if(file) {
+            // Cloudinary-ს ნაცვლად ვიყენებთ ImgBB-ს, რომელიც ფოტოებს უპრობლემოდ იღებს
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const res = await fetch('https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67', { 
+                method: 'POST', 
+                body: formData 
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                finalUrl = data.data.url;
+            } else {
+                alert("ფოტოს ატვირთვა ვერ მოხერხდა (ImgBB Error)");
+                btn.disabled = false; btn.innerText = "გამოქვეყნება";
+                return;
+            }
+        }
+
+        // მონაცემების შენახვა Firebase-ში
+        await db.ref('community_posts').push({
+            authorId: auth.currentUser.uid,
+            authorName: myName,
+            authorPhoto: myPhoto,
+            text: text,
+            image: finalUrl, // აქ უკვე იქნება ImgBB-ს ლინკი
+            timestamp: Date.now()
+        });
+
+        spendAkho(2, 'Community Post');
+        document.getElementById('wallPostText').value = "";
+        cancelWallImg();
+        alert("პოსტი გამოქვეყნდა!");
+
+    } catch (err) {
+        alert("კავშირის შეცდომა!");
+        console.error(err);
+    } finally {
+        btn.disabled = false; btn.innerText = "გამოქვეყნება";
+    }
 }
 
 
