@@ -1249,24 +1249,28 @@ async function startTokenUpload() {
     const myToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh";
 
     try {
-        // 1. სერვერის მოძიება
+        // 1. სერვერის მოძიება (აქ Proxy არ გვჭირდება)
         const srvRes = await fetch('https://api.gofile.io/servers');
         const srvData = await srvRes.json();
         const serverName = srvData.data.servers[0].name;
 
-        btn.innerText = "ვიდეო იტვირთება 3TB საცავში...";
+        btn.innerText = "ვიდეო იტვირთება (CORS Proxy-ით)...";
 
         const formData = new FormData();
         formData.append("file", file);
 
-        // 2. ატვირთვა FETCH-ით
-        const uploadRes = await fetch(`https://${serverName}.gofile.io/contents/uploadfile`, {
+        // 2. ატვირთვა PROXY-ის საშუალებით (ეს აგვარებს ბლოკირებას)
+        // ვიყენებთ ყველაზე პოპულარულ პროქსის: cors-anywhere
+        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+        const targetUrl = `https://${serverName}.gofile.io/contents/uploadfile`;
+
+        const uploadRes = await fetch(proxyUrl + targetUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${myToken}`
+                'Authorization': `Bearer ${myToken}`,
+                'Origin': window.location.origin // ვაჩვენებთ საიდან მოდის მოთხოვნა
             },
-            body: formData,
-            mode: 'cors' // CORS-ის მხარდაჭერა
+            body: formData
         });
 
         const response = await uploadRes.json();
@@ -1284,16 +1288,17 @@ async function startTokenUpload() {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
+            alert("ვიდეო წარმატებით აიტვირთა Gofile-ზე!");
             location.reload();
         } else {
-            alert("Gofile-ის შეცდომა: " + response.status);
+            alert("Gofile შეცდომა: " + response.status);
             btn.disabled = false;
         }
 
     } catch (err) {
         console.error("Upload error:", err);
-        alert("ბრაუზერმა დაბლოკა ატვირთვა (CORS Error). გთხოვთ, სცადოთ ინკოგნიტო რეჟიმიდან ან შეამოწმოთ ინტერნეტი.");
+        // თუ Proxy-ზე ჯერ არ გაგივლია ავტორიზაცია, ამას დაგიწერს
+        alert("საჭიროა Proxy-ს გააქტიურება. გადადით ბმულზე: https://cors-anywhere.herokuapp.com/corsdemo და დააჭირეთ 'Request temporary access', შემდეგ სცადეთ ატვირთვა თავიდან.");
         btn.disabled = false;
         btn.innerText = "ატვირთვა";
     }
