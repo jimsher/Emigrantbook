@@ -182,15 +182,15 @@ function handleSendComment() {
         timestamp: Date.now()
     };
 
-    // 1. ვაგზავნით კომენტარს
+    // 1. მხოლოდ ვაგზავნით კომენტარს
     db.ref('post_comments/' + currentOpenedPostId).push(commData).then(() => {
-        inp.value = ""; // ვასუფთავებთ ველს
+        inp.value = ""; // ველს ვასუფთავებთ
 
-        // 2. ვუმატებთ ბაზაში (მხოლოდ აქ!)
-        // ამის მერე viewFullPhoto-ში ჩართული .on('value') თავისით შეცვლის ციფრს ეკრანზე
+        // 2. მხოლოდ ბაზაში ვუმატებთ რაოდენობას
+        // არანაირი innerText = ... აქ არ უნდა ეწეროს!
         db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
 
-        // 3. კომენტარების სიის განახლება
+        // 3. მხოლოდ სიას ვანახლებთ (ტექსტებს)
         if (typeof loadComments === "function") {
             loadComments(currentOpenedPostId);
         }
