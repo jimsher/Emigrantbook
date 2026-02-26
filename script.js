@@ -1241,41 +1241,40 @@ window.deleteMessage = function(chatId, msgId, senderId) {
     
     const fileInput = document.getElementById('videoInput');
     const file = fileInput.files[0];
-    if (!file) return alert("აირჩიეთ ვიდეო");
+    if (!file) return alert("გთხოვთ, აირჩიოთ ვიდეო");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "პრემიუმ არხით ატვირთვა...";
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('anonymous', 'false');
+    btn.innerText = "Gofile პრემიუმ ატვირთვა...";
 
     try {
-        const token = "P9pv2cyOn7rVXcCpqbc1Jc14bf7DJvdl";
+        // 1. ჯერ ვიგებთ საუკეთესო პრემიუმ სერვერს
+        const serverRes = await fetch('https://api.gofile.io/getServer');
+        const serverData = await serverRes.json();
+        const serverName = serverData.data.server;
+
+        // 2. ვამზადებთ ფაილს გასაგზავნად
+        const formData = new FormData();
+        formData.append('file', file);
         
-        // ვიყენებთ პრემიუმ API-ს პირდაპირ
-        const res = await fetch('https://pixeldrain.com/api/file', {
+        // აქ ჩასვი შენი GOFILE API TOKEN (Settings-დან აიღე)
+        const gofileToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh"; 
+        formData.append('token', gofileToken);
+
+        // 3. ატვირთვა პრემიუმ სერვერზე
+        const uploadRes = await fetch(`https://${serverName}.gofile.io/uploadFile`, {
             method: 'POST',
-            headers: {
-                // ავტორიზაცია სერვერისთვის
-                'Authorization': 'Basic ' + btoa(":" + token)
-            },
-            mode: 'cors', // ვაიძულებთ ბრაუზერს დაუშვას კავშირი
             body: formData
         });
 
-        if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.message || "სერვერის ბლოკი");
-        }
+        const uploadData = await uploadRes.json();
 
-        const data = await res.json();
-
-        if (data.success) {
-            const fileId = data.id;
-            // პრემიუმ ლინკი პირდაპირი ყურებისთვის
-            const directVideoUrl = `https://pixeldrain.com/api/file/${fileId}`;
+        if (uploadData.status === 'success') {
+            // ვიღებთ პირდაპირ ლინკს (Gofile Direct Download)
+            const fileId = uploadData.data.fileId;
+            const fileName = uploadData.data.fileName;
+            // პრემიუმ ლინკი, რომელიც მომენტალურად ჩაირთვება
+            const directVideoUrl = `https://${serverName}.gofile.io/download/web/${fileId}/${fileName}`;
 
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
@@ -1287,13 +1286,14 @@ window.deleteMessage = function(chatId, msgId, senderId) {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა პრემიუმ საცავში!");
+            alert("ვიდეო წარმატებით აიტვირთა Gofile პრემიუმზე!");
             location.reload();
+        } else {
+            alert("Gofile-ის შეცდომა: " + uploadData.data);
         }
     } catch (err) {
-        console.error("ბრაუზერის შეცდომა:", err);
-        // თუ მაინც "ინტერნეტის შეცდომას" გიწერს, ესე იგი საიტის ჰოსტინგი ბლოკავს გასვლას
-        alert("ბრაუზერი ბლოკავს ატვირთვას. სინჯეთ Chrome-ის ინკოგნიტო რეჟიმში (Incognito).");
+        console.error("Gofile Premium Error:", err);
+        alert("ინტერნეტის შეცდომა! შეამოწმეთ Gofile ტოკენი.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
