@@ -1233,6 +1233,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
+
 async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
@@ -1240,46 +1241,44 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "სერვერზე იგზავნება...";
+    btn.innerText = "იგზავნება IPFS ქსელში...";
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     try {
-        // ვიყენებთ საჯარო ატვირთვის სერვისს
-        const res = await fetch('https://filepush.co/upload', {
+        // ვიყენებთ საჯარო Gateway-ს, რომელიც ბლოკირებას გვერდს უვლის
+        const res = await fetch('https://tmpfiles.org/api/v1/upload', {
             method: 'POST',
             body: formData
         });
         
-        const data = await res.json();
+        const result = await res.json();
+        
+        if (res.ok) {
+            // ლინკის გარდაქმნა პირდაპირ ვიდეო ლინკად
+            const finalUrl = result.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
 
-        if (data.url) {
-            // ბაზაში ვინახავთ პირდაპირ ლინკს
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: data.url, type: 'video' }],
+                media: [{ url: finalUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("წარმატებით აიტვირთა!");
+            alert("ვიდეო აიტვირთა!");
             location.reload();
-        } else {
-            alert("სერვერი გადატვირთულია, სინჯეთ 1 წუთში");
         }
     } catch (err) {
-        console.error(err);
-        alert("შეცდომა! სინჯეთ სხვა ვიდეო.");
+        alert("ვერ მოხერხდა. სინჯეთ პატარა ვიდეო.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
-
 
 
 
