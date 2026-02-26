@@ -241,3 +241,72 @@ function loadComments(postId) {
         }
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 1. ფოტოს კომენტარის გაგზავნა (ცალკე ფუნქცია, რომ პოსტებს არ შეეხოს)
+function submitPhotoCommentDirect() {
+    const inp = document.getElementById('photoCommInp');
+    if (!inp || !currentOpenedPostId || !auth.currentUser) return;
+
+    const txt = inp.value.trim();
+    if (!txt) return;
+
+    const commData = {
+        text: txt,
+        authorId: auth.currentUser.uid,
+        authorName: document.getElementById('profName').innerText || "User",
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('post_comments/' + currentOpenedPostId).push(commData).then(() => {
+        inp.value = "";
+        // მხოლოდ ბაზაში ვზრდით რაოდენობას
+        db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
+        
+        // თუ გაქვს loadComments ფუნქცია, გამოიძახე
+        if (typeof loadComments === "function") {
+            loadComments(currentOpenedPostId);
+        }
+    });
+}
+
+// 2. პოსტის კომენტარის გაგზავნა (დაუბრუნდა ძველ მდგომარეობას)
+function postComment() {
+    const inp = document.getElementById('commInp');
+    if (!inp || !currentPostId || !auth.currentUser) return;
+
+    const txt = inp.value.trim();
+    if (!txt) return;
+
+    const commData = {
+        text: txt,
+        authorId: auth.currentUser.uid,
+        authorName: document.getElementById('profName').innerText,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('post_comments/' + currentPostId).push(commData).then(() => {
+        inp.value = "";
+        db.ref('community_posts/' + currentPostId + '/commentsCount').transaction(c => (c || 0) + 1);
+        
+        if (typeof loadComments === "function") {
+            loadComments(currentPostId);
+        }
+    });
+}
