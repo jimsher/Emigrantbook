@@ -1232,52 +1232,66 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  
 
 
+
 async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
-    if (!file) return alert("აირჩიეთ ვიდეო");
-
-    // შემოწმება: თუ ვიდეო ძალიან დიდია (მაგ: 50MB-ზე მეტი), იუზერს გავაფრთხილებთ
-    if (file.size > 52428800) return alert("ვიდეო ზედმეტად დიდია (Max 50MB)");
+    if (!file) return alert("Select video");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "მიმდინარეობს ატვირთვა...";
+    btn.innerText = "Uploading to Gofile...";
+
+    // შენი Gofile ტოკენი სურათიდან
+    const accountToken = "P9pv2cyOn7rVXcCpqbc1Jcl4bf7DJvdL"; 
 
     try {
-        // ვიყენებთ Firebase Storage-ს, რომელიც შენს კონფიგურაციაში უკვე არის
-        const storageRef = firebase.storage().ref();
-        const fileName = 'tokens/' + Date.now() + '_' + file.name;
-        const fileRef = storageRef.child(fileName);
+        // 1. ჯერ ვპოულობთ საუკეთესო სერვერს
+        const serverRes = await fetch('https://api.gofile.io/getServer');
+        const serverData = await serverRes.json();
+        if (serverData.status !== "ok") throw new Error("Gofile server error");
+        const server = serverData.data.server;
 
-        // ატვირთვის პროცესი
-        const uploadTask = await fileRef.put(file);
-        
-        // ვიღებთ პირდაპირ ლინკს
-        const downloadURL = await uploadTask.ref.getDownloadURL();
+        // 2. ვამზადებთ ფაილს
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("token", accountToken);
 
-        // ვინახავთ პოსტს ბაზაში
-        await db.ref('posts').push({
-            authorId: auth.currentUser.uid,
-            authorName: myName,
-            authorPhoto: myPhoto,
-            text: document.getElementById('videoDesc').value,
-            media: [{ url: downloadURL, type: 'video' }],
-            timestamp: Date.now()
+        // 3. ატვირთვა Gofile-ზე
+        const res = await fetch(`https://${server}.gofile.io/uploadFile`, { 
+            method: 'POST', 
+            body: formData 
         });
+        const data = await res.json();
 
-        spendAkho(5, 'Token Upload');
-        alert("ვიდეო წარმატებით აიტვირთა!");
-        location.reload();
+        if (data.status === "ok") {
+            // ვიყენებთ პირდაპირ ლინკს (direct link)
+            const videoUrl = data.data.downloadPage;
 
-    } catch (err) {
-        console.error("Storage Error:", err);
-        alert("ვერ მოხერხდა ატვირთვა. შეამოწმეთ Firebase Storage Rules!");
-        btn.disabled = false;
-        btn.innerText = "Upload";
+            // 4. შენახვა Firebase ბაზაში (შენი ორიგინალი სტრუქტურა)
+            await db.ref('posts').push({
+                authorId: auth.currentUser.uid, 
+                authorName: myName, 
+                authorPhoto: myPhoto,
+                text: document.getElementById('videoDesc').value,
+                media: [{ url: videoUrl, type: 'video' }],
+                timestamp: Date.now()
+            });
+
+            spendAkho(5, 'Token Upload');
+            alert("Success!");
+            location.reload();
+        } else {
+            alert("Upload failed: " + data.status);
+            btn.disabled = false; btn.innerText = "Upload";
+        }
+    } catch (err) { 
+        console.error(err);
+        alert("Connection Error!"); 
+        btn.disabled = false; 
+        btn.innerText = "Upload"; 
     }
 }
-
 
 
 
