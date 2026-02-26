@@ -1240,31 +1240,34 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "იტვირთება (25GB საცავში)...";
+    btn.innerText = "კავშირის დამყარება...";
 
-    // შენი ზუსტი გასაღებები
     const accessKey = "Ffsgyqoq4Gl4LF9C";
     const secretKey = "6pMdn9aklSVW3nEYEIB7Ibx2PQYfG467OdYuAZNq";
-    const bucketName = "emigrant"; // დარწმუნდი რომ Tebi-ზე ზუსტად ეს სახელი დაარქვი
+    const bucketName = "emigrant";
+    const fileName = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+    const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
 
-    try {
-        const fileName = Date.now() + "_" + file.name.replace(/\s+/g, '_');
-        const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl, true);
+    
+    // ავტორიზაცია
+    const auth = btoa(accessKey + ":" + secretKey);
+    xhr.setRequestHeader('Authorization', 'Basic ' + auth);
+    xhr.setRequestHeader('Content-Type', file.type);
 
-        // ავტორიზაციის მომზადება
-        const authString = btoa(accessKey + ':' + secretKey);
+    // ატვირთვის პროგრესის კონტროლი
+    xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            btn.innerText = `ატვირთვა: ${percent}%`;
+            console.log("Progress:", percent);
+        }
+    };
 
-        const res = await fetch(uploadUrl, {
-            method: 'PUT',
-            body: file,
-            headers: {
-                'Authorization': 'Basic ' + authString,
-                'Content-Type': file.type
-            }
-        });
-
-        if (res.ok || res.status === 200 || res.status === 201) {
-            // წარმატების შემთხვევაში ვინახავთ ლინკს Firebase-ში
+    xhr.onload = async () => {
+        if (xhr.status === 200 || xhr.status === 201) {
+            console.log("Success! URL:", uploadUrl);
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
@@ -1275,21 +1278,24 @@ async function startTokenUpload() {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით გამოქვეყნდა!");
+            alert("ვიდეო წარმატებით აიტვირთა!");
             location.reload();
         } else {
-            const errorText = await res.text();
-            console.error("Tebi Error:", errorText);
-            alert("სერვერის შეცდომა: " + res.status + ". შეამოწმეთ Bucket-ის სახელი!");
+            console.error("Tebi Error Status:", xhr.status);
+            alert("სერვერმა უარი თქვა (Error " + xhr.status + "). შეამოწმეთ CORS!");
             btn.disabled = false;
             btn.innerText = "Upload";
         }
-    } catch (err) {
-        console.error("Upload Error:", err);
-        alert("კავშირის შეცდომა! Tebi.io-ზე CORS წესები გაწერილი გაქვს?");
+    };
+
+    xhr.onerror = (err) => {
+        console.error("XHR Network Error:", err);
+        alert("კავშირის შეცდომა! სერვერი არ გვპასუხობს.");
         btn.disabled = false;
         btn.innerText = "Upload";
-    }
+    };
+
+    xhr.send(file);
 }
 
 
