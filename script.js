@@ -1234,49 +1234,32 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
-
 async function startTokenUpload() {
     if (!canAfford(5)) return;
 
     const fileInput = document.getElementById('videoInput');
     const file = fileInput.files[0];
-    if (!file) return alert("გთხოვთ, აირჩიოთ ვიდეო");
+    if (!file) return alert("აირჩიეთ ვიდეო");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true;
-    btn.innerText = "სერვერის მომზადება...";
+    btn.innerText = "იტვირთება სერვერზე...";
 
-    const myToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh";
+    const formData = new FormData();
+    formData.append("file", file);
 
     try {
-        // 1. სერვერის მოძიება (აქ Proxy არ გვჭირდება)
-        const srvRes = await fetch('https://api.gofile.io/servers');
-        const srvData = await srvRes.json();
-        const serverName = srvData.data.servers[0].name;
-
-        btn.innerText = "ვიდეო იტვირთება (CORS Proxy-ით)...";
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        // 2. ატვირთვა PROXY-ის საშუალებით (ეს აგვარებს ბლოკირებას)
-        // ვიყენებთ ყველაზე პოპულარულ პროქსის: cors-anywhere
-        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-        const targetUrl = `https://${serverName}.gofile.io/contents/uploadfile`;
-
-        const uploadRes = await fetch(proxyUrl + targetUrl, {
+        // მიმართავ შენს ახალ PHP ფაილს
+        const res = await fetch('upload_proxy.php', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${myToken}`,
-                'Origin': window.location.origin // ვაჩვენებთ საიდან მოდის მოთხოვნა
-            },
             body: formData
         });
 
-        const response = await uploadRes.json();
+        const response = await res.json();
 
         if (response.status === 'ok') {
-            const finalLink = `https://${serverName}.gofile.io/download/web/${response.data.id}/${response.data.fileName}`;
+            // Gofile-ს სერვერის სახელი პასუხშივე მოყვება
+            const finalLink = `https://store.gofile.io/download/web/${response.data.id}/${response.data.fileName}`;
 
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
@@ -1288,19 +1271,15 @@ async function startTokenUpload() {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა Gofile-ზე!");
+            alert("ვიდეო წარმატებით აიტვირთა!");
             location.reload();
         } else {
-            alert("Gofile შეცდომა: " + response.status);
+            alert("შეცდომა: " + response.status);
             btn.disabled = false;
         }
-
     } catch (err) {
-        console.error("Upload error:", err);
-        // თუ Proxy-ზე ჯერ არ გაგივლია ავტორიზაცია, ამას დაგიწერს
-        alert("საჭიროა Proxy-ს გააქტიურება. გადადით ბმულზე: https://cors-anywhere.herokuapp.com/corsdemo და დააჭირეთ 'Request temporary access', შემდეგ სცადეთ ატვირთვა თავიდან.");
+        alert("სერვერთან კავშირი ვერ დამყარდა. დარწმუნდით, რომ upload_proxy.php ატვირთულია.");
         btn.disabled = false;
-        btn.innerText = "ატვირთვა";
     }
 }
 
