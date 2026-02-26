@@ -1334,8 +1334,19 @@ function renderTokenFeed() {
             [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
         }
         postEntries.forEach(([id, post]) => {
-            if (post.media && post.media.some(m => m.type === 'video')) {
-                const videoUrl = post.media.find(m => m.type === 'video').url;
+            // აქ შევცვალე: ახლა ხედავს როგორც 'video'-ს, ისე 'video_embed'-ს
+            if (post.media && post.media.some(m => m.type === 'video' || m.type === 'video_embed')) {
+                const mediaItem = post.media.find(m => m.type === 'video' || m.type === 'video_embed');
+                const videoUrl = mediaItem.url;
+                
+                // აქ ვწყვეტთ: iframe ვაჩვენოთ თუ ჩვეულებრივი video ტეგი
+                let videoHTML = "";
+                if (mediaItem.type === 'video_embed') {
+                    videoHTML = `<iframe src="${videoUrl}" width="100%" height="100%" frameborder="0" allowfullscreen scrolling="no" style="background:#000;"></iframe>`;
+                } else {
+                    videoHTML = `<video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>`;
+                }
+
                 const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
                 const shareCount = post.shares || 0;
                 const saveCount = post.saves || 0;
@@ -1345,7 +1356,7 @@ function renderTokenFeed() {
                 const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 card.innerHTML = `
-                <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
+                ${videoHTML}
                 <div class="side-actions">
                     <div style="position:relative">
                         <img id="ava-${id}" src="https://ui-avatars.com/api/?name=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
@@ -1403,6 +1414,9 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
+
+
+
 
 
 
