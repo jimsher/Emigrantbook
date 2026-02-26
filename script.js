@@ -1231,6 +1231,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  }
  
 
+
 async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
@@ -1238,38 +1239,33 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "Uploading to Gofile...";
-
-    // შენი Account Token სურათიდან
-    const accountToken = "P9pv2cyOn7rVXcCpqbc1Jcl4bf7DJvdL"; 
+    btn.innerText = "Uploading...";
 
     try {
-        // 1. ჯერ ვიგებთ თავისუფალ სერვერს Gofile-სგან
+        // 1. ავტომატურად ვპოულობთ თავისუფალ სერვერს (არ სჭირდება გასაღები)
         const serverRes = await fetch('https://api.gofile.io/getServer');
         const serverData = await serverRes.json();
-        if (serverData.status !== "ok") throw new Error("Gofile server error");
         const server = serverData.data.server;
 
-        // 2. ვამზადებთ მონაცემებს ატვირთვისთვის
+        // 2. ვამზადებთ ფაილს
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("token", accountToken);
 
-        // 3. ვიდეოს ატვირთვა Gofile-ზე
-        const res = await fetch(`https://${server}.gofile.io/uploadFile`, { 
-            method: 'POST', 
-            body: formData 
+        // 3. ატვირთვა GoFile-ზე
+        const uploadRes = await fetch(`https://${server}.gofile.io/uploadFile`, {
+            method: 'POST',
+            body: formData
         });
-        const data = await res.json();
+        const uploadData = await uploadRes.json();
 
-        if (data.status === "ok") {
-            // ვიყენებთ downloadPage-ს, რადგან ეს არის ვიდეოს მუდმივი მისამართი
-            const videoUrl = data.data.downloadPage;
+        if (uploadData.status === "ok") {
+            // ვიღებთ ვიდეოს ლინკს
+            const videoUrl = uploadData.data.downloadPage; 
 
-            // 4. მონაცემების შენახვა Firebase-ში
+            // 4. ვინახავთ Firebase-ში (შენი ორიგინალი ლოგიკით)
             await db.ref('posts').push({
-                authorId: auth.currentUser.uid, 
-                authorName: myName, 
+                authorId: auth.currentUser.uid,
+                authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
                 media: [{ url: videoUrl, type: 'video' }],
@@ -1280,22 +1276,16 @@ async function startTokenUpload() {
             alert("Success!");
             location.reload();
         } else {
-            alert("Upload failed: " + data.status);
+            alert("Upload failed!");
             btn.disabled = false; btn.innerText = "Upload";
         }
-    } catch (err) { 
+
+    } catch (err) {
         console.error(err);
-        alert("Connection Error!"); 
-        btn.disabled = false; 
-        btn.innerText = "Upload"; 
+        alert("Connection Error!");
+        btn.disabled = false; btn.innerText = "Upload";
     }
 }
-
-function togglePlayPause(vid) {
-    if (vid.paused) vid.play();
-    else vid.pause();
-}
-
 
 
 
