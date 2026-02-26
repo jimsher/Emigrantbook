@@ -196,3 +196,12 @@ function handleSendComment() {
         }
     });
 }
+
+
+
+
+
+
+
+
+
