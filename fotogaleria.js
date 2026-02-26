@@ -165,22 +165,24 @@ function openPhotoComments(event) {
 
 // 2. კომენტარის გაგზავნის ერთიანი ფუნქცია (ჩაანაცვლე შენი handleSendComment ან postComment ამით)
 function handleSendComment() {
-    // მივმართავთ სპეციალურად ფოტოს ინპუტს
-    const inp = document.getElementById('photoCommInp'); 
+    // ზუსტად იმ ID-ს ვიღებთ, რაც HTML-ში ჩავწერეთ
+    const inp = document.getElementById('photoCommInp');
     
     if (!inp) {
-        alert("შეცდომა: ინპუტი ვერ მოიძებნა!");
+        alert("შეცდომა: ვერ ვიპოვე ტექსტის ჩასაწერი ველი (photoCommInp)!");
         return;
     }
 
     const txt = inp.value.trim();
+    
+    // აქ ვამოწმებთ რეალურად წერია თუ არა რამე
     if (!txt) {
-        alert("ტექსტი ცარიელია!");
+        alert("ტექსტი ცარიელია! გთხოვ ჩაწერო რამე.");
         return;
     }
 
     if (!currentOpenedPostId) {
-        alert("შეცდომა: პოსტის ID დაკარგულია!");
+        alert("შეცდომა: ფოტოს ID არ არის განსაზღვრული!");
         return;
     }
 
@@ -191,19 +193,21 @@ function handleSendComment() {
         timestamp: Date.now()
     };
 
-    // გაგზავნა
+    // გაგზავნა ბაზაში
     db.ref('post_comments/' + currentOpenedPostId).push(commData)
     .then(() => {
-        inp.value = ""; // ველის გასუფთავება
+        inp.value = ""; // ველის გასუფთავება გაგზავნის შემდეგ
         
-        // რაოდენობის მომატება ბაზაში
+        // რაოდენობის მომატება
         db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
 
-        // კომენტარების ჩატვირთვა
+        // სიის განახლება
         if (typeof loadComments === "function") {
             loadComments(currentOpenedPostId);
         }
-        alert("კომენტარი წარმატებით გაიგზავნა!");
+        
+        // სურვილისამებრ შეგიძლია დატოვო ეს alert ან წაშალო
+        console.log("კომენტარი გაიგზავნა!");
     })
     .catch(err => {
         alert("ბაზის შეცდომა: " + err.message);
