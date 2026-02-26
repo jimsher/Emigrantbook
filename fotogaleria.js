@@ -163,28 +163,17 @@ function openPhotoComments(event) {
     }
 }
 
+
+
+
+
 // 2. კომენტარის გაგზავნის ერთიანი ფუნქცია (ჩაანაცვლე შენი handleSendComment ან postComment ამით)
 function handleSendComment() {
-    // ზუსტად იმ ID-ს ვიღებთ, რაც HTML-ში ჩავწერეთ
     const inp = document.getElementById('photoCommInp');
-    
-    if (!inp) {
-        alert("შეცდომა: ვერ ვიპოვე ტექსტის ჩასაწერი ველი (photoCommInp)!");
-        return;
-    }
+    if (!inp) return;
 
     const txt = inp.value.trim();
-    
-    // აქ ვამოწმებთ რეალურად წერია თუ არა რამე
-    if (!txt) {
-        alert("ტექსტი ცარიელია! გთხოვ ჩაწერო რამე.");
-        return;
-    }
-
-    if (!currentOpenedPostId) {
-        alert("შეცდომა: ფოტოს ID არ არის განსაზღვრული!");
-        return;
-    }
+    if (!txt || !currentOpenedPostId || !auth.currentUser) return;
 
     const commData = {
         text: txt,
@@ -193,23 +182,17 @@ function handleSendComment() {
         timestamp: Date.now()
     };
 
-    // გაგზავნა ბაზაში
-    db.ref('post_comments/' + currentOpenedPostId).push(commData)
-    .then(() => {
-        inp.value = ""; // ველის გასუფთავება გაგზავნის შემდეგ
-        
-        // რაოდენობის მომატება
+    // 1. ვაგზავნით კომენტარს
+    db.ref('post_comments/' + currentOpenedPostId).push(commData).then(() => {
+        inp.value = ""; // ვასუფთავებთ ველს
+
+        // 2. ვუმატებთ ბაზაში (მხოლოდ აქ!)
+        // ამის მერე viewFullPhoto-ში ჩართული .on('value') თავისით შეცვლის ციფრს ეკრანზე
         db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
 
-        // სიის განახლება
+        // 3. კომენტარების სიის განახლება
         if (typeof loadComments === "function") {
             loadComments(currentOpenedPostId);
         }
-        
-        // სურვილისამებრ შეგიძლია დატოვო ეს alert ან წაშალო
-        console.log("კომენტარი გაიგზავნა!");
-    })
-    .catch(err => {
-        alert("ბაზის შეცდომა: " + err.message);
     });
 }
