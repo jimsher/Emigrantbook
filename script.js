@@ -1235,65 +1235,46 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 async function startTokenUpload() {
-    // 1. შემოწმება აქვს თუ არა იუზერს საკმარისი აკჰო (5 აკჰო)
     if (!canAfford(5)) return;
-
     const file = document.getElementById('videoInput').files[0];
-    if (!file) return alert("გთხოვთ, აირჩიოთ ვიდეო");
-
     const btn = document.getElementById('upBtn');
-    btn.disabled = true; 
-    btn.innerText = "მიმდინარეობს ატვირთვა...";
+    btn.disabled = true; btn.innerText = "Uploading to BayFiles...";
 
-    // ფორმის მომზადება სერვერისთვის
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-        // 2. ატვირთვა TmpFiles-ზე (უფასო და სწრაფი)
-        const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+        const res = await fetch('https://api.bayfiles.com/upload', {
             method: 'POST',
             body: formData
         });
-        
-        const result = await res.json();
-        
-        if (res.ok && result.data && result.data.url) {
-            // 3. ლინკის გადაკეთება: ნახვის გვერდიდან პირდაპირ ფაილზე
-            // მაგალითად: https://tmpfiles.org/123/vid.mp4 -> https://tmpfiles.org/dl/123/vid.mp4
-            const rawUrl = result.data.url;
-            const directVideoUrl = rawUrl.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+        const data = await res.json();
 
-            // 4. პოსტის შენახვა Firebase-ში სწორი ლინკით
+        if (data.status) {
+            const videoUrl = data.data.file.url.full; // პირდაპირი ლინკი
+
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ 
-                    url: directVideoUrl, 
-                    type: 'video' 
-                }],
+                media: [{ url: videoUrl, type: 'video' }],
                 timestamp: Date.now()
             });
-
-            // 5. აკჰოს ჩამოჭრა და გვერდის განახლება
-            spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით გამოქვეყნდა!");
+            alert("წარმატებით აიტვირთა 20GB საცავში!");
             location.reload();
-
-        } else {
-            alert("სერვერმა ფაილი ვერ მიიღო, სინჯეთ სხვა ვიდეო.");
-            btn.disabled = false;
-            btn.innerText = "Upload";
         }
     } catch (err) {
-        console.error("Upload Error:", err);
-        alert("კავშირის შეცდომა! შეამოწმეთ ინტერნეტი.");
+        alert("სერვერი დაკავებულია.");
+    } finally {
         btn.disabled = false;
-        btn.innerText = "Upload";
     }
 }
+
+
+
+
+                
 
 
 
