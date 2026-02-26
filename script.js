@@ -1240,29 +1240,29 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "იტვირთება (25GB საცავში)...";
+    btn.innerText = "იტვირთება Tebi-ზე (25GB)...";
 
-    // შენი გასაღები
+    // შენი გასაღებები
     const accessKey = "Ffsgyqoq4Gl4LF9C";
-    // ბაკეტის სახელი (Tebi-ზე რაც დაარქვი, მაგალითად 'emigrant')
+    const secretKey = "w7MtnS2DJZH8eYGMZ4Yo0w8Cg714EeOdoDPgKcIq";
+    // აუცილებლად შეამოწმე რომ Bucket-ს Tebi-ზე ჰქვია 'emigrant'
     const bucketName = "emigrant"; 
 
     try {
-        // ფაილის უნიკალური სახელი
         const fileName = Date.now() + "_" + file.name;
         const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
 
-        // პირდაპირი ატვირთვა Tebi-ს სერვერზე
+        // S3 ავტორიზაციისთვის ვიყენებთ ორივე გასაღებს
         const res = await fetch(uploadUrl, {
             method: 'PUT',
             headers: {
-                'Authorization': 'Basic ' + btoa(accessKey + ':') // მხოლოდ Access Key-თ
+                'Authorization': 'Basic ' + btoa(accessKey + ':' + secretKey)
             },
             body: file
         });
 
         if (res.status === 200 || res.status === 201) {
-            // თუ აიტვირთა, ვინახავთ ლინკს Firebase-ში
+            // წარმატებული ატვირთვის შემდეგ ვინახავთ ლინკს Firebase-ში
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
@@ -1273,15 +1273,16 @@ async function startTokenUpload() {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით გამოქვეყნდა!");
+            alert("ვიდეო წარმატებით აიტვირთა!");
             location.reload();
         } else {
-            alert("შეცდომა: დარწმუნდით რომ Bucket-ის სახელი სწორია (emigrant)");
+            console.error("Tebi Error Status:", res.status);
+            alert("შეცდომა! დარწმუნდით რომ Bucket შექმნილია Tebi-ზე.");
             btn.disabled = false;
             btn.innerText = "Upload";
         }
     } catch (err) {
-        console.error(err);
+        console.error("Upload Error:", err);
         alert("კავშირის შეცდომა!");
         btn.disabled = false;
         btn.innerText = "Upload";
