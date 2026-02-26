@@ -1235,9 +1235,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
- 
- 
-async function startTokenUpload() {
+ async function startTokenUpload() {
     if (!canAfford(5)) return;
     
     const fileInput = document.getElementById('videoInput');
@@ -1262,7 +1260,7 @@ async function startTokenUpload() {
         const formData = new FormData();
         formData.append('file', file);
 
-        // შენი ტოკენი პირველი სკრინშოტიდან
+        // შენი ტოკენი ბოლო სკრინშოტიდან (Screenshot_20260226_222637)
         const myToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh";
 
         // 3. ატვირთვა პრემიუმ წესით
@@ -1282,7 +1280,7 @@ async function startTokenUpload() {
             const fileId = uploadData.data.id;
             const fileName = uploadData.data.fileName;
             
-            // ეს ლინკი იმუშავებს შენს საიტზე ვიდეო ფლეიერში
+            // პრემიუმ ლინკი პირდაპირი ყურებისთვის (Ads-ის გარეშე)
             const directVideoUrl = `https://${serverName}.gofile.io/download/web/${fileId}/${fileName}`;
 
             // Firebase-ში შენახვა
@@ -1303,12 +1301,14 @@ async function startTokenUpload() {
         }
     } catch (err) {
         console.error("Gofile Error:", err);
-        alert("ინტერნეტის შეცდომა! სცადეთ Chrome-ის ინკოგნიტო რეჟიმიდან.");
+        alert("ინტერნეტის შეცდომა! სცადეთ Chrome-ის ინკოგნიტო რეჟიმიდან (Incognito).");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
+ 
+
 
 
                 
