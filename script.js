@@ -873,106 +873,128 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
  function openProfile(uid) {
- stopMainFeedVideos();
- document.getElementById('profileUI').style.display = 'flex';
- 
- // ვინახავთ UID-ს, რომ ფოტოების სექციამ იცოდეს ვისი სურათები წამოიღოს
- const profNameEl = document.getElementById('profName');
- profNameEl.setAttribute('data-view-uid', uid);
+    stopMainFeedVideos();
+    document.getElementById('profileUI').style.display = 'flex';
+    
+    const profNameEl = document.getElementById('profName');
+    profNameEl.setAttribute('data-view-uid', uid);
 
- // პროფილის გახსნისას ვასუფთავებთ ძველ მდგომარეობას
- document.getElementById('userPhotosGrid').style.display = 'none';
- document.getElementById('profGrid').style.display = 'grid';
- document.getElementById('noPhotosMsg').style.display = 'none';
+    document.getElementById('userPhotosGrid').style.display = 'none';
+    const grid = document.getElementById('profGrid');
+    grid.style.display = 'grid';
+    grid.innerHTML = "იტვირთება..."; // დროებითი ტექსტი
+    document.getElementById('noPhotosMsg').style.display = 'none';
 
- // --- აქედან იწყება ჩამატებული ლოგიკა ღილაკისთვის ---
- const galleryUploadContainer = document.getElementById('galleryUploadBtnContainer');
- if (galleryUploadContainer && auth.currentUser) {
-     galleryUploadContainer.style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
- }
- // --- აქ მთავრდება ჩამატებული ლოგიკა ---
+    const galleryUploadContainer = document.getElementById('galleryUploadBtnContainer');
+    if (galleryUploadContainer && auth.currentUser) {
+        galleryUploadContainer.style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
+    }
 
- document.querySelectorAll('.p-nav-btn').forEach(btn => btn.classList.remove('active'));
- document.getElementById('infoBtn').classList.add('active');
+    document.querySelectorAll('.p-nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('infoBtn').classList.add('active');
 
- if(uid !== auth.currentUser.uid) {
-     db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
-         uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
-     });
- }
- 
- db.ref('users/' + uid).on('value', async snap => {
-     const user = snap.val();
-     if(!user) return;
-     const dot = document.getElementById('profStatusDot');
-     const lastSeenSpan = document.getElementById('profLastSeenText');
-     if(user.presence === 'online') {
-         dot.className = 'status-dot online';
-         lastSeenSpan.innerText = '';
-     } else {
-         const dynamicTime = formatTimeShort(user.presence);
-         if(dynamicTime) {
-             dot.className = 'status-dot offline';
-             lastSeenSpan.innerText = dynamicTime;
-         } else {
-             dot.className = 'status-dot';
-         }
-     }
-     document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
-     profNameEl.innerText = user.name;
-     const followersCount = user.followers ? Object.keys(user.followers).length : 0;
-     const followingCount = user.following ? Object.keys(user.following).length : 0;
-     document.getElementById('statFollowersCount').innerText = followersCount;
-     document.getElementById('statFollowingCount').innerText = followingCount;
-     document.getElementById('followersStatBtn').onclick = () => openSocialList(uid, 'followers');
-     document.getElementById('followingStatBtn').onclick = () => openSocialList(uid, 'following');
-     const controls = document.getElementById('profControls');
-     controls.innerHTML = "";
-     document.querySelector('.profile-nav').style.display = 'flex';
-     document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
-     document.getElementById('profTabs').style.display = 'flex';
-     document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
-     
-     if(uid === auth.currentUser.uid) {
-         controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
-         
-         // --- ახალი ლოგიკა: კამერის ღილაკის ჩასმა Edit-ის გვერდით ---
-         if (galleryUploadContainer) {
-             galleryUploadContainer.style.marginTop = "0"; // მოვაშოროთ ზედა დაშორება
-             controls.appendChild(galleryUploadContainer); // ჩავსვათ კონტროლებში
-         }
-         
-         loadUserVideos(uid);
-         applyLanguage();
-     } else {
-         const isFollowing = user.followers && user.followers[auth.currentUser.uid];
-         const isFriend = user.following && user.following[auth.currentUser.uid] && isFollowing;
-         let canView = false;
-         if(!user.privacy || user.privacy === 'public') canView = true;
-         if(user.privacy === 'friends' && isFriend) canView = true;
-         if(canView) {
-             loadUserVideos(uid);
-             if(isFollowing) {
-                 controls.innerHTML = `
-                 <button class="profile-btn btn-outline" onclick="unfollowUser('${uid}')" data-key="following_btn">Following</button>
-                 <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>
-                 `;
-             } else {
-                 controls.innerHTML = `
-                 <button class="profile-btn btn-gold" style="background:var(--gold); color:black;" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>
-                 <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>
-                 `;
-             }
-         } else {
-             document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
-             document.getElementById('profTabs').style.display = 'none';
-             controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
-         }
-         applyLanguage();
-     }
- });
+    if(uid !== auth.currentUser.uid) {
+        db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
+            uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
+        });
+    }
+    
+    db.ref('users/' + uid).on('value', async snap => {
+        const user = snap.val();
+        if(!user) return;
+
+        // სტატუსის ლოგიკა
+        const dot = document.getElementById('profStatusDot');
+        const lastSeenSpan = document.getElementById('profLastSeenText');
+        if(user.presence === 'online') {
+            dot.className = 'status-dot online';
+            lastSeenSpan.innerText = '';
+        } else {
+            const dynamicTime = formatTimeShort(user.presence);
+            lastSeenSpan.innerText = dynamicTime ? dynamicTime : '';
+            dot.className = dynamicTime ? 'status-dot offline' : 'status-dot';
+        }
+
+        document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
+        profNameEl.innerText = user.name;
+        
+        document.getElementById('statFollowersCount').innerText = user.followers ? Object.keys(user.followers).length : 0;
+        document.getElementById('statFollowingCount').innerText = user.following ? Object.keys(user.following).length : 0;
+        
+        document.getElementById('followersStatBtn').onclick = () => openSocialList(uid, 'followers');
+        document.getElementById('followingStatBtn').onclick = () => openSocialList(uid, 'following');
+        
+        const controls = document.getElementById('profControls');
+        controls.innerHTML = "";
+        document.querySelector('.profile-nav').style.display = 'flex';
+        document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
+        document.getElementById('profTabs').style.display = 'flex';
+        document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
+        
+        // --- ვიდეოების ჩატვირთვის ლოგიკა (პირდაპირ აქ) ---
+        let vCount = 0;
+        db.ref('posts').once('value', pSnap => {
+            grid.innerHTML = ""; // ვასუფთავებთ "იტვირთება"-ს
+            const posts = pSnap.val();
+            if(posts) {
+                Object.values(posts).forEach(post => {
+                    if(post.authorId === uid && post.media) {
+                        const mediaItem = post.media.find(m => m.type === 'video' || m.type === 'video_embed');
+                        if(mediaItem) {
+                            vCount++;
+                            const item = document.createElement('div');
+                            item.className = 'grid-item';
+                            
+                            if (mediaItem.type === 'video_embed') {
+                                // Streamtape ვიდეო პროფილის კვადრატში
+                                item.innerHTML = `<div style="width:100%; height:100%; background:#111; display:flex; align-items:center; justify-content:center; border-radius:8px;">
+                                    <i class="fas fa-play" style="color:var(--gold); font-size:20px;"></i>
+                                </div>`;
+                                item.onclick = () => playFullVideo(mediaItem.url, true);
+                            } else {
+                                // ჩვეულებრივი ვიდეო
+                                item.innerHTML = `<video src="${mediaItem.url}" muted playsinline></video>`;
+                                item.onclick = () => playFullVideo(mediaItem.url, false);
+                            }
+                            grid.appendChild(item);
+                        }
+                    }
+                });
+            }
+            document.getElementById('statVidsCount').innerText = vCount;
+        });
+        // --- ვიდეოების ლოგიკის დასასრული ---
+
+        if(uid === auth.currentUser.uid) {
+            controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
+            if (galleryUploadContainer) {
+                galleryUploadContainer.style.marginTop = "0";
+                controls.appendChild(galleryUploadContainer);
+            }
+        } else {
+            const isFollowing = user.followers && user.followers[auth.currentUser.uid];
+            const isFriend = user.following && user.following[auth.currentUser.uid] && isFollowing;
+            let canView = (!user.privacy || user.privacy === 'public' || (user.privacy === 'friends' && isFriend));
+
+            if(canView) {
+                if(isFollowing) {
+                    controls.innerHTML = `
+                    <button class="profile-btn btn-outline" onclick="unfollowUser('${uid}')" data-key="following_btn">Following</button>
+                    <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>`;
+                } else {
+                    controls.innerHTML = `
+                    <button class="profile-btn btn-gold" style="background:var(--gold); color:black;" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>
+                    <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>`;
+                }
+            } else {
+                grid.innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
+                document.getElementById('profTabs').style.display = 'none';
+                controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
+            }
+        }
+        applyLanguage();
+    });
 }
-
 
 
 
