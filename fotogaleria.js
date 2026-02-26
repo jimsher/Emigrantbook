@@ -168,28 +168,32 @@ function handleSendComment() {
     const inp = document.getElementById('commInp');
     const txt = inp.value.trim();
     
-    // ვამოწმებთ, ფოტოს ID აწერია თუ ჩვეულებრივი პოსტისაა
-    const targetId = inp.getAttribute('data-target-post') || currentPostId;
-
-    if (!txt || !targetId || !auth.currentUser) return;
+    // ვიყენებთ იმ ID-ს, რომელიც ფოტოს გახსნისას დავიმახსოვრეთ
+    if (!txt || !currentOpenedPostId || !auth.currentUser) {
+        console.log("შეცდომა: ტექსტი ცარიელია ან პოსტის ID არ არსებობს");
+        return;
+    }
 
     const commData = {
         text: txt,
         authorId: auth.currentUser.uid,
-        authorName: document.getElementById('profName').innerText,
+        authorName: document.getElementById('profName').innerText, // შენი სახელი
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
-    // აგზავნის ბაზაში
-    db.ref(`post_comments/${targetId}`).push(commData).then(() => {
-        inp.value = ""; // ასუფთავებს ველს
-        
-        // ზრდის რაოდენობას ბაზაში
-        db.ref(`community_posts/${targetId}/commentsCount`).transaction(c => (c || 0) + 1);
-        
-        // ეგრევე აახლებს სიას ეკრანზე
+    // 1. ვინახავთ კომენტარს ბაზაში კონკრეტულ ფოლდერში
+    db.ref(`post_comments/${currentOpenedPostId}`).push(commData).then(() => {
+        console.log("კომენტარი წარმატებით გაიგზავნა!");
+        inp.value = ""; // ვასუფთავებთ ველს
+
+        // 2. ვზრდით კომენტარების რაოდენობას პოსტზე
+        db.ref(`community_posts/${currentOpenedPostId}/commentsCount`).transaction(c => (c || 0) + 1);
+
+        // 3. თუ გაქვს კომენტარების ჩამტვირთავი ფუნქცია, გამოვიძახოთ
         if (typeof loadComments === "function") {
-            loadComments(targetId);
+            loadComments(currentOpenedPostId);
         }
+    }).catch(err => {
+        console.error("გაგზავნის შეცდომა:", err);
     });
 }
