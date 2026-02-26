@@ -1229,34 +1229,74 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
  }
  }
- async function startTokenUpload() {
- if (!canAfford(5)) return;
- const file = document.getElementById('videoInput').files[0];
- if (!file) return alert("Select video");
- const btn = document.getElementById('upBtn');
- btn.disabled = true; btn.innerText = "Uploading...";
- const formData = new FormData();
- formData.append("file", file); formData.append("upload_preset", "Emigrantbook.video");
- try {
- const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/video/upload`, { method: 'POST', body: formData });
- const data = await res.json();
- if (data.secure_url) {
- await db.ref('posts').push({
- authorId: auth.currentUser.uid, authorName: myName, authorPhoto: myPhoto,
- text: document.getElementById('videoDesc').value,
- media: [{ url: data.secure_url, type: 'video' }],
- timestamp: Date.now()
- });
- spendAkho(5, 'Token Upload');
- location.reload();
- }
- } catch (err) { alert("Error!"); btn.disabled = false; btn.innerText = "Upload"; }
- }
+ 
 
- function togglePlayPause(vid) {
- if (vid.paused) vid.play();
- else vid.pause();
- }
+async function startTokenUpload() {
+    if (!canAfford(5)) return;
+    const file = document.getElementById('videoInput').files[0];
+    if (!file) return alert("Select video");
+
+    const btn = document.getElementById('upBtn');
+    btn.disabled = true; 
+    btn.innerText = "Uploading to Gofile...";
+
+    // შენი Account Token სურათიდან
+    const accountToken = "P9pv2cyOn7rVXcCpqbc1Jcl4bf7DJvdL"; 
+
+    try {
+        // 1. ჯერ ვიგებთ თავისუფალ სერვერს Gofile-სგან
+        const serverRes = await fetch('https://api.gofile.io/getServer');
+        const serverData = await serverRes.json();
+        if (serverData.status !== "ok") throw new Error("Gofile server error");
+        const server = serverData.data.server;
+
+        // 2. ვამზადებთ მონაცემებს ატვირთვისთვის
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("token", accountToken);
+
+        // 3. ვიდეოს ატვირთვა Gofile-ზე
+        const res = await fetch(`https://${server}.gofile.io/uploadFile`, { 
+            method: 'POST', 
+            body: formData 
+        });
+        const data = await res.json();
+
+        if (data.status === "ok") {
+            // ვიყენებთ downloadPage-ს, რადგან ეს არის ვიდეოს მუდმივი მისამართი
+            const videoUrl = data.data.downloadPage;
+
+            // 4. მონაცემების შენახვა Firebase-ში
+            await db.ref('posts').push({
+                authorId: auth.currentUser.uid, 
+                authorName: myName, 
+                authorPhoto: myPhoto,
+                text: document.getElementById('videoDesc').value,
+                media: [{ url: videoUrl, type: 'video' }],
+                timestamp: Date.now()
+            });
+
+            spendAkho(5, 'Token Upload');
+            alert("Success!");
+            location.reload();
+        } else {
+            alert("Upload failed: " + data.status);
+            btn.disabled = false; btn.innerText = "Upload";
+        }
+    } catch (err) { 
+        console.error(err);
+        alert("Connection Error!"); 
+        btn.disabled = false; 
+        btn.innerText = "Upload"; 
+    }
+}
+
+function togglePlayPause(vid) {
+    if (vid.paused) vid.play();
+    else vid.pause();
+}
+
+
 
 
 
