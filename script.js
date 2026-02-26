@@ -1242,16 +1242,16 @@ async function startTokenUpload() {
     btn.disabled = true; 
     btn.innerText = "იტვირთება (25GB საცავში)...";
 
-    // შენი ახალი გასაღებები
+    // შენი ზუსტი გასაღებები
     const accessKey = "Ffsgyqoq4Gl4LF9C";
-    const secretKey = "87HTOq2nxEKaKPeV4TtENupnlt7HjvlNfyALukeR";
-    const bucketName = "emigrant"; 
+    const secretKey = "6pMdn9aklSVW3nEYEIB7Ibx2PQYfG467OdYuAZNq";
+    const bucketName = "emigrant"; // დარწმუნდი რომ Tebi-ზე ზუსტად ეს სახელი დაარქვი
 
     try {
         const fileName = Date.now() + "_" + file.name.replace(/\s+/g, '_');
         const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
 
-        // ავტორიზაციის კოდი
+        // ავტორიზაციის მომზადება
         const authString = btoa(accessKey + ':' + secretKey);
 
         const res = await fetch(uploadUrl, {
@@ -1264,37 +1264,33 @@ async function startTokenUpload() {
         });
 
         if (res.ok || res.status === 200 || res.status === 201) {
-            // ვიდეოს საბოლოო ლინკი
-            const videoUrl = uploadUrl;
-
+            // წარმატების შემთხვევაში ვინახავთ ლინკს Firebase-ში
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: videoUrl, type: 'video' }],
+                media: [{ url: uploadUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
+            alert("ვიდეო წარმატებით გამოქვეყნდა!");
             location.reload();
         } else {
-            // თუ აქ მოვიდა, ნიშნავს რომ სერვერმა გვიპასუხა მაგრამ უარით
             const errorText = await res.text();
             console.error("Tebi Error:", errorText);
-            alert("სერვერის შეცდომა: " + res.status);
+            alert("სერვერის შეცდომა: " + res.status + ". შეამოწმეთ Bucket-ის სახელი!");
             btn.disabled = false;
             btn.innerText = "Upload";
         }
     } catch (err) {
-        console.error("Network Error:", err);
-        alert("კავშირის შეცდომა! Tebi.io-ზე CORS ჩართული გაქვს?");
+        console.error("Upload Error:", err);
+        alert("კავშირის შეცდომა! Tebi.io-ზე CORS წესები გაწერილი გაქვს?");
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
-
 
 
 
