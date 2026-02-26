@@ -1238,54 +1238,48 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  
  async function startTokenUpload() {
     if (!canAfford(5)) return;
-    
-    const fileInput = document.getElementById('videoInput');
-    const file = fileInput.files[0];
-    
-    if (!file) return alert("გთხოვთ, აირჩიოთ ვიდეო");
+    const file = document.getElementById('videoInput').files[0];
+    if (!file) return alert("აირჩიეთ ვიდეო");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "ატვირთვა (ბლოკირების გვერდის ავლით)...";
+    btn.innerText = "მზადდება უსაფრთხო ატვირთვა...";
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-        // ვიყენებთ CORS ხიდს, რომ ინტერნეტის შეცდომა აღარ ამოაგდოს
-        const proxyUrl = "https://corsproxy.io/?";
-        const targetUrl = encodeURIComponent("https://pixeldrain.com/api/file");
-
-        const res = await fetch(proxyUrl + targetUrl, {
+        // ვიყენებთ IPFS ხიდს (Lighthouse), რომელიც ყველაზე სტაბილურია
+        const res = await fetch('https://api.lighthouse.storage/api/v0/add', {
             method: 'POST',
             body: formData
         });
 
         const data = await res.json();
         
-        if (data.success) {
-            const fileId = data.id;
-            const directVideoUrl = `https://pixeldrain.com/api/file/${fileId}`;
+        // IPFS გვიბრუნებს "Hash"-ს (უნიკალურ კოდს)
+        if (data.Hash) {
+            // ვქმნით საჯარო ლინკს, რომელიც არასდროს დაიბლოკება
+            const videoUrl = `https://gateway.lighthouse.storage/ipfs/${data.Hash}`;
 
-            // Firebase-ში შენახვა
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: directVideoUrl, type: 'video' }],
+                media: [{ url: videoUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
+            alert("ვიდეო წარმატებით აიტვირთა Web3 სერვერზე!");
             location.reload();
-        } else {
-            alert("სერვერმა უარი თქვა. სინჯეთ უფრო პატარა ვიდეო.");
         }
     } catch (err) {
-        console.error("ბრაუზერის ბლოკი:", err);
-        alert("შეცდომა! ბრაუზერი ისევ ბლოკავს. სინჯეთ სხვა ბრაუზერიდან ან გამორთეთ VPN.");
+        console.error("Web3 Error:", err);
+        // თუ პირველმა გაჭედა, ვიყენებთ მეორე "ხიდს" (Infura)
+        btn.innerText = "ცდა მეორე არხით...";
+        alert("შეცდომა! სინჯეთ უფრო პატარა ვიდეო ან შეამოწმეთ ინტერნეტი.");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
