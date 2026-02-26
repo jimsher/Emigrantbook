@@ -1,71 +1,303 @@
-function openProfile(uid) {
- stopMainFeedVideos();
- document.getElementById('profileUI').style.display = 'flex';
- if(uid !== auth.currentUser.uid) {
- db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
- uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
- });
- }
- db.ref('users/' + uid).on('value', async snap => {
- const user = snap.val();
- if(!user) return;
- const dot = document.getElementById('profStatusDot');
- const lastSeenSpan = document.getElementById('profLastSeenText');
- if(user.presence === 'online') {
- dot.className = 'status-dot online';
- lastSeenSpan.innerText = '';
- } else {
- const dynamicTime = formatTimeShort(user.presence);
- if(dynamicTime) {
- dot.className = 'status-dot offline';
- lastSeenSpan.innerText = dynamicTime;
- } else {
- dot.className = 'status-dot';
- }
- }
- document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
- document.getElementById('profName').innerText = user.name;
- const followersCount = user.followers ? Object.keys(user.followers).length : 0;
- const followingCount = user.following ? Object.keys(user.following).length : 0;
- document.getElementById('statFollowersCount').innerText = followersCount;
- document.getElementById('statFollowingCount').innerText = followingCount;
- document.getElementById('followersStatBtn').onclick = () => openSocialList(uid, 'followers');
- document.getElementById('followingStatBtn').onclick = () => openSocialList(uid, 'following');
- const controls = document.getElementById('profControls');
- controls.innerHTML = "";
- document.querySelector('.profile-nav').style.display = 'flex';
- document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
- document.getElementById('profTabs').style.display = 'flex';
- document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
- if(uid === auth.currentUser.uid) {
- controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
- loadUserVideos(uid);
- applyLanguage();
- } else {
- const isFollowing = user.followers && user.followers[auth.currentUser.uid];
- const isFriend = user.following && user.following[auth.currentUser.uid] && isFollowing;
- let canView = false;
- if(!user.privacy || user.privacy === 'public') canView = true;
- if(user.privacy === 'friends' && isFriend) canView = true;
- if(canView) {
- loadUserVideos(uid);
- if(isFollowing) {
- controls.innerHTML = `
- <button class="profile-btn btn-outline" onclick="unfollowUser('${uid}')" data-key="following_btn">Following</button>
- <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>
- `;
- } else {
- controls.innerHTML = `
- <button class="profile-btn btn-gold" style="background:var(--gold); color:black;" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>
- <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>
- `;
- }
- } else {
- document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
- document.getElementById('profTabs').style.display = 'none';
- controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
- }
- applyLanguage();
- }
- });
- }
+function openPhotosSection() {
+    // ვიღებთ იმ იუზერის ID-ს, ვის პროფილსაც ვათვალიერებთ
+    const viewUid = document.getElementById('profName').getAttribute('data-view-uid') || auth.currentUser.uid;
+    
+    // UI ელემენტების მომზადება
+    const videoGrid = document.getElementById('profGrid');
+    const photosGrid = document.getElementById('userPhotosGrid');
+    const noPhotosMsg = document.getElementById('noPhotosMsg');
+
+    // ვიდეოებს ვმალავთ, ფოტოებს ვაჩენთ
+    videoGrid.style.display = 'none';
+    photosGrid.style.display = 'grid';
+    photosGrid.innerHTML = ""; // გასუფთავება
+
+    // ბაზიდან ფოტოების წამოღება ფილტრით (მხოლოდ ამ იუზერის)
+    db.ref('community_posts').orderByChild('authorId').equalTo(viewUid).once('value', snap => {
+        const posts = snap.val();
+        let hasPhotos = false;
+
+        if (posts) {
+            // გადავაქციოთ ობიექტი მასივად, რომ ID-ებიც შევინახოთ
+            const postsArray = Object.keys(posts).map(key => ({ id: key, ...posts[key] }));
+
+            postsArray.reverse().forEach(post => {
+                if (post.image) {
+                    hasPhotos = true;
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'grid-item'; 
+                    
+                    // აქ ჩავამატეთ მონაცემების გადაცემა (ID, ლაიქები, კომენტარები, ნახვები)
+                    photoDiv.innerHTML = `
+    <img src="${post.image}" 
+         style="width:100%; height:100%; object-fit:cover;" 
+         onclick="viewFullPhoto('${post.image}', '${post.id}', ${post.likesCount || 0}, ${post.commentsCount || 0}, ${post.views || 0})">
+`;
+                    photosGrid.appendChild(photoDiv);
+                }
+            });
+        }
+
+        // შემოწმება, აქვს თუ არა ფოტოები
+        noPhotosMsg.style.display = hasPhotos ? 'none' : 'block';
+        if (!hasPhotos) photosGrid.style.display = 'none';
+    });
+
+    // ტაბის გააქტიურება (ვიზუალურად)
+    if (event && event.target) {
+        document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+}
+
+// ფოტოს გადიდების ფუნქცია
+// ცვლადი, რომელიც დაიმახსოვრებს რომელ ფოტოს ვუყურებთ ახლა
+let currentOpenedPostId = null;
+
+// ფოტოს გახსნის განახლებული ფუნქცია
+let currentPhotoListener = null; // ძველი "მოსმენების" მოსაშორებლად
+
+async function viewFullPhoto(url, postId, likes, comms, views) {
+    currentOpenedPostId = postId;
+    const modal = document.getElementById('photoPreviewModal');
+    const likeIcon = document.getElementById('photoLikeIcon');
+    const likeCountSpan = document.getElementById('photoLikeCount');
+    const viewCountSpan = document.getElementById('photoViewCount');
+    
+    document.getElementById('fullPhoto').src = url;
+    modal.style.display = 'flex';
+
+    // თუ წინა ფოტოზე რამე "მოსმენა" გვქონდა ჩართული, ვთიშავთ
+    if (currentPhotoListener) {
+        db.ref('community_posts/' + currentOpenedPostId).off();
+    }
+
+    // --- რეალურ დროში განახლება (Real-time Sync) ---
+    currentPhotoListener = db.ref('community_posts/' + postId).on('value', snap => {
+        const data = snap.val();
+        if (data) {
+            likeCountSpan.innerText = data.likesCount || 0;
+            viewCountSpan.innerText = data.views || 0;
+            // თუ გინდა კომენტარების რაოდენობაც რეალურ დროში განახლდეს:
+            document.getElementById('photoCommCount').innerText = data.commentsCount || 0;
+        }
+    });
+
+    // --- ლაიქის სტატუსის შემოწმება (რომ გული წითელი დაგხვდეს) ---
+    if (auth.currentUser && postId) {
+        const myUid = auth.currentUser.uid;
+        db.ref(`post_likes/${postId}/${myUid}`).on('value', snap => {
+            likeIcon.style.color = snap.exists() ? '#ff4d4d' : 'white';
+        });
+    }
+
+    // ნახვების მომატება (ეს მხოლოდ ერთხელ უნდა მოხდეს გახსნისას)
+    if (postId) {
+        db.ref('community_posts/' + postId + '/views').transaction(c => (c || 0) + 1);
+    }
+}
+
+
+
+
+// ლაიქის დაჭერის ფუნქცია
+async function handlePhotoLike(event) {
+    event.stopPropagation();
+    if (!currentOpenedPostId || !auth.currentUser) return;
+
+    const myUid = auth.currentUser.uid;
+    const likeIcon = document.getElementById('photoLikeIcon');
+    const likeCountSpan = document.getElementById('photoLikeCount');
+    
+    const likeRef = db.ref(`post_likes/${currentOpenedPostId}/${myUid}`);
+    const postRef = db.ref(`community_posts/${currentOpenedPostId}`);
+
+    // 1. ვამოწმებთ არსებულ სტატუსს
+    const snap = await likeRef.once('value');
+
+    if (snap.exists()) {
+        // თუ უკვე არის -> წაშლა
+        await likeRef.remove();
+        // ვაკლებთ ბაზაში
+        postRef.child('likesCount').transaction(c => (c || 1) - 1);
+        
+        // ვიზუალი (ფერს ვცვლით, ციფრს .on('value') თავისით შეცვლის)
+        likeIcon.style.color = 'white';
+    } else {
+        // თუ არ არის -> დამატება
+        await likeRef.set(true);
+        // ვუმატებთ ბაზაში
+        postRef.child('likesCount').transaction(c => (c || 0) + 1);
+        
+        // ვიზუალი
+        likeIcon.style.color = '#ff4d4d';
+
+        // ანიმაცია (შევინარჩუნეთ სრულად)
+        likeIcon.style.transform = 'scale(1.5)';
+        setTimeout(() => likeIcon.style.transform = 'scale(1)', 200);
+    }
+}
+
+
+
+
+
+// კომენტარების გახსნის ფუნქცია
+// 1. ფოტოს კომენტარების გახსნა
+function openPhotoComments(event) {
+    event.stopPropagation();
+    if (!currentOpenedPostId) return;
+
+    const commUI = document.getElementById('commentsUI');
+    const inp = document.getElementById('commInp');
+
+    commUI.style.zIndex = "500000"; 
+    commUI.style.display = 'flex';
+    
+    // ვანიჭებთ ID-ს, რომ გაგზავნისას კოდმა იცოდეს სად წაიღოს ტექსტი
+    currentPostId = currentOpenedPostId; 
+    if (inp) inp.setAttribute('data-target-post', currentOpenedPostId);
+    
+    if (typeof loadComments === "function") {
+        loadComments(currentOpenedPostId);
+    }
+}
+
+
+
+
+
+// 2. კომენტარის გაგზავნის ერთიანი ფუნქცია (ჩაანაცვლე შენი handleSendComment ან postComment ამით)
+function handleSendComment() {
+    const inp = document.getElementById('photoCommInp');
+    if (!inp) return;
+
+    const txt = inp.value.trim();
+    if (!txt || !currentOpenedPostId || !auth.currentUser) return;
+
+    const commData = {
+        text: txt,
+        authorId: auth.currentUser.uid,
+        authorName: document.getElementById('profName').innerText || "User",
+        timestamp: Date.now()
+    };
+
+    // 1. მხოლოდ ვაგზავნით კომენტარს
+    db.ref('post_comments/' + currentOpenedPostId).push(commData).then(() => {
+        inp.value = ""; // ველს ვასუფთავებთ
+
+        // 2. მხოლოდ ბაზაში ვუმატებთ რაოდენობას
+        // არანაირი innerText = ... აქ არ უნდა ეწეროს!
+        db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
+
+        // 3. მხოლოდ სიას ვანახლებთ (ტექსტებს)
+        if (typeof loadComments === "function") {
+            loadComments(currentOpenedPostId);
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+function loadComments(postId) {
+    if (!postId) return;
+
+    // ვუკავშირდებით ბაზას, სადაც კომენტარები ინახება
+    db.ref(`post_comments/${postId}`).on('value', snap => {
+        const commContainer = document.getElementById('commentsList'); // აქ უნდა გამოჩნდეს ტექსტები
+        if (!commContainer) return;
+
+        commContainer.innerHTML = "";
+        const comments = snap.val();
+        
+        // 1. ვითვლით რეალურად რამდენი კომენტარია ბაზაში
+        const realCount = snap.numChildren(); 
+
+        // 2. ვასწორებთ ციფრს ეკრანზე
+        const commCountSpan = document.getElementById('photoCommCount');
+        if (commCountSpan) commCountSpan.innerText = realCount;
+
+        // 3. ვასწორებთ ციფრს ბაზაშიც, რომ სინქრონში იყოს
+        db.ref(`community_posts/${postId}/commentsCount`).set(realCount);
+
+        // 4. გამოგვაქვს კომენტარები ეკრანზე
+        if (comments) {
+            Object.values(comments).reverse().forEach(c => {
+                const div = document.createElement('div');
+                div.style.padding = "8px";
+                div.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
+                div.innerHTML = `
+                    <div style="color:#d4af37; font-weight:bold; font-size:13px;">${c.authorName}</div>
+                    <div style="color:white; font-size:14px;">${c.text}</div>
+                `;
+                commContainer.appendChild(div);
+            });
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 1. ფოტოს კომენტარის გაგზავნა (ცალკე ფუნქცია, რომ პოსტებს არ შეეხოს)
+// ეს ფუნქცია არის მხოლოდ ფოტოებისთვის
+function sendPhotoCommentDirectly() {
+    const inp = document.getElementById('photoCommInp');
+    if (!inp || !currentOpenedPostId || !auth.currentUser) return;
+
+    const txt = inp.value.trim();
+    if (!txt) return;
+
+    const commData = {
+        text: txt,
+        authorId: auth.currentUser.uid,
+        authorName: document.getElementById('profName').innerText,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('post_comments/' + currentOpenedPostId).push(commData).then(() => {
+        inp.value = "";
+        db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
+    });
+}
+
+// ეს ფუნქცია არის შენი ძველი პოსტებისთვის (რომელიც არ მუშაობდა)
+function postComment() {
+    const inp = document.getElementById('commInp'); // უბრუნდება ძველ ინპუტს
+    if (!inp || !currentPostId || !auth.currentUser) return;
+
+    const txt = inp.value.trim();
+    if (!txt) return;
+
+    const commData = {
+        text: txt,
+        authorId: auth.currentUser.uid,
+        authorName: document.getElementById('profName').innerText,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('post_comments/' + currentPostId).push(commData).then(() => {
+        inp.value = "";
+        db.ref('community_posts/' + currentPostId + '/commentsCount').transaction(c => (c || 0) + 1);
+    });
+}
