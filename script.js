@@ -1320,11 +1320,12 @@ function togglePlayPause(vid) {
 
 
 
+
+
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
-    // შეცვლილია ON -> ONCE-ით, რომ ლაიქზე ვიდეო არ გადახტეს
     db.ref('posts').once('value', snap => {
         feed.innerHTML = "";
         const data = snap.val(); if (!data) return;
@@ -1334,12 +1335,12 @@ function renderTokenFeed() {
             [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
         }
         postEntries.forEach(([id, post]) => {
-            // აქ შევცვალე: ახლა ხედავს როგორც 'video'-ს, ისე 'video_embed'-ს
+            // --- შეცვლილი ფილტრი: ხედავს ორივე ტიპის ვიდეოს ---
             if (post.media && post.media.some(m => m.type === 'video' || m.type === 'video_embed')) {
                 const mediaItem = post.media.find(m => m.type === 'video' || m.type === 'video_embed');
                 const videoUrl = mediaItem.url;
                 
-                // აქ ვწყვეტთ: iframe ვაჩვენოთ თუ ჩვეულებრივი video ტეგი
+                // --- გადაწყვეტილება: iframe (Streamtape) თუ video (პირდაპირი) ---
                 let videoHTML = "";
                 if (mediaItem.type === 'video_embed') {
                     videoHTML = `<iframe src="${videoUrl}" width="100%" height="100%" frameborder="0" allowfullscreen scrolling="no" style="background:#000;"></iframe>`;
@@ -1391,14 +1392,14 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // კომენტარების მთვლელი მაინც რეალურ დროში იყოს
+                // კომენტარების მთვლელი
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
                 });
 
-                // ავტორის სტატუსის განახლება
+                // ავტორის სტატუსი
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
@@ -1414,8 +1415,6 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
-
-
 
 
 
