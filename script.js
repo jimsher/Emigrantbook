@@ -1235,6 +1235,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
+ 
  async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
@@ -1242,48 +1243,63 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "მიმდინარეობს ატვირთვა...";
+    btn.innerText = "სწრაფ სერვერზე გაგზავნა...";
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-        // პირდაპირი ატვირთვა ყოველგვარი გასაღების გარეშე
-        const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+        // ვიყენებთ Catbox-ს - ის ყველაზე სწრაფია და მომენტალურად აჩენს ვიდეოს
+        const res = await fetch('https://catbox.moe/user/api.php', {
             method: 'POST',
-            body: formData
+            body: new URLSearchParams({
+                'reqtype': 'fileupload',
+                'userhash': '', // აქ შეგიძლია ცარიელი დატოვო ან დარეგისტრირდე
+                'fileToUpload': file 
+            })
         });
         
-        const result = await res.json();
-        
-        if (res.ok && result.data.url) {
-            // ლინკის მყისიერი კონვერტაცია პირდაპირ ფაილზე
-            const rawUrl = result.data.url;
-            const directVideoUrl = rawUrl.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+        // Catbox პირდაპირ ლინკს აბრუნებს ტექსტად
+        const videoUrl = await res.text();
 
-            // Firebase-ში შენახვა (type: 'video' - ეს მნიშვნელოვანია!)
+        if (videoUrl.includes('http')) {
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: directVideoUrl, type: 'video' }],
+                media: [{ url: videoUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით გამოქვეყნდა რეკლამების გარეშე!");
+            alert("ვიდეო მომენტალურად გამოქვეყნდა!");
             location.reload();
         }
     } catch (err) {
-        console.error(err);
-        alert("ვერ მოხერხდა ატვირთვა. სინჯეთ სხვა ვიდეო.");
+        // თუ Catbox-მა გაჭედა, გადაზღვევისთვის ვიყენებთ File.io-ს
+        const resBackup = await fetch('https://file.io', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await resBackup.json();
+        
+        if (data.success) {
+            await db.ref('posts').push({
+                authorId: auth.currentUser.uid,
+                authorName: myName,
+                authorPhoto: myPhoto,
+                text: document.getElementById('videoDesc').value,
+                media: [{ url: data.link, type: 'video' }],
+                timestamp: Date.now()
+            });
+            location.reload();
+        }
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
- 
 
 
 
