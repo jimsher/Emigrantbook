@@ -1235,7 +1235,6 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
- 
  async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
@@ -1243,24 +1242,23 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "მზადდება უსაფრთხო ატვირთვა...";
+    btn.innerText = "ატვირთვა პროფესიონალურ სერვერზე...";
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-        // ვიყენებთ IPFS ხიდს (Lighthouse), რომელიც ყველაზე სტაბილურია
-        const res = await fetch('https://api.lighthouse.storage/api/v0/add', {
+        // ვიყენებთ file.io-ს, რომელიც ბრაუზერის ბლოკებს გვერდს უვლის
+        const res = await fetch('https://file.io', {
             method: 'POST',
             body: formData
         });
 
         const data = await res.json();
-        
-        // IPFS გვიბრუნებს "Hash"-ს (უნიკალურ კოდს)
-        if (data.Hash) {
-            // ვქმნით საჯარო ლინკს, რომელიც არასდროს დაიბლოკება
-            const videoUrl = `https://gateway.lighthouse.storage/ipfs/${data.Hash}`;
+
+        if (data.success) {
+            // ვიღებთ პირდაპირ ლინკს
+            const videoUrl = data.link;
 
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
@@ -1272,20 +1270,20 @@ window.deleteMessage = function(chatId, msgId, senderId) {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა Web3 სერვერზე!");
+            alert("ვიდეო წარმატებით აიტვირთა!");
             location.reload();
+        } else {
+            alert("სერვერი დაკავებულია, სინჯეთ 1 წუთში.");
         }
     } catch (err) {
-        console.error("Web3 Error:", err);
-        // თუ პირველმა გაჭედა, ვიყენებთ მეორე "ხიდს" (Infura)
-        btn.innerText = "ცდა მეორე არხით...";
-        alert("შეცდომა! სინჯეთ უფრო პატარა ვიდეო ან შეამოწმეთ ინტერნეტი.");
+        console.error("Upload Error:", err);
+        alert("შეცდომა! სინჯეთ სხვა ბრაუზერიდან (მაგ: Chrome-დან).");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
-
+ 
 
 
                 
