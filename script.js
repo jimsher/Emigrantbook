@@ -1263,7 +1263,7 @@ async function startTokenUpload() {
         formData.append('file', file);
 
         // შენი ტოკენი პირველი სკრინშოტიდან
-        const myToken = "P9pv2cyOn7rVXcCpqbc1Jc14bf7DJvdl";
+        const myToken = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh";
 
         // 3. ატვირთვა პრემიუმ წესით
         const uploadRes = await fetch(`https://${serverName}.gofile.io/contents/uploadfile`, {
