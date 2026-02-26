@@ -1236,62 +1236,58 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 async function startTokenUpload() {
     if (!canAfford(5)) return;
     const file = document.getElementById('videoInput').files[0];
-    if (!file) return alert("Select video");
+    if (!file) return alert("აირჩიეთ ვიდეო");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "Uploading to Gofile...";
+    btn.innerText = "იტვირთება (25GB საცავში)...";
 
-    // შენი Gofile ტოკენი სურათიდან
-    const accountToken = "P9pv2cyOn7rVXcCpqbc1Jcl4bf7DJvdL"; 
+    // შენი გასაღები
+    const accessKey = "Ffsgyqoq4Gl4LF9C";
+    // ბაკეტის სახელი (Tebi-ზე რაც დაარქვი, მაგალითად 'emigrant')
+    const bucketName = "emigrant"; 
 
     try {
-        // 1. ჯერ ვპოულობთ საუკეთესო სერვერს
-        const serverRes = await fetch('https://api.gofile.io/getServer');
-        const serverData = await serverRes.json();
-        if (serverData.status !== "ok") throw new Error("Gofile server error");
-        const server = serverData.data.server;
+        // ფაილის უნიკალური სახელი
+        const fileName = Date.now() + "_" + file.name;
+        const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
 
-        // 2. ვამზადებთ ფაილს
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("token", accountToken);
-
-        // 3. ატვირთვა Gofile-ზე
-        const res = await fetch(`https://${server}.gofile.io/uploadFile`, { 
-            method: 'POST', 
-            body: formData 
+        // პირდაპირი ატვირთვა Tebi-ს სერვერზე
+        const res = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Basic ' + btoa(accessKey + ':') // მხოლოდ Access Key-თ
+            },
+            body: file
         });
-        const data = await res.json();
 
-        if (data.status === "ok") {
-            // ვიყენებთ პირდაპირ ლინკს (direct link)
-            const videoUrl = data.data.downloadPage;
-
-            // 4. შენახვა Firebase ბაზაში (შენი ორიგინალი სტრუქტურა)
+        if (res.status === 200 || res.status === 201) {
+            // თუ აიტვირთა, ვინახავთ ლინკს Firebase-ში
             await db.ref('posts').push({
-                authorId: auth.currentUser.uid, 
-                authorName: myName, 
+                authorId: auth.currentUser.uid,
+                authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: videoUrl, type: 'video' }],
+                media: [{ url: uploadUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
             spendAkho(5, 'Token Upload');
-            alert("Success!");
+            alert("ვიდეო წარმატებით გამოქვეყნდა!");
             location.reload();
         } else {
-            alert("Upload failed: " + data.status);
-            btn.disabled = false; btn.innerText = "Upload";
+            alert("შეცდომა: დარწმუნდით რომ Bucket-ის სახელი სწორია (emigrant)");
+            btn.disabled = false;
+            btn.innerText = "Upload";
         }
-    } catch (err) { 
+    } catch (err) {
         console.error(err);
-        alert("Connection Error!"); 
-        btn.disabled = false; 
-        btn.innerText = "Upload"; 
+        alert("კავშირის შეცდომა!");
+        btn.disabled = false;
+        btn.innerText = "Upload";
     }
 }
+    
 
 
 
