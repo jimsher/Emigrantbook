@@ -169,19 +169,61 @@ function gallery_openComments(event) {
 
 
 
-function gallery_handleFileUpload(input) {
+async function gallery_handleFileUpload(input) {
     const file = input.files[0];
-    if (!file) return;
+    if (!file || !auth.currentUser) return;
 
-    // ვამოწმებთ არის თუ არა ნამდვილად ფოტო
-    if (!file.type.startsWith('image/')) {
-        alert("გთხოვთ აირჩიოთ მხოლოდ ფოტოსურათი!");
-        return;
-    }
+    // 1. ვამოწმებთ ბალანსს (თუ გინდა რომ გალერეაში ატვირთვაც ფასიანი იყოს, როგორც პოსტი)
+    if (!canAfford(2)) return; 
 
-    // აქ უკვე შეგვიძლია გამოვიძახოთ ატვირთვის მთავარი ფუნქცია
-    // რომელსაც შემდეგ ეტაპზე დავწერთ
-    if (confirm("გსურთ ამ ფოტოს ატვირთვა თქვენს გალერეაში?")) {
-        gallery_startUploadProcess(file);
+    // ვიზუალური ეფექტი: სანამ იტვირთება, ღილაკი დავაპაუზოთ
+    const btnIcon = document.querySelector('#galleryUploadBtnContainer i');
+    if(btnIcon) btnIcon.className = "fas fa-spinner fa-spin";
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "Emigrantbook.video"); // შენი Cloudinary-ს პრესეტი
+
+    try {
+        // 2. ატვირთვა Cloudinary-ზე
+        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
+            method: 'POST', 
+            body: formData 
+        });
+        const data = await res.json();
+
+        if (data.secure_url) {
+            const myUid = auth.currentUser.uid;
+
+            // 3. ინფორმაციის შენახვა Firebase-ში (community_posts-ში, რომ გალერეამ დაინახოს)
+            const newPostRef = db.ref('community_posts').push();
+            await newPostRef.set({
+                id: newPostRef.key,
+                authorId: myUid,
+                authorName: myName,
+                authorPhoto: myPhoto, // შენი ავატარი
+                image: data.secure_url, // Cloudinary-ს ლინკი
+                likesCount: 0,
+                commentsCount: 0,
+                views: 0,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // 4. ბალანსის ჩამოჭრა და განახლება
+            spendAkho(2, 'Gallery Upload');
+            alert("ფოტო წარმატებით აიტვირთა გალერეაში!");
+            
+            // გალერეის ეგრევე გადატვირთვა, რომ ახალი ფოტო გამოჩნდეს
+            if (typeof openPhotosSection === "function") {
+                openPhotosSection();
+            }
+        }
+    } catch (err) {
+        alert("ატვირთვის შეცდომა!");
+        console.error(err);
+    } finally {
+        // ღილაკის დაბრუნება ძველ მდგომარეობაში
+        if(btnIcon) btnIcon.className = "fas fa-camera";
+        input.value = ""; // ინპუტის გასუფთავება
     }
 }
