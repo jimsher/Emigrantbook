@@ -121,11 +121,8 @@ async function handlePhotoLike(event) {
         // ვაკლებთ ბაზაში
         postRef.child('likesCount').transaction(c => (c || 1) - 1);
         
-        // ვიზუალი
+        // ვიზუალი (ფერს ვცვლით, ციფრს .on('value') თავისით შეცვლის)
         likeIcon.style.color = 'white';
-        // ეკრანზეც ვაკლებთ მომენტალურად
-        let currentNum = parseInt(likeCountSpan.innerText) || 0;
-        likeCountSpan.innerText = Math.max(0, currentNum - 1);
     } else {
         // თუ არ არის -> დამატება
         await likeRef.set(true);
@@ -134,11 +131,8 @@ async function handlePhotoLike(event) {
         
         // ვიზუალი
         likeIcon.style.color = '#ff4d4d';
-        // ეკრანზეც ვუმატებთ
-        let currentNum = parseInt(likeCountSpan.innerText) || 0;
-        likeCountSpan.innerText = currentNum + 1;
 
-        // ანიმაცია
+        // ანიმაცია (შევინარჩუნეთ სრულად)
         likeIcon.style.transform = 'scale(1.5)';
         setTimeout(() => likeIcon.style.transform = 'scale(1)', 200);
     }
