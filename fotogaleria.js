@@ -29,10 +29,10 @@ function openPhotosSection() {
                     
                     // აქ ჩავამატეთ მონაცემების გადაცემა (ID, ლაიქები, კომენტარები, ნახვები)
                     photoDiv.innerHTML = `
-                        <img src="${post.image}" 
-                             style="width:100%; height:100%; object-fit:cover;" 
-                             onclick="viewFullPhoto('${post.image}', '${post.id}', ${post.likesCount || 0}, ${post.commentsCount || 0}, ${post.views || 0})">
-                    `;
+    <img src="${post.image}" 
+         style="width:100%; height:100%; object-fit:cover;" 
+         onclick="viewFullPhoto('${post.image}', '${post.id}', ${post.likesCount || 0}, ${post.commentsCount || 0}, ${post.views || 0})">
+`;
                     photosGrid.appendChild(photoDiv);
                 }
             });
