@@ -260,7 +260,8 @@ function loadComments(postId) {
 
 
 // 1. ფოტოს კომენტარის გაგზავნა (ცალკე ფუნქცია, რომ პოსტებს არ შეეხოს)
-function submitPhotoCommentDirect() {
+// ეს ფუნქცია არის მხოლოდ ფოტოებისთვის
+function sendPhotoCommentDirectly() {
     const inp = document.getElementById('photoCommInp');
     if (!inp || !currentOpenedPostId || !auth.currentUser) return;
 
@@ -270,25 +271,19 @@ function submitPhotoCommentDirect() {
     const commData = {
         text: txt,
         authorId: auth.currentUser.uid,
-        authorName: document.getElementById('profName').innerText || "User",
+        authorName: document.getElementById('profName').innerText,
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
     db.ref('post_comments/' + currentOpenedPostId).push(commData).then(() => {
         inp.value = "";
-        // მხოლოდ ბაზაში ვზრდით რაოდენობას
         db.ref('community_posts/' + currentOpenedPostId + '/commentsCount').transaction(c => (c || 0) + 1);
-        
-        // თუ გაქვს loadComments ფუნქცია, გამოიძახე
-        if (typeof loadComments === "function") {
-            loadComments(currentOpenedPostId);
-        }
     });
 }
 
-// 2. პოსტის კომენტარის გაგზავნა (დაუბრუნდა ძველ მდგომარეობას)
+// ეს ფუნქცია არის შენი ძველი პოსტებისთვის (რომელიც არ მუშაობდა)
 function postComment() {
-    const inp = document.getElementById('commInp');
+    const inp = document.getElementById('commInp'); // უბრუნდება ძველ ინპუტს
     if (!inp || !currentPostId || !auth.currentUser) return;
 
     const txt = inp.value.trim();
@@ -304,9 +299,5 @@ function postComment() {
     db.ref('post_comments/' + currentPostId).push(commData).then(() => {
         inp.value = "";
         db.ref('community_posts/' + currentPostId + '/commentsCount').transaction(c => (c || 0) + 1);
-        
-        if (typeof loadComments === "function") {
-            loadComments(currentPostId);
-        }
     });
 }
