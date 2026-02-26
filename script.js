@@ -872,7 +872,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
-function openProfile(uid) {
+ function openProfile(uid) {
  stopMainFeedVideos();
  document.getElementById('profileUI').style.display = 'flex';
  
@@ -935,6 +935,13 @@ function openProfile(uid) {
      
      if(uid === auth.currentUser.uid) {
          controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
+         
+         // --- ახალი ლოგიკა: კამერის ღილაკის ჩასმა Edit-ის გვერდით ---
+         if (galleryUploadContainer) {
+             galleryUploadContainer.style.marginTop = "0"; // მოვაშოროთ ზედა დაშორება
+             controls.appendChild(galleryUploadContainer); // ჩავსვათ კონტროლებში
+         }
+         
          loadUserVideos(uid);
          applyLanguage();
      } else {
