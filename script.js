@@ -1240,23 +1240,24 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "იტვირთება Tebi-ზე (25GB)...";
+    btn.innerText = "იტვირთება (25GB საცავში)...";
 
-    // შენი გასაღებები
+    // შენი ზუსტი გასაღებები
     const accessKey = "Ffsgyqoq4Gl4LF9C";
-    const secretKey = "w7MtnS2DJZH8eYGMZ4Yo0w8Cg714EeOdoDPgKcIq";
-    // აუცილებლად შეამოწმე რომ Bucket-ს Tebi-ზე ჰქვია 'emigrant'
+    const secretKey = "6pMdn9aklSVW3nEYEIB7Ibx2PQYfG467OdYuAZNq";
+    // დარწმუნდი, რომ Tebi-ზე შექმნილ Bucket-ს ჰქვია 'emigrant'
     const bucketName = "emigrant"; 
 
     try {
-        const fileName = Date.now() + "_" + file.name;
+        const fileName = Date.now() + "_" + file.name.replace(/\s+/g, '_');
         const uploadUrl = `https://s3.tebi.io/${bucketName}/${fileName}`;
 
-        // S3 ავტორიზაციისთვის ვიყენებთ ორივე გასაღებს
+        // ავტორიზაცია S3 სისტემისთვის
         const res = await fetch(uploadUrl, {
             method: 'PUT',
             headers: {
-                'Authorization': 'Basic ' + btoa(accessKey + ':' + secretKey)
+                'Authorization': 'Basic ' + btoa(accessKey + ':' + secretKey),
+                'Content-Type': file.type
             },
             body: file
         });
@@ -1273,11 +1274,11 @@ async function startTokenUpload() {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
+            alert("ვიდეო წარმატებით გამოქვეყნდა!");
             location.reload();
         } else {
-            console.error("Tebi Error Status:", res.status);
-            alert("შეცდომა! დარწმუნდით რომ Bucket შექმნილია Tebi-ზე.");
+            console.error("Tebi Error:", res.status);
+            alert("შეცდომა! შეამოწმეთ Bucket-ის სახელი Tebi.io-ზე.");
             btn.disabled = false;
             btn.innerText = "Upload";
         }
@@ -1287,6 +1288,11 @@ async function startTokenUpload() {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
+}
+
+function togglePlayPause(vid) {
+    if (vid.paused) vid.play();
+    else vid.pause();
 }
     
 
