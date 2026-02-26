@@ -153,6 +153,10 @@ function openPhotoComments(event) {
     
     currentPostId = currentOpenedPostId; 
     
+    // აი ეს ხაზი ჩავამატე - ინპუტს აძლევს ნიშანს, რომ ეს ფოტოს კომენტარია
+    const inp = document.getElementById('commInp');
+    if (inp) inp.setAttribute('data-target-post', currentOpenedPostId);
+    
     if (typeof loadComments === "function") {
         loadComments(currentOpenedPostId);
     }
