@@ -1235,37 +1235,46 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 
+ 
  async function startTokenUpload() {
     if (!canAfford(5)) return;
-    const file = document.getElementById('videoInput').files[0];
+    
+    const fileInput = document.getElementById('videoInput');
+    const file = fileInput.files[0];
     if (!file) return alert("აირჩიეთ ვიდეო");
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "ავტორიზებული ატვირთვა...";
+    btn.innerText = "პრემიუმ არხით ატვირთვა...";
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('anonymous', 'false'); // შენს ექაუნთზე რომ დაჯდეს
+    formData.append('anonymous', 'false');
 
     try {
-        // ვიყენებთ Basic Auth-ს შენი ტოკენით, რომ ბლოკირება არ მოხდეს
-        const token = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh"; // შენი Account Token
+        const token = "P9pv2cyOn7rVXcCpqbc1Jc14bf7DJvdl";
         
+        // ვიყენებთ პრემიუმ API-ს პირდაპირ
         const res = await fetch('https://pixeldrain.com/api/file', {
             method: 'POST',
             headers: {
-                // ეს კოდი სერვერს ეუბნება ვინ ხარ
+                // ავტორიზაცია სერვერისთვის
                 'Authorization': 'Basic ' + btoa(":" + token)
             },
+            mode: 'cors', // ვაიძულებთ ბრაუზერს დაუშვას კავშირი
             body: formData
         });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message || "სერვერის ბლოკი");
+        }
 
         const data = await res.json();
 
         if (data.success) {
             const fileId = data.id;
-            // პირდაპირი ლინკი, რომელიც მომენტალურად ჩაირთვება
+            // პრემიუმ ლინკი პირდაპირი ყურებისთვის
             const directVideoUrl = `https://pixeldrain.com/api/file/${fileId}`;
 
             await db.ref('posts').push({
@@ -1278,20 +1287,19 @@ window.deleteMessage = function(chatId, msgId, senderId) {
             });
 
             spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა შენს ექაუნთზე!");
+            alert("ვიდეო წარმატებით აიტვირთა პრემიუმ საცავში!");
             location.reload();
-        } else {
-            alert("სერვერის შეცდომა! სინჯეთ სხვა ფაილი.");
         }
     } catch (err) {
-        console.error("PixelDrain Auth Error:", err);
-        alert("შეცდომა! შეამოწმეთ ინტერნეტი ან სცადეთ პატარა ვიდეო.");
+        console.error("ბრაუზერის შეცდომა:", err);
+        // თუ მაინც "ინტერნეტის შეცდომას" გიწერს, ესე იგი საიტის ჰოსტინგი ბლოკავს გასვლას
+        alert("ბრაუზერი ბლოკავს ატვირთვას. სინჯეთ Chrome-ის ინკოგნიტო რეჟიმში (Incognito).");
     } finally {
         btn.disabled = false;
         btn.innerText = "Upload";
     }
 }
- 
+
 
 
                 
