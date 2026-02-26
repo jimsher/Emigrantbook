@@ -1239,36 +1239,34 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true; 
-    btn.innerText = "Uploading...";
+    btn.innerText = "ატვირთვა...";
+
+    const formData = new FormData();
+    formData.append("file", file);
 
     try {
-        // 1. ავტომატურად ვპოულობთ თავისუფალ სერვერს (არ სჭირდება გასაღები)
-        const serverRes = await fetch('https://api.gofile.io/getServer');
-        const serverData = await serverRes.json();
-        const server = serverData.data.server;
+        // ვიყენებთ Transloadit-ის უფასო ატვირთვის სერვისს (არ სჭირდება გასაღები სატესტოდ)
+        const res = await fetch("https://api2.transloadit.com/instances/resurrect", {
+            method: "GET"
+        });
+        const instance = await res.json();
+        const uploadUrl = instance.api2_host;
 
-        // 2. ვამზადებთ ფაილს
-        const formData = new FormData();
-        formData.append("file", file);
-
-        // 3. ატვირთვა GoFile-ზე
-        const uploadRes = await fetch(`https://${server}.gofile.io/uploadFile`, {
+        const uploadRes = await fetch(`https://${uploadUrl}/files/`, {
             method: 'POST',
             body: formData
         });
-        const uploadData = await uploadRes.json();
+        const data = await uploadRes.json();
 
-        if (uploadData.status === "ok") {
-            // ვიღებთ ვიდეოს ლინკს
-            const videoUrl = uploadData.data.downloadPage; 
+        if (data.ssl_url || data.url) {
+            const finalUrl = data.ssl_url || data.url;
 
-            // 4. ვინახავთ Firebase-ში (შენი ორიგინალი ლოგიკით)
             await db.ref('posts').push({
                 authorId: auth.currentUser.uid,
                 authorName: myName,
                 authorPhoto: myPhoto,
                 text: document.getElementById('videoDesc').value,
-                media: [{ url: videoUrl, type: 'video' }],
+                media: [{ url: finalUrl, type: 'video' }],
                 timestamp: Date.now()
             });
 
@@ -1276,14 +1274,15 @@ async function startTokenUpload() {
             alert("Success!");
             location.reload();
         } else {
-            alert("Upload failed!");
-            btn.disabled = false; btn.innerText = "Upload";
+            throw new Error("Upload failed");
         }
 
     } catch (err) {
         console.error(err);
-        alert("Connection Error!");
-        btn.disabled = false; btn.innerText = "Upload";
+        // თუ მაინც ერორი დაწერა, მაშინ ერთადერთი გზაა იუზერმა ჩასვას პირდაპირ YouTube ლინკი
+        alert("სერვერმა უარი თქვა. სინჯეთ სხვა ვიდეო.");
+        btn.disabled = false;
+        btn.innerText = "Upload";
     }
 }
 
