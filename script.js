@@ -1250,7 +1250,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
     try {
         // ვიყენებთ Basic Auth-ს შენი ტოკენით, რომ ბლოკირება არ მოხდეს
-        const token = "P9pv2cyOn7rVXcCpqbc1Jcl4bf7DJvdl"; // შენი Account Token
+        const token = "PYgf3g33GkpEfBNJHBYrwM2cw6sEM2vh"; // შენი Account Token
         
         const res = await fetch('https://pixeldrain.com/api/file', {
             method: 'POST',
