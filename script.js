@@ -1,12 +1,21 @@
 const firebaseConfig = { 
- apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
- authDomain: "emigrantbook.firebaseapp.com", 
- databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
- projectId: "emigrantbook", 
- appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
- };
- firebase.initializeApp(firebaseConfig);
- const db = firebase.database(), auth = firebase.auth();
+  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+  authDomain: "emigrantbook.firebaseapp.com", 
+  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+  projectId: "emigrantbook", 
+  storageBucket: "emigrantbook.firebasestorage.app", // <-- ეს ხაზი აუცილებლად უნდა იყოს აქ!
+  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+};
+
+// ინიციალიზაცია
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+// გლობალური ცვლადები
+const db = firebase.database();
+const auth = firebase.auth();
+const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
 
 
  // --- LANGUAGE LOGIC ---
