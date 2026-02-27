@@ -1896,3 +1896,42 @@ auth.onAuthStateChanged(user => {
         requestPushPermission();
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+function switchTab(tabName, btn) {
+    // 1. აქტიური ფერის შეცვლა ღილაკებზე
+    document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // 2. ელემენტების მართვა
+    const profGrid = document.getElementById('profGrid');
+    const userPhotosGrid = document.getElementById('userPhotosGrid');
+    const noPhotosMsg = document.getElementById('noPhotosMsg');
+
+    // თავიდან ყველაფერს ვმალავთ
+    profGrid.style.display = 'none';
+    userPhotosGrid.style.display = 'none';
+    noPhotosMsg.style.display = 'none';
+
+    if (tabName === 'info' || tabName === 'reels') {
+        profGrid.style.display = 'grid';
+    } else if (tabName === 'photos') {
+        userPhotosGrid.style.display = 'grid';
+    } else if (tabName === 'saved') {
+        profGrid.style.display = 'grid';
+        // აქ შეგიძლია ჩაწერო შენახული პოსტების წამოღების ლოგიკა
+    } else if (tabName === 'tagged') {
+        noPhotosMsg.style.display = 'block';
+        noPhotosMsg.innerText = "მონიშნული პოსტები არ არის";
+    }
+}
