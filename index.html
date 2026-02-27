@@ -771,19 +771,30 @@
  <script src="fotogaleria.js"></script>
  
  
- <script>
- const firebaseConfig = { 
- apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
- authDomain: "emigrantbook.firebaseapp.com", 
- databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
- projectId: "emigrantbook", 
- appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
- };
- firebase.initializeApp(firebaseConfig);
- const db = firebase.database(), auth = firebase.auth();
+
+<script>
+  const firebaseConfig = { 
+    apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+    authDomain: "emigrantbook.firebaseapp.com", 
+    databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+    projectId: "emigrantbook", 
+    storageBucket: "emigrantbook.firebasestorage.app", // დარწმუნდი რომ ეს ხაზი აქაა
+    appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+  };
+
+  // ინიციალიზაცია
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+
+  // ცვლადების გლობალურად გამოცხადება
+  const db = firebase.database();
+  const auth = firebase.auth();
+  const storage = firebase.storage(); // აი აქ ვააქტიურებთ Storage-ს
+</script>
 
 
- </script>
+ 
 <div id="communityWallUI" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 15000; display: none; flex-direction: column;">
  <div style="padding: 15px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5);">
  <h2 style="color: var(--gold); font-weight: 900; font-size: 18px;">COMMUNITY</h2>
