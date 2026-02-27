@@ -1935,3 +1935,30 @@ function switchTab(tabName, btn) {
         noPhotosMsg.innerText = "მონიშნული პოსტები არ არის";
     }
 }
+
+
+
+function loadSavedPosts() {
+    const grid = document.getElementById('profGrid');
+    grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>იტვირთება შენახულები...</p>";
+    
+    db.ref('posts').once('value', snap => {
+        grid.innerHTML = "";
+        const posts = snap.val();
+        if(!posts) return;
+
+        Object.entries(posts).forEach(([id, post]) => {
+            // ვამოწმებთ, არის თუ არა ჩემი UID ამ პოსტის 'savedBy' სიაში
+            if(post.savedBy && post.savedBy[auth.currentUser.uid]) {
+                const video = post.media.find(m => m.type === 'video');
+                if(video) {
+                    const item = document.createElement('div');
+                    item.className = 'grid-item';
+                    item.innerHTML = `<video src="${video.url}" muted></video><i class="fas fa-bookmark" style="position:absolute; top:5px; right:5px; color:var(--gold); font-size:10px;"></i>`;
+                    item.onclick = () => playFullVideo(video.url);
+                    grid.appendChild(item);
+                }
+            }
+        });
+    });
+}
