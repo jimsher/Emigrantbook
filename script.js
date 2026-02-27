@@ -1910,41 +1910,46 @@ auth.onAuthStateChanged(user => {
 
 
 
+
 function switchTab(tabName, btn) {
-    // 1. აქტიური ღილაკის მონიშვნა
+    // 1. მონიშვნა
     document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
     const profGrid = document.getElementById('profGrid');
     const userPhotosGrid = document.getElementById('userPhotosGrid');
-    const noPhotosMsg = document.getElementById('noPhotosMsg');
+    const noMsg = document.getElementById('noPhotosMsg');
     const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
 
-    // 2. ყველაფრის გასუფთავება და დამალვა
+    // 2. კრიტიკული ნაწილი: გასუფთავება (რომ დუბლიკატები არ დარჩეს)
     profGrid.innerHTML = ""; 
+    userPhotosGrid.innerHTML = "";
+    
     profGrid.style.display = 'none';
     userPhotosGrid.style.display = 'none';
-    noPhotosMsg.style.display = 'none';
+    noMsg.style.display = 'none';
 
-    // 3. ლოგიკა ტაბების მიხედვით
+    // 3. ჩატვირთვა
     if (tabName === 'info' || tabName === 'reels') {
         profGrid.style.display = 'grid';
-        loadUserVideos(viewUid); // აჩვენებს მხოლოდ ამ იუზერის ვიდეოებს
+        loadUserVideos(viewUid); 
     } 
     else if (tabName === 'photos') {
         userPhotosGrid.style.display = 'grid';
-        if (typeof openPhotosSection === "function") openPhotosSection();
+        // ვიყენებთ timeout-ს 100 მილიწამით, რომ ბრაუზერმა მოასწროს გასუფთავება
+        setTimeout(() => {
+            if (typeof openPhotosSection === "function") openPhotosSection();
+        }, 100);
     } 
     else if (tabName === 'saved') {
         profGrid.style.display = 'grid';
-        loadMySavedPosts(); // აჩვენებს მხოლოდ შენახულებს
+        loadMySavedPosts(); 
     } 
     else if (tabName === 'tagged') {
-        noPhotosMsg.style.display = 'block';
-        noPhotosMsg.innerText = "მონიშნული პოსტები არ არის";
+        noMsg.style.display = 'block';
+        noMsg.innerText = "მონიშნული პოსტები არ არის";
     }
 }
-
 
 function loadMySavedPosts() {
     const grid = document.getElementById('profGrid');
