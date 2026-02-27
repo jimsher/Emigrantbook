@@ -1908,57 +1908,78 @@ auth.onAuthStateChanged(user => {
 
 
 
+
+
 function switchTab(tabName, btn) {
-    // 1. აქტიური ფერის შეცვლა ღილაკებზე
+    // 1. აქტიური ღილაკის მონიშვნა
     document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    // 2. ელემენტების მართვა
     const profGrid = document.getElementById('profGrid');
     const userPhotosGrid = document.getElementById('userPhotosGrid');
     const noPhotosMsg = document.getElementById('noPhotosMsg');
+    const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
 
-    // თავიდან ყველაფერს ვმალავთ
+    // 2. ყველაფრის გასუფთავება და დამალვა
+    profGrid.innerHTML = ""; 
     profGrid.style.display = 'none';
     userPhotosGrid.style.display = 'none';
     noPhotosMsg.style.display = 'none';
 
+    // 3. ლოგიკა ტაბების მიხედვით
     if (tabName === 'info' || tabName === 'reels') {
         profGrid.style.display = 'grid';
-    } else if (tabName === 'photos') {
+        loadUserVideos(viewUid); // აჩვენებს მხოლოდ ამ იუზერის ვიდეოებს
+    } 
+    else if (tabName === 'photos') {
         userPhotosGrid.style.display = 'grid';
-    } else if (tabName === 'saved') {
+        if (typeof openPhotosSection === "function") openPhotosSection();
+    } 
+    else if (tabName === 'saved') {
         profGrid.style.display = 'grid';
-        // აქ შეგიძლია ჩაწერო შენახული პოსტების წამოღების ლოგიკა
-    } else if (tabName === 'tagged') {
+        loadMySavedPosts(); // აჩვენებს მხოლოდ შენახულებს
+    } 
+    else if (tabName === 'tagged') {
         noPhotosMsg.style.display = 'block';
         noPhotosMsg.innerText = "მონიშნული პოსტები არ არის";
     }
 }
 
 
-
-function loadSavedPosts() {
+function loadMySavedPosts() {
     const grid = document.getElementById('profGrid');
-    grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>იტვირთება შენახულები...</p>";
+    const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
+    grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>იტვირთება შენახულები...</p>";
     
     db.ref('posts').once('value', snap => {
         grid.innerHTML = "";
         const posts = snap.val();
-        if(!posts) return;
+        if(!posts) {
+            grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
+            return;
+        }
 
+        let savedCount = 0;
         Object.entries(posts).forEach(([id, post]) => {
-            // ვამოწმებთ, არის თუ არა ჩემი UID ამ პოსტის 'savedBy' სიაში
-            if(post.savedBy && post.savedBy[auth.currentUser.uid]) {
-                const video = post.media.find(m => m.type === 'video');
+            // ვამოწმებთ, არის თუ არა ეს ვიდეო ამ მომხმარებლის მიერ შენახული
+            if(post.savedBy && post.savedBy[viewUid]) {
+                const video = post.media ? post.media.find(m => m.type === 'video') : null;
                 if(video) {
+                    savedCount++;
                     const item = document.createElement('div');
                     item.className = 'grid-item';
-                    item.innerHTML = `<video src="${video.url}" muted></video><i class="fas fa-bookmark" style="position:absolute; top:5px; right:5px; color:var(--gold); font-size:10px;"></i>`;
+                    item.innerHTML = `
+                        <video src="${video.url}" muted></video>
+                        <i class="fas fa-bookmark" style="position:absolute; top:8px; right:8px; color:var(--gold); font-size:12px; filter: drop-shadow(0 0 2px black);"></i>
+                    `;
                     item.onclick = () => playFullVideo(video.url);
                     grid.appendChild(item);
                 }
             }
         });
+
+        if(savedCount === 0) {
+            grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
+        }
     });
 }
