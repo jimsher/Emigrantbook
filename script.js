@@ -1247,12 +1247,14 @@ async function startTokenUpload() {
     btn.innerText = "მიმდინარეობს ატვირთვა...";
 
     try {
-        // 2. Firebase Storage-ის რეფერენსი
-        const storageRef = firebase.storage().ref();
+        // 2. Firebase Storage-ის რეფერენსი (უფრო უსაფრთხო გამოძახება)
+        const storage = firebase.storage(); 
+        const storageRef = storage.ref();
         const videoName = Date.now() + "_" + file.name;
         const videoRef = storageRef.child('videos/' + videoName);
 
         // 3. ატვირთვა
+        // ვიყენებთ "blob" ფორმატს, რაც ტელეფონისთვის უფრო სტაბილურია
         const snapshot = await videoRef.put(file);
         
         // 4. ვიდეოს მუდმივი ლინკის მიღება
@@ -1276,7 +1278,14 @@ async function startTokenUpload() {
 
     } catch (err) {
         console.error("ატვირთვის შეცდომა:", err);
-        alert("შეცდომა: " + err.message);
+        
+        // თუ შეცდომა მაინც ამოაგდო, გავიგოთ ზუსტად რისი ბრალია
+        if (err.code === 'storage/unauthorized') {
+            alert("შეცდომა: Firebase Rules (წესები) არ გაძლევს წვდომას!");
+        } else {
+            alert("შეცდომა: " + err.message);
+        }
+        
         btn.disabled = false;
         btn.innerText = "ატვირთვა";
     }
