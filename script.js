@@ -1235,6 +1235,7 @@ window.deleteMessage = function(chatId, msgId, senderId) {
 
 
 async function startTokenUpload() {
+    // 1. შემოწმება (ტოკენები გაქვს თუ არა)
     if (!canAfford(5)) return;
 
     const fileInput = document.getElementById('videoInput');
@@ -1243,43 +1244,41 @@ async function startTokenUpload() {
 
     const btn = document.getElementById('upBtn');
     btn.disabled = true;
-    btn.innerText = "იტვირთება სერვერზე...";
-
-    const formData = new FormData();
-    formData.append("file", file);
+    btn.innerText = "მიმდინარეობს ატვირთვა...";
 
     try {
-        // მიმართავ შენს ახალ PHP ფაილს
-        const res = await fetch('upload_proxy.php', {
-            method: 'POST',
-            body: formData
+        // 2. Firebase Storage-ის რეფერენსი
+        const storageRef = firebase.storage().ref();
+        const videoName = Date.now() + "_" + file.name;
+        const videoRef = storageRef.child('videos/' + videoName);
+
+        // 3. ატვირთვა
+        const snapshot = await videoRef.put(file);
+        
+        // 4. ვიდეოს მუდმივი ლინკის მიღება
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        // 5. მონაცემების შენახვა Realtime Database-ში
+        await db.ref('posts').push({
+            authorId: auth.currentUser.uid,
+            authorName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+            authorPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
+            text: document.getElementById('videoDesc').value || "",
+            media: [{ url: downloadURL, type: 'video' }],
+            timestamp: Date.now()
         });
 
-        const response = await res.json();
+        // ტოკენის ჩამოჭრა
+        spendAkho(5, 'Video Upload');
 
-        if (response.status === 'ok') {
-            // Gofile-ს სერვერის სახელი პასუხშივე მოყვება
-            const finalLink = `https://store.gofile.io/download/web/${response.data.id}/${response.data.fileName}`;
+        alert("ვიდეო წარმატებით აიტვირთა!");
+        location.reload();
 
-            await db.ref('posts').push({
-                authorId: auth.currentUser.uid,
-                authorName: myName,
-                authorPhoto: myPhoto,
-                text: document.getElementById('videoDesc').value,
-                media: [{ url: finalLink, type: 'video' }],
-                timestamp: Date.now()
-            });
-
-            spendAkho(5, 'Token Upload');
-            alert("ვიდეო წარმატებით აიტვირთა!");
-            location.reload();
-        } else {
-            alert("შეცდომა: " + response.status);
-            btn.disabled = false;
-        }
     } catch (err) {
-        alert("სერვერთან კავშირი ვერ დამყარდა. დარწმუნდით, რომ upload_proxy.php ატვირთულია.");
+        console.error("ატვირთვის შეცდომა:", err);
+        alert("შეცდომა: " + err.message);
         btn.disabled = false;
+        btn.innerText = "ატვირთვა";
     }
 }
 
