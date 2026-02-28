@@ -1347,7 +1347,7 @@ function togglePlayPause(vid) {
 
 
 
-function renderTokenFeed() {
+         function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
@@ -1409,13 +1409,12 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- ერთიანი ციკლი: კომენტარი და ლაიქი ერთად ამოდის ---
+                // --- გაუმჯობესებული TikTok ეფექტი: ავატარი მოყვება კომენტარს ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
 
-                    // ვიღებთ ბოლო კომენტარებს
                     db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
                         const comms = cSnap.val();
                         if (!comms) return;
@@ -1423,47 +1422,55 @@ function renderTokenFeed() {
                         const commList = Object.values(comms);
                         const randComm = commList[Math.floor(Math.random() * commList.length)];
                         
-                        // ვქმნით ერთიან ბლოკს (გამოვიყენებთ შენს floating-comment სტილს)
+                        // ვქმნით ერთიან ბლოკს
                         const wrapper = document.createElement('div');
                         wrapper.className = 'floating-comment'; 
                         
-                        // თუ ლაიქებიც არის, ჩავამატოთ შემთხვევითი ავატარი კომენტარის წინ
-                        let avatarHtml = "";
+                        // ვეძებთ დალაიქებული იუზერის ავატარს (თუ ლაიქები აქვს)
+                        let avatarPart = "";
                         if (post.likedBy) {
                             const likes = Object.values(post.likedBy);
                             const randLike = likes[Math.floor(Math.random() * likes.length)];
-                            avatarHtml = `
-                                <div style="display:flex; align-items:center; gap:5px;">
+                            avatarPart = `
+                                <div style="display:flex; align-items:center; margin-right:8px;">
                                     <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
-                                         style="width:24px; height:24px; border-radius:50%; border:1px solid var(--gold);">
-                                    <i class="fas fa-heart" style="color:#ff4d4d; font-size:10px;"></i>
+                                         style="width:28px; height:28px; border-radius:50%; border:1.5px solid var(--gold); object-fit:cover;">
+                                    <i class="fas fa-heart" style="color:#ff4d4d; font-size:10px; margin-left:-8px; margin-top:15px; background:#000; border-radius:50%; padding:1px;"></i>
+                                </div>
+                            `;
+                        } else {
+                            // თუ ლაიქი არაა, კომენტარის ავტორის ავატარი გამოჩნდეს
+                            avatarPart = `
+                                <div style="display:flex; align-items:center; margin-right:8px;">
+                                    <img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" 
+                                         style="width:28px; height:28px; border-radius:50%; border:1.5px solid #fff; object-fit:cover;">
                                 </div>
                             `;
                         }
 
                         wrapper.innerHTML = `
-                            ${avatarHtml}
-                            <div style="margin-left:5px;">
-                                <b style="color:var(--gold); font-size:11px;">${randComm.authorName}:</b> 
-                                <span>${randComm.text}</span>
+                            ${avatarPart}
+                            <div style="display:flex; flex-direction:column;">
+                                <b style="color:var(--gold); font-size:11px; line-height:1;">${randComm.authorName}</b> 
+                                <span style="font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;">${randComm.text}</span>
                             </div>
                         `;
 
                         activityContainer.appendChild(wrapper);
                         
-                        // წაშლა ანიმაციის დასრულების შემდეგ
-                        setTimeout(() => wrapper.remove(), 7000);
+                        // წაშლა ანიმაციის (7 წამი) შემდეგ
+                        setTimeout(() => {
+                            if(wrapper.parentNode) wrapper.remove();
+                        }, 7000);
                     });
-                }, 5000); // ყოველ 5 წამში ამოვა ერთი გაერთიანებული ბლოკი
+                }, 4000); // 4 წამში ერთხელ ამოდის ახალი წყვილი
 
-                // კომენტარების მთვლელი რეალურ დროში
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
                 });
 
-                // ავტორის სტატუსის განახლება
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
@@ -1478,8 +1485,8 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}
-
+}                                   const u = uSnap.val();
+                    
 
 
 
