@@ -204,23 +204,45 @@
 
 
 /* კომენტარის ფორმის გასწორება */
+/* კომენტარის ახალი სტრუქტურა */
 .floating-comment {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    color: white;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 14px;
-    margin-bottom: 8px;
-    /* სიგანის კონტროლი */
-    width: auto;
-    max-width: 200px; 
     display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid rgba(212, 175, 55, 0.3);
+    align-items: flex-start; /* ავატარი რომ ზემოთ დარჩეს */
+    gap: 10px;
     animation: smoothFlowUp 8s linear forwards;
-    word-break: break-word; /* გრძელი სიტყვა რომ არ გადავიდეს */
+    width: fit-content;
+    max-width: 220px;
+}
+  /* ტექსტის ჩარჩო */
+.comment-bubble {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 15px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column; /* სახელი ზემოთ, ტექსტი ქვემოთ */
+    color: white;
+}
+
+.comment-author-name {
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+  .comment-text {
+    font-size: 13px;
+    line-height: 1.3;
+    word-break: break-word; /* გრძელი ტექსტის გადატანა */
+}
+  .comment-external-ava {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    object-fit: cover;
+    flex-shrink: 0; /* რომ არ შეიკუმშოს */
 }
 
 /* ავატარი გულით - გადიდებული */
@@ -251,9 +273,9 @@
 /* ახალი ანიმაცია: ჩნდება ადგილზე -> ყოვნდება -> მიდის */
 @keyframes smoothFlowUp {
     0% { transform: translateY(0); opacity: 0; }
-    5% { transform: translateY(0); opacity: 1; }  /* ადგილზე გაჩენა */
-    20% { transform: translateY(0); opacity: 1; } /* მცირე დაყოვნება ადგილზე */
-    100% { transform: translateY(-200px); opacity: 0; } /* სხვებთან ერთად სვლა */
+    5% { transform: translateY(0); opacity: 1; }
+    20% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-220px); opacity: 0; }
 }
  </style>
 </head>
