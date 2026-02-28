@@ -1345,7 +1345,7 @@ function togglePlayPause(vid) {
 
 
 
- function renderTokenFeed() {
+function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
@@ -1408,7 +1408,6 @@ function togglePlayPause(vid) {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- ციკლური ანიმაციის ლოგიკა ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
                 function startLikeCycle() {
@@ -1439,20 +1438,18 @@ function togglePlayPause(vid) {
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
-                            // მომდევნო ავატარი დაიბადოს 5 წამში
-                            setTimeout(spawnNext, 2500);
+                            // მომდევნო ავატარი დაიბადოს 1 წამში (რომ ახლო-ახლო იყვნენ)
+                            setTimeout(spawnNext, 1000);
                         } else {
                             // როცა ყველა ამოვიდა, დაიცადე 10 წამი და დაიწყე თავიდან
-                            setTimeout(startLikeCycle, 5000);
+                            setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
                 }
 
-                // ციკლის გაშვება
                 startLikeCycle();
 
-                // სტატისტიკის ლოგიკა
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1473,7 +1470,6 @@ function togglePlayPause(vid) {
         setupAutoPlay();
     });
 }
-
 
                 
                          
