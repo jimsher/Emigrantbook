@@ -1346,11 +1346,11 @@ function togglePlayPause(vid) {
 
 
 
+
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
-    // შეცვლილია ON -> ONCE-ით, რომ ლაიქზე ვიდეო არ გადახტეს
     db.ref('posts').once('value', snap => {
         feed.innerHTML = "";
         const data = snap.val(); if (!data) return;
@@ -1409,39 +1409,54 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- Live ეფექტების ავტომატური ციკლი (ჩამატებული ნაწილი) ---
+                // --- ერთიანი ციკლი: კომენტარი და ლაიქი ერთად ამოდის ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
-                // კომენტარების ინტერვალი
                 setInterval(() => {
-                    db.ref(`comments/${id}`).limitToLast(5).once('value', cSnap => {
+                    if (document.visibilityState !== 'visible' || !activityContainer) return;
+
+                    // ვიღებთ ბოლო კომენტარებს
+                    db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
                         const comms = cSnap.val();
-                        if (comms && activityContainer && document.visibilityState === 'visible') {
-                            const commList = Object.values(comms);
-                            const rand = commList[Math.floor(Math.random() * commList.length)];
-                            const div = document.createElement('div');
-                            div.className = 'floating-comment';
-                            div.innerHTML = `<b>${rand.authorName}:</b> ${rand.text}`;
-                            activityContainer.appendChild(div);
-                            setTimeout(() => div.remove(), 7000);
+                        if (!comms) return;
+                        
+                        const commList = Object.values(comms);
+                        const randComm = commList[Math.floor(Math.random() * commList.length)];
+                        
+                        // ვქმნით ერთიან ბლოკს (გამოვიყენებთ შენს floating-comment სტილს)
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'floating-comment'; 
+                        
+                        // თუ ლაიქებიც არის, ჩავამატოთ შემთხვევითი ავატარი კომენტარის წინ
+                        let avatarHtml = "";
+                        if (post.likedBy) {
+                            const likes = Object.values(post.likedBy);
+                            const randLike = likes[Math.floor(Math.random() * likes.length)];
+                            avatarHtml = `
+                                <div style="display:flex; align-items:center; gap:5px;">
+                                    <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
+                                         style="width:24px; height:24px; border-radius:50%; border:1px solid var(--gold);">
+                                    <i class="fas fa-heart" style="color:#ff4d4d; font-size:10px;"></i>
+                                </div>
+                            `;
                         }
+
+                        wrapper.innerHTML = `
+                            ${avatarHtml}
+                            <div style="margin-left:5px;">
+                                <b style="color:var(--gold); font-size:11px;">${randComm.authorName}:</b> 
+                                <span>${randComm.text}</span>
+                            </div>
+                        `;
+
+                        activityContainer.appendChild(wrapper);
+                        
+                        // წაშლა ანიმაციის დასრულების შემდეგ
+                        setTimeout(() => wrapper.remove(), 7000);
                     });
-                }, 4500);
+                }, 5000); // ყოველ 5 წამში ამოვა ერთი გაერთიანებული ბლოკი
 
-                // ლაიქების ინტერვალი (ავატარი + გული)
-                setInterval(() => {
-                    if (post.likedBy && activityContainer && document.visibilityState === 'visible') {
-                        const likes = Object.values(post.likedBy);
-                        const rand = likes[Math.floor(Math.random() * likes.length)];
-                        const box = document.createElement('div');
-                        box.className = 'floating-avatar-box';
-                        box.innerHTML = `<img src="${rand.photo || 'https://ui-avatars.com/api/?name=' + rand.name}"><i class="fas fa-heart"></i>`;
-                        activityContainer.appendChild(box);
-                        setTimeout(() => box.remove(), 6000);
-                    }
-                }, 3500);
-
-                // კომენტარების მთვლელი მაინც რეალურ დროში იყოს
+                // კომენტარების მთვლელი რეალურ დროში
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1464,6 +1479,8 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
+
+
 
 
 
