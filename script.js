@@ -1153,11 +1153,21 @@ function loadUserVideos(uid) {
 }
 
 
- function playFullVideo(url) {
- const overlay = document.getElementById('fullVideoOverlay');
- const vid = document.getElementById('fullVideoTag');
- vid.src = url; overlay.style.display = 'flex'; vid.play();
- }
+function playFullVideo(url, postId) { // დავამატეთ postId პარამეტრი
+    const overlay = document.getElementById('fullVideoOverlay');
+    const vid = document.getElementById('fullVideoTag');
+    vid.src = url; 
+    overlay.style.display = 'flex'; 
+    vid.play();
+
+    // აი ეს კოდი ზრდის ნახვებს ბაზაში:
+    if (postId) {
+        db.ref(`posts/${postId}/views`).transaction(currentViews => {
+            return (currentViews || 0) + 1;
+        });
+    }
+}
+
  function closeFullVideo() {
  const overlay = document.getElementById('fullVideoOverlay');
  const vid = document.getElementById('fullVideoTag');
