@@ -1410,18 +1410,19 @@ function renderTokenFeed() {
 
                 const activityContainer = document.getElementById(`live-activity-${id}`);
 
+                // --- მთავარი ლოგიკა: მიმდევრობითი ამოსვლა ერთ ვერტიკალზე ---
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
 
-                    // 1. ავატარი (აბსოლუტური პოზიციით)
+                    // 1. ავატარი ამოვიდეს პირველი
                     if (post.likedBy) {
                         const likes = Object.values(post.likedBy);
                         const randLike = likes[Math.floor(Math.random() * likes.length)];
                         const avaBox = document.createElement('div');
                         avaBox.className = 'floating-avatar-box';
-                        // ვაძლევთ absolute-ს, რომ არ დაარტყას სხვებს
                         avaBox.style.position = 'absolute';
                         avaBox.style.bottom = '0px'; 
+                        avaBox.style.left = '0px'; // გასწორება მარცხნივ
                         avaBox.innerHTML = `
                             <div style="position:relative; width:32px; height:32px;">
                                 <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
@@ -1432,7 +1433,7 @@ function renderTokenFeed() {
                         setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 7200);
                     }
 
-                    // 2. კომენტარი (აბსოლუტური პოზიციით)
+                    // 2. კომენტარი ამოვიდეს ავატარის შემდეგ (ავატარის ქვეშ რომ გამოჩნდეს გზაში)
                     setTimeout(() => {
                         db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
                             const comms = cSnap.val();
@@ -1441,15 +1442,14 @@ function renderTokenFeed() {
                             const randComm = commList[Math.floor(Math.random() * commList.length)];
                             const commDiv = document.createElement('div');
                             commDiv.className = 'floating-comment';
-                            // ვაძლევთ absolute-ს და ოდნავ მარჯვნივ ვწევთ
                             commDiv.style.position = 'absolute';
                             commDiv.style.bottom = '0px';
-                            commDiv.style.left = '40px'; 
+                            commDiv.style.left = '0px'; // გასწორება ზუსტად ავატარის ქვეშ
                             commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:20px; height:20px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
                             activityContainer.appendChild(commDiv);
                             setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 7200);
                         });
-                    }, 800); 
+                    }, 1500); // 1.5 წამიანი დაყოვნება, რომ დაშორება ქონდეთ
 
                 }, 5000);
 
@@ -1474,6 +1474,7 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
+                
 
 
 
