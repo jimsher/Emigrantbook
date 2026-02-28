@@ -1344,6 +1344,8 @@ function togglePlayPause(vid) {
 
 
 
+
+
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1370,6 +1372,9 @@ function renderTokenFeed() {
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
+                
+                <div class="live-activity-overlay" id="live-activity-${id}"></div>
+
                 <div class="side-actions">
                     <div style="position:relative">
                         <img id="ava-${id}" src="https://ui-avatars.com/api/?name=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
@@ -1404,11 +1409,39 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // კომენტარების მთვლელი მაინც რეალურ დროში იყოს
+                // კომენტარების მთვლელი + ცოცხალი ამოსვლის ეფექტი
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
+                });
+
+                // --- ახალი: კომენტარების ანიმაციური ამოსვლა ---
+                db.ref(`comments/${id}`).limitToLast(1).on('child_added', cSnap => {
+                    const comm = cSnap.val();
+                    if (!comm || Date.now() - comm.ts > 5000) return;
+                    const container = document.getElementById(`live-activity-${id}`);
+                    if (container) {
+                        const div = document.createElement('div');
+                        div.className = 'floating-comment';
+                        div.innerHTML = `<b>${comm.authorName}:</b> ${comm.text}`;
+                        container.appendChild(div);
+                        setTimeout(() => div.remove(), 4000);
+                    }
+                });
+
+                // --- ახალი: ლაიქის ავატარების ამოსვლა ---
+                db.ref(`posts/${id}/likedBy`).limitToLast(1).on('child_added', lSnap => {
+                    const like = lSnap.val();
+                    if (!like) return;
+                    const container = document.getElementById(`live-activity-${id}`);
+                    if (container) {
+                        const img = document.createElement('img');
+                        img.className = 'floating-avatar-like';
+                        img.src = like.photo || 'https://ui-avatars.com/api/?name=' + like.name;
+                        container.appendChild(img);
+                        setTimeout(() => img.remove(), 3000);
+                    }
                 });
 
                 // ავტორის სტატუსის განახლება
@@ -1427,6 +1460,10 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
+
+
+
+
 
 
 
