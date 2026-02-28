@@ -1345,7 +1345,8 @@ function togglePlayPause(vid) {
 
 
 
-  function renderTokenFeed() {
+
+function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
@@ -1408,9 +1409,14 @@ function togglePlayPause(vid) {
                 </div>`;
                 feed.appendChild(card);
 
+                // --- ციკლური ანიმაციის ლოგიკა ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
                 function startLikeCycle() {
+                    // *** მთავარი ცვლილება აქ არის ***
+                    // ვამოწმებთ: თუ მიმდინარე მომხმარებელი არ არის ვიდეოს ავტორი, ანიმაცია საერთოდ არ გაეშვას
+                    if (post.authorId !== auth.currentUser.uid) return;
+
                     if (!post.likedBy || document.visibilityState !== 'visible') {
                         setTimeout(startLikeCycle, 5000);
                         return;
@@ -1438,11 +1444,9 @@ function togglePlayPause(vid) {
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
-                            // 1.5 წამიანი ინტერვალი რომ ლამაზი "მატარებელი" გამოვიდეს
                             setTimeout(spawnNext, 1500);
                         } else {
-                            // პაუზა 10 წამი
-                            setTimeout(startLikeCycle, 5000);
+                            setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
@@ -1450,6 +1454,7 @@ function togglePlayPause(vid) {
 
                 startLikeCycle();
 
+                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები)
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1469,7 +1474,7 @@ function togglePlayPause(vid) {
         });
         setupAutoPlay();
     });
-}                                          const name = document.getElementById(`name-${id}`);
+}
                                     
                          
 
