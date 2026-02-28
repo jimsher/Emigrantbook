@@ -1439,10 +1439,10 @@ function renderTokenFeed() {
 
                             index++;
                             // მომდევნო ავატარი დაიბადოს 1 წამში (რომ ახლო-ახლო იყვნენ)
-                            setTimeout(spawnNext, 2500);
+                            setTimeout(spawnNext, 1800);
                         } else {
                             // როცა ყველა ამოვიდა, დაიცადე 10 წამი და დაიწყე თავიდან
-                            setTimeout(startLikeCycle, 10000);
+                            setTimeout(startLikeCycle, 5000);
                         }
                     }
                     spawnNext();
@@ -1469,9 +1469,7 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}
-
-                
+}                
                          
 
 
