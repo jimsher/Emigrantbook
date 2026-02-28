@@ -1346,88 +1346,125 @@ function togglePlayPause(vid) {
 
 
 
-
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
+    // შეცვლილია ON -> ONCE-ით, რომ ლაიქზე ვიდეო არ გადახტეს
     db.ref('posts').once('value', snap => {
         feed.innerHTML = "";
         const data = snap.val(); if (!data) return;
         let postEntries = Object.entries(data);
-        
-        // არეული თანმიმდევრობა
         for (let i = postEntries.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
         }
-
         postEntries.forEach(([id, post]) => {
             if (post.media && post.media.some(m => m.type === 'video')) {
                 const videoUrl = post.media.find(m => m.type === 'video').url;
+                const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
+                const shareCount = post.shares || 0;
+                const saveCount = post.saves || 0;
                 const card = document.createElement('div');
                 card.className = 'video-card';
                 card.id = `card-${id}`;
-                
-                // შენი ორიგინალი HTML სტრუქტურა
+                const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
+                const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
+                
                 <div class="live-activity-overlay" id="live-activity-${id}"></div>
+
                 <div class="side-actions">
                     <div style="position:relative">
                         <img id="ava-${id}" src="https://ui-avatars.com/api/?name=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
                         <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none;"></div>
                     </div>
+                    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+                        <i class="fas fa-heart"></i>
+                        <span id="like-count-${id}">${likeCount}</span>
                     </div>
+                    <div class="action-item" onclick="openComments('${id}')">
+                        <i class="fas fa-comment-dots"></i>
+                        <span id="comm-count-${id}">0</span>
+                    </div>
+                    <div id="save-btn-${id}" class="action-item ${isSavedByMe ? 'saved' : ''}" onclick="toggleSavePost('${id}')">
+                        <i class="fas fa-bookmark"></i>
+                        <span id="save-count-${id}">${saveCount}</span>
+                    </div>
+                    <div class="action-item" onclick="shareVideo('${id}', '${videoUrl}')">
+                        <i class="fas fa-share"></i>
+                        <span id="share-count-${id}">${shareCount}</span>
+                    </div>
+                    ${post.authorId === auth.currentUser.uid ? `
+                    <div class="action-item" onclick="deleteMyVideo('${id}')" style="margin-top: 5px;">
+                        <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
+                        <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
+                    </div>
+                    ` : ''}
+                </div>
                 <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none;">
                     <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
                     <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
                 </div>`;
                 feed.appendChild(card);
 
-                // --- Live ეფექტების ლოგიკა ---
-                const container = document.getElementById(`live-activity-${id}`);
-
-                // 1. კომენტარების მიმდევრობა
+                // --- Live ეფექტების ავტომატური ციკლი (ჩამატებული ნაწილი) ---
+                const activityContainer = document.getElementById(`live-activity-${id}`);
+                
+                // კომენტარების ინტერვალი
                 setInterval(() => {
-                    db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
+                    db.ref(`comments/${id}`).limitToLast(5).once('value', cSnap => {
                         const comms = cSnap.val();
-                        if (!comms) return;
-                        const commList = Object.values(comms);
-                        const rand = commList[Math.floor(Math.random() * commList.length)];
-                        
-                        const div = document.createElement('div');
-                        div.className = 'floating-comment';
-                        div.innerHTML = `<b>${rand.authorName}:</b> ${rand.text}`;
-                        container.appendChild(div);
-                        setTimeout(() => div.remove(), 7000);
+                        if (comms && activityContainer && document.visibilityState === 'visible') {
+                            const commList = Object.values(comms);
+                            const rand = commList[Math.floor(Math.random() * commList.length)];
+                            const div = document.createElement('div');
+                            div.className = 'floating-comment';
+                            div.innerHTML = `<b>${rand.authorName}:</b> ${rand.text}`;
+                            activityContainer.appendChild(div);
+                            setTimeout(() => div.remove(), 7000);
+                        }
                     });
-                }, 5000); // 5 წამიანი დაშორება
+                }, 4500);
 
-                // 2. ლაიქების (ავატარი + გული) მიმდევრობა
+                // ლაიქების ინტერვალი (ავატარი + გული)
                 setInterval(() => {
-                    if (post.likedBy) {
+                    if (post.likedBy && activityContainer && document.visibilityState === 'visible') {
                         const likes = Object.values(post.likedBy);
                         const rand = likes[Math.floor(Math.random() * likes.length)];
-                        
                         const box = document.createElement('div');
                         box.className = 'floating-avatar-box';
-                        box.innerHTML = `
-                            <img src="${rand.photo || 'https://ui-avatars.com/api/?name=' + rand.name}">
-                            <i class="fas fa-heart"></i>
-                        `;
-                        container.appendChild(box);
+                        box.innerHTML = `<img src="${rand.photo || 'https://ui-avatars.com/api/?name=' + rand.name}"><i class="fas fa-heart"></i>`;
+                        activityContainer.appendChild(box);
                         setTimeout(() => box.remove(), 6000);
                     }
-                }, 4000); // 4 წამიანი დაშორება
+                }, 3500);
 
-                // დანარჩენი შენი ორიგინალი ლოგიკა (მთვლელები, სტატუსები)
-                // ... (იგივე რჩება რაც გქონდა)
+                // კომენტარების მთვლელი მაინც რეალურ დროში იყოს
+                db.ref(`comments/${id}`).on('value', cSnap => {
+                    const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
+                    const el = document.getElementById(`comm-count-${id}`);
+                    if(el) el.innerText = count;
+                });
+
+                // ავტორის სტატუსის განახლება
+                db.ref(`users/${post.authorId}`).on('value', uSnap => {
+                    const u = uSnap.val();
+                    const ava = document.getElementById(`ava-${id}`);
+                    const name = document.getElementById(`name-${id}`);
+                    const status = document.getElementById(`mini-status-${id}`);
+                    if(u && u.photo && ava) ava.src = u.photo;
+                    if(u && u.name && name) name.innerText = "@" + u.name;
+                    if(u && u.presence === 'online' && status) status.style.display = 'block';
+                    else if(status) status.style.display = 'none';
+                });
             }
         });
         setupAutoPlay();
     });
 }
+
 
 
 
