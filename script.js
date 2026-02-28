@@ -1347,7 +1347,7 @@ function togglePlayPause(vid) {
 
 
 
-
+                
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1373,7 +1373,7 @@ function renderTokenFeed() {
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
-                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 200px; pointer-events: none;"></div>
+                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
                 <div class="side-actions">
                     <div style="position:relative">
                         <img id="ava-${id}" src="https://ui-avatars.com/api/?name=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
@@ -1410,11 +1410,10 @@ function renderTokenFeed() {
 
                 const activityContainer = document.getElementById(`live-activity-${id}`);
 
-                // --- მთავარი ლოგიკა: მიმდევრობითი ამოსვლა ერთ ვერტიკალზე ---
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
 
-                    // 1. ავატარი ამოვიდეს პირველი
+                    // 1. ავატარი (48px)
                     if (post.likedBy) {
                         const likes = Object.values(post.likedBy);
                         const randLike = likes[Math.floor(Math.random() * likes.length)];
@@ -1422,18 +1421,18 @@ function renderTokenFeed() {
                         avaBox.className = 'floating-avatar-box';
                         avaBox.style.position = 'absolute';
                         avaBox.style.bottom = '0px'; 
-                        avaBox.style.left = '0px'; // გასწორება მარცხნივ
+                        avaBox.style.left = '0px';
                         avaBox.innerHTML = `
                             <div style="position:relative; width:48px; height:48px;">
                                 <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
                                      style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                                <i class="fas fa-heart" style="position:absolute; bottom:-2px; right:-2px; color:#ff4d4d; font-size:12px; filter:drop-shadow(0 0 2px #000);"></i>
+                                <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
                             </div>`;
                         activityContainer.appendChild(avaBox);
-                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 7200);
+                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
                     }
 
-                    // 2. კომენტარი ამოვიდეს ავატარის შემდეგ (ავატარის ქვეშ რომ გამოჩნდეს გზაში)
+                    // 2. კომენტარი (ავატარის ქვეშ)
                     setTimeout(() => {
                         db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
                             const comms = cSnap.val();
@@ -1444,16 +1443,16 @@ function renderTokenFeed() {
                             commDiv.className = 'floating-comment';
                             commDiv.style.position = 'absolute';
                             commDiv.style.bottom = '0px';
-                            commDiv.style.left = '0px'; // გასწორება ზუსტად ავატარის ქვეშ
-                            commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:20px; height:20px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
+                            commDiv.style.left = '0px'; 
+                            commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:24px; height:24px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
                             activityContainer.appendChild(commDiv);
-                            setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 7200);
+                            setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 8000);
                         });
-                    }, 1500); // 1.5 წამიანი დაყოვნება, რომ დაშორება ქონდეთ
+                    }, 1500);
 
                 }, 5000);
 
-                // სტატისტიკა და სტატუსები...
+                // დანარჩენი სტატისტიკის ლოგიკა...
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1474,8 +1473,6 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
-                
-
 
 
                 
