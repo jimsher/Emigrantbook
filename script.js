@@ -1143,7 +1143,7 @@ function loadUserVideos(uid) {
                         </div>
                     `;
                     
-                    item.onclick = () => playFullVideo(video.url);
+                    item.onclick = () => playFullVideo(video.url, id);
                     grid.appendChild(item);
                 }
             }
