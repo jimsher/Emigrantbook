@@ -1346,8 +1346,7 @@ function togglePlayPause(vid) {
 
 
 
-
-         function renderTokenFeed() {
+function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
@@ -1409,68 +1408,49 @@ function togglePlayPause(vid) {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- გაუმჯობესებული TikTok ეფექტი: ავატარი მოყვება კომენტარს ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
+                // 1. ავატარების "წვიმა" გულებით (ცალკე)
+                setInterval(() => {
+                    if (document.visibilityState !== 'visible' || !activityContainer || !post.likedBy) return;
+                    const likes = Object.values(post.likedBy);
+                    const randLike = likes[Math.floor(Math.random() * likes.length)];
+                    
+                    const avaBox = document.createElement('div');
+                    avaBox.className = 'floating-avatar-box'; // იყენებს შენს CSS-ს
+                    avaBox.innerHTML = `
+                        <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}">
+                        <i class="fas fa-heart"></i>
+                    `;
+                    activityContainer.appendChild(avaBox);
+                    setTimeout(() => avaBox.remove(), 6000);
+                }, 3000); // ავატარი ამოდის ყოველ 3 წამში
+
+                // 2. კომენტარების ბუშტები (ცალკე, ქვეშ მოყვება)
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
-
                     db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
                         const comms = cSnap.val();
                         if (!comms) return;
-                        
                         const commList = Object.values(comms);
                         const randComm = commList[Math.floor(Math.random() * commList.length)];
                         
-                        // ვქმნით ერთიან ბლოკს
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'floating-comment'; 
-                        
-                        // ვეძებთ დალაიქებული იუზერის ავატარს (თუ ლაიქები აქვს)
-                        let avatarPart = "";
-                        if (post.likedBy) {
-                            const likes = Object.values(post.likedBy);
-                            const randLike = likes[Math.floor(Math.random() * likes.length)];
-                            avatarPart = `
-                                <div style="display:flex; align-items:center; margin-right:8px;">
-                                    <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
-                                         style="width:28px; height:28px; border-radius:50%; border:1.5px solid var(--gold); object-fit:cover;">
-                                    <i class="fas fa-heart" style="color:#ff4d4d; font-size:10px; margin-left:-8px; margin-top:15px; background:#000; border-radius:50%; padding:1px;"></i>
-                                </div>
-                            `;
-                        } else {
-                            // თუ ლაიქი არაა, კომენტარის ავტორის ავატარი გამოჩნდეს
-                            avatarPart = `
-                                <div style="display:flex; align-items:center; margin-right:8px;">
-                                    <img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" 
-                                         style="width:28px; height:28px; border-radius:50%; border:1.5px solid #fff; object-fit:cover;">
-                                </div>
-                            `;
-                        }
-
-                        wrapper.innerHTML = `
-                            ${avatarPart}
-                            <div style="display:flex; flex-direction:column;">
-                                <b style="color:var(--gold); font-size:11px; line-height:1;">${randComm.authorName}</b> 
-                                <span style="font-size:12px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:150px;">${randComm.text}</span>
-                            </div>
-                        `;
-
-                        activityContainer.appendChild(wrapper);
-                        
-                        // წაშლა ანიმაციის (7 წამი) შემდეგ
-                        setTimeout(() => {
-                            if(wrapper.parentNode) wrapper.remove();
-                        }, 7000);
+                        const commDiv = document.createElement('div');
+                        commDiv.className = 'floating-comment'; // იყენებს შენს CSS-ს
+                        commDiv.innerHTML = `<b>${randComm.authorName}:</b> ${randComm.text}`;
+                        activityContainer.appendChild(commDiv);
+                        setTimeout(() => commDiv.remove(), 7000);
                     });
-                }, 4000); // 4 წამში ერთხელ ამოდის ახალი წყვილი
+                }, 4500); // კომენტარი ამოდის ყოველ 4.5 წამში
 
+                // კომენტარების მთვლელი რეალურ დროში
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
                 });
 
+                // ავტორის სტატუსის განახლება
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
@@ -1485,9 +1465,8 @@ function togglePlayPause(vid) {
         });
         setupAutoPlay();
     });
-}                                   const u = uSnap.val();
-                    
-
+}
+                         
 
 
 
