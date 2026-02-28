@@ -1345,6 +1345,7 @@ function togglePlayPause(vid) {
 
 
 
+                                                            <span class="comment-text">${randComm.text}</span>
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1407,53 +1408,53 @@ function renderTokenFeed() {
 
                 const activityContainer = document.getElementById(`live-activity-${id}`);
 
+                // --- რიგითობის დაცვა: ჯერ კომენტარი, მერე ლაიქი ---
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
 
-                    // 1. ავატარი გულით (48px)
-                    if (post.likedBy) {
-                        const likes = Object.values(post.likedBy);
-                        const randLike = likes[Math.floor(Math.random() * likes.length)];
-                        const avaBox = document.createElement('div');
-                        avaBox.className = 'floating-avatar-box';
-                        avaBox.style.position = 'absolute';
-                        avaBox.style.bottom = '0px'; 
-                        avaBox.style.left = '0px';
-                        avaBox.innerHTML = `
-                            <div style="position:relative; width:48px; height:48px;">
-                                <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
-                                     style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                                <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
-                            </div>`;
-                        activityContainer.appendChild(avaBox);
-                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-                    }
+                    // 1. ჯერ ამოდის კომენტარი
+                    db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
+                        const comms = cSnap.val();
+                        if (!comms) return;
+                        const commList = Object.values(comms);
+                        const randComm = commList[Math.floor(Math.random() * commList.length)];
+                        const commDiv = document.createElement('div');
+                        commDiv.className = 'floating-comment';
+                        commDiv.style.position = 'absolute';
+                        commDiv.style.bottom = '0px';
+                        commDiv.style.left = '0px'; 
+                        
+                        commDiv.innerHTML = `
+                            <img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" class="comment-external-ava">
+                            <div class="comment-bubble">
+                                <span class="comment-author-name">${randComm.authorName}</span>
+                                <span class="comment-text">${randComm.text}</span>
+                            </div>
+                        `;
+                        
+                        activityContainer.appendChild(commDiv);
+                        setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 8000);
+                    });
 
-                    // 2. კომენტარი (ავატარი წინ + ჩარჩო შიგნით სახელით)
+                    // 2. 1.5 წამის შემდეგ ამოდის ლაიქის ავატარი
                     setTimeout(() => {
-                        db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
-                            const comms = cSnap.val();
-                            if (!comms) return;
-                            const commList = Object.values(comms);
-                            const randComm = commList[Math.floor(Math.random() * commList.length)];
-                            const commDiv = document.createElement('div');
-                            commDiv.className = 'floating-comment';
-                            commDiv.style.position = 'absolute';
-                            commDiv.style.bottom = '0px';
-                            commDiv.style.left = '0px'; 
-                            
-                            // ახალი სტრუქტურა: ავატარი გარეთ, ჩარჩო შიგნით
-                            commDiv.innerHTML = `
-                                <img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" class="comment-external-ava">
-                                <div class="comment-bubble">
-                                    <span class="comment-author-name">${randComm.authorName}</span>
-                                    <span class="comment-text">${randComm.text}</span>
-                                </div>
-                            `;
-                            
-                            activityContainer.appendChild(commDiv);
-                            setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 8000);
-                        });
+                        if (post.likedBy) {
+                            const likes = Object.values(post.likedBy);
+                            const randLike = likes[Math.floor(Math.random() * likes.length)];
+                            const avaBox = document.createElement('div');
+                            avaBox.className = 'floating-avatar-box';
+                            avaBox.style.position = 'absolute';
+                            avaBox.style.bottom = '0px'; 
+                            avaBox.style.left = '0px';
+                            avaBox.innerHTML = `
+                                <div style="position:relative; width:48px; height:48px;">
+                                    <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
+                                         style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                                    <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
+                                </div>`;
+                            activityContainer.appendChild(avaBox);
+                            setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
+                        }
                     }, 1500);
 
                 }, 5000);
@@ -1478,7 +1479,7 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}
+}                                
 
                 
                 
