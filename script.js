@@ -1438,7 +1438,7 @@ function renderTokenFeed() {
                                 </div>`;
                             
                             activityContainer.appendChild(avaBox);
-                            setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
+                            setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 5000);
 
                             index++;
                             // მომდევნო ავატარი დაიბადოს 5 წამში
