@@ -1345,7 +1345,7 @@ function togglePlayPause(vid) {
 
 
 
-function renderTokenFeed() {
+  function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
@@ -1438,11 +1438,11 @@ function renderTokenFeed() {
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
-                            // მომდევნო ავატარი დაიბადოს 1 წამში (რომ ახლო-ახლო იყვნენ)
-                            setTimeout(spawnNext, 1800);
+                            // 1.5 წამიანი ინტერვალი რომ ლამაზი "მატარებელი" გამოვიდეს
+                            setTimeout(spawnNext, 1500);
                         } else {
-                            // როცა ყველა ამოვიდა, დაიცადე 10 წამი და დაიწყე თავიდან
-                            setTimeout(startLikeCycle, 5000);
+                            // პაუზა 10 წამი
+                            setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
@@ -1469,7 +1469,8 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}                
+}                                          const name = document.getElementById(`name-${id}`);
+                                    
                          
 
 
