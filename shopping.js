@@ -145,30 +145,7 @@ function openShopSection() {
     renderStore('all');
 }
 
-function renderStore(category = 'all', btn = null) {
-    const grid = document.getElementById('productsGrid');
-    if (!grid) return;
-    db.ref('akhoStore').on('value', snap => {
-        grid.innerHTML = "";
-        const data = snap.val();
-        if (!data) return;
-        Object.entries(data).reverse().forEach(([id, item]) => {
-            if (category !== 'all' && item.category !== category) return;
-            const card = document.createElement('div');
-            card.className = "product-card";
-            card.onclick = () => showProductDetails(id);
-            card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer;";
-            card.innerHTML = `
-                <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
-                <div style="padding:10px 0;">
-                    <b style="color:white; font-size:14px; display:block;">${item.name}</b>
-                    <span style="color:#00ff00; font-weight:bold;">${item.price} ₾</span>
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-    });
-}
+
 
 
 
