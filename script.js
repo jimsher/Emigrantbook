@@ -576,22 +576,35 @@ window.deleteReply = function(postId, commentId, replyId) {
  document.getElementById('commInp').focus();
  }
  function postComment() {
- if (!canAfford(0.5)) return;
- const text = document.getElementById('commInp').value;
- if(!text.trim() || !activePostId) return;
- if(activeReplyTo) {
- db.ref(`comments/${activePostId}/${activeReplyTo}/replies`).push({
- authorId: auth.currentUser.uid, authorName: myName, authorPhoto: myPhoto, text: text, ts: Date.now()
- });
- } else {
- db.ref(`comments/${activePostId}`).push({
- authorId: auth.currentUser.uid, authorName: myName, authorPhoto: myPhoto, text: text, ts: Date.now()
- });
- }
- spendAkho(0.5, 'Comment');
- document.getElementById('commInp').value = "";
- activeReplyTo = null;
- }
+    if (!canAfford(0.5)) return;
+    const text = document.getElementById('commInp').value;
+    if(!text.trim() || !activePostId) return;
+
+    // სწორი ნაბიჯი: თუ window.isGalleryMode არის true, ვიყენებთ სხვა სახელს
+    const commentPath = window.isGalleryMode ? `gallery_comments/${activePostId}` : `comments/${activePostId}`;
+
+    if(activeReplyTo) {
+        db.ref(`${commentPath}/${activeReplyTo}/replies`).push({
+            authorId: auth.currentUser.uid, 
+            authorName: myName, 
+            authorPhoto: myPhoto, 
+            text: text, 
+            ts: Date.now()
+        });
+    } else {
+        db.ref(commentPath).push({
+            authorId: auth.currentUser.uid, 
+            authorName: myName, 
+            authorPhoto: myPhoto, 
+            text: text, 
+            ts: Date.now()
+        });
+    }
+    
+    spendAkho(0.5, 'Comment');
+    document.getElementById('commInp').value = "";
+    activeReplyTo = null;
+}
  function likeComment(commId) {
  if (!canAfford(0.1)) return;
  const ref = db.ref(`comments/${activePostId}/${commId}/likes/${auth.currentUser.uid}`);
