@@ -202,21 +202,25 @@
     z-index: 100;
 }
 
-/* ამომავალი კომენტარი - გადიდებული */
+
+/* კომენტარის ფორმის გასწორება */
 .floating-comment {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
     color: white;
-    padding: 8px 16px; /* გავზარდეთ დაშორება შიგნით */
-    border-radius: 25px;
-    font-size: 14px; /* ტექსტი გავზარდეთ 12-დან 14-მდე */
-    margin-bottom: 10px;
-    width: fit-content;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    /* სიგანის კონტროლი */
+    width: auto;
+    max-width: 200px; 
     display: flex;
     align-items: center;
-    gap: 10px;
-    animation: smoothFlowUp 7s linear forwards;
+    gap: 8px;
     border: 1px solid rgba(212, 175, 55, 0.3);
+    animation: smoothFlowUp 8s linear forwards;
+    word-break: break-word; /* გრძელი სიტყვა რომ არ გადავიდეს */
 }
 
 /* ავატარი გულით - გადიდებული */
@@ -229,26 +233,27 @@
     margin-bottom: 15px; /* დაშორება კომენტარსა და ავატარს შორის */
 }
 
+
 .floating-avatar-box img {
-    width: 48px; /* გაიზარდა 32-დან 48-მდე */
-    height: 48px; /* გაიზარდა 32-დან 48-მდე */
+    width: 48px !important;
+    height: 48px !important;
     border-radius: 50%;
-    border: 2.5px solid var(--gold); /* ჩარჩოც ოდნავ სქელია */
+    border: 2px solid var(--gold);
     object-fit: cover;
 }
-
+  
 .floating-avatar-box i {
     color: #ff4d4d;
     font-size: 18px; /* გულიც გაიზარდა 14-დან 18-მდე */
     filter: drop-shadow(0 0 5px #ff4d4d);
 }
 
+/* ახალი ანიმაცია: ჩნდება ადგილზე -> ყოვნდება -> მიდის */
 @keyframes smoothFlowUp {
-    0% { transform: translateY(60px); opacity: 0; }
-    10% { opacity: 1; transform: translateY(0); }
-    /* 85%-ზე უკვე იწყებს გაქრობას, რომ ხტუნვა არ ქონდეს წაშლისას */
-    85% { opacity: 1; }
-    100% { transform: translateY(-180px); opacity: 0; }
+    0% { transform: translateY(0); opacity: 0; }
+    5% { transform: translateY(0); opacity: 1; }  /* ადგილზე გაჩენა */
+    20% { transform: translateY(0); opacity: 1; } /* მცირე დაყოვნება ადგილზე */
+    100% { transform: translateY(-200px); opacity: 0; } /* სხვებთან ერთად სვლა */
 }
  </style>
 </head>
