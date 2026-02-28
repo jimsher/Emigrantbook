@@ -1442,7 +1442,7 @@ function togglePlayPause(vid) {
                             setTimeout(spawnNext, 1500);
                         } else {
                             // პაუზა 10 წამი
-                            setTimeout(startLikeCycle, 10000);
+                            setTimeout(startLikeCycle, 5000);
                         }
                     }
                     spawnNext();
