@@ -1347,7 +1347,6 @@ function togglePlayPause(vid) {
 
 
 
-
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1373,9 +1372,7 @@ function renderTokenFeed() {
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
-                
                 <div class="live-activity-overlay" id="live-activity-${id}"></div>
-
                 <div class="side-actions">
                     <div style="position:relative">
                         <img id="ava-${id}" src="https://ui-avatars.com/api/?name=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
@@ -1411,51 +1408,51 @@ function renderTokenFeed() {
                 feed.appendChild(card);
 
                 const activityContainer = document.getElementById(`live-activity-${id}`);
-                
-                // 1. ავატარების "წვიმა" გულებით (გასწორებული პოზიცია)
-                setInterval(() => {
-                    if (document.visibilityState !== 'visible' || !activityContainer || !post.likedBy) return;
-                    const likes = Object.values(post.likedBy);
-                    const randLike = likes[Math.floor(Math.random() * likes.length)];
-                    
-                    const avaBox = document.createElement('div');
-                    avaBox.className = 'floating-avatar-box'; 
-                    // გული ზუსტად ავატარის კუთხეში TikTok-ის სტილში:
-                    avaBox.innerHTML = `
-                        <div style="position:relative; width:32px; height:32px;">
-                            <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
-                                 style="width:32px; height:32px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                            <i class="fas fa-heart" style="position:absolute; bottom:-2px; right:-2px; color:#ff4d4d; font-size:12px; filter:drop-shadow(0 0 2px #000);"></i>
-                        </div>
-                    `;
-                    activityContainer.appendChild(avaBox);
-                    setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 6000);
-                }, 3500);
 
-                // 2. კომენტარების ბუშტები
+                // --- ერთიანი ციკლი: ავატარი და კომენტარი ამოდიან ერთად ---
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
-                    db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
-                        const comms = cSnap.val();
-                        if (!comms) return;
-                        const commList = Object.values(comms);
-                        const randComm = commList[Math.floor(Math.random() * commList.length)];
-                        
-                        const commDiv = document.createElement('div');
-                        commDiv.className = 'floating-comment'; 
-                        commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:20px; height:20px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
-                        activityContainer.appendChild(commDiv);
-                        setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 7000);
-                    });
-                }, 4500);
 
-                // დანარჩენი კოდი უცვლელია...
+                    // 1. ჯერ ვამზადებთ ავატარს (თუ ლაიქებია)
+                    if (post.likedBy) {
+                        const likes = Object.values(post.likedBy);
+                        const randLike = likes[Math.floor(Math.random() * likes.length)];
+                        const avaBox = document.createElement('div');
+                        avaBox.className = 'floating-avatar-box';
+                        avaBox.innerHTML = `
+                            <div style="position:relative; width:32px; height:32px;">
+                                <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
+                                     style="width:32px; height:32px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                                <i class="fas fa-heart" style="position:absolute; bottom:-2px; right:-2px; color:#ff4d4d; font-size:12px; filter:drop-shadow(0 0 2px #000);"></i>
+                            </div>`;
+                        activityContainer.appendChild(avaBox);
+                        // წაშლა ხდება ანიმაციის მერე, რომ არ ხტუნავდეს
+                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 7200);
+                    }
+
+                    // 2. მაშინვე (მცირე დაყოვნებით 0.5 წამი) მოვაყოლოთ კომენტარი
+                    setTimeout(() => {
+                        db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
+                            const comms = cSnap.val();
+                            if (!comms) return;
+                            const commList = Object.values(comms);
+                            const randComm = commList[Math.floor(Math.random() * commList.length)];
+                            const commDiv = document.createElement('div');
+                            commDiv.className = 'floating-comment';
+                            commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:20px; height:20px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
+                            activityContainer.appendChild(commDiv);
+                            setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 7200);
+                        });
+                    }, 500); 
+
+                }, 5000); // 5 წამში ერთხელ ამოდის ახალი "წყვილი"
+
+                // რეალურ დროში განახლებები...
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
                 });
-
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
@@ -1471,6 +1468,7 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
+                
                 
                          
 
