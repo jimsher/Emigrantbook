@@ -1442,7 +1442,7 @@ function renderTokenFeed() {
 
                             index++;
                             // მომდევნო ავატარი დაიბადოს 5 წამში
-                            setTimeout(spawnNext, 3000);
+                            setTimeout(spawnNext, 2500);
                         } else {
                             // როცა ყველა ამოვიდა, დაიცადე 10 წამი და დაიწყე თავიდან
                             setTimeout(startLikeCycle, 7000);
