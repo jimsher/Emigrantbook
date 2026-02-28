@@ -1108,29 +1108,51 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  function deleteNotification(id) {
  db.ref(`notifications/${auth.currentUser.uid}/${id}`).remove().then(() => openRequestsUI());
  }
- function loadUserVideos(uid) {
- const grid = document.getElementById('profGrid');
- grid.innerHTML = "";
- let vCount = 0;
- db.ref('posts').once('value', snap => {
- const posts = snap.val();
- if(!posts) return;
- Object.values(posts).forEach(post => {
- if(post.authorId === uid && post.media) {
- const video = post.media.find(m => m.type === 'video');
- if(video) {
- vCount++;
- const item = document.createElement('div');
- item.className = 'grid-item';
- item.innerHTML = `<video src="${video.url}" muted playsinline></video>`;
- item.onclick = () => playFullVideo(video.url);
- grid.appendChild(item);
- }
- }
- });
- document.getElementById('statVidsCount').innerText = vCount;
- });
- }
+
+
+function loadUserVideos(uid) {
+    const grid = document.getElementById('profGrid');
+    grid.innerHTML = "";
+    let vCount = 0;
+
+    db.ref('posts').once('value', snap => {
+        const posts = snap.val();
+        if(!posts) return;
+
+        // ვალაგებთ პოსტებს ახლიდან ძველისკენ
+        const postEntries = Object.entries(posts).reverse();
+
+        postEntries.forEach(([id, post]) => {
+            if(post.authorId === uid && post.media) {
+                const video = post.media.find(m => m.type === 'video');
+                if(video) {
+                    vCount++;
+                    
+                    // ნახვების რაოდენობის ფორმატირება (მაგ: 1500 -> 1.5K)
+                    const views = post.views || 0;
+                    const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
+
+                    const item = document.createElement('div');
+                    item.className = 'grid-item';
+                    
+                    // ვამატებთ ნახვების ლეიბლს ვიდეოს ზემოდან
+                    item.innerHTML = `
+                        <video src="${video.url}" muted playsinline></video>
+                        <div class="video-views-label">
+                            <i class="fas fa-play"></i> ${formattedViews}
+                        </div>
+                    `;
+                    
+                    item.onclick = () => playFullVideo(video.url);
+                    grid.appendChild(item);
+                }
+            }
+        });
+        document.getElementById('statVidsCount').innerText = vCount;
+    });
+}
+
+
  function playFullVideo(url) {
  const overlay = document.getElementById('fullVideoOverlay');
  const vid = document.getElementById('fullVideoTag');
