@@ -1345,7 +1345,7 @@ function togglePlayPause(vid) {
 
 
 
-                                                            <span class="comment-text">${randComm.text}</span>
+
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
