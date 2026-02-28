@@ -483,12 +483,19 @@ function openComments(postId, postOwnerId) {
 }
 
 
-function loadComments(postId) {
+function loadComments(postId, isGallery = false) {
     const list = document.getElementById('commList');
     const myUid = auth.currentUser.uid;
     const postOwnerId = window.currentPostOwnerId; // ვიღებთ შენახულ ID-ს
 
-    db.ref(`comments/${postId}`).on('value', snap => {
+    // ვინახავთ მდგომარეობას გლობალურად, რომ postComment-მაც იცოდეს სად გააგზავნოს
+    window.isGalleryMode = isGallery;
+    activePostId = postId;
+
+    // სწორი ნაბიჯი: თუ გალერეიდანაა, ვიყენებთ gallery_comments-ს, სხვა შემთხვევაში ორიგინალ comments-ს
+    const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
+
+    db.ref(commentPath).on('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
         if (!data) return;
@@ -544,7 +551,6 @@ function loadComments(postId) {
         });
     });
 }
-
 
 // წაშლის რეალური ფუნქციები
 window.deleteComment = function(postId, commentId) {
