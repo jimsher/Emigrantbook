@@ -1346,11 +1346,11 @@ function togglePlayPause(vid) {
 
 
 
+
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
-    // შეცვლილია ON -> ONCE-ით, რომ ლაიქზე ვიდეო არ გადახტეს
     db.ref('posts').once('value', snap => {
         feed.innerHTML = "";
         const data = snap.val(); if (!data) return;
@@ -1372,9 +1372,7 @@ function renderTokenFeed() {
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
-                
                 <div class="live-activity-overlay" id="live-activity-${id}"></div>
-
                 <div class="side-actions">
                     <div style="position:relative">
                         <img id="ava-${id}" src="https://ui-avatars.com/api/?name=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
@@ -1409,49 +1407,56 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // კომენტარების მთვლელი + ცოცხალი ამოსვლის ეფექტი
+                // --- ლოგიკა მუდმივი ინტერვალისთვის ---
+                
+                // 1. კომენტარების ციკლი
+                setInterval(() => {
+                    db.ref(`comments/${id}`).limitToLast(5).once('value', cSnap => {
+                        const comms = cSnap.val();
+                        if (!comms) return;
+                        const commList = Object.values(comms);
+                        const randomComm = commList[Math.floor(Math.random() * commList.length)];
+                        
+                        const container = document.getElementById(`live-activity-${id}`);
+                        if (container && document.visibilityState === 'visible') {
+                            const div = document.createElement('div');
+                            div.className = 'floating-comment';
+                            div.innerHTML = `<b>${randomComm.authorName}:</b> ${randomComm.text}`;
+                            container.appendChild(div);
+                            setTimeout(() => div.remove(), 5500);
+                        }
+                    });
+                }, 4500); // ყოველ 4.5 წამში ამოვა კომენტარი
+
+                // 2. ლაიქების ციკლი
+                setInterval(() => {
+                    if (post.likedBy) {
+                        const likes = Object.values(post.likedBy);
+                        const randomLike = likes[Math.floor(Math.random() * likes.length)];
+                        const container = document.getElementById(`live-activity-${id}`);
+                        if (container && document.visibilityState === 'visible') {
+                            const img = document.createElement('img');
+                            img.className = 'floating-avatar-like';
+                            img.src = randomLike.photo || 'https://ui-avatars.com/api/?name=' + randomLike.name;
+                            container.appendChild(img);
+                            setTimeout(() => img.remove(), 4500);
+                        }
+                    }
+                }, 3500); // ყოველ 3.5 წამში ამოვა ლაიქი
+
+                // კომენტარების მთვლელი
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
                 });
 
-                // --- ახალი: კომენტარების ანიმაციური ამოსვლა ---
-                db.ref(`comments/${id}`).limitToLast(1).on('child_added', cSnap => {
-                    const comm = cSnap.val();
-                    if (!comm || Date.now() - comm.ts > 5000) return;
-                    const container = document.getElementById(`live-activity-${id}`);
-                    if (container) {
-                        const div = document.createElement('div');
-                        div.className = 'floating-comment';
-                        div.innerHTML = `<b>${comm.authorName}:</b> ${comm.text}`;
-                        container.appendChild(div);
-                        setTimeout(() => div.remove(), 4000);
-                    }
-                });
-
-                // --- ახალი: ლაიქის ავატარების ამოსვლა ---
-                db.ref(`posts/${id}/likedBy`).limitToLast(1).on('child_added', lSnap => {
-                    const like = lSnap.val();
-                    if (!like) return;
-                    const container = document.getElementById(`live-activity-${id}`);
-                    if (container) {
-                        const img = document.createElement('img');
-                        img.className = 'floating-avatar-like';
-                        img.src = like.photo || 'https://ui-avatars.com/api/?name=' + like.name;
-                        container.appendChild(img);
-                        setTimeout(() => img.remove(), 3000);
-                    }
-                });
-
-                // ავტორის სტატუსის განახლება
+                // ავტორის სტატუსი
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
-                    const name = document.getElementById(`name-${id}`);
                     const status = document.getElementById(`mini-status-${id}`);
                     if(u && u.photo && ava) ava.src = u.photo;
-                    if(u && u.name && name) name.innerText = "@" + u.name;
                     if(u && u.presence === 'online' && status) status.style.display = 'block';
                     else if(status) status.style.display = 'none';
                 });
@@ -1460,7 +1465,6 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
-
 
 
 
