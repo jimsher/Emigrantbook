@@ -1424,9 +1424,9 @@ function renderTokenFeed() {
                         avaBox.style.bottom = '0px'; 
                         avaBox.style.left = '0px'; // გასწორება მარცხნივ
                         avaBox.innerHTML = `
-                            <div style="position:relative; width:32px; height:32px;">
+                            <div style="position:relative; width:48px; height:48px;">
                                 <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
-                                     style="width:32px; height:32px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                                     style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
                                 <i class="fas fa-heart" style="position:absolute; bottom:-2px; right:-2px; color:#ff4d4d; font-size:12px; filter:drop-shadow(0 0 2px #000);"></i>
                             </div>`;
                         activityContainer.appendChild(avaBox);
