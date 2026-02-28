@@ -1415,7 +1415,7 @@ function renderTokenFeed() {
                 
                 function startLikeCycle() {
                     if (!post.likedBy || document.visibilityState !== 'visible') {
-                        setTimeout(startLikeCycle, 6000);
+                        setTimeout(startLikeCycle, 5000);
                         return;
                     }
 
@@ -1442,7 +1442,7 @@ function renderTokenFeed() {
 
                             index++;
                             // მომდევნო ავატარი დაიბადოს 5 წამში
-                            setTimeout(spawnNext, 2000);
+                            setTimeout(spawnNext, 2500);
                         } else {
                             // როცა ყველა ამოვიდა, დაიცადე 10 წამი და დაიწყე თავიდან
                             setTimeout(startLikeCycle, 5000);
