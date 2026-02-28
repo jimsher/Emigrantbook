@@ -1415,7 +1415,7 @@ function renderTokenFeed() {
                 
                 function startLikeCycle() {
                     if (!post.likedBy || document.visibilityState !== 'visible') {
-                        setTimeout(startLikeCycle, 2000);
+                        setTimeout(startLikeCycle, 6000);
                         return;
                     }
 
