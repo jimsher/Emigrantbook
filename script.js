@@ -1344,6 +1344,10 @@ function togglePlayPause(vid) {
 
 
 
+
+
+
+
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1408,7 +1412,7 @@ function renderTokenFeed() {
 
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
-                // 1. ავატარების "წვიმა" გულებით (ცალკე ნაკადი)
+                // 1. ავატარების "წვიმა" გულებით (გასწორებული პოზიცია)
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer || !post.likedBy) return;
                     const likes = Object.values(post.likedBy);
@@ -1416,16 +1420,19 @@ function renderTokenFeed() {
                     
                     const avaBox = document.createElement('div');
                     avaBox.className = 'floating-avatar-box'; 
-                    avaBox.style.marginBottom = "15px"; // დაშორება შემდეგი ელემენტისთვის
+                    // გული ზუსტად ავატარის კუთხეში TikTok-ის სტილში:
                     avaBox.innerHTML = `
-                        <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}">
-                        <i class="fas fa-heart"></i>
+                        <div style="position:relative; width:32px; height:32px;">
+                            <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
+                                 style="width:32px; height:32px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                            <i class="fas fa-heart" style="position:absolute; bottom:-2px; right:-2px; color:#ff4d4d; font-size:12px; filter:drop-shadow(0 0 2px #000);"></i>
+                        </div>
                     `;
                     activityContainer.appendChild(avaBox);
-                    setTimeout(() => avaBox.remove(), 6000);
-                }, 3500); // ავატარების ნაკადის სიხშირე
+                    setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 6000);
+                }, 3500);
 
-                // 2. კომენტარების ბუშტები (ცალკე ნაკადი, რომელიც ავატარებს მოჰყვება)
+                // 2. კომენტარების ბუშტები
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
                     db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
@@ -1436,20 +1443,19 @@ function renderTokenFeed() {
                         
                         const commDiv = document.createElement('div');
                         commDiv.className = 'floating-comment'; 
-                        commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:20px; height:20px; border-radius:50%; margin-right:5px; border:1px solid #fff;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
+                        commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:20px; height:20px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
                         activityContainer.appendChild(commDiv);
-                        setTimeout(() => commDiv.remove(), 7000);
+                        setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 7000);
                     });
-                }, 5000); // კომენტარების ნაკადის სიხშირე
+                }, 4500);
 
-                // კომენტარების მთვლელი რეალურ დროში
+                // დანარჩენი კოდი უცვლელია...
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
                     if(el) el.innerText = count;
                 });
 
-                // ავტორის სტატუსის განახლება
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
