@@ -2,93 +2,85 @@
 let currentProduct = null;
 let cart = [];
 
-// Stripe ინიციალიზაცია
+// Stripe ინიციალიზაცია (შენი Key)
 const stripe = Stripe('pk_test_51SuywEE4GEOA0VbFL1utyI4vcXZUXWCVYYWzNbG32Gxk8oZxgaxMlhJiyJzR3w0VQ8BfDuLCaaPBrHw9eM745nzc00I2i2sNvK');
 
-// შენი imgBB API Key
-const IMGBB_API_KEY = "6f6634c0e667866380c55048d085957d";
+// 1. მაღაზიის სექციის გახსნა
+function openShopSection() {
+    const shopContainer = document.getElementById('shopSectionContainer');
+    if (shopContainer) shopContainer.style.display = 'flex';
 
-// --- 1. პროდუქტის ატვირთვის ფუნქცია (imgBB + Firebase) ---
+    // ადმინ პანელის შემოწმება (ჩაწერე შენი UID 'YOUR_ACTUAL_UID'-ის ნაცვლად)
+    if (auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2') {
+        const adminStore = document.getElementById('adminStorePanel');
+        if (adminStore) adminStore.style.display = 'block';
+    }
+    renderStore('all');
+}
+
+// 2. მთავარი ფუნქცია: ნივთის შენახვა (imgBB + Firebase)
 async function saveProductToFirebase() {
-    const fileInput = document.getElementById('newProdFile');
-    const file = fileInput ? fileInput.files[0] : null;
+    // ზუსტად შენი HTML-ის ID-ები
     const name = document.getElementById('newProdName').value;
     const price = document.getElementById('newProdPrice').value;
     const stripeLink = document.getElementById('newProdStripeLink').value;
     const desc = document.getElementById('newProdDesc').value;
     const cat = document.getElementById('newProdCat').value;
+    const fileInput = document.getElementById('newProdFile');
+    const file = fileInput.files[0];
     const btn = document.getElementById('uploadBtn');
 
     if (!file || !name || !price) {
         return alert("შეავსე აუცილებელი ველები: ფოტო, სახელი და ფასი!");
     }
 
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = "იტვირთება...";
-    }
+    // ღილაკის დაბლოკვა ატვირთვისას
+    btn.disabled = true;
+    btn.innerText = "იტვირთება...";
+
+    const formData = new FormData();
+    formData.append("image", file);
 
     try {
-        // 🚀 ატვირთვა imgBB-ზე
-        const formData = new FormData();
-        formData.append("image", file);
-
-        const imgBBRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        // 🚀 1. ატვირთვა imgBB-ზე (შენი API Key)
+        const res = await fetch("https://api.imgbb.com/1/upload?key=6f6634c0e667866380c55048d085957d", {
             method: "POST",
             body: formData
         });
-        const imgBBData = await imgBBRes.json();
+        const json = await res.json();
 
-        if (!imgBBData.success) {
-            throw new Error("imgBB-ზე ატვირთვა ვერ მოხერხდა!");
+        if (json.success) {
+            const imageUrl = json.data.url; // imgBB-ს მოცემული ლინკი
+
+            // 🚀 2. შენახვა Firebase-ში (akhoStore-ში)
+            await db.ref('akhoStore').push({
+                name: name,
+                price: price,
+                stripeLink: stripeLink,
+                desc: desc,
+                category: cat,
+                image: imageUrl,
+                timestamp: Date.now()
+            });
+
+            alert("ნივთი წარმატებით დაემატა! ✅");
+            
+            // ფორმის გასუფთავება
+            document.getElementById('newProdName').value = "";
+            document.getElementById('newProdPrice').value = "";
+            document.getElementById('newProdStripeLink').value = "";
+            document.getElementById('newProdDesc').value = "";
+            fileInput.value = "";
+        } else {
+            alert("imgBB-ზე ატვირთვა ვერ მოხერხდა!");
         }
-
-        const imageUrl = imgBBData.data.url; // აი ნამდვილი ლინკი
-
-        // 🚀 შენახვა Firebase-ში
-        const productData = {
-            name: name,
-            price: price,
-            stripeLink: stripeLink,
-            desc: desc,
-            category: cat,
-            image: imageUrl,
-            timestamp: Date.now()
-        };
-
-        await db.ref('akhoStore').push(productData);
-
-        alert("პროდუქტი წარმატებით დაემატა! ✅");
-        
-        // ფორმის გასუფთავება
-        document.getElementById('newProdName').value = "";
-        document.getElementById('newProdPrice').value = "";
-        document.getElementById('newProdStripeLink').value = "";
-        document.getElementById('newProdDesc').value = "";
-        fileInput.value = "";
-
     } catch (e) {
         console.error(e);
         alert("შეცდომაა: " + e.message);
     } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerText = "გამოქვეყნება 🚀";
-        }
+        btn.disabled = false;
+        btn.innerText = "დამატება 🚀";
     }
-}
-
-// 2. მაღაზიის გახსნა და რენდერი
-function openShopSection() {
-    const shopContainer = document.getElementById('shopSectionContainer');
-    if (shopContainer) shopContainer.style.display = 'flex';
-
-    // ადმინ პანელის გამოჩენა (შეცვალე შენი UID-ით)
-    if (auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2') { 
-        const adminStore = document.getElementById('adminStorePanel');
-        if (adminStore) adminStore.style.display = 'block';
-    }
-    renderStore('all');
 }
 
 // 3. მაღაზიის რენდერი
@@ -137,7 +129,7 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 4. პროდუქტის დეტალების გახსნა
+// 4. პროდუქტის დეტალები
 function showProductDetails(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
@@ -159,7 +151,7 @@ function showProductDetails(id) {
                     ${item.desc ? item.desc : "აღწერა არ არის მითითებული."}
                 </div>
             </div>
-            <button onclick="openOrderForm()" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer; transition: 0.3s;">
+            <button onclick="openOrderForm()" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer;">
                 შეკვეთის გაფორმება 💳
             </button>
         `;
@@ -167,132 +159,14 @@ function showProductDetails(id) {
     });
 }
 
-// 5. შეკვეთის ფორმის გახსნა
-function openOrderForm() {
-    const detailsModal = document.getElementById('productDetailsModal');
-    const orderModal = document.getElementById('orderFormModal');
-    const priceDisplay = document.getElementById('finalPriceDisplay');
-
-    if (detailsModal) detailsModal.style.display = 'none';
-    if (orderModal) orderModal.style.display = 'flex';
-    if (priceDisplay && currentProduct) priceDisplay.innerText = currentProduct.price + " ₾";
-}
-
-// 6. შეკვეთის და გადახდის პროცესი
-async function processOrderAndPay() {
-    const btn = document.querySelector("#orderFormModal button");
-    const user = auth.currentUser;
-    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია");
-
-    const fName = document.getElementById('ordFirstName').value;
-    const lName = document.getElementById('ordLastName').value;
-    const addr = document.getElementById('ordAddress').value;
-    const phone = document.getElementById('ordPhone').value;
-    const email = document.getElementById('ordEmail').value;
-
-    if (!fName || !lName || !addr || !phone) {
-        alert("შეავსეთ აუცილებელი ველები!");
-        return;
-    }
-
-    const customerInfo = {
-        name: fName + " " + lName,
-        address: addr,
-        phone: phone,
-        email: email,
-        productName: currentProduct.name,
-        price: currentProduct.price,
-        uid: user.uid,
-        status: "waiting_payment",
-        timestamp: Date.now()
-    };
-
-    if (btn) {
-        btn.innerText = "გადამისამართება...";
-        btn.disabled = true;
-    }
-
-    try {
-        await db.ref('orders').push(customerInfo);
-
-        if (currentProduct && currentProduct.stripeLink) {
-            const priceId = currentProduct.stripeLink;
-
-            if (priceId.startsWith('price_')) {
-                const { error } = await stripe.redirectToCheckout({
-                    lineItems: [{ price: priceId, quantity: 1 }],
-                    mode: 'payment',
-                    successUrl: window.location.origin + '/success',
-                    cancelUrl: window.location.origin + '/cancel'
-                });
-                if (error) alert(error.message);
-            } else {
-                const finalUrl = priceId.includes('?') 
-                    ? `${priceId}&client_reference_id=${user.uid}` 
-                    : `${priceId}?client_reference_id=${user.uid}`;
-                window.open(finalUrl, "_blank");
-            }
-        } else {
-            alert("ამ ნივთს Stripe-ის ლინკი არ აქვს!");
-        }
-    } catch (e) {
-        alert("შეცდომაა: " + e.message);
-    } finally {
-        if (btn) {
-            btn.innerText = "გადახდაზე გადასვლა 🚀";
-            btn.disabled = false;
-        }
-    }
-}
-
-// 7. ადმინ პანელის ფუნქციები
-function loadIncomingOrders() {
-    const list = document.getElementById('ordersList');
-    if (!list) return;
-
-    db.ref('orders').on('value', snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        if (!data) {
-            list.innerHTML = "<p style='color:gray; font-size:12px;'>შეკვეთები არ არის...</p>";
-            return;
-        }
-
-        Object.entries(data).reverse().forEach(([id, order]) => {
-            const card = document.createElement('div');
-            card.style = "background:#111; border:1px solid #333; padding:12px; border-radius:10px; font-size:13px; margin-bottom:10px; border-left: 4px solid var(--gold);";
-            
-            card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <b style="color:var(--gold); font-size:14px;">📦 ${order.productName || 'ნივთი'}</b>
-                    <span style="color:#00ff00; font-weight:bold;">${order.price || 0} ₾</span>
-                </div>
-                <div style="color:white; line-height:1.6;">
-                    👤 <b>კლიენტი:</b> ${order.name || '-'}<br>
-                    📍 <b>მისამართი:</b> ${order.address || '-'}<br>
-                    📞 <b>ტელ:</b> ${order.phone || '-'}<br>
-                    <span style="color:gray; font-size:10px;">📅 ${new Date(order.timestamp).toLocaleString()}</span>
-                </div>
-                <button onclick="deleteOrder('${id}')" style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:5px; margin-top:10px; cursor:pointer;">წაშლა 🗑️</button>
-            `;
-            list.appendChild(card);
-        });
-    });
+// 5. ფორმების დახურვა და წაშლა
+function closeProductDetails() {
+    const modal = document.getElementById('productDetailsModal');
+    if (modal) modal.style.display = 'none';
 }
 
 function deleteProduct(id) {
     if (confirm("ნამდვილად გინდა ამ ნივთის წაშლა?")) {
         db.ref(`akhoStore/${id}`).remove();
     }
-}
-
-function deleteOrder(id) {
-    if (confirm("წავშალოთ შეკვეთა?")) {
-        db.ref(`orders/${id}`).remove();
-    }
-}
-
-function closeProductDetails() {
-    const modal = document.getElementById('productDetailsModal');
-    if (modal) modal.style.display = 'none';
 }
