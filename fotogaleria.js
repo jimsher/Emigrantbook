@@ -13,10 +13,14 @@ function openPhotosSection(event) {
     if (videoGrid) videoGrid.style.display = 'none';
     if (photosGrid) {
         photosGrid.style.display = 'grid';
-        photosGrid.innerHTML = ""; 
+        photosGrid.innerHTML = ""; // პირველადი გასუფთავება
     }
 
     db.ref('community_posts').orderByChild('authorId').equalTo(viewUid).once('value', snap => {
+        // --- აი ეს არის დაზღვევა დუბლიკატის წინააღმდეგ ---
+        if (photosGrid) photosGrid.innerHTML = ""; 
+        // ----------------------------------------------
+
         const posts = snap.val();
         let hasPhotos = false;
 
@@ -29,7 +33,6 @@ function openPhotosSection(event) {
                     const photoDiv = document.createElement('div');
                     photoDiv.className = 'grid-item'; 
                     
-                    // ფუნქციის სახელი შეცვლილია: gallery_viewFullPhoto
                     photoDiv.innerHTML = `
                         <img src="${post.image}" 
                              style="width:100%; height:100%; object-fit:cover; cursor:pointer;" 
@@ -41,7 +44,12 @@ function openPhotosSection(event) {
         }
 
         if (noPhotosMsg) noPhotosMsg.style.display = hasPhotos ? 'none' : 'block';
-        if (!hasPhotos && photosGrid) photosGrid.style.display = 'none';
+        // ამ ხაზს ოდნავ შევეხე: თუ ფოტოები არ არის, ბადე დაიმალოს, მაგრამ თუ არის - დარჩეს grid
+        if (!hasPhotos && photosGrid) {
+            photosGrid.style.display = 'none';
+        } else if (hasPhotos && photosGrid) {
+            photosGrid.style.display = 'grid';
+        }
     });
 
     if (event && event.target) {
@@ -49,6 +57,8 @@ function openPhotosSection(event) {
         event.target.classList.add('active');
     }
 }
+
+
 
 // 2. ფოტოს გახსნა გალერეაში
 async function gallery_viewFullPhoto(url, postId) {
