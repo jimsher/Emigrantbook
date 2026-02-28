@@ -1345,7 +1345,7 @@ function togglePlayPause(vid) {
 
 
 
-
+                                
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1389,7 +1389,7 @@ function renderTokenFeed() {
                         <i class="fas fa-bookmark"></i>
                         <span id="save-count-${id}">${saveCount}</span>
                     </div>
-                    <div class="action-item" onclick="shareVideo('${id}', '${videoUrl}')">
+                    <div class="action-item" onclick="openShare('${id}', '${videoUrl}')">
                         <i class="fas fa-share"></i>
                         <span id="share-count-${id}">${shareCount}</span>
                     </div>
@@ -1408,58 +1408,32 @@ function renderTokenFeed() {
 
                 const activityContainer = document.getElementById(`live-activity-${id}`);
 
-                // --- რიგითობის დაცვა: ჯერ კომენტარი, მერე ლაიქი ---
+                // --- ავატარების უწყვეტი ნაკადი (ლაიქები) ---
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
 
-                    // 1. ჯერ ამოდის კომენტარი
-                    db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
-                        const comms = cSnap.val();
-                        if (!comms) return;
-                        const commList = Object.values(comms);
-                        const randComm = commList[Math.floor(Math.random() * commList.length)];
-                        const commDiv = document.createElement('div');
-                        commDiv.className = 'floating-comment';
-                        commDiv.style.position = 'absolute';
-                        commDiv.style.bottom = '0px';
-                        commDiv.style.left = '0px'; 
+                    if (post.likedBy) {
+                        const likes = Object.values(post.likedBy);
+                        const randLike = likes[Math.floor(Math.random() * likes.length)];
+                        const avaBox = document.createElement('div');
+                        avaBox.className = 'floating-avatar-box';
+                        avaBox.style.position = 'absolute';
+                        avaBox.style.bottom = '0px'; 
+                        avaBox.style.left = '0px';
+                        avaBox.innerHTML = `
+                            <div style="position:relative; width:48px; height:48px;">
+                                <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
+                                     style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                                <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
+                            </div>`;
+                        activityContainer.appendChild(avaBox);
                         
-                        commDiv.innerHTML = `
-                            <img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" class="comment-external-ava">
-                            <div class="comment-bubble">
-                                <span class="comment-author-name">${randComm.authorName}</span>
-                                <span class="comment-text">${randComm.text}</span>
-                            </div>
-                        `;
-                        
-                        activityContainer.appendChild(commDiv);
-                        setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 8000);
-                    });
+                        // წაშლა 8 წამში (როცა ანიმაცია მორჩება), მაგრამ ახალი 2 წამშივე იბადება
+                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
+                    }
+                }, 2000); // 2 წამიანი ინტერვალი ქმნის უწყვეტ "ჯაჭვს"
 
-                    // 2. 1.5 წამის შემდეგ ამოდის ლაიქის ავატარი
-                    setTimeout(() => {
-                        if (post.likedBy) {
-                            const likes = Object.values(post.likedBy);
-                            const randLike = likes[Math.floor(Math.random() * likes.length)];
-                            const avaBox = document.createElement('div');
-                            avaBox.className = 'floating-avatar-box';
-                            avaBox.style.position = 'absolute';
-                            avaBox.style.bottom = '0px'; 
-                            avaBox.style.left = '0px';
-                            avaBox.innerHTML = `
-                                <div style="position:relative; width:48px; height:48px;">
-                                    <img src="${randLike.photo || 'https://ui-avatars.com/api/?name=' + randLike.name}" 
-                                         style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                                    <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
-                                </div>`;
-                            activityContainer.appendChild(avaBox);
-                            setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-                        }
-                    }, 1500);
-
-                }, 5000);
-
-                // დანარჩენი ლოგიკა უცვლელია
+                // დანარჩენი სტატისტიკის ლოგიკა უცვლელია
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1479,8 +1453,7 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}                                
-
+}
                 
                 
 
