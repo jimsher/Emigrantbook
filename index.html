@@ -190,63 +190,65 @@
     position: absolute;
     bottom: 110px;
     left: 15px;
-    width: 220px;
-    height: 180px; /* სიმაღლე, რომელზეც ამოდის */
+    width: 250px; /* გავზარდეთ სიგანე გადიდებული ელემენტებისთვის */
+    height: 220px; /* ცოტა სიმაღლე მოვუმატეთ */
     pointer-events: none;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    /* ეს ხაზი ქმნის ზემოთ გაქრობის ეფექტს */
     mask-image: linear-gradient(to top, black 60%, transparent 100%);
     -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
     overflow: hidden;
     z-index: 100;
 }
 
-/* ამომავალი კომენტარი */
+/* ამომავალი კომენტარი - გადიდებული */
 .floating-comment {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
     color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    margin-bottom: 6px;
+    padding: 8px 16px; /* გავზარდეთ დაშორება შიგნით */
+    border-radius: 25px;
+    font-size: 14px; /* ტექსტი გავზარდეთ 12-დან 14-მდე */
+    margin-bottom: 10px;
     width: fit-content;
     display: flex;
     align-items: center;
-    gap: 8px;
-    animation: smoothFlowUp 7s linear forwards; /* ნელი და თანაბარი სვლა */
+    gap: 10px;
+    animation: smoothFlowUp 7s linear forwards;
     border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
-/* ავატარი გულით */
+/* ავატარი გულით - გადიდებული */
 .floating-avatar-box {
     position: relative;
     display: flex;
     align-items: center;
     gap: 5px;
     animation: smoothFlowUp 6s linear forwards;
-    margin-bottom: 10px;
+    margin-bottom: 15px; /* დაშორება კომენტარსა და ავატარს შორის */
 }
 
 .floating-avatar-box img {
-    width: 32px;
-    height: 32px;
+    width: 48px; /* გაიზარდა 32-დან 48-მდე */
+    height: 48px; /* გაიზარდა 32-დან 48-მდე */
     border-radius: 50%;
-    border: 2px solid var(--gold);
+    border: 2.5px solid var(--gold); /* ჩარჩოც ოდნავ სქელია */
+    object-fit: cover;
 }
 
 .floating-avatar-box i {
     color: #ff4d4d;
-    font-size: 14px;
+    font-size: 18px; /* გულიც გაიზარდა 14-დან 18-მდე */
     filter: drop-shadow(0 0 5px #ff4d4d);
 }
 
 @keyframes smoothFlowUp {
-    0% { transform: translateY(50px); opacity: 0; }
+    0% { transform: translateY(60px); opacity: 0; }
     10% { opacity: 1; transform: translateY(0); }
-    100% { transform: translateY(-150px); opacity: 0; } /* ნელა ადის და ქრება */
+    /* 85%-ზე უკვე იწყებს გაქრობას, რომ ხტუნვა არ ქონდეს წაშლისას */
+    85% { opacity: 1; }
+    100% { transform: translateY(-180px); opacity: 0; }
 }
  </style>
 </head>
