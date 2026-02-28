@@ -1345,9 +1345,6 @@ function togglePlayPause(vid) {
 
 
 
-
-
-                
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1413,7 +1410,7 @@ function renderTokenFeed() {
                 setInterval(() => {
                     if (document.visibilityState !== 'visible' || !activityContainer) return;
 
-                    // 1. ავატარი (48px)
+                    // 1. ავატარი გულით (48px)
                     if (post.likedBy) {
                         const likes = Object.values(post.likedBy);
                         const randLike = likes[Math.floor(Math.random() * likes.length)];
@@ -1432,7 +1429,7 @@ function renderTokenFeed() {
                         setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
                     }
 
-                    // 2. კომენტარი (ავატარის ქვეშ)
+                    // 2. კომენტარი (ავატარი წინ + ჩარჩო შიგნით სახელით)
                     setTimeout(() => {
                         db.ref(`comments/${id}`).limitToLast(10).once('value', cSnap => {
                             const comms = cSnap.val();
@@ -1444,7 +1441,16 @@ function renderTokenFeed() {
                             commDiv.style.position = 'absolute';
                             commDiv.style.bottom = '0px';
                             commDiv.style.left = '0px'; 
-                            commDiv.innerHTML = `<img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" style="width:24px; height:24px; border-radius:50%; margin-right:8px; border:1px solid #fff; object-fit:cover;"> <b>${randComm.authorName}:</b> ${randComm.text}`;
+                            
+                            // ახალი სტრუქტურა: ავატარი გარეთ, ჩარჩო შიგნით
+                            commDiv.innerHTML = `
+                                <img src="${randComm.authorPhoto || 'https://ui-avatars.com/api/?name=' + randComm.authorName}" class="comment-external-ava">
+                                <div class="comment-bubble">
+                                    <span class="comment-author-name">${randComm.authorName}</span>
+                                    <span class="comment-text">${randComm.text}</span>
+                                </div>
+                            `;
+                            
                             activityContainer.appendChild(commDiv);
                             setTimeout(() => { if(commDiv.parentNode) commDiv.remove(); }, 8000);
                         });
@@ -1452,7 +1458,7 @@ function renderTokenFeed() {
 
                 }, 5000);
 
-                // დანარჩენი სტატისტიკის ლოგიკა...
+                // დანარჩენი ლოგიკა უცვლელია
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1473,6 +1479,9 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }
+
+                
+                
 
 
                 
