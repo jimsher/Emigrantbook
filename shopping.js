@@ -425,3 +425,40 @@ function renderUserOrderHistory() {
         content.innerHTML = ordersHtml;
     });
 }
+
+
+// --- 2. ადმინისთვის ყველა შეკვეთის ნახვა ---
+function renderAdminOrders() {
+    const listContainer = document.getElementById('adminProductList'); // ვიყენებთ ადმინ პანელის იმავე სივრცეს
+    if (!listContainer) return;
+
+    db.ref('orders').on('value', snap => {
+        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">შემოსული შეკვეთები:</h4>`;
+        const data = snap.val();
+        if (!data) {
+            listContainer.innerHTML += `<p style="color:gray; font-size:12px;">შეკვეთები არ არის.</p>`;
+            return;
+        }
+
+        Object.entries(data).reverse().forEach(([id, order]) => {
+            listContainer.innerHTML += `
+                <div style="background:#1a1a1a; padding:12px; border-radius:10px; margin-bottom:10px; border:1px solid #333; text-align:left;">
+                    <div style="color:var(--gold); font-weight:bold; margin-bottom:5px;">${order.productName}</div>
+                    <div style="color:white; font-size:13px;">მყიდველი: ${order.buyerName}</div>
+                    <div style="color:#ccc; font-size:12px;">ტელ: ${order.phone}</div>
+                    <div style="color:#ccc; font-size:12px;">მისამართი: ${order.address}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px solid #222; padding-top:8px;">
+                        <b style="color:#00ff00;">${order.paidAmount} AKHO</b>
+                        <button onclick="updateOrderStatus('${id}', 'delivered')" style="background:var(--gold); border:none; padding:4px 8px; border-radius:5px; font-size:11px; font-weight:bold;">ჩაბარება ✅</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+// სტატუსის განახლება
+function updateOrderStatus(orderId, newStatus) {
+    db.ref(`orders/${orderId}`).update({ status: newStatus })
+      .then(() => alert("სტატუსი განახლდა!"));
+}
