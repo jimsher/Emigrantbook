@@ -68,12 +68,11 @@ function openShopSection() {
     renderStore('all');
 }
 
-// 4. რენდერი ფილტრაციის ფუნქციით (მენიუს ღილაკებისთვის)
+// 4. რენდერი ფილტრაციის ფუნქციით
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
 
-    // მენიუს ღილაკების აქტიური სტილი
     if (btn) {
         document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
@@ -85,7 +84,6 @@ function renderStore(category = 'all', btn = null) {
         if (!data) return;
 
         Object.entries(data).reverse().forEach(([id, item]) => {
-            // ფილტრაცია კატეგორიის მიხედვით
             if (category !== 'all' && item.category !== category) return;
 
             const card = document.createElement('div');
@@ -111,12 +109,12 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 5. კალათაში დამატება
+// 5. კალათის მართვა (ახალი ფუნქციები)
 function addToCart(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
         if (item) {
-            cart.push({ id, ...item });
+            cart.push({ cartId: Date.now(), id: id, ...item });
             updateCartBadge();
             alert(`${item.name} დაემატა კალათაში! 🛒`);
         }
@@ -125,10 +123,68 @@ function addToCart(id) {
 
 function updateCartBadge() {
     const badge = document.getElementById('cartCountBadge');
-    if (badge) badge.innerText = cart.length;
+    if (badge) {
+        badge.innerText = cart.length;
+        badge.style.display = cart.length > 0 ? 'flex' : 'none';
+    }
 }
 
-// 6. შეკვეთის ფორმის გახსნა (მონაცემების შესავსებად)
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartBadge();
+    openCartView(); // კალათის გვერდის განახლება
+}
+
+function openCartView() {
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    if (!modal || !content) return;
+
+    if (cart.length === 0) {
+        content.innerHTML = `
+            <div style="text-align:center; padding:40px;">
+                <i class="fas fa-shopping-basket" style="font-size:50px; color:#333; margin-bottom:20px;"></i>
+                <p style="color:gray;">კალათა ცარიელია...</p>
+            </div>
+        `;
+    } else {
+        let total = 0;
+        let html = `<h2 style="color:var(--gold); margin-bottom:15px; width:100%;">შენი კალათა</h2>`;
+        
+        cart.forEach((item, index) => {
+            total += parseFloat(item.price);
+            html += `
+                <div style="width:100%; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #222;">
+                    <img src="${item.image}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
+                    <div style="flex:1; color:white; font-size:13px;">${item.name}</div>
+                    <div style="color:var(--gold); font-weight:bold; font-size:13px;">${item.price}</div>
+                    <i class="fas fa-trash" onclick="removeFromCart(${index})" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
+                </div>
+            `;
+        });
+
+        html += `
+            <div style="width:100%; border-top:1px solid #333; padding-top:15px; margin-top:10px;">
+                <div style="display:flex; justify-content:space-between; color:white; font-weight:bold; margin-bottom:15px;">
+                    <span>ჯამი:</span>
+                    <span style="color:#00ff00;">${total} AKHO</span>
+                </div>
+                <button onclick="openOrderFormFromCart(${total})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">
+                    ყველას ყიდვა 🚀
+                </button>
+            </div>
+        `;
+        content.innerHTML = html;
+    }
+    modal.style.display = 'flex';
+}
+
+function openOrderFormFromCart(total) {
+    currentProduct = { name: `კალათა (${cart.length} ნივთი)`, price: total, isCart: true };
+    openOrderForm();
+}
+
+// 6. შეკვეთის ფორმის გახსნა
 function openOrderForm() {
     const detailsModal = document.getElementById('productDetailsModal');
     const orderModal = document.getElementById('orderFormModal');
@@ -156,20 +212,20 @@ async function processOrderAndPay() {
 
     if (!fName || !lName || !addr || !phone) return alert("შეავსე ყველა ველი!");
 
-    const productPrice = parseFloat(currentProduct.price);
+    const totalPrice = parseFloat(currentProduct.price);
     const userRef = db.ref(`users/${user.uid}`);
 
     try {
         const userSnap = await userRef.once('value');
         const currentBalance = parseFloat(userSnap.val().akhoBalance || 0);
 
-        if (currentBalance < productPrice) {
+        if (currentBalance < totalPrice) {
             return alert(`არ გაქვს საკმარისი AKHO!`);
         }
 
         if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
 
-        await userRef.update({ akhoBalance: currentBalance - productPrice });
+        await userRef.update({ akhoBalance: currentBalance - totalPrice });
 
         await db.ref('orders').push({
             buyerUid: user.uid,
@@ -177,20 +233,25 @@ async function processOrderAndPay() {
             address: addr,
             phone: phone,
             productName: currentProduct.name,
-            paidAmount: productPrice,
+            paidAmount: totalPrice,
             status: "paid_with_akho",
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            cartItems: currentProduct.isCart ? cart : null
         });
+
+        if (currentProduct.isCart) cart = []; // კალათის გასუფთავება
+        updateCartBadge();
 
         alert("შენაძენი წარმატებულია! ✅");
         location.reload();
 
     } catch (e) {
         alert("შეცდომაა: " + e.message);
+        if (btn) { btn.disabled = false; btn.innerText = "მონაცემების შენახვა და გადახდა 🚀"; }
     }
 }
 
-// 8. დეტალების გამოჩენა (კალათაში დამატების ღილაკით)
+// 8. დეტალების გამოჩენა
 function showProductDetails(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
