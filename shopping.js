@@ -36,7 +36,7 @@ async function saveProductToFirebase() {
 
     try {
         // 🚀 ატვირთვა imgBB-ზე შენი API Key-თ
-        const res = await fetch("https://api.imgbb.com/1/upload?key=6f6634c0e667866380c55048d085957d", {
+        const res = await fetch("https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67", {
             method: "POST",
             body: formData
         });
