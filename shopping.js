@@ -3,14 +3,18 @@ let currentProduct = null;
 let cart = []; 
 let allProductsStore = []; 
 
-// 💶 კურსის კონსტანტა: 10 AKHO = 1 EUR (ანუ 1 AKHO = 0.1 EUR)
+// 💶 კურსის კონსტანტა: 10 AKHO = 1 EUR
 const AKHO_EXCHANGE_RATE = 0.1; 
 
 // 1. მაღაზიის მართვის პანელის ჩართვა/გამორთვა
 function toggleStoreManager() {
     const section = document.getElementById('storeManagerSection');
     if (section) {
-        section.style.display = (section.style.display === 'none' || section.style.display === '') ? 'block' : 'none';
+        const isOpening = (section.style.display === 'none' || section.style.display === '');
+        section.style.display = isOpening ? 'block' : 'none';
+        
+        // თუ პანელს ვხსნით, ეგრევე ჩატვირთოს ნივთების სია წასაშლელად
+        if (isOpening) renderAdminProductList();
     }
 }
 
@@ -60,7 +64,7 @@ async function saveProductToFirebase() {
     }
 }
 
-// 3. მაღაზიის გახსნა (კალათის ჩატვირთვით)
+// 3. მაღაზიის გახსნა
 function openShopSection() {
     const shopContainer = document.getElementById('shopSectionContainer');
     if (shopContainer) shopContainer.style.display = 'flex';
@@ -74,7 +78,40 @@ function openShopSection() {
     renderStore('all');
 }
 
-// 4. კალათის ჩატვირთვა Firebase-დან
+// --- ადმინ პანელში ნივთების სიის გამოჩენა ---
+function renderAdminProductList() {
+    const listContainer = document.getElementById('adminProductList');
+    if (!listContainer) return;
+
+    db.ref('akhoStore').on('value', snap => {
+        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">არსებული ნივთები:</h4>`;
+        const data = snap.val();
+        if (!data) {
+            listContainer.innerHTML += `<p style="color:gray; font-size:12px;">მაღაზია ცარიელია</p>`;
+            return;
+        }
+
+        Object.entries(data).reverse().forEach(([id, item]) => {
+            const itemRow = document.createElement('div');
+            itemRow.style = "display:flex; align-items:center; justify-content:space-between; background:#222; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #333;";
+            itemRow.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${item.image}" style="width:35px; height:35px; border-radius:5px; object-fit:cover;">
+                    <div>
+                        <b style="color:white; font-size:13px; display:block;">${item.name}</b>
+                        <small style="color:var(--gold); font-size:11px;">${item.price} AKHO</small>
+                    </div>
+                </div>
+                <button onclick="deleteProduct('${id}')" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">
+                    <i class="fas fa-trash"></i> წაშლა
+                </button>
+            `;
+            listContainer.appendChild(itemRow);
+        });
+    });
+}
+
+// 4. კალათის ჩატვირთვა
 function loadUserCart() {
     if (!auth.currentUser) return;
     db.ref(`userCarts/${auth.currentUser.uid}`).on('value', snap => {
@@ -121,7 +158,7 @@ function searchProduct(query) {
     });
 }
 
-// ბარათი (დამატებულია რეალური ფასის ჩვენება ევროში)
+// ბარათი
 function drawProductCard(id, item, grid) {
     const card = document.createElement('div');
     card.className = "product-card";
@@ -180,7 +217,7 @@ function removeFromCart(cartKey) {
     openCartView(); 
 }
 
-// 7. კალათის ნახვა (ევროების ჯამით)
+// 7. კალათის ნახვა
 function openCartView() {
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
