@@ -84,7 +84,7 @@ function renderAdminProductList() {
     if (!listContainer) return;
 
     db.ref('akhoStore').on('value', snap => {
-        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;"> </h4>`;
+        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">არსებული ნივთები:</h4>`;
         const data = snap.val();
         if (!data) {
             listContainer.innerHTML += `<p style="color:gray; font-size:12px;">მაღაზია ცარიელია</p>`;
@@ -265,7 +265,7 @@ function openOrderFormFromCart(total) {
     openOrderForm();
 }
 
-// 8. გადახდა
+// 8. გადახდა AKHO ბალანსით (სტრიპეს გარეშე)
 async function processOrderAndPay() {
     const user = auth.currentUser;
     const btn = document.querySelector("#orderFormModal button");
@@ -283,14 +283,17 @@ async function processOrderAndPay() {
 
     try {
         const userSnap = await userRef.once('value');
-        const currentBalance = parseFloat(userSnap.val().akhoBalance || 0);
+        const userData = userSnap.val();
+        const currentBalance = parseFloat(userData.akhoBalance || 0);
 
         if (currentBalance < totalPrice) return alert(`არ გაქვს საკმარისი AKHO!`);
 
         if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
 
+        // ბალანსის ჩამოჭრა
         await userRef.update({ akhoBalance: currentBalance - totalPrice });
 
+        // შეკვეთის გაფორმება
         await db.ref('orders').push({
             buyerUid: user.uid,
             buyerName: fName + " " + lName,
@@ -302,11 +305,12 @@ async function processOrderAndPay() {
             timestamp: Date.now()
         });
 
+        // კალათის გასუფთავება
         if (currentProduct.isCart) {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
 
-        alert("შენაძენი წარმატებულია! ✅");
+        alert("შენაძენი წარმატებულია! ✅ AKHO ჩამოგეჭრა ბალანსიდან.");
         location.reload();
 
     } catch (e) {
@@ -370,11 +374,7 @@ function closeProductDetails() {
     if (modal) modal.style.display = 'none';
 }
 
-
-
-
-
-// --- 1. მომხმარებლის შეკვეთების ისტორიის რენდერი ---
+// --- 1. მომხმარებლის შეკვეთების ისტორია ---
 function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
@@ -426,10 +426,9 @@ function renderUserOrderHistory() {
     });
 }
 
-
-// --- 2. ადმინისთვის ყველა შეკვეთის ნახვა ---
+// --- 2. ადმინისთვის შეკვეთების ნახვა ---
 function renderAdminOrders() {
-    const listContainer = document.getElementById('adminProductList'); // ვიყენებთ ადმინ პანელის იმავე სივრცეს
+    const listContainer = document.getElementById('adminProductList'); 
     if (!listContainer) return;
 
     db.ref('orders').on('value', snap => {
