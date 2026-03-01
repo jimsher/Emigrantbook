@@ -1366,7 +1366,6 @@ function togglePlayPause(vid) {
 
 
 
-
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1430,25 +1429,28 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- ციკლური ანიმაციის ლოგიკა ---
+                // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
-                function startLikeCycle() {
-                    // *** მთავარი ცვლილება აქ არის ***
-                    // ვამოწმებთ: თუ მიმდინარე მომხმარებელი არ არის ვიდეოს ავტორი, ანიმაცია საერთოდ არ გაეშვას
-                    if (post.authorId !== auth.currentUser.uid) return;
+                // ვიღებთ მხოლოდ ამ კონკრეტული პოსტის დამლაიქებლებს
+                const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
 
-                    if (!post.likedBy || document.visibilityState !== 'visible') {
+                function startLikeCycle() {
+                    // ანიმაცია მუშაობს ყველასთვის, ოღონდ მხოლოდ თავისივე ლაიქებზე
+                    if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
                         setTimeout(startLikeCycle, 5000);
                         return;
                     }
 
-                    const likes = Object.values(post.likedBy);
                     let index = 0;
 
                     function spawnNext() {
-                        if (index < likes.length) {
-                            const person = likes[index];
+                        // ვამოწმებთ, რომ კონტეინერი ისევ არსებობს DOM-ში
+                        const container = document.getElementById(`live-activity-${id}`);
+                        if (!container) return; 
+
+                        if (index < currentPostLikes.length) {
+                            const person = currentPostLikes[index];
                             const avaBox = document.createElement('div');
                             avaBox.className = 'floating-avatar-box';
                             avaBox.style.position = 'absolute';
@@ -1461,12 +1463,13 @@ function renderTokenFeed() {
                                     <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
                                 </div>`;
                             
-                            activityContainer.appendChild(avaBox);
+                            container.appendChild(avaBox);
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
-                            setTimeout(spawnNext, 1500);
+                            setTimeout(spawnNext, 2000); // დაშორება ავატარებს შორის
                         } else {
+                            // როცა სია დამთავრდება, თავიდან ვიწყებთ
                             setTimeout(startLikeCycle, 10000);
                         }
                     }
@@ -1475,7 +1478,7 @@ function renderTokenFeed() {
 
                 startLikeCycle();
 
-                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები)
+                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები) - ხელუხლებელი
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1484,7 +1487,7 @@ function renderTokenFeed() {
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
-                    const name = document.getElementById(`name-${id}`);
+                    const name = document.getElementById('name-' + id);
                     const status = document.getElementById(`mini-status-${id}`);
                     if(u && u.photo && ava) ava.src = u.photo;
                     if(u && u.name && name) name.innerText = "@" + u.name;
@@ -1495,8 +1498,7 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}
-                                    
+}                                    
                          
 
 
