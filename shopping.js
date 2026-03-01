@@ -18,17 +18,24 @@ function toggleStoreManager() {
     }
 }
 
-// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა
+// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა (გასწორებული Stripe-ის გარეშე)
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
-    const file = fileInput.files[0];
-    const name = document.getElementById('newProdName').value;
-    const price = document.getElementById('newProdPrice').value;
-    const desc = document.getElementById('newProdDesc').value;
-    const cat = document.getElementById('newProdCat').value;
+    const nameInput = document.getElementById('newProdName');
+    const priceInput = document.getElementById('newProdPrice');
+    const descInput = document.getElementById('newProdDesc');
+    const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
 
-    if (!file || !name || !price) return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
+    if (!fileInput || !fileInput.files[0] || !nameInput.value || !priceInput.value) {
+        return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
+    }
+
+    const file = fileInput.files[0];
+    const name = nameInput.value;
+    const price = priceInput.value;
+    const desc = descInput ? descInput.value : "";
+    const cat = catInput ? catInput.value : "all";
 
     btn.disabled = true;
     btn.innerText = "იტვირთება...";
@@ -265,7 +272,7 @@ function openOrderFormFromCart(total) {
     openOrderForm();
 }
 
-// 8. გადახდა AKHO ბალანსით (სტრიპეს გარეშე)
+// 8. გადახდა AKHO ბალანსით
 async function processOrderAndPay() {
     const user = auth.currentUser;
     const btn = document.querySelector("#orderFormModal button");
@@ -290,10 +297,8 @@ async function processOrderAndPay() {
 
         if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
 
-        // ბალანსის ჩამოჭრა
         await userRef.update({ akhoBalance: currentBalance - totalPrice });
 
-        // შეკვეთის გაფორმება
         await db.ref('orders').push({
             buyerUid: user.uid,
             buyerName: fName + " " + lName,
@@ -305,7 +310,6 @@ async function processOrderAndPay() {
             timestamp: Date.now()
         });
 
-        // კალათის გასუფთავება
         if (currentProduct.isCart) {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
