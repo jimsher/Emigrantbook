@@ -369,3 +369,59 @@ function closeProductDetails() {
     const modal = document.getElementById('productDetailsModal');
     if (modal) modal.style.display = 'none';
 }
+
+
+
+
+
+// --- 1. მომხმარებლის შეკვეთების ისტორიის რენდერი ---
+function renderUserOrderHistory() {
+    const user = auth.currentUser;
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    
+    if (!user || !modal || !content) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+
+    content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                         <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
+    modal.style.display = 'flex';
+
+    db.ref('orders').orderByChild('buyerUid').equalTo(user.uid).on('value', snap => {
+        const data = snap.val();
+        const loadingEl = document.getElementById('ordersLoading');
+        if (loadingEl) loadingEl.remove();
+
+        if (!data) {
+            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                                 <p style="color:gray; text-align:center; padding:20px;">ჯერ არაფერი გიყიდია.</p>`;
+            return;
+        }
+
+        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
+        
+        Object.values(data).reverse().forEach(order => {
+            const date = new Date(order.timestamp).toLocaleDateString();
+            const statusColor = order.status === 'paid_with_akho' ? 'var(--gold)' : '#00ff00';
+            const statusText = order.status === 'paid_with_akho' ? 'მუშავდება' : 'დასრულებულია';
+
+            ordersHtml += `
+                <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <b style="color:white; font-size:14px;">${order.productName}</b>
+                        <span style="color:gray; font-size:12px;">${date}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="color:var(--gold); font-weight:bold; display:block;">${order.paidAmount} AKHO</span>
+                            <small style="color:gray; font-size:10px;">≈ ${(order.paidAmount * AKHO_EXCHANGE_RATE).toFixed(2)} EUR</small>
+                        </div>
+                        <span style="background:rgba(212,175,55,0.1); color:${statusColor}; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid ${statusColor}">
+                            ${statusText}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        content.innerHTML = ordersHtml;
+    });
+}
