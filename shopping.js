@@ -35,7 +35,6 @@ async function saveProductToFirebase() {
     formData.append("image", file);
 
     try {
-        // 🚀 ატვირთვა imgBB-ზე შენი API Key-თ
         const res = await fetch("https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67", {
             method: "POST",
             body: formData
@@ -45,7 +44,6 @@ async function saveProductToFirebase() {
         if (json.success) {
             const url = json.data.url;
 
-            // 🚀 შენახვა akhoStore-ში
             await db.ref('akhoStore').push({
                 name: name,
                 price: price,
@@ -58,7 +56,6 @@ async function saveProductToFirebase() {
 
             alert("ნივთი წარმატებით დაემატა! ✅");
             
-            // გასუფთავება
             document.getElementById('newProdName').value = "";
             document.getElementById('newProdPrice').value = "";
             document.getElementById('newProdStripeLink').value = "";
@@ -75,12 +72,11 @@ async function saveProductToFirebase() {
     }
 }
 
-// 3. მაღაზიის გახსნა (UID შემოწმებით)
+// 3. მაღაზიის გახსნა
 function openShopSection() {
     const shopContainer = document.getElementById('shopSectionContainer');
     if (shopContainer) shopContainer.style.display = 'flex';
 
-    // შენი UID: TfXz5N0lHjX2R7yV9pW1qM8bK4d2
     if (auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2') {
         const adminStore = document.getElementById('adminStorePanel');
         if (adminStore) adminStore.style.display = 'block';
@@ -88,7 +84,7 @@ function openShopSection() {
     renderStore('all');
 }
 
-// 4. რენდერი (პროდუქტების გამოჩენა)
+// 4. რენდერი (დამატებულია წაშლის ღილაკი ადმინისთვის)
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -122,13 +118,48 @@ function renderStore(category = 'all', btn = null) {
                         <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">დეტალები</button>
                     </div>
                 </div>
+                ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
+                    <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" 
+                       style="position:absolute; top:8px; right:8px; color:white; background:rgba(255,0,0,0.6); padding:8px; border-radius:50%; font-size:12px;"></i>
+                ` : ''}
             `;
             grid.appendChild(card);
         });
     });
 }
 
-// 5. წაშლის ფუნქციები
+// 5. პროდუქტის დეტალების გამოჩენა (ახლა უკვე მუშაობს)
+function showProductDetails(id) {
+    db.ref(`akhoStore/${id}`).once('value', snap => {
+        const item = snap.val();
+        if (!item) return;
+
+        currentProduct = item; 
+        const modal = document.getElementById('productDetailsModal');
+        const content = document.getElementById('detailsContent');
+        if (!modal || !content) return;
+
+        const imgUrl = item.image || 'https://via.placeholder.com/400x250';
+
+        // ვაგენერირებთ დეტალების შიგთავსს
+        content.innerHTML = `
+            <div style="width:100%; height:250px; background:url('${imgUrl}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
+            <div style="width:100%; text-align:left; padding: 15px 0;">
+                <h1 style="color:white; font-size:22px; margin-bottom:5px;">${item.name}</h1>
+                <div style="color:#00ff00; font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} ₾</div>
+                <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222; white-space: pre-wrap;">
+                    ${item.desc || "აღწერა არ არის."}
+                </div>
+            </div>
+            <button onclick="openOrderForm()" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px;">
+                შეკვეთის გაფორმება 💳
+            </button>
+        `;
+        modal.style.display = 'flex';
+    });
+}
+
+// წაშლის ფუნქციები
 function deleteProduct(id) {
     if (confirm("ნამდვილად გინდა ამ ნივთის წაშლა?")) {
         db.ref(`akhoStore/${id}`).remove();
