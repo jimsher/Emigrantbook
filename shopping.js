@@ -2,7 +2,7 @@
 let currentProduct = null;
 let cart = [];
 
-// Stripe ინიციალიზაცია (დარჩა ისე, როგორც გქონდა)
+// Stripe ინიციალიზაცია (ხელუხლებელია)
 const stripe = Stripe('pk_test_51SuywEE4GEOA0VbFL1utyI4vcXZUXWCVYYWzNbG32Gxk8oZxgaxMlhJiyJzR3w0VQ8BfDuLCaaPBrHw9eM745nzc00I2i2sNvK');
 
 // 1. მაღაზიის მართვის პანელის ჩართვა/გამორთვა
@@ -41,7 +41,7 @@ async function saveProductToFirebase() {
         if (json.success) {
             await db.ref('akhoStore').push({
                 name: name,
-                price: parseFloat(price), // ფასი ახლა AKHO-შია
+                price: parseFloat(price),
                 desc: desc,
                 category: cat,
                 image: json.data.url,
@@ -59,7 +59,7 @@ async function saveProductToFirebase() {
     }
 }
 
-// 3. მაღაზიის გახსნა (ხელუხლებელია, რომ ნავბარიდან იმუშაოს)
+// 3. მაღაზიის გახსნა (ნავბარის ღილაკისთვის)
 function openShopSection() {
     const shopContainer = document.getElementById('shopSectionContainer');
     if (shopContainer) shopContainer.style.display = 'flex';
@@ -71,7 +71,7 @@ function openShopSection() {
     renderStore('all');
 }
 
-// 4. რენდერი
+// 4. რენდერი (ურნა რჩება ადმინისთვის)
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -107,10 +107,37 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 5. გადახდის პროცესი AKHO ბალანსით
+// 5. შეკვეთის ფორმის გახსნა
+function openOrderForm() {
+    const detailsModal = document.getElementById('productDetailsModal');
+    const orderModal = document.getElementById('orderFormModal');
+    const priceDisplay = document.getElementById('finalPriceDisplay');
+
+    if (detailsModal) detailsModal.style.display = 'none';
+    if (orderModal) orderModal.style.display = 'flex';
+    
+    // აჩვენებს ფასს ფორმაში
+    if (priceDisplay && currentProduct) {
+        priceDisplay.innerText = currentProduct.price + " AKHO";
+    }
+}
+
+// 6. გადახდის პროცესი AKHO ბალანსით
 async function processOrderAndPay() {
     const user = auth.currentUser;
+    const btn = document.querySelector("#orderFormModal button");
+    
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+
+    // მონაცემების აღება
+    const fName = document.getElementById('ordFirstName').value;
+    const lName = document.getElementById('ordLastName').value;
+    const addr = document.getElementById('ordAddress').value;
+    const phone = document.getElementById('ordPhone').value;
+
+    if (!fName || !lName || !addr || !phone) {
+        return alert("გთხოვთ შეავსოთ აუცილებელი ველები!");
+    }
 
     const productPrice = parseFloat(currentProduct.price);
     const userRef = db.ref(`users/${user.uid}`);
@@ -125,6 +152,8 @@ async function processOrderAndPay() {
             return;
         }
 
+        if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
+
         // 1. ბალანსის განახლება
         const newBalance = currentBalance - productPrice;
         await userRef.update({ akhoBalance: newBalance });
@@ -132,9 +161,10 @@ async function processOrderAndPay() {
         // 2. შეკვეთის გაფორმება
         const orderInfo = {
             buyerUid: user.uid,
-            buyerName: document.getElementById('ordFirstName').value + " " + document.getElementById('ordLastName').value,
-            address: document.getElementById('ordAddress').value,
-            phone: document.getElementById('ordPhone').value,
+            buyerName: fName + " " + lName,
+            address: addr,
+            phone: phone,
+            email: document.getElementById('ordEmail').value || "არ არის",
             productName: currentProduct.name,
             paidAmount: productPrice,
             status: "paid_with_akho",
@@ -148,10 +178,11 @@ async function processOrderAndPay() {
 
     } catch (e) {
         alert("შეცდომაა: " + e.message);
+        if (btn) { btn.disabled = false; btn.innerText = "მონაცემების შენახვა და გადახდა 🚀"; }
     }
 }
 
-// 6. დეტალების გამოჩენა
+// 7. დეტალების გამოჩენა
 function showProductDetails(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
