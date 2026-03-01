@@ -18,7 +18,7 @@ function toggleStoreManager() {
     }
 }
 
-// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა (სრულად გასწორებული)
+// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა (STRIPE სრულად მოშორებულია)
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
@@ -27,17 +27,17 @@ async function saveProductToFirebase() {
     const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
 
-    // მნიშვნელობების აღება უსაფრთხოდ
+    // მნიშვნელობების აღება (მხოლოდ ის რაც HTML-ში გაქვს)
     const file = fileInput ? fileInput.files[0] : null;
     const name = nameInput ? nameInput.value.trim() : "";
     const price = priceInput ? priceInput.value.trim() : "";
     const desc = descInput ? descInput.value.trim() : "";
     const cat = catInput ? catInput.value : "ნივთები";
 
-    // ვალიდაცია: მხოლოდ აუცილებელი ველები
-    if (!file) return alert("გთხოვთ, აირჩიოთ ფოტო!");
-    if (!name) return alert("გთხოვთ, შეიყვანოთ ნივთის სახელი!");
-    if (!price) return alert("გთხოვთ, მიუთითოთ ფასი!");
+    // ვალიდაცია: მხოლოდ სახელი, ფასი და ფოტო
+    if (!file || !name || !price) {
+        return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
+    }
 
     btn.disabled = true;
     btn.innerText = "იტვირთება...";
@@ -46,7 +46,6 @@ async function saveProductToFirebase() {
     formData.append("image", file);
 
     try {
-        // ფოტოს ატვირთვა imgBB-ზე
         const res = await fetch("https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67", {
             method: "POST",
             body: formData
@@ -54,7 +53,7 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
-            // მონაცემების შენახვა Firebase-ში (ყოველგვარი Stripe ლინკის გარეშე)
+            // Firebase-ში შენახვა Stripe-ის გარეშე
             await db.ref('akhoStore').push({
                 name: name,
                 price: parseFloat(price),
@@ -70,7 +69,7 @@ async function saveProductToFirebase() {
             alert("ფოტოს ატვირთვის შეცდომა imgBB-ზე.");
         }
     } catch (e) {
-        console.error("Error saving product:", e);
+        console.error("Error:", e);
         alert("შეცდომა: " + e.message);
     } finally {
         btn.disabled = false;
