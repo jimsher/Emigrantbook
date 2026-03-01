@@ -18,7 +18,7 @@ function toggleStoreManager() {
     }
 }
 
-// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა (გასწორებული Stripe-ის გარეშე)
+// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა (სრულად გასწორებული)
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
@@ -27,15 +27,17 @@ async function saveProductToFirebase() {
     const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
 
-    if (!fileInput || !fileInput.files[0] || !nameInput.value || !priceInput.value) {
-        return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
-    }
+    // მნიშვნელობების აღება უსაფრთხოდ
+    const file = fileInput ? fileInput.files[0] : null;
+    const name = nameInput ? nameInput.value.trim() : "";
+    const price = priceInput ? priceInput.value.trim() : "";
+    const desc = descInput ? descInput.value.trim() : "";
+    const cat = catInput ? catInput.value : "ნივთები";
 
-    const file = fileInput.files[0];
-    const name = nameInput.value;
-    const price = priceInput.value;
-    const desc = descInput ? descInput.value : "";
-    const cat = catInput ? catInput.value : "all";
+    // ვალიდაცია: მხოლოდ აუცილებელი ველები
+    if (!file) return alert("გთხოვთ, აირჩიოთ ფოტო!");
+    if (!name) return alert("გთხოვთ, შეიყვანოთ ნივთის სახელი!");
+    if (!price) return alert("გთხოვთ, მიუთითოთ ფასი!");
 
     btn.disabled = true;
     btn.innerText = "იტვირთება...";
@@ -44,6 +46,7 @@ async function saveProductToFirebase() {
     formData.append("image", file);
 
     try {
+        // ფოტოს ატვირთვა imgBB-ზე
         const res = await fetch("https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67", {
             method: "POST",
             body: formData
@@ -51,6 +54,7 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
+            // მონაცემების შენახვა Firebase-ში (ყოველგვარი Stripe ლინკის გარეშე)
             await db.ref('akhoStore').push({
                 name: name,
                 price: parseFloat(price),
@@ -60,11 +64,14 @@ async function saveProductToFirebase() {
                 timestamp: Date.now()
             });
 
-            alert("ნივთი დაემატა მაღაზიაში! ✅");
+            alert("ნივთი წარმატებით დაემატა! ✅");
             location.reload();
+        } else {
+            alert("ფოტოს ატვირთვის შეცდომა imgBB-ზე.");
         }
     } catch (e) {
-        alert("შეცდომაა: " + e.message);
+        console.error("Error saving product:", e);
+        alert("შეცდომა: " + e.message);
     } finally {
         btn.disabled = false;
         btn.innerText = "გამოქვეყნება 🚀";
