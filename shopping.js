@@ -1,6 +1,7 @@
 // 🚀 ინიციალიზაცია
 let currentProduct = null;
 let cart = []; // კალათის მასივი
+let allProductsStore = []; // ძებნისთვის ყველა ნივთის შესანახად
 
 // 1. მაღაზიის მართვის პანელის ჩართვა/გამორთვა
 function toggleStoreManager() {
@@ -68,7 +69,7 @@ function openShopSection() {
     renderStore('all');
 }
 
-// 4. რენდერი ფილტრაციის ფუნქციით
+// 4. რენდერი ფილტრაციით და ძებნით
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -83,33 +84,53 @@ function renderStore(category = 'all', btn = null) {
         const data = snap.val();
         if (!data) return;
 
-        Object.entries(data).reverse().forEach(([id, item]) => {
-            if (category !== 'all' && item.category !== category) return;
+        allProductsStore = Object.entries(data).reverse(); // ვინახავთ ძებნისთვის
 
-            const card = document.createElement('div');
-            card.className = "product-card";
-            card.onclick = () => showProductDetails(id); 
-            card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
-            
-            card.innerHTML = `
-                <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
-                <div style="padding:10px 0;">
-                    <b style="color:white; font-size:14px;">${item.name}</b>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                        <span style="color:var(--gold); font-weight:bold;">${item.price} AKHO</span>
-                        <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">ნახვა</button>
-                    </div>
-                </div>
-                ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
-                    <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:8px; right:8px; color:white; background:rgba(255,0,0,0.6); padding:8px; border-radius:50%; font-size:12px;"></i>
-                ` : ''}
-            `;
-            grid.appendChild(card);
+        allProductsStore.forEach(([id, item]) => {
+            if (category !== 'all' && item.category !== category) return;
+            drawProductCard(id, item, grid);
         });
     });
 }
 
-// 5. კალათის მართვა (ახალი ფუნქციები)
+// 🔍 ძებნის ფუნქცია (ჩაამატე HTML-ში input oninput="searchProduct(this.value)")
+function searchProduct(query) {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+    grid.innerHTML = "";
+    
+    const lowerQuery = query.toLowerCase();
+    allProductsStore.forEach(([id, item]) => {
+        if (item.name.toLowerCase().includes(lowerQuery)) {
+            drawProductCard(id, item, grid);
+        }
+    });
+}
+
+// დამხმარე ფუნქცია ბარათის დასახატად
+function drawProductCard(id, item, grid) {
+    const card = document.createElement('div');
+    card.className = "product-card";
+    card.onclick = () => showProductDetails(id); 
+    card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
+    
+    card.innerHTML = `
+        <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
+        <div style="padding:10px 0;">
+            <b style="color:white; font-size:14px;">${item.name}</b>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                <span style="color:var(--gold); font-weight:bold;">${item.price} AKHO</span>
+                <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">ნახვა</button>
+            </div>
+        </div>
+        ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
+            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:8px; right:8px; color:white; background:rgba(255,0,0,0.6); padding:8px; border-radius:50%; font-size:12px;"></i>
+        ` : ''}
+    `;
+    grid.appendChild(card);
+}
+
+// 5. კალათის მართვა
 function addToCart(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
@@ -132,48 +153,37 @@ function updateCartBadge() {
 function removeFromCart(index) {
     cart.splice(index, 1);
     updateCartBadge();
-    openCartView(); // კალათის გვერდის განახლება
+    openCartView(); 
 }
 
+// კალათის ნახვა (იყენებს დეტალების მოდალს)
 function openCartView() {
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
     if (!modal || !content) return;
 
     if (cart.length === 0) {
-        content.innerHTML = `
-            <div style="text-align:center; padding:40px;">
-                <i class="fas fa-shopping-basket" style="font-size:50px; color:#333; margin-bottom:20px;"></i>
-                <p style="color:gray;">კალათა ცარიელია...</p>
-            </div>
-        `;
+        content.innerHTML = `<div style="text-align:center; padding:40px;"><p style="color:gray;">კალათა ცარიელია 🛒</p></div>`;
     } else {
         let total = 0;
-        let html = `<h2 style="color:var(--gold); margin-bottom:15px; width:100%;">შენი კალათა</h2>`;
-        
+        let html = `<h2 style="color:var(--gold); margin-bottom:15px; width:100%;">კალათა</h2>`;
         cart.forEach((item, index) => {
             total += parseFloat(item.price);
             html += `
-                <div style="width:100%; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid #222;">
+                <div style="width:100%; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px;">
                     <img src="${item.image}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
                     <div style="flex:1; color:white; font-size:13px;">${item.name}</div>
-                    <div style="color:var(--gold); font-weight:bold; font-size:13px;">${item.price}</div>
-                    <i class="fas fa-trash" onclick="removeFromCart(${index})" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
+                    <div style="color:var(--gold); font-weight:bold;">${item.price}</div>
+                    <i class="fas fa-times" onclick="removeFromCart(${index})" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
                 </div>
             `;
         });
-
-        html += `
-            <div style="width:100%; border-top:1px solid #333; padding-top:15px; margin-top:10px;">
-                <div style="display:flex; justify-content:space-between; color:white; font-weight:bold; margin-bottom:15px;">
-                    <span>ჯამი:</span>
-                    <span style="color:#00ff00;">${total} AKHO</span>
-                </div>
-                <button onclick="openOrderFormFromCart(${total})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">
-                    ყველას ყიდვა 🚀
-                </button>
-            </div>
-        `;
+        html += `<div style="width:100%; border-top:1px solid #333; padding-top:15px; margin-top:10px;">
+                    <div style="display:flex; justify-content:space-between; color:white; font-weight:bold; margin-bottom:15px;">
+                        <span>ჯამი:</span><span style="color:#00ff00;">${total} AKHO</span>
+                    </div>
+                    <button onclick="openOrderFormFromCart(${total})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">შეკვეთა 🚀</button>
+                 </div>`;
         content.innerHTML = html;
     }
     modal.style.display = 'flex';
@@ -202,7 +212,6 @@ function openOrderForm() {
 async function processOrderAndPay() {
     const user = auth.currentUser;
     const btn = document.querySelector("#orderFormModal button");
-    
     if (!user) return alert("ავტორიზაცია აუცილებელია!");
 
     const fName = document.getElementById('ordFirstName').value;
@@ -219,9 +228,7 @@ async function processOrderAndPay() {
         const userSnap = await userRef.once('value');
         const currentBalance = parseFloat(userSnap.val().akhoBalance || 0);
 
-        if (currentBalance < totalPrice) {
-            return alert(`არ გაქვს საკმარისი AKHO!`);
-        }
+        if (currentBalance < totalPrice) return alert(`არ გაქვს საკმარისი AKHO!`);
 
         if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
 
@@ -239,7 +246,7 @@ async function processOrderAndPay() {
             cartItems: currentProduct.isCart ? cart : null
         });
 
-        if (currentProduct.isCart) cart = []; // კალათის გასუფთავება
+        if (currentProduct.isCart) cart = [];
         updateCartBadge();
 
         alert("შენაძენი წარმატებულია! ✅");
@@ -247,7 +254,7 @@ async function processOrderAndPay() {
 
     } catch (e) {
         alert("შეცდომაა: " + e.message);
-        if (btn) { btn.disabled = false; btn.innerText = "მონაცემების შენახვა და გადახდა 🚀"; }
+        if (btn) { btn.disabled = false; btn.innerText = "გადახდა 🚀"; }
     }
 }
 
@@ -267,17 +274,13 @@ function showProductDetails(id) {
             <div style="width:100%; text-align:left; padding: 15px 0;">
                 <h1 style="color:white; font-size:22px;">${item.name}</h1>
                 <div style="color:var(--gold); font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} AKHO</div>
-                <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222;">
+                <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222; white-space: pre-wrap;">
                     ${item.desc || "აღწერა არ არის."}
                 </div>
             </div>
             <div style="display:flex; gap:10px; width:100%;">
-                <button onclick="addToCart('${id}')" style="flex:1; background:rgba(212,175,55,0.1); color:var(--gold); padding:15px; border:1px solid var(--gold); border-radius:12px; font-weight:bold;">
-                    კალათაში 🛒
-                </button>
-                <button onclick="openOrderForm()" style="flex:2; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">
-                    ახლავე ყიდვა 💳
-                </button>
+                <button onclick="addToCart('${id}')" style="flex:1; background:rgba(212,175,55,0.1); color:var(--gold); padding:15px; border:1px solid var(--gold); border-radius:12px; font-weight:bold;">კალათაში 🛒</button>
+                <button onclick="openOrderForm()" style="flex:2; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">ყიდვა 💳</button>
             </div>
         `;
         modal.style.display = 'flex';
