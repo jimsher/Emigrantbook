@@ -1467,10 +1467,10 @@ function renderTokenFeed() {
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
-                            setTimeout(spawnNext, 2000); // დაშორება ავატარებს შორის
+                            setTimeout(spawnNext, 1500); // დაშორება ავატარებს შორის
                         } else {
                             // როცა სია დამთავრდება, თავიდან ვიწყებთ
-                            setTimeout(startLikeCycle, 10000);
+                            setTimeout(startLikeCycle, 5000);
                         }
                     }
                     spawnNext();
