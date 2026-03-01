@@ -57,7 +57,7 @@ async function saveProductToFirebase() {
     }
 }
 
-// 3. მაღაზიის გახსნა
+// 3. მაღაზიის გახსნა (კალათის ჩატვირთვით)
 function openShopSection() {
     const shopContainer = document.getElementById('shopSectionContainer');
     if (shopContainer) shopContainer.style.display = 'flex';
@@ -66,10 +66,22 @@ function openShopSection() {
         const adminStore = document.getElementById('adminStorePanel');
         if (adminStore) adminStore.style.display = 'block';
     }
+    
+    loadUserCart(); // ჩატვირთოს კალათა ბაზიდან
     renderStore('all');
 }
 
-// 4. რენდერი ფილტრაციით და ძებნით
+// 4. კალათის ჩატვირთვა Firebase-დან
+function loadUserCart() {
+    if (!auth.currentUser) return;
+    db.ref(`userCarts/${auth.currentUser.uid}`).on('value', snap => {
+        const data = snap.val();
+        cart = data ? Object.entries(data).map(([key, val]) => ({ cartKey: key, ...val })) : [];
+        updateCartBadge();
+    });
+}
+
+// 5. რენდერი
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -84,7 +96,7 @@ function renderStore(category = 'all', btn = null) {
         const data = snap.val();
         if (!data) return;
 
-        allProductsStore = Object.entries(data).reverse(); // ვინახავთ ძებნისთვის
+        allProductsStore = Object.entries(data).reverse();
 
         allProductsStore.forEach(([id, item]) => {
             if (category !== 'all' && item.category !== category) return;
@@ -93,12 +105,11 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 🔍 ძებნის ფუნქცია (ჩაამატე HTML-ში input oninput="searchProduct(this.value)")
+// ძებნა
 function searchProduct(query) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
     grid.innerHTML = "";
-    
     const lowerQuery = query.toLowerCase();
     allProductsStore.forEach(([id, item]) => {
         if (item.name.toLowerCase().includes(lowerQuery)) {
@@ -107,13 +118,12 @@ function searchProduct(query) {
     });
 }
 
-// დამხმარე ფუნქცია ბარათის დასახატად
+// ბარათი
 function drawProductCard(id, item, grid) {
     const card = document.createElement('div');
     card.className = "product-card";
     card.onclick = () => showProductDetails(id); 
     card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
-    
     card.innerHTML = `
         <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
         <div style="padding:10px 0;">
@@ -130,13 +140,18 @@ function drawProductCard(id, item, grid) {
     grid.appendChild(card);
 }
 
-// 5. კალათის მართვა
+// 6. კალათაში დამატება (Firebase-ში)
 function addToCart(id) {
+    if (!auth.currentUser) return alert("გაიარეთ ავტორიზაცია!");
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
         if (item) {
-            cart.push({ cartId: Date.now(), id: id, ...item });
-            updateCartBadge();
+            db.ref(`userCarts/${auth.currentUser.uid}`).push({
+                productId: id,
+                name: item.name,
+                price: item.price,
+                image: item.image
+            });
             alert(`${item.name} დაემატა კალათაში! 🛒`);
         }
     });
@@ -150,13 +165,13 @@ function updateCartBadge() {
     }
 }
 
-function removeFromCart(index) {
-    cart.splice(index, 1);
-    updateCartBadge();
-    openCartView(); 
+function removeFromCart(cartKey) {
+    if (!auth.currentUser) return;
+    db.ref(`userCarts/${auth.currentUser.uid}/${cartKey}`).remove();
+    openCartView(); // განაახლოს ვიზუალი
 }
 
-// კალათის ნახვა (იყენებს დეტალების მოდალს)
+// 7. კალათის ნახვა
 function openCartView() {
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -167,14 +182,14 @@ function openCartView() {
     } else {
         let total = 0;
         let html = `<h2 style="color:var(--gold); margin-bottom:15px; width:100%;">კალათა</h2>`;
-        cart.forEach((item, index) => {
+        cart.forEach((item) => {
             total += parseFloat(item.price);
             html += `
                 <div style="width:100%; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px;">
                     <img src="${item.image}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
                     <div style="flex:1; color:white; font-size:13px;">${item.name}</div>
                     <div style="color:var(--gold); font-weight:bold;">${item.price}</div>
-                    <i class="fas fa-times" onclick="removeFromCart(${index})" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
+                    <i class="fas fa-times" onclick="removeFromCart('${item.cartKey}')" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
                 </div>
             `;
         });
@@ -194,21 +209,7 @@ function openOrderFormFromCart(total) {
     openOrderForm();
 }
 
-// 6. შეკვეთის ფორმის გახსნა
-function openOrderForm() {
-    const detailsModal = document.getElementById('productDetailsModal');
-    const orderModal = document.getElementById('orderFormModal');
-    const priceDisplay = document.getElementById('finalPriceDisplay');
-
-    if (detailsModal) detailsModal.style.display = 'none';
-    if (orderModal) orderModal.style.display = 'flex';
-    
-    if (priceDisplay && currentProduct) {
-        priceDisplay.innerText = currentProduct.price + " AKHO";
-    }
-}
-
-// 7. გადახდის პროცესი AKHO ბალანსით
+// 8. გადახდა
 async function processOrderAndPay() {
     const user = auth.currentUser;
     const btn = document.querySelector("#orderFormModal button");
@@ -242,12 +243,13 @@ async function processOrderAndPay() {
             productName: currentProduct.name,
             paidAmount: totalPrice,
             status: "paid_with_akho",
-            timestamp: Date.now(),
-            cartItems: currentProduct.isCart ? cart : null
+            timestamp: Date.now()
         });
 
-        if (currentProduct.isCart) cart = [];
-        updateCartBadge();
+        // კალათის გასუფთავება ყიდვის შემდეგ
+        if (currentProduct.isCart) {
+            await db.ref(`userCarts/${user.uid}`).remove();
+        }
 
         alert("შენაძენი წარმატებულია! ✅");
         location.reload();
@@ -258,7 +260,7 @@ async function processOrderAndPay() {
     }
 }
 
-// 8. დეტალების გამოჩენა
+// დეტალები
 function showProductDetails(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
@@ -287,10 +289,17 @@ function showProductDetails(id) {
     });
 }
 
+function openOrderForm() {
+    const detailsModal = document.getElementById('productDetailsModal');
+    const orderModal = document.getElementById('orderFormModal');
+    const priceDisplay = document.getElementById('finalPriceDisplay');
+    if (detailsModal) detailsModal.style.display = 'none';
+    if (orderModal) orderModal.style.display = 'flex';
+    if (priceDisplay && currentProduct) priceDisplay.innerText = currentProduct.price + " AKHO";
+}
+
 function deleteProduct(id) {
-    if (confirm("ნამდვილად გინდა ამ ნივთის წაშლა?")) {
-        db.ref(`akhoStore/${id}`).remove();
-    }
+    if (confirm("ნამდვილად გინდა ამ ნივთის წაშლა?")) db.ref(`akhoStore/${id}`).remove();
 }
 
 function closeProductDetails() {
