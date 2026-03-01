@@ -84,7 +84,7 @@ function renderAdminProductList() {
     if (!listContainer) return;
 
     db.ref('akhoStore').on('value', snap => {
-        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">არსებული ნივთები:</h4>`;
+        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;"> </h4>`;
         const data = snap.val();
         if (!data) {
             listContainer.innerHTML += `<p style="color:gray; font-size:12px;">მაღაზია ცარიელია</p>`;
