@@ -2,6 +2,9 @@
 let currentProduct = null;
 let cart = [];
 
+// Stripe ინიციალიზაცია (დარჩა ისე, როგორც გქონდა)
+const stripe = Stripe('pk_test_51SuywEE4GEOA0VbFL1utyI4vcXZUXWCVYYWzNbG32Gxk8oZxgaxMlhJiyJzR3w0VQ8BfDuLCaaPBrHw9eM745nzc00I2i2sNvK');
+
 // 1. მაღაზიის მართვის პანელის ჩართვა/გამორთვა
 function toggleStoreManager() {
     const section = document.getElementById('storeManagerSection');
@@ -10,17 +13,17 @@ function toggleStoreManager() {
     }
 }
 
-// 2. პროდუქტის ატვირთვა (ფასი ავტომატურად ჩაითვლება AKHO-ში)
+// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const file = fileInput.files[0];
     const name = document.getElementById('newProdName').value;
-    const price = document.getElementById('newProdPrice').value; // აქ იგულისხმება AKHO რაოდენობა
+    const price = document.getElementById('newProdPrice').value;
     const desc = document.getElementById('newProdDesc').value;
     const cat = document.getElementById('newProdCat').value;
     const btn = document.getElementById('uploadBtn');
 
-    if (!file || !name || !price) return alert("შეავსე სახელი, ფასი და ფოტო!");
+    if (!file || !name || !price) return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
 
     btn.disabled = true;
     btn.innerText = "იტვირთება...";
@@ -38,7 +41,7 @@ async function saveProductToFirebase() {
         if (json.success) {
             await db.ref('akhoStore').push({
                 name: name,
-                price: parseFloat(price),
+                price: parseFloat(price), // ფასი ახლა AKHO-შია
                 desc: desc,
                 category: cat,
                 image: json.data.url,
@@ -56,7 +59,19 @@ async function saveProductToFirebase() {
     }
 }
 
-// 3. რენდერი (ფასი გამოჩნდება AKHO სიმბოლოთი)
+// 3. მაღაზიის გახსნა (ხელუხლებელია, რომ ნავბარიდან იმუშაოს)
+function openShopSection() {
+    const shopContainer = document.getElementById('shopSectionContainer');
+    if (shopContainer) shopContainer.style.display = 'flex';
+
+    if (auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2') {
+        const adminStore = document.getElementById('adminStorePanel');
+        if (adminStore) adminStore.style.display = 'block';
+    }
+    renderStore('all');
+}
+
+// 4. რენდერი
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
@@ -80,7 +95,7 @@ function renderStore(category = 'all', btn = null) {
                     <b style="color:white; font-size:14px;">${item.name}</b>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                         <span style="color:var(--gold); font-weight:bold;">${item.price} AKHO</span>
-                        <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">ყიდვა</button>
+                        <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">ნახვა</button>
                     </div>
                 </div>
                 ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
@@ -92,7 +107,7 @@ function renderStore(category = 'all', btn = null) {
     });
 }
 
-// 4. გადახდის ლოგიკა AKHO-თ (მთავარი ცვლილება)
+// 5. გადახდის პროცესი AKHO ბალანსით
 async function processOrderAndPay() {
     const user = auth.currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
@@ -106,15 +121,15 @@ async function processOrderAndPay() {
         const currentBalance = parseFloat(userData.akhoBalance || 0);
 
         if (currentBalance < productPrice) {
-            alert(`არ გაქვთ საკმარისი AKHO! გაკლიათ ${productPrice - currentBalance} AKHO.`);
+            alert(`ბალანსზე არ გაქვთ საკმარისი AKHO! გაკლიათ ${productPrice - currentBalance} AKHO.`);
             return;
         }
 
-        // 🟢 1. ბალანსის ჩამოჭრა
+        // 1. ბალანსის განახლება
         const newBalance = currentBalance - productPrice;
         await userRef.update({ akhoBalance: newBalance });
 
-        // 🟢 2. შეკვეთის გაფორმება
+        // 2. შეკვეთის გაფორმება
         const orderInfo = {
             buyerUid: user.uid,
             buyerName: document.getElementById('ordFirstName').value + " " + document.getElementById('ordLastName').value,
@@ -128,17 +143,49 @@ async function processOrderAndPay() {
 
         await db.ref('orders').push(orderInfo);
 
-        // 🟢 3. აქტივობის ისტორიაში ჩაწერა
-        await db.ref(`activities/${user.uid}`).push({
-            type: "purchase",
-            text: `იყიდე ${currentProduct.name} - ${productPrice} AKHO`,
-            timestamp: Date.now()
-        });
-
-        alert("შენაძენი წარმატებულია! ✅ AKHO ჩამოგეჭრათ ბალანსიდან.");
+        alert("ყიდვა წარმატებულია! ✅ AKHO ჩამოგეჭრათ ბალანსიდან.");
         location.reload();
 
     } catch (e) {
-        alert("შეცდომა გადახდისას: " + e.message);
+        alert("შეცდომაა: " + e.message);
     }
+}
+
+// 6. დეტალების გამოჩენა
+function showProductDetails(id) {
+    db.ref(`akhoStore/${id}`).once('value', snap => {
+        const item = snap.val();
+        if (!item) return;
+        currentProduct = item; 
+
+        const modal = document.getElementById('productDetailsModal');
+        const content = document.getElementById('detailsContent');
+        if (!modal || !content) return;
+
+        content.innerHTML = `
+            <div style="width:100%; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
+            <div style="width:100%; text-align:left; padding: 15px 0;">
+                <h1 style="color:white; font-size:22px; margin-bottom:5px;">${item.name}</h1>
+                <div style="color:var(--gold); font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} AKHO</div>
+                <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222; white-space: pre-wrap;">
+                    ${item.desc || "აღწერა არ არის."}
+                </div>
+            </div>
+            <button onclick="openOrderForm()" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:16px;">
+                AKHO-თ შეძენა 💳
+            </button>
+        `;
+        modal.style.display = 'flex';
+    });
+}
+
+function deleteProduct(id) {
+    if (confirm("ნამდვილად გინდა ამ ნივთის წაშლა?")) {
+        db.ref(`akhoStore/${id}`).remove();
+    }
+}
+
+function closeProductDetails() {
+    const modal = document.getElementById('productDetailsModal');
+    if (modal) modal.style.display = 'none';
 }
