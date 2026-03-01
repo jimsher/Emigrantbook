@@ -1430,12 +1430,15 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- ციკლური ანიმაციის ლოგიკა (გასწორებული ინდივიდუალური ლაიქებისთვის) ---
-                const activityContainer = document.getElementById(`live-activity-${id}`);
-                
+                // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
                 function startLikeCycle() {
-                    // წავშალეთ ავტორის შემოწმება, რომ ყველა ვიდეოზე ამოდიოდეს ავატარები
-                    // ვიღებთ კონკრეტულად ამ ვიდეოს (post) ლაიქებს
+                    // 1. ვამოწმებთ, რომ ვიდეო ნამდვილად შენია
+                    if (post.authorId !== auth.currentUser.uid) return;
+
+                    const activityContainer = document.getElementById(`live-activity-${id}`);
+                    if (!activityContainer) return;
+
+                    // 2. ვიღებთ მხოლოდ ამ კონკრეტული ვიდეოს ლაიქებს
                     const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
 
                     if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
@@ -1446,8 +1449,9 @@ function renderTokenFeed() {
                     let index = 0;
 
                     function spawnNext() {
-                        // ვამოწმებთ, რომ ისევ ამ ვიდეოზე ვართ და კონტეინერი არსებობს
-                        if (!document.getElementById(`live-activity-${id}`)) return;
+                        // ვამოწმებთ, რომ კონტეინერი ისევ არსებობს (რომ სხვა ვიდეოზე არ გადავიდეს)
+                        const container = document.getElementById(`live-activity-${id}`);
+                        if (!container) return;
 
                         if (index < currentPostLikes.length) {
                             const person = currentPostLikes[index];
@@ -1463,21 +1467,23 @@ function renderTokenFeed() {
                                     <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
                                 </div>`;
                             
-                            activityContainer.appendChild(avaBox);
+                            container.appendChild(avaBox);
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
                             setTimeout(spawnNext, 1500);
                         } else {
+                            // როცა სია მორჩება, თავიდან იწყებს ციკლს
                             setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
                 }
 
+                // ანიმაციის გაშვება
                 startLikeCycle();
 
-                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები)
+                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები) - ხელუხლებელი
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1497,7 +1503,8 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}                         
+}                
+                                         
 
 
 
