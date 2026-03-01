@@ -1366,6 +1366,7 @@ function togglePlayPause(vid) {
 
 
 
+                                    
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
@@ -1429,14 +1430,14 @@ function renderTokenFeed() {
                 </div>`;
                 feed.appendChild(card);
 
-                // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
+                // --- ციკლური ანიმაციის ლოგიკა (გასწორებული ინდივიდუალური ლაიქებისთვის) ---
                 const activityContainer = document.getElementById(`live-activity-${id}`);
                 
-                // ვიღებთ მხოლოდ ამ კონკრეტული პოსტის დამლაიქებლებს
-                const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-
                 function startLikeCycle() {
-                    // ანიმაცია მუშაობს ყველასთვის, ოღონდ მხოლოდ თავისივე ლაიქებზე
+                    // წავშალეთ ავტორის შემოწმება, რომ ყველა ვიდეოზე ამოდიოდეს ავატარები
+                    // ვიღებთ კონკრეტულად ამ ვიდეოს (post) ლაიქებს
+                    const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
+
                     if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
                         setTimeout(startLikeCycle, 5000);
                         return;
@@ -1445,9 +1446,8 @@ function renderTokenFeed() {
                     let index = 0;
 
                     function spawnNext() {
-                        // ვამოწმებთ, რომ კონტეინერი ისევ არსებობს DOM-ში
-                        const container = document.getElementById(`live-activity-${id}`);
-                        if (!container) return; 
+                        // ვამოწმებთ, რომ ისევ ამ ვიდეოზე ვართ და კონტეინერი არსებობს
+                        if (!document.getElementById(`live-activity-${id}`)) return;
 
                         if (index < currentPostLikes.length) {
                             const person = currentPostLikes[index];
@@ -1463,14 +1463,13 @@ function renderTokenFeed() {
                                     <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
                                 </div>`;
                             
-                            container.appendChild(avaBox);
+                            activityContainer.appendChild(avaBox);
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
 
                             index++;
-                            setTimeout(spawnNext, 1500); // დაშორება ავატარებს შორის
+                            setTimeout(spawnNext, 1500);
                         } else {
-                            // როცა სია დამთავრდება, თავიდან ვიწყებთ
-                            setTimeout(startLikeCycle, 5000);
+                            setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
@@ -1478,7 +1477,7 @@ function renderTokenFeed() {
 
                 startLikeCycle();
 
-                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები) - ხელუხლებელი
+                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები)
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1487,7 +1486,7 @@ function renderTokenFeed() {
                 db.ref(`users/${post.authorId}`).on('value', uSnap => {
                     const u = uSnap.val();
                     const ava = document.getElementById(`ava-${id}`);
-                    const name = document.getElementById('name-' + id);
+                    const name = document.getElementById(`name-${id}`);
                     const status = document.getElementById(`mini-status-${id}`);
                     if(u && u.photo && ava) ava.src = u.photo;
                     if(u && u.name && name) name.innerText = "@" + u.name;
@@ -1498,8 +1497,7 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}                                    
-                         
+}                         
 
 
 
