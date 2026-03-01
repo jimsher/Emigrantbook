@@ -1,7 +1,10 @@
 // 🚀 ინიციალიზაცია
 let currentProduct = null;
-let cart = []; // კალათის მასივი
-let allProductsStore = []; // ძებნისთვის ყველა ნივთის შესანახად
+let cart = []; 
+let allProductsStore = []; 
+
+// 💶 კურსის კონსტანტა: 10 AKHO = 1 EUR (ანუ 1 AKHO = 0.1 EUR)
+const AKHO_EXCHANGE_RATE = 0.1; 
 
 // 1. მაღაზიის მართვის პანელის ჩართვა/გამორთვა
 function toggleStoreManager() {
@@ -67,7 +70,7 @@ function openShopSection() {
         if (adminStore) adminStore.style.display = 'block';
     }
     
-    loadUserCart(); // ჩატვირთოს კალათა ბაზიდან
+    loadUserCart(); 
     renderStore('all');
 }
 
@@ -118,18 +121,24 @@ function searchProduct(query) {
     });
 }
 
-// ბარათი
+// ბარათი (დამატებულია რეალური ფასის ჩვენება ევროში)
 function drawProductCard(id, item, grid) {
     const card = document.createElement('div');
     card.className = "product-card";
     card.onclick = () => showProductDetails(id); 
     card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
+    
+    const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
+
     card.innerHTML = `
         <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
         <div style="padding:10px 0;">
             <b style="color:white; font-size:14px;">${item.name}</b>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                <span style="color:var(--gold); font-weight:bold;">${item.price} AKHO</span>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px;">
+                <div>
+                    <span style="color:var(--gold); font-weight:bold; display:block;">${item.price} AKHO</span>
+                    <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
+                </div>
                 <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">ნახვა</button>
             </div>
         </div>
@@ -140,7 +149,7 @@ function drawProductCard(id, item, grid) {
     grid.appendChild(card);
 }
 
-// 6. კალათაში დამატება (Firebase-ში)
+// 6. კალათაში დამატება
 function addToCart(id) {
     if (!auth.currentUser) return alert("გაიარეთ ავტორიზაცია!");
     db.ref(`akhoStore/${id}`).once('value', snap => {
@@ -168,10 +177,10 @@ function updateCartBadge() {
 function removeFromCart(cartKey) {
     if (!auth.currentUser) return;
     db.ref(`userCarts/${auth.currentUser.uid}/${cartKey}`).remove();
-    openCartView(); // განაახლოს ვიზუალი
+    openCartView(); 
 }
 
-// 7. კალათის ნახვა
+// 7. კალათის ნახვა (ევროების ჯამით)
 function openCartView() {
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -184,18 +193,28 @@ function openCartView() {
         let html = `<h2 style="color:var(--gold); margin-bottom:15px; width:100%;">კალათა</h2>`;
         cart.forEach((item) => {
             total += parseFloat(item.price);
+            const itemEurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
             html += `
                 <div style="width:100%; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px;">
                     <img src="${item.image}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
                     <div style="flex:1; color:white; font-size:13px;">${item.name}</div>
-                    <div style="color:var(--gold); font-weight:bold;">${item.price}</div>
+                    <div style="text-align:right;">
+                        <div style="color:var(--gold); font-weight:bold; font-size:13px;">${item.price}</div>
+                        <small style="color:gray; font-size:9px;">${itemEurPrice} EUR</small>
+                    </div>
                     <i class="fas fa-times" onclick="removeFromCart('${item.cartKey}')" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
                 </div>
             `;
         });
+        
+        const totalEurPrice = (total * AKHO_EXCHANGE_RATE).toFixed(2);
         html += `<div style="width:100%; border-top:1px solid #333; padding-top:15px; margin-top:10px;">
-                    <div style="display:flex; justify-content:space-between; color:white; font-weight:bold; margin-bottom:15px;">
-                        <span>ჯამი:</span><span style="color:#00ff00;">${total} AKHO</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; color:white; font-weight:bold; margin-bottom:15px;">
+                        <span>ჯამი:</span>
+                        <div style="text-align:right;">
+                            <span style="color:#00ff00; display:block;">${total} AKHO</span>
+                            <small style="color:gray; font-weight:normal; font-size:12px;">≈ ${totalEurPrice} EUR</small>
+                        </div>
                     </div>
                     <button onclick="openOrderFormFromCart(${total})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">შეკვეთა 🚀</button>
                  </div>`;
@@ -246,7 +265,6 @@ async function processOrderAndPay() {
             timestamp: Date.now()
         });
 
-        // კალათის გასუფთავება ყიდვის შემდეგ
         if (currentProduct.isCart) {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
@@ -271,11 +289,16 @@ function showProductDetails(id) {
         const content = document.getElementById('detailsContent');
         if (!modal || !content) return;
 
+        const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
+
         content.innerHTML = `
             <div style="width:100%; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
             <div style="width:100%; text-align:left; padding: 15px 0;">
                 <h1 style="color:white; font-size:22px;">${item.name}</h1>
-                <div style="color:var(--gold); font-size:20px; font-weight:bold; margin-bottom:15px;">${item.price} AKHO</div>
+                <div style="margin-bottom:15px;">
+                    <div style="color:var(--gold); font-size:20px; font-weight:bold;">${item.price} AKHO</div>
+                    <div style="color:gray; font-size:14px;">≈ ${eurPrice} EUR</div>
+                </div>
                 <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222; white-space: pre-wrap;">
                     ${item.desc || "აღწერა არ არის."}
                 </div>
@@ -295,7 +318,10 @@ function openOrderForm() {
     const priceDisplay = document.getElementById('finalPriceDisplay');
     if (detailsModal) detailsModal.style.display = 'none';
     if (orderModal) orderModal.style.display = 'flex';
-    if (priceDisplay && currentProduct) priceDisplay.innerText = currentProduct.price + " AKHO";
+    if (priceDisplay && currentProduct) {
+        const eurPrice = (currentProduct.price * AKHO_EXCHANGE_RATE).toFixed(2);
+        priceDisplay.innerHTML = `${currentProduct.price} AKHO <br><small style="font-size:12px; color:gray;">≈ ${eurPrice} EUR</small>`;
+    }
 }
 
 function deleteProduct(id) {
