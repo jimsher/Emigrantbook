@@ -271,7 +271,7 @@ function openOrderFormFromCart(total) {
     openOrderForm();
 }
 
-// 8. გადახდა AKHO ბალანსით
+// 8. გადახდა AKHO ბალანსით - გასწორებული (არაფერი მოკლებული)
 async function processOrderAndPay() {
     const user = auth.currentUser;
     const btn = document.querySelector("#orderFormModal button");
@@ -290,14 +290,18 @@ async function processOrderAndPay() {
     try {
         const userSnap = await userRef.once('value');
         const userData = userSnap.val();
-        const currentBalance = parseFloat(userData.akhoBalance || 0);
+        
+        // ვიყენებთ 'akho' ველს ბალანსისთვის
+        const currentBalance = parseFloat(userData.akho || 0);
 
         if (currentBalance < totalPrice) return alert(`არ გაქვს საკმარისი AKHO!`);
 
         if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
 
-        await userRef.update({ akhoBalance: currentBalance - totalPrice });
+        // 1. ბალანსის ჩამოჭრა
+        await userRef.update({ akho: currentBalance - totalPrice });
 
+        // 2. შეკვეთის შენახვა ისტორიაში
         await db.ref('orders').push({
             buyerUid: user.uid,
             buyerName: fName + " " + lName,
@@ -309,6 +313,7 @@ async function processOrderAndPay() {
             timestamp: Date.now()
         });
 
+        // 3. კალათის გასუფთავება
         if (currentProduct.isCart) {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
