@@ -277,12 +277,16 @@ async function processOrderAndPay() {
     const btn = document.querySelector("#orderFormModal button");
     if (!user) return alert("ავტორიზაცია აუცილებელია!");
 
+    // ყველა ველის წაკითხვა შენი HTML-დან (დავამატე ქვეყანა, ქალაქი, იმეილი)
     const fName = document.getElementById('ordFirstName').value;
     const lName = document.getElementById('ordLastName').value;
+    const country = document.getElementById('ordCountry').value;
+    const city = document.getElementById('ordCity').value;
     const addr = document.getElementById('ordAddress').value;
     const phone = document.getElementById('ordPhone').value;
+    const email = document.getElementById('ordEmail').value;
 
-    if (!fName || !lName || !addr || !phone) return alert("შეავსე ყველა ველი!");
+    if (!fName || !lName || !addr || !phone) return alert("შეავსე აუცილებელი ველები!");
 
     const totalPrice = parseFloat(currentProduct.price);
     const userRef = db.ref(`users/${user.uid}`);
@@ -291,7 +295,7 @@ async function processOrderAndPay() {
         const userSnap = await userRef.once('value');
         const userData = userSnap.val();
         
-        // 🛠️ ყურადღება: აქ 'akhoBalance'-ის ნაცვლად ვიყენებთ 'akho'-ს, როგორც შენს ბაზაშია
+        // 🛠️ ვიყენებთ 'akho' ველს ბალანსისთვის
         const currentBalance = parseFloat(userData.akho || 0);
 
         if (currentBalance < totalPrice) return alert(`არ გაქვს საკმარისი AKHO!`);
@@ -301,12 +305,15 @@ async function processOrderAndPay() {
         // 1. ბალანსის ჩამოჭრა (akho ველში)
         await userRef.update({ akho: currentBalance - totalPrice });
 
-        // 2. შეკვეთის შენახვა ისტორიაში (აუცილებლად 'buyerUid' ველით)
+        // 2. შეკვეთის შენახვა ისტორიაში (აუცილებლად 'buyerUid' ველით საძიებლად)
         await db.ref('orders').push({
             buyerUid: user.uid,
             buyerName: fName + " " + lName,
+            country: country,
+            city: city,
             address: addr,
             phone: phone,
+            email: email,
             productName: currentProduct.name,
             paidAmount: totalPrice,
             status: "paid_with_akho",
@@ -393,7 +400,7 @@ function renderUserOrderHistory() {
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
     modal.style.display = 'flex';
 
-    // 🛠️ ყურადღება: აქ ვეძებთ 'buyerUid' ველს
+    // 🛠️ აქ ვფილტრავთ 'buyerUid'-ით (ახალ შეკვეთებზე იმუშავებს)
     db.ref('orders').orderByChild('buyerUid').equalTo(user.uid).on('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
