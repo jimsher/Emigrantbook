@@ -2229,3 +2229,65 @@ function stopCamera() {
     const placeholder = document.getElementById('placeholderText');
     if (placeholder) placeholder.style.display = 'block';
 }
+
+
+
+
+
+
+
+
+
+let mediaRecorder;
+let videoChunks = [];
+
+// ეს ფუნქცია უნდა გამოიძახოს შუა წითელმა ღილაკმა (recordBtn)
+async function toggleRecording() {
+    const recordInner = document.getElementById('recordInner');
+    
+    // 1. თუ ჩაწერა არ მიმდინარეობს - ვიწყებთ
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        videoChunks = [];
+        // ვიყენებთ უკვე ჩართულ კამერის ნაკადს (videoStream)
+        if (!videoStream) return alert("კამერა არ არის აქტიური!");
+
+        mediaRecorder = new MediaRecorder(videoStream);
+        
+        mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) videoChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
+            
+            // ვქმნით ფაილს, რომელსაც შენი ატვირთვის სისტემა დაინახავს
+            const file = new File([videoBlob], "recorded_video.mp4", { type: "video/mp4" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('videoInput').files = dataTransfer.files;
+
+            alert("ვიდეო მზადაა ასატვირთად! დააჭირეთ ატვირთვის ღილაკს.");
+            
+            // ღილაკს ვუბრუნებთ ძველ ფერს
+            if (recordInner) {
+                recordInner.style.background = '#ff4d4d';
+                recordInner.style.borderRadius = '50%';
+            }
+        };
+
+        mediaRecorder.start();
+        console.log("ჩაწერა დაიწყო...");
+        
+        // ვიზუალური ეფექტი: ღილაკი ხდება კვადრატული (როგორც კამერებშია)
+        if (recordInner) {
+            recordInner.style.background = '#ff0000';
+            recordInner.style.borderRadius = '8px';
+            recordInner.style.boxShadow = '0 0 20px red';
+        }
+    } 
+    // 2. თუ ჩაწერა უკვე მიმდინარეობს - ვაჩერებთ
+    else {
+        mediaRecorder.stop();
+        console.log("ჩაწერა დასრულდა.");
+    }
+}
