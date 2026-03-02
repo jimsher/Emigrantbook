@@ -291,17 +291,17 @@ async function processOrderAndPay() {
         const userSnap = await userRef.once('value');
         const userData = userSnap.val();
         
-        // ვიყენებთ 'akho' ველს ბალანსისთვის
+        // 🛠️ ყურადღება: აქ 'akhoBalance'-ის ნაცვლად ვიყენებთ 'akho'-ს, როგორც შენს ბაზაშია
         const currentBalance = parseFloat(userData.akho || 0);
 
         if (currentBalance < totalPrice) return alert(`არ გაქვს საკმარისი AKHO!`);
 
         if (btn) { btn.disabled = true; btn.innerText = "მუშავდება..."; }
 
-        // 1. ბალანსის ჩამოჭრა
+        // 1. ბალანსის ჩამოჭრა (akho ველში)
         await userRef.update({ akho: currentBalance - totalPrice });
 
-        // 2. შეკვეთის შენახვა ისტორიაში
+        // 2. შეკვეთის შენახვა ისტორიაში (აუცილებლად 'buyerUid' ველით)
         await db.ref('orders').push({
             buyerUid: user.uid,
             buyerName: fName + " " + lName,
@@ -313,7 +313,6 @@ async function processOrderAndPay() {
             timestamp: Date.now()
         });
 
-        // 3. კალათის გასუფთავება
         if (currentProduct.isCart) {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
@@ -394,6 +393,7 @@ function renderUserOrderHistory() {
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
     modal.style.display = 'flex';
 
+    // 🛠️ ყურადღება: აქ ვეძებთ 'buyerUid' ველს
     db.ref('orders').orderByChild('buyerUid').equalTo(user.uid).on('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
