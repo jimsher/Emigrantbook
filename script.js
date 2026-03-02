@@ -2121,10 +2121,7 @@ function loadMySavedPosts() {
 // --- 1. გლობალური ცვლადები (მხოლოდ ერთხელ) ---
 let mediaRecorder = null;
 let videoChunks = [];
-// მნიშვნელოვანია: ვიყენებთ მხოლოდ ერთ ცვლადს ნაკადისთვის
-if (typeof videoStream === 'undefined') {
-    var videoStream = null; 
-}
+
 
 // --- 2. ფანჯრის გახსნა და კამერის ავტომატური ჩართვა ---
 async function openUploadModal() {
