@@ -2114,28 +2114,33 @@ function loadMySavedPosts() {
 
 
 
-let videoStream = null;
+// --- კამერის და ჩაწერის ერთიანი სისტემა ---
+let mediaRecorder = null;
+let videoChunks = [];
 
-// 1. აქ შევცვალე window.videoStream უბრალოდ videoStream-ით
+// 1. ფანჯრის გახსნა და კამერის ავტომატური ჩართვა
 async function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
         modal.style.display = 'flex';
+        
         const video = document.getElementById('cameraStream');
         const placeholder = document.getElementById('placeholderText');
 
         try {
-            if (videoStream) { // აქაც
-                videoStream.getTracks().forEach(track => track.stop());
+            // თუ ძველი ნაკადი არსებობს, ვთიშავთ
+            if (window.videoStream) {
+                window.videoStream.getTracks().forEach(track => track.stop());
             }
 
-            videoStream = await navigator.mediaDevices.getUserMedia({ 
+            // ვიღებთ ახალ ნაკადს
+            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "user" }, 
-                audio: true // ჩაწერისთვის აუდიო აუცილებელია!
+                audio: true 
             });
             
             if (video) {
-                video.srcObject = videoStream;
+                video.srcObject = window.videoStream;
                 video.setAttribute('playsinline', '');
                 video.setAttribute('autoplay', '');
                 video.muted = true;
@@ -2146,7 +2151,8 @@ async function openUploadModal() {
                 console.log("კამერა ჩაირთო ✅");
             }
         } catch (err) {
-            console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
+            console.error("კამერის შეცდომა:", err);
+            alert("კამერა ვერ ჩაირთო. შეამოწმეთ HTTPS და ნებართვები.");
         }
     }
 }
@@ -2247,29 +2253,26 @@ function stopCamera() {
 mediaRecorder = null; 
 videoChunks = [];
 
-// 2. ჩაწერის ფუნქციაში დავამატე MIME ტიპის შემოწმება სტაბილურობისთვის
+// 2. გადაღების ღილაკის ფუნქცია (START/STOP)
 async function toggleRecording() {
     const recordInner = document.getElementById('recordInner');
 
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        if (!videoStream) {
+        if (!window.videoStream) {
             alert("კამერა არ არის აქტიური!");
             return;
         }
 
         videoChunks = [];
-        
-        // ვამოწმებთ რომელი ფორმატია ხელმისაწვდომი (მობილურისთვის mp4/webm)
-        const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
-        mediaRecorder = new MediaRecorder(videoStream, { mimeType });
+        mediaRecorder = new MediaRecorder(window.videoStream);
 
         mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) videoChunks.push(e.data);
         };
 
         mediaRecorder.onstop = () => {
-            const videoBlob = new Blob(videoChunks, { type: mimeType });
-            const videoFile = new File([videoBlob], "captured_video.mp4", { type: mimeType });
+            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
+            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
 
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(videoFile);
@@ -2280,20 +2283,16 @@ async function toggleRecording() {
 
             if (recordInner) {
                 recordInner.style.borderRadius = "50%";
-                recordInner.style.transform = "scale(1)";
                 recordInner.style.background = "#ff4d4d";
             }
         };
 
         mediaRecorder.start();
-
         if (recordInner) {
             recordInner.style.borderRadius = "8px"; 
-            recordInner.style.transform = "scale(0.8)";
             recordInner.style.background = "#ff0000";
         }
-    } 
-    else {
+    } else {
         mediaRecorder.stop();
     }
 }
