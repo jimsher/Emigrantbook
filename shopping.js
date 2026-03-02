@@ -13,12 +13,11 @@ function toggleStoreManager() {
         const isOpening = (section.style.display === 'none' || section.style.display === '');
         section.style.display = isOpening ? 'block' : 'none';
         
-        // თუ პანელს ვხსნით, ეგრევე ჩატვირთოს ნივთების სია წასაშლელად
         if (isOpening) renderAdminProductList();
     }
 }
 
-// 2. პროდუქტის ატვირთვა - გასწორებული ვერსია (Stripe-ის გარეშე)
+// 2. პროდუქტის ატვირთვა - სრულად გასწორებული
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
@@ -27,14 +26,12 @@ async function saveProductToFirebase() {
     const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
 
-    // ვიღებთ მნიშვნელობებს (მხოლოდ იმას, რაც HTML-ში გვაქვს)
     const file = fileInput ? fileInput.files[0] : null;
     const name = nameInput ? nameInput.value.trim() : "";
     const price = priceInput ? priceInput.value.trim() : "";
     const desc = descInput ? descInput.value.trim() : "";
     const cat = catInput ? catInput.value : "all";
 
-    // ვალიდაცია: მხოლოდ სახელი, ფასი და ფოტოა სავალდებულო
     if (!file || !name || !price) {
         return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
     }
@@ -53,7 +50,6 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
-            // Firebase-ში ვინახავთ მხოლოდ საჭირო ინფორმაციას
             await db.ref('akhoStore').push({
                 name: name,
                 price: parseFloat(price),
