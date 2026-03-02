@@ -391,6 +391,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
+
 function renderUserOrderHistory() {
     const user = auth.currentUser;
     // ვიყენებთ შენს ორიგინალ ID-ებს: productDetailsModal და detailsContent
@@ -427,17 +428,21 @@ function renderUserOrderHistory() {
                 hasOrders = true;
                 const date = new Date(order.timestamp).toLocaleDateString();
                 
-                // ვიყენებთ შენს სტილს და ცვლადებს (paidAmount, productName)
+                // 🛠️ დამატებული ლოგიკა undefined-ის ასაცილებლად:
+                // თუ paidAmount არ არსებობს, აიღებს price-ს, თუ არც ის - მაშინ 0-ს.
+                const finalAmount = order.paidAmount || order.price || 0;
+                
+                // ვიყენებთ შენს სტილს და ცვლადებს (finalAmount, productName)
                 ordersHtml += `
                     <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <b style="color:white; font-size:14px;">${order.productName}</b>
+                            <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
                             <span style="color:gray; font-size:12px;">${date}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <span style="color:var(--gold); font-weight:bold; display:block;">${order.paidAmount} AKHO</span>
-                                <small style="color:gray; font-size:10px;">≈ ${(order.paidAmount * 0.1).toFixed(2)} EUR</small>
+                                <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
+                                <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
                             </div>
                             <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
                                 ${order.status === 'paid_with_akho' ? 'მუშავდება' : 'დასრულებულია'}
@@ -455,7 +460,6 @@ function renderUserOrderHistory() {
         }
     });
 }
-
 
 
 
