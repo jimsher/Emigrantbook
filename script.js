@@ -2135,29 +2135,42 @@ async function toggleCamera() {
         try {
             videoStream = await navigator.mediaDevices.getUserMedia(constraints);
             
-            // ვუკავშირებთ ნაკადს
+            // 🛠️ მნიშვნელოვანია: ჯერ ვუკავშირებთ ნაკადს
             video.srcObject = videoStream;
             
-            // ვაიძულებთ ბრაუზერს რომ ნამდვილად აჩვენოს
-            video.onloadedmetadata = async () => {
-                try {
-                    await video.play();
-                    video.style.display = 'block';
-                    if (placeholder) placeholder.style.display = 'none';
-                    
-                    if (recordInner) {
-                        recordInner.style.background = '#00ff00';
-                        recordInner.style.boxShadow = '0 0 15px #00ff00';
-                    }
-                    console.log("კამერა ჩაირთო ✅");
-                } catch (playErr) {
-                    console.error("Play error:", playErr);
-                }
-            };
+            // 🛠️ მობილურებისთვის აუცილებელი ატრიბუტები
+            video.setAttribute('autoplay', '');
+            video.setAttribute('muted', '');
+            video.setAttribute('playsinline', '');
+            
+            // 🛠️ პირდაპირი გაშვება metadata-ს ლოდინის გარეშეც
+            video.style.display = 'block'; 
+            if (placeholder) placeholder.style.display = 'none';
+
+            await video.play();
+
+            if (recordInner) {
+                recordInner.style.background = '#00ff00';
+                recordInner.style.boxShadow = '0 0 15px #00ff00';
+            }
+            console.log("კამერა ჩაირთო ✅");
 
         } catch (err) {
             console.error("getUserMedia error:", err);
-            alert("კამერა ვერ ჩაირთო. დარწმუნდით, რომ იყენებთ HTTPS-ს და საიტს აქვს კამერის ნებართვა.");
+            // თუ 'user' კამერა არ აქვს (მაგ. კომპიუტერზე), ვცდილობთ ნებისმიერ კამერას
+            if (err.name === "OverconstrainedError" || err.name === "ConstraintNotSatisfiedError") {
+                try {
+                    videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = videoStream;
+                    await video.play();
+                    video.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                } catch (e) {
+                    alert("კამერა ვერ მოიძებნა.");
+                }
+            } else {
+                alert("კამერა ვერ ჩაირთო. დარწმუნდით, რომ იყენებთ HTTPS-ს.");
+            }
         }
     } else {
         stopCamera();
