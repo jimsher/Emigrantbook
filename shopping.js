@@ -393,56 +393,54 @@ function closeProductDetails() {
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
 function renderUserOrderHistory() {
     const user = auth.currentUser;
-    // ვიყენებთ უკვე არსებულ მოდალს ინფორმაციის გამოსაჩენად
+    // ვიყენებთ შენს ორიგინალ ID-ებს: productDetailsModal და detailsContent
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
     
-    if (!user) return alert("ავტორიზაცია აუცილებელია!");
-    if (!modal || !content) return console.error("მოდალის ელემენტები ვერ მოიძებნა!");
+    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    if (!modal || !content) return;
 
-    // მოდალის გახსნა და პირველადი ტექსტი
-    content.innerHTML = `
-        <h2 style="color:var(--gold); margin-bottom:20px; width:100%; text-align:center;">ჩემი შეკვეთები 📦</h2>
-        <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">
-            <i class="fas fa-spinner fa-spin"></i> იტვირთება ისტორია...
-        </div>`;
+    // ვასუფთავებთ კონტენტს და ვშლით ძველ მონაცემებს
+    content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                         <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
     modal.style.display = 'flex';
 
-    // ბაზიდან წამოსვლა
+    // ვიყენებთ პირდაპირ .once('value')-ს, რომ JS-მა გადაარჩიოს მონაცემები (ინდექსაციის გარეშეც რომ იმუშაოს)
     db.ref('orders').once('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
         if (loadingEl) loadingEl.remove();
 
         if (!data) {
-            content.innerHTML += `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
+            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                                 <p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
             return;
         }
 
-        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%; text-align:center;">ჩემი შეკვეთები 📦</h2>`;
+        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
         let hasOrders = false;
 
-        // მონაცემების გადარჩევა
+        // ვამოწმებთ ყველა შეკვეთას
         Object.values(data).reverse().forEach(order => {
-            // ვამოწმებთ ორივე შესაძლო ID-ს (buyerUid ან uid)
+            // აქ არის მთავარი: ვამოწმებთ ორივე ვარიანტს, buyerUid-საც და uid-საც
             if (order.buyerUid === user.uid || order.uid === user.uid) {
                 hasOrders = true;
                 const date = new Date(order.timestamp).toLocaleDateString();
-                const statusText = order.status === 'paid_with_akho' ? 'მიღებულია' : 'დასრულებული';
-                const statusColor = order.status === 'paid_with_akho' ? 'var(--gold)' : '#4ade80';
-
+                
+                // ვიყენებთ შენს სტილს და ცვლადებს (paidAmount, productName)
                 ordersHtml += `
-                    <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                            <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
-                            <span style="color:gray; font-size:11px;">${date}</span>
+                    <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <b style="color:white; font-size:14px;">${order.productName}</b>
+                            <span style="color:gray; font-size:12px;">${date}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <span style="color:#00ff00; font-weight:bold; font-size:14px;">${order.paidAmount} AKHO</span>
+                                <span style="color:var(--gold); font-weight:bold; display:block;">${order.paidAmount} AKHO</span>
+                                <small style="color:gray; font-size:10px;">≈ ${(order.paidAmount * 0.1).toFixed(2)} EUR</small>
                             </div>
-                            <span style="font-size:11px; color:${statusColor}; border:1px solid ${statusColor}; padding:2px 8px; border-radius:5px;">
-                                ${statusText}
+                            <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
+                                ${order.status === 'paid_with_akho' ? 'მუშავდება' : 'დასრულებულია'}
                             </span>
                         </div>
                     </div>`;
@@ -450,14 +448,11 @@ function renderUserOrderHistory() {
         });
 
         if (!hasOrders) {
-            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%; text-align:center;">ჩემი შეკვეთები 📦</h2>
-                                 <p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ მოიძებნა.</p>`;
+            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                                 <p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
         } else {
             content.innerHTML = ordersHtml;
         }
-    }).catch(err => {
-        console.error("Firebase Error:", err);
-        content.innerHTML = `<p style="color:red; text-align:center;">შეცდომა მონაცემების წაკითხვისას.</p>`;
     });
 }
 
