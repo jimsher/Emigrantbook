@@ -2208,6 +2208,14 @@ async function startLiveCamera() {
     }
 }
 
+
+
+
+
+
+
+
+
 // იქსის ღილაკი - თიშავს ყველაფერს
 // 1. ფანჯრის დახურვა
 function closeUploadModal() {
@@ -2233,17 +2241,18 @@ function stopCamera() {
     }
     if (placeholder) placeholder.style.display = 'block';
     
-    // ღილაკის ფორმის დაბრუნება (თუ ჩაწერისას გათიშა)
+    // ღილაკის ფორმის დაბრუნება
     if (recordInner) {
         recordInner.style.borderRadius = "50%";
         recordInner.style.background = "#ff4d4d";
         recordInner.style.transform = "scale(1)";
+        recordInner.style.boxShadow = "none";
     }
 }
 
-// 3. ვიდეოს ჩაწერის ლოგიკა (ახალი)
-let mediaRecorder;
-let videoChunks = [];
+// 3. ვიდეოს ჩაწერის ლოგიკა (ცვლადები let-ის გარეშე, რომ არ აირიოს)
+mediaRecorder = null; 
+videoChunks = [];
 
 async function toggleRecording() {
     const recordInner = document.getElementById('recordInner');
@@ -2251,7 +2260,7 @@ async function toggleRecording() {
     // თუ ჩაწერა არ მიმდინარეობს - ვიწყებთ
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
         if (!videoStream) {
-            alert("ჯერ ჩართეთ კამერა!");
+            alert("კამერა არ არის აქტიური!");
             return;
         }
 
@@ -2263,19 +2272,16 @@ async function toggleRecording() {
         };
 
         mediaRecorder.onstop = () => {
-            // ვქმნით ვიდეო ფაილს
             const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
             const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
 
-            // ფაილის გადაცემა ინფუთისთვის (რომ ატვირთვა ამუშავდეს)
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(videoFile);
             const videoInput = document.getElementById('videoInput');
             if (videoInput) videoInput.files = dataTransfer.files;
 
-            alert("ვიდეო მზადაა! ახლა დააჭირეთ ატვირთვის ღილაკს.");
+            alert("ვიდეო მზადაა! დააჭირეთ ატვირთვას.");
 
-            // ღილაკის ფორმის რესეტი
             if (recordInner) {
                 recordInner.style.borderRadius = "50%";
                 recordInner.style.transform = "scale(1)";
@@ -2284,18 +2290,15 @@ async function toggleRecording() {
         };
 
         mediaRecorder.start();
-        console.log("ჩაწერა დაიწყო...");
 
-        // ვიზუალური ეფექტი: ღილაკი ხდება კვადრატული
         if (recordInner) {
             recordInner.style.borderRadius = "8px"; 
             recordInner.style.transform = "scale(0.8)";
             recordInner.style.background = "#ff0000";
         }
     } 
-    // თუ უკვე იწერს - ვაჩერებთ
     else {
         mediaRecorder.stop();
-        console.log("ჩაწერა შეწყდა.");
     }
 }
+            
