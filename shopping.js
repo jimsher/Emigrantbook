@@ -388,58 +388,54 @@ function closeProductDetails() {
     if (modal) modal.style.display = 'none';
 }
 
+
+
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
 function renderUserOrderHistory() {
     const user = auth.currentUser;
-    const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
-    
-    if (!user || !modal || !content) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    if (!user || !content) return;
 
-    content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
-                         <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
-    modal.style.display = 'flex';
+    content.innerHTML = `<h2 style="color:var(--gold);">ჩემი შეკვეთები 📦</h2><div id="ordersLoading">იტვირთება...</div>`;
 
-    // 🛠️ აქ ვფილტრავთ 'buyerUid'-ით (ახალ შეკვეთებზე იმუშავებს)
-    db.ref('orders').orderByChild('buyerUid').equalTo(user.uid).on('value', snap => {
+    // ვკითხულობთ ყველა შეკვეთას და JS-ით ვფილტრავთ (ეს უფრო საიმედოა, თუ ინდექსი არ გაქვს)
+    db.ref('orders').once('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
         if (loadingEl) loadingEl.remove();
 
         if (!data) {
-            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
-                                 <p style="color:gray; text-align:center; padding:20px;">ჯერ არაფერი გიყიდია.</p>`;
+            content.innerHTML += `<p style="color:gray;">ჯერ არაფერი გიყიდია.</p>`;
             return;
         }
 
-        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
-        
-        Object.values(data).reverse().forEach(order => {
-            const date = new Date(order.timestamp).toLocaleDateString();
-            const statusColor = order.status === 'paid_with_akho' ? 'var(--gold)' : '#00ff00';
-            const statusText = order.status === 'paid_with_akho' ? 'მუშავდება' : 'დასრულებულია';
+        let ordersHtml = `<h2 style="color:var(--gold);">ჩემი შეკვეთები 📦</h2>`;
+        let hasOrders = false;
 
-            ordersHtml += `
-                <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <b style="color:white; font-size:14px;">${order.productName}</b>
-                        <span style="color:gray; font-size:12px;">${date}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <span style="color:var(--gold); font-weight:bold; display:block;">${order.paidAmount} AKHO</span>
-                            <small style="color:gray; font-size:10px;">≈ ${(order.paidAmount * AKHO_EXCHANGE_RATE).toFixed(2)} EUR</small>
-                        </div>
-                        <span style="background:rgba(212,175,55,0.1); color:${statusColor}; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid ${statusColor}">
-                            ${statusText}
-                        </span>
-                    </div>
-                </div>
-            `;
+        Object.values(data).reverse().forEach(order => {
+            // ვამოწმებთ ორივე შესაძლო ველს: buyerUid ან უბრალოდ uid
+            if (order.buyerUid === user.uid || order.uid === user.uid) {
+                hasOrders = true;
+                const date = new Date(order.timestamp).toLocaleDateString();
+                ordersHtml += `
+                    <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px;">
+                        <b style="color:white;">${order.productName}</b>
+                        <div style="color:var(--gold); font-weight:bold;">${order.paidAmount} AKHO</div>
+                        <small style="color:gray;">${date} - სტატუსი: ${order.status}</small>
+                    </div>`;
+            }
         });
-        content.innerHTML = ordersHtml;
+
+        if (!hasOrders) {
+            content.innerHTML += `<p style="color:gray;">შეკვეთები ვერ მოიძებნა.</p>`;
+        } else {
+            content.innerHTML = ordersHtml;
+        }
     });
 }
+
+
+
 
 // --- 2. ადმინისთვის შეკვეთების ნახვა ---
 function renderAdminOrders() {
