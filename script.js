@@ -2114,46 +2114,69 @@ function loadMySavedPosts() {
 
 
 
-let stream = null;
+let videoStream = null; // ცვლადი კამერის ნაკადის შესანახად
 
+// იქსის ღილაკი - ფანჯრის დახურვა და კამერის გათიშვა
+function closeUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) modal.style.display = 'none';
+    stopCamera(); // კამერის გათიშვა დახურვისას
+}
+
+// კამერის ჩართვა/გამორთვის ფუნქცია (TikTok სტილის ღილაკისთვის)
 async function toggleCamera() {
     const video = document.getElementById('cameraStream');
     const placeholder = document.getElementById('placeholderText');
     const recordInner = document.getElementById('recordInner');
 
-    if (!stream) {
+    if (!videoStream) {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
-            video.srcObject = stream;
-            video.style.display = 'block';
-            placeholder.style.display = 'none';
-            recordInner.style.backgroundColor = '#00ff00'; // მწვანე როცა ჩართულია
+            // ვითხოვთ წვდომას კამერასა და მიკროფონზე
+            videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: true 
+            });
+            
+            video.srcObject = videoStream;
+            video.style.display = 'block'; // ვაჩენთ ვიდეოს
+            if(placeholder) placeholder.style.display = 'none'; // ვაქრობთ აიქონს
+            
+            // ვიზუალური ეფექტი ღილაკზე - მივახვედროთ მომხმარებელი რომ ჩაირთო
+            recordInner.style.background = '#00ff00'; 
+            recordInner.style.boxShadow = '0 0 15px #00ff00';
+            
         } catch (err) {
-            alert("კამერაზე წვდომა უარყოფილია!");
+            console.error("კამერის შეცდომა:", err);
+            alert("კამერა ვერ ჩაირთო. გთხოვთ, მოგვცეთ ნებართვა ბრაუზერის პარამეტრებიდან.");
         }
     } else {
         stopCamera();
     }
 }
 
+// კამერის ნაკადის გაჩერება
 function stopCamera() {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
     }
-    document.getElementById('cameraStream').style.display = 'none';
-    document.getElementById('placeholderText').style.display = 'block';
-    document.getElementById('recordInner').style.backgroundColor = '#ff4d4d';
+    const video = document.getElementById('cameraStream');
+    const placeholder = document.getElementById('placeholderText');
+    const recordInner = document.getElementById('recordInner');
+    
+    if(video) video.style.display = 'none';
+    if(placeholder) placeholder.style.display = 'block';
+    if(recordInner) {
+        recordInner.style.background = '#ff4d4d';
+        recordInner.style.boxShadow = 'none';
+    }
 }
 
-function closeUploadModal() {
-    stopCamera();
-    document.getElementById('uploadModal').style.display = 'none';
-}
-
+// გალერეიდან ვიდეოს არჩევისას კამერა რომ არ დარჩეს ჩართული
 function handleVideoSelect(input) {
     if (input.files && input.files[0]) {
-        alert("ვიდეო არჩეულია: " + input.files[0].name + " \nახლა დააჭირეთ ატვირთვის ღილაკს.");
-        stopCamera(); // თუ კამერა ჩართული იყო, ვთიშავთ
+        stopCamera();
+        // აქ შეგიძლია დაამატო მინიშნება, რომ ვიდეო მზადაა ასატვირთად
+        console.log("ვიდეო არჩეულია:", input.files[0].name);
     }
 }
