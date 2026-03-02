@@ -2116,24 +2116,24 @@ function loadMySavedPosts() {
 
 let videoStream = null;
 
-// ვიყენებთ Event Listener-ს, რომ გარანტირებულად იმუშაოს დაჭერამ
-document.addEventListener('DOMContentLoaded', () => {
-    const recordBtn = document.getElementById('recordBtn');
-    if (recordBtn) {
-        recordBtn.addEventListener('click', () => {
-            toggleCamera();
-        });
+// ეს ფუნქცია გამოიძახე ტოკენის (პლუსის) ღილაკზე დაჭერისას
+async function openUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        // როგორც კი ფანჯარა გაიხსნება, კამერა ავტომატურად ირთვება
+        await startLiveCamera();
     }
-});
+}
 
-async function toggleCamera() {
+// კამერის გაშვების ძირითადი ლოგიკა
+async function startLiveCamera() {
     const video = document.getElementById('cameraStream');
     const placeholder = document.getElementById('placeholderText');
     const recordInner = document.getElementById('recordInner');
 
     if (!videoStream) {
         try {
-            // ვცდილობთ კამერის გამოძახებას
             videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "user" }, 
                 audio: false 
@@ -2141,28 +2141,36 @@ async function toggleCamera() {
             
             if (video) {
                 video.srcObject = videoStream;
+                // მობილურებისთვის აუცილებელი პარამეტრები
                 video.setAttribute('playsinline', '');
+                video.setAttribute('autoplay', '');
                 video.muted = true;
                 
-                // ვაჩენთ ვიდეოს და ვრთავთ
                 video.style.display = 'block';
                 await video.play();
-                
+
                 if (placeholder) placeholder.style.display = 'none';
                 if (recordInner) {
                     recordInner.style.background = '#00ff00';
                     recordInner.style.boxShadow = '0 0 15px #00ff00';
                 }
+                console.log("კამერა ავტომატურად ჩაირთო ✅");
             }
         } catch (err) {
             console.error("კამერის შეცდომა:", err);
-            alert("კამერა ვერ ჩაირთო. გთხოვთ გამოიყენოთ HTTPS და მისცეთ კამერის ნებართვა.");
+            // თუ კამერა ვერ ჩაირთო (მაგ. ნებართვის გამო), ფანჯარა მაინც ღია რჩება
         }
-    } else {
-        stopCamera();
     }
 }
 
+// იქსის ღილაკი
+function closeUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) modal.style.display = 'none';
+    stopCamera();
+}
+
+// კამერის სრული გათიშვა
 function stopCamera() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
@@ -2184,15 +2192,10 @@ function stopCamera() {
     }
 }
 
-function closeUploadModal() {
-    stopCamera();
-    const modal = document.getElementById('uploadModal');
-    if (modal) modal.style.display = 'none';
-}
-
+// გალერეიდან არჩევისას
 function handleVideoSelect(input) {
     if (input.files && input.files[0]) {
-        stopCamera();
-        console.log("ვიდეო არჩეულია:", input.files[0].name);
+        stopCamera(); // კამერა ითიშება, რადგან ფაილი უკვე ავირჩიეთ
+        console.log("ვიდეო არჩეულია გალერეიდან");
     }
 }
