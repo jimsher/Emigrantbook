@@ -461,43 +461,45 @@ function renderUserOrderHistory() {
 
 // --- 2. ადმინისთვის შეკვეთების ნახვა ---
 function renderAdminOrders() {
-    // შენს კოდში ადმინის შეკვეთები adminProductList-ში გამოდის
-    const listContainer = document.getElementById('adminProductList'); 
-    if (!listContainer) return console.error("adminProductList ვერ მოიძებნა!");
+    // შენი HTML-ის მიხედვით კონტეინერის ID არის "ordersList"
+    const listContainer = document.getElementById('ordersList'); 
+    if (!listContainer) return;
 
     db.ref('orders').on('value', snap => {
-        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">📦 შემოსული შეკვეთები:</h4>`;
         const data = snap.val();
         
         if (!data) {
-            listContainer.innerHTML += `<p style="color:gray; font-size:12px; padding:10px;">შეკვეთები არ არის.</p>`;
+            listContainer.innerHTML = `<p style="color:gray; font-size:12px;">შეკვეთები არ არის...</p>`;
             return;
         }
 
-        // ვატრიალებთ სიას, რომ ახალი შეკვეთები ზემოთ იყოს
+        listContainer.innerHTML = ""; // ვასუფთავებთ ძველ მონაცემებს
+        
+        // ვატრიალებთ სიას, რომ უახლესი შეკვეთა პირველი გამოჩნდეს
         Object.entries(data).reverse().forEach(([id, order]) => {
             const date = new Date(order.timestamp).toLocaleDateString();
             
-            // ვიყენებთ ზუსტად შენს ველებს: productName, paidAmount, buyerName, phone, address
+            // ვიყენებთ ზუსტად შენს ველებს: productName, buyerName, phone, address, paidAmount
             listContainer.innerHTML += `
-                <div style="background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:12px; border:1px solid #333; text-align:left;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                        <b style="color:var(--gold); font-size:14px;">${order.productName || 'ნივთი'}</b>
+                <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #333; text-align:left; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <b style="color:var(--gold); font-size:14px;">📦 ${order.productName}</b>
                         <span style="color:gray; font-size:11px;">${date}</span>
                     </div>
                     
-                    <div style="color:white; font-size:13px; margin-bottom:4px;">👤 მყიდველი: ${order.buyerName || 'უცნობი'}</div>
-                    <div style="color:#ccc; font-size:12px; margin-bottom:4px;">📞 ტელ: ${order.phone || '-'}</div>
-                    <div style="color:#ccc; font-size:12px; margin-bottom:10px;">📍 მისამართი: ${order.address || '-'}</div>
+                    <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${order.buyerName}</div>
+                    <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone}</div>
+                    <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${order.address}</div>
                     
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px solid #222; padding-top:10px;">
-                        <b style="color:#00ff00; font-size:14px;">${order.paidAmount} AKHO</b>
-                        <div style="display:flex; gap:5px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
+                        <b style="color:#00ff00; font-size:15px;">${order.paidAmount} AKHO</b>
+                        
+                        <div style="display:flex; gap:8px;">
                             ${order.status === 'paid_with_akho' ? 
-                                `<button onclick="updateOrderStatus('${id}', 'delivered')" style="background:var(--gold); border:none; padding:5px 10px; border-radius:5px; font-size:11px; font-weight:bold; color:black; cursor:pointer;">ჩაბარება ✅</button>` : 
+                                `<button onclick="updateOrderStatus('${id}', 'delivered')" style="background:var(--gold); border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:bold; color:black; cursor:pointer;">ჩაბარება ✅</button>` : 
                                 `<span style="color:#4ade80; font-size:11px; font-weight:bold;">ჩაბარებულია</span>`
                             }
-                            <button onclick="if(confirm('წაიშალოს შეკვეთა?')) db.ref('orders/${id}').remove()" style="background:#ff4d4d; border:none; padding:5px; border-radius:5px; color:white; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                            <i class="fas fa-trash-alt" onclick="if(confirm('წაიშალოს?')) db.ref('orders/${id}').remove()" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
                         </div>
                     </div>
                 </div>
