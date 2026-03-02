@@ -464,8 +464,9 @@ function renderUserOrderHistory() {
 
 
 // --- 2. ადმინისთვის შეკვეთების ნახვა ---
+// --- 2. ადმინისთვის შეკვეთების ნახვა (გასწორებული undefined) ---
 function renderAdminOrders() {
-    // შენი HTML-ის მიხედვით კონტეინერის ID არის "ordersList"
+    // შენს HTML-ში კონტეინერის ID არის "ordersList"
     const listContainer = document.getElementById('ordersList'); 
     if (!listContainer) return;
 
@@ -483,20 +484,23 @@ function renderAdminOrders() {
         Object.entries(data).reverse().forEach(([id, order]) => {
             const date = new Date(order.timestamp).toLocaleDateString();
             
-            // ვიყენებთ ზუსტად შენს ველებს: productName, buyerName, phone, address, paidAmount
+            // 🛠️ აქაც ვამატებთ შემოწმებას: თუ paidAmount არ არის, აიღოს price
+            const finalAmount = order.paidAmount || order.price || 0;
+            
+            // ვიყენებთ ზუსტად შენს ველებს: productName, buyerName, phone, address
             listContainer.innerHTML += `
                 <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #333; text-align:left; margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <b style="color:var(--gold); font-size:14px;">📦 ${order.productName}</b>
+                        <b style="color:var(--gold); font-size:14px;">📦 ${order.productName || 'ნივთი'}</b>
                         <span style="color:gray; font-size:11px;">${date}</span>
                     </div>
                     
-                    <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${order.buyerName}</div>
-                    <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone}</div>
-                    <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${order.address}</div>
+                    <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${order.buyerName || 'უცნობი'}</div>
+                    <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone || '-'}</div>
+                    <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${order.address || '-'}</div>
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
-                        <b style="color:#00ff00; font-size:15px;">${order.paidAmount} AKHO</b>
+                        <b style="color:#00ff00; font-size:15px;">${finalAmount} AKHO</b>
                         
                         <div style="display:flex; gap:8px;">
                             ${order.status === 'paid_with_akho' ? 
