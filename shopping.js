@@ -393,44 +393,71 @@ function closeProductDetails() {
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
 function renderUserOrderHistory() {
     const user = auth.currentUser;
+    // ვიყენებთ უკვე არსებულ მოდალს ინფორმაციის გამოსაჩენად
+    const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
-    if (!user || !content) return;
+    
+    if (!user) return alert("ავტორიზაცია აუცილებელია!");
+    if (!modal || !content) return console.error("მოდალის ელემენტები ვერ მოიძებნა!");
 
-    content.innerHTML = `<h2 style="color:var(--gold);">ჩემი შეკვეთები 📦</h2><div id="ordersLoading">იტვირთება...</div>`;
+    // მოდალის გახსნა და პირველადი ტექსტი
+    content.innerHTML = `
+        <h2 style="color:var(--gold); margin-bottom:20px; width:100%; text-align:center;">ჩემი შეკვეთები 📦</h2>
+        <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">
+            <i class="fas fa-spinner fa-spin"></i> იტვირთება ისტორია...
+        </div>`;
+    modal.style.display = 'flex';
 
-    // ვკითხულობთ ყველა შეკვეთას და JS-ით ვფილტრავთ (ეს უფრო საიმედოა, თუ ინდექსი არ გაქვს)
+    // ბაზიდან წამოსვლა
     db.ref('orders').once('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
         if (loadingEl) loadingEl.remove();
 
         if (!data) {
-            content.innerHTML += `<p style="color:gray;">ჯერ არაფერი გიყიდია.</p>`;
+            content.innerHTML += `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
             return;
         }
 
-        let ordersHtml = `<h2 style="color:var(--gold);">ჩემი შეკვეთები 📦</h2>`;
+        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%; text-align:center;">ჩემი შეკვეთები 📦</h2>`;
         let hasOrders = false;
 
+        // მონაცემების გადარჩევა
         Object.values(data).reverse().forEach(order => {
-            // ვამოწმებთ ორივე შესაძლო ველს: buyerUid ან უბრალოდ uid
+            // ვამოწმებთ ორივე შესაძლო ID-ს (buyerUid ან uid)
             if (order.buyerUid === user.uid || order.uid === user.uid) {
                 hasOrders = true;
                 const date = new Date(order.timestamp).toLocaleDateString();
+                const statusText = order.status === 'paid_with_akho' ? 'მიღებულია' : 'დასრულებული';
+                const statusColor = order.status === 'paid_with_akho' ? 'var(--gold)' : '#4ade80';
+
                 ordersHtml += `
-                    <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px;">
-                        <b style="color:white;">${order.productName}</b>
-                        <div style="color:var(--gold); font-weight:bold;">${order.paidAmount} AKHO</div>
-                        <small style="color:gray;">${date} - სტატუსი: ${order.status}</small>
+                    <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                            <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
+                            <span style="color:gray; font-size:11px;">${date}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <span style="color:#00ff00; font-weight:bold; font-size:14px;">${order.paidAmount} AKHO</span>
+                            </div>
+                            <span style="font-size:11px; color:${statusColor}; border:1px solid ${statusColor}; padding:2px 8px; border-radius:5px;">
+                                ${statusText}
+                            </span>
+                        </div>
                     </div>`;
             }
         });
 
         if (!hasOrders) {
-            content.innerHTML += `<p style="color:gray;">შეკვეთები ვერ მოიძებნა.</p>`;
+            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%; text-align:center;">ჩემი შეკვეთები 📦</h2>
+                                 <p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ მოიძებნა.</p>`;
         } else {
             content.innerHTML = ordersHtml;
         }
+    }).catch(err => {
+        console.error("Firebase Error:", err);
+        content.innerHTML = `<p style="color:red; text-align:center;">შეცდომა მონაცემების წაკითხვისას.</p>`;
     });
 }
 
