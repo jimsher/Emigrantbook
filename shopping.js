@@ -18,7 +18,7 @@ function toggleStoreManager() {
     }
 }
 
-// 2. პროდუქტის ატვირთვა imgBB-ზე და შენახვა (STRIPE სრულად მოშორებულია)
+// 2. პროდუქტის ატვირთვა - გასწორებული ვერსია (Stripe-ის გარეშე)
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
@@ -27,14 +27,14 @@ async function saveProductToFirebase() {
     const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
 
-    // მნიშვნელობების აღება (მხოლოდ ის რაც HTML-ში გაქვს)
+    // ვიღებთ მნიშვნელობებს (მხოლოდ იმას, რაც HTML-ში გვაქვს)
     const file = fileInput ? fileInput.files[0] : null;
     const name = nameInput ? nameInput.value.trim() : "";
     const price = priceInput ? priceInput.value.trim() : "";
     const desc = descInput ? descInput.value.trim() : "";
-    const cat = catInput ? catInput.value : "ნივთები";
+    const cat = catInput ? catInput.value : "all";
 
-    // ვალიდაცია: მხოლოდ სახელი, ფასი და ფოტო
+    // ვალიდაცია: მხოლოდ სახელი, ფასი და ფოტოა სავალდებულო
     if (!file || !name || !price) {
         return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
     }
@@ -53,7 +53,7 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
-            // Firebase-ში შენახვა Stripe-ის გარეშე
+            // Firebase-ში ვინახავთ მხოლოდ საჭირო ინფორმაციას
             await db.ref('akhoStore').push({
                 name: name,
                 price: parseFloat(price),
@@ -63,14 +63,11 @@ async function saveProductToFirebase() {
                 timestamp: Date.now()
             });
 
-            alert("ნივთი წარმატებით დაემატა! ✅");
+            alert("ნივთი დაემატა მაღაზიაში! ✅");
             location.reload();
-        } else {
-            alert("ფოტოს ატვირთვის შეცდომა imgBB-ზე.");
         }
     } catch (e) {
-        console.error("Error:", e);
-        alert("შეცდომა: " + e.message);
+        alert("შეცდომაა: " + e.message);
     } finally {
         btn.disabled = false;
         btn.innerText = "გამოქვეყნება 🚀";
