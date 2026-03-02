@@ -308,7 +308,7 @@ async function processOrderAndPay() {
         // 2. შეკვეთის შენახვა ისტორიაში (აუცილებლად 'buyerUid' ველით საძიებლად)
         await db.ref('orders').push({
             buyerUid: user.uid,
-            buyerName: fName + " " + lName,
+            buyerName: fName + " " + lName, // აქ სწორად აერთიანებს სახელს და გვარს
             country: country,
             city: city,
             address: addr,
@@ -316,6 +316,7 @@ async function processOrderAndPay() {
             email: email,
             productName: currentProduct.name,
             paidAmount: totalPrice,
+            price: totalPrice, // დავამატე მხოლოდ ეს, რომ ადმინ პანელში undefined აღარ ეწეროს
             status: "paid_with_akho",
             timestamp: Date.now()
         });
@@ -332,6 +333,8 @@ async function processOrderAndPay() {
         if (btn) { btn.disabled = false; btn.innerText = "გადახდა 🚀"; }
     }
 }
+
+        
 
 // დეტალები
 function showProductDetails(id) {
