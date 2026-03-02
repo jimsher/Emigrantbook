@@ -13,11 +13,12 @@ function toggleStoreManager() {
         const isOpening = (section.style.display === 'none' || section.style.display === '');
         section.style.display = isOpening ? 'block' : 'none';
         
+        // თუ პანელს ვხსნით, ეგრევე ჩატვირთოს ნივთების სია წასაშლელად
         if (isOpening) renderAdminProductList();
     }
 }
 
-// 2. პროდუქტის ატვირთვა - აქ საერთოდ აღარ არსებობს Stripe-ის ცვლადი
+// 2. პროდუქტის ატვირთვა - გასწორებული ვერსია (Stripe-ის გარეშე)
 async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
@@ -26,15 +27,14 @@ async function saveProductToFirebase() {
     const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
 
-    if (!fileInput || !nameInput || !priceInput) return;
-
-    const file = fileInput.files[0];
-    const name = nameInput.value.trim();
-    const price = priceInput.value.trim();
+    // ვიღებთ მნიშვნელობებს (მხოლოდ იმას, რაც HTML-ში გვაქვს)
+    const file = fileInput ? fileInput.files[0] : null;
+    const name = nameInput ? nameInput.value.trim() : "";
+    const price = priceInput ? priceInput.value.trim() : "";
     const desc = descInput ? descInput.value.trim() : "";
-    const cat = catInput ? catInput.value : "ნივთები";
+    const cat = catInput ? catInput.value : "all";
 
-    // ვალიდაცია: მხოლოდ ეს სამი ველი გვაინტერესებს!
+    // ვალიდაცია: მხოლოდ სახელი, ფასი და ფოტოა სავალდებულო
     if (!file || !name || !price) {
         return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
     }
@@ -53,7 +53,7 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
-            // Firebase-ში ვინახავთ მხოლოდ იმას, რაც HTML-ში გვაქვს
+            // Firebase-ში ვინახავთ მხოლოდ საჭირო ინფორმაციას
             await db.ref('akhoStore').push({
                 name: name,
                 price: parseFloat(price),
@@ -63,13 +63,11 @@ async function saveProductToFirebase() {
                 timestamp: Date.now()
             });
 
-            alert("ნივთი წარმატებით დაემატა! ✅");
+            alert("ნივთი დაემატა მაღაზიაში! ✅");
             location.reload();
-        } else {
-            alert("ფოტოს ატვირთვის შეცდომა.");
         }
     } catch (e) {
-        alert("შეცდომა: " + e.message);
+        alert("შეცდომაა: " + e.message);
     } finally {
         btn.disabled = false;
         btn.innerText = "გამოქვეყნება 🚀";
@@ -88,6 +86,39 @@ function openShopSection() {
     
     loadUserCart(); 
     renderStore('all');
+}
+
+// --- ადმინ პანელში ნივთების სიის გამოჩენა ---
+function renderAdminProductList() {
+    const listContainer = document.getElementById('adminProductList');
+    if (!listContainer) return;
+
+    db.ref('akhoStore').on('value', snap => {
+        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">არსებული ნივთები:</h4>`;
+        const data = snap.val();
+        if (!data) {
+            listContainer.innerHTML += `<p style="color:gray; font-size:12px;">მაღაზია ცარიელია</p>`;
+            return;
+        }
+
+        Object.entries(data).reverse().forEach(([id, item]) => {
+            const itemRow = document.createElement('div');
+            itemRow.style = "display:flex; align-items:center; justify-content:space-between; background:#222; padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid #333;";
+            itemRow.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${item.image}" style="width:35px; height:35px; border-radius:5px; object-fit:cover;">
+                    <div>
+                        <b style="color:white; font-size:13px; display:block;">${item.name}</b>
+                        <small style="color:var(--gold); font-size:11px;">${item.price} AKHO</small>
+                    </div>
+                </div>
+                <button onclick="deleteProduct('${id}')" style="background:#ff4d4d; border:none; color:white; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:11px;">
+                    <i class="fas fa-trash"></i> წაშლა
+                </button>
+            `;
+            listContainer.appendChild(itemRow);
+        });
+    });
 }
 
 // 4. კალათის ჩატვირთვა
@@ -121,6 +152,19 @@ function renderStore(category = 'all', btn = null) {
             if (category !== 'all' && item.category !== category) return;
             drawProductCard(id, item, grid);
         });
+    });
+}
+
+// ძებნა
+function searchProduct(query) {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+    grid.innerHTML = "";
+    const lowerQuery = query.toLowerCase();
+    allProductsStore.forEach(([id, item]) => {
+        if (item.name.toLowerCase().includes(lowerQuery)) {
+            drawProductCard(id, item, grid);
+        }
     });
 }
 
@@ -231,7 +275,7 @@ function openOrderFormFromCart(total) {
     openOrderForm();
 }
 
-// 8. გადახდა AKHO ბალანსით - აქაც ყველაფერი გასუფთავებულია
+// 8. გადახდა AKHO ბალანსით
 async function processOrderAndPay() {
     const user = auth.currentUser;
     const btn = document.querySelector("#orderFormModal button");
@@ -335,4 +379,92 @@ function deleteProduct(id) {
 function closeProductDetails() {
     const modal = document.getElementById('productDetailsModal');
     if (modal) modal.style.display = 'none';
+}
+
+// --- 1. მომხმარებლის შეკვეთების ისტორია ---
+function renderUserOrderHistory() {
+    const user = auth.currentUser;
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    
+    if (!user || !modal || !content) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+
+    content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                         <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
+    modal.style.display = 'flex';
+
+    db.ref('orders').orderByChild('buyerUid').equalTo(user.uid).on('value', snap => {
+        const data = snap.val();
+        const loadingEl = document.getElementById('ordersLoading');
+        if (loadingEl) loadingEl.remove();
+
+        if (!data) {
+            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
+                                 <p style="color:gray; text-align:center; padding:20px;">ჯერ არაფერი გიყიდია.</p>`;
+            return;
+        }
+
+        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
+        
+        Object.values(data).reverse().forEach(order => {
+            const date = new Date(order.timestamp).toLocaleDateString();
+            const statusColor = order.status === 'paid_with_akho' ? 'var(--gold)' : '#00ff00';
+            const statusText = order.status === 'paid_with_akho' ? 'მუშავდება' : 'დასრულებულია';
+
+            ordersHtml += `
+                <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <b style="color:white; font-size:14px;">${order.productName}</b>
+                        <span style="color:gray; font-size:12px;">${date}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span style="color:var(--gold); font-weight:bold; display:block;">${order.paidAmount} AKHO</span>
+                            <small style="color:gray; font-size:10px;">≈ ${(order.paidAmount * AKHO_EXCHANGE_RATE).toFixed(2)} EUR</small>
+                        </div>
+                        <span style="background:rgba(212,175,55,0.1); color:${statusColor}; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid ${statusColor}">
+                            ${statusText}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        content.innerHTML = ordersHtml;
+    });
+}
+
+// --- 2. ადმინისთვის შეკვეთების ნახვა ---
+function renderAdminOrders() {
+    const listContainer = document.getElementById('adminProductList'); 
+    if (!listContainer) return;
+
+    db.ref('orders').on('value', snap => {
+        listContainer.innerHTML = `<h4 style="color:var(--gold); margin-top:20px;">შემოსული შეკვეთები:</h4>`;
+        const data = snap.val();
+        if (!data) {
+            listContainer.innerHTML += `<p style="color:gray; font-size:12px;">შეკვეთები არ არის.</p>`;
+            return;
+        }
+
+        Object.entries(data).reverse().forEach(([id, order]) => {
+            listContainer.innerHTML += `
+                <div style="background:#1a1a1a; padding:12px; border-radius:10px; margin-bottom:10px; border:1px solid #333; text-align:left;">
+                    <div style="color:var(--gold); font-weight:bold; margin-bottom:5px;">${order.productName}</div>
+                    <div style="color:white; font-size:13px;">მყიდველი: ${order.buyerName}</div>
+                    <div style="color:#ccc; font-size:12px;">ტელ: ${order.phone}</div>
+                    <div style="color:#ccc; font-size:12px;">მისამართი: ${order.address}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px solid #222; padding-top:8px;">
+                        <b style="color:#00ff00;">${order.paidAmount} AKHO</b>
+                        <button onclick="updateOrderStatus('${id}', 'delivered')" style="background:var(--gold); border:none; padding:4px 8px; border-radius:5px; font-size:11px; font-weight:bold;">ჩაბარება ✅</button>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
+
+// სტატუსის განახლება
+function updateOrderStatus(orderId, newStatus) {
+    db.ref(`orders/${orderId}`).update({ status: newStatus })
+      .then(() => alert("სტატუსი განახლდა!"));
 }
