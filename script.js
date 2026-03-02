@@ -2116,61 +2116,47 @@ function loadMySavedPosts() {
 
 let videoStream = null;
 
+// ვიყენებთ Event Listener-ს, რომ გარანტირებულად იმუშაოს დაჭერამ
+document.addEventListener('DOMContentLoaded', () => {
+    const recordBtn = document.getElementById('recordBtn');
+    if (recordBtn) {
+        recordBtn.addEventListener('click', () => {
+            toggleCamera();
+        });
+    }
+});
+
 async function toggleCamera() {
     const video = document.getElementById('cameraStream');
     const placeholder = document.getElementById('placeholderText');
     const recordInner = document.getElementById('recordInner');
 
     if (!videoStream) {
-        // კონფიგურაცია მობილურისთვის და დესკტოპისთვის
-        const constraints = {
-            video: {
-                facingMode: "user",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            },
-            audio: false
-        };
-
         try {
-            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+            // ვცდილობთ კამერის გამოძახებას
+            videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: false 
+            });
             
-            // 🛠️ მნიშვნელოვანია: ჯერ ვუკავშირებთ ნაკადს
-            video.srcObject = videoStream;
-            
-            // 🛠️ მობილურებისთვის აუცილებელი ატრიბუტები
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            
-            // 🛠️ პირდაპირი გაშვება metadata-ს ლოდინის გარეშეც
-            video.style.display = 'block'; 
-            if (placeholder) placeholder.style.display = 'none';
-
-            await video.play();
-
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
-            console.log("კამერა ჩაირთო ✅");
-
-        } catch (err) {
-            console.error("getUserMedia error:", err);
-            // თუ 'user' კამერა არ აქვს (მაგ. კომპიუტერზე), ვცდილობთ ნებისმიერ კამერას
-            if (err.name === "OverconstrainedError" || err.name === "ConstraintNotSatisfiedError") {
-                try {
-                    videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    video.srcObject = videoStream;
-                    await video.play();
-                    video.style.display = 'block';
-                    if (placeholder) placeholder.style.display = 'none';
-                } catch (e) {
-                    alert("კამერა ვერ მოიძებნა.");
+            if (video) {
+                video.srcObject = videoStream;
+                video.setAttribute('playsinline', '');
+                video.muted = true;
+                
+                // ვაჩენთ ვიდეოს და ვრთავთ
+                video.style.display = 'block';
+                await video.play();
+                
+                if (placeholder) placeholder.style.display = 'none';
+                if (recordInner) {
+                    recordInner.style.background = '#00ff00';
+                    recordInner.style.boxShadow = '0 0 15px #00ff00';
                 }
-            } else {
-                alert("კამერა ვერ ჩაირთო. დარწმუნდით, რომ იყენებთ HTTPS-ს.");
             }
+        } catch (err) {
+            console.error("კამერის შეცდომა:", err);
+            alert("კამერა ვერ ჩაირთო. გთხოვთ გამოიყენოთ HTTPS და მისცეთ კამერის ნებართვა.");
         }
     } else {
         stopCamera();
@@ -2199,6 +2185,14 @@ function stopCamera() {
 }
 
 function closeUploadModal() {
-    document.getElementById('uploadModal').style.display = 'none';
     stopCamera();
+    const modal = document.getElementById('uploadModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function handleVideoSelect(input) {
+    if (input.files && input.files[0]) {
+        stopCamera();
+        console.log("ვიდეო არჩეულია:", input.files[0].name);
+    }
 }
