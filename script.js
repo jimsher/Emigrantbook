@@ -2116,41 +2116,34 @@ function loadMySavedPosts() {
 
 let videoStream = null;
 
-// ეს ფუნქცია იხსნება ტოკენზე დაჭერისას
+// 1. აქ შევცვალე window.videoStream უბრალოდ videoStream-ით
 async function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
-        // 1. ჯერ ვაჩენთ ფანჯარას (ზუსტად ისე, როგორც ადრე გქონდა)
         modal.style.display = 'flex';
-        
-        // 2. ეგრევე ვრთავთ კამერას
         const video = document.getElementById('cameraStream');
         const placeholder = document.getElementById('placeholderText');
 
         try {
-            // თუ კამერა უკვე ჩართულია სხვაგან, ვასუფთავებთ
-            if (window.videoStream) {
-                window.videoStream.getTracks().forEach(track => track.stop());
+            if (videoStream) { // აქაც
+                videoStream.getTracks().forEach(track => track.stop());
             }
 
-            // ვითხოვთ კამერას
-            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
+            videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "user" }, 
-                audio: false 
+                audio: true // ჩაწერისთვის აუდიო აუცილებელია!
             });
             
             if (video) {
-                video.srcObject = window.videoStream;
-                // აუცილებელი პარამეტრები, რომ მობილურზე ეგრევე გამოჩნდეს
+                video.srcObject = videoStream;
                 video.setAttribute('playsinline', '');
                 video.setAttribute('autoplay', '');
                 video.muted = true;
-                
                 video.style.display = 'block';
                 await video.play();
 
                 if (placeholder) placeholder.style.display = 'none';
-                console.log("კამერა ჩაირთო ავტომატურად ✅");
+                console.log("კამერა ჩაირთო ✅");
             }
         } catch (err) {
             console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
@@ -2254,10 +2247,10 @@ function stopCamera() {
 mediaRecorder = null; 
 videoChunks = [];
 
+// 2. ჩაწერის ფუნქციაში დავამატე MIME ტიპის შემოწმება სტაბილურობისთვის
 async function toggleRecording() {
     const recordInner = document.getElementById('recordInner');
 
-    // თუ ჩაწერა არ მიმდინარეობს - ვიწყებთ
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
         if (!videoStream) {
             alert("კამერა არ არის აქტიური!");
@@ -2265,15 +2258,18 @@ async function toggleRecording() {
         }
 
         videoChunks = [];
-        mediaRecorder = new MediaRecorder(videoStream);
+        
+        // ვამოწმებთ რომელი ფორმატია ხელმისაწვდომი (მობილურისთვის mp4/webm)
+        const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+        mediaRecorder = new MediaRecorder(videoStream, { mimeType });
 
         mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) videoChunks.push(e.data);
         };
 
         mediaRecorder.onstop = () => {
-            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
-            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
+            const videoBlob = new Blob(videoChunks, { type: mimeType });
+            const videoFile = new File([videoBlob], "captured_video.mp4", { type: mimeType });
 
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(videoFile);
