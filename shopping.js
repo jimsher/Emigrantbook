@@ -467,9 +467,9 @@ function renderUserOrderHistory() {
 
 
 // --- 2. ადმინისთვის შეკვეთების ნახვა ---
-// --- 2. ადმინისთვის შეკვეთების ნახვა (გასწორებული undefined) ---
+// --- 2. ადმინისთვის შეკვეთების ნახვა (ორიგინალი კოდი - გასწორებული სახელით) ---
 function renderAdminOrders() {
-    // შენს HTML-ში კონტეინერის ID არის "ordersList"
+    // შენი HTML-ის მიხედვით კონტეინერის ID არის "ordersList"
     const listContainer = document.getElementById('ordersList'); 
     if (!listContainer) return;
 
@@ -487,10 +487,14 @@ function renderAdminOrders() {
         Object.entries(data).reverse().forEach(([id, order]) => {
             const date = new Date(order.timestamp).toLocaleDateString();
             
-            // 🛠️ აქაც ვამატებთ შემოწმებას: თუ paidAmount არ არის, აიღოს price
+            // 🛠️ აქ ვასწორებთ ფასს (რომ undefined არ იყოს)
             const finalAmount = order.paidAmount || order.price || 0;
             
-            // ვიყენებთ ზუსტად შენს ველებს: productName, buyerName, phone, address
+            // 🛠️ აქ ვასწორებთ სახელს (რომ "უცნობი" არ იყოს)
+            // ვამოწმებთ ჯერ buyerName-ს, მერე firstName/lastName-ს
+            const fullName = order.buyerName || (order.firstName ? (order.firstName + " " + (order.lastName || "")) : "უცნობი მყიდველი");
+            
+            // ვიყენებთ ზუსტად შენს სტილს და ID-ებს
             listContainer.innerHTML += `
                 <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #333; text-align:left; margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -498,7 +502,7 @@ function renderAdminOrders() {
                         <span style="color:gray; font-size:11px;">${date}</span>
                     </div>
                     
-                    <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${order.buyerName || 'უცნობი'}</div>
+                    <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${fullName}</div>
                     <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone || '-'}</div>
                     <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${order.address || '-'}</div>
                     
