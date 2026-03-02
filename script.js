@@ -2120,9 +2120,41 @@ let videoStream = null;
 async function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
+        // 1. ჯერ ვაჩენთ ფანჯარას (ზუსტად ისე, როგორც ადრე გქონდა)
         modal.style.display = 'flex';
-        // 🛠️ ადრე რომ მუშაობდა, ზუსტად ეგრე - გახსნისთანავე რთავს კამერას
-        startLiveCamera(); 
+        
+        // 2. ეგრევე ვრთავთ კამერას
+        const video = document.getElementById('cameraStream');
+        const placeholder = document.getElementById('placeholderText');
+
+        try {
+            // თუ კამერა უკვე ჩართულია სხვაგან, ვასუფთავებთ
+            if (window.videoStream) {
+                window.videoStream.getTracks().forEach(track => track.stop());
+            }
+
+            // ვითხოვთ კამერას
+            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: false 
+            });
+            
+            if (video) {
+                video.srcObject = window.videoStream;
+                // აუცილებელი პარამეტრები, რომ მობილურზე ეგრევე გამოჩნდეს
+                video.setAttribute('playsinline', '');
+                video.setAttribute('autoplay', '');
+                video.muted = true;
+                
+                video.style.display = 'block';
+                await video.play();
+
+                if (placeholder) placeholder.style.display = 'none';
+                console.log("კამერა ჩაირთო ავტომატურად ✅");
+            }
+        } catch (err) {
+            console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
+        }
     }
 }
 
