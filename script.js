@@ -2209,32 +2209,93 @@ async function startLiveCamera() {
 }
 
 // იქსის ღილაკი - თიშავს ყველაფერს
+// 1. ფანჯრის დახურვა
 function closeUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) modal.style.display = 'none';
     stopCamera();
 }
 
+// 2. კამერის გათიშვა
 function stopCamera() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
         videoStream = null;
     }
     const video = document.getElementById('cameraStream');
+    const placeholder = document.getElementById('placeholderText');
+    const recordInner = document.getElementById('recordInner');
+    
     if (video) {
         video.pause();
         video.srcObject = null;
         video.style.display = 'none';
     }
-    const placeholder = document.getElementById('placeholderText');
     if (placeholder) placeholder.style.display = 'block';
+    
+    // ღილაკის ფორმის დაბრუნება (თუ ჩაწერისას გათიშა)
+    if (recordInner) {
+        recordInner.style.borderRadius = "50%";
+        recordInner.style.background = "#ff4d4d";
+        recordInner.style.transform = "scale(1)";
+    }
 }
 
+// 3. ვიდეოს ჩაწერის ლოგიკა (ახალი)
+let mediaRecorder;
+let videoChunks = [];
 
+async function toggleRecording() {
+    const recordInner = document.getElementById('recordInner');
 
+    // თუ ჩაწერა არ მიმდინარეობს - ვიწყებთ
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        if (!videoStream) {
+            alert("ჯერ ჩართეთ კამერა!");
+            return;
+        }
 
+        videoChunks = [];
+        mediaRecorder = new MediaRecorder(videoStream);
 
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) videoChunks.push(e.data);
+        };
 
+        mediaRecorder.onstop = () => {
+            // ვქმნით ვიდეო ფაილს
+            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
+            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
 
+            // ფაილის გადაცემა ინფუთისთვის (რომ ატვირთვა ამუშავდეს)
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(videoFile);
+            const videoInput = document.getElementById('videoInput');
+            if (videoInput) videoInput.files = dataTransfer.files;
 
+            alert("ვიდეო მზადაა! ახლა დააჭირეთ ატვირთვის ღილაკს.");
 
+            // ღილაკის ფორმის რესეტი
+            if (recordInner) {
+                recordInner.style.borderRadius = "50%";
+                recordInner.style.transform = "scale(1)";
+                recordInner.style.background = "#ff4d4d";
+            }
+        };
+
+        mediaRecorder.start();
+        console.log("ჩაწერა დაიწყო...");
+
+        // ვიზუალური ეფექტი: ღილაკი ხდება კვადრატული
+        if (recordInner) {
+            recordInner.style.borderRadius = "8px"; 
+            recordInner.style.transform = "scale(0.8)";
+            recordInner.style.background = "#ff0000";
+        }
+    } 
+    // თუ უკვე იწერს - ვაჩერებთ
+    else {
+        mediaRecorder.stop();
+        console.log("ჩაწერა შეწყდა.");
+    }
+}
