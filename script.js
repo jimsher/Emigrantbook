@@ -2101,3 +2101,59 @@ function loadMySavedPosts() {
         }
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+let stream = null;
+
+async function toggleCamera() {
+    const video = document.getElementById('cameraStream');
+    const placeholder = document.getElementById('placeholderText');
+    const recordInner = document.getElementById('recordInner');
+
+    if (!stream) {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            placeholder.style.display = 'none';
+            recordInner.style.backgroundColor = '#00ff00'; // მწვანე როცა ჩართულია
+        } catch (err) {
+            alert("კამერაზე წვდომა უარყოფილია!");
+        }
+    } else {
+        stopCamera();
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    document.getElementById('cameraStream').style.display = 'none';
+    document.getElementById('placeholderText').style.display = 'block';
+    document.getElementById('recordInner').style.backgroundColor = '#ff4d4d';
+}
+
+function closeUploadModal() {
+    stopCamera();
+    document.getElementById('uploadModal').style.display = 'none';
+}
+
+function handleVideoSelect(input) {
+    if (input.files && input.files[0]) {
+        alert("ვიდეო არჩეულია: " + input.files[0].name + " \nახლა დააჭირეთ ატვირთვის ღილაკს.");
+        stopCamera(); // თუ კამერა ჩართული იყო, ვთიშავთ
+    }
+}
