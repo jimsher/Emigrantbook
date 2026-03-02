@@ -313,6 +313,7 @@ function declineCall() {
  toggleSideMenu(false);
  document.getElementById('adminUI').style.display = 'flex';
  loadAdminRequests();
+ renderAdminOrders();
  }
 
  function adminSearchUsers(q) {
