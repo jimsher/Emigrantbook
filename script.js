@@ -2133,21 +2133,28 @@ async function toggleCamera() {
         try {
             // ვითხოვთ წვდომას კამერასა და მიკროფონზე
             videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
+                video: true, // შევცვალე უფრო მარტივით, რომ ყველა მოწყობილობაზე წავიდეს
                 audio: true 
             });
             
             video.srcObject = videoStream;
-            video.style.display = 'block'; // ვაჩენთ ვიდეოს
-            if(placeholder) placeholder.style.display = 'none'; // ვაქრობთ აიქონს
             
-            // ვიზუალური ეფექტი ღილაკზე - მივახვედროთ მომხმარებელი რომ ჩაირთო
-            recordInner.style.background = '#00ff00'; 
-            recordInner.style.boxShadow = '0 0 15px #00ff00';
+            // 🛠️ აი ეს დაემატა: ბრძანება, რომ ვიდეომ ჩვენება დაიწყოს
+            video.onloadedmetadata = () => {
+                video.play();
+                video.style.display = 'block'; 
+                if(placeholder) placeholder.style.display = 'none';
+            };
+            
+            // ვიზუალური ეფექტი ღილაკზე
+            if(recordInner) {
+                recordInner.style.background = '#00ff00';  
+                recordInner.style.boxShadow = '0 0 15px #00ff00';
+            }
             
         } catch (err) {
             console.error("კამერის შეცდომა:", err);
-            alert("კამერა ვერ ჩაირთო. გთხოვთ, მოგვცეთ ნებართვა ბრაუზერის პარამეტრებიდან.");
+            alert("კამერა ვერ ჩაირთო. გთხოვთ, შეამოწმოთ ნებართვები ბრაუზერში.");
         }
     } else {
         stopCamera();
@@ -2164,7 +2171,11 @@ function stopCamera() {
     const placeholder = document.getElementById('placeholderText');
     const recordInner = document.getElementById('recordInner');
     
-    if(video) video.style.display = 'none';
+    if(video) {
+        video.pause();
+        video.srcObject = null;
+        video.style.display = 'none';
+    }
     if(placeholder) placeholder.style.display = 'block';
     if(recordInner) {
         recordInner.style.background = '#ff4d4d';
@@ -2176,7 +2187,6 @@ function stopCamera() {
 function handleVideoSelect(input) {
     if (input.files && input.files[0]) {
         stopCamera();
-        // აქ შეგიძლია დაამატო მინიშნება, რომ ვიდეო მზადაა ასატვირთად
         console.log("ვიდეო არჩეულია:", input.files[0].name);
     }
 }
