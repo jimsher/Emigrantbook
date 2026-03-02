@@ -467,9 +467,8 @@ function renderUserOrderHistory() {
 
 
 // --- 2. ადმინისთვის შეკვეთების ნახვა ---
-// --- 2. ადმინისთვის შეკვეთების ნახვა (ორიგინალი კოდი - გასწორებული სახელით) ---
+// --- 2. ადმინისთვის შეკვეთების ნახვა (სრული ინფორმაციით) ---
 function renderAdminOrders() {
-    // შენი HTML-ის მიხედვით კონტეინერის ID არის "ordersList"
     const listContainer = document.getElementById('ordersList'); 
     if (!listContainer) return;
 
@@ -481,20 +480,16 @@ function renderAdminOrders() {
             return;
         }
 
-        listContainer.innerHTML = ""; // ვასუფთავებთ ძველ მონაცემებს
+        listContainer.innerHTML = "";
         
-        // ვატრიალებთ სიას, რომ უახლესი შეკვეთა პირველი გამოჩნდეს
         Object.entries(data).reverse().forEach(([id, order]) => {
             const date = new Date(order.timestamp).toLocaleDateString();
-            
-            // 🛠️ აქ ვასწორებთ ფასს (რომ undefined არ იყოს)
             const finalAmount = order.paidAmount || order.price || 0;
-            
-            // 🛠️ აქ ვასწორებთ სახელს (რომ "უცნობი" არ იყოს)
-            // ვამოწმებთ ჯერ buyerName-ს, მერე firstName/lastName-ს
             const fullName = order.buyerName || (order.firstName ? (order.firstName + " " + (order.lastName || "")) : "უცნობი მყიდველი");
             
-            // ვიყენებთ ზუსტად შენს სტილს და ID-ებს
+            // ვაწყობთ სრულ მისამართს: ქვეყანა, ქალაქი, მისამართი
+            const fullLocation = `${order.country || ''} ${order.city || ''}, ${order.address || '-'}`;
+
             listContainer.innerHTML += `
                 <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #333; text-align:left; margin-bottom:10px;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
@@ -503,8 +498,9 @@ function renderAdminOrders() {
                     </div>
                     
                     <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${fullName}</div>
+                    <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📧 მეილი: ${order.email || '-'}</div>
                     <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone || '-'}</div>
-                    <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${order.address || '-'}</div>
+                    <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${fullLocation}</div>
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
                         <b style="color:#00ff00; font-size:15px;">${finalAmount} AKHO</b>
@@ -522,7 +518,6 @@ function renderAdminOrders() {
         });
     });
 }
-
 // სტატუსის განახლება
 function updateOrderStatus(orderId, newStatus) {
     db.ref(`orders/${orderId}`).update({ status: newStatus })
