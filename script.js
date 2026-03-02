@@ -2133,18 +2133,26 @@ async function toggleCamera() {
         try {
             // ვითხოვთ წვდომას კამერასა და მიკროფონზე
             videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: true, // შევცვალე უფრო მარტივით, რომ ყველა მოწყობილობაზე წავიდეს
-                audio: true 
+                video: {
+                    facingMode: "user",
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }, 
+                audio: false // აუდიო გავთიშე, რომ სტვენა (feedback) არ დაიწყოს ჩართვისას
             });
+            
+            // 🛠️ აუცილებელი პარამეტრები მობილურებისთვის
+            video.setAttribute('autoplay', '');
+            video.setAttribute('muted', '');
+            video.setAttribute('playsinline', '');
             
             video.srcObject = videoStream;
             
-            // 🛠️ აი ეს დაემატა: ბრძანება, რომ ვიდეომ ჩვენება დაიწყოს
-            video.onloadedmetadata = () => {
-                video.play();
-                video.style.display = 'block'; 
-                if(placeholder) placeholder.style.display = 'none';
-            };
+            // 🛠️ პირდაპირი გაშვება
+            await video.play();
+            
+            video.style.display = 'block'; 
+            if(placeholder) placeholder.style.display = 'none';
             
             // ვიზუალური ეფექტი ღილაკზე
             if(recordInner) {
@@ -2152,9 +2160,11 @@ async function toggleCamera() {
                 recordInner.style.boxShadow = '0 0 15px #00ff00';
             }
             
+            console.log("კამერა წარმატებით ჩაირთო ✅");
+            
         } catch (err) {
             console.error("კამერის შეცდომა:", err);
-            alert("კამერა ვერ ჩაირთო. გთხოვთ, შეამოწმოთ ნებართვები ბრაუზერში.");
+            alert("შეცდომა: კამერა ვერ ჩაირთო. შეამოწმეთ, რომ საიტი იყენებს HTTPS-ს და გაქვთ მიცემული ნებართვა.");
         }
     } else {
         stopCamera();
