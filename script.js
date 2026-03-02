@@ -2114,11 +2114,19 @@ function loadMySavedPosts() {
 
 
 
-// --- კამერის და ჩაწერის ერთიანი სისტემა ---
+
+
+
+
+// --- 1. გლობალური ცვლადები (მხოლოდ ერთხელ) ---
 let mediaRecorder = null;
 let videoChunks = [];
+// მნიშვნელოვანია: ვიყენებთ მხოლოდ ერთ ცვლადს ნაკადისთვის
+if (typeof videoStream === 'undefined') {
+    var videoStream = null; 
+}
 
-// 1. ფანჯრის გახსნა და კამერის ავტომატური ჩართვა
+// --- 2. ფანჯრის გახსნა და კამერის ავტომატური ჩართვა ---
 async function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
@@ -2126,28 +2134,33 @@ async function openUploadModal() {
         
         const video = document.getElementById('cameraStream');
         const placeholder = document.getElementById('placeholderText');
+        const recordInner = document.getElementById('recordInner');
 
         try {
-            // თუ ძველი ნაკადი არსებობს, ვთიშავთ
-            if (window.videoStream) {
-                window.videoStream.getTracks().forEach(track => track.stop());
+            // თუ ძველი ნაკადი არსებობს, ვთიშავთ რესეტისთვის
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
             }
 
             // ვიღებთ ახალ ნაკადს
-            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
+            videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "user" }, 
                 audio: true 
             });
             
             if (video) {
-                video.srcObject = window.videoStream;
+                video.srcObject = videoStream;
                 video.setAttribute('playsinline', '');
                 video.setAttribute('autoplay', '');
-                video.muted = true;
+                video.muted = true; // პრევიუ ყოველთვის დამიუტებული
                 video.style.display = 'block';
                 await video.play();
 
                 if (placeholder) placeholder.style.display = 'none';
+                if (recordInner) {
+                    recordInner.style.background = '#ff4d4d'; // საწყისი ფერი
+                    recordInner.style.borderRadius = "50%";
+                }
                 console.log("კამერა ჩაირთო ✅");
             }
         } catch (err) {
@@ -2157,73 +2170,60 @@ async function openUploadModal() {
     }
 }
 
-async function startLiveCamera() {
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
+// --- 3. გადაღების ღილაკის ფუნქცია (START/STOP) ---
+async function toggleRecording() {
     const recordInner = document.getElementById('recordInner');
 
-    // თუ უკვე მუშაობს ნაკადი, ჯერ გავთიშოთ (რომ არ "გაიჭედოს")
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-        // ტელეფონის კამერის გამოძახება
-        videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        });
-        
-        if (video) {
-            video.srcObject = videoStream;
-            // ეს ატრიბუტებია აუცილებელი, რომ ვიდეო ეგრევე გამოჩნდეს
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.muted = true; // პრევიუზე ხმა რომ არ ჰქონდეს
-
-            // 🛠️ ძალისმიერი გაშვება
-            video.play();
-            
-            video.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
+    // თუ არ იწერს - ვიწყებთ
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        if (!videoStream) {
+            alert("კამერა არ არის აქტიური!");
+            return;
         }
-    } catch (err) {
-        console.error("Camera Error:", err);
-        // თუ სელფი კამერა (user) ვერ იპოვა, ვცდით ნებისმიერ ხელმისაწვდომს
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-                video.play();
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            })
-            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
+
+        videoChunks = [];
+        // ვირჩევთ ფორმატს სტაბილურობისთვის
+        const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+        mediaRecorder = new MediaRecorder(videoStream, { mimeType });
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) videoChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const videoBlob = new Blob(videoChunks, { type: mimeType });
+            const videoFile = new File([videoBlob], "captured_video.mp4", { type: mimeType });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(videoFile);
+            const videoInput = document.getElementById('videoInput');
+            if (videoInput) videoInput.files = dataTransfer.files;
+
+            alert("ვიდეო მზადაა! დააჭირეთ ატვირთვას.");
+
+            if (recordInner) {
+                recordInner.style.borderRadius = "50%";
+                recordInner.style.background = "#ff4d4d";
+                recordInner.style.transform = "scale(1)";
+            }
+        };
+
+        mediaRecorder.start();
+        console.log("ჩაწერა დაიწყო...");
+
+        if (recordInner) {
+            recordInner.style.borderRadius = "8px"; // ხდება კვადრატული
+            recordInner.style.background = "#ff0000";
+            recordInner.style.transform = "scale(0.8)";
+        }
+    } else {
+        // თუ უკვე იწერს - ვაჩერებთ
+        mediaRecorder.stop();
+        console.log("ჩაწერა შეწყდა.");
     }
 }
 
-
-
-
-
-
-
-
-
-// იქსის ღილაკი - თიშავს ყველაფერს
-// 1. ფანჯრის დახურვა
-function closeUploadModal() {
-    const modal = document.getElementById('uploadModal');
-    if (modal) modal.style.display = 'none';
-    stopCamera();
-}
-
-// 2. კამერის გათიშვა
+// --- 4. დახურვა და გათიშვა ---
 function stopCamera() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
@@ -2240,7 +2240,6 @@ function stopCamera() {
     }
     if (placeholder) placeholder.style.display = 'block';
     
-    // ღილაკის ფორმის დაბრუნება
     if (recordInner) {
         recordInner.style.borderRadius = "50%";
         recordInner.style.background = "#ff4d4d";
@@ -2249,51 +2248,8 @@ function stopCamera() {
     }
 }
 
-// 3. ვიდეოს ჩაწერის ლოგიკა (ცვლადები let-ის გარეშე, რომ არ აირიოს)
-mediaRecorder = null; 
-videoChunks = [];
-
-// 2. გადაღების ღილაკის ფუნქცია (START/STOP)
-async function toggleRecording() {
-    const recordInner = document.getElementById('recordInner');
-
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        if (!window.videoStream) {
-            alert("კამერა არ არის აქტიური!");
-            return;
-        }
-
-        videoChunks = [];
-        mediaRecorder = new MediaRecorder(window.videoStream);
-
-        mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) videoChunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
-            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
-
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(videoFile);
-            const videoInput = document.getElementById('videoInput');
-            if (videoInput) videoInput.files = dataTransfer.files;
-
-            alert("ვიდეო მზადაა! დააჭირეთ ატვირთვას.");
-
-            if (recordInner) {
-                recordInner.style.borderRadius = "50%";
-                recordInner.style.background = "#ff4d4d";
-            }
-        };
-
-        mediaRecorder.start();
-        if (recordInner) {
-            recordInner.style.borderRadius = "8px"; 
-            recordInner.style.background = "#ff0000";
-        }
-    } else {
-        mediaRecorder.stop();
-    }
+function closeUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) modal.style.display = 'none';
+    stopCamera();
 }
-            
