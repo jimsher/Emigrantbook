@@ -2118,36 +2118,37 @@ function loadMySavedPosts() {
 
 
 
-    // გლობალური ცვლადები (მხოლოდ ერთხელ გამოცხადებული)
-var videoStream = null;
-var mediaRecorder = null;
-var videoChunks = [];
+    
+       // --- კამერის და ჩაწერის ერთიანი სისტემა ---
+let mediaRecorder = null;
+let videoChunks = [];
 
 // 1. ფანჯრის გახსნა და კამერის ავტომატური ჩართვა
 async function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
         modal.style.display = 'flex';
+        
         const video = document.getElementById('cameraStream');
         const placeholder = document.getElementById('placeholderText');
 
         try {
-            // თუ კამერა უკვე ჩართულია, ჯერ ვთიშავთ რესეტისთვის
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
+            // თუ ძველი ნაკადი არსებობს, ვთიშავთ
+            if (window.videoStream) {
+                window.videoStream.getTracks().forEach(track => track.stop());
             }
 
-            // ვიღებთ ახალ ნაკადს (ვიდეო + აუდიო ჩაწერისთვის)
-            videoStream = await navigator.mediaDevices.getUserMedia({ 
+            // ვიღებთ ახალ ნაკადს
+            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "user" }, 
                 audio: true 
             });
             
             if (video) {
-                video.srcObject = videoStream;
+                video.srcObject = window.videoStream;
                 video.setAttribute('playsinline', '');
                 video.setAttribute('autoplay', '');
-                video.muted = true; // პრევიუ ყოველთვის დამიუტებული
+                video.muted = true;
                 video.style.display = 'block';
                 await video.play();
 
@@ -2156,30 +2157,31 @@ async function openUploadModal() {
             }
         } catch (err) {
             console.error("კამერის შეცდომა:", err);
-            alert("კამერა ვერ ჩაირთო. შეამოწმეთ HTTPS.");
+            alert("კამერა ვერ ჩაირთო. შეამოწმეთ HTTPS და ნებართვები.");
         }
     }
 }
 
-// 2. ჩაწერის ფუნქცია (START/STOP) - მიბმული შუა ღილაკზე
+// 2. გადაღების ღილაკის ფუნქცია (START/STOP)
 async function toggleRecording() {
     const recordInner = document.getElementById('recordInner');
 
-    // თუ არ იწერს - ვიწყებთ
     if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        if (!videoStream) return alert("კამერა არ არის აქტიური!");
+        if (!window.videoStream) {
+            alert("კამერა არ არის აქტიური!");
+            return;
+        }
 
         videoChunks = [];
-        const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
-        mediaRecorder = new MediaRecorder(videoStream, { mimeType });
+        mediaRecorder = new MediaRecorder(window.videoStream);
 
         mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) videoChunks.push(e.data);
         };
 
         mediaRecorder.onstop = () => {
-            const videoBlob = new Blob(videoChunks, { type: mimeType });
-            const videoFile = new File([videoBlob], "captured_video.mp4", { type: mimeType });
+            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
+            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
 
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(videoFile);
@@ -2196,7 +2198,7 @@ async function toggleRecording() {
 
         mediaRecorder.start();
         if (recordInner) {
-            recordInner.style.borderRadius = "8px"; // ხდება კვადრატული
+            recordInner.style.borderRadius = "8px"; 
             recordInner.style.background = "#ff0000";
         }
     } else {
@@ -2204,11 +2206,11 @@ async function toggleRecording() {
     }
 }
 
-// 3. გათიშვა და დახურვა
+// 3. კამერის გათიშვა და დახურვა
 function stopCamera() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
+    if (window.videoStream) {
+        window.videoStream.getTracks().forEach(track => track.stop());
+        window.videoStream = null;
     }
     const video = document.getElementById('cameraStream');
     const placeholder = document.getElementById('placeholderText');
@@ -2223,4 +2225,4 @@ function stopCamera() {
 function closeUploadModal() {
     document.getElementById('uploadModal').style.display = 'none';
     stopCamera();
-}
+}     
