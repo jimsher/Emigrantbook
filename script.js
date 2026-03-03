@@ -1,4 +1,4 @@
-const firebaseConfig = { 
+  const firebaseConfig = { 
   apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
   authDomain: "emigrantbook.firebaseapp.com", 
   databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
@@ -1369,6 +1369,8 @@ function togglePlayPause(vid) {
 
                                     
 function renderTokenFeed() {
+  activeLikeIntervals.forEach(interval => clearInterval(interval));
+    activeLikeIntervals = [];
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
