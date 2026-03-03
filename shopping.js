@@ -191,6 +191,7 @@ function drawProductCard(id, item, grid) {
     card.onclick = () => showProductDetails(id); 
     card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
     
+    // ძირითადი ფასის კონვერტაცია
     const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
 
     // --- თეგების ლოგიკა ---
@@ -200,23 +201,26 @@ function drawProductCard(id, item, grid) {
         <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
     `;
 
-    // 1. SALE თეგი და ძველი ფასი (თუ oldPrice არსებობს)
+    // 1. SALE თეგი და ძველი ფასი (თუ oldPrice არსებობს და მეტია მიმდინარეზე)
     if (item.oldPrice && item.oldPrice > item.price) {
         badge = `<div style="position:absolute; top:8px; left:8px; background:#ff4d4d; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">SALE</div>`;
+        
+        // ძველი ფასის კონვერტაცია EUR-ში გადახაზვისთვის
         const oldEurPrice = (item.oldPrice * AKHO_EXCHANGE_RATE).toFixed(2);
+        
         priceDisplay = `
             <div style="display:flex; flex-direction:column;">
-                <span style="color:#666; text-decoration:line-through; font-size:11px;">${item.oldPrice} AKHO</span>
-                <span style="color:var(--gold); font-weight:bold; display:block; font-size:15px;">${item.price} AKHO</span>
+                <span style="color:#666; text-decoration:line-through; font-size:11px; line-height: 1.2;">${item.oldPrice} AKHO (≈ ${oldEurPrice} €)</span>
+                <span style="color:var(--gold); font-weight:bold; display:block; font-size:15px; margin-top:2px;">${item.price} AKHO</span>
                 <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
             </div>
         `;
     } 
-    // 2. NEW თეგი (თუ item.isNew არის true)
+    // 2. NEW თეგი (მხოლოდ თუ SALE არ არის)
     else if (item.isNew) {
         badge = `<div style="position:absolute; top:8px; left:8px; background:#007bff; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEW</div>`;
     }
-    // 3. TOP SELLER / HOT თეგი (თუ item.isHot არის true)
+    // 3. HOT თეგი (მხოლოდ თუ წინა ორი არ არის)
     else if (item.isHot) {
         badge = `<div style="position:absolute; top:8px; left:8px; background:#ff9800; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">🔥 HOT</div>`;
     }
@@ -225,7 +229,7 @@ function drawProductCard(id, item, grid) {
         ${badge}
         <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
         <div style="padding:10px 0;">
-            <b style="color:white; font-size:14px;">${item.name}</b>
+            <b style="color:white; font-size:14px; display:block; height:18px; overflow:hidden;">${item.name}</b>
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
                 <div>
                     ${priceDisplay}
