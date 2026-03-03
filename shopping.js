@@ -609,8 +609,6 @@ function renderAdminOrders() {
             const date = new Date(order.timestamp).toLocaleDateString();
             const finalAmount = order.paidAmount || order.price || 0;
             const fullName = order.buyerName || (order.firstName ? (order.firstName + " " + (order.lastName || "")) : "უცნობი მყიდველი");
-            
-            // ვაწყობთ სრულ მისამართს: ქვეყანა, ქალაქი, მისამართი
             const fullLocation = `${order.country || ''} ${order.city || ''}, ${order.address || '-'}`;
 
             listContainer.innerHTML += `
@@ -625,15 +623,20 @@ function renderAdminOrders() {
                     <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone || '-'}</div>
                     <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${fullLocation}</div>
                     
+                    <div style="display:flex; gap:5px; margin-bottom:12px;">
+                        <input type="text" id="loc_${id}" placeholder="მდებარეობა" value="${order.location || ''}" style="flex:1; background:#222; border:1px solid #444; color:white; font-size:11px; padding:5px; border-radius:5px;">
+                        <input type="text" id="eta_${id}" placeholder="ETA დრო" value="${order.eta || ''}" style="flex:1; background:#222; border:1px solid #444; color:white; font-size:11px; padding:5px; border-radius:5px;">
+                    </div>
+
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; padding-top:10px;">
                         <b style="color:#00ff00; font-size:15px;">${finalAmount} AKHO</b>
                         
-                        <div style="display:flex; gap:8px;">
-                            ${order.status === 'paid_with_akho' ? 
-                                `<button onclick="updateOrderStatus('${id}', 'delivered')" style="background:var(--gold); border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:bold; color:black; cursor:pointer;">ჩაბარება ✅</button>` : 
-                                `<span style="color:#4ade80; font-size:11px; font-weight:bold;">ჩაბარებულია</span>`
-                            }
-                            <i class="fas fa-trash-alt" onclick="if(confirm('წაიშალოს?')) db.ref('orders/${id}').remove()" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
+                        <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button onclick="updateOrderStatus('${id}', 'shipped')" style="background:#222; border:1px solid var(--gold); padding:5px 8px; border-radius:6px; font-size:10px; color:var(--gold); cursor:pointer;">🚚 გზაშია</button>
+                            
+                            <button onclick="updateOrderStatus('${id}', 'arrived')" style="background:var(--gold); border:none; padding:5px 8px; border-radius:6px; font-size:10px; font-weight:bold; color:black; cursor:pointer;">✅ ჩამოვიდა</button>
+                            
+                            <i class="fas fa-trash-alt" onclick="if(confirm('წაიშალოს?')) db.ref('orders/${id}').remove()" style="color:#ff4d4d; cursor:pointer; padding:5px; margin-left:5px;"></i>
                         </div>
                     </div>
                 </div>
@@ -641,20 +644,18 @@ function renderAdminOrders() {
         });
     });
 }
-// სტატუსის განახლება
+
+
 function updateOrderStatus(orderId, newStatus) {
-    db.ref(`orders/${orderId}`).update({ status: newStatus })
-      .then(() => alert("სტატუსი განახლდა! ✅"))
-      .catch(err => alert("შეცდომა: " + err.message));
+    // ვიღებთ მნიშვნელობებს კონკრეტული შეკვეთის ინფუთებიდან
+    const locationVal = document.getElementById(`loc_${orderId}`).value;
+    const etaVal = document.getElementById(`eta_${orderId}`).value;
+
+    db.ref(`orders/${orderId}`).update({ 
+        status: newStatus,
+        location: locationVal,
+        eta: etaVal
+    })
+    .then(() => alert("სტატუსი და გზავნილის ინფორმაცია განახლდა! ✅"))
+    .catch(err => alert("შეცდომა: " + err.message));
 }
-
-
-
-
-
-
-
-
-
-
-
