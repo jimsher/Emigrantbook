@@ -1,3 +1,5 @@
+
+
 const firebaseConfig = { 
   apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
   authDomain: "emigrantbook.firebaseapp.com", 
@@ -2100,4 +2102,155 @@ function loadMySavedPosts() {
             grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
         }
     });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- კამერის და ჩაწერის ერთიანი სისტემა ---
+let mediaRecorder = null;
+let videoChunks = [];
+
+// 1. ფანჯრის გახსნა და კამერის ავტომატური ჩართვა
+async function openUploadModal() {
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        const video = document.getElementById('cameraStream');
+        const placeholder = document.getElementById('placeholderText');
+
+        try {
+            // თუ ძველი ნაკადი არსებობს, ვთიშავთ
+            if (window.videoStream) {
+                window.videoStream.getTracks().forEach(track => track.stop());
+            }
+
+            // ვიღებთ ახალ ნაკადს
+            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: true 
+            });
+            
+            if (video) {
+                video.srcObject = window.videoStream;
+                video.setAttribute('playsinline', '');
+                video.setAttribute('autoplay', '');
+                video.muted = true;
+                video.style.display = 'block';
+                await video.play();
+
+                if (placeholder) placeholder.style.display = 'none';
+                console.log("კამერა ჩაირთო ✅");
+            }
+        } catch (err) {
+            console.error("კამერის შეცდომა:", err);
+            alert("კამერა ვერ ჩაირთო. შეამოწმეთ HTTPS და ნებართვები.");
+        }
+    }
+}
+
+// 2. გადაღების ღილაკის ფუნქცია (START/STOP)
+async function toggleRecording() {
+    const recordInner = document.getElementById('recordInner');
+
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        if (!window.videoStream) {
+            alert("კამერა არ არის აქტიური!");
+            return;
+        }
+
+        videoChunks = [];
+        mediaRecorder = new MediaRecorder(window.videoStream);
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) videoChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
+            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(videoFile);
+            const videoInput = document.getElementById('videoInput');
+            if (videoInput) videoInput.files = dataTransfer.files;
+
+            alert("ვიდეო მზადაა! დააჭირეთ ატვირთვას.");
+
+            if (recordInner) {
+                recordInner.style.borderRadius = "50%";
+                recordInner.style.background = "#ff4d4d";
+            }
+        };
+
+        mediaRecorder.start();
+        if (recordInner) {
+            recordInner.style.borderRadius = "8px"; 
+            recordInner.style.background = "#ff0000";
+        }
+    } else {
+        mediaRecorder.stop();
+    }
+}
+
+// 3. კამერის გათიშვა და დახურვა
+function stopCamera() {
+    if (window.videoStream) {
+        window.videoStream.getTracks().forEach(track => track.stop());
+        window.videoStream = null;
+    }
+    const video = document.getElementById('cameraStream');
+    const placeholder = document.getElementById('placeholderText');
+    if (video) {
+        video.pause();
+        video.srcObject = null;
+        video.style.display = 'none';
+    }
+    if (placeholder) placeholder.style.display = 'block';
+}
+
+function closeUploadModal() {
+    document.getElementById('uploadModal').style.display = 'none';
+    stopCamera();
 }
