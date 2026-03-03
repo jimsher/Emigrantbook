@@ -1,4 +1,4 @@
-  const firebaseConfig = { 
+const firebaseConfig = { 
   apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
   authDomain: "emigrantbook.firebaseapp.com", 
   databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
@@ -1369,8 +1369,6 @@ function togglePlayPause(vid) {
 
                                     
 function renderTokenFeed() {
-  activeLikeIntervals.forEach(interval => clearInterval(interval));
-    activeLikeIntervals = [];
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
@@ -1434,25 +1432,20 @@ function renderTokenFeed() {
                 feed.appendChild(card);
 
                 // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
-                // ამ ნაწილს ჩაამატებ იქ, სადაც startLikeCycle გაქვს
-function startLikeCycle() {
-    if (post.authorId !== auth.currentUser.uid) return;
+                function startLikeCycle() {
+                    // 1. ვამოწმებთ, რომ ვიდეო ნამდვილად შენია
+                    if (post.authorId !== auth.currentUser.uid) return;
 
-    const activityContainer = document.getElementById(`live-activity-${id}`);
-    if (!activityContainer) return;
+                    const activityContainer = document.getElementById(`live-activity-${id}`);
+                    if (!activityContainer) return;
 
-    // ვინახავთ ინტერვალს, რომ მერე გავთიშოთ
-    let interval = setInterval(() => {
-        const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-        
-        if (currentPostLikes.length > 0 && document.visibilityState === 'visible') {
-            const person = currentPostLikes[Math.floor(Math.random() * currentPostLikes.length)];
-            spawnNext(person, id); // ცალკე ფუნქციად გამოვიტანოთ spawn
-        }
-    }, 3000); // ყოველ 3 წამში ერთი ავატარი
+                    // 2. ვიღებთ მხოლოდ ამ კონკრეტული ვიდეოს ლაიქებს
+                    const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
 
-    activeLikeIntervals.push(interval); 
-}
+                    if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
+                        setTimeout(startLikeCycle, 5000);
+                        return;
+                    }
 
                     let index = 0;
 
@@ -2107,237 +2100,4 @@ function loadMySavedPosts() {
             grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
         }
     });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-let videoStream = null;
-
-// ეს ფუნქცია იხსნება ტოკენზე დაჭერისას
-async function openUploadModal() {
-    const modal = document.getElementById('uploadModal');
-    if (modal) {
-        // 1. ჯერ ვაჩენთ ფანჯარას (ზუსტად ისე, როგორც ადრე გქონდა)
-        modal.style.display = 'flex';
-        
-        // 2. ეგრევე ვრთავთ კამერას
-        const video = document.getElementById('cameraStream');
-        const placeholder = document.getElementById('placeholderText');
-
-        try {
-            // თუ კამერა უკვე ჩართულია სხვაგან, ვასუფთავებთ
-            if (window.videoStream) {
-                window.videoStream.getTracks().forEach(track => track.stop());
-            }
-
-            // ვითხოვთ კამერას
-            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
-                audio: false 
-            });
-            
-            if (video) {
-                video.srcObject = window.videoStream;
-                // აუცილებელი პარამეტრები, რომ მობილურზე ეგრევე გამოჩნდეს
-                video.setAttribute('playsinline', '');
-                video.setAttribute('autoplay', '');
-                video.muted = true;
-                
-                video.style.display = 'block';
-                await video.play();
-
-                if (placeholder) placeholder.style.display = 'none';
-                console.log("კამერა ჩაირთო ავტომატურად ✅");
-            }
-        } catch (err) {
-            console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
-        }
-    }
-}
-
-async function startLiveCamera() {
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-
-    // თუ უკვე მუშაობს ნაკადი, ჯერ გავთიშოთ (რომ არ "გაიჭედოს")
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-        // ტელეფონის კამერის გამოძახება
-        videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        });
-        
-        if (video) {
-            video.srcObject = videoStream;
-            // ეს ატრიბუტებია აუცილებელი, რომ ვიდეო ეგრევე გამოჩნდეს
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.muted = true; // პრევიუზე ხმა რომ არ ჰქონდეს
-
-            // 🛠️ ძალისმიერი გაშვება
-            video.play();
-            
-            video.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
-        }
-    } catch (err) {
-        console.error("Camera Error:", err);
-        // თუ სელფი კამერა (user) ვერ იპოვა, ვცდით ნებისმიერ ხელმისაწვდომს
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-                video.play();
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            })
-            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
-    }
-}
-
-
-
-
-
-
-
-
-
-// იქსის ღილაკი - თიშავს ყველაფერს
-// 1. ფანჯრის დახურვა
-function closeUploadModal() {
-    const modal = document.getElementById('uploadModal');
-    if (modal) modal.style.display = 'none';
-    stopCamera();
-}
-
-// 2. კამერის გათიშვა
-function stopCamera() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-    }
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-    
-    if (video) {
-        video.pause();
-        video.srcObject = null;
-        video.style.display = 'none';
-    }
-    if (placeholder) placeholder.style.display = 'block';
-    
-    // ღილაკის ფორმის დაბრუნება
-    if (recordInner) {
-        recordInner.style.borderRadius = "50%";
-        recordInner.style.background = "#ff4d4d";
-        recordInner.style.transform = "scale(1)";
-        recordInner.style.boxShadow = "none";
-    }
-}
-
-// 3. ვიდეოს ჩაწერის ლოგიკა (ცვლადები let-ის გარეშე, რომ არ აირიოს)
-mediaRecorder = null; 
-videoChunks = [];
-
-async function toggleRecording() {
-    const recordInner = document.getElementById('recordInner');
-
-    // თუ ჩაწერა არ მიმდინარეობს - ვიწყებთ
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        if (!videoStream) {
-            alert("კამერა არ არის აქტიური!");
-            return;
-        }
-
-        videoChunks = [];
-        mediaRecorder = new MediaRecorder(videoStream);
-
-        mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) videoChunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-            const videoBlob = new Blob(videoChunks, { type: 'video/mp4' });
-            const videoFile = new File([videoBlob], "captured_video.mp4", { type: 'video/mp4' });
-
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(videoFile);
-            const videoInput = document.getElementById('videoInput');
-            if (videoInput) videoInput.files = dataTransfer.files;
-
-            alert("ვიდეო მზადაა! დააჭირეთ ატვირთვას.");
-
-            if (recordInner) {
-                recordInner.style.borderRadius = "50%";
-                recordInner.style.transform = "scale(1)";
-                recordInner.style.background = "#ff4d4d";
-            }
-        };
-
-        mediaRecorder.start();
-
-        if (recordInner) {
-            recordInner.style.borderRadius = "8px"; 
-            recordInner.style.transform = "scale(0.8)";
-            recordInner.style.background = "#ff0000";
-        }
-    } 
-    else {
-        mediaRecorder.stop();
-    }
 }
