@@ -173,20 +173,48 @@ function drawProductCard(id, item, grid) {
     
     const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
 
+    // --- თეგების ლოგიკა ---
+    let badge = "";
+    let priceDisplay = `
+        <span style="color:var(--gold); font-weight:bold; display:block;">${item.price} AKHO</span>
+        <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
+    `;
+
+    // 1. SALE თეგი და ძველი ფასი (თუ oldPrice არსებობს)
+    if (item.oldPrice && item.oldPrice > item.price) {
+        badge = `<div style="position:absolute; top:8px; left:8px; background:#ff4d4d; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">SALE</div>`;
+        const oldEurPrice = (item.oldPrice * AKHO_EXCHANGE_RATE).toFixed(2);
+        priceDisplay = `
+            <div style="display:flex; flex-direction:column;">
+                <span style="color:#666; text-decoration:line-through; font-size:11px;">${item.oldPrice} AKHO</span>
+                <span style="color:var(--gold); font-weight:bold; display:block; font-size:15px;">${item.price} AKHO</span>
+                <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
+            </div>
+        `;
+    } 
+    // 2. NEW თეგი (თუ item.isNew არის true)
+    else if (item.isNew) {
+        badge = `<div style="position:absolute; top:8px; left:8px; background:#007bff; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEW</div>`;
+    }
+    // 3. TOP SELLER / HOT თეგი (თუ item.isHot არის true)
+    else if (item.isHot) {
+        badge = `<div style="position:absolute; top:8px; left:8px; background:#ff9800; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">🔥 HOT</div>`;
+    }
+
     card.innerHTML = `
+        ${badge}
         <div style="width:100%; height:130px; background:url('${item.image}') center/cover no-repeat; border-radius:12px;"></div>
         <div style="padding:10px 0;">
             <b style="color:white; font-size:14px;">${item.name}</b>
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-top:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
                 <div>
-                    <span style="color:var(--gold); font-weight:bold; display:block;">${item.price} AKHO</span>
-                    <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
+                    ${priceDisplay}
                 </div>
-                <button style="background:var(--gold); border:none; padding:5px 12px; border-radius:8px; font-weight:bold; font-size:11px; color:black;">ნახვა</button>
+                <button style="background:var(--gold); border:none; padding:6px 14px; border-radius:8px; font-weight:bold; font-size:11px; color:black; cursor:pointer; transition: 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">ნახვა</button>
             </div>
         </div>
         ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
-            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:8px; right:8px; color:white; background:rgba(255,0,0,0.6); padding:8px; border-radius:50%; font-size:12px;"></i>
+            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:8px; right:8px; color:white; background:rgba(255,0,0,0.8); padding:8px; border-radius:50%; font-size:12px; z-index:2;"></i>
         ` : ''}
     `;
     grid.appendChild(card);
