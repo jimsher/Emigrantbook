@@ -128,26 +128,47 @@ function loadUserCart() {
 }
 
 // 5. რენდერი
-function renderStore(category = 'all', btn = null) {
-    const grid = document.getElementById('productsGrid');
-    if (!grid) return;
-
-    if (btn) {
-        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
+function renderStore(category = 'all', btnElement = null) {
+    // 1. აქტიური ღილაკის ვიზუალი (დიზაინის შენარჩუნება)
+    if (btnElement) {
+        document.querySelectorAll('.shop-tab').forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
     }
 
-    db.ref('akhoStore').on('value', snap => {
-        grid.innerHTML = "";
-        const data = snap.val();
-        if (!data) return;
+    const container = document.getElementById('storeContainer'); // დარწმუნდი რომ ეს ID გაქვს
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loader">...</div>'; // ჩატვირთვის ეფექტი
 
-        allProductsStore = Object.entries(data).reverse();
+    // 2. მონაცემების წამოღება Firebase-დან
+    db.collection('store').get().then((querySnapshot) => {
+        container.innerHTML = ''; // ვასუფთავებთ კონტეინერს
+        
+        querySnapshot.forEach((doc) => {
+            const item = doc.data();
+            const itemId = doc.id;
 
-        allProductsStore.forEach(([id, item]) => {
-            if (category !== 'all' && item.category !== category) return;
-            drawProductCard(id, item, grid);
+            // ფილტრაციის ლოგიკა
+            if (category === 'all' || item.category === category) {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'product-card'; // შენი პროდუქტის ბარათის კლასი
+                itemEl.innerHTML = `
+                    <div style="background: #222; border-radius: 15px; padding: 10px; margin-bottom: 15px; border: 1px solid #333;">
+                        <img src="${item.image}" style="width: 100%; border-radius: 10px; height: 150px; object-fit: cover;">
+                        <h3 style="color: white; font-size: 16px; margin: 10px 0;">${item.name}</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--gold); font-weight: bold;">${item.price} TOKEN</span>
+                            <button onclick="buyItem('${itemId}', ${item.price})" style="background: var(--gold); border: none; padding: 5px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;">ყიდვა</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            }
         });
+
+        if (container.innerHTML === '') {
+            container.innerHTML = '<p style="color: #555; text-align: center; margin-top: 20px;">ამ კატეგორიაში ნივთები ჯერ არ არის.</p>';
+        }
     });
 }
 
