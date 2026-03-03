@@ -485,7 +485,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-function renderUserOrderHistory() {
+ function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -493,39 +493,39 @@ function renderUserOrderHistory() {
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     if (!modal || !content) return;
 
+    modal.style.display = 'flex';
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
-    modal.style.display = 'flex';
 
-    // გამოყენებულია .on('value'), რომ რეალურ დროში განახლდეს ეკრანი
+    // 🛠️ ვთიშავთ ძველ კავშირს და ვამყარებთ ახალს რეალურ დროში
+    db.ref('orders').off(); 
     db.ref('orders').on('value', snap => {
         const data = snap.val();
-        const loadingEl = document.getElementById('ordersLoading');
-        if (loadingEl) loadingEl.remove();
-
-        if (!data) {
-            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
-                                 <p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
-            return;
-        }
-
+        
+        // საწყისი სათაური
         let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
         let hasOrders = false;
 
+        if (!data) {
+            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
+            return;
+        }
+
+        // მონაცემების გადარჩევა
         Object.values(data).reverse().forEach(order => {
             if (order.buyerUid === user.uid || order.uid === user.uid) {
                 hasOrders = true;
                 const date = new Date(order.timestamp).toLocaleDateString();
                 const finalAmount = order.paidAmount || order.price || 0;
 
-                // --- ლოგიკა პროგრესის ხაზისთვის ---
+                // --- სტატუსის და პროგრესის ლოგიკა ---
                 let progress = "20%"; 
                 let statusLabel = "მუშავდება";
                 
                 if (order.status === 'shipped') { 
                     progress = "60%"; 
-                    statusLabel = "გამოგზავნილია"; 
-                } else if (order.status === 'arrived' || order.status === 'completed') { 
+                    statusLabel = "გზაშია"; 
+                } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
                     progress = "100%"; 
                     statusLabel = "ჩამოვიდა"; 
                 }
@@ -540,10 +540,9 @@ function renderUserOrderHistory() {
                         <div style="margin: 15px 0 10px 0;">
                             <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
                                 <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
-                                
                                 <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
-                                <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${progress === '60%' || progress === '100%' ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
-                                <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${progress === '100%' ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                             </div>
                             <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
                                 <span>მიღებულია</span>
@@ -554,11 +553,11 @@ function renderUserOrderHistory() {
 
                         <div style="background:rgba(255,215,0,0.03); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between;">
-                                <span style="color:#777; font-size:11px;">📍 ამჟამინდელი მდებარეობა:</span>
+                                <span style="color:#777; font-size:11px;">📍 მდებარეობა:</span>
                                 <b style="color:white; font-size:11px;">${order.location || 'მუშავდება'}</b>
                             </div>
                             <div style="display:flex; justify-content:space-between;">
-                                <span style="color:#777; font-size:11px;">⏳ სავარაუდო მოსვლის დრო:</span>
+                                <span style="color:#777; font-size:11px;">⏳ ETA:</span>
                                 <b style="color:var(--gold); font-size:11px;">${order.eta || 'მოწმდება'}</b>
                             </div>
                         </div>
@@ -578,14 +577,14 @@ function renderUserOrderHistory() {
             }
         });
 
+        // საბოლოო ჩახატვა
         if (!hasOrders) {
-            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
-                                 <p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
+            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
         } else {
             content.innerHTML = ordersHtml;
         }
     });
-}                                                            
+}                                                                                   
                             
 
 
