@@ -485,22 +485,18 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-
 function renderUserOrderHistory() {
     const user = auth.currentUser;
-    // ვიყენებთ შენს ორიგინალ ID-ებს: productDetailsModal და detailsContent
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
     
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     if (!modal || !content) return;
 
-    // ვასუფთავებთ კონტენტს და ვშლით ძველ მონაცემებს
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
     modal.style.display = 'flex';
 
-    // ვიყენებთ პირდაპირ .once('value')-ს, რომ JS-მა გადაარჩიოს მონაცემები (ინდექსაციის გარეშეც რომ იმუშაოს)
     db.ref('orders').once('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
@@ -515,32 +511,57 @@ function renderUserOrderHistory() {
         let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
         let hasOrders = false;
 
-        // ვამოწმებთ ყველა შეკვეთას
         Object.values(data).reverse().forEach(order => {
-            // აქ არის მთავარი: ვამოწმებთ ორივე ვარიანტს, buyerUid-საც და uid-საც
             if (order.buyerUid === user.uid || order.uid === user.uid) {
                 hasOrders = true;
                 const date = new Date(order.timestamp).toLocaleDateString();
-                
-                // 🛠️ დამატებული ლოგიკა undefined-ის ასაცილებლად:
-                // თუ paidAmount არ არსებობს, აიღებს price-ს, თუ არც ის - მაშინ 0-ს.
                 const finalAmount = order.paidAmount || order.price || 0;
+
+                // --- ლოგიკა პროგრესის ხაზისთვის ---
+                let progress = "20%"; // საწყისი სტატუსი (paid_with_akho)
+                let statusLabel = "მუშავდება";
                 
-                // ვიყენებთ შენს სტილს და ცვლადებს (finalAmount, productName)
+                if (order.status === 'shipped') { 
+                    progress = "60%"; 
+                    statusLabel = "გამოგზავნილია"; 
+                } else if (order.status === 'arrived' || order.status === 'completed') { 
+                    progress = "100%"; 
+                    statusLabel = "ჩამოვიდა"; 
+                }
+
                 ordersHtml += `
                     <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                             <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
                             <span style="color:gray; font-size:12px;">${date}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
+
+                        <div style="margin: 15px 0 10px 0;">
+                            <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
+                                <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
+                                
+                                <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
+                                <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${progress === '60%' || progress === '100%' ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${progress === '100%' ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
+                                <span>მიღებულია</span>
+                                <span>გზაშია</span>
+                                <span>ჩაბარდა</span>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
                             <div>
                                 <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
                                 <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
                             </div>
-                            <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
-                                ${order.status === 'paid_with_akho' ? 'მუშავდება' : 'დასრულებულია'}
-                            </span>
+                            <div style="text-align:right;">
+                                <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
+                                    ${statusLabel}
+                                </span>
+                                ${order.location ? `<small style="color:gray; display:block; font-size:10px; margin-top:5px;">📍 ${order.location}</small>` : ''}
+                            </div>
                         </div>
                     </div>`;
             }
@@ -554,6 +575,7 @@ function renderUserOrderHistory() {
         }
     });
 }
+                            
 
 
 
