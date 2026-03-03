@@ -497,7 +497,8 @@ function renderUserOrderHistory() {
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
     modal.style.display = 'flex';
 
-    db.ref('orders').once('value', snap => {
+    // გამოყენებულია .on('value'), რომ რეალურ დროში განახლდეს ეკრანი
+    db.ref('orders').on('value', snap => {
         const data = snap.val();
         const loadingEl = document.getElementById('ordersLoading');
         if (loadingEl) loadingEl.remove();
