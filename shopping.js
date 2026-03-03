@@ -22,6 +22,11 @@ async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
     const priceInput = document.getElementById('newProdPrice');
+    // ახალი ინფუთები (ID-ები უნდა ემთხვეოდეს HTML-ს)
+    const oldPriceInput = document.getElementById('newProdOldPrice');
+    const isNewInput = document.getElementById('newProdIsNew');
+    const isHotInput = document.getElementById('newProdIsHot');
+
     const descInput = document.getElementById('newProdDesc');
     const catInput = document.getElementById('newProdCat');
     const btn = document.getElementById('uploadBtn');
@@ -31,6 +36,11 @@ async function saveProductToFirebase() {
     const price = priceInput ? priceInput.value.trim() : "";
     const desc = descInput ? descInput.value.trim() : "";
     const cat = catInput ? catInput.value : "all";
+    
+    // ახალი მნიშვნელობების წაკითხვა
+    const oldPrice = oldPriceInput ? oldPriceInput.value.trim() : "";
+    const isNew = isNewInput ? isNewInput.checked : false;
+    const isHot = isHotInput ? isHotInput.checked : false;
 
     if (!file || !name || !price) {
         return alert("შეავსე სახელი, ფასი და აირჩიე ფოტო!");
@@ -50,14 +60,24 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
-            await db.ref('akhoStore').push({
+            // ვქმნით ობიექტს ზუსტად შენი სტრუქტურით + ახალი ველები
+            const productData = {
                 name: name,
                 price: parseFloat(price),
                 desc: desc,
                 category: cat,
                 image: json.data.url,
-                timestamp: Date.now()
-            });
+                timestamp: Date.now(),
+                isNew: isNew,
+                isHot: isHot
+            };
+
+            // ძველი ფასი ემატება მხოლოდ თუ რამე წერია
+            if (oldPrice) {
+                productData.oldPrice = parseFloat(oldPrice);
+            }
+
+            await db.ref('akhoStore').push(productData);
 
             alert("ნივთი დაემატა მაღაზიაში! ✅");
             location.reload();
