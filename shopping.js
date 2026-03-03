@@ -22,10 +22,13 @@ async function saveProductToFirebase() {
     const fileInput = document.getElementById('newProdFile');
     const nameInput = document.getElementById('newProdName');
     const priceInput = document.getElementById('newProdPrice');
-    // ახალი ინფუთები (ID-ები უნდა ემთხვეოდეს HTML-ს)
     const oldPriceInput = document.getElementById('newProdOldPrice');
     const isNewInput = document.getElementById('newProdIsNew');
     const isHotInput = document.getElementById('newProdIsHot');
+    
+    // --- აი ეს ორი ახალი ინფუთი ---
+    const locationInput = document.getElementById('newProdLocation');
+    const etaInput = document.getElementById('newProdETA');
 
     const descInput = document.getElementById('newProdDesc');
     const catInput = document.getElementById('newProdCat');
@@ -34,11 +37,13 @@ async function saveProductToFirebase() {
     const file = fileInput ? fileInput.files[0] : null;
     const name = nameInput ? nameInput.value.trim() : "";
     const price = priceInput ? priceInput.value.trim() : "";
+    const oldPrice = oldPriceInput ? oldPriceInput.value.trim() : "";
     const desc = descInput ? descInput.value.trim() : "";
     const cat = catInput ? catInput.value : "all";
     
     // ახალი მნიშვნელობების წაკითხვა
-    const oldPrice = oldPriceInput ? oldPriceInput.value.trim() : "";
+    const locationVal = locationInput ? locationInput.value.trim() : "";
+    const etaVal = etaInput ? etaInput.value.trim() : "";
     const isNew = isNewInput ? isNewInput.checked : false;
     const isHot = isHotInput ? isHotInput.checked : false;
 
@@ -60,7 +65,6 @@ async function saveProductToFirebase() {
         const json = await res.json();
 
         if (json.success) {
-            // ვქმნით ობიექტს ზუსტად შენი სტრუქტურით + ახალი ველები
             const productData = {
                 name: name,
                 price: parseFloat(price),
@@ -69,10 +73,11 @@ async function saveProductToFirebase() {
                 image: json.data.url,
                 timestamp: Date.now(),
                 isNew: isNew,
-                isHot: isHot
+                isHot: isHot,
+                location: locationVal, // ბაზაში იწერება ქვეყანა
+                eta: etaVal           // ბაზაში იწერება დრო
             };
 
-            // ძველი ფასი ემატება მხოლოდ თუ რამე წერია
             if (oldPrice) {
                 productData.oldPrice = parseFloat(oldPrice);
             }
