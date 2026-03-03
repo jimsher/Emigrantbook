@@ -523,19 +523,35 @@ div[style*="overflow-x:auto"] {
     
     <div style="display:grid; gap:10px;">
         <input type="text" id="newProdName" class="auth-input" placeholder="ნივთის სახელი">
-        <input type="number" id="newProdPrice" class="auth-input" placeholder="ფასი (₾)">
+        
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="newProdPrice" class="auth-input" placeholder="ფასი (AKHO)" style="flex:1;">
+            <input type="number" id="newProdOldPrice" class="auth-input" placeholder="ძველი ფასი (SALE)" style="flex:1;">
+        </div>
         
         <textarea id="newProdDesc" class="auth-input" placeholder="ნივთის დეტალური აღწერა..." style="height:80px;"></textarea>
         
         <div style="display:flex; gap:10px; align-items:center;">
             <select id="newProdCat" class="auth-input" style="flex:1;">
-                <option value="ნივთები">ნივთები</option>
-                <option value="ციფრული">ციფრული</option>
+                <option value="clothing">ტანსაცმელი</option>
+                <option value="watches">საათები</option>
+                <option value="digital">ციფრული</option>
+                <option value="physical">ნივთები</option>
+                <option value="vip">VIP</option>
             </select>
             <input type="file" id="newProdFile" accept="image/*" style="flex:1; color:white; font-size:12px;">
         </div>
+
+        <div style="display:flex; gap:15px; padding:5px; background:rgba(255,255,255,0.05); border-radius:8px; justify-content: center;">
+            <label style="color:white; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="newProdIsNew"> 🆕 NEW
+            </label>
+            <label style="color:white; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="newProdIsHot"> 🔥 HOT
+            </label>
+        </div>
         
-        <button onclick="saveProductToFirebase()" id="uploadBtn" style="background:#00ff00; color:black; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">
+        <button onclick="saveProductToFirebase()" id="uploadBtn" style="background:#00ff00; color:black; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:5px;">
             გამოქვეყნება 🚀
         </button>
     </div>
@@ -543,13 +559,6 @@ div[style*="overflow-x:auto"] {
     <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
     <h3 style="color:var(--gold); font-size:14px; margin-bottom:10px;">🗑️ არსებული ნივთები:</h3>
     <div id="adminProductList" style="display:grid; gap:10px;"></div>
-</div>
-  
- <div id="adminOrdersSection" style="margin-top:20px; border-top:1px solid #333; padding-top:20px;">
- <h3 style="color:var(--gold); font-size:16px; margin-bottom:15px;">📦 შემოსული შეკვეთები</h3>
- <div id="ordersList" style="display:flex; flex-direction:column; gap:10px;">
- <p style="color:gray; font-size:12px;">შეკვეთები არ არის...</p>
- </div>
 </div>
 
 
