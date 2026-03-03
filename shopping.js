@@ -485,7 +485,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
- function renderUserOrderHistory() {
+function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -522,12 +522,20 @@ function closeProductDetails() {
                 let progress = "20%"; 
                 let statusLabel = "მუშავდება";
                 
+                // დინამიური ტექსტები მდებარეობის და ETA-სთვის
+                let displayLocation = order.location || 'მუშავდება';
+                let displayETA = order.eta || 'მოწმდება';
+                
                 if (order.status === 'shipped') { 
                     progress = "60%"; 
                     statusLabel = "გზაშია"; 
                 } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
                     progress = "100%"; 
                     statusLabel = "ჩამოვიდა"; 
+                    
+                    // თუ ჩამოვიდა და ადმინს არაფერი ჩაუწერია, ვაჩვენოთ "ადგილზეა"
+                    if (!order.location) displayLocation = "ადგილზეა ✅";
+                    if (!order.eta) displayETA = "მზად არის ჩასაბარებლად";
                 }
 
                 ordersHtml += `
@@ -554,11 +562,11 @@ function closeProductDetails() {
                         <div style="background:rgba(255,215,0,0.03); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
                             <div style="display:flex; justify-content:space-between;">
                                 <span style="color:#777; font-size:11px;">📍 მდებარეობა:</span>
-                                <b style="color:white; font-size:11px;">${order.location || 'მუშავდება'}</b>
+                                <b style="color:white; font-size:11px;">${displayLocation}</b>
                             </div>
                             <div style="display:flex; justify-content:space-between;">
                                 <span style="color:#777; font-size:11px;">⏳ ETA:</span>
-                                <b style="color:var(--gold); font-size:11px;">${order.eta || 'მოწმდება'}</b>
+                                <b style="color:var(--gold); font-size:11px;">${displayETA}</b>
                             </div>
                         </div>
 
@@ -584,7 +592,7 @@ function closeProductDetails() {
             content.innerHTML = ordersHtml;
         }
     });
-}                                                                                   
+}                                                                                                        
                             
 
 
