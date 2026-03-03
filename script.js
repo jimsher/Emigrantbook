@@ -1434,20 +1434,25 @@ function renderTokenFeed() {
                 feed.appendChild(card);
 
                 // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
-                function startLikeCycle() {
-                    // 1. ვამოწმებთ, რომ ვიდეო ნამდვილად შენია
-                    if (post.authorId !== auth.currentUser.uid) return;
+                // ამ ნაწილს ჩაამატებ იქ, სადაც startLikeCycle გაქვს
+function startLikeCycle() {
+    if (post.authorId !== auth.currentUser.uid) return;
 
-                    const activityContainer = document.getElementById(`live-activity-${id}`);
-                    if (!activityContainer) return;
+    const activityContainer = document.getElementById(`live-activity-${id}`);
+    if (!activityContainer) return;
 
-                    // 2. ვიღებთ მხოლოდ ამ კონკრეტული ვიდეოს ლაიქებს
-                    const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
+    // ვინახავთ ინტერვალს, რომ მერე გავთიშოთ
+    let interval = setInterval(() => {
+        const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
+        
+        if (currentPostLikes.length > 0 && document.visibilityState === 'visible') {
+            const person = currentPostLikes[Math.floor(Math.random() * currentPostLikes.length)];
+            spawnNext(person, id); // ცალკე ფუნქციად გამოვიტანოთ spawn
+        }
+    }, 3000); // ყოველ 3 წამში ერთი ავატარი
 
-                    if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
-                        setTimeout(startLikeCycle, 5000);
-                        return;
-                    }
+    activeLikeIntervals.push(interval); 
+}
 
                     let index = 0;
 
