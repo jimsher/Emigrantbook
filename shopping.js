@@ -667,3 +667,51 @@ function updateOrderStatus(orderId, newStatus) {
     .then(() => alert("სტატუსი და გზავნილის ინფორმაცია განახლდა! ✅"))
     .catch(err => alert("შეცდომა: " + err.message));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- ყიდვის დროს ანიმაციის ფუნქცია ---
+function showSuccessAnimation() {
+    const successDiv = document.createElement('div');
+    successDiv.style = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9); z-index: 20000;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        animation: fadeIn 0.5s ease;
+    `;
+
+    successDiv.innerHTML = `
+        <div style="text-align: center;">
+            <div style="width: 80px; height: 80px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 0 20px var(--gold);">
+                <i class="fas fa-check" style="font-size: 40px; color: black;"></i>
+            </div>
+            <h2 style="color: white; font-size: 24px; margin-bottom: 10px;">შეკვეთა მიღებულია!</h2>
+            <p style="color: gray; font-size: 14px;">თქვენი ნივთი უკვე მუშავდება 🚀</p>
+        </div>
+    `;
+
+    document.body.appendChild(successDiv);
+
+    // 3 წამში გაქრება და გადატვირთავს გვერდს
+    setTimeout(() => {
+        successDiv.style.opacity = '0';
+        successDiv.style.transition = '1s';
+        setTimeout(() => {
+            successDiv.remove();
+            location.reload();
+        }, 1000);
+    }, 3000);
+}
