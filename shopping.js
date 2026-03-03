@@ -382,15 +382,14 @@ async function processOrderAndPay() {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
 
-        alert("შენაძენი წარმატებულია! ✅ AKHO ჩამოგეჭრა ბალანსიდან.");
-        location.reload();
+        // --- 🛠️ აი აქ შეიცვალა ორიგინალი კოდი: alert ჩანაცვლდა ანიმაციით ---
+        showSuccessAnimation();
 
     } catch (e) {
         alert("შეცდომაა: " + e.message);
         if (btn) { btn.disabled = false; btn.innerText = "გადახდა 🚀"; }
     }
 }
-
         
 
 // დეტალები
