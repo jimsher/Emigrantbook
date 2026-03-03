@@ -518,7 +518,7 @@ function renderUserOrderHistory() {
                 const finalAmount = order.paidAmount || order.price || 0;
 
                 // --- ლოგიკა პროგრესის ხაზისთვის ---
-                let progress = "20%"; // საწყისი სტატუსი (paid_with_akho)
+                let progress = "20%"; 
                 let statusLabel = "მუშავდება";
                 
                 if (order.status === 'shipped') { 
@@ -551,7 +551,18 @@ function renderUserOrderHistory() {
                             </div>
                         </div>
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                        <div style="background:rgba(255,215,0,0.03); border:1px solid #333; border-radius:10px; padding:10px; margin:10px 0; display:flex; flex-direction:column; gap:5px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="color:#888; font-size:11px;"><i class="fas fa-map-marker-alt" style="color:var(--gold);"></i> მდებარეობა:</span>
+                                <b style="color:white; font-size:11px;">${order.location || 'მუშავდება...'}</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="color:#888; font-size:11px;"><i class="fas fa-shipping-fast" style="color:var(--gold);"></i> ჩასვლის დრო:</span>
+                                <b style="color:var(--gold); font-size:11px;">${order.eta || 'მოწმდება...'}</b>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                             <div>
                                 <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
                                 <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
@@ -560,7 +571,6 @@ function renderUserOrderHistory() {
                                 <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
                                     ${statusLabel}
                                 </span>
-                                ${order.location ? `<small style="color:gray; display:block; font-size:10px; margin-top:5px;">📍 ${order.location}</small>` : ''}
                             </div>
                         </div>
                     </div>`;
@@ -574,7 +584,7 @@ function renderUserOrderHistory() {
             content.innerHTML = ordersHtml;
         }
     });
-}
+}                                
                             
 
 
