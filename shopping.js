@@ -919,3 +919,31 @@ function initRealTimeSalesPopup() {
         }, 10000);
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+// ფასდაკლევის კუპონის ლოგიკა
+function createPromoCode() {
+    const code = document.getElementById('promoCodeName').value.trim().toUpperCase();
+    const percent = document.getElementById('promoPercent').value;
+
+    if (!code || !percent) return alert("შეავსეთ კოდი და პროცენტი!");
+
+    db.ref(`promoCodes/${code}`).set({
+        discount: parseInt(percent),
+        active: true,
+        createdAt: Date.now()
+    }).then(() => {
+        alert(`კუპონი ${code} (${percent}%) წარმატებით დაემატა! ✅`);
+        document.getElementById('promoCodeName').value = "";
+        document.getElementById('promoPercent').value = "";
+    }).catch(err => alert("შეცდომა: " + err.message));
+}
