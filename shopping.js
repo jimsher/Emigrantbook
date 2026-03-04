@@ -947,3 +947,68 @@ function createPromoCode() {
         document.getElementById('promoPercent').value = "";
     }).catch(err => alert("შეცდომა: " + err.message));
 }
+
+
+
+
+
+
+
+
+
+
+
+// პრომო კოდის ლოგიკა
+let currentDiscount = 0; // გლობალური ცვლადი ფასდაკლებისთვის
+
+async function applyPromoCode() {
+    const codeInput = document.getElementById('appliedPromoCode');
+    const statusDiv = document.getElementById('promoStatus');
+    const priceDisplay = document.getElementById('finalPriceDisplay');
+    const code = codeInput.value.trim().toUpperCase();
+
+    if (!code) return;
+
+    try {
+        const snap = await db.ref(`promoCodes/${code}`).once('value');
+        const promo = snap.val();
+
+        if (promo && promo.active) {
+            currentDiscount = promo.discount; // მაგ: 15
+            statusDiv.innerText = `კოდი გააქტიურდა! -${currentDiscount}% ✅`;
+            statusDiv.style.color = "#00ff00";
+            
+            // ფასის ხელახლა დათვლა ფასდაკლებით
+            updatePriceWithDiscount();
+        } else {
+            currentDiscount = 0;
+            statusDiv.innerText = "არასწორი ან ვადაგასული კოდი! ❌";
+            statusDiv.style.color = "#ff4d4d";
+            updatePriceWithDiscount();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function updatePriceWithDiscount() {
+    const priceDisplay = document.getElementById('finalPriceDisplay');
+    if (!currentProduct || !priceDisplay) return;
+
+    let originalPrice = parseFloat(currentProduct.price);
+    let discountAmount = (originalPrice * currentDiscount) / 100;
+    let finalPrice = originalPrice - discountAmount;
+
+    // ვანახლებთ ვიზუალს
+    const eurPrice = (finalPrice * AKHO_EXCHANGE_RATE).toFixed(2);
+    priceDisplay.innerHTML = `
+        <span style="text-decoration: ${currentDiscount > 0 ? 'line-through' : 'none'}; color: ${currentDiscount > 0 ? 'gray' : '#00ff00'}; font-size: ${currentDiscount > 0 ? '14px' : '20px'};">
+            ${originalPrice} AKHO
+        </span>
+        ${currentDiscount > 0 ? `<br><span style="color:#00ff00; font-size:22px;">${finalPrice} AKHO</span>` : ''}
+        <br><small style="font-size:12px; color:gray;">≈ ${eurPrice} EUR</small>
+    `;
+    
+    // მნიშვნელოვანი: ვაახლებთ currentProduct.price-ს, რომ გადახდისას დაკლებული თანხა ჩამოიჭრას
+    currentProduct.finalPrice = finalPrice; 
+}
