@@ -1091,3 +1091,74 @@ function startCountdown() {
     
     update(); // პირველივე გაშვება
 }
+
+
+
+
+
+
+
+
+
+
+
+// Default რეიტინგი
+let selectedRating = 5; // Default რეიტინგი
+
+function setRating(n) {
+    selectedRating = n;
+    const stars = document.querySelectorAll('.star-select');
+    stars.forEach((s, index) => {
+        s.classList.toggle('active', index < n);
+    });
+}
+
+function submitReview(productId) {
+    if (!auth.currentUser) return alert("გამოხმაურებისთვის გაიარეთ ავტორიზაცია!");
+    const text = document.getElementById('reviewText').value.trim();
+    if (!text) return alert("დაწერეთ რამე...");
+
+    const reviewData = {
+        uid: auth.currentUser.uid,
+        name: auth.currentUser.displayName || "მომხმარებელი",
+        text: text,
+        rating: selectedRating,
+        timestamp: Date.now()
+    };
+
+    db.ref(`productReviews/${productId}`).push(reviewData).then(() => {
+        document.getElementById('reviewText').value = "";
+        alert("მადლობა გამოხმაურებისთვის! ⭐");
+    });
+}
+
+function loadProductReviews(productId) {
+    const list = document.getElementById('reviewsList');
+    db.ref(`productReviews/${productId}`).on('value', snap => {
+        const data = snap.val();
+        if (!data) {
+            list.innerHTML = `<p style="color:gray; font-size:12px; text-align:center;">ჯერჯერობით გამოხმაურებები არ არის.</p>`;
+            return;
+        }
+
+        let html = "";
+        Object.values(data).reverse().forEach(r => {
+            let starsHtml = "";
+            for (let i = 0; i < 5; i++) {
+                starsHtml += `<i class="fas fa-star" style="color:${i < r.rating ? 'var(--gold)' : '#333'}"></i>`;
+            }
+
+            html += `
+                <div class="review-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b style="color:white; font-size:13px;">${r.name}</b>
+                        <span style="color:gray; font-size:10px;">${new Date(r.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div class="star-rating">${starsHtml}</div>
+                    <p style="color:#ccc; font-size:12px; margin:5px 0 0 0;">${r.text}</p>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+    });
+}
