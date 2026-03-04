@@ -443,11 +443,14 @@ async function processOrderAndPay() {
 📞 ტელ: ${phone}
 📍 მისამართი: ${country}, ${city}, ${addr}`;
         
-        const whatsappUrl = `https://wa.me/${myAdminNumber}?text=${encodeURIComponent(waMessage)}`;
+        
+// ... (ბმულის მომზადება)
+const whatsappUrl = `https://wa.me/${myAdminNumber}?text=${encodeURIComponent(waMessage)}`;
 
-        // გამოვიძახოთ ანიმაცია
-        showSuccessAnimation();
+// გადავაწოდოთ ლინკი ანიმაციას
+showSuccessAnimation(whatsappUrl);
 
+        
         // ანიმაციის პარალელურად გავხსნათ WhatsApp (მცირე დაგვიანებით)
         setTimeout(() => {
             window.open(whatsappUrl, '_blank');
