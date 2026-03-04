@@ -876,43 +876,48 @@ function openWishlistView() {
 
 
 // მაღაზიის შეტყობინების ლოგიკა
-function startLiveSalesNotifications() {
+function initRealTimeSalesPopup() {
     const popup = document.createElement('div');
     popup.className = "sales-popup";
     document.body.appendChild(popup);
 
-    // ვუყურებთ ბოლო 5 შეკვეთას
-    db.ref('orders').limitToLast(5).on('value', snap => {
-        const orders = snap.val();
-        if (!orders) return;
+    // .limitToLast(1) ნიშნავს, რომ მხოლოდ ყველაზე ბოლო დამატებულს ვუყურებთ
+    // .on('child_added') ნიშნავს, რომ ფუნქცია გაეშვება მხოლოდ მაშინ, როცა ახალი შვილი (შეკვეთა) დაემატება
+    let isFirstLoad = true;
+    
+    db.ref('orders').limitToLast(1).on('child_added', snap => {
+        // ეს შემოწმება საჭიროა, რომ საიტის ჩართვისთანავე ძველი შეკვეთა არ ამოაგდოს
+        if (isFirstLoad) {
+            isFirstLoad = false;
+            return;
+        }
 
-        const orderList = Object.values(orders);
-        
-        // ყოველ 20-30 წამში გამოვაჩინოთ შემთხვევითი შეკვეთა
-        setInterval(() => {
-            const randomOrder = orderList[Math.floor(Math.random() * orderList.length)];
-            
-            popup.innerHTML = `
-                <div style="background:var(--gold); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:black;">
-                    <i class="fas fa-shopping-bag"></i>
-                </div>
-                <div class="info">
-                    <b>${randomOrder.buyerName.split(' ')[0]} - მ იყიდა</b>
-                    ${randomOrder.productName}
-                    <div style="color:gray; font-size:9px; margin-top:3px;">ახლახან ✅</div>
-                </div>
-            `;
+        const newOrder = snap.val();
+        if (!newOrder) return;
 
-            popup.classList.add('show');
-            
-            // 6 წამში დავმალოთ
-            setTimeout(() => {
-                popup.classList.remove('show');
-            }, 6000);
+        const firstName = newOrder.buyerName ? newOrder.buyerName.split(' ')[0] : "მომხმარებელმა";
 
-        }, 25000); // 25 წამში ერთხელ
+        // პოპაპის შინაარსი
+        popup.innerHTML = `
+            <div style="background:#25D366; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; flex-shrink:0; box-shadow: 0 0 15px rgba(37,211,102,0.4);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="info">
+                <b style="color:#25D366;">ახალი გაყიდვა! ✅</b>
+                <span style="color:#fff; font-size:12px;">${firstName}-მ ახლახან შეიძინა</span>
+                <div style="color:var(--gold); font-size:11px; font-weight:bold;">${newOrder.productName}</div>
+            </div>
+        `;
+
+        // გამოჩენა
+        popup.classList.add('show');
+
+        // 8 წამში დამალვა
+        setTimeout(() => {
+            popup.classList.remove('show');
+        }, 8000);
     });
 }
 
-// აუცილებლად გამოიძახე ეს ფუნქცია საიტის ჩართვისას
-startLiveSalesNotifications();
+// გაუშვი ფუნქცია
+initRealTimeSalesPopup();
