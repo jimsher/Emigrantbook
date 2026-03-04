@@ -405,34 +405,35 @@ function showProductDetails(id) {
 
         const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
 
-        // --- თვალთვალის ლოგიკა (Tracking Logic) ---
-        let trackingHTML = "";
-        if (item.location || item.eta) {
-            // თუ მდებარეობა მითითებულია, პროგრესი იყოს 60%, თუ არა - 20%
-            const progress = item.location ? "60%" : "20%";
-            
-            trackingHTML = `
-                <div style="margin: 20px 0; background: rgba(255,215,0,0.03); border: 1px solid #333; padding: 15px; border-radius: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <span style="color: #888; font-size: 12px;"><i class="fas fa-map-marker-alt"></i> მდებარეობა: <b style="color: white;">${item.location || 'მუშავდება'}</b></span>
-                        <span style="color: #888; font-size: 12px;"><i class="fas fa-clock"></i> ETA: <b style="color: white;">${item.eta || 'უცნობია'}</b></span>
-                    </div>
-                    
-                    <div style="position: relative; height: 4px; background: #222; border-radius: 10px; margin: 25px 5px 10px 5px;">
-                        <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${progress}; background: var(--gold); border-radius: 10px; transition: 1s ease-in-out;"></div>
-                        
-                        <div style="position: absolute; left: 0; top: -4px; width: 12px; height: 12px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 10px var(--gold);"></div>
-                        <div style="position: absolute; left: 50%; top: -4px; width: 12px; height: 12px; background: ${item.location ? 'var(--gold)' : '#333'}; border-radius: 50%;"></div>
-                        <div style="position: absolute; right: 0; top: -4px; width: 12px; height: 12px; background: #333; border-radius: 50%;"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; color: #555; font-size: 10px; font-weight: bold; text-transform: uppercase;">
-                        <span>საწყობი</span>
-                        <span>გზაშია</span>
-                        <span>ჩამოვიდა</span>
-                    </div>
+
+        
+// --- ნივთის მდებარეობის და მიწოდების ინფორმაცია (Shopping Mode) ---
+let trackingHTML = "";
+if (item.location || item.eta) {
+    trackingHTML = `
+        <div style="margin: 20px 0; background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px;">
+            <div style="background: rgba(212,175,55,0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 20px;">
+                <i class="fas fa-globe-europe"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">მარაგის მდებარეობა</span>
+                    <span style="background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;">AVAILABLE</span>
                 </div>
-            `;
-        }
+                <div style="color: white; font-size: 14px; font-weight: bold; margin-top: 2px;">
+                    ${item.location || 'მითითებული არ არის'}
+                </div>
+                <div style="color: #4ade80; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-shipping-fast" style="font-size: 10px;"></i> 
+                    მიწოდების დრო: <b>${item.eta || 'დაზუსტების პროცესშია'}</b>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+
+
 
         content.innerHTML = `
             <div style="width:100%; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
