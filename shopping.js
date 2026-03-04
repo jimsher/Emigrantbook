@@ -227,12 +227,22 @@ function drawProductCard(id, item, grid) {
         badge = `<div style="position:absolute; top:8px; left:8px; background:#ff9800; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">🔥 HOT</div>`;
     }
 
-    // --- ❤️ Wishlist (ფავორიტების) ღილაკი ---
-    // ვიყენებთ event.stopPropagation(), რომ გულზე დაჭერისას პროდუქტის დეტალები არ გაიხსნას
+    // --- ❤️ Wishlist (ფავორიტების) ღილაკი რეალურ დროში ფერის შემოწმებით ---
+    let heartColor = "rgba(255,255,255,0.3)";
+    if (auth.currentUser) {
+        db.ref(`userWishlists/${auth.currentUser.uid}/${id}`).once('value', snap => {
+            if (snap.exists()) {
+                const heartIcon = document.getElementById(`wish_${id}`);
+                if (heartIcon) heartIcon.style.color = "#ff4d4d";
+            }
+        });
+    }
+
     const wishlistBtn = `
         <i class="fas fa-heart" 
+           id="wish_${id}"
            onclick="event.stopPropagation(); toggleWishlist('${id}', this)" 
-           style="position:absolute; top:10px; right:10px; color:rgba(255,255,255,0.3); font-size:18px; z-index:5; transition:0.3s; cursor:pointer;"
+           style="position:absolute; top:10px; right:10px; color:${heartColor}; font-size:18px; z-index:5; transition:0.3s; cursor:pointer;"
            onmouseover="this.style.transform='scale(1.2)'" 
            onmouseout="this.style.transform='scale(1)'">
         </i>
@@ -801,30 +811,32 @@ function showSuccessAnimation(whatsappUrl) {
 
 
 
-function toggleWishlist(productId, event) {
-    if (event) event.stopPropagation(); // რომ ბარათის დეტალები არ გაიხსნას ერთდროულად
+
+function toggleWishlist(productId, element) {
     if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
 
     const userWishlistRef = db.ref(`userWishlists/${auth.currentUser.uid}/${productId}`);
 
     userWishlistRef.once('value', snap => {
         if (snap.exists()) {
-            userWishlistRef.remove(); // თუ უკვე იყო, წავშალოთ
+            userWishlistRef.remove();
+            if (element) element.style.color = "rgba(255,255,255,0.3)"; // გაუფერულება
         } else {
-            // თუ არ იყო, დავამატოთ ნივთის ძირითადი ინფო
             db.ref(`akhoStore/${productId}`).once('value', pSnap => {
                 const p = pSnap.val();
-                userWishlistRef.set({
-                    name: p.name,
-                    price: p.price,
-                    image: p.image,
-                    addedAt: Date.now()
-                });
+                if (p) {
+                    userWishlistRef.set({
+                        name: p.name,
+                        price: p.price,
+                        image: p.image,
+                        addedAt: Date.now()
+                    });
+                    if (element) element.style.color = "#ff4d4d"; // გაწითლება
+                }
             });
         }
     });
 }
-
 
 
 
