@@ -435,7 +435,7 @@ async function processOrderAndPay() {
         }
 
         // --- 📱 WhatsApp შეტყობინების გაგზავნა (ახალი ნაწილი) ---
-        const myAdminNumber = "9955XXXXXXXX"; // 👈 აქ ჩაწერე შენი ნომერი (მაგ: 995599123456)
+        const myAdminNumber = "+393791861909"; // 👈 აქ ჩაწერე შენი ნომერი (მაგ: 995599123456)
         const waMessage = `🚀 ახალი შეკვეთა Emigrantbook-დან!
 📦 ნივთი: ${currentProduct.name}
 💰 გადახდილია: ${totalPrice} AKHO
