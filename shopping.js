@@ -452,9 +452,10 @@ showSuccessAnimation(whatsappUrl);
 
         
         // ანიმაციის პარალელურად გავხსნათ WhatsApp (მცირე დაგვიანებით)
-        setTimeout(() => {
-            window.open(whatsappUrl, '_blank');
-        }, 1500);
+
+
+
+        
 
     } catch (e) {
         alert("შეცდომაა: " + e.message);
