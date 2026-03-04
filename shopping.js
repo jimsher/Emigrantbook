@@ -13,7 +13,10 @@ function toggleStoreManager() {
         const isOpening = (section.style.display === 'none' || section.style.display === '');
         section.style.display = isOpening ? 'block' : 'none';
         
-        if (isOpening) renderAdminProductList();
+        if (isOpening) 
+        renderAdminProductList();
+        renderAdminOrders(); // შეკვეთების სია
+        loadAdminDashboardStats(); // 👈 აი ეს დაამატე აქ!
     }
 }
 
