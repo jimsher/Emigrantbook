@@ -393,7 +393,8 @@ async function processOrderAndPay() {
 
     if (!fName || !lName || !addr || !phone) return alert("შეავსე აუცილებელი ველები!");
 
-    const totalPrice = parseFloat(currentProduct.price);
+    // თუ ფასდაკლება გვაქვს, ვიყენებთ ფინალურ ფასს, თუ არა - ჩვეულებრივს
+    const totalPrice = currentProduct.finalPrice || parseFloat(currentProduct.price);
     const userRef = db.ref(`users/${user.uid}`);
 
     try {
