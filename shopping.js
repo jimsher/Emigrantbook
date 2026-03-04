@@ -881,12 +881,10 @@ function initRealTimeSalesPopup() {
     popup.className = "sales-popup";
     document.body.appendChild(popup);
 
-    // .limitToLast(1) ნიშნავს, რომ მხოლოდ ყველაზე ბოლო დამატებულს ვუყურებთ
-    // .on('child_added') ნიშნავს, რომ ფუნქცია გაეშვება მხოლოდ მაშინ, როცა ახალი შვილი (შეკვეთა) დაემატება
     let isFirstLoad = true;
     
     db.ref('orders').limitToLast(1).on('child_added', snap => {
-        // ეს შემოწმება საჭიროა, რომ საიტის ჩართვისთანავე ძველი შეკვეთა არ ამოაგდოს
+        // პირველ ჩატვირთვაზე ძველებს არ ვაჩვენებთ
         if (isFirstLoad) {
             isFirstLoad = false;
             return;
@@ -895,29 +893,29 @@ function initRealTimeSalesPopup() {
         const newOrder = snap.val();
         if (!newOrder) return;
 
+        // ✅ მთავარი შემოწმება: თუ მე ვყიდულობ, ჩემთან არ ამოხტეს (რომ რეფრეშმა არ გააქროს)
+        if (auth.currentUser && newOrder.buyerUid === auth.currentUser.uid) {
+            return; 
+        }
+
         const firstName = newOrder.buyerName ? newOrder.buyerName.split(' ')[0] : "მომხმარებელმა";
 
-        // პოპაპის შინაარსი
         popup.innerHTML = `
             <div style="background:#25D366; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-size:18px; flex-shrink:0; box-shadow: 0 0 15px rgba(37,211,102,0.4);">
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="info">
                 <b style="color:#25D366;">ახალი გაყიდვა! ✅</b>
-                <span style="color:#fff; font-size:12px;">${firstName}-მ ახლახან შეიძინა</span>
+                <span style="color:#fff; font-size:12px;">${firstName}-მ შეიძინა</span>
                 <div style="color:var(--gold); font-size:11px; font-weight:bold;">${newOrder.productName}</div>
             </div>
         `;
 
-        // გამოჩენა
         popup.classList.add('show');
 
-        // 8 წამში დამალვა
+        // 10 წამი გავაჩეროთ ეკრანზე, რომ ნახვა მოასწრონ
         setTimeout(() => {
             popup.classList.remove('show');
-        }, 8000);
+        }, 10000);
     });
 }
-
-// გაუშვი ფუნქცია
-initRealTimeSalesPopup();
