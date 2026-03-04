@@ -475,35 +475,52 @@ function showProductDetails(id) {
 
         const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
 
-
-        
-// --- ნივთის მდებარეობის და მიწოდების ინფორმაცია (Shopping Mode) ---
-let trackingHTML = "";
-if (item.location || item.eta) {
-    trackingHTML = `
-        <div style="margin: 20px 0; background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px;">
-            <div style="background: rgba(212,175,55,0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 20px;">
-                <i class="fas fa-globe-europe"></i>
-            </div>
-            <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">მარაგის მდებარეობა</span>
-                    <span style="background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;">AVAILABLE</span>
+        // --- ნივთის მდებარეობის და მიწოდების ინფორმაცია (Shopping Mode) ---
+        let trackingHTML = "";
+        if (item.location || item.eta) {
+            trackingHTML = `
+                <div style="margin: 20px 0; background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px;">
+                    <div style="background: rgba(212,175,55,0.1); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--gold); font-size: 20px;">
+                        <i class="fas fa-globe-europe"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">მარაგის მდებარეობა</span>
+                            <span style="background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold;">AVAILABLE</span>
+                        </div>
+                        <div style="color: white; font-size: 14px; font-weight: bold; margin-top: 2px;">
+                            ${item.location || 'მითითებული არ არის'}
+                        </div>
+                        <div style="color: #4ade80; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-shipping-fast" style="font-size: 10px;"></i> 
+                            მიწოდების დრო: <b>15 დღე</b>
+                        </div>
+                    </div>
                 </div>
-                <div style="color: white; font-size: 14px; font-weight: bold; margin-top: 2px;">
-                    ${item.location || 'მითითებული არ არის'}
+            `;
+        }
+
+        // --- ⏳ ახალი ფუნქცია: ფასდაკლების ტაიმერი (მხოლოდ SALE ნივთებისთვის) ---
+        let timerHTML = "";
+        if (item.oldPrice && item.oldPrice > item.price) {
+            timerHTML = `
+                <div class="offer-timer">
+                    <div style="color: #ff4d4d; font-size: 18px;"><i class="fas fa-clock"></i></div>
+                    <div style="text-align: left;">
+                        <div style="color: #eee; font-size: 11px; font-weight: bold;">აქცია მთავრდება:</div>
+                        <div id="countdownDisplay" style="display: flex; gap: 8px; margin-top: 4px;">
+                            <div class="timer-unit"><span class="timer-num" id="t-hours">00</span><span class="timer-label">სთ</span></div>
+                            <div style="color:var(--gold); font-weight:bold;">:</div>
+                            <div class="timer-unit"><span class="timer-num" id="t-mins">00</span><span class="timer-label">წთ</span></div>
+                            <div style="color:var(--gold); font-weight:bold;">:</div>
+                            <div class="timer-unit"><span class="timer-num" id="t-secs">00</span><span class="timer-label">წმ</span></div>
+                        </div>
+                    </div>
                 </div>
-                <div style="color: #4ade80; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
-                    <i class="fas fa-shipping-fast" style="font-size: 10px;"></i> 
-                    მიწოდების დრო: <b>15 დღე</b>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-
-
+            `;
+            // ვუშვებთ ტაიმერს მცირე დაგვიანებით, რომ HTML-მა ჩახატვა მოასწროს
+            setTimeout(startCountdown, 100);
+        }
 
         content.innerHTML = `
             <div style="width:100%; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
@@ -515,6 +532,7 @@ if (item.location || item.eta) {
                 </div>
 
                 ${trackingHTML}
+                ${timerHTML}
 
                 <div style="color:#ccc; font-size:14px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #222; white-space: pre-wrap;">
                     ${item.desc || "აღწერა არ არის."}
@@ -528,6 +546,7 @@ if (item.location || item.eta) {
         modal.style.display = 'flex';
     });
 }
+
 
 
 
