@@ -190,61 +190,42 @@ function searchProduct(query) {
 }
 
 // ბარათი
+// ბარათი - გასწორებული ვერსია
 function drawProductCard(id, item, grid) {
     const card = document.createElement('div');
     card.className = "product-card";
     card.onclick = () => showProductDetails(id); 
     card.style = "background:#111; border:1px solid #222; border-radius:15px; padding:10px; cursor:pointer; position:relative;";
     
-    // ძირითადი ფასის კონვერტაცია
     const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
 
-    // --- თეგების ლოგიკა ---
     let badge = "";
     let priceDisplay = `
         <span style="color:var(--gold); font-weight:bold; display:block;">${item.price} AKHO</span>
         <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
     `;
 
-    // 1. SALE თეგი
     if (item.oldPrice && item.oldPrice > item.price) {
-        badge = `<div style="position:absolute; top:8px; left:8px; background:#ff4d4d; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">SALE</div>`;
+        badge = `<div style="position:absolute; top:8px; left:8px; background:#ff4d4d; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1;">SALE</div>`;
         const oldEurPrice = (item.oldPrice * AKHO_EXCHANGE_RATE).toFixed(2);
         priceDisplay = `
             <div style="display:flex; flex-direction:column;">
-                <span style="color:#666; text-decoration:line-through; font-size:11px; line-height: 1.2;">${item.oldPrice} AKHO (≈ ${oldEurPrice} €)</span>
-                <span style="color:var(--gold); font-weight:bold; display:block; font-size:15px; margin-top:2px;">${item.price} AKHO</span>
-                <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
+                <span style="color:#666; text-decoration:line-through; font-size:11px;">${item.oldPrice} AKHO</span>
+                <span style="color:var(--gold); font-weight:bold; display:block; font-size:15px;">${item.price} AKHO</span>
             </div>
         `;
-    } 
-    // 2. NEW თეგი
-    else if (item.isNew) {
-        badge = `<div style="position:absolute; top:8px; left:8px; background:#007bff; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">NEW</div>`;
-    }
-    // 3. HOT თეგი
-    else if (item.isHot) {
-        badge = `<div style="position:absolute; top:8px; left:8px; background:#ff9800; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">🔥 HOT</div>`;
+    } else if (item.isNew) {
+        badge = `<div style="position:absolute; top:8px; left:8px; background:#007bff; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1;">NEW</div>`;
+    } else if (item.isHot) {
+        badge = `<div style="position:absolute; top:8px; left:8px; background:#ff9800; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:1;">🔥 HOT</div>`;
     }
 
-    // --- ❤️ Wishlist (ფავორიტების) ღილაკი რეალურ დროში ფერის შემოწმებით ---
-    let heartColor = "rgba(255,255,255,0.3)";
-    if (auth.currentUser) {
-        db.ref(`userWishlists/${auth.currentUser.uid}/${id}`).once('value', snap => {
-            if (snap.exists()) {
-                const heartIcon = document.getElementById(`wish_${id}`);
-                if (heartIcon) heartIcon.style.color = "#ff4d4d";
-            }
-        });
-    }
-
+    // --- ❤️ Wishlist ლოგიკა (გასწორებული) ---
     const wishlistBtn = `
         <i class="fas fa-heart" 
            id="wish_${id}"
            onclick="event.stopPropagation(); toggleWishlist('${id}', this)" 
-           style="position:absolute; top:10px; right:10px; color:${heartColor}; font-size:18px; z-index:5; transition:0.3s; cursor:pointer;"
-           onmouseover="this.style.transform='scale(1.2)'" 
-           onmouseout="this.style.transform='scale(1)'">
+           style="position:absolute; top:10px; right:10px; color:rgba(255,255,255,0.3); font-size:18px; z-index:5; transition:0.3s; cursor:pointer;">
         </i>
     `;
 
@@ -255,18 +236,30 @@ function drawProductCard(id, item, grid) {
         <div style="padding:10px 0;">
             <b style="color:white; font-size:14px; display:block; height:18px; overflow:hidden;">${item.name}</b>
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
-                <div>
-                    ${priceDisplay}
-                </div>
-                <button style="background:var(--gold); border:none; padding:6px 14px; border-radius:8px; font-weight:bold; font-size:11px; color:black; cursor:pointer; transition: 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">ნახვა</button>
+                <div>${priceDisplay}</div>
+                <button style="background:var(--gold); border:none; padding:6px 14px; border-radius:8px; font-weight:bold; font-size:11px; color:black; cursor:pointer;">ნახვა</button>
             </div>
         </div>
         ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
             <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:40px; right:8px; color:white; background:rgba(255,0,0,0.8); padding:8px; border-radius:50%; font-size:12px; z-index:2;"></i>
         ` : ''}
     `;
+
+    // 🛠️ აი აქ არის მთავარი ცვლილება: ველოდებით სანამ აიქონი გაჩნდება
+    if (auth.currentUser) {
+        db.ref(`userWishlists/${auth.currentUser.uid}/${id}`).once('value', snap => {
+            if (snap.exists()) {
+                setTimeout(() => {
+                    const heartIcon = document.getElementById(`wish_${id}`);
+                    if (heartIcon) heartIcon.style.color = "#ff4d4d";
+                }, 100);
+            }
+        });
+    }
+
     grid.appendChild(card);
 }
+
 
 
 
