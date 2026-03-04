@@ -425,7 +425,7 @@ if (item.location || item.eta) {
                 </div>
                 <div style="color: #4ade80; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
                     <i class="fas fa-shipping-fast" style="font-size: 10px;"></i> 
-                    მიწოდების დრო: <b>${item.eta || 'დაზუსტების პროცესშია'}</b>
+                    მიწოდების დრო: <b>15 დღე</b>
                 </div>
             </div>
         </div>
