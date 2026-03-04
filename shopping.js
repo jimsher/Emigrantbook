@@ -542,8 +542,29 @@ function showProductDetails(id) {
                 <button onclick="addToCart('${id}')" style="flex:1; background:rgba(212,175,55,0.1); color:var(--gold); padding:15px; border:1px solid var(--gold); border-radius:12px; font-weight:bold;">კალათაში 🛒</button>
                 <button onclick="openOrderForm()" style="flex:2; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">ყიდვა 💳</button>
             </div>
+
+           <div class="reviews-container">
+                <h3 style="color:white; font-size:16px; margin-bottom:15px;">გამოხმაურებები ⭐</h3>
+                
+                <div class="review-input-area">
+                    <div style="display:flex; gap:10px; margin-bottom:15px;" id="starSelector">
+                        <i class="fas fa-star star-select active" onclick="setRating(1)"></i>
+                        <i class="fas fa-star star-select active" onclick="setRating(2)"></i>
+                        <i class="fas fa-star star-select active" onclick="setRating(3)"></i>
+                        <i class="fas fa-star star-select active" onclick="setRating(4)"></i>
+                        <i class="fas fa-star star-select active" onclick="setRating(5)"></i>
+                    </div>
+                    <textarea id="reviewText" class="auth-input" placeholder="დაწერეთ თქვენი აზრი..." style="height:60px; margin-bottom:10px; padding:10px;"></textarea>
+                    <button onclick="submitReview('${id}')" style="width:100%; background:var(--gold); color:black; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">გაგზავნა 📝</button>
+                </div>
+
+                <div id="reviewsList" style="width:100%;">იტვირთება გამოხმაურებები...</div>
+            </div>
+
         `;
         modal.style.display = 'flex';
+        // მნიშვნელოვანი: ამას ვიძახებთ მას შემდეგ, რაც HTML ჩაიხატა
+        loadProductReviews(id);
     });
 }
 
