@@ -386,7 +386,7 @@ async function processOrderAndPay() {
     const btn = document.querySelector("#orderFormModal button");
     if (!user) return alert("ავტორიზაცია აუცილებელია!");
 
-    // ყველა ველის წაკითხვა შენი HTML-დან (დავამატე ქვეყანა, ქალაქი, იმეილი)
+    // ყველა ველის წაკითხვა შენი HTML-დან (ქვეყანა, ქალაქი, იმეილი)
     const fName = document.getElementById('ordFirstName').value;
     const lName = document.getElementById('ordLastName').value;
     const country = document.getElementById('ordCountry').value;
@@ -414,10 +414,10 @@ async function processOrderAndPay() {
         // 1. ბალანსის ჩამოჭრა (akho ველში)
         await userRef.update({ akho: currentBalance - totalPrice });
 
-        // 2. შეკვეთის შენახვა ისტორიაში (აუცილებლად 'buyerUid' ველით საძიებლად)
+        // 2. შეკვეთის შენახვა ისტორიაში
         await db.ref('orders').push({
             buyerUid: user.uid,
-            buyerName: fName + " " + lName, // აქ სწორად აერთიანებს სახელს და გვარს
+            buyerName: fName + " " + lName,
             country: country,
             city: city,
             address: addr,
@@ -425,7 +425,7 @@ async function processOrderAndPay() {
             email: email,
             productName: currentProduct.name,
             paidAmount: totalPrice,
-            price: totalPrice, // დავამატე მხოლოდ ეს, რომ ადმინ პანელში undefined აღარ ეწეროს
+            price: totalPrice,
             status: "paid_with_akho",
             timestamp: Date.now()
         });
@@ -434,14 +434,31 @@ async function processOrderAndPay() {
             await db.ref(`userCarts/${user.uid}`).remove();
         }
 
-        // --- 🛠️ აი აქ შეიცვალა ორიგინალი კოდი: alert ჩანაცვლდა ანიმაციით ---
+        // --- 📱 WhatsApp შეტყობინების გაგზავნა (ახალი ნაწილი) ---
+        const myAdminNumber = "9955XXXXXXXX"; // 👈 აქ ჩაწერე შენი ნომერი (მაგ: 995599123456)
+        const waMessage = `🚀 ახალი შეკვეთა Emigrantbook-დან!
+📦 ნივთი: ${currentProduct.name}
+💰 გადახდილია: ${totalPrice} AKHO
+👤 მყიდველი: ${fName} ${lName}
+📞 ტელ: ${phone}
+📍 მისამართი: ${country}, ${city}, ${addr}`;
+        
+        const whatsappUrl = `https://wa.me/${myAdminNumber}?text=${encodeURIComponent(waMessage)}`;
+
+        // გამოვიძახოთ ანიმაცია
         showSuccessAnimation();
+
+        // ანიმაციის პარალელურად გავხსნათ WhatsApp (მცირე დაგვიანებით)
+        setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+        }, 1500);
 
     } catch (e) {
         alert("შეცდომაა: " + e.message);
         if (btn) { btn.disabled = false; btn.innerText = "გადახდა 🚀"; }
     }
 }
+
         
 
 // დეტალები
