@@ -1183,3 +1183,45 @@ function loadProductReviews(productId) {
         list.innerHTML = html;
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+function loadAdminDashboardStats() {
+    db.ref('orders').on('value', snap => {
+        const orders = snap.val();
+        if (!orders) return;
+
+        let totalAkho = 0;
+        let count = 0;
+        let lastProduct = "";
+
+        Object.values(orders).forEach(order => {
+            // ვითვლით მხოლოდ წარმატებულ გადახდებს
+            const amount = parseFloat(order.paidAmount || order.price || 0);
+            totalAkho += amount;
+            count++;
+            lastProduct = order.productName; // ბოლო გაყიდული ნივთი
+        });
+
+        // ვიზუალის განახლება
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalIncomeEurEl = document.getElementById('totalIncomeEur');
+        const totalOrdersCountEl = document.getElementById('totalOrdersCount');
+        const topProductNameEl = document.getElementById('topProductName');
+
+        if (totalIncomeEl) totalIncomeEl.innerText = `${totalAkho.toLocaleString()} AKHO`;
+        if (totalIncomeEurEl) totalIncomeEurEl.innerText = `≈ ${(totalAkho * AKHO_EXCHANGE_RATE).toFixed(2)} EUR`;
+        if (totalOrdersCountEl) totalOrdersCountEl.innerText = count;
+        if (topProductNameEl) topProductNameEl.innerText = lastProduct || "ჯერ არ არის";
+    });
+}
