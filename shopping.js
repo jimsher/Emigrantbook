@@ -1013,3 +1013,62 @@ function updatePriceWithDiscount() {
     // მნიშვნელოვანი: ვაახლებთ currentProduct.price-ს, რომ გადახდისას დაკლებული თანხა ჩამოიჭრას
     currentProduct.finalPrice = finalPrice; 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ფასდაკლების ტაიმერის ლოგიკა
+function startCountdown() {
+    // ყოველდღე რომ ახლიდან დაიწყოს "თითქოს" ცოტა დრო დარჩა
+    // დავაყენოთ რომ აქცია მთავრდება დღის ბოლოს
+    const now = new Date();
+    const tonight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    
+    function update() {
+        const currentTime = new Date();
+        const diff = tonight - currentTime;
+
+        if (diff <= 0) {
+            document.getElementById('t-hours').innerText = "00";
+            document.getElementById('t-mins').innerText = "00";
+            document.getElementById('t-secs').innerText = "00";
+            return;
+        }
+
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+        // ელემენტების განახლება (თუ ისინი არსებობენ ეკრანზე)
+        const hEl = document.getElementById('t-hours');
+        const mEl = document.getElementById('t-mins');
+        const sEl = document.getElementById('t-secs');
+
+        if (hEl) hEl.innerText = h < 10 ? "0" + h : h;
+        if (mEl) mEl.innerText = m < 10 ? "0" + m : m;
+        if (sEl) sEl.innerText = s < 10 ? "0" + s : s;
+    }
+
+    // ვუშვებთ ყოველ წამს
+    const timerInterval = setInterval(() => {
+        if (!document.getElementById('countdownDisplay')) {
+            clearInterval(timerInterval); // თუ მოდალი დაიკეტა, ტაიმერიც გაჩერდეს
+            return;
+        }
+        update();
+    }, 1000);
+    
+    update(); // პირველივე გაშვება
+}
