@@ -864,3 +864,55 @@ function openWishlistView() {
         content.innerHTML = html;
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+// მაღაზიის შეტყობინების ლოგიკა
+function startLiveSalesNotifications() {
+    const popup = document.createElement('div');
+    popup.className = "sales-popup";
+    document.body.appendChild(popup);
+
+    // ვუყურებთ ბოლო 5 შეკვეთას
+    db.ref('orders').limitToLast(5).on('value', snap => {
+        const orders = snap.val();
+        if (!orders) return;
+
+        const orderList = Object.values(orders);
+        
+        // ყოველ 20-30 წამში გამოვაჩინოთ შემთხვევითი შეკვეთა
+        setInterval(() => {
+            const randomOrder = orderList[Math.floor(Math.random() * orderList.length)];
+            
+            popup.innerHTML = `
+                <div style="background:var(--gold); width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:black;">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="info">
+                    <b>${randomOrder.buyerName.split(' ')[0]} - მ იყიდა</b>
+                    ${randomOrder.productName}
+                    <div style="color:gray; font-size:9px; margin-top:3px;">ახლახან ✅</div>
+                </div>
+            `;
+
+            popup.classList.add('show');
+            
+            // 6 წამში დავმალოთ
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 6000);
+
+        }, 25000); // 25 წამში ერთხელ
+    });
+}
+
+// აუცილებლად გამოიძახე ეს ფუნქცია საიტის ჩართვისას
+startLiveSalesNotifications();
