@@ -289,13 +289,15 @@ function openCartView() {
     if (cart.length === 0) {
         content.innerHTML = `<div style="text-align:center; padding:40px;"><p style="color:gray;">კალათა ცარიელია 🛒</p></div>`;
     } else {
-        let total = 0;
         let html = `<h2 style="color:var(--gold); margin-bottom:15px; width:100%;">კალათა</h2>`;
-        cart.forEach((item) => {
-            total += parseFloat(item.price);
+        
+        cart.forEach((item, index) => {
             const itemEurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
             html += `
                 <div style="width:100%; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px;">
+                    <input type="checkbox" class="cart-item-checkbox" data-index="${index}" onchange="calculateSelectedTotal()" checked 
+                           style="width: 18px; height: 18px; accent-color: var(--gold); cursor: pointer;">
+                    
                     <img src="${item.image}" style="width:40px; height:40px; border-radius:5px; object-fit:cover;">
                     <div style="flex:1; color:white; font-size:13px;">${item.name}</div>
                     <div style="text-align:right;">
@@ -307,24 +309,74 @@ function openCartView() {
             `;
         });
         
-        const totalEurPrice = (total * AKHO_EXCHANGE_RATE).toFixed(2);
         html += `<div style="width:100%; border-top:1px solid #333; padding-top:15px; margin-top:10px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; color:white; font-weight:bold; margin-bottom:15px;">
                         <span>ჯამი:</span>
                         <div style="text-align:right;">
-                            <span style="color:#00ff00; display:block;">${total} AKHO</span>
-                            <small style="color:gray; font-weight:normal; font-size:12px;">≈ ${totalEurPrice} EUR</small>
+                            <span id="cartSelectedTotal" style="color:#00ff00; display:block; font-size:18px;">0 AKHO</span>
+                            <small id="cartSelectedTotalEur" style="color:gray; font-weight:normal; font-size:12px;">≈ 0.00 EUR</small>
                         </div>
                     </div>
-                    <button onclick="openOrderFormFromCart(${total})" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">შეკვეთა 🚀</button>
+                    <button id="cartOrderBtn" onclick="checkoutSelectedItems()" style="width:100%; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">შეკვეთა 🚀</button>
                  </div>`;
+        
         content.innerHTML = html;
+        // გამოძახება, რომ საწყისი ჯამი დაითვალოს
+        calculateSelectedTotal();
     }
     modal.style.display = 'flex';
 }
 
-function openOrderFormFromCart(total) {
-    currentProduct = { name: `კალათა (${cart.length} ნივთი)`, price: total, isCart: true };
+// 🧮 ახალი დამხმარე ფუნქცია მონიშნულების დასათვლელად
+function calculateSelectedTotal() {
+    const checkboxes = document.querySelectorAll('.cart-item-checkbox');
+    let total = 0;
+    
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            const index = cb.getAttribute('data-index');
+            total += parseFloat(cart[index].price);
+        }
+    });
+
+    const totalEurPrice = (total * AKHO_EXCHANGE_RATE).toFixed(2);
+    
+    const totalDisplay = document.getElementById('cartSelectedTotal');
+    const eurDisplay = document.getElementById('cartSelectedTotalEur');
+    
+    if (totalDisplay) totalDisplay.innerText = `${total} AKHO`;
+    if (eurDisplay) eurDisplay.innerText = `≈ ${totalEurPrice} EUR`;
+    
+    return total;
+}
+
+// 🛒 მონიშნული ნივთების მომზადება საყიდლად
+function checkoutSelectedItems() {
+    const checkboxes = document.querySelectorAll('.cart-item-checkbox');
+    let selectedItems = [];
+    let total = 0;
+
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            const index = cb.getAttribute('data-index');
+            selectedItems.push(cart[index]);
+            total += parseFloat(cart[index].price);
+        }
+    });
+
+    if (selectedItems.length === 0) return alert("გთხოვთ მონიშნოთ მინიმუმ ერთი ნივთი!");
+
+    // შენი ორიგინალი ფუნქციის ლოგიკა, ოღონდ მონიშნულებზე
+    openOrderFormFromCart(total, selectedItems.length);
+}
+
+// 💳 შენი ორიგინალი ფუნქცია (ოდნავ განახლებული მონიშნულებისთვის)
+function openOrderFormFromCart(total, count) {
+    currentProduct = { 
+        name: `კალათა (${count} ნივთი)`, 
+        price: total, 
+        isCart: true 
+    };
     openOrderForm();
 }
 
