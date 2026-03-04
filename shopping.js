@@ -190,7 +190,7 @@ function searchProduct(query) {
 }
 
 // ბარათი
-// ბარათი - გასწორებული და გაძლიერებული Wishlist ღილაკით
+    // ბარათი - სრულად გასწორებული, რომ გული აუცილებლად გამოჩნდეს
 function drawProductCard(id, item, grid) {
     const card = document.createElement('div');
     card.className = "product-card";
@@ -205,7 +205,6 @@ function drawProductCard(id, item, grid) {
         <small style="color:gray; font-size:10px;">≈ ${eurPrice} EUR</small>
     `;
 
-    // თეგების ლოგიკა (Z-index დამატებული)
     if (item.oldPrice && item.oldPrice > item.price) {
         badge = `<div style="position:absolute; top:8px; left:8px; background:#ff4d4d; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:15; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">SALE</div>`;
         const oldEurPrice = (item.oldPrice * AKHO_EXCHANGE_RATE).toFixed(2);
@@ -221,13 +220,13 @@ function drawProductCard(id, item, grid) {
         badge = `<div style="position:absolute; top:8px; left:8px; background:#ff9800; color:white; padding:3px 8px; border-radius:6px; font-size:10px; font-weight:bold; z-index:15;">🔥 HOT</div>`;
     }
 
-    // --- ❤️ Wishlist ლოგიკა (Z-index 100 და მუქი ფონი გარანტირებული ხილვადობისთვის) ---
+    // --- ❤️ Wishlist ლოგიკა (გასწორებული ხილვადობა) ---
     const wishlistBtn = `
         <div onclick="event.stopPropagation(); toggleWishlist('${id}', this.querySelector('i'))" 
-             style="position:absolute; top:10px; right:10px; z-index:100; background:rgba(0,0,0,0.6); width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(4px);">
+             style="position:absolute; top:10px; right:10px; z-index:1001; background:rgba(0,0,0,0.7); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(5px);">
             <i class="fas fa-heart" 
                id="wish_${id}"
-               style="color:rgba(255,255,255,0.5); font-size:16px; transition:0.3s; cursor:pointer;">
+               style="color:rgba(255,255,255,0.4); font-size:16px; transition:0.3s; cursor:pointer;">
             </i>
         </div>
     `;
@@ -244,25 +243,23 @@ function drawProductCard(id, item, grid) {
             </div>
         </div>
         ${auth.currentUser && auth.currentUser.uid === 'TfXz5N0lHjX2R7yV9pW1qM8bK4d2' ? `
-            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; top:45px; right:10px; color:white; background:rgba(255,0,0,0.8); padding:8px; border-radius:50%; font-size:12px; z-index:20;"></i>
+            <i class="fas fa-trash" onclick="event.stopPropagation(); deleteProduct('${id}')" style="position:absolute; bottom:10px; right:10px; color:white; background:rgba(255,0,0,0.8); padding:8px; border-radius:50%; font-size:12px; z-index:20;"></i>
         ` : ''}
     `;
 
-    // რეალურ დროში ფერის შემოწმება (Firebase-დან)
     if (auth.currentUser) {
         db.ref(`userWishlists/${auth.currentUser.uid}/${id}`).once('value', snap => {
             if (snap.exists()) {
                 setTimeout(() => {
                     const heartIcon = document.getElementById(`wish_${id}`);
                     if (heartIcon) heartIcon.style.color = "#ff4d4d";
-                }, 150);
+                }, 200);
             }
         });
     }
 
     grid.appendChild(card);
 }
-
 
 
 function updateCartBadge() {
