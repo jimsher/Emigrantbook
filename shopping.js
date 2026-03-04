@@ -795,3 +795,37 @@ function showSuccessAnimation(whatsappUrl) {
         }, 1000);
     }, 5000); 
 }
+
+
+
+
+
+
+
+
+
+
+
+function toggleWishlist(productId, event) {
+    if (event) event.stopPropagation(); // რომ ბარათის დეტალები არ გაიხსნას ერთდროულად
+    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+
+    const userWishlistRef = db.ref(`userWishlists/${auth.currentUser.uid}/${productId}`);
+
+    userWishlistRef.once('value', snap => {
+        if (snap.exists()) {
+            userWishlistRef.remove(); // თუ უკვე იყო, წავშალოთ
+        } else {
+            // თუ არ იყო, დავამატოთ ნივთის ძირითადი ინფო
+            db.ref(`akhoStore/${productId}`).once('value', pSnap => {
+                const p = pSnap.val();
+                userWishlistRef.set({
+                    name: p.name,
+                    price: p.price,
+                    image: p.image,
+                    addedAt: Date.now()
+                });
+            });
+        }
+    });
+}
