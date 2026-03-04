@@ -824,3 +824,40 @@ function toggleWishlist(productId, event) {
         }
     });
 }
+
+
+
+
+
+function openWishlistView() {
+    const modal = document.getElementById('productDetailsModal');
+    const content = document.getElementById('detailsContent');
+    if (!modal || !content) return;
+
+    modal.style.display = 'flex';
+    content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px;">ჩემი ფავორიტები ❤️</h2><div id="wishLoading">იტვირთება...</div>`;
+
+    db.ref(`userWishlists/${auth.currentUser.uid}`).on('value', snap => {
+        const data = snap.val();
+        if (!data) {
+            content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px;">ჩემი ფავორიტები ❤️</h2><p style="color:gray; text-align:center;">ფავორიტების სია ცარიელია.</p>`;
+            return;
+        }
+
+        let html = `<h2 style="color:var(--gold); margin-bottom:20px;">ჩემი ფავორიტები ❤️</h2>`;
+        Object.entries(data).forEach(([id, item]) => {
+            html += `
+                <div style="width:100%; display:flex; align-items:center; gap:12px; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; margin-bottom:10px; border:1px solid #222;">
+                    <img src="${item.image}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+                    <div style="flex:1;">
+                        <b style="color:white; font-size:14px; display:block;">${item.name}</b>
+                        <span style="color:var(--gold); font-size:13px;">${item.price} AKHO</span>
+                    </div>
+                    <button onclick="showProductDetails('${id}')" style="background:var(--gold); border:none; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:11px; color:black;">ნახვა</button>
+                    <i class="fas fa-trash" onclick="toggleWishlist('${id}')" style="color:#ff4d4d; cursor:pointer; padding:5px;"></i>
+                </div>
+            `;
+        });
+        content.innerHTML = html;
+    });
+}
