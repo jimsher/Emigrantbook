@@ -701,6 +701,45 @@ function renderUserOrderHistory() {
     });
 }
 
+            // --- შენი ორიგინალი შეკვეთების ლოგიკა (უცვლელად) ---
+            let hasOrders = false;
+            if (data) {
+                Object.values(data).reverse().forEach(order => {
+                    if (order.buyerUid === user.uid || order.uid === user.uid) {
+                        hasOrders = true;
+                        const date = new Date(order.timestamp).toLocaleDateString();
+                        const finalAmount = order.paidAmount || order.price || 0;
+                        
+                        // აქ შენი ძველი სტატუსის და პროგრესის ლოგიკა...
+                        let progress = "20%"; 
+                        let statusLabel = "მუშავდება";
+                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
+                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
+                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
+                        }
+
+                        ordersHtml += `
+                            <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
+                                    <span style="color:gray; font-size:12px;">${date}</span>
+                                </div>
+                                <div style="color:var(--gold); font-weight:bold;">${finalAmount} AKHO</div>
+                                <div style="color:gray; font-size:11px; margin-top:5px;">სტატუსი: ${statusLabel}</div>
+                            </div>`;
+                    }
+                });
+            }
+
+            if (!hasOrders && !ordersHtml.includes('vip-status-card')) {
+                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">ისტორია ცარიელია.</p>`;
+            } else {
+                content.innerHTML = ordersHtml;
+            }
+        });
+    });
+}
+
 
 
 
