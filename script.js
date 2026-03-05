@@ -2267,3 +2267,50 @@ function stopCamera() {
         recordInner.style.boxShadow = "none";
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// პაროლის აღდგენის ლოგიკა
+function handleForgotPassword() {
+    const emailInput = document.getElementById('loginEmail');
+    const email = emailInput ? emailInput.value.trim() : "";
+
+    if (!email) {
+        alert("გთხოვთ, ჯერ ჩაწეროთ თქვენი მეილი შესვლის ველში.");
+        if(emailInput) emailInput.focus();
+        return;
+    }
+
+    if (confirm(`გსურთ პაროლის აღდგენის ლინკის გაგზავნა მეილზე: ${email}?`)) {
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                alert("პაროლის აღდგენის ინსტრუქცია გაიგზავნა თქვენს ელ-ფოსტაზე. შეამოწმეთ Inbox (ან Spam). ✅");
+            })
+            .catch((error) => {
+                let errorMessage = "შეცდომა მოხდა: ";
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage += "მომხმარებელი ამ მეილით არ მოიძებნა.";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += "მეილის ფორმატი არასწორია.";
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                alert(errorMessage);
+            });
+    }
+}
