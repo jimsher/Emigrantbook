@@ -777,7 +777,7 @@ function closeProductDetails() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}                                                                                      
+}                                                                                                                   
                     
 
                                                                                                                                                                
