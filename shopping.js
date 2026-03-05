@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-function renderUserOrderHistory() {
+    function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -644,13 +644,67 @@ function renderUserOrderHistory() {
                 // შედარება ხდება მხოლოდ UID-ით, რაც 100% საიმედოა
                 if (details.active && details.forUser === currentUid) {
                     vipCardHtml = `
-                        <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
-                            <div style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 VIP IMPACT</div>
-                            <div style="color:white; font-size:14px; font-weight:bold;">თქვენი პირადი პრომო კოდია:</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-top:10px; border:1px dashed var(--gold);">
-                                <b style="color:var(--gold); font-size:22px; letter-spacing:1px;">${codeKey}</b>
-                                <span style="color:#00ff00; font-weight:bold; font-size:18px;">-${details.discount}%</span>
+                        <div class="vip-promo-container" style="
+                            margin-bottom: 25px; 
+                            background: linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(0,0,0,0.6) 100%); 
+                            border: 2px solid var(--gold); 
+                            padding: 20px; 
+                            border-radius: 20px; 
+                            width: 100%; 
+                            box-sizing: border-box; 
+                            position: relative;
+                            overflow: hidden;
+                            box-shadow: 0 10px 30px rgba(212,175,55,0.15);
+                        ">
+                            <div style="position:absolute; top:-10px; right:-10px; font-size:60px; color:rgba(212,175,55,0.05); transform:rotate(-15deg); pointer-events:none;">💎</div>
+
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                                <div style="background:var(--gold); color:black; padding:3px 10px; border-radius:50px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">
+                                    🎉 პერსონალური საჩუქარი
+                                </div>
                             </div>
+
+                            <h3 style="color:white; margin:0 0 5px 0; font-size:18px; font-weight:800;">გილოცავთ! 🎊</h3>
+                            <p style="color:rgba(255,255,255,0.7); font-size:12px; margin:0 0 15px 0; line-height:1.4;">
+                                თქვენ გადმოგეცათ სპეციალური ფასდაკლების კუპონი IMPACT-ისგან.
+                            </p>
+
+                            <div style="
+                                display: flex; 
+                                justify-content: space-between; 
+                                align-items: center; 
+                                background: rgba(0,0,0,0.4); 
+                                padding: 12px; 
+                                border-radius: 12px; 
+                                border: 1px solid rgba(212,175,55,0.3);
+                            ">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="color:rgba(212,175,55,0.6); font-size:9px; font-weight:bold; text-transform:uppercase;">პრომო კოდი:</span>
+                                    <b style="color:var(--gold); font-size:22px; letter-spacing:2px; font-family:monospace;">${codeKey}</b>
+                                </div>
+                                
+                                <div style="text-align:right;">
+                                    <div style="color:#00ff00; font-size:26px; font-weight:900; line-height:1;">-${details.discount}%</div>
+                                    <span style="color:rgba(255,255,255,0.5); font-size:9px; font-weight:bold;">OFF STORE</span>
+                                </div>
+                            </div>
+
+                            <button onclick="navigator.clipboard.writeText('${codeKey}'); alert('კოდი დაკოპირდა! ✅');" style="
+                                width: 100%; 
+                                margin-top: 12px; 
+                                background: var(--gold); 
+                                color: black; 
+                                border: none; 
+                                padding: 10px; 
+                                border-radius: 10px; 
+                                font-weight: 900; 
+                                font-size: 12px; 
+                                cursor: pointer; 
+                                text-transform: uppercase;
+                                box-shadow: 0 4px 10px rgba(212,175,55,0.2);
+                            ">
+                                🎁 კოდის დაკოპირება
+                            </button>
                         </div>`;
                 }
             });
@@ -710,7 +764,7 @@ function renderUserOrderHistory() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}         
+}     
                     
 
                                                                                                                                                                
