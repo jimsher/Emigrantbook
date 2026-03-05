@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-     function renderUserOrderHistory() {
+        function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -633,33 +633,30 @@ function closeProductDetails() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
 
-    // 1. ჯერ ვამოწმებთ არის თუ არა ამ მომხმარებლისთვის პერსონალური კუპონი
+    // 1. VIP კუპონის წამოღება (ცალკე ლოგიკად, რომ ისტორიას არ შეუშალოს ხელი)
     db.ref('promoCodes').once('value', pSnap => {
         const allCodes = pSnap.val();
-        const userName = user.displayName || ""; // მომხმარებლის სახელი, რომელსაც ადარებ forUser-ს
+        const userName = user.displayName || "";
         let vipCardHtml = "";
 
         if (allCodes) {
             Object.entries(allCodes).forEach(([code, details]) => {
-                // ვამოწმებთ: კოდი აქტიურია? და ეკუთვნის ამ მომხმარებელს (სახელით)?
+                // ვამოწმებთ არის თუ არა მომხმარებლისთვის განკუთვნილი
                 if (details.active && details.forUser === userName) {
                     vipCardHtml = `
-                        <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box; animation: fadeIn 0.5s ease;">
+                        <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
                             <div style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 VIP IMPACT STATUS</div>
-                            <div style="color:white; font-size:14px; font-weight:bold;">თქვენი პერსონალური კუპონია:</div>
+                            <div style="color:white; font-size:14px; font-weight:bold;">თქვენი პირადი პრომო კოდია:</div>
                             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-top:10px; border:1px dashed var(--gold);">
-                                <b style="color:var(--gold); font-size:22px; letter-spacing:2px;">${code}</b>
+                                <b style="color:var(--gold); font-size:22px; letter-spacing:1px;">${code}</b>
                                 <span style="color:#00ff00; font-weight:bold; font-size:18px;">-${details.discount}%</span>
                             </div>
-                            <p style="color:gray; font-size:10px; margin-top:10px;">* გამოიყენეთ პრომო კოდი მაღაზიაში ფასდაკლების მისაღებად.</p>
-                        </div>
-                    `;
+                        </div>`;
                 }
             });
         }
 
-        // 2. ჩავტვირთოთ შეკვეთების ისტორია
-        db.ref('orders').off(); 
+        // 2. შენი ორიგინალი შეკვეთების ისტორია (ზუსტად ისე, როგორც შენ გქონდა)
         db.ref('orders').on('value', snap => {
             const data = snap.val();
             let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
@@ -684,7 +681,7 @@ function closeProductDetails() {
                             progress = "100%"; 
                             statusLabel = "ჩამოვიდა"; 
                             if (!order.location) displayLocation = "ადგილზეა ✅";
-                            if (!order.eta) displayETA = "მზად არის";
+                            if (!order.eta) displayETA = "მზად არის ჩასაბარებლად";
                         }
 
                         ordersHtml += `
@@ -697,8 +694,8 @@ function closeProductDetails() {
                                     <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
                                         <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
                                         <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
-                                        <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
-                                        <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                        <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                        <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                                     </div>
                                     <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
                                         <span>მიღებულია</span><span>გზაშია</span><span>ჩაბარდა</span>
@@ -710,7 +707,7 @@ function closeProductDetails() {
                                         <b style="color:white; font-size:11px;">${displayLocation}</b>
                                     </div>
                                     <div style="display:flex; justify-content:space-between;">
-                                        <span style="color:#777; font-size:11px;">⏳ ETA დრო:</span>
+                                        <span style="color:#777; font-size:11px;">⏳ ETA:</span>
                                         <b style="color:var(--gold); font-size:11px;">${displayETA}</b>
                                     </div>
                                 </div>
@@ -729,13 +726,13 @@ function closeProductDetails() {
             }
 
             if (!hasOrders && !vipCardHtml) {
-                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები ვერ მოიძებნა.</p>`;
+                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
             } else {
                 content.innerHTML = ordersHtml;
             }
         });
     });
-}                                                       
+}                                                                                        
                                                                             
 
 
