@@ -1032,18 +1032,22 @@ function initRealTimeSalesPopup() {
 function createPromoCode() {
     const code = document.getElementById('promoCodeName').value.trim().toUpperCase();
     const percent = document.getElementById('promoPercent').value;
-    const targetUser = prompt("ვისთვის არის ეს კოდი? (ჩაწერეთ სახელი და გვარი ან 'ყველასთვის')");
+    const targetUser = document.getElementById('promoTargetUser').value.trim();
 
     if (!code || !percent) return alert("შეავსეთ კოდი და პროცენტი!");
 
     db.ref(`promoCodes/${code}`).set({
         discount: parseInt(percent),
         active: true,
-        forUser: targetUser || "ყველასთვის", // აქ ვინახავთ მფლობელის სახელს
+        forUser: targetUser || "ყველასთვის", // თუ ცარიელია, იქნება ყველასთვის
         createdAt: Date.now()
     }).then(() => {
-        alert(`კუპონი ${code} (${percent}%) შეიქმნა ${targetUser}-ისთვის! ✅`);
-    });
+        alert(`კუპონი ${code} (${percent}%) შეიქმნა ${targetUser || 'ყველასთვის'}! ✅`);
+        // ველების გასუფთავება
+        document.getElementById('promoCodeName').value = "";
+        document.getElementById('promoPercent').value = "";
+        document.getElementById('promoTargetUser').value = "";
+    }).catch(err => alert("შეცდომა: " + err.message));
 }
 
 
