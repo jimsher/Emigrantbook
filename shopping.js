@@ -648,27 +648,35 @@ function renderUserOrderHistory() {
         }
 
         // --- ⭐ VIP სტატუსის და პირადი კოდის გამოჩენა ---
-db.ref(`users/${user.uid}/personalCode`).once('value', pSnap => {
-    const personalCode = pSnap.val();
-    const ordersCount = Object.values(data).filter(o => o.buyerUid === user.uid || o.uid === user.uid).length;
+// ვეძებთ კუპონს, რომელიც ამ მომხმარებლის სახელზეა (მაგ: "გიორგი ბერიძე")
+db.ref('promoCodes').once('value', pSnap => {
+    const allCodes = pSnap.val();
+    const userName = auth.currentUser.displayName; // მომხმარებლის სახელი
+    
+    let userSpecialCode = "LOYALVIP10"; // სტანდარტული კოდი
+    let userDiscount = 10;
 
-    // თუ მომხმარებელს აქვს პირადი კოდი ან 3-ზე მეტი შეკვეთა
-    if (personalCode || ordersCount >= 3) {
-        const displayCode = personalCode || "LOYALVIP15"; // თუ პირადი არ აქვს, ვაჩვენებთ ზოგადს
-        
-        // აქ ჩაჯდება შენი VIP ბარათის HTML
-        let vipCard = `
-            <div class="vip-status-card">
-                <div class="vip-badge">👑 VIP წევრი</div>
-                <div style="color:white; font-size:15px; font-weight:bold;">გილოცავთ! თქვენ გაქვთ VIP სტატუსი</div>
-                <p style="color:gray; font-size:11px; margin-top:5px;">თქვენი პირადი ფასდაკლების კოდია:</p>
-                <div class="vip-promo-box">
-                    <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">${displayCode}</b>
-                </div>
-            </div>
-        `;
-        // ამას ჩავსვამთ სათაურის ქვემოთ
+    if (allCodes) {
+        Object.values(allCodes).forEach(c => {
+            if (c.forUser === userName) {
+                // თუ ვიპოვეთ კოდი, რომელიც სპეციალურად ამ მომხმარებლისთვისაა
+                userSpecialCode = Object.keys(allCodes).find(key => allCodes[key] === c);
+                userDiscount = c.discount;
+            }
+        });
     }
+
+    // აი აქ უკვე გამოჩნდება VIP ბარათი იმ კოდით, რომელიც შენ შექმენი
+    ordersHtml += `
+        <div class="vip-status-card">
+            <div class="vip-badge">👑 VIP სტატუსი</div>
+            <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
+            <div class="vip-promo-box">
+                <b style="color:var(--gold); font-size:18px;">${userSpecialCode}</b>
+                <span style="color:#00ff00;">-${userDiscount}%</span>
+            </div>
+        </div>
+    `;
 });
 
         // მონაცემების გადარჩევა (შენი ორიგინალი ციკლი)
