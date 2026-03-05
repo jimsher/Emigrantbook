@@ -489,7 +489,7 @@ showSuccessAnimation(whatsappUrl);
         
 
 // დეტალები
-function showProductDetails(id) {
+ function showProductDetails(id) {
     db.ref(`akhoStore/${id}`).once('value', snap => {
         const item = snap.val();
         if (!item) return;
@@ -501,7 +501,22 @@ function showProductDetails(id) {
 
         const eurPrice = (item.price * AKHO_EXCHANGE_RATE).toFixed(2);
 
-        // --- ნივთის მდებარეობის და მიწოდების ინფორმაცია (Shopping Mode) ---
+        // --- ⭐ სლაიდერის ლოგიკა (მრავალი ფოტოსთვის) ---
+        const images = item.images || [item.image]; 
+        let sliderHTML = `<div class="product-slider" id="pSlider">`;
+        let dotsHTML = `<div class="slider-dots">`;
+        
+        images.forEach((img, index) => {
+            sliderHTML += `
+                <div class="product-slide">
+                    <img src="${img}" alt="პროდუქტი">
+                </div>`;
+            dotsHTML += `<div class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>`;
+        });
+        sliderHTML += `</div>`;
+        dotsHTML += `</div>`;
+
+        // --- ნივთის მდებარეობის და მიწოდების ინფორმაცია (შენი ორიგინალი) ---
         let trackingHTML = "";
         if (item.location || item.eta) {
             trackingHTML = `
@@ -519,14 +534,14 @@ function showProductDetails(id) {
                         </div>
                         <div style="color: #4ade80; font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
                             <i class="fas fa-shipping-fast" style="font-size: 10px;"></i> 
-                            მიწოდების დრო: <b>15 დღე</b>
+                            მიწოდების დრო: <b>${item.eta || '15'} დღე</b>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // --- ⏳ ახალი ფუნქცია: ფასდაკლების ტაიმერი (მხოლოდ SALE ნივთებისთვის) ---
+        // --- ⏳ ფასდაკლების ტაიმერი (შენი ორიგინალი) ---
         let timerHTML = "";
         if (item.oldPrice && item.oldPrice > item.price) {
             timerHTML = `
@@ -544,12 +559,13 @@ function showProductDetails(id) {
                     </div>
                 </div>
             `;
-            // ვუშვებთ ტაიმერს მცირე დაგვიანებით, რომ HTML-მა ჩახატვა მოასწროს
             setTimeout(startCountdown, 100);
         }
 
         content.innerHTML = `
-            <div style="width:100%; height:250px; background:url('${item.image}') center/cover no-repeat; border-radius:15px; border:1px solid #333;"></div>
+            ${sliderHTML}
+            ${images.length > 1 ? dotsHTML : ''}
+
             <div style="width:100%; text-align:left; padding: 15px 0;">
                 <h1 style="color:white; font-size:22px;">${item.name}</h1>
                 <div style="margin-bottom:15px;">
@@ -564,6 +580,7 @@ function showProductDetails(id) {
                     ${item.desc || "აღწერა არ არის."}
                 </div>
             </div>
+
             <div style="display:flex; gap:10px; width:100%;">
                 <button onclick="addToCart('${id}')" style="flex:1; background:rgba(212,175,55,0.1); color:var(--gold); padding:15px; border:1px solid var(--gold); border-radius:12px; font-weight:bold;">კალათაში 🛒</button>
                 <button onclick="openOrderForm()" style="flex:2; background:#d4af37; color:black; padding:15px; border:none; border-radius:12px; font-weight:bold;">ყიდვა 💳</button>
@@ -571,7 +588,6 @@ function showProductDetails(id) {
 
            <div class="reviews-container">
                 <h3 style="color:white; font-size:16px; margin-bottom:15px;">გამოხმაურებები ⭐</h3>
-                
                 <div class="review-input-area">
                     <div style="display:flex; gap:10px; margin-bottom:15px;" id="starSelector">
                         <i class="fas fa-star star-select active" onclick="setRating(1)"></i>
@@ -583,16 +599,25 @@ function showProductDetails(id) {
                     <textarea id="reviewText" class="auth-input" placeholder="დაწერეთ თქვენი აზრი..." style="height:60px; margin-bottom:10px; padding:10px;"></textarea>
                     <button onclick="submitReview('${id}')" style="width:100%; background:var(--gold); color:black; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">გაგზავნა 📝</button>
                 </div>
-
                 <div id="reviewsList" style="width:100%;">იტვირთება გამოხმაურებები...</div>
             </div>
-
         `;
+
         modal.style.display = 'flex';
-        // მნიშვნელოვანი: ამას ვიძახებთ მას შემდეგ, რაც HTML ჩაიხატა
         loadProductReviews(id);
+
+        // --- 🛠️ სლაიდერის წერტილების ანიმაცია სქროლვისას ---
+        const slider = document.getElementById('pSlider');
+        if (slider && images.length > 1) {
+            slider.addEventListener('scroll', () => {
+                const index = Math.round(slider.scrollLeft / slider.offsetWidth);
+                document.querySelectorAll('.dot').forEach((d, i) => {
+                    d.classList.toggle('active', i === index);
+                });
+            });
+        }
     });
-}
+}                       
 
 
 
