@@ -640,44 +640,84 @@ function renderUserOrderHistory() {
         
         // საწყისი სათაური
         let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
-        let hasOrders = false;
 
-        if (!data) {
-            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
-            return;
-        }
+        // --- ⭐ VIP სტატუსის და პირადი კოდის გამოჩენა (შენი ორიგინალი ლოგიკა) ---
+        db.ref('promoCodes').once('value', pSnap => {
+            const allCodes = pSnap.val();
+            const userName = auth.currentUser.displayName; // მომხმარებლის სახელი
+            
+            let userSpecialCode = ""; // თავიდან ცარიელია
+            let userDiscount = 0;
 
-        // --- ⭐ VIP სტატუსის და პირადი კოდის გამოჩენა ---
-// ვეძებთ კუპონს, რომელიც ამ მომხმარებლის სახელზეა (მაგ: "გიორგი ბერიძე")
-db.ref('promoCodes').once('value', pSnap => {
-    const allCodes = pSnap.val();
-    const userName = auth.currentUser.displayName; // მომხმარებლის სახელი
-    
-    let userSpecialCode = "LOYALVIP10"; // სტანდარტული კოდი
-    let userDiscount = 10;
+            if (allCodes) {
+                Object.entries(allCodes).forEach(([code, c]) => {
+                    if (c.forUser === userName && c.active) {
+                        userSpecialCode = code;
+                        userDiscount = c.discount;
+                    }
+                });
+            }
 
-    if (allCodes) {
-        Object.values(allCodes).forEach(c => {
-            if (c.forUser === userName) {
-                // თუ ვიპოვეთ კოდი, რომელიც სპეციალურად ამ მომხმარებლისთვისაა
-                userSpecialCode = Object.keys(allCodes).find(key => allCodes[key] === c);
-                userDiscount = c.discount;
+            // თუ კოდი მოიძებნა, ვამატებთ VIP ბარათს
+            if (userSpecialCode) {
+                ordersHtml += `
+                    <div class="vip-status-card" style="margin-bottom:20px;">
+                        <div class="vip-badge">👑 VIP სტატუსი</div>
+                        <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
+                        <div class="vip-promo-box">
+                            <b style="color:var(--gold); font-size:18px;">${userSpecialCode}</b>
+                            <span style="color:#00ff00;">-${userDiscount}%</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // --- შეკვეთების სია (შენი ორიგინალი ციკლი) ---
+            let hasOrders = false;
+            if (data) {
+                Object.values(data).reverse().forEach(order => {
+                    if (order.buyerUid === user.uid || order.uid === user.uid) {
+                        hasOrders = true;
+                        const date = new Date(order.timestamp).toLocaleDateString();
+                        const finalAmount = order.paidAmount || order.price || 0;
+
+                        // --- შენი ორიგინალი სტატუსის და პროგრესის ლოგიკა (უცვლელად) ---
+                        let progress = "20%"; 
+                        let statusLabel = "მუშავდება";
+                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
+                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
+                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
+                        }
+
+                        ordersHtml += `
+                            <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
+                                    <span style="color:gray; font-size:12px;">${date}</span>
+                                </div>
+                                <div style="margin: 15px 0 10px 0;">
+                                    <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
+                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px;"></div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                                    <span style="color:var(--gold); font-weight:bold;">${finalAmount} AKHO</span>
+                                    <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px;">${statusLabel}</span>
+                                </div>
+                            </div>`;
+                    }
+                });
+            }
+
+            // საბოლოო ჩახატვა (რომ არაფერი დაიკარგოს)
+            if (!hasOrders && !userSpecialCode) {
+                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
+            } else {
+                content.innerHTML = ordersHtml;
             }
         });
-    }
-
-    // აი აქ უკვე გამოჩნდება VIP ბარათი იმ კოდით, რომელიც შენ შექმენი
-    ordersHtml += `
-        <div class="vip-status-card">
-            <div class="vip-badge">👑 VIP სტატუსი</div>
-            <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
-            <div class="vip-promo-box">
-                <b style="color:var(--gold); font-size:18px;">${userSpecialCode}</b>
-                <span style="color:#00ff00;">-${userDiscount}%</span>
-            </div>
-        </div>
-    `;
-});
+    });
+}
 
         // მონაცემების გადარჩევა (შენი ორიგინალი ციკლი)
         Object.values(data).reverse().forEach(order => {
