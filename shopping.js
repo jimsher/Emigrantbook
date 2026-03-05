@@ -633,91 +633,108 @@ function renderUserOrderHistory() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
 
-    // 🛠️ ვთიშავთ ძველ კავშირს და ვამყარებთ ახალს რეალურ დროში
     db.ref('orders').off(); 
-    db.ref('orders').on('value', snap => {
+    db.ref('orders').on('value', async snap => { // დავამატე async სტაბილურობისთვის
         const data = snap.val();
-        
-        // საწყისი სათაური
         let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
+        
+        // --- ⭐ VIP სტატუსის ნაწილი (შენი ორიგინალიდან) ---
+        const pSnap = await db.ref('promoCodes').once('value');
+        const allCodes = pSnap.val();
+        const userName = auth.currentUser.displayName;
+        
+        let userSpecialCode = ""; 
+        let userDiscount = 0;
 
-        // --- ⭐ VIP სტატუსის და პირადი კოდის გამოჩენა (შენი ორიგინალი ლოგიკა) ---
-        db.ref('promoCodes').once('value', pSnap => {
-            const allCodes = pSnap.val();
-            const userName = auth.currentUser.displayName; // მომხმარებლის სახელი
-            
-            let userSpecialCode = ""; // თავიდან ცარიელია
-            let userDiscount = 0;
+        if (allCodes) {
+            Object.entries(allCodes).forEach(([code, c]) => {
+                if (c.forUser === userName && c.active) {
+                    userSpecialCode = code;
+                    userDiscount = c.discount;
+                }
+            });
+        }
 
-            if (allCodes) {
-                Object.entries(allCodes).forEach(([code, c]) => {
-                    if (c.forUser === userName && c.active) {
-                        userSpecialCode = code;
-                        userDiscount = c.discount;
-                    }
-                });
-            }
-
-            // თუ კოდი მოიძებნა, ვამატებთ VIP ბარათს
-            if (userSpecialCode) {
-                ordersHtml += `
-                    <div class="vip-status-card" style="margin-bottom:20px;">
-                        <div class="vip-badge">👑 VIP სტატუსი</div>
-                        <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
-                        <div class="vip-promo-box">
-                            <b style="color:var(--gold); font-size:18px;">${userSpecialCode}</b>
-                            <span style="color:#00ff00;">-${userDiscount}%</span>
-                        </div>
+        if (userSpecialCode) {
+            ordersHtml += `
+                <div class="vip-status-card">
+                    <div class="vip-badge">👑 VIP სტატუსი</div>
+                    <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
+                    <div class="vip-promo-box">
+                        <b style="color:var(--gold); font-size:18px;">${userSpecialCode}</b>
+                        <span style="color:#00ff00;">-${userDiscount}%</span>
                     </div>
-                `;
-            }
+                </div>
+            `;
+        }
 
-            // --- შეკვეთების სია (შენი ორიგინალი ციკლი) ---
-            let hasOrders = false;
-            if (data) {
-                Object.values(data).reverse().forEach(order => {
-                    if (order.buyerUid === user.uid || order.uid === user.uid) {
-                        hasOrders = true;
-                        const date = new Date(order.timestamp).toLocaleDateString();
-                        const finalAmount = order.paidAmount || order.price || 0;
+        // --- შენი ორიგინალი შეკვეთების სია (ზუსტად ისე როგორც გქონდა) ---
+        let hasOrders = false;
+        if (data) {
+            Object.values(data).reverse().forEach(order => {
+                if (order.buyerUid === user.uid || order.uid === user.uid) {
+                    hasOrders = true;
+                    const date = new Date(order.timestamp).toLocaleDateString();
+                    const finalAmount = order.paidAmount || order.price || 0;
 
-                        // --- შენი ორიგინალი სტატუსის და პროგრესის ლოგიკა (უცვლელად) ---
-                        let progress = "20%"; 
-                        let statusLabel = "მუშავდება";
-                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
-                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
-                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
-                        }
-
-                        ordersHtml += `
-                            <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                                    <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
-                                    <span style="color:gray; font-size:12px;">${date}</span>
-                                </div>
-                                <div style="margin: 15px 0 10px 0;">
-                                    <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
-                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px;"></div>
-                                    </div>
-                                </div>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                                    <span style="color:var(--gold); font-weight:bold;">${finalAmount} AKHO</span>
-                                    <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px;">${statusLabel}</span>
-                                </div>
-                            </div>`;
+                    // --- აქ შენი ორიგინალი პროგრესის და სტატუსის ლოგიკაა ---
+                    let progress = "20%"; 
+                    let statusLabel = "მუშავდება";
+                    if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
+                    else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
+                        progress = "100%"; statusLabel = "ჩამოვიდა"; 
                     }
-                });
-            }
 
-            // საბოლოო ჩახატვა (რომ არაფერი დაიკარგოს)
-            if (!hasOrders && !userSpecialCode) {
-                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
-            } else {
-                content.innerHTML = ordersHtml;
-            }
-        });
+                    ordersHtml += `
+                        <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
+                                <span style="color:gray; font-size:12px;">${date}</span>
+                            </div>
+                            <div style="margin: 15px 0 10px 0;">
+                                <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
+                                    <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
+                                    <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
+                                    <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                    <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
+                                    <span>მიღებულია</span>
+                                    <span>გზაშია</span>
+                                    <span>ჩაბარდა</span>
+                                </div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                                <div>
+                                    <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
+                                    <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
+                                </div>
+                                <div style="text-align:right;">
+                                    <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
+                                        ${statusLabel}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            });
+        }
+
+        if (!hasOrders && !userSpecialCode) {
+            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
+        } else {
+            content.innerHTML = ordersHtml;
+        }
     });
 }
+
+
+
+
+
+
+
+
 
         // მონაცემების გადარჩევა (შენი ორიგინალი ციკლი)
         Object.values(data).reverse().forEach(order => {
