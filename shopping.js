@@ -744,6 +744,7 @@ function renderAdminOrders() {
             const finalAmount = order.paidAmount || order.price || 0;
             const fullName = order.buyerName || (order.firstName ? (order.firstName + " " + (order.lastName || "")) : "უცნობი მყიდველი");
             const fullLocation = `${order.country || ''} ${order.city || ''}, ${order.address || '-'}`;
+            const userUID = order.uid || order.buyerUid || "UID არ მოიძებნა";
 
             listContainer.innerHTML += `
                 <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid #333; text-align:left; margin-bottom:10px;">
@@ -752,7 +753,16 @@ function renderAdminOrders() {
                         <span style="color:gray; font-size:11px;">${date}</span>
                     </div>
                     
-                    <div style="color:white; font-size:13px; margin-bottom:5px;">👤 მყიდველი: ${fullName}</div>
+                    <div style="color:white; font-size:13px; margin-bottom:2px;">👤 მყიდველი: ${fullName}</div>
+                    
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <small style="color:#777; font-size:10px;">ID: ${userUID}</small>
+                        <button onclick="navigator.clipboard.writeText('${userUID}'); alert('ID დაკოპირდა!')" 
+                                style="background:#333; color:#ccc; border:none; padding:2px 6px; border-radius:4px; font-size:9px; cursor:pointer;">
+                            📋 COPY
+                        </button>
+                    </div>
+
                     <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📧 მეილი: ${order.email || '-'}</div>
                     <div style="color:#ccc; font-size:12px; margin-bottom:3px;">📞 ტელ: ${order.phone || '-'}</div>
                     <div style="color:#ccc; font-size:12px; margin-bottom:12px;">📍 მისამართი: ${fullLocation}</div>
@@ -778,6 +788,10 @@ function renderAdminOrders() {
         });
     });
 }
+
+
+
+
 
 
 function updateOrderStatus(orderId, newStatus) {
