@@ -1000,18 +1000,47 @@ function initRealTimeSalesPopup() {
 function createPromoCode() {
     const code = document.getElementById('promoCodeName').value.trim().toUpperCase();
     const percent = document.getElementById('promoPercent').value;
+    const target = document.getElementById('promoTargetUser').value.trim(); // აქ წერ სახელს (მაგ: ნუკრი ყარდავა)
 
-    if (!code || !percent) return alert("შეავსეთ კოდი და პროცენტი!");
+    if (!code || !percent || !target) {
+        return alert("შეავსეთ ყველა ველი!");
+    }
 
-    db.ref(`promoCodes/${code}`).set({
-        discount: parseInt(percent),
-        active: true,
-        createdAt: Date.now()
-    }).then(() => {
-        alert(`კუპონი ${code} (${percent}%) წარმატებით დაემატა! ✅`);
-        document.getElementById('promoCodeName').value = "";
-        document.getElementById('promoPercent').value = "";
-    }).catch(err => alert("შეცდომა: " + err.message));
+    // 1. ჯერ ვეძებთ შეკვეთებში ამ მომხმარებლის UID-ს
+    db.ref('orders').once('value', snap => {
+        const orders = snap.val();
+        let foundUid = null;
+
+        if (orders) {
+            // ვეძებთ შეკვეთას, სადაც სახელი ემთხვევა (firstName + lastName ან buyerName)
+            Object.values(orders).forEach(order => {
+                const fullName = (order.firstName + " " + (order.lastName || "")).trim();
+                const buyerName = (order.buyerName || "").trim();
+                
+                if (fullName === target || buyerName === target || order.uid === target) {
+                    foundUid = order.uid || order.buyerUid;
+                }
+            });
+        }
+
+        // 2. თუ UID ვიპოვეთ, ვინახავთ. თუ ვერა - სახელს ვტოვებთ (მაგრამ UID ჯობია)
+        const finalTarget = foundUid || target;
+
+        db.ref('promoCodes/' + code).set({
+            discount: parseInt(percent),
+            forUser: finalTarget, // აი აქ უკვე სწორი UID ჩაიწერება
+            active: true,
+            timestamp: Date.now()
+        }).then(() => {
+            alert(`კუპონი ${code} შეიქმნა ${foundUid ? 'UID-ით' : 'სახელით'}! ✅`);
+            // ფორმის გასუფთავება
+            document.getElementById('promoCodeName').value = "";
+            document.getElementById('promoPercent').value = "";
+            document.getElementById('promoTargetUser').value = "";
+        }).catch(err => {
+            alert("შეცდომა: " + err.message);
+        });
+    });
 }
 
 
