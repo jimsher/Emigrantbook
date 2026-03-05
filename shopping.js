@@ -633,22 +633,21 @@ function renderUserOrderHistory() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
 
-    // 1. ვკითხულობთ კუპონებს
+    // 1. ვკითხულობთ კუპონებს UID-ით (რომელიც სკრინშოტზე ჩანს)
     db.ref('promoCodes').once('value', pSnap => {
         const allCodes = pSnap.val();
-        const userName = user.displayName || "";
-        const userId = user.uid;
+        const currentUserId = user.uid; // ვიყენებთ UID-ს (ყველაზე საიმედოა)
+        const currentUserName = user.displayName || ""; 
         let vipCardHtml = "";
 
         if (allCodes) {
-            // სწორად გადავუაროთ კოდებს (Keys)
             Object.keys(allCodes).forEach(codeName => {
                 const details = allCodes[codeName];
-                // ვამოწმებთ: სახელი ემთხვევა? ან UID ემთხვევა? (ადმინში ორივე იმუშავებს)
-                if (details.active && (details.forUser === userName || details.forUser === userId)) {
+                // ვამოწმებთ: თუ UID ემთხვევა ან სახელი ემთხვევა
+                if (details.active && (details.forUser === currentUserId || details.forUser === currentUserName)) {
                     vipCardHtml = `
                         <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
-                            <div style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 პერსონალური შეთავაზება</div>
+                            <div style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 VIP IMPACT</div>
                             <div style="color:white; font-size:14px; font-weight:bold;">თქვენი პირადი პრომო კოდია:</div>
                             <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-top:10px; border:1px dashed var(--gold);">
                                 <b style="color:var(--gold); font-size:22px; letter-spacing:1px;">${codeName}</b>
@@ -659,7 +658,7 @@ function renderUserOrderHistory() {
             });
         }
 
-        // 2. ვტვირთავთ შეკვეთებს რეალურ დროში
+        // 2. ვტვირთავთ შეკვეთებს რეალურ დროში (Real-time)
         db.ref('orders').on('value', snap => {
             const data = snap.val();
             let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
@@ -667,10 +666,11 @@ function renderUserOrderHistory() {
 
             if (data) {
                 Object.values(data).reverse().forEach(order => {
-                    if (order.buyerUid === user.uid || order.uid === user.uid) {
+                    // სკრინშოტის მიხედვით ვამოწმებთ UID-ს
+                    if (order.uid === currentUserId || order.buyerUid === currentUserId) {
                         hasOrders = true;
                         const date = new Date(order.timestamp).toLocaleDateString();
-                        const finalAmount = order.paidAmount || order.price || 0;
+                        const finalAmount = order.price || order.paidAmount || 0;
                         
                         let progress = "20%"; 
                         let statusLabel = "მუშავდება";
@@ -684,7 +684,7 @@ function renderUserOrderHistory() {
                             progress = "100%"; 
                             statusLabel = "ჩამოვიდა"; 
                             if (!order.location) displayLocation = "ადგილზეა ✅";
-                            if (!order.eta) displayETA = "მზად არის ჩასაბარებლად";
+                            if (!order.eta) displayETA = "მზად არის";
                         }
 
                         ordersHtml += `
@@ -714,25 +714,15 @@ function renderUserOrderHistory() {
                                         <b style="color:var(--gold); font-size:11px;">${displayETA}</b>
                                     </div>
                                 </div>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                                    <div>
-                                        <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
-                                        <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
-                                    </div>
-                                    <div style="text-align:right;">
-                                        <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">${statusLabel}</span>
-                                    </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                                    <b style="color:var(--gold); font-size:16px;">${finalAmount} AKHO</b>
+                                    <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">${statusLabel}</span>
                                 </div>
                             </div>`;
                     }
                 });
             }
-
-            if (!hasOrders && !vipCardHtml) {
-                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები ვერ მოიძებნა.</p>`;
-            } else {
-                content.innerHTML = ordersHtml;
-            }
+            content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
 }
