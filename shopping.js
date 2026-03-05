@@ -155,6 +155,29 @@ function loadUserCart() {
     });
 }
 
+
+// ეს ფუნქცია აკლია შენს კოდს, რომ ღილაკმა "კალათაში 🛒" იმოქმედოს
+function addToCart(productId) {
+    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+
+    // ვიღებთ ნივთის მონაცემებს ბაზიდან
+    db.ref(`akhoStore/${productId}`).once('value', snap => {
+        const item = snap.val();
+        if (item) {
+            // ვამატებთ მომხმარებლის კალათაში Firebase-ში
+            db.ref(`userCarts/${auth.currentUser.uid}`).push({
+                name: item.name,
+                price: item.price,
+                image: item.image,
+                addedAt: Date.now()
+            }).then(() => {
+                alert("დაემატა კალათაში! 🛒");
+            });
+        }
+    });
+}
+
+
 // 5. რენდერი
 function renderStore(category = 'all', btn = null) {
     const grid = document.getElementById('productsGrid');
