@@ -621,53 +621,53 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-    function renderUserOrderHistory() {
+function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
     
-    if (!user || !modal || !content) return;
+    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    if (!modal || !content) return;
 
     modal.style.display = 'flex';
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
-                         <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
+                         <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
 
-    // 1. აი ეს არის ჩამატებული ნაწილი VIP კოდისთვის
-    db.ref('promoCodes').once('value', pSnap => {
-        const allCodes = pSnap.val();
-        const userName = user.displayName || "";
-        let vipCardHtml = "";
+    db.ref('orders').off(); 
+    db.ref('orders').on('value', snap => {
+        const data = snap.val();
+        let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
 
-        if (allCodes) {
-            Object.entries(allCodes).forEach(([code, details]) => {
-                if (details.active && details.forUser === userName) {
-                    vipCardHtml = `
-                        <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
-                            <div style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 VIP საჩუქარი</div>
-                            <div style="color:white; font-size:14px; font-weight:bold;">თქვენი პირადი პრომო კოდი:</div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:12px; border-radius:10px; margin-top:10px; border:1px dashed var(--gold);">
-                                <b style="color:var(--gold); font-size:20px; letter-spacing:1px;">${code}</b>
-                                <span style="color:#00ff00; font-weight:bold; font-size:16px;">-${details.discount}%</span>
-                            </div>
-                            <p style="color:gray; font-size:10px; margin-top:10px;">* გამოიყენეთ კოდი გადახდისას ფასდაკლების მისაღებად.</p>
-                        </div>`;
-                }
-            });
-        }
+        // --- ⭐ VIP სტატუსის და პირადი კოდის გამოჩენა (ზუსტად შენი ლოგიკით) ---
+        db.ref('promoCodes').once('value', pSnap => {
+            const allCodes = pSnap.val();
+            const userName = auth.currentUser.displayName;
+            
+            if (allCodes) {
+                Object.entries(allCodes).forEach(([code, c]) => {
+                    if (c.forUser === userName && c.active) {
+                        ordersHtml += `
+                            <div class="vip-status-card" style="margin-bottom:20px;">
+                                <div class="vip-badge">👑 VIP სტატუსი</div>
+                                <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
+                                <div class="vip-promo-box">
+                                    <b style="color:var(--gold); font-size:18px;">${code}</b>
+                                    <span style="color:#00ff00;">-${c.discount}%</span>
+                                </div>
+                            </div>`;
+                    }
+                });
+            }
 
-        // 2. აქედან გრძელდება შენი ორიგინალი კოდი უცვლელად
-        db.ref('orders').on('value', snap => {
-            const data = snap.val();
-            let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
+            // --- შეკვეთების სრული სია (ETA, მდებარეობა და ყველა წერტილით) ---
             let hasOrders = false;
-
             if (data) {
                 Object.values(data).reverse().forEach(order => {
                     if (order.buyerUid === user.uid || order.uid === user.uid) {
                         hasOrders = true;
                         const date = new Date(order.timestamp).toLocaleDateString();
                         const finalAmount = order.paidAmount || order.price || 0;
-                        
+
                         let progress = "20%"; 
                         let statusLabel = "მუშავდება";
                         let displayLocation = order.location || 'მუშავდება';
@@ -684,7 +684,7 @@ function closeProductDetails() {
                         }
 
                         ordersHtml += `
-                            <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left; box-sizing: border-box;">
+                            <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                                     <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
                                     <span style="color:gray; font-size:12px;">${date}</span>
@@ -724,14 +724,14 @@ function closeProductDetails() {
                 });
             }
 
-            if (!hasOrders && !vipCardHtml) {
+            if (!hasOrders && !ordersHtml.includes('vip-status-card')) {
                 content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
             } else {
                 content.innerHTML = ordersHtml;
             }
         });
     });
-}                        
+}                                                            
                                                                             
 
 
