@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-  function renderUserOrderHistory() {
+   function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -696,36 +696,47 @@ function closeProductDetails() {
                         const date = new Date(order.timestamp).toLocaleDateString();
                         const finalAmount = order.price || 0;
                         
-                        // --- პროგრესის და მანქანის ლოგიკა ---
-                        let progress = "20%"; 
+                        // --- 🚀 პროგრესის და მანქანის დინამიური ლოგიკა ---
+                        let progressVal = 20; 
                         let statusLabel = "მუშავდება";
                         let displayLocation = order.location || 'მუშავდება';
                         let displayETA = order.eta || 'მოწმდება';
                         let carHtml = ""; 
 
                         if (order.status === 'shipped') { 
-                            progress = "60%"; 
                             statusLabel = "გზაშია";
-                            displayLocation = "ნივთი გზაშია 🚚"; // შეცვლილი ტექსტი
-                            displayETA = order.eta || "უახლოეს დღეებში"; // პანელიდან წამოღებული დრო
+                            displayLocation = "ნივთი გზაშია 🚚";
+                            displayETA = order.eta ? order.eta + " დღე" : "მოწმდება";
+
+                            // დროზე დაფუძნებული გამოთვლა
+                            const orderTime = order.timestamp;
+                            const totalDays = parseInt(order.eta) || 7; 
+                            const deliveryDuration = totalDays * 24 * 60 * 60 * 1000;
+                            const elapsed = Date.now() - orderTime;
                             
-                            // ⭐ მანქანა შემოტრიალებული (scaleX(-1)) და ანიმაციით
+                            // მანქანა მოძრაობს 20%-დან 95%-მდე (რომ ბოლო წერტილს არ გადასცდეს)
+                            let dynamicAdd = (elapsed / deliveryDuration) * 75;
+                            if (dynamicAdd > 75) dynamicAdd = 75;
+                            if (dynamicAdd < 0) dynamicAdd = 0;
+                            
+                            progressVal = 20 + dynamicAdd;
+
                             carHtml = `
                                 <div style="
                                     position: absolute; 
                                     top: -20px; 
-                                    left: calc(${progress} - 20px); 
+                                    left: calc(${progressVal}% - 20px); 
                                     font-size: 22px; 
-                                    transform: scaleX(-1); /* მანქანის შემოტრიალება */
+                                    transform: scaleX(-1); 
                                     animation: carDrive 1.2s infinite ease-in-out; 
-                                    transition: left 1s ease-in-out; 
+                                    transition: left 2s linear; 
                                     z-index: 10;
                                 ">
                                     🚚
                                 </div>
                             `;
                         } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
-                            progress = "100%"; 
+                            progressVal = 100; 
                             statusLabel = "ჩამოვიდა";
                             displayLocation = order.location || "ადგილზეა ✅";
                             displayETA = "მზად არის ჩასაბარებლად";
@@ -739,13 +750,13 @@ function closeProductDetails() {
                                 </div>
                                 <div style="margin: 30px 0 15px 0;"> 
                                     <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
-                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:width 1s ease-in-out;"></div>
+                                        <div style="height:100%; width:${progressVal}%; background:var(--gold); border-radius:10px; transition:width 2s linear;"></div>
                                         
                                         ${carHtml}
 
                                         <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
-                                        <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
-                                        <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                        <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${progressVal >= 50 ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                        <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${progressVal >= 100 ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                                     </div>
                                     <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:10px; font-weight:bold; text-transform:uppercase;">
                                         <span>მიღებულია</span><span>გზაშია</span><span>ჩაბარდა</span>
@@ -766,7 +777,7 @@ function closeProductDetails() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}                                                                                              
+}                                                                                      
                     
 
                                                                                                                                                                
