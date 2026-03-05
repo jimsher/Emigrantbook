@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-   function renderUserOrderHistory() {
+  function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -662,7 +662,7 @@ function closeProductDetails() {
                             </div>
                             <h3 style="color:white; margin:0 0 5px 0; font-size:18px; font-weight:800;">გილოცავთ! 🎊</h3>
                             <p style="color:rgba(255,255,255,0.7); font-size:12px; margin:0 0 15px 0; line-height:1.4;">
-                                თქვენ გადმოგეცათ სპეციალური ფასდაკლების კუპონი EMIGRANTBOOK-ისგან.
+                                თქვენ გადმოგეცათ სპეციალური ფასდაკლების კუპონი IMPACT-ისგან.
                             </p>
                             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3);">
                                 <div style="display:flex; flex-direction:column;">
@@ -695,9 +695,33 @@ function closeProductDetails() {
                         hasOrders = true;
                         const date = new Date(order.timestamp).toLocaleDateString();
                         const finalAmount = order.price || 0;
-                        let progress = "20%"; let statusLabel = "მუშავდება";
-                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
-                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { progress = "100%"; statusLabel = "ჩამოვიდა"; }
+                        
+                        // --- პროგრესის და მანქანის ლოგიკა ---
+                        let progress = "20%"; 
+                        let statusLabel = "მუშავდება";
+                        let carHtml = ""; // მანქანის HTML თავიდან ცარიელია
+
+                        if (order.status === 'shipped') { 
+                            progress = "60%"; 
+                            statusLabel = "გზაშია"; 
+                            // ⭐ თუ გზაშია, ვამატებთ მოძრავ მანქანას
+                            carHtml = `
+                                <div style="
+                                    position: absolute; 
+                                    top: -18px; /* ხაზის ზემოთ */
+                                    left: calc(${progress} - 15px); /* პროგრესის ბოლოს */
+                                    font-size: 20px; 
+                                    animation: carDrive 1s infinite linear; /* ანიმაციის მიბმა */
+                                    transition: left 1s ease-in-out; /* როცა პროგრესი იცვლება, მანქანაც სრიალებს */
+                                    z-index: 10;
+                                ">
+                                    🚚
+                                </div>
+                            `;
+                        } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
+                            progress = "100%"; 
+                            statusLabel = "ჩამოვიდა"; 
+                        }
 
                         ordersHtml += `
                             <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left; box-sizing: border-box;">
@@ -705,12 +729,17 @@ function closeProductDetails() {
                                     <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
                                     <span style="color:gray; font-size:12px;">${date}</span>
                                 </div>
-                                <div style="margin: 15px 0 10px 0;">
-                                    <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
-                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
+                                <div style="margin: 25px 0 15px 0;"> <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
+                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:width 1s ease-in-out;"></div>
+                                        
+                                        ${carHtml}
+
                                         <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
                                         <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                                         <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
+                                        <span>მიღებულია</span><span>გზაშია</span><span>ჩაბარდა</span>
                                     </div>
                                 </div>
                                 <div style="background:rgba(255,215,0,0.02); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
@@ -728,7 +757,7 @@ function closeProductDetails() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}                                         
+}                                                                  
                     
 
                                                                                                                                                                
