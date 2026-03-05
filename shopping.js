@@ -634,37 +634,72 @@ function renderUserOrderHistory() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
 
-    // 🛠️ ვთიშავთ ძველ კავშირს და ვამყარებთ ახალს რეალურ დროში
     db.ref('orders').off(); 
     db.ref('orders').on('value', snap => {
         const data = snap.val();
-        
-        // საწყისი სათაური
         let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
-        let hasOrders = false;
+        
+        // --- 🎫 პირადი კუპონის ძებნა (ახალი ჩამატებული ნაწილი) ---
+        db.ref('promoCodes').once('value', pSnap => {
+            const promoData = pSnap.val();
+            const userName = user.displayName || ""; // მომხმარებლის სახელი
 
-        if (!data) {
-            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
-            return;
-        }
+            if (promoData) {
+                Object.entries(promoData).forEach(([code, details]) => {
+                    // ვამოწმებთ, ემთხვევა თუ არა სახელი იმას, რაც ადმინმა ჩაწერა
+                    if (details.forUser === userName && details.active) {
+                        ordersHtml += `
+                            <div class="vip-status-card" style="margin-bottom:20px; border: 1px solid var(--gold); background: rgba(212,175,55,0.1); padding: 15px; border-radius: 12px;">
+                                <div class="vip-badge" style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 პერსონალური საჩუქარი</div>
+                                <div style="color:white; font-size:14px; font-weight:bold;">თქვენ გაქვთ პირადი პრომო კოდი!</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:10px; border:1px dashed var(--gold);">
+                                    <b style="color:var(--gold); font-size:18px; letter-spacing:1px;">${code}</b>
+                                    <span style="color:#4ade80; font-weight:bold;">-${details.discount}%</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
 
-        // --- ⭐ VIP სტატუსის დათვლა (დამატებული ლოგიკა) ---
-        const userOrders = Object.values(data).filter(o => o.buyerUid === user.uid || o.uid === user.uid);
-        const ordersCount = userOrders.length;
+            // --- შენი ორიგინალი შეკვეთების ლოგიკა (უცვლელად) ---
+            let hasOrders = false;
+            if (data) {
+                Object.values(data).reverse().forEach(order => {
+                    if (order.buyerUid === user.uid || order.uid === user.uid) {
+                        hasOrders = true;
+                        const date = new Date(order.timestamp).toLocaleDateString();
+                        const finalAmount = order.paidAmount || order.price || 0;
+                        
+                        // აქ შენი ძველი სტატუსის და პროგრესის ლოგიკა...
+                        let progress = "20%"; 
+                        let statusLabel = "მუშავდება";
+                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
+                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
+                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
+                        }
 
-        if (ordersCount >= 3) {
-            ordersHtml += `
-                <div class="vip-status-card">
-                    <div class="vip-badge">👑 VIP წევრი</div>
-                    <div style="color:white; font-size:15px; font-weight:bold;">გილოცავთ! თქვენ გაქვთ VIP სტატუსი</div>
-                    <p style="color:gray; font-size:11px; margin-top:5px;">თქვენი ერთგულებისთვის გადმოგეცემათ პირადი კუპონი:</p>
-                    <div class="vip-promo-box">
-                        <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">LOYALVIP15</b>
-                        <small style="color:#00ff00; font-size:10px;">-15% ALL STORE</small>
-                    </div>
-                </div>
-            `;
-        }
+                        ordersHtml += `
+                            <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                    <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
+                                    <span style="color:gray; font-size:12px;">${date}</span>
+                                </div>
+                                <div style="color:var(--gold); font-weight:bold;">${finalAmount} AKHO</div>
+                                <div style="color:gray; font-size:11px; margin-top:5px;">სტატუსი: ${statusLabel}</div>
+                            </div>`;
+                    }
+                });
+            }
+
+            if (!hasOrders && !ordersHtml.includes('vip-status-card')) {
+                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">ისტორია ცარიელია.</p>`;
+            } else {
+                content.innerHTML = ordersHtml;
+            }
+        });
+    });
+}
 
 
 
