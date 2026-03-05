@@ -640,7 +640,6 @@ function renderUserOrderHistory() {
 
         if (allCodes) {
             Object.entries(allCodes).forEach(([code, details]) => {
-                // თუ კუპონი აქტიურია და სახელი ემთხვევა
                 if (details.active && details.forUser === userName) {
                     vipCardHtml = `
                         <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
@@ -651,8 +650,7 @@ function renderUserOrderHistory() {
                                 <span style="color:#00ff00; font-weight:bold; font-size:16px;">-${details.discount}%</span>
                             </div>
                             <p style="color:gray; font-size:10px; margin-top:10px;">* გამოიყენეთ კოდი გადახდისას ფასდაკლების მისაღებად.</p>
-                        </div>
-                    `;
+                        </div>`;
                 }
             });
         }
@@ -672,9 +670,17 @@ function renderUserOrderHistory() {
                         
                         let progress = "20%"; 
                         let statusLabel = "მუშავდება";
-                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
-                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
-                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
+                        let displayLocation = order.location || 'მუშავდება';
+                        let displayETA = order.eta || 'მოწმდება';
+
+                        if (order.status === 'shipped') { 
+                            progress = "60%"; 
+                            statusLabel = "გზაშია"; 
+                        } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
+                            progress = "100%"; 
+                            statusLabel = "ჩამოვიდა"; 
+                            if (!order.location) displayLocation = "ადგილზეა ✅";
+                            if (!order.eta) displayETA = "მზად არის ჩასაბარებლად";
                         }
 
                         ordersHtml += `
@@ -685,12 +691,33 @@ function renderUserOrderHistory() {
                                 </div>
                                 <div style="margin: 15px 0 10px 0;">
                                     <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
-                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px;"></div>
+                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
+                                        <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
+                                        <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                        <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
+                                        <span>მიღებულია</span><span>გზაშია</span><span>ჩაბარდა</span>
                                     </div>
                                 </div>
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span style="color:var(--gold); font-weight:bold;">${finalAmount} AKHO</span>
-                                    <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; border:1px solid var(--gold);">${statusLabel}</span>
+                                <div style="background:rgba(255,215,0,0.03); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span style="color:#777; font-size:11px;">📍 მდებარეობა:</span>
+                                        <b style="color:white; font-size:11px;">${displayLocation}</b>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span style="color:#777; font-size:11px;">⏳ ETA:</span>
+                                        <b style="color:var(--gold); font-size:11px;">${displayETA}</b>
+                                    </div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                                    <div>
+                                        <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
+                                        <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">${statusLabel}</span>
+                                    </div>
                                 </div>
                             </div>`;
                     }
@@ -698,100 +725,17 @@ function renderUserOrderHistory() {
             }
 
             if (!hasOrders && !vipCardHtml) {
-                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">ისტორია ცარიელია.</p>`;
+                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
             } else {
                 content.innerHTML = ordersHtml;
             }
         });
     });
-}
-
-        // მონაცემების გადარჩევა (შენი ორიგინალი ციკლი)
-        Object.values(data).reverse().forEach(order => {
-            if (order.buyerUid === user.uid || order.uid === user.uid) {
-                hasOrders = true;
-                const date = new Date(order.timestamp).toLocaleDateString();
-                const finalAmount = order.paidAmount || order.price || 0;
-
-                // --- სტატუსის და პროგრესის ლოგიკა ---
-                let progress = "20%"; 
-                let statusLabel = "მუშავდება";
-                
-                // დინამიური ტექსტები მდებარეობის და ETA-სთვის
-                let displayLocation = order.location || 'მუშავდება';
-                let displayETA = order.eta || 'მოწმდება';
-                
-                if (order.status === 'shipped') { 
-                    progress = "60%"; 
-                    statusLabel = "გზაშია"; 
-                } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
-                    progress = "100%"; 
-                    statusLabel = "ჩამოვიდა"; 
-                    
-                    // თუ ჩამოვიდა და ადმინს არაფერი ჩაუწერია, ვაჩვენოთ "ადგილზეა"
-                    if (!order.location) displayLocation = "ადგილზეა ✅";
-                    if (!order.eta) displayETA = "მზად არის ჩასაბარებლად";
-                }
-
-                ordersHtml += `
-                    <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
-                            <span style="color:gray; font-size:12px;">${date}</span>
-                        </div>
-
-                        <div style="margin: 15px 0 10px 0;">
-                            <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
-                                <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
-                                <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
-                                <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
-                                <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived' || order.status === 'delivered') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
-                                <span>მიღებულია</span>
-                                <span>გზაშია</span>
-                                <span>ჩაბარდა</span>
-                            </div>
-                        </div>
-
-                        <div style="background:rgba(255,215,0,0.03); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:#777; font-size:11px;">📍 მდებარეობა:</span>
-                                <b style="color:white; font-size:11px;">${displayLocation}</b>
-                            </div>
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="color:#777; font-size:11px;">⏳ ETA:</span>
-                                <b style="color:var(--gold); font-size:11px;">${displayETA}</b>
-                            </div>
-                        </div>
-
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                            <div>
-                                <span style="color:var(--gold); font-weight:bold; display:block;">${finalAmount} AKHO</span>
-                                <small style="color:gray; font-size:10px;">≈ ${(finalAmount * 0.1).toFixed(2)} EUR</small>
-                            </div>
-                            <div style="text-align:right;">
-                                <span style="background:rgba(212,175,55,0.1); color:var(--gold); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; border:1px solid var(--gold)">
-                                    ${statusLabel}
-                                </span>
-                            </div>
-                        </div>
-                    </div>`;
-            }
-        });
-
-        // საბოლოო ჩახატვა
-        if (!hasOrders) {
-            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
-        } else {
-            content.innerHTML = ordersHtml;
-        }
-    });
 }                                                    
 
 
 
-// --- 2. ადმინისთვის შეკვეთების ნახვა ---
+
 // --- 2. ადმინისთვის შეკვეთების ნახვა (სრული ინფორმაციით) ---
 function renderAdminOrders() {
     const listContainer = document.getElementById('ordersList'); 
