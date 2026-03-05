@@ -620,6 +620,7 @@ function closeProductDetails() {
 
 
 
+
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
 function renderUserOrderHistory() {
     const user = auth.currentUser;
@@ -633,40 +634,42 @@ function renderUserOrderHistory() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray;">იტვირთება...</div>`;
 
+    // 🛠️ ვთიშავთ ძველ კავშირს და ვამყარებთ ახალს რეალურ დროში
     db.ref('orders').off(); 
-    db.ref('orders').on('value', async snap => { // დავამატე async სტაბილურობისთვის
+    db.ref('orders').on('value', snap => {
         const data = snap.val();
+        
+        // საწყისი სათაური
         let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>`;
-        
-        // --- ⭐ VIP სტატუსის ნაწილი (შენი ორიგინალიდან) ---
-        const pSnap = await db.ref('promoCodes').once('value');
-        const allCodes = pSnap.val();
-        const userName = auth.currentUser.displayName;
-        
-        let userSpecialCode = ""; 
-        let userDiscount = 0;
+        let hasOrders = false;
 
-        if (allCodes) {
-            Object.entries(allCodes).forEach(([code, c]) => {
-                if (c.forUser === userName && c.active) {
-                    userSpecialCode = code;
-                    userDiscount = c.discount;
-                }
-            });
+        if (!data) {
+            content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთების ისტორია ცარიელია.</p>`;
+            return;
         }
 
-        if (userSpecialCode) {
+        // --- ⭐ VIP სტატუსის დათვლა (დამატებული ლოგიკა) ---
+        const userOrders = Object.values(data).filter(o => o.buyerUid === user.uid || o.uid === user.uid);
+        const ordersCount = userOrders.length;
+
+        if (ordersCount >= 3) {
             ordersHtml += `
                 <div class="vip-status-card">
-                    <div class="vip-badge">👑 VIP სტატუსი</div>
-                    <div style="color:white; font-size:14px;">თქვენი პირადი კუპონია:</div>
+                    <div class="vip-badge">👑 VIP წევრი</div>
+                    <div style="color:white; font-size:15px; font-weight:bold;">გილოცავთ! თქვენ გაქვთ VIP სტატუსი</div>
+                    <p style="color:gray; font-size:11px; margin-top:5px;">თქვენი ერთგულებისთვის გადმოგეცემათ პირადი კუპონი:</p>
                     <div class="vip-promo-box">
-                        <b style="color:var(--gold); font-size:18px;">${userSpecialCode}</b>
-                        <span style="color:#00ff00;">-${userDiscount}%</span>
+                        <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">LOYALVIP15</b>
+                        <small style="color:#00ff00; font-size:10px;">-15% ALL STORE</small>
                     </div>
                 </div>
             `;
         }
+
+
+
+
+
 
         // --- შენი ორიგინალი შეკვეთების სია (ზუსტად ისე როგორც გქონდა) ---
         let hasOrders = false;
