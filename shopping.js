@@ -699,20 +699,26 @@ function closeProductDetails() {
                         // --- პროგრესის და მანქანის ლოგიკა ---
                         let progress = "20%"; 
                         let statusLabel = "მუშავდება";
-                        let carHtml = ""; // მანქანის HTML თავიდან ცარიელია
+                        let displayLocation = order.location || 'მუშავდება';
+                        let displayETA = order.eta || 'მოწმდება';
+                        let carHtml = ""; 
 
                         if (order.status === 'shipped') { 
                             progress = "60%"; 
-                            statusLabel = "გზაშია"; 
-                            // ⭐ თუ გზაშია, ვამატებთ მოძრავ მანქანას
+                            statusLabel = "გზაშია";
+                            displayLocation = "ნივთი გზაშია 🚚"; // შეცვლილი ტექსტი
+                            displayETA = order.eta || "უახლოეს დღეებში"; // პანელიდან წამოღებული დრო
+                            
+                            // ⭐ მანქანა შემოტრიალებული (scaleX(-1)) და ანიმაციით
                             carHtml = `
                                 <div style="
                                     position: absolute; 
-                                    top: -18px; /* ხაზის ზემოთ */
-                                    left: calc(${progress} - 15px); /* პროგრესის ბოლოს */
-                                    font-size: 20px; 
-                                    animation: carDrive 1s infinite linear; /* ანიმაციის მიბმა */
-                                    transition: left 1s ease-in-out; /* როცა პროგრესი იცვლება, მანქანაც სრიალებს */
+                                    top: -20px; 
+                                    left: calc(${progress} - 20px); 
+                                    font-size: 22px; 
+                                    transform: scaleX(-1); /* მანქანის შემოტრიალება */
+                                    animation: carDrive 1.2s infinite ease-in-out; 
+                                    transition: left 1s ease-in-out; 
                                     z-index: 10;
                                 ">
                                     🚚
@@ -720,7 +726,9 @@ function closeProductDetails() {
                             `;
                         } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
                             progress = "100%"; 
-                            statusLabel = "ჩამოვიდა"; 
+                            statusLabel = "ჩამოვიდა";
+                            displayLocation = order.location || "ადგილზეა ✅";
+                            displayETA = "მზად არის ჩასაბარებლად";
                         }
 
                         ordersHtml += `
@@ -729,7 +737,8 @@ function closeProductDetails() {
                                     <b style="color:white; font-size:14px;">${order.productName || 'ნივთი'}</b>
                                     <span style="color:gray; font-size:12px;">${date}</span>
                                 </div>
-                                <div style="margin: 25px 0 15px 0;"> <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
+                                <div style="margin: 30px 0 15px 0;"> 
+                                    <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
                                         <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:width 1s ease-in-out;"></div>
                                         
                                         ${carHtml}
@@ -738,13 +747,13 @@ function closeProductDetails() {
                                         <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                                         <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                                     </div>
-                                    <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:8px; font-weight:bold; text-transform:uppercase;">
+                                    <div style="display:flex; justify-content:space-between; color:#555; font-size:9px; margin-top:10px; font-weight:bold; text-transform:uppercase;">
                                         <span>მიღებულია</span><span>გზაშია</span><span>ჩაბარდა</span>
                                     </div>
                                 </div>
                                 <div style="background:rgba(255,215,0,0.02); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
-                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">📍 სტატუსი:</span><b style="color:white; font-size:11px;">${order.location || 'მუშავდება'}</b></div>
-                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">⏳ დრო:</span><b style="color:var(--gold); font-size:11px;">${order.eta || 'მოწმდება'}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">📍 მდებარეობა:</span><b style="color:white; font-size:11px;">${displayLocation}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">⏳ სავარაუდო დრო:</span><b style="color:var(--gold); font-size:11px;">${displayETA}</b></div>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                                     <b style="color:var(--gold); font-size:16px;">${finalAmount} AKHO</b>
@@ -757,7 +766,7 @@ function closeProductDetails() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}                                                                  
+}                                                                                              
                     
 
                                                                                                                                                                
