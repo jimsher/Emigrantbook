@@ -647,23 +647,29 @@ function renderUserOrderHistory() {
             return;
         }
 
-        // --- ⭐ VIP სტატუსის დათვლა (დამატებული ლოგიკა) ---
-        const userOrders = Object.values(data).filter(o => o.buyerUid === user.uid || o.uid === user.uid);
-        const ordersCount = userOrders.length;
+        // --- ⭐ VIP სტატუსის და პირადი კოდის გამოჩენა ---
+db.ref(`users/${user.uid}/personalCode`).once('value', pSnap => {
+    const personalCode = pSnap.val();
+    const ordersCount = Object.values(data).filter(o => o.buyerUid === user.uid || o.uid === user.uid).length;
 
-        if (ordersCount >= 3) {
-            ordersHtml += `
-                <div class="vip-status-card">
-                    <div class="vip-badge">👑 VIP წევრი</div>
-                    <div style="color:white; font-size:15px; font-weight:bold;">გილოცავთ! თქვენ გაქვთ VIP სტატუსი</div>
-                    <p style="color:gray; font-size:11px; margin-top:5px;">თქვენი ერთგულებისთვის გადმოგეცემათ პირადი კუპონი:</p>
-                    <div class="vip-promo-box">
-                        <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">LOYALVIP15</b>
-                        <small style="color:#00ff00; font-size:10px;">-15% ALL STORE</small>
-                    </div>
+    // თუ მომხმარებელს აქვს პირადი კოდი ან 3-ზე მეტი შეკვეთა
+    if (personalCode || ordersCount >= 3) {
+        const displayCode = personalCode || "LOYALVIP15"; // თუ პირადი არ აქვს, ვაჩვენებთ ზოგადს
+        
+        // აქ ჩაჯდება შენი VIP ბარათის HTML
+        let vipCard = `
+            <div class="vip-status-card">
+                <div class="vip-badge">👑 VIP წევრი</div>
+                <div style="color:white; font-size:15px; font-weight:bold;">გილოცავთ! თქვენ გაქვთ VIP სტატუსი</div>
+                <p style="color:gray; font-size:11px; margin-top:5px;">თქვენი პირადი ფასდაკლების კოდია:</p>
+                <div class="vip-promo-box">
+                    <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">${displayCode}</b>
                 </div>
-            `;
-        }
+            </div>
+        `;
+        // ამას ჩავსვამთ სათაურის ქვემოთ
+    }
+});
 
         // მონაცემების გადარჩევა (შენი ორიგინალი ციკლი)
         Object.values(data).reverse().forEach(order => {
