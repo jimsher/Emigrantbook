@@ -1024,18 +1024,18 @@ function initRealTimeSalesPopup() {
 function createPromoCode() {
     const code = document.getElementById('promoCodeName').value.trim().toUpperCase();
     const percent = document.getElementById('promoPercent').value;
+    const targetUser = prompt("ვისთვის არის ეს კოდი? (ჩაწერეთ სახელი და გვარი ან 'ყველასთვის')");
 
     if (!code || !percent) return alert("შეავსეთ კოდი და პროცენტი!");
 
     db.ref(`promoCodes/${code}`).set({
         discount: parseInt(percent),
         active: true,
+        forUser: targetUser || "ყველასთვის", // აქ ვინახავთ მფლობელის სახელს
         createdAt: Date.now()
     }).then(() => {
-        alert(`კუპონი ${code} (${percent}%) წარმატებით დაემატა! ✅`);
-        document.getElementById('promoCodeName').value = "";
-        document.getElementById('promoPercent').value = "";
-    }).catch(err => alert("შეცდომა: " + err.message));
+        alert(`კუპონი ${code} (${percent}%) შეიქმნა ${targetUser}-ისთვის! ✅`);
+    });
 }
 
 
