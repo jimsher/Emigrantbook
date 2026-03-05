@@ -1268,3 +1268,35 @@ function loadAdminDashboardStats() {
         if (topProductNameEl) topProductNameEl.innerText = lastProduct || "ჯერ არ არის";
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function assignPersonalCode() {
+    const uid = document.getElementById('targetUserId').value.trim();
+    const code = document.getElementById('personalPromoCode').value.trim().toUpperCase();
+
+    if (!uid || !code) return alert("შეავსეთ ორივე ველი!");
+
+    // ვინახავთ პირდაპირ მომხმარებლის პროფილში
+    db.ref(`users/${uid}/personalCode`).set(code)
+        .then(() => {
+            alert(`კოდი ${code} წარმატებით მიება მომხმარებელს! ✅`);
+            document.getElementById('targetUserId').value = "";
+            document.getElementById('personalPromoCode').value = "";
+        })
+        .catch(err => alert("შეცდომა: " + err.message));
+}
