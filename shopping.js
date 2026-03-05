@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-        function renderUserOrderHistory() {
+   function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -633,7 +633,7 @@ function closeProductDetails() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
 
-    // 1. VIP კუპონის წამოღება (ცალკე ლოგიკად, რომ ისტორიას არ შეუშალოს ხელი)
+    // 1. ვკითხულობთ კუპონებს (DisplayName-ით შედარება)
     db.ref('promoCodes').once('value', pSnap => {
         const allCodes = pSnap.val();
         const userName = user.displayName || "";
@@ -641,7 +641,6 @@ function closeProductDetails() {
 
         if (allCodes) {
             Object.entries(allCodes).forEach(([code, details]) => {
-                // ვამოწმებთ არის თუ არა მომხმარებლისთვის განკუთვნილი
                 if (details.active && details.forUser === userName) {
                     vipCardHtml = `
                         <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
@@ -656,7 +655,7 @@ function closeProductDetails() {
             });
         }
 
-        // 2. შენი ორიგინალი შეკვეთების ისტორია (ზუსტად ისე, როგორც შენ გქონდა)
+        // 2. შეკვეთების რეალური დროის ისტორია
         db.ref('orders').on('value', snap => {
             const data = snap.val();
             let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
@@ -726,13 +725,13 @@ function closeProductDetails() {
             }
 
             if (!hasOrders && !vipCardHtml) {
-                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">თქვენი შეკვეთები ვერ მოიძებნა.</p>`;
+                content.innerHTML = ordersHtml + `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები ვერ მოიძებნა.</p>`;
             } else {
                 content.innerHTML = ordersHtml;
             }
         });
     });
-}                                                                                        
+}                                                                                                                                 
                                                                             
 
 
