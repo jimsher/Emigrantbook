@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-function renderUserOrderHistory() {
+         function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -633,18 +633,17 @@ function renderUserOrderHistory() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
 
-    // 1. ვკითხულობთ კუპონებს UID-ით (რომელიც სკრინშოტზე ჩანს)
+    // 1. ვკითხულობთ კუპონებს UID-ით
     db.ref('promoCodes').once('value', pSnap => {
         const allCodes = pSnap.val();
-        const currentUserId = user.uid; // ვიყენებთ UID-ს (ყველაზე საიმედოა)
-        const currentUserName = user.displayName || ""; 
+        const currentUserId = user.uid; 
         let vipCardHtml = "";
 
         if (allCodes) {
             Object.keys(allCodes).forEach(codeName => {
                 const details = allCodes[codeName];
-                // ვამოწმებთ: თუ UID ემთხვევა ან სახელი ემთხვევა
-                if (details.active && (details.forUser === currentUserId || details.forUser === currentUserName)) {
+                // ვამოწმებთ ემთხვევა თუ არა UID
+                if (details.active && details.forUser === currentUserId) {
                     vipCardHtml = `
                         <div class="vip-status-card" style="margin-bottom:25px; background: rgba(212,175,55,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 15px; width: 100%; box-sizing: border-box;">
                             <div style="background:var(--gold); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; display:inline-block; margin-bottom:10px;">👑 VIP IMPACT</div>
@@ -658,7 +657,7 @@ function renderUserOrderHistory() {
             });
         }
 
-        // 2. ვტვირთავთ შეკვეთებს რეალურ დროში (Real-time)
+        // 2. ვტვირთავთ შეკვეთებს რეალურ დროში
         db.ref('orders').on('value', snap => {
             const data = snap.val();
             let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
@@ -666,11 +665,11 @@ function renderUserOrderHistory() {
 
             if (data) {
                 Object.values(data).reverse().forEach(order => {
-                    // სკრინშოტის მიხედვით ვამოწმებთ UID-ს
+                    // შედარება ხდება UID-ით (როგორც სკრინშოტზეა)
                     if (order.uid === currentUserId || order.buyerUid === currentUserId) {
                         hasOrders = true;
                         const date = new Date(order.timestamp).toLocaleDateString();
-                        const finalAmount = order.price || order.paidAmount || 0;
+                        const finalAmount = order.price || 0;
                         
                         let progress = "20%"; 
                         let statusLabel = "მუშავდება";
@@ -678,13 +677,9 @@ function renderUserOrderHistory() {
                         let displayETA = order.eta || 'მოწმდება';
 
                         if (order.status === 'shipped') { 
-                            progress = "60%"; 
-                            statusLabel = "გზაშია"; 
+                            progress = "60%"; statusLabel = "გზაშია"; 
                         } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
-                            progress = "100%"; 
-                            statusLabel = "ჩამოვიდა"; 
-                            if (!order.location) displayLocation = "ადგილზეა ✅";
-                            if (!order.eta) displayETA = "მზად არის";
+                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
                         }
 
                         ordersHtml += `
@@ -695,7 +690,7 @@ function renderUserOrderHistory() {
                                 </div>
                                 <div style="margin: 15px 0 10px 0;">
                                     <div style="height:4px; width:100%; background:#222; border-radius:10px; position:relative;">
-                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px; transition:1s ease-in-out;"></div>
+                                        <div style="height:100%; width:${progress}; background:var(--gold); border-radius:10px;"></div>
                                         <div style="position:absolute; top:-4px; left:0; width:12px; height:12px; background:var(--gold); border-radius:50%;"></div>
                                         <div style="position:absolute; top:-4px; left:50%; width:12px; height:12px; background:${(order.status === 'shipped' || order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
                                         <div style="position:absolute; top:-4px; right:0; width:12px; height:12px; background:${(order.status === 'arrived') ? 'var(--gold)' : '#333'}; border-radius:50%;"></div>
@@ -704,15 +699,9 @@ function renderUserOrderHistory() {
                                         <span>მიღებულია</span><span>გზაშია</span><span>ჩაბარდა</span>
                                     </div>
                                 </div>
-                                <div style="background:rgba(255,215,0,0.03); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
-                                    <div style="display:flex; justify-content:space-between;">
-                                        <span style="color:#777; font-size:11px;">📍 მდებარეობა:</span>
-                                        <b style="color:white; font-size:11px;">${displayLocation}</b>
-                                    </div>
-                                    <div style="display:flex; justify-content:space-between;">
-                                        <span style="color:#777; font-size:11px;">⏳ ETA:</span>
-                                        <b style="color:var(--gold); font-size:11px;">${displayETA}</b>
-                                    </div>
+                                <div style="background:rgba(255,215,0,0.02); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">📍 სტატუსი:</span><b style="color:white; font-size:11px;">${displayLocation}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">⏳ დრო:</span><b style="color:var(--gold); font-size:11px;">${displayETA}</b></div>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                                     <b style="color:var(--gold); font-size:16px;">${finalAmount} AKHO</b>
@@ -725,7 +714,7 @@ function renderUserOrderHistory() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}
+}               
 
                     
 
