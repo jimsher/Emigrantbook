@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-    function renderUserOrderHistory() {
+   function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -632,7 +632,6 @@ function closeProductDetails() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
 
-    // 1. ვკითხულობთ კუპონებს UID-ით
     db.ref('promoCodes').once('value', pSnap => {
         const allCodes = pSnap.val();
         const currentUid = user.uid; 
@@ -641,7 +640,6 @@ function closeProductDetails() {
         if (allCodes) {
             Object.keys(allCodes).forEach(codeKey => {
                 const details = allCodes[codeKey];
-                // შედარება ხდება მხოლოდ UID-ით, რაც 100% საიმედოა
                 if (details.active && details.forUser === currentUid) {
                     vipCardHtml = `
                         <div class="vip-promo-container" style="
@@ -657,51 +655,27 @@ function closeProductDetails() {
                             box-shadow: 0 10px 30px rgba(212,175,55,0.15);
                         ">
                             <div style="position:absolute; top:-10px; right:-10px; font-size:60px; color:rgba(212,175,55,0.05); transform:rotate(-15deg); pointer-events:none;">💎</div>
-
                             <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
                                 <div style="background:var(--gold); color:black; padding:3px 10px; border-radius:50px; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">
                                     🎉 პერსონალური საჩუქარი
                                 </div>
                             </div>
-
                             <h3 style="color:white; margin:0 0 5px 0; font-size:18px; font-weight:800;">გილოცავთ! 🎊</h3>
                             <p style="color:rgba(255,255,255,0.7); font-size:12px; margin:0 0 15px 0; line-height:1.4;">
                                 თქვენ გადმოგეცათ სპეციალური ფასდაკლების კუპონი IMPACT-ისგან.
                             </p>
-
-                            <div style="
-                                display: flex; 
-                                justify-content: space-between; 
-                                align-items: center; 
-                                background: rgba(0,0,0,0.4); 
-                                padding: 12px; 
-                                border-radius: 12px; 
-                                border: 1px solid rgba(212,175,55,0.3);
-                            ">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3);">
                                 <div style="display:flex; flex-direction:column;">
                                     <span style="color:rgba(212,175,55,0.6); font-size:9px; font-weight:bold; text-transform:uppercase;">პრომო კოდი:</span>
                                     <b style="color:var(--gold); font-size:22px; letter-spacing:2px; font-family:monospace;">${codeKey}</b>
                                 </div>
-                                
                                 <div style="text-align:right;">
                                     <div style="color:#00ff00; font-size:26px; font-weight:900; line-height:1;">-${details.discount}%</div>
                                     <span style="color:rgba(255,255,255,0.5); font-size:9px; font-weight:bold;">OFF STORE</span>
                                 </div>
                             </div>
-
-                            <button onclick="navigator.clipboard.writeText('${codeKey}'); alert('კოდი დაკოპირდა! ✅');" style="
-                                width: 100%; 
-                                margin-top: 12px; 
-                                background: var(--gold); 
-                                color: black; 
-                                border: none; 
-                                padding: 10px; 
-                                border-radius: 10px; 
-                                font-weight: 900; 
-                                font-size: 12px; 
-                                cursor: pointer; 
-                                text-transform: uppercase;
-                                box-shadow: 0 4px 10px rgba(212,175,55,0.2);
+                            <button onclick="new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3').play(); navigator.clipboard.writeText('${codeKey}'); alert('კოდი დაკოპირდა! ✅');" style="
+                                width: 100%; margin-top: 12px; background: var(--gold); color: black; border: none; padding: 10px; border-radius: 10px; font-weight: 900; font-size: 12px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 10px rgba(212,175,55,0.2);
                             ">
                                 🎁 კოდის დაკოპირება
                             </button>
@@ -710,7 +684,6 @@ function closeProductDetails() {
             });
         }
 
-        // 2. ვტვირთავთ შეკვეთებს (Real-time)
         db.ref('orders').on('value', snap => {
             const data = snap.val();
             let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
@@ -718,22 +691,13 @@ function closeProductDetails() {
 
             if (data) {
                 Object.values(data).reverse().forEach(order => {
-                    // შედარება მომხმარებლის UID-თან (როგორც სკრინშოტზეა)
                     if (order.uid === currentUid) {
                         hasOrders = true;
                         const date = new Date(order.timestamp).toLocaleDateString();
                         const finalAmount = order.price || 0;
-                        
-                        let progress = "20%"; 
-                        let statusLabel = "მუშავდება";
-                        let displayLocation = order.location || 'მუშავდება';
-                        let displayETA = order.eta || 'მოწმდება';
-
-                        if (order.status === 'shipped') { 
-                            progress = "60%"; statusLabel = "გზაშია"; 
-                        } else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { 
-                            progress = "100%"; statusLabel = "ჩამოვიდა"; 
-                        }
+                        let progress = "20%"; let statusLabel = "მუშავდება";
+                        if (order.status === 'shipped') { progress = "60%"; statusLabel = "გზაშია"; }
+                        else if (order.status === 'arrived' || order.status === 'completed' || order.status === 'delivered') { progress = "100%"; statusLabel = "ჩამოვიდა"; }
 
                         ordersHtml += `
                             <div style="width:100%; background:rgba(255,255,255,0.05); border:1px solid #222; border-radius:12px; padding:15px; margin-bottom:12px; text-align:left; box-sizing: border-box;">
@@ -750,8 +714,8 @@ function closeProductDetails() {
                                     </div>
                                 </div>
                                 <div style="background:rgba(255,215,0,0.02); border:1px solid #333; border-radius:8px; padding:8px; margin:10px 0; display:flex; flex-direction:column; gap:4px;">
-                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">📍 სტატუსი:</span><b style="color:white; font-size:11px;">${displayLocation}</b></div>
-                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">⏳ დრო:</span><b style="color:var(--gold); font-size:11px;">${displayETA}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">📍 სტატუსი:</span><b style="color:white; font-size:11px;">${order.location || 'მუშავდება'}</b></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:#777; font-size:11px;">⏳ დრო:</span><b style="color:var(--gold); font-size:11px;">${order.eta || 'მოწმდება'}</b></div>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                                     <b style="color:var(--gold); font-size:16px;">${finalAmount} AKHO</b>
@@ -764,7 +728,7 @@ function closeProductDetails() {
             content.innerHTML = ordersHtml + (!hasOrders && !vipCardHtml ? `<p style="color:gray; text-align:center; padding:20px;">შეკვეთები არ არის.</p>` : "");
         });
     });
-}     
+}                                         
                     
 
                                                                                                                                                                
