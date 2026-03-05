@@ -662,7 +662,7 @@ function closeProductDetails() {
                             </div>
                             <h3 style="color:white; margin:0 0 5px 0; font-size:18px; font-weight:800;">გილოცავთ! 🎊</h3>
                             <p style="color:rgba(255,255,255,0.7); font-size:12px; margin:0 0 15px 0; line-height:1.4;">
-                                თქვენ გადმოგეცათ სპეციალური ფასდაკლების კუპონი IMPACT-ისგან.
+                                თქვენ გადმოგეცათ სპეციალური ფასდაკლების კუპონი EMIGRANTBOOK-ისგან.
                             </p>
                             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3);">
                                 <div style="display:flex; flex-direction:column;">
