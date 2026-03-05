@@ -621,7 +621,7 @@ function closeProductDetails() {
 
 
 // --- 1. მომხმარებლის შეკვეთების ისტორია ---
-function renderUserOrderHistory() {
+    function renderUserOrderHistory() {
     const user = auth.currentUser;
     const modal = document.getElementById('productDetailsModal');
     const content = document.getElementById('detailsContent');
@@ -632,7 +632,7 @@ function renderUserOrderHistory() {
     content.innerHTML = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>
                          <div id="ordersLoading" style="color:gray; text-align:center; padding:20px;">იტვირთება...</div>`;
 
-    // 1. ჯერ ვამოწმებთ არის თუ არა ამ მომხმარებლისთვის პერსონალური კუპონი
+    // 1. აი ეს არის ჩამატებული ნაწილი VIP კოდისთვის
     db.ref('promoCodes').once('value', pSnap => {
         const allCodes = pSnap.val();
         const userName = user.displayName || "";
@@ -655,7 +655,7 @@ function renderUserOrderHistory() {
             });
         }
 
-        // 2. შემდეგ ვტვირთავთ შეკვეთების ისტორიას
+        // 2. აქედან გრძელდება შენი ორიგინალი კოდი უცვლელად
         db.ref('orders').on('value', snap => {
             const data = snap.val();
             let ordersHtml = `<h2 style="color:var(--gold); margin-bottom:20px; width:100%;">ჩემი შეკვეთები 📦</h2>` + vipCardHtml;
@@ -731,7 +731,7 @@ function renderUserOrderHistory() {
             }
         });
     });
-}
+}                        
                                                                             
 
 
