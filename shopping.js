@@ -624,7 +624,25 @@ function renderUserOrderHistory() {
             return;
         }
 
-        // მონაცემების გადარჩევა
+        // --- ⭐ VIP სტატუსის დათვლა (დამატებული ლოგიკა) ---
+        const userOrders = Object.values(data).filter(o => o.buyerUid === user.uid || o.uid === user.uid);
+        const ordersCount = userOrders.length;
+
+        if (ordersCount >= 3) {
+            ordersHtml += `
+                <div class="vip-status-card">
+                    <div class="vip-badge">👑 VIP წევრი</div>
+                    <div style="color:white; font-size:15px; font-weight:bold;">გილოცავთ! თქვენ გაქვთ VIP სტატუსი</div>
+                    <p style="color:gray; font-size:11px; margin-top:5px;">თქვენი ერთგულებისთვის გადმოგეცემათ პირადი კუპონი:</p>
+                    <div class="vip-promo-box">
+                        <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">LOYALVIP15</b>
+                        <small style="color:#00ff00; font-size:10px;">-15% ALL STORE</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        // მონაცემების გადარჩევა (შენი ორიგინალი ციკლი)
         Object.values(data).reverse().forEach(order => {
             if (order.buyerUid === user.uid || order.uid === user.uid) {
                 hasOrders = true;
@@ -705,8 +723,7 @@ function renderUserOrderHistory() {
             content.innerHTML = ordersHtml;
         }
     });
-}                                                                                                        
-                            
+}                                                    
 
 
 
