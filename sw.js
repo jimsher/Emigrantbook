@@ -1,34 +1,46 @@
+// 1. ინსტალაცია და მომენტალური გააქტიურება
 self.addEventListener('install', (e) => {
-    console.log('Service Worker: Installed');
+    console.log('Service Worker: Installed ✅');
+    self.skipWaiting(); // აიძულებს ახალ ვერსიას ეგრევე ჩაენაცვლოს ძველს
 });
 
+self.addEventListener('activate', (e) => {
+    console.log('Service Worker: Activated 🚀');
+    return self.clients.claim(); // ეგრევე იღებს კონტროლს ყველა ღია ტაბზე
+});
+
+// 2. ფეჩი (საჭიროა PWA სტატუსისთვის)
 self.addEventListener('fetch', (e) => {
-    // ეს საჭიროა რომ ბრაუზერმა PWA-დ ჩაგვთვალოს
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
 });
 
-
-
-
-
-
-
-
-// შ3ტყობინ3ბის მოსვლა აპლიკაციაზე
+// 3. შეტყობინების მოსვლა (Push) - დაცული ვერსია
 self.addEventListener('push', function(event) {
-    let data = { title: 'Impact Store', body: 'ახალი შეტყობინება!' };
-    
-    if (event.data) {
-        data = event.data.json();
+    let data = { title: 'Impact Store', body: 'ახალი შეტყობინება თქვენთვის! 🔔' };
+
+    try {
+        if (event.data) {
+            // ვამოწმებთ, JSON-ია თუ უბრალო ტექსტი
+            const payload = event.data.text();
+            try {
+                data = JSON.parse(payload);
+            } catch (e) {
+                data.body = payload; // თუ JSON არ არის, ტექსტად ჩავსვამთ
+            }
+        }
+    } catch (err) {
+        console.error("Push მონაცემების წაკითხვის შეცდომა:", err);
     }
 
     const options = {
         body: data.body,
-        icon: '/logo.png', // შენი ლოგო
-        badge: '/logo.png', // პატარა იკონკა ზედა ზოლისთვის
-        vibrate: [200, 100, 200], // ტელეფონის ვიბრაცია
+        icon: '/logo.png',
+        badge: '/logo.png',
+        vibrate: [200, 100, 200],
+        tag: 'order-update', // ერთნაირი მესიჯები რომ არ დაგროვდეს
+        renotify: true,
         data: {
-            url: '/' // სად გადავიდეს დაჭერისას
+            url: data.url || '/' 
         }
     };
 
@@ -37,10 +49,22 @@ self.addEventListener('push', function(event) {
     );
 });
 
-// როცა მომხმარებელი მესიჯს დააჭერს, აპლიკაცია გაიხსნას
+// 4. მესიჯზე დაჭერის ლოგიკა
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow(event.notification.data.url)
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            // თუ აპლიკაცია უკვე ღიაა, უბრალოდ მასზე გადავიდეს
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url === event.notification.data.url && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // თუ დაკეტილია, გახსნას ახალი ფანჯარა
+            if (clients.openWindow) {
+                return clients.openWindow(event.notification.data.url);
+            }
+        })
     );
 });
