@@ -2370,16 +2370,27 @@ function installApp() {
 
 
 // შეტყობინების მონიჭება აპლიკაციაზე 
-function requestNotificationPermission() {
-    Notification.requestPermission().then((permission) => {
+function enableNotifications() {
+    if (!('Notification' in window)) {
+        console.log("ეს ბრაუზერი არ უჭერს მხარს შეტყობინებებს.");
+        return;
+    }
+
+    Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
-            console.log('მესიჯების გამოგზავნის უფლება მოცემულია! ✅');
-            // აქ შეგვიძლია მომხმარებლის Token შევინახოთ ბაზაში
-        } else {
-            console.log('მომხმარებელმა უარი თქვა მესიჯებზე ❌');
+            console.log("ნებართვა მიღებულია! ✅");
+            // აქედან შეგიძლია გატესტო
+            showTestNotification();
         }
     });
 }
 
-// შეგვიძლია ეს ფუნქცია გამოვიძახოთ როცა მომხმარებელი შედის საიტზე
-window.addEventListener('load', requestNotificationPermission);
+// ტესტისთვის, რომ ახლავე ნახო როგორ მუშაობს
+function showTestNotification() {
+    navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification('Impact Token Store', {
+            body: 'შეტყობინებები წარმატებით ჩაირთო! 🚀',
+            icon: '/logo.png'
+        });
+    });
+}
