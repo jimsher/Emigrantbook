@@ -2386,11 +2386,25 @@ function enableNotifications() {
 }
 
 // ტესტისთვის, რომ ახლავე ნახო როგორ მუშაობს
+window.addEventListener('load', () => {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log("შეტყობინებები ჩაირთო! ✅");
+                // სატესტო მესიჯი 2 წამში, რომ დარწმუნდე მუშაობს თუ არა
+                setTimeout(showTestNotification, 2000);
+            }
+        });
+    }
+});
+
 function showTestNotification() {
     navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification('Impact Token Store', {
-            body: 'შეტყობინებები წარმატებით ჩაირთო! 🚀',
-            icon: '/logo.png'
+        registration.showNotification('Impact Store', {
+            body: 'თქვენ ჩართეთ შეტყობინებები! 🔔',
+            icon: 'logo.png',
+            vibrate: [200, 100, 200],
+            badge: 'logo.png'
         });
     });
 }
