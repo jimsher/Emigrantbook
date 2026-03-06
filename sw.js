@@ -16,13 +16,17 @@ self.addEventListener('fetch', (e) => {
 
 // შ3ტყობინ3ბის მოსვლა აპლიკაციაზე
 self.addEventListener('push', function(event) {
-    const data = event.data ? event.data.json() : { title: 'Impact Token', body: 'ახალი სიახლე გაქვს!' };
+    let data = { title: 'Impact Store', body: 'ახალი შეტყობინება!' };
+    
+    if (event.data) {
+        data = event.data.json();
+    }
 
     const options = {
         body: data.body,
         icon: '/logo.png', // შენი ლოგო
         badge: '/logo.png', // პატარა იკონკა ზედა ზოლისთვის
-        vibrate: [100, 50, 100],
+        vibrate: [200, 100, 200], // ტელეფონის ვიბრაცია
         data: {
             url: '/' // სად გადავიდეს დაჭერისას
         }
@@ -33,7 +37,7 @@ self.addEventListener('push', function(event) {
     );
 });
 
-// შეტყობინებაზე დაჭერისას საიტის გახსნა
+// როცა მომხმარებელი მესიჯს დააჭერს, აპლიკაცია გაიხსნას
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
