@@ -2369,4 +2369,17 @@ function installApp() {
 
 
 
+// შეტყობინების მონიჭება აპლიკაციაზე 
+function requestNotificationPermission() {
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            console.log('მესიჯების გამოგზავნის უფლება მოცემულია! ✅');
+            // აქ შეგვიძლია მომხმარებლის Token შევინახოთ ბაზაში
+        } else {
+            console.log('მომხმარებელმა უარი თქვა მესიჯებზე ❌');
+        }
+    });
+}
 
+// შეგვიძლია ეს ფუნქცია გამოვიძახოთ როცა მომხმარებელი შედის საიტზე
+window.addEventListener('load', requestNotificationPermission);
