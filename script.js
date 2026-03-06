@@ -2327,29 +2327,7 @@ function handleForgotPassword() {
 
 
 // საიფის დროებითი აპლიკაციის ლოგიკა
-let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-    // ბრაუზერის სტანდარტული ფანჯრის დაბლოკვა
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // აქ შეგიძლია გამოაჩინო შენი საკუთარი "Install" ღილაკი საიტზე
-    console.log("აპლიკაციის დაინსტალირება შესაძლებელია! ✅");
-});
-
-// ფუნქცია, რომელიც გამოიძახება "Install" ღილაკზე დაჭერისას
-function installApp() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('მომხმარებელმა დააინსტალირა აპლიკაცია');
-            }
-            deferredPrompt = null;
-        });
-    }
-}
 
 
 
