@@ -2350,3 +2350,49 @@ function installApp() {
         });
     }
 }
+
+
+
+
+
+
+
+
+
+let deferredPrompt;
+const installBtn = document.getElementById('installAppBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // ბლოკავს ბრაუზერის სტანდარტულ პატარა შეტყობინებას
+    e.preventDefault();
+    // ინახავს მოვლენას, რომ მერე ჩვენი ღილაკით გამოვიძახოთ
+    deferredPrompt = e;
+    
+    // აჩვენებს ჩვენს ლამაზ ოქროსფერ ღილაკს
+    if (installBtn) {
+        installBtn.style.display = 'flex';
+    }
+});
+
+function installApp() {
+    if (!deferredPrompt) return;
+    
+    // აჩვენებს დაინსტალირების ფანჯარას
+    deferredPrompt.prompt();
+    
+    deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+            console.log('მომხმარებელმა დააინსტალირა IMPACT ✅');
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            console.log('მომხმარებელმა უარი თქვა ❌');
+        }
+        deferredPrompt = null;
+    });
+}
+
+// თუ აპლიკაცია უკვე დაინსტალირებულია, ღილაკი რომ დაიმალოს
+window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.style.display = 'none';
+    console.log('IMPACT წარმატებით დაყენდა ტელეფონზე! 📱');
+});
