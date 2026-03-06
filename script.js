@@ -2394,3 +2394,20 @@ function showTestNotification() {
         });
     });
 }
+
+
+
+
+
+
+// ფუნქცია, რომელიც აპლიკაციის ხატულაზე აჩენს ციფრს
+function setAppBadge(count) {
+    if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(count).catch((error) => {
+            console.error("Badge-ის დაყენება ვერ მოხერხდა:", error);
+        });
+    }
+}
+
+// მაგალითად, როცა 1 ახალი მესიჯია:
+setAppBadge(1);
