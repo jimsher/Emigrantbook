@@ -734,31 +734,30 @@ div[style*="overflow-x:auto"] {
 
 /* დროებითი აკლიკაციის სტილი */
   #installAppBtn {
-    display: flex /* მაინც დავტოვოთ none, მაგრამ JS-ით ეგრევე გამოვაჩენთ */
+    display: none; /* თავიდან მაინც none, JS გამოაჩენს */
+    position: fixed;
+    bottom: 85px; /* აწეულია, რომ ჩატს ან სხვა ღილაკებს არ დაეფაროს */
+    right: 20px;
+    z-index: 999999;
     background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
     color: black;
     border: none;
-    padding: 12px 25px;
+    padding: 12px 20px;
     border-radius: 50px;
     font-weight: 900;
+    font-size: 12px;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(212,175,55,0.5);
-    position: fixed; /* ეკრანზე რომ დაჰყვებოდეს */
-    bottom: 20px;
-    right: 20px;
-    z-index: 10000;
+    box-shadow: 0 4px 15px rgba(212,175,55,0.6);
     text-transform: uppercase;
-}
-  
-
-#installAppBtn i {
-    font-size: 16px;
+    align-items: center;
+    gap: 8px;
+    animation: pulseGlow 2s infinite;
 }
 
 @keyframes pulseGlow {
-    0% { box-shadow: 0 0 5px rgba(212,175,55,0.4); }
-    50% { box-shadow: 0 0 20px rgba(212,175,55,0.8); }
-    100% { box-shadow: 0 0 5px rgba(212,175,55,0.4); }
+    0% { transform: scale(1); box-shadow: 0 4px 15px rgba(212,175,55,0.6); }
+    50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(212,175,55,0.9); }
+    100% { transform: scale(1); box-shadow: 0 4px 15px rgba(212,175,55,0.6); }
 }
  </style>
 </head>
