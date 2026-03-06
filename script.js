@@ -2349,38 +2349,27 @@ function handleForgotPassword() {
 
 
 let deferredPrompt;
-const installBtn = document.getElementById('installAppBtn');
 
-// 1. ბრაუზერი აგზავნის სიგნალს, რომ დაყენება შეიძლება
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    
-    // ეგრევე ვაჩვენებთ ჩვენს ღილაკს
+    const installBtn = document.getElementById('installAppBtn');
     if (installBtn) {
-        installBtn.style.display = 'flex';
-        console.log("Install button is now visible! ✅");
+        installBtn.style.display = 'flex'; // მხოლოდ აქ ჩნდება ღილაკი
     }
 });
 
-// 2. თუ მომხმარებელი დააჭერს ჩვენს ღილაკს
 function installApp() {
     if (!deferredPrompt) {
-        // თუ ბრაუზერმა სიგნალი არ მოგვცა, ვასწავლით მომხმარებელს ხელით როგორ ქნას
-        alert("დაინსტალირებისთვის: დააჭირეთ ბრაუზერის მენიუს (3 წერტილი) და აირჩიეთ 'Add to Home Screen' ან 'Install App' 📲");
+        // თუ მაინც ვერ ხედავს ბრაუზერი, მივეხმაროთ მომხმარებელს
+        alert("ინსტალაციისთვის: დააჭირეთ ბრაუზერის მენიუს (3 წერტილი) და აირჩიეთ 'Add to Home Screen' 📲");
         return;
     }
-    
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-            installBtn.style.display = 'none';
-            deferredPrompt = null;
+            document.getElementById('installAppBtn').style.display = 'none';
         }
+        deferredPrompt = null;
     });
-}
-
-// 3. თუ უკვე აპლიკაციაშია, ღილაკი დავმალოთ
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-    if (installBtn) installBtn.style.display = 'none';
 }
