@@ -2340,37 +2340,36 @@ function handleForgotPassword() {
 let deferredPrompt;
 const installBtn = document.getElementById('installAppBtn');
 
+// 1. ბრაუზერი აგზავნის სიგნალს, რომ დაყენება შეიძლება
 window.addEventListener('beforeinstallprompt', (e) => {
-    // ბლოკავს ბრაუზერის სტანდარტულ პატარა შეტყობინებას
     e.preventDefault();
-    // ინახავს მოვლენას, რომ მერე ჩვენი ღილაკით გამოვიძახოთ
     deferredPrompt = e;
     
-    // აჩვენებს ჩვენს ლამაზ ოქროსფერ ღილაკს
+    // ეგრევე ვაჩვენებთ ჩვენს ღილაკს
     if (installBtn) {
         installBtn.style.display = 'flex';
+        console.log("Install button is now visible! ✅");
     }
 });
 
+// 2. თუ მომხმარებელი დააჭერს ჩვენს ღილაკს
 function installApp() {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+        // თუ ბრაუზერმა სიგნალი არ მოგვცა, ვასწავლით მომხმარებელს ხელით როგორ ქნას
+        alert("დაინსტალირებისთვის: დააჭირეთ ბრაუზერის მენიუს (3 წერტილი) და აირჩიეთ 'Add to Home Screen' ან 'Install App' 📲");
+        return;
+    }
     
-    // აჩვენებს დაინსტალირების ფანჯარას
     deferredPrompt.prompt();
-    
     deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
-            console.log('მომხმარებელმა დააინსტალირა IMPACT ✅');
-            if (installBtn) installBtn.style.display = 'none';
-        } else {
-            console.log('მომხმარებელმა უარი თქვა ❌');
+            installBtn.style.display = 'none';
+            deferredPrompt = null;
         }
-        deferredPrompt = null;
     });
 }
 
-// თუ აპლიკაცია უკვე დაინსტალირებულია, ღილაკი რომ დაიმალოს
-window.addEventListener('appinstalled', () => {
+// 3. თუ უკვე აპლიკაციაშია, ღილაკი დავმალოთ
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
     if (installBtn) installBtn.style.display = 'none';
-    console.log('IMPACT წარმატებით დაყენდა ტელეფონზე! 📱');
-});
+}
