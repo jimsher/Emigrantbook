@@ -2338,38 +2338,35 @@ function handleForgotPassword() {
 
 
 // საიფის დროებითი აპლიკაციის ლოგიკა
-
-
-
-
-
-
-
-
-
-
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
+    // ბრაუზერის სტანდარტული ფანჯრის დაბლოკვა
     e.preventDefault();
     deferredPrompt = e;
-    const installBtn = document.getElementById('installAppBtn');
-    if (installBtn) {
-        installBtn.style.display = 'flex'; // მხოლოდ აქ ჩნდება ღილაკი
-    }
+    
+    // აქ შეგიძლია გამოაჩინო შენი საკუთარი "Install" ღილაკი საიტზე
+    console.log("აპლიკაციის დაინსტალირება შესაძლებელია! ✅");
 });
 
+// ფუნქცია, რომელიც გამოიძახება "Install" ღილაკზე დაჭერისას
 function installApp() {
-    if (!deferredPrompt) {
-        // თუ მაინც ვერ ხედავს ბრაუზერი, მივეხმაროთ მომხმარებელს
-        alert("ინსტალაციისთვის: დააჭირეთ ბრაუზერის მენიუს (3 წერტილი) და აირჩიეთ 'Add to Home Screen' 📲");
-        return;
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('მომხმარებელმა დააინსტალირა აპლიკაცია');
+            }
+            deferredPrompt = null;
+        });
     }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-            document.getElementById('installAppBtn').style.display = 'none';
-        }
-        deferredPrompt = null;
-    });
 }
+
+
+
+
+
+
+
+
+
