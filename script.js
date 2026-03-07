@@ -2286,34 +2286,78 @@ function stopCamera() {
 
 
 // კამერის ჩაწერის ფუნქცია
+// --- გლობალური ცვლადები ---
 var globalMediaRecorder = null;
 var globalChunks = [];
+var currentFacingMode = "user"; 
 var timerInterval = null;
 var seconds = 0;
 
+// 1. ტაიმერის მართვა
 function startTimer() {
     seconds = 0;
     const timerElement = document.getElementById('recordingTimer');
-    timerElement.style.display = 'block';
+    if (timerElement) timerElement.style.display = 'flex';
+    
     timerInterval = setInterval(() => {
         seconds++;
         let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         let secs = (seconds % 60).toString().padStart(2, '0');
-        timerElement.innerText = `${mins}:${secs}`;
+        const minElem = document.getElementById('timerMinutes');
+        const secElem = document.getElementById('timerSeconds');
+        if (minElem) minElem.innerText = mins;
+        if (secElem) secElem.innerText = secs;
     }, 1000);
 }
 
 function stopTimer() {
     clearInterval(timerInterval);
     const timerElement = document.getElementById('recordingTimer');
-    timerElement.style.display = 'none';
-    timerElement.innerText = "00:00";
+    if (timerElement) timerElement.style.display = 'none';
 }
 
+// 2. კამერის გადართვა (წინა/უკანა)
+async function switchCamera() {
+    const video = document.getElementById('cameraStream');
+    
+    // ვთიშავთ არსებულს
+    if (window.videoStream) {
+        window.videoStream.getTracks().forEach(track => track.stop());
+    }
+    
+    // ვცვლით რეჟიმს
+    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { 
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 } 
+            },
+            audio: true
+        });
+
+        window.videoStream = stream;
+        if (video) {
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+                // სარკის ეფექტი: მხოლოდ სელფიზე (user)
+                video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
+            };
+        }
+    } catch (err) {
+        alert("კამერის გადართვა ვერ მოხერხდა.");
+        currentFacingMode = "user"; // ვაბრუნებთ საწყისზე
+    }
+}
+
+// 3. ჩაწერის დაწყება/გაჩერება
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
-    const cameraPreview = document.getElementById('cameraStream');
+    const video = document.getElementById('cameraStream');
     
     try {
         if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
@@ -2327,22 +2371,20 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.onstop = () => {
-                stopTimer(); // ტაიმერის გაჩერება
+                stopTimer();
                 const blob = new Blob(globalChunks, { type: 'video/mp4' });
-                const videoURL = URL.createObjectURL(blob);
                 
-                // --- ვიდეოს პრევიუ ---
-                // კამერის ლაივს ვთიშავთ და ჩაწერილ ვიდეოს ვაჩვენებთ
-                cameraPreview.srcObject = null;
-                cameraPreview.src = videoURL;
-                cameraPreview.muted = false; // პრევიუზე ხმა რომ ისმოდეს
-                cameraPreview.play();
-
                 // ფაილის მომზადება ატვირთვისთვის
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(file);
                 videoInput.files = dataTransfer.files;
+
+                // პრევიუს ჩვენება (ხმით)
+                video.srcObject = null;
+                video.src = URL.createObjectURL(blob);
+                video.muted = false;
+                video.play();
 
                 if (typeof handleVideoSelect === "function") {
                     handleVideoSelect(videoInput);
@@ -2350,14 +2392,13 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
-            startTimer(); // ტაიმერის დაწყება
+            startTimer();
             
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
                 btnInner.style.background = "#ff0000";
             }
-        } 
-        else {
+        } else {
             globalMediaRecorder.stop();
             if (btnInner) {
                 btnInner.style.borderRadius = "50%";
@@ -2373,61 +2414,8 @@ async function toggleRecording() {
 
 
 
-
-// კამერის წინა და უკანა შეტრიალების ლოგიკა
-// 1. გლობალური ცვლადი რეჟიმისთვის (თუ არ გაქვს, დაამატე სკრიპტის თავში)
-var currentFacingMode = "user"; 
-
-async function switchCamera() {
-    const video = document.getElementById('cameraStream');
-    
-    // 2. სრული "Reset" - ვთიშავთ ყველაფერს
-    if (window.videoStream) {
-        window.videoStream.getTracks().forEach(track => track.stop());
-        window.videoStream = null;
-    }
-    
-    if (video) {
-        video.srcObject = null;
-        video.style.opacity = "0"; // დროებით ვმალავთ, რომ "გაყინული" კადრი არ გამოჩნდეს
-    }
-
-    // 3. ვცვლით რეჟიმს
-    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-
-    // 4. ახალი სუფთა მოთხოვნა
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                facingMode: currentFacingMode,
-                // ზოგიერთი ტელეფონი იჭედება მაღალ რეზოლუციაზე გადართვისას, ამიტომ ვიყენებთ სტანდარტულს
-                width: { ideal: 640 }, 
-                height: { ideal: 480 } 
-            },
-            audio: true
-        });
-
-        window.videoStream = stream;
-
-        if (video) {
-            video.srcObject = stream;
-            
-            // ველოდებით სანამ ვიდეო მართლა მზად იქნება საჩვენებლად
-            video.onloadeddata = () => {
-                video.play();
-                video.style.opacity = "1"; // მხოლოდ ახლა ვაჩენთ
-                
-                // სარკისებური ეფექტი მხოლოდ სელფიზე
-                video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
-            };
-        }
-    } catch (err) {
-        console.error("Switch Error:", err);
-        // თუ უკანა კამერა დაიბლოკა, ვაბრუნებთ სელფიზე
-        alert("კამერის გადართვა ვერ მოხერხდა. შესაძლოა კამერა დაკავებულია.");
-    }
-}
-
+// თუ უკანა კამერა დაიბლოკა, ვაბრუნებთ სელფიზე
+        
 
 
 
