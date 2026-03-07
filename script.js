@@ -2257,49 +2257,51 @@ function stopCamera() {
 
 
 
-
-
-
-
-
 var globalMediaRecorder = null;
 var globalChunks = [];
 var currentFacingMode = "user"; 
 var timerInterval = null;
 var seconds = 0;
 
-// ლიმიტი - 60 წამი
-const RECORDING_LIMIT = 60; 
+const RECORDING_LIMIT = 60; // ლიმიტი 60 წამი
 
 function startTimer() {
-    // ყოველთვის ვასუფთავებთ წინა ინტერვალს, რომ არ გაორმაგდეს
-    if (timerInterval) clearInterval(timerInterval);
+    // 1. ჯერ ვასუფთავებთ ნებისმიერ აქტიურ ინტერვალს
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
     
+    // 2. საწყისი მნიშვნელობების დაყენება
     seconds = 0;
     const timerElement = document.getElementById('recordingTimer');
     const minElem = document.getElementById('timerMinutes');
     const secElem = document.getElementById('timerSeconds');
 
+    // ვიზუალურად ვასუფთავებთ ტაიმერს ჩართვამდე
+    if (minElem) minElem.innerText = "00";
+    if (secElem) secElem.innerText = "00";
     if (timerElement) timerElement.style.display = 'flex';
     
+    // 3. ინტერვალის დაწყება
     timerInterval = setInterval(() => {
         seconds++;
         
-        // 1. დროის გამოთვლა და ჩვენება
+        // დროის დათვლა
         let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         let secs = (seconds % 60).toString().padStart(2, '0');
         
+        // ეკრანზე განახლება (შენი span-ების მიხედვით)
         if (minElem) minElem.innerText = mins;
         if (secElem) secElem.innerText = secs;
 
-        // 2. ავტომატური გაჩერების ლოგიკა ლიმიტზე
+        // 4. ლიმიტის შემოწმება
         if (seconds >= RECORDING_LIMIT) {
-            console.log("ლიმიტი ამოიწურა, ჩაწერა ჩერდება...");
-            // ვაჩერებთ MediaRecorder-ს პირდაპირ, რაც თავისით გამოიწვევს onstop-ს და stopTimer-ს
+            console.log("ლიმიტი მიღწეულია!");
             if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
                 globalMediaRecorder.stop();
                 
-                // ღილაკის ვიზუალის დაბრუნება
+                // ღილაკის ფორმის დაბრუნება
                 const btnInner = document.getElementById('recordInner');
                 if (btnInner) {
                     btnInner.style.borderRadius = "50%";
@@ -2312,11 +2314,19 @@ function startTimer() {
 }
 
 function stopTimer() {
-    clearInterval(timerInterval);
-    timerInterval = null; // ვასუფთავებთ ცვლადს
+    // ინტერვალის სრული გაჩერება და გასუფთავება
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
     const timerElement = document.getElementById('recordingTimer');
     if (timerElement) timerElement.style.display = 'none';
 }
+
+
+
+
+                    
 
 async function switchCamera() {
     const video = document.getElementById('cameraStream');
