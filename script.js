@@ -2425,3 +2425,63 @@ function setAppBadge(count) {
 
 // მაგალითად, როცა 1 ახალი მესიჯია:
 setAppBadge(1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ვიდეოი ფაილის დაპატარავების ლიგიკა
+const { createFFmpeg, fetchFile } = FFmpeg;
+const ffmpeg = createFFmpeg({ log: true });
+
+async function compressVideoBeforeUpload(file) {
+    const statusLabel = document.getElementById('status'); // პროგრესის ტექსტისთვის
+    statusLabel.innerText = "ვიდეოს ოპტიმიზაცია (ეს აჩქარებს ატვირთვას)...";
+
+    // 1. ჩავტვირთოთ FFmpeg
+    if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load();
+    }
+
+    // 2. ჩავწეროთ ფაილი ვირტუალურ მეხსიერებაში
+    ffmpeg.FS('writeFile', 'input_video', await fetchFile(file));
+
+    // 3. გავუშვათ კომპრესია (720p ხარისხი, საშუალო სიჩქარე)
+    // ეს ბრძანება 100MB-ს დაახლოებით 15-20MB-მდე ჩამოიყვანს
+    await ffmpeg.run('-i', 'input_video', '-vcodec', 'libx264', '-crf', '28', '-preset', 'faster', '-vf', 'scale=-2:720', 'output.mp4');
+
+    // 4. ამოვიღოთ დამუშავებული ფაილი
+    const data = ffmpeg.FS('readFile', 'output.mp4');
+
+    // 5. შევქმნათ ახალი ფაილი ატვირთვისთვის
+    const compressedFile = new File([data.buffer], 'optimized_video.mp4', { type: 'video/mp4' });
+    
+    console.log("ახალი ზომა:", (compressedFile.size / 1024 / 1024).toFixed(2), "MB");
+    return compressedFile;
+}
+
+
+
+
+// დაპატარავებული ვიდეოს გაშვ3ბა ფურ3ბას3შ8
+async function onFileSelected(event) {
+    const originalFile = event.target.files[0];
+    
+    // ჯერ ვაკეთებთ კომპრესიას
+    const readyToUpload = await compressVideoBeforeUpload(originalFile);
+    
+    // შემდეგ ვაგზავნით Firebase-ში (ეს ეხლა ბევრად სწრაფად მოხდება!)
+    uploadToFirebase(readyToUpload);
+}
