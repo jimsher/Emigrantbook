@@ -2284,7 +2284,67 @@ function stopCamera() {
 
 
 // კამერის ჩაწერის ფუნქცია
+// ვიდეო ჩაწერის გლობალური ცვლადები
+let customMediaRecorder = null;
+let customRecordedChunks = [];
 
+// ეს ფუნქცია უნდა გამოიძახო შენი ჩაწერის ღილაკიდან
+async function toggleRecording() {
+    const btnInner = document.getElementById('recordInner');
+    
+    try {
+        // 1. თუ ჩაწერა არ მიდის - ვიწყებთ
+        if (!customMediaRecorder || customMediaRecorder.state === "inactive") {
+            
+            // ვიყენებთ შენს კოდში უკვე არსებულ window.videoStream-ს
+            if (!window.videoStream) {
+                alert("კამერა არ არის აქტიური!");
+                return;
+            }
+
+            customRecordedChunks = [];
+            customMediaRecorder = new MediaRecorder(window.videoStream);
+
+            customMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) customRecordedChunks.push(e.data);
+            };
+
+            customMediaRecorder.onstop = () => {
+                const blob = new Blob(customRecordedChunks, { type: 'video/mp4' });
+                const file = new File([blob], "live_video.mp4", { type: "video/mp4" });
+                
+                // აწვდის ფაილს შენს handleVideoSelect-ს
+                if (typeof handleVideoSelect === "function") {
+                    handleVideoSelect({ files: [file] });
+                }
+            };
+
+            customMediaRecorder.start();
+            
+            // ვიზუალური ეფექტი ჩაწერისას
+            if (btnInner) {
+                btnInner.style.borderRadius = "8px";
+                btnInner.style.background = "#ff0000";
+                btnInner.style.transform = "scale(0.8)";
+            }
+            console.log("ჩაწერა დაიწყო...");
+        } 
+        else {
+            // 2. თუ ჩაწერა მიდის - ვაჩერებთ
+            customMediaRecorder.stop();
+            
+            if (btnInner) {
+                btnInner.style.borderRadius = "50%";
+                btnInner.style.background = "#ff4d4d";
+                btnInner.style.transform = "scale(1)";
+            }
+            console.log("ჩაწერა დასრულდა.");
+        }
+    } catch (err) {
+        console.error("ჩაწერის შეცდომა:", err);
+        alert("ჩაწერა ვერ მოხერხდა. სცადეთ თავიდან.");
+    }
+}
 
 
 
