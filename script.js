@@ -2581,14 +2581,27 @@ setAppBadge(1);
 
 
 // ფილტრის ლოგიკა
+let selectedFilterValue = 'none';
 
-function applyFilter(filterValue) {
+function applyTikTokFilter(filter, element) {
     const video = document.getElementById('cameraStream');
+    selectedFilterValue = filter;
+
+    // 1. ვიდეოზე ფილტრის დადება
     if (video) {
-        // ფილტრის დადება ვიდეოზე
-        video.style.filter = filterValue;
-        
-        // ანიმაცია არჩევისას
-        console.log("ფილტრი გამოყენებულია: " + filterValue);
+        video.style.filter = filter;
+        // სელფის დროს scaleX(-1)-ის შენარჩუნება, რომ არ აირიოს
+        const isSelfie = video.style.transform.includes('scaleX(-1)');
+        video.style.transform = isSelfie ? 'scaleX(-1)' : 'scaleX(1)';
     }
+
+    // 2. ვიზუალური მონიშვნა ავატარებზე
+    const allAvatars = document.querySelectorAll('.filter-avatar div');
+    allAvatars.forEach(div => div.style.borderColor = 'white'); // ყველას ვათეთრებთ
+    
+    // არჩეულს ვუწითლებთ ჩარჩოს (TikTok-ის ფერი #fe2c55)
+    element.querySelector('div').style.borderColor = '#fe2c55';
+    
+    console.log("აქტიური ეფექტი: " + filter);
 }
+
