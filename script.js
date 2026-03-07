@@ -2266,49 +2266,45 @@ var seconds = 0;
 const RECORDING_LIMIT = 60; // ლიმიტი 60 წამი
 
 function startTimer() {
-    // 1. ჯერ ვასუფთავებთ ნებისმიერ აქტიურ ინტერვალს
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
+    if (timerInterval) clearInterval(timerInterval);
     
-    // 2. საწყისი მნიშვნელობების დაყენება
     seconds = 0;
-    const timerElement = document.getElementById('recordingTimer');
     const minElem = document.getElementById('timerMinutes');
     const secElem = document.getElementById('timerSeconds');
+    const timerElement = document.getElementById('recordingTimer');
 
-    // ვიზუალურად ვასუფთავებთ ტაიმერს ჩართვამდე
-    if (minElem) minElem.innerText = "00";
-    if (secElem) secElem.innerText = "00";
     if (timerElement) timerElement.style.display = 'flex';
     
-    // 3. ინტერვალის დაწყება
     timerInterval = setInterval(() => {
         seconds++;
         
-        // დროის დათვლა
+        // დროის განახლება ეკრანზე
         let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         let secs = (seconds % 60).toString().padStart(2, '0');
         
-        // ეკრანზე განახლება (შენი span-ების მიხედვით)
         if (minElem) minElem.innerText = mins;
         if (secElem) secElem.innerText = secs;
 
-        // 4. ლიმიტის შემოწმება
+        // 🛑 ლიმიტის შემოწმება
         if (seconds >= RECORDING_LIMIT) {
-            console.log("ლიმიტი მიღწეულია!");
-            if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
+            console.log("ლიმიტი ამოიწურა!");
+            
+            // 1. ჯერ ვასუფთავებთ ტაიმერს, რომ აღარ გაგრძელდეს ათვლა
+            stopTimer();
+
+            // 2. ვაჩერებთ MediaRecorder-ს (ყველანაირი შემოწმების გარეშე, პირდაპირ)
+            if (globalMediaRecorder) {
                 globalMediaRecorder.stop();
-                
-                // ღილაკის ფორმის დაბრუნება
-                const btnInner = document.getElementById('recordInner');
-                if (btnInner) {
-                    btnInner.style.borderRadius = "50%";
-                    btnInner.style.background = "#ff4d4d";
-                }
-                alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
             }
+
+            // 3. ვიზუალურად ვაბრუნებთ ღილაკს საწყის ფორმაში
+            const btnInner = document.getElementById('recordInner');
+            if (btnInner) {
+                btnInner.style.borderRadius = "50%";
+                btnInner.style.background = "#ff4d4d";
+            }
+
+            alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
         }
     }, 1000);
 }
