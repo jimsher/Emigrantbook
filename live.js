@@ -1,98 +1,100 @@
-// --- EB-LIVE CORE ENGINE ---
-let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
-let liveTracks = { video: null, audio: null };
-let currentLiveChannel = null;
+// --- EB-LIVE MASTER CONTROLLER ---
+const agoraAppId = "7290502fac7f4feb82b021ccde79988a";
+const agoraToken = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
 
-// აგორას კონფიგურაცია
-const AGORA_APP_ID = "7290502fac7f4feb82b021ccde79988a";
-const AGORA_TOKEN = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
+let clientEB = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+let tracksEB = { video: null, audio: null };
+let activeChannel = null;
 
-// 1. ლაივის დაწყება (მენიუდან გამოსაძახებელი)
-async function startLive() {
+// 1. ლაივის დაწყება
+async function initLiveBroadcast() {
     if (typeof toggleSideMenu === "function") toggleSideMenu(false); // მენიუს დახურვა
     
-    currentLiveChannel = "live_" + auth.currentUser.uid;
+    activeChannel = "live_" + auth.currentUser.uid;
     
     // UI-ს მომზადება
-    const ui = document.getElementById('liveUI');
-    ui.style.display = 'block';
+    const liveWin = document.getElementById('liveUI');
+    liveWin.style.display = 'block';
     document.getElementById('liveHostName').innerText = myName;
     document.getElementById('liveHostAva').src = myPhoto;
 
     try {
-        await liveClient.setClientRole("host");
-        await liveClient.join(AGORA_APP_ID, currentLiveChannel, AGORA_TOKEN, auth.currentUser.uid);
+        await clientEB.setClientRole("host");
+        await clientEB.join(agoraAppId, activeChannel, agoraToken, auth.currentUser.uid);
         
-        liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
-        liveTracks.video = await AgoraRTC.createCameraVideoTrack();
+        tracksEB.audio = await AgoraRTC.createMicrophoneAudioTrack();
+        tracksEB.video = await AgoraRTC.createCameraVideoTrack();
         
         // ვიდეოს გაშვება
-        liveTracks.video.play("remote-live-video");
-        await liveClient.publish([liveTracks.audio, liveTracks.video]);
+        tracksEB.video.play("remote-live-video");
+        await clientEB.publish([tracksEB.audio, tracksEB.video]);
 
-        // Firebase-ში რეგისტრაცია
+        // Firebase რეგისტრაცია
         db.ref(`lives/${auth.currentUser.uid}`).set({
             hostId: auth.currentUser.uid,
             hostName: myName,
             hostPhoto: myPhoto,
-            channel: currentLiveChannel,
+            channel: activeChannel,
             status: 'active',
-            ts: Date.now()
+            ts: firebase.database.ServerValue.TIMESTAMP
         });
 
-        listenToLiveChat(currentLiveChannel);
-    } catch (e) {
-        console.error("ლაივი ვერ დაიწყო:", e);
-        endLive();
+        startChatListener(activeChannel);
+    } catch (err) {
+        console.error("Live failed:", err);
+        terminateLive();
     }
 }
 
-// 2. ჩატის მოსმენა
-function listenToLiveChat(channel) {
-    const chatBox = document.getElementById('liveChatBox');
-    chatBox.innerHTML = "";
-    db.ref(`live_chats/${channel}`).off(); // წინა კავშირის გაწყვეტა
+// 2. ჩატი (Real-time Firebase)
+function startChatListener(channel) {
+    const chatFeed = document.getElementById('liveChatBox');
+    chatFeed.innerHTML = "";
+    db.ref(`live_chats/${channel}`).off(); 
     
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
-        const msg = snap.val();
-        const div = document.createElement('div');
-        
-        if(msg.name === "SYSTEM") {
-            div.style = "background:rgba(212,175,55,0.1); padding:6px 10px; border-radius:10px; margin-bottom:5px; color:#d4af37; font-size:12px; font-weight:bold; text-align:center;";
-            div.innerText = msg.text;
-        } else {
-            div.style = "background:rgba(255,255,255,0.1); padding:8px 12px; border-radius:15px; margin-bottom:6px; width:fit-content; border-left:3px solid #d4af37;";
-            div.innerHTML = `<b style="color:#d4af37; font-size:11px;">${msg.name}:</b> <span style="color:white; font-size:13px;">${msg.text}</span>`;
-        }
-        
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const data = snap.val();
+        const msgDiv = document.createElement('div');
+        msgDiv.style = "background:rgba(0,0,0,0.3); padding:7px 12px; border-radius:15px; color:#fff; font-size:13px; width:fit-content; border-left:3px solid #d4af37;";
+        msgDiv.innerHTML = `<b style="color:#d4af37; font-size:11px;">${data.name}:</b> ${data.text}`;
+        chatFeed.appendChild(msgDiv);
+        chatFeed.scrollTop = chatFeed.scrollHeight;
     });
 }
 
 // 3. კომენტარის გაგზავნა
-function sendLiveComment() {
-    const inp = document.getElementById('liveMsgInp');
-    if(!inp.value.trim() || !currentLiveChannel) return;
-    db.ref(`live_chats/${currentLiveChannel}`).push({ name: myName, text: inp.value, ts: Date.now() });
-    inp.value = "";
+function postLiveComment() {
+    const input = document.getElementById('liveMsgInp');
+    if(!input.value.trim() || !activeChannel) return;
+    db.ref(`live_chats/${activeChannel}`).push({ name: myName, text: input.value, ts: Date.now() });
+    input.value = "";
 }
 
-// 4. საჩუქრების პანელის მართვა
-function toggleGiftPanel() {
-    document.getElementById('giftPanel').classList.toggle('active');
+// 4. საჩუქრების პანელი
+function openGifts() { document.getElementById('giftPanel').classList.add('active'); }
+function closeGifts() { document.getElementById('giftPanel').classList.remove('active'); }
+
+// 5. საჩუქრის გაგზავნა (ბალანსის შემოწმებით)
+function processGift(emoji, cost, name) {
+    if (myAkho < cost) { alert("ბალანსი არ გაქვთ!"); return; }
+    
+    const hostUid = activeChannel.replace("live_", "");
+    spendAkho(cost, `Gift: ${name}`);
+    earnAkho(hostUid, cost, `Gift: ${name}`);
+    
+    db.ref(`live_chats/${activeChannel}`).push({ name: "SYSTEM", text: `🎁 ${myName}-მა გაჩუქა ${name}`, ts: Date.now() });
+    closeGifts();
 }
 
-// 5. ლაივის დასრულება
-async function endLive() {
-    if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); }
-    if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); }
-    await liveClient.leave();
+// 6. ლაივის დასრულება
+async function terminateLive() {
+    if (tracksEB.video) { tracksEB.video.stop(); tracksEB.video.close(); }
+    if (tracksEB.audio) { tracksEB.audio.stop(); tracksEB.audio.close(); }
+    await clientEB.leave();
     
     document.getElementById('liveUI').style.display = 'none';
-    
-    if (currentLiveChannel && currentLiveChannel.includes(auth.currentUser.uid)) {
+    if (activeChannel && activeChannel.includes(auth.currentUser.uid)) {
         db.ref(`lives/${auth.currentUser.uid}`).remove();
-        db.ref(`live_chats/${currentLiveChannel}`).remove();
     }
 }
+</script>
