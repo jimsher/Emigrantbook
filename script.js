@@ -2147,44 +2147,46 @@ let videoStream = null;
 
 // ეს ფუნქცია იხსნება ტოკენზე დაჭერისას
 async function openUploadModal() {
-    const modal = document.getElementById('uploadModal');
-    if (modal) {
-        // 1. ჯერ ვაჩენთ ფანჯარას (ზუსტად ისე, როგორც ადრე გქონდა)
-        modal.style.display = 'flex';
-        
-        // 2. ეგრევე ვრთავთ კამერას
-        const video = document.getElementById('cameraStream');
-        const placeholder = document.getElementById('placeholderText');
+    const modal = document.getElementById('uploadModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        const video = document.getElementById('cameraStream');
+        const placeholder = document.getElementById('placeholderText');
 
-        try {
-            // თუ კამერა უკვე ჩართულია სხვაგან, ვასუფთავებთ
-            if (window.videoStream) {
-                window.videoStream.getTracks().forEach(track => track.stop());
-            }
+        try {
+            // თუ კამერა უკვე ჩართულია, ვთიშავთ ძველს
+            if (window.videoStream) {
+                window.videoStream.getTracks().forEach(track => track.stop());
+            }
 
-            // ვითხოვთ კამერას
-            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
-                audio: false 
-            });
-            
-            if (video) {
-                video.srcObject = window.videoStream;
-                // აუცილებელი პარამეტრები, რომ მობილურზე ეგრევე გამოჩნდეს
-                video.setAttribute('playsinline', '');
-                video.setAttribute('autoplay', '');
-                video.muted = true;
-                
-                video.style.display = 'block';
-                await video.play();
+            // ვითხოვთ კამერას + მიკროფონს (ჩაწერისთვის აუცილებელია audio: true)
+            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" }, 
+                audio: true 
+            });
+            
+            if (video) {
+                video.srcObject = window.videoStream;
+                
+                // მობილურისთვის აუცილებელი პარამეტრები
+                video.setAttribute('playsinline', '');
+                video.setAttribute('autoplay', '');
+                video.muted = true; // პრევიუზე ხმა რომ არ დაექოსდეს
+                
+                video.style.display = 'block';
+                
+                // ვაიძულებთ ვიდეოს გაშვებას
+                video.play().catch(e => console.log("ავტომატური გაშვების შეცდომა:", e));
 
-                if (placeholder) placeholder.style.display = 'none';
-                console.log("კამერა ჩაირთო ავტომატურად ✅");
-            }
-        } catch (err) {
-            console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
-        }
-    }
+                if (placeholder) placeholder.style.display = 'none';
+                console.log("კამერა და მიკროფონი მზად არის ✅");
+            }
+        } catch (err) {
+            console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
+            alert("კამერა ვერ ჩაირთო. შეამოწმეთ ნებართვები პარამეტრებში.");
+        }
+    }
 }
 
 async function startLiveCamera() {
