@@ -2581,31 +2581,23 @@ setAppBadge(1);
 
 
 // ფილტრის ლოგიკა
-function applyTikTokFilter(filter, element) {
+function applyTikTokFilter(filterType, element) {
     const video = document.getElementById('cameraStream');
     
-    if (video) {
-        // 1. ჯერ ვადგენთ, სარკის ეფექტი გვჭირდება თუ არა
-        // თუ currentFacingMode არის "user", მაშინ გვინდა სარკე
-        let mirror = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
-        
-        // 2. ვადებთ ფილტრს და სარკეს ერთდროულად
-        video.style.filter = filter;
-        video.style.transform = mirror; 
-        
-        console.log("ფილტრი აქტიურია: " + filter);
+    // თუ აირჩიე "Beauty" (მაგალითად, დავარქვათ Smooth)
+    if (filterType === 'beauty_smooth') {
+        // აქ ირთვება AI-ს პარამეტრები
+        video.style.filter = "contrast(1.1) brightness(1.1) blur(0.5px) saturate(1.1)";
+        console.log("Beauty Mode: Active ✅");
+    } else {
+        // სხვა ჩვეულებრივი ფერების ფილტრები
+        video.style.filter = filterType;
     }
 
-    // 3. ვიზუალური მონიშვნა (წითელი ჩარჩო)
+    // ვიზუალური მონიშვნა ავატარებზე (წითელი ჩარჩო)
     const allAvatars = document.querySelectorAll('.filter-avatar div');
-    allAvatars.forEach(div => {
-        div.style.borderColor = 'white';
-        div.style.transform = 'scale(1)';
-    });
-    
-    const selectedDiv = element.querySelector('div');
-    selectedDiv.style.borderColor = '#fe2c55';
-    selectedDiv.style.transform = 'scale(1.1)'; // პატარა ზუმი არჩეულზე
+    allAvatars.forEach(div => div.style.borderColor = 'white');
+    element.querySelector('div').style.borderColor = '#fe2c55';
 }
 
 
