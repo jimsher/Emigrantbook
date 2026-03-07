@@ -2286,7 +2286,6 @@ function stopCamera() {
 
 
 // კამერის ჩაწერის ფუნქცია
-// 1. ცვლადი უნდა იყოს ფუნქციის გარეთ, რომ ყოველთვის ხელმისაწვდომი იყოს
 var globalMediaRecorder = null;
 var globalChunks = [];
 
@@ -2294,7 +2293,6 @@ async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     
     try {
-        // 2. ვამოწმებთ, საერთოდ შექმნილია თუ არა რეკორდერი და რა მდგომარეობაშია
         if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             
             if (!window.videoStream) {
@@ -2304,42 +2302,61 @@ async function toggleRecording() {
 
             globalChunks = [];
             
-            // ვცდილობთ შექმნას
-            globalMediaRecorder = new MediaRecorder(window.videoStream);
+            // ვამოწმებთ ბრაუზერის მხარდაჭერილ ფორმატს
+            let mimeType = 'video/webm;codecs=vp8,opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/mp4';
+            }
+
+            globalMediaRecorder = new MediaRecorder(window.videoStream, { mimeType });
 
             globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
+                if (e.data.size > 0) {
+                    globalChunks.push(e.data);
+                    console.log("მონაცემები მოდის: ", e.data.size, "ბაიტი");
+                }
             };
 
             globalMediaRecorder.onstop = () => {
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
+                console.log("ჩაწერა გაჩერდა. ნაჭრების რაოდენობა:", globalChunks.length);
+                
+                if (globalChunks.length === 0) {
+                    alert("ვიდეო ფაილი ვერ შეიქმნა. სცადეთ უფრო ხანგრძლივი ჩაწერა.");
+                    return;
+                }
+
+                const blob = new Blob(globalChunks, { type: globalMediaRecorder.mimeType });
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+                
+                console.log("ფაილი მზადაა ატვირთვისთვის:", file.size, "ბაიტი");
+
+                // აი აქ ხდება გადაცემა - დავრწმუნდეთ რომ handleVideoSelect ხედავს ამას
                 if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect({ files: [file] });
+                    // ზოგიერთი ფუნქცია ელოდება target-ს, ამიტომ ასე მივაწოდოთ:
+                    handleVideoSelect({ target: { files: [file] }, files: [file] });
+                } else {
+                    console.error("handleVideoSelect ფუნქცია ვერ მოიძებნა!");
                 }
             };
 
             globalMediaRecorder.start();
+            console.log("ჩაწერა დაიწყო...");
             
-            // დიზაინის შეცვლა
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
                 btnInner.style.background = "#ff0000";
             }
-            console.log("ჩაწერა დაიწყო");
         } 
         else {
-            // 3. თუ უკვე მუშაობს, ვაჩერებთ
             globalMediaRecorder.stop();
-            
             if (btnInner) {
                 btnInner.style.borderRadius = "50%";
                 btnInner.style.background = "#ff4d4d";
             }
         }
     } catch (err) {
-        console.error("შეცდომა:", err);
-        alert("ჩაწერა ვერ მოხერხდა: " + err.message);
+        console.error("ჩაწერის შეცდომა:", err);
+        alert("შეცდომა: " + err.message);
     }
 }
 
