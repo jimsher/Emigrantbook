@@ -1438,44 +1438,58 @@ div[style*="overflow-x:auto"] {
         <textarea id="videoDesc" placeholder="დაწერე აღწერა... #impact" style="width:90%; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:12px; color:white; padding:15px; outline:none; font-size:14px; resize:none;"></textarea>
 
 
-     
-
-        <div id="filterSlider" style="position: absolute; bottom: 120px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; overflow-x: auto; padding: 10px; z-index: 1000002; scroll-behavior: smooth;">
-    
-    <div class="filter-item" onclick="applyFilter('none')" style="text-align:center;">
-        <div style="width:55px; height:55px; border-radius:50%; border:2px solid white; background: url('https://via.placeholder.com/55?text=Normal'); background-size:cover;"></div>
-        <span style="color:white; font-size:10px;">Original</span>
-    </div>
-
-    <div class="filter-item" onclick="applyFilter('grayscale(100%)')" style="text-align:center;">
-        <div style="width:55px; height:55px; border-radius:50%; border:2px solid white; background: gray;"></div>
-        <span style="color:white; font-size:10px;">B&W</span>
-    </div>
-
-    <div class="filter-item" onclick="applyFilter('sepia(80%)')" style="text-align:center;">
-        <div style="width:55px; height:55px; border-radius:50%; border:2px solid white; background: #704214;"></div>
-        <span style="color:white; font-size:10px;">Vintage</span>
-    </div>
-
-    <div class="filter-item" onclick="applyFilter('brightness(1.5) contrast(1.2)')" style="text-align:center;">
-        <div style="width:55px; height:55px; border-radius:50%; border:2px solid white; background: #ffd700;"></div>
-        <span style="color:white; font-size:10px;">Bright</span>
-    </div>
-
-    <div class="filter-item" onclick="applyFilter('hue-rotate(180deg)')" style="text-align:center;">
-        <div style="width:55px; height:55px; border-radius:50%; border:2px solid white; background: #00ffff;"></div>
-        <span style="color:white; font-size:10px;">Cold</span>
-    </div>
-</div>
-
-     
-     
-     
         <div style="width:100%; display:flex; justify-content:space-around; align-items:center;">
             <div onclick="document.getElementById('videoInput').click()" style="text-align:center; cursor:pointer; width:60px;">
                 <div style="width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:8px; border:2px solid white; margin:0 auto; display:flex; align-items:center; justify-content:center;">
                      <i class="fas fa-images" style="color:white; font-size:20px;"></i>
                 </div>
+
+
+
+             <div class="filters-container" style="position: absolute; bottom: 130px; left: 0; width: 100%; z-index: 1000005;">
+    <div id="filterSlider" style="display: flex; overflow-x: auto; padding: 10px 20px; gap: 15px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+        
+        <div class="filter-avatar" onclick="applyTikTokFilter('none', this)" style="flex: 0 0 auto; text-align: center; cursor: pointer;">
+            <div style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fe2c55; background: url('https://i.pravatar.cc/100?img=1') center/cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>
+            <p style="color: white; font-size: 12px; margin-top: 5px; font-weight: bold; text-shadow: 1px 1px 2px black;">Normal</p>
+        </div>
+
+
+
+     
+        <div class="filter-avatar" onclick="applyTikTokFilter('grayscale(100%) contrast(1.2)', this)" style="flex: 0 0 auto; text-align: center; cursor: pointer;">
+            <div style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; background: url('https://i.pravatar.cc/100?img=2') center/cover; filter: grayscale(100%);"></div>
+            <p style="color: white; font-size: 12px; margin-top: 5px; text-shadow: 1px 1px 2px black;">Noir</p>
+        </div>
+
+        <div class="filter-avatar" onclick="applyTikTokFilter('sepia(1) hue-rotate(-30deg) saturate(1.4)', this)" style="flex: 0 0 auto; text-align: center; cursor: pointer;">
+            <div style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; background: url('https://i.pravatar.cc/100?img=3') center/cover; filter: sepia(1);"></div>
+            <p style="color: white; font-size: 12px; margin-top: 5px; text-shadow: 1px 1px 2px black;">Retro</p>
+        </div>
+
+        <div class="filter-avatar" onclick="applyTikTokFilter('hue-rotate(280deg) brightness(1.2) contrast(1.1)', this)" style="flex: 0 0 auto; text-align: center; cursor: pointer;">
+            <div style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; background: url('https://i.pravatar.cc/100?img=4') center/cover; filter: hue-rotate(280deg);"></div>
+            <p style="color: white; font-size: 12px; margin-top: 5px; text-shadow: 1px 1px 2px black;">Cyber</p>
+        </div>
+
+        <div class="filter-avatar" onclick="applyTikTokFilter('saturate(1.8) sepia(0.3) brightness(1.1)', this)" style="flex: 0 0 auto; text-align: center; cursor: pointer;">
+            <div style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; background: url('https://i.pravatar.cc/100?img=5') center/cover; filter: saturate(1.8) sepia(0.3);"></div>
+            <p style="color: white; font-size: 12px; margin-top: 5px; text-shadow: 1px 1px 2px black;">Warm</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* მალავს scrollbar-ს დიზაინისთვის */
+    #filterSlider::-webkit-scrollbar { display: none; }
+    #filterSlider { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+
+
+
+
+             
                 <span style="color:white; font-size:11px; margin-top:5px; display:block;">გალერეა</span>
                 <input type="file" id="videoInput" accept="video/*" hidden onchange="handleVideoSelect(this)">
             </div>
