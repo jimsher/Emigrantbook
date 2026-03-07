@@ -2378,53 +2378,59 @@ async function toggleRecording() {
 let currentFacingMode = "user"; 
 
 async function switchCamera() {
-    // 1. ჯერ ვთიშავთ არსებულ ნაკადს ბოლომდე
+    const video = document.getElementById('cameraStream');
+    
+    // 1. სრული გაჩერება და გასუფთავება
     if (window.videoStream) {
-        window.videoStream.getTracks().forEach(track => {
-            track.stop();
-            console.log("Track stopped: ", track.label);
-        });
+        window.videoStream.getTracks().forEach(track => track.stop());
         window.videoStream = null;
     }
 
-    // 2. ვცვლით რეჟიმს
+    // 2. რეჟიმის შეცვლა
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
     
-    const video = document.getElementById('cameraStream');
-    const constraints = {
-        video: { 
-            facingMode: { exact: currentFacingMode } 
-        },
-        audio: true
-    };
-
+    // 3. ახალი კამერის გამოძახება
     try {
-        // 3. ვცდილობთ ახალი კამერის ჩართვას
-        window.videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const newStream = await navigator.mediaDevices.getUserMedia({
+            video: { 
+                facingMode: currentFacingMode,
+                // ვამცირებთ რეზოლუციას გადართვისას, რომ უფრო სწრაფად ჩაიტვირთოს
+                width: { ideal: 1280 }, 
+                height: { ideal: 720 } 
+            },
+            audio: true
+        });
+
+        window.videoStream = newStream;
+
+        if (video) {
+            // მნიშვნელოვანია: ჯერ ვწყვეტთ კავშირს ძველთან
+            video.srcObject = null;
+            video.load(); 
+            
+            // ახალი ნაკადის მიბმა
+            video.srcObject = newStream;
+
+            // ველოდებით სანამ მონაცემები რეალურად წამოვა
+            video.onloadedmetadata = async () => {
+                try {
+                    await video.play();
+                    console.log("კამერა წარმატებით გადაირთო ✅");
+                } catch (playErr) {
+                    console.error("Play error:", playErr);
+                }
+            };
+        }
     } catch (err) {
-        console.warn("Exact mode failed, trying flexible mode...", err);
-        // თუ 'exact' არ იმუშავა (ზოგ ძველ ტელეფონზე), ვცდით უფრო რბილად
-        try {
-            window.videoStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: currentFacingMode },
-                audio: true
-            });
-        } catch (finalErr) {
-            alert("კამერის გადართვა ვერ მოხერხდა: " + finalErr.message);
-            return;
+        console.error("გადართვის შეცდომა:", err);
+        // თუ უკანა კამერა საერთოდ არ გაქვს, ვაბრუნებთ წინა კამერას
+        if (currentFacingMode === "environment") {
+            currentFacingMode = "user";
+            switchCamera(); 
         }
     }
-
-    // 4. ახალი ნაკადის მიბმა ვიდეო თეგზე
-    if (video && window.videoStream) {
-        video.srcObject = window.videoStream;
-        
-        // აუცილებელია play-ს ხელახლა გამოძახება
-        video.onloadedmetadata = () => {
-            video.play();
-        };
-    }
 }
+
 
 
 
