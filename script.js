@@ -2286,74 +2286,59 @@ function stopCamera() {
 
 
 // კამერის ჩაწერის ფუნქცია
-// ვიდეო ჩაწერის გლობალური ცვლადები
-let customMediaRecorder = null;
-let customRecordedChunks = [];
+// 1. ცვლადი უნდა იყოს ფუნქციის გარეთ, რომ ყოველთვის ხელმისაწვდომი იყოს
+var globalMediaRecorder = null;
+var globalChunks = [];
 
-// ეს ფუნქცია უნდა გამოიძახო შენი ჩაწერის ღილაკიდან
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     
     try {
-        if (!customMediaRecorder || customMediaRecorder.state === "inactive") {
+        // 2. ვამოწმებთ, საერთოდ შექმნილია თუ არა რეკორდერი და რა მდგომარეობაშია
+        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             
-            // 1. ვამოწმებთ, არის თუ არა საერთოდ კამერის ნაკადი
             if (!window.videoStream) {
-                alert("კამერა არ არის აქტიური! გთხოვთ, ჯერ ჩართოთ კამერა.");
+                alert("კამერა არ არის აქტიური!");
                 return;
             }
 
-            customRecordedChunks = [];
-
-            // 2. ვცდილობთ ჩაწერას (ვამატებთ MIME ტიპის შემოწმებას)
-            let options = { mimeType: 'video/webm;codecs=vp8,opus' };
+            globalChunks = [];
             
-            // თუ webm არ მუშაობს (მაგალითად iPhone-ზე), ვცდით სხვა ფორმატს
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options = { mimeType: 'video/mp4' };
-            }
+            // ვცდილობთ შექმნას
+            globalMediaRecorder = new MediaRecorder(window.videoStream);
 
-            try {
-                customMediaRecorder = new MediaRecorder(window.videoStream, options);
-            } catch (e) {
-                // თუ ფორმატებმა მაინც არ იმუშავა, ბრაუზერმა თავად აირჩიოს საუკეთესო
-                customMediaRecorder = new MediaRecorder(window.videoStream);
-            }
-
-            customMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) customRecordedChunks.push(e.data);
+            globalMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) globalChunks.push(e.data);
             };
 
-            customMediaRecorder.onstop = () => {
-                const blob = new Blob(customRecordedChunks, { type: customMediaRecorder.mimeType });
-                const file = new File([blob], "live_video.mp4", { type: "video/mp4" });
-                
+            globalMediaRecorder.onstop = () => {
+                const blob = new Blob(globalChunks, { type: 'video/mp4' });
+                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 if (typeof handleVideoSelect === "function") {
                     handleVideoSelect({ files: [file] });
                 }
             };
 
-            // 3. ჩაწერის დაწყება
-            customMediaRecorder.start();
+            globalMediaRecorder.start();
             
+            // დიზაინის შეცვლა
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
                 btnInner.style.background = "#ff0000";
-                btnInner.style.transform = "scale(0.8)";
             }
-            console.log("ჩაწერა დაიწყო წარმატებით ✅");
+            console.log("ჩაწერა დაიწყო");
         } 
         else {
-            customMediaRecorder.stop();
+            // 3. თუ უკვე მუშაობს, ვაჩერებთ
+            globalMediaRecorder.stop();
+            
             if (btnInner) {
                 btnInner.style.borderRadius = "50%";
                 btnInner.style.background = "#ff4d4d";
-                btnInner.style.transform = "scale(1)";
             }
         }
     } catch (err) {
-        console.error("ჩაწერის კრიტიკული შეცდომა:", err);
-        // აქ გვეტყვის კონკრეტულ მიზეზს კონსოლში
+        console.error("შეცდომა:", err);
         alert("ჩაწერა ვერ მოხერხდა: " + err.message);
     }
 }
