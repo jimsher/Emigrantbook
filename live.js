@@ -6,7 +6,7 @@ let currentLiveChannel = null;
 function startLiveFunc() { toggleSideMenu(false); startLive(); }
 async function startLive() {
  const appId = "7290502fac7f4feb82b021ccde79988a"; 
- const token = "007eJxTYJCJDClhfz5XMXb3vpfqFU8l31bKlrHO3sDbt+LzEhlT81oFBnMjSwNTA6O0xGTzNJO01CQLoyQDI8Pk5JRUc0tLC4vEKrO+zIZARgbe89EsjAwQCOJzM+RklqXGF5cUpSbmMjAAAMI9INc=";
+ const token = "007eJxTYLCqzt12NiWqlN/2bPoNmfqPG1Y83a6inFixJ7vVybrx5RoFBnMjSwNTA6O0xGTzNJO01CQLoyQDI8Pk5JRUc0tLC4vEzQvWZDYEMjJw329nZGSAQBCfg6EkPzs1z9DImIEBAARuIYo=";
  currentLiveChannel = "live_" + auth.currentUser.uid; 
  document.getElementById('liveUI').style.display = 'flex';
  document.getElementById('liveHostName').innerText = myName;
@@ -58,7 +58,7 @@ async function endLive() {
 
 async function joinLive(hostUid, channelName) {
  const appId = "7290502fac7f4feb82b021ccde79988a"; 
- const token = "007eJxTYJCJDClhfz5XMXb3vpfqFU8l31bKlrHO3sDbt+LzEhlT81oFBnMjSwNTA6O0xGTzNJO01CQLoyQDI8Pk5JRUc0tLC4vEKrO+zIZARgbe89EsjAwQCOJzM+RklqXGF5cUpSbmMjAAAMI9INc=";
+ const token = "007eJxTYLCqzt12NiWqlN/2bPoNmfqPG1Y83a6inFixJ7vVybrx5RoFBnMjSwNTA6O0xGTzNJO01CQLoyQDI8Pk5JRUc0tLC4vEzQvWZDYEMjJw329nZGSAQBCfg6EkPzs1z9DImIEBAARuIYo=";
  currentLiveChannel = channelName;
  document.getElementById('liveUI').style.display = 'flex';
  document.getElementById('activeLivesModal').style.display = 'none';
