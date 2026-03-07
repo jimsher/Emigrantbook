@@ -2283,6 +2283,64 @@ function stopCamera() {
 
 
 
+// კამერის ჩაწერის ფუნქცია
+let mediaRecorder;
+let recordedChunks = [];
+
+// ეს ფუნქცია უნდა გამოიძახო შენი ჩაწერის ღილაკიდან (toggleRecording)
+async function toggleRecording() {
+    const recordInner = document.getElementById('recordInner');
+
+    // თუ ჩაწერა არ მიდის - ვიწყებთ
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        recordedChunks = [];
+        
+        // ვიყენებთ უკვე ჩართულ videoStream-ს, რომელიც შენს კოდშია
+        if (!window.videoStream) {
+            alert("ჯერ ჩართეთ კამერა!");
+            return;
+        }
+
+        mediaRecorder = new MediaRecorder(window.videoStream);
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+            const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+            
+            // გადავცემთ ფაილს შენს არსებულ ფუნქციას, რომელიც Firebase-ში ტვირთავს
+            handleVideoSelect({ files: [file] });
+        };
+
+        mediaRecorder.start();
+        
+        // ღილაკის ვიზუალური შეცვლა (ხდება წითელი კვადრატი)
+        recordInner.style.borderRadius = "8px";
+        recordInner.style.transform = "scale(0.8)";
+        recordInner.style.background = "#ff0000"; 
+    } 
+    else {
+        // თუ ჩაწერა მიდის - ვაჩერებთ
+        mediaRecorder.stop();
+        
+        // ღილაკის დაბრუნება საწყის ფორმაში
+        recordInner.style.borderRadius = "50%";
+        recordInner.style.transform = "scale(1)";
+        recordInner.style.background = "#ff4d4d";
+    }
+}
+
+
+
+
+
+
+
+
+
 
 
 
