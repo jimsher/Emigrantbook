@@ -2581,27 +2581,29 @@ setAppBadge(1);
 
 
 // ფილტრის ლოგიკა
-let selectedFilterValue = 'none';
-
 function applyTikTokFilter(filter, element) {
     const video = document.getElementById('cameraStream');
-    selectedFilterValue = filter;
-
-    // 1. ვიდეოზე ფილტრის დადება
+    
     if (video) {
+        // 1. ჯერ ვადგენთ, სარკის ეფექტი გვჭირდება თუ არა
+        // თუ currentFacingMode არის "user", მაშინ გვინდა სარკე
+        let mirror = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
+        
+        // 2. ვადებთ ფილტრს და სარკეს ერთდროულად
         video.style.filter = filter;
-        // სელფის დროს scaleX(-1)-ის შენარჩუნება, რომ არ აირიოს
-        const isSelfie = video.style.transform.includes('scaleX(-1)');
-        video.style.transform = isSelfie ? 'scaleX(-1)' : 'scaleX(1)';
+        video.style.transform = mirror; 
+        
+        console.log("ფილტრი აქტიურია: " + filter);
     }
 
-    // 2. ვიზუალური მონიშვნა ავატარებზე
+    // 3. ვიზუალური მონიშვნა (წითელი ჩარჩო)
     const allAvatars = document.querySelectorAll('.filter-avatar div');
-    allAvatars.forEach(div => div.style.borderColor = 'white'); // ყველას ვათეთრებთ
+    allAvatars.forEach(div => {
+        div.style.borderColor = 'white';
+        div.style.transform = 'scale(1)';
+    });
     
-    // არჩეულს ვუწითლებთ ჩარჩოს (TikTok-ის ფერი #fe2c55)
-    element.querySelector('div').style.borderColor = '#fe2c55';
-    
-    console.log("აქტიური ეფექტი: " + filter);
+    const selectedDiv = element.querySelector('div');
+    selectedDiv.style.borderColor = '#fe2c55';
+    selectedDiv.style.transform = 'scale(1.1)'; // პატარა ზუმი არჩეულზე
 }
-
