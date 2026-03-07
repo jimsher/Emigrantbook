@@ -2284,54 +2284,64 @@ function stopCamera() {
 
 
 // კამერის ჩაწერის ფუნქცია
-let mediaRecorder;
+// 1. ცვლადების უსაფრთხო განსაზღვრა
+let mediaRecorder = null;
 let recordedChunks = [];
 
-// ეს ფუნქცია უნდა გამოიძახო შენი ჩაწერის ღილაკიდან (toggleRecording)
 async function toggleRecording() {
     const recordInner = document.getElementById('recordInner');
+    if (!recordInner) return; // თუ ღილაკი ვერ იპოვა, არ გააგრძელოს
 
-    // თუ ჩაწერა არ მიდის - ვიწყებთ
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        recordedChunks = [];
-        
-        // ვიყენებთ უკვე ჩართულ videoStream-ს, რომელიც შენს კოდშია
-        if (!window.videoStream) {
-            alert("ჯერ ჩართეთ კამერა!");
-            return;
-        }
-
-        mediaRecorder = new MediaRecorder(window.videoStream);
-
-        mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
-            const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+    try {
+        // შემოწმება: მიდის თუ არა უკვე ჩაწერა?
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
             
-            // გადავცემთ ფაილს შენს არსებულ ფუნქციას, რომელიც Firebase-ში ტვირთავს
-            handleVideoSelect({ files: [file] });
-        };
+            // ვიყენებთ შენს მიერ უკვე გახსნილ სტრიმს (window.videoStream)
+            if (!window.videoStream) {
+                console.error("კამერის სტრიმი ვერ მოიძებნა");
+                return;
+            }
 
-        mediaRecorder.start();
-        
-        // ღილაკის ვიზუალური შეცვლა (ხდება წითელი კვადრატი)
-        recordInner.style.borderRadius = "8px";
-        recordInner.style.transform = "scale(0.8)";
-        recordInner.style.background = "#ff0000"; 
-    } 
-    else {
-        // თუ ჩაწერა მიდის - ვაჩერებთ
-        mediaRecorder.stop();
-        
-        // ღილაკის დაბრუნება საწყის ფორმაში
-        recordInner.style.borderRadius = "50%";
-        recordInner.style.transform = "scale(1)";
-        recordInner.style.background = "#ff4d4d";
+            recordedChunks = [];
+            
+            // ვქმნით რეკორდერს
+            mediaRecorder = new MediaRecorder(window.videoStream);
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+                
+                // ვაწვდით შენს ატვირთვის ფუნქციას
+                if (typeof handleVideoSelect === "function") {
+                    handleVideoSelect({ files: [file] });
+                }
+            };
+
+            mediaRecorder.start();
+            
+            // ვიზუალური ეფექტი
+            recordInner.style.borderRadius = "8px";
+            recordInner.style.background = "#ff0000";
+            console.log("ჩაწერა დაიწყო...");
+        } 
+        else {
+            // ჩაწერის გაჩერება
+            mediaRecorder.stop();
+            recordInner.style.borderRadius = "50%";
+            recordInner.style.background = "#ff4d4d";
+            console.log("ჩაწერა დასრულდა.");
+        }
+    } catch (err) {
+        // თუ რამე შეცდომაა, მხოლოდ კონსოლში დაწეროს და საიტი არ გათიშოს
+        console.error("ჩაწერის შეცდომა:", err);
     }
 }
+
+
 
 
 
