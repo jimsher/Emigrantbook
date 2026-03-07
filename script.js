@@ -2284,62 +2284,7 @@ function stopCamera() {
 
 
 // კამერის ჩაწერის ფუნქცია
-// 1. ცვლადების უსაფრთხო განსაზღვრა
-let mediaRecorder = null;
-let recordedChunks = [];
 
-async function toggleRecording() {
-    const recordInner = document.getElementById('recordInner');
-    if (!recordInner) return; // თუ ღილაკი ვერ იპოვა, არ გააგრძელოს
-
-    try {
-        // შემოწმება: მიდის თუ არა უკვე ჩაწერა?
-        if (!mediaRecorder || mediaRecorder.state === "inactive") {
-            
-            // ვიყენებთ შენს მიერ უკვე გახსნილ სტრიმს (window.videoStream)
-            if (!window.videoStream) {
-                console.error("კამერის სტრიმი ვერ მოიძებნა");
-                return;
-            }
-
-            recordedChunks = [];
-            
-            // ვქმნით რეკორდერს
-            mediaRecorder = new MediaRecorder(window.videoStream);
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/mp4' });
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
-                
-                // ვაწვდით შენს ატვირთვის ფუნქციას
-                if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect({ files: [file] });
-                }
-            };
-
-            mediaRecorder.start();
-            
-            // ვიზუალური ეფექტი
-            recordInner.style.borderRadius = "8px";
-            recordInner.style.background = "#ff0000";
-            console.log("ჩაწერა დაიწყო...");
-        } 
-        else {
-            // ჩაწერის გაჩერება
-            mediaRecorder.stop();
-            recordInner.style.borderRadius = "50%";
-            recordInner.style.background = "#ff4d4d";
-            console.log("ჩაწერა დასრულდა.");
-        }
-    } catch (err) {
-        // თუ რამე შეცდომაა, მხოლოდ კონსოლში დაწეროს და საიტი არ გათიშოს
-        console.error("ჩაწერის შეცდომა:", err);
-    }
-}
 
 
 
