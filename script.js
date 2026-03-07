@@ -2580,5 +2580,15 @@ setAppBadge(1);
 
 
 
+// ფილტრის ლოგიკა
 
-
+function applyFilter(filterValue) {
+    const video = document.getElementById('cameraStream');
+    if (video) {
+        // ფილტრის დადება ვიდეოზე
+        video.style.filter = filterValue;
+        
+        // ანიმაცია არჩევისას
+        console.log("ფილტრი გამოყენებულია: " + filterValue);
+    }
+}
