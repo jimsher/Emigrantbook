@@ -1333,8 +1333,11 @@ div[style*="overflow-x:auto"] {
  <span id="langSwitchBtn">Language: EN / ენა: ქარ</span>
  </a>
 
-<div id="ebStartLiveBtn" onclick="initLiveBroadcast()" style="cursor:pointer; padding:12px 20px; background:linear-gradient(45deg, #fe2c55, #ff1e56); color:white; border-radius:12px; display:inline-flex; align-items:center; gap:10px; font-weight:bold; box-shadow: 0 4px 15px rgba(254, 44, 85, 0.3); transition: 0.3s;">
-    <i class="fas fa-video"></i> GO LIVE NOW
+<div class="eb-menu-item" onclick="startLiveBroadcast()" style="cursor:pointer; display:flex; align-items:center; gap:12px; padding:12px; background:rgba(255,255,255,0.05); border-radius:12px;">
+    <div style="width:40px; height:40px; background:#fe2c55; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(254,44,85,0.4);">
+        <i class="fas fa-video" style="color:white;"></i>
+    </div>
+    <span style="color:white; font-weight:bold;">Go Live</span>
 </div>
   
  <a href="#" class="menu-item">
@@ -1533,45 +1536,47 @@ div[style*="overflow-x:auto"] {
 
 
 
-<div id="liveUI" class="eb-live-wrapper">
-    <div id="remote-live-video" class="eb-video-layer"></div>
-    <div class="eb-v-overlay"></div>
+<div id="ebLiveMainUI" class="eb-live-full-screen">
+    <div class="eb-video-container">
+        <div id="ebRemoteVideo"></div>
+        <div class="eb-v-gradient"></div>
+    </div>
 
-    <div class="eb-ui-content">
-        <div class="eb-top-header">
+    <div class="eb-ui-layer">
+        <div class="eb-header">
             <div class="eb-host-badge">
-                <img id="liveHostAva" src="" alt="host">
+                <img id="ebHostAvatar" src="" alt="host">
                 <div class="eb-host-info">
-                    <b id="liveHostName">Host Name</b>
-                    <small id="liveViewerCount"><i class="fas fa-eye"></i> 0</small>
+                    <b id="ebHostNameDisplay">Host Name</b>
+                    <small id="ebViewerCounter">👁️ 0</small>
                 </div>
-                <button id="followHostBtn" class="eb-follow-btn">Follow</button>
+                <button class="eb-follow-btn">Follow</button>
             </div>
-            <div class="eb-close-room" onclick="terminateLive()"><i class="fas fa-times"></i></div>
+            <div class="eb-close-icon" onclick="stopLiveBroadcast()"><i class="fas fa-times"></i></div>
         </div>
 
-        <div id="liveChatBox" class="eb-chat-feed"></div>
+        <div id="ebLiveChatFeed" class="eb-chat-area"></div>
 
-        <div class="eb-footer-panel">
-            <div class="eb-input-container">
-                <input type="text" id="liveMsgInp" placeholder="თქვი რამე..." autocomplete="off">
-                <button onclick="postLiveComment()"><i class="fas fa-paper-plane"></i></button>
+        <div class="eb-footer-actions">
+            <div class="eb-input-wrapper">
+                <input type="text" id="ebLiveMessageInput" placeholder="Add comment..." autocomplete="off">
+                <button onclick="sendEBLiveComment()"><i class="fas fa-paper-plane"></i></button>
             </div>
-            <div class="eb-action-group">
-                <div class="eb-circle-icon" onclick="openGifts()"><i class="fas fa-gift"></i></div>
-                <div class="eb-circle-icon" onclick="fireHeart()"><i class="fas fa-heart"></i></div>
+            <div class="eb-btn-group">
+                <div class="eb-action-btn gift" onclick="toggleEBGiftPanel()"><i class="fas fa-gift"></i></div>
+                <div class="eb-action-btn heart" onclick="sendEBLiveHeart()"><i class="fas fa-heart"></i></div>
             </div>
         </div>
     </div>
 
-    <div id="giftPanel" class="eb-gift-sheet">
-        <div class="eb-sheet-bar"></div>
-        <div class="eb-sheet-header">გაუგზავნე საჩუქარი</div>
+    <div id="ebGiftPanel" class="eb-bottom-sheet">
+        <div class="eb-sheet-handle"></div>
+        <div class="eb-sheet-title">Send Gift</div>
         <div class="eb-gift-grid">
-            <div class="eb-gift-box" onclick="processGift('🌹', 1, 'Rose')"><span>🌹</span><small>1</small></div>
-            <div class="eb-gift-box" onclick="processGift('💎', 10, 'Diamond')"><span>💎</span><small>10</small></div>
-            <div class="eb-gift-box" onclick="processGift('🦁', 50, 'Lion')"><span>🦁</span><small>50</small></div>
-            <div class="eb-gift-box" onclick="processGift('👑', 100, 'Crown')"><span>👑</span><small>100</small></div>
+            <div class="eb-gift-card" onclick="processEBGift('🌹', 1, 'Rose')"><span>🌹</span><small>1</small></div>
+            <div class="eb-gift-card" onclick="processEBGift('💎', 10, 'Diamond')"><span>💎</span><small>10</small></div>
+            <div class="eb-gift-card" onclick="processEBGift('🦁', 50, 'Lion')"><span>🦁</span><small>50</small></div>
+            <div class="eb-gift-card" onclick="processEBGift('👑', 100, 'Crown')"><span>👑</span><small>100</small></div>
         </div>
     </div>
 </div>
