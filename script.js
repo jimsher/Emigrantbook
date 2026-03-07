@@ -2380,56 +2380,59 @@ let currentFacingMode = "user";
 async function switchCamera() {
     const video = document.getElementById('cameraStream');
     
-    // 1. სრული გაჩერება და გასუფთავება
+    // 1. ჯერ სრულად ვთიშავთ ყველაფერს
     if (window.videoStream) {
-        window.videoStream.getTracks().forEach(track => track.stop());
+        window.videoStream.getTracks().forEach(track => {
+            track.stop();
+        });
         window.videoStream = null;
     }
+    
+    // 2. ვასუფთავებთ ვიდეო ელემენტს
+    if (video) {
+        video.srcObject = null;
+        video.pause();
+    }
 
-    // 2. რეჟიმის შეცვლა
+    // 3. პატარა დაყოვნება (Pause), რომ ბრაუზერმა მოასწროს აპარატურის გათავისუფლება
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // 4. რეჟიმის შეცვლა
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
     
-    // 3. ახალი კამერის გამოძახება
+    // 5. ახალი ნაკადის გამოძახება
     try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
+        const constraints = {
             video: { 
-                facingMode: currentFacingMode,
-                // ვამცირებთ რეზოლუციას გადართვისას, რომ უფრო სწრაფად ჩაიტვირთოს
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 } 
+                facingMode: { ideal: currentFacingMode },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             },
             audio: true
-        });
+        };
 
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
         window.videoStream = newStream;
 
         if (video) {
-            // მნიშვნელოვანია: ჯერ ვწყვეტთ კავშირს ძველთან
-            video.srcObject = null;
-            video.load(); 
-            
-            // ახალი ნაკადის მიბმა
             video.srcObject = newStream;
-
-            // ველოდებით სანამ მონაცემები რეალურად წამოვა
-            video.onloadedmetadata = async () => {
-                try {
-                    await video.play();
-                    console.log("კამერა წარმატებით გადაირთო ✅");
-                } catch (playErr) {
-                    console.error("Play error:", playErr);
-                }
-            };
+            
+            // სარკისებური ეფექტის გასწორება (სელფიზე სარკეა, უკანა კამერაზე - ჩვეულებრივი)
+            video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
+            
+            await video.play();
+            console.log("კამერა წარმატებით გადაირთო!");
         }
     } catch (err) {
-        console.error("გადართვის შეცდომა:", err);
-        // თუ უკანა კამერა საერთოდ არ გაქვს, ვაბრუნებთ წინა კამერას
+        console.error("კამერის გადართვა ვერ მოხერხდა:", err);
+        // თუ უკანა კამერამ აურია, ვცდილობთ ისევ სელფი ჩავრთოთ
         if (currentFacingMode === "environment") {
             currentFacingMode = "user";
-            switchCamera(); 
+            setTimeout(switchCamera, 500);
         }
     }
 }
+
 
 
 
