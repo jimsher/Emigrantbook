@@ -2607,3 +2607,50 @@ function applyTikTokFilter(filter, element) {
     selectedDiv.style.borderColor = '#fe2c55';
     selectedDiv.style.transform = 'scale(1.1)'; // პატარა ზუმი არჩეულზე
 }
+
+
+
+
+
+
+let faceMesh;
+
+function initBeautyFilter() {
+    faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true, // თვალების და ტუჩების დეტალიზაცია
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    faceMesh.onResults(onFaceResults);
+}
+
+// სახის დამუშავების ფუნქცია (Beauty Effect)
+function onFaceResults(results) {
+    const video = document.getElementById('cameraStream');
+    if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+
+    // აქ ხდება ჯადოქრობა: სახის გაგლუვება
+    // ვიყენებთ Canvas-ს, რომ კანზე "რბილი" ფენა გადავატაროთ
+    applySkinSmooth(results.multiFaceLandmarks[0]);
+}
+
+function applySkinSmooth(landmarks) {
+    const video = document.getElementById('cameraStream');
+    // TikTok-ის სტილის Skin Softening ლოგიკა:
+    // 1. სახის კონტურის ამოცნობა
+    // 2. კანის ფერის ოდნავ "დაბლურვა" (Blur)
+    // 3. თვალების და ტუჩების სიცხადის შენარჩუნება
+    video.style.filter = "contrast(1.1) brightness(1.05) saturate(1.1) blur(0.4px)";
+    
+    // შენიშვნა: ნამდვილი "Skin Smooth" უფრო რთული Canvas ლოგიკაა,
+    // მაგრამ ეს CSS კომბინაცია გაძლევს საწყის "Beauty" ეფექტს.
+}
+
+// ჩართე AI ფილტრი კამერის გახსნისას
+initBeautyFilter();
