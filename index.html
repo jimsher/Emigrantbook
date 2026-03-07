@@ -1356,27 +1356,29 @@ div[style*="overflow-x:auto"] {
  
  <div id="chatMessages" class="chat-messages"></div>
  
-<div id="typingIndicator" class="typing-indicator" style="display:none; margin-left: 15px; margin-bottom: 5px;">
-    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+ <div id="typingIndicator" class="typing-indicator" style="display:none; margin-left: 15px; margin-bottom: 5px;">
+ <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+ </div>
+
+ <div class="chat-input-area" style="padding: 10px; display:flex; align-items:center; gap:10px; background: rgba(0,0,0,0.5);">
+ <i class="fas fa-plus-circle" style="color:var(--gold); font-size:20px; cursor:pointer;"></i>
+ <input type="text" id="messageInp" class="chat-input" placeholder="შეტყობინება..." oninput="handleTyping()" style="margin-bottom:0; border-radius: 20px;">
+ 
+ <div id="voiceBtn" onclick="toggleVoiceRecord()" style="cursor:pointer; width:35px; height:35px; display:flex; align-items:center; justify-content:center; color:var(--gold);">
+ <i class="fas fa-microphone" id="micIcon"></i>
+ </div>
+ 
+ <button class="chat-send-btn" onclick="sendMessage()" style="width:35px; height:35px; background:var(--gold); border-radius:50%; color:black; border:none;">
+ <i class="fas fa-paper-plane" style="font-size:14px;"></i>
+ </button>
+ </div>
 </div>
 
-<div class="chat-input-area" style="padding: 10px; display:flex; align-items:center; gap:10px; background: rgba(0,0,0,0.5);">
-    <i class="fas fa-plus-circle" style="color:var(--gold); font-size:20px; cursor:pointer;"></i>
-    <input type="text" id="messageInp" class="chat-input" placeholder="შეტყობინება..." oninput="handleTyping()" style="margin-bottom:0; border-radius: 20px;">
-    
-    <div id="voiceBtn" onclick="toggleVoiceRecord()" style="cursor:pointer; width:35px; height:35px; display:flex; align-items:center; justify-content:center; color:var(--gold);">
-        <i class="fas fa-microphone" id="micIcon"></i>
-    </div>
-    
-    <button class="chat-send-btn" onclick="sendMessage()" style="width:35px; height:35px; background:var(--gold); border-radius:50%; color:black; border:none;">
-        <i class="fas fa-paper-plane" style="font-size:14px;"></i>
-    </button>
-</div>
+ <div id="fullVideoOverlay">
+ <span class="close-full-video" onclick="closeFullVideo()">✕</span>
+ <video id="fullVideoTag" controls autoplay loop style="width:100%; height:100%; object-fit:contain;"></video>
+ </div>
 
-<div id="fullVideoOverlay">
-    <span class="close-full-video" onclick="closeFullVideo()">✕</span>
-    <video id="fullVideoTag" controls autoplay loop style="width:100%; height:100%; object-fit:contain;"></video>
-</div>
 
 <div id="uploadModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center;">
     <span onclick="closeUploadModal()" style="position:absolute; top:20px; left:20px; color:white; font-size:24px; cursor:pointer; z-index:1000000;"><i class="fas fa-times"></i></span>
@@ -1392,17 +1394,9 @@ div[style*="overflow-x:auto"] {
 
     <div style="position:absolute; bottom:40px; width:100%; display:flex; flex-direction:column; align-items:center; gap:30px; padding:20px; box-sizing:border-box; z-index:1000000;">
         
-        <div id="uploadStatusContainer" style="display:none; width:90%; text-align:center;">
-            <p id="optimizationStatus" style="color:var(--gold); font-size:12px; margin-bottom:5px;"></p>
-            <div style="width:100%; background:rgba(255,255,255,0.1); height:4px; border-radius:10px;">
-                <div id="optimizationProgressBar" style="width:0%; background:var(--gold); height:100%; transition:0.3s;"></div>
-            </div>
-        </div>
-
         <textarea id="videoDesc" placeholder="დაწერე აღწერა... #impact" style="width:90%; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:12px; color:white; padding:15px; outline:none; font-size:14px; resize:none;"></textarea>
 
         <div style="width:100%; display:flex; justify-content:space-around; align-items:center;">
-            
             <div onclick="document.getElementById('videoInput').click()" style="text-align:center; cursor:pointer; width:60px;">
                 <div style="width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:8px; border:2px solid white; margin:0 auto; display:flex; align-items:center; justify-content:center;">
                      <i class="fas fa-images" style="color:white; font-size:20px;"></i>
@@ -1421,11 +1415,9 @@ div[style*="overflow-x:auto"] {
                 </div>
                 <span style="color:var(--gold); font-size:11px; margin-top:5px; display:block;">ატვირთვა</span>
             </div>
-            
         </div>
     </div>
 </div>
- 
 
 
 
