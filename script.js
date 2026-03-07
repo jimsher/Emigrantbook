@@ -2254,18 +2254,32 @@ function stopCamera() {
     }
 }
 
+
+
+
+
+
+
+
+
 var globalMediaRecorder = null;
 var globalChunks = [];
 var currentFacingMode = "user"; 
 var timerInterval = null;
 var seconds = 0;
 
-// დავამატოთ ლიმიტი ცვლადის სახით (მაგალითად 60 წამი)
+// ლიმიტი - 60 წამი
 const RECORDING_LIMIT = 60; 
 
 function startTimer() {
+    // ყოველთვის ვასუფთავებთ წინა ინტერვალს, რომ არ გაორმაგდეს
+    if (timerInterval) clearInterval(timerInterval);
+    
     seconds = 0;
     const timerElement = document.getElementById('recordingTimer');
+    const minElem = document.getElementById('timerMinutes');
+    const secElem = document.getElementById('timerSeconds');
+
     if (timerElement) timerElement.style.display = 'flex';
     
     timerInterval = setInterval(() => {
@@ -2274,23 +2288,32 @@ function startTimer() {
         // 1. დროის გამოთვლა და ჩვენება
         let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         let secs = (seconds % 60).toString().padStart(2, '0');
-        const minElem = document.getElementById('timerMinutes');
-        const secElem = document.getElementById('timerSeconds');
+        
         if (minElem) minElem.innerText = mins;
         if (secElem) secElem.innerText = secs;
 
-        // 2. ავტომატური გაჩერების ლოგიკა
+        // 2. ავტომატური გაჩერების ლოგიკა ლიმიტზე
         if (seconds >= RECORDING_LIMIT) {
             console.log("ლიმიტი ამოიწურა, ჩაწერა ჩერდება...");
-            toggleRecording(); // ავტომატურად ვიძახებთ გაჩერებას
-            alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
+            // ვაჩერებთ MediaRecorder-ს პირდაპირ, რაც თავისით გამოიწვევს onstop-ს და stopTimer-ს
+            if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
+                globalMediaRecorder.stop();
+                
+                // ღილაკის ვიზუალის დაბრუნება
+                const btnInner = document.getElementById('recordInner');
+                if (btnInner) {
+                    btnInner.style.borderRadius = "50%";
+                    btnInner.style.background = "#ff4d4d";
+                }
+                alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
+            }
         }
     }, 1000);
 }
 
-
 function stopTimer() {
     clearInterval(timerInterval);
+    timerInterval = null; // ვასუფთავებთ ცვლადს
     const timerElement = document.getElementById('recordingTimer');
     if (timerElement) timerElement.style.display = 'none';
 }
@@ -2319,7 +2342,6 @@ async function switchCamera() {
             video.srcObject = stream;
             video.onloadedmetadata = () => {
                 video.play();
-                // --- შესწორებული: სელფიზე სარკე, უკანაზე ჩვეულებრივი ---
                 video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
             };
         }
@@ -2346,7 +2368,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.onstop = () => {
-                stopTimer();
+                stopTimer(); // აქედან ვთიშავთ ტაიმერს
                 const blob = new Blob(globalChunks, { type: 'video/mp4' });
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
@@ -2355,10 +2377,7 @@ async function toggleRecording() {
 
                 video.srcObject = null;
                 video.src = URL.createObjectURL(blob);
-                
-                // ჩაწერილი ვიდეოს ჩვენებისას სარკის ეფექტს ვთიშავთ, რომ სწორად გამოჩნდეს
                 video.style.transform = "scaleX(1)";
-                
                 video.muted = false;
                 video.play();
 
@@ -2368,7 +2387,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
-            startTimer();
+            startTimer(); // აქედან ვიწყებთ ტაიმერს
             
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
@@ -2385,6 +2404,9 @@ async function toggleRecording() {
         console.error(err);
     }
 }
+
+
+            
 
 
 
