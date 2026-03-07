@@ -2260,6 +2260,9 @@ var currentFacingMode = "user";
 var timerInterval = null;
 var seconds = 0;
 
+// დავამატოთ ლიმიტი ცვლადის სახით (მაგალითად 60 წამი)
+const RECORDING_LIMIT = 60; 
+
 function startTimer() {
     seconds = 0;
     const timerElement = document.getElementById('recordingTimer');
@@ -2267,14 +2270,24 @@ function startTimer() {
     
     timerInterval = setInterval(() => {
         seconds++;
+        
+        // 1. დროის გამოთვლა და ჩვენება
         let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         let secs = (seconds % 60).toString().padStart(2, '0');
         const minElem = document.getElementById('timerMinutes');
         const secElem = document.getElementById('timerSeconds');
         if (minElem) minElem.innerText = mins;
         if (secElem) secElem.innerText = secs;
+
+        // 2. ავტომატური გაჩერების ლოგიკა
+        if (seconds >= RECORDING_LIMIT) {
+            console.log("ლიმიტი ამოიწურა, ჩაწერა ჩერდება...");
+            toggleRecording(); // ავტომატურად ვიძახებთ გაჩერებას
+            alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
+        }
     }, 1000);
 }
+
 
 function stopTimer() {
     clearInterval(timerInterval);
