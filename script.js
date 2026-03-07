@@ -2288,42 +2288,70 @@ function stopCamera() {
 // კამერის ჩაწერის ფუნქცია
 var globalMediaRecorder = null;
 var globalChunks = [];
+var timerInterval = null;
+var seconds = 0;
+
+function startTimer() {
+    seconds = 0;
+    const timerElement = document.getElementById('recordingTimer');
+    timerElement.style.display = 'block';
+    timerInterval = setInterval(() => {
+        seconds++;
+        let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        let secs = (seconds % 60).toString().padStart(2, '0');
+        timerElement.innerText = `${mins}:${secs}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+    const timerElement = document.getElementById('recordingTimer');
+    timerElement.style.display = 'none';
+    timerElement.innerText = "00:00";
+}
 
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
-    const videoInput = document.getElementById('videoInput'); // შენი გალერეის ინპუტი
+    const videoInput = document.getElementById('videoInput');
+    const cameraPreview = document.getElementById('cameraStream');
     
     try {
         if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) { alert("კამერა არ არის აქტიური!"); return; }
+            if (!window.videoStream) return;
 
             globalChunks = [];
             globalMediaRecorder = new MediaRecorder(window.videoStream);
-
+            
             globalMediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) globalChunks.push(e.data);
             };
 
             globalMediaRecorder.onstop = () => {
+                stopTimer(); // ტაიმერის გაჩერება
                 const blob = new Blob(globalChunks, { type: 'video/mp4' });
+                const videoURL = URL.createObjectURL(blob);
                 
-                // ვქმნით ფაილს
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+                // --- ვიდეოს პრევიუ ---
+                // კამერის ლაივს ვთიშავთ და ჩაწერილ ვიდეოს ვაჩვენებთ
+                cameraPreview.srcObject = null;
+                cameraPreview.src = videoURL;
+                cameraPreview.muted = false; // პრევიუზე ხმა რომ ისმოდეს
+                cameraPreview.play();
 
-                // 🛠️ ხრიკი: ვატყუებთ სისტემას, თითქოს ფაილი გალერეიდან აირჩიეს
+                // ფაილის მომზადება ატვირთვისთვის
+                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(file);
                 videoInput.files = dataTransfer.files;
 
-                // ხელით გამოვიძახოთ handleVideoSelect და გადავცეთ თვითონ ინპუტი
                 if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect(videoInput); 
+                    handleVideoSelect(videoInput);
                 }
-                
-                alert("ვიდეო მზადაა ასატვირთად! დააჭირეთ ატვირთვის ღილაკს.");
             };
 
             globalMediaRecorder.start();
+            startTimer(); // ტაიმერის დაწყება
+            
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
                 btnInner.style.background = "#ff0000";
@@ -2337,7 +2365,7 @@ async function toggleRecording() {
             }
         }
     } catch (err) {
-        alert("შეცდომა: " + err.message);
+        console.error(err);
     }
 }
 
