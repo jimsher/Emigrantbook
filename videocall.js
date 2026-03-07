@@ -6,7 +6,7 @@ let camMuted = false;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const AGORA_APP_ID = "7290502fac7f4feb82b021ccde79988a";
-const AGORA_TOKEN = "007eJxTYNjw1J2jY5H35PN35lyqcL/8ze5Q3U+jLTZfHlux7FNbdGK3AoO5kaWBqYFRWmKyeZpJWmqShVGSgZFhcnJKqrmlpYVFYsThOZkNgYwMPWo8DIxQCOJzM+RklqXGF5cUpSbmMjAAACBWJKo=";
+const AGORA_TOKEN = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
 const FIXED_CHANNEL = "live_stream"; 
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
