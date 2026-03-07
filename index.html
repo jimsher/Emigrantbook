@@ -1536,47 +1536,58 @@ div[style*="overflow-x:auto"] {
 
 
 
-<div id="ebLiveMainUI" class="eb-live-full-screen">
-    <div class="eb-video-container">
-        <div id="ebRemoteVideo"></div>
-        <div class="eb-v-gradient"></div>
-    </div>
+<div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column;">
+    <div id="live-video-container" style="width:100%; height:100%; background:#111; position:relative;">
+        <div id="remote-live-video" style="width:100%; height:100%;"></div>
+        
+        <div style="position:absolute; top:20px; left:15px; display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.5); padding:5px 12px; border-radius:30px; border:1px solid rgba(212,175,55,0.3);">
+            <img id="liveHostAva" src="" style="width:32px; height:32px; border-radius:50%; border:1px solid var(--gold);">
+            <div>
+                <b id="liveHostName" style="color:white; font-size:12px; display:block;">Host Name</b>
+                <small id="liveViewerCount" style="color:var(--gold); font-size:10px;"><i class="fas fa-eye"></i> 0</small>
+            </div>
+            <button id="followHostBtn" style="background:var(--gold); border:none; border-radius:15px; padding:4px 10px; font-size:11px; font-weight:bold; margin-left:5px;">Follow</button>
+        </div>
 
-    <div class="eb-ui-layer">
-        <div class="eb-header">
-            <div class="eb-host-badge">
-                <img id="ebHostAvatar" src="" alt="host">
-                <div class="eb-host-info">
-                    <b id="ebHostNameDisplay">Host Name</b>
-                    <small id="ebViewerCounter">👁️ 0</small>
+        <div style="position:absolute; right:15px; bottom:150px; display:flex; flex-direction:column; gap:20px; align-items:center;">
+            <div class="live-action" onclick="sendLiveHeart()"><i class="fas fa-heart" style="color:#ff4d4d; font-size:28px;"></i></div>
+            
+            <div class="live-action" onclick="toggleGiftPanel()"><i class="fas fa-gift" style="color:var(--gold); font-size:28px;"></i></div>
+            
+            <div class="live-action" onclick="shareLive()"><i class="fas fa-share" style="color:white; font-size:28px;"></i></div>
+            <div class="live-action" onclick="endLive()"><i class="fas fa-times-circle" style="color:#aaa; font-size:28px;"></i></div>
+        </div>
+
+        <div id="giftPanel" style="display:none; position:absolute; bottom:0; left:0; width:100%; background:rgba(0,0,0,0.95); border-top:2px solid var(--gold); padding:20px; border-radius:20px 20px 0 0; z-index:100000; box-shadow: 0 -10px 30px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+                <b style="color:var(--gold); font-size:16px; letter-spacing:1px;">გაუგზავნე საჩუქარი</b>
+                <i class="fas fa-times" onclick="toggleGiftPanel()" style="color:gray; cursor:pointer; font-size:20px;"></i>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; text-align:center;">
+                <div class="gift-item" onclick="sendGift('🌹', 1, 'Rose')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                    <div style="font-size:32px; margin-bottom:5px;">🌹</div>
+                    <small style="color:var(--gold); font-weight:bold; display:block;">1</small>
                 </div>
-                <button class="eb-follow-btn">Follow</button>
-            </div>
-            <div class="eb-close-icon" onclick="stopLiveBroadcast()"><i class="fas fa-times"></i></div>
-        </div>
-
-        <div id="ebLiveChatFeed" class="eb-chat-area"></div>
-
-        <div class="eb-footer-actions">
-            <div class="eb-input-wrapper">
-                <input type="text" id="ebLiveMessageInput" placeholder="Add comment..." autocomplete="off">
-                <button onclick="sendEBLiveComment()"><i class="fas fa-paper-plane"></i></button>
-            </div>
-            <div class="eb-btn-group">
-                <div class="eb-action-btn gift" onclick="toggleEBGiftPanel()"><i class="fas fa-gift"></i></div>
-                <div class="eb-action-btn heart" onclick="sendEBLiveHeart()"><i class="fas fa-heart"></i></div>
+                <div class="gift-item" onclick="sendGift('💎', 10, 'Diamond')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                    <div style="font-size:32px; margin-bottom:5px;">💎</div>
+                    <small style="color:var(--gold); font-weight:bold; display:block;">10</small>
+                </div>
+                <div class="gift-item" onclick="sendGift('🦁', 50, 'Lion')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                    <div style="font-size:32px; margin-bottom:5px;">🦁</div>
+                    <small style="color:var(--gold); font-weight:bold; display:block;">50</small>
+                </div>
+                <div class="gift-item" onclick="sendGift('👑', 100, 'Crown')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                    <div style="font-size:32px; margin-bottom:5px;">👑</div>
+                    <small style="color:var(--gold); font-weight:bold; display:block;">100</small>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="ebGiftPanel" class="eb-bottom-sheet">
-        <div class="eb-sheet-handle"></div>
-        <div class="eb-sheet-title">Send Gift</div>
-        <div class="eb-gift-grid">
-            <div class="eb-gift-card" onclick="processEBGift('🌹', 1, 'Rose')"><span>🌹</span><small>1</small></div>
-            <div class="eb-gift-card" onclick="processEBGift('💎', 10, 'Diamond')"><span>💎</span><small>10</small></div>
-            <div class="eb-gift-card" onclick="processEBGift('🦁', 50, 'Lion')"><span>🦁</span><small>50</small></div>
-            <div class="eb-gift-card" onclick="processEBGift('👑', 100, 'Crown')"><span>👑</span><small>100</small></div>
+        <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:70%; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:5px; pointer-events:auto;"></div>
+        
+        <div style="position:absolute; bottom:20px; left:0; width:100%; padding:0 15px; display:flex; gap:10px;">
+            <input type="text" id="liveMsgInp" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:10px 15px; color:white; outline:none;" placeholder="თქვი რამე...">
+            <button onclick="sendLiveComment()" style="background:var(--gold); border:none; width:40px; height:40px; border-radius:50%; color:black;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 </div>
