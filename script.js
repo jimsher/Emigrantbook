@@ -2443,45 +2443,69 @@ setAppBadge(1);
 
 
 // ვიდეოი ფაილის დაპატარავების ლიგიკა
+// FFmpeg ინიციალიზაცია
 const { createFFmpeg, fetchFile } = FFmpeg;
 const ffmpeg = createFFmpeg({ log: true });
 
-async function compressVideoBeforeUpload(file) {
-    const statusLabel = document.getElementById('status'); // პროგრესის ტექსტისთვის
-    statusLabel.innerText = "ვიდეოს ოპტიმიზაცია (ეს აჩქარებს ატვირთვას)...";
+// მთავარი ფუნქცია, რომელიც აერთიანებს კომპრესიას და ატვირთვას
+async function processAndUploadVideo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-    // 1. ჩავტვირთოთ FFmpeg
+    const statusLabel = document.getElementById('status');
+    const progressBar = document.getElementById('uploadProgress');
+    
+    // 1. კომპრესიის ეტაპი
+    try {
+        statusLabel.innerText = "მიმდინარეობს ოპტიმიზაცია... გთხოვთ დაელოდოთ.";
+        
+        const optimizedFile = await compressVideoBeforeUpload(file);
+        
+        // 2. Firebase-ში ატვირთვის ეტაპი
+        statusLabel.innerText = "ოპტიმიზაცია დასრულდა. იწყება ატვირთვა...";
+        uploadToFirebase(optimizedFile, statusLabel, progressBar);
+
+    } catch (error) {
+        console.error("შეცდომა:", error);
+        statusLabel.innerText = "მოხდა შეცდომა დამუშავებისას.";
+    }
+}
+
+// თქვენი კომპრესიის ფუნქცია (ოდნავ დავხვეწე სტატუსებისთვის)
+async function compressVideoBeforeUpload(file) {
     if (!ffmpeg.isLoaded()) {
         await ffmpeg.load();
     }
 
-    // 2. ჩავწეროთ ფაილი ვირტუალურ მეხსიერებაში
     ffmpeg.FS('writeFile', 'input_video', await fetchFile(file));
 
-    // 3. გავუშვათ კომპრესია (720p ხარისხი, საშუალო სიჩქარე)
-    // ეს ბრძანება 100MB-ს დაახლოებით 15-20MB-მდე ჩამოიყვანს
+    // კომპრესიის ბრძანება
     await ffmpeg.run('-i', 'input_video', '-vcodec', 'libx264', '-crf', '28', '-preset', 'faster', '-vf', 'scale=-2:720', 'output.mp4');
 
-    // 4. ამოვიღოთ დამუშავებული ფაილი
     const data = ffmpeg.FS('readFile', 'output.mp4');
-
-    // 5. შევქმნათ ახალი ფაილი ატვირთვისთვის
-    const compressedFile = new File([data.buffer], 'optimized_video.mp4', { type: 'video/mp4' });
-    
-    console.log("ახალი ზომა:", (compressedFile.size / 1024 / 1024).toFixed(2), "MB");
-    return compressedFile;
+    return new File([data.buffer], 'optimized_' + file.name, { type: 'video/mp4' });
 }
 
+// Firebase ატვირთვის ფუნქცია (Resumable)
+function uploadToFirebase(file, label, pBar) {
+    const storageRef = firebase.storage().ref('videos/' + file.name); // შეცვალეთ თქვენი ბილიკით
+    const uploadTask = storageRef.put(file);
 
-
-
-// დაპატარავებული ვიდეოს გაშვ3ბა ფურ3ბას3შ8
-async function onFileSelected(event) {
-    const originalFile = event.target.files[0];
-    
-    // ჯერ ვაკეთებთ კომპრესიას
-    const readyToUpload = await compressVideoBeforeUpload(originalFile);
-    
-    // შემდეგ ვაგზავნით Firebase-ში (ეს ეხლა ბევრად სწრაფად მოხდება!)
-    uploadToFirebase(readyToUpload);
+    uploadTask.on('state_changed', 
+        (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            pBar.style.width = progress + "%";
+            label.innerText = "იტვირთება: " + Math.round(progress) + "%";
+        }, 
+        (error) => {
+            label.innerText = "ატვირთვა ვერ მოხერხდა.";
+        }, 
+        () => {
+            label.innerText = "ვიდეო წარმატებით აიტვირთა!";
+            uploadTask.snapshot.ref.getDownloadURL().then((url) => {
+                console.log("ვიდეოს ლინკი:", url);
+                // აქ შეგიძლიათ შეინახოთ URL ბაზაში
+            });
+        }
+    );
 }
