@@ -1,22 +1,52 @@
-.eb-live-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; background: #000; font-family: 'Segoe UI', sans-serif; }
-.eb-video-wrapper, #remote-live-video { position: absolute; width: 100%; height: 100%; object-fit: cover; }
-.eb-v-gradient { position: absolute; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%); pointer-events: none; }
-.eb-ui-wrapper { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 50px 15px 30px; z-index: 10; pointer-events: none; }
-.eb-ui-wrapper > * { pointer-events: auto; }
 
-.eb-host-card { background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); padding: 4px 12px 4px 4px; border-radius: 30px; display: flex; align-items: center; gap: 8px; border: 0.5px solid rgba(255,255,255,0.2); }
-.eb-host-card img { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #d4af37; }
-.eb-host-meta b { color: #fff; font-size: 13px; display: block; }
-.eb-host-meta span { color: #ccc; font-size: 10px; }
-.eb-follow-tag { background: #fe2c55; color: #fff; border: none; border-radius: 15px; padding: 4px 12px; font-size: 11px; font-weight: bold; margin-left: 5px; }
-
-.eb-live-chat { max-height: 250px; overflow-y: auto; margin-bottom: 15px; width: 80%; mask-image: linear-gradient(to top, black 80%, transparent 100%); }
-.eb-input-area { flex: 1; background: rgba(255,255,255,0.15); backdrop-filter: blur(15px); border-radius: 25px; display: flex; padding: 5px 5px 5px 15px; border: 0.5px solid rgba(255,255,255,0.2); }
-.eb-input-area input { background: transparent; border: none; color: #fff; flex: 1; outline: none; font-size: 14px; }
-.eb-send-btn { background: #d4af37; width: 35px; height: 35px; border-radius: 50%; border: none; color: #000; }
-
-.eb-gift-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: rgba(15,15,15,0.98); backdrop-filter: blur(25px); border-radius: 20px 20px 0 0; padding: 20px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100000; }
+.eb-live-wrapper {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1000000; background: #000; display: none; overflow: hidden;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+.eb-video-layer { position: absolute; width: 100%; height: 100%; z-index: 1; }
+.eb-video-layer video { object-fit: cover !important; }
+.eb-v-overlay {
+    position: absolute; width: 100%; height: 100%; z-index: 2;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 20%, transparent 80%, rgba(0,0,0,0.5));
+    pointer-events: none;
+}
+.eb-ui-content {
+    position: relative; z-index: 10; height: 100%; display: flex;
+    flex-direction: column; justify-content: space-between; padding: 45px 15px 30px;
+}
+.eb-host-badge {
+    background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px);
+    padding: 4px 12px 4px 4px; border-radius: 30px; display: flex; align-items: center; gap: 8px;
+    border: 0.5px solid rgba(255,255,255,0.2);
+}
+.eb-host-badge img { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #d4af37; }
+.eb-host-info b { color: #fff; font-size: 13px; display: block; }
+.eb-host-info small { color: #d4af37; font-size: 11px; font-weight: bold; }
+.eb-follow-btn { background: #fe2c55; border: none; color: #fff; border-radius: 15px; padding: 4px 10px; font-size: 11px; font-weight: bold; }
+.eb-close-room { color: #fff; font-size: 22px; cursor: pointer; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+.eb-chat-feed {
+    max-height: 250px; overflow-y: auto; width: 80%;
+    mask-image: linear-gradient(to top, black 80%, transparent 100%);
+    display: flex; flex-direction: column; gap: 6px;
+}
+.eb-footer-panel { display: flex; align-items: center; gap: 12px; }
+.eb-input-container {
+    flex: 1; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
+    border-radius: 25px; padding: 5px 15px; display: flex; border: 0.5px solid rgba(255,255,255,0.2);
+}
+.eb-input-container input { background: transparent; border: none; color: #fff; flex: 1; outline: none; padding: 8px 0; }
+.eb-circle-icon {
+    width: 45px; height: 45px; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; cursor: pointer; border: 0.5px solid rgba(255,255,255,0.1);
+}
+.eb-gift-sheet {
+    position: fixed; bottom: -100%; left: 0; width: 100%; background: rgba(15,15,15,0.95);
+    backdrop-filter: blur(20px); border-radius: 20px 20px 0 0; padding: 20px;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000001;
+}
 .eb-gift-sheet.active { bottom: 0; }
-.eb-gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
-.eb-gift-item { background: rgba(255,255,255,0.05); padding: 15px 5px; border-radius: 12px; text-align: center; border: 1px solid transparent; }
-.eb-gift-item:active { background: rgba(212,175,55,0.15); border-color: #d4af37; }
+.eb-gift-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; }
+.eb-gift-box { background: rgba(255,255,255,0.05); padding: 15px 5px; border-radius: 15px; text-align: center; border: 1px solid transparent; }
+.eb-gift-box:active { background: rgba(212,175,55,0.1); border-color: #d4af37; }
