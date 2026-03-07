@@ -2374,8 +2374,40 @@ async function toggleRecording() {
 
 
 
+// კამერის წინა და უკანა შეტრიალების ლოგიკა
+let currentFacingMode = "user"; // საწყისი რეჟიმი (სელფი)
 
-
+async function switchCamera() {
+    // გადართვა რეჟიმებს შორის
+    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+    
+    // თუ კამერა უკვე ჩართულია, თავიდან ვუშვებთ ახალი პარამეტრით
+    if (window.videoStream) {
+        window.videoStream.getTracks().forEach(track => track.stop());
+        
+        try {
+            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: currentFacingMode,
+                    width: { ideal: 1280 }, // ხარისხის ოპტიმიზაცია
+                    height: { ideal: 720 }
+                }, 
+                audio: true 
+            });
+            
+            const video = document.getElementById('cameraStream');
+            if (video) {
+                video.srcObject = window.videoStream;
+                video.play();
+            }
+            console.log("კამერა გადაირთო: " + currentFacingMode);
+        } catch (err) {
+            console.error("კამერის გადართვა ვერ მოხერხდა:", err);
+            // თუ უკანა კამერა არ აქვს, ვაბრუნებთ სელფიზე
+            currentFacingMode = "user";
+        }
+    }
+}
 
 
 
