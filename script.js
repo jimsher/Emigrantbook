@@ -2143,7 +2143,7 @@ function loadMySavedPosts() {
 
 
 
-let videoStream = null;
+  let videoStream = null;
 
 // ეს ფუნქცია იხსნება ტოკენზე დაჭერისას
 async function openUploadModal() {
@@ -2174,6 +2174,8 @@ async function openUploadModal() {
                 video.setAttribute('autoplay', '');
                 video.muted = true; // პრევიუზე ხმა რომ არ დაექოსდეს
                 
+                // გასწორებული სელფი (ნატურალური ხედი)
+                video.style.transform = "scaleX(1)"; 
                 video.style.display = 'block';
                 
                 // ვაიძულებთ ვიდეოს გაშვებას
@@ -2190,100 +2192,92 @@ async function openUploadModal() {
 }
 
 async function startLiveCamera() {
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
+    const video = document.getElementById('cameraStream');
+    const placeholder = document.getElementById('placeholderText');
+    const recordInner = document.getElementById('recordInner');
 
-    // თუ უკვე მუშაობს ნაკადი, ჯერ გავთიშოთ (რომ არ "გაიჭედოს")
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
+    // თუ უკვე მუშაობს ნაკადი, ჯერ გავთიშოთ (რომ არ "გაიჭედოს")
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
 
-    try {
-        // ტელეფონის კამერის გამოძახება
-        videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        });
-        
-        if (video) {
-            video.srcObject = videoStream;
-            // ეს ატრიბუტებია აუცილებელი, რომ ვიდეო ეგრევე გამოჩნდეს
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.muted = true; // პრევიუზე ხმა რომ არ ჰქონდეს
+    try {
+        // ტელეფონის კამერის გამოძახება
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "user" }, 
+            audio: true 
+        });
+        
+        if (video) {
+            video.srcObject = videoStream;
+            // ეს ატრიბუტებია აუცილებელი, რომ ვიდეო ეგრევე გამოჩნდეს
+            video.setAttribute('autoplay', '');
+            video.setAttribute('muted', '');
+            video.setAttribute('playsinline', '');
+            video.muted = true; // პრევიუზე ხმა რომ არ ჰქონდეს
+            
+            // გასწორებული სელფი (ნატურალური ხედი)
+            video.style.transform = "scaleX(1)";
 
-            // 🛠️ ძალისმიერი გაშვება
-            video.play();
-            
-            video.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
-        }
-    } catch (err) {
-        console.error("Camera Error:", err);
-        // თუ სელფი კამერა (user) ვერ იპოვა, ვცდით ნებისმიერ ხელმისაწვდომს
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-                video.play();
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            })
-            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
-    }
+            // 🛠️ ძალისმიერი გაშვება
+            video.play();
+            
+            video.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+            if (recordInner) {
+                recordInner.style.background = '#00ff00';
+                recordInner.style.boxShadow = '0 0 15px #00ff00';
+            }
+        }
+    } catch (err) {
+        console.error("Camera Error:", err);
+        // თუ სელფი კამერა (user) ვერ იპოვა, ვცდით ნებისმიერ ხელმისაწვდომს
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                videoStream = stream;
+                video.srcObject = stream;
+                video.style.transform = "scaleX(1)";
+                video.play();
+                video.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            })
+            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
+    }
 }
-
-
-
-
-
-
-
-
 
 // იქსის ღილაკი - თიშავს ყველაფერს
 // 1. ფანჯრის დახურვა
 function closeUploadModal() {
-    const modal = document.getElementById('uploadModal');
-    if (modal) modal.style.display = 'none';
-    stopCamera();
+    const modal = document.getElementById('uploadModal');
+    if (modal) modal.style.display = 'none';
+    stopCamera();
 }
 
 // 2. კამერის გათიშვა
 function stopCamera() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-    }
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-    
-    if (video) {
-        video.pause();
-        video.srcObject = null;
-        video.style.display = 'none';
-    }
-    if (placeholder) placeholder.style.display = 'block';
-    
-    // ღილაკის ფორმის დაბრუნება
-    if (recordInner) {
-        recordInner.style.borderRadius = "50%";
-        recordInner.style.background = "#ff4d4d";
-        recordInner.style.transform = "scale(1)";
-        recordInner.style.boxShadow = "none";
-    }
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    const video = document.getElementById('cameraStream');
+    const placeholder = document.getElementById('placeholderText');
+    const recordInner = document.getElementById('recordInner');
+    
+    if (video) {
+        video.pause();
+        video.srcObject = null;
+        video.style.display = 'none';
+    }
+    if (placeholder) placeholder.style.display = 'block';
+    
+    // ღილაკის ფორმის დაბრუნება
+    if (recordInner) {
+        recordInner.style.borderRadius = "50%";
+        recordInner.style.background = "#ff4d4d";
+        recordInner.style.transform = "scale(1)";
+        recordInner.style.boxShadow = "none";
+    }
 }
-
-
-
-
 
 // კამერის ჩაწერის ფუნქცია
 // --- გლობალური ცვლადები ---
@@ -2343,8 +2337,8 @@ async function switchCamera() {
             video.srcObject = stream;
             video.onloadedmetadata = () => {
                 video.play();
-                // სარკის ეფექტი: მხოლოდ სელფიზე (user)
-                video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
+                // გასწორებული ხედი: არანაირი scaleX(-1) არცერთ რეჟიმში
+                video.style.transform = "scaleX(1)";
             };
         }
     } catch (err) {
@@ -2409,7 +2403,6 @@ async function toggleRecording() {
         console.error(err);
     }
 }
-
 
 
 
