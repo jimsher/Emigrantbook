@@ -180,19 +180,20 @@ async function endLive() {
         listenForResponse(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
-            await liveClient.subscribe(user, mediaType);
-            if (mediaType === "video") {
-                // [ჩამატებული]: თუ სხვა მომხმარებელიც (სტუმარი) აქვეყნებს ვიდეოს, ვაჩვენებთ პატარა ფანჯარაში
-                if (user.uid !== hostUid) {
-                    const gBox = document.getElementById('guest-video-box');
-                    if(gBox) gBox.style.display = 'block';
-                    user.videoTrack.play("guest-remote-video");
-                } else {
-                    user.videoTrack.play("remote-live-video");
-                }
-            }
-            if (mediaType === "audio") user.audioTrack.play();
-        });
+    await liveClient.subscribe(user, mediaType);
+    if (mediaType === "video") {
+        if (user.uid !== hostUid) {
+            // სტუმარია - ვყოფთ ეკრანს
+            const gBox = document.getElementById('guest-video-box');
+            if(gBox) gBox.style.display = 'block';
+            user.videoTrack.play("guest-remote-video");
+        } else {
+            // ჰოსტია - დიდ ეკრანზე (ან ზედა ნახევარში)
+            user.videoTrack.play("remote-live-video");
+        }
+    }
+    if (mediaType === "audio") user.audioTrack.play();
+});
 
         listenToLiveChat(channelName);
         db.ref(`live_chats/${channelName}`).push({ name: "SYSTEM", text: `👋 ${myName} შემოვიდა`, ts: Date.now() });
