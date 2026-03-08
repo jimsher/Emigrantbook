@@ -135,12 +135,20 @@ async function endLive() {
     currentLiveChannel = null;
 }
 
-async function joinLive(hostUid, channelName) {
+
+
+        async function joinLive(hostUid, channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
     currentLiveChannel = channelName;
+    
+    // UI-ს მომზადება
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
+    
+    // [ჩამატებული]: მაყურებელს ვუჩვენებთ ხელის აწევის ღილაკს
+    const reqBtn = document.getElementById('requestJoinBtn');
+    if(reqBtn) reqBtn.style.display = 'block';
 
     db.ref(`users/${hostUid}`).once('value', snap => {
         const host = snap.val();
@@ -151,7 +159,6 @@ async function joinLive(hostUid, channelName) {
     });
 
     // --- ახალი ლოგიკა: ჰოსტის სტატუსის კონტროლი ---
-    // თუ ჰოსტი წაშლის ჩანაწერს ბაზიდან, მაყურებელს ავტომატურად გაეთიშება
     db.ref(`lives/${hostUid}`).on('value', snap => {
         if (!snap.exists()) {
             showLiveEndedUI();
@@ -167,10 +174,22 @@ async function joinLive(hostUid, channelName) {
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
         listenToLikes(channelName);
+        
+        // [ჩამატებული]: ვუსმენთ ჰოსტის პასუხს ჩართვის მოთხოვნაზე
+        listenForResponse(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
-            if (mediaType === "video") user.videoTrack.play("remote-live-video");
+            if (mediaType === "video") {
+                // [ჩამატებული]: თუ სხვა მომხმარებელიც (სტუმარი) აქვეყნებს ვიდეოს, ვაჩვენებთ პატარა ფანჯარაში
+                if (user.uid !== hostUid) {
+                    const gBox = document.getElementById('guest-video-box');
+                    if(gBox) gBox.style.display = 'block';
+                    user.videoTrack.play("guest-remote-video");
+                } else {
+                    user.videoTrack.play("remote-live-video");
+                }
+            }
             if (mediaType === "audio") user.audioTrack.play();
         });
 
