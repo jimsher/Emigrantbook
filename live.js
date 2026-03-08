@@ -166,6 +166,7 @@ async function joinLive(hostUid, channelName) {
         
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
+        listenToLikes(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
