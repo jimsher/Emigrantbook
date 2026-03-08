@@ -459,3 +459,73 @@ function followHostLive(hostUid) {
         btn.style.color = "white";
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ლაივში დამატების ფუნქცია
+let currentGuestUid = null;
+
+// 1. მაყურებელი აგზავნის მოთხოვნას
+function sendJoinRequest() {
+    if(!currentLiveChannel) return;
+    const hostUid = currentLiveChannel.replace("live_", "");
+    
+    db.ref(`live_requests/${currentLiveChannel}`).set({
+        uid: auth.currentUser.uid,
+        name: myName,
+        photo: myPhoto,
+        status: 'pending'
+    });
+    alert("მოთხოვნა გაიგზავნა!");
+}
+
+// 2. ჰოსტი უსმენს მოთხოვნებს (ეს ჩასვი startLive-ის ბოლოში)
+function listenForRequests(channel) {
+    db.ref(`live_requests/${channel}`).on('value', snap => {
+        const req = snap.val();
+        if(req && req.status === 'pending') {
+            currentGuestUid = req.uid;
+            document.getElementById('guestRequestPanel').style.display = 'block';
+            document.getElementById('reqUserName').innerText = req.name;
+        } else {
+            document.getElementById('guestRequestPanel').style.display = 'none';
+        }
+    });
+}
+
+// 3. ჰოსტი ათანხმებს მოთხოვნას
+function acceptGuest() {
+    db.ref(`live_requests/${currentLiveChannel}`).update({ status: 'accepted' });
+    document.getElementById('guestRequestPanel').style.display = 'none';
+}
+
+function rejectGuest() {
+    db.ref(`live_requests/${currentLiveChannel}`).remove();
+}
+
+// 4. მაყურებელი უსმენს პასუხს (ეს ჩასვი joinLive-ის ბოლოში)
+function listenForResponse(channel) {
+    db.ref(`live_requests/${channel}`).on('value', snap => {
+        const req = snap.val();
+        if(req && req.uid === auth.currentUser.uid && req.status === 'accepted') {
+            startGuestStreaming(); // თუ დაეთანხმა, იწყებს მაუწყებლობას
+            db.ref(`live_requests/${channel}`).remove(); // ვასუფთავებთ მოთხოვნას
+        }
+    });
+}
+
