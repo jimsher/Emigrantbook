@@ -269,39 +269,56 @@ if(feed) {
 
 // ფოლოვერის დამატება ლაივში
 function followHostLive(hostUid) {
-    if(!auth.currentUser || hostUid === auth.currentUser.uid) return;
+    // თუ საკუთარ თავს აჭერ ან სისტემა არაა მზად, გაჩერდეს
+    if(!auth.currentUser || !hostUid || hostUid === auth.currentUser.uid || hostUid === "stream") return;
 
-    // 1. ვიზუალური ეფექტი (ბრჭყვიალა ვარსკვლავები ავატართან)
-    const avatarImg = document.getElementById('liveHostAva');
-    for(let i=0; i<6; i++) {
+    console.log("Following host:", hostUid);
+
+    // 1. ვარსკვლავების ანიმაცია (ვიზუალური ეფექტი)
+    const hostImg = document.getElementById('liveHostAva');
+    for(let i=0; i<8; i++) {
         const star = document.createElement('i');
         star.className = "fas fa-star";
-        star.style = `position:absolute; left:50%; top:50%; color:#d4af37; font-size:14px; z-index:1000; transition:all 0.8s ease-out; pointer-events:none;`;
-        avatarImg.parentElement.appendChild(star);
-        
-        // ვფანტავთ ვარსკვლავებს სხვადასხვა მხარეს
+        star.style = `
+            position: absolute; 
+            left: ${hostImg.getBoundingClientRect().left + 20}px; 
+            top: ${hostImg.getBoundingClientRect().top + 20}px; 
+            color: #d4af37; 
+            font-size: 15px; 
+            z-index: 100000; 
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: none;
+        `;
+        document.body.appendChild(star);
+
         setTimeout(() => {
-            star.style.transform = `translate(${(Math.random()-0.5)*100}px, ${(Math.random()-0.5)*100}px) scale(0)`;
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 50 + Math.random() * 50;
+            star.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`;
             star.style.opacity = "0";
-        }, 50);
+        }, 10);
+
         setTimeout(() => star.remove(), 800);
     }
 
-    // 2. ბაზაში ჩაწერა (შენი არსებული ფოლოვერების სისტემის მიხედვით)
+    // 2. ბაზაში ჩაწერა
     db.ref(`followers/${hostUid}/${auth.currentUser.uid}`).set(true);
     db.ref(`following/${auth.currentUser.uid}/${hostUid}`).set(true);
 
-    // 3. ჩატში შეტყობინების გაშვება
-    db.ref(`live_chats/${currentLiveChannel}`).push({ 
-        name: "SYSTEM", 
-        text: `✨ ${myName}-მა დაგაფოლოვათ!`, 
-        ts: Date.now() 
-    });
+    // 3. შეტყობინება ჩატში
+    if(currentLiveChannel) {
+        db.ref(`live_chats/${currentLiveChannel}`).push({
+            name: "SYSTEM",
+            text: `✨ ${myName} დაგაფოლოვათ!`,
+            ts: Date.now()
+        });
+    }
 
-    // ღილაკის შეცვლა
-    const btn = document.querySelector('.eb-follow-btn');
+    // 4. ღილაკის ვიზუალის შეცვლა
+    const btn = document.getElementById('followHostBtn');
     if(btn) {
         btn.innerText = "Following";
-        btn.style.background = "rgba(255,255,255,0.2)";
+        btn.style.background = "rgba(255,255,255,0.3)";
+        btn.style.color = "white";
     }
 }
