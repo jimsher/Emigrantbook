@@ -202,21 +202,69 @@ function showLiveEndedUI() {
 }
 
 
+
+
+
+
+
 // --- ტიკ-ტოკ ეფექტები (გულები და საჩუქრები) ---
 function sendLiveHeart() {
+    if(!currentLiveChannel || !auth.currentUser) return;
+
+    // 1. ლოკალური ანიმაცია (მაყურებლის ეკრანზე)
+    animateHeart();
+
+    // 2. Firebase-ში ლაიქების რაოდენობის გაზრდა (ატომურად)
+    // hostUid-ს ვიღებთ ჩენელის სახელიდან
+    const hostUid = currentLiveChannel.replace("live_", "");
+    
+    // ვიყენებთ transaction-ს, რომ რამდენიმე მომხმარებლის ერთდროული ლაიქი სწორად დაითვალოს
+    db.ref(`lives_meta/${currentLiveChannel}/likes`).transaction(currentLikes => {
+        return (currentLikes || 0) + 1;
+    });
+
+    // 3. (Optional) ჩატში შეტყობინების გაშვება (მხოლოდ სისტემური)
+    // db.ref(`live_chats/${currentLiveChannel}`).push({ name: "SYSTEM", text: `❤️ ${myName}-მა მოიწონა ლაივი`, ts: Date.now() });
+}
+
+// დამხმარე ფუნქცია ლოკალური ანიმაციისთვის (გამოყოფილი, რომ ჰოსტმაც გამოიყენოს)
+function animateHeart() {
     const container = document.getElementById('live-video-container');
     if(!container) return;
     const heart = document.createElement('i');
     heart.className = "fas fa-heart"; 
-    heart.style = `position:absolute; right:20px; bottom:150px; color:hsl(${Math.random()*360},100%,50%); font-size:24px; transition:all 1s ease-out; z-index:100; pointer-events:none;`;
+    
+    // შემთხვევითი ფერი და პოზიცია (TikTok სტილი)
+    const randomColor = `hsl(${Math.random()*360},100%,70%)`;
+    const randomX = (Math.random() - 0.5) * 50; // -25px-დან 25px-მდე
+    
+    heart.style = `
+        position:absolute; 
+        right:20px; 
+        bottom:100px; 
+        color:${randomColor}; 
+        font-size:24px; 
+        transition:all 1.5s ease-out; 
+        z-index:100; 
+        pointer-events:none;
+        text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    `;
     container.appendChild(heart);
+    
+    // ანიმაციის დაწყება
     setTimeout(() => { 
-        heart.style.bottom = "400px"; 
-        heart.style.right = (Math.random()*100)+"px"; 
-        heart.style.opacity = "0"; 
+        heart.style.bottom = "400px"; // ადის ზემოთ
+        heart.style.transform = `translateX(${randomX}px) scale(1.5)`; // იზრდება და იხრება
+        heart.style.opacity = "0"; // ქრება
     }, 50);
-    setTimeout(() => heart.remove(), 1000);
+    
+    setTimeout(() => heart.remove(), 1500);
 }
+
+
+
+
+
 
 function toggleGiftPanel() { 
     const p = document.getElementById('giftPanel'); 
