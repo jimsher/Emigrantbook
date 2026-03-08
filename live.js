@@ -262,6 +262,29 @@ function animateHeart() {
 }
 
 
+function listenToLikes(channel) {
+    if(!channel) return;
+
+    // ვუსმენთ 'lives_meta/CHANNEL/likes' ველს
+    db.ref(`lives_meta/${channel}/likes`).on('value', snap => {
+        const likeCount = snap.val() || 0;
+        
+        // 1. განახლდეს მთვლელი HTML-ში
+        const countEl = document.getElementById('liveLikeCount');
+        if(countEl) {
+            countEl.innerText = likeCount;
+        }
+
+        // 2. გამოვაჩინოთ გულის ანიმაცია (TikTok სტილი)
+        // იმისათვის, რომ ანიმაცია ლამაზად გამოჩნდეს, გამოვიძახოთ ლოკალური animateHeart
+        // (შენიშვნა: თუ ლაიქები ძალიან სწრაფად მოდის, ანიმაციები შეიძლება გადაიფაროს)
+        animateHeart();
+    });
+}
+
+
+
+
 
 
 
