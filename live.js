@@ -43,6 +43,7 @@ async function startLive() {
         // დამატებულია: მაყურებლების ლოგიკა
         updateViewerCount(currentLiveChannel, 'join');
         listenToViewers(currentLiveChannel);
+        listenToLikes(currentLiveChannel);
 
         console.log("Live started successfully ✅");
     } catch (e) { 
