@@ -1,4 +1,4 @@
-// --- TIKTOK STYLE LIVE LOGIC (ORIGINAL STRUCTURE + ENHANCEMENTS) ---
+// --- TIKTOK STYLE LIVE LOGIC (FULL & ORIGINAL) ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
@@ -30,6 +30,7 @@ async function startLive() {
         await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
+        // Firebase-ში ლაივის აქტივაცია (აქედან დაგინახავენ სხვები!)
         db.ref(`lives/${auth.currentUser.uid}`).set({ 
             hostId: auth.currentUser.uid, 
             hostName: myName, 
@@ -47,7 +48,7 @@ async function startLive() {
         console.log("Live started successfully ✅");
     } catch (e) { 
         console.error("Agora Error:", e);
-        alert("შეცდომა ლაივის დაწყებისას: " + e.message);
+        alert("შეცდომა: " + e.message);
     }
 }
 
@@ -67,7 +68,7 @@ function listenToLiveChat(channel) {
             // TikTok სტილი: ავატარი + შეტყობინება
             div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content; border-left:3px solid var(--gold);";
             div.innerHTML = `
-                <img src="${msg.photo || 'https://ui-avatars.com/api/?name='+msg.name}" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);">
+                <img src="${msg.photo || 'https://ui-avatars.com/api/?name='+msg.name}" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.2); object-fit:cover;">
                 <div>
                     <b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>
                     <span style="color:white; font-size:13px;">${msg.text}</span>
@@ -81,7 +82,6 @@ function listenToLiveChat(channel) {
 function sendLiveComment() {
     const inp = document.getElementById('liveMsgInp');
     if(!inp || !inp.value.trim() || !currentLiveChannel) return;
-    // დაემატა photo ობიექტში
     db.ref(`live_chats/${currentLiveChannel}`).push({ 
         name: myName, 
         photo: myPhoto, 
@@ -104,9 +104,19 @@ function updateViewerCount(channel, action) {
 
 function listenToViewers(channel) {
     db.ref(`lives_meta/${channel}/viewers`).on('value', snap => {
-        const count = snap.numChildren();
+        const viewers = snap.val() || {};
+        const count = Object.keys(viewers).length;
         const countEl = document.getElementById('vCount');
         if(countEl) countEl.innerText = count;
+        
+        // ზედა ზოლში ავატარების გამოჩენა
+        const avDiv = document.getElementById('viewerAvatars');
+        if(avDiv) {
+            avDiv.innerHTML = "";
+            Object.values(viewers).slice(-3).forEach(v => {
+                avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px; background:#000; object-fit:cover;">`;
+            });
+        }
     });
 }
 
