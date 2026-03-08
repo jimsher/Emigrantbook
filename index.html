@@ -1538,33 +1538,50 @@ div[style*="overflow-x:auto"] {
 
 
 
+
 <div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column; font-family: sans-serif;">
     <div id="live-video-container" style="width:100%; height:100%; background:#111; position:relative; overflow: hidden;">
+        
         <div id="remote-live-video" style="width:100%; height:100%; object-fit: cover;"></div>
 
-
-     
-        <div style="position:absolute; top:20px; left:15px; right:15px; display:flex; justify-content:space-between; align-items:center; z-index: 10;">
-            <div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.4); padding:4px 12px 4px 4px; border-radius:30px; backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.2); cursor: pointer;" 
-     onclick="followHostLive(currentLiveChannel ? currentLiveChannel.replace('live_', '') : '')">
-    
-    <img id="liveHostAva" src="" style="width:36px; height:36px; border-radius:50%; border:1.5px solid var(--gold); object-fit: cover;">
-    
-    <div style="overflow: hidden; max-width: 80px;">
-        <b id="liveHostName" style="color:white; font-size:12px; display:block; white-space: nowrap; text-overflow: ellipsis;">Host</b>
-        <small id="liveViewerCountDisplay" style="color:rgba(255,255,255,0.8); font-size:10px;">
-            <i class="fas fa-eye" style="color: var(--gold);"></i> <span id="vCount">0</span>
-        </small>
-    </div>
-    
-    <button id="followHostBtn" style="background:var(--gold); border:none; border-radius:20px; padding:6px 12px; font-size:11px; font-weight:900; margin-left:5px; cursor: pointer;">Follow</button>
-</div>
+        <div id="guest-video-box" style="display:none; position:absolute; top:120px; right:15px; width:120px; height:180px; border-radius:15px; overflow:hidden; border:2px solid #3498db; z-index:15;">
+            <div id="guest-remote-video" style="width:100%; height:100%; background:#000;"></div>
         </div>
 
+        <div id="guestRequestPanel" style="display:none; position:absolute; top:85px; left:15px; background:rgba(0,0,0,0.85); padding:10px; border-radius:12px; border:1px solid #3498db; z-index:1001; color:white; backdrop-filter: blur(10px);">
+            <small id="reqUserName" style="font-weight: bold; color: #3498db;"></small> <span style="font-size: 11px;">-ს უნდა ჩართვა</span>
+            <div style="margin-top:5px; display:flex; gap:5px;">
+                <button onclick="acceptGuest()" style="background:#2ecc71; border:none; border-radius:5px; padding:4px 10px; color:white; font-size:11px; cursor:pointer; font-weight: bold;">ჩართვა</button>
+                <button onclick="rejectGuest()" style="background:#e74c3c; border:none; border-radius:5px; padding:4px 10px; color:white; font-size:11px; cursor:pointer; font-weight: bold;">X</button>
+            </div>
+        </div>
 
-     
+        <div style="position:absolute; top:20px; left:15px; right:15px; display:flex; justify-content:space-between; align-items:center; z-index: 10;">
+            <div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.4); padding:4px 12px 4px 4px; border-radius:30px; backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.2); cursor: pointer;" 
+                 onclick="followHostLive(currentLiveChannel ? currentLiveChannel.replace('live_', '') : '')">
+                
+                <img id="liveHostAva" src="" style="width:36px; height:36px; border-radius:50%; border:1.5px solid var(--gold); object-fit: cover;">
+                
+                <div style="overflow: hidden; max-width: 100px;"> 
+                    <b id="liveHostName" style="color:white; font-size:12px; display:block; white-space: nowrap; text-overflow: ellipsis;">Host</b>
+                    <div style="display: flex; align-items: center; gap: 4px; color:rgba(255,255,255,0.8); font-size:10px;">
+                        <small id="liveViewerCountDisplay"><i class="fas fa-eye" style="color: var(--gold);"></i> <span id="vCount">0</span></small>
+                        <span style="color: rgba(255,255,255,0.5);">|</span>
+                        <small id="liveLikeCountDisplay"><i class="fas fa-heart" style="color: #ff4d4d;"></i> <span id="liveLikeCount">0</span></small>
+                    </div>
+                </div>
+                <button id="followHostBtn" style="background:var(--gold); border:none; border-radius:20px; padding:6px 12px; font-size:11px; font-weight:900; margin-left:5px; cursor: pointer;">Follow</button>
+            </div>
+            
+            <div id="viewerAvatars" style="display:flex; gap:-10px; align-items:center;"></div>
+        </div>
 
         <div style="position:absolute; right:15px; bottom:140px; display:flex; flex-direction:column; gap:18px; align-items:center; z-index: 10;">
+            
+            <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:none; cursor: pointer; text-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                <i class="fas fa-hand-paper" style="color:#3498db; font-size:32px;"></i>
+            </div>
+
             <div class="live-action-btn" onclick="sendLiveHeart()" style="text-shadow: 0 0 10px rgba(0,0,0,0.5); cursor: pointer;"><i class="fas fa-heart" style="color:#ff4d4d; font-size:32px;"></i></div>
             <div class="live-action-btn" onclick="toggleGiftPanel()" style="cursor: pointer;"><i class="fas fa-gift" style="color:var(--gold); font-size:32px;"></i></div>
             <div class="live-action-btn" onclick="shareLive()" style="cursor: pointer;"><i class="fas fa-share" style="color:white; font-size:28px;"></i></div>
@@ -1582,8 +1599,7 @@ div[style*="overflow-x:auto"] {
             </button>
         </div>
 
-        <div id="giftPanel" style="display:none; position:absolute; bottom:0; left:0; width:100%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(212,175,55,0.5); padding:25px 20px; border-radius:25px 25px 0 0; z-index:100000; backdrop-filter: blur(20px);">
-             </div>
+        <div id="giftPanel" style="display:none; position:absolute; bottom:0; left:0; width:100%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(212,175,55,0.5); padding:25px 20px; border-radius:25px 25px 0 0; z-index:100000; backdrop-filter: blur(20px);"></div>
     </div>
 </div>
 
