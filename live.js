@@ -15,13 +15,25 @@ async function startLive() {
     document.getElementById('liveHostAva').src = myPhoto;
 
     try {
+        // 1. ჯერ ვასუფთავებთ ნებისმიერ ძველ კავშირს
+        await liveClient.leave(); 
+
+        // 2. ვაყენებთ როლს და ვაძლევთ სერვერს 500ms დროს
         await liveClient.setClientRole("host");
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+
+        // 3. შევდივართ არხში
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
         
+        // 4. ვქმნით ტრეკებს
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
+        // 5. ვიწყებთ ჩვენებას
         liveTracks.video.play("remote-live-video");
+        
+        // 6. პატარა პაუზა გამოქვეყნებამდე (Publish)
+        await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
         // Firebase-ში ლაივის აქტივაცია
@@ -35,8 +47,9 @@ async function startLive() {
         });
 
         listenToLiveChat(currentLiveChannel);
+        console.log("Live started successfully ✅");
     } catch (e) { 
-        console.error(e);
+        console.error("Agora Error:", e);
         endLive(); 
     }
 }
