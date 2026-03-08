@@ -1,4 +1,4 @@
-// --- TIKTOK STYLE LIVE LOGIC (FULL & ORIGINAL) ---
+// --- TIKTOK STYLE LIVE LOGIC (ORIGINAL + ALL ENHANCEMENTS) ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
@@ -30,7 +30,6 @@ async function startLive() {
         await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
-        // Firebase-ში ლაივის აქტივაცია (აქედან დაგინახავენ სხვები!)
         db.ref(`lives/${auth.currentUser.uid}`).set({ 
             hostId: auth.currentUser.uid, 
             hostName: myName, 
@@ -41,14 +40,14 @@ async function startLive() {
         });
 
         listenToLiveChat(currentLiveChannel);
-        // ჩაემატა: მაყურებლების და სტატისტიკის ლოგიკა
+        // დამატებულია: მაყურებლების ლოგიკა
         updateViewerCount(currentLiveChannel, 'join');
         listenToViewers(currentLiveChannel);
 
         console.log("Live started successfully ✅");
     } catch (e) { 
         console.error("Agora Error:", e);
-        alert("შეცდომა: " + e.message);
+        alert("შეცდომა ლაივის დაწყებისას: " + e.message);
     }
 }
 
@@ -68,7 +67,7 @@ function listenToLiveChat(channel) {
             // TikTok სტილი: ავატარი + შეტყობინება
             div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content; border-left:3px solid var(--gold);";
             div.innerHTML = `
-                <img src="${msg.photo || 'https://ui-avatars.com/api/?name='+msg.name}" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.2); object-fit:cover;">
+                <img src="${msg.photo || 'https://ui-avatars.com/api/?name='+msg.name}" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);">
                 <div>
                     <b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>
                     <span style="color:white; font-size:13px;">${msg.text}</span>
@@ -108,13 +107,13 @@ function listenToViewers(channel) {
         const count = Object.keys(viewers).length;
         const countEl = document.getElementById('vCount');
         if(countEl) countEl.innerText = count;
-        
+
         // ზედა ზოლში ავატარების გამოჩენა
         const avDiv = document.getElementById('viewerAvatars');
         if(avDiv) {
             avDiv.innerHTML = "";
             Object.values(viewers).slice(-3).forEach(v => {
-                avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px; background:#000; object-fit:cover;">`;
+                avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px; background:#000;">`;
             });
         }
     });
