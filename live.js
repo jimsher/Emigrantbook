@@ -218,21 +218,51 @@ function listenToActiveLives() {
     const floatBtn = document.getElementById('liveFloatingBtn');
     const lastAva = document.getElementById('lastLiveAva');
     const modalList = document.getElementById('modalLivesList');
+
     db.ref('lives').on('value', snap => {
         const lives = snap.val(); 
         if(modalList) modalList.innerHTML = "";
+
         if (!lives || Object.keys(lives).length === 0) { 
             if(floatBtn) floatBtn.style.display = 'none'; 
             return; 
         }
+
         if(floatBtn) floatBtn.style.display = 'block';
+
         const liveEntries = Object.entries(lives);
         const lastLive = liveEntries[liveEntries.length - 1][1];
+
         if(lastAva) lastAva.src = lastLive.hostPhoto || 'https://ui-avatars.com/api/?name=' + lastLive.hostName;
+
+        // აქ ვამატებთ დაჭერის ფუნქციას მთავარ მცურავ ღილაკზეც (ბოლო ლაივისთვის)
+        if(floatBtn) {
+            floatBtn.onclick = () => {
+                const lastUid = liveEntries[liveEntries.length - 1][0];
+                joinLive(lastUid, lastLive.channel);
+            };
+        }
+
         liveEntries.forEach(([uid, data]) => {
             const item = document.createElement('div');
-            item.style = "display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px; margin-bottom:10px;";
-            item.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${data.hostPhoto}" style="width:45px; height:45px; border-radius:50%; border:1px solid var(--gold);"><b style="color:white;">${data.hostName}</b></div><button onclick="joinLive('${uid}', '${data.channel}'); closeActiveLivesModal();" style="background:var(--gold); border:none; padding:7px 15px; border-radius:10px; font-weight:900;">WATCH</button>`;
+            // დავამატე cursor:pointer რომ მიხვდნენ რომ დაჭერადია
+            item.style = "display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px; margin-bottom:10px; cursor:pointer;";
+            
+            // ეს არის მთავარი ცვლილება: მთლიან ბლოკზე (ფოტოზეც) დაჭერა ააქტიურებს შესვლას
+            item.onclick = (e) => {
+                // თუ პირდაპირ ღილაკს დააჭირა, ორჯერ რომ არ გამოიძახოს
+                joinLive(uid, data.channel);
+                closeActiveLivesModal();
+            };
+
+            item.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${data.hostPhoto}" style="width:45px; height:45px; border-radius:50%; border:1px solid var(--gold);">
+                    <b style="color:white;">${data.hostName}</b>
+                </div>
+                <button style="background:var(--gold); border:none; padding:7px 15px; border-radius:10px; font-weight:900; pointer-events:none;">WATCH</button>
+            `;
+            
             if(modalList) modalList.appendChild(item);
         });
     });
