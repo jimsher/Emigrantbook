@@ -559,22 +559,23 @@ function listenForResponse(channel) {
 // ლაივში დამატება კამერის გამოჩენა
 async function startGuestStreaming() {
     try {
-        // 1. ვცვლით როლს მაყურებლიდან ჰოსტზე
         await liveClient.setClientRole("host");
         
-        // 2. ვქმნით სტუმრის ტრეკებს
         const guestTracks = {
             audio: await AgoraRTC.createMicrophoneAudioTrack(),
             video: await AgoraRTC.createCameraVideoTrack()
         };
 
-        // 3. ვაჩვენებთ სტუმრის ვიდეოს პატარა ფანჯარაში
-        document.getElementById('guest-video-box').style.display = 'block';
-        guestTracks.video.play("guest-remote-video");
+        // ეკრანის გაყოფის გააქტიურება
+        const gBox = document.getElementById('guest-video-box');
+        if(gBox) {
+            gBox.style.display = 'block'; // ჩნდება სტუმრის ბლოკი
+            // Flexbox ავტომატურად გაყოფს ეკრანს ორ თანაბარ ნაწილად (flex: 1 ორივეზე)
+        }
 
-        // 4. ვაქვეყნებთ (Publish) რომ ჰოსტმა და სხვებმა დაინახონ
+        guestTracks.video.play("guest-remote-video");
         await liveClient.publish([guestTracks.audio, guestTracks.video]);
         
-        console.log("Guest is now live! ✅");
+        console.log("Split screen active! ✅");
     } catch (e) { console.error("Guest Stream Error:", e); }
 }
