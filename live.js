@@ -253,3 +253,55 @@ if(feed) {
         setTimeout(() => { isScrolling = false; }, 500);
     }, { passive: false });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ფოლოვერის დამატება ლაივში
+function followHostLive(hostUid) {
+    if(!auth.currentUser || hostUid === auth.currentUser.uid) return;
+
+    // 1. ვიზუალური ეფექტი (ბრჭყვიალა ვარსკვლავები ავატართან)
+    const avatarImg = document.getElementById('liveHostAva');
+    for(let i=0; i<6; i++) {
+        const star = document.createElement('i');
+        star.className = "fas fa-star";
+        star.style = `position:absolute; left:50%; top:50%; color:#d4af37; font-size:14px; z-index:1000; transition:all 0.8s ease-out; pointer-events:none;`;
+        avatarImg.parentElement.appendChild(star);
+        
+        // ვფანტავთ ვარსკვლავებს სხვადასხვა მხარეს
+        setTimeout(() => {
+            star.style.transform = `translate(${(Math.random()-0.5)*100}px, ${(Math.random()-0.5)*100}px) scale(0)`;
+            star.style.opacity = "0";
+        }, 50);
+        setTimeout(() => star.remove(), 800);
+    }
+
+    // 2. ბაზაში ჩაწერა (შენი არსებული ფოლოვერების სისტემის მიხედვით)
+    db.ref(`followers/${hostUid}/${auth.currentUser.uid}`).set(true);
+    db.ref(`following/${auth.currentUser.uid}/${hostUid}`).set(true);
+
+    // 3. ჩატში შეტყობინების გაშვება
+    db.ref(`live_chats/${currentLiveChannel}`).push({ 
+        name: "SYSTEM", 
+        text: `✨ ${myName}-მა დაგაფოლოვათ!`, 
+        ts: Date.now() 
+    });
+
+    // ღილაკის შეცვლა
+    const btn = document.querySelector('.eb-follow-btn');
+    if(btn) {
+        btn.innerText = "Following";
+        btn.style.background = "rgba(255,255,255,0.2)";
+    }
+}
