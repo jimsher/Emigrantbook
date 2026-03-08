@@ -1,4 +1,4 @@
-// --- TIKTOK STYLE LIVE LOGIC (FULL & ORIGINAL STRUCTURE) ---
+// --- TIKTOK STYLE LIVE LOGIC (ORIGINAL + ALL ENHANCEMENTS) ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
@@ -9,7 +9,7 @@ async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
     
-    currentLiveChannel = "live_" + auth.currentUser.uid; 
+    currentLiveChannel = "live_stream"; 
     
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
@@ -40,17 +40,18 @@ async function startLive() {
         });
 
         listenToLiveChat(currentLiveChannel);
+        // დამატებულია: მაყურებლების ლოგიკა
         updateViewerCount(currentLiveChannel, 'join');
         listenToViewers(currentLiveChannel);
-        listenToHearts(currentLiveChannel); 
 
         console.log("Live started successfully ✅");
     } catch (e) { 
         console.error("Agora Error:", e);
-        alert("შეცდომა: " + e.message);
+        alert("შეცდომა ლაივის დაწყებისას: " + e.message);
     }
 }
 
+// --- ჩატის ლოგიკა (ავატარებით) ---
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
     if(!chatBox) return;
@@ -63,9 +64,10 @@ function listenToLiveChat(channel) {
             div.style = "background:rgba(212,175,55,0.2); padding:8px 12px; border-radius:10px; margin-bottom:5px; border:1px solid var(--gold); text-align:center;";
             div.innerHTML = `<span style="color:var(--gold); font-size:13px; font-weight:bold;">${msg.text}</span>`;
         } else {
+            // TikTok სტილი: ავატარი + შეტყობინება
             div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content; border-left:3px solid var(--gold);";
             div.innerHTML = `
-                <img src="${msg.photo || 'https://ui-avatars.com/api/?name='+msg.name}" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.2); object-fit:cover;">
+                <img src="${msg.photo || 'https://ui-avatars.com/api/?name='+msg.name}" style="width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.2);">
                 <div>
                     <b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>
                     <span style="color:white; font-size:13px;">${msg.text}</span>
@@ -88,6 +90,7 @@ function sendLiveComment() {
     inp.value = "";
 }
 
+// --- მაყურებლების მთვლელის ლოგიკა ---
 function updateViewerCount(channel, action) {
     if(!auth.currentUser) return;
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
@@ -104,25 +107,26 @@ function listenToViewers(channel) {
         const count = Object.keys(viewers).length;
         const countEl = document.getElementById('vCount');
         if(countEl) countEl.innerText = count;
-        
+
+        // ზედა ზოლში ავატარების გამოჩენა
         const avDiv = document.getElementById('viewerAvatars');
         if(avDiv) {
             avDiv.innerHTML = "";
             Object.values(viewers).slice(-3).forEach(v => {
-                avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px; background:#000; object-fit:cover;">`;
+                avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px; background:#000;">`;
             });
         }
     });
 }
 
+// --- ლაივის დასრულება და შეერთება ---
 async function endLive() {
     if(currentLiveChannel) updateViewerCount(currentLiveChannel, 'leave');
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
-    
-    if (currentLiveChannel && (currentLiveChannel.includes(auth.currentUser.uid) || currentLiveChannel === "live_stream")) {
+    if (currentLiveChannel === "live_stream" || currentLiveChannel === "live_" + auth.currentUser.uid) {
         db.ref(`lives/${auth.currentUser.uid}`).remove();
         db.ref(`live_chats/${currentLiveChannel}`).remove();
         db.ref(`lives_meta/${currentLiveChannel}`).remove();
@@ -152,7 +156,6 @@ async function joinLive(hostUid, channelName) {
         
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
-        listenToHearts(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
@@ -165,19 +168,8 @@ async function joinLive(hostUid, channelName) {
     } catch (e) { console.log(e); }
 }
 
+// --- ტიკ-ტოკ ეფექტები (გულები და საჩუქრები) ---
 function sendLiveHeart() {
-    if(!currentLiveChannel) return;
-    db.ref(`lives_meta/${currentLiveChannel}/likes`).push({ ts: Date.now() });
-    showHeartAnimation();
-}
-
-function listenToHearts(channel) {
-    db.ref(`lives_meta/${channel}/likes`).limitToLast(1).on('child_added', () => {
-        showHeartAnimation();
-    });
-}
-
-function showHeartAnimation() {
     const container = document.getElementById('live-video-container');
     if(!container) return;
     const heart = document.createElement('i');
@@ -198,7 +190,10 @@ function toggleGiftPanel() {
 }
 
 function sendGift(emoji, price, giftName) {
-    if (myAkho < price) { alert("ბალანსი!"); return; }
+    if (myAkho < price) { alert("ბალანსი!"); if(typeof openWalletUI === "function") openWalletUI(); return; }
+    const hostUid = currentLiveChannel.replace("live_", "");
+    spendAkho(price, `Gift: ${giftName}`); 
+    earnAkho(hostUid, price, `Gift: ${giftName}`);
     db.ref(`live_chats/${currentLiveChannel}`).push({ name: "SYSTEM", text: `🎁 ${myName}-მა გაჩუქა ${giftName}`, ts: Date.now() });
     showGiftAnimation(emoji); 
     toggleGiftPanel();
@@ -214,6 +209,7 @@ function showGiftAnimation(emoji) {
     setTimeout(() => giftEl.remove(), 2000);
 }
 
+// --- სტილები და აქტიური ლაივების სია ---
 const styleSheet = document.createElement("style");
 styleSheet.innerText = "@keyframes gift-pop-up { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; } 100% { transform: translate(-50%, -200%) scale(1); opacity: 0; } }";
 document.head.appendChild(styleSheet);
@@ -243,6 +239,7 @@ function listenToActiveLives() {
 }
 listenToActiveLives();
 
+// --- სქროლის ლოგიკა ---
 const feed = document.getElementById('main-feed');
 let isScrolling = false;
 if(feed) {
