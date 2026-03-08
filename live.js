@@ -1,4 +1,4 @@
-// --- TIKTOK STYLE LIVE LOGIC (OPTIMIZED) ---
+// --- TIKTOK STYLE LIVE LOGIC (OPTIMIZED & FULL) ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
@@ -7,36 +7,30 @@ function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
+    // ტოკენი აიღე "live_stream" არხისთვის!
     const token = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
     
-    currentLiveChannel = "live_" + auth.currentUser.uid; 
+    currentLiveChannel = "live_stream"; 
+    
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
     document.getElementById('liveHostAva').src = myPhoto;
 
     try {
-        // 1. ჯერ ვასუფთავებთ ნებისმიერ ძველ კავშირს
         await liveClient.leave(); 
-
-        // 2. ვაყენებთ როლს და ვაძლევთ სერვერს 500ms დროს
         await liveClient.setClientRole("host");
         await new Promise(resolve => setTimeout(resolve, 500)); 
 
-        // 3. შევდივართ არხში
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
         
-        // 4. ვქმნით ტრეკებს
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
-        // 5. ვიწყებთ ჩვენებას
         liveTracks.video.play("remote-live-video");
         
-        // 6. პატარა პაუზა გამოქვეყნებამდე (Publish)
         await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
-        // Firebase-ში ლაივის აქტივაცია
         db.ref(`lives/${auth.currentUser.uid}`).set({ 
             hostId: auth.currentUser.uid, 
             hostName: myName, 
@@ -50,15 +44,15 @@ async function startLive() {
         console.log("Live started successfully ✅");
     } catch (e) { 
         console.error("Agora Error:", e);
-        endLive(); 
+        alert("შეცდომა ლაივის დაწყებისას: " + e.message);
     }
 }
 
+// --- ჩატის ლოგიკა ---
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
+    if(!chatBox) return;
     chatBox.innerHTML = "";
-    
-    // ვთიშავთ წინა მსმენელს დუბლირების თავიდან ასაცილებლად
     db.ref(`live_chats/${channel}`).off(); 
 
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
@@ -78,21 +72,18 @@ function listenToLiveChat(channel) {
 
 function sendLiveComment() {
     const inp = document.getElementById('liveMsgInp');
-    if(!inp.value.trim() || !currentLiveChannel) return;
+    if(!inp || !inp.value.trim() || !currentLiveChannel) return;
     db.ref(`live_chats/${currentLiveChannel}`).push({ name: myName, text: inp.value, ts: Date.now() });
     inp.value = "";
 }
 
+// --- ლაივის დასრულება და შეერთება ---
 async function endLive() {
-    // ტრეკების სრული გათიშვა
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
-    
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
-
-    // მხოლოდ ჰოსტს შეუძლია ლაივის და ჩატის წაშლა
-    if (currentLiveChannel === "live_" + auth.currentUser.uid) {
+    if (currentLiveChannel === "live_stream" || currentLiveChannel === "live_" + auth.currentUser.uid) {
         db.ref(`lives/${auth.currentUser.uid}`).remove();
         db.ref(`live_chats/${currentLiveChannel}`).remove();
     }
@@ -102,11 +93,9 @@ async function endLive() {
 async function joinLive(hostUid, channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYChdECCsELPkzo+dN3sDZshXu8ktK5mjVTrB5N4k7hMNH9cqMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgk5ixek9kQyMjwvTCWiZEBAkF8boaczLLU+OKSotTEXAYGAGRLI14=";
-    
     currentLiveChannel = channelName;
     document.getElementById('liveUI').style.display = 'flex';
-    document.getElementById('activeLivesModal').style.display = 'none';
-
+    if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
     db.ref(`users/${hostUid}`).once('value', snap => {
         const host = snap.val();
         if(host) {
@@ -114,23 +103,21 @@ async function joinLive(hostUid, channelName) {
             document.getElementById('liveHostAva').src = host.photo || "https://ui-avatars.com/api/?name=" + host.name;
         }
     });
-
     try {
         await liveClient.leave(); 
         await liveClient.setClientRole("audience");
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
-        
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") user.videoTrack.play("remote-live-video");
             if (mediaType === "audio") user.audioTrack.play();
         });
-
         listenToLiveChat(channelName);
         db.ref(`live_chats/${channelName}`).push({ name: "SYSTEM", text: `👋 ${myName} შემოვიდა`, ts: Date.now() });
     } catch (e) { console.log(e); }
 }
 
+// --- ტიკ-ტოკ ეფექტები (გულები და საჩუქრები) ---
 function sendLiveHeart() {
     const container = document.getElementById('live-video-container');
     if(!container) return;
@@ -171,6 +158,7 @@ function showGiftAnimation(emoji) {
     setTimeout(() => giftEl.remove(), 2000);
 }
 
+// --- სტილები და აქტიური ლაივების სია ---
 const styleSheet = document.createElement("style");
 styleSheet.innerText = "@keyframes gift-pop-up { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; } 100% { transform: translate(-50%, -200%) scale(1); opacity: 0; } }";
 document.head.appendChild(styleSheet);
@@ -179,34 +167,28 @@ function listenToActiveLives() {
     const floatBtn = document.getElementById('liveFloatingBtn');
     const lastAva = document.getElementById('lastLiveAva');
     const modalList = document.getElementById('modalLivesList');
-    
     db.ref('lives').on('value', snap => {
         const lives = snap.val(); 
-        modalList.innerHTML = "";
+        if(modalList) modalList.innerHTML = "";
         if (!lives || Object.keys(lives).length === 0) { 
             if(floatBtn) floatBtn.style.display = 'none'; 
             return; 
         }
         if(floatBtn) floatBtn.style.display = 'block';
-        
         const liveEntries = Object.entries(lives);
         const lastLive = liveEntries[liveEntries.length - 1][1];
         if(lastAva) lastAva.src = lastLive.hostPhoto || 'https://ui-avatars.com/api/?name=' + lastLive.hostName;
-        
         liveEntries.forEach(([uid, data]) => {
             const item = document.createElement('div');
             item.style = "display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px; border-radius:15px; margin-bottom:10px;";
             item.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${data.hostPhoto}" style="width:45px; height:45px; border-radius:50%; border:1px solid var(--gold);"><b style="color:white;">${data.hostName}</b></div><button onclick="joinLive('${uid}', '${data.channel}'); closeActiveLivesModal();" style="background:var(--gold); border:none; padding:7px 15px; border-radius:10px; font-weight:900;">WATCH</button>`;
-            modalList.appendChild(item);
+            if(modalList) modalList.appendChild(item);
         });
     });
 }
-
-function openActiveLivesModal() { document.getElementById('activeLivesModal').style.display = 'flex'; }
-function closeActiveLivesModal() { document.getElementById('activeLivesModal').style.display = 'none'; }
 listenToActiveLives();
 
-// Smooth scroll logic
+// --- სქროლის ლოგიკა ---
 const feed = document.getElementById('main-feed');
 let isScrolling = false;
 if(feed) {
