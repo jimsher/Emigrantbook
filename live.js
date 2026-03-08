@@ -149,6 +149,15 @@ async function joinLive(hostUid, channelName) {
         }
     });
 
+    // --- ახალი ლოგიკა: ჰოსტის სტატუსის კონტროლი ---
+    // თუ ჰოსტი წაშლის ჩანაწერს ბაზიდან, მაყურებელს ავტომატურად გაეთიშება
+    db.ref(`lives/${hostUid}`).on('value', snap => {
+        if (!snap.exists()) {
+            showLiveEndedUI();
+        }
+    });
+    // ------------------------------------------
+
     try {
         await liveClient.leave(); 
         await liveClient.setClientRole("audience");
@@ -167,6 +176,31 @@ async function joinLive(hostUid, channelName) {
         db.ref(`live_chats/${channelName}`).push({ name: "SYSTEM", text: `👋 ${myName} შემოვიდა`, ts: Date.now() });
     } catch (e) { console.log(e); }
 }
+
+
+
+function showLiveEndedUI() {
+    // 1. ჯერ ვთიშავთ Firebase-ის მსმენელს, რომ სულ არ იტრიალოს
+    if (currentLiveChannel) {
+        db.ref(`lives_meta/${currentLiveChannel}/viewers`).off();
+    }
+
+    // 2. გამოვიტანოთ შეტყობინება ჩატში
+    const chatBox = document.getElementById('liveChatBox');
+    if (chatBox) {
+        const div = document.createElement('div');
+        div.style = "background:rgba(255,0,0,0.6); padding:10px; border-radius:12px; margin-bottom:10px; color:white; text-align:center; font-weight:bold;";
+        div.innerHTML = "⚠️ ჰოსტმა დაასრულა ლაივი";
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 3. 2 წამში ავტომატურად ვხურავთ ლაივის ინტერფეისს
+    setTimeout(() => {
+        endLive(); // შენი ორიგინალი ფუნქცია, რომელიც ასუფთავებს UI-ს და აგორას
+    }, 2500);
+}
+
 
 // --- ტიკ-ტოკ ეფექტები (გულები და საჩუქრები) ---
 function sendLiveHeart() {
