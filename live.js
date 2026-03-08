@@ -44,6 +44,7 @@ async function startLive() {
         updateViewerCount(currentLiveChannel, 'join');
         listenToViewers(currentLiveChannel);
         listenToLikes(currentLiveChannel);
+        listenForRequests(currentLiveChannel);.
 
         console.log("Live started successfully ✅");
     } catch (e) { 
