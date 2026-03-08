@@ -516,14 +516,20 @@ function sendJoinRequest() {
 
 // 2. ჰოსტი უსმენს მოთხოვნებს (ეს ჩასვი startLive-ის ბოლოში)
 function listenForRequests(channel) {
+    // ჰოსტი უსმენს თავის ჩენელზე მოსულ მოთხოვნებს
     db.ref(`live_requests/${channel}`).on('value', snap => {
         const req = snap.val();
+        const panel = document.getElementById('guestRequestPanel');
+        const nameLabel = document.getElementById('reqUserName');
+
         if(req && req.status === 'pending') {
-            currentGuestUid = req.uid;
-            document.getElementById('guestRequestPanel').style.display = 'block';
-            document.getElementById('reqUserName').innerText = req.name;
+            // თუ ვინმემ ხელი აწია, გამოუჩნდეს ჰოსტს ლურჯი პანელი
+            if(panel) panel.style.display = 'block';
+            if(nameLabel) nameLabel.innerText = req.name;
+            currentGuestUid = req.uid; // ვიმახსოვრებთ ვინ ითხოვს
         } else {
-            document.getElementById('guestRequestPanel').style.display = 'none';
+            // თუ მოთხოვნა არ არის ან წაიშალა, ვმალავთ პანელს
+            if(panel) panel.style.display = 'none';
         }
     });
 }
