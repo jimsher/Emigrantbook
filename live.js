@@ -21,6 +21,23 @@ async function startLive() {
         await new Promise(resolve => setTimeout(resolve, 500)); 
 
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
+
+        // --- აი ეს ნაწილი დავამატე: სტუმრის ვიდეოს მოსმენა ---
+        liveClient.on("user-published", async (user, mediaType) => {
+            await liveClient.subscribe(user, mediaType);
+            if (mediaType === "video") {
+                // როცა სტუმარი ჩაირთვება, ჰოსტთანაც იყოფა ეკრანი
+                const singleZone = document.getElementById('single-screen-zone');
+                const splitZone = document.getElementById('split-screen-zone');
+                if(singleZone && splitZone) {
+                    singleZone.style.display = 'none';
+                    splitZone.style.display = 'flex';
+                }
+                user.videoTrack.play("guest-remote-video");
+            }
+            if (mediaType === "audio") user.audioTrack.play();
+        });
+
         
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
