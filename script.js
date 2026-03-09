@@ -2645,3 +2645,36 @@ function applySkinSmooth(landmarks) {
 
 // ჩართე AI ფილტრი კამერის გახსნისას
 initBeautyFilter();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function openProfileVideo(videoId) {
+    // ვიღებთ ვიდეოს მონაცემებს ბაზიდან
+    db.ref(`all_videos/${videoId}`).once('value', snap => {
+        const videoData = snap.val();
+
+        // აქ გამოიძახე ის ფუნქცია, რომლითაც მთავარ გვერდზე აჩენ ვიდეოს
+        // მაგალითად, თუ შენს ფუნქციას ქვია renderVideoItem:
+        const fullVideoHTML = renderVideoItem(videoData, videoId); 
+
+        // ჩასვი ეს HTML პროფილის ვიდეოს მოდალში/ფანჯარაში
+        document.getElementById('profileVideoOverlay').innerHTML = fullVideoHTML;
+        document.getElementById('profileVideoOverlay').style.display = 'block';
+    });
+}
