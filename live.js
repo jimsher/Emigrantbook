@@ -586,6 +586,16 @@ async function startGuestStreaming() {
     try {
         console.log("სტუმარი იწყებს მაუწყებლობას...");
         
+        // --- დაზღვევა: თუ წინა მცდელობიდან ტრეკები დარჩა, ვასუფთავებთ რომ შეცდომა არ ამოაგდოს ---
+        if (liveTracks.guestVideo) {
+            try {
+                await liveClient.unpublish([liveTracks.guestAudio, liveTracks.guestVideo]);
+                liveTracks.guestVideo.close();
+                liveTracks.guestAudio.close();
+            } catch(e) { console.log("Cleaning tracks..."); }
+        }
+        // -----------------------------------------------------------------------------------
+
         // 1. როლის შეცვლა (აუცილებელია, რომ მაყურებელი გახდეს ჰოსტი)
         await liveClient.setClientRole("host");
         
@@ -606,7 +616,6 @@ async function startGuestStreaming() {
         videoTrack.play("guest-remote-video");
 
         // 5. ტრეკების გამოქვეყნება (რომ ჰოსტმა დაინახოს)
-        // აი აქ უნდა იყოს მასივი [audioTrack, videoTrack]
         await liveClient.publish([audioTrack, videoTrack]);
         
         console.log("TikTok style split screen active! ✅");
