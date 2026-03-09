@@ -207,9 +207,10 @@ async function endLive() {
             const singleZone = document.getElementById('single-screen-zone');
             const splitZone = document.getElementById('split-screen-zone');
             if(singleZone && splitZone) {
-                singleZone.style.display = 'none';
-                splitZone.style.display = 'flex';
-            }
+    singleZone.style.width = '50%'; // ჰოსტი პატარავდება
+    splitZone.style.display = 'block'; // გამოდის სტუმრის ადგილი
+    splitZone.style.width = '50%'; // სტუმარი იკავებს მეორე ნახევარს
+}
             user.videoTrack.play("guest-remote-video");
         } else {
             // ჰოსტია - დიდ ეკრანზე (ან ზედა ნახევარში)
