@@ -24,21 +24,19 @@ async function startLive() {
 
         // --- [მნიშვნელოვანი ჩამატება]: სტუმრის გამოჩენის ლოგიკა ---
         liveClient.on("user-published", async (user, mediaType) => {
-            await liveClient.subscribe(user, mediaType);
-            if (mediaType === "video") {
-                // ჰოსტის ეკრანზეც იყოფა სივრცე, როცა სტუმარი შემოდის
-                const singleZone = document.getElementById('single-screen-zone');
-                const splitZone = document.getElementById('split-screen-zone');
-                if(singleZone && splitZone) {
-                    singleZone.style.display = 'none';
-                    splitZone.style.display = 'flex';
-                }
-                // სტუმრის ვიდეოს ვუშვებთ სპეციალურ ID-ში
-                user.videoTrack.play("guest-remote-video");
-            }
-            if (mediaType === "audio") user.audioTrack.play();
-        });
-
+    await liveClient.subscribe(user, mediaType);
+    if (mediaType === "video") {
+        const singleZone = document.getElementById('single-screen-zone');
+        const splitZone = document.getElementById('split-screen-zone');
+        if(singleZone && splitZone) {
+            singleZone.style.width = '50%';
+            splitZone.style.display = 'block';
+            splitZone.style.width = '50%';
+        }
+        user.videoTrack.play("guest-remote-video");
+    }
+    if (mediaType === "audio") user.audioTrack.play();
+});
         
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
