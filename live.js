@@ -584,6 +584,15 @@ function listenForResponse(channel) {
 async function startGuestStreaming() {
     try {
         console.log("სტუმარი იწყებს მაუწყებლობას...");
+
+        // 2. [მნიშვნელოვანი] ვხურავთ ნებისმიერ სხვა აქტიურ ვიდეო ტრეკს, რომელსაც აგორა ხედავს
+        if (liveTracks.video) {
+            try {
+                liveTracks.video.stop();
+                liveTracks.video.close();
+                liveTracks.video = null;
+            } catch(e) { console.log("Cleaning main video track..."); }
+        }
         
         // --- დაზღვევა: თუ წინა მცდელობიდან ტრეკები დარჩა, ვასუფთავებთ რომ შეცდომა არ ამოაგდოს ---
         if (liveTracks.guestVideo) {
