@@ -2435,35 +2435,34 @@ async function toggleRecording() {
 
 // პაროლის აღდგენის ლოგიკა
 function handleForgotPassword() {
-    const emailInput = document.getElementById('loginEmail');
-    const email = emailInput ? emailInput.value.trim() : "";
+    // 1. ვიღებთ მეილს ზუსტად uEmail აიდიდან
+    const emailInput = document.getElementById('uEmail');
+    const emailValue = emailInput.value.trim();
 
-    if (!email) {
-        alert("გთხოვთ, ჯერ ჩაწეროთ თქვენი მეილი შესვლის ველში.");
-        if(emailInput) emailInput.focus();
+    // 2. ვამოწმებთ, ცარიელი ხომ არ არის
+    if (!emailValue) {
+        alert("გთხოვთ, ჯერ ჩაწეროთ მეილი Email / ელფოსტა ველში!");
+        emailInput.focus(); // ავტომატურად გადაიყვანს კურსორს ველზე
         return;
     }
 
-    if (confirm(`გსურთ პაროლის აღდგენის ლინკის გაგზავნა მეილზე: ${email}?`)) {
-        auth.sendPasswordResetEmail(email)
-            .then(() => {
-                alert("პაროლის აღდგენის ინსტრუქცია გაიგზავნა თქვენს ელ-ფოსტაზე. შეამოწმეთ Inbox (ან Spam). ✅");
-            })
-            .catch((error) => {
-                let errorMessage = "შეცდომა მოხდა: ";
-                switch (error.code) {
-                    case 'auth/user-not-found':
-                        errorMessage += "მომხმარებელი ამ მეილით არ მოიძებნა.";
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += "მეილის ფორმატი არასწორია.";
-                        break;
-                    default:
-                        errorMessage += error.message;
-                }
-                alert(errorMessage);
-            });
-    }
+    // 3. Firebase-ის პაროლის აღდგენის მოთხოვნა
+    auth.sendPasswordResetEmail(emailValue)
+        .then(() => {
+            // წარმატება
+            alert("პაროლის აღდგენის ინსტრუქცია გამოგზავნილია თქვენს მეილზე: " + emailValue);
+        })
+        .catch((error) => {
+            // შეცდომების დამუშავება
+            console.error("Reset Error:", error);
+            if (error.code === 'auth/user-not-found') {
+                alert("ამ მეილით მომხმარებელი ვერ მოიძებნა.");
+            } else if (error.code === 'auth/invalid-email') {
+                alert("მეილის ფორმატი არასწორია.");
+            } else {
+                alert("შეცდომა: " + error.message);
+            }
+        });
 }
 
 
