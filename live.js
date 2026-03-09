@@ -567,16 +567,17 @@ async function startGuestStreaming() {
             video: await AgoraRTC.createCameraVideoTrack()
         };
 
-        // ეკრანის გაყოფის გააქტიურება
-        const gBox = document.getElementById('guest-video-box');
-        if(gBox) {
-            gBox.style.display = 'block'; // ჩნდება სტუმრის ბლოკი
-            // Flexbox ავტომატურად გაყოფს ეკრანს ორ თანაბარ ნაწილად (flex: 1 ორივეზე)
+        // UI-ს გადართვა ტიკტოკ სტილზე
+        const singleZone = document.getElementById('single-screen-zone');
+        const splitZone = document.getElementById('split-screen-zone');
+        if(singleZone && splitZone) {
+            singleZone.style.display = 'none';
+            splitZone.style.display = 'flex'; // ჩნდება გაყოფილი ეკრანი
         }
 
         guestTracks.video.play("guest-remote-video");
         await liveClient.publish([guestTracks.audio, guestTracks.video]);
         
-        console.log("Split screen active! ✅");
+        console.log("TikTok style split screen active! ✅");
     } catch (e) { console.error("Guest Stream Error:", e); }
 }
