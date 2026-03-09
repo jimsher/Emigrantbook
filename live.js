@@ -53,6 +53,32 @@ async function startLive() {
     }
 }
 
+
+
+// ეს ფუნქცია გამოიძახე როცა სტუმარს ათანხმებ (acceptGuest) ან როცა სტუმარი ერთვება
+function updateLiveLayout(isSplit) {
+    const hostWrap = document.getElementById('host-video-wrapper');
+    const guestBox = document.getElementById('guest-video-box');
+
+    if (isSplit) {
+        // ეკრანის გაყოფა 50/50-ზე
+        hostWrap.style.width = "50%";
+        guestBox.style.display = "block";
+        setTimeout(() => { guestBox.style.width = "50%"; }, 10);
+    } else {
+        // დაბრუნება სრულ ეკრანზე
+        hostWrap.style.width = "100%";
+        guestBox.style.width = "0%";
+        setTimeout(() => { guestBox.style.display = "none"; }, 400);
+    }
+}
+
+
+
+
+
+
+
 // --- ჩატის ლოგიკა (ავატარებით) ---
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
@@ -585,3 +611,18 @@ async function startGuestStreaming() {
         console.log("TikTok style split screen active! ✅");
     } catch (e) { console.error("Guest Stream Error:", e); }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
