@@ -22,17 +22,18 @@ async function startLive() {
 
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
 
-        // --- აი ეს ნაწილი დავამატე: სტუმრის ვიდეოს მოსმენა ---
+        // --- [მნიშვნელოვანი ჩამატება]: სტუმრის გამოჩენის ლოგიკა ---
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") {
-                // როცა სტუმარი ჩაირთვება, ჰოსტთანაც იყოფა ეკრანი
+                // ჰოსტის ეკრანზეც იყოფა სივრცე, როცა სტუმარი შემოდის
                 const singleZone = document.getElementById('single-screen-zone');
                 const splitZone = document.getElementById('split-screen-zone');
                 if(singleZone && splitZone) {
                     singleZone.style.display = 'none';
                     splitZone.style.display = 'flex';
                 }
+                // სტუმრის ვიდეოს ვუშვებთ სპეციალურ ID-ში
                 user.videoTrack.play("guest-remote-video");
             }
             if (mediaType === "audio") user.audioTrack.play();
