@@ -183,9 +183,13 @@ async function endLive() {
     await liveClient.subscribe(user, mediaType);
     if (mediaType === "video") {
         if (user.uid !== hostUid) {
-            // სტუმარია - ვყოფთ ეკრანს
-            const gBox = document.getElementById('guest-video-box');
-            if(gBox) gBox.style.display = 'block';
+            // სტუმარია - ვყოფთ ეკრანს ტიკტოკ სტილზე
+            const singleZone = document.getElementById('single-screen-zone');
+            const splitZone = document.getElementById('split-screen-zone');
+            if(singleZone && splitZone) {
+                singleZone.style.display = 'none';
+                splitZone.style.display = 'flex';
+            }
             user.videoTrack.play("guest-remote-video");
         } else {
             // ჰოსტია - დიდ ეკრანზე (ან ზედა ნახევარში)
