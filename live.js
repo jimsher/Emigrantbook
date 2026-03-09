@@ -566,27 +566,43 @@ function listenForResponse(channel) {
 // ლაივში დამატება კამერის გამოჩენა
 async function startGuestStreaming() {
     try {
+        console.log("სტუმარი იწყებს მაუწყებლობას...");
+        
+        // 1. როლის შეცვლა (აუცილებელია, რომ მაყურებელი გახდეს ჰოსტი)
         await liveClient.setClientRole("host");
         
-        const guestTracks = {
-            audio: await AgoraRTC.createMicrophoneAudioTrack(),
-            video: await AgoraRTC.createCameraVideoTrack()
-        };
+        // 2. კამერის და მიკროფონის ჩართვა
+        const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+        const videoTrack = await AgoraRTC.createCameraVideoTrack();
 
-        // UI-ს გადართვა ტიკტოკ სტილზე
+        // 3. UI-ს გადართვა ტიკტოკ სტილზე (გაყოფა)
         const singleZone = document.getElementById('single-screen-zone');
         const splitZone = document.getElementById('split-screen-zone');
+        
         if(singleZone && splitZone) {
             singleZone.style.display = 'none';
-            splitZone.style.display = 'flex'; // ჩნდება გაყოფილი ეკრანი
+            splitZone.style.display = 'flex'; 
         }
 
-        guestTracks.video.play("guest-remote-video");
-        await liveClient.publish([guestTracks.audio, guestTracks.video]);
+        // 4. სტუმარმა საკუთარი თავი უნდა დაინახოს თავის ნახევარში
+        videoTrack.play("guest-remote-video");
+
+        // 5. ტრეკების გამოქვეყნება (რომ ჰოსტმა დაინახოს)
+        // აი აქ უნდა იყოს მასივი [audioTrack, videoTrack]
+        await liveClient.publish([audioTrack, videoTrack]);
         
         console.log("TikTok style split screen active! ✅");
-    } catch (e) { console.error("Guest Stream Error:", e); }
+
+        // 6. (Optional) შევინახოთ ტრეკები, რომ მერე გავთიშოთ
+        liveTracks.guestAudio = audioTrack;
+        liveTracks.guestVideo = videoTrack;
+
+    } catch (e) { 
+        console.error("Guest Stream Error:", e); 
+        alert("კამერის ჩართვა ვერ მოხერხდა: " + e.message);
+    }
 }
+
 
 
 
