@@ -1222,52 +1222,62 @@ function playFullVideo(url, postId) {
     // 2. ID-ს შენახვა გლობალურად
     window.currentFullVideoId = postId; 
 
-    // --- ახალი: სქროლვის (Swipe) ლოგიკის ჩამატება ---
+    // --- გარანტირებული სქროლვა (Window-ზე მიბმული) ---
     let touchStartY = 0;
-    overlay.ontouchstart = (e) => {
-        touchStartY = e.touches[0].clientY;
+
+    // ვასუფთავებთ ძველ ივენთებს, რომ არ გაორმაგდეს
+    window.ontouchstart = null;
+    window.ontouchend = null;
+
+    // მხოლოდ მაშინ იმუშაოს, როცა ოვერლეი ღიაა
+    window.ontouchstart = (e) => {
+        if (overlay.style.display === 'block') {
+            touchStartY = e.touches[0].clientY;
+        }
     };
 
-    overlay.ontouchend = (e) => {
+    window.ontouchend = (e) => {
+        if (overlay.style.display !== 'block') return;
+
         const touchEndY = e.changedTouches[0].clientY;
         const diff = touchStartY - touchEndY;
 
-        if (Math.abs(diff) > 60) { // 60px-ზე მეტი გასრიალება
+        if (Math.abs(diff) > 50) { 
             const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
             const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
 
             if (diff > 0 && currentIndex < allPosts.length - 1) {
-                // Swipe Up -> შემდეგი ვიდეო
+                // Swipe Up -> შემდეგი
                 allPosts[currentIndex + 1].click();
             } else if (diff < 0 && currentIndex > 0) {
-                // Swipe Down -> წინა ვიდეო
+                // Swipe Down -> წინა
                 allPosts[currentIndex - 1].click();
             }
         }
     };
-    // --- სქროლვის დასასრული ---
+    // ---------------------------------------------
 
     if (postId) {
         // 3. ნახვების მომატება
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
-        // 4. მონაცემების წამოღება posts/ რეფერენსიდან
+        // 4. მონაცემების წამოღება
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
 
-            // --- ნახვების რაოდენობის გამოტანა ---
+            // ნახვების რაოდენობა
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
 
-            // ავატარის ჩასმა
+            // ავატარი
             const ava = document.getElementById('fullVideoAva');
             if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
 
-            // ლაიქების რაოდენობა
+            // ლაიქები
             const lCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
             const lElem = document.getElementById('fullLikeCount');
             if (lElem) lElem.innerText = lCount;
@@ -1278,21 +1288,22 @@ function playFullVideo(url, postId) {
                 if (cElem) cElem.innerText = cSnap.numChildren();
             });
 
-            // გულის ფერის შემოწმება
+            // გულის ფერი
             const myUid = auth.currentUser.uid;
             const lIcon = document.getElementById('fullLikeIcon');
             if (lIcon) {
                 lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
             }
             
-            // შენახვის ფერის შემოწმება
+            // შენახვის ფერი
             const sIcon = document.getElementById('fullSaveIcon');
             if (sIcon) {
                 sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
             }
         });
     }
-}
+}            
+            
 
 
 
