@@ -1209,17 +1209,43 @@ function loadUserVideos(uid) {
 
 
 
+ 
 function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
     // 1. ვიდეოს გაშვება
     vid.src = url; 
-    overlay.style.display = 'block'; // შენს HTML-ში 'block' გიწერია სტილებში
+    overlay.style.display = 'block'; 
     vid.play();
 
-    // 2. ID-ს შენახვა გლობალურად (რომ ლაიქმა იმუშაოს)
+    // 2. ID-ს შენახვა გლობალურად
     window.currentFullVideoId = postId; 
+
+    // --- ახალი: სქროლვის (Swipe) ლოგიკის ჩამატება ---
+    let touchStartY = 0;
+    overlay.ontouchstart = (e) => {
+        touchStartY = e.touches[0].clientY;
+    };
+
+    overlay.ontouchend = (e) => {
+        const touchEndY = e.changedTouches[0].clientY;
+        const diff = touchStartY - touchEndY;
+
+        if (Math.abs(diff) > 60) { // 60px-ზე მეტი გასრიალება
+            const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
+            const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
+
+            if (diff > 0 && currentIndex < allPosts.length - 1) {
+                // Swipe Up -> შემდეგი ვიდეო
+                allPosts[currentIndex + 1].click();
+            } else if (diff < 0 && currentIndex > 0) {
+                // Swipe Down -> წინა ვიდეო
+                allPosts[currentIndex - 1].click();
+            }
+        }
+    };
+    // --- სქროლვის დასასრული ---
 
     if (postId) {
         // 3. ნახვების მომატება
@@ -1230,7 +1256,7 @@ function playFullVideo(url, postId) {
             const data = snap.val();
             if (!data) return;
 
-            // --- ნახვების რაოდენობის გამოტანა (რაც ბადეზეა ის) ---
+            // --- ნახვების რაოდენობის გამოტანა ---
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
@@ -1246,7 +1272,7 @@ function playFullVideo(url, postId) {
             const lElem = document.getElementById('fullLikeCount');
             if (lElem) lElem.innerText = lCount;
 
-            // კომენტარების რაოდენობა (comments/ რეფერენსიდან)
+            // კომენტარების რაოდენობა
             db.ref(`comments/${postId}`).once('value', cSnap => {
                 const cElem = document.getElementById('fullCommCount');
                 if (cElem) cElem.innerText = cSnap.numChildren();
@@ -1267,7 +1293,6 @@ function playFullVideo(url, postId) {
         });
     }
 }
-
 
 
 
