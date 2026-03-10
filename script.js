@@ -1209,7 +1209,7 @@ function loadUserVideos(uid) {
 
 
 
-function playFullVideo(url, postId) {
+ function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
@@ -1219,24 +1219,17 @@ function playFullVideo(url, postId) {
 
     window.currentFullVideoId = postId; 
 
-    // --- სქროლვის (Swipe) ლოგიკა ---
+    // --- გარანტირებული სქროლვა პირდაპირ ვიდეოზე ---
     let startY = 0;
-    overlay.ontouchstart = (e) => { startY = e.touches[0].clientY; };
-    overlay.ontouchend = (e) => {
+    vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
+    vid.ontouchend = (e) => {
         let endY = e.changedTouches[0].clientY;
         let diff = startY - endY;
-
-        if (Math.abs(diff) > 50) { // თუ გასრიალდა 50 პიქსელზე მეტი
+        if (Math.abs(diff) > 50) {
             const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
             const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
-
-            if (diff > 0 && currentIndex < allPosts.length - 1) {
-                // Swipe Up -> შემდეგი
-                allPosts[currentIndex + 1].click();
-            } else if (diff < 0 && currentIndex > 0) {
-                // Swipe Down -> წინა
-                allPosts[currentIndex - 1].click();
-            }
+            if (diff > 0 && currentIndex < allPosts.length - 1) allPosts[currentIndex + 1].click();
+            else if (diff < 0 && currentIndex > 0) allPosts[currentIndex - 1].click();
         }
     };
 
@@ -1255,9 +1248,8 @@ function playFullVideo(url, postId) {
             const ava = document.getElementById('fullVideoAva');
             if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
 
-            const lCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
             const lElem = document.getElementById('fullLikeCount');
-            if (lElem) lElem.innerText = lCount;
+            if (lElem) lElem.innerText = data.likedBy ? Object.keys(data.likedBy).length : 0;
 
             db.ref(`comments/${postId}`).once('value', cSnap => {
                 const cElem = document.getElementById('fullCommCount');
@@ -1266,17 +1258,12 @@ function playFullVideo(url, postId) {
 
             const myUid = auth.currentUser.uid;
             const lIcon = document.getElementById('fullLikeIcon');
-            if (lIcon) {
-                lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
-            }
-            
+            if (lIcon) lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
             const sIcon = document.getElementById('fullSaveIcon');
-            if (sIcon) {
-                sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
-            }
+            if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
         });
     }
-}   
+}
              
 
 
