@@ -2782,25 +2782,21 @@ function handleLikeFromFull() {
 
 // 2. კომენტარების პანელის გახსნა
 function openCommentsFromFull() {
-    const postId = window.currentFullVideoId;
-    if (!postId) return;
+    if (!window.currentFullVideoId) return;
 
     const commUI = document.getElementById('commentsUI');
     const vid = document.getElementById('fullVideoTag');
 
     if (commUI) {
-        // 1. ვიდეოს გაჩერება
+        // 1. ვაპაუზებთ ვიდეოს
         if (vid) vid.pause();
 
-        // 2. კომენტარების ფანჯრის ამოწევა ყველაზე მაღლა (z-index)
+        // 2. კომენტარების ფანჯარას ვანიჭებთ ვიდეოზე მაღალ პრიორიტეტს
+        commUI.style.zIndex = "2000000"; 
         commUI.style.display = "flex";
-        commUI.style.zIndex = "3000000"; 
-        
-        // 3. გადატანა HTML-ის ბოლოში, რომ ვიდეოს "ზემოდან" დაჯდეს
-        document.body.appendChild(commUI);
 
-        // 4. შენი ორიგინალი კომენტარების ჩატვირთვა
-        openComments(postId);
+        // 3. ვიძახებთ შენს ორიგინალ ფუნქციას
+        openComments(window.currentFullVideoId);
     }
 }
 
