@@ -2785,35 +2785,41 @@ function openCommentsFromFull() {
     if (!window.currentFullVideoId) return;
 
     const commUI = document.getElementById('commentsUI');
+    const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
 
-    if (commUI) {
-        // 1. ვაპაუზებთ ვიდეოს
+    if (commUI && videoOverlay) {
+        // 1. მთავარი ხრიკი: კომენტარებს ვსვამთ ვიდეოს ფანჯრის შიგნით
+        // ასე ის ფიზიკურად ვეღარ მოექცევა ვიდეოს უკან
+        videoOverlay.appendChild(commUI);
+
+        // 2. ვაძლევთ უზარმაზარ პრიორიტეტს შიგნით
+        commUI.style.position = "absolute";
+        commUI.style.zIndex = "10000002"; 
+        commUI.style.display = "flex";
+        commUI.style.top = "0";
+        commUI.style.left = "0";
+        commUI.style.width = "100%";
+        commUI.style.height = "100%";
+
+        // 3. ვიდეოს გაჩერება
         if (vid) vid.pause();
 
-        // 2. კომენტარების ფანჯარას ვწევთ ყველაზე წინ
-        commUI.style.zIndex = "3000000"; 
-        commUI.style.display = "flex";
-        document.body.appendChild(commUI); // ეს ხაზი აუცილებელია, რომ ვიდეოს არ დაეფაროს
-
-        // 3. აი აქ ვასწავლით X ღილაკს, რომ ვიდეოც ჩართოს დახურვისას
+        // 4. დახურვის ღილაკის გასწორება (რომ ვიდეო გაგრძელდეს)
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
-                commUI.style.display = 'none'; // იხურება კომენტარები
-                
-                // თუ უკან ვიდეოს ოვერლეი გახსნილია, ვაგრძელებთ Play-ს
-                const overlay = document.getElementById('fullVideoOverlay');
-                if (overlay && overlay.style.display === 'block') {
-                    if (vid) vid.play();
-                }
+                commUI.style.display = 'none';
+                if (vid) vid.play();
             };
         }
 
-        // 4. ვიძახებთ შენს ორიგინალ ფუნქციას
+        // 5. შენი ორიგინალი ფუნქციის გამოძახება
         openComments(window.currentFullVideoId);
     }
 }
+
+
 
 // 3. ვიდეოს შენახვა (Bookmark)
 function saveVideoFromFull() {
