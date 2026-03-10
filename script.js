@@ -491,17 +491,17 @@ function openComments(postId, postOwnerId) {
     const commUI = document.getElementById('commentsUI');
     commUI.style.display = 'flex';
     
-    // ვპოულობთ "X" ღილაკს და ვამატებთ დახურვის ლოგიკას
+    // ვპოულობთ "X" ღილაკს და ვასწავლით, რომ დახურვისას ვიდეო ჩართოს
     const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
     if (closeBtn) {
         closeBtn.onclick = function() {
-            // 1. ვხურავთ კომენტარებს
+            // კომენტარების დახურვა
             commUI.style.display = 'none';
             
-            // 2. თუ უკან ვიდეოა (ანუ ოვერლეი ჩანს), ვაგრძელებთ ვიდეოს
-            const videoOverlay = document.getElementById('fullVideoOverlay');
+            // თუ უკან ვიდეოა ჩართული, გააგრძელოს Play
             const vid = document.getElementById('fullVideoTag');
-            if (videoOverlay && videoOverlay.style.display === 'block') {
+            const overlay = document.getElementById('fullVideoOverlay');
+            if (overlay && overlay.style.display === 'block') {
                 if (vid) vid.play();
             }
         };
