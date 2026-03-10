@@ -2911,3 +2911,56 @@ function fixCloseBtn() {
         closeBtn.onclick = closeVideoComments;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let touchStartY = 0;
+let touchEndY = 0;
+
+// ვამატებთ მოსმენას ვიდეოს ოვერლეიზე
+const overlay = document.getElementById('fullVideoOverlay');
+
+overlay.addEventListener('touchstart', e => {
+    touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+overlay.addEventListener('touchend', e => {
+    touchEndY = e.changedTouches[0].screenY;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const swipeDistance = touchStartY - touchEndY;
+    const threshold = 50; // მინიმუმ რამდენი პიქსელი უნდა გასრიალდეს თითი
+
+    if (swipeDistance > threshold) {
+        // Swipe Up (თითი ზემოთ ავწიეთ -> შემდეგი ვიდეო)
+        playNextVideo();
+    } else if (swipeDistance < -threshold) {
+        // Swipe Down (თითი ქვემოთ ჩამოვწიეთ -> წინა ვიდეო)
+        playPrevVideo();
+    }
+}
