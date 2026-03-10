@@ -1213,47 +1213,28 @@ function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
-    // 1. ვიდეოს გაშვება და ფენების გასწორება
     vid.src = url; 
     overlay.style.display = 'block'; 
-    overlay.style.pointerEvents = 'auto'; // ოვერლეიმ უნდა მიიღოს შეხება
-    vid.style.pointerEvents = 'none';    // ვიდეომ არ უნდა დაბლოკოს შეხება
     vid.play();
 
     window.currentFullVideoId = postId; 
 
-    // --- გარანტირებული სქროლვა (Window-ზე, რომ ფენებმა ვერ დაბლოკოს) ---
-    let touchStartY = 0;
-    
-    // ვასუფთავებთ წინა ივენთებს
-    window.ontouchstart = null;
-    window.ontouchend = null;
+    // --- სქროლვის (Swipe) ლოგიკა ---
+    let startY = 0;
+    overlay.ontouchstart = (e) => { startY = e.touches[0].clientY; };
+    overlay.ontouchend = (e) => {
+        let endY = e.changedTouches[0].clientY;
+        let diff = startY - endY;
 
-    window.ontouchstart = (e) => {
-        if (overlay.style.display === 'block') {
-            touchStartY = e.touches[0].clientY;
-        }
-    };
-
-    window.ontouchend = (e) => {
-        if (overlay.style.display !== 'block') return;
-
-        const touchEndY = e.changedTouches[0].clientY;
-        const diff = touchStartY - touchEndY;
-
-        // თუ 50 პიქსელზე მეტია მოძრაობა
-        if (Math.abs(diff) > 50) {
+        if (Math.abs(diff) > 50) { // თუ გასრიალდა 50 პიქსელზე მეტი
             const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
-            let currentIndex = -1;
-            allPosts.forEach((p, index) => {
-                if (p.getAttribute('onclick').includes(window.currentFullVideoId)) {
-                    currentIndex = index;
-                }
-            });
+            const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
 
             if (diff > 0 && currentIndex < allPosts.length - 1) {
+                // Swipe Up -> შემდეგი
                 allPosts[currentIndex + 1].click();
             } else if (diff < 0 && currentIndex > 0) {
+                // Swipe Down -> წინა
                 allPosts[currentIndex - 1].click();
             }
         }
@@ -1265,40 +1246,37 @@ function playFullVideo(url, postId) {
             const data = snap.val();
             if (!data) return;
 
-            // ნახვები
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
 
-            // აღწერა (Caption)
-            const capElem = document.getElementById('fullVideoCaption');
-            if (capElem) capElem.innerText = data.text || "";
-
-            // ავატარი
             const ava = document.getElementById('fullVideoAva');
             if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
 
-            // ლაიქები
+            const lCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
             const lElem = document.getElementById('fullLikeCount');
-            if (lElem) lElem.innerText = data.likedBy ? Object.keys(data.likedBy).length : 0;
+            if (lElem) lElem.innerText = lCount;
 
-            // კომენტარები
             db.ref(`comments/${postId}`).once('value', cSnap => {
                 const cElem = document.getElementById('fullCommCount');
                 if (cElem) cElem.innerText = cSnap.numChildren();
             });
 
-            // ფერები
             const myUid = auth.currentUser.uid;
             const lIcon = document.getElementById('fullLikeIcon');
-            if (lIcon) lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
+            if (lIcon) {
+                lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
+            }
+            
             const sIcon = document.getElementById('fullSaveIcon');
-            if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
+            if (sIcon) {
+                sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
+            }
         });
     }
-} 
+}   
              
 
 
