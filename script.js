@@ -2787,28 +2787,35 @@ function openCommentsFromFull() {
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.querySelector('.video-side-menu'); // გვერდითა მენიუ
+    const sideMenu = document.getElementById('fullSideMenu'); // ID-ით მიმართვა უფრო ზუსტია
 
     if (commUI && videoOverlay) {
-        // 1. მენიუს დამალვა, რომ კომენტარებს არ დაეფაროს
-        if (sideMenu) sideMenu.style.display = 'none';
+        // 1. მენიუს დამალვა
+        if (sideMenu) sideMenu.style.setProperty('display', 'none', 'important');
 
-        // 2. კომენტარების დასმა ვიდეოს შიგნით
+        // 2. კომენტარების დასმა წინ
         videoOverlay.appendChild(commUI);
         commUI.style.display = "flex";
         commUI.style.zIndex = "10000005"; 
         commUI.style.position = "absolute";
 
-        // 3. ვიდეოს პაუზა
+        // 3. პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის ღილაკის ლოგიკა (დახურვისას მენიუ უნდა დაბრუნდეს!)
+        // 4. დახურვის (X) ღილაკის ლოგიკა - დაბრუნება
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
+                // კომენტარების გათიშვა
                 commUI.style.display = 'none';
-                // მენიუს დაბრუნება
-                if (sideMenu) sideMenu.style.display = 'flex';
+                
+                // მენიუს დაბრუნება (ვაიძულებთ გამოჩენას)
+                if (sideMenu) {
+                    sideMenu.style.setProperty('display', 'flex', 'important');
+                    sideMenu.style.visibility = 'visible';
+                    sideMenu.style.opacity = '1';
+                }
+
                 // ვიდეოს გაგრძელება
                 if (vid) vid.play();
             };
