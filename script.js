@@ -2827,18 +2827,6 @@ window.shareVideoFromFull = shareVideoFromFull;
 
 
 
-function closeCommentsAndShowVideo() {
-    // 1. ვმალავთ კომენტარების ფანჯარას
-    document.getElementById('commentsUI').style.display = 'none';
-
-    // 2. ვაბრუნებთ ვიდეოს ხილვადობას და ვაგრძელებთ ჩვენებას
-    const videoOverlay = document.getElementById('fullVideoOverlay');
-    if (videoOverlay && window.currentFullVideoId) {
-        videoOverlay.style.opacity = "1"; // ისევ გამოვაჩინოთ ვიდეო
-        const vid = document.getElementById('fullVideoTag');
-        if (vid) vid.play(); // გავაგრძელოთ ჩვენება
-    }
-}
 
 
 
