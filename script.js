@@ -2964,3 +2964,41 @@ function handleSwipe() {
         playPrevVideo();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function playNextVideo() {
+    const currentId = window.currentFullVideoId;
+    // ვპოულობთ ყველა პოსტს, რომელსაც აქვს onclick ფუნქცია playFullVideo-თი
+    const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
+    const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(currentId));
+
+    if (currentIndex !== -1 && currentIndex < allPosts.length - 1) {
+        const nextPost = allPosts[currentIndex + 1];
+        nextPost.click(); // სიმულაცია დაჭერის, რომ ჩაიტვირთოს ახალი მონაცემები
+    }
+}
+
+function playPrevVideo() {
+    const currentId = window.currentFullVideoId;
+    const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
+    const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(currentId));
+
+    if (currentIndex > 0) {
+        const prevPost = allPosts[currentIndex - 1];
+        prevPost.click();
+    }
+}
