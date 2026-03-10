@@ -2790,37 +2790,34 @@ function openCommentsFromFull() {
     const sideMenu = document.getElementById('fullSideMenu');
 
     if (commUI && videoOverlay) {
-        // 1. მენიუს პრიორიტეტს ვაგდებთ ძირს, რომ კომენტარებს არ გადაეფაროს
-        if (sideMenu) {
-            sideMenu.style.zIndex = "1"; 
-            sideMenu.style.opacity = "0"; // საერთოდ გავაქროთ ხედვიდან
-            sideMenu.style.pointerEvents = "none"; // რომ შემთხვევით არ დაეჭიროს
-        }
-
-        // 2. კომენტარებს ვსვამთ ვიდეოს შიგნით და ვაძლევთ უზარმაზარ z-index-ს
+        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
         videoOverlay.appendChild(commUI);
+
+        // 2. ვშლით ყველანაირ ძველ სტილს და ვაფარებთ ყველაფერს (ვიდეოსაც და ღილაკებსაც)
         commUI.style.display = "flex";
         commUI.style.position = "absolute";
-        commUI.style.zIndex = "999999999"; // მაქსიმალური პრიორიტეტი
+        commUI.style.top = "0";
+        commUI.style.left = "0";
+        commUI.style.width = "100%"; // მთლიანი სიგანე (ღილაკების დასამალად)
+        commUI.style.height = "100%"; // მთლიანი სიმაღლე
+        commUI.style.zIndex = "2147483647"; // მაქსიმალური შესაძლო ინდექსი
+        commUI.style.background = "rgba(0, 0, 0, 0.9)"; // მუქი ფონი, რომ უკანა ღილაკები არ გამოჩნდეს
 
-        // 3. ვიდეოს პაუზა
+        // 3. გვერდითა მენიუს დამალვა (დაზღვევისთვის)
+        if (sideMenu) sideMenu.style.display = 'none';
+
+        // 4. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის (X) ღილაკის ლოგიკა - ყველაფრის დაბრუნება
+        // 5. დახურვის (X) ღილაკის ლოგიკა - ყველაფრის აღდგენა
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
                 // კომენტარების გათიშვა
                 commUI.style.display = 'none';
                 
-                // მენიუს აღდგენა
-                if (sideMenu) {
-                    sideMenu.style.zIndex = "999999"; // დავაბრუნოთ თავის საწყის ინდექსზე
-                    sideMenu.style.opacity = "1";
-                    sideMenu.style.pointerEvents = "auto";
-                }
-
-                // ვიდეოს გაგრძელება
+                // მენიუს და ვიდეოს დაბრუნება
+                if (sideMenu) sideMenu.style.display = 'flex';
                 if (vid) vid.play();
             };
         }
