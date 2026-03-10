@@ -2781,7 +2781,7 @@ function handleLikeFromFull() {
 }
 
 // 2. კომენტარების პანელის გახსნა
-function openCommentsFromFull() {
+ function openCommentsFromFull() {
     if (!window.currentFullVideoId) return;
 
     const commUI = document.getElementById('commentsUI');
@@ -2792,24 +2792,15 @@ function openCommentsFromFull() {
         // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით (რომ უკან არ დაიმალოს)
         videoOverlay.appendChild(commUI);
 
-        // 2. სტილის გასწორება: რომ მთელი ეკრანი არ დაფაროს და ღილაკები გამოჩნდეს
-        commUI.style.position = "absolute";
+        // 2. ვაძლევთ მაღალ პრიორიტეტს, რომ ვიდეოს ზემოდან იჯდეს
         commUI.style.display = "flex";
-        commUI.style.flexDirection = "column";
-        commUI.style.bottom = "0"; // ქვემოდან იწყება
-        commUI.style.top = "auto"; // ზემოდან ადგილი რჩება
-        commUI.style.left = "0";
-        commUI.style.width = "100%";
-        commUI.style.height = "75vh"; // ეკრანის 75%-ს დაიკავებს
         commUI.style.zIndex = "10000005"; 
-        commUI.style.background = "rgba(15, 15, 15, 0.95)"; // ოდნავ გამჭვირვალე მუქი ფონი
-        commUI.style.borderRadius = "20px 20px 0 0"; // მომრგვალებული კუთხეები ზემოთ
-        commUI.style.backdropFilter = "blur(10px)"; // ლამაზი ბლური უკან
+        commUI.style.position = "absolute";
 
         // 3. ვიდეოს გაჩერება
         if (vid) vid.pause();
 
-        // 4. დახურვის (X) ღილაკის გასწორება
+        // 4. დახურვის (X) ღილაკის გასწორება - რომ ვიდეო ჩაირთოს
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
@@ -2818,11 +2809,10 @@ function openCommentsFromFull() {
             };
         }
 
-        // 5. შენი ორიგინალი ფუნქციის გამოძახება მონაცემებისთვის
+        // 5. შენი ორიგინალი ფუნქციის გამოძახება
         openComments(window.currentFullVideoId);
     }
-}
-
+}   
 
 
 // 3. ვიდეოს შენახვა (Bookmark)
