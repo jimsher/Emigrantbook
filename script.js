@@ -2787,33 +2787,37 @@ function openCommentsFromFull() {
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.getElementById('fullSideMenu'); // ID-ით მიმართვა უფრო ზუსტია
+    const sideMenu = document.getElementById('fullSideMenu');
 
     if (commUI && videoOverlay) {
-        // 1. მენიუს დამალვა
-        if (sideMenu) sideMenu.style.setProperty('display', 'none', 'important');
+        // 1. მენიუს პრიორიტეტს ვაგდებთ ძირს, რომ კომენტარებს არ გადაეფაროს
+        if (sideMenu) {
+            sideMenu.style.zIndex = "1"; 
+            sideMenu.style.opacity = "0"; // საერთოდ გავაქროთ ხედვიდან
+            sideMenu.style.pointerEvents = "none"; // რომ შემთხვევით არ დაეჭიროს
+        }
 
-        // 2. კომენტარების დასმა წინ
+        // 2. კომენტარებს ვსვამთ ვიდეოს შიგნით და ვაძლევთ უზარმაზარ z-index-ს
         videoOverlay.appendChild(commUI);
         commUI.style.display = "flex";
-        commUI.style.zIndex = "10000005"; 
         commUI.style.position = "absolute";
+        commUI.style.zIndex = "999999999"; // მაქსიმალური პრიორიტეტი
 
-        // 3. პაუზა
+        // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის (X) ღილაკის ლოგიკა - დაბრუნება
+        // 4. დახურვის (X) ღილაკის ლოგიკა - ყველაფრის დაბრუნება
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
                 // კომენტარების გათიშვა
                 commUI.style.display = 'none';
                 
-                // მენიუს დაბრუნება (ვაიძულებთ გამოჩენას)
+                // მენიუს აღდგენა
                 if (sideMenu) {
-                    sideMenu.style.setProperty('display', 'flex', 'important');
-                    sideMenu.style.visibility = 'visible';
-                    sideMenu.style.opacity = '1';
+                    sideMenu.style.zIndex = "999999"; // დავაბრუნოთ თავის საწყის ინდექსზე
+                    sideMenu.style.opacity = "1";
+                    sideMenu.style.pointerEvents = "auto";
                 }
 
                 // ვიდეოს გაგრძელება
