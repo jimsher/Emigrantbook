@@ -2858,3 +2858,27 @@ window.shareVideoFromFull = shareVideoFromFull;
 
 
 
+// ეს ფუნქცია სპეციალურად ვიდეოს დროს დახურვისთვისაა
+function closeVideoComments() {
+    // 1. ვთიშავთ კომენტარების ფანჯარას
+    document.getElementById('commentsUI').style.display = 'none';
+
+    // 2. თუ უკან ვიდეოს ფანჯარაა, გამოვაჩინოთ და გავაგრძელოთ
+    const overlay = document.getElementById('fullVideoOverlay');
+    const vid = document.getElementById('fullVideoTag');
+    
+    if (overlay && overlay.style.display === 'block') {
+        overlay.style.opacity = "1"; // თუ opacity-თ გვქონდა დამალული
+        if (vid) vid.play(); // ვიდეოს გაგრძელება
+    }
+}
+
+// აი აქ ვპოულობთ შენს "X" ღილაკს და პროგრამულად ვაბამთ ამ ფუნქციას
+// ამას ვუშვებთ ყოველ ჯერზე, როცა ვიდეოდან იხსნება კომენტარები
+function fixCloseBtn() {
+    const commUI = document.getElementById('commentsUI');
+    const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
+    if (closeBtn) {
+        closeBtn.onclick = closeVideoComments;
+    }
+}
