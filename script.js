@@ -2790,34 +2790,36 @@ function openCommentsFromFull() {
     const sideMenu = document.getElementById('fullSideMenu');
 
     if (commUI && videoOverlay) {
-        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
+        // 1. მენიუს ვაიძულებთ, რომ უკანა პლანზე გადავიდეს
+        if (sideMenu) {
+            sideMenu.style.zIndex = "1"; // მინიმალური ინდექსი
+            sideMenu.style.visibility = "hidden"; // სრული გაქრობა
+        }
+
+        // 2. კომენტარების ამოწევა წინ
         videoOverlay.appendChild(commUI);
-
-        // 2. ვშლით ყველანაირ ძველ სტილს და ვაფარებთ ყველაფერს (ვიდეოსაც და ღილაკებსაც)
         commUI.style.display = "flex";
+        commUI.style.zIndex = "99999999"; 
         commUI.style.position = "absolute";
-        commUI.style.top = "0";
-        commUI.style.left = "0";
-        commUI.style.width = "100%"; // მთლიანი სიგანე (ღილაკების დასამალად)
-        commUI.style.height = "100%"; // მთლიანი სიმაღლე
-        commUI.style.zIndex = "2147483647"; // მაქსიმალური შესაძლო ინდექსი
-        commUI.style.background = "rgba(0, 0, 0, 0.9)"; // მუქი ფონი, რომ უკანა ღილაკები არ გამოჩნდეს
+        // აქ აღარ ვწერთ height: 100%, რომ შენი ორიგინალი დიზაინი დარჩეს
 
-        // 3. გვერდითა მენიუს დამალვა (დაზღვევისთვის)
-        if (sideMenu) sideMenu.style.display = 'none';
-
-        // 4. ვიდეოს პაუზა
+        // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 5. დახურვის (X) ღილაკის ლოგიკა - ყველაფრის აღდგენა
+        // 4. დახურვის (X) ღილაკის ლოგიკა - ყველაფრის აღდგენა
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
                 // კომენტარების გათიშვა
                 commUI.style.display = 'none';
                 
-                // მენიუს და ვიდეოს დაბრუნება
-                if (sideMenu) sideMenu.style.display = 'flex';
+                // მენიუს დაბრუნება თავის ადგილზე
+                if (sideMenu) {
+                    sideMenu.style.zIndex = "999999"; 
+                    sideMenu.style.visibility = "visible";
+                }
+
+                // ვიდეოს გაგრძელება
                 if (vid) vid.play();
             };
         }
