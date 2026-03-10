@@ -74,22 +74,34 @@
  }
 
  function toggleLanguage() {
-    // ენების რიგითობა
+    // 1. განსაზღვრე ენების რიგითობა
     const langOrder = ['ka', 'en', 'it', 'ru'];
-    let nextIndex = (langOrder.indexOf(currentLang) + 1) % langOrder.length;
     
+    // 2. იპოვე მიმდინარე ენის ინდექსი და გადადი შემდეგზე
+    let currentIndex = langOrder.indexOf(currentLang);
+    let nextIndex = (currentIndex + 1) % langOrder.length;
     currentLang = langOrder[nextIndex];
 
+    // 3. შეინახე არჩევანი
     localStorage.setItem('appLang', currentLang);
-    applyLanguage();
     
-    // მენიუში ტექსტის განახლება (რომ მომხმარებელმა ნახოს რა ენაა ახლა)
+    // 4. აამუშავე თარგმანი
+    applyLanguage();
+
+    // 5. განაახლე შენი ორიგინალი ღილაკის ტექსტი (langSwitchBtn)
     const langBtn = document.getElementById('langSwitchBtn');
     if (langBtn) {
-        const langLabels = { ka: "KA", en: "EN", it: "IT", ru: "RU" };
-        langBtn.innerText = "Language: " + langLabels[currentLang];
+        // აქ ვწერთ რა ტექსტი გამოჩნდეს ღილაკზე ყოველ გადართვაზე
+        const labels = {
+            'ka': 'ენა: ქართული (KA)',
+            'en': 'Language: English (EN)',
+            'it': 'Lingua: Italiano (IT)',
+            'ru': 'Язык: Русский (RU)'
+        };
+        langBtn.innerText = labels[currentLang];
     }
 
+    // 6. დახურე გვერდითა მენიუ
     toggleSideMenu(false);
 }
  // --- END LANGUAGE LOGIC ---
