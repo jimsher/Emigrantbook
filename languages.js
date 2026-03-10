@@ -40,7 +40,19 @@
  cancel: "Cancel", home: "Home", people: "People", chat: "Chat", profile: "Profile", search_p: "Search emigrant...",
  private_profile: "This profile is private", follow: "Follow", following_btn: "Following", write: "Message"
  }
+  it: {
+    welcome: "BENVENUTO",
+    login: "Accedi",
+    // ... აქ ჩაიწერება იტალიური
+ },
+ ru: {
+    welcome: "ДОБРО ПОЖАЛОВАТЬ",
+    login: "Вход",
+    // ... აქ ჩაიწერება რუსული
+ }
  };
+
+
 
  let currentLang = localStorage.getItem('appLang') || (navigator.language.startsWith('ka') ? 'ka' : 'en');
 
@@ -62,9 +74,22 @@
  }
 
  function toggleLanguage() {
- currentLang = currentLang === 'ka' ? 'en' : 'ka';
- localStorage.setItem('appLang', currentLang);
- applyLanguage();
- toggleSideMenu(false);
- }
+    // ენების რიგითობა
+    const langOrder = ['ka', 'en', 'it', 'ru'];
+    let nextIndex = (langOrder.indexOf(currentLang) + 1) % langOrder.length;
+    
+    currentLang = langOrder[nextIndex];
+
+    localStorage.setItem('appLang', currentLang);
+    applyLanguage();
+    
+    // მენიუში ტექსტის განახლება (რომ მომხმარებელმა ნახოს რა ენაა ახლა)
+    const langBtn = document.getElementById('langSwitchBtn');
+    if (langBtn) {
+        const langLabels = { ka: "KA", en: "EN", it: "IT", ru: "RU" };
+        langBtn.innerText = "Language: " + langLabels[currentLang];
+    }
+
+    toggleSideMenu(false);
+}
  // --- END LANGUAGE LOGIC ---
