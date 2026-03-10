@@ -2664,3 +2664,89 @@ initBeautyFilter();
 
 
 
+
+
+
+
+// ცვლადი, რომელიც დაიმახსოვრებს რომელ ვიდეოს ვუყურებთ
+let currentFullVideoId = null;
+
+function openFullVideo(videoId) {
+    currentFullVideoId = videoId; // ვინახავთ ID-ს სხვა ფუნქციებისთვის
+    
+    db.ref(`all_videos/${videoId}`).once('value', snap => {
+        const data = snap.val();
+        if (!data) return;
+
+        // 1. ვრთავთ ვიდეოს
+        const videoTag = document.getElementById('fullVideoTag');
+        videoTag.src = data.videoUrl;
+        document.getElementById('fullVideoOverlay').style.display = 'block';
+
+        // 2. ვავსებთ ავატარს და სახელს (თუ გაქვს ბაზაში)
+        document.getElementById('fullVideoAva').src = data.userAva || 'https://ui-avatars.com/api/?name=U';
+        
+        // 3. ვავსებთ ციფრებს (ლაიქი და კომენტარი)
+        const likesCount = data.likes ? Object.keys(data.likes).length : 0;
+        const commsCount = data.comments ? Object.keys(data.comments).length : 0;
+        
+        document.getElementById('fullLikeCount').innerText = likesCount;
+        document.getElementById('fullCommCount').innerText = commsCount;
+
+        // 4. ვამოწმებთ ჩვენ უკვე დალაიქებული გვაქვს თუ არა (ფერის შესაცვლელად)
+        const myUid = auth.currentUser.uid;
+        if (data.likes && data.likes[myUid]) {
+            document.getElementById('fullLikeIcon').style.color = '#ff4d4d'; // წითელი
+        } else {
+            document.getElementById('fullLikeIcon').style.color = 'white';
+        }
+    });
+}
+
+
+
+
+
+
+
+
+// ლაიქის ფუნქცია
+function handleLikeFromFull() {
+    if (!currentFullVideoId) return;
+    const myUid = auth.currentUser.uid;
+    const likeRef = db.ref(`all_videos/${currentFullVideoId}/likes/${myUid}`);
+
+    likeRef.once('value', snap => {
+        if (snap.exists()) {
+            likeRef.remove(); // თუ უკვე გვიწერია - ვაშორებთ
+        } else {
+            likeRef.set(true); // თუ არა - ვწერთ
+        }
+        // რეალურ დროში განახლებისთვის (სურვილისამებრ)
+        openFullVideo(currentFullVideoId); 
+    });
+}
+
+// კომენტარების გახსნა
+function openCommentsFromFull() {
+    if (!currentFullVideoId) return;
+    // ვიყენებთ შენს უკვე არსებულ კომენტარების UI-ს
+    openComments(currentFullVideoId); 
+}
+
+// გაზიარება
+function shareVideoFromFull() {
+    const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        alert("ლინკი კოპირებულია!");
+    });
+}
+
+// შენახვა (Bookmark)
+function saveVideoFromFull() {
+    if (!currentFullVideoId) return;
+    const myUid = auth.currentUser.uid;
+    db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`).set(true);
+    document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
+    alert("შენახულია!");
+}
