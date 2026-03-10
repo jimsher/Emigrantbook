@@ -489,22 +489,19 @@ function openComments(postId, postOwnerId) {
     activeReplyTo = null;
     
     const commUI = document.getElementById('commentsUI');
-    
-    // გარანტირებული გამოჩენა (არანაირი გამჭვირვალობა!)
     commUI.style.display = 'flex';
-    commUI.style.opacity = '1';
-    commUI.style.visibility = 'visible';
-
-    // ვპოულობთ დახურვის (X) ღილაკს და ვასწავლით ვიდეოს დაბრუნებას
+    
+    // ვპოულობთ "X" ღილაკს და ვამატებთ დახურვის ლოგიკას
     const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
     if (closeBtn) {
         closeBtn.onclick = function() {
+            // 1. ვხურავთ კომენტარებს
             commUI.style.display = 'none';
-            // თუ უკან ვიდეოა, ვაგრძელებთ
+            
+            // 2. თუ უკან ვიდეოა (ანუ ოვერლეი ჩანს), ვაგრძელებთ ვიდეოს
             const videoOverlay = document.getElementById('fullVideoOverlay');
+            const vid = document.getElementById('fullVideoTag');
             if (videoOverlay && videoOverlay.style.display === 'block') {
-                videoOverlay.style.opacity = "1";
-                const vid = document.getElementById('fullVideoTag');
                 if (vid) vid.play();
             }
         };
@@ -2789,20 +2786,20 @@ function openCommentsFromFull() {
     if (!postId) return;
 
     const commUI = document.getElementById('commentsUI');
-    const videoOverlay = document.getElementById('fullVideoOverlay');
+    const vid = document.getElementById('fullVideoTag');
 
     if (commUI) {
-        // 1. ჯერ ვასუფთავებთ სტილებს, რომ "გამჭვირვალე ფენა" არ დაგვიტოვოს
-        commUI.style.opacity = "1";
-        commUI.style.display = "flex";
-        commUI.style.zIndex = "3000000";
-        document.body.appendChild(commUI); // გადმოვიტანოთ ყველაზე წინ
-
-        // 2. ვიდეოს ვაპაუზებთ, რომ რესურსი არ წაიღოს
-        const vid = document.getElementById('fullVideoTag');
+        // 1. ვიდეოს გაჩერება
         if (vid) vid.pause();
 
-        // 3. ვიძახებთ კომენტარების ჩატვირთვას
+        // 2. კომენტარების ფანჯრის ამოწევა ყველაზე მაღლა (z-index)
+        commUI.style.display = "flex";
+        commUI.style.zIndex = "3000000"; 
+        
+        // 3. გადატანა HTML-ის ბოლოში, რომ ვიდეოს "ზემოდან" დაჯდეს
+        document.body.appendChild(commUI);
+
+        // 4. შენი ორიგინალი კომენტარების ჩატვირთვა
         openComments(postId);
     }
 }
