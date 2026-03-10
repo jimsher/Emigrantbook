@@ -2765,19 +2765,16 @@ function handleLikeFromFull() {
 // 2. კომენტარების პანელის გახსნა
 function openCommentsFromFull() {
     if (window.currentFullVideoId) {
-        const commUI = document.getElementById('commentsUI');
+        // 1. ვმალავთ ვიდეოს ოვერლეის, რომ კომენტარები არ დაიფაროს
+        const videoOverlay = document.getElementById('fullVideoOverlay');
+        if (videoOverlay) videoOverlay.style.opacity = "0"; // ვაქრობთ, მაგრამ არ ვთიშავთ
+
+        // 2. ვხსნით კომენტარებს
+        openComments(window.currentFullVideoId);
+        
+        // 3. ვაპაუზებთ ვიდეოს
         const vid = document.getElementById('fullVideoTag');
-
-        if (commUI) {
-            // 1. დროებით ვუწევთ z-index-ს მაქსიმუმზე
-            commUI.style.zIndex = "2000000";
-            
-            // 2. ვაპაუზებთ ვიდეოს
-            if (vid) vid.pause();
-
-            // 3. ვხსნით კომენტარებს
-            openComments(window.currentFullVideoId);
-        }
+        if (vid) vid.pause();
     }
 }
 
