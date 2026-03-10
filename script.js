@@ -483,16 +483,38 @@ function declineCall() {
 
 
 
-
-
 function openComments(postId, postOwnerId) {
     activePostId = postId;
-    // ვინახავთ პოსტის პატრონის ID-ს გლობალურად
     window.currentPostOwnerId = postOwnerId;
     activeReplyTo = null;
-    document.getElementById('commentsUI').style.display = 'flex';
+    
+    const commUI = document.getElementById('commentsUI');
+    commUI.style.display = 'flex';
+    
+    // თუ ვიდეოს ოვერლეი გახსნილია, ავწიოთ კომენტარები ზემოთ
+    const videoOverlay = document.getElementById('fullVideoOverlay');
+    if (videoOverlay && videoOverlay.style.display === 'block') {
+        document.body.appendChild(commUI); // გადატანა ბოლოში
+        commUI.style.zIndex = "2000000";
+        videoOverlay.style.opacity = "0"; // ვიდეოს დროებით დამალვა
+    }
+
     loadComments(postId);
+
+    // ვაწესებთ ერთჯერად შემოწმებას: როცა commentsUI დაიხურება
+    const checkClosed = setInterval(() => {
+        if (commUI.style.display === 'none') {
+            if (videoOverlay && videoOverlay.style.display === 'block') {
+                videoOverlay.style.opacity = "1"; // ვიდეოს დაბრუნება
+                const vid = document.getElementById('fullVideoTag');
+                if (vid) vid.play();
+            }
+            clearInterval(checkClosed); // ვთიშავთ შემოწმებას
+        }
+    }, 500);
 }
+
+
 
 
 function loadComments(postId, isGallery = false) {
