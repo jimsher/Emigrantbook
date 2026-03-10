@@ -2780,39 +2780,44 @@ function handleLikeFromFull() {
     });
 }
 
-// 2. კომენტარების პანელის გახსნა
- function openCommentsFromFull() {
+// 2. კომენტარების პანელის 
+function openCommentsFromFull() {
     if (!window.currentFullVideoId) return;
 
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
+    const sideMenu = document.querySelector('.video-side-menu'); // გვერდითა მენიუ
 
     if (commUI && videoOverlay) {
-        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით (რომ უკან არ დაიმალოს)
-        videoOverlay.appendChild(commUI);
+        // 1. მენიუს დამალვა, რომ კომენტარებს არ დაეფაროს
+        if (sideMenu) sideMenu.style.display = 'none';
 
-        // 2. ვაძლევთ მაღალ პრიორიტეტს, რომ ვიდეოს ზემოდან იჯდეს
+        // 2. კომენტარების დასმა ვიდეოს შიგნით
+        videoOverlay.appendChild(commUI);
         commUI.style.display = "flex";
         commUI.style.zIndex = "10000005"; 
         commUI.style.position = "absolute";
 
-        // 3. ვიდეოს გაჩერება
+        // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის (X) ღილაკის გასწორება - რომ ვიდეო ჩაირთოს
+        // 4. დახურვის ღილაკის ლოგიკა (დახურვისას მენიუ უნდა დაბრუნდეს!)
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
                 commUI.style.display = 'none';
+                // მენიუს დაბრუნება
+                if (sideMenu) sideMenu.style.display = 'flex';
+                // ვიდეოს გაგრძელება
                 if (vid) vid.play();
             };
         }
 
-        // 5. შენი ორიგინალი ფუნქციის გამოძახება
         openComments(window.currentFullVideoId);
     }
-}   
+}
+ 
 
 
 // 3. ვიდეოს შენახვა (Bookmark)
