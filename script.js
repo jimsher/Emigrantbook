@@ -491,27 +491,24 @@ function openComments(postId, postOwnerId) {
     const commUI = document.getElementById('commentsUI');
     commUI.style.display = 'flex';
     
-    // თუ ვიდეოს ოვერლეი გახსნილია, ავწიოთ კომენტარები ზემოთ
-    const videoOverlay = document.getElementById('fullVideoOverlay');
-    if (videoOverlay && videoOverlay.style.display === 'block') {
-        document.body.appendChild(commUI); // გადატანა ბოლოში
-        commUI.style.zIndex = "2000000";
-        videoOverlay.style.opacity = "0"; // ვიდეოს დროებით დამალვა
-    }
-
-    loadComments(postId);
-
-    // ვაწესებთ ერთჯერად შემოწმებას: როცა commentsUI დაიხურება
-    const checkClosed = setInterval(() => {
-        if (commUI.style.display === 'none') {
+    // აი აქ არის მთავარი: ვპოულობთ შენს "X" ღილაკს და ვასწავლით ვიდეოს დაბრუნებას
+    const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
+    if (closeBtn) {
+        closeBtn.onclick = function() {
+            // 1. ვთიშავთ კომენტარებს
+            commUI.style.display = 'none';
+            
+            // 2. თუ უკან ვიდეოა, ვაბრუნებთ ნორმალურ მდგომარეობაში
+            const videoOverlay = document.getElementById('fullVideoOverlay');
             if (videoOverlay && videoOverlay.style.display === 'block') {
-                videoOverlay.style.opacity = "1"; // ვიდეოს დაბრუნება
+                videoOverlay.style.opacity = "1";
                 const vid = document.getElementById('fullVideoTag');
                 if (vid) vid.play();
             }
-            clearInterval(checkClosed); // ვთიშავთ შემოწმებას
-        }
-    }, 500);
+        };
+    }
+
+    loadComments(postId);
 }
 
 
