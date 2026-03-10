@@ -2765,8 +2765,19 @@ function handleLikeFromFull() {
 // 2. კომენტარების პანელის გახსნა
 function openCommentsFromFull() {
     if (window.currentFullVideoId) {
-        // ვიყენებთ შენს არსებულ openComments ფუნქციას
-        openComments(window.currentFullVideoId);
+        const commUI = document.getElementById('commentsUI');
+        const vid = document.getElementById('fullVideoTag');
+
+        if (commUI) {
+            // 1. დროებით ვუწევთ z-index-ს მაქსიმუმზე
+            commUI.style.zIndex = "2000000";
+            
+            // 2. ვაპაუზებთ ვიდეოს
+            if (vid) vid.pause();
+
+            // 3. ვხსნით კომენტარებს
+            openComments(window.currentFullVideoId);
+        }
     }
 }
 
