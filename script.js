@@ -1209,107 +1209,97 @@ function loadUserVideos(uid) {
 
 
 
- 
- function playFullVideo(url, postId) {
+function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
-    // 1. ვიდეოს გაშვება
+    // 1. ვიდეოს გაშვება და ფენების გასწორება
     vid.src = url; 
     overlay.style.display = 'block'; 
+    overlay.style.pointerEvents = 'auto'; // ოვერლეიმ უნდა მიიღოს შეხება
+    vid.style.pointerEvents = 'none';    // ვიდეომ არ უნდა დაბლოკოს შეხება
     vid.play();
 
-    // 2. ID-ს შენახვა გლობალურად
     window.currentFullVideoId = postId; 
 
-    // --- გარანტირებული სქროლვა (Swipe) ---
-    // ვიყენებთ addEventListener-ს, რომელიც უფრო ძლიერია ვიდრე ontouch
+    // --- გარანტირებული სქროლვა (Window-ზე, რომ ფენებმა ვერ დაბლოკოს) ---
     let touchStartY = 0;
+    
+    // ვასუფთავებთ წინა ივენთებს
+    window.ontouchstart = null;
+    window.ontouchend = null;
 
-    const handleStart = (e) => {
-        touchStartY = e.touches[0].clientY;
+    window.ontouchstart = (e) => {
+        if (overlay.style.display === 'block') {
+            touchStartY = e.touches[0].clientY;
+        }
     };
 
-    const handleEnd = (e) => {
+    window.ontouchend = (e) => {
+        if (overlay.style.display !== 'block') return;
+
         const touchEndY = e.changedTouches[0].clientY;
         const diff = touchStartY - touchEndY;
 
         // თუ 50 პიქსელზე მეტია მოძრაობა
         if (Math.abs(diff) > 50) {
             const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
-            const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
+            let currentIndex = -1;
+            allPosts.forEach((p, index) => {
+                if (p.getAttribute('onclick').includes(window.currentFullVideoId)) {
+                    currentIndex = index;
+                }
+            });
 
             if (diff > 0 && currentIndex < allPosts.length - 1) {
-                // Swipe Up -> შემდეგი
-                removeSwipeListeners();
                 allPosts[currentIndex + 1].click();
             } else if (diff < 0 && currentIndex > 0) {
-                // Swipe Down -> წინა
-                removeSwipeListeners();
                 allPosts[currentIndex - 1].click();
             }
         }
     };
 
-    // ფუნქცია ივენთების მოსახსნელად (რომ არ გაორმაგდეს ყოველ გადასვლაზე)
-    function removeSwipeListeners() {
-        overlay.removeEventListener('touchstart', handleStart);
-        overlay.removeEventListener('touchend', handleEnd);
-    }
-
-    // ვამატებთ ახალ მოსმენას
-    removeSwipeListeners(); 
-    overlay.addEventListener('touchstart', handleStart, { passive: true });
-    overlay.addEventListener('touchend', handleEnd, { passive: true });
-    // -------------------------------------
-
     if (postId) {
-        // 3. ნახვების მომატება
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
-
-        // 4. მონაცემების წამოღება
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
 
-            // ნახვების რაოდენობა
+            // ნახვები
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
 
+            // აღწერა (Caption)
+            const capElem = document.getElementById('fullVideoCaption');
+            if (capElem) capElem.innerText = data.text || "";
+
             // ავატარი
             const ava = document.getElementById('fullVideoAva');
             if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
 
             // ლაიქები
-            const lCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
             const lElem = document.getElementById('fullLikeCount');
-            if (lElem) lElem.innerText = lCount;
+            if (lElem) lElem.innerText = data.likedBy ? Object.keys(data.likedBy).length : 0;
 
-            // კომენტარების რაოდენობა
+            // კომენტარები
             db.ref(`comments/${postId}`).once('value', cSnap => {
                 const cElem = document.getElementById('fullCommCount');
                 if (cElem) cElem.innerText = cSnap.numChildren();
             });
 
-            // გულის ფერი
+            // ფერები
             const myUid = auth.currentUser.uid;
             const lIcon = document.getElementById('fullLikeIcon');
-            if (lIcon) {
-                lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
-            }
-            
-            // შენახვის ფერი
+            if (lIcon) lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
             const sIcon = document.getElementById('fullSaveIcon');
-            if (sIcon) {
-                sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
-            }
+            if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
         });
     }
-}
-            
+} 
+             
 
 
 
