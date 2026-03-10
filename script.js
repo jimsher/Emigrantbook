@@ -1187,56 +1187,57 @@ function loadUserVideos(uid) {
 
 
 
-function playFullVideo(url, postId) { 
+
+
+
+
+function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
-    // 1. ვიდეოს ჩართვა
+    // 1. ვიდეოს გაშვება
     vid.src = url; 
-    overlay.style.display = 'flex'; 
+    overlay.style.display = 'block'; // შენს HTML-ში 'block' გიწერია სტილებში
     vid.play();
 
-    // 2. ნახვების მომატება
-    if (postId) {
-        db.ref(`posts/${postId}/views`).transaction(currentViews => {
-            return (currentViews || 0) + 1;
-        });
+    // 2. ID-ს შენახვა გლობალურად (რომ ლაიქმა იმუშაოს)
+    window.currentFullVideoId = postId; 
 
-        // 3. გვერდითა პანელის მონაცემების შევსება (ახალი ლოგიკა)
-        currentFullVideoId = postId; // ვინახავთ ID-ს ლაიქისთვის
-        
+    if (postId) {
+        // 3. ნახვების მომატება
+        db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
+
+        // 4. მონაცემების წამოღება posts/ რეფერენსიდან
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
 
-            // ავატარის შევსება
-            const avaImg = document.getElementById('fullVideoAva');
-            if (avaImg) avaImg.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
-            
-            // ლაიქების და კომენტარების რაოდენობა
-            const likesCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
-            document.getElementById('fullLikeCount').innerText = likesCount;
-            
-            // კომენტარების რაოდენობის წამოღება ცალკე რეფერენსიდან
+            // ავატარის ჩასმა
+            const ava = document.getElementById('fullVideoAva');
+            if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
+
+            // ლაიქების რაოდენობა
+            const lCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
+            const lElem = document.getElementById('fullLikeCount');
+            if (lElem) lElem.innerText = lCount;
+
+            // კომენტარების რაოდენობა (comments/ რეფერენსიდან)
             db.ref(`comments/${postId}`).once('value', cSnap => {
-                document.getElementById('fullCommCount').innerText = cSnap.numChildren();
+                const cElem = document.getElementById('fullCommCount');
+                if (cElem) cElem.innerText = cSnap.numChildren();
             });
 
-            // ლაიქის და შენახვის ფერების შემოწმება (თუ შესულია მომხმარებელი)
-            if (auth.currentUser) {
-                const myUid = auth.currentUser.uid;
-                
-                // გულის ფერი
-                const likeIcon = document.getElementById('fullLikeIcon');
-                if (likeIcon) {
-                    likeIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
-                }
-
-                // ბუკმარკის ფერი
-                const saveIcon = document.getElementById('fullSaveIcon');
-                if (saveIcon) {
-                    saveIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
-                }
+            // გულის ფერის შემოწმება
+            const myUid = auth.currentUser.uid;
+            const lIcon = document.getElementById('fullLikeIcon');
+            if (lIcon) {
+                lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
+            }
+            
+            // შენახვის ფერის შემოწმება
+            const sIcon = document.getElementById('fullSaveIcon');
+            if (sIcon) {
+                sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
             }
         });
     }
