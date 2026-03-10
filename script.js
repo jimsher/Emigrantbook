@@ -2667,108 +2667,74 @@ initBeautyFilter();
 
 
 
-
-// გლობალური ცვლადი ID-ს შესანახად
 let currentFullVideoId = null;
 
-// 1. ვიდეოს გახსნა და მონაცემების შევსება
 function openFullVideo(videoId) {
+    console.log("ვიდეო იხსნება ID-ით:", videoId);
     currentFullVideoId = videoId;
     
     db.ref(`all_videos/${videoId}`).once('value', snap => {
         const data = snap.val();
         if (!data) return;
 
-        // ოვერლეის გამოჩენა და ვიდეოს ჩართვა
-        const overlay = document.getElementById('fullVideoOverlay');
-        const videoTag = document.getElementById('fullVideoTag');
-        
-        videoTag.src = data.videoUrl;
-        overlay.style.display = 'block';
+        document.getElementById('fullVideoTag').src = data.videoUrl;
+        document.getElementById('fullVideoOverlay').style.display = 'block';
 
-        // ავატარის შევსება
-        document.getElementById('fullVideoAva').src = data.userAva || 'https://ui-avatars.com/api/?name=U';
+        // მონაცემების შევსება
+        document.getElementById('fullVideoAva').src = data.userAva || 'https://ui-avatars.cc/api/?name=U';
         
-        // ლაიქების და კომენტარების რაოდენობა
-        const likesCount = data.likes ? Object.keys(data.likes).length : 0;
-        const commsCount = data.comments ? Object.keys(data.comments).length : 0;
+        const likes = data.likes ? Object.keys(data.likes).length : 0;
+        const comms = data.comments ? Object.keys(data.comments).length : 0;
         
-        document.getElementById('fullLikeCount').innerText = likesCount;
-        document.getElementById('fullCommCount').innerText = commsCount;
+        document.getElementById('fullLikeCount').innerText = likes;
+        document.getElementById('fullCommCount').innerText = comms;
 
-        // ლაიქის სტატუსი (გაწითლება)
+        // ლაიქის ფერი
         const myUid = auth.currentUser.uid;
-        const likeIcon = document.getElementById('fullLikeIcon');
-        if (data.likes && data.likes[myUid]) {
-            likeIcon.style.color = '#ff4d4d';
-        } else {
-            likeIcon.style.color = 'white';
-        }
-
-        // შენახვის სტატუსი (თუ გინდა რომ ფერი შეიცვალოს)
-        db.ref(`users/${myUid}/saved_videos/${videoId}`).once('value', s => {
-            document.getElementById('fullSaveIcon').style.color = s.exists() ? 'var(--gold)' : 'white';
-        });
+        document.getElementById('fullLikeIcon').style.color = (data.likes && data.likes[myUid]) ? '#ff4d4d' : 'white';
     });
 }
 
-// 2. ვიდეოს დახურვა
 function closeFullVideo() {
     const overlay = document.getElementById('fullVideoOverlay');
-    const videoTag = document.getElementById('fullVideoTag');
-    
+    const v = document.getElementById('fullVideoTag');
     overlay.style.display = 'none';
-    videoTag.pause();
-    videoTag.src = ""; // მეხსიერების გასასუფთავებლად
+    v.pause();
+    v.src = "";
     currentFullVideoId = null;
 }
 
-// 3. ლაიქის ლოგიკა (handleLikeFromFull)
 function handleLikeFromFull() {
     if (!currentFullVideoId) return;
     const myUid = auth.currentUser.uid;
-    const likeRef = db.ref(`all_videos/${currentFullVideoId}/likes/${myUid}`);
-
-    likeRef.once('value', snap => {
-        if (snap.exists()) {
-            likeRef.remove();
-        } else {
-            likeRef.set(true);
-        }
-        // მონაცემების მომენტალური განახლება
-        openFullVideo(currentFullVideoId);
+    const ref = db.ref(`all_videos/${currentFullVideoId}/likes/${myUid}`);
+    ref.once('value', s => {
+        s.exists() ? ref.remove() : ref.set(true);
+        openFullVideo(currentFullVideoId); // განახლება
     });
 }
 
-// 4. კომენტარების გახსნა (openCommentsFromFull)
 function openCommentsFromFull() {
-    if (!currentFullVideoId) return;
-    // იყენებს შენს მთავარ openComments ფუნქციას
-    openComments(currentFullVideoId);
+    if (currentFullVideoId) openComments(currentFullVideoId);
 }
 
-// 5. შენახვა (saveVideoFromFull)
 function saveVideoFromFull() {
     if (!currentFullVideoId) return;
     const myUid = auth.currentUser.uid;
-    const saveRef = db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`);
-
-    saveRef.once('value', snap => {
-        if (snap.exists()) {
-            saveRef.remove();
-            document.getElementById('fullSaveIcon').style.color = 'white';
-        } else {
-            saveRef.set(true);
-            document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
-        }
-    });
+    db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`).set(true);
+    document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
 }
 
-// 6. გაზიარება (shareVideoFromFull)
 function shareVideoFromFull() {
     if (!currentFullVideoId) return;
-    const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        alert("ბმული კოპირებულია!");
-    });
+    navigator.clipboard.writeText(window.location.origin + "?v=" + currentFullVideoId);
+    alert("ლინკი კოპირებულია!");
 }
+
+// მნიშვნელოვანი: ვაქცევთ ფუნქციებს გლობალურად, რომ HTML-მა დაინახოს
+window.openFullVideo = openFullVideo;
+window.closeFullVideo = closeFullVideo;
+window.handleLikeFromFull = handleLikeFromFull;
+window.openCommentsFromFull = openCommentsFromFull;
+window.saveVideoFromFull = saveVideoFromFull;
+window.shareVideoFromFull = shareVideoFromFull;
