@@ -1186,20 +1186,67 @@ function loadUserVideos(uid) {
 }
 
 
-function playFullVideo(url, postId) { // დავამატეთ postId პარამეტრი
+
+function playFullVideo(url, postId) { 
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
+    
+    // 1. ვიდეოს ჩართვა
     vid.src = url; 
     overlay.style.display = 'flex'; 
     vid.play();
 
-    // აი ეს კოდი ზრდის ნახვებს ბაზაში:
+    // 2. ნახვების მომატება
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(currentViews => {
             return (currentViews || 0) + 1;
         });
+
+        // 3. გვერდითა პანელის მონაცემების შევსება (ახალი ლოგიკა)
+        currentFullVideoId = postId; // ვინახავთ ID-ს ლაიქისთვის
+        
+        db.ref(`posts/${postId}`).once('value', snap => {
+            const data = snap.val();
+            if (!data) return;
+
+            // ავატარის შევსება
+            const avaImg = document.getElementById('fullVideoAva');
+            if (avaImg) avaImg.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
+            
+            // ლაიქების და კომენტარების რაოდენობა
+            const likesCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
+            document.getElementById('fullLikeCount').innerText = likesCount;
+            
+            // კომენტარების რაოდენობის წამოღება ცალკე რეფერენსიდან
+            db.ref(`comments/${postId}`).once('value', cSnap => {
+                document.getElementById('fullCommCount').innerText = cSnap.numChildren();
+            });
+
+            // ლაიქის და შენახვის ფერების შემოწმება (თუ შესულია მომხმარებელი)
+            if (auth.currentUser) {
+                const myUid = auth.currentUser.uid;
+                
+                // გულის ფერი
+                const likeIcon = document.getElementById('fullLikeIcon');
+                if (likeIcon) {
+                    likeIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
+                }
+
+                // ბუკმარკის ფერი
+                const saveIcon = document.getElementById('fullSaveIcon');
+                if (saveIcon) {
+                    saveIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
+                }
+            }
+        });
     }
 }
+
+
+
+
+
+
 
  function closeFullVideo() {
  const overlay = document.getElementById('fullVideoOverlay');
