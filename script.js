@@ -1230,6 +1230,13 @@ function playFullVideo(url, postId) {
             const data = snap.val();
             if (!data) return;
 
+            // --- ნახვების რაოდენობის გამოტანა (რაც ბადეზეა ის) ---
+            const vText = document.getElementById('fullVideoViewsText');
+            if (vText) {
+                const views = data.views || 0;
+                vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
+            }
+
             // ავატარის ჩასმა
             const ava = document.getElementById('fullVideoAva');
             if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
