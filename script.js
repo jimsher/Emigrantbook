@@ -2668,9 +2668,10 @@ initBeautyFilter();
 
 
 
+// გლობალური ცვლადი ID-ს შესანახად
 let currentFullVideoId = null;
 
-// ფუნქცია, რომელიც ხსნის ვიდეოს და ავსებს შენს მიერ მოცემულ აიდეებს (IDs)
+// 1. ვიდეოს გახსნა და მონაცემების შევსება
 function openFullVideo(videoId) {
     currentFullVideoId = videoId;
     
@@ -2678,32 +2679,51 @@ function openFullVideo(videoId) {
         const data = snap.val();
         if (!data) return;
 
-        // ვიდეოს გაშვება
+        // ოვერლეის გამოჩენა და ვიდეოს ჩართვა
+        const overlay = document.getElementById('fullVideoOverlay');
         const videoTag = document.getElementById('fullVideoTag');
+        
         videoTag.src = data.videoUrl;
-        document.getElementById('fullVideoOverlay').style.display = 'block';
+        overlay.style.display = 'block';
 
-        // შენი HTML-ის აიდეების შევსება
+        // ავატარის შევსება
         document.getElementById('fullVideoAva').src = data.userAva || 'https://ui-avatars.com/api/?name=U';
         
+        // ლაიქების და კომენტარების რაოდენობა
         const likesCount = data.likes ? Object.keys(data.likes).length : 0;
         const commsCount = data.comments ? Object.keys(data.comments).length : 0;
         
         document.getElementById('fullLikeCount').innerText = likesCount;
         document.getElementById('fullCommCount').innerText = commsCount;
 
-        // ლაიქის ფერის შემოწმება
+        // ლაიქის სტატუსი (გაწითლება)
         const myUid = auth.currentUser.uid;
         const likeIcon = document.getElementById('fullLikeIcon');
         if (data.likes && data.likes[myUid]) {
-            likeIcon.style.color = '#ff4d4d'; // გაწითლება
+            likeIcon.style.color = '#ff4d4d';
         } else {
             likeIcon.style.color = 'white';
         }
+
+        // შენახვის სტატუსი (თუ გინდა რომ ფერი შეიცვალოს)
+        db.ref(`users/${myUid}/saved_videos/${videoId}`).once('value', s => {
+            document.getElementById('fullSaveIcon').style.color = s.exists() ? 'var(--gold)' : 'white';
+        });
     });
 }
 
-// 1. ლაიქის ლოგიკა შენი სახელწოდებით: handleLikeFromFull()
+// 2. ვიდეოს დახურვა
+function closeFullVideo() {
+    const overlay = document.getElementById('fullVideoOverlay');
+    const videoTag = document.getElementById('fullVideoTag');
+    
+    overlay.style.display = 'none';
+    videoTag.pause();
+    videoTag.src = ""; // მეხსიერების გასასუფთავებლად
+    currentFullVideoId = null;
+}
+
+// 3. ლაიქის ლოგიკა (handleLikeFromFull)
 function handleLikeFromFull() {
     if (!currentFullVideoId) return;
     const myUid = auth.currentUser.uid;
@@ -2715,28 +2735,36 @@ function handleLikeFromFull() {
         } else {
             likeRef.set(true);
         }
-        // მონაცემების ხელახლა წაკითხვა ეკრანზე ასასახად
+        // მონაცემების მომენტალური განახლება
         openFullVideo(currentFullVideoId);
     });
 }
 
-// 2. კომენტარების ლოგიკა შენი სახელწოდებით: openCommentsFromFull()
+// 4. კომენტარების გახსნა (openCommentsFromFull)
 function openCommentsFromFull() {
     if (!currentFullVideoId) return;
-    // იყენებს შენს მთავარ ფუნქციას openComments, რომელსაც videoId სჭირდება
+    // იყენებს შენს მთავარ openComments ფუნქციას
     openComments(currentFullVideoId);
 }
 
-// 3. შენახვის ლოგიკა შენი სახელწოდებით: saveVideoFromFull()
+// 5. შენახვა (saveVideoFromFull)
 function saveVideoFromFull() {
     if (!currentFullVideoId) return;
     const myUid = auth.currentUser.uid;
-    db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`).set(true).then(() => {
-        document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
+    const saveRef = db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`);
+
+    saveRef.once('value', snap => {
+        if (snap.exists()) {
+            saveRef.remove();
+            document.getElementById('fullSaveIcon').style.color = 'white';
+        } else {
+            saveRef.set(true);
+            document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
+        }
     });
 }
 
-// 4. გაზიარების ლოგიკა შენი სახელწოდებით: shareVideoFromFull()
+// 6. გაზიარება (shareVideoFromFull)
 function shareVideoFromFull() {
     if (!currentFullVideoId) return;
     const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
