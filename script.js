@@ -2791,11 +2791,26 @@ function openCommentsFromFull() {
         // 1. ვაპაუზებთ ვიდეოს
         if (vid) vid.pause();
 
-        // 2. კომენტარების ფანჯარას ვანიჭებთ ვიდეოზე მაღალ პრიორიტეტს
-        commUI.style.zIndex = "2000000"; 
+        // 2. კომენტარების ფანჯარას ვწევთ ყველაზე წინ
+        commUI.style.zIndex = "3000000"; 
         commUI.style.display = "flex";
+        document.body.appendChild(commUI); // ეს ხაზი აუცილებელია, რომ ვიდეოს არ დაეფაროს
 
-        // 3. ვიძახებთ შენს ორიგინალ ფუნქციას
+        // 3. აი აქ ვასწავლით X ღილაკს, რომ ვიდეოც ჩართოს დახურვისას
+        const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
+        if (closeBtn) {
+            closeBtn.onclick = function() {
+                commUI.style.display = 'none'; // იხურება კომენტარები
+                
+                // თუ უკან ვიდეოს ოვერლეი გახსნილია, ვაგრძელებთ Play-ს
+                const overlay = document.getElementById('fullVideoOverlay');
+                if (overlay && overlay.style.display === 'block') {
+                    if (vid) vid.play();
+                }
+            };
+        }
+
+        // 4. ვიძახებთ შენს ორიგინალ ფუნქციას
         openComments(window.currentFullVideoId);
     }
 }
