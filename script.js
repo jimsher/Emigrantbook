@@ -2667,74 +2667,113 @@ initBeautyFilter();
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let currentFullVideoId = null;
 
-function openFullVideo(videoId) {
-    console.log("ვიდეო იხსნება ID-ით:", videoId);
-    currentFullVideoId = videoId;
+// ვიდეოს გახსნის ფუნქცია - შეცვლილია 'posts/' მისამართზე
+function openFullVideo(postId) {
+    console.log("ვიდეო იხსნება ID-ით:", postId);
+    currentFullVideoId = postId;
     
-    db.ref(`all_videos/${videoId}`).once('value', snap => {
+    // ვიყენებთ 'posts' ნაცვლად 'all_videos'-ისა
+    db.ref(`posts/${postId}`).once('value', snap => {
         const data = snap.val();
-        if (!data) return;
+        if (!data) {
+            console.log("შეცდომა: ვიდეო ბაზაში ვერ მოიძებნა posts/ მისამართზე");
+            return;
+        }
 
-        document.getElementById('fullVideoTag').src = data.videoUrl;
-        document.getElementById('fullVideoOverlay').style.display = 'block';
-
-        // მონაცემების შევსება
-        document.getElementById('fullVideoAva').src = data.userAva || 'https://ui-avatars.cc/api/?name=U';
+        const overlay = document.getElementById('fullVideoOverlay');
+        const videoTag = document.getElementById('fullVideoTag');
         
-        const likes = data.likes ? Object.keys(data.likes).length : 0;
-        const comms = data.comments ? Object.keys(data.comments).length : 0;
+        // ვიდეოს ლინკის აღება (შენი სტრუქტურით media[0].url)
+        const videoUrl = (data.media && data.media[0]) ? data.media[0].url : data.videoUrl;
         
-        document.getElementById('fullLikeCount').innerText = likes;
-        document.getElementById('fullCommCount').innerText = comms;
+        videoTag.src = videoUrl;
+        overlay.style.display = 'block';
+        videoTag.play();
 
-        // ლაიქის ფერი
+        // ავატარის და ციფრების შევსება
+        document.getElementById('fullVideoAva').src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
+        
+        const likesCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
+        // კომენტარებს ცალკე რეფერენსიდან ვითვლით სიზუსტისთვის
+        db.ref(`comments/${postId}`).once('value', cSnap => {
+            document.getElementById('fullCommCount').innerText = cSnap.numChildren();
+        });
+        
+        document.getElementById('fullLikeCount').innerText = likesCount;
+
+        // ლაიქის ფერის შემოწმება
         const myUid = auth.currentUser.uid;
-        document.getElementById('fullLikeIcon').style.color = (data.likes && data.likes[myUid]) ? '#ff4d4d' : 'white';
+        const likeIcon = document.getElementById('fullLikeIcon');
+        if (data.likedBy && data.likedBy[myUid]) {
+            likeIcon.style.color = '#ff4d4d';
+        } else {
+            likeIcon.style.color = 'white';
+        }
+
+        // შენახვის ფერის შემოწმება
+        const saveIcon = document.getElementById('fullSaveIcon');
+        if (data.savedBy && data.savedBy[myUid]) {
+            saveIcon.style.color = 'var(--gold)';
+        } else {
+            saveIcon.style.color = 'white';
+        }
     });
 }
 
-function closeFullVideo() {
-    const overlay = document.getElementById('fullVideoOverlay');
-    const v = document.getElementById('fullVideoTag');
-    overlay.style.display = 'none';
-    v.pause();
-    v.src = "";
-    currentFullVideoId = null;
-}
-
+// ლაიქის ლოგიკა - იყენებს შენს react() ფუნქციას
 function handleLikeFromFull() {
     if (!currentFullVideoId) return;
-    const myUid = auth.currentUser.uid;
-    const ref = db.ref(`all_videos/${currentFullVideoId}/likes/${myUid}`);
-    ref.once('value', s => {
-        s.exists() ? ref.remove() : ref.set(true);
-        openFullVideo(currentFullVideoId); // განახლება
+    const postOwnerId = ""; // აქ შეგიძლია დაამატო მფლობელის ID თუ გჭირდება earnAkho-სთვის
+    
+    // ვიყენებთ შენს უკვე არსებულ react ფუნქციას, რომ ლოგიკა ერთი იყოს
+    react(currentFullVideoId, postOwnerId);
+    
+    // მცირე დაყოვნება რომ ბაზამ მოასწროს განახლება და მერე გადავხატავთ ციფრს
+    setTimeout(() => openFullVideo(currentFullVideoId), 500);
+}
+
+// კომენტარების გახსნა
+function openCommentsFromFull() {
+    if (currentFullVideoId) {
+        openComments(currentFullVideoId);
+    }
+}
+
+// შენახვა
+function saveVideoFromFull() {
+    if (!currentFullVideoId) return;
+    toggleSavePost(currentFullVideoId);
+    setTimeout(() => openFullVideo(currentFullVideoId), 500);
+}
+
+// გაზიარება
+function shareVideoFromFull() {
+    if (!currentFullVideoId) return;
+    const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        alert("ბმული კოპირებულია!");
     });
 }
 
-function openCommentsFromFull() {
-    if (currentFullVideoId) openComments(currentFullVideoId);
-}
-
-function saveVideoFromFull() {
-    if (!currentFullVideoId) return;
-    const myUid = auth.currentUser.uid;
-    db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`).set(true);
-    document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
-}
-
-function shareVideoFromFull() {
-    if (!currentFullVideoId) return;
-    navigator.clipboard.writeText(window.location.origin + "?v=" + currentFullVideoId);
-    alert("ლინკი კოპირებულია!");
-}
-
-// მნიშვნელოვანი: ვაქცევთ ფუნქციებს გლობალურად, რომ HTML-მა დაინახოს
-window.openFullVideo = openFullVideo;
-window.closeFullVideo = closeFullVideo;
+// ფუნქციების გლობალურად გატანა
 window.handleLikeFromFull = handleLikeFromFull;
 window.openCommentsFromFull = openCommentsFromFull;
 window.saveVideoFromFull = saveVideoFromFull;
 window.shareVideoFromFull = shareVideoFromFull;
+window.openFullVideo = openFullVideo;
