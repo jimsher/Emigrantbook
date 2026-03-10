@@ -2786,21 +2786,20 @@ function openCommentsFromFull() {
     if (window.currentFullVideoId) {
         const commUI = document.getElementById('commentsUI');
         const videoOverlay = document.getElementById('fullVideoOverlay');
+        const vid = document.getElementById('fullVideoTag');
 
         if (commUI) {
-            // 1. კომენტარების ფანჯრის გადატანა HTML-ის სულ ბოლოში (რომ ფიზიკურად ყველაფერზე მაღლა იყოს)
+            // კომენტარების ამოწევა ყველაზე ზემოთ
             document.body.appendChild(commUI);
-            
-            // 2. ვაძლევთ უზარმაზარ z-index-ს და ვხსნით
-            commUI.style.zIndex = "3000000"; 
+            commUI.style.zIndex = "3000000";
             commUI.style.display = "flex";
 
-            // 3. ვიძახებთ შენს სტანდარტულ ჩატვირთვის ლოგიკას
-            openComments(window.currentFullVideoId);
-            
-            // 4. ვიდეოს დაპაუზება (თუ გინდა რომ ხმამ არ შეგაწუხოს)
-            const vid = document.getElementById('fullVideoTag');
+            // ვიდეოს გაჩერება და ოდნავ ჩამუქება (რომ კომენტარები იკითხებოდეს)
             if (vid) vid.pause();
+            if (videoOverlay) videoOverlay.style.opacity = "0.3"; 
+
+            // შენი ორიგინალი ფუნქციის გამოძახება
+            openComments(window.currentFullVideoId);
         }
     }
 }
