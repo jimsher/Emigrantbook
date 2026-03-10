@@ -2787,39 +2787,31 @@ function openCommentsFromFull() {
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.getElementById('fullSideMenu');
 
     if (commUI && videoOverlay) {
-        // 1. მენიუს ვაიძულებთ, რომ უკანა პლანზე გადავიდეს
-        if (sideMenu) {
-            sideMenu.style.zIndex = "1"; // მინიმალური ინდექსი
-            sideMenu.style.visibility = "hidden"; // სრული გაქრობა
-        }
-
-        // 2. კომენტარების ამოწევა წინ
+        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით (წინ რომ იყოს)
         videoOverlay.appendChild(commUI);
+
+        // 2. დიზაინი: მუქი და ოდნავ გამჭვირვალე ფონი
         commUI.style.display = "flex";
-        commUI.style.zIndex = "99999999"; 
         commUI.style.position = "absolute";
-        // აქ აღარ ვწერთ height: 100%, რომ შენი ორიგინალი დიზაინი დარჩეს
+        commUI.style.zIndex = "9999999";
+        
+        // RGBA: 0,0,0 არის შავი, ხოლო 0.85 არის 85% სიმუქე (15% გამჭვირვალობა)
+        commUI.style.background = "rgba(10, 10, 10, 0.85)"; 
+        
+        // დავამატოთ ბლური (Blur), რომ ტექსტი უკეთ იკითხებოდეს
+        commUI.style.backdropFilter = "blur(8px)";
+        commUI.style.webkitBackdropFilter = "blur(8px)";
 
         // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის (X) ღილაკის ლოგიკა - ყველაფრის აღდგენა
+        // 4. დახურვის ღილაკის ლოგიკა
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
             closeBtn.onclick = function() {
-                // კომენტარების გათიშვა
                 commUI.style.display = 'none';
-                
-                // მენიუს დაბრუნება თავის ადგილზე
-                if (sideMenu) {
-                    sideMenu.style.zIndex = "999999"; 
-                    sideMenu.style.visibility = "visible";
-                }
-
-                // ვიდეოს გაგრძელება
                 if (vid) vid.play();
             };
         }
