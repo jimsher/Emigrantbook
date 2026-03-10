@@ -2839,3 +2839,34 @@ function closeCommentsAndShowVideo() {
         if (vid) vid.play(); // გავაგრძელოთ ჩვენება
     }
 }
+
+
+
+
+
+
+
+
+
+// ვქმნით დამკვირვებელს (Observer), რომელიც მიხვდება როდის დაიხურება კომენტარები
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'style') {
+            const commUI = document.getElementById('commentsUI');
+            const videoOverlay = document.getElementById('fullVideoOverlay');
+            
+            // თუ კომენტარები დაიმალა (display: none) და ვიდეო-ოვერლეი გახსნილია
+            if (commUI.style.display === 'none' && videoOverlay && videoOverlay.style.display === 'block') {
+                videoOverlay.style.opacity = "1"; // ვიდეოს გამოჩენა
+                const vid = document.getElementById('fullVideoTag');
+                if (vid) vid.play(); // ვიდეოს გაგრძელება
+            }
+        }
+    });
+});
+
+// ვრთავთ ამ დამკვირვებელს კომენტარების ფანჯარაზე
+const target = document.getElementById('commentsUI');
+if (target) {
+    observer.observe(target, { attributes: true });
+}
