@@ -489,16 +489,18 @@ function openComments(postId, postOwnerId) {
     activeReplyTo = null;
     
     const commUI = document.getElementById('commentsUI');
-    commUI.style.display = 'flex';
     
-    // აი აქ არის მთავარი: ვპოულობთ შენს "X" ღილაკს და ვასწავლით ვიდეოს დაბრუნებას
+    // გარანტირებული გამოჩენა (არანაირი გამჭვირვალობა!)
+    commUI.style.display = 'flex';
+    commUI.style.opacity = '1';
+    commUI.style.visibility = 'visible';
+
+    // ვპოულობთ დახურვის (X) ღილაკს და ვასწავლით ვიდეოს დაბრუნებას
     const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
     if (closeBtn) {
         closeBtn.onclick = function() {
-            // 1. ვთიშავთ კომენტარებს
             commUI.style.display = 'none';
-            
-            // 2. თუ უკან ვიდეოა, ვაბრუნებთ ნორმალურ მდგომარეობაში
+            // თუ უკან ვიდეოა, ვაგრძელებთ
             const videoOverlay = document.getElementById('fullVideoOverlay');
             if (videoOverlay && videoOverlay.style.display === 'block') {
                 videoOverlay.style.opacity = "1";
@@ -2783,24 +2785,25 @@ function handleLikeFromFull() {
 
 // 2. კომენტარების პანელის გახსნა
 function openCommentsFromFull() {
-    if (window.currentFullVideoId) {
-        const commUI = document.getElementById('commentsUI');
-        const videoOverlay = document.getElementById('fullVideoOverlay');
+    const postId = window.currentFullVideoId;
+    if (!postId) return;
+
+    const commUI = document.getElementById('commentsUI');
+    const videoOverlay = document.getElementById('fullVideoOverlay');
+
+    if (commUI) {
+        // 1. ჯერ ვასუფთავებთ სტილებს, რომ "გამჭვირვალე ფენა" არ დაგვიტოვოს
+        commUI.style.opacity = "1";
+        commUI.style.display = "flex";
+        commUI.style.zIndex = "3000000";
+        document.body.appendChild(commUI); // გადმოვიტანოთ ყველაზე წინ
+
+        // 2. ვიდეოს ვაპაუზებთ, რომ რესურსი არ წაიღოს
         const vid = document.getElementById('fullVideoTag');
+        if (vid) vid.pause();
 
-        if (commUI) {
-            // კომენტარების ამოწევა ყველაზე ზემოთ
-            document.body.appendChild(commUI);
-            commUI.style.zIndex = "3000000";
-            commUI.style.display = "flex";
-
-            // ვიდეოს გაჩერება და ოდნავ ჩამუქება (რომ კომენტარები იკითხებოდეს)
-            if (vid) vid.pause();
-            if (videoOverlay) videoOverlay.style.opacity = "0.3"; 
-
-            // შენი ორიგინალი ფუნქციის გამოძახება
-            openComments(window.currentFullVideoId);
-        }
+        // 3. ვიძახებთ კომენტარების ჩატვირთვას
+        openComments(postId);
     }
 }
 
