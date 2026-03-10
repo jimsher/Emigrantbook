@@ -2729,99 +2729,85 @@ initBeautyFilter();
 
 
 
-let currentFullVideoId = null;
+// 1. ლაიქის (გულის) გაცოცხლება
+function handleLikeFromFull() {
+    const postId = window.currentFullVideoId;
+    if (!postId) return;
 
-// ვიდეოს გახსნის ფუნქცია - შეცვლილია 'posts/' მისამართზე
-function openFullVideo(postId) {
-    console.log("ვიდეო იხსნება ID-ით:", postId);
-    currentFullVideoId = postId;
-    
-    // ვიყენებთ 'posts' ნაცვლად 'all_videos'-ისა
-    db.ref(`posts/${postId}`).once('value', snap => {
-        const data = snap.val();
-        if (!data) {
-            console.log("შეცდომა: ვიდეო ბაზაში ვერ მოიძებნა posts/ მისამართზე");
-            return;
-        }
+    const myUid = auth.currentUser.uid;
+    const likeRef = db.ref(`posts/${postId}/likedBy/${myUid}`);
 
-        const overlay = document.getElementById('fullVideoOverlay');
-        const videoTag = document.getElementById('fullVideoTag');
-        
-        // ვიდეოს ლინკის აღება (შენი სტრუქტურით media[0].url)
-        const videoUrl = (data.media && data.media[0]) ? data.media[0].url : data.videoUrl;
-        
-        videoTag.src = videoUrl;
-        overlay.style.display = 'block';
-        videoTag.play();
-
-        // ავატარის და ციფრების შევსება
-        document.getElementById('fullVideoAva').src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
-        
-        const likesCount = data.likedBy ? Object.keys(data.likedBy).length : 0;
-        // კომენტარებს ცალკე რეფერენსიდან ვითვლით სიზუსტისთვის
-        db.ref(`comments/${postId}`).once('value', cSnap => {
-            document.getElementById('fullCommCount').innerText = cSnap.numChildren();
-        });
-        
-        document.getElementById('fullLikeCount').innerText = likesCount;
-
-        // ლაიქის ფერის შემოწმება
-        const myUid = auth.currentUser.uid;
-        const likeIcon = document.getElementById('fullLikeIcon');
-        if (data.likedBy && data.likedBy[myUid]) {
-            likeIcon.style.color = '#ff4d4d';
+    likeRef.once('value', snap => {
+        if (snap.exists()) {
+            // თუ უკვე დალაიქებულია - ვაშორებთ
+            likeRef.remove();
         } else {
-            likeIcon.style.color = 'white';
+            // თუ არ არის - ვამატებთ (შენი სტრუქტურით: ტიპი, ფოტო, სახელი)
+            likeRef.set({ 
+                type: '❤️', 
+                photo: myPhoto, 
+                name: myName 
+            });
+            
+            // ტოკენების ლოგიკა (თუ სხვისია, დაერიცხოს 2.00)
+            db.ref(`posts/${postId}`).once('value', pSnap => {
+                const post = pSnap.val();
+                if (post && post.authorId !== myUid) {
+                    earnAkho(post.authorId, 2.00, 'Impact (Like from Full)');
+                }
+            });
         }
-
-        // შენახვის ფერის შემოწმება
-        const saveIcon = document.getElementById('fullSaveIcon');
-        if (data.savedBy && data.savedBy[myUid]) {
-            saveIcon.style.color = 'var(--gold)';
-        } else {
-            saveIcon.style.color = 'white';
-        }
+        // ეკრანზე ციფრების მომენტალური განახლება
+        setTimeout(() => playFullVideo(document.getElementById('fullVideoTag').src, postId), 300);
     });
 }
 
-// ლაიქის ლოგიკა - იყენებს შენს react() ფუნქციას
-function handleLikeFromFull() {
-    if (!currentFullVideoId) return;
-    const postOwnerId = ""; // აქ შეგიძლია დაამატო მფლობელის ID თუ გჭირდება earnAkho-სთვის
-    
-    // ვიყენებთ შენს უკვე არსებულ react ფუნქციას, რომ ლოგიკა ერთი იყოს
-    react(currentFullVideoId, postOwnerId);
-    
-    // მცირე დაყოვნება რომ ბაზამ მოასწროს განახლება და მერე გადავხატავთ ციფრს
-    setTimeout(() => openFullVideo(currentFullVideoId), 500);
-}
-
-// კომენტარების გახსნა
+// 2. კომენტარების პანელის გახსნა
 function openCommentsFromFull() {
-    if (currentFullVideoId) {
-        openComments(currentFullVideoId);
+    if (window.currentFullVideoId) {
+        // ვიყენებთ შენს არსებულ openComments ფუნქციას
+        openComments(window.currentFullVideoId);
     }
 }
 
-// შენახვა
+// 3. ვიდეოს შენახვა (Bookmark)
 function saveVideoFromFull() {
-    if (!currentFullVideoId) return;
-    toggleSavePost(currentFullVideoId);
-    setTimeout(() => openFullVideo(currentFullVideoId), 500);
-}
+    const postId = window.currentFullVideoId;
+    if (!postId) return;
 
-// გაზიარება
-function shareVideoFromFull() {
-    if (!currentFullVideoId) return;
-    const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        alert("ბმული კოპირებულია!");
+    const myUid = auth.currentUser.uid;
+    const saveRef = db.ref(`posts/${postId}/savedBy/${myUid}`);
+
+    saveRef.once('value', snap => {
+        if (snap.exists()) {
+            saveRef.remove();
+            document.getElementById('fullSaveIcon').style.color = 'white';
+        } else {
+            saveRef.set(true);
+            document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
+        }
     });
 }
 
-// ფუნქციების გლობალურად გატანა
+// 4. გაზიარება (Share)
+function shareVideoFromFull() {
+    if (!window.currentFullVideoId) return;
+    
+    const shareUrl = window.location.origin + "?v=" + window.currentFullVideoId;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'EmigrantBook Video',
+            url: shareUrl
+        }).catch(err => console.log(err));
+    } else {
+        navigator.clipboard.writeText(shareUrl);
+        alert("ბმული კოპირებულია!");
+    }
+}
+
+// აუცილებელია: ფუნქციების გატანა window-ზე, რომ HTML-მა "დაინახოს"
 window.handleLikeFromFull = handleLikeFromFull;
 window.openCommentsFromFull = openCommentsFromFull;
 window.saveVideoFromFull = saveVideoFromFull;
 window.shareVideoFromFull = shareVideoFromFull;
-window.openFullVideo = openFullVideo;
