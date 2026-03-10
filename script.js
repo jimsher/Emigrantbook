@@ -2789,20 +2789,20 @@ function openCommentsFromFull() {
     const vid = document.getElementById('fullVideoTag');
 
     if (commUI && videoOverlay) {
-        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით (წინ რომ იყოს)
+        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
         videoOverlay.appendChild(commUI);
 
-        // 2. დიზაინი: მუქი და ოდნავ გამჭვირვალე ფონი
+        // 2. დიზაინი: უფრო მეტი გამჭვირვალობა
         commUI.style.display = "flex";
         commUI.style.position = "absolute";
         commUI.style.zIndex = "9999999";
         
-        // RGBA: 0,0,0 არის შავი, ხოლო 0.85 არის 85% სიმუქე (15% გამჭვირვალობა)
-        commUI.style.background = "rgba(10, 10, 10, 0.85)"; 
+        // 0.6 ნიშნავს 60% სიმუქეს, ანუ 40% გამჭვირვალეა
+        commUI.style.background = "rgba(0, 0, 0, 0.6)"; 
         
-        // დავამატოთ ბლური (Blur), რომ ტექსტი უკეთ იკითხებოდეს
-        commUI.style.backdropFilter = "blur(8px)";
-        commUI.style.webkitBackdropFilter = "blur(8px)";
+        // ბლური გავაძლიერე 15px-მდე უფრო "Premium" ეფექტისთვის
+        commUI.style.backdropFilter = "blur(15px)";
+        commUI.style.webkitBackdropFilter = "blur(15px)";
 
         // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
