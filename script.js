@@ -1210,7 +1210,7 @@ function loadUserVideos(uid) {
 
 
  
-function playFullVideo(url, postId) {
+ function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
@@ -1222,40 +1222,46 @@ function playFullVideo(url, postId) {
     // 2. ID-ს შენახვა გლობალურად
     window.currentFullVideoId = postId; 
 
-    // --- გარანტირებული სქროლვა (Window-ზე მიბმული) ---
+    // --- გარანტირებული სქროლვა (Swipe) ---
+    // ვიყენებთ addEventListener-ს, რომელიც უფრო ძლიერია ვიდრე ontouch
     let touchStartY = 0;
 
-    // ვასუფთავებთ ძველ ივენთებს, რომ არ გაორმაგდეს
-    window.ontouchstart = null;
-    window.ontouchend = null;
-
-    // მხოლოდ მაშინ იმუშაოს, როცა ოვერლეი ღიაა
-    window.ontouchstart = (e) => {
-        if (overlay.style.display === 'block') {
-            touchStartY = e.touches[0].clientY;
-        }
+    const handleStart = (e) => {
+        touchStartY = e.touches[0].clientY;
     };
 
-    window.ontouchend = (e) => {
-        if (overlay.style.display !== 'block') return;
-
+    const handleEnd = (e) => {
         const touchEndY = e.changedTouches[0].clientY;
         const diff = touchStartY - touchEndY;
 
-        if (Math.abs(diff) > 50) { 
+        // თუ 50 პიქსელზე მეტია მოძრაობა
+        if (Math.abs(diff) > 50) {
             const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
             const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
 
             if (diff > 0 && currentIndex < allPosts.length - 1) {
                 // Swipe Up -> შემდეგი
+                removeSwipeListeners();
                 allPosts[currentIndex + 1].click();
             } else if (diff < 0 && currentIndex > 0) {
                 // Swipe Down -> წინა
+                removeSwipeListeners();
                 allPosts[currentIndex - 1].click();
             }
         }
     };
-    // ---------------------------------------------
+
+    // ფუნქცია ივენთების მოსახსნელად (რომ არ გაორმაგდეს ყოველ გადასვლაზე)
+    function removeSwipeListeners() {
+        overlay.removeEventListener('touchstart', handleStart);
+        overlay.removeEventListener('touchend', handleEnd);
+    }
+
+    // ვამატებთ ახალ მოსმენას
+    removeSwipeListeners(); 
+    overlay.addEventListener('touchstart', handleStart, { passive: true });
+    overlay.addEventListener('touchend', handleEnd, { passive: true });
+    // -------------------------------------
 
     if (postId) {
         // 3. ნახვების მომატება
@@ -1302,7 +1308,7 @@ function playFullVideo(url, postId) {
             }
         });
     }
-}            
+}
             
 
 
