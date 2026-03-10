@@ -2937,68 +2937,56 @@ function fixCloseBtn() {
 
 
 
+// 1. ცვლადები თითის მოძრაობის დასაფიქსირებლად
 let touchStartY = 0;
 let touchEndY = 0;
 
-// ვამატებთ მოსმენას ვიდეოს ოვერლეიზე
-const overlay = document.getElementById('fullVideoOverlay');
-
-overlay.addEventListener('touchstart', e => {
-    touchStartY = e.changedTouches[0].screenY;
-}, { passive: true });
-
-overlay.addEventListener('touchend', e => {
-    touchEndY = e.changedTouches[0].screenY;
-    handleSwipe();
-}, { passive: true });
-
-function handleSwipe() {
-    const swipeDistance = touchStartY - touchEndY;
-    const threshold = 50; // მინიმუმ რამდენი პიქსელი უნდა გასრიალდეს თითი
-
-    if (swipeDistance > threshold) {
-        // Swipe Up (თითი ზემოთ ავწიეთ -> შემდეგი ვიდეო)
-        playNextVideo();
-    } else if (swipeDistance < -threshold) {
-        // Swipe Down (თითი ქვემოთ ჩამოვწიეთ -> წინა ვიდეო)
-        playPrevVideo();
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function playNextVideo() {
+// 2. ერთიანი ფუნქცია ნავიგაციისთვის
+function navigateVideo(direction) {
     const currentId = window.currentFullVideoId;
-    // ვპოულობთ ყველა პოსტს, რომელსაც აქვს onclick ფუნქცია playFullVideo-თი
+    if (!currentId) return;
+
+    // ვპოულობთ ყველა ელემენტს, რომელსაც onclick-ში უწერია playFullVideo
     const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
     const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(currentId));
 
-    if (currentIndex !== -1 && currentIndex < allPosts.length - 1) {
-        const nextPost = allPosts[currentIndex + 1];
-        nextPost.click(); // სიმულაცია დაჭერის, რომ ჩაიტვირთოს ახალი მონაცემები
+    if (direction === 'next') {
+        if (currentIndex < allPosts.length - 1) {
+            allPosts[currentIndex + 1].click();
+        } else {
+            console.log("ბოლო ვიდეოა");
+        }
+    } else if (direction === 'prev') {
+        if (currentIndex > 0) {
+            allPosts[currentIndex - 1].click();
+        } else {
+            console.log("პირველი ვიდეოა");
+        }
     }
 }
 
-function playPrevVideo() {
-    const currentId = window.currentFullVideoId;
-    const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
-    const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(currentId));
+// 3. ივენთების მიბმა ოვერლეიზე
+// ვიყენებთ window-ს, რომ გარანტირებულად იპოვოს ელემენტი
+window.addEventListener('load', () => {
+    const overlay = document.getElementById('fullVideoOverlay');
+    
+    if (overlay) {
+        overlay.addEventListener('touchstart', e => {
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
 
-    if (currentIndex > 0) {
-        const prevPost = allPosts[currentIndex - 1];
-        prevPost.click();
+        overlay.addEventListener('touchend', e => {
+            touchEndY = e.changedTouches[0].screenY;
+            const swipeDistance = touchStartY - touchEndY;
+            const threshold = 50; // მინიმალური მანძილი გასასრიალებლად
+
+            if (Math.abs(swipeDistance) > threshold) {
+                if (swipeDistance > 0) {
+                    navigateVideo('next'); // თითი ზემოთ - შემდეგი
+                } else {
+                    navigateVideo('prev'); // თითი ქვემოთ - წინა
+                }
+            }
+        }, { passive: true });
     }
-}
+});
