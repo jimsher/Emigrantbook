@@ -2668,49 +2668,42 @@ initBeautyFilter();
 
 
 
-// ცვლადი, რომელიც დაიმახსოვრებს რომელ ვიდეოს ვუყურებთ
 let currentFullVideoId = null;
 
+// ფუნქცია, რომელიც ხსნის ვიდეოს და ავსებს შენს მიერ მოცემულ აიდეებს (IDs)
 function openFullVideo(videoId) {
-    currentFullVideoId = videoId; // ვინახავთ ID-ს სხვა ფუნქციებისთვის
+    currentFullVideoId = videoId;
     
     db.ref(`all_videos/${videoId}`).once('value', snap => {
         const data = snap.val();
         if (!data) return;
 
-        // 1. ვრთავთ ვიდეოს
+        // ვიდეოს გაშვება
         const videoTag = document.getElementById('fullVideoTag');
         videoTag.src = data.videoUrl;
         document.getElementById('fullVideoOverlay').style.display = 'block';
 
-        // 2. ვავსებთ ავატარს და სახელს (თუ გაქვს ბაზაში)
+        // შენი HTML-ის აიდეების შევსება
         document.getElementById('fullVideoAva').src = data.userAva || 'https://ui-avatars.com/api/?name=U';
         
-        // 3. ვავსებთ ციფრებს (ლაიქი და კომენტარი)
         const likesCount = data.likes ? Object.keys(data.likes).length : 0;
         const commsCount = data.comments ? Object.keys(data.comments).length : 0;
         
         document.getElementById('fullLikeCount').innerText = likesCount;
         document.getElementById('fullCommCount').innerText = commsCount;
 
-        // 4. ვამოწმებთ ჩვენ უკვე დალაიქებული გვაქვს თუ არა (ფერის შესაცვლელად)
+        // ლაიქის ფერის შემოწმება
         const myUid = auth.currentUser.uid;
+        const likeIcon = document.getElementById('fullLikeIcon');
         if (data.likes && data.likes[myUid]) {
-            document.getElementById('fullLikeIcon').style.color = '#ff4d4d'; // წითელი
+            likeIcon.style.color = '#ff4d4d'; // გაწითლება
         } else {
-            document.getElementById('fullLikeIcon').style.color = 'white';
+            likeIcon.style.color = 'white';
         }
     });
 }
 
-
-
-
-
-
-
-
-// ლაიქის ფუნქცია
+// 1. ლაიქის ლოგიკა შენი სახელწოდებით: handleLikeFromFull()
 function handleLikeFromFull() {
     if (!currentFullVideoId) return;
     const myUid = auth.currentUser.uid;
@@ -2718,35 +2711,36 @@ function handleLikeFromFull() {
 
     likeRef.once('value', snap => {
         if (snap.exists()) {
-            likeRef.remove(); // თუ უკვე გვიწერია - ვაშორებთ
+            likeRef.remove();
         } else {
-            likeRef.set(true); // თუ არა - ვწერთ
+            likeRef.set(true);
         }
-        // რეალურ დროში განახლებისთვის (სურვილისამებრ)
-        openFullVideo(currentFullVideoId); 
+        // მონაცემების ხელახლა წაკითხვა ეკრანზე ასასახად
+        openFullVideo(currentFullVideoId);
     });
 }
 
-// კომენტარების გახსნა
+// 2. კომენტარების ლოგიკა შენი სახელწოდებით: openCommentsFromFull()
 function openCommentsFromFull() {
     if (!currentFullVideoId) return;
-    // ვიყენებთ შენს უკვე არსებულ კომენტარების UI-ს
-    openComments(currentFullVideoId); 
+    // იყენებს შენს მთავარ ფუნქციას openComments, რომელსაც videoId სჭირდება
+    openComments(currentFullVideoId);
 }
 
-// გაზიარება
-function shareVideoFromFull() {
-    const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        alert("ლინკი კოპირებულია!");
-    });
-}
-
-// შენახვა (Bookmark)
+// 3. შენახვის ლოგიკა შენი სახელწოდებით: saveVideoFromFull()
 function saveVideoFromFull() {
     if (!currentFullVideoId) return;
     const myUid = auth.currentUser.uid;
-    db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`).set(true);
-    document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
-    alert("შენახულია!");
+    db.ref(`users/${myUid}/saved_videos/${currentFullVideoId}`).set(true).then(() => {
+        document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
+    });
+}
+
+// 4. გაზიარების ლოგიკა შენი სახელწოდებით: shareVideoFromFull()
+function shareVideoFromFull() {
+    if (!currentFullVideoId) return;
+    const shareUrl = window.location.origin + "?v=" + currentFullVideoId;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        alert("ბმული კოპირებულია!");
+    });
 }
