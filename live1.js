@@ -17,7 +17,7 @@ const auth = firebase.auth();
 
 // --- 2. გლობალური ცვლადები ---
 const agoraAppId = "7290502fac7f4feb82b021ccde79988a"; 
-const agoraToken = "აქ_ჩასვი_შენი_ტოკენი"; // <-- ჩაწერე აგორას კონსოლიდან აღებული ტოკენი აქ
+const agoraToken = "007eJxTYPB/MDWs88rPCInZChNLf+4RTfT/WCFRKRYpfL10H/+KM8sUGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwS51ZuzGwIZGQ49uArKyMDBIL43Aw5mWWp8cUlRamJuQwMAIJjJCI="; // <-- ჩაწერე აგორას კონსოლიდან აღებული ტოკენი აქ
 const channelName = "emigrantbook_battle_room";
 
 let agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
