@@ -54,26 +54,45 @@
 
 
         
-/* სანამ მარტო ხარ */
+/* მთავარი კონტეინერი */
 #video-container {
-    display: block;
+    position: relative;
     width: 100%;
     height: 100vh;
+    background: #000;
+    display: block; /* თავიდან იყოს ერთიანი */
+    transition: all 0.3s ease;
 }
-#local-player { width: 100%; height: 100%; object-fit: cover; }
-#remote-player { display: none; }
 
-/* როცა სტუმარი შემოვა (გაყოფილი ეკრანი) */
-#video-container.split-screen {
-    display: flex;
-    flex-direction: row; /* გვერდიგვერდ */
+/* შენი ვიდეო (Local Player) */
+#local-player {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
 }
+
+/* სტუმრის ვიდეო (Remote Player) - თავიდან დამალულია */
+#remote-player {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* აი ეს არის მთავარი: როცა სტუმარი შემოვა, JS დაამატებს ამ კლასს */
+#video-container.split-screen {
+    display: flex; /* გვერდიგვერდ დაალაგებს */
+    flex-direction: row;
+    align-items: center;
+}
+
 #video-container.split-screen #local-player,
 #video-container.split-screen #remote-player {
     display: block;
-    width: 50%;
-    height: 50vh; /* ან სასურველი სიმაღლე PK-ს დროს */
-    border: 1px solid #fff;
+    width: 50%; /* ზუსტად შუაზე გაყოფს */
+    height: 50vh; /* PK-ს სიმაღლე */
+    border: 2px solid #fff;
+    object-fit: cover;
 }
     </style>
 </head>
