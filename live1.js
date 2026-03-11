@@ -3,26 +3,29 @@
 const agoraAppId = "INSERT_YOUR_AGORA_APP_ID"; 
 const channelName = "emigrantbook_battle_room";
 
-// 2. Firebase (ჩასვი შენი Config მონაცემები Firebase Console-დან)
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "emigrantbook.firebaseapp.com",
-    databaseURL: "https://emigrantbook-default-rtdb.firebaseio.com",
-    projectId: "emigrantbook",
-    storageBucket: "emigrantbook.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+// 2. Firebase (შენი ორიგინალი მონაცემები)
+const firebaseConfig = { 
+  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+  authDomain: "emigrantbook.firebaseapp.com", 
+  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+  projectId: "emigrantbook", 
+  storageBucket: "emigrantbook.firebasestorage.app",
+  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
 };
 
 // ინიციალიზაცია
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 const auth = firebase.auth();
+const storage = firebase.storage();
 
 let agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let localTracks = { videoTrack: null, audioTrack: null };
 let currentUser = null;
 let currentBattleId = null;
+let battleTimer = null; // ტაიმერის ცვლადი
 
 // PK ქულების ლოგიკა
 let scores = { host: 0, guest: 0 };
@@ -80,6 +83,15 @@ function setupBattleSync() {
         }
         if (mediaType === "audio") user.audioTrack.play();
     });
+
+    // 3.3 მოსმენა ბრძოლის ტაიმერზე
+    db.ref('live_battles/' + channelName + '/timer').on('value', (snapshot) => {
+        const timeLeft = snapshot.val();
+        if (timeLeft && timeLeft > 0) {
+            console.log("ბრძოლის დასრულებამდე დარჩა: " + timeLeft);
+            // აქ შეგიძლია ტაიმერი გამოაჩინო ეკრანზე
+        }
+    });
 }
 
 // --- 4. ქულების ბარის განახლება (Tiktok PK style) ---
@@ -105,9 +117,11 @@ document.getElementById('gift-btn').onclick = () => {
 function sendGift(points, type) {
     if (!currentUser) return;
     
-    // ქულის მომატება Firebase-ში (მაგალითად მასპინძელს ვჩუქნით)
-    const newHostScore = scores.host + points;
-    db.ref('live_battles/' + channelName + '/scores').update({ host: newHostScore });
+    // ქულის მომატება Firebase-ში ტრანზაქციით (უსაფრთხოებისთვის)
+    const scoreRef = db.ref('live_battles/' + channelName + '/scores/host');
+    scoreRef.transaction((currentScore) => {
+        return (currentScore || 0) + points;
+    });
     
     // ჩატში შეტყობინების გაგზავნა
     sendChatMessage(`🎁 აჩუქა ${type.toUpperCase()} (+${points})`);
@@ -155,12 +169,31 @@ document.getElementById('leave-btn').onclick = async () => {
     window.location.href = "/"; // მთავარზე დაბრუნება
 };
 
-// PK ბრძოლის დაწყების დემო (მაგალითად, ადმინი იწყებს)
+// PK ბრძოლის დაწყება (ტაიმერით)
 document.getElementById('pk-btn').onclick = () => {
+    const battleDuration = 300; // 5 წუთი
     db.ref('live_battles/' + channelName).set({
         status: "active",
         scores: { host: 0, guest: 0 },
+        timer: battleDuration,
         timestamp: Date.now()
     });
+    
     sendChatMessage("⚔️ PK ბრძოლა დაიწყო!");
+    startBattleTimer(battleDuration);
 };
+
+// ბრძოლის ტაიმერის ფუნქცია
+function startBattleTimer(duration) {
+    let timeLeft = duration;
+    clearInterval(battleTimer);
+    battleTimer = setInterval(() => {
+        timeLeft--;
+        db.ref('live_battles/' + channelName + '/timer').set(timeLeft);
+        if (timeLeft <= 0) {
+            clearInterval(battleTimer);
+            db.ref('live_battles/' + channelName).update({ status: "finished" });
+            sendChatMessage("🏁 ბრძოლა დასრულდა!");
+        }
+    }, 1000);
+}
