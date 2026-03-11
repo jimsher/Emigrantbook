@@ -21,15 +21,7 @@
  private_profile: "ეს პროფილი პრივატულია", follow: "გამოწერა", following_btn: "გამოწერილია", write: "მიწერა"
 
 
-  impact_store: "IMPACT STORE",
-all: "ყველა",
-my_orders: "ჩემი შეკვეთები",
-clothing: "ტანსაცმელი",
-watches: "საათები",
-digital: "ციფრული",
-physical: "ნივთები",
-vip: "VIP",
-close_btn: "← დახურვა"
+  
  },
  en: {
  welcome: "WELCOME", ob_desc1: "Welcome to a space where every idea turns into a result. Our platform is based on real Impact.", next: "Next",
@@ -53,15 +45,7 @@ close_btn: "← დახურვა"
 
 
 
-  impact_store: "IMPACT STORE",
-all: "All",
-my_orders: "My Orders",
-clothing: "Clothing",
-watches: "Watches",
-digital: "Digital",
-physical: "Items",
-vip: "VIP",
-close_btn: "← Close"
+  
  },
 
      // --- ITALIANO ---
@@ -86,15 +70,7 @@ it: {
     private_profile: "Profilo privato", follow: "Segui", following_btn: "Seguito", write: "Messaggio"
 
 
- impact_store: "IMPACT STORE",
-all: "Tutti",
-my_orders: "I miei ordini",
-clothing: "Abbigliamento",
-watches: "Orologi",
-digital: "Digitale",
-physical: "Oggetti",
-vip: "VIP",
-close_btn: "← Chiudi"
+ 
 },
 
 // --- RUSSIAN ---
@@ -119,15 +95,7 @@ ru: {
     private_profile: "Это приватный профиль", follow: "Подписаться", following_btn: "Подписки", write: "Написать"
 
 
- impact_store: "IMPACT STORE",
-all: "Все",
-my_orders: "Мои заказы",
-clothing: "Одежда",
-watches: "Часы",
-digital: "Цифровые",
-physical: "Товары",
-vip: "VIP",
-close_btn: "← Закрыть"
+ 
 },
  };
 
