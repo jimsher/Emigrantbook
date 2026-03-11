@@ -16,7 +16,7 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 // --- 2. გლობალური ცვლადები ---
-const agoraAppId = "ჯერ_ცარიელია"; // აქ მერე ჩაწერ
+const agoraAppId = "7290502fac7f4feb82b021ccde79988a"; // აქ მერე ჩაწერ
 const channelName = "emigrantbook_battle_room";
 
 let agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
