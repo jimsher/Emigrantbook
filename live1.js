@@ -16,7 +16,7 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 // --- 2. გლობალური ცვლადები ---
-const agoraAppId = "7290502fac7f4feb82b021ccde79988a"; // აქ მერე ჩაწერ
+const agoraAppId = "7290502fac7f4feb82b021ccde79988a"; 
 const channelName = "emigrantbook_battle_room";
 
 let agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
@@ -25,47 +25,47 @@ let currentUser = null;
 let battleTimer = null;
 let scores = { host: 0, guest: 0 };
 
+// --- დამხმარე ფუნქცია რეალური მონაცემების წამოსაღებად ---
+async function fetchRealUserData(uid) {
+    const snapshot = await db.ref('users/' + uid).once('value');
+    const data = snapshot.val();
+    return {
+        username: data?.username || auth.currentUser.displayName || "სტუმარი",
+        profilePic: data?.profilePic || auth.currentUser.photoURL || "https://emigrantbook.com/default-avatar.png"
+    };
+}
+
 // --- 3. ავტორიზაციის კონტროლი ---
-auth.onAuthStateChanged((user) => {
+auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
 
-        // აქ ვიღებთ რეალურ სახელს Firebase Auth-დან
-        const realName = user.displayName;
-        const realPhoto = user.photoURL;
+        // რეალური მონაცემების ამოღება
+        const userData = await fetchRealUserData(user.uid);
 
-        // ვამოწმებთ, რომ სახელი ნამდვილად არსებობს
-        if (realName) {
-            document.getElementById('user-name').innerText = realName;
-        } else {
-            // თუ Auth-ში სახელი არაა, ვეძებთ შენს 'users' ბაზაში UID-ით
-            db.ref('users/' + user.uid).once('value').then((snapshot) => {
-                const userData = snapshot.val();
-                if (userData && userData.username) {
-                    document.getElementById('user-name').innerText = userData.username;
-                }
-            });
-        }
+        // UI-ს განახლება რეალური მონაცემებით
+        document.getElementById('user-name').innerText = userData.username;
+        document.getElementById('user-avatar').src = userData.profilePic;
 
-        // რეალური ავატარის ჩატვირთვა
-        if (realPhoto) {
-            document.getElementById('user-avatar').src = realPhoto;
-        }
+        // "შემოუერთდა" შეტყობინება ბაზაში (როგორც TikTok-ზე)
+        db.ref('live_chats/' + channelName).push({
+            name: userData.username,
+            type: "join",
+            timestamp: Date.now()
+        });
 
         console.log("სისტემაშია რეალური მომხმარებელი: " + user.uid);
         startLiveStream();
     } else {
-        // თუ არავინ არაა შესული, ლაივის გვერდზე საერთოდ არ გააჩეროს
         window.location.href = "/login.html";
     }
 });
 
 // --- 4. PK ბრძოლის ღილაკი (BATTLE START) ---
 document.getElementById('pk-btn').onclick = () => {
-    const duration = 300; // 5 წუთი
+    const duration = 300; 
     const startTime = Date.now();
 
-    // Firebase-ში ბრძოლის დაწყება
     db.ref('live_battles/' + channelName).set({
         status: "active",
         scores: { host: 0, guest: 0 },
@@ -78,59 +78,71 @@ document.getElementById('pk-btn').onclick = () => {
 };
 
 // --- 5. საჩუქრების ღილაკი (GIFT LOGIC) ---
-// ეს ფუნქცია პირდაპირ HTML-დანაც იმუშავებს: onclick="sendGift(100, 'Rose')"
-window.sendGift = function(points, type) {
+window.sendGift = async function(points, type) {
     if (!currentUser) return alert("გაიარეთ ავტორიზაცია საჩუქრისთვის");
 
-    // ქულების მომატება ბაზაში ტრანზაქციით
+    const userData = await fetchRealUserData(currentUser.uid);
     const scoreRef = db.ref('live_battles/' + channelName + '/scores/host');
     scoreRef.transaction((current) => (current || 0) + points);
 
-    sendChatMessage(`🎁 აჩუქა ${type.toUpperCase()} (+${points})`);
+    // საჩუქრის მესიჯი რეალური სახელით
+    db.ref('live_chats/' + channelName).push({
+        name: userData.username,
+        text: `🎁 აჩუქა ${type.toUpperCase()} (+${points})`,
+        type: "gift",
+        timestamp: Date.now()
+    });
     
-    // საჩუქრების პანელის დახურვა
     document.getElementById('gift-panel').style.display = 'none';
 };
 
-// საჩუქრების პანელის გამოჩენა/დამალვა
 document.getElementById('gift-btn').onclick = () => {
     const panel = document.getElementById('gift-panel');
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 };
 
 // --- 6. ჩატის ღილაკი და შეტყობინებები ---
-document.getElementById('send-msg').onclick = () => {
+document.getElementById('send-msg').onclick = async () => {
     const input = document.getElementById('chat-input');
     if (input.value.trim() !== "") {
-        sendChatMessage(input.value);
+        await sendChatMessage(input.value);
         input.value = "";
     }
 };
 
-// Enter-ზე გაგზავნა
-document.getElementById('chat-input').addEventListener('keypress', (e) => {
+document.getElementById('chat-input').addEventListener('keypress', async (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== "") {
-        sendChatMessage(e.target.value);
+        await sendChatMessage(e.target.value);
         e.target.value = "";
     }
 });
 
-function sendChatMessage(text) {
+async function sendChatMessage(text) {
     if (!currentUser) return;
+    const userData = await fetchRealUserData(currentUser.uid);
     db.ref('live_chats/' + channelName).push({
-        name: currentUser.displayName || "მომხმარებელი",
+        name: userData.username,
         text: text,
         timestamp: Date.now()
     });
 }
 
-// ჩატის რეალურ დროში მოსმენა
+// ჩატის რეალურ დროში მოსმენა (TikTok სტილის ფილტრით)
 db.ref('live_chats/' + channelName).limitToLast(20).on('child_added', (snapshot) => {
     const msg = snapshot.val();
     const chatList = document.getElementById('chat-list');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'chat-msg';
-    msgDiv.innerHTML = `<span class="user-name">${msg.name}:</span> ${msg.text}`;
+    
+    // დინამიური ფერები ტიპის მიხედვით
+    if (msg.type === "join") {
+        msgDiv.innerHTML = `<span style="color: #ffcc00;">✨ ${msg.name} შემოუერთდა</span>`;
+    } else if (msg.type === "gift") {
+        msgDiv.innerHTML = `<span style="color: #ff00cc; font-weight: bold;">🎁 ${msg.name}:</span> ${msg.text}`;
+    } else {
+        msgDiv.innerHTML = `<span class="user-name" style="color: #00d2ff;">${msg.name}:</span> ${msg.text}`;
+    }
+    
     chatList.appendChild(msgDiv);
     chatList.scrollTop = chatList.scrollHeight;
 });
@@ -176,3 +188,17 @@ document.getElementById('leave-btn').onclick = async () => {
     await agoraClient.leave();
     window.location.href = "/";
 };
+
+// Agora-ს ლაივის დაწყების ფუნქცია (რომელიც აკლდა ორიგინალს)
+async function startLiveStream() {
+    try {
+        await agoraClient.setClientRole("host");
+        await agoraClient.join(agoraAppId, channelName, null, currentUser.uid);
+        
+        localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+        localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+        
+        localTracks.videoTrack.play("local-player");
+        await agoraClient.publish([localTracks.audioTrack, localTracks.videoTrack]);
+    } catch (e) { console.error("Agora error:", e); }
+}
