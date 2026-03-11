@@ -125,6 +125,7 @@ ru: {
     }
 
     toggleSideMenu(false);
+  applyLanguage();
 }
  
     
