@@ -19,6 +19,17 @@
  editor: "რედაქტორი", balance: "Wallet", logout: "გასვლა", chats: "ჩატები", upload_token: "ატვირთვა", upload: "ატვირთვა",
  cancel: "გაუქმება", home: "მთავარი", people: "ხალხი", chat: "ჩატი", profile: "პროფილი", search_p: "მოძებნე ემიგრანტი...",
  private_profile: "ეს პროფილი პრივატულია", follow: "გამოწერა", following_btn: "გამოწერილია", write: "მიწერა"
+
+
+  impact_store: "IMPACT STORE",
+all: "ყველა",
+my_orders: "ჩემი შეკვეთები",
+clothing: "ტანსაცმელი",
+watches: "საათები",
+digital: "ციფრული",
+physical: "ნივთები",
+vip: "VIP",
+close_btn: "← დახურვა"
  },
  en: {
  welcome: "WELCOME", ob_desc1: "Welcome to a space where every idea turns into a result. Our platform is based on real Impact.", next: "Next",
@@ -39,6 +50,18 @@
  editor: "Editor", balance: "Wallet", logout: "Logout", chats: "Chats", upload_token: "Upload Token", upload: "Upload",
  cancel: "Cancel", home: "Home", people: "People", chat: "Chat", profile: "Profile", search_p: "Search emigrant...",
  private_profile: "This profile is private", follow: "Follow", following_btn: "Following", write: "Message"
+
+
+
+  impact_store: "IMPACT STORE",
+all: "All",
+my_orders: "My Orders",
+clothing: "Clothing",
+watches: "Watches",
+digital: "Digital",
+physical: "Items",
+vip: "VIP",
+close_btn: "← Close"
  },
 
      // --- ITALIANO ---
@@ -61,6 +84,17 @@ it: {
     editor: "Editor", balance: "Wallet", logout: "Esci", chats: "Chat", upload_token: "Carica Token", upload: "Carica",
     cancel: "Annulla", home: "Home", people: "Persone", chat: "Chat", profile: "Profilo", search_p: "Cerca emigrante...",
     private_profile: "Profilo privato", follow: "Segui", following_btn: "Seguito", write: "Messaggio"
+
+
+ impact_store: "IMPACT STORE",
+all: "Tutti",
+my_orders: "I miei ordini",
+clothing: "Abbigliamento",
+watches: "Orologi",
+digital: "Digitale",
+physical: "Oggetti",
+vip: "VIP",
+close_btn: "← Chiudi"
 },
 
 // --- RUSSIAN ---
@@ -83,6 +117,17 @@ ru: {
     editor: "Редактор", balance: "Кошелек", logout: "Выход", chats: "Чаты", upload_token: "Загрузить Токен", upload: "Загрузить",
     cancel: "Отмена", home: "Главная", people: "Люди", chat: "Чат", profile: "Профиль", search_p: "Поиск эмигранта...",
     private_profile: "Это приватный профиль", follow: "Подписаться", following_btn: "Подписки", write: "Написать"
+
+
+ impact_store: "IMPACT STORE",
+all: "Все",
+my_orders: "Мои заказы",
+clothing: "Одежда",
+watches: "Часы",
+digital: "Цифровые",
+physical: "Товары",
+vip: "VIP",
+close_btn: "← Закрыть"
 },
  };
 
