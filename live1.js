@@ -29,22 +29,33 @@ let scores = { host: 0, guest: 0 };
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
-        
-        // მომხმარებლის სახელი
-        document.getElementById('user-name').innerText = user.displayName || "მომხმარებელი";
-        
-        // ავატარის ლოგიკა
-        const avatarElement = document.getElementById('user-avatar');
-        if (user.photoURL) {
-            avatarElement.src = user.photoURL;
+
+        // აქ ვიღებთ რეალურ სახელს Firebase Auth-დან
+        const realName = user.displayName;
+        const realPhoto = user.photoURL;
+
+        // ვამოწმებთ, რომ სახელი ნამდვილად არსებობს
+        if (realName) {
+            document.getElementById('user-name').innerText = realName;
         } else {
-            // თუ იუზერს ფოტო არ აქვს, ჩავსვათ სტანდარტული სურათი
-            avatarElement.src = "https://emigrantbook.com/default-avatar.png"; 
+            // თუ Auth-ში სახელი არაა, ვეძებთ შენს 'users' ბაზაში UID-ით
+            db.ref('users/' + user.uid).once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                if (userData && userData.username) {
+                    document.getElementById('user-name').innerText = userData.username;
+                }
+            });
         }
-        
-        console.log("ავტორიზაცია წარმატებულია!");
+
+        // რეალური ავატარის ჩატვირთვა
+        if (realPhoto) {
+            document.getElementById('user-avatar').src = realPhoto;
+        }
+
+        console.log("სისტემაშია რეალური მომხმარებელი: " + user.uid);
+        startLiveStream();
     } else {
-        // თუ სისტემაში არ არის, გადავიყვანოთ ლოგინზე
+        // თუ არავინ არაა შესული, ლაივის გვერდზე საერთოდ არ გააჩეროს
         window.location.href = "/login.html";
     }
 });
