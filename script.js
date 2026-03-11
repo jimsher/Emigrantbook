@@ -16,7 +16,7 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 const auth = firebase.auth();
 const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
-
+const messaging = firebase.messaging(); // <-- ეს აუცილებელია შეტყობინებებისთვის
 
 
 if ('serviceWorker' in navigator) {
