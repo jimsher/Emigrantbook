@@ -1,4 +1,3 @@
-// --- LANGUAGE LOGIC ---
 const translations = {
  ka: {
     welcome: "მოგესალმებით", ob_desc1: "შენ მოხვდი სივრცეში, სადაც ყოველი იდეა შედეგად გარდაიქმნება...", next: "შემდეგი",
@@ -18,7 +17,7 @@ const translations = {
     followers: "გამომწერი", following: "გამოწერა", photos: "ფოტოები", live: "ლაივი", real_balance: "რეალური ბალანსი",
     editor: "რედაქტორი", balance: "Wallet", logout: "გასვლა", chats: "ჩატები", upload_token: "ატვირთვა", upload: "ატვირთვა",
     cancel: "გაუქმება", home: "მთავარი", people: "ხალხი", chat: "ჩატი", profile: "პროფილი", search_p: "მოძებნე ემიგრანტი...",
-    private_profile: "ეს პროფილი პრივატულია", follow: "გამოწერა", following_btn: "გამოწერილია", write: "მიწერა", // <-- აქ დავამატე მძიმე
+    private_profile: "ეს პროფილი პრივატულია", follow: "გამოწერა", following_btn: "გამოწერილია", write: "მიწერა",
     impact_store: "IMPACT STORE",
     all: "ყველა",
     my_orders: "ჩემი შეკვეთები",
@@ -27,15 +26,15 @@ const translations = {
     digital: "ციფრული",
     physical: "ნივთები",
     vip: "VIP",
-    close_btn: "← დახურვა",
-  checkout_title: "შეკვეთის გაფორმება",
-f_name: "სახელი",
-l_name: "გვარი",
-address: "სრული მისამართი",
-city: "ქალაქი",
-post_code: "საფოსტო ინდექსი",
-phone_label: "ტელეფონის ნომერი",
-confirm_order: "შეკვეთის დადასტურება"
+    close_btn: "← დახურვა", // <--- აქ მძიმე ჩავამატე
+    checkout_title: "შეკვეთის გაფორმება",
+    f_name: "სახელი",
+    l_name: "გვარი",
+    address: "სრული მისამართი",
+    city: "ქალაქი",
+    post_code: "საფოსტო ინდექსი",
+    phone_label: "ტელეფონის ნომერი",
+    confirm_order: "შეკვეთის დადასტურება"
  },
  en: {
     welcome: "WELCOME", ob_desc1: "Welcome to a space where every idea turns into a result.", next: "Next",
@@ -55,7 +54,7 @@ confirm_order: "შეკვეთის დადასტურება"
     followers: "Followers", following: "Following", photos: "Photos", live: "Live", real_balance: "Real Balance",
     editor: "Editor", balance: "Wallet", logout: "Logout", chats: "Chats", upload_token: "Upload Token", upload: "Upload",
     cancel: "Cancel", home: "Home", people: "People", chat: "Chat", profile: "Profile", search_p: "Search emigrant...",
-    private_profile: "This profile is private", follow: "Follow", following_btn: "Following", write: "Message", // <-- აქაც მძიმე
+    private_profile: "This profile is private", follow: "Follow", following_btn: "Following", write: "Message",
     impact_store: "IMPACT STORE",
     all: "All",
     my_orders: "My Orders",
@@ -64,15 +63,15 @@ confirm_order: "შეკვეთის დადასტურება"
     digital: "Digital",
     physical: "Items",
     vip: "VIP",
-    close_btn: "← Close",
-  checkout_title: "Checkout",
-f_name: "First Name",
-l_name: "Last Name",
-address: "Full Address",
-city: "City",
-post_code: "Post Code",
-phone_label: "Phone Number",
-confirm_order: "Confirm Order"
+    close_btn: "← Close", // <--- აქაც
+    checkout_title: "Checkout",
+    f_name: "First Name",
+    l_name: "Last Name",
+    address: "Full Address",
+    city: "City",
+    post_code: "Post Code",
+    phone_label: "Phone Number",
+    confirm_order: "Confirm Order"
  },
  it: {
     welcome: "BENVENUTO", ob_desc1: "Benvenuti...", next: "Avanti",
@@ -90,9 +89,9 @@ confirm_order: "Confirm Order"
     in_rel: "Relazione", phone: "Telefono", save: "Salva", info: "Info", profile_manage: "Gestisci",
     public: "Pubblico", friends: "Amici", private: "Privato", finish: "Fine", videos: "Video",
     followers: "Follower", following: "Seguiti", photos: "Foto", live: "Live", real_balance: "Saldo",
-    editor: "Editor", balance: "Wallet", logout: "Esci", chats: "Chat", upload_token: "Carica", upload: "Carica",
+    editor: "Editor", balance: "Wallet", logout: "Escი", chats: "Chat", upload_token: "Carica", upload: "Carica",
     cancel: "Annulla", home: "Home", people: "Persone", chat: "Chat", profile: "Profilo", search_p: "Cerca...",
-    private_profile: "Privato", follow: "Segui", following_btn: "Seguito", write: "Messaggio", // <-- აქაც მძიმე
+    private_profile: "Privato", follow: "Segui", following_btn: "Seguito", write: "Messaggio",
     impact_store: "IMPACT STORE",
     all: "Tutti",
     my_orders: "I miei ordini",
@@ -101,15 +100,15 @@ confirm_order: "Confirm Order"
     digital: "Digitale",
     physical: "Oggetti",
     vip: "VIP",
-    close_btn: "← Chiudi",
-  checkout_title: "Completare l'ordine",
-f_name: "Nome",
-l_name: "Cognome",
-address: "Indirizzo completo",
-city: "Città",
-post_code: "Codice postale",
-phone_label: "Numero di telefono",
-confirm_order: "Conferma ordine"
+    close_btn: "← Chiudi", // <--- აქაც
+    checkout_title: "Completare l'ordine",
+    f_name: "Nome",
+    l_name: "Cognome",
+    address: "Indirizzo completo",
+    city: "Città",
+    post_code: "Codice postale",
+    phone_label: "Numero di telefono",
+    confirm_order: "Conferma ordine"
  },
  ru: {
     welcome: "ДОБРО ПОЖАЛОВАТЬ", ob_desc1: "Добро пожаловать...", next: "Далее",
@@ -129,7 +128,7 @@ confirm_order: "Conferma ordine"
     followers: "Подписчики", following: "Подписки", photos: "Фото", live: "Лайв", real_balance: "Баланс",
     editor: "Редактор", balance: "Кошелек", logout: "Выход", chats: "Чаты", upload_token: "Загрузить", upload: "Загрузить",
     cancel: "Отмена", home: "Главная", people: "Люди", chat: "Чат", profile: "Профиль", search_p: "Поиск...",
-    private_profile: "Приватный", follow: "Подписаться", following_btn: "Подписки", write: "Написать", // <-- აქაც მძიმე
+    private_profile: "Приватный", follow: "Подписаться", following_btn: "Подписки", write: "Написать",
     impact_store: "IMPACT STORE",
     all: "Все",
     my_orders: "Мои заказы",
@@ -138,15 +137,15 @@ confirm_order: "Conferma ordine"
     digital: "Цифровые",
     physical: "Товары",
     vip: "VIP",
-    close_btn: "← Закрыть",
-  checkout_title: "Оформление заказа",
-f_name: "Имя",
-l_name: "Фамилия",
-address: "Полный адрес",
-city: "Город",
-post_code: "Почтовый индекс",
-phone_label: "Номер телефона",
-confirm_order: "Подтвердить заказ"
+    close_btn: "← Закрыть", // <--- აქაც
+    checkout_title: "Оформление заказа",
+    f_name: "Имя",
+    l_name: "Фамилия",
+    address: "Полный адрес",
+    city: "Город",
+    post_code: "Почтовый индекс",
+    phone_label: "Номер телефона",
+    confirm_order: "Подтвердить заказ"
  }
 };
 
