@@ -144,7 +144,7 @@ ru: {
     toggleSideMenu(false);
 }
   applyLanguage();
-}
+
  
     
  // --- END LANGUAGE LOGIC ---
