@@ -29,11 +29,23 @@ let scores = { host: 0, guest: 0 };
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
-        document.getElementById('user-name').innerText = user.displayName || "Host";
-        if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
-        console.log("სისტემაში ხართ!");
+        
+        // მომხმარებლის სახელი
+        document.getElementById('user-name').innerText = user.displayName || "მომხმარებელი";
+        
+        // ავატარის ლოგიკა
+        const avatarElement = document.getElementById('user-avatar');
+        if (user.photoURL) {
+            avatarElement.src = user.photoURL;
+        } else {
+            // თუ იუზერს ფოტო არ აქვს, ჩავსვათ სტანდარტული სურათი
+            avatarElement.src = "https://emigrantbook.com/default-avatar.png"; 
+        }
+        
+        console.log("ავტორიზაცია წარმატებულია!");
     } else {
-        console.log("გთხოვთ გაიაროთ ავტორიზაცია");
+        // თუ სისტემაში არ არის, გადავიყვანოთ ლოგინზე
+        window.location.href = "/login.html";
     }
 });
 
