@@ -153,23 +153,41 @@ close_btn: "← Закрыть"
  }
 
  function toggleLanguage() {
-    // ენების რიგითობა
     const langOrder = ['ka', 'en', 'it', 'ru'];
-    let nextIndex = (langOrder.indexOf(currentLang) + 1) % langOrder.length;
     
+    // ვპოულობთ მიმდინარე ენას, თუ ვერ იპოვა - ვიწყებთ ქართულით
+    let currentIndex = langOrder.indexOf(currentLang);
+    if (currentIndex === -1) currentIndex = 0; 
+
+    // გადავდივართ შემდეგზე
+    let nextIndex = (currentIndex + 1) % langOrder.length;
     currentLang = langOrder[nextIndex];
 
     localStorage.setItem('appLang', currentLang);
-    applyLanguage();
     
-    // მენიუში ტექსტის განახლება (რომ მომხმარებელმა ნახოს რა ენაა ახლა)
+    // ვამოწმებთ, რომ translations-ში ეს ენა ნამდვილად არსებობს
+    if (translations[currentLang]) {
+        applyLanguage();
+    } else {
+        console.error("ენა " + currentLang + " არ მოიძებნა translations-ში!");
+        currentLang = 'ka'; // უსაფრთხოებისთვის ვაბრუნებთ ქართულზე
+        applyLanguage();
+    }
+
+    // ღილაკზე ტექსტის განახლება
     const langBtn = document.getElementById('langSwitchBtn');
     if (langBtn) {
-        const langLabels = { ka: "KA", en: "EN", it: "IT", ru: "RU" };
-        langBtn.innerText = "Language: " + langLabels[currentLang];
+        const labels = {
+            'ka': 'ენა: ქართული (KA)',
+            'en': 'Language: English (EN)',
+            'it': 'Lingua: Italiano (IT)',
+            'ru': 'Язык: Русский (RU)'
+        };
+        langBtn.innerText = labels[currentLang];
     }
 
     toggleSideMenu(false);
+}
   applyLanguage();
 }
  
