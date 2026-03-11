@@ -19,9 +19,6 @@
  editor: "რედაქტორი", balance: "Wallet", logout: "გასვლა", chats: "ჩატები", upload_token: "ატვირთვა", upload: "ატვირთვა",
  cancel: "გაუქმება", home: "მთავარი", people: "ხალხი", chat: "ჩატი", profile: "პროფილი", search_p: "მოძებნე ემიგრანტი...",
  private_profile: "ეს პროფილი პრივატულია", follow: "გამოწერა", following_btn: "გამოწერილია", write: "მიწერა"
-
-
-  
  },
  en: {
  welcome: "WELCOME", ob_desc1: "Welcome to a space where every idea turns into a result. Our platform is based on real Impact.", next: "Next",
@@ -42,10 +39,6 @@
  editor: "Editor", balance: "Wallet", logout: "Logout", chats: "Chats", upload_token: "Upload Token", upload: "Upload",
  cancel: "Cancel", home: "Home", people: "People", chat: "Chat", profile: "Profile", search_p: "Search emigrant...",
  private_profile: "This profile is private", follow: "Follow", following_btn: "Following", write: "Message"
-
-
-
-  
  },
 
      // --- ITALIANO ---
@@ -68,9 +61,6 @@ it: {
     editor: "Editor", balance: "Wallet", logout: "Esci", chats: "Chat", upload_token: "Carica Token", upload: "Carica",
     cancel: "Annulla", home: "Home", people: "Persone", chat: "Chat", profile: "Profilo", search_p: "Cerca emigrante...",
     private_profile: "Profilo privato", follow: "Segui", following_btn: "Seguito", write: "Messaggio"
-
-
- 
 },
 
 // --- RUSSIAN ---
@@ -93,9 +83,6 @@ ru: {
     editor: "Редактор", balance: "Кошелек", logout: "Выход", chats: "Чаты", upload_token: "Загрузить Токен", upload: "Загрузить",
     cancel: "Отмена", home: "Главная", people: "Люди", chat: "Чат", profile: "Профиль", search_p: "Поиск эмигранта...",
     private_profile: "Это приватный профиль", follow: "Подписаться", following_btn: "Подписки", write: "Написать"
-
-
- 
 },
  };
 
