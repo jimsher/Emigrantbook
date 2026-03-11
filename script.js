@@ -1,10 +1,10 @@
 const firebaseConfig = { 
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-  authDomain: "emigrantbook.firebaseapp.com", 
-  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-  projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", // <-- ეს ხაზი აუცილებლად უნდა იყოს აქ!
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+ apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+ authDomain: "emigrantbook.firebaseapp.com", 
+ databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+ projectId: "emigrantbook", 
+ storageBucket: "emigrantbook.firebasestorage.app", 
+ appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
 };
 
 // ინიციალიზაცია
@@ -15,8 +15,8 @@ if (!firebase.apps.length) {
 // გლობალური ცვლადები
 const db = firebase.database();
 const auth = firebase.auth();
-const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
-const messaging = firebase.messaging(); // <-- ეს აუცილებელია შეტყობინებებისთვის
+const storage = firebase.storage(); 
+const messaging = firebase.messaging(); 
 
 
 if ('serviceWorker' in navigator) {
@@ -26,17 +26,6 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('SW Registration Failed ❌', err));
     });
 }
-
-
-
-
-
-
-
-
-
-
-
 
  let myName = "User";
  let myPhoto = "";
@@ -98,8 +87,6 @@ if ('serviceWorker' in navigator) {
  }
  }
 
- 
-
  function nextObSlide(n) {
  document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
  document.getElementById('obSlide' + n).style.display = 'block';
@@ -118,16 +105,6 @@ if ('serviceWorker' in navigator) {
  document.getElementById('onboardingUI').style.display = 'none';
 }
 
-
-
-
-
-
-
-
-
-
-        
 auth.onAuthStateChanged(user => {
  applyLanguage();
  if (user) {
@@ -138,59 +115,50 @@ auth.onAuthStateChanged(user => {
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
 
-// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
-let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
+ // --- PUSH NOTIFICATION TOKEN SAVER ---
+ Notification.requestPermission().then((permission) => {
+    if (permission === 'granted') {
+        messaging.getToken({ vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' })
+        .then((token) => {
+            if (token) {
+                db.ref('users/' + user.uid + '/fcmToken').set(token);
+            }
+        });
+    }
+ });
+
+let currentIncomingCall = null; 
 
 db.ref(`video_calls/${user.uid}`).on('value', snap => {
     const call = snap.val();
     if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        currentIncomingCall = call; // ვინახავთ ინფორმაციას
-        
-        // ვავსებთ ფანჯარას მონაცემებით
+        currentIncomingCall = call; 
         document.getElementById('callerNameDisplay').innerText = call.callerName;
         document.getElementById('callerAva').src = call.callerPhoto || 'https://ui-avatars.com/api/?name=' + call.callerName;
-        
-        // ვაჩენთ ლამაზ ფანჯარას
         const modal = document.getElementById('incomingCallModal');
         modal.style.display = 'flex';
     } else {
-        // თუ ზარი გაუქმდა გამომძახებლის მიერ
         document.getElementById('incomingCallModal').style.display = 'none';
     }
 });
 
-// ფუნქცია: ზარის აღება
-function acceptCall() {
+window.acceptCall = function() {
     if (currentIncomingCall) {
         window.currentChatId = currentIncomingCall.callerUid; 
         db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
-        
         document.getElementById('incomingCallModal').style.display = 'none';
         document.getElementById('videoCallUI').style.display = 'flex';
-        
         if (typeof startVideoCall === "function") {
             startVideoCall();
         }
     }
 }
 
-// ფუნქცია: ზარის გათიშვა
-function declineCall() {
+window.declineCall = function() {
     db.ref(`video_calls/${auth.currentUser.uid}`).remove();
     document.getElementById('incomingCallModal').style.display = 'none';
 }
-
-
-
-
-
-
-
-
-
-  
-
-  
+ 
  document.getElementById('authUI').style.display = 'none';
  db.ref('users/' + user.uid).on('value', snap => {
  const d = snap.val();
@@ -219,7 +187,7 @@ function declineCall() {
  document.getElementById('authUI').style.display = 'flex';
  document.getElementById('main-feed').innerHTML = "";
  }
-});
+}); // <-- აი აქ აკლდა ეს დახურვა და მაგიტომ გაჩერდა ყველაფერი
 
  function updateCashoutUI() {
  const status = document.getElementById('cashoutStatus');
@@ -416,12 +384,6 @@ function declineCall() {
  });
  }
 
-
-
-
-
-
-
 function openComments(postId, postOwnerId) {
     activePostId = postId;
     window.currentPostOwnerId = postOwnerId;
@@ -430,14 +392,10 @@ function openComments(postId, postOwnerId) {
     const commUI = document.getElementById('commentsUI');
     commUI.style.display = 'flex';
     
-    // ვპოულობთ "X" ღილაკს და ვასწავლით, რომ დახურვისას ვიდეო ჩართოს
     const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
     if (closeBtn) {
         closeBtn.onclick = function() {
-            // კომენტარების დახურვა
             commUI.style.display = 'none';
-            
-            // თუ უკან ვიდეოა ჩართული, გააგრძელოს Play
             const vid = document.getElementById('fullVideoTag');
             const overlay = document.getElementById('fullVideoOverlay');
             if (overlay && overlay.style.display === 'block') {
@@ -445,23 +403,15 @@ function openComments(postId, postOwnerId) {
             }
         };
     }
-
     loadComments(postId);
 }
-
-
-
 
 function loadComments(postId, isGallery = false) {
     const list = document.getElementById('commList');
     const myUid = auth.currentUser.uid;
-    const postOwnerId = window.currentPostOwnerId; // ვიღებთ შენახულ ID-ს
-
-    // ვინახავთ მდგომარეობას გლობალურად, რომ postComment-მაც იცოდეს სად გააგზავნოს
+    const postOwnerId = window.currentPostOwnerId; 
     window.isGalleryMode = isGallery;
     activePostId = postId;
-
-    // სწორი ნაბიჯი: თუ გალერეიდანაა, ვიყენებთ gallery_comments-ს, სხვა შემთხვევაში ორიგინალ comments-ს
     const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
 
     db.ref(commentPath).on('value', snap => {
@@ -471,10 +421,7 @@ function loadComments(postId, isGallery = false) {
 
         Object.entries(data).forEach(([id, comm]) => {
             const isLiked = comm.likes && comm.likes[myUid];
-            
-            // ლოგიკა: გამოჩნდეს ნაგვის ურნა, თუ ჩემი კომენტარია ან ჩემს პოსტზეა
             const canDeleteComm = (myUid === comm.authorId) || (myUid === postOwnerId);
-
             let html = `
             <div class="comment-item">
                 <div class="comment-top">
@@ -495,15 +442,11 @@ function loadComments(postId, isGallery = false) {
                 </div>
                 <div id="replies-${id}" class="reply-list"></div>
             </div>`;
-            
             list.innerHTML += html;
-
             if(comm.replies) {
                 const rList = document.getElementById(`replies-${id}`);
                 Object.entries(comm.replies).forEach(([rId, r]) => {
-                    // პასუხის წაშლის უფლება
                     const canDeleteReply = (myUid === r.authorId) || (myUid === postOwnerId);
-
                     rList.innerHTML += `
                     <div style="display:flex; gap:10px; margin-bottom:10px; justify-content:space-between; align-items:flex-start;">
                         <div style="display:flex; gap:10px;">
@@ -521,7 +464,6 @@ function loadComments(postId, isGallery = false) {
     });
 }
 
-// წაშლის რეალური ფუნქციები
 window.deleteComment = function(postId, commentId) {
     if (confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) {
         db.ref(`comments/${postId}/${commentId}`).remove();
@@ -534,12 +476,6 @@ window.deleteReply = function(postId, commentId, replyId) {
     }
 };
 
-
-
-
-
-
-
  function prepareReply(commId, name) {
  activeReplyTo = commId;
  document.getElementById('commInp').focus();
@@ -548,10 +484,7 @@ window.deleteReply = function(postId, commentId, replyId) {
     if (!canAfford(0.5)) return;
     const text = document.getElementById('commInp').value;
     if(!text.trim() || !activePostId) return;
-
-    // სწორი ნაბიჯი: თუ window.isGalleryMode არის true, ვიყენებთ სხვა სახელს
     const commentPath = window.isGalleryMode ? `gallery_comments/${activePostId}` : `comments/${activePostId}`;
-
     if(activeReplyTo) {
         db.ref(`${commentPath}/${activeReplyTo}/replies`).push({
             authorId: auth.currentUser.uid, 
@@ -569,7 +502,6 @@ window.deleteReply = function(postId, commentId, replyId) {
             ts: Date.now()
         });
     }
-    
     spendAkho(0.5, 'Comment');
     document.getElementById('commInp').value = "";
     activeReplyTo = null;
@@ -587,21 +519,13 @@ window.deleteReply = function(postId, commentId, replyId) {
  });
  }
 
-
- 
-
-
-
-
 function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     ui.style.display = 'flex';
     ui.style.backgroundColor = '#000';
-
     const list = document.getElementById('chatList');
     list.innerHTML = "";
-    
     db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
         list.innerHTML = "";
         const followers = snap.val();
@@ -611,12 +535,10 @@ function openMessenger() {
                 const item = document.createElement('div');
                 item.className = 'chat-list-item';
                 item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
-                
                 item.onclick = () => {
                     db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
                     startChat(uid, data.name, data.photo);
                 };
-                
                 db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
                     const lastRead = readSnap.val() || 0;
                     db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
@@ -646,15 +568,12 @@ function openMessenger() {
 }
 
 function startChat(uid, name, photo) {
-    // ეს ხაზი აცოცხლებს ხმოვანის გაგზავნას
     window.currentChatId = uid;
     currentChatId = uid; 
-
     document.getElementById('socialListsUI').style.display = 'none';
     document.getElementById('individualChat').style.display = 'flex';
     document.getElementById('chatTargetName').innerText = name;
     document.getElementById('chatTargetAva').src = photo;
-
     const statusEl = document.getElementById('chatTargetStatus');
     if (statusEl) {
         db.ref(`users/${uid}/presence`).on('value', snap => {
@@ -673,37 +592,24 @@ function startChat(uid, name, photo) {
     listenToTyping(uid);
 }
 
-
-
-
-
-
-
 function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
     const box = document.getElementById('chatMessages');
-    
     db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
         const deletedMsgs = deletedSnap.val() || {};
-
         db.ref(`messages/${chatId}`).on('value', snap => {
             box.innerHTML = "";
             snap.forEach(child => {
                 const msgId = child.key;
                 if (deletedMsgs[msgId]) return;
-
                 const msg = child.val();
                 const type = msg.senderId === myUid ? 'sent' : 'received';
-                
                 const d = new Date(msg.ts);
                 const fullDateTime = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0') + " " + d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-                
                 let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                
                 const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
                 const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
-
                 box.innerHTML += `
                     <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}" 
                          oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
@@ -718,10 +624,6 @@ function loadMessages(targetUid) {
     });
 }
 
-
-
-
-
 window.deleteMessage = function(chatId, msgId, senderId) {
     const myUid = auth.currentUser.uid;
     if (senderId === myUid) {
@@ -734,13 +636,6 @@ window.deleteMessage = function(chatId, msgId, senderId) {
         }
     }
 };
-
-
-
-
-
-
-
 
  function closeChat() {
  if (currentChatId) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
@@ -756,7 +651,6 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  if (!currentChatId) return;
  const chatId = getChatId(auth.currentUser.uid, currentChatId);
  db.ref(`typing/${chatId}/${auth.currentUser.uid}`).set(true);
- 
  if (typingTimeout) clearTimeout(typingTimeout);
  typingTimeout = setTimeout(() => {
  db.ref(`typing/${chatId}/${auth.currentUser.uid}`).remove();
@@ -801,12 +695,6 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  document.getElementById('msgSound').play().catch(e => {});
  setTimeout(() => push.classList.remove('show'), 4000);
  }
-
-
-
-
-
-
 
  function sendMessage() {
  if (!canAfford(0.2)) return;
@@ -866,40 +754,25 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  db.ref(`users/${auth.currentUser.uid}`).update({ privacy: val });
  }
 
-
-
-
-
-
  function openProfile(uid) {
  stopMainFeedVideos();
  document.getElementById('profileUI').style.display = 'flex';
- 
- // ვინახავთ UID-ს, რომ ფოტოების სექციამ იცოდეს ვისი სურათები წამოიღოს
  const profNameEl = document.getElementById('profName');
  profNameEl.setAttribute('data-view-uid', uid);
-
- // პროფილის გახსნისას ვასუფთავებთ ძველ მდგომარეობას
  document.getElementById('userPhotosGrid').style.display = 'none';
  document.getElementById('profGrid').style.display = 'grid';
  document.getElementById('noPhotosMsg').style.display = 'none';
-
- // --- აქედან იწყება ჩამატებული ლოგიკა ღილაკისთვის ---
  const galleryUploadContainer = document.getElementById('galleryUploadBtnContainer');
  if (galleryUploadContainer && auth.currentUser) {
      galleryUploadContainer.style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
  }
- // --- აქ მთავრდება ჩამატებული ლოგიკა ---
-
  document.querySelectorAll('.p-nav-btn').forEach(btn => btn.classList.remove('active'));
  document.getElementById('infoBtn').classList.add('active');
-
  if(uid !== auth.currentUser.uid) {
      db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
          uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
      });
  }
- 
  db.ref('users/' + uid).on('value', async snap => {
      const user = snap.val();
      if(!user) return;
@@ -931,16 +804,12 @@ window.deleteMessage = function(chatId, msgId, senderId) {
      document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
      document.getElementById('profTabs').style.display = 'flex';
      document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
-     
      if(uid === auth.currentUser.uid) {
          controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
-         
-         // --- ახალი ლოგიკა: კამერის ღილაკის ჩასმა Edit-ის გვერდით ---
          if (galleryUploadContainer) {
-             galleryUploadContainer.style.marginTop = "0"; // მოვაშოროთ ზედა დაშორება
-             controls.appendChild(galleryUploadContainer); // ჩავსვათ კონტროლებში
+             galleryUploadContainer.style.marginTop = "0"; 
+             controls.appendChild(galleryUploadContainer); 
          }
-         
          loadUserVideos(uid);
          applyLanguage();
      } else {
@@ -971,12 +840,6 @@ window.deleteMessage = function(chatId, msgId, senderId) {
      }
  });
 }
-
-
-
-
-
-
 
  function showProfileVisitors() {
  document.getElementById('visitorsUI').style.display = 'flex';
@@ -1104,35 +967,24 @@ function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     grid.innerHTML = "";
     let vCount = 0;
-
     db.ref('posts').once('value', snap => {
         const posts = snap.val();
         if(!posts) return;
-
-        // ვალაგებთ პოსტებს ახლიდან ძველისკენ
         const postEntries = Object.entries(posts).reverse();
-
         postEntries.forEach(([id, post]) => {
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
                 if(video) {
                     vCount++;
-                    
-                    // ნახვების რაოდენობის ფორმატირება (მაგ: 1500 -> 1.5K)
                     const views = post.views || 0;
                     const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
-
                     const item = document.createElement('div');
                     item.className = 'grid-item';
-                    
-                    // ვამატებთ ნახვების ლეიბლს ვიდეოს ზემოდან
                     item.innerHTML = `
                         <video src="${video.url}" muted playsinline></video>
                         <div class="video-views-label">
                             <i class="fas fa-play"></i> ${formattedViews}
-                        </div>
-                    `;
-                    
+                        </div>`;
                     item.onclick = () => playFullVideo(video.url, id);
                     grid.appendChild(item);
                 }
@@ -1142,23 +994,13 @@ function loadUserVideos(uid) {
     });
 }
 
-
-
-
-
-
-
  function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    
     vid.src = url; 
     overlay.style.display = 'block'; 
     vid.play();
-
     window.currentFullVideoId = postId; 
-
-    // --- გარანტირებული სქროლვა პირდაპირ ვიდეოზე ---
     let startY = 0;
     vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
@@ -1171,30 +1013,24 @@ function loadUserVideos(uid) {
             else if (diff < 0 && currentIndex > 0) allPosts[currentIndex - 1].click();
         }
     };
-
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
-
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
-
             const ava = document.getElementById('fullVideoAva');
             if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
-
             const lElem = document.getElementById('fullLikeCount');
             if (lElem) lElem.innerText = data.likedBy ? Object.keys(data.likedBy).length : 0;
-
             db.ref(`comments/${postId}`).once('value', cSnap => {
                 const cElem = document.getElementById('fullCommCount');
                 if (cElem) cElem.innerText = cSnap.numChildren();
             });
-
             const myUid = auth.currentUser.uid;
             const lIcon = document.getElementById('fullLikeIcon');
             if (lIcon) lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
@@ -1203,12 +1039,6 @@ function loadUserVideos(uid) {
         });
     }
 }
-             
-
-
-
-
-
 
  function closeFullVideo() {
  const overlay = document.getElementById('fullVideoOverlay');
@@ -1312,38 +1142,22 @@ function loadUserVideos(uid) {
  auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
  }
  }
- 
-
-
-
 
 async function startTokenUpload() {
-    // 1. შემოწმება (ტოკენები გაქვს თუ არა)
     if (!canAfford(5)) return;
-
     const fileInput = document.getElementById('videoInput');
     const file = fileInput.files[0];
     if (!file) return alert("აირჩიეთ ვიდეო");
-
     const btn = document.getElementById('upBtn');
     btn.disabled = true;
     btn.innerText = "მიმდინარეობს ატვირთვა...";
-
     try {
-        // 2. Firebase Storage-ის რეფერენსი (უფრო უსაფრთხო გამოძახება)
         const storage = firebase.storage(); 
         const storageRef = storage.ref();
         const videoName = Date.now() + "_" + file.name;
         const videoRef = storageRef.child('videos/' + videoName);
-
-        // 3. ატვირთვა
-        // ვიყენებთ "blob" ფორმატს, რაც ტელეფონისთვის უფრო სტაბილურია
         const snapshot = await videoRef.put(file);
-        
-        // 4. ვიდეოს მუდმივი ლინკის მიღება
         const downloadURL = await snapshot.ref.getDownloadURL();
-
-        // 5. მონაცემების შენახვა Realtime Database-ში
         await db.ref('posts').push({
             authorId: auth.currentUser.uid,
             authorName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
@@ -1352,56 +1166,37 @@ async function startTokenUpload() {
             media: [{ url: downloadURL, type: 'video' }],
             timestamp: Date.now()
         });
-
-        // ტოკენის ჩამოჭრა
         spendAkho(5, 'Video Upload');
-
         alert("ვიდეო წარმატებით აიტვირთა!");
         location.reload();
-
     } catch (err) {
         console.error("ატვირთვის შეცდომა:", err);
-        
-        // თუ შეცდომა მაინც ამოაგდო, გავიგოთ ზუსტად რისი ბრალია
         if (err.code === 'storage/unauthorized') {
             alert("შეცდომა: Firebase Rules (წესები) არ გაძლევს წვდომას!");
         } else {
             alert("შეცდომა: " + err.message);
         }
-        
         btn.disabled = false;
         btn.innerText = "ატვირთვა";
     }
 }
 
-                
-
-
-
 function togglePlayPause(vid) {
     if (vid.paused) vid.play();
     else vid.pause();
 }
-    
 
-
-
-
-                                    
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
-
     const feed = document.getElementById('main-feed');
     db.ref('posts').once('value', snap => {
         feed.innerHTML = "";
         const data = snap.val(); if (!data) return;
         let postEntries = Object.entries(data);
-        
         for (let i = postEntries.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
         }
-
         postEntries.forEach(([id, post]) => {
             if (post.media && post.media.some(m => m.type === 'video')) {
                 const videoUrl = post.media.find(m => m.type === 'video').url;
@@ -1413,7 +1208,6 @@ function renderTokenFeed() {
                 card.id = `card-${id}`;
                 const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
-                
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
@@ -1450,30 +1244,19 @@ function renderTokenFeed() {
                     <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
                 </div>`;
                 feed.appendChild(card);
-
-                // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
                 function startLikeCycle() {
-                    // 1. ვამოწმებთ, რომ ვიდეო ნამდვილად შენია
                     if (post.authorId !== auth.currentUser.uid) return;
-
                     const activityContainer = document.getElementById(`live-activity-${id}`);
                     if (!activityContainer) return;
-
-                    // 2. ვიღებთ მხოლოდ ამ კონკრეტული ვიდეოს ლაიქებს
                     const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-
                     if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
                         setTimeout(startLikeCycle, 5000);
                         return;
                     }
-
                     let index = 0;
-
                     function spawnNext() {
-                        // ვამოწმებთ, რომ კონტეინერი ისევ არსებობს (რომ სხვა ვიდეოზე არ გადავიდეს)
                         const container = document.getElementById(`live-activity-${id}`);
                         if (!container) return;
-
                         if (index < currentPostLikes.length) {
                             const person = currentPostLikes[index];
                             const avaBox = document.createElement('div');
@@ -1487,24 +1270,17 @@ function renderTokenFeed() {
                                          style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
                                     <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
                                 </div>`;
-                            
                             container.appendChild(avaBox);
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-
                             index++;
                             setTimeout(spawnNext, 1500);
                         } else {
-                            // როცა სია მორჩება, თავიდან იწყებს ციკლს
                             setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
                 }
-
-                // ანიმაციის გაშვება
                 startLikeCycle();
-
-                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები) - ხელუხლებელი
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -1524,12 +1300,7 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}                
-                                         
-
-
-
-
+}
 
  function setupAutoPlay() {
  const observer = new IntersectionObserver((entries) => {
@@ -1548,14 +1319,6 @@ function renderTokenFeed() {
  document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
  }
 
-
-
-
-
-
-
-
-
  function react(postId, ownerUid) {
     if (!canAfford(0.1)) return;
     const user = auth.currentUser;
@@ -1563,7 +1326,6 @@ function renderTokenFeed() {
     const likeRef = db.ref(`posts/${postId}/likedBy/${user.uid}`);
     const likeBtn = document.getElementById(`like-btn-${postId}`);
     const likeSpan = document.getElementById(`like-count-${postId}`);
-
     likeRef.once('value').then(snap => {
         let currentLikes = parseInt(likeSpan.innerText);
         if (snap.exists()) {
@@ -1574,10 +1336,6 @@ function renderTokenFeed() {
             likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
             if(likeBtn) likeBtn.classList.add('liked');
             likeSpan.innerText = currentLikes + 1;
-            
-            // --- აი ეს ხაზი ჩავამატე ეფექტისთვის ---
-            showFloatingLike(postId, myPhoto);
-            
             spendAkho(0.1, 'Like'); 
             if (ownerUid !== user.uid) {
                 earnAkho(ownerUid, 2.00, 'Impact (Like)'); 
@@ -1586,22 +1344,12 @@ function renderTokenFeed() {
     });
 }
 
-
-
-
-
-
-
-
-
-
 function toggleSavePost(postId) {
     const user = auth.currentUser;
     if(!user) return;
     const saveRef = db.ref(`posts/${postId}/savedBy/${user.uid}`);
     const saveBtn = document.getElementById(`save-btn-${postId}`);
     const saveSpan = document.getElementById(`save-count-${postId}`);
-
     saveRef.once('value').then(snap => {
         let currentSaves = parseInt(saveSpan.innerText);
         if(snap.exists()) {
@@ -1656,27 +1404,20 @@ function cancelWallImg() {
 async function submitWallPost() {
     const text = document.getElementById('wallPostText').value;
     const file = document.getElementById('wallImgInput').files[0];
-    
     if(!text.trim() && !file) return alert("დაწერეთ რამე");
     if(!canAfford(2)) return; 
-
     const btn = document.querySelector('[onclick="submitWallPost()"]');
     btn.disabled = true; btn.innerText = "...";
-    
     let finalUrl = "";
-
     try {
         if(file) {
-            // Cloudinary-ს ნაცვლად ვიყენებთ ImgBB-ს, რომელიც ფოტოებს უპრობლემოდ იღებს
             const formData = new FormData();
             formData.append('image', file);
-
             const res = await fetch('https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67', { 
                 method: 'POST', 
                 body: formData 
             });
             const data = await res.json();
-            
             if (data.success) {
                 finalUrl = data.data.url;
             } else {
@@ -1685,22 +1426,18 @@ async function submitWallPost() {
                 return;
             }
         }
-
-        // მონაცემების შენახვა Firebase-ში
         await db.ref('community_posts').push({
             authorId: auth.currentUser.uid,
             authorName: myName,
             authorPhoto: myPhoto,
             text: text,
-            image: finalUrl, // აქ უკვე იქნება ImgBB-ს ლინკი
+            image: finalUrl, 
             timestamp: Date.now()
         });
-
         spendAkho(2, 'Community Post');
         document.getElementById('wallPostText').value = "";
         cancelWallImg();
         alert("პოსტი გამოქვეყნდა!");
-
     } catch (err) {
         alert("კავშირის შეცდომა!");
         console.error(err);
@@ -1709,34 +1446,17 @@ async function submitWallPost() {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
     const myUid = auth.currentUser ? auth.currentUser.uid : null;
-
     db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
         box.innerHTML = "";
         const data = snap.val();
         if (!data) return;
-
         Object.entries(data).reverse().forEach(([id, post]) => {
             const isLiked = (myUid && post.likes && post.likes[myUid]);
             const likeCount = post.likes ? Object.keys(post.likes).length : 0;
-
             const card = document.createElement('div');
             card.className = "post-card";
             card.innerHTML = `
@@ -1752,23 +1472,19 @@ function loadCommunityPosts() {
                         }
                     </div>
                 </div>
-                
                 ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB; line-height:1.4;">${post.text}</p>` : ''}
                 ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px; cursor:pointer;" onclick="previewImage('${post.image}')">` : ''}
-                
                 <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
                     <div onclick="window.toggleWallLike('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
                         <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
                     </div>
-
                     <div onclick="openComments('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                         <i class="far fa-comment"></i>
                         <span id="comm-count-${id}" style="font-size:14px; font-weight:bold;">0</span>
                     </div>
                 </div>`;
             box.appendChild(card);
-
             db.ref('comments/' + id).on('value', cSnap => {
                 const count = cSnap.numChildren();
                 const cElem = document.getElementById('comm-count-' + id);
@@ -1778,16 +1494,6 @@ function loadCommunityPosts() {
     });
 }
 
-// კომენტარების წაშლის კონტროლი (შენი ორიგინალი)
-window.deleteComment = function(postId, commentId) {
-    if (confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) {
-        db.ref('comments/' + postId + '/' + commentId).remove()
-            .then(() => console.log("Comment deleted"))
-            .catch(err => alert("შეცდომა: " + err.message));
-    }
-};
-
-// რეპორტის ფუნქცია (ახალი)
 window.reportPost = function(postId, authorId, content) {
     if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     if (confirm("ნამდვილად გსურთ ამ პოსტის დარეპორტება?")) {
@@ -1802,27 +1508,19 @@ window.reportPost = function(postId, authorId, content) {
     }
 };
 
-
-
-
-
-
-// ლაიქის ლოგიკა
 window.toggleWallLike = function(postId, ownerUid) {
     if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     const myUid = auth.currentUser.uid;
     const likeRef = db.ref('community_posts/' + postId + '/likes/' + myUid);
-
     likeRef.once('value').then(snap => {
         if (snap.exists()) {
             likeRef.remove();
         } else {
             likeRef.set(true).then(() => {
-                // ნოტიფიკაციის გაგზავნა (მხოლოდ თუ სხვის პოსტს აგულებ)
                 if (ownerUid && ownerUid !== myUid) {
                     db.ref('notifications/' + ownerUid).push({
                         text: myName + "-მა თქვენი პოსტი დააგულა ❤️",
-                        fromPhoto: myPhoto || '', // შენი ფოტო
+                        fromPhoto: myPhoto || '', 
                         fromUid: myUid,
                         timestamp: Date.now(),
                         type: 'like'
@@ -1833,7 +1531,6 @@ window.toggleWallLike = function(postId, ownerUid) {
     }).catch(err => console.error("Like Error:", err));
 };
 
-// წაშლის ლოგიკა
 window.deleteWallPost = function(postId) {
     if (confirm("ნამდვილად გსურთ პოსტის წაშლა?")) {
         db.ref('community_posts/' + postId).remove()
@@ -1841,13 +1538,6 @@ window.deleteWallPost = function(postId) {
             .catch(err => alert("შეცდომა წაშლისას: " + err.message));
     }
 };
-
-
-
-
-
-
-
 
 let mediaRecorder;
 let audioChunks = [];
@@ -1872,59 +1562,34 @@ async function toggleVoiceRecord() {
  }
 }
 
-
-
 async function sendVoiceMessage(blob) {
-    // 1. ვამოწმებთ, არჩეულია თუ არა ჩატი
     const targetId = window.currentChatId; 
-    if (!targetId) {
-        console.error("Chat ID missing!");
-        return alert("ჯერ აირჩიეთ ჩატი (დააწკაპეთ მომხმარებელს)!");
-    }
-
+    if (!targetId) return alert("ჯერ აირჩიეთ ჩატი!");
     if (!canAfford(0.5)) return; 
-
     const formData = new FormData();
     formData.append("file", blob); 
     formData.append("upload_preset", "Emigrantbook.video"); 
-
     try {
-        console.log("ხმა იგზავნება Cloudinary-ზე...");
         const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
             method: 'POST', 
             body: formData 
         });
         const data = await res.json();
-        
         if (data.secure_url) {
-            console.log("Cloudinary-მ ატვირთა:", data.secure_url);
             const myUid = auth.currentUser.uid;
             const chatId = getChatId(myUid, targetId);
-            
-            // 2. ვწერთ Firebase-ში
             db.ref(`messages/${chatId}`).push({ 
                 senderId: myUid, 
                 audio: data.secure_url, 
                 ts: Date.now() 
             }).then(() => {
                 spendAkho(0.5, 'Voice Message');
-                console.log("Firebase-ში წარმატებით ჩაიწერა!");
-            }).catch(e => {
-                console.error("Firebase Error:", e);
-                alert("Firebase შეცდომა: " + e.message);
             });
-
-        } else {
-            console.error("Cloudinary Error Data:", data);
-            alert("Cloudinary შეცდომა: " + (data.error ? data.error.message : "უცნობი"));
         }
     } catch (err) { 
         console.error("Network Error:", err);
-        alert("ინტერნეტის შეცდომა: ვერ მოხერხდა სერვერთან კავშირი"); 
     }
 }
-
-
 
 function deleteMyVideo(postId) {
  if(confirm("ნამდვილად გსურთ წაშლა?")) {
@@ -1932,39 +1597,22 @@ function deleteMyVideo(postId) {
  }
 }
 
-
-
-
-
-
-
-// ქვედა ნევბარის ჩატის ლოგოზე წითელი ნიშანის გამოსაჩენი ლოგიკა
 function startGlobalUnreadCounter() {
     const myUid = auth.currentUser.uid;
-    const chatBadge = document.getElementById('chatCountBadge'); // ეს ID უნდა ქონდეს შენს წითელ ნიშანს
-
-    // ვუსმენთ ყველა ჩატს, სადაც მე ვმონაწილეობ
+    const chatBadge = document.getElementById('chatCountBadge'); 
     db.ref('messages').on('value', snap => {
         let totalUnread = 0;
         const allChats = snap.val();
         if (!allChats) return;
-
-        // გადავუყვებით ყველა ჩატს
         Object.keys(allChats).forEach(chatId => {
             if (chatId.includes(myUid)) {
-                // ვნახულობთ ამ კონკრეტულ ჩატში ბოლო ნახვის დროს
                 db.ref(`users/${myUid}/last_read/${chatId}`).once('value', readSnap => {
                     const lastRead = readSnap.val() || 0;
-                    
-                    // ვიღებთ ამ ჩატის ბოლო მესიჯს
                     const msgs = Object.values(allChats[chatId]);
                     const lastMsg = msgs[msgs.length - 1];
-
                     if (lastMsg.senderId !== myUid && lastMsg.ts > lastRead) {
                         totalUnread++;
                     }
-
-                    // თუ არის წაუკითხავები, ავანთოთ ნიშანი ქვევით ნავბარში
                     if (chatBadge) {
                         if (totalUnread > 0) {
                             chatBadge.innerText = totalUnread;
@@ -1979,97 +1627,24 @@ function startGlobalUnreadCounter() {
     });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ზარის მესიჯის და ვიდიეო ჩატის ხმები
-const messaging = firebase.messaging();
-
-function requestPushPermission() {
-    Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-            console.log('შეტყობინებებზე უფლება მიღებულია.');
-            // ვიღებთ უნიკალურ Token-ს ამ მომხმარებლისთვის
-            messaging.getToken({ vapidKey: 'აქ_უნდა_ჩაისვას_შენი_VAPID_KEY' })
-            .then((currentToken) => {
-                if (currentToken) {
-                    // ვინახავთ ამ ტოკენს ბაზაში მომხმარებლის ID-სთან ერთად
-                    if (auth.currentUser) {
-                        db.ref('users/' + auth.currentUser.uid).update({
-                            pushToken: currentToken
-                        });
-                    }
-                }
-            });
-        }
-    });
-}
-
-// გამოიძახე ეს ფუნქცია როცა მომხმარებელი შედის სისტემაში
-auth.onAuthStateChanged(user => {
-    if (user) {
-        requestPushPermission();
-    }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function switchTab(tabName, btn) {
-    // 1. მონიშვნა
     document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
     const profGrid = document.getElementById('profGrid');
     const userPhotosGrid = document.getElementById('userPhotosGrid');
     const noMsg = document.getElementById('noPhotosMsg');
     const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
-
-    // 2. კრიტიკული ნაწილი: გასუფთავება (რომ დუბლიკატები არ დარჩეს)
     profGrid.innerHTML = ""; 
     userPhotosGrid.innerHTML = "";
-    
     profGrid.style.display = 'none';
     userPhotosGrid.style.display = 'none';
     noMsg.style.display = 'none';
-
-    // 3. ჩატვირთვა
     if (tabName === 'info' || tabName === 'reels') {
         profGrid.style.display = 'grid';
         loadUserVideos(viewUid); 
     } 
     else if (tabName === 'photos') {
         userPhotosGrid.style.display = 'grid';
-        // ვიყენებთ timeout-ს 100 მილიწამით, რომ ბრაუზერმა მოასწროს გასუფთავება
         setTimeout(() => {
             if (typeof openPhotosSection === "function") openPhotosSection();
         }, 100);
@@ -2088,7 +1663,6 @@ function loadMySavedPosts() {
     const grid = document.getElementById('profGrid');
     const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
     grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>იტვირთება შენახულები...</p>";
-    
     db.ref('posts').once('value', snap => {
         grid.innerHTML = "";
         const posts = snap.val();
@@ -2096,10 +1670,8 @@ function loadMySavedPosts() {
             grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
             return;
         }
-
         let savedCount = 0;
         Object.entries(posts).forEach(([id, post]) => {
-            // ვამოწმებთ, არის თუ არა ეს ვიდეო ამ მომხმარებლის მიერ შენახული
             if(post.savedBy && post.savedBy[viewUid]) {
                 const video = post.media ? post.media.find(m => m.type === 'video') : null;
                 if(video) {
@@ -2108,128 +1680,43 @@ function loadMySavedPosts() {
                     item.className = 'grid-item';
                     item.innerHTML = `
                         <video src="${video.url}" muted></video>
-                        <i class="fas fa-bookmark" style="position:absolute; top:8px; right:8px; color:var(--gold); font-size:12px; filter: drop-shadow(0 0 2px black);"></i>
-                    `;
+                        <i class="fas fa-bookmark" style="position:absolute; top:8px; right:8px; color:var(--gold); font-size:12px; filter: drop-shadow(0 0 2px black);"></i>`;
                     item.onclick = () => playFullVideo(video.url);
                     grid.appendChild(item);
                 }
             }
         });
-
         if(savedCount === 0) {
             grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
         }
     });
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let videoStream = null;
-
-// ეს ფუნქცია იხსნება ტოკენზე დაჭერისას
 async function openUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
         modal.style.display = 'flex';
-        
         const video = document.getElementById('cameraStream');
         const placeholder = document.getElementById('placeholderText');
-
         try {
             if (window.videoStream) {
                 window.videoStream.getTracks().forEach(track => track.stop());
             }
-
             window.videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "user" }, 
                 audio: true 
             });
-            
             if (video) {
                 video.srcObject = window.videoStream;
-                video.setAttribute('playsinline', '');
-                video.setAttribute('autoplay', '');
-                video.muted = true; 
-                
-                // --- შესწორებული: სარკისებური ეფექტი სელფისთვის ---
                 video.style.transform = "scaleX(-1)"; 
-                
                 video.style.display = 'block';
                 video.play().catch(e => console.log("ავტომატური გაშვების შეცდომა:", e));
-
                 if (placeholder) placeholder.style.display = 'none';
-                console.log("კამერა და მიკროფონი მზად არის ✅");
             }
         } catch (err) {
-            console.error("კამერის ჩართვა ვერ მოხერხდა:", err);
-            alert("კამერა ვერ ჩაირთო. შეამოწმეთ ნებართვები პარამეტრებში.");
+            alert("კამერა ვერ ჩაირთო.");
         }
-    }
-}
-
-async function startLiveCamera() {
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        });
-        
-        if (video) {
-            video.srcObject = videoStream;
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.muted = true; 
-
-            // --- შესწორებული: სარკისებური ეფექტი აქაც ---
-            video.style.transform = "scaleX(-1)";
-
-            video.play();
-            video.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
-        }
-    } catch (err) {
-        console.error("Camera Error:", err);
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-                video.style.transform = "scaleX(-1)";
-                video.play();
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            })
-            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
     }
 }
 
@@ -2245,81 +1732,42 @@ function stopCamera() {
         videoStream = null;
     }
     const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-    
     if (video) {
         video.pause();
         video.srcObject = null;
         video.style.display = 'none';
     }
-    if (placeholder) placeholder.style.display = 'block';
-    
-    if (recordInner) {
-        recordInner.style.borderRadius = "50%";
-        recordInner.style.background = "#ff4d4d";
-        recordInner.style.transform = "scale(1)";
-        recordInner.style.boxShadow = "none";
-    }
 }
-
-
-
 
 var globalMediaRecorder = null;
 var globalChunks = [];
 var currentFacingMode = "user"; 
 var timerInterval = null;
 var seconds = 0;
-
-const RECORDING_LIMIT = 60; // ლიმიტი 60 წამი
+const RECORDING_LIMIT = 60; 
 
 function startTimer() {
     if (timerInterval) clearInterval(timerInterval);
-    
     seconds = 0;
     const minElem = document.getElementById('timerMinutes');
     const secElem = document.getElementById('timerSeconds');
     const timerElement = document.getElementById('recordingTimer');
-
     if (timerElement) timerElement.style.display = 'flex';
-    
     timerInterval = setInterval(() => {
         seconds++;
-        
-        // დროის განახლება ეკრანზე
         let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
         let secs = (seconds % 60).toString().padStart(2, '0');
-        
         if (minElem) minElem.innerText = mins;
         if (secElem) secElem.innerText = secs;
-
-        // 🛑 ლიმიტის შემოწმება
         if (seconds >= RECORDING_LIMIT) {
-            console.log("ლიმიტი ამოიწურა!");
-            
-            // 1. ჯერ ვასუფთავებთ ტაიმერს, რომ აღარ გაგრძელდეს ათვლა
             stopTimer();
-
-            // 2. ვაჩერებთ MediaRecorder-ს (ყველანაირი შემოწმების გარეშე, პირდაპირ)
-            if (globalMediaRecorder) {
-                globalMediaRecorder.stop();
-            }
-
-            // 3. ვიზუალურად ვაბრუნებთ ღილაკს საწყის ფორმაში
-            const btnInner = document.getElementById('recordInner');
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-
-            alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
+            if (globalMediaRecorder) globalMediaRecorder.stop();
+            alert("ლიმიტი ამოიწურა.");
         }
     }, 1000);
 }
 
 function stopTimer() {
-    // ინტერვალის სრული გაჩერება და გასუფთავება
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
@@ -2328,451 +1776,132 @@ function stopTimer() {
     if (timerElement) timerElement.style.display = 'none';
 }
 
-
-
-
-                    
-
 async function switchCamera() {
     const video = document.getElementById('cameraStream');
-    
-    if (window.videoStream) {
-        window.videoStream.getTracks().forEach(track => track.stop());
-    }
-    
+    if (window.videoStream) window.videoStream.getTracks().forEach(track => track.stop());
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-
     try {
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                facingMode: currentFacingMode,
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 } 
-            },
+            video: { facingMode: currentFacingMode },
             audio: true
         });
-
         window.videoStream = stream;
         if (video) {
             video.srcObject = stream;
-            video.onloadedmetadata = () => {
-                video.play();
-                video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
-            };
+            video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
+            video.play();
         }
-    } catch (err) {
-        alert("კამერის გადართვა ვერ მოხერხდა.");
-        currentFacingMode = "user"; 
-    }
+    } catch (err) { alert("შეცდომა კამერის გადართვისას."); }
 }
 
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
-    
-    try {
-        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) return;
-
-            globalChunks = [];
-            globalMediaRecorder = new MediaRecorder(window.videoStream);
-            
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
-            };
-
-            globalMediaRecorder.onstop = () => {
-                stopTimer(); // აქედან ვთიშავთ ტაიმერს
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                videoInput.files = dataTransfer.files;
-
-                video.srcObject = null;
-                video.src = URL.createObjectURL(blob);
-                video.style.transform = "scaleX(1)";
-                video.muted = false;
-                video.play();
-
-                if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect(videoInput);
-                }
-            };
-
-            globalMediaRecorder.start();
-            startTimer(); // აქედან ვიწყებთ ტაიმერს
-            
-            if (btnInner) {
-                btnInner.style.borderRadius = "8px";
-                btnInner.style.background = "#ff0000";
-            }
-        } else {
-            globalMediaRecorder.stop();
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-        }
-    } catch (err) {
-        console.error(err);
+    if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+        if (!window.videoStream) return;
+        globalChunks = [];
+        globalMediaRecorder = new MediaRecorder(window.videoStream);
+        globalMediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) globalChunks.push(e.data); };
+        globalMediaRecorder.onstop = () => {
+            stopTimer();
+            const blob = new Blob(globalChunks, { type: 'video/mp4' });
+            const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            videoInput.files = dataTransfer.files;
+            video.srcObject = null;
+            video.src = URL.createObjectURL(blob);
+            video.style.transform = "scaleX(1)";
+            video.play();
+        };
+        globalMediaRecorder.start();
+        startTimer();
+        if (btnInner) btnInner.style.borderRadius = "8px";
+    } else {
+        globalMediaRecorder.stop();
+        if (btnInner) btnInner.style.borderRadius = "50%";
     }
 }
 
-
-            
-
-
-
-
-
-
-
-
-
-              
-
-
-
-
-
-
-
-
-
-
-// პაროლის აღდგენის ლოგიკა
 function handleForgotPassword() {
-    // 1. ვიღებთ მეილს ზუსტად uEmail აიდიდან
     const emailInput = document.getElementById('uEmail');
     const emailValue = emailInput.value.trim();
-
-    // 2. ვამოწმებთ, ცარიელი ხომ არ არის
-    if (!emailValue) {
-        alert("გთხოვთ, ჯერ ჩაწეროთ მეილი Email / ელფოსტა ველში!");
-        emailInput.focus(); // ავტომატურად გადაიყვანს კურსორს ველზე
-        return;
-    }
-
-    // 3. Firebase-ის პაროლის აღდგენის მოთხოვნა
-    auth.sendPasswordResetEmail(emailValue)
-        .then(() => {
-            // წარმატება
-            alert("პაროლის აღდგენის ინსტრუქცია გამოგზავნილია თქვენს მეილზე: " + emailValue);
-        })
-        .catch((error) => {
-            // შეცდომების დამუშავება
-            console.error("Reset Error:", error);
-            if (error.code === 'auth/user-not-found') {
-                alert("ამ მეილით მომხმარებელი ვერ მოიძებნა.");
-            } else if (error.code === 'auth/invalid-email') {
-                alert("მეილის ფორმატი არასწორია.");
-            } else {
-                alert("შეცდომა: " + error.message);
-            }
-        });
+    if (!emailValue) return alert("ჩაწერეთ მეილი!");
+    auth.sendPasswordResetEmail(emailValue).then(() => alert("ინსტრუქცია გაიგზავნა."));
 }
 
-
-
-
-
-
-
-
-
-
-
-
-// საიფის დროებითი აპლიკაციის ლოგიკა
 let deferredPrompt;
-
 window.addEventListener('beforeinstallprompt', (e) => {
-    // ბრაუზერის სტანდარტული ფანჯრის დაბლოკვა
     e.preventDefault();
     deferredPrompt = e;
-    
-    // აქ შეგიძლია გამოაჩინო შენი საკუთარი "Install" ღილაკი საიტზე
-    console.log("აპლიკაციის დაინსტალირება შესაძლებელია! ✅");
 });
 
-// ფუნქცია, რომელიც გამოიძახება "Install" ღილაკზე დაჭერისას
 function installApp() {
     if (deferredPrompt) {
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('მომხმარებელმა დააინსტალირა აპლიკაცია');
-            }
-            deferredPrompt = null;
-        });
+        deferredPrompt = null;
     }
 }
 
-
-
-
-
-
-
-
-// შეტყობინების მონიჭება აპლიკაციაზე 
 function enableNotifications() {
-    if (!('Notification' in window)) {
-        console.log("ეს ბრაუზერი არ უჭერს მხარს შეტყობინებებს.");
-        return;
-    }
-
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            console.log("ნებართვა მიღებულია! ✅");
-            // აქედან შეგიძლია გატესტო
-            showTestNotification();
-        }
-    });
+    if (!('Notification' in window)) return;
+    Notification.requestPermission();
 }
 
-// ტესტისთვის, რომ ახლავე ნახო როგორ მუშაობს
-window.addEventListener('load', () => {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                console.log("შეტყობინებები ჩაირთო! ✅");
-                // სატესტო მესიჯი 2 წამში, რომ დარწმუნდე მუშაობს თუ არა
-                setTimeout(showTestNotification, 2000);
-            }
-        });
-    }
-});
-
-function showTestNotification() {
-    navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification('Impact Store', {
-            body: 'თქვენ ჩართეთ შეტყობინებები! 🔔',
-            icon: 'logo.png',
-            vibrate: [200, 100, 200],
-            badge: 'logo.png'
-        });
-    });
-}
-
-
-
-
-
-
-// ფუნქცია, რომელიც აპლიკაციის ხატულაზე აჩენს ციფრს
 function setAppBadge(count) {
-    if ('setAppBadge' in navigator) {
-        navigator.setAppBadge(count).catch((error) => {
-            console.error("Badge-ის დაყენება ვერ მოხერხდა:", error);
-        });
-    }
+    if ('setAppBadge' in navigator) navigator.setAppBadge(count);
 }
 
-// მაგალითად, როცა 1 ახალი მესიჯია:
-setAppBadge(1);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ფილტრის ლოგიკა
 function applyTikTokFilter(filterType, element) {
     const video = document.getElementById('cameraStream');
-    
-    // თუ აირჩიე "Beauty" (მაგალითად, დავარქვათ Smooth)
-    if (filterType === 'beauty_smooth') {
-        // აქ ირთვება AI-ს პარამეტრები
-        video.style.filter = "contrast(1.1) brightness(1.1) blur(0.5px) saturate(1.1)";
-        console.log("Beauty Mode: Active ✅");
-    } else {
-        // სხვა ჩვეულებრივი ფერების ფილტრები
-        video.style.filter = filterType;
-    }
-
-    // ვიზუალური მონიშვნა ავატარებზე (წითელი ჩარჩო)
-    const allAvatars = document.querySelectorAll('.filter-avatar div');
-    allAvatars.forEach(div => div.style.borderColor = 'white');
-    element.querySelector('div').style.borderColor = '#fe2c55';
+    video.style.filter = (filterType === 'beauty_smooth') ? "contrast(1.1) brightness(1.1) blur(0.5px)" : filterType;
 }
 
-
-
-
-
-
-let faceMesh;
-
-function initBeautyFilter() {
-    faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true, // თვალების და ტუჩების დეტალიზაცია
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    faceMesh.onResults(onFaceResults);
-}
-
-// სახის დამუშავების ფუნქცია (Beauty Effect)
-function onFaceResults(results) {
-    const video = document.getElementById('cameraStream');
-    if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
-
-    // აქ ხდება ჯადოქრობა: სახის გაგლუვება
-    // ვიყენებთ Canvas-ს, რომ კანზე "რბილი" ფენა გადავატაროთ
-    applySkinSmooth(results.multiFaceLandmarks[0]);
-}
-
-function applySkinSmooth(landmarks) {
-    const video = document.getElementById('cameraStream');
-    // TikTok-ის სტილის Skin Softening ლოგიკა:
-    // 1. სახის კონტურის ამოცნობა
-    // 2. კანის ფერის ოდნავ "დაბლურვა" (Blur)
-    // 3. თვალების და ტუჩების სიცხადის შენარჩუნება
-    video.style.filter = "contrast(1.1) brightness(1.05) saturate(1.1) blur(0.4px)";
-    
-    // შენიშვნა: ნამდვილი "Skin Smooth" უფრო რთული Canvas ლოგიკაა,
-    // მაგრამ ეს CSS კომბინაცია გაძლევს საწყის "Beauty" ეფექტს.
-}
-
-// ჩართე AI ფილტრი კამერის გახსნისას
-initBeautyFilter();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 1. ლაიქის (გულის) გაცოცხლება
 function handleLikeFromFull() {
     const postId = window.currentFullVideoId;
     if (!postId) return;
-
     const myUid = auth.currentUser.uid;
     const likeRef = db.ref(`posts/${postId}/likedBy/${myUid}`);
-
     likeRef.once('value', snap => {
-        if (snap.exists()) {
-            // თუ უკვე დალაიქებულია - ვაშორებთ
-            likeRef.remove();
-        } else {
-            // თუ არ არის - ვამატებთ (შენი სტრუქტურით: ტიპი, ფოტო, სახელი)
-            likeRef.set({ 
-                type: '❤️', 
-                photo: myPhoto, 
-                name: myName 
-            });
-            
-            // ტოკენების ლოგიკა (თუ სხვისია, დაერიცხოს 2.00)
+        if (snap.exists()) likeRef.remove();
+        else {
+            likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
             db.ref(`posts/${postId}`).once('value', pSnap => {
                 const post = pSnap.val();
-                if (post && post.authorId !== myUid) {
-                    earnAkho(post.authorId, 2.00, 'Impact (Like from Full)');
-                }
+                if (post && post.authorId !== myUid) earnAkho(post.authorId, 2.00, 'Impact');
             });
         }
-        // ეკრანზე ციფრების მომენტალური განახლება
         setTimeout(() => playFullVideo(document.getElementById('fullVideoTag').src, postId), 300);
     });
 }
 
-// 2. კომენტარების პანელის 
 function openCommentsFromFull() {
     if (!window.currentFullVideoId) return;
-
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-
     if (commUI && videoOverlay) {
-        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
         videoOverlay.appendChild(commUI);
-
-        // 2. დიზაინი: უფრო მეტი გამჭვირვალობა
         commUI.style.display = "flex";
         commUI.style.position = "absolute";
-        commUI.style.zIndex = "9999999";
-        
-        // 0.6 ნიშნავს 60% სიმუქეს, ანუ 40% გამჭვირვალეა
         commUI.style.background = "rgba(0, 0, 0, 0.6)"; 
-        
-        // ბლური გავაძლიერე 15px-მდე უფრო "Premium" ეფექტისთვის
         commUI.style.backdropFilter = "blur(15px)";
-        commUI.style.webkitBackdropFilter = "blur(15px)";
-
-        // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
-
-        // 4. დახურვის ღილაკის ლოგიკა
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
-        if (closeBtn) {
-            closeBtn.onclick = function() {
-                commUI.style.display = 'none';
-                if (vid) vid.play();
-            };
-        }
-
+        if (closeBtn) closeBtn.onclick = function() {
+            commUI.style.display = 'none';
+            if (vid) vid.play();
+        };
         openComments(window.currentFullVideoId);
     }
 }
- 
 
-
-// 3. ვიდეოს შენახვა (Bookmark)
 function saveVideoFromFull() {
     const postId = window.currentFullVideoId;
     if (!postId) return;
-
     const myUid = auth.currentUser.uid;
     const saveRef = db.ref(`posts/${postId}/savedBy/${myUid}`);
-
     saveRef.once('value', snap => {
         if (snap.exists()) {
             saveRef.remove();
@@ -2784,92 +1913,20 @@ function saveVideoFromFull() {
     });
 }
 
-// 4. გაზიარება (Share)
 function shareVideoFromFull() {
     if (!window.currentFullVideoId) return;
-    
     const shareUrl = window.location.origin + "?v=" + window.currentFullVideoId;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'EmigrantBook Video',
-            url: shareUrl
-        }).catch(err => console.log(err));
-    } else {
-        navigator.clipboard.writeText(shareUrl);
-        alert("ბმული კოპირებულია!");
-    }
+    if (navigator.share) navigator.share({ url: shareUrl });
+    else { navigator.clipboard.writeText(shareUrl); alert("ბმული კოპირებულია!"); }
 }
 
-// აუცილებელია: ფუნქციების გატანა window-ზე, რომ HTML-მა "დაინახოს"
-window.handleLikeFromFull = handleLikeFromFull;
-window.openCommentsFromFull = openCommentsFromFull;
-window.saveVideoFromFull = saveVideoFromFull;
-window.shareVideoFromFull = shareVideoFromFull;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ეს ფუნქცია სპეციალურად ვიდეოს დროს დახურვისთვისაა
 function closeVideoComments() {
-    // 1. ვთიშავთ კომენტარების ფანჯარას
     document.getElementById('commentsUI').style.display = 'none';
-
-    // 2. თუ უკან ვიდეოს ფანჯარაა, გამოვაჩინოთ და გავაგრძელოთ
-    const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    
-    if (overlay && overlay.style.display === 'block') {
-        overlay.style.opacity = "1"; // თუ opacity-თ გვქონდა დამალული
-        if (vid) vid.play(); // ვიდეოს გაგრძელება
-    }
+    if (vid) vid.play();
 }
 
-// აი აქ ვპოულობთ შენს "X" ღილაკს და პროგრამულად ვაბამთ ამ ფუნქციას
-// ამას ვუშვებთ ყოველ ჯერზე, როცა ვიდეოდან იხსნება კომენტარები
 function fixCloseBtn() {
-    const commUI = document.getElementById('commentsUI');
-    const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
-    if (closeBtn) {
-        closeBtn.onclick = closeVideoComments;
-    }
+    const closeBtn = document.getElementById('commentsUI').querySelector('span[onclick*="commentsUI"]');
+    if (closeBtn) closeBtn.onclick = closeVideoComments;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
