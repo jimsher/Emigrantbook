@@ -1,4 +1,4 @@
-// --- 1. Firebase კონფიგურაცია ---
+// --- 1. Firebase კონფიგურაცია (შენი ორიგინალი მონაცემები) ---
 const firebaseConfig = { 
   apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
   authDomain: "emigrantbook.firebaseapp.com", 
@@ -8,7 +8,10 @@ const firebaseConfig = {
   appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
 };
 
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+// ინიციალიზაცია
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 const auth = firebase.auth();
 
@@ -86,13 +89,26 @@ window.sendGift = async function(points, type) {
     document.getElementById('gift-panel').style.display = 'none';
 };
 
+document.getElementById('gift-btn').onclick = () => {
+    const panel = document.getElementById('gift-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+};
+
 // --- 6. ჩატი ---
 document.getElementById('send-msg').onclick = async () => {
     const input = document.getElementById('chat-input');
     if (input.value.trim() !== "") { await sendChatMessage(input.value); input.value = ""; }
 };
 
+document.getElementById('chat-input').addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== "") {
+        await sendChatMessage(e.target.value);
+        e.target.value = "";
+    }
+});
+
 async function sendChatMessage(text) {
+    if (!currentUser) return;
     const userData = await getRealUser(currentUser.uid);
     db.ref('live_chats/' + channelName).push({ name: userData.name, text: text, timestamp: Date.now() });
 }
@@ -131,6 +147,7 @@ function startLocalTimer(duration) {
         if (timeLeft <= 0) {
             clearInterval(battleTimer);
             db.ref('live_battles/' + channelName).update({ status: "finished" });
+            sendChatMessage("🏁 ბრძოლა დასრულდა!");
         }
     }, 1000);
 }
@@ -143,32 +160,35 @@ document.getElementById('leave-btn').onclick = async () => {
     window.location.href = "/";
 };
 
-// --- 10. Agora ჩართვა და ეკრანის გაყოფის ლოგიკა ---
+// --- 10. Agora-ს ჩართვა (შენი ორიგინალი + ეკრანის გაყოფა) ---
 async function startLiveStream() {
     try {
         await agoraClient.setClientRole("host");
         await agoraClient.join(agoraAppId, channelName, agoraToken, currentUser.uid);
+        
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
         localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+        
         localTracks.videoTrack.play("local-player");
         await agoraClient.publish([localTracks.audioTrack, localTracks.videoTrack]);
-
-        // როცა სტუმარი შემოვა (User Published)
+        
+        // აი ეს არის ერთადერთი დანამატი სტუმრისთვის:
         agoraClient.on("user-published", async (user, mediaType) => {
             await agoraClient.subscribe(user, mediaType);
             if (mediaType === "video") {
-                // ვრთავთ ეკრანის გაყოფის კლასს (Split Screen)
                 document.getElementById('video-container').classList.add('split-screen');
                 user.videoTrack.play("remote-player");
             }
             if (mediaType === "audio") { user.audioTrack.play(); }
         });
 
-        // როცა სტუმარი გავა (User Unpublished)
         agoraClient.on("user-unpublished", user => {
-            // ვაბრუნებთ მთლიან ეკრანზე (Full Screen)
             document.getElementById('video-container').classList.remove('split-screen');
         });
 
-    } catch (e) { console.log("Agora error:", e); }
+        console.log("ლაივი წარმატებით დაიწყო ტოკენით!");
+    } catch (e) { 
+        console.log("Agora error:", e); 
+        alert("ლაივი ვერ დაიწყო. შეამოწმე ტოკენი ან კამერის ნებართვა.");
+    }
 }
