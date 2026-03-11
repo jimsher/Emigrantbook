@@ -135,6 +135,26 @@ auth.onAuthStateChanged(user => {
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
 
+// 1. ფუნქცია: Token-ის აღება და შენახვა
+    function saveUserToken() {
+      messaging.getToken({ 
+        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
+      }).then((token) => {
+        if (token) {
+          // ვინახავთ ტოკენს კონკრეტული იუზერის ქვეშ ბაზაში
+          db.ref('users/' + user.uid + '/fcmToken').set(token);
+          console.log("Push Token შენახულია! ✅");
+        }
+      }).catch((err) => console.log("Token-ის შეცდომა:", err));
+    }
+
+    // 2. ფუნქცია: ნებართვის მოთხოვნა
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        saveUserToken();
+      }
+    });
+   
 // აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
 let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
 
