@@ -127,7 +127,5 @@ ru: {
     toggleSideMenu(false);
 }
  
-    // 6. დახურე გვერდითა მენიუ
-    toggleSideMenu(false);
-}
+    
  // --- END LANGUAGE LOGIC ---
