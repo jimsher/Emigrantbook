@@ -1,3 +1,40 @@
+// 1. სულ თავში (იმპორტები)
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+
+// 2. Firebase-ის ჩართვა (კონფიგურაცია)
+firebase.initializeApp({
+  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk",
+  projectId: "emigrantbook",
+  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f"
+});
+
+const messaging = firebase.messaging();
+
+// 3. შენი PWA ლოგიკა (Install, Activate, Fetch)
+self.addEventListener('install', (e) => {
+    console.log('SW Installed');
+    self.skipWaiting();
+});
+
+// ... და ასე შემდეგ შენი კოდი ბოლომდე
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // 1. ინსტალაცია და მომენტალური გააქტიურება
 self.addEventListener('install', (e) => {
     console.log('Service Worker: Installed ✅');
