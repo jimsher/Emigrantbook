@@ -28,6 +28,14 @@ const translations = {
     physical: "ნივთები",
     vip: "VIP",
     close_btn: "← დახურვა"
+  checkout_title: "შეკვეთის გაფორმება",
+f_name: "სახელი",
+l_name: "გვარი",
+address: "სრული მისამართი",
+city: "ქალაქი",
+post_code: "საფოსტო ინდექსი",
+phone_label: "ტელეფონის ნომერი",
+confirm_order: "შეკვეთის დადასტურება"
  },
  en: {
     welcome: "WELCOME", ob_desc1: "Welcome to a space where every idea turns into a result.", next: "Next",
@@ -57,6 +65,14 @@ const translations = {
     physical: "Items",
     vip: "VIP",
     close_btn: "← Close"
+  checkout_title: "Checkout",
+f_name: "First Name",
+l_name: "Last Name",
+address: "Full Address",
+city: "City",
+post_code: "Post Code",
+phone_label: "Phone Number",
+confirm_order: "Confirm Order"
  },
  it: {
     welcome: "BENVENUTO", ob_desc1: "Benvenuti...", next: "Avanti",
@@ -86,6 +102,14 @@ const translations = {
     physical: "Oggetti",
     vip: "VIP",
     close_btn: "← Chiudi"
+  checkout_title: "Completare l'ordine",
+f_name: "Nome",
+l_name: "Cognome",
+address: "Indirizzo completo",
+city: "Città",
+post_code: "Codice postale",
+phone_label: "Numero di telefono",
+confirm_order: "Conferma ordine"
  },
  ru: {
     welcome: "ДОБРО ПОЖАЛОВАТЬ", ob_desc1: "Добро пожаловать...", next: "Далее",
@@ -115,6 +139,14 @@ const translations = {
     physical: "Товары",
     vip: "VIP",
     close_btn: "← Закрыть"
+  checkout_title: "Оформление заказа",
+f_name: "Имя",
+l_name: "Фамилия",
+address: "Полный адрес",
+city: "Город",
+post_code: "Почтовый индекс",
+phone_label: "Номер телефона",
+confirm_order: "Подтвердить заказ"
  }
 };
 
