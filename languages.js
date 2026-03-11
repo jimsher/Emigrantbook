@@ -27,7 +27,7 @@ const translations = {
     digital: "ციფრული",
     physical: "ნივთები",
     vip: "VIP",
-    close_btn: "← დახურვა"
+    close_btn: "← დახურვა",
   checkout_title: "შეკვეთის გაფორმება",
 f_name: "სახელი",
 l_name: "გვარი",
@@ -64,7 +64,7 @@ confirm_order: "შეკვეთის დადასტურება"
     digital: "Digital",
     physical: "Items",
     vip: "VIP",
-    close_btn: "← Close"
+    close_btn: "← Close",
   checkout_title: "Checkout",
 f_name: "First Name",
 l_name: "Last Name",
@@ -101,7 +101,7 @@ confirm_order: "Confirm Order"
     digital: "Digitale",
     physical: "Oggetti",
     vip: "VIP",
-    close_btn: "← Chiudi"
+    close_btn: "← Chiudi",
   checkout_title: "Completare l'ordine",
 f_name: "Nome",
 l_name: "Cognome",
@@ -138,7 +138,7 @@ confirm_order: "Conferma ordine"
     digital: "Цифровые",
     physical: "Товары",
     vip: "VIP",
-    close_btn: "← Закрыть"
+    close_btn: "← Закрыть",
   checkout_title: "Оформление заказа",
 f_name: "Имя",
 l_name: "Фамилия",
@@ -146,7 +146,7 @@ address: "Полный адрес",
 city: "Город",
 post_code: "Почтовый индекс",
 phone_label: "Номер телефона",
-confirm_order: "Подтвердить заказ"
+confirm_order: "Подтвердить заказ",
  }
 };
 
