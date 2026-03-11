@@ -140,6 +140,23 @@ auth.onAuthStateChanged(user => {
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
 
+
+// --- PUSH NOTIFICATION TOKEN LOGIC (START) ---
+        // ვიყენებთ messaging-ს, რომელიც თავში გაქვს განსაზღვრული
+        messaging.requestPermission()
+            .then(() => messaging.getToken())
+            .then((token) => {
+                if (token) {
+                    // ვინახავთ ტოკენს ბაზაში fcmToken-ის სახელით
+                    db.ref('users/' + user.uid + '/fcmToken').set(token);
+                    console.log("Push ტოკენი შენახულია! ✅");
+                }
+            })
+            .catch((err) => console.log("ტოკენის შეცდომა:", err));
+        // --- PUSH NOTIFICATION TOKEN LOGIC (END) ---
+
+   
+
 // აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
 let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
 
