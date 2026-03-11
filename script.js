@@ -16,7 +16,7 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 const auth = firebase.auth();
 const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
-const messaging = firebase.messaging(); // <-- ეს აუცილებელია შეტყობინებებისთვის
+
 
 
 if ('serviceWorker' in navigator) {
@@ -129,6 +129,7 @@ if ('serviceWorker' in navigator) {
 
         
 
+
 auth.onAuthStateChanged(user => {
  applyLanguage();
  if (user) {
@@ -139,46 +140,44 @@ auth.onAuthStateChanged(user => {
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
 
- // --- PUSH NOTIFICATION TOKEN SAVER ---
- Notification.requestPermission().then((permission) => {
-    if (permission === 'granted') {
-        messaging.getToken({ vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' })
-        .then((token) => {
-            if (token) {
-                db.ref('users/' + user.uid + '/fcmToken').set(token);
-            }
-        });
-    }
- });
-
-let currentIncomingCall = null; 
+// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
+let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
 
 db.ref(`video_calls/${user.uid}`).on('value', snap => {
     const call = snap.val();
     if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        currentIncomingCall = call; 
+        currentIncomingCall = call; // ვინახავთ ინფორმაციას
+        
+        // ვავსებთ ფანჯარას მონაცემებით
         document.getElementById('callerNameDisplay').innerText = call.callerName;
         document.getElementById('callerAva').src = call.callerPhoto || 'https://ui-avatars.com/api/?name=' + call.callerName;
+        
+        // ვაჩენთ ლამაზ ფანჯარას
         const modal = document.getElementById('incomingCallModal');
         modal.style.display = 'flex';
     } else {
+        // თუ ზარი გაუქმდა გამომძახებლის მიერ
         document.getElementById('incomingCallModal').style.display = 'none';
     }
 });
 
-window.acceptCall = function() {
+// ფუნქცია: ზარის აღება
+function acceptCall() {
     if (currentIncomingCall) {
         window.currentChatId = currentIncomingCall.callerUid; 
         db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
+        
         document.getElementById('incomingCallModal').style.display = 'none';
         document.getElementById('videoCallUI').style.display = 'flex';
+        
         if (typeof startVideoCall === "function") {
             startVideoCall();
         }
     }
 }
 
-window.declineCall = function() {
+// ფუნქცია: ზარის გათიშვა
+function declineCall() {
     db.ref(`video_calls/${auth.currentUser.uid}`).remove();
     document.getElementById('incomingCallModal').style.display = 'none';
 }
