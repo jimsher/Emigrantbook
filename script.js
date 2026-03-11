@@ -126,78 +126,78 @@ if ('serviceWorker' in navigator) {
 
 
 auth.onAuthStateChanged(user => {
- applyLanguage();
- if (user) {
- updatePresence();
- listenToGlobalMessages();
- startNotificationListener();
- checkDailyBonus();
- startGlobalUnreadCounter();
- listenForIncomingCalls(user);
+    applyLanguage();
+    if (user) {
+        updatePresence();
+        listenToGlobalMessages();
+        startNotificationListener();
+        checkDailyBonus();
+        startGlobalUnreadCounter();
+        listenForIncomingCalls(user);
 
-// 1. ფუნქცია: Token-ის აღება და შენახვა
-    function saveUserToken() {
-      messaging.getToken({ 
-        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-      }).then((token) => {
-        if (token) {
-          // ვინახავთ ტოკენს კონკრეტული იუზერის ქვეშ ბაზაში
-          db.ref('users/' + user.uid + '/fcmToken').set(token);
-          console.log("Push Token შენახულია! ✅");
+        // --- 1. შეტყობინებების აქტივაცია ---
+        // ჯერ ვამოწმებთ საერთოდ თუ არსებობს messaging მხარდაჭერა
+        const messaging = firebase.messaging(); 
+
+        function saveUserToken() {
+            messaging.getToken({ 
+                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
+            }).then((token) => {
+                if (token) {
+                    db.ref('users/' + user.uid + '/fcmToken').set(token);
+                    console.log("Push Token შენახულია! ✅");
+                }
+            }).catch((err) => console.log("Token-ის შეცდომა:", err));
         }
-      }).catch((err) => console.log("Token-ის შეცდომა:", err));
-    }
 
-    // 2. ფუნქცია: ნებართვის მოთხოვნა
-    Notification.requestPermission().then((permission) => {
-      if (permission === 'granted') {
-        saveUserToken();
-      }
-    });
-   
-// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
-let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
-
-db.ref(`video_calls/${user.uid}`).on('value', snap => {
-    const call = snap.val();
-    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        currentIncomingCall = call; // ვინახავთ ინფორმაციას
-        
-        // ვავსებთ ფანჯარას მონაცემებით
-        document.getElementById('callerNameDisplay').innerText = call.callerName;
-        document.getElementById('callerAva').src = call.callerPhoto || 'https://ui-avatars.com/api/?name=' + call.callerName;
-        
-        // ვაჩენთ ლამაზ ფანჯარას
-        const modal = document.getElementById('incomingCallModal');
-        modal.style.display = 'flex';
-    } else {
-        // თუ ზარი გაუქმდა გამომძახებლის მიერ
-        document.getElementById('incomingCallModal').style.display = 'none';
-    }
-});
-
-// ფუნქცია: ზარის აღება
-function acceptCall() {
-    if (currentIncomingCall) {
-        window.currentChatId = currentIncomingCall.callerUid; 
-        db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
-        
-        document.getElementById('incomingCallModal').style.display = 'none';
-        document.getElementById('videoCallUI').style.display = 'flex';
-        
-        if (typeof startVideoCall === "function") {
-            startVideoCall();
+        // ნებართვის მოთხოვნა
+        if (Notification.permission !== 'granted') {
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    saveUserToken();
+                }
+            });
+        } else {
+            saveUserToken(); // თუ უკვე მიცემული აქვს ნებართვა, მაინც გადავამოწმოთ ტოკენი
         }
-    }
-}
 
-// ფუნქცია: ზარის გათიშვა
-function declineCall() {
-    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
-    document.getElementById('incomingCallModal').style.display = 'none';
-}
+        // --- 2. ვიდეო ზარის ლოგიკა ---
+        let currentIncomingCall = null;
 
+        db.ref(`video_calls/${user.uid}`).on('value', snap => {
+            const call = snap.val();
+            if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+                currentIncomingCall = call;
+                document.getElementById('callerNameDisplay').innerText = call.callerName;
+                document.getElementById('callerAva').src = call.callerPhoto || 'https://ui-avatars.com/api/?name=' + call.callerName;
+                const modal = document.getElementById('incomingCallModal');
+                if (modal) modal.style.display = 'flex';
+            } else {
+                const modal = document.getElementById('incomingCallModal');
+                if (modal) modal.style.display = 'none';
+            }
+        });
 
+        // ფუნქცია: ზარის აღება (window-ზე გადატანილი, რომ ღილაკმა დაინახოს)
+        window.acceptCall = function() {
+            if (currentIncomingCall) {
+                window.currentChatId = currentIncomingCall.callerUid; 
+                db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
+                document.getElementById('incomingCallModal').style.display = 'none';
+                document.getElementById('videoCallUI').style.display = 'flex';
+                if (typeof startVideoCall === "function") {
+                    startVideoCall();
+                }
+            }
+        };
+
+        // ფუნქცია: ზარის გათიშვა (window-ზე გადატანილი)
+        window.declineCall = function() {
+            db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+            document.getElementById('incomingCallModal').style.display = 'none';
+        };
+
+        
 
 
 
