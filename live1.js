@@ -17,7 +17,7 @@ const auth = firebase.auth();
 
 // --- 2. გლობალური ცვლადები ---
 const agoraAppId = "7290502fac7f4feb82b021ccde79988a"; 
-const agoraToken = "007eJxTYPB/MDWs88rPCInZChNLf+4RTfT/WCFRKRYpfL10H/+KM8sUGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwS51ZuzGwIZGQ49uArKyMDBIL43Aw5mWWp8cUlRamJuQwMAIJjJCI="; // <-- ჩაწერე აგორას კონსოლიდან აღებული ტოკენი აქ
+const agoraToken = "007eJxTYPB/MDWs88rPCInZChNLf+4RTfT/WCFRKRYpfL10H/+KM8sUGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwS51ZuzGwIZGQ49uArKyMDBIL43Aw5mWWp8cUlRamJuQwMAIJjJCI="; 
 const channelName = "live_stream";
 
 let agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
@@ -48,11 +48,28 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('user-name').innerText = userData.name;
         document.getElementById('user-avatar').src = userData.avatar;
 
-        // TikTok სტილის "შემოუერთდა" შეტყობინება
-        db.ref('live_chats/' + channelName).push({
-            name: userData.name,
-            type: "join",
-            timestamp: Date.now()
+        // --- დამატებული ლოგიკა: ვამოწმებთ არის თუ არა მასპინძელი ---
+        db.ref('live_sessions/' + channelName).once('value').then((snapshot) => {
+            const session = snapshot.val();
+            let label = "შემოუერთდა";
+            
+            // თუ ოთახი არ არსებობს ან მე ვარ პატრონი
+            if (!session || session.hostUid === user.uid) {
+                label = "დაიწყო ლაივი 🎥";
+                db.ref('live_sessions/' + channelName).set({
+                    hostUid: user.uid,
+                    hostName: userData.name,
+                    startTime: Date.now()
+                });
+            }
+
+            // TikTok სტილის შეტყობინება რეალური სტატუსით
+            db.ref('live_chats/' + channelName).push({
+                name: userData.name,
+                type: "join",
+                text: label,
+                timestamp: Date.now()
+            });
         });
 
         console.log("სისტემაშია რეალური მომხმარებელი: " + user.uid);
@@ -135,7 +152,8 @@ db.ref('live_chats/' + channelName).limitToLast(20).on('child_added', (snapshot)
     msgDiv.className = 'chat-msg';
 
     if (msg.type === "join") {
-        msgDiv.innerHTML = `<span style="color: #ffcc00; font-weight: bold;">✨ ${msg.name}</span> შემოუერთდა`;
+        // აქ ვიყენებთ msg.text-ს, სადაც წერია "დაიწყო ლაივი" ან "შემოუერთდა"
+        msgDiv.innerHTML = `<span style="color: #ffcc00; font-weight: bold;">✨ ${msg.name}</span> ${msg.text || "შემოუერთდა"}`;
     } else if (msg.type === "gift") {
         msgDiv.innerHTML = `<span style="color: #ff00cc; font-weight: bold;">🎁 ${msg.name}:</span> ${msg.text}`;
     } else {
@@ -183,6 +201,10 @@ document.getElementById('leave-btn').onclick = async () => {
         localTracks.videoTrack.stop();
         localTracks.videoTrack.close();
     }
+    // როცა მასპინძელი გადის, ვშლით სესიას
+    if (currentUser) {
+        db.ref('live_sessions/' + channelName).remove();
+    }
     await agoraClient.leave();
     window.location.href = "/";
 };
@@ -191,7 +213,6 @@ document.getElementById('leave-btn').onclick = async () => {
 async function startLiveStream() {
     try {
         await agoraClient.setClientRole("host");
-        // აქ დავამატეთ agoraToken - null-ის ნაცვლად
         await agoraClient.join(agoraAppId, channelName, agoraToken, currentUser.uid);
         
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
