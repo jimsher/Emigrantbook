@@ -17,6 +17,7 @@ const auth = firebase.auth();
 
 // --- 2. გლობალური ცვლადები ---
 const agoraAppId = "7290502fac7f4feb82b021ccde79988a"; 
+const agoraToken = "აქ_ჩასვი_შენი_ტოკენი"; // <-- ჩაწერე აგორას კონსოლიდან აღებული ტოკენი აქ
 const channelName = "emigrantbook_battle_room";
 
 let agoraClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
@@ -186,14 +187,22 @@ document.getElementById('leave-btn').onclick = async () => {
     window.location.href = "/";
 };
 
-// --- 10. Agora-ს ჩართვა (სრულად ავტომატური) ---
+// --- 10. Agora-ს ჩართვა (ტოკენის მხარდაჭერით) ---
 async function startLiveStream() {
     try {
         await agoraClient.setClientRole("host");
-        await agoraClient.join(agoraAppId, channelName, null, currentUser.uid);
+        // აქ დავამატეთ agoraToken - null-ის ნაცვლად
+        await agoraClient.join(agoraAppId, channelName, agoraToken, currentUser.uid);
+        
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
         localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+        
         localTracks.videoTrack.play("local-player");
         await agoraClient.publish([localTracks.audioTrack, localTracks.videoTrack]);
-    } catch (e) { console.log("Agora error:", e); }
+        
+        console.log("ლაივი წარმატებით დაიწყო ტოკენით!");
+    } catch (e) { 
+        console.log("Agora error:", e); 
+        alert("ლაივი ვერ დაიწყო. შეამოწმე ტოკენი ან კამერის ნებართვა.");
+    }
 }
