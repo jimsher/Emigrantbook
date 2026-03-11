@@ -152,19 +152,33 @@ const translations = {
 let currentLang = localStorage.getItem('appLang') || (navigator.language.startsWith('ka') ? 'ka' : 'en');
 
 function applyLanguage() {
+    // 1. ჩვეულებრივი ტექსტების შეცვლა (ღილაკები, სათაურები)
     document.querySelectorAll('[data-key]').forEach(el => {
         const key = el.getAttribute('data-key');
-        if (translations[currentLang][key]) el.innerText = translations[currentLang][key];
+        if (translations[currentLang] && translations[currentLang][key]) {
+            el.innerText = translations[currentLang][key];
+        }
     });
 
-    const searchInp = document.getElementById('searchPlaceholder');
-    if(searchInp) searchInp.placeholder = translations[currentLang].search_p;
+    // 2. Placeholder-ების შეცვლა Checkout-ის ინპუტებისთვის
+    const inputMappings = {
+        'ordFirstName': 'f_name',
+        'ordLastName': 'l_name',
+        'ordCountry': 'country',
+        'ordCity': 'city',
+        'ordAddress': 'address',
+        'ordPhone': 'phone_label',
+        'ordEmail': 'email',
+        'appliedPromoCode': 'promo_code'
+    };
 
-    const commInp = document.getElementById('commInp');
-    if(commInp) commInp.placeholder = (translations[currentLang].comments || "Comments") + "...";
-
-    const msgInp = document.getElementById('messageInp');
-    if(msgInp) msgInp.placeholder = (translations[currentLang].chat || "Chat") + "...";
+    for (let id in inputMappings) {
+        const el = document.getElementById(id);
+        const key = inputMappings[id];
+        if (el && translations[currentLang][key]) {
+            el.placeholder = translations[currentLang][key];
+        }
+    }
 }
 
 function toggleLanguage() {
