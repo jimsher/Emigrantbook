@@ -160,7 +160,7 @@ document.getElementById('leave-btn').onclick = async () => {
     window.location.href = "/";
 };
 
-// --- 10. Agora-ს ჩართვა (შენი ორიგინალი + ეკრანის გაყოფა) ---
+// --- 10. Agora ჩართვა და ეკრანის გაყოფის მართვა ---
 async function startLiveStream() {
     try {
         await agoraClient.setClientRole("host");
@@ -168,27 +168,24 @@ async function startLiveStream() {
         
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
         localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
-        
         localTracks.videoTrack.play("local-player");
         await agoraClient.publish([localTracks.audioTrack, localTracks.videoTrack]);
-        
-        // აი ეს არის ერთადერთი დანამატი სტუმრისთვის:
+
+        // სტუმრის შემოსვლის ავტომატური კონტროლი
         agoraClient.on("user-published", async (user, mediaType) => {
             await agoraClient.subscribe(user, mediaType);
             if (mediaType === "video") {
+                // ვამატებთ CSS კლასს, რომ ეკრანი გაიყოს
                 document.getElementById('video-container').classList.add('split-screen');
                 user.videoTrack.play("remote-player");
             }
             if (mediaType === "audio") { user.audioTrack.play(); }
         });
 
-        agoraClient.on("user-unpublished", user => {
+        agoraClient.on("user-unpublished", () => {
+            // ვაშორებთ კლასს, რომ ეკრანი ისევ გაერთიანდეს
             document.getElementById('video-container').classList.remove('split-screen');
         });
 
-        console.log("ლაივი წარმატებით დაიწყო ტოკენით!");
-    } catch (e) { 
-        console.log("Agora error:", e); 
-        alert("ლაივი ვერ დაიწყო. შეამოწმე ტოკენი ან კამერის ნებართვა.");
-    }
+    } catch (e) { console.log("Agora error:", e); }
 }
