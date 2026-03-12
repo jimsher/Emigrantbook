@@ -2563,28 +2563,26 @@ function installApp() {
 
 
 // შეტყობინების მონიჭება აპლიკაციაზე 
-
-// 1. სისტემური ნოტიფიკაციის ჩვენება (Google-ის ფანჯარა)
+// 1. სისტემური ნოტიფიკაციის გამოტანა
 function showLocalNotification(title, body) {
     if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(title, {
                 body: body,
-                icon: 'logo.png', // დარწმუნდი რომ ეს ფაილი გაქვს
+                icon: 'logo.png',
                 vibrate: [200, 100, 200],
                 badge: 'logo.png',
                 tag: 'msg-group',
                 renotify: true
             });
             
-            // მესიჯის ხმა
             const sound = document.getElementById('msgSound');
-            if (sound) sound.play().catch(e => console.log("Audio play blocked"));
+            if (sound) sound.play().catch(e => {});
         });
     }
 }
 
-// 2. აპლიკაციის ხატულაზე ციფრის დაწერა (წითელი წრე)
+// 2. ხატულაზე ციფრის დაწერა (Badge)
 function setAppBadge(count) {
     if ('setAppBadge' in navigator) {
         if (count > 0) {
@@ -2595,8 +2593,9 @@ function setAppBadge(count) {
     }
 }
 
-// 3. მესიჯების მოსმენის ლოგიკა (განახლებული ვერსია)
+// 3. მესიჯების მოსმენა (აქტიურდება საიტზე შემოსვლისას)
 function listenToGlobalMessages() {
+    if (!auth.currentUser) return;
     const myUid = auth.currentUser.uid;
     console.log("მესიჯების მოსმენა აქტიურია... 👂");
 
@@ -2604,12 +2603,12 @@ function listenToGlobalMessages() {
         snap.ref.limitToLast(1).on('child_added', mSnap => {
             const msg = mSnap.val();
             
-            // ვაიგნორებთ ჩემს მესიჯებს და ძველებს (10 წამზე მეტი)
+            // ვაიგნორებთ ჩემს მესიჯებს და ძველებს
             if (!msg || msg.senderId === myUid) return;
             if (Date.now() - msg.ts > 10000) return;
 
-            // თუ ჩატი ისედაც ღიაა, ნოტიფიკაცია არ გვინდა
-            if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
+            // თუ ჩატი ღიაა, ნოტიფიკაცია არ გვინდა
+            if (typeof currentChatId !== 'undefined' && currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
 
             db.ref(`users/${msg.senderId}`).once('value', uSnap => {
                 const u = uSnap.val();
@@ -2617,8 +2616,8 @@ function listenToGlobalMessages() {
                     const senderName = u.name || "მომხმარებელი";
                     const messageText = msg.text || "📷 მედია ფაილი";
 
-                    setAppBadge(1); // აანთებს ციფრს
-                    showLocalNotification(senderName, messageText); // ამოაგდებს ფანჯარას
+                    setAppBadge(1);
+                    showLocalNotification(senderName, messageText);
 
                     if (typeof showGlobalPush === "function") {
                         showGlobalPush(senderName, u.photo, messageText);
@@ -2629,13 +2628,7 @@ function listenToGlobalMessages() {
     });
 }
 
-// 4. ციფრის მოშორების ფუნქცია
-function clearBadgeOnChat() {
-    setAppBadge(0);
-}
-
-
-
+// 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
 function sendPushToUser(targetUid, senderName, text) {
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
@@ -2657,71 +2650,42 @@ function sendPushToUser(targetUid, senderName, text) {
                     },
                     priority: "high"
                 })
-            }).then(res => console.log("Push Status:", res.status));
+            }).then(res => console.log("Push გაიგზავნა! სტატუსი:", res.status));
         }
     });
 }
 
-// ეს არის მესიჯების მოსვლის სრული ლოგიკისბოლო
-
-// 1. ტოკენის აღება და შენახვა Firebase-ში
+// 5. ტოკენის აღება და ბაზაში შენახვა (უსაფრთხო ვერსია)
 function saveMessagingToken(user) {
-    // 1. ვამოწმებთ, საერთოდ არსებობს თუ არა მესეჯინგი ამ ბრაუზერში
     if (!firebase.messaging || !firebase.messaging.isSupported()) {
-        console.log("Push შეტყობინებები არ არის მხარდაჭერილი.");
+        console.log("Push მხარდაჭერა არ არის.");
         return;
     }
 
     const messaging = firebase.messaging();
 
-    // 2. ვითხოვთ ნებართვას და ვიღებთ ტოკენს
     messaging.getToken({ 
         vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
     })
     .then((currentToken) => {
         if (currentToken) {
-            console.log("ტოკენი მიღებულია! ✅");
-            // ვინახავთ ბაზაში
-            db.ref(`users/${user.uid}/fcmToken`).set(currentToken);
-        } else {
-            console.log('ნებართვა არ არის გაცემული.');
-        }
-    })
-    .catch((err) => {
-        console.log('ტოკენის აღების შეცდომა:', err);
-    });
-}
-
-//  მეზიჯის ტოკენი რომ გაგზავნოს ბაზაზე
-const messaging = firebase.messaging();
-
-function setupNotifications(userId) {
-    // 1. ვითხოვთ ნებართვას
-    Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-            // 2. ვიღებთ Token-ს
-            return messaging.getToken({ 
-                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-            });
-        }
-    })
-    .then((currentToken) => {
-        if (currentToken) {
-            // 3. ვინახავთ ბაზაში (Firebase Realtime Database)
-            firebase.database().ref('users/' + userId).update({
+            db.ref(`users/${user.uid}`).update({
                 fcmToken: currentToken,
                 notificationsEnabled: true
-            }).then(() => {
-                console.log("Token წარმატებით შეინახა ბაზაში! ✅");
-            });
-        } else {
-            console.log('Token ვერ იქნა აღებული. ნებართვა გაცემულია?');
+            }).then(() => console.log("ტოკენი განახლდა ბაზაში! ✅"));
         }
     })
-    .catch((err) => {
-        console.log('შეცდომა Token-ის აღებისას: ', err);
-    });
+    .catch((err) => console.log('ტოკენის შეცდომა:', err));
 }
+
+// 6. ციფრის გასუფთავება ჩატში შესვლისას
+function clearBadgeOnChat() {
+    setAppBadge(0);
+}
+
+            
+// 1. ტოკენის აღება და შენახვა Firebase-ში
+
 
 
 
