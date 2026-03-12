@@ -2679,7 +2679,7 @@ function saveMessagingToken(user) {
         if (permission === 'granted') {
             // ვიღებთ ტოკენს
             return messaging.getToken({ 
-                vapidKey: 'აქ_ჩასვი_შენი_VAPID_KEY_სქრინიდან' 
+                vapidKey: 'Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA' 
             });
         }
     })
