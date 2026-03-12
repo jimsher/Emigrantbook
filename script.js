@@ -865,23 +865,29 @@ function listenToGlobalMessages() {
 
 
  function sendMessage() {
- if (!canAfford(0.2)) return;
- const inp = document.getElementById('messageInp');
- if(!inp.value.trim() || !currentChatId) return;
- const myUid = auth.currentUser.uid;
- const chatId = getChatId(myUid, currentChatId);
- 
- // მესიჯის გაგზავნა ბაზაში
- db.ref(`messages/${chatId}`).push({
- senderId: myUid,
- text: inp.value,
- ts: Date.now()
- });
+    if (!canAfford(0.2)) return;
+    const inp = document.getElementById('messageInp');
+    if(!inp.value.trim() || !currentChatId) return;
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, currentChatId);
 
- // --- ჩამატებული ხაზი ნოტიფიკაციისთვის ---
- if (typeof sendPushToUser === "function") {
-     sendPushToUser(currentChatId, myName, inp.value);
- }
+    // 1. მესიჯის გაგზავნა ბაზაში
+    db.ref(`messages/${chatId}`).push({
+        senderId: myUid,
+        text: inp.value,
+        ts: Date.now()
+    });
+
+    // --- ნოტიფიკაციის გაგზავნა მეორე იუზერთან ---
+    if (typeof sendPushToUser === "function") {
+        sendPushToUser(currentChatId, myName, inp.value);
+    }
+    // ------------------------------------------
+
+    db.ref(`typing/${chatId}/${myUid}`).remove();
+    spendAkho(0.2, 'Message');
+    inp.value = "";
+}
  // ---------------------------------------
 
  db.ref(`typing/${chatId}/${myUid}`).remove();
@@ -2633,17 +2639,14 @@ function clearBadgeOnChat() {
 
 
 function sendPushToUser(targetUid, senderName, text) {
-    // 1. ვიღებთ იმ ადამიანის ტოკენს, ვისაც მესიჯს ვწერთ
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
-        
         if (token) {
-            // 2. ვაგზავნით მოთხოვნას Google-ში შენი ახალი გასაღებით
             fetch('https://fcm.googleapis.com/fcm/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
+                    'Authorization': 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
                 },
                 body: JSON.stringify({
                     to: token,
@@ -2656,11 +2659,7 @@ function sendPushToUser(targetUid, senderName, text) {
                     },
                     priority: "high"
                 })
-            })
-            .then(res => console.log("Push გაიგზავნა! ✅ Status:", res.status))
-            .catch(err => console.log("Push-ის შეცდომა:", err));
-        } else {
-            console.log("მომხმარებელს Push ჩართული არ აქვს (ტოკენი აკლია).");
+            }).then(res => console.log("Push Status:", res.status));
         }
     });
 }
