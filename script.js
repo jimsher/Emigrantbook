@@ -683,6 +683,7 @@ function openMessenger() {
 }
 
 function startChat(uid, name, photo) {
+  setAppBadge(0);
     // ეს ხაზი აცოცხლებს ხმოვანის გაგზავნას
     window.currentChatId = uid;
     currentChatId = uid; 
@@ -708,7 +709,7 @@ function startChat(uid, name, photo) {
     }
     loadMessages(uid);
     listenToTyping(uid);
-    setAppBadge(0);
+    
 }
 
 
