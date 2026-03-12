@@ -2632,31 +2632,42 @@ function listenToGlobalMessages() {
 
 // 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
 function sendPushToUser(targetUid, senderName, text) {
+function sendPushToUser(targetUid, senderName, text) {
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
-        if (token) {
-            // ვიყენებთ თანამედროვე V1 გაგზავნის მეთოდს
-            fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // აქ ვიყენებთ შენს Browser Key-ს (API Key)
-                    'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
-                },
-                body: JSON.stringify({
-                    "to": token,
-                    "notification": {
-                        "title": senderName,
-                        "body": text,
-                        "icon": "logo.png",
-                        "click_action": "https://emigrantbook.com"
-                    },
-                    "priority": "high"
-                })
-            })
-            .then(res => console.log("Push სტატუსი:", res.status))
-            .catch(err => console.log("Push შეცდომა:", err));
+        if (!token) {
+            alert("შეცდომა: ამ იუზერს არ აქვს ტოკენი ბაზაში! ❌");
+            return;
         }
+
+        fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
+            },
+            body: JSON.stringify({
+                "to": token,
+                "notification": {
+                    "title": senderName,
+                    "body": text,
+                    "icon": "logo.png",
+                    "click_action": "https://emigrantbook.com"
+                }
+            })
+        })
+        .then(res => {
+            if (res.status === 200) {
+                alert("წარმატება! მესიჯი გაიგზავნა (200) ✅");
+            } else if (res.status === 401) {
+                alert("შეცდომა 401: გასაღები (Key) არასწორია! 🔑");
+            } else {
+                alert("სერვერის პასუხი: " + res.status);
+            }
+        })
+        .catch(err => {
+            alert("ინტერნეტის ან Fetch-ის შეცდომა: " + err.message);
+        });
     });
 }
 
