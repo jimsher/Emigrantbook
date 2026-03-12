@@ -133,13 +133,16 @@ if ('serviceWorker' in navigator) {
 auth.onAuthStateChanged(user => {
  applyLanguage();
  if (user) {
+   setTimeout(() => {
+            saveMessagingToken(user);
+        }, 2000);
  updatePresence();
  listenToGlobalMessages();
  startNotificationListener();
  checkDailyBonus();
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
- saveMessagingToken(user);   
+   
 
 
 // ეს არის შეტყობინების ველი
@@ -2663,19 +2666,32 @@ function sendPushToUser(targetUid, senderName, text) {
 
 // 1. ტოკენის აღება და შენახვა Firebase-ში
 function saveMessagingToken(user) {
+    // ვამოწმებთ, საერთოდ გვაქვს თუ არა მესეჯინგის მხარდაჭერა
+    if (!firebase.messaging.isSupported()) {
+        console.log("Push შეტყობინებები არ არის მხარდაჭერილი ამ ბრაუზერში.");
+        return;
+    }
+
     const messaging = firebase.messaging();
-    
-    messaging.getToken({ vapidKey: 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA' })
+
+    // ვითხოვთ ნებართვას
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            // ვიღებთ ტოკენს
+            return messaging.getToken({ 
+                vapidKey: 'აქ_ჩასვი_შენი_VAPID_KEY_სქრინიდან' 
+            });
+        }
+    })
     .then((currentToken) => {
         if (currentToken) {
-            console.log("ტოკენი მიღებულია: ✅", currentToken);
-            // ვინახავთ იუზერის ქვეშ
+            console.log("ტოკენი მიღებულია! ✅");
             db.ref(`users/${user.uid}/fcmToken`).set(currentToken);
-        } else {
-            console.log('ნებართვა არ არის გაცემული ტოკენზე.');
         }
-    }).catch((err) => {
-        console.log('ტოკენის აღებისას მოხდა შეცდომა: ', err);
+    })
+    .catch((err) => {
+        // ეს "catch" აუცილებელია, რომ შეცდომის შემთხვევაში საიტი არ გაჩერდეს
+        console.log('ტოკენის აღება ვერ მოხერხდა:', err);
     });
 }
 
