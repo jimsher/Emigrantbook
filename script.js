@@ -2657,25 +2657,34 @@ function sendPushToUser(targetUid, senderName, text) {
 
 // 5. ტოკენის აღება და ბაზაში შენახვა (უსაფრთხო ვერსია)
 function saveMessagingToken(user) {
-    if (!firebase.messaging || !firebase.messaging.isSupported()) {
-        console.log("Push მხარდაჭერა არ არის.");
+    // 1. ვამოწმებთ საერთოდ თუ არსებობს messaging ობიექტი
+    if (!firebase.messaging) {
+        console.error("❌ კატასტროფა: firebase-messaging.js საერთოდ არ არის ჩატვირთული!");
         return;
     }
 
     const messaging = firebase.messaging();
 
+    // 2. ვითხოვთ ტოკენს - აი აქ უნდა მოხდეს სასწაული
     messaging.getToken({ 
         vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
     })
-    .then((currentToken) => {
-        if (currentToken) {
-            db.ref(`users/${user.uid}`).update({
-                fcmToken: currentToken,
-                notificationsEnabled: true
-            }).then(() => console.log("ტოკენი განახლდა ბაზაში! ✅"));
+    .then((token) => {
+        if (token) {
+            console.log("✅ ტოკენი ამოვიღეთ:", token);
+            // 3. პირდაპირ ვწერ ბაზაში (update-ის გარეშე, set-ით რომ გადააწეროს)
+            return db.ref('users/' + user.uid + '/fcmToken').set(token);
+        } else {
+            console.warn("⚠️ ტოკენი ცარიელია! ალბათ Notification 'Allow' არ გაქვს დაჭერილი.");
         }
     })
-    .catch((err) => console.log('ტოკენის შეცდომა:', err));
+    .then(() => {
+        console.log("🔥 წარმატება! fcmToken ჩაჯდა ბაზაში!");
+    })
+    .catch((err) => {
+        console.error("🚑 აი აქ იჭედება:", err.code, err.message);
+        // თუ აქ დაწერა 'messaging/permission-blocked', ე.ი. ბრაუზერი გვიბლოკავს
+    });
 }
 
 // 6. ციფრის გასუფთავება ჩატში შესვლისას
