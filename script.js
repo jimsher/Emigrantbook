@@ -813,21 +813,38 @@ window.deleteMessage = function(chatId, msgId, senderId) {
  });
  }
 
- function listenToGlobalMessages() {
- const myUid = auth.currentUser.uid;
- db.ref('messages').on('child_added', snap => {
- snap.ref.limitToLast(1).on('child_added', mSnap => {
- const msg = mSnap.val();
- if (!msg || msg.senderId === myUid) return;
- if (Date.now() - msg.ts > 10000) return;
- if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
- db.ref(`users/${msg.senderId}`).once('value', uSnap => {
- const u = uSnap.val();
- showGlobalPush(u.name, u.photo, msg.text);
- });
- });
- });
- }
+
+
+function listenToGlobalMessages() {
+    const myUid = auth.currentUser.uid;
+    db.ref('messages').on('child_added', snap => {
+        snap.ref.limitToLast(1).on('child_added', mSnap => {
+            const msg = mSnap.val();
+            // 1. თუ მესიჯი ჩემი გამოგზავნილია, ან ძალიან ძველია, არაფერს ვშვებით
+            if (!msg || msg.senderId === myUid) return;
+            if (Date.now() - msg.ts > 10000) return;
+            
+            // 2. თუ ამ ადამიანთან ჩატი უკვე გახსნილი მაქვს, ნოტიფიკაცია არ გვინდა
+            if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
+
+            // 3. ვიგებთ ვინ მოგვწერა და ვუშვებთ ნოტიფიკაციებს
+            db.ref(`users/${msg.senderId}`).once('value', uSnap => {
+                const u = uSnap.val();
+                const senderName = u.name || "მომხმარებელი";
+                const messageText = msg.text || "📷 Voice/Media";
+
+                // --- აქ ჩაჯდა შენი კოდი ---
+                setAppBadge(1); // აანთებს ხატულას (Badge)
+                showLocalNotification("ახალი მესიჯი: " + senderName, messageText); // გამოიტანს Push-ს
+                
+                // ასევე შენი ძველი ფუნქცია, რომელიც საიტის შიგნით აჩენს პატარა ფანჯარას
+                showGlobalPush(senderName, u.photo, messageText);
+            });
+        });
+    });
+}
+
+
 
  function showGlobalPush(name, photo, text) {
  const push = document.getElementById('globalPush');
