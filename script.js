@@ -2679,7 +2679,7 @@ function saveMessagingToken(user) {
         if (permission === 'granted') {
             // ვიღებთ ტოკენს
             return messaging.getToken({ 
-                vapidKey: 'Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA' 
+                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
             });
         }
     })
@@ -2704,7 +2704,7 @@ function setupNotifications(userId) {
         if (permission === 'granted') {
             // 2. ვიღებთ Token-ს
             return messaging.getToken({ 
-                vapidKey: 'აქ_ჩასვი_შენი_VAPID_KEY_კონსოლიდან' 
+                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
             });
         }
     })
