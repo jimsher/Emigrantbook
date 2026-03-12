@@ -2635,24 +2635,27 @@ function sendPushToUser(targetUid, senderName, text) {
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
         if (token) {
+            // ვიყენებთ თანამედროვე V1 გაგზავნის მეთოდს
             fetch('https://fcm.googleapis.com/fcm/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
+                    // აქ ვიყენებთ შენს Browser Key-ს (API Key)
+                    'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
                 },
                 body: JSON.stringify({
-                    to: token,
-                    notification: {
-                        title: senderName,
-                        body: text,
-                        icon: "logo.png",
-                        click_action: "https://emigrantbook.com",
-                        sound: "default"
+                    "to": token,
+                    "notification": {
+                        "title": senderName,
+                        "body": text,
+                        "icon": "logo.png",
+                        "click_action": "https://emigrantbook.com"
                     },
-                    priority: "high"
+                    "priority": "high"
                 })
-            }).then(res => console.log("Push გაიგზავნა! სტატუსი:", res.status));
+            })
+            .then(res => console.log("Push სტატუსი:", res.status))
+            .catch(err => console.log("Push შეცდომა:", err));
         }
     });
 }
