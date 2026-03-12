@@ -870,15 +870,24 @@ function listenToGlobalMessages() {
  if(!inp.value.trim() || !currentChatId) return;
  const myUid = auth.currentUser.uid;
  const chatId = getChatId(myUid, currentChatId);
+ 
+ // მესიჯის გაგზავნა ბაზაში
  db.ref(`messages/${chatId}`).push({
  senderId: myUid,
  text: inp.value,
  ts: Date.now()
  });
+
+ // --- ჩამატებული ხაზი ნოტიფიკაციისთვის ---
+ if (typeof sendPushToUser === "function") {
+     sendPushToUser(currentChatId, myName, inp.value);
+ }
+ // ---------------------------------------
+
  db.ref(`typing/${chatId}/${myUid}`).remove();
  spendAkho(0.2, 'Message');
  inp.value = "";
- }
+}
  function openDiscovery() { 
  stopMainFeedVideos();
  document.getElementById('discoveryUI').style.display = 'flex'; 
