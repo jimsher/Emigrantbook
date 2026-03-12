@@ -2695,8 +2695,36 @@ function saveMessagingToken(user) {
     });
 }
 
+//  მეზიჯის ტოკენი რომ გაგზავნოს ბაზაზე
+const messaging = firebase.messaging();
 
-
+function setupNotifications(userId) {
+    // 1. ვითხოვთ ნებართვას
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            // 2. ვიღებთ Token-ს
+            return messaging.getToken({ 
+                vapidKey: 'აქ_ჩასვი_შენი_VAPID_KEY_კონსოლიდან' 
+            });
+        }
+    })
+    .then((currentToken) => {
+        if (currentToken) {
+            // 3. ვინახავთ ბაზაში (Firebase Realtime Database)
+            firebase.database().ref('users/' + userId).update({
+                fcmToken: currentToken,
+                notificationsEnabled: true
+            }).then(() => {
+                console.log("Token წარმატებით შეინახა ბაზაში! ✅");
+            });
+        } else {
+            console.log('Token ვერ იქნა აღებული. ნებართვა გაცემულია?');
+        }
+    })
+    .catch((err) => {
+        console.log('შეცდომა Token-ის აღებისას: ', err);
+    });
+}
 
 
 
