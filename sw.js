@@ -1,23 +1,35 @@
-// 1. სულ თავში (იმპორტები)
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-// 2. Firebase-ის ჩართვა (კონფიგურაცია)
 firebase.initializeApp({
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk",
-  projectId: "emigrantbook",
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f"
+    apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk",
+    projectId: "emigrantbook",
+    appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f"
 });
 
 const messaging = firebase.messaging();
 
-// 3. შენი PWA ლოგიკა (Install, Activate, Fetch)
-self.addEventListener('install', (e) => {
-    console.log('SW Installed');
-    self.skipWaiting();
+// ფონური შეტყობინებების დამუშავება
+messaging.onBackgroundMessage(function(payload) {
+    console.log('მიღებულია ფონური შეტყობინება:', payload);
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+        body: payload.notification.body,
+        icon: '/logo.png',
+        badge: '/logo.png',
+        data: { url: payload.data ? payload.data.url : '/' }
+    };
+
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// ... და ასე შემდეგ შენი კოდი ბოლომდე
+// ნოტიფიკაციაზე დაჭერისას საიტის გახსნა
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow(event.notification.data.url || '/')
+    );
+});
 
 
 
