@@ -2665,7 +2665,7 @@ function sendPushToUser(targetUid, senderName, text) {
 function saveMessagingToken(user) {
     const messaging = firebase.messaging();
     
-    messaging.getToken({ vapidKey: 'აქ_ჩასვი_შენი_VAPID_KEY_სქრინიდან' })
+    messaging.getToken({ vapidKey: 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA' })
     .then((currentToken) => {
         if (currentToken) {
             console.log("ტოკენი მიღებულია: ✅", currentToken);
