@@ -2643,7 +2643,7 @@ function sendPushToUser(targetUid, senderName, text) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
+                    'Authorization': 'AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
                 },
                 body: JSON.stringify({
                     to: token,
