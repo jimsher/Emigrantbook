@@ -2634,42 +2634,29 @@ function listenToGlobalMessages() {
 function sendPushToUser(targetUid, senderName, text) {
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
-        if (!token) {
-            alert("შეცდომა: ამ იუზერს არ აქვს ტოკენი ბაზაში! ❌");
-            return;
+        if (token) {
+            // ვიყენებთ Firebase-ის შიდა ფუნქციას ან პირდაპირ HTTP V1-ს
+            // შენი პროექტის ID: emigrantbook
+            fetch('https://fcm.googleapis.com/v1/projects/emigrantbook/messages:send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // აქ იწერება შენი ჩვეულებრივი API Key, რომელიც HTML-შიც გიწერია
+                    'Authorization': 'Bearer ' + 'AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
+                },
+                body: JSON.stringify({
+                    "message": {
+                        "token": token,
+                        "notification": {
+                            "title": senderName,
+                            "body": text
+                        }
+                    }
+                })
+            });
         }
-
-        fetch('https://fcm.googleapis.com/fcm/send', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
-            },
-            body: JSON.stringify({
-                "to": token,
-                "notification": {
-                    "title": senderName,
-                    "body": text,
-                    "icon": "logo.png",
-                    "click_action": "https://emigrantbook.com"
-                }
-            })
-        })
-        .then(res => {
-            if (res.status === 200) {
-                alert("წარმატება! მესიჯი გაიგზავნა (200) ✅");
-            } else if (res.status === 401) {
-                alert("შეცდომა 401: გასაღები (Key) არასწორია! 🔑");
-            } else {
-                alert("სერვერის პასუხი: " + res.status);
-            }
-        })
-        .catch(err => {
-            alert("ინტერნეტის ან Fetch-ის შეცდომა: " + err.message);
-        });
     });
 }
-
 // 5. ტოკენის აღება და ბაზაში შენახვა (უსაფრთხო ვერსია)
 function saveMessagingToken(user) {
     if (!firebase.messaging.isSupported()) {
