@@ -2663,6 +2663,65 @@ function sendPushToUser(targetUid, senderName, text) {
         }
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ეს არის ახალი, ერთიანი ფუნქცია მესიჯისთვის და ნოტიფიკაციისთვის
+function sendSecureMessage() {
+    if (!canAfford(0.2)) return;
+    const inp = document.getElementById('messageInp');
+    if(!inp.value.trim() || !currentChatId) return;
+
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, currentChatId);
+
+    // 1. მესიჯის ჩაწერა ბაზაში
+    db.ref(`messages/${chatId}`).push({
+        senderId: myUid,
+        text: inp.value,
+        ts: Date.now()
+    });
+
+    // 2. ნოტიფიკაციის გაგზავნა Google-ის მეშვეობით
+    db.ref(`users/${currentChatId}/fcmToken`).once('value', snap => {
+        const token = snap.val();
+        if (token) {
+            fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
+                },
+                body: JSON.stringify({
+                    to: token,
+                    notification: {
+                        title: typeof myName !== 'undefined' ? myName : "ახალი მესიჯი",
+                        body: inp.value,
+                        icon: "logo.png",
+                        click_action: "https://emigrantbook.com",
+                        sound: "default"
+                    },
+                    priority: "high"
+                })
+            }).then(res => console.log("Push გაიგზავნა! სტატუსი:", res.status));
+        }
+    });
+
+    // 3. გასუფთავება
+    db.ref(`typing/${chatId}/${myUid}`).remove();
+    spendAkho(0.2, 'Message');
+    inp.value = "";
+}
 // ეს არის მესიჯების მოსვლის სრული ლოგიკისბოლო
 
 
