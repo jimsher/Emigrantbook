@@ -2547,165 +2547,79 @@ function installApp() {
 
 
 
+
+
 // შეტყობინების მონიჭება აპლიკაციაზე 
 
-// 1. ნებართვის მოთხოვნის ფუნქცია (გამოიძახება მხოლოდ საჭიროებისას)
-function enableNotifications() {
-    if (!('Notification' in window)) {
-        console.log("ეს ბრაუზერი არ უჭერს მხარს შეტყობინებებს.");
-        return;
-    }
-
-    Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-            console.log("ნებართვა მიღებულია! ✅");
-            // პირველად ჩართვისას ერთხელ ვაჩვენოთ დასტური
-            showTestNotification("შეტყობინებები წარმატებით ჩაირთო! 🔔");
-        }
-    });
-}
-
-// 2. აპლიკაციის ხატულაზე ციფრის დაყენება (მუშაობს მხოლოდ საჭიროებისას)
-function setAppBadge(count) {
-    if ('setAppBadge' in navigator) {
-        if (count > 0) {
-            navigator.setAppBadge(count).catch(err => console.log(err));
-        } else {
-            navigator.clearAppBadge().catch(err => console.log(err));
-        }
-    }
-}
-
-// 3. ნოტიფიკაციის ჩვენების ფუნქცია (გამოიყენება როგორც ტესტისთვის, ისე რეალური მესიჯებისთვის)
+// 1. სისტემური ნოტიფიკაციის ჩვენება (Google-ის ფანჯარა)
 function showLocalNotification(title, body) {
     if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(registration => {
             registration.showNotification(title, {
                 body: body,
-                icon: 'logo.png',
+                icon: 'logo.png', // დარწმუნდი რომ ეს ფაილი გაქვს
                 vibrate: [200, 100, 200],
                 badge: 'logo.png',
-                tag: 'new-message', // აჯგუფებს შეტყობინებებს
+                tag: 'msg-group',
                 renotify: true
             });
+            
+            // მესიჯის ხმა
+            const sound = document.getElementById('msgSound');
+            if (sound) sound.play().catch(e => console.log("Audio play blocked"));
         });
     }
 }
 
-// 4. გვერდის ჩატვირთვისას მხოლოდ ნებართვას ვამოწმებთ (სპამის გარეშე)
-window.addEventListener('load', () => {
-    if ('Notification' in window) {
-        // თუ ნებართვა უკვე გვაქვს, უბრალოდ კონსოლში ვწერთ
-        if (Notification.permission === 'granted') {
-            console.log("შეტყობინებების ნებართვა აქტიურია.");
-        } else if (Notification.permission !== 'denied') {
-            // თუ არც უარი უთქვამს და არც დათანხმებულა, შეგვიძლია ვთხოვოთ
-            // Notification.requestPermission(); 
+// 2. აპლიკაციის ხატულაზე ციფრის დაწერა (წითელი წრე)
+function setAppBadge(count) {
+    if ('setAppBadge' in navigator) {
+        if (count > 0) {
+            navigator.setAppBadge(count).catch(e => {});
+        } else {
+            navigator.clearAppBadge().catch(e => {});
         }
     }
-    
-    // შესვლისას ვასუფთავებთ ბეჯს (რომ სულ არ ეხატოს 1)
+}
+
+// 3. მესიჯების მოსმენის ლოგიკა (განახლებული ვერსია)
+function listenToGlobalMessages() {
+    const myUid = auth.currentUser.uid;
+    console.log("მესიჯების მოსმენა აქტიურია... 👂");
+
+    db.ref('messages').on('child_added', snap => {
+        snap.ref.limitToLast(1).on('child_added', mSnap => {
+            const msg = mSnap.val();
+            
+            // ვაიგნორებთ ჩემს მესიჯებს და ძველებს (10 წამზე მეტი)
+            if (!msg || msg.senderId === myUid) return;
+            if (Date.now() - msg.ts > 10000) return;
+
+            // თუ ჩატი ისედაც ღიაა, ნოტიფიკაცია არ გვინდა
+            if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
+
+            db.ref(`users/${msg.senderId}`).once('value', uSnap => {
+                const u = uSnap.val();
+                if (u) {
+                    const senderName = u.name || "მომხმარებელი";
+                    const messageText = msg.text || "📷 მედია ფაილი";
+
+                    setAppBadge(1); // აანთებს ციფრს
+                    showLocalNotification(senderName, messageText); // ამოაგდებს ფანჯარას
+
+                    if (typeof showGlobalPush === "function") {
+                        showGlobalPush(senderName, u.photo, messageText);
+                    }
+                }
+            });
+        });
+    });
+}
+
+// 4. ციფრის მოშორების ფუნქცია
+function clearBadgeOnChat() {
     setAppBadge(0);
-});
-
-// 5. სატესტო შეტყობინება (მხოლოდ პირველადი ჩართვისას)
-function showTestNotification(msg) {
-    showLocalNotification('Impact Store', msg || 'თქვენ ჩართეთ შეტყობინებები!');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ფილტრის ლოგიკა
-function applyTikTokFilter(filterType, element) {
-    const video = document.getElementById('cameraStream');
-    
-    // თუ აირჩიე "Beauty" (მაგალითად, დავარქვათ Smooth)
-    if (filterType === 'beauty_smooth') {
-        // აქ ირთვება AI-ს პარამეტრები
-        video.style.filter = "contrast(1.1) brightness(1.1) blur(0.5px) saturate(1.1)";
-        console.log("Beauty Mode: Active ✅");
-    } else {
-        // სხვა ჩვეულებრივი ფერების ფილტრები
-        video.style.filter = filterType;
-    }
-
-    // ვიზუალური მონიშვნა ავატარებზე (წითელი ჩარჩო)
-    const allAvatars = document.querySelectorAll('.filter-avatar div');
-    allAvatars.forEach(div => div.style.borderColor = 'white');
-    element.querySelector('div').style.borderColor = '#fe2c55';
-}
-
-
-
-
-
-
-let faceMesh;
-
-function initBeautyFilter() {
-    faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true, // თვალების და ტუჩების დეტალიზაცია
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    faceMesh.onResults(onFaceResults);
-}
-
-// სახის დამუშავების ფუნქცია (Beauty Effect)
-function onFaceResults(results) {
-    const video = document.getElementById('cameraStream');
-    if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
-
-    // აქ ხდება ჯადოქრობა: სახის გაგლუვება
-    // ვიყენებთ Canvas-ს, რომ კანზე "რბილი" ფენა გადავატაროთ
-    applySkinSmooth(results.multiFaceLandmarks[0]);
-}
-
-function applySkinSmooth(landmarks) {
-    const video = document.getElementById('cameraStream');
-    // TikTok-ის სტილის Skin Softening ლოგიკა:
-    // 1. სახის კონტურის ამოცნობა
-    // 2. კანის ფერის ოდნავ "დაბლურვა" (Blur)
-    // 3. თვალების და ტუჩების სიცხადის შენარჩუნება
-    video.style.filter = "contrast(1.1) brightness(1.05) saturate(1.1) blur(0.4px)";
-    
-    // შენიშვნა: ნამდვილი "Skin Smooth" უფრო რთული Canvas ლოგიკაა,
-    // მაგრამ ეს CSS კომბინაცია გაძლევს საწყის "Beauty" ეფექტს.
-}
-
-// ჩართე AI ფილტრი კამერის გახსნისას
-initBeautyFilter();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
