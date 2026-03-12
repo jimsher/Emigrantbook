@@ -2529,6 +2529,8 @@ function installApp() {
 
 
 // შეტყობინების მონიჭება აპლიკაციაზე 
+
+// 1. ნებართვის მოთხოვნის ფუნქცია (გამოიძახება მხოლოდ საჭიროებისას)
 function enableNotifications() {
     if (!('Notification' in window)) {
         console.log("ეს ბრაუზერი არ უჭერს მხარს შეტყობინებებს.");
@@ -2538,53 +2540,59 @@ function enableNotifications() {
     Notification.requestPermission().then(permission => {
         if (permission === 'granted') {
             console.log("ნებართვა მიღებულია! ✅");
-            // აქედან შეგიძლია გატესტო
-            showTestNotification();
+            // პირველად ჩართვისას ერთხელ ვაჩვენოთ დასტური
+            showTestNotification("შეტყობინებები წარმატებით ჩაირთო! 🔔");
         }
     });
 }
 
-// ტესტისთვის, რომ ახლავე ნახო როგორ მუშაობს
-window.addEventListener('load', () => {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                console.log("შეტყობინებები ჩაირთო! ✅");
-                // სატესტო მესიჯი 2 წამში, რომ დარწმუნდე მუშაობს თუ არა
-                setTimeout(showTestNotification, 2000);
-            }
-        });
-    }
-});
-
-function showTestNotification() {
-    navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification('Impact Store', {
-            body: 'თქვენ ჩართეთ შეტყობინებები! 🔔',
-            icon: 'logo.png',
-            vibrate: [200, 100, 200],
-            badge: 'logo.png'
-        });
-    });
-}
-
-
-
-
-
-
-// ფუნქცია, რომელიც აპლიკაციის ხატულაზე აჩენს ციფრს
+// 2. აპლიკაციის ხატულაზე ციფრის დაყენება (მუშაობს მხოლოდ საჭიროებისას)
 function setAppBadge(count) {
     if ('setAppBadge' in navigator) {
-        navigator.setAppBadge(count).catch((error) => {
-            console.error("Badge-ის დაყენება ვერ მოხერხდა:", error);
+        if (count > 0) {
+            navigator.setAppBadge(count).catch(err => console.log(err));
+        } else {
+            navigator.clearAppBadge().catch(err => console.log(err));
+        }
+    }
+}
+
+// 3. ნოტიფიკაციის ჩვენების ფუნქცია (გამოიყენება როგორც ტესტისთვის, ისე რეალური მესიჯებისთვის)
+function showLocalNotification(title, body) {
+    if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, {
+                body: body,
+                icon: 'logo.png',
+                vibrate: [200, 100, 200],
+                badge: 'logo.png',
+                tag: 'new-message', // აჯგუფებს შეტყობინებებს
+                renotify: true
+            });
         });
     }
 }
 
-// მაგალითად, როცა 1 ახალი მესიჯია:
-setAppBadge(1);
+// 4. გვერდის ჩატვირთვისას მხოლოდ ნებართვას ვამოწმებთ (სპამის გარეშე)
+window.addEventListener('load', () => {
+    if ('Notification' in window) {
+        // თუ ნებართვა უკვე გვაქვს, უბრალოდ კონსოლში ვწერთ
+        if (Notification.permission === 'granted') {
+            console.log("შეტყობინებების ნებართვა აქტიურია.");
+        } else if (Notification.permission !== 'denied') {
+            // თუ არც უარი უთქვამს და არც დათანხმებულა, შეგვიძლია ვთხოვოთ
+            // Notification.requestPermission(); 
+        }
+    }
+    
+    // შესვლისას ვასუფთავებთ ბეჯს (რომ სულ არ ეხატოს 1)
+    setAppBadge(0);
+});
 
+// 5. სატესტო შეტყობინება (მხოლოდ პირველადი ჩართვისას)
+function showTestNotification(msg) {
+    showLocalNotification('Impact Store', msg || 'თქვენ ჩართეთ შეტყობინებები!');
+}
 
 
 
