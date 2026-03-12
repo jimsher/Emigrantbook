@@ -2666,32 +2666,29 @@ function sendPushToUser(targetUid, senderName, text) {
 
 // 1. ტოკენის აღება და შენახვა Firebase-ში
 function saveMessagingToken(user) {
-    // ვამოწმებთ, საერთოდ გვაქვს თუ არა მესეჯინგის მხარდაჭერა
-    if (!firebase.messaging.isSupported()) {
-        console.log("Push შეტყობინებები არ არის მხარდაჭერილი ამ ბრაუზერში.");
+    // 1. ვამოწმებთ, საერთოდ არსებობს თუ არა მესეჯინგი ამ ბრაუზერში
+    if (!firebase.messaging || !firebase.messaging.isSupported()) {
+        console.log("Push შეტყობინებები არ არის მხარდაჭერილი.");
         return;
     }
 
     const messaging = firebase.messaging();
 
-    // ვითხოვთ ნებართვას
-    Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-            // ვიღებთ ტოკენს
-            return messaging.getToken({ 
-                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-            });
-        }
+    // 2. ვითხოვთ ნებართვას და ვიღებთ ტოკენს
+    messaging.getToken({ 
+        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
     })
     .then((currentToken) => {
         if (currentToken) {
             console.log("ტოკენი მიღებულია! ✅");
+            // ვინახავთ ბაზაში
             db.ref(`users/${user.uid}/fcmToken`).set(currentToken);
+        } else {
+            console.log('ნებართვა არ არის გაცემული.');
         }
     })
     .catch((err) => {
-        // ეს "catch" აუცილებელია, რომ შეცდომის შემთხვევაში საიტი არ გაჩერდეს
-        console.log('ტოკენის აღება ვერ მოხერხდა:', err);
+        console.log('ტოკენის აღების შეცდომა:', err);
     });
 }
 
