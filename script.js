@@ -2659,34 +2659,30 @@ function sendPushToUser(targetUid, senderName, text) {
 
 // 5. ტოკენის აღება და ბაზაში შენახვა (უსაფრთხო ვერსია)
 function saveMessagingToken(user) {
-    // 1. ვამოწმებთ ბიბლიოთეკას
-    if (!firebase.messaging || !firebase.messaging.isSupported()) {
-        alert("❌ შეცდომა: firebase-messaging აკლია ან ბრაუზერი არ უჭერს მხარს!");
+    if (!firebase.messaging.isSupported()) {
+        console.log("Messaging not supported");
         return;
     }
 
     const messaging = firebase.messaging();
 
-    alert("⏳ ვიწყებ ტოკენის აღებას გუგლიდან...");
-
-    // 2. ვითხოვთ ტოკენს
+    // ვითხოვთ ნებართვას და ვიღებთ ტოკენს
     messaging.getToken({ 
         vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
     })
     .then((token) => {
         if (token) {
-            alert("✅ ტოკენი ავიღეთ! ვწერთ ბაზაში...");
-            db.ref('users/' + user.uid + '/fcmToken').set(token)
-              .then(() => alert("🎉 მორჩა! ბაზაში წარმატებით ჩაიწერა!"))
-              .catch(e => alert("❌ ბაზაში ჩაწერის ერორი: " + e.message));
+            // ვწერთ ბაზაში იუზერის ქვეშ
+            db.ref('users/' + user.uid + '/fcmToken').set(token);
+            console.log("FCM ტოკენი განახლდა ✅");
         } else {
-            alert("⚠️ ტოკენი ვერ ავიღეთ. ნოტიფიკაციებზე 'Allow' არ გაქვს მიცემული ბრაუზერში!");
+            console.log("ტოკენი ვერ იქნა მიღებული.");
         }
     })
     .catch((err) => {
-        alert("🔥 ამოაგდო ერორი ტოკენის აღებისას: " + err.message);
+        console.log("ტოკენის აღების შეცდომა:", err);
     });
-}
+
 
             
 // 1. ტოკენის აღება და შენახვა Firebase-ში
