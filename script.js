@@ -2632,7 +2632,6 @@ function listenToGlobalMessages() {
 
 // 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
 function sendPushToUser(targetUid, senderName, text) {
-function sendPushToUser(targetUid, senderName, text) {
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
         if (!token) {
