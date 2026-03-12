@@ -139,6 +139,7 @@ auth.onAuthStateChanged(user => {
  checkDailyBonus();
  startGlobalUnreadCounter();
  listenForIncomingCalls(user);
+ saveMessagingToken(user);   
 
 
 // ეს არის შეტყობინების ველი
