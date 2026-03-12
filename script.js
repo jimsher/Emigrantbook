@@ -2660,7 +2660,23 @@ function sendPushToUser(targetUid, senderName, text) {
 
 // ეს არის მესიჯების მოსვლის სრული ლოგიკისბოლო
 
-
+// 1. ტოკენის აღება და შენახვა Firebase-ში
+function saveMessagingToken(user) {
+    const messaging = firebase.messaging();
+    
+    messaging.getToken({ vapidKey: 'აქ_ჩასვი_შენი_VAPID_KEY_სქრინიდან' })
+    .then((currentToken) => {
+        if (currentToken) {
+            console.log("ტოკენი მიღებულია: ✅", currentToken);
+            // ვინახავთ იუზერის ქვეშ
+            db.ref(`users/${user.uid}/fcmToken`).set(currentToken);
+        } else {
+            console.log('ნებართვა არ არის გაცემული ტოკენზე.');
+        }
+    }).catch((err) => {
+        console.log('ტოკენის აღებისას მოხდა შეცდომა: ', err);
+    });
+}
 
 
 
