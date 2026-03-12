@@ -861,10 +861,7 @@ function listenToGlobalMessages() {
 
 
 
-
-
-
- function sendMessage() {
+function sendMessage() {
     if (!canAfford(0.2)) return;
     const inp = document.getElementById('messageInp');
     if(!inp.value.trim() || !currentChatId) return;
@@ -878,22 +875,19 @@ function listenToGlobalMessages() {
         ts: Date.now()
     });
 
-    // --- ნოტიფიკაციის გაგზავნა მეორე იუზერთან ---
+    // 2. ნოტიფიკაციის გაგზავნა მეორე იუზერთან
     if (typeof sendPushToUser === "function") {
         sendPushToUser(currentChatId, myName, inp.value);
     }
-    // ------------------------------------------
 
+    // 3. სტატუსების გასუფთავება და გადახდა
     db.ref(`typing/${chatId}/${myUid}`).remove();
     spendAkho(0.2, 'Message');
     inp.value = "";
 }
- // ---------------------------------------
 
- db.ref(`typing/${chatId}/${myUid}`).remove();
- spendAkho(0.2, 'Message');
- inp.value = "";
-}
+
+ 
  function openDiscovery() { 
  stopMainFeedVideos();
  document.getElementById('discoveryUI').style.display = 'flex'; 
