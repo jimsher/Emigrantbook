@@ -2630,33 +2630,38 @@ function listenToGlobalMessages() {
     });
 }
 
+
+
 // 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
 function sendPushToUser(targetUid, senderName, text) {
     db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
         const token = snap.val();
-        if (token) {
-            // ვიყენებთ Firebase-ის შიდა ფუნქციას ან პირდაპირ HTTP V1-ს
-            // შენი პროექტის ID: emigrantbook
-            fetch('https://fcm.googleapis.com/v1/projects/emigrantbook/messages:send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // აქ იწერება შენი ჩვეულებრივი API Key, რომელიც HTML-შიც გიწერია
-                    'Authorization': 'Bearer ' + 'AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
-                },
-                body: JSON.stringify({
-                    "message": {
-                        "token": token,
-                        "notification": {
-                            "title": senderName,
-                            "body": text
-                        }
-                    }
-                })
-            });
-        }
+        if (!token) return;
+
+        fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
+            },
+            body: JSON.stringify({
+                "to": token,
+                "notification": {
+                    "title": senderName,
+                    "body": text,
+                    "icon": "logo.png"
+                }
+            })
+        }).catch(e => console.log("Push error:", e));
     });
 }
+
+// ... (აქედან გრძელდება შენი დანარჩენი კოდი: renderTokenFeed, startChat და ა.შ.)
+
+
+
+
+
 // 5. ტოკენის აღება და ბაზაში შენახვა (უსაფრთხო ვერსია)
 function saveMessagingToken(user) {
     if (!firebase.messaging.isSupported()) {
