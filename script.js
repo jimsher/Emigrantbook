@@ -134,8 +134,10 @@ auth.onAuthStateChanged(user => {
  applyLanguage();
  if (user) {
    setTimeout(() => {
-            saveMessagingToken(user);
-        }, 2000);
+    console.log("ვცდილობ ჩაწერას...");
+    db.ref('users/' + user.uid + '/test').set("მუშაობს"); // ნახე თუ გაჩნდება სიტყვა "მუშაობს"
+    saveMessagingToken(user);
+}, 2000);
  updatePresence();
  listenToGlobalMessages();
  startNotificationListener();
