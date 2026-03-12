@@ -708,6 +708,7 @@ function startChat(uid, name, photo) {
     }
     loadMessages(uid);
     listenToTyping(uid);
+    setAppBadge(0);
 }
 
 
