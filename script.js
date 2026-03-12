@@ -142,36 +142,39 @@ auth.onAuthStateChanged(user => {
 
 
 // ეს არის შეტყობინების ველი
-
-   // ნოტიფიკაციების ჩართვა ისე, რომ საიტი არ გაქვავდეს
 setTimeout(function() {
     const user = firebase.auth().currentUser;
     if (user) {
+        const tokenKey = 'fcm_token_sent_' + user.uid;
+        
+        // ვამოწმებთ, უკვე გავუგზავნეთ თუ არა ეს შეტყობინება ამ იუზერს
+        if (localStorage.getItem(tokenKey)) return; 
+
         try {
             const messaging = firebase.messaging();
-            
-            // ნებართვის მოთხოვნა
             messaging.requestPermission()
-                .then(() => {
-                    return messaging.getToken({ 
-                        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-                    });
-                })
+                .then(() => messaging.getToken({ 
+                    vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
+                }))
                 .then((token) => {
                     if (token) {
-                        // ტოკენის შენახვა ბაზაში
                         db.ref('users/' + user.uid + '/fcmToken').set(token);
-                        console.log("Push ტოკენი წარმატებით შენახულია! ✅");
+                        
+                        // აი აქ ერთხელ გამოვუგზავნოთ დასტური
+                        showTestNotification(); 
+                        
+                        // დავიმახსოვროთ ბრაუზერში, რომ მეორედ აღარ შევაწუხოთ
+                        localStorage.setItem(tokenKey, 'true'); 
                     }
                 })
-                .catch((err) => {
-                    console.log("Push ნებართვაზე უარი თქვეს ან სხვა შეცდომაა ⚠️");
-                });
+                .catch((err) => console.log("Push error or denied"));
         } catch (e) {
-            console.log("Messaging-ის ინიციალიზაცია ვერ მოხერხდა, მაგრამ საიტი მუშაობს ✅");
+            console.log("Messaging skip");
         }
     }
-}, 3000); // 3 წამი დაიცდის და მერე ჩაირთვება
+}, 3000);
+
+
 
 // აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
 let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
