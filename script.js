@@ -2634,29 +2634,30 @@ function listenToGlobalMessages() {
 
 // 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
 function sendPushToUser(targetUid, senderName, text) {
-    db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
-        const token = snap.val();
-        if (token) {
-            fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'key=AQ.Ab8RN6I7gXuHYzuTs5oZB9dgg4qoddgqxHpzZcNGgGfQb-4-IA'
-                },
-                body: JSON.stringify({
-                    to: token,
-                    notification: {
-                        title: senderName,
-                        body: text,
-                        icon: "logo.png",
-                        click_action: "https://emigrantbook.com",
-                        sound: "default"
-                    },
-                    priority: "high"
-                })
-            }).then(res => console.log("Push გაიგზავნა! სტატუსი:", res.status));
-        }
-    });
+    db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
+        const token = snap.val();
+        if (token) {
+            fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // აქ ჩავწერე შენი სწორი API Key სქრინშოთიდან
+                    'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
+                },
+                body: JSON.stringify({
+                    to: token,
+                    notification: {
+                        title: senderName,
+                        body: text,
+                        icon: "logo.png",
+                        click_action: "https://emigrantbook.com",
+                        sound: "default"
+                    },
+                    priority: "high"
+                })
+            }).catch(e => console.log("Push error"));
+        }
+    });
 }
 
 // ... (აქედან გრძელდება შენი დანარჩენი კოდი: renderTokenFeed, startChat და ა.შ.)
