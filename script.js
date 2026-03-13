@@ -1603,6 +1603,72 @@ function renderTokenFeed() {
 }                
                                          
 
+// --- GIFT SYSTEM LOGIC ---
+window.openGiftPanel = function(postId, authorId) {
+    if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
+    const panel = document.createElement('div');
+    panel.id = "dynamicGiftPanel";
+    panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:25px 20px; z-index:2000005; backdrop-filter:blur(15px); color:white; font-family:sans-serif;";
+    panel.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <b style="color:#d4af37;">აირჩიე საჩუქარი</b>
+            <i class="fas fa-times" onclick="document.getElementById('dynamicGiftPanel').remove()" style="cursor:pointer; font-size:20px; color:gray;"></i>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
+            <div onclick="window.processGift('${authorId}', 5, '🌹')" style="background:rgba(255,255,255,0.05); padding:15px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <div style="font-size:35px; margin-bottom:5px;">🌹</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 50, '💎')" style="background:rgba(255,255,255,0.05); padding:15px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <div style="font-size:35px; margin-bottom:5px;">💎</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '🚗')" style="background:rgba(255,255,255,0.05); padding:15px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <div style="font-size:35px; margin-bottom:5px;">🚗</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+        </div>`;
+    document.body.appendChild(panel);
+};
+
+window.processGift = function(targetUid, cost, type) {
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    
+    firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
+        const myBalance = snap.val() || 0;
+        if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
+
+        // 1. ჩამოჭრა და დარიცხვა
+        firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
+        firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
+
+        // 2. ნოტიფიკაცია ავტორს
+        firebase.database().ref(`notifications/${targetUid}`).push({
+            text: `${window.myName || 'მომხმარებელმა'} გაჩუქათ ${type}!`,
+            ts: Date.now(),
+            fromPhoto: window.myPhoto || ""
+        });
+
+        // 3. პანელის დახურვა და ანიმაცია
+        if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
+        
+        const anim = document.createElement('div');
+        anim.innerHTML = type;
+        anim.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); font-size:120px; z-index:2000010; pointer-events:none; animation: giftShow 2s ease-in-out forwards;";
+        document.body.appendChild(anim);
+
+        if (!document.getElementById('giftGlobalStyle')) {
+            const style = document.createElement('style');
+            style.id = 'giftGlobalStyle';
+            style.innerHTML = `@keyframes giftShow { 0% { opacity:0; scale:0.5; } 30% { opacity:1; scale:1.5; } 100% { opacity:0; transform:translate(-50%, -250%); scale:1; } }`;
+            document.head.appendChild(style);
+        }
+        setTimeout(() => anim.remove(), 2000);
+    });
+};
+
+
 
 
 
