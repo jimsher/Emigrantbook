@@ -1612,7 +1612,7 @@ window.openGiftPanel = function(postId, authorId) {
     panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:25px 20px; z-index:2000005; backdrop-filter:blur(15px); color:white; font-family:sans-serif;";
     
     // აქ ჩაწერე შენი GIF-ების ლინკები
-    const gift1 = "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/Begemot.gif";
+    const gift1 = "https://github.com/jimsher/Emigrantbook/blob/main/Begemot.gif";
     const gift2 = "https://pixabay.com/gifs/celebration-scattered-colorful-19390/";
     const gift3 = "https://შენი-ლინკი.com/car.gif";
 
