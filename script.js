@@ -2915,26 +2915,46 @@ function openGiftPanel(postId, authorId) {
 }
 
 function sendGift(targetUid, cost, type) {
-    if (myAkho < cost) {
-        alert("არ გაქვთ საკმარისი AKHO!");
-        return;
-    }
-    
-    // ბალანსის განახლება ბაზაში
-    spendAkho(cost, `Gift ${type}`);
-    earnAkho(targetUid, cost, `Received Gift ${type}`);
-    
-    // პანელის დახურვა
-    document.getElementById('dynamicGiftPanel').remove();
-    
-    // ანიმაციის გაშვება
-    showGiftAnimation(type);
-    
-    // ნოტიფიკაცია ავტორს
-    db.ref(`notifications/${targetUid}`).push({
-        text: `${myName}-მა გაჩუქა ${type}!`,
-        ts: Date.now(),
-        fromPhoto: myPhoto
+    const myUid = auth.currentUser.uid;
+
+    // 1. ჯერ ვამოწმებთ რეალურ ბალანსს ბაზაში
+    db.ref(`users/${myUid}/akho`).once('value', snap => {
+        const currentBalance = snap.val() || 0;
+
+        if (currentBalance < cost) {
+            alert("არ გაქვთ საკმარისი AKHO! ❌");
+            return;
+        }
+
+        // 2. თუ ბალანსი ეყო, ვიწყებთ გადარიცხვას
+        const updates = {};
+        updates[`users/${myUid}/akho`] = currentBalance - cost;
+        
+        db.ref().update(updates).then(() => {
+            // გამჩუქებელს დააკლდა, ახლა ავტორს ვუმატებთ
+            db.ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
+
+            // ისტორიაში ჩაწერა
+            addToLog(`Sent Gift: ${type}`, -cost);
+            
+            // პანელის დახურვა
+            const panel = document.getElementById('dynamicGiftPanel');
+            if (panel) panel.remove();
+
+            // ანიმაციის გაშვება
+            showGiftAnimation(type);
+
+            // ნოტიფიკაცია ავტორს
+            db.ref(`notifications/${targetUid}`).push({
+                text: `${myName}-მა გამოგიგზავნათ საჩუქარი: ${type}`,
+                ts: Date.now(),
+                fromPhoto: myPhoto
+            });
+
+            console.log("საჩუქარი წარმატებით გაიგზავნა! ✅");
+        }).catch(err => {
+            alert("შეცდომა გადარიცხვისას: " + err.message);
+        });
     });
 }
 
