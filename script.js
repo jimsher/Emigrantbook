@@ -2868,3 +2868,95 @@ function fixCloseBtn() {
         closeBtn.onclick = closeVideoComments;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// საცუქრები გიფები ტოკენის ვიდეოსთვის
+function openGiftPanel(postId, authorId) {
+    // ვქმნით პანელს დინამიურად, რომ HTML-ში წინასწარ არაფერი ეწეროს
+    let panel = document.createElement('div');
+    panel.id = "dynamicGiftPanel";
+    panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(15,15,15,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:20px; z-index:2000001; backdrop-filter:blur(15px); transition: 0.3s transform;";
+    
+    panel.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <b style="color:#d4af37; font-size:16px;">გაუგზავნე საჩუქარი</b>
+            <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="color:gray; cursor:pointer; font-size:20px;"></i>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; text-align:center;">
+            <div onclick="sendGift('${authorId}', 5, '🌹')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                <div style="font-size:30px;">🌹</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div>
+            </div>
+            <div onclick="sendGift('${authorId}', 50, '💎')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                <div style="font-size:30px;">💎</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div>
+            </div>
+            <div onclick="sendGift('${authorId}', 500, '🚗')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+                <div style="font-size:30px;">🚗</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(panel);
+}
+
+function sendGift(targetUid, cost, type) {
+    if (myAkho < cost) {
+        alert("არ გაქვთ საკმარისი AKHO!");
+        return;
+    }
+    
+    // ბალანსის განახლება ბაზაში
+    spendAkho(cost, `Gift ${type}`);
+    earnAkho(targetUid, cost, `Received Gift ${type}`);
+    
+    // პანელის დახურვა
+    document.getElementById('dynamicGiftPanel').remove();
+    
+    // ანიმაციის გაშვება
+    showGiftAnimation(type);
+    
+    // ნოტიფიკაცია ავტორს
+    db.ref(`notifications/${targetUid}`).push({
+        text: `${myName}-მა გაჩუქა ${type}!`,
+        ts: Date.now(),
+        fromPhoto: myPhoto
+    });
+}
+
+function showGiftAnimation(type) {
+    let anim = document.createElement('div');
+    anim.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); font-size:150px; z-index:2000002; pointer-events:none; animation: giftPop 2s ease-out forwards;";
+    anim.innerText = type;
+    document.body.appendChild(anim);
+    
+    // CSS ანიმაცია დინამიურად
+    if (!document.getElementById('giftAnimStyles')) {
+        let style = document.createElement('style');
+        style.id = 'giftAnimStyles';
+        style.innerHTML = `
+            @keyframes giftPop {
+                0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+                50% { transform: translate(-50%, -50%) scale(1.5) rotate(20deg); opacity: 1; }
+                100% { transform: translate(-50%, -150%) scale(1); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    setTimeout(() => anim.remove(), 2000);
+}
