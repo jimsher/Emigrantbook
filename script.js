@@ -1614,7 +1614,7 @@ window.openGiftPanel = function(postId, authorId) {
     // აქ ჩაწერე შენი GIF-ების ლინკები
     const gift1 = "https://github.com/jimsher/Emigrantbook/blob/main/Begemot.gif";
     const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift3 = "https://შენი-ლინკი.com/car.gif";
+    const gift3 = "https://imgflip.com/gif/aml0sw";
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
