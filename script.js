@@ -2885,8 +2885,9 @@ function fixCloseBtn() {
 
 
 // საცუქრები გიფები ტოკენის ვიდეოსთვის
+// --- საჩუქრების სისტემა (გასწორებული) ---
+
 function openGiftPanel(postId, authorId) {
-    // ვქმნით პანელს დინამიურად, რომ HTML-ში წინასწარ არაფერი ეწეროს
     let panel = document.createElement('div');
     panel.id = "dynamicGiftPanel";
     panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(15,15,15,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:20px; z-index:2000001; backdrop-filter:blur(15px); transition: 0.3s transform;";
@@ -2897,15 +2898,15 @@ function openGiftPanel(postId, authorId) {
             <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="color:gray; cursor:pointer; font-size:20px;"></i>
         </div>
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; text-align:center;">
-            <div onclick="sendGift('${authorId}', 5, '🌹')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+            <div onclick="window.sendGift('${authorId}', 5, '🌹')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
                 <div style="font-size:30px;">🌹</div>
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div>
             </div>
-            <div onclick="sendGift('${authorId}', 50, '💎')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+            <div onclick="window.sendGift('${authorId}', 50, '💎')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
                 <div style="font-size:30px;">💎</div>
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div>
             </div>
-            <div onclick="sendGift('${authorId}', 500, '🚗')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
+            <div onclick="window.sendGift('${authorId}', 500, '🚗')" style="cursor:pointer; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px;">
                 <div style="font-size:30px;">🚗</div>
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
             </div>
@@ -2915,45 +2916,33 @@ function openGiftPanel(postId, authorId) {
 }
 
 function sendGift(targetUid, cost, type) {
+    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     const myUid = auth.currentUser.uid;
 
-    // 1. ჯერ ვამოწმებთ რეალურ ბალანსს ბაზაში
     db.ref(`users/${myUid}/akho`).once('value', snap => {
         const currentBalance = snap.val() || 0;
-
         if (currentBalance < cost) {
             alert("არ გაქვთ საკმარისი AKHO! ❌");
             return;
         }
 
-        // 2. თუ ბალანსი ეყო, ვიწყებთ გადარიცხვას
-        const updates = {};
-        updates[`users/${myUid}/akho`] = currentBalance - cost;
-        
-        db.ref().update(updates).then(() => {
-            // გამჩუქებელს დააკლდა, ახლა ავტორს ვუმატებთ
+        // ტრანზაქცია: გამჩუქებელს აკლდება, ავტორს ემატება
+        db.ref(`users/${myUid}/akho`).set(currentBalance - cost).then(() => {
             db.ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
-
-            // ისტორიაში ჩაწერა
-            addToLog(`Sent Gift: ${type}`, -cost);
             
-            // პანელის დახურვა
-            const panel = document.getElementById('dynamicGiftPanel');
-            if (panel) panel.remove();
-
-            // ანიმაციის გაშვება
-            showGiftAnimation(type);
-
-            // ნოტიფიკაცია ავტორს
+            // ლოგი და ნოტიფიკაცია
+            addToLog(`Sent Gift: ${type}`, -cost);
             db.ref(`notifications/${targetUid}`).push({
                 text: `${myName}-მა გამოგიგზავნათ საჩუქარი: ${type}`,
                 ts: Date.now(),
                 fromPhoto: myPhoto
             });
 
-            console.log("საჩუქარი წარმატებით გაიგზავნა! ✅");
-        }).catch(err => {
-            alert("შეცდომა გადარიცხვისას: " + err.message);
+            const panel = document.getElementById('dynamicGiftPanel');
+            if (panel) panel.remove();
+            
+            showGiftAnimation(type);
+            console.log("საჩუქარი გაიგზავნა! ✅");
         });
     });
 }
@@ -2964,7 +2953,6 @@ function showGiftAnimation(type) {
     anim.innerText = type;
     document.body.appendChild(anim);
     
-    // CSS ანიმაცია დინამიურად
     if (!document.getElementById('giftAnimStyles')) {
         let style = document.createElement('style');
         style.id = 'giftAnimStyles';
@@ -2977,6 +2965,10 @@ function showGiftAnimation(type) {
         `;
         document.head.appendChild(style);
     }
-    
     setTimeout(() => anim.remove(), 2000);
 }
+
+// მნიშვნელოვანი: ვაქცევთ ფუნქციებს გლობალურად
+window.openGiftPanel = openGiftPanel;
+window.sendGift = sendGift;
+window.showGiftAnimation = showGiftAnimation;
