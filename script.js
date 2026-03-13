@@ -1608,25 +1608,25 @@ window.openGiftPanel = function(postId, authorId) {
     if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
     const panel = document.createElement('div');
     panel.id = "dynamicGiftPanel";
-    panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:25px 25px 0 0; padding:25px 20px; z-index:2000005; backdrop-filter:blur(15px); color:white; font-family:sans-serif; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);";
+    panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(5,5,5,0.98); border-top:1px solid #d4af37; border-radius:25px 25px 0 0; padding:25px 20px; z-index:2000005; backdrop-filter:blur(20px); color:white; font-family:sans-serif; box-shadow: 0 -10px 40px rgba(0,0,0,0.8);";
     
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <b style="color:#d4af37; font-size:14px; text-transform:uppercase;">Premium Gifts</b>
-            <i class="fas fa-times" onclick="document.getElementById('dynamicGiftPanel').remove()" style="cursor:pointer; font-size:20px; color:gray;"></i>
+            <b style="color:#d4af37; text-transform:uppercase; font-size:13px; letter-spacing:1px;">Premium Impact Gifts</b>
+            <i class="fas fa-times" onclick="document.getElementById('dynamicGiftPanel').remove()" style="cursor:pointer; font-size:20px; color:#555;"></i>
         </div>
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; text-align:center;">
-            <div onclick="window.sendGift('${authorId}', 5, 'rose')" style="background:rgba(255,255,255,0.05); padding:15px 5px; border-radius:15px; cursor:pointer; border:1px solid #333;">
-                <img src="https://cdn-icons-png.flaticon.com/512/2550/2550223.png" style="width:40px; height:40px; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div>
+            <div onclick="window.sendGift('${authorId}', 5, 'rose')" style="background:rgba(255,255,255,0.03); padding:15px 5px; border-radius:18px; cursor:pointer; border:1px solid #222;">
+                <img src="https://cdn-icons-png.flaticon.com/512/2550/2550223.png" style="width:45px; height:45px; margin-bottom:8px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:11px;">5 AKHO</div>
             </div>
-            <div onclick="window.sendGift('${authorId}', 50, 'diamond')" style="background:rgba(255,255,255,0.05); padding:15px 5px; border-radius:15px; cursor:pointer; border:1px solid #333;">
-                <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" style="width:40px; height:40px; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div>
+            <div onclick="window.sendGift('${authorId}', 50, 'diamond')" style="background:rgba(255,255,255,0.03); padding:15px 5px; border-radius:18px; cursor:pointer; border:1px solid #222;">
+                <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" style="width:45px; height:45px; margin-bottom:8px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:11px;">50 AKHO</div>
             </div>
-            <div onclick="window.sendGift('${authorId}', 500, 'car')" style="background:rgba(255,255,255,0.05); padding:15px 5px; border-radius:15px; cursor:pointer; border:1px solid #333;">
-                <img src="https://cdn-icons-png.flaticon.com/512/741/741407.png" style="width:40px; height:40px; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            <div onclick="window.sendGift('${authorId}', 500, 'car')" style="background:rgba(255,255,255,0.03); padding:15px 5px; border-radius:18px; cursor:pointer; border:1px solid #222;">
+                <img src="https://cdn-icons-png.flaticon.com/512/741/741407.png" style="width:45px; height:45px; margin-bottom:8px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:11px;">500 AKHO</div>
             </div>
         </div>`;
     document.body.appendChild(panel);
@@ -1634,23 +1634,22 @@ window.openGiftPanel = function(postId, authorId) {
 
 window.sendGift = function(targetUid, cost, type) {
     const user = firebase.auth().currentUser;
-    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    
-    firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
-        const myBalance = snap.val() || 0;
-        if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
+    if (!user) return alert("შედით სისტემაში!");
 
-        firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
+    firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
+        const bal = snap.val() || 0;
+        if (bal < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
+
+        firebase.database().ref(`users/${user.uid}/akho`).set(bal - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
         firebase.database().ref(`notifications/${targetUid}`).push({
-            text: `${window.myName || 'მომხმარებელმა'} გაჩუქათ საჩუქარი!`,
+            text: `${window.myName || 'მომხმარებელმა'} გაჩუქათ ${type === 'rose' ? 'ვარდი' : type === 'diamond' ? 'ბრილიანტი' : 'მანქანა'}!`,
             ts: Date.now(),
             fromPhoto: window.myPhoto || ""
         });
 
-        if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
-        
+        document.getElementById('dynamicGiftPanel').remove();
         window.showGiftAnimation(type);
     });
 };
@@ -1663,23 +1662,23 @@ window.showGiftAnimation = function(type) {
     };
 
     const anim = document.createElement('div');
-    anim.style = "position:fixed; top:45%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; display:flex; flex-direction:column; align-items:center; animation: giftPopHD 3s ease-in-out forwards;";
+    anim.style = "position:fixed; top:45%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; display:flex; flex-direction:column; align-items:center; animation: tiktokStyle 3s ease-out forwards;";
     
     anim.innerHTML = `
-        <img src="${gifts[type]}" style="width:180px; height:auto; filter: drop-shadow(0 0 15px rgba(212,175,55,0.6));">
-        <div style="background:rgba(212,175,55,0.9); padding:5px 25px; border-radius:20px; color:black; font-weight:bold; margin-top:-10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">GIFT SENT!</div>
+        <img src="${gifts[type]}" style="width:200px; height:auto; filter: drop-shadow(0 0 20px rgba(212,175,55,0.7));">
+        <div style="background:rgba(212,175,55,1); padding:6px 30px; border-radius:20px; color:black; font-weight:bold; margin-top:-15px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); font-size:18px;">SPECIAL GIFT!</div>
     `;
 
     document.body.appendChild(anim);
 
-    if (!document.getElementById('giftHDStyle')) {
+    if (!document.getElementById('giftStyleHD')) {
         const style = document.createElement('style');
-        style.id = 'giftHDStyle';
+        style.id = 'giftStyleHD';
         style.innerHTML = `
-            @keyframes giftPopHD {
-                0% { opacity:0; transform:translate(-50%, 0%) scale(0.5); }
-                20% { opacity:1; transform:translate(-50%, -50%) scale(1.2); }
-                80% { opacity:1; transform:translate(-50%, -55%) scale(1); }
+            @keyframes tiktokStyle {
+                0% { opacity:0; transform:translate(-50%, 30%) scale(0.5); }
+                15% { opacity:1; transform:translate(-50%, -50%) scale(1.2); }
+                85% { opacity:1; transform:translate(-50%, -55%) scale(1); }
                 100% { opacity:0; transform:translate(-50%, -150%) scale(0.8); }
             }
         `;
