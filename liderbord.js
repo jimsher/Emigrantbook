@@ -1,22 +1,19 @@
-// ==========================================
-// 1. LEADERBOARD (რეიტინგის სისტემა)
-// ==========================================
 function openLeaderboard() {
     document.getElementById('leaderboardUI').style.display = 'flex';
     const listDiv = document.getElementById('leaderboardList');
     listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">იტვირთება რეიტინგი...</p>';
 
-    // .on('value') მუდმივად უსმენს ცვლილებებს
-    db.ref('users').on('value', snap => {
-        // კრიტიკული მომენტი: ყოველ განახლებაზე ვასუფთავებთ კონტეინერს, რომ დუბლიკატები არ დაჯდეს
-        listDiv.innerHTML = ''; 
+    // ვიყენებთ orderByChild-ს, რომ Firebase-მა თავად აკონტროლოს ცვლილებები ბალანსზე
+    // პრიორიტეტს ვაძლევთ 'akhoBalance'-ს, რადგან ბონუსი მანდ იწერება
+    db.ref('users').orderByChild('akhoBalance').on('value', snap => {
+        listDiv.innerHTML = '';
         let players = [];
 
         snap.forEach(child => {
             const v = child.val();
             let foundPhoto = "";
 
-            // ავტომატური ძებნა ფოტოსთვის
+            // 🔍 ავტომატური ძებნა (შენი ორიგინალი ლოგიკა)
             for (let key in v) {
                 if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
                     foundPhoto = v[key];
@@ -28,7 +25,7 @@ function openLeaderboard() {
                 foundPhoto = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name || 'U')}&background=d4af37&color=000&bold=true`;
             }
 
-            // ვამოწმებთ ყველა შესაძლო სახელს ბალანსისთვის, როგორც შენს კოდშია
+            // ზუსტი ბალანსის აღება
             const finalBalance = parseFloat(v.akhoBalance || v.akho || v.balance || 0);
 
             if (v.name && v.name !== "undefined") {
@@ -40,10 +37,10 @@ function openLeaderboard() {
             }
         });
 
-        // დალაგება (დიდიდან პატარისკენ)
-        players.sort((a, b) => b.balance - a.balance);
+        // Firebase orderByChild ზრდადობით ალაგებს, ამიტომ ჩვენ reverse გვჭირდება ტოპებისთვის
+        players.reverse();
 
-        // ტოპ 10-ის რენდერი
+        // ტოპ 10-ის გამოტანა
         players.slice(0, 10).forEach((p, index) => {
             const isTop = index < 3;
             const colors = ['#d4af37', '#c0c0c0', '#cd7f32'];
@@ -64,85 +61,5 @@ function openLeaderboard() {
                 </div>
             `;
         });
-    });
-}
-
-// ==========================================
-// 2. NOTIFICATIONS (შეტყობინებები)
-// ==========================================
-function showLiveNotification(title, text, icon = '🔔') {
-    const el = document.getElementById('liveNotification');
-    if (!el) return; // უსაფრთხოებისთვის
-    document.getElementById('notifTitle').innerText = title;
-    document.getElementById('notifText').innerText = text;
-    document.getElementById('notifIcon').innerText = icon;
-    
-    el.style.display = 'block';
-    setTimeout(() => { hideNotification(); }, 5000);
-}
-
-function hideNotification() {
-    const el = document.getElementById('liveNotification');
-    if (el) el.style.display = 'none';
-}
-
-function checkRankImprovement(oldBalance, newBalance) {
-    if (newBalance > oldBalance) {
-        db.ref('users').orderByChild('akhoBalance').limitToLast(3).once('value', snap => {
-            let topPlayers = [];
-            snap.forEach(c => topPlayers.push(c.key));
-            if (topPlayers.includes(auth.currentUser.uid)) {
-                showLiveNotification("გავლენა გაიზარდა!", "შენ უკვე საიტის ტოპ-ლიდერებში ხარ! 🏆", "👑");
-            }
-        });
-    }
-}
-
-function notifyOwnerOfLike(ownerId, likerName) {
-    const eventRef = db.ref(`live_events/${ownerId}`).push();
-    eventRef.set({
-        type: 'like',
-        from: likerName,
-        time: Date.now()
-    });
-}
-
-function startNotificationListener() {
-    if (!auth.currentUser) return;
-    db.ref(`live_events/${auth.currentUser.uid}`).on('child_added', snap => {
-        const ev = snap.val();
-        if (ev.type === 'like') {
-            showLiveNotification("ახალი რეაქცია!", `${ev.from}-ს მოეწონა შენი პოსტი!`, "❤️");
-        }
-        snap.ref.remove(); // წავშალოთ გამოყენებული ივენთი
-    });
-}
-
-// ==========================================
-// 3. BONUS SYSTEM (ბონუსი)
-// ==========================================
-function checkDailyBonus() {
-    if (!auth.currentUser) return;
-
-    const uid = auth.currentUser.uid;
-    const today = new Date().toISOString().split('T')[0];
-
-    db.ref(`users/${uid}`).once('value', snap => {
-        const user = snap.val();
-        if (!user) return;
-
-        if (user.lastBonusDate !== today) {
-            const bonusAmount = 0.50;
-            const currentBal = parseFloat(user.akhoBalance || user.akho || user.balance || 0);
-            
-            db.ref(`users/${uid}`).update({
-                akhoBalance: currentBal + bonusAmount,
-                lastBonusDate: today
-            }).then(() => {
-                showLiveNotification("საჩუქარი!", `დღევანდელი ბონუსი +${bonusAmount} AKHO დაგერიცხათ! 🎁`, "🎁");
-            }).catch(err => {
-                console.error("ბონუსის შეცდომა:", err);
-            });
-        }
     });
 }
