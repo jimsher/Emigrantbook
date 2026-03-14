@@ -1,4 +1,6 @@
-// --- LEADERBOARD (რეიტინგის სისტემა) ---
+// ==========================================
+// 1. LEADERBOARD (რეიტინგის სისტემა)
+// ==========================================
 function openLeaderboard() {
     document.getElementById('leaderboardUI').style.display = 'flex';
     const listDiv = document.getElementById('leaderboardList');
@@ -65,7 +67,9 @@ function openLeaderboard() {
     });
 }
 
-// --- NOTIFICATIONS (შეტყობინებები) ---
+// ==========================================
+// 2. NOTIFICATIONS (შეტყობინებები)
+// ==========================================
 function showLiveNotification(title, text, icon = '🔔') {
     const el = document.getElementById('liveNotification');
     if (!el) return; // უსაფრთხოებისთვის
@@ -114,7 +118,9 @@ function startNotificationListener() {
     });
 }
 
-// --- BONUS SYSTEM (ბონუსი) ---
+// ==========================================
+// 3. BONUS SYSTEM (ბონუსი)
+// ==========================================
 function checkDailyBonus() {
     if (!auth.currentUser) return;
 
