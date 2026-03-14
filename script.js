@@ -1613,8 +1613,8 @@ window.openGiftPanel = function(postId, authorId) {
     
     // აქ ჩაწერე შენი GIF-ების ლინკები
     const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
+    const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/yava.gif";
+    const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/yava1.gif";
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
