@@ -131,20 +131,27 @@ if ('serviceWorker' in navigator) {
 
 
 auth.onAuthStateChanged(user => {
- applyLanguage();
- if (user) {
-   setTimeout(() => {
-    console.log("ვცდილობ ჩაწერას...");
-    db.ref('users/' + user.uid + '/test').set("მუშაობს"); // ნახე თუ გაჩნდება სიტყვა "მუშაობს"
-    saveMessagingToken(user);
-}, 2000);
-   
- updatePresence();
- listenToGlobalMessages();
- startNotificationListener();
- checkDailyBonus();
- startGlobalUnreadCounter();
- listenForIncomingCalls(user);
+  applyLanguage();
+  if (user) {
+    // --- ახალი: ნებართვების მოთხოვნა ავტორიზაციისთანავე ---
+    setTimeout(() => {
+        askInitialPermissions(); 
+    }, 1500);
+
+    setTimeout(() => {
+      console.log("ვცდილობ ჩაწერას...");
+      db.ref('users/' + user.uid + '/test').set("მუშაობს");
+      saveMessagingToken(user);
+    }, 2000);
+    
+    updatePresence();
+    listenToGlobalMessages();
+    startNotificationListener();
+    checkDailyBonus();
+    startGlobalUnreadCounter();
+    listenForIncomingCalls(user);
+    
+    // ... დანარჩენი შენი კოდი უცვლელად ...
    
 
 
