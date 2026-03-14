@@ -9,111 +9,67 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// ფონური შეტყობინებების დამუშავება
+// 1. Firebase ფონური შეტყობინებები
 messaging.onBackgroundMessage(function(payload) {
-    console.log('მიღებულია ფონური შეტყობინება:', payload);
-    const notificationTitle = payload.notification.title;
+    console.log('Firebase ფონური მესიჯი:', payload);
+    const notificationTitle = payload.notification.title || 'Impact';
     const notificationOptions = {
         body: payload.notification.body,
         icon: '/logo.png',
         badge: '/logo.png',
-        data: { url: payload.data ? payload.data.url : '/' }
+        vibrate: [200, 100, 200],
+        tag: 'impact-msg', 
+        renotify: true,
+        data: { 
+            url: (payload.data && payload.data.url) ? payload.data.url : '/' 
+        }
     };
-
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// ნოტიფიკაციაზე დაჭერისას საიტის გახსნა
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
-    event.waitUntil(
-        clients.openWindow(event.notification.data.url || '/')
-    );
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 1. ინსტალაცია და მომენტალური გააქტიურება
-self.addEventListener('install', (e) => {
-    console.log('Service Worker: Installed ✅');
-    self.skipWaiting(); // აიძულებს ახალ ვერსიას ეგრევე ჩაენაცვლოს ძველს
-});
-
-self.addEventListener('activate', (e) => {
-    console.log('Service Worker: Activated 🚀');
-    return self.clients.claim(); // ეგრევე იღებს კონტროლს ყველა ღია ტაბზე
-});
-
-// 2. ფეჩი (საჭიროა PWA სტატუსისთვის)
-self.addEventListener('fetch', (e) => {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-});
-
-// 3. შეტყობინების მოსვლა (Push) - დაცული ვერსია
+// 2. სტანდარტული Push (სარეზერვო, თუ Firebase-ის გარეთ მოდის რამე)
 self.addEventListener('push', function(event) {
-    let data = { title: 'Impact Store', body: 'ახალი შეტყობინება თქვენთვის! 🔔' };
-
-    try {
-        if (event.data) {
-            // ვამოწმებთ, JSON-ია თუ უბრალო ტექსტი
-            const payload = event.data.text();
-            try {
-                data = JSON.parse(payload);
-            } catch (e) {
-                data.body = payload; // თუ JSON არ არის, ტექსტად ჩავსვამთ
-            }
+    if (event.data) {
+        try {
+            const data = event.data.json();
+            const options = {
+                body: data.body || data.notification?.body,
+                icon: '/logo.png',
+                badge: '/logo.png',
+                data: { url: data.url || (data.data && data.data.url) || '/' }
+            };
+            event.waitUntil(self.registration.showNotification(data.title || 'Impact', options));
+        } catch (e) {
+            // თუ JSON არ არის, ტექსტად გამოვიტანოთ
+            event.waitUntil(self.registration.showNotification('Impact', { body: event.data.text() }));
         }
-    } catch (err) {
-        console.error("Push მონაცემების წაკითხვის შეცდომა:", err);
     }
-
-    const options = {
-        body: data.body,
-        icon: '/logo.png',
-        badge: '/logo.png',
-        vibrate: [200, 100, 200],
-        tag: 'order-update', // ერთნაირი მესიჯები რომ არ დაგროვდეს
-        renotify: true,
-        data: {
-            url: data.url || '/' 
-        }
-    };
-
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
 });
 
-// 4. მესიჯზე დაჭერის ლოგიკა
+// 3. ნოტიფიკაციაზე დაჭერის ერთიანი ლოგიკა
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
+    const targetUrl = event.notification.data.url || '/';
+
     event.waitUntil(
-        clients.matchAll({ type: 'window' }).then(windowClients => {
-            // თუ აპლიკაცია უკვე ღიაა, უბრალოდ მასზე გადავიდეს
-            for (var i = 0; i < windowClients.length; i++) {
-                var client = windowClients[i];
-                if (client.url === event.notification.data.url && 'focus' in client) {
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            // თუ საიტი უკვე ღიაა, უბრალოდ ფოკუსი მოახდინოს
+            for (let client of windowClients) {
+                if (client.url.includes(targetUrl) && 'focus' in client) {
                     return client.focus();
                 }
             }
-            // თუ დაკეტილია, გახსნას ახალი ფანჯარა
-            if (clients.openWindow) {
-                return clients.openWindow(event.notification.data.url);
-            }
+            // თუ დაკეტილია, გახსნას ახალი
+            if (clients.openWindow) return clients.openWindow(targetUrl);
         })
     );
+});
+
+// 4. სერვის ვორკერის მართვა
+self.addEventListener('install', (e) => {
+    self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+    e.waitUntil(self.clients.claim());
 });
