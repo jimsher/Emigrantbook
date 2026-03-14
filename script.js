@@ -1619,7 +1619,7 @@ window.openGiftPanel = function(postId, authorId) {
     const gift5 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Egvipte.gif";
     const gift6 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Guli.gif";
     const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Saati.gif";
-    const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
+    const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Sunduk.gif";
     const gift9 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
 
     panel.innerHTML = `
