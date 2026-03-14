@@ -1646,7 +1646,7 @@ window.openGiftPanel = function(postId, authorId) {
             </div>
             <div onclick="window.processGift('${authorId}', 25, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift5}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">250 AKHO</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">25 AKHO</div>
             </div>
             <div onclick="window.processGift('${authorId}', 50, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift6}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
