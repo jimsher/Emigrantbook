@@ -12,6 +12,12 @@ const messaging = firebase.messaging();
 // 1. Firebase ფონური შეტყობინებები
 messaging.onBackgroundMessage(function(payload) {
     console.log('Firebase ფონური მესიჯი:', payload);
+
+    // --- აი ეს ხაზი აანთებს ნიშანს აპლიკაციის ხატულაზე ---
+    if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(1).catch(e => {});
+    }
+
     const notificationTitle = payload.notification.title || 'Impact';
     const notificationOptions = {
         body: payload.notification.body,
@@ -27,8 +33,13 @@ messaging.onBackgroundMessage(function(payload) {
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// 2. სტანდარტული Push (სარეზერვო, თუ Firebase-ის გარეთ მოდის რამე)
+// 2. სტანდარტული Push
 self.addEventListener('push', function(event) {
+    // ხატულაზე ნიშნის დაწერა Push-ის დროსაც
+    if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(1).catch(e => {});
+    }
+
     if (event.data) {
         try {
             const data = event.data.json();
@@ -40,26 +51,28 @@ self.addEventListener('push', function(event) {
             };
             event.waitUntil(self.registration.showNotification(data.title || 'Impact', options));
         } catch (e) {
-            // თუ JSON არ არის, ტექსტად გამოვიტანოთ
             event.waitUntil(self.registration.showNotification('Impact', { body: event.data.text() }));
         }
     }
 });
 
-// 3. ნოტიფიკაციაზე დაჭერის ერთიანი ლოგიკა
+// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    const targetUrl = event.notification.data.url || '/';
+    
+    // როცა მომხმარებელი ნოტიფიკაციას დააჭერს, ნიშანი გაქრეს ხატულიდან
+    if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge().catch(e => {});
+    }
 
+    const targetUrl = event.notification.data.url || '/';
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-            // თუ საიტი უკვე ღიაა, უბრალოდ ფოკუსი მოახდინოს
             for (let client of windowClients) {
                 if (client.url.includes(targetUrl) && 'focus' in client) {
                     return client.focus();
                 }
             }
-            // თუ დაკეტილია, გახსნას ახალი
             if (clients.openWindow) return clients.openWindow(targetUrl);
         })
     );
