@@ -1612,9 +1612,9 @@ window.openGiftPanel = function(postId, authorId) {
     panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:25px 20px; z-index:2000005; backdrop-filter:blur(15px); color:white; font-family:sans-serif;";
     
     // აქ ჩაწერე შენი GIF-ების ლინკები
-    const gift1 = "https://github.com/jimsher/Emigrantbook/blob/main/Begemot.gif";
+    const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
     const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift3 = "https://imgflip.com/gif/aml0sw";
+    const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
