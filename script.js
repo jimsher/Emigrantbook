@@ -1615,6 +1615,12 @@ window.openGiftPanel = function(postId, authorId) {
     const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
     const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
     const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift4 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
+    const gift5 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
+    const gift6 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
+    const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
+    const gift9 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -1632,6 +1638,30 @@ window.openGiftPanel = function(postId, authorId) {
             </div>
             <div onclick="window.processGift('${authorId}', 500, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift3}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift4}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift5}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift6}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift7}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift8}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 500, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift9}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
             </div>
         </div>`;
