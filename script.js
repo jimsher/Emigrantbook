@@ -1621,6 +1621,14 @@ window.openGiftPanel = function(postId, authorId) {
     const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Saati.gif";
     const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Sunduk.png";
     const gift9 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift10 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift11 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift12 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift13 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift14 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift15 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+    const gift16 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
+
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -1662,6 +1670,34 @@ window.openGiftPanel = function(postId, authorId) {
             </div>
             <div onclick="window.processGift('${authorId}', 150, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift9}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift10}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift10}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift11}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift11}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift12}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift12}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift13}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift13}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift14}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift14}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift15}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift15}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift16}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift16}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
             </div>
         </div>`;
