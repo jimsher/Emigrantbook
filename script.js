@@ -1615,10 +1615,10 @@ window.openGiftPanel = function(postId, authorId) {
     const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
     const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
     const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
-    const gift4 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift5 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
-    const gift6 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
-    const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
+    const gift4 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yvavili.gif";
+    const gift5 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Egvipte.gif";
+    const gift6 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Guli.gif";
+    const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Saati.gif";
     const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
     const gift9 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
 
