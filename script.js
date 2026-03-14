@@ -3027,3 +3027,37 @@ function fixCloseBtn() {
 
 
 
+
+
+
+
+async function askInitialPermissions() {
+    // 1. შემოწმება, ხომ არ არის უკვე მოთხოვნილი (რომ ყოველ შესვლაზე არ შეაწუხოს)
+    if (localStorage.getItem('initial_permissions_asked')) return;
+
+    console.log("ვითხოვ ყველა სისტემურ ნებართვას...");
+
+    try {
+        // ა) კამერა და მიკროფონი
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        // თუ ნებართვა მოგვცა, ეგრევე ვთიშავთ სტრიმს (უბრალოდ დასტურისთვის გვჭირდებოდა)
+        stream.getTracks().forEach(track => track.stop());
+
+        // ბ) ლოკაცია (მაპი)
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(() => {}, () => {});
+        }
+
+        // გ) ნოტიფიკაციები (უკვე გაქვს კოდში, მაგრამ აქაც იყოს გარანტიისთვის)
+        if ("Notification" in window) {
+            await Notification.requestPermission();
+        }
+
+        // დავიმახსოვროთ, რომ ერთხელ უკვე ვკითხეთ
+        localStorage.setItem('initial_permissions_asked', 'true');
+        console.log("ყველა ნებართვა დამუშავებულია ✅");
+
+    } catch (err) {
+        console.warn("ზოგიერთ ნებართვაზე მომხმარებელმა უარი თქვა ან ბრაუზერმა დაბლოკა:", err);
+    }
+}
