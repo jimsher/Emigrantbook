@@ -1632,37 +1632,37 @@ window.openGiftPanel = function(postId, authorId) {
                 <img src="${gift1}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div>
             </div>
-            <div onclick="window.processGift('${authorId}', 50, '${gift2}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+            <div onclick="window.processGift('${authorId}', 10, '${gift2}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift2}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">10 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 15, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift3}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">15 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 20, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift4}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">20 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 25, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift5}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">250 AKHO</div>
+            </div>
+            <div onclick="window.processGift('${authorId}', 50, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                <img src="${gift6}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
                 <div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div>
             </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift3}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift4}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift5}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift6}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+            <div onclick="window.processGift('${authorId}', 80, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift7}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">80 AKHO</div>
             </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+            <div onclick="window.processGift('${authorId}', 100, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift8}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">100 AKHO</div>
             </div>
-            <div onclick="window.processGift('${authorId}', 500, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+            <div onclick="window.processGift('${authorId}', 150, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
                 <img src="${gift9}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">500 AKHO</div>
+                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
             </div>
         </div>`;
     document.body.appendChild(panel);
