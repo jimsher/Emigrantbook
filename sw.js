@@ -59,11 +59,15 @@ self.addEventListener('push', function(event) {
 // 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
+    event.waitUntil(
+        clients.openWindow('https://emigrantbook.com') // აქ შეგიძლია კონკრეტული ჩატის ლინკი მიუთითო
+    );
+});
     
     // როცა მომხმარებელი ნოტიფიკაციას დააჭერს, ნიშანი გაქრეს ხატულიდან
     if ('clearAppBadge' in navigator) {
-        navigator.clearAppBadge().catch(e => {});
-    }
+    navigator.clearAppBadge().catch(console.error);
+}
 
     const targetUrl = event.notification.data.url || '/';
     event.waitUntil(
