@@ -2866,32 +2866,31 @@ if ('setAppBadge' in navigator) {
 }
 
 // 5. ტოკენის აღება და ბაზაში შენახვა (შესწორებული კრიტიკული ადგილები)
-   function saveMessagingToken(user) {
-    // ვიყენებთ იმ messaging-ს, რომელიც უკვე გაქვს საიტზე
+     function saveMessagingToken(user) {
     const messaging = firebase.messaging();
 
-    // აიძულებს ბრაუზერს ამოაგდოს ფანჯარა "Allow/Block"
-    messaging.requestPermission()
-        .then(function() {
-            // თუ მომხმარებელმა დააჭირა Allow, ვიღებთ ტოკენს
-            return messaging.getToken({
-                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk'
-            });
+    // 1. ჯერ ვრწმუნდებით რომ Service Worker მზადაა
+    navigator.serviceWorker.ready.then(function(registration) {
+        
+        // 2. მხოლოდ ამის შემდეგ ვითხოვთ ტოკენს
+        messaging.getToken({
+            vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk',
+            serviceWorkerRegistration: registration // აი ეს აკლია, რომ ტოკენი "გამოვარდეს"
         })
         .then(function(token) {
             if (token) {
-                // ვწერთ ბაზაში შენი db ცვლადით
+                // 3. თუ ტოკენი მოვიდა, ვწერთ იქ, სადაც 'test' წერია
                 db.ref('users/' + user.uid).update({ 
                     fcmToken: token 
                 });
-                console.log("FCM ტოკენი წარმატებით ჩაიწერა! ✅");
+                console.log("ტოკენი ჩაიწერა! ✅");
             }
         })
         .catch(function(err) {
-            // აქ დაგიწერს თუ რამე შეცდომაა (მაგ: მომხმარებელმა "Block" დააჭირა)
-            console.log("შეტყობინების ჩართვის პრობლემა:", err);
+            console.log("ტოკენის აღების შეცდომა:", err);
         });
-}                   
+    });
+}                 
 // 1. ტოკენის აღება და შენახვა Firebase-ში
 
 
