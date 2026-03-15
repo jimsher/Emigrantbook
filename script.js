@@ -2827,46 +2827,6 @@ function setAppBadge(count) {
 }
 
 // 3. მესიჯების მოსმენა (აქტიურდება საიტზე შემოსვლისას)
-function listenToGlobalMessages() {
-    if (!auth.currentUser) return;
-    const myUid = auth.currentUser.uid;
-    console.log("მესიჯების მოსმენა აქტიურია... 👂");
-
-    // შევცვალეთ ლოგიკა, რომ არ მოხდეს რესურსების გადატვირთვა
-    db.ref('messages').on('child_added', snap => {
-        // ვიღებთ მხოლოდ ბოლო მესიჯს ამ კონკრეტული ჩათიდან
-        snap.ref.limitToLast(1).once('value', mSnap => {
-            const data = mSnap.val();
-            if (!data) return;
-            
-            // ვიღებთ რეალურ მესიჯს (რადგან limitToLast აბრუნებს ობიექტს)
-            const msgKey = Object.keys(data)[0];
-            const msg = data[msgKey];
-
-            // ვაიგნორებთ ჩემს მესიჯებს და ძველებს (10 წამზე მეტის)
-            if (!msg || msg.senderId === myUid) return;
-            if (Date.now() - msg.ts > 10000) return;
-
-            // თუ ჩატი ღიაა ამ ადამიანთან, ნოტიფიკაცია არ გვინდა
-            if (typeof currentChatId !== 'undefined' && currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
-
-            db.ref(`users/${msg.senderId}`).once('value', uSnap => {
-                const u = uSnap.val();
-                if (u) {
-                    const senderName = u.name || "მომხმარებელი";
-                    const messageText = msg.text || "📷 მედია ფაილი";
-
-                    setAppBadge(1);
-                    showLocalNotification(senderName, messageText);
-
-                    if (typeof showGlobalPush === "function") {
-                        showGlobalPush(senderName, u.photo, messageText);
-                    }
-                }
-            });
-        });
-    });
-}
 
 // 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
 function sendPushToUser(targetUid, senderName, text) {
