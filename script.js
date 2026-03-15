@@ -2869,27 +2869,27 @@ if ('setAppBadge' in navigator) {
      function saveMessagingToken(user) {
     const messaging = firebase.messaging();
 
-    // 1. ჯერ ვრწმუნდებით რომ Service Worker მზადაა
-    navigator.serviceWorker.ready.then(function(registration) {
-        
-        // 2. მხოლოდ ამის შემდეგ ვითხოვთ ტოკენს
-        messaging.getToken({
-            vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk',
-            serviceWorkerRegistration: registration // აი ეს აკლია, რომ ტოკენი "გამოვარდეს"
+    // 1. ჯერ ვითხოვთ ნებართვას (ეს აკლია, რომ ტოკენი გააქტიურდეს)
+    messaging.requestPermission()
+        .then(function() {
+            // 2. მხოლოდ ნებართვის მერე ვიღებთ ტოკენს
+            return messaging.getToken({
+                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk'
+            });
         })
         .then(function(token) {
             if (token) {
-                // 3. თუ ტოკენი მოვიდა, ვწერთ იქ, სადაც 'test' წერია
+                // 3. თუ აქამდე მოაღწია, აუცილებლად ჩაწერს 'test'-ის გვერდით
                 db.ref('users/' + user.uid).update({ 
                     fcmToken: token 
                 });
-                console.log("ტოკენი ჩაიწერა! ✅");
+                console.log("ტოკენი წარმატებით ჩაიწერა! ✅");
             }
         })
         .catch(function(err) {
-            console.log("ტოკენის აღების შეცდომა:", err);
+            // თუ აქ მოვიდა, კონსოლში დაგიწერს რატომ არ ჩაიწერა (მაგ: მომხმარებელმა დაბლოკა)
+            console.log("FCM შეცდომა:", err);
         });
-    });
 }                 
 // 1. ტოკენის აღება და შენახვა Firebase-ში
 
