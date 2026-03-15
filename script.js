@@ -2866,31 +2866,37 @@ if ('setAppBadge' in navigator) {
 }
 
 // 5. ტოკენის აღება და ბაზაში შენახვა (შესწორებული კრიტიკული ადგილები)
-     function saveMessagingToken(user) {
+    function saveMessagingToken(user) {
     const messaging = firebase.messaging();
 
-    // 1. ჯერ ვითხოვთ ნებართვას (ეს აკლია, რომ ტოკენი გააქტიურდეს)
+    console.log("ნაბიჯი 1: ვიწყებთ...");
+
     messaging.requestPermission()
         .then(function() {
-            // 2. მხოლოდ ნებართვის მერე ვიღებთ ტოკენს
+            console.log("ნაბიჯი 2: ნებართვა გვაქვს! ვიღებთ ტოკენს...");
             return messaging.getToken({
                 vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk'
             });
         })
         .then(function(token) {
             if (token) {
-                // 3. თუ აქამდე მოაღწია, აუცილებლად ჩაწერს 'test'-ის გვერდით
-                db.ref('users/' + user.uid).update({ 
-                    fcmToken: token 
+                console.log("ნაბიჯი 3: ტოკენი ხელშია! ვწერთ ბაზაში:", token);
+                // აუცილებლად დავაწეროთ 'test'-ის გვერდით
+                return db.ref('users/' + user.uid).update({ 
+                    fcmToken: token,
+                    messagingStatus: "active" 
                 });
-                console.log("ტოკენი წარმატებით ჩაიწერა! ✅");
+            } else {
+                console.warn("ნაბიჯი 3: ტოკენი ცარიელია.");
             }
         })
+        .then(function() {
+            console.log("ნაბიჯი 4: ბაზაში ჩაიწერა! ✅");
+        })
         .catch(function(err) {
-            // თუ აქ მოვიდა, კონსოლში დაგიწერს რატომ არ ჩაიწერა (მაგ: მომხმარებელმა დაბლოკა)
-            console.log("FCM შეცდომა:", err);
+            console.error("კრიტიკული შეცდომა:", err);
         });
-}                 
+}                  
 // 1. ტოკენის აღება და შენახვა Firebase-ში
 
 
