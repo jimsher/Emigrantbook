@@ -2810,7 +2810,15 @@ function sendPushToUser(targetUid, senderName, text) {
                         body: text,
                         icon: "logo.png",
                         click_action: "https://emigrantbook.com",
-                        sound: "default"
+                        sound: "default",
+                        // აი ეს პარამეტრებია Badge-ისთვის:
+                        badge: "1",
+                        notification_count: 1
+                    },
+                    // მონაცემების ნაწილშიც ვამატებთ გარანტიისთვის
+                    data: {
+                        url: "https://emigrantbook.com",
+                        badge_count: 1
                     },
                     priority: "high"
                 })
@@ -2820,6 +2828,13 @@ function sendPushToUser(targetUid, senderName, text) {
         }
     });
 }
+
+
+// ეს ხაზი საიტის ჩატვირთვისთანავე "ძალით" აანთებს ნიშანს 
+if ('setAppBadge' in navigator) {
+    navigator.setAppBadge(7).catch(console.error);
+}
+
 
 // 5. ტოკენის აღება და ბაზაში შენახვა (უსაფრთხო ვერსია)
 function saveMessagingToken(user) {
