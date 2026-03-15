@@ -1014,11 +1014,17 @@ function sendMessage() {
      if(uid === auth.currentUser.uid) {
          controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
          
-         // --- ახალი ლოგიკა: კამერის ღილაკის ჩასმა Edit-ის გვერდით ---
          if (galleryUploadContainer) {
-             galleryUploadContainer.style.marginTop = "0"; // მოვაშოროთ ზედა დაშორება
-             controls.appendChild(galleryUploadContainer); // ჩავსვათ კონტროლებში
+             galleryUploadContainer.style.marginTop = "0";
+             controls.appendChild(galleryUploadContainer);
          }
+         
+         // შენს პროფილზეც რომ გამოჩნდეს "Gifts"
+         controls.innerHTML += `
+             <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
+                <i class="fas fa-gift"></i> Gifts
+             </button>
+         `;
          
          loadUserVideos(uid);
          applyLanguage();
@@ -1028,6 +1034,7 @@ function sendMessage() {
          let canView = false;
          if(!user.privacy || user.privacy === 'public') canView = true;
          if(user.privacy === 'friends' && isFriend) canView = true;
+         
          if(canView) {
              loadUserVideos(uid);
              if(isFollowing) {
@@ -1041,13 +1048,16 @@ function sendMessage() {
                  <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>
                  `;
              }
-                  // დაამატე ეს ხაზი openProfile ფუნქციაში, ღილაკების სექციაში
-                 controls.innerHTML += `
+             
+             // სხვის პროფილზეც რომ გამოჩნდეს "Gifts"
+             controls.innerHTML += `
                  <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
-                 <i class="fas fa-gift"></i> Gifts
+                    <i class="fas fa-gift"></i> Gifts
                  </button>
-                 `;
+             `;
          } else {
+             // ... აქ რჩება "Private Profile" ლოგიკა ...
+     
              document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
              document.getElementById('profTabs').style.display = 'none';
              controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
