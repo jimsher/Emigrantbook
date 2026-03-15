@@ -1050,12 +1050,22 @@ function sendMessage() {
              }
              
              // სხვის პროფილზეც რომ გამოჩნდეს "Gifts"
-             controls.innerHTML += `
-                 <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
-                    <i class="fas fa-gift"></i> Gifts
-                 </button>
+             // 1. ჯერ ვხატავთ ღილაკს (id-ით, რომ მერე ციფრი ჩავწეროთ)
+            controls.innerHTML += `
+             <button id="gifts-btn-${uid}" class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
+                <i class="fas fa-gift"></i> Gifts
+             </button>
              `;
-         } else {
+         
+            // 2. ეგრევე ვითვლით ბაზიდან რამდენი საჩუქარია და ვწერთ ღილაკზე
+            db.ref(`received_gifts/${uid}`).once('value', snap => {
+             const count = snap.numChildren() || 0;
+             const giftsBtn = document.getElementById(`gifts-btn-${uid}`);
+             if (giftsBtn) {
+                 giftsBtn.innerHTML = `<i class="fas fa-gift"></i> Gifts (${count})`;
+             }
+            });
+            } else {
              // ... აქ რჩება "Private Profile" ლოგიკა ...
      
              document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
