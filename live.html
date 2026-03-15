@@ -1,164 +1,43 @@
-<!DOCTYPE html>
-<html lang="ka">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Emigrantbook Live Battle</title>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.23.1.js"></script>
-    
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: white; }
-        
-        /* მთავარი კონტეინერი (Tiktok vertical layout) */
-        .live-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
-        
-        /* ზედა ბარი (პროფილი და რეიტინგი) */
-        .header-bar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .profile-info { display: flex; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px; }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid white; margin-right: 8px; }
-        .live-status { background: rgba(255, 0, 0, 0.7); font-size: 10px; padding: 2px 5px; border-radius: 5px; margin-left: 5px; }
-
-        /* ვიდეო ბადე (Dual Screen PK) */
-        .video-grid { position: relative; width: 100%; height: 60%; /* ვიდეო ზონა 60% */ display: flex; overflow: hidden; }
-        .video-box { position: relative; width: 50%; height: 100%; background: #222; overflow: hidden; }
-        .video-box.host-side { border-right: 1px solid rgba(255,255,255,0.2); }
-        .video-player { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* PK ქულების ბარი (ზემოდან მეორე) */
-        .pk-score-bar { position: absolute; top: 10px; /* ვიდეოს შიგნით */ left: 10px; right: 10px; height: 25px; background: rgba(0,0,0,0.6); border-radius: 12.5px; overflow: hidden; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.3); z-index: 5; }
-        .score-fill-blue { height: 100%; background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%); width: 50%; transition: width 0.3s ease; }
-        .score-fill-pink { height: 100%; background: linear-gradient(90deg, #ff00cc 0%, #ffc0cb 100%); width: 50%; transition: width 0.3s ease; }
-        .score-text { position: absolute; font-size: 12px; font-weight: bold; color: white; padding: 0 10px; }
-        .score-text.left { left: 5px; }
-        .score-text.right { right: 5px; }
-
-        /* ბრძოლის ანიმაცია (შუაში) */
-        .vs-icon-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; width: 80px; height: 80px; pointer-events: none; }
-
-        /* ჩატი და რეაქციები (ქვედა ნაწილი) */
-        .bottom-section { position: relative; width: 100%; height: 40%; background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 100%); padding: 15px; display: flex; flex-direction: column-reverse; justify-content: flex-start; }
-        #chat-list { max-height: 80%; overflow-y: auto; scroll-behavior: smooth; font-size: 13px; color: #ccc; margin-bottom: 50px; }
-        .chat-msg { margin-bottom: 5px; }
-        .chat-msg .user-name { font-weight: bold; color: #fff; margin-right: 5px; }
-
-        /* Input Bar (Tiktok style) */
-        .input-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: rgba(0,0,0,0.8); border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; padding: 0 10px; z-index: 20; }
-        .input-bar input { flex-grow: 1; background: rgba(255,255,255,0.1); border: none; padding: 10px; border-radius: 20px; color: white; margin-right: 10px; }
-        .action-btns { display: flex; gap: 15px; }
-        .action-btn { font-size: 20px; cursor: pointer; }
-
-
-
-
-        
-/* მთავარი კონტეინერი */
-#video-container {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    background: #000;
-    display: block; /* თავიდან იყოს ერთიანი */
-    transition: all 0.3s ease;
-}
-
-/* შენი ვიდეო (Local Player) */
-#local-player {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: all 0.3s ease;
-}
-
-/* სტუმრის ვიდეო (Remote Player) - თავიდან დამალულია */
-#remote-player {
-    display: none;
-    width: 0;
-    height: 0;
-}
-
-/* აი ეს არის მთავარი: როცა სტუმარი შემოვა, JS დაამატებს ამ კლასს */
-#video-container.split-screen {
-    display: flex; /* გვერდიგვერდ დაალაგებს */
-    flex-direction: row;
-    align-items: center;
-}
-
-#video-container.split-screen #local-player,
-#video-container.split-screen #remote-player {
-    display: block;
-    width: 50%; /* ზუსტად შუაზე გაყოფს */
-    height: 50vh; /* PK-ს სიმაღლე */
-    border: 2px solid #fff;
-    object-fit: cover;
-}
-    </style>
-</head>
-<body>
-
-    <div class="live-container">
-        <div class="header-bar">
-            <div class="profile-info">
-                <img src="https://emigrantbook.com/default-avatar.png" id="user-avatar" class="avatar" alt="Host">
-                <div>
-                    <div style="font-size:12px; font-weight:bold;" id="user-name">Host...</div>
-                    <div style="font-size:10px; color:#aaa;" id="viewer-count">👁️ 0</div>
-                </div>
-            </div>
-            <button style="background:#ff00cc; border:none; color:white; padding:5px 15px; border-radius:15px; font-size:12px;" id="pk-btn">Battle Start</button>
-        </div>
-
-        <div class="video-grid">
-            <div class="video-box host-side" id="host-video">
-                <div class="pk-score-bar">
-                    <div class="score-fill-blue" id="score-blue-fill"></div>
-                    <div class="score-fill-pink" id="score-pink-fill"></div>
-                    <div class="score-text left" id="score-blue-text">0</div>
-                    <div class="score-text right" id="score-pink-text">0</div>
-                </div>
-                <div id="local-player" class="video-player"></div>
-            </div>
-            
-            <div class="video-box remote-side" id="remote-video">
-                <div class="vs-icon-container">
-                    <img src="https://img.icons8.com/color/96/sword.png" alt="VS" style="width:100%; height:100%; opacity:0.8;">
-                </div>
-                <div id="remote-player" class="video-player"></div>
-            </div>
-        </div>
-
-        <div class="bottom-section">
-            <div id="chat-list">
-                <div class="chat-msg"><span class="user-name">სისტემა:</span> კეთილი იყოს თქვენი მობრძანება PK ბრძოლაში!</div>
-            </div>
-        </div>
-
-        <div class="input-bar">
-            <input type="text" placeholder="დაწერე რამე..." id="chat-input">
-            <div class="action-btns">
-                <div class="action-btn" id="send-msg">➡️</div>
-                <div class="action-btn" id="gift-btn">🎁</div>
-                <div class="action-btn" id="leave-btn">🚪</div>
-            </div>
+<div id="deliveryPage" class="full-ui">
+    <div class="delivery-header">
+        <i class="fas fa-arrow-left" onclick="refreshHomeFeed()"></i>
+        <h2>Food Delivery</h2>
+        <div class="cart-icon-wrapper" onclick="openCart()">
+            <i class="fas fa-shopping-basket"></i>
+            <span id="cartCount">0</span>
         </div>
     </div>
 
-    <div id="gift-panel" style="display:none; position:absolute; bottom:60px; right:10px; background:rgba(0,0,0,0.9); border-radius:10px; padding:10px; z-index:100; border:1px solid #333;">
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; font-size:12px;">
-            <div class="gift" onclick="sendGift(50, 'rose')" style="text-align:center;">🌹 50</div>
-            <div class="gift" onclick="sendGift(500, 'diamond')" style="text-align:center;">💎 500</div>
-            <div class="gift" onclick="sendGift(1000, 'crown')" style="text-align:center;">👑 1000</div>
-        </div>
+    <div class="category-scroll">
+        <button class="cat-btn active" onclick="loadCategory('all')">ყველა</button>
+        <button class="cat-btn" onclick="loadCategory('khinkali')">ხინკალი</button>
+        <button class="cat-btn" onclick="loadCategory('khachapuri')">ხაჭაპური</button>
+        <button class="cat-btn" onclick="loadCategory('drinks')">სასმელები</button>
     </div>
 
+    <div id="menuGrid" class="menu-grid">
+        </div>
+</div>
 
-
-
-
-    
-    
-    <script src="live1.js"></script>
-</body>
-</html>
+<div id="customizeModal" class="modal-overlay" style="display:none;">
+    <div class="customize-box">
+        <img id="customDishImg" src="" alt="">
+        <h3 id="customDishName"></h3>
+        <p id="customDishPrice"></p>
+        
+        <div class="ingredients-section">
+            <h4>დაამატეთ ინგრედიენტები:</h4>
+            <div id="ingredientsList">
+                </div>
+        </div>
+        
+        <div class="qty-control">
+            <button onclick="changeQty(-1)">-</button>
+            <span id="orderQty">1</span>
+            <button onclick="changeQty(1)">+</button>
+        </div>
+        
+        <button class="add-to-cart-final" onclick="confirmAddToCart()">კალათაში დამატება</button>
+        <button class="close-modal" onclick="closeCustomize()">გაუქმება</button>
+    </div>
+</div>
