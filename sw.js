@@ -4,6 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js')
 firebase.initializeApp({
     apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk",
     projectId: "emigrantbook",
+    messagingSenderId: "138873748174", // ეს ჩავამატე, ტოკენი რომ ჩაიწეროს
     appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f"
 });
 
@@ -13,7 +14,6 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
     console.log('Firebase ფონური მესიჯი:', payload);
 
-    // --- აი ეს ხაზი აანთებს ნიშანს აპლიკაციის ხატულაზე ---
     if ('setAppBadge' in navigator) {
         navigator.setAppBadge(1).catch(e => {});
     }
@@ -35,7 +35,6 @@ messaging.onBackgroundMessage(function(payload) {
 
 // 2. სტანდარტული Push
 self.addEventListener('push', function(event) {
-    // ხატულაზე ნიშნის დაწერა Push-ის დროსაც
     if ('setAppBadge' in navigator) {
         navigator.setAppBadge(1).catch(e => {});
     }
@@ -56,20 +55,17 @@ self.addEventListener('push', function(event) {
     }
 });
 
-// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
+// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა (გასწორებული ფრჩხილები)
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    event.waitUntil(
-        clients.openWindow('https://emigrantbook.com') // აქ შეგიძლია კონკრეტული ჩატის ლინკი მიუთითო
-    );
-});
-    
-    // როცა მომხმარებელი ნოტიფიკაციას დააჭერს, ნიშანი გაქრეს ხატულიდან
-    if ('clearAppBadge' in navigator) {
-    navigator.clearAppBadge().catch(console.error);
-}
 
-    const targetUrl = event.notification.data.url || '/';
+    //Badge-ის მოცილება
+    if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge().catch(console.error);
+    }
+
+    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : 'https://emigrantbook.com';
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
             for (let client of windowClients) {
