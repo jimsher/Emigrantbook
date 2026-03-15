@@ -2796,10 +2796,7 @@ function installApp() {
 
 
 // შეტყობინების მონიჭება აპლიკაციაზე 
-  import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-messaging.js";
-import { getDatabase, ref, update, get } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-database.js";
-
-// 1. ლოკალური ნოტიფიკაცია (გასწორებული)
+  // 1. სისტემური ნოტიფიკაციის გამოტანა
 function showLocalNotification(title, body) {
     if (Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then(registration => {
@@ -2809,8 +2806,7 @@ function showLocalNotification(title, body) {
                 vibrate: [200, 100, 200],
                 badge: 'logo.png',
                 tag: 'msg-group',
-                renotify: true,
-                data: { url: window.location.origin }
+                renotify: true
             });
             
             const sound = document.getElementById('msgSound');
@@ -2819,7 +2815,7 @@ function showLocalNotification(title, body) {
     }
 }
 
-// 2. ხატულაზე ციფრის დაწერა (Badge) - მუშაობს იდეალურად
+// 2. ხატულაზე ციფრის დაწერა (Badge)
 function setAppBadge(count) {
     if ('setAppBadge' in navigator) {
         if (count > 0) {
@@ -2830,61 +2826,69 @@ function setAppBadge(count) {
     }
 }
 
-// 3. ნოტიფიკაციის გაგზავნა (V1 API-სთვის მომზადებული)
-// ყურადღება: ბრაუზერიდან პირდაპირ გაგზავნა უსაფრთხოების გამო იზღუდება, 
-// მაგრამ ტესტისთვის ეს სტრუქტურა სწორია:
-async function sendPushToUser(targetUid, senderName, text) {
-    const db = getDatabase();
-    const tokenSnap = await get(ref(db, `users/${targetUid}/fcmToken`));
-    const token = tokenSnap.val();
-
-    if (token) {
-        // V1 სტრუქტურა განსხვავდება Legacy-სგან
-        const messageData = {
-            message: {
-                token: token,
-                notification: {
-                    title: senderName,
-                    body: text
+// 4. ნოტიფიკაციის გაგზავნა მეორე იუზერთან (API-ს მეშვეობით)
+function sendPushToUser(targetUid, senderName, text) {
+    // ყურადღება: db უნდა იყოს გლობალურად განსაზღვრული შენს კოდში
+    db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
+        const token = snap.val();
+        if (token) {
+            fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
                 },
-                data: {
-                    url: "https://emigrantbook.com"
-                },
-                android: {
+                body: JSON.stringify({
+                    to: token,
                     notification: {
+                        title: senderName,
+                        body: text,
                         icon: "logo.png",
-                        click_action: "OPEN_ACTIVITY_1"
-                    }
-                }
-            }
-        };
-        console.log("Push-ის გაგზავნა მზად არის Token-ისთვის:", token);
-        // რეალური გაგზავნა Firebase V1-ში ხდება Cloud Functions-ით უსაფრთხოებისთვის
-    }
+                        click_action: "https://emigrantbook.com",
+                        sound: "default",
+                        badge: "1"
+                    },
+                    data: {
+                        url: "https://emigrantbook.com"
+                    },
+                    priority: "high"
+                })
+            })
+            .then(res => console.log("Push status:", res.status))
+            .catch(e => console.log("Push error:", e));
+        }
+    });
 }
 
-// 4. ტოკენის აღება და ბაზაში შენახვა (MODULAR VERSION)
-async function saveMessagingToken(user) {
-    const messaging = getMessaging();
-    const db = getDatabase();
+// საიტის ჩატვირთვისას ნიშნის დაყენება
+if ('setAppBadge' in navigator) {
+    navigator.setAppBadge(7).catch(() => {});
+}
 
-    try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        const token = await getToken(messaging, { 
+// 5. ტოკენის აღება და ბაზაში შენახვა (შესწორებული კრიტიკული ადგილები)
+function saveMessagingToken(user) {
+    // ვიყენებთ firebase-ის იმ ვერსიას, რომელიც შენს საიტზეა უკვე აწყობილი
+    const messaging = firebase.messaging();
+
+    // აუცილებელია მივუთითოთ serviceWorkerRegistration, რადგან ფაილს sw.js ჰქვია
+    navigator.serviceWorker.ready.then(registration => {
+        messaging.getToken({ 
             vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk',
-            serviceWorkerRegistration: registration
+            serviceWorkerRegistration: registration 
+        })
+        .then((token) => {
+            if (token) {
+                // ვიყენებთ შენს ორიგინალ db ცვლადს
+                db.ref('users/' + user.uid).update({ fcmToken: token });
+                console.log("FCM ტოკენი განახლდა ✅");
+            } else {
+                console.log("ტოკენი ვერ იქნა მიღებული.");
+            }
+        })
+        .catch((err) => {
+            console.log("ტოკენის აღების შეცდომა:", err);
         });
-
-        if (token) {
-            await update(ref(db, 'users/' + user.uid), { 
-                fcmToken: token,
-                lastTokenUpdate: new Date().toISOString()
-            });
-            console.log("FCM ტოკენი განახლდა ბაზაში ✅");
-        }
-    } catch (err) {
-        console.error("ტოკენის აღების შეცდომა:", err);
-    }
+    });
 }                      
 // 1. ტოკენის აღება და შენახვა Firebase-ში
 
