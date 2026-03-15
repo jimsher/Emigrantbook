@@ -1,43 +1,379 @@
-<div id="deliveryPage" class="full-ui">
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact Delivery - Emigrantbook</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --dark-bg: #0a0a0a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .delivery-header {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+            z-index: 1000;
+        }
+
+        .delivery-header h2 {
+            font-size: 18px;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cart-btn {
+            position: relative;
+            font-size: 22px;
+            color: white;
+            cursor: pointer;
+        }
+
+        #cartCount {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: #ff4d4d;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        /* Categories */
+        .categories {
+            display: flex;
+            overflow-x: auto;
+            padding: 15px;
+            gap: 10px;
+            scrollbar-width: none;
+        }
+        .categories::-webkit-scrollbar { display: none; }
+
+        .cat-item {
+            padding: 8px 18px;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .cat-item.active {
+            background: var(--gold);
+            color: black;
+            border-color: var(--gold);
+            font-weight: bold;
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid #222;
+            overflow: hidden;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .product-card:active { transform: scale(0.96); }
+
+        .product-img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+        }
+
+        .product-info { padding: 12px; }
+
+        .product-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            height: 38px;
+            overflow: hidden;
+        }
+
+        .product-price {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        /* Modal / Customizer */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #111;
+            width: 100%;
+            max-height: 85vh;
+            border-radius: 30px 30px 0 0;
+            padding: 25px;
+            overflow-y: auto;
+            border-top: 2px solid var(--gold);
+        }
+
+        .customize-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+
+        .option-group {
+            margin: 20px 0;
+        }
+
+        .option-group h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: var(--gold);
+        }
+
+        .ingredient-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            padding: 12px 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* Quantity & Add Button */
+        .footer-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .qty-box {
+            display: flex;
+            align-items: center;
+            background: #222;
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .qty-box button {
+            background: none; border: none; color: white;
+            width: 35px; height: 35px; font-size: 18px; cursor: pointer;
+        }
+
+        .add-to-cart-btn {
+            flex-grow: 1;
+            background: var(--gold);
+            color: black;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
     <div class="delivery-header">
-        <i class="fas fa-arrow-left" onclick="refreshHomeFeed()"></i>
-        <h2>Food Delivery</h2>
-        <div class="cart-icon-wrapper" onclick="openCart()">
+        <i class="fas fa-chevron-left" onclick="history.back()"></i>
+        <h2>Impact Delivery</h2>
+        <div class="cart-btn" onclick="toggleCart()">
             <i class="fas fa-shopping-basket"></i>
             <span id="cartCount">0</span>
         </div>
     </div>
 
-    <div class="category-scroll">
-        <button class="cat-btn active" onclick="loadCategory('all')">ყველა</button>
-        <button class="cat-btn" onclick="loadCategory('khinkali')">ხინკალი</button>
-        <button class="cat-btn" onclick="loadCategory('khachapuri')">ხაჭაპური</button>
-        <button class="cat-btn" onclick="loadCategory('drinks')">სასმელები</button>
+    <div class="categories" id="catList">
+        <div class="cat-item active" onclick="filterMenu('all', this)">ყველა</div>
+        <div class="cat-item" onclick="filterMenu('ხინკალი', this)">ხინკალი</div>
+        <div class="cat-item" onclick="filterMenu('ხაჭაპური', this)">ხაჭაპური</div>
+        <div class="cat-item" onclick="filterMenu('მწვადი', this)">მწვადი</div>
+        <div class="cat-item" onclick="filterMenu('სასმელი', this)">სასმელები</div>
     </div>
 
-    <div id="menuGrid" class="menu-grid">
+    <div class="menu-grid" id="menuGrid">
         </div>
-</div>
 
-<div id="customizeModal" class="modal-overlay" style="display:none;">
-    <div class="customize-box">
-        <img id="customDishImg" src="" alt="">
-        <h3 id="customDishName"></h3>
-        <p id="customDishPrice"></p>
-        
-        <div class="ingredients-section">
-            <h4>დაამატეთ ინგრედიენტები:</h4>
-            <div id="ingredientsList">
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <img src="" id="modImg" class="customize-img">
+            <h2 id="modTitle"></h2>
+            <p id="modDesc" style="color: gray; font-size: 13px; margin-top: 5px;"></p>
+            
+            <div class="option-group">
+                <h4>დაამატეთ ინგრედიენტები</h4>
+                <div id="ingredientsBox">
+                    </div>
+            </div>
+
+            <div class="footer-actions">
+                <div class="qty-box">
+                    <button onclick="changeQty(-1)">-</button>
+                    <span id="qtyVal" style="width: 30px; text-align: center; font-weight: bold;">1</span>
+                    <button onclick="changeQty(1)">+</button>
                 </div>
+                <button class="add-to-cart-btn" onclick="addToCart()">კალათაში დამატება</button>
+            </div>
+            <p onclick="closeModal()" style="text-align: center; margin-top: 20px; color: #555; cursor: pointer;">გაუქმება</p>
         </div>
-        
-        <div class="qty-control">
-            <button onclick="changeQty(-1)">-</button>
-            <span id="orderQty">1</span>
-            <button onclick="changeQty(1)">+</button>
-        </div>
-        
-        <button class="add-to-cart-final" onclick="confirmAddToCart()">კალათაში დამატება</button>
-        <button class="close-modal" onclick="closeCustomize()">გაუქმება</button>
     </div>
-</div>
+
+    <script>
+        const products = [
+            { id: 1, cat: 'ხინკალი', name: 'ხინკალი ქალაქური', price: 1.50, desc: 'ხორცი, მწვანილი, სანელებლები', img: 'https://img.freepik.com/free-photo/khinkali-with-meat-parsley_140725-3343.jpg', extras: [{n:'არაჟანი', p:1}, {n:'წიწაკა', p:0}] },
+            { id: 2, cat: 'ხაჭაპური', name: 'აჭარული ხაჭაპური', price: 15.00, desc: 'ყველი, ცომი, კვერცხი, კარაქი', img: 'https://img.freepik.com/free-photo/khachapuri-with-egg-cheese_140725-3341.jpg', extras: [{n:'ორმაგი ყველი', p:3}, {n:'დამატებითი კვერცხი', p:1.5}] },
+            { id: 3, cat: 'ხაჭაპური', name: 'იმერული ხაჭაპური', price: 12.00, desc: 'ტრადიციული იმერული ყველით', img: 'https://img.freepik.com/free-photo/khachapuri-imeretian-traditional-georgian-flatbread-with-cheese_2829-14234.jpg', extras: [{n:'კარაქი', p:0.5}] },
+            { id: 4, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.00, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}, {n:'ორმაგი ხახვი', p:0}] },
+            { id: 5, cat: 'სასმელი', name: 'ლიმონათი ნატახტარი', price: 2.50, desc: 'მსხალი, ტარხუნა ან საფერავი', img: 'https://img.freepik.com/free-photo/glass-bottles-with-colorful-soda_144627-14231.jpg', extras: [] }
+        ];
+
+        let cart = [];
+        let currentProduct = null;
+        let currentQty = 1;
+
+        // Render Menu
+        function initMenu() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card" onclick="openModal(${p.id})">
+                    <img src="${p.img}" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${p.price.toFixed(2)} AKHO</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterMenu(cat, btn) {
+            document.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const grid = document.getElementById('menuGrid');
+            const filtered = cat === 'all' ? products : products.filter(p => p.cat === cat);
+            grid.innerHTML = filtered.map(p => `
+                <div class="product-card" onclick="openModal(${p.id})">
+                    <img src="${p.img}" class="product-img">
+                    <div class="product-info">
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${p.price.toFixed(2)} AKHO</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modal Logic
+        function openModal(id) {
+            currentProduct = products.find(p => p.id === id);
+            currentQty = 1;
+            document.getElementById('qtyVal').innerText = currentQty;
+            document.getElementById('modImg').src = currentProduct.img;
+            document.getElementById('modTitle').innerText = currentProduct.name;
+            document.getElementById('modDesc').innerText = currentProduct.desc;
+            
+            const ingBox = document.getElementById('ingredientsBox');
+            ingBox.innerHTML = currentProduct.extras.map((ex, i) => `
+                <div class="ingredient-row">
+                    <span>${ex.n} (+${ex.p} AKHO)</span>
+                    <input type="checkbox" class="ing-check" data-name="${ex.n}" data-price="${ex.p}">
+                </div>
+            `).join('');
+
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function changeQty(v) {
+            currentQty = Math.max(1, currentQty + v);
+            document.getElementById('qtyVal').innerText = currentQty;
+        }
+
+        function addToCart() {
+            const selectedExtras = [];
+            document.querySelectorAll('.ing-check:checked').forEach(el => {
+                selectedExtras.push({ n: el.dataset.name, p: parseFloat(el.dataset.price) });
+            });
+
+            const cartItem = {
+                ...currentProduct,
+                qty: currentQty,
+                selectedExtras: selectedExtras,
+                totalPrice: (currentProduct.price + selectedExtras.reduce((a, b) => a + b.p, 0)) * currentQty
+            };
+
+            cart.push(cartItem);
+            updateCartUI();
+            closeModal();
+        }
+
+        function updateCartUI() {
+            document.getElementById('cartCount').innerText = cart.length;
+        }
+
+        function toggleCart() {
+            if(cart.length === 0) return alert("კალათა ცარიელია!");
+            let list = cart.map(i => `${i.name} x${i.qty} - ${i.totalPrice.toFixed(2)} AKHO`).join('\n');
+            let total = cart.reduce((a, b) => a + b.totalPrice, 0);
+            if(confirm("თქვენი შეკვეთა:\n" + list + "\n\nჯამში: " + total.toFixed(2) + " AKHO\nგსურთ გაგრძელება?")) {
+                alert("შეკვეთა მიღებულია! კურიერი მალე დაგიკავშირდებათ.");
+                cart = [];
+                updateCartUI();
+            }
+        }
+
+        window.onload = initMenu;
+    </script>
+</body>
+</html>
