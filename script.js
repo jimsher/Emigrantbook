@@ -1050,20 +1050,21 @@ function sendMessage() {
              }
              
              // სხვის პროფილზეც რომ გამოჩნდეს "Gifts"
-             // 1. ჯერ ვხატავთ ღილაკს (id-ით, რომ მერე ციფრი ჩავწეროთ)
+             // 1. ვქმნით ღილაკს - დავამატე 'white-space: nowrap', რომ ციფრი ქვემოთ არ ჩავარდეს
             controls.innerHTML += `
-             <button id="gifts-btn-${uid}" class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
-                <i class="fas fa-gift"></i> Gifts
-             </button>
-             `;
-         
-            // 2. ეგრევე ვითვლით ბაზიდან რამდენი საჩუქარია და ვწერთ ღილაკზე
+            <button id="gifts-btn-${uid}" class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px; white-space: nowrap;">
+            <i class="fas fa-gift"></i> Gifts
+            </button>
+            `;
+
+            // 2. ვწერთ ციფრს პირდაპირ ტექსტის გვერდით
             db.ref(`received_gifts/${uid}`).once('value', snap => {
-             const count = snap.numChildren() || 0;
-             const giftsBtn = document.getElementById(`gifts-btn-${uid}`);
-             if (giftsBtn) {
-                 giftsBtn.innerHTML = `<i class="fas fa-gift"></i> Gifts (${count})`;
-             }
+            const count = snap.numChildren() || 0;
+            const giftsBtn = document.getElementById(`gifts-btn-${uid}`);
+            if (giftsBtn) {
+             // აქ Gifts და (${count}) ერთად წერია, რაც უზრუნველყოფს მათ გვერდიგვერდ ყოფნას
+            giftsBtn.innerHTML = `<i class="fas fa-gift"></i> Gifts (${count})`;
+            }
             });
             } else {
              // ... აქ რჩება "Private Profile" ლოგიკა ...
