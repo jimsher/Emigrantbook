@@ -3111,3 +3111,49 @@ async function askInitialPermissions() {
         console.warn("ზოგიერთ ნებართვაზე მომხმარებელმა უარი თქვა ან ბრაუზერმა დაბლოკა:", err);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ეს კოდი გაეშვება საიტის გახსნისთანავე
+window.addEventListener('load', () => {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            console.log("ნებართვის სტატუსი:", permission);
+            if (permission === 'granted') {
+                // თუ ნებართვა გვაქვს, ვცდილობთ ტოკენის აღებას
+                navigator.serviceWorker.ready.then(reg => {
+                    const messaging = firebase.messaging();
+                    messaging.getToken({
+                        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk',
+                        serviceWorkerRegistration: reg
+                    }).then(token => {
+                        console.log("ტოკენი პირდაპირი მოთხოვნით:", token);
+                    });
+                });
+            }
+        });
+    }
+});
