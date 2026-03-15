@@ -1740,8 +1740,8 @@ window.processGift = function(targetUid, cost, giftUrl) {
 
         // --- აი ეს არის ახალი ლოგიკა კოლექციისთვის ---
         firebase.database().ref(`received_gifts/${targetUid}`).push({
-            fromName: window.myName || 'User',
-            fromPhoto: window.myPhoto || '',
+            fromName: myName || 'User',
+            fromPhoto: myPhoto || '',
             giftUrl: giftUrl,
             price: cost,
             ts: Date.now()
