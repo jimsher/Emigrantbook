@@ -1749,9 +1749,9 @@ window.processGift = function(targetUid, cost, giftUrl) {
 
         // ნოტიფიკაცია (შენი ძველი კოდი)
         firebase.database().ref(`notifications/${targetUid}`).push({
-            text: `${window.myName || 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
+            text: `${myName || 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
             ts: Date.now(),
-            fromPhoto: window.myPhoto || "",
+            fromPhoto: myPhoto || "",
             giftImage: giftUrl
         });
 
