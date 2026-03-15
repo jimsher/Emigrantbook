@@ -1722,16 +1722,26 @@ window.processGift = function(targetUid, cost, giftUrl) {
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
+        // --- აი ეს არის ახალი ლოგიკა კოლექციისთვის ---
+        firebase.database().ref(`received_gifts/${targetUid}`).push({
+            fromName: window.myName || 'User',
+            fromPhoto: window.myPhoto || '',
+            giftUrl: giftUrl,
+            price: cost,
+            ts: Date.now()
+        });
+
+        // ნოტიფიკაცია (შენი ძველი კოდი)
         firebase.database().ref(`notifications/${targetUid}`).push({
             text: `${window.myName || 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
             ts: Date.now(),
             fromPhoto: window.myPhoto || "",
-            giftImage: giftUrl // ბაზაშიც ვინახავთ GIF-ის ლინკს
+            giftImage: giftUrl
         });
 
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
         
-        // ანიმაცია GIF-ით
+        // ანიმაცია (შენი ძველი კოდი)
         const anim = document.createElement('div');
         anim.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; animation: giftShow 2s ease-in-out forwards;";
         anim.innerHTML = `<img src="${giftUrl}" style="width:150px; height:150px; object-fit:contain;">`;
