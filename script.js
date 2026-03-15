@@ -1041,6 +1041,12 @@ function sendMessage() {
                  <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>
                  `;
              }
+                  // დაამატე ეს ხაზი openProfile ფუნქციაში, ღილაკების სექციაში
+                 controls.innerHTML += `
+                 <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
+                 <i class="fas fa-gift"></i> Gifts
+                 </button>
+                 `;
          } else {
              document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
              document.getElementById('profTabs').style.display = 'none';
