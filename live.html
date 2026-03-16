@@ -62,41 +62,56 @@
 
 
 
-    
-
-    
-
-    <div id="dishModal" class="delivery-modal" style="display:none;">
-    <div class="modal-content">
-        <div id="dishContent">
-            </div>
-        <button class="close-modal-btn" onclick="document.getElementById('dishModal').style.display='none'">დახურვა</button>
+    <div id="productDetailSide" class="product-side-page">
+    <div class="side-header">
+        <i class="fas fa-arrow-left" onclick="closeProductPage()"></i>
+        <span>შეკვეთის დეტალები</span>
     </div>
-</div>
-
-<div id="deliveryCheckoutModal" class="delivery-modal" style="display:none;">
-    <div class="modal-content full-checkout">
-        <h2 style="color:var(--gold); margin-bottom:20px;">შეკვეთის გაფორმება</h2>
-        
-        <div id="orderSummaryBox" class="summary-card"></div>
-
-        <div class="input-grid">
-            <input type="text" id="custName" placeholder="სახელი და გვარი*">
-            <input type="text" id="custCity" placeholder="ქალაქი*">
-            <input type="text" id="custAddr" placeholder="მისამართი (ქუჩა, ნომერი)*">
-            <input type="tel" id="custPhone" placeholder="ტელეფონი*">
-            
-            <select id="custPayment" class="checkout-select">
-                <option value="akho">გადახდა AKHO ბალანსით</option>
-                <option value="cash">ანგარიშსწორება კურიერთან</option>
-                <option value="card">ბარათით გადახდა (Online)</option>
-            </select>
+    
+    <div class="side-content">
+        <img src="" id="sideImg" class="side-hero-img">
+        <div class="side-info">
+            <h2 id="sideTitle"></h2>
+            <p id="sideDesc"></p>
         </div>
 
-        <button class="submit-order-btn" onclick="submitFinalDeliveryOrder()">შეკვეთის დადასტურება 🚀</button>
-        <p onclick="document.getElementById('deliveryCheckoutModal').style.display='none'" style="text-align:center; margin-top:15px; color:gray; cursor:pointer;">დაბრუნება</p>
+        <div class="side-section">
+            <h4><i class="fas fa-plus-circle"></i> დაამატეთ ინგრედიენტები</h4>
+            <div id="sideIngredients" class="ingredients-list"></div>
+        </div>
+
+        <div class="side-section">
+            <h4><i class="fas fa-credit-card"></i> გადახდის მეთოდი</h4>
+            <div class="payment-options">
+                <label class="pay-item">
+                    <input type="radio" name="payMethod" value="akho" checked>
+                    <span><i class="fas fa-wallet"></i> AKHO ბალანსი</span>
+                </label>
+                <label class="pay-item">
+                    <input type="radio" name="payMethod" value="card">
+                    <span><i class="fas fa-university"></i> რეალური თანხა (ბარათი)</span>
+                </label>
+                <label class="pay-item">
+                    <input type="radio" name="payMethod" value="cash">
+                    <span><i class="fas fa-truck"></i> კურიერთან ნაღდი ანგარიშსწორება</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-footer">
+        <div class="qty-control">
+            <button onclick="changeQty(-1)">-</button>
+            <span id="sideQty">1</span>
+            <button onclick="changeQty(1)">+</button>
+        </div>
+        <button class="main-action-btn" onclick="addToCart()">კალათაში დამატება</button>
     </div>
 </div>
+
+    
+
+    
 
     
     <script src="live1.js"></script>
