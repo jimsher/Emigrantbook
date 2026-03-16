@@ -4,116 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impact Delivery - Emigrantbook</title>
-    <link rel="stylesheet" href="live.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <style>
+        :root { --gold: #d4af37; --dark-bg: #0a0a0a; --card-bg: rgba(255,255,255,0.05); --text: #fff; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--dark-bg); color: var(--text); overflow-x: hidden; }
+
+        /* მთავარი გვერდი */
+        .header { position: sticky; top: 0; background: #0a0a0a; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; z-index: 100; }
+        .cart-btn { position: relative; font-size: 24px; color: var(--gold); cursor: pointer; }
+        #cartCount { position: absolute; top: -5px; right: -8px; background: red; font-size: 10px; padding: 2px 6px; border-radius: 50%; color: white; }
+
+        .categories { display: flex; overflow-x: auto; padding: 15px; gap: 10px; }
+        .cat-item { padding: 8px 18px; background: var(--card-bg); border-radius: 20px; border: 1px solid #333; white-space: nowrap; font-size: 13px; cursor: pointer; }
+        .cat-item.active { background: var(--gold); color: #000; font-weight: bold; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
+        .product-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid #222; transition: 0.3s; }
+        .product-img { width: 100%; height: 130px; object-fit: cover; cursor: pointer; }
+        .product-info { padding: 12px; }
+
+        /* სრულეკრანიანი გვერდები */
+        .page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark-bg); z-index: 1000; display: none; overflow-y: auto; }
+        .hero-img { width: 100%; height: 250px; object-fit: cover; }
+        .content { padding: 20px; padding-bottom: 100px; }
         
+        .section-title { color: var(--gold); margin: 20px 0 10px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .row { background: #151515; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid #222; }
+        
+        input[type="text"], input[type="tel"] { width: 100%; padding: 15px; background: #151515; border: 1px solid #222; border-radius: 12px; color: white; margin-bottom: 10px; outline: none; }
+        input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; accent-color: var(--gold); }
+
+        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px; display: flex; gap: 15px; border-top: 1px solid #222; box-sizing: border-box; }
+        .qty-box { display: flex; align-items: center; background: #222; border-radius: 10px; padding: 5px 15px; }
+        .main-btn { flex: 1; background: var(--gold); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="delivery-header">
-        <i class="fas fa-chevron-left" onclick="history.back()"></i>
-        <h2>Impact Delivery</h2>
-        <div class="cart-btn" onclick="toggleCart()">
-            <i class="fas fa-shopping-basket"></i>
-            <span id="cartCount">0</span>
+    <div id="mainView">
+        <div class="header">
+            <i class="fas fa-chevron-left" onclick="history.back()"></i>
+            <h2>Impact Delivery</h2>
+            <div class="cart-btn" onclick="showCart()">
+                <i class="fas fa-shopping-basket"></i>
+                <span id="cartCount">0</span>
+            </div>
         </div>
+        <div class="categories" id="catList">
+            <div class="cat-item active" onclick="filterMenu('all', this)">ყველა</div>
+            <div class="cat-item" onclick="filterMenu('ხინკალი', this)">ხინკალი</div>
+            <div class="cat-item" onclick="filterMenu('ხაჭაპური', this)">ხაჭაპური</div>
+            <div class="cat-item" onclick="filterMenu('მწვადი', this)">მწვადი</div>
+            <div class="cat-item" onclick="filterMenu('სასმელი', this)">სასმელი</div>
+        </div>
+        <div class="menu-grid" id="menuGrid"></div>
     </div>
 
-    <div class="categories" id="catList">
-        <div class="cat-item active" onclick="filterMenu('all', this)">ყველა</div>
-        <div class="cat-item" onclick="filterMenu('ხინკალი', this)">ხინკალი</div>
-        <div class="cat-item" onclick="filterMenu('ხაჭაპური', this)">ხაჭაპური</div>
-        <div class="cat-item" onclick="filterMenu('მწვადი', this)">მწვადი</div>
-        <div class="cat-item" onclick="filterMenu('სასმელი', this)">სასმელები</div>
-    </div>
-
-    <div class="menu-grid" id="menuGrid">
+    <div id="productPage" class="page">
+        <div class="header">
+            <i class="fas fa-arrow-left" onclick="closePage('productPage')"></i>
+            <h2 id="pTitle">დეტალები</h2>
+            <div></div>
         </div>
-
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-content">
-            <img src="" id="modImg" class="customize-img">
-            <h2 id="modTitle"></h2>
-            <p id="modDesc" style="color: gray; font-size: 13px; margin-top: 5px;"></p>
+        <img src="" id="pImg" class="hero-img">
+        <div class="content">
+            <h1 id="pName"></h1>
+            <p id="pDesc" style="color:gray; margin-bottom:20px;"></p>
             
-            <div class="option-group">
-                <h4>დაამატეთ ინგრედიენტები</h4>
-                <div id="ingredientsBox">
+            <div class="section-title">დაამატეთ ინგრედიენტები</div>
+            <div id="extrasBox"></div>
+
+            <div class="section-title">გადახდის მეთოდი</div>
+            <label class="row"><span>AKHO ბალანსი</span><input type="radio" name="pay" value="akho" checked></label>
+            <label class="row"><span>ბარათით (Online)</span><input type="radio" name="pay" value="card"></label>
+            <label class="row"><span>კურიერთან</span><input type="radio" name="pay" value="cash"></label>
+        </div>
+        <div class="footer">
+            <div class="qty-box">
+                <button onclick="updateQty(-1)" style="background:none; border:none; color:white; font-size:20px;">-</button>
+                <span id="qty" style="margin:0 15px; font-weight:bold;">1</span>
+                <button onclick="updateQty(1)" style="background:none; border:none; color:white; font-size:20px;">+</button>
+            </div>
+            <button class="main-btn" onclick="addToCart()">კალათაში დამატება</button>
+        </div>
+    </div>
+
+    <div id="cartPage" class="page">
+        <div class="header">
+            <i class="fas fa-arrow-left" onclick="closePage('cartPage')"></i>
+            <h2>შეკვეთის გაფორმება</h2>
+            <div></div>
+        </div>
+        <div class="content">
+            <div class="section-title">არჩეული პროდუქტები</div>
+            <div id="cartItems"></div>
+            <h3 id="totalSum" style="text-align:right; color:var(--gold); margin:20px 0;"></h3>
+
+            <div class="section-title">მიწოდების მონაცემები</div>
+            <input type="text" id="userName" placeholder="სახელი და გვარი*">
+            <input type="text" id="userCity" placeholder="ქალაქი*">
+            <input type="text" id="userAddr" placeholder="მისამართი (ქუჩა, კორპუსი, ბინა)*">
+            <input type="tel" id="userPhone" placeholder="ტელეფონის ნომერი*">
+        </div>
+        <div class="footer">
+            <button class="main-btn" style="width:100%" onclick="submitOrder()">შეკვეთის დადასტურება 🚀</button>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, cat: 'ხინკალი', name: 'ხინკალი ქალაქური', price: 1.5, desc: 'ხორცი, მწვანილი, სანელებლები', img: 'https://img.freepik.com/free-photo/khinkali-with-meat-parsley_140725-3343.jpg', extras: [{n:'არაჟანი', p:1}, {n:'წიწაკა', p:0}] },
+            { id: 2, cat: 'ხაჭაპური', name: 'აჭარული ხაჭაპური', price: 15.0, desc: 'ყველი, ცომი, კვერცხი, კარაქი', img: 'https://img.freepik.com/free-photo/khachapuri-with-egg-cheese_140725-3341.jpg', extras: [{n:'ორმაგი ყველი', p:3}] },
+            { id: 3, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] }
+        ];
+
+        let cart = [];
+        let curProd = null;
+        let curQty = 1;
+
+        function init() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.img}" class="product-img" onclick="openProduct(${p.id})">
+                    <div class="product-info">
+                        <div style="font-weight:bold;">${p.name}</div>
+                        <div style="color:var(--gold); margin-top:5px;">${p.price.toFixed(2)} AKHO</div>
                     </div>
-            </div>
-
-            <div class="footer-actions">
-                <div class="qty-box">
-                    <button onclick="changeQty(-1)">-</button>
-                    <span id="qtyVal" style="width: 30px; text-align: center; font-weight: bold;">1</span>
-                    <button onclick="changeQty(1)">+</button>
                 </div>
-                <button class="add-to-cart-btn" onclick="addToCart()">კალათაში დამატება</button>
-            </div>
-            <p onclick="closeModal()" style="text-align: center; margin-top: 20px; color: #555; cursor: pointer;">გაუქმება</p>
-        </div>
-    </div>
+            `).join('');
+        }
 
+        function openProduct(id) {
+            curProd = products.find(p => p.id === id);
+            curQty = 1;
+            document.getElementById('pName').innerText = curProd.name;
+            document.getElementById('pDesc').innerText = curProd.desc;
+            document.getElementById('pImg').src = curProd.img;
+            document.getElementById('qty').innerText = curQty;
+            
+            const exBox = document.getElementById('extrasBox');
+            exBox.innerHTML = curProd.extras.map(e => `
+                <label class="row"><span>${e.n} (+${e.p} AKHO)</span><input type="checkbox" class="ex-in" data-n="${e.n}" data-p="${e.p}"></label>
+            `).join('');
+            
+            document.getElementById('productPage').style.display = 'block';
+        }
 
+        function updateQty(v) { curQty = Math.max(1, curQty + v); document.getElementById('qty').innerText = curQty; }
+        function closePage(id) { document.getElementById(id).style.display = 'none'; }
 
+        function addToCart() {
+            const ex = [];
+            document.querySelectorAll('.ex-in:checked').forEach(i => ex.push({n: i.dataset.n, p: parseFloat(i.dataset.p)}));
+            const pay = document.querySelector('input[name="pay"]:checked').value;
+            const total = (curProd.price + ex.reduce((a,b)=>a+b.p, 0)) * curQty;
+            
+            cart.push({ name: curProd.name, qty: curQty, extras: ex, pay, total });
+            document.getElementById('cartCount').innerText = cart.length;
+            closePage('productPage');
+        }
 
+        function showCart() {
+            const box = document.getElementById('cartItems');
+            if(cart.length === 0) { box.innerHTML = '<p style="text-align:center;">კალათა ცარიელია</p>'; }
+            else {
+                box.innerHTML = cart.map(i => `
+                    <div class="row">
+                        <div><b>${i.name} (x${i.qty})</b><br><small>${i.pay}</small></div>
+                        <div style="color:var(--gold);">${i.total.toFixed(2)} AKHO</div>
+                    </div>
+                `).join('');
+            }
+            const sum = cart.reduce((a,b)=>a+b.total, 0);
+            document.getElementById('totalSum').innerText = "ჯამი: " + sum.toFixed(2) + " AKHO";
+            document.getElementById('cartPage').style.display = 'block';
+        }
 
+        function submitOrder() {
+            const name = document.getElementById('userName').value;
+            const phone = document.getElementById('userPhone').value;
+            if(!name || !phone) return alert("გთხოვთ შეავსოთ სავალდებულო ველები!");
+            alert("შეკვეთა მიღებულია! 🚀");
+            cart = [];
+            document.getElementById('cartCount').innerText = 0;
+            closePage('cartPage');
+        }
 
-    <div id="productDetailSide" class="product-side-page">
-    <div class="side-header">
-        <i class="fas fa-arrow-left" onclick="closeProductPage()"></i>
-        <span>შეკვეთის დეტალები</span>
-    </div>
-    
-    <div class="side-content">
-        <img src="" id="sideImg" class="side-hero-img">
-        <div class="side-info">
-            <h2 id="sideTitle"></h2>
-            <p id="sideDesc"></p>
-        </div>
-
-        <div class="side-section">
-            <h4><i class="fas fa-plus-circle"></i> დაამატეთ ინგრედიენტები</h4>
-            <div id="sideIngredients" class="ingredients-list"></div>
-        </div>
-
-        <div class="side-section">
-            <h4><i class="fas fa-credit-card"></i> გადახდის მეთოდი</h4>
-            <div class="payment-options">
-                <label class="pay-item">
-                    <input type="radio" name="payMethod" value="akho" checked>
-                    <span><i class="fas fa-wallet"></i> AKHO ბალანსი</span>
-                </label>
-                <label class="pay-item">
-                    <input type="radio" name="payMethod" value="card">
-                    <span><i class="fas fa-university"></i> რეალური თანხა (ბარათი)</span>
-                </label>
-                <label class="pay-item">
-                    <input type="radio" name="payMethod" value="cash">
-                    <span><i class="fas fa-truck"></i> კურიერთან ნაღდი ანგარიშსწორება</span>
-                </label>
-            </div>
-        </div>
-    </div>
-
-    <div class="side-footer">
-        <div class="qty-control">
-            <button onclick="changeQty(-1)">-</button>
-            <span id="sideQty">1</span>
-            <button onclick="changeQty(1)">+</button>
-        </div>
-        <button class="main-action-btn" onclick="addToCart()">კალათაში დამატება</button>
-    </div>
-</div>
-
-    
-
-    
-
-    
-    <script src="live1.js"></script>
+        window.onload = init;
+    </script>
 </body>
 </html>
