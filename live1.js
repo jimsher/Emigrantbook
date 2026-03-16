@@ -3,6 +3,7 @@ const products = [
             { id: 2, cat: 'ხაჭაპური', name: 'აჭარული ხაჭაპური', price: 15.00, desc: 'ყველი, ცომი, კვერცხი, კარაქი', img: 'https://img.freepik.com/free-photo/khachapuri-with-egg-cheese_140725-3341.jpg', extras: [{n:'ორმაგი ყველი', p:3}, {n:'დამატებითი კვერცხი', p:1.5}] },
             { id: 3, cat: 'ხაჭაპური', name: 'იმერული ხაჭაპური', price: 12.00, desc: 'ტრადიციული იმერული ყველით', img: 'https://img.freepik.com/free-photo/khachapuri-imeretian-traditional-georgian-flatbread-with-cheese_2829-14234.jpg', extras: [{n:'კარაქი', p:0.5}] },
             { id: 4, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.00, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}, {n:'ორმაგი ხახვი', p:0}] },
+            { id: 4, cat: 'ხაჭაპური', name: 'მეგრული ხაჭაპური', price: 18.00, desc: 'ტრადიციული მეგრული ყველით', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}, {n:'ორმაგი ხახვი', p:0}] },
             { id: 5, cat: 'სასმელი', name: 'ლიმონათი ნატახტარი', price: 2.50, desc: 'მსხალი, ტარხუნა ან საფერავი', img: 'https://img.freepik.com/free-photo/glass-bottles-with-colorful-soda_144627-14231.jpg', extras: [] }
         ];
 
