@@ -114,40 +114,136 @@ const products = [
 
         
 // შეკვეთის ლოგიკა
-// ეს ფუნქცია გახსნის მისამართის შესავსებ გვერდს
-window.goToCheckout = function() {
+// 🚀 მიტანის სერვისის გლობალური ცვლადები
+let deliveryMenu = []; 
+let deliveryCart = [];
+let activeDish = null;
+
+// 1. მენიუს ჩატვირთვა (Firebase-დან ან მასივიდან)
+function loadDeliveryMenu(category = 'all') {
+    const grid = document.getElementById('deliveryGrid');
+    if (!grid) return;
+
+    db.ref('delivery_items').on('value', snap => {
+        grid.innerHTML = "";
+        const data = snap.val();
+        if (!data) return;
+
+        deliveryMenu = Object.entries(data);
+        deliveryMenu.forEach(([id, item]) => {
+            if (category !== 'all' && item.category !== category) return;
+            
+            // ვხატავთ კერძის ბარათს
+            grid.innerHTML += `
+                <div class="food-card" onclick="openDishCustomizer('${id}')">
+                    <img src="${item.image}" class="food-img">
+                    <div class="food-info">
+                        <b>${item.name}</b>
+                        <span class="price-tag">${item.price} AKHO</span>
+                    </div>
+                </div>`;
+        });
+    });
+}
+
+// 2. ინგრედიენტების ასარჩევი ფანჯარა (Customizer)
+function openDishCustomizer(id) {
+    db.ref(`delivery_items/${id}`).once('value', snap => {
+        activeDish = { id, ...snap.val() };
+        const modal = document.getElementById('dishModal');
+        const content = document.getElementById('dishContent');
+
+        // ვამზადებთ ინგრედიენტების სიას (თუ აქვს)
+        let extrasHtml = "";
+        if (activeDish.extras) {
+            extrasHtml = `<h4>პერსონალიზაცია:</h4>`;
+            activeDish.extras.forEach((ex, index) => {
+                extrasHtml += `
+                    <div class="extra-row">
+                        <label>${ex.name} (+${ex.price} AKHO)</label>
+                        <input type="checkbox" class="dish-extra-in" data-price="${ex.price}" data-name="${ex.name}">
+                    </div>`;
+            });
+        }
+
+        content.innerHTML = `
+            <img src="${activeDish.image}" style="width:100%; border-radius:15px;">
+            <h2>${activeDish.name}</h2>
+            <p>${activeDish.desc || ''}</p>
+            ${extrasHtml}
+            <div class="modal-actions">
+                <button class="add-btn" onclick="addDishToCart()">კალათაში 🛒</button>
+            </div>`;
+        
+        modal.style.display = 'flex';
+    });
+}
+
+// 3. კალათის ლოგიკა (მუშაობს ბრაუზერის მეხსიერებაში სწრაფი რეაგირებისთვის)
+function addDishToCart() {
+    let extraSum = 0;
+    let selectedExtras = [];
+    
+    document.querySelectorAll('.dish-extra-in:checked').forEach(el => {
+        extraSum += parseFloat(el.dataset.price);
+        selectedExtras.push(el.dataset.name);
+    });
+
+    const finalDish = {
+        name: activeDish.name,
+        totalPrice: parseFloat(activeDish.price) + extraSum,
+        extras: selectedExtras,
+        qty: 1
+    };
+
+    deliveryCart.push(finalDish);
+    updateDeliveryCartBadge();
+    document.getElementById('dishModal').style.display = 'none';
+    alert("დაემატა შეკვეთაში! ✅");
+}
+
+// 4. გადახდის და მისამართის ფორმის გახსნა (Checkout)
+function openDeliveryCheckout() {
     if (deliveryCart.length === 0) return alert("კალათა ცარიელია!");
-    document.getElementById('checkout-step').style.display = 'block';
-};
 
-// ეს ფუნქცია რეალურად აგზავნის შეკვეთას ბაზაში
-window.finalSubmitOrder = function() {
-    const name = document.getElementById('order-name').value;
-    const phone = document.getElementById('order-tel').value;
-    const addr = document.getElementById('order-addr').value;
+    const checkoutModal = document.getElementById('deliveryCheckoutModal');
+    const summaryBox = document.getElementById('orderSummaryBox');
+    
+    let total = deliveryCart.reduce((sum, item) => sum + item.totalPrice, 0);
+    
+    summaryBox.innerHTML = `
+        <h3>შეკვეთის დეტალები:</h3>
+        ${deliveryCart.map(i => `<div class="summary-item">${i.name} - ${i.totalPrice} AKHO</div>`).join('')}
+        <hr>
+        <div class="total-line">ჯამი: <b>${total} AKHO</b></div>`;
+    
+    checkoutModal.style.display = 'flex';
+}
 
-    if (!name || !phone || !addr) return alert("შეავსეთ აუცილებელი ველები (სახელი, ტელეფონი, მისამართი)!");
+// 5. შეკვეთის გაგზავნა ადმინთან
+async function submitFinalDeliveryOrder() {
+    const customerData = {
+        name: document.getElementById('custName').value,
+        city: document.getElementById('custCity').value,
+        address: document.getElementById('custAddr').value,
+        phone: document.getElementById('custPhone').value,
+        payment: document.getElementById('custPayment').value
+    };
 
-    const finalOrder = {
-        items: deliveryCart, // შენი კალათა
-        customer: {
-            fullName: name,
-            city: document.getElementById('order-city').value,
-            address: addr,
-            details: document.getElementById('order-build').value,
-            floor: document.getElementById('order-floor').value,
-            phone: phone,
-            email: document.getElementById('order-mail').value,
-            payment: document.getElementById('payment-method').value
-        },
-        totalPrice: deliveryCart.reduce((sum, item) => sum + item.totalPrice, 0),
-        status: "pending",
+    if (!customerData.name || !customerData.phone || !customerData.address) {
+        return alert("შეავსეთ აუცილებელი ველები! ⚠️");
+    }
+
+    const orderPayload = {
+        customer: customerData,
+        items: deliveryCart,
+        total: deliveryCart.reduce((s, i) => s + i.totalPrice, 0),
+        status: 'new',
         timestamp: Date.now()
     };
 
-    // აგზავნის Firebase-ში
-    db.ref('delivery_orders').push(finalOrder).then(() => {
-        alert("შეკვეთა მიღებულია! კურიერი მალე დაგიკავშირდებათ.");
-        location.reload(); // გვერდის განახლება
-    });
-};
+    await db.ref('delivery_orders').push(orderPayload);
+    alert("შეკვეთა გაგზავნილია! 🚀");
+    deliveryCart = [];
+    location.reload();
+}
