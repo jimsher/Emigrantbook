@@ -113,3 +113,41 @@ const products = [
 
 
         
+// შეკვეთის ლოგიკა
+// ეს ფუნქცია გახსნის მისამართის შესავსებ გვერდს
+window.goToCheckout = function() {
+    if (deliveryCart.length === 0) return alert("კალათა ცარიელია!");
+    document.getElementById('checkout-step').style.display = 'block';
+};
+
+// ეს ფუნქცია რეალურად აგზავნის შეკვეთას ბაზაში
+window.finalSubmitOrder = function() {
+    const name = document.getElementById('order-name').value;
+    const phone = document.getElementById('order-tel').value;
+    const addr = document.getElementById('order-addr').value;
+
+    if (!name || !phone || !addr) return alert("შეავსეთ აუცილებელი ველები (სახელი, ტელეფონი, მისამართი)!");
+
+    const finalOrder = {
+        items: deliveryCart, // შენი კალათა
+        customer: {
+            fullName: name,
+            city: document.getElementById('order-city').value,
+            address: addr,
+            details: document.getElementById('order-build').value,
+            floor: document.getElementById('order-floor').value,
+            phone: phone,
+            email: document.getElementById('order-mail').value,
+            payment: document.getElementById('payment-method').value
+        },
+        totalPrice: deliveryCart.reduce((sum, item) => sum + item.totalPrice, 0),
+        status: "pending",
+        timestamp: Date.now()
+    };
+
+    // აგზავნის Firebase-ში
+    db.ref('delivery_orders').push(finalOrder).then(() => {
+        alert("შეკვეთა მიღებულია! კურიერი მალე დაგიკავშირდებათ.");
+        location.reload(); // გვერდის განახლება
+    });
+};
