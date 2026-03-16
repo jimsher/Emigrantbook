@@ -57,6 +57,73 @@
         </div>
     </div>
 
+
+
+
+
+
+    <div id="delivery-app">
+    <header class="delivery-nav">
+        <i class="fas fa-chevron-left" onclick="history.back()"></i>
+        <span class="logo-text">IMPACT DELIVERY</span>
+        <div class="cart-trigger" onclick="openCheckout()">
+            <i class="fas fa-shopping-basket"></i>
+            <span id="cart-badge">0</span>
+        </div>
+    </header>
+
+    <div id="category-bar"></div>
+
+    <div id="products-grid"></div>
+</div>
+
+<div id="customize-modal" class="modal">
+    <div class="modal-body">
+        <div id="modal-details"></div>
+        <div class="options-container">
+            <h4>პერსონალიზაცია</h4>
+            <div id="extra-ingredients"></div>
+        </div>
+        <div class="modal-footer">
+            <div class="quantity-picker">
+                <button onclick="updateQty(-1)">-</button>
+                <span id="current-qty">1</span>
+                <button onclick="updateQty(1)">+</button>
+            </div>
+            <button class="confirm-btn" onclick="commitToCart()">დამატება</button>
+        </div>
+        <p class="cancel-link" onclick="closeModal()">გაუქმება</p>
+    </div>
+</div>
+
+<div id="checkout-modal" class="modal">
+    <div class="modal-body full-screen">
+        <h3>შეკვეთის გაფორმება</h3>
+        <div class="order-form">
+            <input type="text" id="order-fullname" placeholder="სახელი და გვარი*">
+            <input type="text" id="order-city" placeholder="ქალაქი*">
+            <input type="text" id="order-address" placeholder="მისამართი (ქუჩა, ნომერი)*">
+            <input type="text" id="order-building" placeholder="კორპუსი/ბინა/სართული">
+            <input type="tel" id="order-phone" placeholder="ტელეფონი*">
+            <input type="email" id="order-email" placeholder="ელ-ფოსტა">
+            
+            <h4>გადახდის მეთოდი</h4>
+            <div class="payment-grid">
+                <div class="pay-method active" id="pay-card" onclick="setPayment('card')">ბარათი</div>
+                <div class="pay-method" id="pay-cash" onclick="setPayment('cash')">კურიერთან</div>
+            </div>
+            
+            <div id="cart-total-display"></div>
+            <button class="finalize-btn" onclick="sendOrderToFirebase()">შეკვეთის გაგზავნა</button>
+        </div>
+        <p class="cancel-link" onclick="closeCheckout()">დაბრუნება მენიუში</p>
+    </div>
+</div>
+
+    
+
+    
+
     
     <script src="live1.js"></script>
 </body>
