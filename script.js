@@ -2969,6 +2969,9 @@ function handleLikeFromFull() {
     });
 }
 
+
+
+
 // 2. კომენტარების პანელის 
 function openCommentsFromFull() {
     if (!window.currentFullVideoId) return;
@@ -2976,11 +2979,11 @@ function openCommentsFromFull() {
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    // ვიღებთ მენიუს ზუსტად იმ ფანჯარაში, სადაც ვიდეოა
+    // ვიღებთ მენიუს, რომელიც ვიდეოს გვერდითაა
     const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu'); 
 
     if (commUI && videoOverlay) {
-        // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
+        // 1. კომენტარებს ვსვამთ ვიდეოს კონტეინერში
         videoOverlay.appendChild(commUI);
 
         // 2. დიზაინი და გამოჩენა
@@ -2991,21 +2994,21 @@ function openCommentsFromFull() {
         commUI.style.backdropFilter = "blur(15px)";
         commUI.style.webkitBackdropFilter = "blur(15px)";
 
-        // --- მენიუს დამალვა ---
+        // 3. მენიუს დამალვა (ვიყენებთ კლასსაც და სტილსაც გარანტიისთვის)
+        videoOverlay.classList.add('hide-menu-now');
         if (sideMenu) {
             sideMenu.style.opacity = "0";
             sideMenu.style.pointerEvents = "none";
-            sideMenu.style.transition = "opacity 0.3s"; // რბილი გაქრობა
+            sideMenu.style.transition = "opacity 0.3s";
         }
 
-        // 3. ვიდეოს პაუზა
+        // 4. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის ღილაკის ლოგიკა (გასწორებული)
+        // 5. დახურვის ღილაკის ("X") ლოგიკა - აქ ხდება მენიუს დაბრუნება
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
-            // ვაუქმებთ ძველ onclick-ს და ვწერთ ახალს, რომელიც ორივეს აკეთებს
-            closeBtn.onclick = null; 
+            closeBtn.onclick = null; // ვასუფთავებთ ძველს
             closeBtn.onclick = function() {
                 // ა) ვმალავთ კომენტარებს
                 commUI.style.display = 'none';
@@ -3013,17 +3016,21 @@ function openCommentsFromFull() {
                 // ბ) ვაგრძელებთ ვიდეოს
                 if (vid) vid.play();
                 
-                // გ) ვაბრუნებთ მენიუს (ეს აკლდა!)
+                // გ) ვაბრუნებთ მენიუს (აშორებს კლასს და opacity-ს)
+                videoOverlay.classList.remove('hide-menu-now');
                 if (sideMenu) {
                     sideMenu.style.opacity = "1";
                     sideMenu.style.pointerEvents = "auto";
                 }
+                console.log("მენიუ წარმატებით დაბრუნდა ✅");
             };
         }
 
+        // კომენტარების ჩატვირთვა
         openComments(window.currentFullVideoId);
     }
 }
+                
 
         
  
