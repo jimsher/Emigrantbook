@@ -1340,12 +1340,23 @@ function playFullVideo(url, postId) {
 
 
 
+function closeFullVideo() {
+    const overlay = document.getElementById('fullVideoOverlay');
+    const vid = document.getElementById('fullVideoTag');
+    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
 
- function closeFullVideo() {
- const overlay = document.getElementById('fullVideoOverlay');
- const vid = document.getElementById('fullVideoTag');
- vid.pause(); overlay.style.display = 'none';
- }
+    if (vid) vid.pause(); 
+    if (overlay) {
+        overlay.style.display = 'none';
+        overlay.classList.remove('hide-menu-now'); // მენიუს კლასის მოცილება
+    }
+    if (sideMenu) {
+        sideMenu.style.opacity = "1";
+        sideMenu.style.pointerEvents = "auto";
+    }
+}
+
+
  function searchUsers(q) {
  const cards = document.querySelectorAll('.user-card');
  cards.forEach(c => {
