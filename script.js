@@ -1239,8 +1239,10 @@ function loadUserVideos(uid) {
                         </div>
                     `;
                     
-                    item.onclick = () => playFullVideo(video.url, id);
+                    // 👇 აი აქ,onclick-ში, postId-ის მერე ჩაამატე ', i'
+                    item.onclick = () => playFullVideo(video.url, id, i); 
                     grid.appendChild(item);
+                    // ...
                 }
             }
         });
