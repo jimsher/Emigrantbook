@@ -7,7 +7,7 @@ function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYFDJP/duoW3yN8XylY8bWr7rbXTL+KSruK1XPTwjWp/d+IgCg7mRpYGpgVFaYrJ5mklaapKFUZKBkWFyckqquaWlhUXi+etrMxsCGRnOPk1nZGSAQBCfmyEnsyw1vrikKDUxl4EBAF9gI4E=";
+    const token = "007eJxTYND7Vv9skqb6pJtskQsWqz0L/uaxTsjSO0Ttb7zkzh+9M1oUGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwSTYx3ZzYEMjKIHl3AzMgAgSA+N0NOZllqfHFJUWpiLgMDADHQIjI=";
     
     currentLiveChannel = "live_stream"; 
     
