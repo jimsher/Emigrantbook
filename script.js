@@ -1253,8 +1253,7 @@ function loadUserVideos(uid) {
 
 
 
-
- function playFullVideo(url, postId) {
+function playFullVideo(url, postId) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
@@ -1264,7 +1263,7 @@ function loadUserVideos(uid) {
 
     window.currentFullVideoId = postId; 
 
-    // --- გარანტირებული სქროლვა პირდაპირ ვიდეოზე ---
+    // --- სქროლვის ლოგიკა (შენარჩუნებული) ---
     let startY = 0;
     vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
@@ -1279,33 +1278,59 @@ function loadUserVideos(uid) {
     };
 
     if (postId) {
+        // 1. ნახვების მომატება
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
-        db.ref(`posts/${postId}`).once('value', snap => {
+
+        // 2. პოსტის მონაცემების დინამიური მოსმენა (.on)
+        db.ref(`posts/${postId}`).on('value', snap => {
             const data = snap.val();
             if (!data) return;
 
+            // ავტორის ID-ს შენახვა საჩუქრებისთვის და პროფილისთვის
+            window.currentFullVideoAuthorId = data.authorId;
+
+            // ავატარი და მისი ფუნქცია (პროფილზე გადასვლა)
+            const ava = document.getElementById('fullVideoAva');
+            if (ava) {
+                ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
+                ava.parentElement.onclick = () => {
+                    closeFullVideo();
+                    openProfile(data.authorId);
+                };
+            }
+
+            // ნახვების რაოდენობა
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
 
-            const ava = document.getElementById('fullVideoAva');
-            if (ava) ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
-
+            // ლაიქების რაოდენობა და გულის ფერი
             const lElem = document.getElementById('fullLikeCount');
-            if (lElem) lElem.innerText = data.likedBy ? Object.keys(data.likedBy).length : 0;
-
-            db.ref(`comments/${postId}`).once('value', cSnap => {
-                const cElem = document.getElementById('fullCommCount');
-                if (cElem) cElem.innerText = cSnap.numChildren();
-            });
-
-            const myUid = auth.currentUser.uid;
             const lIcon = document.getElementById('fullLikeIcon');
-            if (lIcon) lIcon.style.color = (data.likedBy && data.likedBy[myUid]) ? '#ff4d4d' : 'white';
+            const myUid = auth.currentUser.uid;
+            
+            const likesKeys = data.likedBy ? Object.keys(data.likedBy) : [];
+            if (lElem) lElem.innerText = likesKeys.length;
+            if (lIcon) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
+
+            // შენახვის (Bookmark) ხატულა
             const sIcon = document.getElementById('fullSaveIcon');
             if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
+
+            // საჩუქრის ღილაკის ფუნქცია (რომ იცოდეს ვის ჩუქნის)
+            const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
+            if (!giftBtn) {
+                // თუ HTML-ში არ გაქვს, აქედანაც შეგვიძლია მივაბათ, მაგრამ ჯობია HTML-ში გეწეროს:
+                // onclick="openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId)"
+            }
+        });
+
+        // 3. კომენტარების რაოდენობის დინამიური მოსმენა
+        db.ref(`comments/${postId}`).on('value', cSnap => {
+            const cElem = document.getElementById('fullCommCount');
+            if (cElem) cElem.innerText = cSnap.numChildren();
         });
     }
 }
