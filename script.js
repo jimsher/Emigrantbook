@@ -1263,17 +1263,27 @@ function playFullVideo(url, postId) {
 
     window.currentFullVideoId = postId; 
 
-    // --- სქროლვის ლოგიკა (შენარჩუნებული) ---
+    // --- სქროლვის ლოგიკა (გასწორებული და შენარჩუნებული) ---
     let startY = 0;
     vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
         let endY = e.changedTouches[0].clientY;
         let diff = startY - endY;
         if (Math.abs(diff) > 50) {
-            const allPosts = Array.from(document.querySelectorAll('[onclick*="playFullVideo"]'));
-            const currentIndex = allPosts.findIndex(p => p.getAttribute('onclick').includes(window.currentFullVideoId));
-            if (diff > 0 && currentIndex < allPosts.length - 1) allPosts[currentIndex + 1].click();
-            else if (diff < 0 && currentIndex > 0) allPosts[currentIndex - 1].click();
+            // ვეძებთ ყველა ვიდეოს პროფილის ბადეში (Grid)
+            const allPosts = Array.from(document.querySelectorAll('#profGrid .grid-item'));
+            const currentIndex = allPosts.findIndex(p => {
+                const attr = p.getAttribute('onclick');
+                return attr && attr.includes(window.currentFullVideoId);
+            });
+
+            if (diff > 0 && currentIndex < allPosts.length - 1) {
+                // სვაიპი ზემოთ -> შემდეგი ვიდეო
+                allPosts[currentIndex + 1].click();
+            } else if (diff < 0 && currentIndex > 0) {
+                // სვაიპი ქვემოთ -> წინა ვიდეო
+                allPosts[currentIndex - 1].click();
+            }
         }
     };
 
@@ -1319,11 +1329,10 @@ function playFullVideo(url, postId) {
             const sIcon = document.getElementById('fullSaveIcon');
             if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
 
-            // საჩუქრის ღილაკის ფუნქცია (რომ იცოდეს ვის ჩუქნის)
+            // საჩუქრის ღილაკის ფუნქცია
             const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
-            if (!giftBtn) {
-                // თუ HTML-ში არ გაქვს, აქედანაც შეგვიძლია მივაბათ, მაგრამ ჯობია HTML-ში გეწეროს:
-                // onclick="openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId)"
+            if (giftBtn) {
+                giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
             }
         });
 
