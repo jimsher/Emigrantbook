@@ -1256,7 +1256,10 @@ function loadUserVideos(uid) {
 
 
 
-function playFullVideo(url, postId, currentIndex) {
+
+        
+      
+  function playFullVideo(url, postId, currentIndex) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
@@ -1264,49 +1267,51 @@ function playFullVideo(url, postId, currentIndex) {
     overlay.style.display = 'block'; 
     vid.play();
 
+    // ვინახავთ მონაცემებს გლობალურად
     window.currentFullVideoId = postId; 
-    window.currentVideoIndex = currentIndex; // ვინახავთ ინდექსს
+    window.currentVideoIndex = currentIndex; 
 
-    // --- სქროლვის ლოგიკა (გარანტირებული და სრული) ---
+    // --- სქროლვის (Swipe) ლოგიკა ---
     let startY = 0;
-    vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
+    vid.ontouchstart = (e) => { 
+        startY = e.touches[0].clientY; 
+    };
+
     vid.ontouchend = (e) => {
         let endY = e.changedTouches[0].clientY;
         let diff = startY - endY;
 
-        // სვაიპის მგრძნობელობა (50px)
+        // თუ 50 პიქსელზე მეტია გადაადგილება
         if (Math.abs(diff) > 50) {
             // ვიღებთ ყველა ვიდეოს პროფილის ბადიდან
             const allItems = Array.from(document.querySelectorAll('#profGrid .grid-item'));
             
-            // ვამოწმებთ, რომ ინდექსი ვალიდურია
-            if (window.currentVideoIndex !== undefined && window.currentVideoIndex !== -1) {
-                if (diff > 0 && window.currentVideoIndex < allItems.length - 1) {
-                    // სვაიპი ზემოთ -> შემდეგი
-                    console.log("ზემოთ სვაიპი - ვრთავთ შემდეგს");
+            if (diff > 0) {
+                // სვაიპი ზემოთ -> შემდეგი ვიდეო
+                if (window.currentVideoIndex < allItems.length - 1) {
+                    console.log("გადავდივართ შემდეგზე...");
                     allItems[window.currentVideoIndex + 1].click();
-                } else if (diff < 0 && window.currentVideoIndex > 0) {
-                    // სვაიპი ქვემოთ -> წინა
-                    console.log("ქვემოთ სვაიპი - ვრთავთ წინას");
+                }
+            } else {
+                // სვაიპი ქვემოთ -> წინა ვიდეო
+                if (window.currentVideoIndex > 0) {
+                    console.log("ვბრუნდებით წინაზე...");
                     allItems[window.currentVideoIndex - 1].click();
                 }
             }
         }
     };
 
+    // --- შენი ორიგინალი მონაცემების მოსმენა (ლაიქები, ნახვები და ა.შ.) ---
     if (postId) {
-        // 1. ნახვების მომატება
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
-        // 2. პოსტის მონაცემების დინამიური მოსმენა (.on)
         db.ref(`posts/${postId}`).on('value', snap => {
             const data = snap.val();
             if (!data) return;
 
-            // ავტორის ID-ს შენახვა საჩუქრებისთვის და პროფილისთვის
             window.currentFullVideoAuthorId = data.authorId;
 
-            // ავატარი და მისი ფუნქცია (პროფილზე გადასვლა)
             const ava = document.getElementById('fullVideoAva');
             if (ava) {
                 ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
@@ -1316,42 +1321,35 @@ function playFullVideo(url, postId, currentIndex) {
                 };
             }
 
-            // ნახვების რაოდენობა
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
 
-            // ლაიქების რაოდენობა და გულის ფერი
             const lElem = document.getElementById('fullLikeCount');
             const lIcon = document.getElementById('fullLikeIcon');
             const myUid = auth.currentUser.uid;
-            
             const likesKeys = data.likedBy ? Object.keys(data.likedBy) : [];
+            
             if (lElem) lElem.innerText = likesKeys.length;
             if (lIcon) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
 
-            // შენახვის (Bookmark) ხატულა
             const sIcon = document.getElementById('fullSaveIcon');
             if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
 
-            // საჩუქრის ღილაკის ფუნქცია (თუ HTML-ში არ გაქვს, აქედანაც შეგვიძლია მივაბათ)
             const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
             if (giftBtn) {
                 giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
             }
         });
 
-        // 3. კომენტარების რაოდენობის დინამიური მოსმენა
         db.ref(`comments/${postId}`).on('value', cSnap => {
             const cElem = document.getElementById('fullCommCount');
             if (cElem) cElem.innerText = cSnap.numChildren();
         });
     }
-}
-      
-             
+}           
 
 
 
