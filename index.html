@@ -31,6 +31,37 @@
 
  
  <style>
+/* კომენტარების ფანჯარას ვაძლევთ ყველაზე მაღალ პრიორიტეტს */
+#commentsUI {
+    z-index: 2000005 !important; /* ეს უნდა იყოს მენიუზე მეტი */
+}
+
+/* გვერდითა მენიუს ოდნავ ვწევთ უკან */
+.video-side-menu {
+    z-index: 1000000 !important;
+}
+
+/* როცა კომენტარები ღიაა, მენიუ რომ საერთოდ არ გვიშლიდეს ხელს, ოდნავ გავამჭვირვალოთ */
+#commentsUI[style*="display: flex"] ~ .video-side-menu,
+#commentsUI[style*="display: block"] ~ .video-side-menu {
+    opacity: 0.1;
+    pointer-events: none; /* რომ შემთხვევით არ დაგვეჭიროს წერისას */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   /* სქროლვა */
 #fullVideoTag {
     transition: opacity 0.2s ease-in-out;
