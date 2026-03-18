@@ -334,31 +334,60 @@ function listenToLikes(channel) {
 
 
 
+// --- ლაიქების და გულების გაუმჯობესებული ლოგიკა ---
+function createFloatingHeart() {
+    const container = document.getElementById('live-video-container');
+    if(!container) return;
+    const heart = document.createElement('i');
+    heart.className = "fas fa-heart";
+    const colors = ['#ff4d4d', '#ff7575', '#ffb3b3', '#ff0055', '#ff99cc'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const randomX = Math.floor(Math.random() * 100) - 50;
+    heart.style = `position:absolute; right:30px; bottom:80px; color:${randomColor}; font-size:24px; --randomX:${randomX}px; animation:heartFly 1.5s ease-out forwards; pointer-events:none; z-index:1500;`;
+    container.appendChild(heart);
+    setTimeout(() => heart.remove(), 1500);
+}
 
-function toggleGiftPanel() { 
-    const p = document.getElementById('giftPanel'); 
-    p.style.display = p.style.display === 'none' ? 'block' : 'none'; 
+// --- საჩუქრების ახალი ლოგიკა (ყველა ხედავს) ---
+function listenToGifts(channel) {
+    db.ref(`live_gifts/${channel}`).on('child_added', snap => {
+        const gift = snap.val();
+        if(!gift || Date.now() - gift.ts > 10000) return; 
+        showGiftBigAnimation(gift.emoji, gift.senderName, gift.giftName);
+    });
 }
 
 function sendGift(emoji, price, giftName) {
-    if (myAkho < price) { alert("ბალანსი!"); if(typeof openWalletUI === "function") openWalletUI(); return; }
+    if (myAkho < price) { alert("ბალანსი არ გყოფნის!"); return; }
     const hostUid = currentLiveChannel.replace("live_", "");
-    spendAkho(price, `Gift: ${giftName}`); 
-    earnAkho(hostUid, price, `Gift: ${giftName}`);
-    db.ref(`live_chats/${currentLiveChannel}`).push({ name: "SYSTEM", text: `🎁 ${myName}-მა გაჩუქა ${giftName}`, ts: Date.now() });
-    showGiftAnimation(emoji); 
+    spendAkho(price, `Gift: ${giftName}`);
+    earnAkho(hostUid, price, `Live Gift: ${giftName}`);
+    
+    // ვწერთ ბაზაში, რომ listenToGifts-მა ყველასთან აჩვენოს
+    db.ref(`live_gifts/${currentLiveChannel}`).push({
+        emoji: emoji, senderName: myName, giftName: giftName, ts: Date.now()
+    });
+
+    db.ref(`live_chats/${currentLiveChannel}`).push({ 
+        name: "SYSTEM", text: `🎁 ${myName}-მა გაჩუქა ${giftName}`, ts: Date.now() 
+    });
     toggleGiftPanel();
 }
 
-function showGiftAnimation(emoji) {
+function showGiftBigAnimation(emoji, sender, giftName) {
     const container = document.getElementById('live-video-container');
     if(!container) return;
-    const giftEl = document.createElement('div');
-    giftEl.style = "position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:100px; z-index:100001; animation:gift-pop-up 2s ease-out forwards; pointer-events:none;";
-    giftEl.innerText = emoji; 
-    container.appendChild(giftEl);
-    setTimeout(() => giftEl.remove(), 2000);
+    const overlay = document.createElement('div');
+    overlay.className = "live-gift-overlay gift-anim-box";
+    overlay.innerHTML = `
+        <div style="font-size: 80px; filter: drop-shadow(0 0 10px gold);">${emoji}</div>
+        <div style="background: rgba(212,175,55,0.9); color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px; font-size: 14px;">
+            ${sender} გამოგზავნა ${giftName}
+        </div>`;
+    container.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 2500);
 }
+
 
 // --- სტილები და აქტიური ლაივების სია ---
 const styleSheet = document.createElement("style");
