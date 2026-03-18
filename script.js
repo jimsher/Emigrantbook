@@ -2976,41 +2976,44 @@ function openCommentsFromFull() {
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu'); // ვიღებთ მენიუს
+    // ვიღებთ მენიუს ზუსტად იმ ფანჯარაში, სადაც ვიდეოა
+    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu'); 
 
     if (commUI && videoOverlay) {
         // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
         videoOverlay.appendChild(commUI);
 
-        // 2. დიზაინი: უფრო მეტი გამჭვირვალობა
+        // 2. დიზაინი და გამოჩენა
         commUI.style.display = "flex";
         commUI.style.position = "absolute";
         commUI.style.zIndex = "9999999";
-        
-        // 0.6 ნიშნავს 60% სიმუქეს, ანუ 40% გამჭვირვალეა
         commUI.style.background = "rgba(0, 0, 0, 0.6)"; 
-        
-        // ბლური გავაძლიერე 15px-მდე უფრო "Premium" ეფექტისთვის
         commUI.style.backdropFilter = "blur(15px)";
         commUI.style.webkitBackdropFilter = "blur(15px)";
 
-        // --- აი აქ ჩავამატე მენიუს დამალვის ლოგიკა ---
+        // --- მენიუს დამალვა ---
         if (sideMenu) {
-            sideMenu.style.opacity = "0"; // მენიუ ხდება უხილავი
-            sideMenu.style.pointerEvents = "none"; // მენიუზე დაჭერა იბლოკება
+            sideMenu.style.opacity = "0";
+            sideMenu.style.pointerEvents = "none";
+            sideMenu.style.transition = "opacity 0.3s"; // რბილი გაქრობა
         }
 
         // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 4. დახურვის ღილაკის ლოგიკა
+        // 4. დახურვის ღილაკის ლოგიკა (გასწორებული)
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
+            // ვაუქმებთ ძველ onclick-ს და ვწერთ ახალს, რომელიც ორივეს აკეთებს
+            closeBtn.onclick = null; 
             closeBtn.onclick = function() {
+                // ა) ვმალავთ კომენტარებს
                 commUI.style.display = 'none';
+                
+                // ბ) ვაგრძელებთ ვიდეოს
                 if (vid) vid.play();
                 
-                // კომენტარების დახურვისას მენიუ ისევ ვაჩინოთ
+                // გ) ვაბრუნებთ მენიუს (ეს აკლდა!)
                 if (sideMenu) {
                     sideMenu.style.opacity = "1";
                     sideMenu.style.pointerEvents = "auto";
@@ -3021,6 +3024,8 @@ function openCommentsFromFull() {
         openComments(window.currentFullVideoId);
     }
 }
+
+        
  
 
 
