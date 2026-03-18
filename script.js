@@ -1340,21 +1340,6 @@ function playFullVideo(url, postId) {
 
 
 
-function closeFullVideo() {
-    const overlay = document.getElementById('fullVideoOverlay');
-    const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
-
-    if (vid) vid.pause(); 
-    if (overlay) {
-        overlay.style.display = 'none';
-        overlay.classList.remove('hide-menu-now'); // მენიუს კლასის მოცილება
-    }
-    if (sideMenu) {
-        sideMenu.style.opacity = "1";
-        sideMenu.style.pointerEvents = "auto";
-    }
-}
 
 
  function searchUsers(q) {
@@ -2984,42 +2969,53 @@ function handleLikeFromFull() {
 
 
 // 2. კომენტარების პანელის 
+// 1. ფუნქცია: ვიდეოს სრულად დახურვა (პროფილზე)
+function closeFullVideo() {
+    const overlay = document.getElementById('fullVideoOverlay');
+    const vid = document.getElementById('fullVideoTag');
+    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
+
+    if (vid) vid.pause(); 
+    if (overlay) {
+        overlay.style.display = 'none';
+        // აუცილებლად ვაშორებთ დამალვის კლასს
+        overlay.classList.remove('hide-menu-now'); 
+    }
+    // ძალთ დავაბრუნოთ მენიუ ხილვადობაში
+    if (sideMenu) {
+        sideMenu.style.opacity = "1";
+        sideMenu.style.visibility = "visible";
+        sideMenu.style.pointerEvents = "auto";
+    }
+}
+
+// 2. ფუნქცია: კომენტარების გახსნა სრული ვიდეოდან
 function openCommentsFromFull() {
     if (!window.currentFullVideoId) return;
 
     const commUI = document.getElementById('commentsUI');
-    const videoOverlay = document.getElementById('fullVideoOverlay');
+    const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    // ვიღებთ მენიუს, რომელიც ვიდეოს გვერდითაა
-    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu'); 
+    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
 
-    if (commUI && videoOverlay) {
-        // 1. კომენტარებს ვსვამთ ვიდეოს კონტეინერში
-        videoOverlay.appendChild(commUI);
-
-        // 2. დიზაინი და გამოჩენა
+    if (commUI && overlay) {
+        // კომენტარების ჩასმა ვიდეოს ფანჯარაში
+        overlay.appendChild(commUI);
         commUI.style.display = "flex";
-        commUI.style.position = "absolute";
         commUI.style.zIndex = "9999999";
-        commUI.style.background = "rgba(0, 0, 0, 0.6)"; 
-        commUI.style.backdropFilter = "blur(15px)";
-        commUI.style.webkitBackdropFilter = "blur(15px)";
 
-        // 3. მენიუს დამალვა (ვიყენებთ კლასსაც და სტილსაც გარანტიისთვის)
-        videoOverlay.classList.add('hide-menu-now');
+        // მენიუს დამალვა კლასით და პირდაპირი სტილით
+        overlay.classList.add('hide-menu-now');
         if (sideMenu) {
             sideMenu.style.opacity = "0";
             sideMenu.style.pointerEvents = "none";
-            sideMenu.style.transition = "opacity 0.3s";
         }
 
-        // 4. ვიდეოს პაუზა
         if (vid) vid.pause();
 
-        // 5. დახურვის ღილაკის ("X") ლოგიკა - აქ ხდება მენიუს დაბრუნება
+        // "X" ღილაკის (დახურვის) ლოგიკა
         const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
         if (closeBtn) {
-            closeBtn.onclick = null; // ვასუფთავებთ ძველს
             closeBtn.onclick = function() {
                 // ა) ვმალავთ კომენტარებს
                 commUI.style.display = 'none';
@@ -3027,17 +3023,15 @@ function openCommentsFromFull() {
                 // ბ) ვაგრძელებთ ვიდეოს
                 if (vid) vid.play();
                 
-                // გ) ვაბრუნებთ მენიუს (აშორებს კლასს და opacity-ს)
-                videoOverlay.classList.remove('hide-menu-now');
+                // გ) ვაბრუნებთ მენიუს - აი ეს არის მთავარი!
+                overlay.classList.remove('hide-menu-now');
                 if (sideMenu) {
                     sideMenu.style.opacity = "1";
+                    sideMenu.style.visibility = "visible";
                     sideMenu.style.pointerEvents = "auto";
                 }
-                console.log("მენიუ წარმატებით დაბრუნდა ✅");
             };
         }
-
-        // კომენტარების ჩატვირთვა
         openComments(window.currentFullVideoId);
     }
 }
