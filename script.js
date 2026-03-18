@@ -1252,7 +1252,6 @@ function loadUserVideos(uid) {
 
         
       
-
 function playFullVideo(url, postId, currentIndex) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
@@ -1261,11 +1260,11 @@ function playFullVideo(url, postId, currentIndex) {
     overlay.style.display = 'block'; 
     vid.play();
 
+    // 🛑 ეს ორი ხაზი აცოცხლებს სქროლვას ყოველ გადასვლაზე:
     window.currentFullVideoId = postId; 
-    // თუ currentIndex არ მოვიდა (მაგალითად, სხვაგან გამოიძახე), თავად იპოვის
     window.currentVideoIndex = currentIndex; 
 
-    // --- სქროლვის (Swipe) ლოგიკა (გასწორებული) ---
+    // --- სქროლვის (Swipe) ლოგიკა ---
     let startY = 0;
     vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
@@ -1273,29 +1272,23 @@ function playFullVideo(url, postId, currentIndex) {
         let diff = startY - endY;
 
         if (Math.abs(diff) > 50) {
+            // ვიღებთ ყველა ვიდეოს პროფილის ბადიდან
             const allItems = Array.from(document.querySelectorAll('#profGrid .grid-item'));
             
-            // თუ ინდექსი არ გვაქვს, ვპოულობთ postId-ით
-            if (window.currentVideoIndex === undefined) {
-                window.currentVideoIndex = allItems.findIndex(p => p.getAttribute('onclick').includes(postId));
-            }
-
-            let nextIdx = -1;
-            if (diff > 0 && window.currentVideoIndex < allItems.length - 1) {
-                nextIdx = window.currentVideoIndex + 1;
-            } else if (diff < 0 && window.currentVideoIndex > 0) {
-                nextIdx = window.currentVideoIndex - 1;
-            }
-
-            if (nextIdx !== -1) {
-                // ვიღებთ შემდეგი ელემენტის მონაცემებს და თავად ვიძახებთ ფუნქციას ახალი ინდექსით
-                const nextItem = allItems[nextIdx];
-                nextItem.click(); // ეს გამოიწვევს playFullVideo-ს ხელახლა გაშვებას ახალი ინდექსით
+            // ვამოწმებთ, რომ ინდექსი გვაქვს
+            if (window.currentVideoIndex !== undefined) {
+                if (diff > 0 && window.currentVideoIndex < allItems.length - 1) {
+                    // გადავდივართ შემდეგზე და ფუნქცია თავიდან გაეშვება ახალი ინდექსით
+                    allItems[window.currentVideoIndex + 1].click();
+                } else if (diff < 0 && window.currentVideoIndex > 0) {
+                    // გადავდივართ წინაზე
+                    allItems[window.currentVideoIndex - 1].click();
+                }
             }
         }
     };
 
-    // --- შენი ორიგინალი მონაცემების მოსმენა (ლაიქები, ნახვები და ა.შ.) ---
+    // --- შენი ყველა ორიგინალი ლოგიკა (ლაიქი, ნახვა, საჩუქარი) ---
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
@@ -1343,7 +1336,7 @@ function playFullVideo(url, postId, currentIndex) {
         });
     }
 }
-window.playFullVideo = playFullVideo;
+
 
 
 
