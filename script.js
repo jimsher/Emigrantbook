@@ -1209,6 +1209,12 @@ function sendMessage() {
 
 
 
+
+
+
+
+
+
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     grid.innerHTML = "";
@@ -1220,7 +1226,10 @@ function loadUserVideos(uid) {
 
         const postEntries = Object.entries(posts).reverse();
 
-        postEntries.forEach(([id, post], i) => { // <-- აქ დაემატა i
+        // ინდექსს (i) ვითვლით მხოლოდ იმ პოსტებზე, რომლებიც პირობას აკმაყოფილებს
+        let displayIdx = 0; 
+
+        postEntries.forEach(([id, post]) => {
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
                 if(video) {
@@ -1236,9 +1245,13 @@ function loadUserVideos(uid) {
                             <i class="fas fa-play"></i> ${formattedViews}
                         </div>
                     `;
-                    // 👇 გადაეცემა i, როგორც მესამე პარამეტრი
-                    item.onclick = () => playFullVideo(video.url, id, i); 
+
+                    // ვიყენებთ displayIdx-ს, რომელიც ზუსტად ემთხვევა ბადეში ელემენტის პოზიციას
+                    const currentIdx = displayIdx;
+                    item.onclick = () => playFullVideo(video.url, id, currentIdx); 
+                    
                     grid.appendChild(item);
+                    displayIdx++; // ვზრდით ინდექსს შემდეგი ნაჩვენები ვიდეოსთვის
                 }
             }
         });
@@ -1246,12 +1259,6 @@ function loadUserVideos(uid) {
     });
 }
 
-
-
-
-
-        
-      
 function playFullVideo(url, postId, currentIndex) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
@@ -1336,6 +1343,11 @@ function playFullVideo(url, postId, currentIndex) {
         });
     }
 }
+
+
+        
+      
+
 
 
 
