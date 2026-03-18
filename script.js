@@ -1263,18 +1263,21 @@ function playFullVideo(url, postId) {
 
     window.currentFullVideoId = postId; 
 
-    // --- სქროლვის ლოგიკა (გასწორებული და შენარჩუნებული) ---
+    // --- სქროლვის ლოგიკა (გასწორებული) ---
     let startY = 0;
     vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
         let endY = e.changedTouches[0].clientY;
         let diff = startY - endY;
+
         if (Math.abs(diff) > 50) {
-            // ვეძებთ ყველა ვიდეოს პროფილის ბადეში (Grid)
+            // ვიღებთ ვიდეოებს მხოლოდ პროფილის ბადიდან (#profGrid)
             const allPosts = Array.from(document.querySelectorAll('#profGrid .grid-item'));
+            
+            // ვპოულობთ ინდექსს იმის მიხედვით, თუ რომელზე გვიწერია ჩვენი postId
             const currentIndex = allPosts.findIndex(p => {
-                const attr = p.getAttribute('onclick');
-                return attr && attr.includes(window.currentFullVideoId);
+                const clickAttr = p.getAttribute('onclick');
+                return clickAttr && clickAttr.includes(window.currentFullVideoId);
             });
 
             if (diff > 0 && currentIndex < allPosts.length - 1) {
@@ -1296,10 +1299,8 @@ function playFullVideo(url, postId) {
             const data = snap.val();
             if (!data) return;
 
-            // ავტორის ID-ს შენახვა საჩუქრებისთვის და პროფილისთვის
             window.currentFullVideoAuthorId = data.authorId;
 
-            // ავატარი და მისი ფუნქცია (პროფილზე გადასვლა)
             const ava = document.getElementById('fullVideoAva');
             if (ava) {
                 ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
@@ -1309,14 +1310,12 @@ function playFullVideo(url, postId) {
                 };
             }
 
-            // ნახვების რაოდენობა
             const vText = document.getElementById('fullVideoViewsText');
             if (vText) {
                 const views = data.views || 0;
                 vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
             }
 
-            // ლაიქების რაოდენობა და გულის ფერი
             const lElem = document.getElementById('fullLikeCount');
             const lIcon = document.getElementById('fullLikeIcon');
             const myUid = auth.currentUser.uid;
@@ -1325,18 +1324,15 @@ function playFullVideo(url, postId) {
             if (lElem) lElem.innerText = likesKeys.length;
             if (lIcon) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
 
-            // შენახვის (Bookmark) ხატულა
             const sIcon = document.getElementById('fullSaveIcon');
             if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
 
-            // საჩუქრის ღილაკის ფუნქცია
             const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
             if (giftBtn) {
                 giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
             }
         });
 
-        // 3. კომენტარების რაოდენობის დინამიური მოსმენა
         db.ref(`comments/${postId}`).on('value', cSnap => {
             const cElem = document.getElementById('fullCommCount');
             if (cElem) cElem.innerText = cSnap.numChildren();
