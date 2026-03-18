@@ -1252,6 +1252,7 @@ function loadUserVideos(uid) {
 
         
       
+
 function playFullVideo(url, postId, currentIndex) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
@@ -1261,9 +1262,10 @@ function playFullVideo(url, postId, currentIndex) {
     vid.play();
 
     window.currentFullVideoId = postId; 
-    window.currentVideoIndex = currentIndex; // ვინახავთ მიმდინარე ადგილს
+    // თუ currentIndex არ მოვიდა (მაგალითად, სხვაგან გამოიძახე), თავად იპოვის
+    window.currentVideoIndex = currentIndex; 
 
-    // --- სქროლვის (Swipe) ლოგიკა ---
+    // --- სქროლვის (Swipe) ლოგიკა (გასწორებული) ---
     let startY = 0;
     vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
@@ -1271,15 +1273,24 @@ function playFullVideo(url, postId, currentIndex) {
         let diff = startY - endY;
 
         if (Math.abs(diff) > 50) {
-            // ვიღებთ ყველა ვიდეოს პროფილის ბადიდან
             const allItems = Array.from(document.querySelectorAll('#profGrid .grid-item'));
             
+            // თუ ინდექსი არ გვაქვს, ვპოულობთ postId-ით
+            if (window.currentVideoIndex === undefined) {
+                window.currentVideoIndex = allItems.findIndex(p => p.getAttribute('onclick').includes(postId));
+            }
+
+            let nextIdx = -1;
             if (diff > 0 && window.currentVideoIndex < allItems.length - 1) {
-                // სვაიპი ზემოთ -> შემდეგი
-                allItems[window.currentVideoIndex + 1].click();
+                nextIdx = window.currentVideoIndex + 1;
             } else if (diff < 0 && window.currentVideoIndex > 0) {
-                // სვაიპი ქვემოთ -> წინა
-                allItems[window.currentVideoIndex - 1].click();
+                nextIdx = window.currentVideoIndex - 1;
+            }
+
+            if (nextIdx !== -1) {
+                // ვიღებთ შემდეგი ელემენტის მონაცემებს და თავად ვიძახებთ ფუნქციას ახალი ინდექსით
+                const nextItem = allItems[nextIdx];
+                nextItem.click(); // ეს გამოიწვევს playFullVideo-ს ხელახლა გაშვებას ახალი ინდექსით
             }
         }
     };
@@ -1332,11 +1343,7 @@ function playFullVideo(url, postId, currentIndex) {
         });
     }
 }
-
-// კრიტიკული ხაზი: რომ HTML-მა დაინახოს ფუნქცია
 window.playFullVideo = playFullVideo;
-           
-
 
 
 
