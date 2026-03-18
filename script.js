@@ -1218,32 +1218,25 @@ function loadUserVideos(uid) {
         const posts = snap.val();
         if(!posts) return;
 
-        // ვალაგებთ პოსტებს ახლიდან ძველისკენ
         const postEntries = Object.entries(posts).reverse();
 
-        // 👇 აქ ჩავამატე "i", რომ პროგრამამ იცოდეს მერამდენეა ვიდეო
-        postEntries.forEach(([id, post], i) => {
+        postEntries.forEach(([id, post], i) => { // <-- აქ დაემატა i
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
                 if(video) {
                     vCount++;
-                    
-                    // ნახვების რაოდენობის ფორმატირება
                     const views = post.views || 0;
                     const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
 
                     const item = document.createElement('div');
                     item.className = 'grid-item';
-                    
-                    // ვამატებთ ნახვების ლეიბლს ვიდეოს ზემოდან
                     item.innerHTML = `
                         <video src="${video.url}" muted playsinline></video>
                         <div class="video-views-label">
                             <i class="fas fa-play"></i> ${formattedViews}
                         </div>
                     `;
-                    
-                    // 👇 ახლა უკვე "i" სწორად გადაეცემა და ვიდეოც გაიხსნება
+                    // 👇 გადაეცემა i, როგორც მესამე პარამეტრი
                     item.onclick = () => playFullVideo(video.url, id, i); 
                     grid.appendChild(item);
                 }
@@ -1259,7 +1252,7 @@ function loadUserVideos(uid) {
 
         
       
-  function playFullVideo(url, postId, currentIndex) {
+function playFullVideo(url, postId, currentIndex) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
@@ -1267,37 +1260,26 @@ function loadUserVideos(uid) {
     overlay.style.display = 'block'; 
     vid.play();
 
-    // ვინახავთ მონაცემებს გლობალურად
     window.currentFullVideoId = postId; 
-    window.currentVideoIndex = currentIndex; 
+    window.currentVideoIndex = currentIndex; // ვინახავთ მიმდინარე ადგილს
 
     // --- სქროლვის (Swipe) ლოგიკა ---
     let startY = 0;
-    vid.ontouchstart = (e) => { 
-        startY = e.touches[0].clientY; 
-    };
-
+    vid.ontouchstart = (e) => { startY = e.touches[0].clientY; };
     vid.ontouchend = (e) => {
         let endY = e.changedTouches[0].clientY;
         let diff = startY - endY;
 
-        // თუ 50 პიქსელზე მეტია გადაადგილება
         if (Math.abs(diff) > 50) {
             // ვიღებთ ყველა ვიდეოს პროფილის ბადიდან
             const allItems = Array.from(document.querySelectorAll('#profGrid .grid-item'));
             
-            if (diff > 0) {
-                // სვაიპი ზემოთ -> შემდეგი ვიდეო
-                if (window.currentVideoIndex < allItems.length - 1) {
-                    console.log("გადავდივართ შემდეგზე...");
-                    allItems[window.currentVideoIndex + 1].click();
-                }
-            } else {
-                // სვაიპი ქვემოთ -> წინა ვიდეო
-                if (window.currentVideoIndex > 0) {
-                    console.log("ვბრუნდებით წინაზე...");
-                    allItems[window.currentVideoIndex - 1].click();
-                }
+            if (diff > 0 && window.currentVideoIndex < allItems.length - 1) {
+                // სვაიპი ზემოთ -> შემდეგი
+                allItems[window.currentVideoIndex + 1].click();
+            } else if (diff < 0 && window.currentVideoIndex > 0) {
+                // სვაიპი ქვემოთ -> წინა
+                allItems[window.currentVideoIndex - 1].click();
             }
         }
     };
@@ -1349,7 +1331,11 @@ function loadUserVideos(uid) {
             if (cElem) cElem.innerText = cSnap.numChildren();
         });
     }
-}           
+}
+
+// კრიტიკული ხაზი: რომ HTML-მა დაინახოს ფუნქცია
+window.playFullVideo = playFullVideo;
+           
 
 
 
