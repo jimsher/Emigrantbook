@@ -1206,6 +1206,9 @@ function sendMessage() {
  }
 
 
+
+
+
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     grid.innerHTML = "";
@@ -1218,13 +1221,14 @@ function loadUserVideos(uid) {
         // ვალაგებთ პოსტებს ახლიდან ძველისკენ
         const postEntries = Object.entries(posts).reverse();
 
-        postEntries.forEach(([id, post]) => {
+        // 👇 აქ ჩავამატე "i", რომ პროგრამამ იცოდეს მერამდენეა ვიდეო
+        postEntries.forEach(([id, post], i) => {
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
                 if(video) {
                     vCount++;
                     
-                    // ნახვების რაოდენობის ფორმატირება (მაგ: 1500 -> 1.5K)
+                    // ნახვების რაოდენობის ფორმატირება
                     const views = post.views || 0;
                     const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
 
@@ -1239,19 +1243,15 @@ function loadUserVideos(uid) {
                         </div>
                     `;
                     
-                    // 👇 აი აქ,onclick-ში, postId-ის მერე ჩაამატე ', i'
+                    // 👇 ახლა უკვე "i" სწორად გადაეცემა და ვიდეოც გაიხსნება
                     item.onclick = () => playFullVideo(video.url, id, i); 
                     grid.appendChild(item);
-                    // ...
                 }
             }
         });
         document.getElementById('statVidsCount').innerText = vCount;
     });
 }
-
-
-
 
 
 
