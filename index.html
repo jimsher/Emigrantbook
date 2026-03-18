@@ -1439,6 +1439,7 @@ div[style*="overflow-x:auto"] {
 
 
 
+
 <div id="fullVideoOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:999999; pointer-events: auto;">
     
     <video id="fullVideoTag" autoplay loop style="width:100%; height:100%; object-fit:contain; position:relative; z-index:1; pointer-events: auto !important;"></video>
@@ -1452,32 +1453,38 @@ div[style*="overflow-x:auto"] {
 
     <div class="video-side-menu" style="position: absolute; right: 15px; bottom: 100px; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 1000000; pointer-events: none;">
         
-        <div class="author-avatar-box" style="position: relative; margin-bottom: 5px; cursor: pointer; pointer-events: auto;">
-            <img id="fullVideoAva" src="" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid #fff; object-fit: cover;">
-            <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: #ff4d4d; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid #000;">+</div>
+        <div class="author-avatar-box" style="position: relative; margin-bottom: 5px; cursor: pointer; pointer-events: auto;" onclick="closeFullVideo(); openProfile(window.currentFullVideoAuthorId);">
+            <img id="fullVideoAva" src="" style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold); object-fit: cover;">
+            <div id="full-mini-status" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none;"></div>
         </div>
 
         <div class="side-action-item" onclick="handleLikeFromFull()" style="text-align: center; cursor:pointer; pointer-events: auto;">
-            <i class="fas fa-heart" id="fullLikeIcon" style="font-size: 35px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></i>
-            <span id="fullLikeCount" style="color: white; font-size: 14px; font-weight: bold; display: block; margin-top: 3px;">0</span>
+            <i class="fas fa-heart" id="fullLikeIcon" style="font-size: 32px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));"></i>
+            <span id="fullLikeCount" style="color: white; font-size: 13px; font-weight: bold; display: block; margin-top: 3px;">0</span>
         </div>
 
         <div class="side-action-item" onclick="openCommentsFromFull()" style="text-align: center; cursor:pointer; pointer-events: auto;">
-            <i class="fas fa-comment-dots" style="font-size: 35px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></i>
-            <span id="fullCommCount" style="color: white; font-size: 14px; font-weight: bold; display: block; margin-top: 3px;">0</span>
+            <i class="fas fa-comment-dots" style="font-size: 32px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));"></i>
+            <span id="fullCommCount" style="color: white; font-size: 13px; font-weight: bold; display: block; margin-top: 3px;">0</span>
         </div>
 
         <div class="side-action-item" onclick="saveVideoFromFull()" style="text-align: center; cursor:pointer; pointer-events: auto;">
-            <i class="fas fa-bookmark" id="fullSaveIcon" style="font-size: 30px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></i>
-            <span style="color: white; font-size: 11px; display: block; margin-top: 3px;">შენახვა</span>
+            <i class="fas fa-bookmark" id="fullSaveIcon" style="font-size: 28px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));"></i>
+            <span style="color: white; font-size: 10px; display: block; margin-top: 3px;">შენახვა</span>
         </div>
 
         <div class="side-action-item" onclick="shareVideoFromFull()" style="text-align: center; cursor:pointer; pointer-events: auto;">
-            <i class="fas fa-share" style="font-size: 30px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></i>
-            <span style="color: white; font-size: 11px; display: block; margin-top: 3px;">გაზიარება</span>
+            <i class="fas fa-share" style="font-size: 28px; color: white; filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));"></i>
+            <span id="fullShareCount" style="color: white; font-size: 10px; display: block; margin-top: 3px;">0</span>
+        </div>
+
+        <div class="side-action-item gift-btn" onclick="openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId)" style="text-align: center; cursor:pointer; pointer-events: auto;">
+            <i class="fas fa-gift" style="color: #ff4d4d; font-size: 30px; filter: drop-shadow(0 0 8px rgba(255, 77, 77, 0.4));"></i>
+            <span style="color: white; font-size: 10px; font-weight: bold; margin-top: 3px;">GIFT</span>
         </div>
     </div>
 </div>
+ 
 
  
 
