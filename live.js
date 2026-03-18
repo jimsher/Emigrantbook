@@ -335,18 +335,7 @@ function listenToLikes(channel) {
 
 
 // --- ლაიქების და გულების გაუმჯობესებული ლოგიკა ---
-function createFloatingHeart() {
-    const container = document.getElementById('live-video-container');
-    if(!container) return;
-    const heart = document.createElement('i');
-    heart.className = "fas fa-heart";
-    const colors = ['#ff4d4d', '#ff7575', '#ffb3b3', '#ff0055', '#ff99cc'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    const randomX = Math.floor(Math.random() * 100) - 50;
-    heart.style = `position:absolute; right:30px; bottom:80px; color:${randomColor}; font-size:24px; --randomX:${randomX}px; animation:heartFly 1.5s ease-out forwards; pointer-events:none; z-index:1500;`;
-    container.appendChild(heart);
-    setTimeout(() => heart.remove(), 1500);
-}
+
 
 // --- საჩუქრების ახალი ლოგიკა (ყველა ხედავს) ---
 function listenToGifts(channel) {
