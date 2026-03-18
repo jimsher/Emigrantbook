@@ -2976,6 +2976,7 @@ function openCommentsFromFull() {
     const commUI = document.getElementById('commentsUI');
     const videoOverlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
+    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu'); // ვიღებთ მენიუს
 
     if (commUI && videoOverlay) {
         // 1. კომენტარებს ვსვამთ ვიდეოს შიგნით
@@ -2993,6 +2994,12 @@ function openCommentsFromFull() {
         commUI.style.backdropFilter = "blur(15px)";
         commUI.style.webkitBackdropFilter = "blur(15px)";
 
+        // --- აი აქ ჩავამატე მენიუს დამალვის ლოგიკა ---
+        if (sideMenu) {
+            sideMenu.style.opacity = "0"; // მენიუ ხდება უხილავი
+            sideMenu.style.pointerEvents = "none"; // მენიუზე დაჭერა იბლოკება
+        }
+
         // 3. ვიდეოს პაუზა
         if (vid) vid.pause();
 
@@ -3002,6 +3009,12 @@ function openCommentsFromFull() {
             closeBtn.onclick = function() {
                 commUI.style.display = 'none';
                 if (vid) vid.play();
+                
+                // კომენტარების დახურვისას მენიუ ისევ ვაჩინოთ
+                if (sideMenu) {
+                    sideMenu.style.opacity = "1";
+                    sideMenu.style.pointerEvents = "auto";
+                }
             };
         }
 
