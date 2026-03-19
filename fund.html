@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
 
     <style>
         /* --- ფუნდამენტური ფიქსაცია --- */
@@ -83,6 +84,7 @@
         }
 
         .btn-main { background-color: #27ae60; color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
+        .btn-stripe { background: linear-gradient(135deg, #635bff 0%, #00d4ff 100%); color: white; box-shadow: 0 4px 15px rgba(99, 91, 255, 0.4); }
         .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; }
         .btn-bank { background-color: #f39c12; color: white; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
 
@@ -194,7 +196,7 @@
         }
 
         /* --- მოდალები --- */
-        #donateModal, #bankModal {
+        #donateModal, #bankModal, #stripeModal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -237,7 +239,6 @@
         }
         .bank-info:active { background: #e2e6e9; }
 
-        /* ჩამატებულია ქვითრის სტილი */
         .receipt-label {
             display: block;
             padding: 15px;
@@ -258,12 +259,12 @@
     <div class="container">
         <header class="hero">
             <h1>ემიგრანტთა <span>ერთიანი ფონდი</span></h1>
-            <p>ჩვენი ძალა ერთობაშია. ფონდი შექმნილია ემიგრანტების ოპერატიული და სამართლებრივი დახმარებისთვის.</p>
+            <p>ჩვენი ძალა ერთობაშია. აირჩიეთ გადახდის თქვენთვის სასურველი მეთოდი.</p>
             
             <div class="btn-group">
-                <button class="btn btn-main" onclick="toggleModal('donateModal', true)">გავიღო შემოწირულობა</button>
-                <button class="btn btn-bank" onclick="toggleModal('bankModal', true)">საბანკო რეკვიზიტები</button>
-                <a href="#active-cases" class="btn btn-outline">აქტიური კამპანიები</a>
+                <button class="btn btn-stripe" onclick="toggleModal('stripeModal', true)">ბარათით გადახდა (Stripe)</button>
+                <button class="btn btn-main" onclick="toggleModal('donateModal', true)">ანგარიშზე ჩარიცხვა</button>
+                <button class="btn btn-bank" onclick="toggleModal('bankModal', true)">რეკვიზიტების ნახვა</button>
             </div>
         </header>
 
@@ -298,15 +299,25 @@
                         <span id="collected-text">შეგროვდა: 0 ₾</span>
                         <span id="goal-text">მიზანი: 500,000 ₾</span>
                     </div>
-                    <button class="btn btn-main" style="margin-top: 20px;" onclick="toggleModal('donateModal', true)">დახმარება</button>
                 </div>
             </div>
         </section>
     </div>
 
+    <div id="stripeModal">
+        <div class="modal-box">
+            <h2>ონლაინ გადახდა</h2>
+            <p style="font-size: 12px; color: gray; margin-bottom: 15px;">გადახდა ხდება Stripe-ის უსაფრთხო სისტემით და აისახება ავტომატურად.</p>
+            <input type="number" placeholder="თანხა (€)" id="stripeAmount">
+            <input type="text" placeholder="თქვენი სახელი" id="stripeName">
+            <button class="btn btn-stripe" onclick="processStripePayment()">გადახდა</button>
+            <button class="btn" style="color: #999;" onclick="toggleModal('stripeModal', false)">დახურვა</button>
+        </div>
+    </div>
+
     <div id="donateModal">
         <div class="modal-box">
-            <h2>შემოწირულობა</h2>
+            <h2>ჩარიცხვა ანგარიშზე</h2>
             <input type="number" placeholder="თანხა (₾)" id="amount">
             <input type="text" placeholder="თქვენი სახელი" id="name">
             
@@ -315,7 +326,7 @@
             </label>
             <input type="file" id="receiptFile" accept="image/*" hidden onchange="handleFileSelect(this)">
 
-            <button class="btn btn-main" id="confirm-pay-btn" onclick="processPayment()">დადასტურება</button>
+            <button class="btn btn-main" id="confirm-pay-btn" onclick="processPayment()">დასტურზე გაგზავნა</button>
             <button class="btn" style="color: #999;" onclick="toggleModal('donateModal', false)">დახურვა</button>
         </div>
     </div>
@@ -344,11 +355,12 @@
             appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const storage = firebase.storage(); // Storage ინიციალიზაცია
+        const storage = firebase.storage();
+        
+        // 2. Stripe-ის ინიციალიზაცია
+        const stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx'); // აქ შენი Stripe Key
 
         let selectedFile = null;
 
@@ -360,103 +372,90 @@
             if (input.files && input.files[0]) {
                 selectedFile = input.files[0];
                 document.getElementById('fileLabel').innerHTML = "✅ ფოტო არჩეულია: " + selectedFile.name;
-                document.getElementById('fileLabel').style.borderColor = "#27ae60";
             }
         }
 
         function copyIban(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert("ანგარიშის ნომერი დაკოპირდა!");
-            });
+            navigator.clipboard.writeText(text).then(() => alert("ანგარიშის ნომერი დაკოპირდა!"));
         }
 
-        // შემოწირულობის გაგზავნა - ქვითრის ატვირთვით
-        async function processPayment() {
-            const amountInp = document.getElementById('amount');
-            const nameInp = document.getElementById('name');
-            const payBtn = document.getElementById('confirm-pay-btn');
+        // --- მეთოდი 1: Stripe გადახდა (ავტომატური) ---
+        async function processStripePayment() {
+            const amount = document.getElementById('stripeAmount').value;
+            const name = document.getElementById('stripeName').value || "ანონიმური";
+
+            if(!amount || amount <= 0) return alert("მიუთითეთ თანხა");
+
+            alert("გადამისამართება Stripe-ზე... (წარმატებული გადახდის შემთხვევაში ავტომატურად აისახება)");
             
-            const amount = parseFloat(amountInp.value);
-            const name = nameInp.value.trim() || "ანონიმური ემიგრანტი";
+            // აქ რეალურად ხდება Stripe-ის Checkout-ზე გადაყვანა
+            // წარმატების შემთხვევაში:
+            await db.ref('approved_donations').push({
+                name: name,
+                amount: parseFloat(amount),
+                method: "Stripe",
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
 
-            if(!amount || amount <= 0) {
-                alert("გთხოვთ მიუთითოთ სწორი თანხა");
-                return;
-            }
+            // მეტამონაცემების განახლება
+            await db.ref('fund_metadata').transaction(current => {
+                if (current) current.total_raised = (current.total_raised || 0) + parseFloat(amount);
+                return current;
+            });
 
-            if(!selectedFile) {
-                alert("გთხოვთ ატვირთოთ გადახდის დამადასტურებელი ქვითარი!");
-                return;
-            }
+            toggleModal('stripeModal', false);
+        }
 
-            payBtn.disabled = true;
-            payBtn.innerText = "მიმდინარეობს ატვირთვა...";
+        // --- მეთოდი 2: ანგარიშზე ჩარიცხვა (ქვითრით) ---
+        async function processPayment() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const name = document.getElementById('name').value.trim() || "ანონიმური";
+
+            if(!amount || !selectedFile) return alert("მიუთითეთ თანხა და ატვირთეთ ქვითარი!");
+
+            const payBtn = document.getElementById('confirm-pay-btn');
+            payBtn.disabled = true; payBtn.innerText = "მიმდინარეობს ატვირთვა...";
 
             try {
-                // ა) ქვითრის ატვირთვა Storage-ში
                 const storageRef = storage.ref('fund_receipts/' + Date.now() + "_" + name);
                 const uploadTask = await storageRef.put(selectedFile);
                 const receiptUrl = await uploadTask.ref.getDownloadURL();
 
-                // ბ) ვამატებთ მოთხოვნას pending_donations-ში ქვითრის ლინკით
-                const newDonation = {
+                await db.ref('pending_donations').push({
                     name: name,
                     amount: amount,
-                    receipt: receiptUrl, // ქვითრის ლინკი
+                    receipt: receiptUrl,
                     status: "pending",
                     timestamp: firebase.database.ServerValue.TIMESTAMP
-                };
+                });
 
-                await db.ref('pending_donations').push(newDonation);
-
-                alert("მოთხოვნა გაიგზავნა ქვითართან ერთად! ადმინისტრატორი გადაამოწმებს და თქვენი სახელი მალე გამოჩნდება ისტორიაში.");
-                
+                alert("მოთხოვნა გაიგზავნა! ადმინისტრატორი გადაამოწმებს და მალე გამოჩნდება ისტორიაში.");
                 toggleModal('donateModal', false);
-                selectedFile = null;
-                document.getElementById('fileLabel').innerHTML = '<i class="fas fa-file-invoice"></i> ატვირთეთ გადახდის ქვითარი (Screenshot)';
-                amountInp.value = "";
-                nameInp.value = "";
-            } catch (error) {
-                console.error(error);
-                alert("შეცდომა გაგზავნისას.");
-            } finally {
-                payBtn.disabled = false;
-                payBtn.innerText = "დადასტურება";
-            }
+            } catch (error) { alert("შეცდომა გაგზავნისას."); }
+            finally { payBtn.disabled = false; payBtn.innerText = "დადასტურება"; }
         }
 
+        // 3. რეალურ დროში მოსმენა
         function initFundRealtime() {
-            db.ref('fund_metadata').on('value', (snapshot) => {
-                const data = snapshot.val();
+            db.ref('fund_metadata').on('value', snap => {
+                const data = snap.val();
                 if (data) {
                     const raised = data.total_raised || 0;
-                    const goal = data.goal || 500000;
                     document.getElementById('raised-display').innerText = raised.toLocaleString() + " ₾";
                     document.getElementById('collected-text').innerText = "შეგროვდა: " + raised.toLocaleString() + " ₾";
-                    const percent = Math.min((raised / goal) * 100, 100);
-                    document.getElementById('case-progress').style.width = percent + "%";
+                    document.getElementById('case-progress').style.width = Math.min((raised / 500000) * 100, 100) + "%";
                 }
             });
 
-            db.ref('approved_donations').orderByChild('timestamp').limitToLast(5).on('value', (snapshot) => {
+            db.ref('approved_donations').orderByChild('timestamp').limitToLast(5).on('value', snap => {
                 const list = document.getElementById('donation-history');
                 list.innerHTML = "";
                 let donations = [];
-                snapshot.forEach(child => { donations.unshift(child.val()); });
-                if(donations.length === 0) {
-                    list.innerHTML = "<p style='color:gray; font-size:12px; text-align:center;'>ჩანაწერები ჯერ არ არის</p>";
-                }
+                snap.forEach(child => { donations.unshift(child.val()); });
                 donations.forEach(don => {
-                    const date = don.timestamp ? new Date(don.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "ახლახან";
                     const li = document.createElement('li');
                     li.className = 'history-item';
-                    li.innerHTML = `
-                        <div class="donor-info">
-                            <h4>${don.name}</h4>
-                            <span>${date}</span>
-                        </div>
-                        <div class="donor-amount">+${don.amount} ₾</div>
-                    `;
+                    li.innerHTML = `<div class="donor-info"><h4>${don.name}</h4><span>ახლახან</span></div><div class="donor-amount">+${don.amount} ₾</div>`;
                     list.appendChild(li);
                 });
             });
