@@ -181,7 +181,7 @@
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #27ae60, #2ecc71);
-            width: 0%; /* JS-ით შეიცვლება */
+            width: 0%; 
             transition: width 1s ease-in-out;
         }
 
@@ -231,7 +231,10 @@
             border-radius: 12px;
             border: 1px dashed #ccc;
             margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
         }
+        .bank-info:active { background: #e2e6e9; }
     </style>
 </head>
 <body>
@@ -298,10 +301,11 @@
     <div id="bankModal">
         <div class="modal-box">
             <h2>საბანკო რეკვიზიტები</h2>
-            <div class="bank-info">
+            <div class="bank-info" onclick="copyIban('GE00TB0000000000000000')">
                 <p>მიმღები: <b>Emigrantbook Fund</b></p>
                 <p>ბანკი: <b>თიბისი ბანკი</b></p>
                 <p>ანგარიში (GEL): <b>GE00TB0000000000000000</b></p>
+                <p style="font-size: 10px; color: #27ae60; margin-top: 5px;">დააკლიკეთ დასაკოპირებლად</p>
             </div>
             <button class="btn btn-main" onclick="toggleModal('bankModal', false)">გავიგე</button>
         </div>
@@ -318,7 +322,6 @@
             appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
         };
 
-        // ინიციალიზაცია
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -329,7 +332,14 @@
             document.getElementById(modalId).style.display = show ? 'flex' : 'none';
         }
 
-        // შემოწირულობის გაგზავნა რეალურ ბაზაში
+        // რეკვიზიტების კოპირება
+        function copyIban(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("ანგარიშის ნომერი დაკოპირდა!");
+            });
+        }
+
+        // შემოწირულობის გაგზავნა - უსაფრთხო ვერსია (Pending სტატუსით)
         async function processPayment() {
             const amountInp = document.getElementById('amount');
             const nameInp = document.getElementById('name');
@@ -344,31 +354,24 @@
             }
 
             payBtn.disabled = true;
-            payBtn.innerText = "მუშავდება...";
+            payBtn.innerText = "იგზავნება...";
 
             const newDonation = {
                 name: name,
                 amount: amount,
+                status: "pending", // ელოდება ადმინისტრატორის დასტურს
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
             try {
-                // ა) ვამატებთ შემოწირულობას
-                await db.ref('fund_donations').push(newDonation);
+                // ა) ვამატებთ მოთხოვნას pending_donations-ში
+                await db.ref('pending_donations').push(newDonation);
 
-                // ბ) ვაახლებთ მეტამონაცემებს (ჯამურ თანხას)
-                await db.ref('fund_metadata').transaction((current) => {
-                    if (current) {
-                        current.total_raised = (current.total_raised || 0) + amount;
-                        current.total_donors = (current.total_donors || 0) + 1;
-                    } else {
-                        return { total_raised: amount, total_donors: 1, goal: 500000 };
-                    }
-                    return current;
-                });
-
-                alert("მადლობა! თქვენი შემოწირულობა წარმატებით დაფიქსირდა.");
+                alert("მოთხოვნა გაიგზავნა! გთხოვთ, გადარიცხოთ თანხა რეკვიზიტებზე. თქვენი დახმარება ისტორიაში აისახება ადმინისტრატორის დასტურის შემდეგ.");
+                
                 toggleModal('donateModal', false);
+                toggleModal('bankModal', true); // ავტომატურად ვუხსნით რეკვიზიტებს
+
                 amountInp.value = "";
                 nameInp.value = "";
             } catch (error) {
@@ -380,9 +383,9 @@
             }
         }
 
-        // მონაცემების რეალურ დროში მოსმენა
+        // მონაცემების რეალურ დროში მოსმენა (Approved მხოლოდ)
         function initFundRealtime() {
-            // საერთო სტატისტიკის მოსმენა
+            // საერთო სტატისტიკის მოსმენა (მეტამონაცემებიდან)
             db.ref('fund_metadata').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -392,21 +395,24 @@
                     document.getElementById('raised-display').innerText = raised.toLocaleString() + " ₾";
                     document.getElementById('collected-text').innerText = "შეგროვდა: " + raised.toLocaleString() + " ₾";
                     
-                    // პროგრეს ბარის განახლება
                     const percent = Math.min((raised / goal) * 100, 100);
                     document.getElementById('case-progress').style.width = percent + "%";
                 }
             });
 
-            // ბოლო 5 შემოწირულობის მოსმენა ისტორიისთვის
-            db.ref('fund_donations').orderByChild('timestamp').limitToLast(5).on('value', (snapshot) => {
+            // ბოლო 5 დადასტურებული შემოწირულობის მოსმენა
+            db.ref('approved_donations').orderByChild('timestamp').limitToLast(5).on('value', (snapshot) => {
                 const list = document.getElementById('donation-history');
                 list.innerHTML = "";
                 
                 let donations = [];
                 snapshot.forEach(child => {
-                    donations.unshift(child.val()); // ახლები ზემოთ
+                    donations.unshift(child.val());
                 });
+
+                if(donations.length === 0) {
+                    list.innerHTML = "<p style='color:gray; font-size:12px; text-align:center;'>ჩანაწერები ჯერ არ არის</p>";
+                }
 
                 donations.forEach(don => {
                     const date = don.timestamp ? new Date(don.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "ახლახან";
