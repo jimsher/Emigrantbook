@@ -16,8 +16,8 @@
 
         html, body {
             width: 100%;
-            overflow-x: hidden; /* კრძალავს გვერდზე გაწევას - მყარი ეკრანი */
-            background-color: #0a1435; /* მუქი, სოლიდური ფონი */
+            overflow-x: hidden;
+            background-color: #0a1435;
             color: #ffffff;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
@@ -25,7 +25,7 @@
         .container {
             width: 100%;
             padding: 0 20px;
-            max-width: 500px; /* მობილურზე ოპტიმალური სიგანე */
+            max-width: 500px;
             margin: 0 auto;
         }
 
@@ -44,7 +44,7 @@
         }
 
         .hero h1 span {
-            color: #ffcc00; /* ოქროსფერი აქცენტი */
+            color: #ffcc00;
             display: block;
             margin-top: 5px;
         }
@@ -79,10 +79,9 @@
 
         .btn-main { background-color: #27ae60; color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
         .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; }
-        /* ახალი სტილი რეკვიზიტების ღილაკისთვის */
         .btn-bank { background-color: #f39c12; color: white; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
 
-        /* --- სტატისტიკა (მყარი ბარათები) --- */
+        /* --- სტატისტიკა --- */
         .stats-wrapper {
             margin-top: 40px;
             display: grid;
@@ -98,23 +97,48 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            transform: translateZ(0); /* მობილურზე რენდერინგის სტაბილურობისთვის */
         }
 
-        .stat-content h3 {
-            font-size: 26px;
-            color: #0a1435;
-            margin-bottom: 2px;
-            font-weight: 800;
-        }
-
-        .stat-content p {
-            font-size: 14px;
-            color: #666;
-            font-weight: 500;
-        }
-
+        .stat-content h3 { font-size: 26px; color: #0a1435; margin-bottom: 2px; font-weight: 800; }
+        .stat-content p { font-size: 14px; color: #666; font-weight: 500; }
         .stat-icon { font-size: 32px; }
+
+        /* --- შემოწირულობის ისტორია (ახალი ჩამატებული) --- */
+        .history-section {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffcc00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .donor-info h4 { font-size: 15px; font-weight: 600; color: #fff; }
+        .donor-info span { font-size: 12px; color: rgba(255, 255, 255, 0.5); }
+        .donor-amount { font-weight: 800; color: #27ae60; font-size: 16px; }
 
         /* --- აქტიური კამპანია --- */
         .section-title {
@@ -142,7 +166,6 @@
         .case-body h3 { font-size: 20px; margin-bottom: 10px; color: #0a1435; }
         .case-body p { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 20px; }
 
-        /* Progress Bar */
         .progress-container {
             background: #eee;
             height: 12px;
@@ -164,7 +187,7 @@
             font-weight: 600;
         }
 
-        /* --- მოდალური ფორმა --- */
+        /* --- მოდალები --- */
         #donateModal, #bankModal {
             display: none;
             position: fixed;
@@ -183,7 +206,6 @@
             padding: 30px;
             border-radius: 25px;
             color: #333;
-            position: relative;
         }
 
         .modal-box h2 { font-size: 22px; margin-bottom: 20px; color: #0a1435; }
@@ -198,9 +220,6 @@
             outline: none;
         }
 
-        input:focus { border-color: #27ae60; }
-
-        /* საბანკო რეკვიზიტების ბლოკი მოდალში */
         .bank-info {
             background: #f8f9fa;
             padding: 15px;
@@ -208,8 +227,6 @@
             border: 1px dashed #ccc;
             margin-bottom: 15px;
         }
-        .bank-info p { font-size: 14px; margin-bottom: 5px; color: #444; }
-        .bank-info b { color: #000; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -229,39 +246,55 @@
         <section class="stats-wrapper">
             <div class="stat-card">
                 <div class="stat-content">
-                    <h3 id="raised-val">125,400 ₾</h3>
+                    <h3>125,400 ₾</h3>
                     <p>სულ შეგროვდა</p>
                 </div>
                 <div class="stat-icon">🇬🇪</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-content">
-                    <h3 id="donors-val">345</h3>
-                    <p>დონორთა რაოდენობა</p>
+            <div class="history-section">
+                <div class="history-title">
+                    ბოლო შემოწირულობები
+                    <span style="font-size: 10px; color: #27ae60;">● LIVE</span>
                 </div>
-                <div class="stat-icon">🤝</div>
+                <ul class="history-list" id="donation-history">
+                    <li class="history-item">
+                        <div class="donor-info">
+                            <h4>გიორგი ბ. (საბერძნეთი)</h4>
+                            <span>2 წუთის წინ</span>
+                        </div>
+                        <div class="donor-amount">+50 ₾</div>
+                    </li>
+                    <li class="history-item">
+                        <div class="donor-info">
+                            <h4>ანონიმური ემიგრანტი</h4>
+                            <span>15 წუთის წინ</span>
+                        </div>
+                        <div class="donor-amount">+100 ₾</div>
+                    </li>
+                    <li class="history-item">
+                        <div class="donor-info">
+                            <h4>ნინო მ. (გერმანია)</h4>
+                            <span>1 საათის წინ</span>
+                        </div>
+                        <div class="donor-amount">+20 ₾</div>
+                    </li>
+                </ul>
             </div>
         </section>
 
         <section id="active-cases">
             <h2 class="section-title">აქტიური კამპანიები</h2>
-            
             <div class="case-card">
                 <div class="case-img"></div>
                 <div class="case-body">
                     <h3>სამედიცინო დახმარება</h3>
                     <p>დავეხმაროთ ჩვენს თანამემამულეს იტალიაში, რომელსაც სასწრაფო ოპერაცია ესაჭიროება.</p>
-                    
-                    <div class="progress-container">
-                        <div class="progress-bar"></div>
-                    </div>
-                    
+                    <div class="progress-container"><div class="progress-bar"></div></div>
                     <div class="progress-info">
                         <span>შეგროვდა: <b>6,500€</b></span>
                         <span>მიზანი: 10,000€</span>
                     </div>
-                    
                     <button class="btn btn-main" style="margin-top: 20px;" onclick="toggleModal('donateModal', true)">დახმარება</button>
                 </div>
             </div>
@@ -286,32 +319,40 @@
                 <p>ბანკი: <b>თიბისი ბანკი</b></p>
                 <p>ანგარიში (GEL): <b>GE00TB0000000000000000</b></p>
             </div>
-            <p style="font-size: 12px; color: #666; text-align: center; margin-bottom: 15px;">დანიშნულება: შემოწირულობა</p>
             <button class="btn btn-main" onclick="toggleModal('bankModal', false)">გავიგე</button>
         </div>
     </div>
 
     <script>
-        // მოდალის მართვა - განახლებული ფუნქცია, რომელიც იღებს ID-ს
         function toggleModal(modalId, show) {
-            const modal = document.getElementById(modalId);
-            modal.style.display = show ? 'flex' : 'none';
+            document.getElementById(modalId).style.display = show ? 'flex' : 'none';
         }
 
-        // გადახდის იმიტაცია
         function processPayment() {
             const amt = document.getElementById('amount').value;
+            const name = document.getElementById('name').value || "ანონიმური";
             if(!amt) return alert("გთხოვთ მიუთითოთ თანხა");
             
-            alert("მადლობა! გადავდივართ გადახდის უსაფრთხო გვერდზე...");
+            // შემოწირულობის დამატება ისტორიაში (ვიზუალურად)
+            const list = document.getElementById('donation-history');
+            const newItem = document.createElement('li');
+            newItem.className = 'history-item';
+            newItem.innerHTML = `
+                <div class="donor-info">
+                    <h4>${name}</h4>
+                    <span>ახლახან</span>
+                </div>
+                <div class="donor-amount">+${amt} ₾</div>
+            `;
+            list.prepend(newItem); // ამატებს სიის თავში
+
+            alert("მადლობა! თქვენი შემოწირულობა აისახა ისტორიაში.");
             toggleModal('donateModal', false);
         }
 
-        // ეკრანის მყარი ფიქსაცია (Anti-shake)
         window.addEventListener('scroll', () => {
             if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
         });
     </script>
-
 </body>
 </html>
