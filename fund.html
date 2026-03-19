@@ -79,6 +79,8 @@
 
         .btn-main { background-color: #27ae60; color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
         .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; }
+        /* ახალი სტილი რეკვიზიტების ღილაკისთვის */
+        .btn-bank { background-color: #f39c12; color: white; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
 
         /* --- სტატისტიკა (მყარი ბარათები) --- */
         .stats-wrapper {
@@ -163,7 +165,7 @@
         }
 
         /* --- მოდალური ფორმა --- */
-        #donateModal {
+        #donateModal, #bankModal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -197,6 +199,17 @@
         }
 
         input:focus { border-color: #27ae60; }
+
+        /* საბანკო რეკვიზიტების ბლოკი მოდალში */
+        .bank-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px dashed #ccc;
+            margin-bottom: 15px;
+        }
+        .bank-info p { font-size: 14px; margin-bottom: 5px; color: #444; }
+        .bank-info b { color: #000; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -207,7 +220,8 @@
             <p>ჩვენი ძალა ერთობაშია. ფონდი შექმნილია ემიგრანტების ოპერატიული და სამართლებრივი დახმარებისთვის.</p>
             
             <div class="btn-group">
-                <button class="btn btn-main" onclick="toggleModal(true)">გავიღო შემოწირულობა</button>
+                <button class="btn btn-main" onclick="toggleModal('donateModal', true)">გავიღო შემოწირულობა</button>
+                <button class="btn btn-bank" onclick="toggleModal('bankModal', true)">საბანკო რეკვიზიტები</button>
                 <a href="#active-cases" class="btn btn-outline">აქტიური კამპანიები</a>
             </div>
         </header>
@@ -248,7 +262,7 @@
                         <span>მიზანი: 10,000€</span>
                     </div>
                     
-                    <button class="btn btn-main" style="margin-top: 20px;" onclick="toggleModal(true)">დახმარება</button>
+                    <button class="btn btn-main" style="margin-top: 20px;" onclick="toggleModal('donateModal', true)">დახმარება</button>
                 </div>
             </div>
         </section>
@@ -260,14 +274,27 @@
             <input type="number" placeholder="თანხა (₾)" id="amount">
             <input type="text" placeholder="თქვენი სახელი" id="name">
             <button class="btn btn-main" onclick="processPayment()">გადახდა</button>
-            <button class="btn" style="color: #999;" onclick="toggleModal(false)">დახურვა</button>
+            <button class="btn" style="color: #999;" onclick="toggleModal('donateModal', false)">დახურვა</button>
+        </div>
+    </div>
+
+    <div id="bankModal">
+        <div class="modal-box">
+            <h2>საბანკო რეკვიზიტები</h2>
+            <div class="bank-info">
+                <p>მიმღები: <b>Emigrantbook Fund</b></p>
+                <p>ბანკი: <b>თიბისი ბანკი</b></p>
+                <p>ანგარიში (GEL): <b>GE00TB0000000000000000</b></p>
+            </div>
+            <p style="font-size: 12px; color: #666; text-align: center; margin-bottom: 15px;">დანიშნულება: შემოწირულობა</p>
+            <button class="btn btn-main" onclick="toggleModal('bankModal', false)">გავიგე</button>
         </div>
     </div>
 
     <script>
-        // მოდალის მართვა
-        function toggleModal(show) {
-            const modal = document.getElementById('donateModal');
+        // მოდალის მართვა - განახლებული ფუნქცია, რომელიც იღებს ID-ს
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
             modal.style.display = show ? 'flex' : 'none';
         }
 
@@ -277,7 +304,7 @@
             if(!amt) return alert("გთხოვთ მიუთითოთ თანხა");
             
             alert("მადლობა! გადავდივართ გადახდის უსაფრთხო გვერდზე...");
-            toggleModal(false);
+            toggleModal('donateModal', false);
         }
 
         // ეკრანის მყარი ფიქსაცია (Anti-shake)
