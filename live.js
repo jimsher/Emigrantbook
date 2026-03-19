@@ -167,6 +167,8 @@ async function endLive() {
     currentLiveChannel = channelName;
     
     // UI-ს მომზადება
+    document.getElementById('liveChatBox').setAttribute("style", "position: fixed !important; top: 45vh !important; height: calc(100vh - 45vh - 70px) !important; background: #0a0a0a !important; width: 100% !important;");
+    document.getElementById('live-video-container').setAttribute("style", "height: 45vh !important; display: flex !important;");        
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
     
