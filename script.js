@@ -3249,51 +3249,67 @@ window.addEventListener('load', () => {
 
 // ინვოისი მეილზე გასაგზავნი შოპინგი
 // 1. ინიციალიზაცია (ეს აუცილებელია!)
+// 1. EmailJS-ის ინიციალიზაცია (აუცილებელია გაშვებისას)
 emailjs.init("oZOT_SZC1MfIZnil8");
 
 async function sendRealInvoice() {
     const btn = document.getElementById('send_inv_btn');
+    
+    // მონაცემების წამოღება ინპუტებიდან
     const name = document.getElementById('inv_customer_name').value;
     const email = document.getElementById('inv_customer_email').value;
     const desc = document.getElementById('inv_product_desc').value;
     const amount = document.getElementById('inv_amount').value;
+    
+    // ავტომატური მონაცემები
     const date = new Date().toLocaleDateString('ka-GE');
     const inv_no = "EB-" + Math.floor(1000 + Math.random() * 9000);
 
-    if(!name || !email || !amount) return alert("შეავსეთ სახელი, მეილი და თანხა!");
+    // ვალიდაცია
+    if(!name || !email || !amount) {
+        alert("გთხოვთ, შეავსოთ მინიმუმ სახელი, მეილი და თანხა!");
+        return;
+    }
 
     btn.disabled = true;
-    btn.innerHTML = "იგზავნება...";
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> იგზავნება...';
 
-    // ეს მონაცემები უნდა ემთხვეოდეს EmailJS-ის შაბლონში არსებულ {{ცვლადებს}}
+    // პარამეტრები, რომლებიც ემთხვევა შენს EmailJS შაბლონს
     const templateParams = {
         to_name: name,
         to_email: email,
         order_id: inv_no,
         order_date: date,
-        product_description: desc,
+        product_description: desc || "სტანდარტული პაკეტი",
         total_price: amount + " €",
         reply_to: "support@emigrantbook.com"
     };
 
     try {
-        // აქ ჩავწერე შენი სურათიდან აღებული ზუსტი ID-ები
-        await emailjs.send('service_hjiqge4', 'template_wjuodzg', templateParams);
+        // გაგზავნა შენი რეალური ID-ებით
+        await emailjs.send('service_37fjz3m', 'template_wjuodzg', templateParams);
         
-        alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
+        alert("✅ ინვოისი წარმატებით გაეგზავნა მომხმარებელს: " + name);
         
-        // Firebase-ში შენახვა
-        db.ref('sent_invoices').push({
-            customer: name,
-            email: email,
-            amount: amount,
-            date: date,
-            status: "Sent"
-        });
+        // სურვილისამებრ: Firebase-ში შენახვა ისტორიისთვის
+        if(typeof db !== 'undefined') {
+            db.ref('sent_invoices').push({
+                customer: name,
+                email: email,
+                amount: amount,
+                date: date,
+                invoice_no: inv_no,
+                status: "Sent"
+            });
+        }
+
+        // ველების გასუფთავება
+        document.getElementById('inv_product_desc').value = "";
+        document.getElementById('inv_amount').value = "";
 
     } catch (error) {
         console.error("FAILED...", error);
-        alert("შეცდომა გაგზავნისას: " + JSON.stringify(error));
+        alert("შეცდომა გაგზავნისას. შეამოწმეთ EmailJS-ის კონსოლი.");
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
