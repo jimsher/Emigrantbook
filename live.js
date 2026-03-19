@@ -26,6 +26,9 @@ async function startLive() {
         liveClient.on("user-published", async (user, mediaType) => {
     await liveClient.subscribe(user, mediaType);
     if (mediaType === "video") {
+
+        updateLiveLayout(true);
+        
         const singleZone = document.getElementById('single-screen-zone');
         const splitZone = document.getElementById('split-screen-zone');
         if(singleZone && splitZone) {
