@@ -359,8 +359,8 @@
         const db = firebase.database();
         const storage = firebase.storage();
         
-        // 2. Stripe-ის ინიციალიზაცია
-        const stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx'); // აქ შენი Stripe Key
+        // 2. Stripe-ის ინიციალიზაცია (ჩასვი შენი გასაღები აქ)
+        const stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx'); 
 
         let selectedFile = null;
 
@@ -379,31 +379,23 @@
             navigator.clipboard.writeText(text).then(() => alert("ანგარიშის ნომერი დაკოპირდა!"));
         }
 
-        // --- მეთოდი 1: Stripe გადახდა (ავტომატური) ---
-        async function processStripePayment() {
+        // --- მეთოდი 1: Stripe გადახდა (გამოიყენე შენი Payment Link) ---
+        function processStripePayment() {
             const amount = document.getElementById('stripeAmount').value;
             const name = document.getElementById('stripeName').value || "ანონიმური";
 
             if(!amount || amount <= 0) return alert("მიუთითეთ თანხა");
 
-            alert("გადამისამართება Stripe-ზე... (წარმატებული გადახდის შემთხვევაში ავტომატურად აისახება)");
-            
-            // აქ რეალურად ხდება Stripe-ის Checkout-ზე გადაყვანა
-            // წარმატების შემთხვევაში:
-            await db.ref('approved_donations').push({
-                name: name,
-                amount: parseFloat(amount),
-                method: "Stripe",
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
+            // ყურადღება: აქ უნდა ჩასვა ლინკი, რომელიც შენს Stripe Dashboard-ზე შექმენი
+            const STRIPE_LINK = "აქ_ჩასვი_შენი_სტრაიპ_გადახდის_ლინკი";
 
-            // მეტამონაცემების განახლება
-            await db.ref('fund_metadata').transaction(current => {
-                if (current) current.total_raised = (current.total_raised || 0) + parseFloat(amount);
-                return current;
-            });
+            if (STRIPE_LINK === "აქ_ჩასვი_შენი_სტრაიპ_გადახდის_ლინკი") {
+                alert("ჯერ ჩასვი Stripe-ის ლინკი კოდში!");
+                return;
+            }
 
-            toggleModal('stripeModal', false);
+            // გადამისამართება Stripe-ის გადახდის გვერდზე
+            window.location.href = STRIPE_LINK;
         }
 
         // --- მეთოდი 2: ანგარიშზე ჩარიცხვა (ქვითრით) ---
@@ -432,7 +424,7 @@
                 alert("მოთხოვნა გაიგზავნა! ადმინისტრატორი გადაამოწმებს და მალე გამოჩნდება ისტორიაში.");
                 toggleModal('donateModal', false);
             } catch (error) { alert("შეცდომა გაგზავნისას."); }
-            finally { payBtn.disabled = false; payBtn.innerText = "დადასტურება"; }
+            finally { payBtn.disabled = false; payBtn.innerText = "დასტურზე გაგზავნა"; }
         }
 
         // 3. რეალურ დროში მოსმენა
