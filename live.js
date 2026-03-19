@@ -623,6 +623,7 @@ async function startGuestStreaming() {
             splitZone.style.display = 'flex'; 
         }
 
+        updateLiveLayout(true);
         // 4. სტუმარმა საკუთარი თავი უნდა დაინახოს თავის ნახევარში
         videoTrack.play("guest-remote-video");
 
