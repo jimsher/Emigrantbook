@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ემიგრანტთა ერთიანი ფონდი | Emigrantbook</title>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         /* --- ფუნდამენტური ფიქსაცია --- */
         * {
@@ -103,7 +107,7 @@
         .stat-content p { font-size: 14px; color: #666; font-weight: 500; }
         .stat-icon { font-size: 32px; }
 
-        /* --- შემოწირულობის ისტორია (ახალი ჩამატებული) --- */
+        /* --- შემოწირულობის ისტორია --- */
         .history-section {
             margin-top: 30px;
             background: rgba(255, 255, 255, 0.05);
@@ -177,7 +181,8 @@
         .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #27ae60, #2ecc71);
-            width: 65%;
+            width: 0%; /* JS-ით შეიცვლება */
+            transition: width 1s ease-in-out;
         }
 
         .progress-info {
@@ -246,7 +251,7 @@
         <section class="stats-wrapper">
             <div class="stat-card">
                 <div class="stat-content">
-                    <h3>125,400 ₾</h3>
+                    <h3 id="raised-display">0 ₾</h3>
                     <p>სულ შეგროვდა</p>
                 </div>
                 <div class="stat-icon">🇬🇪</div>
@@ -258,28 +263,7 @@
                     <span style="font-size: 10px; color: #27ae60;">● LIVE</span>
                 </div>
                 <ul class="history-list" id="donation-history">
-                    <li class="history-item">
-                        <div class="donor-info">
-                            <h4>გიორგი ბ. (საბერძნეთი)</h4>
-                            <span>2 წუთის წინ</span>
-                        </div>
-                        <div class="donor-amount">+50 ₾</div>
-                    </li>
-                    <li class="history-item">
-                        <div class="donor-info">
-                            <h4>ანონიმური ემიგრანტი</h4>
-                            <span>15 წუთის წინ</span>
-                        </div>
-                        <div class="donor-amount">+100 ₾</div>
-                    </li>
-                    <li class="history-item">
-                        <div class="donor-info">
-                            <h4>ნინო მ. (გერმანია)</h4>
-                            <span>1 საათის წინ</span>
-                        </div>
-                        <div class="donor-amount">+20 ₾</div>
-                    </li>
-                </ul>
+                    </ul>
             </div>
         </section>
 
@@ -288,12 +272,12 @@
             <div class="case-card">
                 <div class="case-img"></div>
                 <div class="case-body">
-                    <h3>სამედიცინო დახმარება</h3>
-                    <p>დავეხმაროთ ჩვენს თანამემამულეს იტალიაში, რომელსაც სასწრაფო ოპერაცია ესაჭიროება.</p>
-                    <div class="progress-container"><div class="progress-bar"></div></div>
+                    <h3>საერთო დახმარება</h3>
+                    <p>ყველა შემოწირულობა ხმარდება კრიზისში მყოფი ემიგრანტების ოპერაციებსა და სამართლებრივ დავებს.</p>
+                    <div class="progress-container"><div class="progress-bar" id="case-progress"></div></div>
                     <div class="progress-info">
-                        <span>შეგროვდა: <b>6,500€</b></span>
-                        <span>მიზანი: 10,000€</span>
+                        <span id="collected-text">შეგროვდა: 0 ₾</span>
+                        <span id="goal-text">მიზანი: 500,000 ₾</span>
                     </div>
                     <button class="btn btn-main" style="margin-top: 20px;" onclick="toggleModal('donateModal', true)">დახმარება</button>
                 </div>
@@ -306,7 +290,7 @@
             <h2>შემოწირულობა</h2>
             <input type="number" placeholder="თანხა (₾)" id="amount">
             <input type="text" placeholder="თქვენი სახელი" id="name">
-            <button class="btn btn-main" onclick="processPayment()">გადახდა</button>
+            <button class="btn btn-main" id="confirm-pay-btn" onclick="processPayment()">დადასტურება</button>
             <button class="btn" style="color: #999;" onclick="toggleModal('donateModal', false)">დახურვა</button>
         </div>
     </div>
@@ -324,31 +308,124 @@
     </div>
 
     <script>
+        // 1. Firebase კონფიგურაცია
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+            authDomain: "emigrantbook.firebaseapp.com", 
+            databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+            projectId: "emigrantbook", 
+            storageBucket: "emigrantbook.firebasestorage.app", 
+            appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+        };
+
+        // ინიციალიზაცია
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        // 2. ფუნქციები
         function toggleModal(modalId, show) {
             document.getElementById(modalId).style.display = show ? 'flex' : 'none';
         }
 
-        function processPayment() {
-            const amt = document.getElementById('amount').value;
-            const name = document.getElementById('name').value || "ანონიმური";
-            if(!amt) return alert("გთხოვთ მიუთითოთ თანხა");
+        // შემოწირულობის გაგზავნა რეალურ ბაზაში
+        async function processPayment() {
+            const amountInp = document.getElementById('amount');
+            const nameInp = document.getElementById('name');
+            const payBtn = document.getElementById('confirm-pay-btn');
             
-            // შემოწირულობის დამატება ისტორიაში (ვიზუალურად)
-            const list = document.getElementById('donation-history');
-            const newItem = document.createElement('li');
-            newItem.className = 'history-item';
-            newItem.innerHTML = `
-                <div class="donor-info">
-                    <h4>${name}</h4>
-                    <span>ახლახან</span>
-                </div>
-                <div class="donor-amount">+${amt} ₾</div>
-            `;
-            list.prepend(newItem); // ამატებს სიის თავში
+            const amount = parseFloat(amountInp.value);
+            const name = nameInp.value.trim() || "ანონიმური ემიგრანტი";
 
-            alert("მადლობა! თქვენი შემოწირულობა აისახა ისტორიაში.");
-            toggleModal('donateModal', false);
+            if(!amount || amount <= 0) {
+                alert("გთხოვთ მიუთითოთ სწორი თანხა");
+                return;
+            }
+
+            payBtn.disabled = true;
+            payBtn.innerText = "მუშავდება...";
+
+            const newDonation = {
+                name: name,
+                amount: amount,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            try {
+                // ა) ვამატებთ შემოწირულობას
+                await db.ref('fund_donations').push(newDonation);
+
+                // ბ) ვაახლებთ მეტამონაცემებს (ჯამურ თანხას)
+                await db.ref('fund_metadata').transaction((current) => {
+                    if (current) {
+                        current.total_raised = (current.total_raised || 0) + amount;
+                        current.total_donors = (current.total_donors || 0) + 1;
+                    } else {
+                        return { total_raised: amount, total_donors: 1, goal: 500000 };
+                    }
+                    return current;
+                });
+
+                alert("მადლობა! თქვენი შემოწირულობა წარმატებით დაფიქსირდა.");
+                toggleModal('donateModal', false);
+                amountInp.value = "";
+                nameInp.value = "";
+            } catch (error) {
+                console.error(error);
+                alert("შეცდომა ჩარიცხვისას.");
+            } finally {
+                payBtn.disabled = false;
+                payBtn.innerText = "დადასტურება";
+            }
         }
+
+        // მონაცემების რეალურ დროში მოსმენა
+        function initFundRealtime() {
+            // საერთო სტატისტიკის მოსმენა
+            db.ref('fund_metadata').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const raised = data.total_raised || 0;
+                    const goal = data.goal || 500000;
+                    
+                    document.getElementById('raised-display').innerText = raised.toLocaleString() + " ₾";
+                    document.getElementById('collected-text').innerText = "შეგროვდა: " + raised.toLocaleString() + " ₾";
+                    
+                    // პროგრეს ბარის განახლება
+                    const percent = Math.min((raised / goal) * 100, 100);
+                    document.getElementById('case-progress').style.width = percent + "%";
+                }
+            });
+
+            // ბოლო 5 შემოწირულობის მოსმენა ისტორიისთვის
+            db.ref('fund_donations').orderByChild('timestamp').limitToLast(5).on('value', (snapshot) => {
+                const list = document.getElementById('donation-history');
+                list.innerHTML = "";
+                
+                let donations = [];
+                snapshot.forEach(child => {
+                    donations.unshift(child.val()); // ახლები ზემოთ
+                });
+
+                donations.forEach(don => {
+                    const date = don.timestamp ? new Date(don.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "ახლახან";
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <div class="donor-info">
+                            <h4>${don.name}</h4>
+                            <span>${date}</span>
+                        </div>
+                        <div class="donor-amount">+${don.amount} ₾</div>
+                    `;
+                    list.appendChild(li);
+                });
+            });
+        }
+
+        // გაშვება
+        initFundRealtime();
 
         window.addEventListener('scroll', () => {
             if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
