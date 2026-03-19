@@ -3,122 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ემიგრანტთა ერთიანი ფონდი | Emigrantbook - ერთად უკეთესი მომავლისთვის</title>
-    
-    <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="fund-pro.css"> </head>
+    <title>ემიგრანტთა ერთიანი ფონდი | Emigrantbook</title>
+
+    <style>
+        /* --- ფუნდამენტური ფიქსაცია --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            width: 100%;
+            overflow-x: hidden; /* კრძალავს გვერდზე გაწევას - მყარი ეკრანი */
+            background-color: #0a1435; /* მუქი, სოლიდური ფონი */
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            padding: 0 20px;
+            max-width: 500px; /* მობილურზე ოპტიმალური სიგანე */
+            margin: 0 auto;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            padding: 50px 0 30px;
+            text-align: left;
+        }
+
+        .hero h1 {
+            font-size: 34px;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        .hero h1 span {
+            color: #ffcc00; /* ოქროსფერი აქცენტი */
+            display: block;
+            margin-top: 5px;
+        }
+
+        .hero p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 30px;
+        }
+
+        /* --- მთავარი ღილაკები --- */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-main { background-color: #27ae60; color: white; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
+        .btn-outline { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; }
+
+        /* --- სტატისტიკა (მყარი ბარათები) --- */
+        .stats-wrapper {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: translateZ(0); /* მობილურზე რენდერინგის სტაბილურობისთვის */
+        }
+
+        .stat-content h3 {
+            font-size: 26px;
+            color: #0a1435;
+            margin-bottom: 2px;
+            font-weight: 800;
+        }
+
+        .stat-content p {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-icon { font-size: 32px; }
+
+        /* --- აქტიური კამპანია --- */
+        .section-title {
+            margin: 45px 0 20px;
+            font-size: 22px;
+            border-left: 5px solid #ffcc00;
+            padding-left: 15px;
+        }
+
+        .case-card {
+            background: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .case-img {
+            width: 100%;
+            height: 200px;
+            background: #222 url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=500') center/cover;
+        }
+
+        .case-body { padding: 25px; }
+        .case-body h3 { font-size: 20px; margin-bottom: 10px; color: #0a1435; }
+        .case-body p { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 20px; }
+
+        /* Progress Bar */
+        .progress-container {
+            background: #eee;
+            height: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            width: 65%;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* --- მოდალური ფორმა --- */
+        #donateModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 25px;
+            color: #333;
+            position: relative;
+        }
+
+        .modal-box h2 { font-size: 22px; margin-bottom: 20px; color: #0a1435; }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus { border-color: #27ae60; }
+    </style>
+</head>
 <body>
 
-    <header id="main-header">
+    <div class="container">
+        <header class="hero">
+            <h1>ემიგრანტთა <span>ერთიანი ფონდი</span></h1>
+            <p>ჩვენი ძალა ერთობაშია. ფონდი შექმნილია ემიგრანტების ოპერატიული და სამართლებრივი დახმარებისთვის.</p>
+            
+            <div class="btn-group">
+                <button class="btn btn-main" onclick="toggleModal(true)">გავიღო შემოწირულობა</button>
+                <a href="#active-cases" class="btn btn-outline">აქტიური კამპანიები</a>
+            </div>
         </header>
 
-    <section class="fund-hero">
-        <div class="hero-overlay">
-            <div class="hero-content container">
-                <h1>ემიგრანტთა <span class="accent-text">ერთიანი ფონდი</span></h1>
-                <p>ჩვენი ძალა ერთობაშია. ფონდი შექმნილია კრიზისში მყოფი თანამემამულეების ოპერატიული, იურიდიული და ჰუმანიტარული დახმარებისთვის მთელ მსოფლიოში.</p>
-                <div class="hero-btns">
-                    <button class="btn-primary open-donate-modal" data-case="ფონდის საერთო მიზნები">გავიღო შემოწირულობა</button>
-                    <a href="#active-cases" class="btn-secondary">აქტიური კამპანიები</a>
+        <section class="stats-wrapper">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3 id="raised-val">125,400 ₾</h3>
+                    <p>სულ შეგროვდა</p>
                 </div>
+                <div class="stat-icon">🇬🇪</div>
             </div>
-        </div>
-    </section>
 
-    <section class="fund-stats container">
-        <div class="stat-card">
-            <i class="stat-icon">🇬🇪</i>
-            <div class="stat-info">
-                <h3 id="total-raised">0 ₾</h3>
-                <p>სულ შეგროვდა</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="stat-icon">🤝</i>
-            <div class="stat-info">
-                <h3 id="donors-count">0</h3>
-                <p>დონორი</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="stat-icon">✅</i>
-            <div class="stat-info">
-                <h3 id="cases-solved">0</h3>
-                <p>დახმარე შემთხვევა</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="active-cases" class="active-cases container">
-        <div class="section-title">
-            <h2>გადაუდებელი კამპანიები</h2>
-            <div class="underline"></div>
-        </div>
-
-        <div class="case-grid">
-            <div class="case-card">
-                <div class="case-img" style="background-image: url('case1.jpg');"></div>
-                <div class="case-content">
-                    <span class="tag tag-urgent">სასწრაფო</span>
-                    <h3>სამედიცინო დახმარება - პარიზი</h3>
-                    <p>ჩვენს ემიგრანტს, 32 წლის ნიკას, სჭირდება გადაუდებელი ოპერაცია...</p>
-                    <div class="progress-box">
-                        <div class="progress-bar-bg">
-                            <div class="progress-fill" style="width: 65%;"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span>შეგროვდა: <b>6,500€</b></span>
-                            <span>მიზანი: 10,000€</span>
-                        </div>
-                    </div>
-                    <button class="btn-donate-card open-donate-modal" data-case="სამედიცინო დახმარება - პარიზი">დახმარება</button>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3 id="donors-val">345</h3>
+                    <p>დონორთა რაოდენობა</p>
                 </div>
+                <div class="stat-icon">🤝</div>
             </div>
-            </div>
-    </section>
+        </section>
 
-    <section class="transparency container">
-        <div class="trans-box">
-            <h2>ყოველ თეთრს აქვს თავისი ისტორია</h2>
-            <p>ჩვენი ფონდი სრულიად გამჭვირვალეა. ყველა შემოსავალი და გასავალი აისახება რეალურ დროში ჩვენს ფინანსურ ანგარიშში.</p>
-            <a href="reports.pdf" target="_blank" class="btn-transparency">ფინანსური რეპორტი (PDF)</a>
-        </div>
-    </section>
-
-    <div id="donateModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2>შემოწირულობის გაღება</h2>
-            <p id="modal-case-name">ფონდის საერთო მიზნები</p>
+        <section id="active-cases">
+            <h2 class="section-title">აქტიური კამპანიები</h2>
             
-            <form id="donateForm">
-                <div class="form-group">
-                    <label>თანხა (₾)</label>
-                    <input type="number" id="donate-amount" placeholder="50" required min="1">
-                </div>
-                <div class="form-group">
-                    <label>სახელი / გვარი (არაა სავალდებულო)</label>
-                    <input type="text" id="donor-name" placeholder="ემიგრანტი">
-                </div>
-                <div class="payment-methods">
-                    <h3>აირჩიეთ გადახდის მეთოდი</h3>
-                    <div class="method-options">
-                        <label class="method-card">
-                            <input type="radio" name="payment" value="card" checked>
-                            <span><i class="icon-card">💳</i> საბანკო ბარათი</span>
-                        </label>
-                        <label class="method-card">
-                            <input type="radio" name="payment" value="bank">
-                            <span><i class="icon-bank">🏦</i> საბანკო გადარიცხვა</span>
-                        </label>
+            <div class="case-card">
+                <div class="case-img"></div>
+                <div class="case-body">
+                    <h3>სამედიცინო დახმარება</h3>
+                    <p>დავეხმაროთ ჩვენს თანამემამულეს იტალიაში, რომელსაც სასწრაფო ოპერაცია ესაჭიროება.</p>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar"></div>
                     </div>
+                    
+                    <div class="progress-info">
+                        <span>შეგროვდა: <b>6,500€</b></span>
+                        <span>მიზანი: 10,000€</span>
+                    </div>
+                    
+                    <button class="btn btn-main" style="margin-top: 20px;" onclick="toggleModal(true)">დახმარება</button>
                 </div>
-                <button type="submit" class="btn-confirm">გადახდა</button>
-            </form>
+            </div>
+        </section>
+    </div>
+
+    <div id="donateModal">
+        <div class="modal-box">
+            <h2>შემოწირულობა</h2>
+            <input type="number" placeholder="თანხა (₾)" id="amount">
+            <input type="text" placeholder="თქვენი სახელი" id="name">
+            <button class="btn btn-main" onclick="processPayment()">გადახდა</button>
+            <button class="btn" style="color: #999;" onclick="toggleModal(false)">დახურვა</button>
         </div>
     </div>
 
-    <footer id="main-footer">
-        </footer>
+    <script>
+        // მოდალის მართვა
+        function toggleModal(show) {
+            const modal = document.getElementById('donateModal');
+            modal.style.display = show ? 'flex' : 'none';
+        }
 
-    <script src="js/main.js"></script> <script src="fund.js"></script> </body>
+        // გადახდის იმიტაცია
+        function processPayment() {
+            const amt = document.getElementById('amount').value;
+            if(!amt) return alert("გთხოვთ მიუთითოთ თანხა");
+            
+            alert("მადლობა! გადავდივართ გადახდის უსაფრთხო გვერდზე...");
+            toggleModal(false);
+        }
+
+        // ეკრანის მყარი ფიქსაცია (Anti-shake)
+        window.addEventListener('scroll', () => {
+            if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+        });
+    </script>
+
+</body>
 </html>
