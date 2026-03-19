@@ -3287,7 +3287,7 @@ async function sendRealInvoice() {
 
     try {
         // გაგზავნა შენი რეალური ID-ებით
-        await emailjs.send('service_hjiqge4', 'template_wjuodzg', templateParams);
+        await emailjs.send('service_hjiqge4', 'template_50xhnnm', templateParams);
         
         alert("✅ ინვოისი წარმატებით გაეგზავნა მომხმარებელს: " + name);
         
