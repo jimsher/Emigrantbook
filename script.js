@@ -3275,7 +3275,7 @@ async function sendRealInvoice() {
 
     try {
         // 'YOUR_SERVICE_ID' და 'YOUR_TEMPLATE_ID' უნდა აიღო EmailJS-ის პანელიდან
-        await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
+        await emailjs.send('service_hjiqge4', 'oZOT_SZC1MfIZnil8', templateParams);
         
         alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
         
