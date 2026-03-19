@@ -3316,3 +3316,48 @@ async function sendRealInvoice() {
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
     }
 }
+
+
+
+
+
+// ინვოისის ისტორიების ლოგიკა
+function loadInvoiceHistory() {
+    const tableBody = document.getElementById('invoice_history_body');
+    
+    // ვუსმენთ 'sent_invoices' კვანძს Firebase-ში
+    db.ref('sent_invoices').orderByChild('timestamp').on('value', (snapshot) => {
+        tableBody.innerHTML = ""; // ვასუფთავებთ ძველ მონაცემებს
+        
+        let invoices = [];
+        snapshot.forEach((childSnapshot) => {
+            invoices.unshift(childSnapshot.val()); // ახალი ინვოისები ზემოთ მოექცეს
+        });
+
+        if (invoices.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999;">ისტორია ცარიელია</td></tr>';
+            return;
+        }
+
+        invoices.forEach((data) => {
+            const row = document.createElement('tr');
+            row.style.borderBottom = "1px solid #eee";
+            
+            row.innerHTML = `
+                <td style="padding: 12px; color: #666;">${data.date}</td>
+                <td style="padding: 12px; font-weight: 600;">${data.customer}</td>
+                <td style="padding: 12px; color: #0a1435;">${data.invoice_no || '---'}</td>
+                <td style="padding: 12px; text-align: right; font-weight: bold; color: #27ae60;">${data.amount} €</td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">
+                        ✅ გაიგზავნა
+                    </span>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    });
+}
+
+// ავტომატურად ჩავრთოთ ისტორიის ჩატვირთვა გვერდის გახსნისას
+loadInvoiceHistory();
