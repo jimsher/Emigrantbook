@@ -3248,6 +3248,9 @@ window.addEventListener('load', () => {
 
 
 // ინვოისი მეილზე გასაგზავნი შოპინგი
+// 1. ინიციალიზაცია (ეს აუცილებელია!)
+emailjs.init("oZOT_SZC1MfIZnil8");
+
 async function sendRealInvoice() {
     const btn = document.getElementById('send_inv_btn');
     const name = document.getElementById('inv_customer_name').value;
@@ -3262,7 +3265,7 @@ async function sendRealInvoice() {
     btn.disabled = true;
     btn.innerHTML = "იგზავნება...";
 
-    // მონაცემები EmailJS-ისთვის
+    // ეს მონაცემები უნდა ემთხვეოდეს EmailJS-ის შაბლონში არსებულ {{ცვლადებს}}
     const templateParams = {
         to_name: name,
         to_email: email,
@@ -3274,12 +3277,12 @@ async function sendRealInvoice() {
     };
 
     try {
-        // 'YOUR_SERVICE_ID' და 'YOUR_TEMPLATE_ID' უნდა აიღო EmailJS-ის პანელიდან
-        await emailjs.send('service_hjiqge4', 'oZOT_SZC1MfIZnil8', templateParams);
+        // აქ ჩავწერე შენი სურათიდან აღებული ზუსტი ID-ები
+        await emailjs.send('service_hjiqge4', '__ejs-ტესტ-ფოსტის-სერვისი__', templateParams);
         
         alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
         
-        // Firebase-ში ჩაწერა ისტორიისთვის
+        // Firebase-ში შენახვა
         db.ref('sent_invoices').push({
             customer: name,
             email: email,
@@ -3290,7 +3293,7 @@ async function sendRealInvoice() {
 
     } catch (error) {
         console.error("FAILED...", error);
-        alert("შეცდომა გაგზავნისას!");
+        alert("შეცდომა გაგზავნისას: " + JSON.stringify(error));
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
