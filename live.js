@@ -659,18 +659,19 @@ async function startGuestStreaming() {
 
 // ეს ფუნქცია გამოიძახე როცა სტუმარს ათანხმებ (acceptGuest) ან როცა სტუმარი ერთვება
 function updateLiveLayout(isSplit) {
-    const hostWrap = document.getElementById('host-video-wrapper');
-    const guestBox = document.getElementById('guest-video-box');
+    const singleZone = document.getElementById('single-screen-zone'); // ჰოსტის კონტეინერი
+    const splitZone = document.getElementById('split-screen-zone');   // სტუმრის კონტეინერი
 
     if (isSplit) {
-        // ეკრანის გაყოფა 50/50-ზე
-        hostWrap.style.width = "50%";
-        guestBox.style.display = "block";
-        setTimeout(() => { guestBox.style.width = "50%"; }, 10);
+        // ეკრანის გაყოფა გვერდიგვერდ 50/50
+        if(singleZone) singleZone.style.width = "50%";
+        if(splitZone) {
+            splitZone.style.display = "block";
+            splitZone.style.width = "50%";
+        }
     } else {
-        // დაბრუნება სრულ ეკრანზე
-        hostWrap.style.width = "100%";
-        guestBox.style.width = "0%";
-        setTimeout(() => { guestBox.style.display = "none"; }, 400);
+        // დაბრუნება სრულ ეკრანზე (ჰოსტი 100%)
+        if(singleZone) singleZone.style.width = "100%";
+        if(splitZone) splitZone.style.display = "none";
     }
 }
