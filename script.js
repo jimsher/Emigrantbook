@@ -3343,17 +3343,18 @@ function loadInvoiceHistory() {
             const row = document.createElement('tr');
             row.style.borderBottom = "1px solid #eee";
             
-            row.innerHTML = `
-                <td style="padding: 12px; color: #666;">${data.date}</td>
-                <td style="padding: 12px; font-weight: 600;">${data.customer}</td>
-                <td style="padding: 12px; color: #0a1435;">${data.invoice_no || '---'}</td>
-                <td style="padding: 12px; text-align: right; font-weight: bold; color: #27ae60;">${data.amount} €</td>
-                <td style="padding: 12px; text-align: center;">
-                    <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">
-                        ✅ გაიგზავნა
-                    </span>
-                </td>
-            `;
+            // ამ ნაწილს ჩაასწორებ შენს loadInvoiceHistory ფუნქციაში:
+row.innerHTML = `
+    <td style="padding: 15px; color: #aaa;">${data.date}</td>
+    <td style="padding: 15px; font-weight: bold; color: white;">${data.customer}</td>
+    <td style="padding: 15px; color: var(--gold); font-family: monospace;">${data.invoice_no || '---'}</td>
+    <td style="padding: 15px; text-align: right; font-weight: bold; color: #4ade80;">${data.amount} €</td>
+    <td style="padding: 15px; text-align: center;">
+        <span style="background: rgba(74, 222, 128, 0.1); color: #4ade80; padding: 4px 10px; border-radius: 6px; font-size: 10px; border: 1px solid rgba(74, 222, 128, 0.2);">
+            SENT
+        </span>
+    </td>
+`;
             tableBody.appendChild(row);
         });
     });
