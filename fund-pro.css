@@ -1,81 +1,107 @@
-/* 1. ეკრანის "გაქცევის" საწინააღმდეგო ფუნდამენტი */
+/* 1. გლობალური ფიქსაცია - რომ ეკრანმა არ ითამაშოს */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* ჰორიზონტალურ სქროლს საერთოდ კრძალავს */
-    position: relative;
+    overflow-x: hidden; /* ბლოკავს ჰორიზონტალურ სქროლს */
+    background-color: #0a183d; /* შენი მუქი ფონი სქრინშოტიდან */
 }
 
-/* 2. კონტეინერების შეზღუდვა */
 .container {
     width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px; /* გვერდებზე პატარა დაშორება მობილურისთვის */
-    box-sizing: border-box; /* რომ padding-მა არ გაზარდოს სიგანე */
+    padding: 0 15px;
 }
 
-/* 3. მობილური Hero სექცია */
+/* 2. Hero Section - ტექსტების ზომის გასწორება */
 .fund-hero {
-    height: auto;
-    min-height: 400px;
-    padding: 60px 0;
+    padding: 40px 0;
+    text-align: left; /* სქრინშოტის მიხედვით */
 }
 
-.hero-content h1 {
-    font-size: 2rem; /* მობილურზე დიდი ტექსტი არ გვინდა */
-    line-height: 1.2;
+.fund-hero h1 {
+    font-size: 2.2rem; /* შემცირებული ზომა მობილურისთვის */
+    line-height: 1.1;
+    color: #ffffff;
+    margin-bottom: 15px;
+    word-wrap: break-word;
 }
 
-/* 4. სტატისტიკის ბლოკები მობილურზე (ერთ სვეტად) */
-@media (max-width: 768px) {
-    .fund-stats {
-        grid-template-columns: 1fr; /* ერთმანეთის ქვეშ */
-        margin-top: -30px;
-        gap: 15px;
-    }
-
-    .hero-btns {
-        flex-direction: column; /* ღილაკები ერთმანეთის ქვეშ */
-        gap: 10px;
-    }
-
-    .hero-content h1 {
-        font-size: 1.8rem;
-    }
+.accent-text {
+    color: #ffcc00; /* ყვითელი აქცენტი */
+    display: block; /* ახალ ხაზზე გადასვლა უკეთესი იერისთვის */
 }
 
-/* 5. კამპანიის ქარდები მობილურზე */
-.case-grid {
+.fund-hero p {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 25px;
+}
+
+/* 3. ღილაკების გასწორება - რომ არ გაიჭრას */
+.hero-btns {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    flex-direction: column; /* მობილურზე ერთმანეთის ქვეშ */
+    gap: 12px;
 }
 
-.case-card {
+.btn-primary, .btn-secondary {
     width: 100%;
-    max-width: 100%; /* ქარდმა არასდროს გაასწროს ეკრანს */
-    box-sizing: border-box;
+    text-align: center;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
 }
 
-/* 6. მოდალური ფანჯრის მობილური ვერსია */
-@media (max-width: 600px) {
-    .modal-content {
-        width: 95%;
-        padding: 20px;
-        margin: 20% auto;
-    }
-    
-    .method-options {
-        grid-template-columns: 1fr; /* გადახდის მეთოდები ერთმანეთის ქვეშ */
-    }
+/* 4. სტატისტიკის ბარათები (თეთრი ბლოკები) */
+.fund-stats {
+    display: flex;
+    flex-direction: column; /* რომ არ გავიდეს ეკრანიდან */
+    gap: 15px;
+    margin-top: 20px;
 }
 
-/* სურათები რომ არ "გაიჭრას" */
-img, .case-img {
-    max-width: 100%;
-    display: block;
+.stat-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100% !important; /* მკაცრი სიგანე */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.stat-info h3 {
+    font-size: 1.8rem;
+    color: #0a183d;
+    margin: 0;
+}
+
+.stat-info p {
+    color: #7f8c8d;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.stat-icon img {
+    width: 40px;
+    height: auto;
+}
+
+/* 5. ქეისების ბარათები */
+.case-card {
+    background: #fff;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    width: 100%;
 }
 
 
