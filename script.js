@@ -3232,3 +3232,67 @@ window.addEventListener('load', () => {
         });
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ინვოისი მეილზე გასაგზავნი შოპინგი
+async function sendRealInvoice() {
+    const btn = document.getElementById('send_inv_btn');
+    const name = document.getElementById('inv_customer_name').value;
+    const email = document.getElementById('inv_customer_email').value;
+    const desc = document.getElementById('inv_product_desc').value;
+    const amount = document.getElementById('inv_amount').value;
+    const date = new Date().toLocaleDateString('ka-GE');
+    const inv_no = "EB-" + Math.floor(1000 + Math.random() * 9000);
+
+    if(!name || !email || !amount) return alert("შეავსეთ სახელი, მეილი და თანხა!");
+
+    btn.disabled = true;
+    btn.innerHTML = "იგზავნება...";
+
+    // მონაცემები EmailJS-ისთვის
+    const templateParams = {
+        to_name: name,
+        to_email: email,
+        order_id: inv_no,
+        order_date: date,
+        product_description: desc,
+        total_price: amount + " €",
+        reply_to: "support@emigrantbook.com"
+    };
+
+    try {
+        // 'YOUR_SERVICE_ID' და 'YOUR_TEMPLATE_ID' უნდა აიღო EmailJS-ის პანელიდან
+        await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
+        
+        alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
+        
+        // Firebase-ში ჩაწერა ისტორიისთვის
+        db.ref('sent_invoices').push({
+            customer: name,
+            email: email,
+            amount: amount,
+            date: date,
+            status: "Sent"
+        });
+
+    } catch (error) {
+        console.error("FAILED...", error);
+        alert("შეცდომა გაგზავნისას!");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
+    }
+}
