@@ -3250,6 +3250,7 @@ window.addEventListener('load', () => {
 // ინვოისი მეილზე გასაგზავნი შოპინგი
 // 1. ინიციალიზაცია (ეს აუცილებელია!)
 // 1. EmailJS-ის ინიციალიზაცია (აუცილებელია გაშვებისას)
+// 1. ინიციალიზაცია (შენი Public Key-თ)
 emailjs.init("oZOT_SZC1MfIZnil8");
 
 async function sendRealInvoice() {
@@ -3267,31 +3268,31 @@ async function sendRealInvoice() {
 
     // ვალიდაცია
     if(!name || !email || !amount) {
-        alert("გთხოვთ, შეავსოთ მინიმუმ სახელი, მეილი და თანხა!");
+        alert("გთხოვთ, შეავსოთ სახელი, მეილი და თანხა!");
         return;
     }
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> იგზავნება...';
 
-    // პარამეტრები, რომლებიც ემთხვევა შენს EmailJS შაბლონს
+    // პარამეტრები შენი EmailJS შაბლონისთვის
     const templateParams = {
         to_name: name,
         to_email: email,
         order_id: inv_no,
         order_date: date,
-        product_description: desc || "სტანდარტული პაკეტი",
+        product_description: desc || "შენაძენი",
         total_price: amount + " €",
         reply_to: "support@emigrantbook.com"
     };
 
     try {
-        // გაგზავნა შენი რეალური ID-ებით
+        // შენი ზუსტი Service ID და Template ID
         await emailjs.send('service_hjiqge4', 'template_50xhnnm', templateParams);
         
-        alert("✅ ინვოისი წარმატებით გაეგზავნა მომხმარებელს: " + name);
+        alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
         
-        // სურვილისამებრ: Firebase-ში შენახვა ისტორიისთვის
+        // Firebase-ში ჩაწერა (თუ ბაზა ჩართულია)
         if(typeof db !== 'undefined') {
             db.ref('sent_invoices').push({
                 customer: name,
@@ -3303,13 +3304,13 @@ async function sendRealInvoice() {
             });
         }
 
-        // ველების გასუფთავება
+        // ინპუტების გასუფთავება წარმატების შემდეგ
         document.getElementById('inv_product_desc').value = "";
         document.getElementById('inv_amount').value = "";
 
     } catch (error) {
-        console.error("FAILED...", error);
-        alert("შეცდომა გაგზავნისას. შეამოწმეთ EmailJS-ის კონსოლი.");
+        console.error("EmailJS Error:", error);
+        alert("შეცდომა გაგზავნისას: " + (error.text || "გადაამოწმეთ EmailJS პანელი"));
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
