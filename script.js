@@ -3278,7 +3278,7 @@ async function sendRealInvoice() {
 
     try {
         // აქ ჩავწერე შენი სურათიდან აღებული ზუსტი ID-ები
-        await emailjs.send('service_hjiqge4', '__ejs-ტესტ-ფოსტის-სერვისი__', templateParams);
+        await emailjs.send('service_hjiqge4', '__ejs-test-mail-service__', templateParams);
         
         alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
         
