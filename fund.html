@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <style>
         /* --- ფუნდამენტური ფიქსაცია --- */
@@ -235,6 +236,21 @@
             position: relative;
         }
         .bank-info:active { background: #e2e6e9; }
+
+        /* ჩამატებულია ქვითრის სტილი */
+        .receipt-label {
+            display: block;
+            padding: 15px;
+            background: #f1f3f5;
+            border: 2px dashed #adb5bd;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #495057;
+        }
+        .receipt-label i { font-size: 20px; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -293,6 +309,12 @@
             <h2>შემოწირულობა</h2>
             <input type="number" placeholder="თანხა (₾)" id="amount">
             <input type="text" placeholder="თქვენი სახელი" id="name">
+            
+            <label for="receiptFile" class="receipt-label" id="fileLabel">
+                <i class="fas fa-file-invoice"></i> ატვირთეთ გადახდის ქვითარი (Screenshot)
+            </label>
+            <input type="file" id="receiptFile" accept="image/*" hidden onchange="handleFileSelect(this)">
+
             <button class="btn btn-main" id="confirm-pay-btn" onclick="processPayment()">დადასტურება</button>
             <button class="btn" style="color: #999;" onclick="toggleModal('donateModal', false)">დახურვა</button>
         </div>
@@ -326,20 +348,29 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.database();
+        const storage = firebase.storage(); // Storage ინიციალიზაცია
 
-        // 2. ფუნქციები
+        let selectedFile = null;
+
         function toggleModal(modalId, show) {
             document.getElementById(modalId).style.display = show ? 'flex' : 'none';
         }
 
-        // რეკვიზიტების კოპირება
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                document.getElementById('fileLabel').innerHTML = "✅ ფოტო არჩეულია: " + selectedFile.name;
+                document.getElementById('fileLabel').style.borderColor = "#27ae60";
+            }
+        }
+
         function copyIban(text) {
             navigator.clipboard.writeText(text).then(() => {
                 alert("ანგარიშის ნომერი დაკოპირდა!");
             });
         }
 
-        // შემოწირულობის გაგზავნა - უსაფრთხო ვერსია (Pending სტატუსით)
+        // შემოწირულობის გაგზავნა - ქვითრის ატვირთვით
         async function processPayment() {
             const amountInp = document.getElementById('amount');
             const nameInp = document.getElementById('name');
@@ -353,67 +384,68 @@
                 return;
             }
 
-            payBtn.disabled = true;
-            payBtn.innerText = "იგზავნება...";
+            if(!selectedFile) {
+                alert("გთხოვთ ატვირთოთ გადახდის დამადასტურებელი ქვითარი!");
+                return;
+            }
 
-            const newDonation = {
-                name: name,
-                amount: amount,
-                status: "pending", // ელოდება ადმინისტრატორის დასტურს
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
+            payBtn.disabled = true;
+            payBtn.innerText = "მიმდინარეობს ატვირთვა...";
 
             try {
-                // ა) ვამატებთ მოთხოვნას pending_donations-ში
+                // ა) ქვითრის ატვირთვა Storage-ში
+                const storageRef = storage.ref('fund_receipts/' + Date.now() + "_" + name);
+                const uploadTask = await storageRef.put(selectedFile);
+                const receiptUrl = await uploadTask.ref.getDownloadURL();
+
+                // ბ) ვამატებთ მოთხოვნას pending_donations-ში ქვითრის ლინკით
+                const newDonation = {
+                    name: name,
+                    amount: amount,
+                    receipt: receiptUrl, // ქვითრის ლინკი
+                    status: "pending",
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
                 await db.ref('pending_donations').push(newDonation);
 
-                alert("მოთხოვნა გაიგზავნა! გთხოვთ, გადარიცხოთ თანხა რეკვიზიტებზე. თქვენი დახმარება ისტორიაში აისახება ადმინისტრატორის დასტურის შემდეგ.");
+                alert("მოთხოვნა გაიგზავნა ქვითართან ერთად! ადმინისტრატორი გადაამოწმებს და თქვენი სახელი მალე გამოჩნდება ისტორიაში.");
                 
                 toggleModal('donateModal', false);
-                toggleModal('bankModal', true); // ავტომატურად ვუხსნით რეკვიზიტებს
-
+                selectedFile = null;
+                document.getElementById('fileLabel').innerHTML = '<i class="fas fa-file-invoice"></i> ატვირთეთ გადახდის ქვითარი (Screenshot)';
                 amountInp.value = "";
                 nameInp.value = "";
             } catch (error) {
                 console.error(error);
-                alert("შეცდომა ჩარიცხვისას.");
+                alert("შეცდომა გაგზავნისას.");
             } finally {
                 payBtn.disabled = false;
                 payBtn.innerText = "დადასტურება";
             }
         }
 
-        // მონაცემების რეალურ დროში მოსმენა (Approved მხოლოდ)
         function initFundRealtime() {
-            // საერთო სტატისტიკის მოსმენა (მეტამონაცემებიდან)
             db.ref('fund_metadata').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     const raised = data.total_raised || 0;
                     const goal = data.goal || 500000;
-                    
                     document.getElementById('raised-display').innerText = raised.toLocaleString() + " ₾";
                     document.getElementById('collected-text').innerText = "შეგროვდა: " + raised.toLocaleString() + " ₾";
-                    
                     const percent = Math.min((raised / goal) * 100, 100);
                     document.getElementById('case-progress').style.width = percent + "%";
                 }
             });
 
-            // ბოლო 5 დადასტურებული შემოწირულობის მოსმენა
             db.ref('approved_donations').orderByChild('timestamp').limitToLast(5).on('value', (snapshot) => {
                 const list = document.getElementById('donation-history');
                 list.innerHTML = "";
-                
                 let donations = [];
-                snapshot.forEach(child => {
-                    donations.unshift(child.val());
-                });
-
+                snapshot.forEach(child => { donations.unshift(child.val()); });
                 if(donations.length === 0) {
                     list.innerHTML = "<p style='color:gray; font-size:12px; text-align:center;'>ჩანაწერები ჯერ არ არის</p>";
                 }
-
                 donations.forEach(don => {
                     const date = don.timestamp ? new Date(don.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "ახლახან";
                     const li = document.createElement('li');
@@ -430,12 +462,7 @@
             });
         }
 
-        // გაშვება
         initFundRealtime();
-
-        window.addEventListener('scroll', () => {
-            if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
-        });
     </script>
 </body>
 </html>
