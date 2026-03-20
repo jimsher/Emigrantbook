@@ -650,10 +650,11 @@ window.deleteReply = function(postId, commentId, replyId) {
 
 
 function openMessenger() {
-    stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     ui.style.display = 'flex';
     ui.style.backgroundColor = '#000';
+
+  stopMainFeedVideos();
 
     const list = document.getElementById('chatList');
     list.innerHTML = "";
