@@ -654,6 +654,7 @@ function openMessenger() {
     ui.style.display = 'flex';
     ui.style.backgroundColor = '#000';
 
+}
   stopMainFeedVideos();
 
     const list = document.getElementById('chatList');
