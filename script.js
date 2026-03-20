@@ -646,12 +646,15 @@ window.deleteReply = function(postId, commentId, replyId) {
 
  
 
-
 function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     
-    // UI-ის გახსნა Meta style-ით
+    // 🛑 დამატებულია: აპლიკაციის ხატულაზე (Badge) ციფრის განულება გახსნისას
+    if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(0).catch(err => console.log(err));
+    }
+
     if (ui) {
         ui.style.display = 'flex';
         ui.style.flexDirection = 'column';
@@ -660,7 +663,6 @@ function openMessenger() {
     const list = document.getElementById('chatList');
     if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
     
-    // შემოწმება: არის თუ არა იუზერი სისტემაში
     if (!auth.currentUser) return;
 
     db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
@@ -678,17 +680,16 @@ function openMessenger() {
             const item = document.createElement('div');
             item.className = 'chat-list-item';
             
-            // მომხმარებელზე დაჭერის ლოგიკა (როგორც ადრე)
             item.onclick = () => {
                 db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-                document.getElementById('messengerUI').style.display = 'none'; // მალავს სიას
+                document.getElementById('messengerUI').style.display = 'none';
                 startChat(uid, data.name, data.photo);
             };
             
-            // 🛑 Meta Design: ბოლო მესიჯის, დროის და ბეიჯის ლოგიკა
             db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
                 const lastRead = readSnap.val() || 0;
                 
+                // 🛑 .on('value'...) გამოყენებულია, რომ რეალურ დროში მოვიდეს პუში
                 db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
                     let lastMsg = "Tap to chat in Impact";
                     let msgTimeFormatted = "";
@@ -700,36 +701,31 @@ function openMessenger() {
                         lastMsg = msgData.text || "📷 Voice/Media";
                         const ts = msgData.ts;
 
-                        // 🛑 Meta Design: დროის ფორმატირება
                         const msgDate = new Date(ts);
                         const now = new Date();
                         const isToday = msgDate.toDateString() === now.toDateString();
                         
                         if (isToday) {
-                            // თუ დღესაა -> "8:22 PM"
                             msgTimeFormatted = msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
                         } else {
                             const isThisYear = msgDate.getFullYear() === now.getFullYear();
                             if (isThisYear) {
-                                // თუ ამ წელსაა -> "Wed" ან "Mar 15"
                                 msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                             } else {
-                                // თუ სხვა წელია -> "15/03/23"
                                 msgTimeFormatted = msgDate.toLocaleDateString('ka-GE', { year: '2-digit', month: '2-digit', day: '2-digit' });
                             }
                         }
 
-                        // შემოწმება: წაუკითხავია თუ არა (თუ მე არ გამიგზავნია და ბოლო ნახვაზე გვიანაა)
+                        // 🛑 პუშ ნოტიფიკაციის და ბეიჯის მთავარი ლოგიკა
                         if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
                             isUnread = true;
                         }
                     }
 
-                    // 🛑 Meta DESIGN: ონლაინ სტატუსის შემოწმება (Presence)
-                    db.ref(`users/${uid}/presence`).once('value', presenceSnap => {
+                    // 🛑 Presence: .on('value') რომ ეგრევე აინთოს მწვანე სტატუსი
+                    db.ref(`users/${uid}/presence`).on('value', presenceSnap => {
                         const isOnline = presenceSnap.val() === 'online';
 
-                        // 🛑 Meta DESIGN: HTML-ის გენერაცია
                         item.innerHTML = `
                             <div class="ava-container">
                                 <img src="${data.photo || 'https://ui-avatars.com/api/?name='+data.name}" class="chat-list-ava">
