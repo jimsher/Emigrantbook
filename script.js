@@ -650,14 +650,15 @@ function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     
-    // 🛑 დამატებულია: აპლიკაციის ხატულაზე (Badge) ციფრის განულება გახსნისას
+    // 🛑 დავაბრუნე: აპლიკაციის ხატულაზე (Badge) ნიშნის განულება
     if ('setAppBadge' in navigator) {
-        navigator.setAppBadge(0).catch(err => console.log(err));
+        navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
     }
 
     if (ui) {
         ui.style.display = 'flex';
         ui.style.flexDirection = 'column';
+        ui.style.backgroundColor = '#000';
     }
 
     const list = document.getElementById('chatList');
@@ -671,7 +672,7 @@ function openMessenger() {
         const followers = snap.val();
         
         if(!followers) { 
-            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats in Impact yet.</p>";
+            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
             return; 
         }
 
@@ -679,6 +680,9 @@ function openMessenger() {
             const chatId = getChatId(auth.currentUser.uid, uid);
             const item = document.createElement('div');
             item.className = 'chat-list-item';
+            
+            // სტილი მესენჯერის დიზაინით
+            item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
             
             item.onclick = () => {
                 db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
@@ -689,57 +693,52 @@ function openMessenger() {
             db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
                 const lastRead = readSnap.val() || 0;
                 
-                // 🛑 .on('value'...) გამოყენებულია, რომ რეალურ დროში მოვიდეს პუში
+                // 🛑 .on('value') - აუცილებელია პუშების რეალურ დროში დასაჭერად
                 db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
-                    let lastMsg = "Tap to chat in Impact";
+                    let lastMsg = "Tap to chat";
                     let msgTimeFormatted = "";
                     let isUnread = false;
 
                     if(mSnap.exists()) {
                         const msgs = mSnap.val();
                         const msgData = Object.values(msgs)[0];
-                        lastMsg = msgData.text || "📷 Voice/Media";
+                        lastMsg = msgData.text || "📷 Media/Voice";
                         const ts = msgData.ts;
 
+                        // დროის ფორმატირება (Meta Style)
                         const msgDate = new Date(ts);
                         const now = new Date();
-                        const isToday = msgDate.toDateString() === now.toDateString();
-                        
-                        if (isToday) {
-                            msgTimeFormatted = msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        if (msgDate.toDateString() === now.toDateString()) {
+                            msgTimeFormatted = msgDate.getHours() + ":" + (msgDate.getMinutes() < 10 ? '0' : '') + msgDate.getMinutes();
                         } else {
-                            const isThisYear = msgDate.getFullYear() === now.getFullYear();
-                            if (isThisYear) {
-                                msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                            } else {
-                                msgTimeFormatted = msgDate.toLocaleDateString('ka-GE', { year: '2-digit', month: '2-digit', day: '2-digit' });
-                            }
+                            msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }
 
-                        // 🛑 პუშ ნოტიფიკაციის და ბეიჯის მთავარი ლოგიკა
+                        // 🛑 შენი ორიგინალი პუშის და ბეიჯის ლოგიკა
                         if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
                             isUnread = true;
                         }
                     }
 
-                    // 🛑 Presence: .on('value') რომ ეგრევე აინთოს მწვანე სტატუსი
+                    // 🛑 Presence: ონლაინ სტატუსის მწვანე წერტილი
                     db.ref(`users/${uid}/presence`).on('value', presenceSnap => {
                         const isOnline = presenceSnap.val() === 'online';
 
                         item.innerHTML = `
-                            <div class="ava-container">
-                                <img src="${data.photo || 'https://ui-avatars.com/api/?name='+data.name}" class="chat-list-ava">
-                                <div class="status-dot-online" style="display: ${isOnline ? 'block' : 'none'};"></div>
+                            <div style="position:relative; flex-shrink:0;">
+                                <img src="${data.photo || 'https://ui-avatars.com/api/?name='+data.name}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
+                                <div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#4ade80; border-radius:50%; border:3px solid #000; display:${isOnline ? 'block' : 'none'};"></div>
+                                
+                                <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
                             </div>
-                            <div class="chat-info">
-                                <span class="chat-user-name">${data.name}</span>
-                                <div class="chat-last-msg-box ${isUnread ? 'unread-msg' : ''}">
-                                    <span>${lastMsg}</span>
-                                    <span>·</span>
-                                    <span>${msgTimeFormatted}</span>
+                            <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
+                                <b style="color:white; font-size:16px; margin-bottom:2px;">${data.name}</b>
+                                <div style="display:flex; align-items:center; gap:5px;">
+                                    <span style="color:${isUnread ? 'white' : '#888'}; font-weight:${isUnread ? 'bold' : 'normal'}; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${lastMsg}</span>
+                                    <span style="color:#888; font-size:12px;"> · ${msgTimeFormatted}</span>
                                 </div>
                             </div>
-                            <div class="unread-badge" style="display: ${isUnread ? 'flex' : 'none'};">!</div>
+                            <div style="width:12px; height:12px; background:#0084ff; border-radius:50%; display:${isUnread ? 'block' : 'none'}; margin-right:5px;"></div>
                         `;
                     });
                 });
