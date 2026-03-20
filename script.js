@@ -647,62 +647,113 @@ window.deleteReply = function(postId, commentId, replyId) {
  
 
 
-
-
 function openMessenger() {
+    stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
-    ui.style.display = 'flex';
-    ui.style.backgroundColor = '#000';
-
-
-  stopMainFeedVideos();
+    
+    // UI-ის გახსნა Meta style-ით
+    if (ui) {
+        ui.style.display = 'flex';
+        ui.style.flexDirection = 'column';
+    }
 
     const list = document.getElementById('chatList');
-    list.innerHTML = "";
+    if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
     
+    // შემოწმება: არის თუ არა იუზერი სისტემაში
+    if (!auth.currentUser) return;
+
     db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
+        if (!list) return;
         list.innerHTML = "";
         const followers = snap.val();
-        if(followers) {
-            Object.entries(followers).forEach(([uid, data]) => {
-                const chatId = getChatId(auth.currentUser.uid, uid);
-                const item = document.createElement('div');
-                item.className = 'chat-list-item';
-                item.style = "border:none; background:#000; padding:10px 15px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
+        
+        if(!followers) { 
+            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats in Impact yet.</p>";
+            return; 
+        }
+
+        Object.entries(followers).forEach(([uid, data]) => {
+            const chatId = getChatId(auth.currentUser.uid, uid);
+            const item = document.createElement('div');
+            item.className = 'chat-list-item';
+            
+            // მომხმარებელზე დაჭერის ლოგიკა (როგორც ადრე)
+            item.onclick = () => {
+                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
+                document.getElementById('messengerUI').style.display = 'none'; // მალავს სიას
+                startChat(uid, data.name, data.photo);
+            };
+            
+            // 🛑 Meta Design: ბოლო მესიჯის, დროის და ბეიჯის ლოგიკა
+            db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
+                const lastRead = readSnap.val() || 0;
                 
-                item.onclick = () => {
-                    db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-                    document.getElementById('messengerUI').style.display = 'none';
-                    startChat(uid, data.name, data.photo);
-                };
-                
-                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
-                    const lastRead = readSnap.val() || 0;
-                    db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
-                        let lastMsg = "No messages yet";
-                        let showBadge = false;
-                        if(mSnap.exists()) {
-                            const msgs = mSnap.val();
-                            const msgData = Object.values(msgs)[0];
-                            lastMsg = msgData.text || "📷 Voice/Media";
-                            if (msgData.senderId !== auth.currentUser.uid && msgData.ts > lastRead) showBadge = true;
+                db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
+                    let lastMsg = "Tap to chat in Impact";
+                    let msgTimeFormatted = "";
+                    let isUnread = false;
+
+                    if(mSnap.exists()) {
+                        const msgs = mSnap.val();
+                        const msgData = Object.values(msgs)[0];
+                        lastMsg = msgData.text || "📷 Voice/Media";
+                        const ts = msgData.ts;
+
+                        // 🛑 Meta Design: დროის ფორმატირება
+                        const msgDate = new Date(ts);
+                        const now = new Date();
+                        const isToday = msgDate.toDateString() === now.toDateString();
+                        
+                        if (isToday) {
+                            // თუ დღესაა -> "8:22 PM"
+                            msgTimeFormatted = msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                        } else {
+                            const isThisYear = msgDate.getFullYear() === now.getFullYear();
+                            if (isThisYear) {
+                                // თუ ამ წელსაა -> "Wed" ან "Mar 15"
+                                msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            } else {
+                                // თუ სხვა წელია -> "15/03/23"
+                                msgTimeFormatted = msgDate.toLocaleDateString('ka-GE', { year: '2-digit', month: '2-digit', day: '2-digit' });
+                            }
                         }
+
+                        // შემოწმება: წაუკითხავია თუ არა (თუ მე არ გამიგზავნია და ბოლო ნახვაზე გვიანაა)
+                        if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
+                            isUnread = true;
+                        }
+                    }
+
+                    // 🛑 Meta DESIGN: ონლაინ სტატუსის შემოწმება (Presence)
+                    db.ref(`users/${uid}/presence`).once('value', presenceSnap => {
+                        const isOnline = presenceSnap.val() === 'online';
+
+                        // 🛑 Meta DESIGN: HTML-ის გენერაცია
                         item.innerHTML = `
-                            <div style="position:relative;">
-                                <img src="${data.photo}" class="chat-list-ava">
-                                <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; display:${showBadge ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
+                            <div class="ava-container">
+                                <img src="${data.photo || 'https://ui-avatars.com/api/?name='+data.name}" class="chat-list-ava">
+                                <div class="status-dot-online" style="display: ${isOnline ? 'block' : 'none'};"></div>
                             </div>
-                            <div style="display:flex; flex-direction:column; overflow:hidden;">
-                                <b style="color:white; font-size:15px;">${data.name}</b>
-                                <span style="color:${showBadge ? 'white' : '#888'}; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">${lastMsg}</span>
-                            </div>`;
+                            <div class="chat-info">
+                                <span class="chat-user-name">${data.name}</span>
+                                <div class="chat-last-msg-box ${isUnread ? 'unread-msg' : ''}">
+                                    <span>${lastMsg}</span>
+                                    <span>·</span>
+                                    <span>${msgTimeFormatted}</span>
+                                </div>
+                            </div>
+                            <div class="unread-badge" style="display: ${isUnread ? 'flex' : 'none'};">!</div>
+                        `;
                     });
                 });
-                list.appendChild(item);
             });
-        } else { list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No contacts</p>"; }
+            list.appendChild(item);
+        });
     });
 }
+
+
 
 function startChat(uid, name, photo) {
   setAppBadge(0);
