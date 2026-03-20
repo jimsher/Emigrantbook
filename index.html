@@ -37,6 +37,157 @@
 
  
  <style>
+
+/* --- IMPACT Messenger: Meta Design --- */
+
+/* მთავარი კონტეინერი (Background: სუფთა შავი, როგორც ფოტოზე) */
+#messengerUI {
+    background: #000 !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000000;
+    display: none; /* JS გამოაჩენს */
+    flex-direction: column;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; /* სისტემური ფონტი */
+}
+
+/* მესენჯერის ჰედერი */
+.impact-messenger-header {
+    padding: 15px 20px;
+    background: #000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.impact-messenger-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+}
+
+/* ჩატების სია */
+#chatList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    background: #000;
+}
+
+/* თითოეული ჩატის ბლოკი (Padding: როგორც ფოტოზე) */
+.chat-list-item {
+    display: flex !important;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px !important;
+    background: #000 !important;
+    border: none !important;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chat-list-item:hover {
+    background: #111 !important; /* ნაზი ჰოვერი */
+}
+
+/* ავატარის კონტეინერი (სტატუსისთვის) */
+.ava-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* ავატარის ფოტო (Meta size: ~55px) */
+.chat-list-ava {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: none;
+}
+
+/* ონლაინ სტატუსის მწვანე წერტილი (Offline -> დამალულია) */
+.status-dot-online {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: #4ade80; /* Meta green */
+    border-radius: 50%;
+    border: 2px solid #000; /* შავი კანტი */
+    display: none; /* JS ჩართავს */
+}
+
+/* ტექსტური ინფორმაცია (ცენტრში) */
+.chat-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* მომხმარებლის სახელი */
+.chat-user-name {
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ბოლო მესიჯი და დრო (Gray text) */
+.chat-last-msg-box {
+    color: #888;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* როცა მესიჯი წაუკითხავია (Bolder, Whites text) */
+.unread-msg {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+/* წაუკითხავი მესიჯების ბეიჯი (Red dot - Meta style) */
+.unread-badge {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    background: #ff4d4d;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    display: none; /* JS ჩართავს */
+    align-items: center;
+    justify-content: center;
+    border: 2px solid black;
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+
+  /*________________________________*/
 /* კომენტარების ფანჯარას ვაძლევთ ყველაზე მაღალ პრიორიტეტს */
 #commentsUI {
     z-index: 2000005 !important; /* ეს უნდა იყოს მენიუზე მეტი */
