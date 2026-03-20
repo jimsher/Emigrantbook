@@ -16,7 +16,7 @@ if (!firebase.apps.length) {
 const db = firebase.database();
 const auth = firebase.auth();
 const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
-
+const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
 
 
 if ('serviceWorker' in navigator) {
@@ -411,12 +411,17 @@ function declineCall() {
  document.getElementById('infoUI').style.display = 'flex';
  }
  function initStripePayment(url) {
- const user = auth.currentUser;
- if (!user) return alert("Please Login");
- const finalUrl = url + "?client_reference_id=" + user.uid;
- document.getElementById('walletMain').style.display = 'none';
- document.getElementById('paymentPending').style.display = 'block';
- window.open(finalUrl, "_blank");
+  const user = auth.currentUser;
+  if (!user) return alert("Please Login");
+
+  // აქ 'url' უნდა იყოს შენი ახალი LIVE ლინკი (რომელსაც არ აქვს სიტყვა test_)
+  const finalUrl = url + "?client_reference_id=" + user.uid;
+
+  document.getElementById('walletMain').style.display = 'none';
+  document.getElementById('paymentPending').style.display = 'block';
+
+  // ეს გადაგიყვანს პირდაპირ Stripe-ის რეალურ გვერდზე
+  window.location.href = finalUrl; 
  }
  function canAfford(cost) {
  if (myAkho >= cost) return true;
