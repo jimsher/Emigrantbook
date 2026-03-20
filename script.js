@@ -672,6 +672,7 @@ function openMessenger() {
                 
                 item.onclick = () => {
                     db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
+                    document.getElementById('messengerUI').style.display = 'none';
                     startChat(uid, data.name, data.photo);
                 };
                 
