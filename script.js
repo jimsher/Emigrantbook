@@ -685,9 +685,10 @@ function openMessenger() {
             item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
             
             item.onclick = () => {
-                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-                document.getElementById('messengerUI').style.display = 'none';
-                startChat(uid, data.name, data.photo);
+            db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
+            document.getElementById('messengerUI').style.display = 'none';
+            document.getElementById('messengerCloseLogo').onclick = () => { document.getElementById('messengerUI').style.display = 'none'; };
+            startChat(uid, data.name, data.photo);
             };
             
             db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
