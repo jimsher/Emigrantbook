@@ -647,130 +647,91 @@ window.deleteReply = function(postId, commentId, replyId) {
  
 
 
+function loadMessages(chatId) {
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+    const myUid = auth.currentUser.uid;
 
-  function openMessenger() {
-    stopMainFeedVideos();
-    const ui = document.getElementById('messengerUI');
-    
-    // აპლიკაციის Badge-ის განულება
-    if ('setAppBadge' in navigator) {
-        navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
-    }
+    // 1. ჯერ ვიგებთ ადრესატის ფოტოს (Seen-ისთვის და მესიჯის ავატარისთვის)
+    db.ref(`users/${currentChatId}`).once('value', targetSnap => {
+        const targetData = targetSnap.val();
+        const targetPhoto = (targetData && targetData.photo) ? targetData.photo : 'token-avatar.png';
 
-    if (ui) {
-        ui.style.display = 'flex';
-        ui.style.flexDirection = 'column';
-        ui.style.backgroundColor = '#000';
-    }
-
-    const list = document.getElementById('chatList');
-    if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
-    
-    if (!auth.currentUser) return;
-
-    // ვუსმენთ 'following' სიას Firebase-ში
-    db.ref(`users/${auth.currentUser.uid}/following`).on('value', async snap => {
-        if (!list) return;
-        const followers = snap.val();
-        
-        if(!followers) { 
-            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
-            return; 
-        }
-
-        // --- 📊 დახარისხების ლოგიკა (Sorting) ---
-        let chatArray = [];
-        const promises = Object.entries(followers).map(async ([uid, data]) => {
-            const chatId = getChatId(auth.currentUser.uid, uid);
-            // ვიღებთ ბოლო მესიჯს, რომ გავიგოთ დრო (ts) სორტირებისთვის
-            const mSnap = await db.ref(`messages/${chatId}`).limitToLast(1).once('value');
-            let lastTs = 0;
-            if (mSnap.exists()) {
-                const msgs = mSnap.val();
-                lastTs = Object.values(msgs)[0].ts;
-            }
-            chatArray.push({ uid, data, lastTs });
-        });
-
-        // ველოდებით ყველა ჩატის მონაცემის წამოღებას
-        await Promise.all(promises);
-
-        // ვახარისხებთ: ვინც ბოლოს მოგწერა, ის პირველია
-        chatArray.sort((a, b) => b.lastTs - a.lastTs);
-
-        list.innerHTML = ""; // ვასუფთავებთ სიას გამოჩენამდე
-
-        chatArray.forEach(({ uid, data }) => {
-            const chatId = getChatId(auth.currentUser.uid, uid);
-            const item = document.createElement('div');
-            item.className = 'chat-list-item';
-            item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
+        // 2. ვუსმენთ მესიჯებს რეალურ დროში
+        db.ref(`messages/${chatId}`).on('value', snap => {
+            if (!currentChatId || getChatId(myUid, currentChatId) !== chatId) return;
             
-            item.onclick = () => {
-                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-                document.getElementById('messengerUI').style.display = 'none';
-                document.getElementById('messengerCloseLogo').onclick = () => { 
-                    document.getElementById('messengerUI').style.display = 'none'; 
-                };
-                startChat(uid, data.name, data.photo);
-            };
-            
-            // ვუსმენთ წაკითხვის სტატუსს (Badge-ისთვის)
-            db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
-                const lastRead = readSnap.val() || 0;
+            container.innerHTML = "";
+            const msgs = snap.val();
+            if (!msgs) return;
+
+            let lastTimestamp = 0;
+            const msgEntries = Object.entries(msgs);
+
+            msgEntries.forEach(([mId, msg], index) => {
+                const isMine = msg.senderId === myUid;
                 
-                // ვუსმენთ ბოლო მესიჯს რეალურ დროში (Real-time updates)
-                db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
-                    let lastMsg = "Tap to chat";
-                    let msgTimeFormatted = "";
-                    let isUnread = false;
+                // --- 📅 დროის გამყოფი (მაგ: SAT AT 7:50 PM) ---
+                if (msg.ts - lastTimestamp > 3600000) { // თუ 1 საათზე მეტია სხვაობა
+                    const timeDiv = document.createElement('div');
+                    timeDiv.style = "text-align:center; color:#888; font-size:11px; margin:20px 0 10px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;";
+                    
+                    const d = new Date(msg.ts);
+                    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                    let hours = d.getHours();
+                    let ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    let mins = d.getMinutes().toString().padStart(2, '0');
+                    
+                    timeDiv.innerText = `${days[d.getDay()]} AT ${hours}:${mins} ${ampm}`;
+                    container.appendChild(timeDiv);
+                }
+                lastTimestamp = msg.ts;
 
-                    if(mSnap.exists()) {
-                        const msgs = mSnap.val();
-                        const msgData = Object.values(msgs)[0];
-                        lastMsg = msgData.text || "📷 Media/Voice";
-                        const ts = msgData.ts;
+                // --- 💬 მესიჯის მთავარი კონტეინერი ---
+                const msgDiv = document.createElement('div');
+                msgDiv.style = `display:flex; flex-direction:column; align-items:${isMine ? 'flex-end' : 'flex-start'}; margin-bottom:12px; position:relative; width:100%;`;
 
-                        const msgDate = new Date(ts);
-                        const now = new Date();
-                        if (msgDate.toDateString() === now.toDateString()) {
-                            msgTimeFormatted = msgDate.getHours() + ":" + (msgDate.getMinutes() < 10 ? '0' : '') + msgDate.getMinutes();
-                        } else {
-                            msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        }
+                const contentInner = document.createElement('div');
+                contentInner.style = `display:flex; align-items:flex-end; gap:8px; max-width:85%; flex-direction:${isMine ? 'row-reverse' : 'row'};`;
 
-                        // თუ მესიჯი სხვისია და უფრო ახალია ვიდრე ჩემი ბოლო წაკითხული
-                        if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
-                            isUnread = true;
-                        }
-                    }
+                // --- 👤 ადრესატის ავატარი მესიჯის გვერდით (მონიშნული ადგილი 1) ---
+                if (!isMine) {
+                    const avaImg = document.createElement('img');
+                    avaImg.src = targetPhoto;
+                    avaImg.style = "width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; margin-bottom:2px; border: 1px solid rgba(255,255,255,0.1);";
+                    contentInner.appendChild(avaImg);
+                }
 
-                    // ონლაინ სტატუსის შემოწმება
-                    db.ref(`users/${uid}/presence`).on('value', presenceSnap => {
-                        const isOnline = presenceSnap.val() === 'online';
+                // ტექსტის ბუშტი
+                const bubble = document.createElement('div');
+                bubble.style = isMine 
+                    ? "background:#0084ff; color:white; padding:10px 16px; border-radius:18px 18px 4px 18px; font-size:15px; line-height:1.4; word-wrap:break-word;" 
+                    : "background:#333; color:white; padding:10px 16px; border-radius:18px 18px 18px 4px; font-size:15px; line-height:1.4; word-wrap:break-word;";
+                
+                bubble.innerText = msg.text || "";
+                
+                contentInner.appendChild(bubble);
+                msgDiv.appendChild(contentInner);
 
-                        item.innerHTML = `
-                            <div style="position:relative; flex-shrink:0;">
-                                <img src="${data.photo || 'token-avatar.png'}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
-                                <div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#4ade80; border-radius:50%; border:3px solid #000; display:${isOnline ? 'block' : 'none'};"></div>
-                                <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
-                            </div>
-                            <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
-                                <b style="color:white; font-size:16px; margin-bottom:2px;">${data.name}</b>
-                                <div style="display:flex; align-items:center; gap:5px;">
-                                    <span style="color:${isUnread ? 'white' : '#888'}; font-weight:${isUnread ? 'bold' : 'normal'}; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${lastMsg}</span>
-                                    <span style="color:#888; font-size:12px;"> · ${msgTimeFormatted}</span>
-                                </div>
-                            </div>
-                            <div style="width:12px; height:12px; background:#0084ff; border-radius:50%; display:${isUnread ? 'block' : 'none'}; margin-right:5px;"></div>
-                        `;
-                    });
-                });
+                // --- 👁️ SEEN ავატარი (მონიშნული ადგილი 2) ---
+                // გამოჩნდება მხოლოდ ჩემს ბოლო მესიჯზე, თუ ის წაკითხულია
+                if (isMine && msg.seen && index === msgEntries.length - 1) {
+                    const seenAva = document.createElement('img');
+                    seenAva.src = targetPhoto;
+                    seenAva.style = "width:14px; height:14px; border-radius:50%; margin-top:4px; margin-right:2px; object-fit:cover; opacity:0.9; border: 1px solid rgba(255,255,255,0.2);";
+                    msgDiv.appendChild(seenAva);
+                }
+
+                container.appendChild(msgDiv);
             });
-            list.appendChild(item);
+
+            // ავტომატური სქროლი ბოლოში
+            container.scrollTop = container.scrollHeight;
         });
     });
-}                          
+}
+                                                
 
 
 
