@@ -1672,13 +1672,12 @@ div[style*="overflow-x:auto"] {
 
 
 
- 
-<div id="individualChat" style="display: none; background: #000;">
+ <div id="individualChat" style="display: none; background: #000;">
     <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #1a1a1a; background: #000; position: sticky; top: 0; z-index: 100;">
         <div style="display:flex; align-items:center; gap:12px;">
             <i class="fas fa-arrow-left" onclick="closeChat()" style="cursor:pointer; color:#0084ff; font-size:20px;"></i>
             
-            <img id="chatTargetAva" src="" style="width:40px; height:40px; border-radius:50%; object-fit: cover; border: none; outline: 1px solid rgba(255,255,255,0.1);">
+            <img id="chatTargetAva" src="" style="width:40px; height:40px; border-radius:50%; object-fit: cover;">
             
             <div style="display: flex; flex-direction: column;">
                 <b id="chatTargetName" style="color:white; font-size:16px; line-height: 1.2;">Name</b>
@@ -1686,51 +1685,46 @@ div[style*="overflow-x:auto"] {
             </div>
         </div>
 
-        <div class="chat-header-actions" style="display:flex; gap:20px; align-items:center;">
+        <div style="display:flex; gap:20px; align-items:center;">
             <i class="fas fa-phone-alt" onclick="requestAudioCall()" style="cursor:pointer; color:#0084ff; font-size:18px;"></i>
-            
             <i class="fas fa-video" onclick="requestVideoCall()" style="cursor:pointer; color:#0084ff; font-size:18px;"></i>
-            
-            <i class="fas fa-info-circle" style="cursor:pointer; color:#0084ff; font-size:18px; margin-left: 5px;"></i>
+            <i class="fas fa-info-circle" style="cursor:pointer; color:#0084ff; font-size:18px;"></i>
         </div>
     </div>
 
+    <div id="chatMessages" class="chat-messages"></div>
 
+    <div id="typingIndicator" class="typing-indicator" style="display:none; margin-left: 15px; margin-bottom: 5px;">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+    </div>
 
-
-
-
- <div id="chatMessages" class="chat-messages"></div>
-
-<div id="typingIndicator" class="typing-indicator" style="display:none; margin-left: 15px; margin-bottom: 5px;">
-    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-</div>
-
-<div class="chat-input-area" style="padding: 10px; display:flex; align-items:center; gap:10px; background: #000; border-top: 1px solid #1a1a1a;">
-    
-    <div style="display: flex; gap: 15px; align-items: center; color: #0084ff; font-size: 20px;">
-        <i class="fas fa-plus-circle" style="cursor:pointer;"></i>
-        <i class="fas fa-camera" style="cursor:pointer;" onclick="openUploadModal()"></i>
-        <i class="fas fa-image" style="cursor:pointer;" onclick="document.getElementById('videoInput').click()"></i>
+    <div class="chat-input-area" style="padding: 10px; display:flex; align-items:center; gap:10px; background: #000; border-top: 1px solid #1a1a1a;">
         
-        <div id="voiceBtn" onclick="toggleVoiceRecord()" style="cursor:pointer; display:flex; align-items:center; justify-content:center;">
-            <i class="fas fa-microphone" id="micIcon"></i>
+        <div style="display: flex; gap: 15px; align-items: center; color: #0084ff; font-size: 20px;">
+            <i class="fas fa-plus-circle" style="cursor:pointer;"></i>
+            <i class="fas fa-camera" style="cursor:pointer;" onclick="openUploadModal()"></i>
+            <i class="fas fa-image" style="cursor:pointer;" onclick="document.getElementById('videoInput').click()"></i>
+            
+            <div id="voiceBtn" onclick="toggleVoiceRecord()" style="cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-microphone" id="micIcon"></i>
+            </div>
         </div>
-    </div>
 
-    <div style="flex: 1; background: #1a1a1a; border-radius: 20px; display: flex; align-items: center; padding: 2px 12px;">
-        <input type="text" id="messageInp" 
-               class="chat-input" 
-               placeholder="Message..." 
-               oninput="handleTyping()" 
-               style="flex: 1; background: transparent; border: none; color: white; padding: 8px; outline: none; margin-bottom: 0; font-size: 15px;">
-        <i class="far fa-smile" style="color: #0084ff; font-size: 20px; cursor: pointer;"></i>
-    </div>
+        <div style="flex: 1; background: #1a1a1a; border-radius: 20px; display: flex; align-items: center; padding: 2px 12px;">
+            <input type="text" id="messageInp" 
+                   class="chat-input" 
+                   placeholder="Message..." 
+                   oninput="handleTyping()" 
+                   style="flex: 1; background: transparent; border: none; color: white; padding: 8px; outline: none; margin-bottom: 0; font-size: 15px;">
+            <i class="far fa-smile" style="color: #0084ff; font-size: 20px; cursor: pointer;"></i>
+        </div>
 
-    <div onclick="sendMessage()" style="cursor:pointer; display:flex; align-items:center; justify-content:center; color: #0084ff;">
-        <i class="fas fa-thumbs-up" id="sendBtnIcon" style="font-size: 24px;"></i>
+        <button class="chat-send-btn" onclick="sendMessage()" style="background: transparent; border: none; padding: 0; display: flex; align-items: center; justify-content: center; color: #0084ff;">
+            <i class="fas fa-thumbs-up" style="font-size: 24px;"></i>
+        </button>
     </div>
 </div>
+
 
 
 
