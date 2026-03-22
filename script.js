@@ -814,7 +814,6 @@ function loadMessages(targetUid) {
     const chatId = getChatId(myUid, targetUid);
     const box = document.getElementById('chatMessages');
 
-    // ჯერ ავიღოთ იმ იუზერის მონაცემები, ვისაც ვეჩეთავებით (ავატარებისთვის)
     db.ref(`users/${targetUid}`).once('value', targetSnap => {
         const tData = targetSnap.val();
         const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
@@ -837,8 +836,9 @@ function loadMessages(targetUid) {
                     const msgId = item.id;
                     const msg = item.val;
                     const type = msg.senderId === myUid ? 'sent' : 'received';
+                    const isMine = type === 'sent';
                     
-                    // --- 📅 დროის გამყოფი (SAT AT 7:50 PM) ---
+                    // --- 📅 დროის გამყოფი (ოქროსფერი ტექსტით) ---
                     if (msg.ts - lastTs > 3600000) {
                         const d = new Date(msg.ts);
                         const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -846,14 +846,11 @@ function loadMessages(targetUid) {
                         let ampm = h >= 12 ? 'PM' : 'AM';
                         h = h % 12 || 12;
                         let m = d.getMinutes().toString().padStart(2, '0');
-                        box.innerHTML += `<div style="text-align:center; color:#888; font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
+                        box.innerHTML += `<div style="text-align:center; color:var(--gold, #d4af37); font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
                     }
                     lastTs = msg.ts;
 
                     let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                    
-                    // მესენჯერის სტილის წყობა
-                    const isMine = type === 'sent';
                     
                     box.innerHTML += `
                         <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'}" 
@@ -861,15 +858,15 @@ function loadMessages(targetUid) {
                             
                             <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
                                 
-                                ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-bottom:2px;">` : ''}
+                                ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37);">` : ''}
                                 
-                                <div class="msg-bubble msg-${type}" style="width: fit-content; cursor: pointer; padding: 10px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; background: ${isMine ? '#0084ff' : '#333'}; color: white;">
-                                    <div class="msg-content" style="word-break: break-word; font-size: 15px;">${content}</div>
+                                <div class="msg-bubble msg-${type}" style="width: fit-content; cursor: pointer; padding: 10px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'};">
+                                    <div class="msg-content" style="word-break: break-word; font-size: 15px; font-weight: ${isMine ? '500' : 'normal'};">${content}</div>
                                 </div>
                             </div>
 
                             ${isMine && msg.seen && index === messagesArray.length - 1 ? 
-                                `<img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; margin-top:4px; margin-right:2px; object-fit:cover;">` : ''}
+                                `<img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; margin-top:4px; margin-right:2px; border:1px solid var(--gold, #d4af37);">` : ''}
                         </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
