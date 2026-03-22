@@ -646,11 +646,12 @@ window.deleteReply = function(postId, commentId, replyId) {
 
  
 
+
+
 function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     
-    // 🛑 დავაბრუნე: აპლიკაციის ხატულაზე (Badge) ნიშნის განულება
     if ('setAppBadge' in navigator) {
         navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
     }
@@ -666,9 +667,8 @@ function openMessenger() {
     
     if (!auth.currentUser) return;
 
-    db.ref(`users/${auth.currentUser.uid}/following`).on('value', snap => {
+    db.ref(`users/${auth.currentUser.uid}/following`).on('value', async snap => {
         if (!list) return;
-        list.innerHTML = "";
         const followers = snap.val();
         
         if(!followers) { 
@@ -676,25 +676,44 @@ function openMessenger() {
             return; 
         }
 
-        Object.entries(followers).forEach(([uid, data]) => {
+        // --- დახარისხების ლოგიკა (Sorting) ---
+        let chatArray = [];
+        const promises = Object.entries(followers).map(async ([uid, data]) => {
+            const chatId = getChatId(auth.currentUser.uid, uid);
+            // ვიღებთ ბოლო მესიჯის თაიმსტემპს
+            const mSnap = await db.ref(`messages/${chatId}`).limitToLast(1).once('value');
+            let lastTs = 0;
+            if (mSnap.exists()) {
+                const msgs = mSnap.val();
+                lastTs = Object.values(msgs)[0].ts;
+            }
+            chatArray.push({ uid, data, lastTs });
+        });
+
+        await Promise.all(promises);
+
+        // ვალაგებთ სიას: ბოლო მესიჯი ზემოთ
+        chatArray.sort((a, b) => b.lastTs - a.lastTs);
+
+        list.innerHTML = "";
+        // ------------------------------------
+
+        chatArray.forEach(({ uid, data }) => {
             const chatId = getChatId(auth.currentUser.uid, uid);
             const item = document.createElement('div');
             item.className = 'chat-list-item';
-            
-            // სტილი მესენჯერის დიზაინით
             item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
             
             item.onclick = () => {
-            db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-            document.getElementById('messengerUI').style.display = 'none';
-            document.getElementById('messengerCloseLogo').onclick = () => { document.getElementById('messengerUI').style.display = 'none'; };
-            startChat(uid, data.name, data.photo);
+                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
+                document.getElementById('messengerUI').style.display = 'none';
+                document.getElementById('messengerCloseLogo').onclick = () => { document.getElementById('messengerUI').style.display = 'none'; };
+                startChat(uid, data.name, data.photo);
             };
             
             db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
                 const lastRead = readSnap.val() || 0;
                 
-                // 🛑 .on('value') - აუცილებელია პუშების რეალურ დროში დასაჭერად
                 db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
                     let lastMsg = "Tap to chat";
                     let msgTimeFormatted = "";
@@ -706,7 +725,6 @@ function openMessenger() {
                         lastMsg = msgData.text || "📷 Media/Voice";
                         const ts = msgData.ts;
 
-                        // დროის ფორმატირება (Meta Style)
                         const msgDate = new Date(ts);
                         const now = new Date();
                         if (msgDate.toDateString() === now.toDateString()) {
@@ -715,21 +733,18 @@ function openMessenger() {
                             msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }
 
-                        // 🛑 შენი ორიგინალი პუშის და ბეიჯის ლოგიკა
                         if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
                             isUnread = true;
                         }
                     }
 
-                    // 🛑 Presence: ონლაინ სტატუსის მწვანე წერტილი
                     db.ref(`users/${uid}/presence`).on('value', presenceSnap => {
                         const isOnline = presenceSnap.val() === 'online';
 
                         item.innerHTML = `
                             <div style="position:relative; flex-shrink:0;">
-                                <img src="${data.photo || 'https://ui-avatars.com/api/?name='+data.name}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
+                                <img src="${data.photo || 'token-avatar.png'}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
                                 <div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#4ade80; border-radius:50%; border:3px solid #000; display:${isOnline ? 'block' : 'none'};"></div>
-                                
                                 <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
                             </div>
                             <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
@@ -748,6 +763,9 @@ function openMessenger() {
         });
     });
 }
+
+
+
 
 
 
