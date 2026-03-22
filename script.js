@@ -922,7 +922,14 @@ function listenToGlobalMessages() {
                 const senderName = u.name || "მომხმარებელი";
                 const messageText = msg.text || "📷 Voice/Media";
 
-                // --- აქ ჩაჯდა შენი კოდი ---
+                // --- 🔊 ხმის დაკვრის ახალი ბლოკი (არაფერს შლის) ---
+                const sound = document.getElementById('msgSound');
+                if (sound) {
+                    sound.currentTime = 0; // აბრუნებს დასაწყისში, რომ გადაბმულ მესიჯებზეც დაიწკაპუნოს
+                    sound.play().catch(e => console.log("ხმის დაკვრა დაიბლოკა: საჭიროა ეკრანზე ერთხელ შეხება."));
+                }
+
+                // --- აქ ჩაჯდა შენი ორიგინალი კოდი ---
                 setAppBadge(1); // აანთებს ხატულას (Badge)
                 showLocalNotification("ახალი მესიჯი: " + senderName, messageText); // გამოიტანს Push-ს
                 
