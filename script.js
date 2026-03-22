@@ -813,37 +813,67 @@ function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
     const box = document.getElementById('chatMessages');
-    
-    db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
-        const deletedMsgs = deletedSnap.val() || {};
 
-        db.ref(`messages/${chatId}`).on('value', snap => {
-            box.innerHTML = "";
-            snap.forEach(child => {
-                const msgId = child.key;
-                if (deletedMsgs[msgId]) return;
+    // ჯერ ავიღოთ იმ იუზერის მონაცემები, ვისაც ვეჩეთავებით (ავატარებისთვის)
+    db.ref(`users/${targetUid}`).once('value', targetSnap => {
+        const tData = targetSnap.val();
+        const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
 
-                const msg = child.val();
-                const type = msg.senderId === myUid ? 'sent' : 'received';
-                
-                const d = new Date(msg.ts);
-                const fullDateTime = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0') + " " + d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-                
-                let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                
-                const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
-                const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
+        db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
+            const deletedMsgs = deletedSnap.val() || {};
 
-                box.innerHTML += `
-                    <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}" 
-                         oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-                        <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px; cursor: pointer;">
-                            <div class="msg-content" style="word-break: break-word;">${content}</div>
-                        </div>
-                        <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">${fullDateTime}</div>
-                    </div>`;
+            db.ref(`messages/${chatId}`).on('value', snap => {
+                box.innerHTML = "";
+                let lastTs = 0;
+                let messagesArray = [];
+                
+                snap.forEach(child => {
+                    if (!deletedMsgs[child.key]) {
+                        messagesArray.push({ id: child.key, val: child.val() });
+                    }
+                });
+
+                messagesArray.forEach((item, index) => {
+                    const msgId = item.id;
+                    const msg = item.val;
+                    const type = msg.senderId === myUid ? 'sent' : 'received';
+                    
+                    // --- 📅 დროის გამყოფი (SAT AT 7:50 PM) ---
+                    if (msg.ts - lastTs > 3600000) {
+                        const d = new Date(msg.ts);
+                        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                        let h = d.getHours();
+                        let ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12 || 12;
+                        let m = d.getMinutes().toString().padStart(2, '0');
+                        box.innerHTML += `<div style="text-align:center; color:#888; font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
+                    }
+                    lastTs = msg.ts;
+
+                    let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
+                    
+                    // მესენჯერის სტილის წყობა
+                    const isMine = type === 'sent';
+                    
+                    box.innerHTML += `
+                        <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'}" 
+                             oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
+                            
+                            <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
+                                
+                                ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-bottom:2px;">` : ''}
+                                
+                                <div class="msg-bubble msg-${type}" style="width: fit-content; cursor: pointer; padding: 10px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; background: ${isMine ? '#0084ff' : '#333'}; color: white;">
+                                    <div class="msg-content" style="word-break: break-word; font-size: 15px;">${content}</div>
+                                </div>
+                            </div>
+
+                            ${isMine && msg.seen && index === messagesArray.length - 1 ? 
+                                `<img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; margin-top:4px; margin-right:2px; object-fit:cover;">` : ''}
+                        </div>`;
+                });
+                box.scrollTop = box.scrollHeight;
             });
-            box.scrollTop = box.scrollHeight;
         });
     });
 }
