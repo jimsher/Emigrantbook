@@ -252,7 +252,7 @@ function declineCall() {
  return;
  }
  myName = d.name || "User";
- myPhoto = d.photo || "https://ui-avatars.com/api/?name=" + myName;
+ myPhoto = d.photo || "token-avatar.png";
  myAkho = d.akho || 0;
  document.getElementById('userAkho').innerText = myAkho.toFixed(2);
  document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
