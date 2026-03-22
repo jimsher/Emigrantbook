@@ -648,10 +648,11 @@ window.deleteReply = function(postId, commentId, replyId) {
 
 
 
-function openMessenger() {
+  function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     
+    // აპლიკაციის Badge-ის განულება
     if ('setAppBadge' in navigator) {
         navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
     }
@@ -667,6 +668,7 @@ function openMessenger() {
     
     if (!auth.currentUser) return;
 
+    // ვუსმენთ 'following' სიას Firebase-ში
     db.ref(`users/${auth.currentUser.uid}/following`).on('value', async snap => {
         if (!list) return;
         const followers = snap.val();
@@ -676,11 +678,11 @@ function openMessenger() {
             return; 
         }
 
-        // --- დახარისხების ლოგიკა (Sorting) ---
+        // --- 📊 დახარისხების ლოგიკა (Sorting) ---
         let chatArray = [];
         const promises = Object.entries(followers).map(async ([uid, data]) => {
             const chatId = getChatId(auth.currentUser.uid, uid);
-            // ვიღებთ ბოლო მესიჯის თაიმსტემპს
+            // ვიღებთ ბოლო მესიჯს, რომ გავიგოთ დრო (ts) სორტირებისთვის
             const mSnap = await db.ref(`messages/${chatId}`).limitToLast(1).once('value');
             let lastTs = 0;
             if (mSnap.exists()) {
@@ -690,13 +692,13 @@ function openMessenger() {
             chatArray.push({ uid, data, lastTs });
         });
 
+        // ველოდებით ყველა ჩატის მონაცემის წამოღებას
         await Promise.all(promises);
 
-        // ვალაგებთ სიას: ბოლო მესიჯი ზემოთ
+        // ვახარისხებთ: ვინც ბოლოს მოგწერა, ის პირველია
         chatArray.sort((a, b) => b.lastTs - a.lastTs);
 
-        list.innerHTML = "";
-        // ------------------------------------
+        list.innerHTML = ""; // ვასუფთავებთ სიას გამოჩენამდე
 
         chatArray.forEach(({ uid, data }) => {
             const chatId = getChatId(auth.currentUser.uid, uid);
@@ -707,13 +709,17 @@ function openMessenger() {
             item.onclick = () => {
                 db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
                 document.getElementById('messengerUI').style.display = 'none';
-                document.getElementById('messengerCloseLogo').onclick = () => { document.getElementById('messengerUI').style.display = 'none'; };
+                document.getElementById('messengerCloseLogo').onclick = () => { 
+                    document.getElementById('messengerUI').style.display = 'none'; 
+                };
                 startChat(uid, data.name, data.photo);
             };
             
+            // ვუსმენთ წაკითხვის სტატუსს (Badge-ისთვის)
             db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).on('value', readSnap => {
                 const lastRead = readSnap.val() || 0;
                 
+                // ვუსმენთ ბოლო მესიჯს რეალურ დროში (Real-time updates)
                 db.ref(`messages/${chatId}`).limitToLast(1).on('value', mSnap => {
                     let lastMsg = "Tap to chat";
                     let msgTimeFormatted = "";
@@ -733,11 +739,13 @@ function openMessenger() {
                             msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }
 
+                        // თუ მესიჯი სხვისია და უფრო ახალია ვიდრე ჩემი ბოლო წაკითხული
                         if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
                             isUnread = true;
                         }
                     }
 
+                    // ონლაინ სტატუსის შემოწმება
                     db.ref(`users/${uid}/presence`).on('value', presenceSnap => {
                         const isOnline = presenceSnap.val() === 'online';
 
@@ -762,8 +770,7 @@ function openMessenger() {
             list.appendChild(item);
         });
     });
-}
-
+}                          
 
 
 
