@@ -1051,7 +1051,7 @@ function sendMessage() {
              dot.className = 'status-dot';
          }
      }
-     document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
+     document.getElementById('profAva').src = user.photo || "token-avatar.png";
      profNameEl.innerText = user.name;
      const followersCount = user.followers ? Object.keys(user.followers).length : 0;
      const followingCount = user.following ? Object.keys(user.following).length : 0;
