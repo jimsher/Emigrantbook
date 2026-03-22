@@ -809,112 +809,98 @@ function startChat(uid, name, photo) {
 
 
 
-function loadMessages(chatId) {
+ function loadMessages(chatId) {
     const container = document.getElementById('chatMessages');
     if (!container) return;
-    container.innerHTML = ""; // ვასუფთავებთ კონტეინერს
+    
+    const myUid = auth.currentUser.uid;
 
-    // წამოვიღოთ ინფორმაცია адრესატზე (მისი ავატარი და სახელი)
-    // რათა გამოვიყენოთ მესიჯების ავატარებში და "Seen"-ში.
-    // (აქ Firebase-ის .once() ვიყენებთ targetUser-ის მონაცემების ასაღებად)
-    db.ref(`users/${currentChatId}`).once('value', targetUserSnap => {
-        const targetUserPhoto = targetUserSnap.val()?.photo || "token-avatar.png";
+    // 1. ჯერ ვიგებთ იმ ადამიანის ფოტოს, ვისაც ვეჩეთავებით
+    db.ref(`users/${currentChatId}`).once('value', targetSnap => {
+        const targetData = targetSnap.val();
+        const targetPhoto = (targetData && targetData.photo) ? targetData.photo : 'token-avatar.png';
 
-        // ვუსმენთ მესიჯებს
-        // (.on('value', ...)` უზრუნველყოფს, რომ ჩატი რეალურ დროში განახლდეს)
+        // 2. ვუსმენთ მესიჯებს
         db.ref(`messages/${chatId}`).on('value', snap => {
-            if (!currentChatId || getChatId(auth.currentUser.uid, currentChatId) !== chatId) return;
-            container.innerHTML = ""; // ხელახლა ვხატავთ ყველაფერს
+            if (!currentChatId || getChatId(myUid, currentChatId) !== chatId) return;
             
+            container.innerHTML = "";
             const msgs = snap.val();
             if (!msgs) return;
 
-            const myUid = auth.currentUser.uid;
-            let lastMessageDate = null; // წინა მესიჯის თარიღი გამყოფისთვის
+            let lastTimestamp = 0;
+            const msgEntries = Object.entries(msgs);
 
-            // Object.entries-ით გადავურბენთ ყველა მესიჯს
-            // Object.entries(msgs) აბრუნებს [mId, msg] მასივს თითოეული მესიჯისთვის
-            Object.entries(msgs).forEach(([mId, msg], index, arr) => {
-                const messageDate = new Date(msg.ts);
-
-                // --- 1. დროის გამყოფი (მაგ: SAT AT 7:50 PM) ---
-                // ვამოწმებთ, დიდი დროა თუ არა წინა მესიჯის მერე გასული
-                // (მაგალითად, 1 საათი, რაც არის 3600000 მილიწამი)
-                if (lastMessageDate && (messageDate - lastMessageDate) > 3600000) {
-                    const separatorDiv = document.createElement('div');
-                    separatorDiv.className = 'message-date-separator';
-                    separatorDiv.innerHTML = formatChatTime(msg.ts); // ფუნქცია ქვემოთაა
-                    container.appendChild(separatorDiv);
-                }
-                lastMessageDate = messageDate; // ვანახლებთ წინა მესიჯის დროს
-
-                // --- 2. მესიჯის კონტეინერის შექმნა ---
-                const msgWrapper = document.createElement('div');
-                const isMine = (msg.senderId === myUid);
+            msgEntries.forEach(([mId, msg], index) => {
+                const isMine = msg.senderId === myUid;
                 
-                // .message-wrapper - მთავარი კლასი
-                // .mine - ჩემი, .target - адრესატის (დიზაინისთვის)
-                msgWrapper.className = `message-wrapper ${isMine ? 'mine' : 'target'}`;
+                // --- 📅 დროის გამყოფი (მაგ: SAT AT 7:50 PM) ---
+                // თუ ორ მესიჯს შორის 1 საათზე მეტია სხვაობა, ვსვამთ თარიღს
+                if (msg.ts - lastTimestamp > 3600000) {
+                    const timeDiv = document.createElement('div');
+                    timeDiv.style = "text-align:center; color:#888; font-size:11px; margin:20px 0 10px; font-weight:bold; text-transform: uppercase;";
+                    
+                    const d = new Date(msg.ts);
+                    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                    let hours = d.getHours();
+                    let ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    let mins = d.getMinutes().toString().padStart(2, '0');
+                    
+                    timeDiv.innerText = `${days[d.getDay()]} AT ${hours}:${mins} ${ampm}`;
+                    container.appendChild(timeDiv);
+                }
+                lastTimestamp = msg.ts;
 
-                let content = "";
+                // --- 💬 მესიჯის კონტეინერი ---
+                const msgDiv = document.createElement('div');
+                msgDiv.style = `display:flex; flex-direction:column; align-items:${isMine ? 'flex-end' : 'flex-start'}; margin-bottom:8px; position:relative;`;
 
-                // --- 3. ადრესატის ავატარი (მესიჯის მარცხნივ) ---
-                // image_0.png-ზე როგორცაა მონიშნული.
-                // მხოლოდ ადრესატის მესიჯებზე და არა ჩემზე.
+                // მესიჯის შიგთავსის ბლოკი (ავატარი + ტექსტი)
+                const contentInner = document.createElement('div');
+                contentInner.style = `display:flex; align-items:flex-end; gap:8px; max-width:85%; flex-direction:${isMine ? 'row-reverse' : 'row'};`;
+
+                // --- 👤 ადრესატის ავატარი მესიჯის გვერდით ---
                 if (!isMine) {
-                    content += `<img src="${targetUserPhoto}" class="chat-message-author-ava">`;
+                    const avaImg = document.createElement('img');
+                    avaImg.src = targetPhoto;
+                    avaImg.style = "width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; margin-bottom:2px;";
+                    contentInner.appendChild(avaImg);
                 }
 
-                // --- 4. მესიჯის ტექსტი ---
-                // შენი Firebase-დან ტექსტის წამოღება (text || Media)
-                const messageText = msg.text || "📷 Media/Voice";
-                content += `<div class="message-bubble">${messageText}</div>`;
-
-                // --- 5. "Seen" (ნახვის) ავატარი ---
-                // image_1.png-ის ქვედა მარჯვენა კუთხეში როგორცაა.
-                // მხოლოდ ჩემს ბოლო მესიჯზე და თუ ის "ნახულია" (seen).
-                // "arr.length - 1" - ამოწმებს, არის თუ არა ეს ბოლო მესიჯი სიაში.
-                const isSeen = msg.seen; // (ამას შენი sendMessage() და seenMessages() უნდა აკონტროლებდეს Firebase-ში)
+                // ტექსტის ბუშტი
+                const bubble = document.createElement('div');
+                bubble.style = isMine 
+                    ? "background:#0084ff; color:white; padding:10px 16px; border-radius:18px 18px 4px 18px; font-size:15px; line-height:1.4;" 
+                    : "background:#333; color:white; padding:10px 16px; border-radius:18px 18px 18px 4px; font-size:15px; line-height:1.4;";
                 
-                if (isMine && isSeen && index === arr.length - 1) {
-                    content += `<img src="${targetUserPhoto}" class="message-seen-ava">`;
+                bubble.innerText = msg.text || "";
+                
+                // თუ მესიჯი მხოლოდ სმაილებია, მოვაშოროთ ფონი (Messenger-ივით)
+                if (/^[\uD800-\uDBFF][\uDC00-\uDFFF]+$/.test(msg.text)) {
+                    bubble.style.background = "none";
+                    bubble.style.fontSize = "35px";
+                    bubble.style.padding = "0";
                 }
 
-                msgWrapper.innerHTML = content;
-                container.appendChild(msgWrapper);
+                contentInner.appendChild(bubble);
+                msgDiv.appendChild(contentInner);
+
+                // --- 👁️ SEEN ავატარი (ბოლო მესიჯზე) ---
+                if (isMine && msg.seen && index === msgEntries.length - 1) {
+                    const seenAva = document.createElement('img');
+                    seenAva.src = targetPhoto;
+                    seenAva.style = "width:14px; height:14px; border-radius:50%; margin-top:4px; margin-right:2px; object-fit:cover;";
+                    msgDiv.appendChild(seenAva);
+                }
+
+                container.appendChild(msgDiv);
             });
 
-            // ჩატის ავტომატური ჩამოწევა ბოლო მესიჯზე
             container.scrollTop = container.scrollHeight;
         });
     });
 }
-
-// --- დამხმარე ფუნქცია: დროის ფორმატირება (Meta Style) ---
-// აბრუნებს ტექსტს ფორმატში: SAT AT 7:50 PM
-function formatChatTime(timestamp) {
-    const date = new Date(timestamp);
-    const options = { weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true };
-    return date.toLocaleString('en-US', options).toUpperCase(); // .toUpperCase(), რომ SAT გამოვიდეს
-}
-
-
-
-
-
-window.deleteMessage = function(chatId, msgId, senderId) {
-    const myUid = auth.currentUser.uid;
-    if (senderId === myUid) {
-        if (confirm("გსურთ შეტყობინების წაშლა ყველასთვის?")) {
-            db.ref(`messages/${chatId}/${msgId}`).remove();
-        }
-    } else {
-        if (confirm("გსურთ ამ შეტყობინების წაშლა მხოლოდ თქვენთვის?")) {
-            db.ref(`users/${myUid}/deleted_messages/${chatId}/${msgId}`).set(true);
-        }
-    }
-};
-
 
 
 
