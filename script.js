@@ -809,99 +809,45 @@ function startChat(uid, name, photo) {
 
 
 
- function loadMessages(chatId) {
-    const container = document.getElementById('chatMessages');
-    if (!container) return;
-    
+function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, targetUid);
+    const box = document.getElementById('chatMessages');
+    
+    db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
+        const deletedMsgs = deletedSnap.val() || {};
 
-    // 1. ჯერ ვიგებთ იმ ადამიანის ფოტოს, ვისაც ვეჩეთავებით
-    db.ref(`users/${currentChatId}`).once('value', targetSnap => {
-        const targetData = targetSnap.val();
-        const targetPhoto = (targetData && targetData.photo) ? targetData.photo : 'token-avatar.png';
-
-        // 2. ვუსმენთ მესიჯებს
         db.ref(`messages/${chatId}`).on('value', snap => {
-            if (!currentChatId || getChatId(myUid, currentChatId) !== chatId) return;
-            
-            container.innerHTML = "";
-            const msgs = snap.val();
-            if (!msgs) return;
+            box.innerHTML = "";
+            snap.forEach(child => {
+                const msgId = child.key;
+                if (deletedMsgs[msgId]) return;
 
-            let lastTimestamp = 0;
-            const msgEntries = Object.entries(msgs);
-
-            msgEntries.forEach(([mId, msg], index) => {
-                const isMine = msg.senderId === myUid;
+                const msg = child.val();
+                const type = msg.senderId === myUid ? 'sent' : 'received';
                 
-                // --- 📅 დროის გამყოფი (მაგ: SAT AT 7:50 PM) ---
-                // თუ ორ მესიჯს შორის 1 საათზე მეტია სხვაობა, ვსვამთ თარიღს
-                if (msg.ts - lastTimestamp > 3600000) {
-                    const timeDiv = document.createElement('div');
-                    timeDiv.style = "text-align:center; color:#888; font-size:11px; margin:20px 0 10px; font-weight:bold; text-transform: uppercase;";
-                    
-                    const d = new Date(msg.ts);
-                    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                    let hours = d.getHours();
-                    let ampm = hours >= 12 ? 'PM' : 'AM';
-                    hours = hours % 12 || 12;
-                    let mins = d.getMinutes().toString().padStart(2, '0');
-                    
-                    timeDiv.innerText = `${days[d.getDay()]} AT ${hours}:${mins} ${ampm}`;
-                    container.appendChild(timeDiv);
-                }
-                lastTimestamp = msg.ts;
-
-                // --- 💬 მესიჯის კონტეინერი ---
-                const msgDiv = document.createElement('div');
-                msgDiv.style = `display:flex; flex-direction:column; align-items:${isMine ? 'flex-end' : 'flex-start'}; margin-bottom:8px; position:relative;`;
-
-                // მესიჯის შიგთავსის ბლოკი (ავატარი + ტექსტი)
-                const contentInner = document.createElement('div');
-                contentInner.style = `display:flex; align-items:flex-end; gap:8px; max-width:85%; flex-direction:${isMine ? 'row-reverse' : 'row'};`;
-
-                // --- 👤 ადრესატის ავატარი მესიჯის გვერდით ---
-                if (!isMine) {
-                    const avaImg = document.createElement('img');
-                    avaImg.src = targetPhoto;
-                    avaImg.style = "width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; margin-bottom:2px;";
-                    contentInner.appendChild(avaImg);
-                }
-
-                // ტექსტის ბუშტი
-                const bubble = document.createElement('div');
-                bubble.style = isMine 
-                    ? "background:#0084ff; color:white; padding:10px 16px; border-radius:18px 18px 4px 18px; font-size:15px; line-height:1.4;" 
-                    : "background:#333; color:white; padding:10px 16px; border-radius:18px 18px 18px 4px; font-size:15px; line-height:1.4;";
+                const d = new Date(msg.ts);
+                const fullDateTime = d.getDate().toString().padStart(2, '0') + "/" + (d.getMonth() + 1).toString().padStart(2, '0') + " " + d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
                 
-                bubble.innerText = msg.text || "";
+                let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
                 
-                // თუ მესიჯი მხოლოდ სმაილებია, მოვაშოროთ ფონი (Messenger-ივით)
-                if (/^[\uD800-\uDBFF][\uDC00-\uDFFF]+$/.test(msg.text)) {
-                    bubble.style.background = "none";
-                    bubble.style.fontSize = "35px";
-                    bubble.style.padding = "0";
-                }
+                const wrapperStyle = type === 'sent' ? 'align-items: flex-end;' : 'align-items: flex-start;';
+                const timeAlign = type === 'sent' ? 'text-align: right;' : 'text-align: left;';
 
-                contentInner.appendChild(bubble);
-                msgDiv.appendChild(contentInner);
-
-                // --- 👁️ SEEN ავატარი (ბოლო მესიჯზე) ---
-                if (isMine && msg.seen && index === msgEntries.length - 1) {
-                    const seenAva = document.createElement('img');
-                    seenAva.src = targetPhoto;
-                    seenAva.style = "width:14px; height:14px; border-radius:50%; margin-top:4px; margin-right:2px; object-fit:cover;";
-                    msgDiv.appendChild(seenAva);
-                }
-
-                container.appendChild(msgDiv);
+                box.innerHTML += `
+                    <div style="display: flex; flex-direction: column; margin-bottom: 12px; width: 100%; ${wrapperStyle}" 
+                         oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
+                        <div class="msg-bubble msg-${type}" style="width: fit-content; max-width: 80%; margin-bottom: 2px; cursor: pointer;">
+                            <div class="msg-content" style="word-break: break-word;">${content}</div>
+                        </div>
+                        <div style="font-size: 8px; color: gray; padding: 0 5px; width: fit-content; ${timeAlign}">${fullDateTime}</div>
+                    </div>`;
             });
-
-            container.scrollTop = container.scrollHeight;
+            box.scrollTop = box.scrollHeight;
         });
     });
 }
-
+    
 
 
 
