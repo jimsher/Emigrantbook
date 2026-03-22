@@ -31,7 +31,12 @@ if ('serviceWorker' in navigator) {
 
 
 
-
+function getAva(url) {
+    if (!url || url === "" || url.includes("ui-avatars.com")) {
+        return "token-avatar.png";
+    }
+    return url;
+}
 
 
 
