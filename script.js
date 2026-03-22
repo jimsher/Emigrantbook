@@ -200,7 +200,7 @@ db.ref(`video_calls/${user.uid}`).on('value', snap => {
         
         // ვავსებთ ფანჯარას მონაცემებით
         document.getElementById('callerNameDisplay').innerText = call.callerName;
-        document.getElementById('callerAva').src = call.callerPhoto || 'https://ui-avatars.com/api/?name=' + call.callerName;
+        document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
         
         // ვაჩენთ ლამაზ ფანჯარას
         const modal = document.getElementById('incomingCallModal');
