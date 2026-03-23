@@ -2369,45 +2369,54 @@ async function sendVoiceMessage(blob) {
         return alert("ჯერ აირჩიეთ ჩატი (დააწკაპეთ მომხმარებელს)!");
     }
 
+    // შენი გადახდის ლოგიკა (0.5 აკო)
     if (!canAfford(0.5)) return; 
 
-    const formData = new FormData();
-    formData.append("file", blob); 
-    formData.append("upload_preset", "Emigrantbook.video"); 
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, targetId);
+    const fileName = `voice_${Date.now()}.mp3`;
 
     try {
-        console.log("ხმა იგზავნება Cloudinary-ზე...");
-        const res = await fetch(`https://api.cloudinary.com/v1_1/djbgqzf6l/auto/upload`, { 
-            method: 'POST', 
-            body: formData 
-        });
-        const data = await res.json();
+        console.log("ხმა იტვირთება Firebase Storage-ზე...");
+
+        // 2. ვქმნით რეფერენსს Firebase Storage-ში
+        const storageRef = firebase.storage().ref(`chat_audio/${chatId}/${fileName}`);
+
+        // 3. ფაილის ატვირთვა
+        const snapshot = await storageRef.put(blob);
         
-        if (data.secure_url) {
-            console.log("Cloudinary-მ ატვირთა:", data.secure_url);
-            const myUid = auth.currentUser.uid;
-            const chatId = getChatId(myUid, targetId);
+        // 4. ვიღებთ ატვირთული აუდიოს პირდაპირ ლინკს
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        if (downloadURL) {
+            console.log("Firebase-მა ატვირთა:", downloadURL);
             
-            // 2. ვწერთ Firebase-ში
+            // 5. ვწერთ Realtime Database-ში
             db.ref(`messages/${chatId}`).push({ 
                 senderId: myUid, 
-                audio: data.secure_url, 
-                ts: Date.now() 
+                audio: downloadURL, 
+                ts: Date.now(),
+                seen: false
             }).then(() => {
+                // შენი ორიგინალი გადახდის ლოგიკა
                 spendAkho(0.5, 'Voice Message');
                 console.log("Firebase-ში წარმატებით ჩაიწერა!");
             }).catch(e => {
-                console.error("Firebase Error:", e);
-                alert("Firebase შეცდომა: " + e.message);
+                console.error("Firebase DB Error:", e);
+                alert("ბაზაში ჩაწერის შეცდომა: " + e.message);
             });
 
+            // ნოტიფიკაციის გაგზავნა (თუ გაქვს ეს ფუნქცია)
+            if (typeof sendPushToUser === "function") {
+                sendPushToUser(targetId, myName, "🎤 Voice Message");
+            }
+
         } else {
-            console.error("Cloudinary Error Data:", data);
-            alert("Cloudinary შეცდომა: " + (data.error ? data.error.message : "უცნობი"));
+            alert("ვერ მოხერხდა აუდიო ფაილის ლინკის მიღება.");
         }
     } catch (err) { 
-        console.error("Network Error:", err);
-        alert("ინტერნეტის შეცდომა: ვერ მოხერხდა სერვერთან კავშირი"); 
+        console.error("Storage Error:", err);
+        alert("ატვირთვის შეცდომა: ვერ მოხერხდა ფაილის შენახვა"); 
     }
 }
 
