@@ -822,6 +822,7 @@ function startChat(uid, name, photo) {
 
 
                                 
+                                                
 function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
@@ -877,47 +878,44 @@ function loadMessages(targetUid) {
                         content = msg.text || "";
                     }
                     
-                    // --- 🎨 ბუშტის სტილი (თუ ფოტოა ან ემოჯი, ფონი გამჭვირვალეა) ---
-                    const dynamicBubbleStyle = (isOnlyEmoji || isImg) ? 
+                    // --- 🎨 ბუშტის სტილი (დავამატეთ msg.audio, რომ ფონი არ დაედოს) ---
+                    const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
                         `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
                         `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
 
-                    // ... (წინა კოდი, სადაც content და dynamicBubbleStyle იწყობა) ...
+                    box.innerHTML += `
+                    <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
+                         oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
+                        
+                        <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
+                            
+                            ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
+                            
+                            <div class="msg-bubble msg-${type}" style="
+                                display: inline-block; 
+                                min-width: 20px; 
+                                max-width: 100%; 
+                                width: fit-content; 
+                                cursor: pointer; 
+                                word-wrap: break-word;
+                                text-align: left;
+                                ${dynamicBubbleStyle}
+                            ">
+                                <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
+                            </div>
+                        </div>
 
-box.innerHTML += `
-    <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
-         oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-        
-        <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
-            
-            ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
-            
-            <div class="msg-bubble msg-${type}" style="
-                display: inline-block; 
-                min-width: 20px; 
-                max-width: 100%; 
-                width: fit-content; 
-                cursor: pointer; 
-                word-wrap: break-word;
-                text-align: left;
-                ${dynamicBubbleStyle}
-            ">
-                <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
-            </div>
-        </div>
-
-        ${isMine && msg.seen && index === messagesArray.length - 1 ? 
-            `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
-                <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
-            </div>` : ''}
-    </div>`;
+                        ${isMine && msg.seen && index === messagesArray.length - 1 ? 
+                            `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
+                                <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
+                            </div>` : ''}
+                    </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
             });
         });
     });
-}                                
-
+}
 
 
 
