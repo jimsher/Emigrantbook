@@ -857,7 +857,7 @@ function loadMessages(targetUid) {
                     let content = "";
                     if (isImg) {
                         content = `<img src="${msg.image}" style="width:100%; max-width:250px; border-radius:12px; cursor:pointer; display:block;" onclick="window.open('${msg.image}', '_blank')">`;
-                    } else if (msg.audio) {
+                     if (msg.audio) {
                     const waveformId = `wave-${msgId}`;
                     content = `
                     <div class="msg-bubble-audio" style="display: flex; align-items: center; gap: 10px; background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; border: ${isMine ? 'none' : '1px solid var(--gold, #d4af37)'}; padding: 8px 12px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; width: 240px; position: relative;">
