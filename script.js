@@ -872,10 +872,10 @@ function loadMessages(targetUid) {
                     }
                     
                     
-                    // --- 🎨 ბუშტის სტილი (თუ ფოტოა ან ემოჯი, ფონი გამჭვირვალეა) ---
-                    const dynamicBubbleStyle = (isOnlyEmoji || isImg) ? 
-                        `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
-                        `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
+                    // --- 🎨 ბუშტის სტილი (დავამატეთ msg.audio) ---
+                    const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
+                    `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
+                    `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
 
                     box.innerHTML += `
                         <div style="display: flex; flex-direction: column; margin-bottom: 8px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
