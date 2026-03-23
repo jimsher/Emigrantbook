@@ -807,6 +807,7 @@ function startChat(uid, name, photo) {
 
 
 
+                                
 function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
@@ -848,28 +849,23 @@ function loadMessages(targetUid) {
                     }
                     lastTs = msg.ts;
 
-                    // --- 🔍 ემოჯის შემოწმება (მხოლოდ ემოჯი თუა, ბუშტი არ გვინდა) ---
+                    // --- 🔍 ტიპის განსაზღვრა (ფოტო, ემოჯი, აუდიო თუ ტექსტი) ---
                     const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
                     const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
+                    const isImg = msg.image ? true : false;
 
-                    let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                  
-                   // --- ფოტოს ან ტექსტის ამოცნობა ---
-                   let content = "";
-                   if (msg.image) {
-                     // თუ მესიჯი ფოტოა
-                    content = `<img src="${msg.image}" style="width:100%; max-width:250px; border-radius:12px; cursor:pointer; display:block;" onclick="window.open('${msg.image}', '_blank')">`;
-                    } else if (msg.text) {
-                  // თუ ჩვეულებრივი ტექსტია (აქ შენი ემოჯის ლოგიკაც იქნება)
-                   content = msg.text;
-                   } else if (msg.audio) {
-                   content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                   }
-
-                  
-                    // ბუშტის სტილის განსაზღვრა (ემოჯის დროს გამჭვირვალეა)
-                    const dynamicBubbleStyle = isOnlyEmoji ? 
-                        `background: transparent; border: none; padding: 0; font-size: 35px;` : 
+                    let content = "";
+                    if (isImg) {
+                        content = `<img src="${msg.image}" style="width:100%; max-width:250px; border-radius:12px; cursor:pointer; display:block;" onclick="window.open('${msg.image}', '_blank')">`;
+                    } else if (msg.audio) {
+                        content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
+                    } else {
+                        content = msg.text || "";
+                    }
+                    
+                    // --- 🎨 ბუშტის სტილი (თუ ფოტოა ან ემოჯი, ფონი გამჭვირვალეა) ---
+                    const dynamicBubbleStyle = (isOnlyEmoji || isImg) ? 
+                        `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
                         `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
 
                     box.innerHTML += `
@@ -902,7 +898,7 @@ function loadMessages(targetUid) {
             });
         });
     });
-}
+}                                
 
 
 
