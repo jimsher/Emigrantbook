@@ -1073,7 +1073,7 @@ function sendMessage() {
  const card = `
  <div class="user-card" onclick="openProfile('${uid}')">
  <div class="card-inner">
- <img src="${user.photo || 'https://ui-avatars.com/api/?name='+user.name}" class="discover-ava">
+ <img src="${user.photo || 'token-avatar.png'}" class="discover-ava">
  <div class="discover-name">${user.name}</div>
  <div class="discover-status">EMIGRANT</div>
  </div>
@@ -1147,7 +1147,7 @@ function sendMessage() {
              dot.className = 'status-dot';
          }
      }
-     document.getElementById('profAva').src = user.photo || "https://ui-avatars.com/api/?name=" + user.name;
+     document.getElementById('profAva').src = user.photo || "token-avatar.png";
      profNameEl.innerText = user.name;
      const followersCount = user.followers ? Object.keys(user.followers).length : 0;
      const followingCount = user.following ? Object.keys(user.following).length : 0;
