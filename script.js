@@ -977,6 +977,11 @@ function loadMessages(targetUid) {
 function listenToGlobalMessages() {
     const myUid = auth.currentUser.uid;
     db.ref('messages').on('child_added', snap => {
+        
+        // ✨ კრიტიკული ჩამატება: ვამოწმებთ, შენი ჩატია თუ სხვისი
+        // თუ ჩატის სახელი (snap.key) არ შეიცავს შენს UID-ს, ფუნქცია ჩერდება
+        if (!snap.key.includes(myUid)) return;
+
         snap.ref.limitToLast(1).on('child_added', mSnap => {
             const msg = mSnap.val();
             // 1. თუ მესიჯი ჩემი გამოგზავნილია, ან ძალიან ძველია, არაფერს ვშვებით
@@ -989,6 +994,8 @@ function listenToGlobalMessages() {
             // 3. ვიგებთ ვინ მოგვწერა და ვუშვებთ ნოტიფიკაციებს
             db.ref(`users/${msg.senderId}`).once('value', uSnap => {
                 const u = uSnap.val();
+                if (!u) return;
+                
                 const senderName = u.name || "მომხმარებელი";
                 const messageText = msg.text || "📷 Voice/Media";
 
@@ -996,7 +1003,7 @@ function listenToGlobalMessages() {
                 const sound = document.getElementById('msgSound');
                 if (sound) {
                     sound.currentTime = 0; // აბრუნებს დასაწყისში, რომ გადაბმულ მესიჯებზეც დაიწკაპუნოს
-                    sound.play().catch(e => console.log("ხმის დაკვრა დაიბლოკა: საჭიროა ეკრანზე ერთხელ შეხება."));
+                    sound.play().catch(e => console.log("ხმის დაკვრა დაიბლოკა."));
                 }
 
                 // --- აქ ჩაჯდა შენი ორიგინალი კოდი ---
