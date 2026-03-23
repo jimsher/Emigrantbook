@@ -988,26 +988,43 @@ function listenToGlobalMessages() {
 function sendMessage() {
     if (!canAfford(0.2)) return;
     const inp = document.getElementById('messageInp');
-    if(!inp.value.trim() || !currentChatId) return;
     const myUid = auth.currentUser.uid;
+    
+    // ვიღებთ ტექსტს და ვაცილებთ ზედმეტ სფეისებს
+    let msgText = inp.value.trim();
+
+    // --- ✨ ახალი ლოგიკა: თუ ინპუტი ცარიელია, msgText ხდება ლაიქი ---
+    // თუ ტექსტი ცარიელია, მაგრამ მომხმარებელმა მაინც დააჭირა ღილაკს
+    if (!msgText) {
+        msgText = "👍";
+    }
+    // --------------------------------------------------------
+
+    if (!currentChatId) return;
     const chatId = getChatId(myUid, currentChatId);
 
-    // 1. მესიჯის გაგზავნა ბაზაში
+    // 1. მესიჯის გაგზავნა ბაზაში (ტექსტი იქნება ან ნაწერი, ან ლაიქი)
     db.ref(`messages/${chatId}`).push({
         senderId: myUid,
-        text: inp.value,
+        text: msgText,
         ts: Date.now()
     });
 
     // 2. ნოტიფიკაციის გაგზავნა მეორე იუზერთან
     if (typeof sendPushToUser === "function") {
-        sendPushToUser(currentChatId, myName, inp.value);
+        sendPushToUser(currentChatId, myName, msgText);
     }
 
-    // 3. სტატუსების გასუფთავება და გადახდა
+    // 3. სტატუსების გასუფთავება და გადახდა (შენი ორიგინალი ხაზები)
     db.ref(`typing/${chatId}/${myUid}`).remove();
     spendAkho(0.2, 'Message');
-    inp.value = "";
+    
+    inp.value = ""; // ვასუფთავებთ ინპუტს
+
+    // აუცილებელია გამოვიძახოთ handleTyping, რომ ღილაკი ისევ ლაიქად იქცეს
+    if (typeof handleTyping === "function") {
+        handleTyping();
+    }
 }
 
 
