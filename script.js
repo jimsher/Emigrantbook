@@ -774,7 +774,7 @@ function openMessenger() {
 
 
 function startChat(uid, name, photo) {
-  setAppBadge(0);
+    setAppBadge(0);
     // ეს ხაზი აცოცხლებს ხმოვანის გაგზავნას
     window.currentChatId = uid;
     currentChatId = uid; 
@@ -783,6 +783,21 @@ function startChat(uid, name, photo) {
     document.getElementById('individualChat').style.display = 'flex';
     document.getElementById('chatTargetName').innerText = name;
     document.getElementById('chatTargetAva').src = photo;
+
+    // --- ✨ ახალი: მესიჯების წაკითხულად მონიშვნა (Seen Logic) ---
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, uid);
+    
+    db.ref(`messages/${chatId}`).once('value', snap => {
+        snap.forEach(child => {
+            const m = child.val();
+            // თუ მესიჯი სხვისია და ჯერ Seen არაა, ვნიშნავთ წაკითხულად
+            if (m.senderId !== myUid && m.seen === false) {
+                child.ref.update({ seen: true });
+            }
+        });
+    });
+    // -------------------------------------------------------
 
     const statusEl = document.getElementById('chatTargetStatus');
     if (statusEl) {
@@ -800,7 +815,6 @@ function startChat(uid, name, photo) {
     }
     loadMessages(uid);
     listenToTyping(uid);
-    
 }
 
 
