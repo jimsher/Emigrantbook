@@ -856,7 +856,7 @@ function loadMessages(targetUid) {
 
                     let content = "";
                     if (isImg) {
-                        content = `<img src="${msg.image}" style="max-width:200px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
+                        content = `<img src="${msg.image}" style="max-width:170px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
                     } else if (msg.audio) {
                         content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
                     } else {
