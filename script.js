@@ -807,9 +807,7 @@ function startChat(uid, name, photo) {
 
 
 
-
-
-  function loadMessages(targetUid) {
+function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
     const box = document.getElementById('chatMessages');
@@ -850,11 +848,20 @@ function startChat(uid, name, photo) {
                     }
                     lastTs = msg.ts;
 
+                    // --- 🔍 ემოჯის შემოწმება (მხოლოდ ემოჯი თუა, ბუშტი არ გვინდა) ---
+                    const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
+                    const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
+
                     let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
                     
-                    // აქ ვიყენებთ "display: inline-block" ან "max-width: fit-content"
+                    // ბუშტის სტილის განსაზღვრა (ემოჯის დროს გამჭვირვალეა)
+                    const dynamicBubbleStyle = isOnlyEmoji ? 
+                        `background: transparent; border: none; padding: 0; font-size: 35px;` : 
+                        `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
+
                     box.innerHTML += `
-                        <div style="display: flex; flex-direction: column; margin-bottom: 8px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};">
+                        <div style="display: flex; flex-direction: column; margin-bottom: 8px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
+                             oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
                             
                             <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
                                 
@@ -866,15 +873,11 @@ function startChat(uid, name, photo) {
                                     max-width: 100%; 
                                     width: fit-content; 
                                     cursor: pointer; 
-                                    padding: 8px 14px; 
-                                    border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; 
-                                    background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; 
-                                    color: ${isMine ? 'black' : 'white'}; 
-                                    border: ${isMine ? 'none' : '1px solid #333'};
                                     word-wrap: break-word;
                                     text-align: left;
+                                    ${dynamicBubbleStyle}
                                 ">
-                                    <div class="msg-content" style="font-size: 15px; font-weight: ${isMine ? '500' : 'normal'}; line-height: 1.4;">${content}</div>
+                                    <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
                                 </div>
                             </div>
 
@@ -886,12 +889,14 @@ function startChat(uid, name, photo) {
             });
         });
     });
-}  
+}
 
 
 
 
 
+
+  
 
  function closeChat() {
  if (currentChatId) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
