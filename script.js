@@ -3513,3 +3513,58 @@ row.innerHTML = `
 
 // ავტომატურად ჩავრთოთ ისტორიის ჩატვირთვა გვერდის გახსნისას
 loadInvoiceHistory();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function uploadChatImage(input) {
+    // თუ ფაილი არ აურჩევია ან ჩატი არაა გახსნილი, გაჩერდეს
+    if (!input.files || !input.files[0] || !currentChatId) return;
+    
+    const file = input.files[0];
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, currentChatId);
+
+    try {
+        // 1. ვქმნით მისამართს Firebase Storage-ში
+        const filePath = `chat_images/${chatId}/${Date.now()}_${file.name}`;
+        const storageRef = firebase.storage().ref(filePath);
+
+        // 2. ფაილის ატვირთვა (Upload)
+        const snapshot = await storageRef.put(file);
+        
+        // 3. ვიღებთ ატვირთული ფოტოს პირდაპირ ლინკს
+        const downloadURL = await snapshot.ref.getDownloadURL();
+
+        // 4. ვაგზავნით მესიჯს (ტექსტის ნაცვლად ვატანთ image-ის ლინკს)
+        db.ref(`messages/${chatId}`).push({
+            senderId: myUid,
+            image: downloadURL, // აი ეს აამუშავებს loadMessages-ში ფოტოს გამოჩენას
+            ts: Date.now(),
+            seen: false
+        });
+
+        // ნოტიფიკაციის გაგზავნა ადრესატთან
+        if (typeof sendPushToUser === "function") {
+            sendPushToUser(currentChatId, myName, "📷 Photo");
+        }
+
+        // ვასუფთავებთ ინპუტს, რომ შემდეგში იგივე ფოტოს არჩევა შევძლოთ
+        input.value = ""; 
+
+    } catch (error) {
+        console.error("ფოტოს ატვირთვა ჩაიშალა:", error);
+        alert("ვერ მოხერხდა ფოტოს გაგზავნა.");
+    }
+}
