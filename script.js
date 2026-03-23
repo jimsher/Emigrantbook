@@ -853,7 +853,20 @@ function loadMessages(targetUid) {
                     const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
 
                     let content = msg.text ? msg.text : `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                    
+                  
+                   // --- ფოტოს ან ტექსტის ამოცნობა ---
+                   let content = "";
+                   if (msg.image) {
+                     // თუ მესიჯი ფოტოა
+                    content = `<img src="${msg.image}" style="width:100%; max-width:250px; border-radius:12px; cursor:pointer; display:block;" onclick="window.open('${msg.image}', '_blank')">`;
+                    } else if (msg.text) {
+                  // თუ ჩვეულებრივი ტექსტია (აქ შენი ემოჯის ლოგიკაც იქნება)
+                   content = msg.text;
+                   } else if (msg.audio) {
+                   content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
+                   }
+
+                  
                     // ბუშტის სტილის განსაზღვრა (ემოჯის დროს გამჭვირვალეა)
                     const dynamicBubbleStyle = isOnlyEmoji ? 
                         `background: transparent; border: none; padding: 0; font-size: 35px;` : 
