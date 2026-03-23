@@ -1047,7 +1047,8 @@ function sendMessage() {
     db.ref(`messages/${chatId}`).push({
         senderId: myUid,
         text: msgText,
-        ts: Date.now()
+        ts: Date.now(),
+        seen: false
     });
 
     // 2. ნოტიფიკაციის გაგზავნა მეორე იუზერთან
