@@ -909,15 +909,30 @@ function loadMessages(targetUid) {
  }
 
  function handleTyping() {
- if (!currentChatId) return;
- const chatId = getChatId(auth.currentUser.uid, currentChatId);
- db.ref(`typing/${chatId}/${auth.currentUser.uid}`).set(true);
- 
- if (typingTimeout) clearTimeout(typingTimeout);
- typingTimeout = setTimeout(() => {
- db.ref(`typing/${chatId}/${auth.currentUser.uid}`).remove();
- }, 3000);
- }
+    // 1. შენი ორიგინალი Typing... სტატუსის ლოგიკა (უცვლელად)
+    if (!currentChatId) return;
+    const chatId = getChatId(auth.currentUser.uid, currentChatId);
+    db.ref(`typing/${chatId}/${auth.currentUser.uid}`).set(true);
+    
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        db.ref(`typing/${chatId}/${auth.currentUser.uid}`).remove();
+    }, 3000);
+
+    // 2. ✨ ახალი: ღილაკის ხატულას შეცვლა (ლაიქი VS თვითმფრინავი)
+    const inp = document.getElementById('messageInp');
+    const sendIcon = document.getElementById('sendBtnIcon'); 
+    
+    if (inp && sendIcon) {
+        // თუ ინპუტში რამე წერია (არაა ცარიელი), ხატულა ხდება თვითმფრინავი
+        if (inp.value.trim().length > 0) {
+            sendIcon.className = 'fas fa-paper-plane';
+        } else {
+            // თუ ცარიელია, ბრუნდება ლაიქი
+            sendIcon.className = 'fas fa-thumbs-up';
+        }
+    }
+}
 
  function listenToTyping(targetUid) {
  const chatId = getChatId(auth.currentUser.uid, targetUid);
