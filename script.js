@@ -2418,7 +2418,85 @@ async function sendVoiceMessage(blob) {
         alert("ატვირთვის შეცდომა: ვერ მოხერხდა ფაილის შენახვა"); 
     }
 }       
-        
+
+
+// ვოისის დიზაინი
+// --- 🎤 MESSENGER STYLE AUDIO SYSTEM (WAVESURFER) ---
+let waveSurfers = {}; 
+
+function initWaveforms() {
+    document.querySelectorAll('.waveform-container').forEach(container => {
+        const msgId = container.id.split('-')[1];
+        if (waveSurfers[msgId]) return;
+
+        const audioUrl = container.getAttribute('data-url');
+        const isSent = container.closest('.msg-sent'); 
+
+        const ws = WaveSurfer.create({
+            container: `#${container.id}`,
+            waveColor: isSent ? 'rgba(0, 0, 0, 0.2)' : 'rgba(212, 175, 55, 0.3)',
+            progressColor: isSent ? 'black' : '#d4af37',
+            barWidth: 2,
+            barGap: 2,
+            barRadius: 10,
+            height: 30,
+            url: audioUrl,
+        });
+
+        waveSurfers[msgId] = ws;
+
+        ws.on('ready', () => {
+            const durationEl = document.getElementById(`duration-${msgId}`);
+            if (durationEl) durationEl.innerText = formatTime(ws.getDuration());
+        });
+
+        ws.on('finish', () => {
+            const icon = document.getElementById(`icon-${msgId}`);
+            if (icon) icon.className = 'fas fa-play';
+        });
+    });
+}
+
+function playPauseAudio(msgId) {
+    const ws = waveSurfers[msgId];
+    const icon = document.getElementById(`icon-${msgId}`);
+    if (!ws) return;
+
+    if (ws.isPlaying()) {
+        ws.pause();
+        icon.className = 'fas fa-play';
+    } else {
+        // სხვა ყველა პლეიერის გაჩერება
+        Object.keys(waveSurfers).forEach(id => {
+            if (waveSurfers[id].isPlaying()) {
+                waveSurfers[id].pause();
+                const otherIcon = document.getElementById(`icon-${id}`);
+                if (otherIcon) otherIcon.className = 'fas fa-play';
+            }
+        });
+        ws.play();
+        icon.className = 'fas fa-pause';
+    }
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+// --- END OF AUDIO SYSTEM ---
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2427,9 +2505,6 @@ function deleteMyVideo(postId) {
  db.ref(`posts/${postId}`).remove();
  }
 }
-
-
-
 
 
 
@@ -2478,34 +2553,7 @@ function startGlobalUnreadCounter() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ზარის მესიჯის და ვიდიეო ჩატის ხმები
-
-
-
-
-
-
-
-
-
 
 
 
