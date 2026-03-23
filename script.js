@@ -903,6 +903,7 @@ function loadMessages(targetUid) {
                         </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
+              setTimeout(initWaveforms, 100);
             });
         });
     });
