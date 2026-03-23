@@ -2336,30 +2336,29 @@ window.deleteWallPost = function(postId) {
 
 
 
-let mediaRecorder;
+ let mediaRecorder;
 let audioChunks = [];
+
 async function toggleVoiceRecord() {
- const micIcon = document.getElementById('micIcon');
- if (!mediaRecorder || mediaRecorder.state === "inactive") {
- const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
- mediaRecorder = new MediaRecorder(stream);
- audioChunks = [];
- mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
- mediaRecorder.onstop = async () => {
- const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
- sendVoiceMessage(audioBlob);
- };
- mediaRecorder.start();
- micIcon.classList.replace('fa-microphone', 'fa-stop-circle');
- micIcon.style.color = "var(--red)";
- } else {
- mediaRecorder.stop();
- micIcon.classList.replace('fa-stop-circle', 'fa-microphone');
- micIcon.style.color = "var(--gold)";
- }
+    const micIcon = document.getElementById('micIcon');
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+            sendVoiceMessage(audioBlob);
+        };
+        mediaRecorder.start();
+        micIcon.classList.replace('fa-microphone', 'fa-stop-circle');
+        micIcon.style.color = "var(--red)";
+    } else {
+        mediaRecorder.stop();
+        micIcon.classList.replace('fa-stop-circle', 'fa-microphone');
+        micIcon.style.color = "var(--gold)";
+    }
 }
-
-
 
 async function sendVoiceMessage(blob) {
     // 1. ვამოწმებთ, არჩეულია თუ არა ჩატი
@@ -2406,7 +2405,7 @@ async function sendVoiceMessage(blob) {
                 alert("ბაზაში ჩაწერის შეცდომა: " + e.message);
             });
 
-            // ნოტიფიკაციის გაგზავნა (თუ გაქვს ეს ფუნქცია)
+            // ნოტიფიკაციის გაგზავნა
             if (typeof sendPushToUser === "function") {
                 sendPushToUser(targetId, myName, "🎤 Voice Message");
             }
@@ -2418,7 +2417,8 @@ async function sendVoiceMessage(blob) {
         console.error("Storage Error:", err);
         alert("ატვირთვის შეცდომა: ვერ მოხერხდა ფაილის შენახვა"); 
     }
-}
+}       
+        
 
 
 
