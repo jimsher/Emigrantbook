@@ -858,9 +858,17 @@ function loadMessages(targetUid) {
                     if (isImg) {
                         content = `<img src="${msg.image}" style="width:100%; max-width:250px; border-radius:12px; cursor:pointer; display:block;" onclick="window.open('${msg.image}', '_blank')">`;
                     } else if (msg.audio) {
-                        content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
+                    const waveformId = `wave-${msgId}`;
+                    content = `
+                    <div class="msg-bubble-audio" style="display: flex; align-items: center; gap: 10px; background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; border: ${isMine ? 'none' : '1px solid var(--gold, #d4af37)'}; padding: 8px 12px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; width: 240px; position: relative;">
+                    <button onclick="playPauseAudio('${msgId}')" style="background: ${isMine ? 'black' : 'var(--gold, #d4af37)'}; color: ${isMine ? 'var(--gold, #d4af37)' : 'black'}; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; outline: none;">
+                    <i class="fas fa-play" id="icon-${msgId}"></i>
+                    </button>
+                    <div id="${waveformId}" class="waveform-container" data-url="${msg.audio}" style="flex: 1; height: 30px; cursor: pointer;"></div>
+                    <span class="audio-duration" id="duration-${msgId}" style="font-size: 10px; font-weight: bold; color: ${isMine ? 'black' : 'var(--gold, #d4af37)'}; min-width: 32px; text-align: right;">--:--</span>
+                    </div>`;
                     } else {
-                        content = msg.text || "";
+                    content = msg.text || "";
                     }
                     
                     // --- 🎨 ბუშტის სტილი (თუ ფოტოა ან ემოჯი, ფონი გამჭვირვალეა) ---
