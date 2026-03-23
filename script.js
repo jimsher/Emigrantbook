@@ -858,24 +858,15 @@ function loadMessages(targetUid) {
                     if (isImg) {
                         content = `<img src="${msg.image}" style="width:100%; max-width:250px; border-radius:12px; cursor:pointer; display:block;" onclick="window.open('${msg.image}', '_blank')">`;
                     } else if (msg.audio) {
-                        const waveformId = `wave-${msgId}`;
-                        content = `
-                        <div class="msg-bubble-audio" style="display: flex; align-items: center; gap: 10px; background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; border: ${isMine ? 'none' : '1px solid var(--gold, #d4af37)'}; padding: 8px 12px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'}; width: 240px; position: relative;">
-                            <button onclick="playPauseAudio('${msgId}')" style="background: ${isMine ? 'black' : 'var(--gold, #d4af37)'}; color: ${isMine ? 'var(--gold, #d4af37)' : 'black'}; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; outline: none;">
-                                <i class="fas fa-play" id="icon-${msgId}"></i>
-                            </button>
-                            <div id="${waveformId}" class="waveform-container" data-url="${msg.audio}" style="flex: 1; height: 30px; cursor: pointer;"></div>
-                            <span class="audio-duration" id="duration-${msgId}" style="font-size: 10px; font-weight: bold; color: ${isMine ? 'black' : 'var(--gold, #d4af37)'}; min-width: 32px; text-align: right;">--:--</span>
-                        </div>`;
+                        content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
                     } else {
                         content = msg.text || "";
                     }
                     
-                    
-                    // --- 🎨 ბუშტის სტილი (დავამატეთ msg.audio) ---
-                    const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
-                    `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
-                    `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
+                    // --- 🎨 ბუშტის სტილი (თუ ფოტოა ან ემოჯი, ფონი გამჭვირვალეა) ---
+                    const dynamicBubbleStyle = (isOnlyEmoji || isImg) ? 
+                        `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
+                        `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
 
                     box.innerHTML += `
                         <div style="display: flex; flex-direction: column; margin-bottom: 8px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
@@ -904,7 +895,6 @@ function loadMessages(targetUid) {
                         </div>`;
                 });
                 box.scrollTop = box.scrollHeight;
-              setTimeout(initWaveforms, 100);
             });
         });
     });
@@ -2434,51 +2424,65 @@ async function sendVoiceMessage(blob) {
 // --- 🎤 MESSENGER STYLE AUDIO SYSTEM (WAVESURFER) ---
 let waveSurfers = {}; 
 
-
 function initWaveforms() {
-    // ვეძებთ ყველა კონტეინერს, რომელსაც აქვს waveform-container კლასი
-    const containers = document.querySelectorAll('.waveform-container');
-    
-    containers.forEach(container => {
+    document.querySelectorAll('.waveform-container').forEach(container => {
         const msgId = container.id.split('-')[1];
-        
-        // თუ უკვე დახატულია, აღარ გვინდა თავიდან
         if (waveSurfers[msgId]) return;
 
         const audioUrl = container.getAttribute('data-url');
-        if (!audioUrl) return;
+        const isSent = container.closest('.msg-sent'); 
 
-        try {
-            const ws = WaveSurfer.create({
-                container: `#${container.id}`,
-                waveColor: 'rgba(0, 0, 0, 0.2)', // ტალღის ფონი
-                progressColor: 'black', // პროგრესი
-                barWidth: 2,
-                barGap: 2,
-                barRadius: 10,
-                height: 30,
-                url: audioUrl
-            });
+        const ws = WaveSurfer.create({
+            container: `#${container.id}`,
+            waveColor: isSent ? 'rgba(0, 0, 0, 0.2)' : 'rgba(212, 175, 55, 0.3)',
+            progressColor: isSent ? 'black' : '#d4af37',
+            barWidth: 2,
+            barGap: 2,
+            barRadius: 10,
+            height: 30,
+            url: audioUrl,
+        });
 
-            waveSurfers[msgId] = ws;
+        waveSurfers[msgId] = ws;
 
-            ws.on('ready', () => {
-                const durEl = document.getElementById(`duration-${msgId}`);
-                if (durEl) durEl.innerText = formatTime(ws.getDuration());
-            });
+        ws.on('ready', () => {
+            const durationEl = document.getElementById(`duration-${msgId}`);
+            if (durationEl) durationEl.innerText = formatTime(ws.getDuration());
+        });
 
-            ws.on('finish', () => {
-                const icon = document.getElementById(`icon-${msgId}`);
-                if (icon) icon.className = 'fas fa-play';
-            });
-            
-            // შეცდომის დაჭერა, თუ აუდიო ვერ ჩაიტვირთა
-            ws.on('error', (e) => console.error("WaveSurfer Error:", e));
-
-        } catch (err) {
-            console.error("WaveSurfer init failed:", err);
-        }
+        ws.on('finish', () => {
+            const icon = document.getElementById(`icon-${msgId}`);
+            if (icon) icon.className = 'fas fa-play';
+        });
     });
+}
+
+function playPauseAudio(msgId) {
+    const ws = waveSurfers[msgId];
+    const icon = document.getElementById(`icon-${msgId}`);
+    if (!ws) return;
+
+    if (ws.isPlaying()) {
+        ws.pause();
+        icon.className = 'fas fa-play';
+    } else {
+        // სხვა ყველა პლეიერის გაჩერება
+        Object.keys(waveSurfers).forEach(id => {
+            if (waveSurfers[id].isPlaying()) {
+                waveSurfers[id].pause();
+                const otherIcon = document.getElementById(`icon-${id}`);
+                if (otherIcon) otherIcon.className = 'fas fa-play';
+            }
+        });
+        ws.play();
+        icon.className = 'fas fa-pause';
+    }
+}
+
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 // --- END OF AUDIO SYSTEM ---
 
