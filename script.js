@@ -2042,25 +2042,38 @@ function showGiftsCollection(uid) {
 
 
 
- function setupAutoPlay() {
- const observer = new IntersectionObserver((entries) => {
- entries.forEach(entry => {
- const video = entry.target.querySelector('video');
- if (entry.isIntersecting) { 
- if (document.getElementById('profileUI').style.display !== 'flex' && 
- document.getElementById('discoveryUI').style.display !== 'flex') {
- video.muted = false; 
- video.play().catch(e => {}); 
- }
- }
- else { video.pause(); video.muted = true; }
- });
- }, { root: document.getElementById('main-feed'), threshold: 0.6 });
- document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
- }
+ 
+function setupAutoPlay() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target.querySelector('video');
 
+            // ✨ ჩამატებული ლოგიკა: ვამოწმებთ, ჩატი ღიაა თუ არა
+            const isChatOpen = document.getElementById('individualChat').style.display === 'flex';
 
+            if (entry.isIntersecting) {
+                // თუ ჩატი ღიაა, ვიდეო არ ჩართო და პირიქით - დააპაუზე
+                if (isChatOpen) {
+                    if (video) video.pause();
+                    return; // აქ წყდება ფუნქცია და აღარ მიდის ქვემოთ play-ზე
+                }
 
+                if (document.getElementById('profileUI').style.display !== 'flex' && 
+                    document.getElementById('discoveryUI').style.display !== 'flex') {
+                    video.muted = false; 
+                    video.play().catch(e => {}); 
+                }
+            } else { 
+                if (video) {
+                    video.pause(); 
+                    video.muted = true; 
+                }
+            }
+        });
+    }, { root: document.getElementById('main-feed'), threshold: 0.6 });
+
+    document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
+}
 
 
 
