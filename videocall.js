@@ -129,3 +129,29 @@ function minimizeVideoCall() {
         ui.style.borderRadius = '0'; ui.style.border = 'none';
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function acceptIncomingCall() {
+    if (window.activeIncomingCall) {
+        db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
+        document.getElementById('answerBtn').style.display = 'none';
+        startVideoCall(); 
+    }
+}
+
+function rejectIncomingCall() {
+    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+    document.getElementById('videoCallUI').style.display = 'none';
+}
