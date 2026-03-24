@@ -2093,36 +2093,53 @@ div[style*="overflow-x:auto"] {
 
  <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif;">
     
-    <div id="remote-video" style="width:100%; height:100%; background:#111; position:relative;">
-        <div id="remote-label" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; font-size:12px; z-index:30;">Waiting for partner...</div>
+    <div id="incomingCallContainer" style="display:none; position:absolute; z-index:1000; background:#1a1a1a; width:300px; padding:30px; border-radius:30px; border:1px solid #d4af37; text-align:center; box-shadow:0 15px 50px rgba(0,0,0,0.8); flex-direction:column; align-items:center;">
+        <div id="incomingAvatar" style="width:100px; height:100px; border-radius:50%; border:3px solid #d4af37; margin-bottom:15px; background-image:url('/logo.png'); background-size:cover; background-position:center;"></div>
+        <h2 id="incomingNameDisplay" style="color:white; font-size:22px; margin:0 0 5px 0;">Levani Gvinjilia</h2>
+        <p style="color:#d4af37; font-size:14px; margin:0 0 25px 0;">ვიდეო ზარი შემოდის...</p>
         
-        <div style="position:absolute; top:80px; width:100%; text-align:center; z-index:25;">
-            <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover;"></div>
-            <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Calling...</h2>
-            <p style="color:rgba(255,255,255,0.7); font-size:15px; margin-top:5px;">Messenger Video Call</p>
+        <div style="display:flex; gap:30px;">
+            <div onclick="rejectIncomingCall()" style="width:60px; height:60px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; cursor:pointer; box-shadow:0 0 15px rgba(255,77,77,0.4);">
+                <i class="fas fa-phone-slash"></i>
+            </div>
+            <div onclick="acceptIncomingCall()" style="width:60px; height:60px; background:#4cd964; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:24px; cursor:pointer; box-shadow:0 0 15px rgba(76,217,100,0.4);">
+                <i class="fas fa-video"></i>
+            </div>
         </div>
     </div>
 
-    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:130px; right:20px; border-radius:15px; border:2px solid var(--gold); overflow:hidden; z-index:100; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
+    <div id="activeCallUI" style="width:100%; height:100%; position:relative; display:none; flex-direction:column; align-items:center;">
+        <div id="remote-video" style="width:100%; height:100%; background:#111; position:relative;">
+            <div id="remote-label" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; font-size:12px; z-index:30;">Waiting for partner...</div>
+            
+            <div style="position:absolute; top:80px; width:100%; text-align:center; z-index:25;">
+                <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover;"></div>
+                <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Calling...</h2>
+                <p style="color:rgba(255,255,255,0.7); font-size:15px; margin-top:5px;">Messenger Video Call</p>
+            </div>
+        </div>
 
-    <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:110; width:90%; justify-content:center;">
-        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-magic"></i> Touch up</div>
-        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-smile"></i> Effects</div>
-        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-image"></i> Backgrounds</div>
-    </div>
+        <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:130px; right:20px; border-radius:15px; border:2px solid #d4af37; overflow:hidden; z-index:100; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
 
-    <div class="call-controls" style="position:absolute; bottom:30px; display:flex; gap:20px; z-index:120; align-items:center;">
-        <div onclick="toggleCam()" id="camBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
-            <i class="fas fa-video"></i>
+        <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:110; width:90%; justify-content:center;">
+            <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-magic"></i> Touch up</div>
+            <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-smile"></i> Effects</div>
+            <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-image"></i> Backgrounds</div>
         </div>
-        <div onclick="toggleMic()" id="micBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
-            <i class="fas fa-microphone"></i>
-        </div>
-        <div style="width:55px; height:55px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
-            <i class="fas fa-gamepad"></i>
-        </div>
-        <div onclick="endVideoCall()" style="width:70px; height:70px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:26px; box-shadow:0 0 15px rgba(255,77,77,0.5);">
-            <i class="fas fa-phone-slash"></i>
+
+        <div class="call-controls" style="position:absolute; bottom:30px; display:flex; gap:20px; z-index:120; align-items:center;">
+            <div onclick="toggleCam()" id="camBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
+                <i class="fas fa-video"></i>
+            </div>
+            <div onclick="toggleMic()" id="micBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
+                <i class="fas fa-microphone"></i>
+            </div>
+            <div style="width:55px; height:55px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+                <i class="fas fa-gamepad"></i>
+            </div>
+            <div onclick="endVideoCall()" style="width:70px; height:70px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:26px; box-shadow:0 0 15px rgba(255,77,77,0.5);">
+                <i class="fas fa-phone-slash"></i>
+            </div>
         </div>
     </div>
 
@@ -2130,7 +2147,6 @@ div[style*="overflow-x:auto"] {
         <i class="fas fa-expand-alt"></i>
     </div>
 </div>
-
 
 
 
