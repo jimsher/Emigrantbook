@@ -14,7 +14,8 @@ async function requestVideoCall() {
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
     document.getElementById('videoCallUI').style.display = 'flex';
-    document.getElementById('answerBtn').style.display = 'none'; // რადგან ჩვენ ვრეკავთ, პასუხი არ გვჭირდება
+    document.getElementById('incomingCallBox').style.display = 'none'; // ვმალავთ ჩარჩოს
+    document.getElementById('activeCallContent').style.display = 'block'; // ვაჩენთ საუბარს
 
     db.ref('users/' + targetUid + '/name').once('value').then(snap => {
         document.getElementById('remote-name').innerText = snap.val() || "Emigrant";
@@ -58,32 +59,37 @@ async function startVideoCall() {
     }
 }
 
-// 3. შემოსული ზარის მოსმენა (აქ ჩავასწორე!)
+// 3. შემოსული ზარის მოსმენა (აქ ჩავსვი ჩარჩოს მართვა)
 function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
-            // ვაჩვენებთ შენს დიზაინს confirm-ის ნაცვლად
             document.getElementById('videoCallUI').style.display = 'flex';
-            document.getElementById('remote-name').innerText = call.callerName;
-            document.getElementById('answerBtn').style.display = 'flex'; // ვაჩენთ მწვანე ღილაკს
+            document.getElementById('incomingCallBox').style.display = 'flex'; // ვაჩენთ ჩარჩოს
+            document.getElementById('activeCallContent').style.display = 'none'; // ვმალავთ საუბარს
             
-            // ვინახავთ ზარის ინფორმაციას
+            document.getElementById('incomingNameDisplay').innerText = call.callerName;
             window.currentIncomingCall = call;
         } else if (!call) {
-            // თუ მეორე მხარემ გათიშა, ვმალავთ UI-ს
             document.getElementById('videoCallUI').style.display = 'none';
         }
     });
 }
 
-// ფუნქცია მწვანე ღილაკისთვის
+// პასუხის ღილაკი
 function acceptIncomingCall() {
     if (window.currentIncomingCall) {
         db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
-        document.getElementById('answerBtn').style.display = 'none'; // ვმალავთ პასუხის ღილაკს, რადგან უკვე ვსაუბრობთ
+        document.getElementById('incomingCallBox').style.display = 'none'; // ვმალავთ ჩარჩოს
+        document.getElementById('activeCallContent').style.display = 'block'; // ვაჩენთ საუბარს
         startVideoCall();
     }
+}
+
+// უარყოფის ღილაკი
+function rejectIncomingCall() {
+    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+    document.getElementById('videoCallUI').style.display = 'none';
 }
 
 // 4. ზარის დასრულება
@@ -99,7 +105,7 @@ async function endVideoCall() {
     if (auth.currentUser) db.ref(`video_calls/${auth.currentUser.uid}`).remove();
 }
 
-// 5. მართვის ღილაკები (toggleMic, toggleCam, minimizeVideoCall უცვლელია...)
+// 5. მართვის ღილაკები
 function toggleMic() {
     micMuted = !micMuted;
     if (localTracks.audioTrack) localTracks.audioTrack.setEnabled(!micMuted);
