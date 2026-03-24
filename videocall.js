@@ -129,3 +129,33 @@ function minimizeVideoCall() {
         ui.style.borderRadius = '0'; ui.style.border = 'none';
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function acceptIncomingCall() {
+    // 1. ბაზას ეუბნება: "იუზერმა უპასუხაო"
+    db.ref(`video_calls/${auth.currentUser.uid}`).update({ 
+        status: 'accepted' 
+    });
+
+    // 2. რთავს ვიდეოს (შენი ორიგინალი ფუნქცია)
+    startVideoCall();
+    
+    // 3. თიშავს იმ პატარა ჩარჩოს, რაც სურათზე მომიგდე
+    document.getElementById('videoCallUI').style.display = 'none';
+}
