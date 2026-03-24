@@ -75,20 +75,54 @@ async function startVideoCall() {
 }
 
 // 3. შემოსული ზარის მოსმენა (ეს უნდა იდოს auth.onAuthStateChanged-ში)
-// 2. listenForIncomingCalls-ში (როცა გირეკავენ)
+const ringtone = document.getElementById('ringtone');
+
+// 1. როცა შემოსულ ზარს ვიჭერთ
 function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
-            // აქ ვსვამთ იმის სახელს ვინც გვირეკავს
-            document.getElementById('remote-name').innerText = call.callerName;
+            document.getElementById('incomingName').innerText = call.callerName;
+            document.getElementById('incomingCallUI').style.display = 'flex';
             
-            if (confirm(`${call.callerName} გირეკავთ...`)) {
-                // ... შენი accepted ლოგიკა ...
-            }
+            // ჩავრთოთ ზუმერი
+            ringtone.play().catch(e => console.log("აუდიოს ჩართვისთვის საჭიროა იუზერის ინტერაქცია"));
+            
+            window.activeIncomingCall = call;
+        } else {
+            // თუ მეორე მხარემ გათიშა (calling გაქრა), ვთიშავთ ყველაფერს
+            stopRingtone();
+            document.getElementById('incomingCallUI').style.display = 'none';
         }
     });
 }
+
+// 2. პასუხის დროს ზუმერის გაჩერება
+function acceptIncomingCall() {
+    stopRingtone();
+    const call = window.activeIncomingCall;
+    db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
+    document.getElementById('incomingCallUI').style.display = 'none';
+    startVideoCall();
+}
+
+// 3. უარყოფის დროს ზუმერის გაჩერება
+function rejectIncomingCall() {
+    stopRingtone();
+    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+    document.getElementById('incomingCallUI').style.display = 'none';
+}
+
+// დამხმარე ფუნქცია აუდიოს გასაჩერებლად
+function stopRingtone() {
+    ringtone.pause();
+    ringtone.currentTime = 0; // აბრუნებს დასაწყისში
+}
+
+
+
+
+
 
 // 4. ზარის დასრულება
 async function endVideoCall() {
