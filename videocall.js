@@ -4,23 +4,28 @@ let localTracks = { videoTrack: null, audioTrack: null };
 let micMuted = false;
 let camMuted = false;
 
+// კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const AGORA_APP_ID = "7290502fac7f4feb82b021ccde79988a";
 const AGORA_TOKEN = "007eJxTYJhrkzvFV3rSsuA7K2fvPRDIuUSKc2P4aQm1I++W7apOCk5WYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBI9J95KLMhkJHh5sOLTIwMEAjiczPkZJalxheXFKUm5jIwAABD8iNp";
+
 const FIXED_CHANNEL = "live_stream"; 
 
-// 1. ზარის დაწყება
+// 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
     const targetUid = window.currentChatId;
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
-    document.getElementById('videoCallUI').style.display = 'flex';
-    document.getElementById('incomingCallBox').style.display = 'none'; // ვმალავთ ჩარჩოს
-    document.getElementById('activeCallContent').style.display = 'block'; // ვაჩენთ საუბარს
+    // UI-ს მომზადება (კამერის ჩართვამდე)
+    const ui = document.getElementById('videoCallUI');
+    if(ui) ui.style.display = 'flex';
 
+    // ბაზიდან სახელის ამოღება, რომ "ლევანი" არ ეწეროს
     db.ref('users/' + targetUid + '/name').once('value').then(snap => {
-        document.getElementById('remote-name').innerText = snap.val() || "Emigrant";
+        const rName = document.getElementById('remote-name');
+        if(rName) rName.innerText = snap.val() || "Emigrant";
     });
 
+    // შენი ორიგინალი Firebase ლოგიკა
     await db.ref('video_calls/' + targetUid).set({
         callerUid: auth.currentUser.uid,
         callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
@@ -29,67 +34,60 @@ async function requestVideoCall() {
         ts: Date.now()
     });
 
-    startVideoCall();
+    startVideoCall(); // ეს რთავს აგორას და კამერას
 }
+
+
 
 // 2. მთავარი ვიდეო ფუნქცია
 async function startVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if (!ui) return;
+
     ui.style.display = 'flex';
     
     try {
         const uid = Math.floor(Math.random() * 10000);
         await client.join(AGORA_APP_ID, FIXED_CHANNEL, AGORA_TOKEN, uid);
+        
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
         localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
+        
         localTracks.videoTrack.play("local-video");
         await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
 
+        // სხვისი ვიდეოს გამოჩენა
         client.on("user-published", async (user, mediaType) => {
             await client.subscribe(user, mediaType);
             if (mediaType === "video") {
-                document.getElementById('remote-label').innerText = "Connected";
+                const remoteLabel = document.getElementById('remote-label');
+                if (remoteLabel) remoteLabel.innerText = "Connected";
                 user.videoTrack.play("remote-video");
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
+
     } catch (err) {
+        console.error("Agora Error:", err);
+        alert("ვიდეო ზარი ვერ შედგა. შეამოწმეთ კამერა ან ტოკენი.");
         endVideoCall();
     }
 }
 
-// 3. შემოსული ზარის მოსმენა (აქ ჩავსვი ჩარჩოს მართვა)
+// 3. შემოსული ზარის მოსმენა (ეს უნდა იდოს auth.onAuthStateChanged-ში)
+// 2. listenForIncomingCalls-ში (როცა გირეკავენ)
 function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
-            document.getElementById('videoCallUI').style.display = 'flex';
-            document.getElementById('incomingCallBox').style.display = 'flex'; // ვაჩენთ ჩარჩოს
-            document.getElementById('activeCallContent').style.display = 'none'; // ვმალავთ საუბარს
+            // აქ ვსვამთ იმის სახელს ვინც გვირეკავს
+            document.getElementById('remote-name').innerText = call.callerName;
             
-            document.getElementById('incomingNameDisplay').innerText = call.callerName;
-            window.currentIncomingCall = call;
-        } else if (!call) {
-            document.getElementById('videoCallUI').style.display = 'none';
+            if (confirm(`${call.callerName} გირეკავთ...`)) {
+                // ... შენი accepted ლოგიკა ...
+            }
         }
     });
-}
-
-// პასუხის ღილაკი
-function acceptIncomingCall() {
-    if (window.currentIncomingCall) {
-        db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
-        document.getElementById('incomingCallBox').style.display = 'none'; // ვმალავთ ჩარჩოს
-        document.getElementById('activeCallContent').style.display = 'block'; // ვაჩენთ საუბარს
-        startVideoCall();
-    }
-}
-
-// უარყოფის ღილაკი
-function rejectIncomingCall() {
-    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
-    document.getElementById('videoCallUI').style.display = 'none';
 }
 
 // 4. ზარის დასრულება
@@ -109,19 +107,19 @@ async function endVideoCall() {
 function toggleMic() {
     micMuted = !micMuted;
     if (localTracks.audioTrack) localTracks.audioTrack.setEnabled(!micMuted);
-    document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : 'rgba(255,255,255,0.2)';
+    document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : '#333';
 }
 
 function toggleCam() {
     camMuted = !camMuted;
     if (localTracks.videoTrack) localTracks.videoTrack.setEnabled(!camMuted);
-    document.getElementById('camBtn').style.background = camMuted ? '#ff4d4d' : 'rgba(255,255,255,0.2)';
+    document.getElementById('camBtn').style.background = camMuted ? '#ff4d4d' : '#333';
 }
 
 function minimizeVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if (!ui) return;
-    if (ui.style.width !== '150px') {
+    if (ui.style.width === '100%') {
         ui.style.width = '150px'; ui.style.height = '220px';
         ui.style.top = '80px'; ui.style.left = '20px';
         ui.style.borderRadius = '20px'; ui.style.border = '2px solid #d4af37';
