@@ -147,15 +147,27 @@ function minimizeVideoCall() {
 
 
 
-function acceptIncomingCall() {
-    // 1. ბაზას ეუბნება: "იუზერმა უპასუხაო"
-    db.ref(`video_calls/${auth.currentUser.uid}`).update({ 
-        status: 'accepted' 
-    });
+// 1. ფუნქცია პასუხისთვის (მწვანე ღილაკი)
+async function acceptCall() {
+    // ბაზაში ვცვლით სტატუსს, რომ იუზერმა უპასუხა
+    if (window.activeIncomingCall) {
+        await db.ref(`video_calls/${auth.currentUser.uid}`).update({ 
+            status: 'accepted' 
+        });
+    }
 
-    // 2. რთავს ვიდეოს (შენი ორიგინალი ფუნქცია)
+    // ვმალავთ ამ ფანჯარას
+    document.getElementById('incomingCallModal').style.display = 'none';
+
+    // ვრთავთ შენს ორიგინალ ვიდეო ფუნქციას
     startVideoCall();
+}
+
+// 2. ფუნქცია უარყოფისთვის (წითელი ღილაკი)
+function declineCall() {
+    // ბაზიდან ვშლით ზარის მოთხოვნას
+    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
     
-    // 3. თიშავს იმ პატარა ჩარჩოს, რაც სურათზე მომიგდე
-    document.getElementById('videoCallUI').style.display = 'none';
+    // ვმალავთ ფანჯარას
+    document.getElementById('incomingCallModal').style.display = 'none';
 }
