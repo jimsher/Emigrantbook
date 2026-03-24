@@ -13,14 +13,14 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function(payload) {
     console.log('Firebase ფონური მესიჯი:', payload);
 
-    // --- აი ეს ხაზი აანთებს ნიშანს აპლიკაციის ხატულაზე ---
-    if ('setAppBadge' in navigator) {
-        navigator.setAppBadge(1).catch(e => {});
+    // სერვის ვორკერში navigator.setAppBadge არ მუშაობს, ვიყენებთ self-ს
+    if (self.setAppBadge) {
+        self.setAppBadge(1).catch(e => {});
     }
 
-    const notificationTitle = payload.notification.title || 'Impact';
+    const notificationTitle = payload.notification ? payload.notification.title : 'Impact';
     const notificationOptions = {
-        body: payload.notification.body,
+        body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
         icon: '/logo.png',
         badge: '/logo.png',
         vibrate: [200, 100, 200],
@@ -35,37 +35,40 @@ messaging.onBackgroundMessage(function(payload) {
 
 // 2. სტანდარტული Push
 self.addEventListener('push', function(event) {
-    // ხატულაზე ნიშნის დაწერა Push-ის დროსაც
-    if ('setAppBadge' in navigator) {
-        navigator.setAppBadge(1).catch(e => {});
+    if (self.setAppBadge) {
+        self.setAppBadge(1).catch(e => {});
     }
 
+    let data = {};
     if (event.data) {
         try {
-            const data = event.data.json();
-            const options = {
-                body: data.body || data.notification?.body,
-                icon: '/logo.png',
-                badge: '/logo.png',
-                data: { url: data.url || (data.data && data.data.url) || '/' }
-            };
-            event.waitUntil(self.registration.showNotification(data.title || 'Impact', options));
+            data = event.data.json();
         } catch (e) {
-            event.waitUntil(self.registration.showNotification('Impact', { body: event.data.text() }));
+            data = { title: 'Impact', body: event.data.text() };
         }
     }
+
+    const title = data.title || (data.notification ? data.notification.title : 'Impact');
+    const options = {
+        body: data.body || (data.notification ? data.notification.body : ''),
+        icon: '/logo.png',
+        badge: '/logo.png',
+        data: { url: data.url || (data.data && data.data.url) || '/' }
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     
-    // როცა მომხმარებელი ნოტიფიკაციას დააჭერს, ნიშანი გაქრეს ხატულიდან
-    if ('clearAppBadge' in navigator) {
-        navigator.clearAppBadge().catch(e => {});
+    if (self.clearAppBadge) {
+        self.clearAppBadge().catch(e => {});
     }
 
-    const targetUrl = event.notification.data.url || '/';
+    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+    
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
             for (let client of windowClients) {
