@@ -80,11 +80,12 @@ function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
-            document.getElementById('videoCallUI').style.display = 'flex';
-            document.getElementById('remote-name-display').innerText = call.callerName;
-            window.activeIncomingCall = call;
-        } else if (!call) {
-            document.getElementById('videoCallUI').style.display = 'none';
+            // აქ ვსვამთ იმის სახელს ვინც გვირეკავს
+            document.getElementById('remote-name').innerText = call.callerName;
+            
+            if (confirm(`${call.callerName} გირეკავთ...`)) {
+                // ... შენი accepted ლოგიკა ...
+            }
         }
     });
 }
@@ -127,34 +128,4 @@ function minimizeVideoCall() {
         ui.style.top = '0'; ui.style.left = '0';
         ui.style.borderRadius = '0'; ui.style.border = 'none';
     }
-}
-
-
-
-
-
-
-
-
-
-
-
-function acceptIncomingCall() {
-    if (window.activeIncomingCall) {
-        // იუზერი ბაზაში ატყობინებს "პასუხი გაცემულია"
-        db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
-        
-        // მწვანე ღილაკი ქრება და იწყება ვიდეო კავშირი
-        document.getElementById('answerBtn').style.display = 'none';
-        
-        // შენი ორიგინალი ფუნქცია, რომელიც რთავს აგორას
-        startVideoCall();
-    }
-}
-
-
-
-function rejectIncomingCall() {
-    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
-    document.getElementById('videoCallUI').style.display = 'none';
 }
