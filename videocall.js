@@ -11,20 +11,22 @@ const AGORA_TOKEN = "007eJxTYLj1b++1lt179tUvUN96exf3fovjXRNerVMpMfsnaXiNYd1cBQZz
 const FIXED_CHANNEL = "live_stream"; 
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
+// 1. requestVideoCall-ში დაამატე სახელი
 async function requestVideoCall() {
-    const targetUid = window.currentChatId; // ვისაც ვურეკავთ
+    const targetUid = window.currentChatId;
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
-    await db.ref('video_calls/' + targetUid).set({
-        callerUid: auth.currentUser.uid,
-        callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
-        channel: "live_stream",
-        status: 'calling',
-        ts: Date.now()
+    // ჩავსვათ ადრესატის სახელი UI-ში
+    db.ref('users/' + targetUid + '/name').once('value').then(snap => {
+        document.getElementById('remote-name').innerText = snap.val() || "Emigrant";
     });
 
-    startVideoCall(); // ჩვენთან ვხსნით ვიდეოს
+    // ... დანარჩენი შენი კოდი ...
+    await db.ref('video_calls/' + targetUid).set({ ... });
+    startVideoCall();
 }
+
+
 
 // 2. მთავარი ვიდეო ფუნქცია
 async function startVideoCall() {
@@ -62,15 +64,16 @@ async function startVideoCall() {
 }
 
 // 3. შემოსული ზარის მოსმენა (ეს უნდა იდოს auth.onAuthStateChanged-ში)
+// 2. listenForIncomingCalls-ში (როცა გირეკავენ)
 function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
-            if (confirm(`${call.callerName} გირეკავთ ვიდეო ზარით. უპასუხებთ?`)) {
-                db.ref(`video_calls/${user.uid}`).update({ status: 'accepted' });
-                startVideoCall();
-            } else {
-                db.ref(`video_calls/${user.uid}`).remove();
+            // აქ ვსვამთ იმის სახელს ვინც გვირეკავს
+            document.getElementById('remote-name').innerText = call.callerName;
+            
+            if (confirm(`${call.callerName} გირეკავთ...`)) {
+                // ... შენი accepted ლოგიკა ...
             }
         }
     });
