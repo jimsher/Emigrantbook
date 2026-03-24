@@ -11,19 +11,30 @@ const AGORA_TOKEN = "007eJxTYLj1b++1lt179tUvUN96exf3fovjXRNerVMpMfsnaXiNYd1cBQZz
 const FIXED_CHANNEL = "live_stream"; 
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
-// 1. requestVideoCall-ში დაამატე სახელი
 async function requestVideoCall() {
     const targetUid = window.currentChatId;
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
-    // ჩავსვათ ადრესატის სახელი UI-ში
+    // UI-ს მომზადება (კამერის ჩართვამდე)
+    const ui = document.getElementById('videoCallUI');
+    if(ui) ui.style.display = 'flex';
+
+    // ბაზიდან სახელის ამოღება, რომ "ლევანი" არ ეწეროს
     db.ref('users/' + targetUid + '/name').once('value').then(snap => {
-        document.getElementById('remote-name').innerText = snap.val() || "Emigrant";
+        const rName = document.getElementById('remote-name');
+        if(rName) rName.innerText = snap.val() || "Emigrant";
     });
 
-    // ... დანარჩენი შენი კოდი ...
-    await db.ref('video_calls/' + targetUid).set({ ... });
-    startVideoCall();
+    // შენი ორიგინალი Firebase ლოგიკა
+    await db.ref('video_calls/' + targetUid).set({
+        callerUid: auth.currentUser.uid,
+        callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+        channel: "live_stream",
+        status: 'calling',
+        ts: Date.now()
+    });
+
+    startVideoCall(); // ეს რთავს აგორას და კამერას
 }
 
 
