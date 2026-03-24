@@ -3662,3 +3662,56 @@ async function uploadChatImage(input) {
         alert("ვერ მოხერხდა ფოტოს გაგზავნა.");
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// სოს ლოგიკა
+
+function openSosModal() {
+    // მარტივი Prompt-ით დავიწყოთ, მერე ლამაზი Modal-ით შევცვალოთ
+    const sosText = prompt("🚨 ემიგრანტის SOS: რა გჭირდებათ? (მაგ: ბინა, სამსახური, დახმარება)");
+    
+    if (sosText && sosText.trim().length > 0) {
+        const user = auth.currentUser;
+        if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია");
+
+        // ვიღებთ იუზერის მონაცემებს (ქვეყანა/სახელი)
+        db.ref('users/' + user.uid).once('value').then((snapshot) => {
+            const userData = snapshot.val();
+            const country = userData.country || "უცნობი";
+            const userName = userData.name || "ანონიმური";
+
+            const sosData = {
+                uid: user.uid,
+                userName: userName,
+                text: sosText,
+                country: country,
+                timestamp: Date.now(),
+                status: "active"
+            };
+
+            // ვინახავთ სპეციალურ კვანძში
+            const newSosRef = db.ref('sos_alerts').push();
+            newSosRef.set(sosData).then(() => {
+                alert("🚨 თქვენი SOS სიგნალი გააქტიურებულია! " + country + "-ში მყოფი ემიგრანტები მიიღებენ შეტყობინებას.");
+            }).catch(err => {
+                console.error("SOS error:", err);
+            });
+        });
+    }
+}
