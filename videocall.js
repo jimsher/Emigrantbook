@@ -200,47 +200,48 @@ function declineCall() {
 // პატარა ჩარჩო ლოკალ ვიდეოს ლოგიკა
 const localVideo = document.getElementById('local-video');
 
-let isDragging = false;
-let offsetX, offsetY;
+let startX, startY, initialX, initialY;
 
-// 1. როცა თითს დაადებ
-localVideo.addEventListener('touchstart', (e) => {
-    isDragging = true;
+localVideo.addEventListener('touchstart', function(e) {
     const touch = e.touches[0];
     
-    // ვიგებთ სად უჭირავს თითი ეკრანის შიგნით
-    offsetX = touch.clientX - localVideo.getBoundingClientRect().left;
-    offsetY = touch.clientY - localVideo.getBoundingClientRect().top;
-    
-    localVideo.style.transition = 'none'; // მოძრაობისას დაყოვნება რომ არ ჰქონდეს
-});
+    // 1. ვიგებთ სად არის ელემენტი ეკრანზე ზუსტად იმ მომენტში
+    const rect = localVideo.getBoundingClientRect();
+    initialX = rect.left;
+    initialY = rect.top;
 
-// 2. როცა თითს გაასრიალებ
-localVideo.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
+    // 2. ვიგებთ თითის საწყის კოორდინატებს
+    startX = touch.clientX;
+    startY = touch.clientY;
+
+    // 3. მთავარია: ვაუქმებთ bottom/right-ს და გადავდივართ top/left-ზე
+    localVideo.style.bottom = 'auto';
+    localVideo.style.right = 'auto';
+    localVideo.style.top = initialY + 'px';
+    localVideo.style.left = initialX + 'px';
+    localVideo.style.transition = 'none'; // რომ არ დააგვიანოს გამოხმაურება
+}, {passive: false});
+
+localVideo.addEventListener('touchmove', function(e) {
     e.preventDefault(); // გვერდის სქროლი რომ არ დაიწყოს
-
     const touch = e.touches[0];
-    
-    // ახალი პოზიციის გამოთვლა
-    let x = touch.clientX - offsetX;
-    let y = touch.clientY - offsetY;
 
-    // რომ ეკრანის გარეთ არ გავარდეს (საზღვრები)
+    // 4. გამოვთვლით მოძრაობის სხვაობას
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+
+    // 5. ახალი პოზიცია
+    let newX = initialX + deltaX;
+    let newY = initialY + deltaY;
+
+    // 6. ეკრანის საზღვრების შემოწმება (რომ ეკრანს არ გაცდეს)
     const maxX = window.innerWidth - localVideo.offsetWidth;
     const maxY = window.innerHeight - localVideo.offsetHeight;
 
-    x = Math.max(0, Math.min(x, maxX));
-    y = Math.max(0, Math.min(y, maxY));
+    newX = Math.max(0, Math.min(newX, maxX));
+    newY = Math.max(0, Math.min(newY, maxY));
 
-    // პოზიციის შეცვლა
-    localVideo.style.left = x + 'px';
-    localVideo.style.top = y + 'px';
-    localVideo.style.bottom = 'auto'; // ორიგინალში bottom ეწერა და ეგ უნდა გავაუქმოთ
-    localVideo.style.right = 'auto';  // ორიგინალში right ეწერა და ეგ უნდა გავაუქმოთ
-});
-
-// 3. როცა თითს აუშვებ
-localVideo.addEventListener('touchend', () => {
-    isDragging = false;
-});
+    // 7. ვსვამთ ელემენტს ახალ ადგილას
+    localVideo.style.left = newX + 'px';
+    localVideo.style.top = newY + 'px';
+}, {passive: false});
