@@ -3,16 +3,17 @@
     const listDiv = document.getElementById('leaderboardList');
     listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">იტვირთება რეიტინგი...</p>';
 
-    // შევცვალე .once -> .on-ით, რომ რეალურ დროში განახლდეს
+    // .on('value') უზრუნველყოფს რეალურ დროში განახლებას
     db.ref('users').on('value', snap => {
-        listDiv.innerHTML = '';
+        listDiv.innerHTML = ''; // სიის გასუფთავება ყოველ განახლებაზე
         let players = [];
 
         snap.forEach(child => {
             const v = child.val();
-            let foundPhoto = "";
+            if (!v) return;
 
-            // 🔍 ავტომატური ძებნა
+            let foundPhoto = "";
+            // 🔍 ავტომატური ფოტოს ძებნა (შენი ორიგინალი ლოგიკა)
             for (let key in v) {
                 if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
                     foundPhoto = v[key];
@@ -24,8 +25,11 @@
                 foundPhoto = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name || 'U')}&background=d4af37&color=000&bold=true`;
             }
 
-            const finalBalance = parseFloat(v.akhoBalance || v.akho || v.balance || 0);
+            // 💰 ბალანსის ზუსტი ამოღება (ვამოწმებთ ყველა შესაძლო ველს)
+            const rawBalance = v.akhoBalance || v.akho || v.balance || 0;
+            const finalBalance = parseFloat(rawBalance) || 0;
 
+            // ვამატებთ მხოლოდ ვალიდურ იუზერებს
             if (v.name && v.name !== "undefined") {
                 players.push({
                     name: v.name,
@@ -35,13 +39,13 @@
             }
         });
 
-        // დალაგება
+        // 🏆 დალაგება ყველაზე მაღალი ბალანსით
         players.sort((a, b) => b.balance - a.balance);
 
-        // ტოპ 10-ის გამოტანა
+        // გამოგვაქვს ტოპ 10
         players.slice(0, 10).forEach((p, index) => {
             const isTop = index < 3;
-            const colors = ['#d4af37', '#c0c0c0', '#cd7f32'];
+            const colors = ['#d4af37', '#c0c0c0', '#cd7f32']; // ოქრო, ვერცხლი, ბრინჯაო
             
             listDiv.innerHTML += `
                 <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isTop ? colors[index] : '#333'}; margin-bottom:10px;">
@@ -53,17 +57,14 @@
                         <small style="color:gray; font-size:10px;">IMPACT RANK</small>
                     </div>
                     <div style="text-align:right;">
-                        <b style="color:var(--gold); font-size:16px;">${p.balance.toFixed(2)}</b>
-                        <small style="color:var(--gold); display:block; font-size:9px;">AKHO</small>
+                        <b style="color:#d4af37; font-size:16px;">${p.balance.toFixed(2)}</b>
+                        <small style="color:#d4af37; display:block; font-size:9px;">AKHO</small>
                     </div>
                 </div>
             `;
         });
     });
 }
-        
-
-
 
 
 
