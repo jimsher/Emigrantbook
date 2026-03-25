@@ -1999,6 +1999,20 @@ window.processGift = function(targetUid, cost, giftUrl) {
 };
 
 
+function listenForGifts(callId) {
+    db.ref(`calls/${callId}/gifts`).on('child_added', snap => {
+        const gift = snap.val();
+        if (gift) {
+            showGiftAnimation(gift.amount);
+            
+            // სურვილისამებრ: ხმაც დავუკრათ
+            // new Audio('gift_sound.mp3').play();
+        }
+    });
+}
+
+
+
 // ნაჩუქარი გიფწბის გამოჩწნის სია
 function showGiftsCollection(uid) {
     const modal = document.createElement('div');
