@@ -2,14 +2,14 @@
     const listDiv = document.getElementById('leaderboardList');
     document.getElementById('leaderboardUI').style.display = 'flex';
     
-    // 1. ჯერ ვწყვეტთ ძველ კავშირს, რომ მონაცემები არ გაიჭედოს
+    // 1. ჯერ ვთიშავთ ყველა ძველ კავშირს, რომ არ "გაიჭედოს"
     db.ref('users').off(); 
 
-    listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">ახლდება...</p>';
+    listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">რეიტინგი ახლდება...</p>';
 
-    // 2. თავიდან ვიწყებთ მოსმენას
+    // 2. ვიწყებთ რეალურ დროში მოსმენას
     db.ref('users').on('value', snap => {
-        // 3. ვასუფთავებთ ეკრანს
+        // 3. აუცილებელია: ყოველ ცვლილებაზე ჯერ ვასუფთავებთ ეკრანს
         listDiv.innerHTML = ''; 
         let players = [];
 
@@ -17,11 +17,11 @@
             const v = child.val();
             if (!v) return;
 
-            // ბალანსის ამოღება (ვამოწმებთ ყველა შესაძლო ველს)
+            // ბალანსის ამოღება (ყველა შესაძლო ვარიანტით)
             let balance = parseFloat(v.akhoBalance || v.akho || v.balance || 0);
 
             if (v.name && v.name !== "undefined") {
-                // ფოტოს ლოგიკა
+                // ფოტოს ლოგიკა (შენი ორიგინალი)
                 let photo = "";
                 for (let key in v) {
                     if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
@@ -29,32 +29,34 @@
                         break;
                     }
                 }
-                if (!photo) photo = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=d4af37&color=000&bold=true`;
+                if (!photo) photo = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=444&color=fff`;
 
                 players.push({ name: v.name, avatar: photo, balance: balance });
             }
         });
 
-        // 4. დალაგება (ყველაზე მნიშვნელოვანი)
+        // 4. დალაგება - ყველაზე დიდი ბალანსი პირველზე
         players.sort((a, b) => b.balance - a.balance);
 
-        // 5. გამოტანა (TOP 10)
+        // 5. გამოტანა (პირველი 50 იუზერი)
         players.slice(0, 50).forEach((p, index) => {
             const isTop = index < 3;
             const colors = ['#d4af37', '#c0c0c0', '#cd7f32'];
             
-            listDiv.innerHTML += `
+            listDiv.insertAdjacentHTML('beforeend', `
                 <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isTop ? colors[index] : '#333'}; margin-bottom:10px;">
                     <b style="width:25px; color:${isTop ? colors[index] : 'white'};">${index + 1}</b>
                     <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; margin:0 15px; border:2px solid ${isTop ? colors[index] : '#444'};">
                     <div style="flex:1;">
-                        <b style="color:white; font-size:14px;">${p.name}</b>
+                        <b style="color:white; font-size:14px; display:block;">${p.name}</b>
+                        <small style="color:gray; font-size:10px;">IMPACT RANK</small>
                     </div>
                     <div style="text-align:right;">
-                        <b style="color:#d4af37;">${p.balance.toFixed(2)}</b>
-                        <small style="color:gray; display:block; font-size:9px;">AKHO</small>
+                        <b style="color:#d4af37; font-size:16px;">${p.balance.toFixed(2)}</b>
+                        <small style="color:#d4af37; display:block; font-size:9px;">AKHO</small>
                     </div>
-                </div>`;
+                </div>
+            `);
         });
     });
 }
