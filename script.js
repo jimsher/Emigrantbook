@@ -1956,104 +1956,86 @@ window.processGift = function(targetUid, cost, giftUrl) {
         const myBalance = snap.val() || 0;
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
+        // ბალანსის განახლება
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
+        // მონაცემების შენახვა კოლექციისთვის
+        firebase.database().ref(`received_gifts/${targetUid}`).push({
+            fromName: typeof myName !== 'undefined' ? myName : 'User',
+            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : '',
+            giftUrl: giftUrl,
+            price: cost,
+            ts: Date.now()
+        });
+
+        // ნოტიფიკაცია რეალურ დროში
+        firebase.database().ref(`notifications/${targetUid}`).push({
+            text: `${typeof myName !== 'undefined' ? myName : 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
+            ts: Date.now(),
+            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
+            giftImage: giftUrl
+        });
+
+        // პანელის დახურვა
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
+        
+        // --- 🚀 ანიმაციის ლოგიკა (ზუსტად შენი ფოტოს მიხედვით) ---
         
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation";
-        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:300px; font-family:sans-serif;";
+        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:350px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
         
-        // 📦 აქ არის SVG კოდი, რომელიც ზუსტად იმეორებს სურათს:
-        // ყუთი, ამოფრენილი მონეტები 'A' ლოგოთი, განათება (Drop Shadow).
-        const goldenBoxSVG = `
-            <svg width="250" height="250" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 25px gold);">
-                <path d="M15 45V85C15 90.5 19.5 95 25 95H75C80.5 95 85 90.5 85 85V45" fill="#fbd14b" stroke="#e0ac00" stroke-width="1.5"/>
-                <path d="M5 45H95V35C95 29.5 90.5 25 85 25H15C9.5 25 5 29.5 5 35V45Z" fill="#ffb400"/>
-                <path d="M50 45V95M40 95H60" stroke="#f22c19" stroke-width="6"/>
-                <circle cx="50" cy="15" r="8" fill="gold" stroke="#e0ac00" stroke-width="1"/>
-                <text x="50" y="19" font-family="sans-serif" font-weight="bold" font-size="11" fill="#8a6d10" text-anchor="middle">A</text>
-                <circle cx="35" cy="25" r="7" fill="gold" stroke="#e0ac00" stroke-width="1"/>
-                <text x="35" y="29" font-family="sans-serif" font-weight="bold" font-size="10" fill="#8a6d10" text-anchor="middle">A</text>
-                <circle cx="65" cy="25" r="7" fill="gold" stroke="#e0ac00" stroke-width="1"/>
-                <text x="65" y="29" font-family="sans-serif" font-weight="bold" font-size="10" fill="#8a6d10" text-anchor="middle">A</text>
-                <circle cx="42" cy="35" r="6" fill="gold" stroke="#e0ac00" stroke-width="1"/>
-                <text x="42" y="39" font-family="sans-serif" font-weight="bold" font-size="9" fill="#8a6d10" text-anchor="middle">A</text>
-                <circle cx="58" cy="35" r="6" fill="gold" stroke="#e0ac00" stroke-width="1"/>
-                <text x="58" y="39" font-family="sans-serif" font-weight="bold" font-size="9" fill="#8a6d10" text-anchor="middle">A</text>
-                
-                <animateTransform attributeName="transform" type="translate" values="0 0; 0 -2; 0 0" dur="2s" repeatCount="indefinite" />
-            </svg>`;
-
         animWrapper.innerHTML = `
             <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:150px; height:150px; object-fit:contain; filter: drop-shadow(0 0 15px gold);">
+                <img src="${giftUrl}" style="width:160px; height:160px; object-fit:contain; filter: drop-shadow(0 0 20px gold);">
             </div>
+            
             <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
-                <h1 style="color:#fbd14b; text-shadow:0 0 10px gold; font-size:32px; font-weight:bold; margin:0 0 10px 0;">საჩუქარი!</h1>
-                <h2 style="color:#fff3c3; text-shadow:0 0 5px gold; font-size:18px; margin:0 0 20px 0;">გადმოგეცათ ${cost} AKHO</h2>
+                <h1 style="color:#fbd14b; text-shadow:0 0 20px gold; font-size:42px; font-weight:bold; margin:0 0 5px 0; letter-spacing:1px;">საჩუქარი!</h1>
+                <h2 style="color:#fff3c3; text-shadow:0 0 10px gold; font-size:22px; margin:0 0 25px 0;">გადმოგეცათ ${cost} AKHO</h2>
                 
-                <div style="width:250px; height:250px; margin:0 auto; position:relative;">
-                    ${goldenBoxSVG}
-                    <div class="giftSparkle s1"></div>
-                    <div class="giftSparkle s2"></div>
-                    <div class="giftSparkle s3"></div>
-                </div>
+                <img src="https://i.ibb.co/v6M6XyS/gift-box-gold.png" style="width:280px; filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.8));">
                 
-                <h1 style="color:#d4af37; text-shadow:0 0 10px rgba(0,0,0,0.5); font-size:24px; margin-top:10px;">+${cost} AKHO</h1>
+                <h1 style="color:#d4af37; text-shadow:0 0 15px rgba(0,0,0,0.6); font-size:32px; margin-top:20px; font-weight:bold;">+${cost} AKHO</h1>
             </div>
         `;
         document.body.appendChild(animWrapper);
 
+        // CSS ანიმაციების ჩამატება
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
             style.id = 'giftEnhancedStyles';
             style.innerHTML = `
-                /* ანიმაციის CSS სტილები */
                 @keyframes giftStep1Anim {
                     0% { transform: scale(0); opacity: 0; }
-                    20% { transform: scale(1.2); opacity: 1; }
-                    80% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0); opacity: 0; }
+                    15% { transform: scale(1.3); opacity: 1; }
+                    85% { transform: scale(1); opacity: 1; }
+                    100% { transform: scale(0.2); opacity: 0; }
                 }
                 @keyframes giftStep2Anim {
-                    0% { transform: scale(0); opacity: 0; }
+                    0% { transform: scale(0.5); opacity: 0; }
                     5% { transform: scale(1.1); opacity: 1; }
                     10% { transform: scale(1); opacity: 1; }
                     95% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.5) translateY(-100px); opacity: 0; }
-                }
-                
-                /* ფეირვერკის ნაპერწკლების CSS */
-                .giftSparkle {
-                    position: absolute;
-                    width: 5px;
-                    height: 5px;
-                    background: gold;
-                    border-radius: 50%;
-                    opacity: 0;
-                    filter: blur(1px);
-                    animation: giftSparkleAnim 1s infinite alternate;
-                }
-                .giftSparkle.s1 { top: 20%; left: 30%; animation-delay: 0.1s; }
-                .giftSparkle.s2 { top: 30%; left: 70%; animation-delay: 0.3s; }
-                .giftSparkle.s3 { top: 60%; left: 10%; animation-delay: 0.5s; }
-                
-                @keyframes giftSparkleAnim {
-                    0% { opacity: 0; transform: scale(0); }
-                    100% { opacity: 1; transform: scale(1.5); }
+                    100% { transform: scale(0.7) translateY(-150px); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);
         }
 
+        // ტაიმერი: 3 წამში GIF ქრება და ჩნდება ყუთი
         setTimeout(() => {
-            document.getElementById('giftStep1').style.display = 'none';
-            document.getElementById('giftStep2').style.display = 'block';
+            const s1 = document.getElementById('giftStep1');
+            const s2 = document.getElementById('giftStep2');
+            if(s1) s1.style.display = 'none';
+            if(s2) s2.style.display = 'block';
         }, 3000);
 
-        setTimeout(() => { animWrapper.remove(); }, 33000);
+        // მთლიანი ანიმაციის წაშლა (3 + 30 წამი)
+        setTimeout(() => {
+            if(animWrapper) animWrapper.remove();
+        }, 33000);
     });
 };
 
