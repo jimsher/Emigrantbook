@@ -181,3 +181,66 @@ function declineCall() {
     // ვმალავთ ფანჯარას
     document.getElementById('incomingCallModal').style.display = 'none';
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// პატარა ჩარჩო ლოკალ ვიდეოს ლოგიკა
+const localVideo = document.getElementById('local-video');
+
+let isDragging = false;
+let offsetX, offsetY;
+
+// 1. როცა თითს დაადებ
+localVideo.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    const touch = e.touches[0];
+    
+    // ვიგებთ სად უჭირავს თითი ეკრანის შიგნით
+    offsetX = touch.clientX - localVideo.getBoundingClientRect().left;
+    offsetY = touch.clientY - localVideo.getBoundingClientRect().top;
+    
+    localVideo.style.transition = 'none'; // მოძრაობისას დაყოვნება რომ არ ჰქონდეს
+});
+
+// 2. როცა თითს გაასრიალებ
+localVideo.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault(); // გვერდის სქროლი რომ არ დაიწყოს
+
+    const touch = e.touches[0];
+    
+    // ახალი პოზიციის გამოთვლა
+    let x = touch.clientX - offsetX;
+    let y = touch.clientY - offsetY;
+
+    // რომ ეკრანის გარეთ არ გავარდეს (საზღვრები)
+    const maxX = window.innerWidth - localVideo.offsetWidth;
+    const maxY = window.innerHeight - localVideo.offsetHeight;
+
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+
+    // პოზიციის შეცვლა
+    localVideo.style.left = x + 'px';
+    localVideo.style.top = y + 'px';
+    localVideo.style.bottom = 'auto'; // ორიგინალში bottom ეწერა და ეგ უნდა გავაუქმოთ
+    localVideo.style.right = 'auto';  // ორიგინალში right ეწერა და ეგ უნდა გავაუქმოთ
+});
+
+// 3. როცა თითს აუშვებ
+localVideo.addEventListener('touchend', () => {
+    isDragging = false;
+});
