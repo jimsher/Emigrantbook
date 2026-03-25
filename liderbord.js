@@ -39,7 +39,7 @@
         players.sort((a, b) => b.balance - a.balance);
 
         // 5. გამოტანა (TOP 10)
-        players.slice(0, 10).forEach((p, index) => {
+        players.slice(0, 50).forEach((p, index) => {
             const isTop = index < 3;
             const colors = ['#d4af37', '#c0c0c0', '#cd7f32'];
             
