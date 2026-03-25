@@ -1958,46 +1958,40 @@ window.processGift = function(targetUid, cost, giftUrl) {
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        // მონაცემების შენახვა ბაზაში
-        firebase.database().ref(`received_gifts/${targetUid}`).push({
-            fromName: typeof myName !== 'undefined' ? myName : 'User',
-            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : '',
-            giftUrl: giftUrl,
-            price: cost,
-            ts: Date.now()
-        });
-
-        // ნოტიფიკაცია
-        firebase.database().ref(`notifications/${targetUid}`).push({
-            text: `${typeof myName !== 'undefined' ? myName : 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
-            ts: Date.now(),
-            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
-            giftImage: giftUrl
-        });
-
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
         
-        // --- 🚀 ახალი 2-ეტაპიანი ანიმაცია ---
-        
-        // 1. ვქმნით მთავარ კონტეინერს
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation";
         animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center;";
         
-        // 2. ვამატებთ საწყის GIF-ს
+        // 📦 აქ არის ის ოქროსფერი ყუთი (SVG ფორმატში - ფაილი არ სჭირდება)
+        const goldenBoxSVG = `
+            <svg width="200" height="200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 20px gold);">
+                <path d="M19 10V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V10" stroke="gold" stroke-width="1.5"/>
+                <path d="M3 10H21V7C21 5.9 20.1 5 19 5H5C3.9 5 3 5.9 3 7V10Z" fill="#d4af37"/>
+                <circle cx="12" cy="5" r="3" fill="gold" opacity="0.8">
+                    <animate attributeName="cy" values="5;2;5" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="8" cy="4" r="2" fill="gold" opacity="0.6">
+                    <animate attributeName="cy" values="4;1;4" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="16" cy="4" r="2" fill="gold" opacity="0.6">
+                    <animate attributeName="cy" values="4;1;4" dur="1.8s" repeatCount="indefinite" />
+                </circle>
+            </svg>`;
+
         animWrapper.innerHTML = `
             <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:180px; height:180px; object-fit:contain; filter: drop-shadow(0 0 15px gold);">
+                <img src="${giftUrl}" style="width:150px; height:150px; object-fit:contain; filter: drop-shadow(0 0 15px gold);">
             </div>
             <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards;">
-                <h2 style="color:#f9f295; text-shadow:0 0 10px gold; margin-bottom:10px;">საჩუქარი!</h2>
-                <img src="https://emigrantbook.com/assets/gift_box_gold.png" style="width:220px; filter: drop-shadow(0 0 25px gold);">
-                <h1 style="color:#d4af37; text-shadow:0 0 10px rgba(0,0,0,0.5);">+${cost} AKHO</h1>
+                <h2 style="color:#f9f295; text-shadow:0 0 10px gold; font-family:sans-serif; margin-bottom:10px;">საჩუქარი!</h2>
+                ${goldenBoxSVG}
+                <h1 style="color:#d4af37; font-family:sans-serif; text-shadow:0 0 10px rgba(0,0,0,0.5); font-size:28px; margin-top:10px;">+${cost} AKHO</h1>
             </div>
         `;
         document.body.appendChild(animWrapper);
 
-        // 3. სტილების დამატება (თუ არ არსებობს)
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
             style.id = 'giftEnhancedStyles';
@@ -2019,31 +2013,15 @@ window.processGift = function(targetUid, cost, giftUrl) {
             document.head.appendChild(style);
         }
 
-        // 4. გადართვა GIF-დან ოქროსფერ ყუთზე (3 წამში)
         setTimeout(() => {
             document.getElementById('giftStep1').style.display = 'none';
             document.getElementById('giftStep2').style.display = 'block';
         }, 3000);
 
-        // 5. მთლიანი ანიმაციის წაშლა 33 წამში (3 + 30)
-        setTimeout(() => {
-            animWrapper.remove();
-        }, 33000);
+        setTimeout(() => { animWrapper.remove(); }, 33000);
     });
 };
 
-
-function listenForGifts(callId) {
-    db.ref(`calls/${callId}/gifts`).on('child_added', snap => {
-        const gift = snap.val();
-        if (gift) {
-            showGiftAnimation(gift.amount);
-            
-            // სურვილისამებრ: ხმაც დავუკრათ
-            // new Audio('gift_sound.mp3').play();
-        }
-    });
-}
 
 
 
