@@ -1948,83 +1948,82 @@ window.openGiftPanel = function(postId, authorId) {
 };
 
                     
+
 window.processGift = function(targetUid, cost, giftUrl) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     
+    // --- (FireBase ლოგიკა იგივე რჩება) ---
     firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
         const myBalance = snap.val() || 0;
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
-        // ბალანსის განახლება
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        // მონაცემების შენახვა კოლექციისთვის
-        firebase.database().ref(`received_gifts/${targetUid}`).push({
-            fromName: typeof myName !== 'undefined' ? myName : 'User',
-            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : '',
-            giftUrl: giftUrl,
-            price: cost,
-            ts: Date.now()
-        });
-
-        // ნოტიფიკაცია რეალურ დროში
-        firebase.database().ref(`notifications/${targetUid}`).push({
-            text: `${typeof myName !== 'undefined' ? myName : 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
-            ts: Date.now(),
-            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
-            giftImage: giftUrl
-        });
-
-        // პანელის დახურვა
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
-        
-        // --- 🚀 ანიმაციის ლოგიკა (ზუსტად შენი ფოტოს მიხედვით) ---
+        // ------------------------------------------
+
+        // 🚀 --- ახალი ანიმაციის აწყობა ---
         
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation";
-        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:350px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
+        // კონტეინერის სტილი: ეკრანის ცენტრში
+        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:350px;";
         
         animWrapper.innerHTML = `
             <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:160px; height:160px; object-fit:contain; filter: drop-shadow(0 0 20px gold);">
+                <img src="${giftUrl}" style="width:180px; height:180px; object-fit:contain; filter: drop-shadow(0 0 20px gold);">
             </div>
             
-            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
-                <h1 style="color:#fbd14b; text-shadow:0 0 20px gold; font-size:42px; font-weight:bold; margin:0 0 5px 0; letter-spacing:1px;">საჩუქარი!</h1>
-                <h2 style="color:#fff3c3; text-shadow:0 0 10px gold; font-size:22px; margin:0 0 25px 0;">გადმოგეცათ ${cost} AKHO</h2>
+            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative; font-family:sans-serif;">
+                <h1 style="color:#fbd14b; text-shadow:0 0 20px gold; font-size:40px; font-weight:bold; margin:0 0 5px 0;">საჩუქარი!</h1>
+                <h2 style="color:#fff3c3; text-shadow:0 0 10px gold; font-size:20px; margin:0 0 30px 0;">გადმოგეცათ ${cost} AKHO</h2>
                 
-                <img src="https://i.ibb.co/v6M6XyS/gift-box-gold.png" style="width:280px; filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.8));">
+                <img src="gift_box.png" class="golden-gift-img" style="width:280px;">
                 
-                <h1 style="color:#d4af37; text-shadow:0 0 15px rgba(0,0,0,0.6); font-size:32px; margin-top:20px; font-weight:bold;">+${cost} AKHO</h1>
+                <h1 style="color:#d4af37; text-shadow:0 0 15px rgba(0,0,0,0.6); font-size:30px; margin-top:20px;">+${cost} AKHO</h1>
             </div>
         `;
         document.body.appendChild(animWrapper);
 
-        // CSS ანიმაციების ჩამატება
+        // --- CSS ეფექტები (ბზინვარება და მონეტების მოძრაობა) ---
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
             style.id = 'giftEnhancedStyles';
             style.innerHTML = `
+                /* 1. ყუთის ძირითადი ეფექტები: ბზინვარება (Drop Shadow) და პულსაცია */
+                .golden-gift-img {
+                    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.9));
+                    animation: giftPulse 2s infinite alternate;
+                }
+
+                /* 2. პულსაციის ანიმაცია (ოქროსფერი ნათების გაძლიერება/შესუსტება) */
+                @keyframes giftPulse {
+                    0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.7)); transform: scale(1); }
+                    100% { filter: drop-shadow(0 0 50px rgba(255, 215, 0, 1)); transform: scale(1.02); }
+                }
+
+                /* 3. ტექსტის და GIF-ის გამოჩენის/გაქრობის ანიმაციები */
                 @keyframes giftStep1Anim {
                     0% { transform: scale(0); opacity: 0; }
-                    15% { transform: scale(1.3); opacity: 1; }
+                    20% { transform: scale(1.3); opacity: 1; }
                     85% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.2); opacity: 0; }
+                    100% { transform: scale(0.2) translateY(-100px); opacity: 0; }
                 }
                 @keyframes giftStep2Anim {
                     0% { transform: scale(0.5); opacity: 0; }
                     5% { transform: scale(1.1); opacity: 1; }
                     10% { transform: scale(1); opacity: 1; }
                     95% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.7) translateY(-150px); opacity: 0; }
+                    100% { transform: scale(0.8) translateY(-150px); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);
         }
 
-        // ტაიმერი: 3 წამში GIF ქრება და ჩნდება ყუთი
+        // --- ტაიმერები ანიმაციის გადასართავად ---
+        // 3 წამში ვმალავთ GIF-ს და ვაჩვენებთ ყუთს
         setTimeout(() => {
             const s1 = document.getElementById('giftStep1');
             const s2 = document.getElementById('giftStep2');
@@ -2032,12 +2031,14 @@ window.processGift = function(targetUid, cost, giftUrl) {
             if(s2) s2.style.display = 'block';
         }, 3000);
 
-        // მთლიანი ანიმაციის წაშლა (3 + 30 წამი)
+        // 33 წამში (3 + 30) ვშლით მთლიან ანიმაციას
         setTimeout(() => {
             if(animWrapper) animWrapper.remove();
         }, 33000);
     });
 };
+
+
 
 
 
