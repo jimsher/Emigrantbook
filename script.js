@@ -3682,3 +3682,25 @@ async function uploadChatImage(input) {
 
 
 
+// საჩუქრის ყუთის ვიზუალის ლოგიკა 
+function showGiftAnimation(amount) {
+    const container = document.getElementById('giftAnimationContainer');
+    const amountSpan = document.getElementById('giftAmount');
+    
+    // 1. ვწერთ რაოდენობას
+    amountSpan.innerText = amount;
+    
+    // 2. ვაჩენთ კონტეინერს
+    container.style.display = 'block';
+    
+    // 3. ვამატებთ ანიმაციის კლასს
+    const wrapper = container.querySelector('.gift-box-wrapper');
+    wrapper.classList.remove('animate-gift');
+    void wrapper.offsetWidth; // "Reflow" - ანიმაციის თავიდან დასაწყებად
+    wrapper.classList.add('animate-gift');
+
+    // 4. 30 წამში ვმალავთ ისევ
+    setTimeout(() => {
+        container.style.display = 'none';
+    }, 30000);
+}
