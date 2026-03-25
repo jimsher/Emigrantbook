@@ -80,12 +80,22 @@ function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
         if (call && call.status === 'calling') {
-            // აქ ვსვამთ იმის სახელს ვინც გვირეკავს
-            document.getElementById('remote-name').innerText = call.callerName;
-            
-            if (confirm(`${call.callerName} გირეკავთ...`)) {
-                // ... შენი accepted ლოგიკა ...
+            // ვაჩენთ ფანჯარას
+            const modal = document.getElementById('incomingCallModal');
+            if (modal) modal.style.display = 'flex';
+
+            // ვწერთ სახელს და ფოტოს (შენი ID-ების მიხედვით)
+            document.getElementById('callerNameDisplay').innerText = call.callerName;
+            if (call.callerPhoto) {
+                document.getElementById('callerAva').src = call.callerPhoto;
             }
+
+            // ვინახავთ ზარის მონაცემებს პასუხისთვის
+            window.activeIncomingCall = call;
+        } else if (!call) {
+            // თუ დამრეკმა გათიშა, ვმალავთ ფანჯარას
+            const modal = document.getElementById('incomingCallModal');
+            if (modal) modal.style.display = 'none';
         }
     });
 }
