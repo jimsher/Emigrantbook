@@ -1964,66 +1964,97 @@ window.processGift = function(targetUid, cost, giftUrl) {
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
         // ------------------------------------------
 
-        // 🚀 --- ახალი ანიმაციის აწყობა ---
+        // 🚀 --- ახალი, დახვეწილი ანიმაციის აწყობა ---
         
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation";
-        // კონტეინერის სტილი: ეკრანის ცენტრში
-        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:350px;";
+        // კონტეინერის სტილი: ეკრანის ცენტრში, ოდნავ პატარა საერთო ფართობი
+        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
         
         animWrapper.innerHTML = `
             <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:180px; height:180px; object-fit:contain; filter: drop-shadow(0 0 20px gold);">
+                <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
             </div>
             
-            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative; font-family:sans-serif;">
-                <h1 style="color:#fbd14b; text-shadow:0 0 20px gold; font-size:40px; font-weight:bold; margin:0 0 5px 0;">საჩუქარი!</h1>
-                <h2 style="color:#fff3c3; text-shadow:0 0 10px gold; font-size:20px; margin:0 0 30px 0;">გადმოგეცათ ${cost} AKHO</h2>
+            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
                 
-                <img src="gift_box.png" class="golden-gift-img" style="width:280px;">
-                
-                <h1 style="color:#d4af37; text-shadow:0 0 15px rgba(0,0,0,0.6); font-size:30px; margin-top:20px;">+${cost} AKHO</h1>
+                <div class="gift-image-container">
+                    <img src="assets/images/gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
+                    <div class="golden-glow-overlay"></div>
+                </div>
+
+                <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
+                    <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
+                    <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადმოგეცათ ${cost} AKHO</h2>
+                    
+                    <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
+                </div>
             </div>
         `;
         document.body.appendChild(animWrapper);
 
-        // --- CSS ეფექტები (ბზინვარება და მონეტების მოძრაობა) ---
+        // --- CSS ეფექტები (გაძლიერებული ბზინვარება, პულსაცია და ტექსტის სტილები) ---
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
             style.id = 'giftEnhancedStyles';
             style.innerHTML = `
-                /* 1. ყუთის ძირითადი ეფექტები: ბზინვარება (Drop Shadow) და პულსაცია */
+                /* 1. ყუთის კონტეინერი და ბზინვარების ეფექტები */
+                .gift-image-container {
+                    position: relative;
+                    display: inline-block;
+                    margin-bottom: 20px;
+                }
+                
                 .golden-gift-img {
-                    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.9));
-                    animation: giftPulse 2s infinite alternate;
+                    filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8));
+                    animation: giftPulse 2.5s infinite alternate;
+                }
+                
+                /* დამატებითი "თბილი" ბზინვარების ფენა სურათის ქვეშ */
+                .golden-glow-overlay {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 150px;
+                    height: 150px;
+                    background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%);
+                    border-radius: 50%;
+                    filter: blur(15px);
+                    z-index: 1;
+                    animation: glowPulse 2.5s infinite alternate;
                 }
 
-                /* 2. პულსაციის ანიმაცია (ოქროსფერი ნათების გაძლიერება/შესუსტება) */
+                /* 2. პულსაციის ანიმაციები */
                 @keyframes giftPulse {
-                    0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.7)); transform: scale(1); }
-                    100% { filter: drop-shadow(0 0 50px rgba(255, 215, 0, 1)); transform: scale(1.02); }
+                    0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); }
+                    100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); }
+                }
+                
+                @keyframes glowPulse {
+                    0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+                    100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
                 }
 
                 /* 3. ტექსტის და GIF-ის გამოჩენის/გაქრობის ანიმაციები */
                 @keyframes giftStep1Anim {
                     0% { transform: scale(0); opacity: 0; }
-                    20% { transform: scale(1.3); opacity: 1; }
+                    15% { transform: scale(1.2); opacity: 1; }
                     85% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.2) translateY(-100px); opacity: 0; }
+                    100% { transform: scale(0.3) translateY(-80px); opacity: 0; }
                 }
                 @keyframes giftStep2Anim {
-                    0% { transform: scale(0.5); opacity: 0; }
-                    5% { transform: scale(1.1); opacity: 1; }
-                    10% { transform: scale(1); opacity: 1; }
-                    95% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.8) translateY(-150px); opacity: 0; }
+                    0% { transform: scale(0.6); opacity: 0; }
+                    4% { transform: scale(1.05); opacity: 1; }
+                    8% { transform: scale(1); opacity: 1; }
+                    96% { transform: scale(1); opacity: 1; }
+                    100% { transform: scale(0.8) translateY(-120px); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);
         }
 
         // --- ტაიმერები ანიმაციის გადასართავად ---
-        // 3 წამში ვმალავთ GIF-ს და ვაჩვენებთ ყუთს
         setTimeout(() => {
             const s1 = document.getElementById('giftStep1');
             const s2 = document.getElementById('giftStep2');
@@ -2036,7 +2067,9 @@ window.processGift = function(targetUid, cost, giftUrl) {
             if(animWrapper) animWrapper.remove();
         }, 33000);
     });
-};
+};                    
+
+
 
 
 
