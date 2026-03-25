@@ -40,31 +40,19 @@ function openLeaderboard() {
         // ხატვა
         let htmlContent = "";
         players.slice(0, 50).forEach((p, index) => {
-            // ... (ციკლის შიგნით)
-const isVip = v.isVip === true; // ვამოწმებთ ბაზიდან
-
-htmlContent += `
-    <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isVip ? '#d4af37' : (isTop ? colors[index] : '#333')}; margin-bottom:10px; position:relative;">
-        
-        ${isVip ? '<div style="position:absolute; top:-5px; right:10px; background:#d4af37; color:black; font-size:9px; padding:2px 5px; border-radius:5px; font-weight:bold;">VIP</div>' : ''}
-
-        <b style="width:25px; color:white;">${index + 1}</b>
-        <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; margin:0 15px; border:2px solid ${isVip ? '#d4af37' : '#444'};">
-        
-        <div style="flex:1;">
-            <b style="color:${isVip ? '#f9f295' : 'white'}; font-size:14px; display:flex; align-items:center;">
-                ${p.name} 
-                ${isFirst ? '<span style="margin-left:5px;">👑</span>' : ''}
-            </b>
-            <small style="color:${isVip ? '#d4af37' : 'gray'}; font-size:10px;">
-                ${isVip ? 'PREMIUM MEMBER' : 'IMPACT RANK'}
-            </small>
-        </div>
-        
-        <div style="text-align:right;">
-            <b style="color:#d4af37; font-size:16px;">${p.balance.toFixed(2)}</b>
-        </div>
-    </div>`;
+            const isTop = index < 3;
+            htmlContent += `
+                <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isTop ? '#d4af37' : '#333'}; margin-bottom:10px;">
+                    <b style="width:25px; color:white;">${index + 1}</b>
+                    <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; margin:0 15px; border:1px solid #444;">
+                    <div style="flex:1;">
+                        <b style="color:white; font-size:14px;">${p.name}</b>
+                    </div>
+                    <div style="text-align:right;">
+                        <b style="color:#d4af37; font-size:16px;">${p.balance.toFixed(2)}</b>
+                        <small style="color:gray; display:block; font-size:9px;">AKHO</small>
+                    </div>
+                </div>`;
         });
         listDiv.innerHTML = htmlContent;
     });
