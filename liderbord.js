@@ -2,7 +2,6 @@ function openLeaderboard() {
     const listDiv = document.getElementById('leaderboardList');
     document.getElementById('leaderboardUI').style.display = 'flex';
     
-    // ძველი კავშირის გათიშვა
     db.ref('users').off(); 
 
     db.ref('users').on('value', snap => {
@@ -13,14 +12,13 @@ function openLeaderboard() {
             const v = child.val();
             if (!v) return;
 
-            // 🎯 აი აქ არის მთავარი ცვლილება: 
-            // ვიღებთ მაქსიმალურს ამ ორს შორის, რომ ძველმა 3.5-მა არ გადაფაროს 493
+            // ბალანსის ამოღება (ყველაზე დიდს ვიღებთ)
             let b1 = parseFloat(v.akho) || 0;
             let b2 = parseFloat(v.akhoBalance) || 0;
-            let currentBalance = Math.max(b1, b2); 
+            let currentBalance = Math.max(b1, b2);
 
             if (v.name && v.name !== "undefined") {
-                // ფოტოს მოძებნა (შენი ლოგიკა)
+                // ფოტოს მოძებნა
                 let photo = "";
                 for (let key in v) {
                     if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
@@ -30,34 +28,56 @@ function openLeaderboard() {
                 }
                 if (!photo) photo = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=444&color=fff`;
 
-                players.push({ name: v.name, avatar: photo, balance: currentBalance });
+                players.push({ 
+                    name: v.name, 
+                    avatar: photo, 
+                    balance: currentBalance,
+                    isVip: v.isVip === true // აქ ვინახავთ VIP სტატუსს
+                });
             }
         });
 
-        // დალაგება რეალურ დროში
+        // დალაგება
         players.sort((a, b) => b.balance - a.balance);
 
         // ხატვა
         let htmlContent = "";
+        const colors = ['#d4af37', '#c0c0c0', '#cd7f32']; // ფერები ტოპ 3-ისთვის
+
         players.slice(0, 50).forEach((p, index) => {
             const isTop = index < 3;
+            const isFirst = index === 0;
+            const isVip = p.isVip; // ვიყენებთ შენახულ VIP სტატუსს
+
             htmlContent += `
-                <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isTop ? '#d4af37' : '#333'}; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isVip ? '#d4af37' : (isTop ? colors[index] : '#333')}; margin-bottom:10px; position:relative;">
+                    
+                    ${isVip ? '<div style="position:absolute; top:-5px; right:10px; background:#d4af37; color:black; font-size:9px; padding:2px 5px; border-radius:5px; font-weight:bold; z-index:10;">VIP</div>' : ''}
+
                     <b style="width:25px; color:white;">${index + 1}</b>
-                    <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; margin:0 15px; border:1px solid #444;">
+                    <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; margin:0 15px; border:2px solid ${isVip ? '#d4af37' : '#444'}; object-fit:cover;">
+                    
                     <div style="flex:1;">
-                        <b style="color:white; font-size:14px;">${p.name}</b>
+                        <b style="color:${isVip ? '#f9f295' : 'white'}; font-size:14px; display:flex; align-items:center;">
+                            ${p.name} 
+                            ${isFirst ? '<span style="margin-left:5px; filter: drop-shadow(0 0 3px gold);">👑</span>' : ''}
+                        </b>
+                        <small style="color:${isVip ? '#d4af37' : 'gray'}; font-size:10px;">
+                            ${isVip ? 'PREMIUM MEMBER' : 'IMPACT RANK'}
+                        </small>
                     </div>
+                    
                     <div style="text-align:right;">
                         <b style="color:#d4af37; font-size:16px;">${p.balance.toFixed(2)}</b>
-                        <small style="color:gray; display:block; font-size:9px;">AKHO</small>
+                        <small style="color:#d4af37; display:block; font-size:9px;">AKHO</small>
                     </div>
                 </div>`;
         });
+        
         listDiv.innerHTML = htmlContent;
     });
 }
-
+        
 
 
 
