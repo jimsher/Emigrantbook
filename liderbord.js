@@ -2,15 +2,10 @@ function openLeaderboard() {
     const listDiv = document.getElementById('leaderboardList');
     document.getElementById('leaderboardUI').style.display = 'flex';
     
-    // 1. სრული გასუფთავება - ძველი ლისენერების მოკვლა
+    // ძველი კავშირის გათიშვა
     db.ref('users').off(); 
 
-    listDiv.innerHTML = '<p style="color:white; text-align:center; padding:20px;">მონაცემები ახლდება...</p>';
-
-    // 2. ახალი, ცოცხალი კავშირი
     db.ref('users').on('value', snap => {
-        console.log("მონაცემები მოვიდა ბაზიდან!"); // შეამოწმე Console-ში თუ დაწერს ამას
-        
         listDiv.innerHTML = ''; 
         let players = [];
 
@@ -18,11 +13,14 @@ function openLeaderboard() {
             const v = child.val();
             if (!v) return;
 
-            // ბალანსის ამოღება (ყველა ვარიანტის შემოწმებით)
-            let balance = parseFloat(v.akhoBalance || v.akho || v.balance || 0);
+            // 🎯 აი აქ არის მთავარი ცვლილება: 
+            // ვიღებთ მაქსიმალურს ამ ორს შორის, რომ ძველმა 3.5-მა არ გადაფაროს 493
+            let b1 = parseFloat(v.akho) || 0;
+            let b2 = parseFloat(v.akhoBalance) || 0;
+            let currentBalance = Math.max(b1, b2); 
 
             if (v.name && v.name !== "undefined") {
-                // ფოტოს მოძებნა
+                // ფოტოს მოძებნა (შენი ლოგიკა)
                 let photo = "";
                 for (let key in v) {
                     if (typeof v[key] === 'string' && (v[key].startsWith('http') || v[key].startsWith('data:image'))) {
@@ -32,39 +30,33 @@ function openLeaderboard() {
                 }
                 if (!photo) photo = `https://ui-avatars.com/api/?name=${encodeURIComponent(v.name)}&background=444&color=fff`;
 
-                players.push({ name: v.name, avatar: photo, balance: balance });
+                players.push({ name: v.name, avatar: photo, balance: currentBalance });
             }
         });
 
-        // 3. სორტირება (დიდიდან პატარისკენ)
+        // დალაგება რეალურ დროში
         players.sort((a, b) => b.balance - a.balance);
 
-        // 4. ხატვა (ტოპ 50)
+        // ხატვა
         let htmlContent = "";
         players.slice(0, 50).forEach((p, index) => {
             const isTop = index < 3;
-            const colors = ['#d4af37', '#c0c0c0', '#cd7f32'];
-            
             htmlContent += `
-                <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isTop ? colors[index] : '#333'}; margin-bottom:10px;">
-                    <b style="width:25px; color:${isTop ? colors[index] : 'white'};">${index + 1}</b>
-                    <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; object-fit:cover; margin:0 15px; border:2px solid ${isTop ? colors[index] : '#444'};">
+                <div style="display:flex; align-items:center; background:${isTop ? 'rgba(212,175,55,0.1)' : '#111'}; padding:12px; border-radius:12px; border:1px solid ${isTop ? '#d4af37' : '#333'}; margin-bottom:10px;">
+                    <b style="width:25px; color:white;">${index + 1}</b>
+                    <img src="${p.avatar}" style="width:45px; height:45px; border-radius:50%; margin:0 15px; border:1px solid #444;">
                     <div style="flex:1;">
-                        <b style="color:white; font-size:14px; display:block;">${p.name}</b>
+                        <b style="color:white; font-size:14px;">${p.name}</b>
                     </div>
                     <div style="text-align:right;">
                         <b style="color:#d4af37; font-size:16px;">${p.balance.toFixed(2)}</b>
-                        <small style="color:#d4af37; display:block; font-size:9px;">AKHO</small>
+                        <small style="color:gray; display:block; font-size:9px;">AKHO</small>
                     </div>
                 </div>`;
         });
-        
         listDiv.innerHTML = htmlContent;
-    }, (error) => {
-        console.error("Firebase Error:", error); // თუ ბაზამ დაბლოკა წვდომა, აქ გამოჩნდება
     });
 }
-
 
 
 
