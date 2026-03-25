@@ -1958,43 +1958,77 @@ window.processGift = function(targetUid, cost, giftUrl) {
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        // --- აი ეს არის ახალი ლოგიკა კოლექციისთვის ---
+        // მონაცემების შენახვა ბაზაში
         firebase.database().ref(`received_gifts/${targetUid}`).push({
-            fromName: myName || 'User',
-            fromPhoto: myPhoto || '',
+            fromName: typeof myName !== 'undefined' ? myName : 'User',
+            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : '',
             giftUrl: giftUrl,
             price: cost,
             ts: Date.now()
         });
 
-        // ნოტიფიკაცია (შენი ძველი კოდი)
+        // ნოტიფიკაცია
         firebase.database().ref(`notifications/${targetUid}`).push({
-            text: `${myName || 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
+            text: `${typeof myName !== 'undefined' ? myName : 'მომხმარებელმა'} გამოგიგზავნათ საჩუქარი!`,
             ts: Date.now(),
-            fromPhoto: myPhoto || "",
+            fromPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
             giftImage: giftUrl
         });
 
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
         
-        // ანიმაცია (შენი ძველი კოდი)
-        const anim = document.createElement('div');
-        anim.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; animation: giftShow 2s ease-in-out forwards;";
-        anim.innerHTML = `<img src="${giftUrl}" style="width:150px; height:150px; object-fit:contain;">`;
-        document.body.appendChild(anim);
+        // --- 🚀 ახალი 2-ეტაპიანი ანიმაცია ---
+        
+        // 1. ვქმნით მთავარ კონტეინერს
+        const animWrapper = document.createElement('div');
+        animWrapper.id = "activeGiftAnimation";
+        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center;";
+        
+        // 2. ვამატებთ საწყის GIF-ს
+        animWrapper.innerHTML = `
+            <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
+                <img src="${giftUrl}" style="width:180px; height:180px; object-fit:contain; filter: drop-shadow(0 0 15px gold);">
+            </div>
+            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards;">
+                <h2 style="color:#f9f295; text-shadow:0 0 10px gold; margin-bottom:10px;">საჩუქარი!</h2>
+                <img src="https://emigrantbook.com/assets/gift_box_gold.png" style="width:220px; filter: drop-shadow(0 0 25px gold);">
+                <h1 style="color:#d4af37; text-shadow:0 0 10px rgba(0,0,0,0.5);">+${cost} AKHO</h1>
+            </div>
+        `;
+        document.body.appendChild(animWrapper);
 
-        if (!document.getElementById('giftGlobalStyle')) {
+        // 3. სტილების დამატება (თუ არ არსებობს)
+        if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
-            style.id = 'giftGlobalStyle';
+            style.id = 'giftEnhancedStyles';
             style.innerHTML = `
-                @keyframes giftShow { 
-                    0% { opacity:0; transform:translate(-50%, -50%) scale(0.5); } 
-                    30% { opacity:1; transform:translate(-50%, -50%) scale(1.2); } 
-                    100% { opacity:0; transform:translate(-50%, -200%) scale(1); } 
-                }`;
+                @keyframes giftStep1Anim {
+                    0% { transform: scale(0); opacity: 0; }
+                    20% { transform: scale(1.2); opacity: 1; }
+                    80% { transform: scale(1); opacity: 1; }
+                    100% { transform: scale(0); opacity: 0; }
+                }
+                @keyframes giftStep2Anim {
+                    0% { transform: scale(0); opacity: 0; }
+                    5% { transform: scale(1.1); opacity: 1; }
+                    10% { transform: scale(1); opacity: 1; }
+                    95% { transform: scale(1); opacity: 1; }
+                    100% { transform: scale(0.5) translateY(-100px); opacity: 0; }
+                }
+            `;
             document.head.appendChild(style);
         }
-        setTimeout(() => anim.remove(), 2000);
+
+        // 4. გადართვა GIF-დან ოქროსფერ ყუთზე (3 წამში)
+        setTimeout(() => {
+            document.getElementById('giftStep1').style.display = 'none';
+            document.getElementById('giftStep2').style.display = 'block';
+        }, 3000);
+
+        // 5. მთლიანი ანიმაციის წაშლა 33 წამში (3 + 30)
+        setTimeout(() => {
+            animWrapper.remove();
+        }, 33000);
     });
 };
 
