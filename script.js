@@ -1951,12 +1951,12 @@ window.openGiftPanel = function(postId, authorId) {
 };
 
                     
-
+// 1. საჩუქრის გაგზავნა (შენს მიერ)
 window.processGift = function(targetUid, cost, giftUrl, videoId) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     
-    // 1. ვპოულობთ ვიდეოს კონტეინერს ID-ით (რომელსაც ვასაჩუქრებთ)
+    // ვპოულობთ ვიდეოს კონტეინერს
     const videoElement = document.getElementById(`post-${videoId}`) || document.querySelector(`[data-video-id="${videoId}"]`);
 
     firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
@@ -1967,7 +1967,7 @@ window.processGift = function(targetUid, cost, giftUrl, videoId) {
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        // 🚀 2. ვწერთ ბაზაში, რომ საჩუქარი ყველასთან გამოჩნდეს ამ ვიდეოზე
+        // 🚀 2. ვწერთ ბაზაში "LIVE" საჩუქარს (ამას ყველა დაინახავს)
         const liveRef = firebase.database().ref(`live_gifts/${videoId}`);
         liveRef.set({
             giftUrl: giftUrl,
@@ -1975,8 +1975,9 @@ window.processGift = function(targetUid, cost, giftUrl, videoId) {
             fromName: typeof myName !== 'undefined' ? myName : 'User',
             ts: Date.now()
         });
-        // 5 წამში ვშლით ბაზიდან ჩანაწერს
-        setTimeout(() => liveRef.remove(), 5000);
+        
+        // 8 წამში ვშლით ბაზიდან ჩანაწერს
+        setTimeout(() => liveRef.remove(), 8000);
 
         // ისტორიაში შენახვა (მენიუსთვის)
         firebase.database().ref(`received_gifts/${targetUid}`).push({
@@ -1988,79 +1989,93 @@ window.processGift = function(targetUid, cost, giftUrl, videoId) {
 
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
 
-        // 🚀 3. ანიმაციის შექმნა და მიბმა კონკრეტულ ვიდეოზე
-        const animWrapper = document.createElement('div');
-        animWrapper.id = "activeGiftAnimation_" + videoId;
-        
-        // 🛑 პოზიცია: absolute და მაღალი z-index, რომ ვიდეოს "ჩაეკროს"
-        animWrapper.style = "position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2147483647; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
-        
-        animWrapper.innerHTML = `
-            <div id="giftStep1_${videoId}" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
-            </div>
-            
-            <div id="giftStep2_${videoId}" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
-                <div class="gift-image-container">
-                    <img src="gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
-                    <div class="golden-glow-overlay"></div>
-                </div>
-
-                <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
-                    <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
-                    <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადმოგეცათ ${cost} AKHO</h2>
-                    <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
-                </div>
-            </div>
-        `;
-
-        // ვამატებთ ვიდეოს კონტეინერში (თუ ვიპოვეთ), თუ არა - ეკრანზე
-        if (videoElement) {
-            videoElement.style.position = "relative";
-            videoElement.appendChild(animWrapper);
-        } else {
-            document.body.appendChild(animWrapper);
-        }
-
-        // --- CSS ეფექტები ---
-        if (!document.getElementById('giftEnhancedStyles')) {
-            const style = document.createElement('style');
-            style.id = 'giftEnhancedStyles';
-            style.innerHTML = `
-                .gift-image-container { position: relative; display: inline-block; margin-bottom: 20px; }
-                .golden-gift-img { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); animation: giftPulse 2.5s infinite alternate; }
-                .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%); border-radius: 50%; filter: blur(15px); z-index: 1; animation: glowPulse 2.5s infinite alternate; }
-                @keyframes giftPulse { 0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); } }
-                @keyframes glowPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
-                @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.3) translateY(-80px); opacity: 0; } }
-                @keyframes giftStep2Anim { 0% { transform: scale(0.6); opacity: 0; } 4% { transform: scale(1.05); opacity: 1; } 8% { transform: scale(1); opacity: 1; } 96% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8) translateY(-120px); opacity: 0; } }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // ანიმაციის ეტაპების გადართვა
-        setTimeout(() => {
-            const s1 = document.getElementById('giftStep1_' + videoId);
-            const s2 = document.getElementById('giftStep2_' + videoId);
-            if(s1) s1.style.display = 'none';
-            if(s2) s2.style.display = 'block';
-            
-            // ზედა ვიჯეტის განახლება
-            if(typeof updateGiftWidget === 'function') updateGiftWidget(giftUrl, cost);
-        }, 3000);
-
-        // 33 წამში ვშლით ყველაფერს
-        setTimeout(() => {
-            if(animWrapper) animWrapper.remove();
-        }, 33000);
+        // 🚀 3. ანიმაციის ჩვენება (გამგზავნთან)
+        // შენი ორიგინალი ანიმაციის ლოგიკა უცვლელად
+        showGiftAnimationLocally(videoElement, giftUrl, cost, videoId);
     });
 };
 
+// 2. 🚀 ფუნქცია, რომელიც უსმენს ბაზას (სხვა იუზერებისთვის)
+// ეს გამოიძახე იქ, სადაც ვიდეოები იტვირთება: initGiftListener(videoId);
+window.initGiftListener = function(videoId) {
+    firebase.database().ref(`live_gifts/${videoId}`).on('value', snap => {
+        const data = snap.val();
+        // თუ ბაზაში საჩუქარი გამოჩნდა და ეკრანზე ჯერ არ არის
+        if (data && !document.getElementById(`activeGiftAnimation_${videoId}`)) {
+            const videoElement = document.getElementById(`post-${videoId}`) || document.querySelector(`[data-video-id="${videoId}"]`);
+            showGiftAnimationLocally(videoElement, data.giftUrl, data.cost, videoId);
+        }
+    });
+};
+
+// 3. შენი ორიგინალი ანიმაციის რენდერი (გამოტანილი ცალკე ფუნქციად)
+function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
+    if (document.getElementById(`activeGiftAnimation_${videoId}`)) return;
+
+    const animWrapper = document.createElement('div');
+    animWrapper.id = "activeGiftAnimation_" + videoId;
+    
+    // შენი ორიგინალი სტილი (absolute-ით რომ ვიდეოს მიებას)
+    animWrapper.style = "position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2147483647; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
+    
+    animWrapper.innerHTML = `
+        <div id="giftStep1_${videoId}" style="animation: giftStep1Anim 3s forwards;">
+            <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
+        </div>
+        
+        <div id="giftStep2_${videoId}" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
+            <div class="gift-image-container">
+                <img src="gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
+                <div class="golden-glow-overlay"></div>
+            </div>
+            <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
+                <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
+                <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადმოგეცათ ${cost} AKHO</h2>
+                <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
+            </div>
+        </div>
+    `;
+
+    if (videoElement) {
+        if(getComputedStyle(videoElement).position === 'static') videoElement.style.position = "relative";
+        videoElement.appendChild(animWrapper);
+    } else {
+        animWrapper.style.position = "fixed";
+        document.body.appendChild(animWrapper);
+    }
+
+    // CSS ეფექტები (შენი ორიგინალი)
+    if (!document.getElementById('giftEnhancedStyles')) {
+        const style = document.createElement('style');
+        style.id = 'giftEnhancedStyles';
+        style.innerHTML = `
+            .gift-image-container { position: relative; display: inline-block; margin-bottom: 20px; }
+            .golden-gift-img { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); animation: giftPulse 2.5s infinite alternate; }
+            .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%); border-radius: 50%; filter: blur(15px); z-index: 1; animation: glowPulse 2.5s infinite alternate; }
+            @keyframes giftPulse { 0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); } }
+            @keyframes glowPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+            @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.3) translateY(-80px); opacity: 0; } }
+            @keyframes giftStep2Anim { 0% { transform: scale(0.6); opacity: 0; } 4% { transform: scale(1.05); opacity: 1; } 8% { transform: scale(1); opacity: 1; } 96% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8) translateY(-120px); opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+    }
+
+    setTimeout(() => {
+        const s1 = document.getElementById('giftStep1_' + videoId);
+        const s2 = document.getElementById('giftStep2_' + videoId);
+        if(s1) s1.style.display = 'none';
+        if(s2) s2.style.display = 'block';
+        if(typeof updateGiftWidget === 'function') updateGiftWidget(giftUrl, cost);
+    }, 3000);
+
+    setTimeout(() => { if(animWrapper) animWrapper.remove(); }, 33000);
+}
+                
 
 
 
                     
-
+// გადავამოწმებ და მერე წავშლი
 function updateGiftWidget(img, amount) {
     const widget = document.getElementById('lastGiftWidget');
     document.getElementById('widgetGiftImg').src = img;
@@ -2106,47 +2121,6 @@ window.openReceivedGifts = function() {
     });
 };
 
-
-
-
-// ნაჩუქარი გიფწბის გამოჩწნის სია
-function showGiftsCollection(uid) {
-    const modal = document.createElement('div');
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000020; display:flex; flex-direction:column; padding:20px; backdrop-filter:blur(10px); color:white;";
-    modal.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 style="color:#d4af37; margin:0;">საჩუქრების კოლექცია 🎁</h3>
-            <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="cursor:pointer; font-size:24px;"></i>
-        </div>
-        <div id="giftsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; overflow-y:auto; padding-bottom:50px;">
-            <p style="text-align:center; grid-column:1/-1;">იტვირთება...</p>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    const container = document.getElementById('giftsContainer');
-    firebase.database().ref(`received_gifts/${uid}`).once('value', snap => {
-        container.innerHTML = "";
-        const data = snap.val();
-        if(!data) {
-            container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები ჯერ არ არის</p>";
-            return;
-        }
-
-        Object.values(data).reverse().forEach(gift => {
-            container.innerHTML += `
-                <div style="background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:15px; padding:15px; text-align:center;">
-                    <img src="${gift.giftUrl}" style="width:80px; height:80px; object-fit:contain; margin-bottom:10px;">
-                    <div style="color:#d4af37; font-weight:bold; font-size:14px;">${gift.price} AKHO</div>
-                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #222;">
-                        <img src="${gift.fromPhoto || 'https://ui-avatars.com/api/?name='+gift.fromName}" style="width:20px; height:20px; border-radius:50%; border:1px solid #d4af37;">
-                        <span style="font-size:11px; color:#aaa;">${gift.fromName}</span>
-                    </div>
-                </div>
-            `;
-        });
-    });
-}
 // აქ მთაცრდება
 
 
