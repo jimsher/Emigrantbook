@@ -3786,3 +3786,31 @@ function showGiftAnimation(amount) {
         container.style.display = 'none';
     }, 30000);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// ეს კოდი ავტომატურად პოულობს ყველა ვიდეოს და რთავს საჩუქრების მოსმენას
+function activateAllGifts() {
+    // ვეძებთ ყველა ელემენტს, რომლის ID იწყება "post-"-ით
+    const allPosts = document.querySelectorAll('[id^="post-"]');
+    
+    allPosts.forEach(post => {
+        const videoId = post.id.replace('post-', '');
+        // თუ ამ ვიდეოზე მოსმენა ჯერ არ ჩართულა, ჩავრთოთ
+        if (typeof window.initGiftListener === 'function') {
+            window.initGiftListener(videoId);
+        }
+    });
+}
+
+// ჩავრთოთ როგორც კი გვერდი ჩაიტვირთება და მერე ყოველ 3 წამში შევამოწმოთ ახალი პოსტები
+setInterval(activateAllGifts, 3000);
