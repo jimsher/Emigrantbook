@@ -2073,59 +2073,7 @@ window.processGift = function(targetUid, cost, giftUrl) {
 };                    
 
 
-// ფუნქცია, რომელიც აახლებს ზედა კუთხის ვიჯეტს
-function updateGiftWidget(img, amount) {
-    const widget = document.getElementById('lastGiftWidget');
-    const wImg = document.getElementById('widgetGiftImg');
-    const wAmount = document.getElementById('widgetGiftAmount');
 
-    wImg.src = img;
-    wAmount.innerText = "+" + amount;
-    widget.style.display = 'flex'; // გამოვაჩინოთ
-}
-
-
-window.openReceivedGifts = function() {
-    const targetUid = currentProfileId; // ვის პროფილზეც ხარ იმის ID
-    
-    // ვქმნით ფანჯარას
-    const modal = document.createElement('div');
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000000; overflow-y:auto; padding:20px; color:white; font-family:sans-serif;";
-    
-    firebase.database().ref(`received_gifts/${targetUid}`).once('value', snap => {
-        let totalAkho = 0;
-        let html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px;">
-                <h2 style="color:gold; margin:0;">მიღებული საჩუქრები</h2>
-                <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="font-size:24px; cursor:pointer;"></i>
-            </div>
-            <div id="giftItemsContainer">`;
-
-        snap.forEach(child => {
-            const data = child.val();
-            totalAkho += parseInt(data.price);
-            html += `
-                <div style="display:flex; align-items:center; background:#1a1a1a; margin-bottom:10px; padding:10px; border-radius:10px; border-left:3px solid gold;">
-                    <img src="${data.giftUrl}" style="width:50px; height:50px; object-fit:contain; margin-right:15px;">
-                    <div style="flex-grow:1;">
-                        <div style="font-weight:bold;">${data.fromName}</div>
-                        <div style="font-size:12px; color:gray;">${new Date(data.ts).toLocaleString()}</div>
-                    </div>
-                    <div style="color:gold; font-weight:bold;">+${data.price} AKHO</div>
-                </div>
-            `;
-        });
-
-        html += `</div>
-            <div style="position:sticky; bottom:0; background:#000; padding:15px; border-top:2px solid gold; text-align:center; font-size:20px; font-weight:bold; color:gold;">
-                ჯამში შეგროვილი: ${totalAkho} AKHO
-            </div>
-        `;
-        
-        modal.innerHTML = html;
-        document.body.appendChild(modal);
-    });
-};
 
 
 
