@@ -2116,6 +2116,11 @@ window.openReceivedGifts = function() {
     });
 };            
 
+
+
+
+function autoStart() { document.querySelectorAll('[id^="post-"]').forEach(p => window.initGiftListener(p.id.replace('post-',''))); }
+setInterval(autoStart, 3000);
 // აქ მთაცრდება
 
 
