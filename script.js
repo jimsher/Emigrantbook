@@ -1952,6 +1952,7 @@ window.openGiftPanel = function(postId, authorId) {
 
                     
 // 1. საჩუქრის გაგზავნა (შენს მიერ)
+    // 1. საჩუქრის გაგზავნა
 window.processGift = function(targetUid, cost, giftUrl, videoId) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
@@ -1990,7 +1991,6 @@ window.processGift = function(targetUid, cost, giftUrl, videoId) {
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
 
         // 🚀 3. ანიმაციის ჩვენება (გამგზავნთან)
-        // შენი ორიგინალი ანიმაციის ლოგიკა უცვლელად
         showGiftAnimationLocally(videoElement, giftUrl, cost, videoId);
     });
 };
@@ -2008,14 +2008,14 @@ window.initGiftListener = function(videoId) {
     });
 };
 
-// 3. შენი ორიგინალი ანიმაციის რენდერი (გამოტანილი ცალკე ფუნქციად)
+// 3. ანიმაციის რენდერი (შენი ორიგინალი სტილები და ლოგიკა)
 function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
     if (document.getElementById(`activeGiftAnimation_${videoId}`)) return;
 
     const animWrapper = document.createElement('div');
     animWrapper.id = "activeGiftAnimation_" + videoId;
     
-    // შენი ორიგინალი სტილი (absolute-ით რომ ვიდეოს მიებას)
+    // შენი ორიგინალი სტილი
     animWrapper.style = "position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2147483647; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
     
     animWrapper.innerHTML = `
@@ -2025,7 +2025,7 @@ function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
         
         <div id="giftStep2_${videoId}" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
             <div class="gift-image-container">
-                <img src="gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
+                <img src="assets/images/gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
                 <div class="golden-glow-overlay"></div>
             </div>
             <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
@@ -2044,7 +2044,7 @@ function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
         document.body.appendChild(animWrapper);
     }
 
-    // CSS ეფექტები (შენი ორიგინალი)
+    // შენი ორიგინალი CSS ეფექტები
     if (!document.getElementById('giftEnhancedStyles')) {
         const style = document.createElement('style');
         style.id = 'giftEnhancedStyles';
@@ -2070,22 +2070,20 @@ function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
 
     setTimeout(() => { if(animWrapper) animWrapper.remove(); }, 33000);
 }
-                
 
-
-
-                    
-// გადავამოწმებ და მერე წავშლი
+// ზედა ვიჯეტის განახლება
 function updateGiftWidget(img, amount) {
     const widget = document.getElementById('lastGiftWidget');
-    document.getElementById('widgetGiftImg').src = img;
-    document.getElementById('widgetGiftAmount').innerText = "+" + amount;
-    widget.style.display = 'flex';
+    if(widget) {
+        document.getElementById('widgetGiftImg').src = img;
+        document.getElementById('widgetGiftAmount').innerText = "+" + amount;
+        widget.style.display = 'flex';
+    }
 }
 
-
+// ისტორიის მენიუ
 window.openReceivedGifts = function() {
-    const targetUid = currentProfileId; // ან ის ID ვის პროფილზეც ხარ
+    const targetUid = typeof currentProfileId !== 'undefined' ? currentProfileId : firebase.auth().currentUser.uid;
     const modal = document.createElement('div');
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2147483647; overflow-y:auto; padding:20px; color:white; font-family:sans-serif;";
     
