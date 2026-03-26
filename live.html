@@ -329,33 +329,88 @@ const storage = firebase.storage();
         
 
         function submitOrder() {
+    const user = firebase.auth().currentUser;
+    // თუ იუზერი არაა შესული, გადახდას ვერ შეძლებს (თუ AKHO-თი იხდის)
+    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+
     const name = document.getElementById('userName').value;
-    const phone = document.getElementById('userPhone').value;
+    const city = document.getElementById('userCity').value;
     const addr = document.getElementById('userAddr').value;
+    const phone = document.getElementById('userPhone').value;
+    const payMethod = document.querySelector('input[name="pay"]:checked').value;
 
-    if(!name || !phone || !addr) {
-        return alert("გთხოვთ შეავსოთ ყველა აუცილებელი ველი!");
+    if(!name || !phone || !addr || !city) return alert("გთხოვთ შეავსოთ ყველა აუცილებელი ველი!");
+    if(cart.length === 0) return alert("კალათა ცარიელია!");
+
+    const totalCost = cart.reduce((a, b) => a + b.total, 0);
+
+    // 🚀 1. თუ იხდის AKHO-თი, ჯერ ვამოწმებთ და ვაკლებთ ბალანსს
+    if (payMethod === 'akho') {
+        const userRef = db.ref(`users/${user.uid}/akho`);
+
+        userRef.transaction((currentBalance) => {
+            if (currentBalance === null) return 0; // თუ ბალანსი არ არსებობს
+            if (currentBalance < totalCost) {
+                return; // ❌ არასაკმარისი თანხა (ტრანზაქცია ჩაიშლება)
+            }
+            return currentBalance - totalCost;
+        }, (error, committed, snapshot) => {
+            if (error) {
+                alert("ტრანზაქციის შეცდომა: " + error.message);
+            } else if (!committed) {
+                alert("თქვენ არ გაქვთ საკმარისი AKHO ბალანსზე! ❌");
+            } else {
+                // ✅ ბალანსი წარმატებით ჩამოიჭრა, ახლა ვწერთ შეკვეთას
+                saveOrderToDb(totalCost, payMethod);
+            }
+        });
+    } else {
+        // თუ სხვა მეთოდით იხდის (მაგ: კურიერთან), პირდაპირ ვწერთ შეკვეთას
+        saveOrderToDb(totalCost, payMethod);
     }
+}
 
-    // შეკვეთის დეტალების გადატანა თრექინგის გვერდზე
-    const trackDetails = document.getElementById('trackDetails');
-    trackDetails.innerHTML = cart.map(i => `
-        <div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
-            <b>${i.name} (x${i.qty})</b> - ${i.total.toFixed(2)} AKHO
-        </div>
-    `).join('');
-
-    // გვერდების გადართვა
-    closePage('cartPage');
-    document.getElementById('trackPage').style.display = 'block';
-
-    // სიმულაცია: სტატუსების ავტომატური ცვლა (ტესტისთვის)
-    setTimeout(() => document.getElementById('step2').classList.add('active'), 5000); // 5 წამში მზადდება
-    setTimeout(() => document.getElementById('step3').classList.add('active'), 10000); // 10 წამში გზაშია
+// 🚀 2. შეკვეთის ბაზაში შენახვის ცალკე ფუნქცია
+function saveOrderToDb(total, method) {
+    const user = firebase.auth().currentUser;
+    const orderId = Date.now();
     
-    // კალათის გასუფთავება
-    cart = [];
-    document.getElementById('cartCount').innerText = 0;
+    const orderData = {
+        orderId: orderId,
+        uid: user ? user.uid : "guest",
+        customer: {
+            name: document.getElementById('userName').value,
+            city: document.getElementById('userCity').value,
+            addr: document.getElementById('userAddr').value,
+            phone: document.getElementById('userPhone').value
+        },
+        items: cart,
+        total: total,
+        payment: method,
+        status: "pending",
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('delivery_orders/' + orderId).set(orderData).then(() => {
+        document.getElementById('trackDetails').innerHTML = `
+            <div style="padding:10px; border:1px solid var(--gold); border-radius:10px; margin-bottom:15px;">
+                <b style="color:var(--gold);">შეკვეთა #${orderId} მიღებულია!</b>
+                <p style="font-size:12px; margin-top:5px;">გადახდილია: ${total.toFixed(2)} AKHO</p>
+            </div>
+        `;
+
+        closePage('cartPage');
+        document.getElementById('trackPage').style.display = 'block';
+        
+        // ვიწყებთ სტატუსის მოსმენას
+        listenToOrderStatus(orderId);
+
+        // კალათის გასუფთავება
+        cart = [];
+        document.getElementById('cartCount').innerText = 0;
+        
+        alert("შეკვეთა წარმატებით გაფორმდა! ✅");
+    }).catch(err => alert("შეკვეთის შენახვის შეცდომა: " + err.message));
 }
 
         
