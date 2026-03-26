@@ -2022,7 +2022,42 @@ function updateGiftWidget(img, amount) {
 }
 
 
+window.openReceivedGifts = function() {
+    const targetUid = currentProfileId; // ან ის ID ვის პროფილზეც ხარ
+    const modal = document.createElement('div');
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2147483647; overflow-y:auto; padding:20px; color:white; font-family:sans-serif;";
+    
+    firebase.database().ref(`received_gifts/${targetUid}`).once('value', snap => {
+        let total = 0;
+        let listHtml = '';
+        snap.forEach(c => {
+            const d = c.val();
+            total += parseInt(d.price);
+            listHtml += `
+                <div style="display:flex; align-items:center; background:#1a1a1a; margin-bottom:10px; padding:12px; border-radius:12px; border:1px solid #333;">
+                    <img src="${d.giftUrl}" style="width:45px; height:45px; object-fit:contain; margin-right:15px;">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:bold; color:#fbd14b;">${d.fromName}</div>
+                        <div style="font-size:11px; color:gray;">${new Date(d.ts).toLocaleString()}</div>
+                    </div>
+                    <div style="color:gold; font-weight:bold;">+${d.price}</div>
+                </div>`;
+        });
 
+        modal.innerHTML = `
+            <div style="max-width:500px; margin:auto;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <h2 style="color:gold;">საჩუქრების ისტორია</h2>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:none; border:none; color:white; font-size:24px;">×</button>
+                </div>
+                ${listHtml}
+                <div style="margin-top:20px; padding:20px; background:linear-gradient(45deg, #d4af37, #fbd14b); border-radius:15px; text-align:center; color:black; font-weight:bold; font-size:20px;">
+                    ჯამში მიღებული: ${total} AKHO
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    });
+};
 
 
 
