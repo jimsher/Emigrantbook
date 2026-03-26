@@ -211,18 +211,18 @@
 
 
 
-
     
+
     <script>
 // Firebase-ის კონფიგურაცია (შენი მონაცემები ჩასვი აქ)
-const firebaseConfig = { 
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-  authDomain: "emigrantbook.firebaseapp.com", 
-  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-  projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", // <-- ეს ხაზი აუცილებლად უნდა იყოს აქ!
-  messagingSenderId: "",
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+const firebaseConfig = {
+    apiKey: "შენი_API_KEY",
+    authDomain: "emigrantbook.firebaseapp.com",
+    databaseURL: "https://emigrantbook-default-rtdb.firebaseio.com",
+    projectId: "emigrantbook",
+    storageBucket: "emigrantbook.appspot.com",
+    messagingSenderId: "შენი_ID",
+    appId: "შენი_APP_ID"
 };
 
 // ინიციალიზაცია
@@ -251,127 +251,100 @@ const db = firebase.database();
         let curProd = null;
         let curQty = 1;
 
-            
+        function init() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.img}" class="product-img" onclick="openProduct(${p.id})">
+                    <div class="product-info">
+                        <div style="font-weight:bold;">${p.name}</div>
+                        <div style="color:var(--gold); margin-top:5px;">${p.price.toFixed(2)} AKHO</div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-// მენიუს ჩვენება (ფილტრის გათვალისწინებით)
-function init(filter = 'all') {
-    const grid = document.getElementById('menuGrid');
-    const filtered = filter === 'all' ? products : products.filter(p => p.cat === filter);
-    
-    grid.innerHTML = filtered.map(p => `
-        <div class="product-card">
-            <img src="${p.img}" class="product-img" onclick="openProduct(${p.id})">
-            <div class="product-info">
-                <div style="font-weight:bold;">${p.name}</div>
-                <div style="color:var(--gold); margin-top:5px;">${p.price.toFixed(2)} AKHO</div>
-            </div>
+        function openProduct(id) {
+            curProd = products.find(p => p.id === id);
+            curQty = 1;
+            document.getElementById('pName').innerText = curProd.name;
+            document.getElementById('pDesc').innerText = curProd.desc;
+            document.getElementById('pImg').src = curProd.img;
+            document.getElementById('qty').innerText = curQty;
+            
+            const exBox = document.getElementById('extrasBox');
+            exBox.innerHTML = curProd.extras.map(e => `
+                <label class="row"><span>${e.n} (+${e.p} AKHO)</span><input type="checkbox" class="ex-in" data-n="${e.n}" data-p="${e.p}"></label>
+            `).join('');
+            
+            document.getElementById('productPage').style.display = 'block';
+        }
+
+        function updateQty(v) { curQty = Math.max(1, curQty + v); document.getElementById('qty').innerText = curQty; }
+        function closePage(id) { document.getElementById(id).style.display = 'none'; }
+
+        function addToCart() {
+            const ex = [];
+            document.querySelectorAll('.ex-in:checked').forEach(i => ex.push({n: i.dataset.n, p: parseFloat(i.dataset.p)}));
+            const pay = document.querySelector('input[name="pay"]:checked').value;
+            const total = (curProd.price + ex.reduce((a,b)=>a+b.p, 0)) * curQty;
+            
+            cart.push({ name: curProd.name, qty: curQty, extras: ex, pay, total });
+            document.getElementById('cartCount').innerText = cart.length;
+            closePage('productPage');
+        }
+
+        function showCart() {
+            const box = document.getElementById('cartItems');
+            if(cart.length === 0) { box.innerHTML = '<p style="text-align:center;">კალათა ცარიელია</p>'; }
+            else {
+                box.innerHTML = cart.map(i => `
+                    <div class="row">
+                        <div><b>${i.name} (x${i.qty})</b><br><small>${i.pay}</small></div>
+                        <div style="color:var(--gold);">${i.total.toFixed(2)} AKHO</div>
+                    </div>
+                `).join('');
+            }
+            const sum = cart.reduce((a,b)=>a+b.total, 0);
+            document.getElementById('totalSum').innerText = "ჯამი: " + sum.toFixed(2) + " AKHO";
+            document.getElementById('cartPage').style.display = 'block';
+        }
+
+
+        
+
+        function submitOrder() {
+    const name = document.getElementById('userName').value;
+    const phone = document.getElementById('userPhone').value;
+    const addr = document.getElementById('userAddr').value;
+
+    if(!name || !phone || !addr) {
+        return alert("გთხოვთ შეავსოთ ყველა აუცილებელი ველი!");
+    }
+
+    // შეკვეთის დეტალების გადატანა თრექინგის გვერდზე
+    const trackDetails = document.getElementById('trackDetails');
+    trackDetails.innerHTML = cart.map(i => `
+        <div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
+            <b>${i.name} (x${i.qty})</b> - ${i.total.toFixed(2)} AKHO
         </div>
     `).join('');
-}
 
-// კატეგორიების ფილტრი
-window.filterMenu = function(category, el) {
-    document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    init(category);
-};
+    // გვერდების გადართვა
+    closePage('cartPage');
+    document.getElementById('trackPage').style.display = 'block';
 
-function openProduct(id) {
-    curProd = products.find(p => p.id === id);
-    curQty = 1;
-    document.getElementById('pName').innerText = curProd.name;
-    document.getElementById('pDesc').innerText = curProd.desc;
-    document.getElementById('pImg').src = curProd.img;
-    document.getElementById('qty').innerText = curQty;
+    // სიმულაცია: სტატუსების ავტომატური ცვლა (ტესტისთვის)
+    setTimeout(() => document.getElementById('step2').classList.add('active'), 5000); // 5 წამში მზადდება
+    setTimeout(() => document.getElementById('step3').classList.add('active'), 10000); // 10 წამში გზაშია
     
-    const exBox = document.getElementById('extrasBox');
-    exBox.innerHTML = curProd.extras.map(e => `
-        <label class="row"><span>${e.n} (+${e.p} AKHO)</span><input type="checkbox" class="ex-in" data-n="${e.n}" data-p="${e.p}"></label>
-    `).join('');
-    
-    document.getElementById('productPage').style.display = 'block';
+    // კალათის გასუფთავება
+    cart = [];
+    document.getElementById('cartCount').innerText = 0;
 }
 
-function updateQty(v) { curQty = Math.max(1, curQty + v); document.getElementById('qty').innerText = curQty; }
-function closePage(id) { document.getElementById(id).style.display = 'none'; }
-
-function addToCart() {
-    const ex = [];
-    document.querySelectorAll('.ex-in:checked').forEach(i => ex.push({n: i.dataset.n, p: parseFloat(i.dataset.p)}));
-    const pay = document.querySelector('input[name="pay"]:checked').value;
-    const total = (curProd.price + ex.reduce((a,b)=>a+b.p, 0)) * curQty;
-    
-    cart.push({ name: curProd.name, qty: curQty, extras: ex, pay, total });
-    document.getElementById('cartCount').innerText = cart.length;
-    closePage('productPage');
-}
-
-function showCart() {
-    const box = document.getElementById('cartItems');
-    if(cart.length === 0) { 
-        box.innerHTML = '<p style="text-align:center;">კალათა ცარიელია</p>'; 
-    } else {
-        box.innerHTML = cart.map(i => `
-            <div class="row">
-                <div><b>${i.name} (x${i.qty})</b><br><small>${i.pay}</small></div>
-                <div style="color:var(--gold);">${i.total.toFixed(2)} AKHO</div>
-            </div>
-        `).join('');
-    }
-    const sum = cart.reduce((a,b)=>a+b.total, 0);
-    document.getElementById('totalSum').innerText = "ჯამი: " + sum.toFixed(2) + " AKHO";
-    document.getElementById('cartPage').style.display = 'block';
-}
-
-function submitOrder() {
-    const user = firebase.auth().currentUser;
-    const name = document.getElementById('userName').value;
-    const city = document.getElementById('userCity').value;
-    const addr = document.getElementById('userAddr').value;
-    const phone = document.getElementById('userPhone').value;
-
-    if(!name || !phone || !addr || !city) return alert("შეავსეთ ველები!");
-    if(cart.length === 0) return alert("კალათა ცარიელია!");
-
-    const orderId = Date.now();
-    const orderData = {
-        orderId: orderId,
-        uid: user ? user.uid : "guest",
-        customer: { name, city, addr, phone },
-        items: cart,
-        total: cart.reduce((a,b) => a + b.total, 0),
-        status: "pending",
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    };
-
-    db.ref('delivery_orders/' + orderId).set(orderData).then(() => {
-        document.getElementById('trackDetails').innerHTML = `
-            <div style="padding:10px; border:1px solid var(--gold); border-radius:10px; margin-bottom:15px;">
-                <small>შეკვეთის ნომერი: #${orderId}</small>
-            </div>
-        ` + cart.map(i => `<div class="row"><b>${i.name} (x${i.qty})</b></div>`).join('');
-
-        closePage('cartPage');
-        document.getElementById('trackPage').style.display = 'block';
-        listenToOrderStatus(orderId);
-        cart = [];
-        document.getElementById('cartCount').innerText = 0;
-    });
-}
-
-function listenToOrderStatus(orderId) {
-    db.ref('delivery_orders/' + orderId + '/status').on('value', (snap) => {
-        const status = snap.val();
-        document.querySelectorAll('.track-item').forEach(el => el.classList.remove('active'));
-        document.querySelector('.track-item:nth-child(1)').classList.add('active');
-        if(status === "preparing") document.getElementById('step2').classList.add('active');
-        if(status === "on_way") { document.getElementById('step2').classList.add('active'); document.getElementById('step3').classList.add('active'); }
-        if(status === "delivered") { document.getElementById('step2').classList.add('active'); document.getElementById('step3').classList.add('active'); document.getElementById('step4').classList.add('active'); }
-    });
-}
-
-window.onload = () => init('all');
+        
+        window.onload = init;
     </script>
-    
 </body>
 </html>
