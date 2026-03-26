@@ -314,33 +314,54 @@ const db = firebase.database();
         
 
         function submitOrder() {
+    const user = firebase.auth().currentUser;
     const name = document.getElementById('userName').value;
-    const phone = document.getElementById('userPhone').value;
+    const city = document.getElementById('userCity').value;
     const addr = document.getElementById('userAddr').value;
+    const phone = document.getElementById('userPhone').value;
 
-    if(!name || !phone || !addr) {
+    if(!name || !phone || !addr || !city) {
         return alert("გთხოვთ შეავსოთ ყველა აუცილებელი ველი!");
     }
 
-    // შეკვეთის დეტალების გადატანა თრექინგის გვერდზე
-    const trackDetails = document.getElementById('trackDetails');
-    trackDetails.innerHTML = cart.map(i => `
-        <div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
-            <b>${i.name} (x${i.qty})</b> - ${i.total.toFixed(2)} AKHO
-        </div>
-    `).join('');
+    if(cart.length === 0) return alert("კალათა ცარიელია!");
 
-    // გვერდების გადართვა
-    closePage('cartPage');
-    document.getElementById('trackPage').style.display = 'block';
+    const orderId = Date.now(); // დროებითი ID შეკვეთისთვის
+    const orderData = {
+        orderId: orderId,
+        uid: user ? user.uid : "guest",
+        customer: { name, city, addr, phone },
+        items: cart,
+        total: cart.reduce((a,b) => a + b.total, 0),
+        status: "pending", // სტატუსი: მოლოდინში
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
 
-    // სიმულაცია: სტატუსების ავტომატური ცვლა (ტესტისთვის)
-    setTimeout(() => document.getElementById('step2').classList.add('active'), 5000); // 5 წამში მზადდება
-    setTimeout(() => document.getElementById('step3').classList.add('active'), 10000); // 10 წამში გზაშია
-    
-    // კალათის გასუფთავება
-    cart = [];
-    document.getElementById('cartCount').innerText = 0;
+    // 🚀 ვწერთ ბაზაში
+    db.ref('delivery_orders/' + orderId).set(orderData).then(() => {
+        // შეკვეთის დეტალების ჩვენება თრექინგზე
+        const trackDetails = document.getElementById('trackDetails');
+        trackDetails.innerHTML = `
+            <div style="padding:10px; border:1px solid var(--gold); border-radius:10px; margin-bottom:15px;">
+                <small>შეკვეთის ნომერი: #${orderId}</small>
+            </div>
+        ` + cart.map(i => `
+            <div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;">
+                <b>${i.name} (x${i.qty})</b> - ${i.total.toFixed(2)} AKHO
+            </div>
+        `).join('');
+
+        // გადავდივართ თრექინგზე
+        closePage('cartPage');
+        document.getElementById('trackPage').style.display = 'block';
+
+        // 🔔 ვიწყებთ სტატუსის მოსმენას (ადმინი რომ შეცვლის, აქაც შეიცვალოს)
+        listenToOrderStatus(orderId);
+
+        // კალათის გასუფთავება
+        cart = [];
+        document.getElementById('cartCount').innerText = 0;
+    }).catch(err => alert("შეცდომა: " + err.message));
 }
 
         
