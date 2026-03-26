@@ -421,6 +421,81 @@ function finishOrderProcess(orderId, total) {
 
         
         window.onload = init;
+
+
+
+
+
+
+      function showOrderHistory() {
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("ისტორიის სანახავად გაიარეთ ავტორიზაცია!");
+
+    const historyBox = document.getElementById('historyItems');
+    historyBox.innerHTML = '<p style="text-align:center; color:gray; margin-top:20px;">იტვირთება...</p>';
+    document.getElementById('historyPage').style.display = 'block';
+
+    // 🚀 ვეძებთ ბაზაში შეკვეთებს, სადაც uid ემთხვევა იუზერისას
+    db.ref('delivery_orders').orderByChild('uid').equalTo(user.uid).once('value', snap => {
+        if (!snap.exists()) {
+            historyBox.innerHTML = '<p style="text-align:center; color:gray; margin-top:20px;">შეკვეთები არ მოიძებნა</p>';
+            return;
+        }
+
+        let ordersHtml = '';
+        const orders = [];
+        
+        // მონაცემების მასივში გადატანა, რომ დროის მიხედვით დავალაგოთ (ახალი თავში)
+        snap.forEach(child => {
+            orders.push({ id: child.key, ...child.val() });
+        });
+        orders.reverse(); // უახლესი შეკვეთები ზემოთ
+
+        ordersHtml = orders.map(o => `
+            <div class="row" style="display:block; padding:15px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <b style="color:var(--gold);">#${o.orderId}</b>
+                    <span style="font-size:12px; color:gray;">${new Date(o.timestamp).toLocaleDateString()}</span>
+                </div>
+                <div style="font-size:14px; margin-bottom:10px;">
+                    ${o.items.map(i => `• ${i.name} (x${i.qty})`).join('<br>')}
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; pt-10; margin-top:10px; padding-top:10px;">
+                    <span style="color:${o.status === 'delivered' ? 'limegreen' : 'orange'}; font-size:13px; font-weight:bold;">
+                        ${getStatusText(o.status)}
+                    </span>
+                    <b style="color:var(--gold);">${o.total.toFixed(2)} AKHO</b>
+                </div>
+                ${o.status !== 'delivered' ? `
+                    <button onclick="reTrackOrder('${o.orderId}')" style="width:100%; margin-top:10px; background:transparent; border:1px solid var(--gold); color:var(--gold); padding:5px; border-radius:8px; font-size:12px;">
+                        თრექინგის ნახვა
+                    </button>
+                ` : ''}
+            </div>
+        `).join('');
+
+        historyBox.innerHTML = ordersHtml;
+    });
+}
+
+// სტატუსის ტექსტურად გადაქცევა
+function getStatusText(status) {
+    const statuses = {
+        'pending': 'მუშავდება...',
+        'preparing': 'მზადდება 👨‍🍳',
+        'on_way': 'გზაშია 🚚',
+        'delivered': 'ჩაბარდა ✅'
+    };
+    return statuses[status] || status;
+}
+
+// ძველი შეკვეთის თრექინგზე დაბრუნება
+function reTrackOrder(id) {
+    closePage('historyPage');
+    document.getElementById('trackPage').style.display = 'block';
+    // ისევ ვრთავთ მოსმენას ამ ID-ზე
+    listenToOrderStatus(id);
+}  
     </script>
 </body>
 </html>
