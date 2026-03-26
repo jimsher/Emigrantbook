@@ -1952,7 +1952,7 @@ window.openGiftPanel = function(postId, authorId) {
 
                     
 // 1. საჩუქრის გაგზავნა (შენს მიერ)
-    // 1. საჩუქრის გაგზავნა
+    // 1. საჩუქრის გაგზავნა (შენს მიერ)
 window.processGift = function(targetUid, cost, giftUrl, videoId) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
@@ -1996,11 +1996,9 @@ window.processGift = function(targetUid, cost, giftUrl, videoId) {
 };
 
 // 2. 🚀 ფუნქცია, რომელიც უსმენს ბაზას (სხვა იუზერებისთვის)
-// ეს გამოიძახე იქ, სადაც ვიდეოები იტვირთება: initGiftListener(videoId);
 window.initGiftListener = function(videoId) {
     firebase.database().ref(`live_gifts/${videoId}`).on('value', snap => {
         const data = snap.val();
-        // თუ ბაზაში საჩუქარი გამოჩნდა და ეკრანზე ჯერ არ არის
         if (data && !document.getElementById(`activeGiftAnimation_${videoId}`)) {
             const videoElement = document.getElementById(`post-${videoId}`) || document.querySelector(`[data-video-id="${videoId}"]`);
             showGiftAnimationLocally(videoElement, data.giftUrl, data.cost, videoId);
@@ -2008,14 +2006,14 @@ window.initGiftListener = function(videoId) {
     });
 };
 
-// 3. ანიმაციის რენდერი (შენი ორიგინალი სტილები და ლოგიკა)
+// 3. შენი ორიგინალი ანიმაციის რენდერი
 function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
     if (document.getElementById(`activeGiftAnimation_${videoId}`)) return;
 
     const animWrapper = document.createElement('div');
     animWrapper.id = "activeGiftAnimation_" + videoId;
     
-    // შენი ორიგინალი სტილი
+    // შენი ორიგინალი სტილი (absolute-ით რომ ვიდეოს მიებას)
     animWrapper.style = "position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2147483647; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
     
     animWrapper.innerHTML = `
@@ -2044,7 +2042,6 @@ function showGiftAnimationLocally(videoElement, giftUrl, cost, videoId) {
         document.body.appendChild(animWrapper);
     }
 
-    // შენი ორიგინალი CSS ეფექტები
     if (!document.getElementById('giftEnhancedStyles')) {
         const style = document.createElement('style');
         style.id = 'giftEnhancedStyles';
@@ -2117,7 +2114,7 @@ window.openReceivedGifts = function() {
             </div>`;
         document.body.appendChild(modal);
     });
-};
+};            
 
 // აქ მთაცრდება
 
