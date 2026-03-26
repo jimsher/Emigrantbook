@@ -328,10 +328,9 @@ const storage = firebase.storage();
 
         
 
-        function submitOrder() {
+         function submitOrder() {
     const user = firebase.auth().currentUser;
-    // თუ იუზერი არაა შესული, გადახდას ვერ შეძლებს (თუ AKHO-თი იხდის)
-    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    if (!user) return alert("ავტორიზაცია საჭიროა!");
 
     const name = document.getElementById('userName').value;
     const city = document.getElementById('userCity').value;
@@ -339,78 +338,69 @@ const storage = firebase.storage();
     const phone = document.getElementById('userPhone').value;
     const payMethod = document.querySelector('input[name="pay"]:checked').value;
 
-    if(!name || !phone || !addr || !city) return alert("გთხოვთ შეავსოთ ყველა აუცილებელი ველი!");
+    if(!name || !phone || !addr || !city) return alert("შეავსეთ ყველა ველი!");
     if(cart.length === 0) return alert("კალათა ცარიელია!");
 
     const totalCost = cart.reduce((a, b) => a + b.total, 0);
-
-    // 🚀 1. თუ იხდის AKHO-თი, ჯერ ვამოწმებთ და ვაკლებთ ბალანსს
-    if (payMethod === 'akho') {
-        const userRef = db.ref(`users/${user.uid}/akho`);
-
-        userRef.transaction((currentBalance) => {
-            if (currentBalance === null) return 0; // თუ ბალანსი არ არსებობს
-            if (currentBalance < totalCost) {
-                return; // ❌ არასაკმარისი თანხა (ტრანზაქცია ჩაიშლება)
-            }
-            return currentBalance - totalCost;
-        }, (error, committed, snapshot) => {
-            if (error) {
-                alert("ტრანზაქციის შეცდომა: " + error.message);
-            } else if (!committed) {
-                alert("თქვენ არ გაქვთ საკმარისი AKHO ბალანსზე! ❌");
-            } else {
-                // ✅ ბალანსი წარმატებით ჩამოიჭრა, ახლა ვწერთ შეკვეთას
-                saveOrderToDb(totalCost, payMethod);
-            }
-        });
-    } else {
-        // თუ სხვა მეთოდით იხდის (მაგ: კურიერთან), პირდაპირ ვწერთ შეკვეთას
-        saveOrderToDb(totalCost, payMethod);
-    }
-}
-
-// 🚀 2. შეკვეთის ბაზაში შენახვის ცალკე ფუნქცია
-function saveOrderToDb(total, method) {
-    const user = firebase.auth().currentUser;
     const orderId = Date.now();
-    
+
+    // შეკვეთის ობიექტი
     const orderData = {
         orderId: orderId,
-        uid: user ? user.uid : "guest",
-        customer: {
-            name: document.getElementById('userName').value,
-            city: document.getElementById('userCity').value,
-            addr: document.getElementById('userAddr').value,
-            phone: document.getElementById('userPhone').value
-        },
+        uid: user.uid,
+        customer: { name, city, addr, phone },
         items: cart,
-        total: total,
-        payment: method,
+        total: totalCost,
+        payment: payMethod,
         status: "pending",
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
-    db.ref('delivery_orders/' + orderId).set(orderData).then(() => {
-        document.getElementById('trackDetails').innerHTML = `
-            <div style="padding:10px; border:1px solid var(--gold); border-radius:10px; margin-bottom:15px;">
-                <b style="color:var(--gold);">შეკვეთა #${orderId} მიღებულია!</b>
-                <p style="font-size:12px; margin-top:5px;">გადახდილია: ${total.toFixed(2)} AKHO</p>
-            </div>
-        `;
+    // 🚀 1. ჯერ ვცდილობთ შეკვეთის ჩაწერას
+    db.ref('delivery_orders/' + orderId).set(orderData)
+    .then(() => {
+        // ✅ თუ შეკვეთა ჩაიწერა, მხოლოდ მერე მივხედავთ ფულს
+        if (payMethod === 'akho') {
+            const userRef = db.ref(`users/${user.uid}/akho`);
+            
+            userRef.transaction((currentBalance) => {
+                if (currentBalance === null) return 0;
+                if (currentBalance < totalCost) return; // ჩაიშლება ტრანზაქცია
+                return currentBalance - totalCost;
+            }, (error, committed) => {
+                if (!committed) {
+                    // ❌ თუ ფული არ ეყო, შეკვეთას ვაუქმებთ ბაზიდან
+                    db.ref('delivery_orders/' + orderId).remove();
+                    alert("ბალანსზე არ გაქვთ საკმარისი AKHO! ❌");
+                } else {
+                    // 🎉 ყველაფერი წარმატებით დასრულდა
+                    finishOrderProcess(orderId, totalCost);
+                }
+            });
+        } else {
+            // თუ ქეშითაა, პირდაპირ ვასრულებთ
+            finishOrderProcess(orderId, totalCost);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("შეკვეთის შენახვა ვერ მოხერხდა. შეამოწმეთ ინტერნეტი ან ბაზის წესები!");
+    });
+}
 
-        closePage('cartPage');
-        document.getElementById('trackPage').style.display = 'block';
-        
-        // ვიწყებთ სტატუსის მოსმენას
-        listenToOrderStatus(orderId);
-
-        // კალათის გასუფთავება
-        cart = [];
-        document.getElementById('cartCount').innerText = 0;
-        
-        alert("შეკვეთა წარმატებით გაფორმდა! ✅");
-    }).catch(err => alert("შეკვეთის შენახვის შეცდომა: " + err.message));
+// ცალკე ფუნქცია პროცესის დასასრულებლად (ვიზუალური მხარე)
+function finishOrderProcess(orderId, total) {
+    document.getElementById('trackDetails').innerHTML = `
+        <div style="padding:10px; border:1px solid var(--gold); border-radius:10px;">
+            <b style="color:var(--gold);">შეკვეთა #${orderId} მიღებულია!</b>
+            <p>ჯამი: ${total.toFixed(2)} AKHO</p>
+        </div>
+    `;
+    closePage('cartPage');
+    document.getElementById('trackPage').style.display = 'block';
+    listenToOrderStatus(orderId);
+    cart = [];
+    document.getElementById('cartCount').innerText = 0;
 }
 
         
