@@ -1955,87 +1955,104 @@ window.openGiftPanel = function(postId, authorId) {
 window.processGift = function(targetUid, cost, giftUrl, videoId) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-
-    // 1. ვპოულობთ ვიდეოს კონტეინერს (სადაც ანიმაცია უნდა ჩაჯდეს)
-    // ვვარაუდობ, რომ შენს საიტზე ვიდეოს კონტეინერს აქვს ID: "post-" + videoId ან მსგავსი
-    const videoElement = document.getElementById(`post-${videoId}`) || document.querySelector(`[data-video-id="${videoId}"]`) || document.body;
+    
+    // 1. ვპოულობთ ვიდეოს კონტეინერს ID-ით (რომელსაც ვასაჩუქრებთ)
+    const videoElement = document.getElementById(`post-${videoId}`) || document.querySelector(`[data-video-id="${videoId}"]`);
 
     firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
         const myBalance = snap.val() || 0;
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
-        // ბალანსის გადარიცხვა
+        // ბაზის განახლება და ფულის გადარიცხვა
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        // 🚀 2. ვწერთ ბაზაში, რომ სხვებმაც დაინახონ (LIVE რეჟიმი)
-        const liveGiftRef = firebase.database().ref(`live_gifts/${videoId}`);
-        liveGiftRef.set({
+        // 🚀 2. ვწერთ ბაზაში, რომ საჩუქარი ყველასთან გამოჩნდეს ამ ვიდეოზე
+        const liveRef = firebase.database().ref(`live_gifts/${videoId}`);
+        liveRef.set({
             giftUrl: giftUrl,
             cost: cost,
             fromName: typeof myName !== 'undefined' ? myName : 'User',
             ts: Date.now()
         });
-        
-        // 5 წამში ვშლით ბაზიდან, რომ ანიმაცია არ "გაიჭედოს"
-        setTimeout(() => liveGiftRef.remove(), 5000);
+        // 5 წამში ვშლით ბაზიდან ჩანაწერს
+        setTimeout(() => liveRef.remove(), 5000);
 
-        // 3. პანელის დახურვა
+        // ისტორიაში შენახვა (მენიუსთვის)
+        firebase.database().ref(`received_gifts/${targetUid}`).push({
+            fromName: typeof myName !== 'undefined' ? myName : 'User',
+            giftUrl: giftUrl,
+            price: cost,
+            ts: Date.now()
+        });
+
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
 
-        // 🚀 4. ანიმაციის შექმნა (რომელიც მიებმება ვიდეოს)
+        // 🚀 3. ანიმაციის შექმნა და მიბმა კონკრეტულ ვიდეოზე
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation_" + videoId;
         
-        // 🛑 პოზიცია: absolute - რომ მიებას ვიდეოს და სქროლვას გაჰყვეს
-        animWrapper.style = "position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2147483647; pointer-events:none; text-align:center; min-width:300px; font-family:sans-serif;";
+        // 🛑 პოზიცია: absolute და მაღალი z-index, რომ ვიდეოს "ჩაეკროს"
+        animWrapper.style = "position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2147483647; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
         
         animWrapper.innerHTML = `
             <div id="giftStep1_${videoId}" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:140px; filter: drop-shadow(0 0 15px gold);">
+                <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
             </div>
             
-            <div id="giftStep2_${videoId}" style="display:none; animation: giftStep2Anim 30s forwards;">
+            <div id="giftStep2_${videoId}" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
                 <div class="gift-image-container">
-                    <img src="gift_box.png" class="golden-gift-img" style="width:190px; position:relative; z-index:2;">
+                    <img src="assets/images/gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
                     <div class="golden-glow-overlay"></div>
                 </div>
-                <div style="margin-top: -20px; position:relative; z-index:3;">
-                    <h1 style="color:#fff3c3; text-shadow: 0 0 10px #fbd14b, 0 0 20px #e0ac00; font-size:26px; font-weight:bold; margin:0;">საჩუქარი!</h1>
-                    <h2 style="color:#fff; font-size:14px; margin:5px 0;">გადმოგეცათ ${cost} AKHO</h2>
-                    <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px #000; font-size:24px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
+
+                <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
+                    <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
+                    <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადმოგეცათ ${cost} AKHO</h2>
+                    <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
                 </div>
             </div>
         `;
 
-        // ვამატებთ ვიდეოზე
-        if (videoElement !== document.body) videoElement.style.position = "relative";
-        videoElement.appendChild(animWrapper);
+        // ვამატებთ ვიდეოს კონტეინერში (თუ ვიპოვეთ), თუ არა - ეკრანზე
+        if (videoElement) {
+            videoElement.style.position = "relative";
+            videoElement.appendChild(animWrapper);
+        } else {
+            document.body.appendChild(animWrapper);
+        }
 
-        // CSS სტილები
+        // --- CSS ეფექტები ---
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
             style.id = 'giftEnhancedStyles';
             style.innerHTML = `
-                .gift-image-container { position: relative; display: inline-block; }
-                .golden-gift-img { filter: drop-shadow(0 0 25px gold); animation: giftPulse 2s infinite alternate; }
-                .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; background: radial-gradient(circle, rgba(255,215,0,0.5) 0%, rgba(255,215,0,0) 70%); filter: blur(10px); z-index: 1; animation: glowPulse 2s infinite alternate; }
-                @keyframes giftPulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-                @keyframes glowPulse { 0% { opacity: 0.4; } 100% { opacity: 0.9; } }
-                @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
-                @keyframes giftStep2Anim { 0% { transform: scale(0.7); opacity: 0; } 5% { transform: scale(1); opacity: 1; } 95% { transform: scale(1); opacity: 1; } 100% { transform: scale(0); opacity: 0; } }
+                .gift-image-container { position: relative; display: inline-block; margin-bottom: 20px; }
+                .golden-gift-img { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); animation: giftPulse 2.5s infinite alternate; }
+                .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%); border-radius: 50%; filter: blur(15px); z-index: 1; animation: glowPulse 2.5s infinite alternate; }
+                @keyframes giftPulse { 0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); } }
+                @keyframes glowPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+                @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.3) translateY(-80px); opacity: 0; } }
+                @keyframes giftStep2Anim { 0% { transform: scale(0.6); opacity: 0; } 4% { transform: scale(1.05); opacity: 1; } 8% { transform: scale(1); opacity: 1; } 96% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8) translateY(-120px); opacity: 0; } }
             `;
             document.head.appendChild(style);
         }
 
+        // ანიმაციის ეტაპების გადართვა
         setTimeout(() => {
             const s1 = document.getElementById('giftStep1_' + videoId);
             const s2 = document.getElementById('giftStep2_' + videoId);
             if(s1) s1.style.display = 'none';
             if(s2) s2.style.display = 'block';
+            
+            // ზედა ვიჯეტის განახლება
+            if(typeof updateGiftWidget === 'function') updateGiftWidget(giftUrl, cost);
         }, 3000);
 
-        setTimeout(() => { if(animWrapper) animWrapper.remove(); }, 33000);
+        // 33 წამში ვშლით ყველაფერს
+        setTimeout(() => {
+            if(animWrapper) animWrapper.remove();
+        }, 33000);
     });
 };
 
