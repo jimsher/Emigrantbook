@@ -366,6 +366,31 @@ const db = firebase.database();
 
         
         window.onload = init;
+
+
+
+        function listenToOrderStatus(orderId) {
+    db.ref('delivery_orders/' + orderId + '/status').on('value', (snapshot) => {
+        const status = snapshot.val();
+        
+        // ყველა სტატუსის გასუფთავება
+        document.querySelectorAll('.track-item').forEach(el => el.classList.remove('active'));
+        
+        // აქტიური სტატუსის მინიჭება
+        document.querySelector('.track-item:nth-child(1)').classList.add('active'); // ყოველთვის აქტიურია პირველი
+
+        if(status === "preparing") {
+            document.getElementById('step2').classList.add('active');
+        } else if(status === "on_way") {
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('step3').classList.add('active');
+        } else if(status === "delivered") {
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('step3').classList.add('active');
+            document.getElementById('step4').classList.add('active');
+        }
+    });
+}
     </script>
 </body>
 </html>
