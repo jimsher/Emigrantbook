@@ -1,0 +1,101 @@
+<div id="adminPage" class="page" style="display: none; background: #050505;">
+    <div class="header">
+        <i class="fas fa-arrow-left" onclick="closePage('adminPage')"></i>
+        <h2 style="color: gold;">პანელი - შეკვეთები</h2>
+        <div onclick="loadOrdersForAdmin()"><i class="fas fa-sync-alt"></i></div>
+    </div>
+    
+    <div class="content">
+        <div style="display: flex; justify-content: space-around; margin-bottom: 20px; background: #111; padding: 10px; border-radius: 12px;">
+            <div style="text-align: center;"><b id="totalOrdersCount" style="color: gold;">0</b><p style="font-size: 10px; color: gray;">სულ</p></div>
+            <div style="text-align: center;"><b id="pendingOrdersCount" style="color: orange;">0</b><p style="font-size: 10px; color: gray;">ახალი</p></div>
+        </div>
+
+        <div id="adminOrdersList"></div>
+    </div>
+</div>
+
+
+
+
+<script>
+function openAdminPanel() {
+    document.getElementById('adminPage').style.display = 'block';
+    loadOrdersForAdmin(); // შენი მოწოდებული ფუნქცია
+}
+
+
+
+
+
+
+
+
+
+
+
+
+  function loadOrdersForAdmin() {
+    db.ref('delivery_orders').orderByChild('timestamp').on('value', snap => {
+        const adminBox = document.getElementById('adminOrdersList');
+        adminBox.innerHTML = ''; 
+        
+        let total = 0;
+        let pending = 0;
+
+        if (!snap.exists()) {
+            adminBox.innerHTML = '<p style="text-align:center; color:gray; margin-top:50px;">შეკვეთები ჯერ არ არის</p>';
+            return;
+        }
+
+        snap.forEach(child => {
+            const order = child.val();
+            const id = child.key;
+            total++;
+            if(order.status === 'pending') pending++;
+
+            // შენი ორიგინალი HTML ბარათის რენდერი
+            adminBox.innerHTML = `
+                <div style="background:#151515; border:1px solid ${order.status === 'pending' ? 'gold' : '#333'}; padding:15px; margin-bottom:15px; border-radius:15px; color:white; animation: fadeIn 0.5s;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b style="color:gold;">ID: #${id.toString().slice(-6)}</b>
+                        <span style="background:${getStatusColor(order.status)}; color:white; padding:3px 10px; border-radius:5px; font-size:10px; font-weight:bold;">
+                            ${order.status.toUpperCase()}
+                        </span>
+                    </div>
+                    
+                    <div style="margin-top:10px; font-size:14px;">
+                        <p>👤 <b>${order.customer.name}</b></p>
+                        <p>📞 <a href="tel:${order.customer.phone}" style="color:white; text-decoration:none;">${order.customer.phone}</a></p>
+                        <p style="color: gray; font-size: 12px;">📍 ${order.customer.city}, ${order.customer.addr}</p>
+                    </div>
+
+                    <div style="margin-top:10px; padding:10px; background:#222; border-radius:10px;">
+                        ${order.items.map(i => `<div style="font-size:13px;">• ${i.name} (x${i.qty})</div>`).join('')}
+                        <div style="text-align:right; margin-top:5px; font-weight:bold; color:gold;">ჯამი: ${order.total} AKHO</div>
+                    </div>
+
+                    <div style="margin-top:15px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button onclick="updateStatus('${id}', 'preparing')" style="flex:1; background:orange; color:black; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">👨‍🍳 მზადდება</button>
+                        <button onclick="updateStatus('${id}', 'on_way')" style="flex:1; background:deepskyblue; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">🚚 გზაშია</button>
+                        <button onclick="updateStatus('${id}', 'delivered')" style="flex:1; background:limegreen; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">✅ ჩაბარდა</button>
+                        <button onclick="deleteOrder('${id}')" style="background:#333; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            ` + adminBox.innerHTML; // ახლები ზემოთ გამოჩნდეს
+        });
+
+        document.getElementById('totalOrdersCount').innerText = total;
+        document.getElementById('pendingOrdersCount').innerText = pending;
+    });
+}
+
+// ფერების დამხმარე ფუნქცია
+function getStatusColor(s) {
+    if(s === 'pending') return '#d4af37';
+    if(s === 'preparing') return 'orange';
+    if(s === 'on_way') return 'deepskyblue';
+    if(s === 'delivered') return 'limegreen';
+    return '#444';
+}
+</script>
