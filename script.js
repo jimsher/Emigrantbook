@@ -130,97 +130,50 @@ if ('serviceWorker' in navigator) {
         
 
 
-
 auth.onAuthStateChanged(user => {
-  applyLanguage();
-  
-  const authUI = document.getElementById('authUI');
+    applyLanguage();
+    const authUI = document.getElementById('authUI');
 
-  if (user) {
-    // ვამოწმებთ ვერიფიკაციას signOut-ის გარეშე
-    if (user.emailVerified) {
-        // --- თუ დადასტურებულია: ვხსნით საიტს ---
-        if(authUI) authUI.style.display = 'none';
-
-        // შენი ფუნქციები იწყება აქ:
-        setTimeout(() => { askInitialPermissions(); }, 1500);
-        updatePresence();
-        listenToGlobalMessages();
-        startNotificationListener();
-        checkDailyBonus();
-        listenForIncomingCalls(user);
-        // ... დანარჩენი შენი კოდი ...
-    } else {
-        // --- თუ არაა დადასტურებული: ვტოვებთ ლოგინზე ---
-        if(authUI) authUI.style.display = 'flex';
-        // ვაჩვენებთ შეტყობინებას მხოლოდ ერთხელ, რომ არ "იცვი ციკლში"
-        console.log("მომხმარებელი ელოდება ვერიფიკაციას...");
-    }
-  } else {
-    // თუ საერთოდ არავინაა შესული
-    if(authUI) authUI.style.display = 'flex';
-  }
-});
-    
-    // ... დანარჩენი შენი კოდი უცვლელად ...
-   
-
-
-// ეს არის შეტყობინების ველი
-setTimeout(function() {
-    const user = firebase.auth().currentUser;
     if (user) {
-        const tokenKey = 'fcm_token_sent_' + user.uid;
-        
-        // ვამოწმებთ, უკვე გავუგზავნეთ თუ არა ეს შეტყობინება ამ იუზერს
-        if (localStorage.getItem(tokenKey)) return; 
+        // ვამოწმებთ ვერიფიკაციას
+        if (user.emailVerified) {
+            // --- თუ დადასტურებულია: ვხსნით საიტს ---
+            if(authUI) authUI.style.display = 'none';
 
-        try {
-            const messaging = firebase.messaging();
-            messaging.requestPermission()
-                .then(() => messaging.getToken({ 
-                    vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-                }))
-                .then((token) => {
-                    if (token) {
-                        db.ref('users/' + user.uid + '/fcmToken').set(token);
-                        
-                        // აი აქ ერთხელ გამოვუგზავნოთ დასტური
-                        showTestNotification(); 
-                        
-                        // დავიმახსოვროთ ბრაუზერში, რომ მეორედ აღარ შევაწუხოთ
-                        localStorage.setItem(tokenKey, 'true'); 
-                    }
-                })
-                .catch((err) => console.log("Push error or denied"));
-        } catch (e) {
-            console.log("Messaging skip");
+            // 1. შენი ძირითადი ფუნქციები:
+            setTimeout(() => { askInitialPermissions(); }, 1500);
+            updatePresence();
+            listenToGlobalMessages();
+            startNotificationListener();
+            checkDailyBonus();
+            startGlobalUnreadCounter();
+
+            // 2. ვიდეო ზარების მოსმენა (ეს უნდა იყოს იუზერის ბლოკის შიგნით!)
+            db.ref(`video_calls/${user.uid}`).on('value', snap => {
+                const call = snap.val();
+                if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+                    currentIncomingCall = call;
+                    document.getElementById('callerNameDisplay').innerText = call.callerName;
+                    document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
+                    const modal = document.getElementById('incomingCallModal');
+                    if(modal) modal.style.display = 'flex';
+                } else {
+                    const modal = document.getElementById('incomingCallModal');
+                    if(modal) modal.style.display = 'none';
+                }
+            });
+
+        } else {
+            // --- თუ არაა დადასტურებული: ვტოვებთ ლოგინზე ---
+            if(authUI) authUI.style.display = 'flex';
+            console.log("მომხმარებელი ელოდება ვერიფიკაციას...");
         }
-    }
-}, 3000);
-
-
-
-// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
-let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
-
-db.ref(`video_calls/${user.uid}`).on('value', snap => {
-    const call = snap.val();
-    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        currentIncomingCall = call; // ვინახავთ ინფორმაციას
-        
-        // ვავსებთ ფანჯარას მონაცემებით
-        document.getElementById('callerNameDisplay').innerText = call.callerName;
-        document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
-        
-        // ვაჩენთ ლამაზ ფანჯარას
-        const modal = document.getElementById('incomingCallModal');
-        modal.style.display = 'flex';
     } else {
-        // თუ ზარი გაუქმდა გამომძახებლის მიერ
-        document.getElementById('incomingCallModal').style.display = 'none';
+        // თუ საერთოდ არავინაა შესული
+        if(authUI) authUI.style.display = 'flex';
     }
 });
+
 
 // ფუნქცია: ზარის აღება
 function acceptCall() {
