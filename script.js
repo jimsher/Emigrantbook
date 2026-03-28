@@ -3784,3 +3784,44 @@ function showGiftAnimation(amount) {
         container.style.display = 'none';
     }, 30000);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ეს ფუნქცია გამოიძახე handleAuth('reg')-ის წარმატებით დასრულების შემდეგ
+function showVerificationUI() {
+    document.getElementById('regBox').style.display = 'none';
+    document.getElementById('verifyUI').style.display = 'block';
+}
+
+// კურსორის გადაყვანა
+function moveOTP(el, idx) {
+    const inps = document.querySelectorAll('.otp-inp');
+    if (el.value && idx < 5) {
+        inps[idx + 1].focus();
+    }
+}
+
+// კოდის შემოწმება
+function verifyCode() {
+    let code = "";
+    document.querySelectorAll('.otp-inp').forEach(i => code += i.value);
+    
+    if(code.length < 6) {
+        return alert("შეიყვანეთ სრული კოდი!"); // აქ მერე შენი Custom Alert ჩაჯდება
+    }
+    
+    // აქ მოხდება ბაზაში შემოწმება...
+    alert("ვერიფიკაცია წარმატებულია! 🚀");
+    location.reload(); // ან გადაყვანა მთავარ გვერდზე
+}
