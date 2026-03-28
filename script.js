@@ -167,7 +167,7 @@ auth.onAuthStateChanged(user => {
     // თუ იუზერი საერთოდ არ არის შესული
     document.getElementById('authUI').style.display = 'flex';
   }
-});
+
     
     // ... დანარჩენი შენი კოდი უცვლელად ...
    
