@@ -130,44 +130,37 @@ if ('serviceWorker' in navigator) {
         
 
 
+
 auth.onAuthStateChanged(user => {
   applyLanguage();
   
+  const authUI = document.getElementById('authUI');
+
   if (user) {
-    // --- ვერიფიკაციის ფილტრი: თუ მეილი არაა დადასტურებული, აქ წყდება ყველაფერი ---
-    if (!user.emailVerified) {
-        auth.signOut(); // ეგრევე ვაგდებთ, რომ არ "შემოიპაროს"
-        document.getElementById('authUI').style.display = 'flex'; // ვტოვებთ ლოგინზე
-        return; // ეს "return" აჩერებს ქვემოთა კოდის შესრულებას
+    // ვამოწმებთ ვერიფიკაციას signOut-ის გარეშე
+    if (user.emailVerified) {
+        // --- თუ დადასტურებულია: ვხსნით საიტს ---
+        if(authUI) authUI.style.display = 'none';
+
+        // შენი ფუნქციები იწყება აქ:
+        setTimeout(() => { askInitialPermissions(); }, 1500);
+        updatePresence();
+        listenToGlobalMessages();
+        startNotificationListener();
+        checkDailyBonus();
+        listenForIncomingCalls(user);
+        // ... დანარჩენი შენი კოდი ...
+    } else {
+        // --- თუ არაა დადასტურებული: ვტოვებთ ლოგინზე ---
+        if(authUI) authUI.style.display = 'flex';
+        // ვაჩვენებთ შეტყობინებას მხოლოდ ერთხელ, რომ არ "იცვი ციკლში"
+        console.log("მომხმარებელი ელოდება ვერიფიკაციას...");
     }
-
-    // --- აქედან იწყება შენი კოდი, რომელიც მხოლოდ დადასტურებულზე ჩაირთვება ---
-    document.getElementById('authUI').style.display = 'none';
-
-    // --- ახალი: ნებართვების მოთხოვნა ავტორიზაციისთანავე ---
-    setTimeout(() => {
-        askInitialPermissions(); 
-    }, 1500);
-
-    setTimeout(() => {
-      console.log("ვცდილობ ჩაწერას...");
-      db.ref('users/' + user.uid + '/test').set("მუშაობს");
-      saveMessagingToken(user);
-    }, 2000);
-    
-    updatePresence();
-    listenToGlobalMessages();
-    startNotificationListener();
-    checkDailyBonus();
-    startGlobalUnreadCounter();
-    listenForIncomingCalls(user);
-    
-    // ... დანარჩენი შენი კოდი ...
   } else {
-    // თუ იუზერი საერთოდ არ არის შესული
-    document.getElementById('authUI').style.display = 'flex';
+    // თუ საერთოდ არავინაა შესული
+    if(authUI) authUI.style.display = 'flex';
   }
-
+});
     
     // ... დანარჩენი შენი კოდი უცვლელად ...
    
