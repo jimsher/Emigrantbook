@@ -3833,3 +3833,23 @@ function showGiftAnimation(amount) {
 
 
 
+// ავტომატური "დამჭერი" ვიდეოსთვის
+const videoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const video = entry.target;
+        // თუ ვიდეო აღარ ჩანს ეკრანზე (სხვა გვერდი გადაეფარა)
+        if (!entry.isIntersecting) {
+            video.pause();
+            // ტელეფონის მედია პანელის გათიშვაც აქ ჩავამატოთ
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'none';
+            }
+        }
+    });
+}, { threshold: 0.1 }); // 0.1 ნიშნავს, რომ თუ 10% მაინც არ ჩანს, რეაგირებს
+
+// მივაბათ ეს დამკვირვებელი შენს მთავარ ვიდეოს
+const mainVid = document.getElementById('fullVideoTag');
+if (mainVid) {
+    videoObserver.observe(mainVid);
+}
