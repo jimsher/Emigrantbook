@@ -3853,3 +3853,22 @@ const mainVid = document.getElementById('fullVideoTag');
 if (mainVid) {
     videoObserver.observe(mainVid);
 }
+
+
+
+
+
+
+
+
+function killVideo() {
+    const v = document.getElementById('fullVideoTag');
+    if (v) {
+        v.pause();
+        // v.currentTime = 0; // თუ გინდა რომ თავიდან დაიწყოს შემდეგზე
+    }
+    // მედია პანელის გათიშვა ტელეფონის ეკრანზე
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'none';
+    }
+}
