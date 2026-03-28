@@ -1612,22 +1612,56 @@ function playFullVideo(url, postId, currentIndex) {
  }
 }
  
- function handleAuth(type) {
- if (type === 'reg') {
- const email = document.getElementById('rEmail').value;
- const pass = document.getElementById('rPass').value;
- const name = document.getElementById('rFirstName').value + " " + document.getElementById('rLastName').value;
- auth.createUserWithEmailAndPassword(email, pass).then(u => {
- db.ref('users/' + u.user.uid).set({ name: name, akho: 50.00, photo: "", hasSeenRules: false, role: 'user', privacy: 'public', presence: Date.now() });
- addToLog('Welcome Bonus', 50.00);
- }).catch(err => alert(err.message));
- } else {
- const email = document.getElementById('uEmail').value;
- const pass = document.getElementById('uPass').value;
- auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
- }
- }
  
+ function handleAuth(type) {
+    if (type === 'reg') {
+        const email = document.getElementById('rEmail').value;
+        const pass = document.getElementById('rPass').value;
+        const name = document.getElementById('rFirstName').value + " " + document.getElementById('rLastName').value;
+
+        auth.createUserWithEmailAndPassword(email, pass).then(u => {
+            // 1. ვუგზავნით მეილზე დადასტურების ლინკს
+            u.user.sendEmailVerification().then(() => {
+                
+                // 2. ვქმნით იუზერის პროფილს ბაზაში (შენი ორიგინალი ლოგიკა)
+                db.ref('users/' + u.user.uid).set({ 
+                    name: name, 
+                    akho: 50.00, // Welcome Bonus შენარჩუნებულია
+                    photo: "", 
+                    hasSeenRules: false, 
+                    role: 'user', 
+                    privacy: 'public', 
+                    presence: Date.now() 
+                });
+
+                // 3. ვამატებთ ლოგში ბონუსს
+                addToLog('Welcome Bonus', 50.00);
+
+                // 4. ვაჩვენებთ შეტყობინებას და გადავიყვანთ ლოგინზე
+                showCustomAlert("ვერიფიკაცია", "რეგისტრაცია წარმატებულია! გთხოვთ, შეამოწმოთ ელ-ფოსტა და დაადასტუროთ ანგარიში შესვლამდე.");
+                toggleAuthBox('login');
+                auth.signOut(); // გამოვლოგოთ, სანამ მეილს არ დაადასტურებს
+            });
+
+        }).catch(err => showCustomAlert("შეცდომა", err.message));
+
+    } else {
+        // LOGIN ლოგიკა შემოწმებით
+        const email = document.getElementById('uEmail').value;
+        const pass = document.getElementById('uPass').value;
+
+        auth.signInWithEmailAndPassword(email, pass).then(u => {
+            // ვამოწმებთ, დააჭირა თუ არა მეილზე ლინკს
+            if (!u.user.emailVerified) {
+                auth.signOut();
+                showCustomAlert("ვერიფიკაცია", "გთხოვთ, ჯერ დაადასტუროთ თქვენი მეილი!");
+            } else {
+                // თუ ყველაფერი რიგზეა, ავტომატურად გაქრება authUI (Firebase state listener-ის გამო)
+                showCustomAlert("მოგესალმებით", "წარმატებით შეხვედით სისტემაში!");
+            }
+        }).catch(err => showCustomAlert("შეცდომა", err.message));
+    }
+}
 
 
 
