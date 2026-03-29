@@ -2042,13 +2042,29 @@ window.transferToMainBalance = function(amount) {
 // --- ევროს და მეგობრის ფუნქციები (ჩამატებულია შენს კოდში) ---
 
 window.buyEuroWithGift = function(amount) {
-    alert("ევროს ყიდვის ფუნქცია მალე დაემატება! 💶");
-};
+    if (!amount || amount < 100) {
+        return alert("ევროზე გადასაცვლელად საჭიროა მინიმუმ 100 AKHO! 💶");
+    }
 
-window.sendToFriendFromGift = function(amount) {
-    let friendId = prompt("შეიყვანეთ მეგობრის ID ვისაც ურიცხავთ:");
-    if(friendId) {
-        alert("გადარიცხვის ფუნქცია მუშავდება! ✈️");
+    const euroValue = (amount / 100).toFixed(2); // ითვლის ევროს (მაგ: 550 AKHO = 5.50 EURO)
+    
+    const confirmExchange = confirm(`თქვენი ${amount} AKHO გადაიცვლება ${euroValue} ევროდ.\n\nგსურთ გაგრძელება? (კოლექცია გასუფთავდება)`);
+    
+    if (confirmExchange) {
+        const user = firebase.auth().currentUser;
+        
+        // 1. ბალანსების განახლება ბაზაში
+        db.ref(`users/${user.uid}/gift_balance`).set(0);
+        db.ref(`users/${user.uid}/euro_balance`).transaction(c => (c || 0) + parseFloat(euroValue));
+        
+        // 2. კოლექციის წაშლა
+        db.ref(`received_gifts/${user.uid}`).remove();
+
+        alert(`გილოცავთ! თქვენს ევრო-ბალანსს დაემატა ${euroValue} €. ✅`);
+        
+        // ფანჯრების დახურვა განახლებისთვის
+        const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
+        modals.forEach(m => m.remove());
     }
 };
 
