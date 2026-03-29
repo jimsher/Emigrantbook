@@ -1,4 +1,5 @@
 function openLeaderboard() {
+    killVideo();
     const listDiv = document.getElementById('leaderboardList');
     document.getElementById('leaderboardUI').style.display = 'flex';
     
