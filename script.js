@@ -2039,8 +2039,9 @@ window.transferToMainBalance = function(amount) {
     }
 };
 
-// --- ევროს და მეგობრის ფუნქციები (ჩამატებულია შენს კოდში) ---
 
+
+// --- ევროს და მეგობრის ფუნქციები (ჩამატებულია შენს კოდში) ---
 window.buyEuroWithGift = function(amount) {
     if (!amount || amount < 100) {
         return alert("ევროზე გადასაცვლელად საჭიროა მინიმუმ 100 AKHO! 💶");
@@ -2062,11 +2063,19 @@ window.buyEuroWithGift = function(amount) {
 
         alert(`გილოცავთ! თქვენს ევრო-ბალანსს დაემატა ${euroValue} €. ✅`);
         
-        // ფანჯრების დახურვა განახლებისთვის
+        // 3. ფანჯრების დახურვა განახლებისთვის
         const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
         modals.forEach(m => m.remove());
+
+        // 🚀 4. ავტომატურად გადასვლა საფულის გვერდზე
+        setTimeout(() => {
+            if (typeof window.showFinancialWallet === "function") {
+                window.showFinancialWallet();
+            }
+        }, 500); // ნახევარი წამის შემდეგ გაიხსნება ახალი გვერდი
     }
 };
+
 
 
 
