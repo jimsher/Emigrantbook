@@ -6,7 +6,7 @@ let camMuted = false;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const AGORA_APP_ID = "7290502fac7f4feb82b021ccde79988a";
-const AGORA_TOKEN = "007eJxTYDjD3WotcvNpcv6j4OwbSg6v47mCy7JOi66Ze9r14EzJzCcKDOZGlgamBkZpicnmaSZpqUkWRkkGRobJySmp5paWFhaJlRuOZjYEMjL83MnNyMgAgSA+N0NOZllqfHFJUWpiLgMDAFBzIzI=";
+const AGORA_TOKEN = "007eJxTYJBsCfv34sb5vOCChUmlZXciUq8nX/l94Mre2yxF51gD5M0VGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwSVQNPZjYEMjL4V69lYIRCEJ+bISezLDW+uKQoNTGXgQEA4SckAw==";
 
 const FIXED_CHANNEL = "live_stream"; 
 
