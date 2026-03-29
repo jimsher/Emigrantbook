@@ -143,6 +143,18 @@ auth.onAuthStateChanged(user => {
       db.ref('users/' + user.uid + '/test').set("მუშაობს");
       saveMessagingToken(user);
     }, 2000);
+
+
+   // 🚀 აი აქ ჩაამატე ევროს ბალანსის მოსმენაც:
+        db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
+            const euro = snap.val() || 0;
+            const euroEl = document.getElementById('euroBalanceDisplay');
+            if (euroEl) {
+                euroEl.innerText = euro.toFixed(2) + " €";
+            }
+        });
+
+
     
     updatePresence();
     listenToGlobalMessages();
