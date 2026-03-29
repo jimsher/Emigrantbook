@@ -1992,25 +1992,29 @@ window.processGift = function(targetUid, cost, giftUrl) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     
-    firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
-        const myBalance = snap.val() || 0;
+    // 1. ჯერ ვამოწმებთ შენს (ჩამჩუქებლის) ბალანსს და მონაცემებს
+    db.ref(`users/${user.uid}`).once('value', snap => {
+        const myData = snap.val();
+        const myBalance = myData ? (myData.akho || 0) : 0;
+        
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
-        // 1. ფულის ჩამოჭრა და დარიცხვა
-        firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
-        firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
+        // 2. ვაკლებთ შენ და ვუმატებთ იმას
+        db.ref(`users/${user.uid}/akho`).set(myBalance - cost);
+        db.ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        // 2. საჩუქრის სიის განახლება (ეს აკლდა!)
-        // ეს ნაწილი ჩაანაცვლე შენს processGift-ში:
-firebase.database().ref(`received_gifts/${targetUid}`).push({
-    giftUrl: giftUrl,
-    price: cost,
-    fromName: document.getElementById('uName')?.innerText || "User", 
-    fromPhoto: document.getElementById('uPhoto')?.src || "", 
-    timestamp: Date.now()
-});
+        // 3. ვწერთ საჩუქარს მიმღებთან (ვიყენებთ ბაზიდან წამოღებულ შენს ნამდვილ სახელს და ფოტოს)
+        firebase.database().ref(`received_gifts/${targetUid}`).push({
+            giftUrl: giftUrl,
+            price: cost,
+            fromName: myData.name || "Anon", // შენი ნამდვილი სახელი ბაზიდან
+            fromPhoto: myData.photo || "",   // შენი ნამდვილი ფოტო ბაზიდან
+            timestamp: Date.now()
+        });
 
+        // --- აქედან შენი ანიმაციის კოდი ჩვეულებრივად გააგრძელე ---
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
+        
         
         
         // 🚀 --- ახალი, დახვეწილი ანიმაციის აწყობა ---
