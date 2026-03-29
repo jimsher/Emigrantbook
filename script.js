@@ -2124,7 +2124,43 @@ window.processGift = function(targetUid, cost, giftUrl) {
 
 
 // ნაჩუქარი გიფწბის გამოჩწნის სია
+function showGiftsCollection(uid) {
+    const modal = document.createElement('div');
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000020; display:flex; flex-direction:column; padding:20px; backdrop-filter:blur(10px); color:white;";
+    modal.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="color:#d4af37; margin:0;">საჩუქრების კოლექცია 🎁</h3>
+            <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="cursor:pointer; font-size:24px;"></i>
+        </div>
+        <div id="giftsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; overflow-y:auto; padding-bottom:50px;">
+            <p style="text-align:center; grid-column:1/-1;">იტვირთება...</p>
+        </div>
+    `;
+    document.body.appendChild(modal);
 
+    const container = document.getElementById('giftsContainer');
+    firebase.database().ref(`received_gifts/${uid}`).once('value', snap => {
+        container.innerHTML = "";
+        const data = snap.val();
+        if(!data) {
+            container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები ჯერ არ არის</p>";
+            return;
+        }
+
+        Object.values(data).reverse().forEach(gift => {
+            container.innerHTML += `
+                <div style="background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:15px; padding:15px; text-align:center;">
+                    <img src="${gift.giftUrl}" style="width:80px; height:80px; object-fit:contain; margin-bottom:10px;">
+                    <div style="color:#d4af37; font-weight:bold; font-size:14px;">${gift.price} AKHO</div>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #222;">
+                        <img src="${gift.fromPhoto || 'https://ui-avatars.com/api/?name='+gift.fromName}" style="width:20px; height:20px; border-radius:50%; border:1px solid #d4af37;">
+                        <span style="font-size:11px; color:#aaa;">${gift.fromName}</span>
+                    </div>
+                </div>
+            `;
+        });
+    });
+}
 // აქ მთაცრდება
 
 
