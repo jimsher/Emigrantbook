@@ -2052,6 +2052,9 @@ window.sendToFriendFromGift = function(amount) {
     }
 };
 
+
+
+
 function showGiftsCollection(uid) {
     const user = firebase.auth().currentUser;
     const isMyProfile = (user && user.uid === uid);
@@ -2064,11 +2067,20 @@ function showGiftsCollection(uid) {
             <h3 style="color:#d4af37; margin:0;">საჩუქრების კოლექცია 🎁</h3>
             <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="cursor:pointer; font-size:24px;"></i>
         </div>
+
         <div id="giftWalletSection" style="display:none; margin-bottom:25px; background:linear-gradient(145deg, #1a1a1a, #111); padding:20px; border-radius:20px; border:1px solid #d4af37; text-align:center;">
             <div style="color:#aaa; font-size:13px; margin-bottom:5px;">საჩუქრებიდან დაგროვებული:</div>
-            <div id="giftBalanceDisplay" style="font-size:32px; font-weight:bold; color:#fbd14b; text-shadow: 0 0 10px rgba(251,209,75,0.4); margin-bottom:15px;">0 AKHO</div>
-            <button id="transferBtn" style="width:100%; padding:14px; background:#d4af37; border:none; border-radius:12px; color:black; font-weight:bold; font-size:15px; cursor:pointer;">ბალანსზე გადატანა</button>
+            <div id="giftBalanceDisplay" style="font-size:32px; font-weight:bold; color:#fbd14b; margin-bottom:20px;">0 AKHO</div>
+            
+            <div style="display: flex; gap: 8px; justify-content: center;">
+                <button id="transferBtn" style="flex: 1; padding: 12px 5px; background: #d4af37; border: none; border-radius: 10px; color: black; font-weight: bold; font-size: 10px; cursor: pointer;">ბალანსზე</button>
+                
+                <button onclick="window.buyEuroWithGift()" style="flex: 1; padding: 12px 5px; background: #00a2ff; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 10px; cursor: pointer;">ევრო</button>
+                
+                <button onclick="window.sendToFriendFromGift()" style="flex: 1; padding: 12px 5px; background: #e0e0e0; border: none; border-radius: 10px; color: #333; font-weight: bold; font-size: 10px; cursor: pointer;">მეგობარს</button>
+            </div>
         </div>
+
         <div id="giftsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; overflow-y:auto; padding-bottom:50px;">
             <p style="text-align:center; grid-column:1/-1;">იტვირთება...</p>
         </div>
@@ -2079,16 +2091,16 @@ function showGiftsCollection(uid) {
     if (isMyProfile) {
         document.getElementById('giftWalletSection').style.display = "block";
         db.ref(`users/${uid}/gift_balance`).on('value', snap => {
-            const currentGiftBal = snap.val() || 0;
-            document.getElementById('giftBalanceDisplay').innerText = `${currentGiftBal} AKHO`;
-            document.getElementById('transferBtn').onclick = () => window.transferToMainBalance(currentGiftBal);
+            const bal = snap.val() || 0;
+            document.getElementById('giftBalanceDisplay').innerText = `${bal} AKHO`;
+            document.getElementById('transferBtn').onclick = () => window.transferToMainBalance(bal);
         });
     }
 
     firebase.database().ref(`received_gifts/${uid}`).once('value', snap => {
         container.innerHTML = "";
         const data = snap.val();
-        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები ჯერ არ არის</p>"; return; }
+        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები არ არის</p>"; return; }
 
         Object.values(data).reverse().forEach(gift => {
             container.innerHTML += `
