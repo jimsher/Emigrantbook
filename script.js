@@ -2071,7 +2071,7 @@ window.buyEuroWithGift = function(amount) {
 
 
 
-function showGiftsCollection(uid) {
+ function showGiftsCollection(uid) {
     const user = firebase.auth().currentUser;
     const isMyProfile = (user && user.uid === uid);
 
@@ -2091,7 +2091,7 @@ function showGiftsCollection(uid) {
             <div style="display: flex; gap: 8px; justify-content: center;">
                 <button id="transferBtn" style="flex: 1; padding: 12px 5px; background: #d4af37; border: none; border-radius: 10px; color: black; font-weight: bold; font-size: 10px; cursor: pointer;">ბალანსზე</button>
                 
-                <button onclick="window.buyEuroWithGift()" style="flex: 1; padding: 12px 5px; background: #00a2ff; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 10px; cursor: pointer;">ევრო</button>
+                <button id="buyEuroBtn" style="flex: 1; padding: 12px 5px; background: #00a2ff; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 10px; cursor: pointer;">ევრო</button>
                 
                 <button onclick="window.sendToFriendFromGift()" style="flex: 1; padding: 12px 5px; background: #e0e0e0; border: none; border-radius: 10px; color: #333; font-weight: bold; font-size: 10px; cursor: pointer;">მეგობარს</button>
             </div>
@@ -2109,7 +2109,12 @@ function showGiftsCollection(uid) {
         db.ref(`users/${uid}/gift_balance`).on('value', snap => {
             const bal = snap.val() || 0;
             document.getElementById('giftBalanceDisplay').innerText = `${bal} AKHO`;
+            
+            // 1. მთავარ ბალანსზე გადატანის ღილაკი
             document.getElementById('transferBtn').onclick = () => window.transferToMainBalance(bal);
+            
+            // 2. ევროს ყიდვის ღილაკი - ახლა უკვე გადასცემს ბალანსს (bal)
+            document.getElementById('buyEuroBtn').onclick = () => window.buyEuroWithGift(bal);
         });
     }
 
