@@ -2016,7 +2016,29 @@ db.ref(`received_gifts/${targetUid}`).push({
         // --- აქედან შენი ანიმაციის კოდი ჩვეულებრივად გააგრძელე ---
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
         
-        
+
+  // ... აქ შეიძლება გეწეროს processGift ან სხვა ფუნქციები ...
+
+window.transferToMainBalance = function(amount) {
+    if (!amount || amount <= 0) return alert("გადასატანი არაფერია!");
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("ავტორიზაცია საჭიროა!");
+
+    // 1. ჯერ ვასუფთავებთ სასაჩუქრე ყულაბას
+    db.ref(`users/${user.uid}/gift_balance`).set(0);
+    
+    // 2. ვამატებთ მთავარ ბალანსზე (akho)
+    db.ref(`users/${user.uid}/akho`).transaction(c => (c || 0) + amount);
+    
+    alert("AKHO წარმატებით გადავიდა მთავარ ბალანსზე! ✅");
+    
+    // თუ გაქვს გახსნილი მოდალი, შეგიძლია აქ მისი დახურვაც ჩაწერო
+    // document.getElementById('giftWalletModal')?.remove();
+};
+
+// ... შემდეგი ფუნქციები ...
+
+      
         
         // 🚀 --- ახალი, დახვეწილი ანიმაციის აწყობა ---
         
