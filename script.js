@@ -2170,7 +2170,6 @@ window.showFinancialWallet = function() {
     modal.id = "financialWalletModal";
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000030; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(15px); color:white;";
     
-    // ვუსმენთ ევროების ბალანსს რეალურ დროში
     db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
         const euroBal = snap.val() || 0;
         
@@ -2197,14 +2196,38 @@ window.showFinancialWallet = function() {
     document.body.appendChild(modal);
 };
 
-// ბარათზე გატანის მოთხოვნის ფუნქცია
+// --- შენი ფუნქცია, ოღონდ ავტომატური გაგზავნით ბაზაში ---
 window.requestBankTransfer = function(amount) {
-    if (amount < 10) return alert("მინიმალური გასატანი თანხაა 10 €");
+    if (amount < 10) return alert("მინიმალური გასატანი თანხაა 10 € ❌");
     
     const cardNum = prompt("შეიყვანეთ თქვენი ბარათის ნომერი (ან IBAN):");
-    if (cardNum) {
-        alert("თქვენი მოთხოვნა მიღებულია! ადმინისტრაცია გადარიცხავს " + amount + " €-ს მითითებულ ანგარიშზე 24 საათში.");
-        // აქ შეგიძლია დაამატო ადმინთან მოთხოვნის გაგზავნის ლოგიკა
+    const fullName = prompt("შეიყვანეთ მიმღების სახელი და გვარი:");
+
+    if (cardNum && fullName) {
+        const user = firebase.auth().currentUser;
+
+        // 1. ვქმნით მოთხოვნას ბაზაში
+        const requestData = {
+            uid: user.uid,
+            name: fullName,
+            card: cardNum,
+            amount: parseFloat(amount),
+            timestamp: Date.now(),
+            status: "pending"
+        };
+
+        // ვინახავთ "payout_requests" პაპკაში
+        db.ref('payout_requests').push(requestData).then(() => {
+            // 2. ვუწერთ იუზერს 0-ს ევრო ბალანსზე
+            db.ref(`users/${user.uid}/euro_balance`).set(0);
+            
+            alert("თქვენი მოთხოვნა მიღებულია! ✅ " + amount + " € დაირიცხება 24 საათში.");
+            
+            // ვხურავთ საფულეს
+            if(document.getElementById('financialWalletModal')) document.getElementById('financialWalletModal').remove();
+        });
+    } else {
+        alert("მონაცემები არასრულია! მოთხოვნა გაუქმდა.");
     }
 };
 // აქ მთავრდება
