@@ -1436,6 +1436,7 @@ function loadUserVideos(uid) {
 }
 
 function playFullVideo(url, postId, currentIndex) {
+  killVideo();
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
     
