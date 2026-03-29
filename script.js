@@ -2001,12 +2001,12 @@ window.processGift = function(targetUid, cost, giftUrl) {
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
         // 2. საჩუქრის სიის განახლება (ეს აკლდა!)
-        // ამას ჩაამატებ შენს processGift ფუნქციაში (ბალანსის დაკლების შემდეგ)
+        // ეს ნაწილი ჩაანაცვლე შენს processGift-ში:
 firebase.database().ref(`received_gifts/${targetUid}`).push({
-    giftUrl: giftUrl, // ზუსტად ეს სახელი უნდა, რომ სიაში გამოჩნდეს
-    price: cost,      // სიაში გიწერია gift.price, ამიტომ აქ price უნდა დავარქვათ
-    fromName: document.getElementById('uName')?.innerText || "მეგობარი",
-    fromPhoto: typeof currentUserPhoto !== 'undefined' ? currentUserPhoto : "",
+    giftUrl: giftUrl,
+    price: cost,
+    fromName: document.getElementById('uName')?.innerText || "User", 
+    fromPhoto: document.getElementById('uPhoto')?.src || "", 
     timestamp: Date.now()
 });
 
