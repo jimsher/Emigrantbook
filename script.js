@@ -1940,27 +1940,32 @@ window.openGiftPanel = function(postId, authorId) {
 window.processGift = function(targetUid, cost, giftUrl) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    if (user.uid === targetUid) return alert("საკუთარ თავს ვერ აჩუქებთ!");
     
+    // 1. შევდივართ შენს (მჩუქებლის) მონაცემებში
     db.ref(`users/${user.uid}`).once('value', snap => {
         const myData = snap.val();
-        const myBalance = myData ? (myData.akho || 0) : 0;
+        if (!myData) return alert("მონაცემები ვერ მოიძებნა!");
+
+        const myBalance = myData.akho || 0;
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
-        // ბალანსის განახლება (აკლდება AKHO, ემატება GIFT_BALANCE)
+        // 2. ბალანსების განახლება
         db.ref(`users/${user.uid}/akho`).set(myBalance - cost);
         db.ref(`users/${targetUid}/gift_balance`).transaction(c => (c || 0) + cost);
 
-        // საჩუქრის ჩაწერა
+        // 🚀 3. საჩუქრის ჩაწერა (ვიღებთ სახელს და ფოტოს პირდაპირ ბაზიდან - myData)
         db.ref(`received_gifts/${targetUid}`).push({
             giftUrl: giftUrl,
             price: cost,
-            fromName: document.getElementById('uName')?.innerText || "User",
-            fromPhoto: document.getElementById('userAvatar')?.src || "",
+            fromName: myData.name || "მეგობარი", // აქ აიღებს შენს ნამდვილ სახელს ბაზიდან
+            fromPhoto: myData.photo || "",      // აქ აიღებს შენს ფოტოს ბაზიდან
             timestamp: Date.now()
         });
 
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
-
+        
+        
         // --- ანიმაცია ---
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation";
