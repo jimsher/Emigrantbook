@@ -2001,7 +2001,7 @@ window.processGift = function(targetUid, cost, giftUrl) {
 
         // 2. ვაკლებთ შენ და ვუმატებთ იმას
         db.ref(`users/${user.uid}/akho`).set(myBalance - cost);
-        db.ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
+        db.ref(`users/${targetUid}/gift_balance`).transaction(c => (c || 0) + cost);
 
         // 3. ვწერთ საჩუქარს მიმღებთან (ვიყენებთ ბაზიდან წამოღებულ შენს ნამდვილ სახელს და ფოტოს)
         // საჩუქრის ჩაწერა პირდაპირ ID-ებით (რომ არაფერი გაჭედოს)
@@ -2126,6 +2126,32 @@ db.ref(`received_gifts/${targetUid}`).push({
 
 
 
+
+
+// ახალი  გიფ ბალანსის გვერდი
+function showGiftWallet() {
+    const user = firebase.auth().currentUser;
+    const modal = document.createElement('div');
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000050; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(10px); color:white;";
+    
+    db.ref(`users/${user.uid}/gift_balance`).on('value', snap => {
+        const giftBal = snap.val() || 0;
+        
+        modal.innerHTML = `
+            <div style="background:#1a1a1a; padding:30px; border-radius:20px; text-align:center; border:1px solid #d4af37; width:300px;">
+                <h3 style="color:#d4af37; margin-bottom:10px;">სასაჩუქრე ბალანსი 🎁</h3>
+                <div style="font-size:32px; font-weight:bold; margin-bottom:20px;">${giftBal} AKHO</div>
+                
+                <button onclick="transferToMainBalance(${giftBal})" style="width:100%; padding:12px; background:#d4af37; border:none; border-radius:10px; color:black; font-weight:bold; margin-bottom:10px; cursor:pointer;">ბალანსზე გადატანა</button>
+                
+                <button onclick="cashOutRequest(${giftBal})" style="width:100%; padding:12px; background:transparent; border:1px solid #444; border-radius:10px; color:white; cursor:pointer;">განაღდება (Cash Out)</button>
+                
+                <p onclick="this.parentElement.parentElement.remove()" style="margin-top:20px; color:#666; cursor:pointer;">დახურვა</p>
+            </div>
+        `;
+    });
+    document.body.appendChild(modal);
+}
 
 
 
