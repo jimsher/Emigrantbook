@@ -2004,13 +2004,14 @@ window.processGift = function(targetUid, cost, giftUrl) {
         db.ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
         // 3. ვწერთ საჩუქარს მიმღებთან (ვიყენებთ ბაზიდან წამოღებულ შენს ნამდვილ სახელს და ფოტოს)
-        firebase.database().ref(`received_gifts/${targetUid}`).push({
-            giftUrl: giftUrl,
-            price: cost,
-            fromName: myData.name || "Anon", // შენი ნამდვილი სახელი ბაზიდან
-            fromPhoto: myData.photo || "",   // შენი ნამდვილი ფოტო ბაზიდან
-            timestamp: Date.now()
-        });
+        // საჩუქრის ჩაწერა პირდაპირ ID-ებით (რომ არაფერი გაჭედოს)
+db.ref(`received_gifts/${targetUid}`).push({
+    giftUrl: giftUrl,
+    price: cost,
+    fromName: document.getElementById('uName')?.innerText || "User",
+    fromPhoto: document.getElementById('userAvatar')?.src || "",
+    timestamp: Date.now()
+});
 
         // --- აქედან შენი ანიმაციის კოდი ჩვეულებრივად გააგრძელე ---
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
