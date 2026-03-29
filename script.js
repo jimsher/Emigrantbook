@@ -2039,6 +2039,19 @@ window.transferToMainBalance = function(amount) {
     }
 };
 
+// --- ევროს და მეგობრის ფუნქციები (ჩამატებულია შენს კოდში) ---
+
+window.buyEuroWithGift = function(amount) {
+    alert("ევროს ყიდვის ფუნქცია მალე დაემატება! 💶");
+};
+
+window.sendToFriendFromGift = function(amount) {
+    let friendId = prompt("შეიყვანეთ მეგობრის ID ვისაც ურიცხავთ:");
+    if(friendId) {
+        alert("გადარიცხვის ფუნქცია მუშავდება! ✈️");
+    }
+};
+
 function showGiftsCollection(uid) {
     const user = firebase.auth().currentUser;
     const isMyProfile = (user && user.uid === uid);
