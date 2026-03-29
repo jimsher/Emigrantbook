@@ -2140,6 +2140,54 @@ window.buyEuroWithGift = function(amount) {
 
 
 
+// ევროს ბალანსის ახალი გვერდი
+window.showFinancialWallet = function() {
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("ავტორიზაცია საჭიროა!");
+
+    const modal = document.createElement('div');
+    modal.id = "financialWalletModal";
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000030; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(15px); color:white;";
+    
+    // ვუსმენთ ევროების ბალანსს რეალურ დროში
+    db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
+        const euroBal = snap.val() || 0;
+        
+        modal.innerHTML = `
+            <div style="background:#1a1a1a; width:90%; max-width:350px; padding:30px; border-radius:30px; text-align:center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;">
+                <div style="font-size: 50px; margin-bottom: 15px;">💶</div>
+                <h3 style="margin:0; color:#00a2ff;">ჩემი საფულე</h3>
+                <p style="color:#666; font-size:12px; margin-top:5px;">დაგროვილი რეალური თანხა</p>
+                
+                <div style="background:#222; margin:25px 0; padding:20px; border-radius:20px;">
+                    <span style="font-size:14px; color:#aaa; display:block; margin-bottom:5px;">ხელმისაწვდომია:</span>
+                    <strong style="font-size:35px; color:#fff;">${euroBal.toFixed(2)} €</strong>
+                </div>
+
+                <button onclick="window.requestBankTransfer(${euroBal})" style="width:100%; padding:15px; background:#00a2ff; border:none; border-radius:15px; color:white; font-weight:bold; font-size:16px; cursor:pointer; margin-bottom:15px; box-shadow: 0 5px 15px rgba(0,162,255,0.3);">
+                    ბარათზე გატანა
+                </button>
+
+                <button onclick="this.parentElement.parentElement.remove()" style="background:transparent; border:none; color:#888; cursor:pointer;">დახურვა</button>
+            </div>
+        `;
+    });
+
+    document.body.appendChild(modal);
+};
+
+// ბარათზე გატანის მოთხოვნის ფუნქცია
+window.requestBankTransfer = function(amount) {
+    if (amount < 10) return alert("მინიმალური გასატანი თანხაა 10 €");
+    
+    const cardNum = prompt("შეიყვანეთ თქვენი ბარათის ნომერი (ან IBAN):");
+    if (cardNum) {
+        alert("თქვენი მოთხოვნა მიღებულია! ადმინისტრაცია გადარიცხავს " + amount + " €-ს მითითებულ ანგარიშზე 24 საათში.");
+        // აქ შეგიძლია დაამატო ადმინთან მოთხოვნის გაგზავნის ლოგიკა
+    }
+};
+// აქ მთავრდება
+
 
  
 function setupAutoPlay() {
