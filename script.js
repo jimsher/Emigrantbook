@@ -1992,17 +1992,25 @@ window.processGift = function(targetUid, cost, giftUrl) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     
-    // --- (FireBase ლოგიკა იგივე რჩება) ---
     firebase.database().ref(`users/${user.uid}/akho`).once('value', snap => {
         const myBalance = snap.val() || 0;
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
+        // 1. ფულის ჩამოჭრა და დარიცხვა
         firebase.database().ref(`users/${user.uid}/akho`).set(myBalance - cost);
         firebase.database().ref(`users/${targetUid}/akho`).transaction(c => (c || 0) + cost);
 
-        if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
-        // ------------------------------------------
+        // 2. საჩუქრის სიის განახლება (ეს აკლდა!)
+        firebase.database().ref(`users/${targetUid}/gifts`).push({
+            url: giftUrl,
+            cost: cost,
+            from: user.uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
 
+        if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
+        
+        
         // 🚀 --- ახალი, დახვეწილი ანიმაციის აწყობა ---
         
         const animWrapper = document.createElement('div');
