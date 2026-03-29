@@ -2013,9 +2013,25 @@ window.transferToMainBalance = function(amount) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("ავტორიზაცია საჭიროა!");
 
+    // 1. სასაჩუქრე ბალანსის განულება
     db.ref(`users/${user.uid}/gift_balance`).set(0);
+    
+    // 2. მთავარ ბალანსზე (akho) დამატება
     db.ref(`users/${user.uid}/akho`).transaction(c => (c || 0) + amount);
-    alert("AKHO წარმატებით გადავიდა მთავარ ბალანსზე! ✅");
+    
+    // 🚀 3. საჩუქრების სიის სრული გასუფთავება (ეს დაემატა)
+    db.ref(`received_gifts/${user.uid}`).remove();
+
+    alert("AKHO გადაიტანილა და კოლექცია გასუფთავდა! ✅");
+
+    // ფანჯრის დახურვა, რომ ცვლილება აისახოს
+    if(document.getElementById('giftWalletModal')) {
+        document.getElementById('giftWalletModal').remove();
+    } else {
+        // თუ პირდაპირ სიაში ხარ, უბრალოდ წაშალე მოდალი
+        const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
+        modals.forEach(m => m.remove());
+    }
 };
 
 function showGiftsCollection(uid) {
