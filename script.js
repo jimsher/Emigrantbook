@@ -2180,13 +2180,27 @@ function showGiftWallet() {
 
 // ნაჩუქარი გიფწბის გამოჩწნის სია
 function showGiftsCollection(uid) {
+    const user = firebase.auth().currentUser;
+    const isMyProfile = (user && user.uid === uid); // ვამოწმებთ ჩვენია თუ სხვისი პროფილი
+
     const modal = document.createElement('div');
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000020; display:flex; flex-direction:column; padding:20px; backdrop-filter:blur(10px); color:white;";
+    
+    // 1. თავი და სათაური (შენი ორიგინალი)
     modal.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="color:#d4af37; margin:0;">საჩუქრების კოლექცია 🎁</h3>
             <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="cursor:pointer; font-size:24px;"></i>
         </div>
+
+        <div id="giftWalletSection" style="display:none; margin-bottom:25px; background:linear-gradient(145deg, #1a1a1a, #111); padding:20px; border-radius:20px; border:1px solid #d4af37; text-align:center; box-shadow: 0 5px 15px rgba(212,175,55,0.1);">
+            <div style="color:#aaa; font-size:13px; margin-bottom:5px;">საჩუქრებიდან დაგროვებული:</div>
+            <div id="giftBalanceDisplay" style="font-size:32px; font-weight:bold; color:#fbd14b; text-shadow: 0 0 10px rgba(251,209,75,0.4); margin-bottom:15px;">0 AKHO</div>
+            <button id="transferBtn" style="width:100%; padding:14px; background:#d4af37; border:none; border-radius:12px; color:black; font-weight:bold; font-size:15px; cursor:pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(212,175,55,0.3);">
+                ბალანსზე გადატანა
+            </button>
+        </div>
+
         <div id="giftsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; overflow-y:auto; padding-bottom:50px;">
             <p style="text-align:center; grid-column:1/-1;">იტვირთება...</p>
         </div>
@@ -2194,6 +2208,29 @@ function showGiftsCollection(uid) {
     document.body.appendChild(modal);
 
     const container = document.getElementById('giftsContainer');
+    const walletSection = document.getElementById('giftWalletSection');
+    const balanceDisplay = document.getElementById('giftBalanceDisplay');
+    const transferBtn = document.getElementById('transferBtn');
+
+    // 3. თუ ჩვენი პროფილია, ვაჩენთ ყულაბას და ვიღებთ ბალანსს
+    if (isMyProfile) {
+        walletSection.style.display = "block";
+        firebase.database().ref(`users/${uid}/gift_balance`).on('value', snap => {
+            const currentGiftBal = snap.val() || 0;
+            balanceDisplay.innerText = `${currentGiftBal} AKHO`;
+            
+            // ღილაკზე დაჭერისას გადაგვაქვს ფული
+            transferBtn.onclick = () => {
+                if (typeof transferToMainBalance === "function") {
+                    transferToMainBalance(currentGiftBal);
+                } else {
+                    alert("ფუნქცია ვერ მოიძებნა!");
+                }
+            };
+        });
+    }
+
+    // 4. საჩუქრების სია (შენი ორიგინალი)
     firebase.database().ref(`received_gifts/${uid}`).once('value', snap => {
         container.innerHTML = "";
         const data = snap.val();
