@@ -1887,13 +1887,13 @@ function renderTokenFeed() {
 
 // --- GIFT SYSTEM LOGIC ---
 // --- GIFT SYSTEM LOGIC ---
+// --- GIFT SYSTEM LOGIC ---
 window.openGiftPanel = function(postId, authorId) {
     if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
     const panel = document.createElement('div');
     panel.id = "dynamicGiftPanel";
     panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:25px 20px; z-index:2000005; backdrop-filter:blur(15px); color:white; font-family:sans-serif;";
     
-    // აქ ჩაწერე შენი GIF-ების ლინკები
     const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
     const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
     const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
@@ -1911,226 +1911,92 @@ window.openGiftPanel = function(postId, authorId) {
     const gift15 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
     const gift16 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
 
-
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <b style="color:#d4af37;">აირჩიე საჩუქარი</b>
             <i class="fas fa-times" onclick="document.getElementById('dynamicGiftPanel').remove()" style="cursor:pointer; font-size:20px; color:gray;"></i>
         </div>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
-            <div onclick="window.processGift('${authorId}', 5, '${gift1}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift1}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 10, '${gift2}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift2}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">10 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 15, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift3}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">15 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 20, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift4}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">20 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 25, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift5}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">25 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 50, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift6}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 80, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift7}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">80 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 100, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift8}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">100 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift9}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift10}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift10}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift11}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift11}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift12}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift12}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift13}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift13}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift14}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift14}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift15}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift15}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift16}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
-                <img src="${gift16}" style="width:60px; height:60px; object-fit:contain; margin-bottom:5px;">
-                <div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div>
-            </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; max-height:400px; overflow-y:auto;">
+            <div onclick="window.processGift('${authorId}', 5, '${gift1}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift1}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 10, '${gift2}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift2}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">10 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 15, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift3}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">15 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 20, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift4}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">20 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 25, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift5}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">25 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 50, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift6}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 80, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift7}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">80 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 100, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift8}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">100 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift9}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift10}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift10}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift11}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift11}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift12}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift12}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift13}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift13}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift14}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift14}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift15}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift15}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift16}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift16}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
         </div>`;
     document.body.appendChild(panel);
 };
-
-                    
 
 window.processGift = function(targetUid, cost, giftUrl) {
     const user = firebase.auth().currentUser;
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
     
-    // 1. ჯერ ვამოწმებთ შენს (ჩამჩუქებლის) ბალანსს და მონაცემებს
     db.ref(`users/${user.uid}`).once('value', snap => {
         const myData = snap.val();
         const myBalance = myData ? (myData.akho || 0) : 0;
-        
         if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
-        // 2. ვაკლებთ შენ და ვუმატებთ იმას
+        // ბალანსის განახლება (აკლდება AKHO, ემატება GIFT_BALANCE)
         db.ref(`users/${user.uid}/akho`).set(myBalance - cost);
         db.ref(`users/${targetUid}/gift_balance`).transaction(c => (c || 0) + cost);
 
-        // 3. ვწერთ საჩუქარს მიმღებთან (ვიყენებთ ბაზიდან წამოღებულ შენს ნამდვილ სახელს და ფოტოს)
-        // საჩუქრის ჩაწერა პირდაპირ ID-ებით (რომ არაფერი გაჭედოს)
-db.ref(`received_gifts/${targetUid}`).push({
-    giftUrl: giftUrl,
-    price: cost,
-    fromName: document.getElementById('uName')?.innerText || "User",
-    fromPhoto: document.getElementById('userAvatar')?.src || "",
-    timestamp: Date.now()
-});
+        // საჩუქრის ჩაწერა
+        db.ref(`received_gifts/${targetUid}`).push({
+            giftUrl: giftUrl,
+            price: cost,
+            fromName: document.getElementById('uName')?.innerText || "User",
+            fromPhoto: document.getElementById('userAvatar')?.src || "",
+            timestamp: Date.now()
+        });
 
-        // --- აქედან შენი ანიმაციის კოდი ჩვეულებრივად გააგრძელე ---
         if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
-        
 
-  // ... აქ შეიძლება გეწეროს processGift ან სხვა ფუნქციები ...
-
-window.transferToMainBalance = function(amount) {
-    if (!amount || amount <= 0) return alert("გადასატანი არაფერია!");
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("ავტორიზაცია საჭიროა!");
-
-    // 1. ჯერ ვასუფთავებთ სასაჩუქრე ყულაბას
-    db.ref(`users/${user.uid}/gift_balance`).set(0);
-    
-    // 2. ვამატებთ მთავარ ბალანსზე (akho)
-    db.ref(`users/${user.uid}/akho`).transaction(c => (c || 0) + amount);
-    
-    alert("AKHO წარმატებით გადავიდა მთავარ ბალანსზე! ✅");
-    
-    // თუ გაქვს გახსნილი მოდალი, შეგიძლია აქ მისი დახურვაც ჩაწერო
-    // document.getElementById('giftWalletModal')?.remove();
-};
-
-// ... შემდეგი ფუნქციები ...
-
-      
-        
-        // 🚀 --- ახალი, დახვეწილი ანიმაციის აწყობა ---
-        
+        // --- ანიმაცია ---
         const animWrapper = document.createElement('div');
         animWrapper.id = "activeGiftAnimation";
-        // კონტეინერის სტილი: ეკრანის ცენტრში, ოდნავ პატარა საერთო ფართობი
         animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
-        
         animWrapper.innerHTML = `
             <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
                 <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
             </div>
-            
             <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
-                
                 <div class="gift-image-container">
                     <img src="gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
                     <div class="golden-glow-overlay"></div>
                 </div>
-
                 <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
                     <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
                     <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადმოგეცათ ${cost} AKHO</h2>
-                    
                     <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
                 </div>
-            </div>
-        `;
+            </div>`;
         document.body.appendChild(animWrapper);
 
-        // --- CSS ეფექტები (გაძლიერებული ბზინვარება, პულსაცია და ტექსტის სტილები) ---
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
             style.id = 'giftEnhancedStyles';
             style.innerHTML = `
-                /* 1. ყუთის კონტეინერი და ბზინვარების ეფექტები */
-                .gift-image-container {
-                    position: relative;
-                    display: inline-block;
-                    margin-bottom: 20px;
-                }
-                
-                .golden-gift-img {
-                    filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8));
-                    animation: giftPulse 2.5s infinite alternate;
-                }
-                
-                /* დამატებითი "თბილი" ბზინვარების ფენა სურათის ქვეშ */
-                .golden-glow-overlay {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 150px;
-                    height: 150px;
-                    background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%);
-                    border-radius: 50%;
-                    filter: blur(15px);
-                    z-index: 1;
-                    animation: glowPulse 2.5s infinite alternate;
-                }
-
-                /* 2. პულსაციის ანიმაციები */
-                @keyframes giftPulse {
-                    0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); }
-                    100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); }
-                }
-                
-                @keyframes glowPulse {
-                    0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-                    100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-                }
-
-                /* 3. ტექსტის და GIF-ის გამოჩენის/გაქრობის ანიმაციები */
-                @keyframes giftStep1Anim {
-                    0% { transform: scale(0); opacity: 0; }
-                    15% { transform: scale(1.2); opacity: 1; }
-                    85% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.3) translateY(-80px); opacity: 0; }
-                }
-                @keyframes giftStep2Anim {
-                    0% { transform: scale(0.6); opacity: 0; }
-                    4% { transform: scale(1.05); opacity: 1; }
-                    8% { transform: scale(1); opacity: 1; }
-                    96% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(0.8) translateY(-120px); opacity: 0; }
-                }
+                .gift-image-container { position: relative; display: inline-block; margin-bottom: 20px; }
+                .golden-gift-img { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); animation: giftPulse 2.5s infinite alternate; }
+                .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%); border-radius: 50%; filter: blur(15px); z-index: 1; animation: glowPulse 2.5s infinite alternate; }
+                @keyframes giftPulse { 0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); } }
+                @keyframes glowPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
+                @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.3) translateY(-80px); opacity: 0; } }
+                @keyframes giftStep2Anim { 0% { transform: scale(0.6); opacity: 0; } 4% { transform: scale(1.05); opacity: 1; } 8% { transform: scale(1); opacity: 1; } 96% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8) translateY(-120px); opacity: 0; } }
             `;
             document.head.appendChild(style);
         }
 
-        // --- ტაიმერები ანიმაციის გადასართავად ---
         setTimeout(() => {
             const s1 = document.getElementById('giftStep1');
             const s2 = document.getElementById('giftStep2');
@@ -2138,69 +2004,37 @@ window.transferToMainBalance = function(amount) {
             if(s2) s2.style.display = 'block';
         }, 3000);
 
-        // 33 წამში (3 + 30) ვშლით მთლიან ანიმაციას
-        setTimeout(() => {
-            if(animWrapper) animWrapper.remove();
-        }, 33000);
+        setTimeout(() => { if(animWrapper) animWrapper.remove(); }, 33000);
     });
-};                    
+};
 
-
-
-
-
-
-// ახალი  გიფ ბალანსის გვერდი
-function showGiftWallet() {
+window.transferToMainBalance = function(amount) {
+    if (!amount || amount <= 0) return alert("გადასატანი არაფერია!");
     const user = firebase.auth().currentUser;
-    const modal = document.createElement('div');
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000050; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(10px); color:white;";
-    
-    db.ref(`users/${user.uid}/gift_balance`).on('value', snap => {
-        const giftBal = snap.val() || 0;
-        
-        modal.innerHTML = `
-            <div style="background:#1a1a1a; padding:30px; border-radius:20px; text-align:center; border:1px solid #d4af37; width:300px;">
-                <h3 style="color:#d4af37; margin-bottom:10px;">სასაჩუქრე ბალანსი 🎁</h3>
-                <div style="font-size:32px; font-weight:bold; margin-bottom:20px;">${giftBal} AKHO</div>
-                
-                <button onclick="transferToMainBalance(${giftBal})" style="width:100%; padding:12px; background:#d4af37; border:none; border-radius:10px; color:black; font-weight:bold; margin-bottom:10px; cursor:pointer;">ბალანსზე გადატანა</button>
-                
-                <button onclick="cashOutRequest(${giftBal})" style="width:100%; padding:12px; background:transparent; border:1px solid #444; border-radius:10px; color:white; cursor:pointer;">განაღდება (Cash Out)</button>
-                
-                <p onclick="this.parentElement.parentElement.remove()" style="margin-top:20px; color:#666; cursor:pointer;">დახურვა</p>
-            </div>
-        `;
-    });
-    document.body.appendChild(modal);
-}
+    if (!user) return alert("ავტორიზაცია საჭიროა!");
 
+    db.ref(`users/${user.uid}/gift_balance`).set(0);
+    db.ref(`users/${user.uid}/akho`).transaction(c => (c || 0) + amount);
+    alert("AKHO წარმატებით გადავიდა მთავარ ბალანსზე! ✅");
+};
 
-
-
-// ნაჩუქარი გიფწბის გამოჩწნის სია
 function showGiftsCollection(uid) {
     const user = firebase.auth().currentUser;
-    const isMyProfile = (user && user.uid === uid); // ვამოწმებთ ჩვენია თუ სხვისი პროფილი
+    const isMyProfile = (user && user.uid === uid);
 
     const modal = document.createElement('div');
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000020; display:flex; flex-direction:column; padding:20px; backdrop-filter:blur(10px); color:white;";
     
-    // 1. თავი და სათაური (შენი ორიგინალი)
     modal.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 style="color:#d4af37; margin:0;">საჩუქრების კოლექცია 🎁</h3>
             <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="cursor:pointer; font-size:24px;"></i>
         </div>
-
-        <div id="giftWalletSection" style="display:none; margin-bottom:25px; background:linear-gradient(145deg, #1a1a1a, #111); padding:20px; border-radius:20px; border:1px solid #d4af37; text-align:center; box-shadow: 0 5px 15px rgba(212,175,55,0.1);">
+        <div id="giftWalletSection" style="display:none; margin-bottom:25px; background:linear-gradient(145deg, #1a1a1a, #111); padding:20px; border-radius:20px; border:1px solid #d4af37; text-align:center;">
             <div style="color:#aaa; font-size:13px; margin-bottom:5px;">საჩუქრებიდან დაგროვებული:</div>
             <div id="giftBalanceDisplay" style="font-size:32px; font-weight:bold; color:#fbd14b; text-shadow: 0 0 10px rgba(251,209,75,0.4); margin-bottom:15px;">0 AKHO</div>
-            <button id="transferBtn" style="width:100%; padding:14px; background:#d4af37; border:none; border-radius:12px; color:black; font-weight:bold; font-size:15px; cursor:pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(212,175,55,0.3);">
-                ბალანსზე გადატანა
-            </button>
+            <button id="transferBtn" style="width:100%; padding:14px; background:#d4af37; border:none; border-radius:12px; color:black; font-weight:bold; font-size:15px; cursor:pointer;">ბალანსზე გადატანა</button>
         </div>
-
         <div id="giftsContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; overflow-y:auto; padding-bottom:50px;">
             <p style="text-align:center; grid-column:1/-1;">იტვირთება...</p>
         </div>
@@ -2208,36 +2042,19 @@ function showGiftsCollection(uid) {
     document.body.appendChild(modal);
 
     const container = document.getElementById('giftsContainer');
-    const walletSection = document.getElementById('giftWalletSection');
-    const balanceDisplay = document.getElementById('giftBalanceDisplay');
-    const transferBtn = document.getElementById('transferBtn');
-
-    // 3. თუ ჩვენი პროფილია, ვაჩენთ ყულაბას და ვიღებთ ბალანსს
     if (isMyProfile) {
-        walletSection.style.display = "block";
-        firebase.database().ref(`users/${uid}/gift_balance`).on('value', snap => {
+        document.getElementById('giftWalletSection').style.display = "block";
+        db.ref(`users/${uid}/gift_balance`).on('value', snap => {
             const currentGiftBal = snap.val() || 0;
-            balanceDisplay.innerText = `${currentGiftBal} AKHO`;
-            
-            // ღილაკზე დაჭერისას გადაგვაქვს ფული
-            transferBtn.onclick = () => {
-                if (typeof transferToMainBalance === "function") {
-                    transferToMainBalance(currentGiftBal);
-                } else {
-                    alert("ფუნქცია ვერ მოიძებნა!");
-                }
-            };
+            document.getElementById('giftBalanceDisplay').innerText = `${currentGiftBal} AKHO`;
+            document.getElementById('transferBtn').onclick = () => window.transferToMainBalance(currentGiftBal);
         });
     }
 
-    // 4. საჩუქრების სია (შენი ორიგინალი)
     firebase.database().ref(`received_gifts/${uid}`).once('value', snap => {
         container.innerHTML = "";
         const data = snap.val();
-        if(!data) {
-            container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები ჯერ არ არის</p>";
-            return;
-        }
+        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები ჯერ არ არის</p>"; return; }
 
         Object.values(data).reverse().forEach(gift => {
             container.innerHTML += `
@@ -2248,8 +2065,7 @@ function showGiftsCollection(uid) {
                         <img src="${gift.fromPhoto || 'https://ui-avatars.com/api/?name='+gift.fromName}" style="width:20px; height:20px; border-radius:50%; border:1px solid #d4af37;">
                         <span style="font-size:11px; color:#aaa;">${gift.fromName}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     });
 }
