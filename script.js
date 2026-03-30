@@ -1198,6 +1198,12 @@ function sendMessage() {
      document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
      document.getElementById('profTabs').style.display = 'flex';
      document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
+
+    // ევროს ღილაკის გამოჩენა მხოლოდ შენს პროფილზე
+    const euroBtn = document.getElementById('euroBalanceBtn');
+    if (euroBtn) {
+     euroBtn.style.display = (uid === auth.currentUser.uid) ? 'inline-flex' : 'none';
+     }
      
      if(uid === auth.currentUser.uid) {
          controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
