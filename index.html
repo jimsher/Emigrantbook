@@ -1688,57 +1688,113 @@ div[style*="overflow-x:auto"] {
  </div>
 
 
-  <div id="sideMenuOverlay" class="side-menu-overlay" onclick="toggleSideMenu(false)"></div>
-<div id="sideMenu" class="side-menu">
-    <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
-        <i class="fas fa-times" style="font-size:24px; color:var(--gold); cursor:pointer;" onclick="toggleSideMenu(false)"></i>
+  
+<div id="sideMenuOverlay" class="side-menu-overlay" onclick="toggleSideMenu(false)" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:9999;"></div>
+
+<div id="sideMenu" class="side-menu" style="position:fixed; top:0; right:-100%; width:82%; max-width:320px; height:100%; background:#121212; z-index:10000; transition:right 0.3s ease; display:flex; flex-direction:column; padding:0; color:white; font-family:sans-serif;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #222;">
+        <i class="fas fa-bars" style="font-size:22px; color:#888; cursor:pointer;" onclick="toggleSideMenu(false)"></i>
+        <div style="font-size:17px; font-weight:bold;">Ресурсы</div>
+        <div style="width:22px;"></div>
     </div>
 
-    <a href="#" class="menu-item" onclick="toggleLanguage()">
-        <i class="fas fa-globe"></i> 
-        <span id="langSwitchBtn" data-key="lang_btn">Language: EN / ენა: KA / IT / RU</span>
-    </a>
+    <div style="flex:1; overflow-y:auto; padding:15px;">
+        
+        <a href="#" class="menu-item" onclick="toggleLanguage()" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-globe" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span id="langSwitchBtn" data-key="lang_btn" style="font-size:15px;">Language: EN / ენა: KA / IT / RU</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
 
-    <a href="#" class="menu-item" onclick="startLiveFunc()">
-        <div class="live-btn-custom">
-            <div class="live-status-dot"></div>
-            <span data-key="live">ლაივი</span>
+        <a href="#" class="menu-item" onclick="startLiveFunc()" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="width:20px; display:flex; justify-content:center;">
+                    <div style="width:10px; height:10px; background:#ff4d4d; border-radius:50%; box-shadow:0 0 8px #ff4d4d;"></div>
+                </div>
+                <span data-key="live" style="font-size:15px;">ლაივი</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <div style="font-size:12px; color:#555; margin:20px 0 10px 0; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">Сервисы</div>
+
+        <a href="fund.html" class="menu-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-hand-holding-heart" style="width:20px; text-align:center; font-size:18px; color:#ffcc00;"></i>
+                <span data-key="fund" style="font-size:15px;">ემიგრანტთა ფონდი</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <a href="live.html" class="menu-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-utensils" style="width:20px; text-align:center; font-size:18px; color:#ff4d4d;"></i>
+                <span data-key="delivery" style="font-size:15px;">სწრაფი კვება</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <div style="font-size:12px; color:#555; margin:20px 0 10px 0; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">Личные инструменты</div>
+
+        <a href="#" class="menu-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-euro-sign" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span style="font-size:15px;"><span data-key="real_balance">რეალური ბალანსი</span>: <b id="realCash">0.00</b> €</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <a href="#" id="adminMenuBtn" class="menu-item" style="display:none; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;" onclick="openAdminUI()">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-user-shield" style="width:20px; text-align:center; font-size:18px; color:#ff4d4d;"></i>
+                <span style="font-size:15px;">ადმინ პანელი</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <a href="#" class="menu-item" onclick="openEditor()" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-edit" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span data-key="editor" style="font-size:15px;">რედაქტორი</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <a href="#" class="menu-item" onclick="openSettings()" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-cog" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span data-key="profile_manage" style="font-size:15px;">პროფილის მართვა</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <a href="#" class="menu-item" onclick="openWalletUI(); toggleSideMenu(false);" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-wallet" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span data-key="balance" style="font-size:15px;">ბალანსი</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <a href="#" class="menu-item" onclick="openInfoUI(); toggleSideMenu(false);" style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; text-decoration:none; color:#eee;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <i class="fas fa-info-circle" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span data-key="info" style="font-size:15px;">ინფორმაცია</span>
+            </div>
+            <i class="fas fa-chevron-right" style="font-size:13px; color:#444;"></i>
+        </a>
+
+        <div style="margin-top:20px; border-top:1px solid #222; padding-top:10px;">
+            <a href="#" class="menu-item" onclick="logoutUser()" style="display:flex; align-items:center; gap:15px; padding:15px 0; text-decoration:none; color:#ff4d4d;">
+                <i class="fas fa-sign-out-alt" style="width:20px; text-align:center; font-size:18px;"></i>
+                <span data-key="logout" style="font-size:15px;">გასვლა</span>
+            </a>
         </div>
-    </a>
-
-    <a href="fund.html" class="menu-item">
-        <i class="fas fa-hand-holding-heart" style="color: #ffcc00;"></i> 
-        <span data-key="fund">ემიგრანტთა ფონდი</span>
-    </a>
-
-    <a href="live.html" class="menu-item">
-        <i class="fas fa-utensils" style="color: #ff4d4d;"></i> 
-        <span data-key="delivery">სწრაფი კვება</span>
-    </a>
-
-    <a href="#" class="menu-item">
-        <i class="fas fa-euro-sign"></i> 
-        <span><span data-key="real_balance">რეალური ბალანსი</span>: <b id="realCash">0.00</b> €</span>
-    </a>
-
-    <a href="#" id="adminMenuBtn" class="menu-item" style="display:none;" onclick="openAdminUI()">
-        <i class="fas fa-user-shield" style="color:var(--red);"></i> ადმინ პანელი
-    </a>
-
-    <a href="#" class="menu-item" onclick="openEditor()"><i class="fas fa-edit"></i> <span data-key="editor">რედაქტორი</span></a>
-    <a href="#" class="menu-item" onclick="openSettings()"><i class="fas fa-cog"></i> <span data-key="profile_manage">პროფილის მართვა</span></a>
-    <a href="#" class="menu-item" onclick="openWalletUI(); toggleSideMenu(false);"><i class="fas fa-wallet"></i> <span data-key="balance">ბალანსი</span></a>
-    <a href="#" class="menu-item" onclick="openInfoUI(); toggleSideMenu(false);"><i class="fas fa-info-circle"></i> <span data-key="info">ინფორმაცია</span></a>
-    
-    <div style="flex:1;"></div>
-
- 
-
-    <a href="#" class="menu-item" onclick="logoutUser()" style="border-top: 1px solid rgba(255,255,255,0.05); color: #ff4d4d;">
-        <i class="fas fa-sign-out-alt" style="color: #ff4d4d;"></i> <span data-key="logout">გასვლა</span>
-    </a>
+    </div>
 </div>
-
 
 
 
