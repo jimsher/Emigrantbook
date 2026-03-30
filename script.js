@@ -2189,10 +2189,10 @@ window.showFinancialWallet = function() {
                     </div>
                 </div>
 
-                <div style="background:#1f1f1f; border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-                    <div style="font-size:15px; font-weight:500;">ტრანზაქციები</div>
-                    <div style="color:#8a8a8a; font-size:13px;">ისტორია <i class="fas fa-chevron-right" style="margin-left:5px;"></i></div>
-                </div>
+                <div onclick="window.showEuroHistory()" style="background:#1f1f1f; border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; cursor:pointer;">
+                 <div style="font-size:15px; font-weight:500;">ტრანზაქციები</div>
+                 <div style="color:#8a8a8a; font-size:13px;">ისტორია <i class="fas fa-chevron-right" style="margin-left:5px;"></i></div>
+                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:25px;">
                     <div style="background:#1f1f1f; padding:20px; border-radius:12px; height:100px; display:flex; flex-direction:column; justify-content:space-between;">
