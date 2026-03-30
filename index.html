@@ -1688,55 +1688,83 @@ div[style*="overflow-x:auto"] {
  </div>
 
 
-  <div id="sideMenuOverlay" class="side-menu-overlay" onclick="toggleSideMenu(false)"></div>
-<div id="sideMenu" class="side-menu">
-    <div style="display:flex; justify-content:flex-end; margin-bottom:20px;">
-        <i class="fas fa-times" style="font-size:24px; color:var(--gold); cursor:pointer;" onclick="toggleSideMenu(false)"></i>
+
+
+
+ <div id="sideMenuOverlay" class="side-menu-overlay-tiktok" onclick="toggleSideMenu(false)"></div>
+
+<div id="sideMenu" class="side-menu-tiktok">
+    <div class="menu-header-tiktok">
+        <div class="menu-title-tiktok">Ресурсы</div>
+        <i class="fas fa-times" onclick="toggleSideMenu(false)" style="font-size: 20px; color: #888; cursor: pointer;"></i>
     </div>
 
-    <a href="#" class="menu-item" onclick="toggleLanguage()">
-        <i class="fas fa-globe"></i> 
-        <span id="langSwitchBtn" data-key="lang_btn">Language: EN / ენა: KA / IT / RU</span>
-    </a>
+    <div class="menu-content-tiktok">
+        
+        <div class="tiktok-section">
+            <div class="tiktok-item" onclick="toggleLanguage()">
+                <div class="item-left"><i class="fas fa-globe"></i> <span id="langSwitchBtn" data-key="lang_btn">Language: EN / ენა: KA...</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
 
-    <a href="#" class="menu-item" onclick="startLiveFunc()">
-        <div class="live-btn-custom">
-            <div class="live-status-dot"></div>
-            <span data-key="live">ლაივი</span>
+            <div class="tiktok-item" onclick="startLiveFunc()">
+                <div class="item-left">
+                    <div class="live-dot-tiktok"></div>
+                    <span data-key="live">ლაივი</span>
+                </div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
         </div>
-    </a>
 
-    <a href="fund.html" class="menu-item">
-        <i class="fas fa-hand-holding-heart" style="color: #ffcc00;"></i> 
-        <span data-key="fund">ემიგრანტთა ფონდი</span>
-    </a>
+        <div class="tiktok-section">
+            <div class="section-label">Сервисы</div>
+            
+            <a href="fund.html" class="tiktok-item" style="text-decoration: none;">
+                <div class="item-left"><i class="fas fa-hand-holding-heart" style="color: #ffcc00;"></i> <span data-key="fund">ემიგრანტთა ფონდი</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </a>
 
-    <a href="live.html" class="menu-item">
-        <i class="fas fa-utensils" style="color: #ff4d4d;"></i> 
-        <span data-key="delivery">სწრაფი კვება</span>
-    </a>
+            <a href="live.html" class="tiktok-item" style="text-decoration: none;">
+                <div class="item-left"><i class="fas fa-utensils" style="color: #ff4d4d;"></i> <span data-key="delivery">სწრაფი კვება</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </a>
+        </div>
 
-    <a href="#" class="menu-item">
-        <i class="fas fa-euro-sign"></i> 
-        <span><span data-key="real_balance">რეალური ბალანსი</span>: <b id="realCash">0.00</b> €</span>
-    </a>
+        <div class="tiktok-section">
+            <div class="section-label">Личные инструменты</div>
 
-    <a href="#" id="adminMenuBtn" class="menu-item" style="display:none;" onclick="openAdminUI()">
-        <i class="fas fa-user-shield" style="color:var(--red);"></i> ადმინ პანელი
-    </a>
+            <div class="tiktok-item" onclick="openWalletUI(); toggleSideMenu(false);">
+                <div class="item-left"><i class="fas fa-euro-sign"></i> <span><span data-key="real_balance">რეალური ბალანსი</span>: <b id="realCash">0.00</b> €</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
 
-    <a href="#" class="menu-item" onclick="openEditor()"><i class="fas fa-edit"></i> <span data-key="editor">რედაქტორი</span></a>
-    <a href="#" class="menu-item" onclick="openSettings()"><i class="fas fa-cog"></i> <span data-key="profile_manage">პროფილის მართვა</span></a>
-    <a href="#" class="menu-item" onclick="openWalletUI(); toggleSideMenu(false);"><i class="fas fa-wallet"></i> <span data-key="balance">ბალანსი</span></a>
-    <a href="#" class="menu-item" onclick="openInfoUI(); toggleSideMenu(false);"><i class="fas fa-info-circle"></i> <span data-key="info">ინფორმაცია</span></a>
-    
-    <div style="flex:1;"></div>
+            <div class="tiktok-item" id="adminMenuBtn" style="display:none;" onclick="openAdminUI()">
+                <div class="item-left"><i class="fas fa-user-shield" style="color:#ff4d4d;"></i> ადმინ პანელი</div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
+        </div>
 
- 
+        <div class="tiktok-section">
+            <div class="tiktok-item" onclick="openEditor()">
+                <div class="item-left"><i class="fas fa-edit"></i> <span data-key="editor">რედაქტორი</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
 
-    <a href="#" class="menu-item" onclick="logoutUser()" style="border-top: 1px solid rgba(255,255,255,0.05); color: #ff4d4d;">
-        <i class="fas fa-sign-out-alt" style="color: #ff4d4d;"></i> <span data-key="logout">გასვლა</span>
-    </a>
+            <div class="tiktok-item" onclick="openSettings()">
+                <div class="item-left"><i class="fas fa-cog"></i> <span data-key="profile_manage">პროფილის მართვა</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
+
+            <div class="tiktok-item" onclick="openInfoUI(); toggleSideMenu(false);">
+                <div class="item-left"><i class="fas fa-info-circle"></i> <span data-key="info">ინფორმაცია</span></div>
+                <i class="fas fa-chevron-right arrow"></i>
+            </div>
+        </div>
+
+        <div class="tiktok-item" onclick="logoutUser()" style="margin-top: 20px; border-top: 1px solid #222; padding-top: 20px;">
+            <div class="item-left" style="color: #ff4d4d;"><i class="fas fa-sign-out-alt"></i> <span data-key="logout">გასვლა</span></div>
+        </div>
+    </div>
 </div>
 
 
