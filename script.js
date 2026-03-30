@@ -2183,7 +2183,7 @@ window.showFinancialWallet = function() {
                     <div style="font-size:14px; color:#8a8a8a; margin-bottom:10px;">მოსალოდნელი თანხა EUR <i class="fas fa-caret-down"></i></div>
                     <div style="font-size:48px; font-weight:bold; margin-bottom:20px;">${euroBal.toFixed(2)} <span style="font-size:24px;">€</span></div>
                     
-                    <div style="display:inline-flex; align-items:center; background:#1f1f1f; padding:8px 15px; border-radius:20px; font-size:13px; color:#efefef;">
+                    <div onclick="window.showRechargeAKHO()" style="display:inline-flex; align-items:center; background:#1f1f1f; padding:8px 15px; border-radius:20px; font-size:13px; color:#efefef; cursor:pointer;">
                         <img src="https://emigrantbook.com/token-avatar.png" style="width:16px; margin-right:8px;"> 
                         AKHO 0 | მონეტების შეძენა <i class="fas fa-chevron-right" style="font-size:10px; margin-left:8px;"></i>
                     </div>
