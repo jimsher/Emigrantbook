@@ -2239,18 +2239,19 @@ window.showFinancialWallet = function() {
 
 
 
+
 window.showEuroHistory = function() {
     const user = firebase.auth().currentUser;
     const historyModal = document.createElement('div');
     historyModal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000040; display:flex; flex-direction:column; color:white; font-family:sans-serif;";
     
     historyModal.innerHTML = `
-        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
+        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222; background:#121212;">
             <i class="fas fa-chevron-left" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
-            <div style="flex:1; text-align:center; font-weight:bold;">ტრანზაქციების ისტორია</div>
+            <div style="flex:1; text-align:center; font-weight:bold; font-size:16px;">ტრანზაქციების ისტორია</div>
             <div style="width:30px;"></div>
         </div>
-        <div id="euroHistoryList" style="flex:1; overflow-y:auto; padding:15px;">
+        <div id="euroHistoryList" style="flex:1; overflow-y:auto; padding:15px; background:#121212;">
             <p style="text-align:center; color:gray;">იტვირთება...</p>
         </div>
     `;
@@ -2262,25 +2263,44 @@ window.showEuroHistory = function() {
         const data = snap.val();
         
         if(!data) {
-            list.innerHTML = "<p style='text-align:center; color:gray; margin-top:50px;'>ისტორია ცარიელია</p>";
+            list.innerHTML = "<div style='text-align:center; margin-top:50px;'><i class='fas fa-receipt' style='font-size:40px; color:#333;'></i><p style='color:gray; margin-top:10px;'>ისტორია ცარიელია</p></div>";
             return;
         }
 
         Object.values(data).reverse().forEach(item => {
             const date = new Date(item.timestamp).toLocaleString('ka-GE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            const isWithdraw = item.type === "გატანა";
+            
+            // სტატუსის ფერები
+            let statusHtml = "";
+            if(isWithdraw) {
+                const statusColor = item.status === "pending" ? "#fbd14b" : "#2ecc71";
+                const statusText = item.status === "pending" ? "მოლოდინში" : "ჩარიცხულია";
+                statusHtml = `<div style="font-size:10px; color:${statusColor}; margin-top:4px;">● ${statusText}</div>`;
+            }
+
             list.innerHTML += `
-                <div style="background:#1f1f1f; padding:15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-size:14px; font-weight:bold;">${item.type}</div>
-                        <div style="font-size:11px; color:gray;">${date}</div>
+                <div style="background:#1f1f1f; padding:15px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:40px; height:40px; border-radius:12px; background:${isWithdraw ? 'rgba(231,76,60,0.1)' : 'rgba(46,204,113,0.1)'}; display:flex; align-items:center; justify-content:center;">
+                            <i class="fas ${isWithdraw ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${isWithdraw ? '#e74c3c' : '#2ecc71'};"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:14px; font-weight:bold;">${item.type}</div>
+                            <div style="font-size:11px; color:gray;">${date}</div>
+                            ${statusHtml}
+                        </div>
                     </div>
-                    <div style="color:#2ecc71; font-weight:bold;">+ ${item.amount} €</div>
+                    <div style="text-align:right;">
+                        <div style="color:${isWithdraw ? '#fff' : '#2ecc71'}; font-weight:bold; font-size:16px;">
+                            ${isWithdraw ? '-' : '+'} ${item.amount} €
+                        </div>
+                    </div>
                 </div>
             `;
         });
     });
 };
-
 // აქ მთავრფება 
 
  
