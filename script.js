@@ -2238,6 +2238,51 @@ window.showFinancialWallet = function() {
 // აქ მთავრდება
 
 
+
+window.showEuroHistory = function() {
+    const user = firebase.auth().currentUser;
+    const historyModal = document.createElement('div');
+    historyModal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000040; display:flex; flex-direction:column; color:white; font-family:sans-serif;";
+    
+    historyModal.innerHTML = `
+        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
+            <i class="fas fa-chevron-left" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
+            <div style="flex:1; text-align:center; font-weight:bold;">ტრანზაქციების ისტორია</div>
+            <div style="width:30px;"></div>
+        </div>
+        <div id="euroHistoryList" style="flex:1; overflow-y:auto; padding:15px;">
+            <p style="text-align:center; color:gray;">იტვირთება...</p>
+        </div>
+    `;
+    document.body.appendChild(historyModal);
+
+    db.ref(`euro_history/${user.uid}`).orderByChild('timestamp').on('value', snap => {
+        const list = document.getElementById('euroHistoryList');
+        list.innerHTML = "";
+        const data = snap.val();
+        
+        if(!data) {
+            list.innerHTML = "<p style='text-align:center; color:gray; margin-top:50px;'>ისტორია ცარიელია</p>";
+            return;
+        }
+
+        Object.values(data).reverse().forEach(item => {
+            const date = new Date(item.timestamp).toLocaleString('ka-GE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            list.innerHTML += `
+                <div style="background:#1f1f1f; padding:15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:14px; font-weight:bold;">${item.type}</div>
+                        <div style="font-size:11px; color:gray;">${date}</div>
+                    </div>
+                    <div style="color:#2ecc71; font-weight:bold;">+ ${item.amount} €</div>
+                </div>
+            `;
+        });
+    });
+};
+
+// აქ მთავრფება 
+
  
 function setupAutoPlay() {
     const observer = new IntersectionObserver((entries) => {
