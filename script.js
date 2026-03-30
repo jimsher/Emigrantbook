@@ -2172,7 +2172,8 @@ window.showFinancialWallet = function() {
     
     db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
         const euroBal = snap.val() || 0;
-        
+        const canCashOut = euroBal >= 10; // ვამოწმებთ ლიმიტს
+
         modal.innerHTML = `
             <div style="background:#1a1a1a; width:90%; max-width:350px; padding:30px; border-radius:30px; text-align:center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;">
                 <div style="font-size: 50px; margin-bottom: 15px;">💶</div>
@@ -2184,11 +2185,20 @@ window.showFinancialWallet = function() {
                     <strong style="font-size:35px; color:#fff;">${euroBal.toFixed(2)} €</strong>
                 </div>
 
-                <button onclick="window.requestBankTransfer(${euroBal})" style="width:100%; padding:15px; background:#00a2ff; border:none; border-radius:15px; color:white; font-weight:bold; font-size:16px; cursor:pointer; margin-bottom:15px; box-shadow: 0 5px 15px rgba(0,162,255,0.3);">
+                <input type="text" id="payoutIbanField" placeholder="IBAN / PayPal" 
+                    ${!canCashOut ? 'disabled' : ''} 
+                    style="width:100%; padding:15px; border-radius:12px; border:1px solid #333; background:${!canCashOut ? '#111' : '#222'}; color:${!canCashOut ? '#444' : 'white'}; outline:none; font-size:16px; box-sizing:border-box; margin-bottom:15px;">
+
+                <button onclick="${canCashOut ? `window.processWithdrawRequest(${euroBal})` : ''}" 
+                    style="width:100%; padding:15px; border:none; border-radius:15px; color:${!canCashOut ? '#666' : 'white'}; background:${!canCashOut ? '#222' : '#00a2ff'}; font-weight:bold; font-size:16px; cursor:${!canCashOut ? 'not-allowed' : 'pointer'}; box-shadow: ${canCashOut ? '0 5px 15px rgba(0,162,255,0.3)' : 'none'}; transition:0.3s;">
                     ბარათზე გატანა
                 </button>
 
-                <button onclick="this.parentElement.parentElement.remove()" style="background:transparent; border:none; color:#888; cursor:pointer;">დახურვა</button>
+                <p style="margin-top:15px; font-size:13px; font-weight:bold; color:${canCashOut ? '#4ade80' : '#ff4d4d'};">
+                    ${canCashOut ? '● გატანა ხელმისაწვდომია!' : '● ბალანსი 10 ევროზე ნაკლებია!'}
+                </p>
+
+                <button onclick="this.parentElement.parentElement.remove()" style="background:transparent; border:none; color:#888; cursor:pointer; margin-top:10px;">დახურვა</button>
             </div>
         `;
     });
@@ -2196,38 +2206,30 @@ window.showFinancialWallet = function() {
     document.body.appendChild(modal);
 };
 
-// --- შენი ფუნქცია, ოღონდ ავტომატური გაგზავნით ბაზაში ---
-window.requestBankTransfer = function(amount) {
-    if (amount < 10) return alert("მინიმალური გასატანი თანხაა 10 € ❌");
-    
-    const cardNum = prompt("შეიყვანეთ თქვენი ბარათის ნომერი (ან IBAN):");
-    const fullName = prompt("შეიყვანეთ მიმღების სახელი და გვარი:");
+// --- გატანის გაუმჯობესებული ფუნქცია (ინპუტით) ---
+window.processWithdrawRequest = function(amount) {
+    const iban = document.getElementById('payoutIbanField').value;
+    const user = firebase.auth().currentUser;
 
-    if (cardNum && fullName) {
-        const user = firebase.auth().currentUser;
+    if (!iban || iban.length < 5) return alert("გთხოვთ შეიყვანოთ ვალიდური მონაცემები! ⚠️");
 
-        // 1. ვქმნით მოთხოვნას ბაზაში
+    const fullName = prompt("დაადასტურეთ მიმღების სახელი და გვარი:");
+
+    if (fullName) {
         const requestData = {
             uid: user.uid,
             name: fullName,
-            card: cardNum,
+            card: iban, // IBAN-ს ვინახავთ card-ის ველში
             amount: parseFloat(amount),
             timestamp: Date.now(),
             status: "pending"
         };
 
-        // ვინახავთ "payout_requests" პაპკაში
         db.ref('payout_requests').push(requestData).then(() => {
-            // 2. ვუწერთ იუზერს 0-ს ევრო ბალანსზე
             db.ref(`users/${user.uid}/euro_balance`).set(0);
-            
-            alert("თქვენი მოთხოვნა მიღებულია! ✅ " + amount + " € დაირიცხება 24 საათში.");
-            
-            // ვხურავთ საფულეს
+            alert("მოთხოვნა მიღებულია! ✅ " + amount.toFixed(2) + " € დაირიცხება 24 საათში.");
             if(document.getElementById('financialWalletModal')) document.getElementById('financialWalletModal').remove();
         });
-    } else {
-        alert("მონაცემები არასრულია! მოთხოვნა გაუქმდა.");
     }
 };
 // აქ მთავრდება
