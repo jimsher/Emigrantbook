@@ -1595,10 +1595,29 @@ div[style*="overflow-x:auto"] {
  <i class="fas fa-medal" style="color:var(--gold);"></i> 
  </a>
 
-  <div id="euroBalanceBtn" onclick="window.showFinancialWallet()" style="display:inline-flex; align-items:center; cursor:pointer; background:rgba(0,162,255,0.1); padding:8px 15px; border-radius:12px; border:1px solid #00a2ff; margin-left:10px;">
+  <div id="euroBalanceBtn" onclick="window.showFinancialWallet()" style="display:none; align-items:center; cursor:pointer; background:rgba(0,162,255,0.1); padding:8px 15px; border-radius:12px; border:1px solid #00a2ff; margin-left:10px;">
     <i class="fas fa-wallet" style="color:#00a2ff; margin-right:8px;"></i>
     <b id="euroBalanceDisplay" style="color:white; font-size:14px;">0.00 €</b>
 </div>
+
+<script>
+  // ეს პატარა კოდი მომენტალურად დამალავს/გამოაჩენს ღილაკს
+  (function() {
+    const check = setInterval(() => {
+      const user = firebase.auth().currentUser;
+      const btn = document.getElementById('euroBalanceBtn');
+      // 'uid' არის იმ პროფილის ID, რომელზეც დგახარ
+      if (user && typeof uid !== 'undefined' && btn) {
+        if (user.uid === uid) {
+          btn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+          btn.style.setProperty('display', 'none', 'important');
+        }
+        clearInterval(check);
+      }
+    }, 100);
+  })();
+</script>
  
  <div style="display: flex; align-items: center; gap: 15px;">
  <i id="feetStats" class="fas fa-shoe-prints" style="color: var(--gold); font-size: 18px; cursor: pointer; display:none;" onclick="showProfileVisitors()"></i>
