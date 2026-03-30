@@ -2303,6 +2303,92 @@ window.showEuroHistory = function() {
 };
 // აქ მთავრფება 
 
+window.showRechargeAKHO = function() {
+    const modal = document.createElement('div');
+    modal.id = "rechargeAkhoModal";
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000050; display:flex; flex-direction:column; color:white; font-family:sans-serif;";
+    
+    // მონეტების პაკეტები (როგორც ფოტოზეა)
+    const packages = [
+        { akho: 5, price: "0.08 €" },
+        { akho: 10, price: "0.16 €" },
+        { akho: 20, price: "0.31 €" },
+        { akho: 30, price: "0.46 €" },
+        { akho: 50, price: "0.76 €" },
+        { akho: 70, price: "1.06 €" },
+        { akho: 139, price: "2.10 €" },
+        { akho: 210, price: "3.19 €" }
+    ];
+
+    modal.innerHTML = `
+        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
+            <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
+            <div style="flex:1; text-align:center; font-weight:bold;">Get Coins</div>
+            <i class="fas fa-history" style="font-size:18px; width:30px; text-align:right;"></i>
+        </div>
+
+        <div style="padding:20px;">
+            <div style="color:#888; font-size:14px; margin-bottom:10px;">Coin balance</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="https://emigrantbook.com/token-avatar.png" style="width:30px;">
+                <span id="currentCoinBalance" style="font-size:32px; font-weight:bold;">0</span>
+            </div>
+        </div>
+
+        <div style="background:#1a1a1a; flex:1; padding:20px; border-radius:20px 20px 0 0;">
+            <div style="color:#888; font-size:14px; margin-bottom:20px;">Recharge</div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;" id="packageContainer">
+                ${packages.map(p => `
+                    <div onclick="window.selectPackage(this, ${p.akho})" style="background:#262626; padding:15px 10px; border-radius:12px; text-align:center; border:2px solid transparent; transition:0.2s; cursor:pointer;">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:5px; margin-bottom:5px;">
+                            <img src="https://emigrantbook.com/token-avatar.png" style="width:14px;">
+                            <span style="font-weight:bold; font-size:16px;">${p.akho}</span>
+                        </div>
+                        <div style="color:#888; font-size:12px;">${p.price}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+
+        <div style="padding:20px; background:#1a1a1a;">
+            <button onclick="window.confirmPurchase()" style="width:100%; padding:15px; background:#fe2c55; border:none; border-radius:8px; color:white; font-weight:bold; font-size:16px; cursor:pointer;">Recharge</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // მიმდინარე ბალანსის წამოღება
+    const user = firebase.auth().currentUser;
+    db.ref(`users/${user.uid}/akho`).on('value', snap => {
+        if(document.getElementById('currentCoinBalance')) {
+            document.getElementById('currentCoinBalance').innerText = snap.val() || 0;
+        }
+    });
+};
+
+// პაკეტის მონიშვნის ლოგიკა
+let selectedAkhoAmount = 0;
+window.selectPackage = function(el, amount) {
+    const all = document.querySelectorAll('#packageContainer > div');
+    all.forEach(d => {
+        d.style.borderColor = 'transparent';
+        d.style.background = '#262626';
+    });
+    el.style.borderColor = '#fe2c55';
+    el.style.background = 'rgba(254, 44, 85, 0.1)';
+    selectedAkhoAmount = amount;
+};
+
+// ყიდვის დადასტურება (აქ შეგიძლია შენი გადახდის სისტემა ჩააყენო)
+window.confirmPurchase = function() {
+    if (selectedAkhoAmount === 0) return alert("გთხოვთ აირჩიოთ პაკეტი!");
+    alert("გადახდის სისტემა მზადების პროცესშია. არჩეულია: " + selectedAkhoAmount + " AKHO");
+};
+// აქ მთავრდება
+
+
+
+
  
 function setupAutoPlay() {
     const observer = new IntersectionObserver((entries) => {
