@@ -2055,36 +2055,32 @@ window.transferToMainBalance = function(amount) {
 
 // --- ევროს და მეგობრის ფუნქციები (ჩამატებულია შენს კოდში) ---
 window.buyEuroWithGift = function(amount) {
-    if (!amount || amount < 100) {
-        return alert("ევროზე გადასაცვლელად საჭიროა მინიმუმ 100 AKHO! 💶");
-    }
+    if (!amount || amount < 100) return alert("მინიმუმ 100 AKHO საჭიროა! 💶");
 
-    const euroValue = (amount / 100).toFixed(2); // ითვლის ევროს (მაგ: 550 AKHO = 5.50 EURO)
-    
-    const confirmExchange = confirm(`თქვენი ${amount} AKHO გადაიცვლება ${euroValue} ევროდ.\n\nგსურთ გაგრძელება? (კოლექცია გასუფთავდება)`);
+    const euroValue = (amount / 100).toFixed(2);
+    const confirmExchange = confirm(`თქვენი ${amount} AKHO გადაიცვლება ${euroValue} ევროდ.\n\nგსურთ გაგრძელება?`);
     
     if (confirmExchange) {
         const user = firebase.auth().currentUser;
         
-        // 1. ბალანსების განახლება ბაზაში
+        // 1. ბალანსების განახლება
         db.ref(`users/${user.uid}/gift_balance`).set(0);
         db.ref(`users/${user.uid}/euro_balance`).transaction(c => (c || 0) + parseFloat(euroValue));
         
-        // 2. კოლექციის წაშლა
-        db.ref(`received_gifts/${user.uid}`).remove();
+        // 🚀 2. ისტორიაში ჩაწერა (ახალი ნაწილი)
+        db.ref(`euro_history/${user.uid}`).push({
+            type: "გადაცვლა",
+            amount: euroValue,
+            akhoAmount: amount,
+            timestamp: Date.now()
+        });
 
-        alert(`გილოცავთ! თქვენს ევრო-ბალანსს დაემატა ${euroValue} €. ✅`);
+        db.ref(`received_gifts/${user.uid}`).remove();
+        alert(`წარმატებით გადაიცვალა! ✅`);
         
-        // 3. ფანჯრების დახურვა განახლებისთვის
         const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
         modals.forEach(m => m.remove());
-
-        // 🚀 4. ავტომატურად გადასვლა საფულის გვერდზე
-        setTimeout(() => {
-            if (typeof window.showFinancialWallet === "function") {
-                window.showFinancialWallet();
-            }
-        }, 500); // ნახევარი წამის შემდეგ გაიხსნება ახალი გვერდი
+        setTimeout(() => window.showFinancialWallet(), 500);
     }
 };
 
