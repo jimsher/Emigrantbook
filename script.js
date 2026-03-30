@@ -2168,69 +2168,76 @@ window.showFinancialWallet = function() {
 
     const modal = document.createElement('div');
     modal.id = "financialWalletModal";
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000030; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(15px); color:white;";
+    // სრული ეკრანის მუქი ფონი
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000030; display:flex; flex-direction:column; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:white;";
     
     db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
         const euroBal = snap.val() || 0;
-        const canCashOut = euroBal >= 10; // ვამოწმებთ ლიმიტს
+        const canCashOut = euroBal >= 50; // TikTok-ზე ხშირად 50-ია ლიმიტი
 
         modal.innerHTML = `
-            <div style="background:#1a1a1a; width:90%; max-width:350px; padding:30px; border-radius:30px; text-align:center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;">
-                <div style="font-size: 50px; margin-bottom: 15px;">💶</div>
-                <h3 style="margin:0; color:#00a2ff;">ჩემი საფულე</h3>
-                <p style="color:#666; font-size:12px; margin-top:5px;">დაგროვილი რეალური თანხა</p>
-                
-                <div style="background:#222; margin:25px 0; padding:20px; border-radius:20px;">
-                    <span style="font-size:14px; color:#aaa; display:block; margin-bottom:5px;">ხელმისაწვდომია:</span>
-                    <strong style="font-size:35px; color:#fff;">${euroBal.toFixed(2)} €</strong>
+            <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
+                <i class="fas fa-chevron-left" onclick="document.getElementById('financialWalletModal').remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
+                <div style="flex:1; text-align:center; font-weight:bold; font-size:17px;">ბალანსი</div>
+                <div style="width:30px;"></div>
+            </div>
+
+            <div style="flex:1; overflow-y:auto; padding:20px;">
+                <div style="text-align:center; margin:30px 0;">
+                    <div style="font-size:14px; color:#8a8a8a; margin-bottom:10px;">მოსალოდნელი თანხა EUR <i class="fas fa-caret-down"></i></div>
+                    <div style="font-size:48px; font-weight:bold; margin-bottom:20px;">${euroBal.toFixed(2)} <span style="font-size:24px;">€</span></div>
+                    
+                    <div style="display:inline-flex; align-items:center; background:#1f1f1f; padding:8px 15px; border-radius:20px; font-size:13px; color:#efefef;">
+                        <img src="https://emigrantbook.com/token-avatar.png" style="width:16px; margin-right:8px;"> 
+                        AKHO 0 | მონეტების შეძენა <i class="fas fa-chevron-right" style="font-size:10px; margin-left:8px;"></i>
+                    </div>
                 </div>
 
-                <input type="text" id="payoutIbanField" placeholder="IBAN / PayPal" 
-                    ${!canCashOut ? 'disabled' : ''} 
-                    style="width:100%; padding:15px; border-radius:12px; border:1px solid #333; background:${!canCashOut ? '#111' : '#222'}; color:${!canCashOut ? '#444' : 'white'}; outline:none; font-size:16px; box-sizing:border-box; margin-bottom:15px;">
+                <div style="background:#1f1f1f; border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                    <div style="font-size:15px; font-weight:500;">ტრანზაქციები</div>
+                    <div style="color:#8a8a8a; font-size:13px;">ისტორია <i class="fas fa-chevron-right" style="margin-left:5px;"></i></div>
+                </div>
 
-                <button onclick="${canCashOut ? `window.processWithdrawRequest(${euroBal})` : ''}" 
-                    style="width:100%; padding:15px; border:none; border-radius:15px; color:${!canCashOut ? '#666' : 'white'}; background:${!canCashOut ? '#222' : '#00a2ff'}; font-weight:bold; font-size:16px; cursor:${!canCashOut ? 'not-allowed' : 'pointer'}; box-shadow: ${canCashOut ? '0 5px 15px rgba(0,162,255,0.3)' : 'none'}; transition:0.3s;">
-                    ბარათზე გატანა
-                </button>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:25px;">
+                    <div style="background:#1f1f1f; padding:20px; border-radius:12px; height:100px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <i class="fas fa-money-bill-wave" style="font-size:20px;"></i>
+                        <div style="font-size:13px; font-weight:500; line-height:1.2;">საჩუქრების ჯილდოები</div>
+                    </div>
+                    <div style="background:#1f1f1f; padding:20px; border-radius:12px; height:100px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <i class="fas fa-chart-line" style="font-size:20px;"></i>
+                        <div style="font-size:13px; font-weight:500; line-height:1.2;">მონეტიზაცია</div>
+                    </div>
+                </div>
 
-                <p style="margin-top:15px; font-size:13px; font-weight:bold; color:${canCashOut ? '#4ade80' : '#ff4d4d'};">
-                    ${canCashOut ? '● გატანა ხელმისაწვდომია!' : '● ბალანსი 10 ევროზე ნაკლებია!'}
-                </p>
+                <div style="background:#1f1f1f; border-radius:12px; padding:20px; border: 1px solid ${canCashOut ? '#2ecc71' : '#333'};">
+                    <h4 style="margin:0 0 10px 0; color:${canCashOut ? '#2ecc71' : '#d4af37'};">Cash Out</h4>
+                    <p style="font-size:12px; color:#8a8a8a; margin-bottom:15px;">Minimum withdrawal: 50.00 €</p>
+                    
+                    <input type="text" id="payoutIbanField" placeholder="IBAN / PayPal" 
+                        ${!canCashOut ? 'disabled' : ''} 
+                        style="width:100%; padding:12px; border-radius:8px; border:1px solid #333; background:#121212; color:white; outline:none; margin-bottom:15px;">
+                    
+                    <button onclick="${canCashOut ? `window.processWithdrawRequest(${euroBal})` : ''}" 
+                        style="width:100%; padding:12px; border:none; border-radius:8px; color:${!canCashOut ? '#666' : 'black'}; background:${!canCashOut ? '#333' : '#2ecc71'}; font-weight:bold; cursor:${!canCashOut ? 'not-allowed' : 'pointer'};">
+                        გატანის მოთხოვნა
+                    </button>
+                    
+                    <div style="margin-top:10px; font-size:12px; color:${canCashOut ? '#2ecc71' : '#ff4d4d'};">
+                        ${canCashOut ? '● გატანა ხელმისაწვდომია!' : '● ბალანსი 50 ევროზე ნაკლებია!'}
+                    </div>
+                </div>
 
-                <button onclick="this.parentElement.parentElement.remove()" style="background:transparent; border:none; color:#888; cursor:pointer; margin-top:10px;">დახურვა</button>
+                <div style="margin-top:25px; background:#1f1f1f; border-radius:12px;">
+                    <div style="padding:15px; display:flex; justify-content:space-between; border-bottom:1px solid #222;">
+                        <div style="font-size:14px;"><i class="far fa-question-circle" style="margin-right:10px;"></i> დახმარება</div>
+                        <i class="fas fa-chevron-right" style="color:#555;"></i>
+                    </div>
+                </div>
             </div>
         `;
     });
 
     document.body.appendChild(modal);
-};
-
-// --- გატანის გაუმჯობესებული ფუნქცია (ინპუტით) ---
-window.processWithdrawRequest = function(amount) {
-    const iban = document.getElementById('payoutIbanField').value;
-    const user = firebase.auth().currentUser;
-
-    if (!iban || iban.length < 5) return alert("გთხოვთ შეიყვანოთ ვალიდური მონაცემები! ⚠️");
-
-    const fullName = prompt("დაადასტურეთ მიმღების სახელი და გვარი:");
-
-    if (fullName) {
-        const requestData = {
-            uid: user.uid,
-            name: fullName,
-            card: iban, // IBAN-ს ვინახავთ card-ის ველში
-            amount: parseFloat(amount),
-            timestamp: Date.now(),
-            status: "pending"
-        };
-
-        db.ref('payout_requests').push(requestData).then(() => {
-            db.ref(`users/${user.uid}/euro_balance`).set(0);
-            alert("მოთხოვნა მიღებულია! ✅ " + amount.toFixed(2) + " € დაირიცხება 24 საათში.");
-            if(document.getElementById('financialWalletModal')) document.getElementById('financialWalletModal').remove();
-        });
-    }
 };
 // აქ მთავრდება
 
