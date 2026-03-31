@@ -1214,6 +1214,18 @@ function sendMessage() {
          }
 
 
+
+// ვამოწმებთ, ჩანს თუ არა რედაქტირების ღილაკი ბურგერ მენიუში
+const isMyProfile = document.querySelector('.menu-item[onclick="openEditor()"]') !== null;
+
+// თუ მენიუში რედაქტორი არ არის, ფანქარს ვშლით (display: none)
+const editBtn = document.getElementById('editNameBtn');
+if (editBtn) {
+    editBtn.style.display = isMyProfile ? 'flex' : 'none';
+}
+
+
+       
          // ... შიგნით openProfile ფუნქციაში, სადაც db.ref('users/' + uid).on წერია:
 
 const locRow = document.getElementById('profLocationRow');
