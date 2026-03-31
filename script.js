@@ -1212,7 +1212,22 @@ function sendMessage() {
              galleryUploadContainer.style.marginTop = "0";
              controls.appendChild(galleryUploadContainer);
          }
-         
+
+
+         // ... შიგნით openProfile ფუნქციაში, სადაც db.ref('users/' + uid).on წერია:
+
+const locRow = document.getElementById('profLocationRow');
+const locText = document.getElementById('profLocationText');
+
+if (user.city) {
+    locText.innerText = user.city; // მომხმარებლის ჩაწერილი ქალაქი/ქვეყანა
+    locRow.style.display = 'flex'; // გამოაჩინე ზოლი ხატულასთან ერთად
+} else {
+    locRow.style.display = 'none'; // თუ არ უწერია, საერთოდ დამალე ეს ზოლი
+}
+
+       
+       
          // შენს პროფილზეც რომ გამოჩნდეს "Gifts"
          controls.innerHTML += `
              <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
