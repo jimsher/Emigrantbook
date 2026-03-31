@@ -2650,12 +2650,14 @@ function loadCommunityPosts() {
             const card = document.createElement('div');
             card.className = "post-card";
             card.innerHTML = `
-                <div class="post-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
-                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
-                        <b style="color:white; font-size:14px;">${post.authorName}</b>
-                    </div>
-                    <div>
+                <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
+                <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
+    
+               <div style="display:flex; flex-direction:column;">
+               <b style="color:white; font-size:14px; line-height:1.2;">${post.authorName}</b>
+              <span style="color:#888; font-size:11px; margin-top:2px;">${postTime}</span>
+             </div>
+            </div>
                         ${post.authorId === myUid ? 
                             `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px; padding:5px;" onclick="window.deleteWallPost('${id}')"></i>` : 
                             `<i class="fas fa-flag" style="color:#666; cursor:pointer; font-size:13px; padding:5px;" onclick="window.reportPost('${id}', '${post.authorId}', '${(post.text || "ფოტო").replace(/'/g, "\\'")}')"></i>`
