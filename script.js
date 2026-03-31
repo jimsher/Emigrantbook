@@ -1224,17 +1224,22 @@ if (editNameBtn) {
 
 
 
-         // ... შიგნით openProfile ფუნქციაში, სადაც db.ref('users/' + uid).on წერია:
+         // ... (ზედა ნაწილი იგივე რჩება) ...
+    
+    document.getElementById('profAva').src = user.photo || "token-avatar.png";
+    profNameEl.innerText = user.name;
 
-const locRow = document.getElementById('profLocationRow');
-const locText = document.getElementById('profLocationText');
+    // --- მისამართის ინდივიდუალური ლოგიკა (დადე აქ, IF-ის გარეთ) ---
+    const locRow = document.getElementById('profLocationRow');
+    const locText = document.getElementById('profLocationText');
 
-if (user.city) {
-    locText.innerText = user.city; // მომხმარებლის ჩაწერილი ქალაქი/ქვეყანა
-    locRow.style.display = 'flex'; // გამოაჩინე ზოლი ხატულასთან ერთად
-} else {
-    locRow.style.display = 'none'; // თუ არ უწერია, საერთოდ დამალე ეს ზოლი
-}
+    if (user.city && user.city.trim() !== "") {
+        locText.innerText = user.city; // აჩვენებს იმ იუზერის ქალაქს, ვისზეც შეხვედი
+        locRow.style.display = 'flex';
+    } else {
+        locRow.style.display = 'none'; // თუ იუზერს ქალაქი არ უწერია, საერთოდ ქრება
+    }
+    // --------------------------------------------------------
 
        
        
