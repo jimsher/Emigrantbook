@@ -1225,21 +1225,22 @@ if (editNameBtn) {
 
 
          // ... (ზედა ნაწილი იგივე რჩება) ...
-    
     document.getElementById('profAva').src = user.photo || "token-avatar.png";
-    profNameEl.innerText = user.name;
+     profNameEl.innerText = user.name;
 
-    // --- მისამართის ინდივიდუალური ლოგიკა (დადე აქ, IF-ის გარეთ) ---
-    const locRow = document.getElementById('profLocationRow');
-    const locText = document.getElementById('profLocationText');
+     // --- ინდივიდუალური მისამართის ლოგიკა (ყველასთვის) ---
+     const locRow = document.getElementById('profLocationRow');
+     const locText = document.getElementById('profLocationText');
 
-    if (user.city && user.city.trim() !== "") {
-        locText.innerText = user.city; // აჩვენებს იმ იუზერის ქალაქს, ვისზეც შეხვედი
-        locRow.style.display = 'flex';
-    } else {
-        locRow.style.display = 'none'; // თუ იუზერს ქალაქი არ უწერია, საერთოდ ქრება
-    }
-    // --------------------------------------------------------
+     if (user.city && user.city.trim() !== "") {
+         locText.innerText = user.city; // აჩვენებს იმ იუზერის ქალაქს, ვისზეც შედიხარ
+         locRow.style.display = 'flex';
+     } else {
+         locRow.style.display = 'none'; // თუ არ უწერია, ქრება (და შენიც აღარ გამოჩნდება)
+     }
+     // ----------------------------------------------------
+
+     
 
        
        
