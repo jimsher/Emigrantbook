@@ -1204,7 +1204,16 @@ function sendMessage() {
     if (euroBtn) {
      euroBtn.style.display = (uid === auth.currentUser.uid) ? 'inline-flex' : 'none';
      }
-     
+
+
+     // --- აი ეს ჩაამატე აქ ---
+const editNameBtn = document.getElementById('editNameBtn');
+if (editNameBtn) {
+    editNameBtn.style.display = (uid === auth.currentUser.uid) ? 'flex' : 'none';
+}
+// -----------------------
+
+   
      if(uid === auth.currentUser.uid) {
          controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
          
