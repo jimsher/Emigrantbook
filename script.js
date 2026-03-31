@@ -63,17 +63,21 @@ if ('serviceWorker' in navigator) {
  });
  }
 
+
  function formatTimeShort(timestamp) {
     if (!timestamp || timestamp === 'online') return 'online';
-    const now = Date.now();
-    const diff = Math.floor((now - timestamp) / 1000);
-    if (diff < 60) return "1m";
-    if (diff < 3600) return Math.floor(diff / 60) + "m";
-    if (diff < 86400) return Math.floor(diff / 3600) + "h";
-    // დაამატე ეს ხაზი დღეებისთვის:
-    if (diff < 2592000) return Math.floor(diff / 86400) + "d"; 
-    return "";
+    const date = new Date(timestamp);
+    // საათი და წუთი (მაგ: 12:45)
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    // დღე და თვე (მაგ: 28 Feb)
+    const day = date.getDate();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[date.getMonth()];
+    // აბრუნებს ფორმატს: "12:45, 28 Feb"
+    return `${hours}:${minutes}, ${day} ${month}`;
 }
+
 
  function stopMainFeedVideos() {
  document.querySelectorAll('#main-feed video').forEach(v => v.pause());
