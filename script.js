@@ -2650,18 +2650,17 @@ function loadCommunityPosts() {
             
             // --- დროის ფორმატირება ---
             const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
-
             const card = document.createElement('div');
             card.className = "post-card";
             card.innerHTML = `
                 <div class="post-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
-                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
-                        
-                        <div style="display:flex; flex-direction:column;">
-                            <b style="color:white; font-size:14px; line-height:1.2;">${post.authorName}</b>
-                            <span style="color:#888; font-size:11px; margin-top:2px;">${postTime}</span>
-                        </div>
+                   <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
+    
+                   <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                   <b style="color:white; font-size:14px; margin:0; line-height:1.2;">${post.authorName}</b>
+                    <span style="color:#888; font-size:10px; margin-top:2px; display:block;">${postTime}</span>
+                    </div>
                     </div>
                     
                     <div>
