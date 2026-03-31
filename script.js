@@ -1186,6 +1186,17 @@ function sendMessage() {
      }
      document.getElementById('profAva').src = user.photo || "token-avatar.png";
      profNameEl.innerText = user.name;
+     // --- ეს ნაწილი ჩასვი profNameEl.innerText-ის ქვემოთ ---
+     const locRow = document.getElementById('profLocationRow');
+     const locText = document.getElementById('profLocationText');
+
+     if (user.city) {
+     locText.innerText = user.city; // აჩვენებს იმ იუზერის ქალაქს, ვისზეც შედიხარ
+     locRow.style.display = 'flex';
+     } else {
+     locRow.style.display = 'none'; // თუ არ უწერია, საერთოდ ქრება (შენიც აღარ დარჩება)
+     }
+     // ----------------------------------------------------
      const followersCount = user.followers ? Object.keys(user.followers).length : 0;
      const followingCount = user.following ? Object.keys(user.following).length : 0;
      document.getElementById('statFollowersCount').innerText = followersCount;
