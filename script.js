@@ -1214,6 +1214,18 @@ function sendMessage() {
          }
 
 
+// ვთქვათ, currentUserId არის შენი აიდი, ხოლო profileUserId არის იმ ადამიანის, ვის გვერდზეც ხარ
+if (currentUserId === profileUserId) {
+    // თუ აიდები ემთხვევა, ესე იგი ჩემს გვერდზე ვარ და ვაჩენ ფანქარს
+    document.getElementById('editNameBtn').style.display = 'flex';
+} else {
+    // თუ არ ემთხვევა, ფანქარი რჩება დამალული
+    document.getElementById('editNameBtn').style.display = 'none';
+}
+
+
+       
+
          // ... შიგნით openProfile ფუნქციაში, სადაც db.ref('users/' + uid).on წერია:
 
 const locRow = document.getElementById('profLocationRow');
