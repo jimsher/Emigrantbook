@@ -2645,6 +2645,7 @@ function loadCommunityPosts() {
         Object.entries(data).reverse().forEach(([id, post]) => {
             const isLiked = (myUid && post.likes && post.likes[myUid]);
             const likeCount = post.likes ? Object.keys(post.likes).length : 0;
+            const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
 
             const card = document.createElement('div');
             card.className = "post-card";
