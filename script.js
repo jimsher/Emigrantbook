@@ -4156,3 +4156,62 @@ function killVideo() {
         navigator.mediaSession.playbackState = 'none';
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// პროფილის ნევბარში ავატარის გამოჩენა სტუმარი
+// ეს ფუნქცია მართავს ხატულების შეცვლას
+function updateFeetIcon() {
+    if (!auth.currentUser) return;
+    const myUid = auth.currentUser.uid;
+    
+    const feetIcon = document.getElementById('feetStats');
+    const avaCont = document.getElementById('visitorAvaCont');
+    const avaImg = document.getElementById('visitorAvaNav');
+
+    // ვამოწმებთ ბოლო სტუმარს
+    db.ref(`profile_views/${myUid}`).orderByChild('ts').limitToLast(1).once('value', snap => {
+        const data = snap.val();
+        if (!data) return;
+
+        const visitorData = Object.values(data)[0];
+        const lastSeenTs = localStorage.getItem('last_seen_visitor_ts');
+
+        // თუ არის ახალი სტუმარი
+        if (!lastSeenTs || visitorData.ts > lastSeenTs) {
+            if (feetIcon) feetIcon.style.display = 'none'; // ვმალავთ ფეხებს
+            if (avaCont) {
+                avaCont.style.display = 'block'; // ვაჩენთ ავატარს
+                avaImg.src = visitorData.photo || "token-avatar.png";
+            }
+        } else {
+            // თუ ნანახია, ვაჩენთ ისევ ფეხებს
+            if (feetIcon) feetIcon.style.display = 'block';
+            if (avaCont) avaCont.style.display = 'none';
+        }
+    });
+}
+
+// ეს ფუნქცია გაეშვება როცა დააჭერ ფეხებს ან ავატარს
+window.handleVisitorClick = function() {
+    const myUid = auth.currentUser.uid;
+    
+    // 1. ვიმახსოვრებთ დროს, რომ "წაკითხულად" ჩაითვალოს
+    localStorage.setItem('last_seen_visitor_ts', Date.now());
+    
+    // 2. ვაბრუნებთ ფეხებს ნავბარში
+    document.getElementById('feetStats').style.display = 'block';
+    document.getElementById('visitorAvaCont').style.display = 'none';
+
+    // 3. ვიძახებთ შენს ორიგინალ ფუნქციას, რომელიც სიას ხსნის
+    showProfileVisitors();
+};
