@@ -1327,6 +1327,9 @@ if (editNameBtn) {
 
 
  function showProfileVisitors() {
+document.getElementById('visitorAvaNav').style.display = 'none';
+document.getElementById('feetStats').style.display = 'block';
+localStorage.setItem('last_seen_visitor_ts', Date.now());
  document.getElementById('visitorsUI').style.display = 'flex';
  const list = document.getElementById('visitorsList');
  list.innerHTML = "Loading...";
