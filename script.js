@@ -145,29 +145,22 @@ auth.onAuthStateChanged(user => {
     }, 1500);
 
 //სკრიპის ფუნქცია რომ ფული დარიცხოს აკნო
-// ჩაამატე auth.onAuthStateChanged-ის შიგნით, როცა იუზერი არსებობს (if user)
-auth.onAuthStateChanged(user => {
-  if (user) {
-    // --- 💰 გადახდის შემოწმების ლოგიკა ---
+// --- 💰 Stripe-იდან დაბრუნების და ავტომატური დარიცხვის ლოგიკა ---
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id'); // Stripe აბრუნებს ამ ID-ს
+    const sessionId = urlParams.get('session_id');
+    const packAmount = urlParams.get('pack'); // ვიღებთ AKHO-ს რაოდენობას URL-იდან
 
-    if (sessionId) {
-        // ვამოწმებთ, ეს სესია უკვე ხომ არ დავარიცხეთ (რომ არ გაორმაგდეს)
+    if (sessionId && packAmount) {
+        const amountToAdd = parseFloat(packAmount);
+        
+        // ვამოწმებთ, ეს კონკრეტული სესია უკვე დამუშავებული ხომ არ არის
         db.ref(`payments_processed/${sessionId}`).once('value', snap => {
             if (!snap.exists()) {
-                // აქ უნდა ვიცოდეთ რამდენი იყიდა. 
-                // დროებითი გამოსავალი: Stripe-ის ლინკიდან გამომდინარე დავარიცხოთ
-                // (უკეთესია თუ Stripe-ის პაკეტის ID-საც გამოატან)
-                
-                let amountToAdd = 0;
-                // მაგალითად, თუ იცი რომ კონკრეტულ ლინკზე 100 AKHO-ა:
-                amountToAdd = 100; 
-
+                // ბალანსის გაზრდა
                 db.ref(`users/${user.uid}/akho`).transaction(current => {
                     return (current || 0) + amountToAdd;
                 }).then(() => {
-                    // მოვნიშნოთ სესია დასრულებულად
+                    // სესიის მონიშვნა, რომ მეორედ აღარ დაერიცხოს
                     db.ref(`payments_processed/${sessionId}`).set({
                         uid: user.uid,
                         amount: amountToAdd,
@@ -175,22 +168,23 @@ auth.onAuthStateChanged(user => {
                     });
                     
                     addToLog('Stripe Purchase', amountToAdd);
-                    showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
                     
-                    // გავასუფთავოთ URL, რომ რეფრეშზე თავიდან არ დაერიცხოს
+                    // მომხმარებლისთვის ლამაზი შეტყობინება
+                    if (typeof showCustomAlert === "function") {
+                        showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    } else {
+                        alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    }
+                    
+                    // URL-ის გასუფთავება (პარამეტრების მოცილება)
                     window.history.replaceState({}, document.title, window.location.pathname);
                 });
             }
         });
     }
-    // --------------------------------------
-    
-    // ... დანარჩენი შენი კოდი ...
-  }
-});
-
-    
+    // --- 💰 დასასრული ---
 // აქ მთავრდება ეს ფუნქცია
+    
     setTimeout(() => {
       console.log("ვცდილობ ჩაწერას...");
       db.ref('users/' + user.uid + '/test').set("მუშაობს");
