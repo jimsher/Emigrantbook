@@ -144,6 +144,53 @@ auth.onAuthStateChanged(user => {
         askInitialPermissions(); 
     }, 1500);
 
+//სკრიპის ფუნქცია რომ ფული დარიცხოს აკნო
+// ჩაამატე auth.onAuthStateChanged-ის შიგნით, როცა იუზერი არსებობს (if user)
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // --- 💰 გადახდის შემოწმების ლოგიკა ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id'); // Stripe აბრუნებს ამ ID-ს
+
+    if (sessionId) {
+        // ვამოწმებთ, ეს სესია უკვე ხომ არ დავარიცხეთ (რომ არ გაორმაგდეს)
+        db.ref(`payments_processed/${sessionId}`).once('value', snap => {
+            if (!snap.exists()) {
+                // აქ უნდა ვიცოდეთ რამდენი იყიდა. 
+                // დროებითი გამოსავალი: Stripe-ის ლინკიდან გამომდინარე დავარიცხოთ
+                // (უკეთესია თუ Stripe-ის პაკეტის ID-საც გამოატან)
+                
+                let amountToAdd = 0;
+                // მაგალითად, თუ იცი რომ კონკრეტულ ლინკზე 100 AKHO-ა:
+                amountToAdd = 100; 
+
+                db.ref(`users/${user.uid}/akho`).transaction(current => {
+                    return (current || 0) + amountToAdd;
+                }).then(() => {
+                    // მოვნიშნოთ სესია დასრულებულად
+                    db.ref(`payments_processed/${sessionId}`).set({
+                        uid: user.uid,
+                        amount: amountToAdd,
+                        ts: Date.now()
+                    });
+                    
+                    addToLog('Stripe Purchase', amountToAdd);
+                    showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    
+                    // გავასუფთავოთ URL, რომ რეფრეშზე თავიდან არ დაერიცხოს
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            }
+        });
+    }
+    // --------------------------------------
+    
+    // ... დანარჩენი შენი კოდი ...
+  }
+});
+
+    
+// აქ მთავრდება ეს ფუნქცია
     setTimeout(() => {
       console.log("ვცდილობ ჩაწერას...");
       db.ref('users/' + user.uid + '/test').set("მუშაობს");
