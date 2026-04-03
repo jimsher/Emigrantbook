@@ -2484,21 +2484,43 @@ function loadMyWithdrawalHistory() {
         list.innerHTML = "";
         const data = snap.val();
         if (!data) {
-            list.innerHTML = "<p style='color:gray; font-size:12px; text-align:center;'>ისტორია ცარიელია</p>";
+            list.innerHTML = `
+                <div style="text-align:center; padding:30px 10px; color:#555;">
+                    <i class="fas fa-receipt" style="font-size:30px; margin-bottom:10px;"></i>
+                    <p style="font-size:12px;">გატანის ისტორია ცარიელია</p>
+                </div>
+            `;
             return;
         }
 
-        Object.values(data).reverse().forEach(req => {
-            const statusColor = req.status === 'pending' ? '#fbd14b' : '#2ecc71';
-            const statusText = req.status === 'pending' ? 'მოლოდინში' : 'გადარიცხულია';
-            
+        // ვაბრუნებთ სიას, რომ ახალი მოთხოვნები ზემოთ იყოს
+        Object.entries(data).reverse().forEach(([id, req]) => {
+            const isPending = req.status === 'pending';
+            const statusColor = isPending ? '#fbd14b' : '#2ecc71'; // ყვითელი / მწვანე
+            const statusText = isPending ? 'მოლოდინში' : 'გადარიცხულია';
+            // ხატულა: საათი (Pending) / ჩეკმარკი (Approved)
+            const statusIcon = isPending ? 'fa-clock' : 'fa-check-circle';
+
             list.innerHTML += `
-                <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; margin-bottom:8px; border-left:3px solid ${statusColor};">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="color:white; font-size:13px; font-weight:bold;">${req.amountEur} €</span>
-                        <span style="color:${statusColor}; font-size:11px; font-weight:bold;">${statusText}</span>
+                <div class="withdraw-item" style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; margin-bottom:10px; border:1px solid #222; transition: 0.3s;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:35px; height:35px; border-radius:10px; background:rgba(212,175,55,0.1); display:flex; align-items:center; justify-content:center;">
+                                <i class="fas fa-money-bill-wave" style="color:#d4af37; font-size:16px;"></i>
+                            </div>
+                            <div>
+                                <div style="color:white; font-size:15px; font-weight:bold;">${req.amountEur} €</div>
+                                <div style="color:#555; font-size:10px;">${new Date(req.ts).toLocaleDateString('ka-GE')}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="display:flex; align-items:center; gap:5px; justify-content:flex-end; color:${statusColor}; font-size:12px; font-weight:bold;">
+                                <i class="fas ${statusIcon}"></i>
+                                <span>${statusText}</span>
+                            </div>
+                            <div style="color:#888; font-size:11px; margin-top:3px; font-family:monospace;">${req.iban}</div>
+                        </div>
                     </div>
-                    <div style="color:#555; font-size:10px; margin-top:4px;">${new Date(req.ts).toLocaleDateString()} - ${req.iban}</div>
                 </div>
             `;
         });
