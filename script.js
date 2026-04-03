@@ -1729,12 +1729,12 @@ function playFullVideo(url, postId, currentIndex) {
 
 
 // მეილის ვალიდაცია
+    // 1. დამხმარე ფუნქციები (ესენი ჩასვი handleAuth-ის ზემოთ)
 function isValidEmail(email) {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
 }
 
-// შეცდომის ჩვენება (შენი ახალი დიზაინით)
 function showAuthError(message) {
     const errorBox = document.getElementById('authError');
     const errorText = document.getElementById('errorText');
@@ -1744,9 +1744,9 @@ function showAuthError(message) {
         setTimeout(() => { errorBox.style.display = 'none'; }, 5000);
     }
 }
- // რეგისტრაცია და ავტორიზაცია
-  async function handleAuth(type) {
-    // ყოველი დაჭერისას ვმალავთ წინა შეცდომას
+
+// 2. მთავარი ფუნქცია (Firebase-ის ლოგიკით და ქართული შეცდომებით)
+async function handleAuth(type) {
     if(document.getElementById('authError')) document.getElementById('authError').style.display = 'none';
 
     if (type === 'reg') {
@@ -1757,17 +1757,15 @@ function showAuthError(message) {
         const lName = document.getElementById('rLastName').value.trim();
         const name = fName + " " + lName;
 
-        // --- ახალი შემოწმებები ---
         if (!fName || !lName || !email || !pass) return showAuthError("გთხოვთ, შეავსოთ ყველა ველი");
         if (!isValidEmail(email)) return showAuthError("ელფოსტის ფორმატი არასწორია");
         if (pass.length < 6) return showAuthError("პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო");
         if (pass !== passConfirm) return showAuthError("პაროლები არ ემთხვევა ერთმანეთს!");
 
-        // --- შენი ორიგინალი Firebase ლოგიკა ---
         auth.createUserWithEmailAndPassword(email, pass).then(u => {
             db.ref('users/' + u.user.uid).set({ 
                 name: name, 
-                akho: 50.00, // Welcome Bonus შენარჩუნებულია
+                akho: 50.00, 
                 photo: "", 
                 hasSeenRules: false, 
                 role: 'user', 
@@ -1775,30 +1773,31 @@ function showAuthError(message) {
                 presence: Date.now() 
             }).then(() => {
                 if(typeof addToLog === "function") addToLog('Welcome Bonus', 50.00);
-                showCustomAlert("მოგესალმებით", "რეგისტრაცია წარმატებულია! კეთილი იყოს თქვენი მობრძანება.");
+                showCustomAlert("მოგესალმებით", "რეგისტრაცია წარმატებულია!");
             });
-        }).catch(err => showAuthError(err.message));
+        }).catch(err => {
+            let msg = "რეგისტრაცია ვერ მოხერხდა";
+            if (err.code === 'auth/email-already-in-use') msg = "ეს ელფოსტა უკვე დაკავებულია";
+            showAuthError(msg);
+        });
 
     } else {
-        // --- LOGIN ლოგიკა ---
         const email = document.getElementById('uEmail').value.trim();
         const pass = document.getElementById('uPass').value.trim();
 
         if (!email || !pass) return showAuthError("შეიყვანეთ მეილი და პაროლი");
-        if (!isValidEmail(email)) return showAuthError("ელფოსტის ფორმატი არასწორია");
 
         auth.signInWithEmailAndPassword(email, pass).then(u => {
             showCustomAlert("მოგესალმებით", "წარმატებით შეხვედით სისტემაში!");
         }).catch(err => {
-            // აქ სპეციალურად ქართულად გამოვიტანოთ შეცდომა
-            if(err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
-                showAuthError("ელფოსტა ან პაროლი არასწორია");
-            } else {
-                showAuthError(err.message);
+            let msg = "ავტორიზაცია ვერ მოხერხდა";
+            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                msg = "ელფოსტა ან პაროლი არასწორია";
             }
+            showAuthError(msg);
         });
     }
-}
+}            
 // აქ მთავრდება
 
 
