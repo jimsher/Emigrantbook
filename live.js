@@ -7,7 +7,7 @@ function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYJBsCfv34sb5vOCChUmlZXciUq8nX/l94Mre2yxF51gD5M0VGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwSVQNPZjYEMjL4V69lYIRCEJ+bISezLDW+uKQoNTGXgQEA4SckAw==";
+    const token = "007eJxTYJBrWvRx11yXh+YRE1onvk2/695557Zq2/06i01S90ziO/4pMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgkJlpcyGwIZGSYW7aaiZEBAkF8boaczLLU+OKSotTEXAYGAPgfJLk=";
     
     currentLiveChannel = "live_stream"; 
     
@@ -163,7 +163,7 @@ async function endLive() {
 
         async function joinLive(hostUid, channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYJBsCfv34sb5vOCChUmlZXciUq8nX/l94Mre2yxF51gD5M0VGMyNLA1MDYzSEpPN00zSUpMsjJIMjAyTk1NSzS0tLSwSVQNPZjYEMjL4V69lYIRCEJ+bISezLDW+uKQoNTGXgQEA4SckAw==";
+    const token = "007eJxTYJBrWvRx11yXh+YRE1onvk2/695557Zq2/06i01S90ziO/4pMJgbWRqYGhilJSabp5mkpSZZGCUZGBkmJ6ekmltaWlgkJlpcyGwIZGSYW7aaiZEBAkF8boaczLLU+OKSotTEXAYGAPgfJLk=";
     currentLiveChannel = channelName;
     
     // UI-ს მომზადება
