@@ -4320,11 +4320,14 @@ function applyChatTheme(url) {
 
     if (url === 'default') {
         chatBox.style.backgroundImage = "none";
+        chatBox.style.backgroundAttachment = "scroll"; // ნორმალური მდგომარეობა
     } else {
         chatBox.style.backgroundImage = `url('${url}')`;
         chatBox.style.backgroundSize = "cover";
         chatBox.style.backgroundPosition = "center";
-        chatBox.style.backgroundAttachment = "local";
+        
+        // აი ეს არის მთავარი ხაზი, რომელიც სურათს გაყინავს:
+        chatBox.style.backgroundAttachment = "fixed"; 
     }
     
     closeChatThemePanel();
