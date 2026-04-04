@@ -867,7 +867,7 @@ function startChat(uid, name, photo) {
 
     const statusEl = document.getElementById('chatTargetStatus');
     if (statusEl) {
-        db.ref(`users/${uid}/presence`).off('value', snap => {
+        db.ref(`users/${uid}/presence`).on('value', snap => {
             const presence = snap.val();
             if (presence === 'online') {
                 statusEl.innerText = 'საიტზეა';
