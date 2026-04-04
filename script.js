@@ -855,19 +855,6 @@ function startChat(uid, name, photo) {
             if (m.senderId !== myUid && m.seen === false) {
                 child.ref.update({ seen: true });
             }
-
-            // startChat-ის შიგნით:
-            const chatIdForBg = getChatId(firebase.auth().currentUser.uid, uid);
-            const savedBg = localStorage.getItem('chat_bg_' + chatIdForBg);
-            const chatBoxEl = document.getElementById('chatMessages');
-
-           ბif (chatBoxEl) {
-              if (savedBg) {
-            chatBoxEl.style.backgroundImage = "url('" + savedBg + "')";
-           } else {
-            chatBoxEl.style.backgroundImage = "none";
-            }
-           }
           
         });
     });
