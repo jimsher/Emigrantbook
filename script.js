@@ -4339,23 +4339,17 @@ function applyChatTheme(url) {
     const chatId = getChatId(myUid, currentChatId);
 
     if (url === 'default') {
-        chatBox.style.backgroundImage = "none";
+        chatBox.style.setProperty('--chat-bg-img', 'none');
         localStorage.removeItem('chat_bg_' + chatId);
     } else {
-        chatBox.style.backgroundImage = "url('" + url + "')";
-        
-        // --- 🔒 აი ეს პარამეტრები გაყინავს სურათს ---
-        chatBox.style.backgroundSize = "cover"; 
-        chatBox.style.backgroundPosition = "center";
-        chatBox.style.backgroundRepeat = "no-repeat";
-        
-        // შეცვალე 'local' -> 'fixed'-ით. ეს ნიშნავს: სურათი მიეკაჭოს ეკრანს!
-        chatBox.style.backgroundAttachment = "fixed"; 
-        
+        // ვუცვლით CSS ცვლადს (--chat-bg-img)
+        chatBox.style.setProperty('--chat-bg-img', "url('" + url + "')");
+        // ვინახავთ კონკრეტული ჩატის ID-ით
         localStorage.setItem('chat_bg_' + chatId, url);
     }
     closeChatThemePanel();
 }
+
 
 // ჩატის გახსნისას რომ ავტომატურად დააყენოს შენახული ფონი
 // ამას ჩვეულებრივ იმ ფუნქციაში ვამატებთ, სადაც ჩატს ხსნი (მაგ. openChat)
