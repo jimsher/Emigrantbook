@@ -4332,6 +4332,7 @@ function applyChatTheme(url) {
     const chatBox = document.getElementById('chatMessages');
     if (!chatBox || !currentChatId) return;
 
+    // ვიღებთ ჩატის უნიკალურ ID-ს
     const myUid = firebase.auth().currentUser.uid;
     const chatId = getChatId(myUid, currentChatId);
 
@@ -4339,12 +4340,9 @@ function applyChatTheme(url) {
         chatBox.style.backgroundImage = "none";
         localStorage.removeItem('chat_bg_' + chatId);
     } else {
-        // პირდაპირი სტილები, რომელიც არაფერს არ ფარავს
-        chatBox.style.background = "url('" + url + "') no-repeat center center";
-        chatBox.style.backgroundSize = "cover";
-        chatBox.style.backgroundAttachment = "local"; 
-        
-        // ინახავს მხოლოდ ამ კონკრეტული ჩატისთვის
+        // ვაყენებთ ფონს
+        chatBox.style.backgroundImage = "url('" + url + "')";
+        // ვინახავთ ბრაუზერში
         localStorage.setItem('chat_bg_' + chatId, url);
     }
     closeChatThemePanel();
