@@ -4327,6 +4327,7 @@ function closeChatThemePanel() {
     document.getElementById('chatThemePanel').style.display = 'none';
 }
 
+
 function applyChatTheme(url) {
     const chatBox = document.getElementById('chatMessages');
     if (!chatBox || !currentChatId) return;
@@ -4335,17 +4336,19 @@ function applyChatTheme(url) {
     const chatId = getChatId(myUid, currentChatId);
 
     if (url === 'default') {
-        chatBox.style.setProperty('--chat-bg-img', 'none');
+        chatBox.style.backgroundImage = "none";
         localStorage.removeItem('chat_bg_' + chatId);
     } else {
-        // ვუცვლით CSS ცვლადს (--chat-bg-img)
-        chatBox.style.setProperty('--chat-bg-img', "url('" + url + "')");
-        // ვინახავთ კონკრეტული ჩატის ID-ით
+        // პირდაპირი სტილები, რომელიც არაფერს არ ფარავს
+        chatBox.style.background = "url('" + url + "') no-repeat center center";
+        chatBox.style.backgroundSize = "cover";
+        chatBox.style.backgroundAttachment = "local"; 
+        
+        // ინახავს მხოლოდ ამ კონკრეტული ჩატისთვის
         localStorage.setItem('chat_bg_' + chatId, url);
     }
     closeChatThemePanel();
 }
-
 
 // ჩატის გახსნისას რომ ავტომატურად დააყენოს შენახული ფონი
 // ამას ჩვეულებრივ იმ ფუნქციაში ვამატებთ, სადაც ჩატს ხსნი (მაგ. openChat)
