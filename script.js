@@ -874,7 +874,7 @@ function startChat(uid, name, photo) {
                 statusEl.style.color = '#4ade80';
             } else {
                 const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + 'ago' : 'offline';
+                statusEl.innerText = timeAgo ? timeAgo + '   ago' : 'offline';
                 statusEl.style.color = '#888';
             }
         });
