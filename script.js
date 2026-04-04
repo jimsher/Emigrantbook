@@ -844,19 +844,24 @@ function startChat(uid, name, photo) {
     document.getElementById('chatTargetName').innerText = name;
     document.getElementById('chatTargetAva').src = photo;
 
-    // --- ✨ ახალი: მესიჯების წაკითხულად მონიშვნა (Seen Logic) ---
+    // --- ✨ სწორი Seen Logic: მხოლოდ წაუკითხავებზე რეაგირება ---
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, uid);
-    
-    db.ref(`messages/${chatId}`).once('value', snap => {
+
+    // ვეძებთ მხოლოდ იმ მესიჯებს, რომლებიც ჩემი არაა და Seen არის false
+    db.ref(`messages/${chatId}`).orderByChild('seen').equalTo(false).once('value', snap => {
+        const updates = {};
         snap.forEach(child => {
             const m = child.val();
-            // თუ მესიჯი სხვისია და ჯერ Seen არაა, ვნიშნავთ წაკითხულად
-            if (m.senderId !== myUid && m.seen === false) {
-                child.ref.update({ seen: true });
+            if (m.senderId !== myUid) {
+                // ვამზადებთ ერთიან ბრძანებას (Multipath update)
+                updates[`${child.key}/seen`] = true;
             }
-          
         });
+        // ყველას ერთად ვაახლებთ ერთი ბრძანებით
+        if (Object.keys(updates).length > 0) {
+            db.ref(`messages/${chatId}`).update(updates);
+        }
     });
     // -------------------------------------------------------
 
