@@ -4315,20 +4315,18 @@ function closeChatThemePanel() {
 }
 
 function applyChatTheme(url) {
-    const chatContainer = document.getElementById('chatMessages'); // შენი ID
-    
+    const chatContainer = document.getElementById('chatMessages');
+    if (!chatContainer) return;
+
     if (url === 'default') {
-        chatContainer.style.backgroundImage = "none";
-        chatContainer.style.backgroundColor = "#000";
-        localStorage.removeItem('selected_chat_bg');
+        chatContainer.style.setProperty('--chat-bg', 'none');
+        chatContainer.classList.remove('has-bg');
     } else {
-        chatContainer.style.backgroundImage = `url('${url}')`;
-        chatContainer.style.backgroundSize = "cover";
-        chatContainer.style.backgroundPosition = "center";
-        chatContainer.style.backgroundAttachment = "local"; // მნიშვნელოვანია სქროლისთვის
-        
-        localStorage.setItem('selected_chat_bg', url);
+        // ვინახავთ სურათის ლინკს CSS ცვლადში
+        chatContainer.style.setProperty('--chat-bg', `url('${url}')`);
+        chatContainer.classList.add('has-bg');
     }
+    
     closeChatThemePanel();
 }
 
