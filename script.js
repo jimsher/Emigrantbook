@@ -4316,20 +4316,25 @@ function closeChatThemePanel() {
 
 function applyChatTheme(url) {
     const chatBox = document.getElementById('chatMessages');
-    if (!chatBox) return;
+    if (!chatBox || !currentChatId) return;
+
+    const myUid = firebase.auth().currentUser.uid;
+    const chatId = getChatId(myUid, currentChatId);
 
     if (url === 'default') {
         chatBox.style.backgroundImage = "none";
-        chatBox.style.backgroundAttachment = "scroll"; // ნორმალური მდგომარეობა
+        localStorage.removeItem('chat_bg_' + chatId);
     } else {
-        chatBox.style.backgroundImage = `url('${url}')`;
-        chatBox.style.backgroundSize = "cover";
-        chatBox.style.backgroundPosition = "center";
+        chatBox.style.backgroundImage = "url('" + url + "')";
         
-        // აი ეს არის მთავარი ხაზი, რომელიც სურათს გაყინავს:
-        chatBox.style.backgroundAttachment = "fixed"; 
+        // --- 📱 ავტომატური ზომა ყველა ტელეფონისთვის ---
+        chatBox.style.backgroundSize = "cover"; // ავსებს ეკრანს პროპორციულად
+        chatBox.style.backgroundPosition = "center center"; // სურათის ცენტრი ყოველთვის შუაშია
+        chatBox.style.backgroundRepeat = "no-repeat"; // რომ არ გაპატარავდეს და არ გამრავლდეს
+        chatBox.style.backgroundAttachment = "local"; 
+        
+        localStorage.setItem('chat_bg_' + chatId, url);
     }
-    
     closeChatThemePanel();
 }
 
