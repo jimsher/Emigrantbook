@@ -889,6 +889,8 @@ function startChat(uid, name, photo) {
 
                                 
                                                 
+let currentChatLimit = 20; // გლობალური ცვლადი ლიმიტისთვის
+
 function loadMessages(targetUid) {
     const myUid = auth.currentUser.uid;
     const chatId = getChatId(myUid, targetUid);
@@ -901,7 +903,8 @@ function loadMessages(targetUid) {
         db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
             const deletedMsgs = deletedSnap.val() || {};
 
-            db.ref(`messages/${chatId}`).on('value', snap => {
+            // --- 🔄 აქ ჩაჯდა Pagination ლოგიკა (limitToLast) ---
+            db.ref(`messages/${chatId}`).limitToLast(currentChatLimit).on('value', snap => {
                 box.innerHTML = "";
                 let lastTs = 0;
                 let messagesArray = [];
@@ -944,7 +947,6 @@ function loadMessages(targetUid) {
                         content = msg.text || "";
                     }
                     
-                    // --- 🎨 ბუშტის სტილი (დავამატეთ msg.audio, რომ ფონი არ დაედოს) ---
                     const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
                         `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
                         `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
@@ -977,12 +979,30 @@ function loadMessages(targetUid) {
                             </div>` : ''}
                     </div>`;
                 });
-                box.scrollTop = box.scrollHeight;
+
+                // მხოლოდ პირველ ჩატვირთვაზე ჩავიდეს ბოლოში
+                if (currentChatLimit === 20) {
+                    box.scrollTop = box.scrollHeight;
+                }
             });
         });
     });
-}
 
+    // --- 📜 სქროლვის დეტექტორი ძველი მესიჯებისთვის ---
+    box.onscroll = function() {
+        if (box.scrollTop === 0) {
+            const oldScrollHeight = box.scrollHeight;
+            currentChatLimit += 20; // ვზრდით ლიმიტს
+            loadMessages(targetUid); // თავიდან ვიძახებთ იგივე ფუნქციას ახალი ლიმიტით
+            
+            // პატარა პაუზა, რომ სქროლი არ "გაიქცეს" ზემოთ
+            setTimeout(() => {
+                box.scrollTop = box.scrollHeight - oldScrollHeight;
+            }, 100);
+        }
+    };
+}                        
+                        
 
 
 
