@@ -857,19 +857,15 @@ function startChat(uid, name, photo) {
             }
 
             // startChat-ის შიგნით ჩაამატე:
-const myUid = firebase.auth().currentUser.uid;
-const chatId = getChatId(myUid, uid); // uid არის ის, ვისაც ვხსნით
+            const myUid = firebase.auth().currentUser.uid;
+const chatId = getChatId(myUid, uid);
 const savedBg = localStorage.getItem('chat_bg_' + chatId);
 const chatBox = document.getElementById('chatMessages');
 
-if (savedBg && chatBox) {
-    chatBox.style.backgroundImage = "url('" + savedBg + "')";
-    chatBox.style.backgroundSize = "cover";
-    chatBox.style.backgroundPosition = "center center";
-    chatBox.style.backgroundRepeat = "no-repeat";
-    chatBox.style.backgroundAttachment = "local";
-} else if (chatBox) {
-    chatBox.style.backgroundImage = "none";
+if (savedBg) {
+    chatBox.style.setProperty('--chat-bg-img', "url('" + savedBg + "')");
+} else {
+    chatBox.style.setProperty('--chat-bg-img', 'none');
 }
           
         });
