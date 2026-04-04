@@ -4327,11 +4327,13 @@ function applyChatTheme(url) {
     } else {
         chatBox.style.backgroundImage = "url('" + url + "')";
         
-        // --- 📱 ავტომატური ზომა ყველა ტელეფონისთვის ---
-        chatBox.style.backgroundSize = "cover"; // ავსებს ეკრანს პროპორციულად
-        chatBox.style.backgroundPosition = "center center"; // სურათის ცენტრი ყოველთვის შუაშია
-        chatBox.style.backgroundRepeat = "no-repeat"; // რომ არ გაპატარავდეს და არ გამრავლდეს
-        chatBox.style.backgroundAttachment = "local"; 
+        // --- 🔒 აი ეს პარამეტრები გაყინავს სურათს ---
+        chatBox.style.backgroundSize = "cover"; 
+        chatBox.style.backgroundPosition = "center";
+        chatBox.style.backgroundRepeat = "no-repeat";
+        
+        // შეცვალე 'local' -> 'fixed'-ით. ეს ნიშნავს: სურათი მიეკაჭოს ეკრანს!
+        chatBox.style.backgroundAttachment = "fixed"; 
         
         localStorage.setItem('chat_bg_' + chatId, url);
     }
