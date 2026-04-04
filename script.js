@@ -4290,3 +4290,56 @@ function checkNewVisitors(myUid) {
         }
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ჩატის ფონის შწცვლა
+function openChatThemePanel() {
+    document.getElementById('chatThemePanel').style.display = 'flex';
+}
+
+function closeChatThemePanel() {
+    document.getElementById('chatThemePanel').style.display = 'none';
+}
+
+function applyChatTheme(url) {
+    const chatContainer = document.getElementById('chatMessages'); // შენი ID
+    
+    if (url === 'default') {
+        chatContainer.style.backgroundImage = "none";
+        chatContainer.style.backgroundColor = "#000";
+        localStorage.removeItem('selected_chat_bg');
+    } else {
+        chatContainer.style.backgroundImage = `url('${url}')`;
+        chatContainer.style.backgroundSize = "cover";
+        chatContainer.style.backgroundPosition = "center";
+        chatContainer.style.backgroundAttachment = "local"; // მნიშვნელოვანია სქროლისთვის
+        
+        localStorage.setItem('selected_chat_bg', url);
+    }
+    closeChatThemePanel();
+}
+
+// ჩატის გახსნისას რომ ავტომატურად დააყენოს შენახული ფონი
+// ამას ჩვეულებრივ იმ ფუნქციაში ვამატებთ, სადაც ჩატს ხსნი (მაგ. openChat)
+function checkSavedChatTheme() {
+    const saved = localStorage.getItem('selected_chat_bg');
+    if (saved) {
+        const chatContainer = document.getElementById('chatMessages');
+        chatContainer.style.backgroundImage = `url('${saved}')`;
+        chatContainer.style.backgroundSize = "cover";
+        chatContainer.style.backgroundPosition = "center";
+    }
+}
