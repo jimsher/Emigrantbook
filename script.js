@@ -844,7 +844,19 @@ function startChat(uid, name, photo) {
     document.getElementById('chatTargetName').innerText = name;
     document.getElementById('chatTargetAva').src = photo;
 
-  // startChat-ის შიგნით ჩაამატე:
+    // --- ✨ ახალი: მესიჯების წაკითხულად მონიშვნა (Seen Logic) ---
+    const myUid = auth.currentUser.uid;
+    const chatId = getChatId(myUid, uid);
+    
+    db.ref(`messages/${chatId}`).once('value', snap => {
+        snap.forEach(child => {
+            const m = child.val();
+            // თუ მესიჯი სხვისია და ჯერ Seen არაა, ვნიშნავთ წაკითხულად
+            if (m.senderId !== myUid && m.seen === false) {
+                child.ref.update({ seen: true });
+            }
+
+            // startChat-ის შიგნით ჩაამატე:
 const myUid = firebase.auth().currentUser.uid;
 const chatId = getChatId(myUid, uid); // uid არის ის, ვისაც ვხსნით
 const savedBg = localStorage.getItem('chat_bg_' + chatId);
@@ -859,18 +871,7 @@ if (savedBg && chatBox) {
 } else if (chatBox) {
     chatBox.style.backgroundImage = "none";
 }
-
-    // --- ✨ ახალი: მესიჯების წაკითხულად მონიშვნა (Seen Logic) ---
-    const myUid = auth.currentUser.uid;
-    const chatId = getChatId(myUid, uid);
-    
-    db.ref(`messages/${chatId}`).once('value', snap => {
-        snap.forEach(child => {
-            const m = child.val();
-            // თუ მესიჯი სხვისია და ჯერ Seen არაა, ვნიშნავთ წაკითხულად
-            if (m.senderId !== myUid && m.seen === false) {
-                child.ref.update({ seen: true });
-            }
+          
         });
     });
     // -------------------------------------------------------
