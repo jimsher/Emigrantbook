@@ -883,6 +883,15 @@ function startChat(uid, name, photo) {
     }
     loadMessages(uid);
     listenToTyping(uid);
+
+  // --- 🚀 აი ეს ჩაამატე აქ, რომ კარნახის ზოლი გაქრეს ---
+    const msgInput = document.getElementById('messageInput'); 
+    if (msgInput) {
+        msgInput.setAttribute('autocomplete', 'off');
+        msgInput.setAttribute('autocorrect', 'off');
+        msgInput.setAttribute('autocapitalize', 'off');
+        msgInput.setAttribute('spellcheck', 'false');
+    }
 }
 
 
