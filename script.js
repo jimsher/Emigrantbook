@@ -1960,9 +1960,9 @@ function renderTokenFeed() {
                         <i class="fas fa-share"></i>
                         <span id="share-count-${id}">${shareCount}</span>
                     </div>
-                    <div class="action-item gift-btn" onclick="openGiftPanel('${id}', '${post.authorId}')">
-                       <i class="fas fa-gift" style="color: #ff4d4d;"></i>
-                       <span>Gift</span>
+                    <div class="action-item gift-btn" onclick="window.openGiftPanel('${id}', '${post.authorId}')">
+                        <i class="fas fa-gift" style="color: #ff4d4d;"></i>
+                        <span>Gift</span>
                     </div>
                     ${post.authorId === auth.currentUser.uid ? `
                     <div class="action-item" onclick="deleteMyVideo('${id}')" style="margin-top: 5px;">
