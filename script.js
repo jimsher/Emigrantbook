@@ -1900,36 +1900,38 @@ function togglePlayPause(vid) {
 let feedLimit = 15; // გლობალური ცვლადი (დატოვე ფუნქციის გარეთ)
 let isFeedLoading = false; // გლობალური ცვლადი
 
- function renderTokenFeed() {
+function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
 
+    // ვიყენებთ limitToLast-ს, რომ სულ ახალი პოსტები წამოვიღოთ
     db.ref('posts').limitToLast(feedLimit).once('value', snap => {
         const data = snap.val(); 
         isFeedLoading = false;
         if (!data) return;
 
-        // მხოლოდ პირველად ვასუფთავებთ ფიდს
         if (feedLimit === 15) {
             feed.innerHTML = "";
         }
 
-         // --- ჩაანაცვლე ამით (არეულობის ლოგიკა): ---
+        // 1. ვიღებთ ყველა პოსტს მასივის სახით
         let postEntries = Object.entries(data);
 
-        // Fisher-Yates Shuffle - ალგორითმი, რომელიც იდეალურად არევს სიას
-        for (let i = postEntries.length - 1; i > 0; i--) {
-         const j = Math.floor(Math.random() * (i + 1));
-          [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
-         }
+        // 2. ვფილტრავთ მხოლოდ იმ პოსტებს, რომლებიც ეკრანზე ჯერ არ გვიხატია
+        // ეს არიდებს ბრაუზერს ზედმეტ მუშაობას და ჭედვას
+        let newEntries = postEntries.filter(([id, post]) => !document.getElementById(`card-${id}`));
 
-      
-        postEntries.forEach(([id, post]) => {
-            if (document.getElementById(`card-${id}`)) return;
+        // 3. ვურევთ მხოლოდ ახალ პოსტებს (Fisher-Yates Shuffle)
+        for (let i = newEntries.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newEntries[i], newEntries[j]] = [newEntries[j], newEntries[i]];
+        }
 
+        // 4. ვხატავთ მხოლოდ არეულ ახალ პოსტებს
+        newEntries.forEach(([id, post]) => {
             if (post.media && post.media.some(m => m.type === 'video')) {
                 const videoUrl = post.media.find(m => m.type === 'video').url;
                 const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
@@ -1985,7 +1987,7 @@ let isFeedLoading = false; // გლობალური ცვლადი
                 
                 feed.appendChild(card);
 
-                // --- ანიმაციის ლოგიკა ---
+                // --- ანიმაციის ლოგიკა (უცვლელი) ---
                 function startLikeCycle() {
                     if (post.authorId !== auth.currentUser.uid) return;
                     const activityContainer = document.getElementById(`live-activity-${id}`);
@@ -2024,7 +2026,7 @@ let isFeedLoading = false; // გლობალური ცვლადი
                 }
                 startLikeCycle();
 
-                // --- მონაცემების მოსმენა ---
+                // --- მონაცემების მოსმენა (უცვლელი) ---
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -2045,7 +2047,7 @@ let isFeedLoading = false; // გლობალური ცვლადი
         setupAutoPlay();
     });
 
-    // --- Infinite Scroll ---
+    // --- Infinite Scroll ლოგიკა ---
     feed.onscroll = function() {
         if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
             if (!isFeedLoading) {
@@ -2054,7 +2056,8 @@ let isFeedLoading = false; // გლობალური ცვლადი
             }
         }
     };
-}                   
+}
+                                                       
 // აქ მთავრდება
 
 // უსასრულო სქროლვა - გაუმჯობესებული ვერსია
