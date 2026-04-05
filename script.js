@@ -1960,7 +1960,7 @@ function renderTokenFeed() {
                         <i class="fas fa-share"></i>
                         <span id="share-count-${id}">${shareCount}</span>
                     </div>
-                      <div class="action-item gift-btn" onclick="if(window.openGiftPanel) { window.openGiftPanel('${id}', '${post.authorId}') } else { openGiftPanel('${id}', '${post.authorId}') }">
+                      <div class="action-item gift-btn" onclick="window.openGiftPanel('${id}', '${post.authorId}')">
                        <i class="fas fa-gift" style="color: #ff4d4d;"></i>
                        <span>Gift</span>
                     </div>
