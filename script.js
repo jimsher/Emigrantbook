@@ -2086,6 +2086,8 @@ window.addEventListener('scroll', function() {
 
 
 function setupAutoPlay() {
+  // 🚀 თუ მესინჯერი ღიაა, საერთოდ არაფერი არ ჩართო!
+    if (document.getElementById('messengerUI').style.display === 'flex') return;
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const video = entry.target.querySelector('video');
