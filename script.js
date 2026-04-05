@@ -2042,11 +2042,22 @@ let isFeedLoading = false; // იცავს ბაზას ზედმეტ
         setupAutoPlay();
     });
 }
-
-
-                                    
-                                    
 // აქ მთავრდება
+
+// უსასრულო სქროლვა მთავარი ფიდისთვის
+document.getElementById('main-feed').addEventListener('scroll', function() {
+    const feed = document.getElementById('main-feed');
+    // თუ მომხმარებელი ჩავიდა ბოლოდან 600 პიქსელზე
+    if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
+        if (!isFeedLoading) {
+            feedLimit += 15; // ვზრდით ლიმიტს კიდევ 15-ით
+            renderTokenFeed(); // თავიდან ვიძახებთ იგივე ფუნქციას ახალი ლიმიტით
+        }
+    }
+});
+
+
+
 function setupAutoPlay() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
