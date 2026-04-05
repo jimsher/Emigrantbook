@@ -884,24 +884,6 @@ function startChat(uid, name, photo) {
     loadMessages(uid);
     listenToTyping(uid);
 
-  // --- 🚀 კარნახის სრული ბლოკი ყველა მოწყობილობისთვის ---
-    const msgInput = document.getElementById('messageInput'); 
-    if (msgInput) {
-        // ბრაუზერს აიძულებს არ დაიმახსოვროს არაფერი
-        msgInput.setAttribute('autocomplete', 'new-password'); 
-        
-        // თიშავს ავტო-გასწორებას (Android & iOS)
-        msgInput.setAttribute('autocorrect', 'off');
-        
-        // თიშავს პირველი ასოს ავტომატურ გადიდებას
-        msgInput.setAttribute('autocapitalize', 'none');
-        
-        // თიშავს მართლწერის შემოწმებას (წითელ ხაზებს და კარნახს)
-        msgInput.setAttribute('spellcheck', 'false');
-        
-        // სპეციალური ატრიბუტი ზოგიერთი Android ბრაუზერისთვის
-        msgInput.setAttribute('inputmode', 'text');
-    }
 }
 
 
