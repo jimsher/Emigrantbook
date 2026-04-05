@@ -884,13 +884,23 @@ function startChat(uid, name, photo) {
     loadMessages(uid);
     listenToTyping(uid);
 
-  // --- 🚀 აი ეს ჩაამატე აქ, რომ კარნახის ზოლი გაქრეს ---
+  // --- 🚀 კარნახის სრული ბლოკი ყველა მოწყობილობისთვის ---
     const msgInput = document.getElementById('messageInput'); 
     if (msgInput) {
-        msgInput.setAttribute('autocomplete', 'off');
+        // ბრაუზერს აიძულებს არ დაიმახსოვროს არაფერი
+        msgInput.setAttribute('autocomplete', 'new-password'); 
+        
+        // თიშავს ავტო-გასწორებას (Android & iOS)
         msgInput.setAttribute('autocorrect', 'off');
-        msgInput.setAttribute('autocapitalize', 'off');
+        
+        // თიშავს პირველი ასოს ავტომატურ გადიდებას
+        msgInput.setAttribute('autocapitalize', 'none');
+        
+        // თიშავს მართლწერის შემოწმებას (წითელ ხაზებს და კარნახს)
         msgInput.setAttribute('spellcheck', 'false');
+        
+        // სპეციალური ატრიბუტი ზოგიერთი Android ბრაუზერისთვის
+        msgInput.setAttribute('inputmode', 'text');
     }
 }
 
