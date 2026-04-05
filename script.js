@@ -3337,17 +3337,29 @@ async function startLiveCamera() {
     }
 }
 
+
+
+// 1. ეს ფუნქცია კეტავს ფანჯარას და ეუბნება მეორე ფუნქციას "გათიშე კამერაო"
 function closeUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) modal.style.display = 'none';
-    stopCamera();
+    stopCamera(); // იძახებს ქვედა ფუნქციას
 }
 
+// 2. ეს არის განახლებული ფუნქცია, რომელიც რეალურად თიშავს "თვალს"
 function stopCamera() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
+    // ვამოწმებთ ყველა შესაძლო სტრიმს
+    const activeStream = window.videoStream || videoStream;
+
+    if (activeStream) {
+        activeStream.getTracks().forEach(track => {
+            track.stop(); // აქ ითიშება ფიზიკურად კამერა
+        });
+        
+        window.videoStream = null;
+        if (typeof videoStream !== 'undefined') videoStream = null;
     }
+
     const video = document.getElementById('cameraStream');
     const placeholder = document.getElementById('placeholderText');
     const recordInner = document.getElementById('recordInner');
@@ -3356,7 +3368,9 @@ function stopCamera() {
         video.pause();
         video.srcObject = null;
         video.style.display = 'none';
+        video.load(); // აიძულებს ბრაუზერს გაანთავისუფლოს კამერა
     }
+
     if (placeholder) placeholder.style.display = 'block';
     
     if (recordInner) {
@@ -3365,6 +3379,7 @@ function stopCamera() {
         recordInner.style.transform = "scale(1)";
         recordInner.style.boxShadow = "none";
     }
+    console.log("კამერა წარმატებით გაითიშა ✅");
 }
 
 
