@@ -4409,3 +4409,28 @@ window.openShare = function(postId, url) {
 };
 
 window.shareVideo = window.openShare;
+
+
+
+
+
+
+
+
+
+// მესიჯის კლავიატურის კონტროლი
+// 🚀 კლავიატურის ამოწევისას ვიდეოების ხელახლა ჩართვის საწინააღმდეგოდ
+window.addEventListener('resize', () => {
+    const messenger = document.getElementById('messengerUI');
+    // თუ მესინჯერი ან ჩატის ველები ჩანს, მაშინვე ვთიშავთ ყველაფერს
+    if (messenger && messenger.style.display === 'flex') {
+        stopMainFeedVideos();
+    }
+});
+
+// ასევე დავამატოთ Focus-ზე (როცა წერას იწყებ input-ში)
+document.addEventListener('focusin', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        stopMainFeedVideos();
+    }
+});
