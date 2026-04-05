@@ -1902,14 +1902,14 @@ function togglePlayPause(vid) {
 let feedLimit = 15; // გლობალური ცვლადი (დატოვე ფუნქციის გარეთ)
 let isFeedLoading = false; // გლობალური ცვლადი
 
-    function renderTokenFeed() {
+    
+            function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
 
-    // ვიყენებთ limitToLast-ს, რომ სულ ახალი პოსტები წამოვიღოთ
     db.ref('posts').limitToLast(feedLimit).once('value', snap => {
         const data = snap.val(); 
         isFeedLoading = false;
@@ -1933,18 +1933,8 @@ let isFeedLoading = false; // გლობალური ცვლადი
 
         // 4. ვხატავთ მხოლოდ არეულ ახალ პოსტებს
         newEntries.forEach(([id, post]) => {
-            // --- 🚀 ახალი ფილტრაციის ბლოკი (არაფერს არ აფუჭებს, მხოლოდ "წმენდს") ---
-            if (!post) return; // თუ პოსტი ცარიელია ბაზაში
-            if (!post.media || !post.media.some(m => m.type === 'video')) return; // თუ ვიდეო არ აქვს (შავი ეკრანის დაცვა)
-
-            const now = Date.now();
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-            const postAge = now - (post.timestamp || 0);
-            
-            // ვაჩვენებთ თუ 24 საათზე ახალია, ან თუ გადახდილი აქვს (isPromoted)
-            const isVisible = postAge < twentyFourHours || post.isPromoted === true;
-            if (!isVisible) return; 
-            // -----------------------------------------------------------------------
+            // 🛡️ მხოლოდ ეს დავამატე: თუ პოსტი წაშლილია ან ვიდეო არ აქვს, გამოტოვე
+            if (!post || !post.media || !post.media.some(m => m.type === 'video')) return;
 
             if (post.media && post.media.some(m => m.type === 'video')) {
                 const videoUrl = post.media.find(m => m.type === 'video').url;
@@ -1957,7 +1947,7 @@ let isFeedLoading = false; // გლობალური ცვლადი
                 card.id = `card-${id}`;
                 
                 const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
-                const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid]; 
+                const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
