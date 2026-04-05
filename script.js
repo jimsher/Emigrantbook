@@ -1896,18 +1896,25 @@ function togglePlayPause(vid) {
     
 
 
-
-
-                                    
+// აქ იწყება ტოკერის ვიდეოები
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
-
+    if (isFeedLoading) return; // თუ უკვე იტვირთება, მეორედ აღარ გაუშვას
+    
+    isFeedLoading = true;
     const feed = document.getElementById('main-feed');
-    db.ref('posts').limitToLast(15).once('value', snap => {
-        feed.innerHTML = "";
-        const data = snap.val(); if (!data) return;
+
+    // ვიყენებთ feedLimit-ს, რომელიც სქროლვისას იზრდება
+    db.ref('posts').limitToLast(feedLimit).once('value', snap => {
+        feed.innerHTML = ""; // ვასუფთავებთ ფიდს ხელახალი რენდერისთვის
+        const data = snap.val(); 
+        isFeedLoading = false;
+        
+        if (!data) return;
+        
         let postEntries = Object.entries(data);
         
+        // --- შენი ორიგინალი რანდომიზაცია ---
         for (let i = postEntries.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
@@ -1919,12 +1926,15 @@ function renderTokenFeed() {
                 const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
                 const shareCount = post.shares || 0;
                 const saveCount = post.saves || 0;
+                
                 const card = document.createElement('div');
                 card.className = 'video-card';
                 card.id = `card-${id}`;
+                
                 const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 
+                // შენი ორიგინალი HTML სტრუქტურა (დაემატა მხოლოდ preload="none")
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
@@ -1964,31 +1974,25 @@ function renderTokenFeed() {
                     <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
                     <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
                 </div>`;
+                
                 feed.appendChild(card);
 
-                // --- ციკლური ანიმაციის გასწორებული ლოგიკა ---
+                // --- შენი ორიგინალი ციკლური ანიმაციის ლოგიკა ---
                 function startLikeCycle() {
-                    // 1. ვამოწმებთ, რომ ვიდეო ნამდვილად შენია
                     if (post.authorId !== auth.currentUser.uid) return;
-
                     const activityContainer = document.getElementById(`live-activity-${id}`);
                     if (!activityContainer) return;
 
-                    // 2. ვიღებთ მხოლოდ ამ კონკრეტული ვიდეოს ლაიქებს
                     const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-
                     if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
                         setTimeout(startLikeCycle, 5000);
                         return;
                     }
 
                     let index = 0;
-
                     function spawnNext() {
-                        // ვამოწმებთ, რომ კონტეინერი ისევ არსებობს (რომ სხვა ვიდეოზე არ გადავიდეს)
                         const container = document.getElementById(`live-activity-${id}`);
                         if (!container) return;
-
                         if (index < currentPostLikes.length) {
                             const person = currentPostLikes[index];
                             const avaBox = document.createElement('div');
@@ -2002,24 +2006,19 @@ function renderTokenFeed() {
                                          style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
                                     <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
                                 </div>`;
-                            
                             container.appendChild(avaBox);
                             setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-
                             index++;
                             setTimeout(spawnNext, 1500);
                         } else {
-                            // როცა სია მორჩება, თავიდან იწყებს ციკლს
                             setTimeout(startLikeCycle, 10000);
                         }
                     }
                     spawnNext();
                 }
-
-                // ანიმაციის გაშვება
                 startLikeCycle();
 
-                // დანარჩენი ლოგიკა (მთვლელები და სტატუსები) - ხელუხლებელი
+                // --- შენი ორიგინალი მთვლელები და სტატუსები ---
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -2039,7 +2038,11 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}                
+}
+
+
+                                    
+                                    
 // აქ მთავრდება
 function setupAutoPlay() {
     const observer = new IntersectionObserver((entries) => {
