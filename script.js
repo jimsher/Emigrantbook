@@ -4350,3 +4350,26 @@ function checkNewVisitors(myUid) {
 
 
 
+// ეს ფუნქცია იმუშავებს ყველგან: მთავარ ფიდშიც და პროფილზეც
+window.openShare = function(postId, url) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Emigrantbook',
+            url: url
+        }).then(() => {
+            // გაზიარების დათვლა ბაზაში
+            db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
+        }).catch(() => console.log("Share cancelled"));
+    } else {
+        // თუ ტელეფონი ძველია და Native Share არ აქვს
+        const dummy = document.createElement("input");
+        document.body.appendChild(dummy);
+        dummy.value = url;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        alert("ბმული დაკოპირებულია! ✅");
+        db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
+    }
+};
+
