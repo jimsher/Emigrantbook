@@ -1900,7 +1900,7 @@ function togglePlayPause(vid) {
 let feedLimit = 15; // გლობალური ცვლადი (დატოვე ფუნქციის გარეთ)
 let isFeedLoading = false; // გლობალური ცვლადი
 
-function renderTokenFeed() {
+ function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
@@ -1912,7 +1912,7 @@ function renderTokenFeed() {
         isFeedLoading = false;
         if (!data) return;
 
-        // მხოლოდ პირველად (როცა 15-ია) ვასუფთავებთ ფიდს
+        // მხოლოდ პირველად ვასუფთავებთ ფიდს
         if (feedLimit === 15) {
             feed.innerHTML = "";
         }
@@ -1920,7 +1920,6 @@ function renderTokenFeed() {
         let postEntries = Object.entries(data).reverse(); 
 
         postEntries.forEach(([id, post]) => {
-            // თუ ეს ვიდეო უკვე დევს ეკრანზე, აღარ მივახატოთ (დუბლიკატების დაცვა)
             if (document.getElementById(`card-${id}`)) return;
 
             if (post.media && post.media.some(m => m.type === 'video')) {
@@ -1960,7 +1959,7 @@ function renderTokenFeed() {
                         <i class="fas fa-share"></i>
                         <span id="share-count-${id}">${shareCount}</span>
                     </div>
-                      <div class="action-item gift-btn" onclick="window.openGiftPanel('${id}', '${post.authorId}')">
+                    <div class="action-item gift-btn" onclick="window.openGiftPanel('${id}', '${post.authorId}')">
                        <i class="fas fa-gift" style="color: #ff4d4d;"></i>
                        <span>Gift</span>
                     </div>
@@ -1978,7 +1977,7 @@ function renderTokenFeed() {
                 
                 feed.appendChild(card);
 
-                // --- შენი ორიგინალი ციკლური ანიმაციის ლოგიკა ---
+                // --- ანიმაციის ლოგიკა ---
                 function startLikeCycle() {
                     if (post.authorId !== auth.currentUser.uid) return;
                     const activityContainer = document.getElementById(`live-activity-${id}`);
@@ -2017,7 +2016,7 @@ function renderTokenFeed() {
                 }
                 startLikeCycle();
 
-                // --- შენი ორიგინალი მთვლელები და სტატუსები ---
+                // --- მონაცემების მოსმენა ---
                 db.ref(`comments/${id}`).on('value', cSnap => {
                     const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                     const el = document.getElementById(`comm-count-${id}`);
@@ -2038,7 +2037,7 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 
-    // --- 🚀 Infinite Scroll ლოგიკა (ფუნქციის შიგნით, რომ ყოველთვის იმუშაოს) ---
+    // --- Infinite Scroll ---
     feed.onscroll = function() {
         if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
             if (!isFeedLoading) {
@@ -2047,8 +2046,7 @@ function renderTokenFeed() {
             }
         }
     };
-}                                                setTimeout(startLikeCycle, 10000);
-
+}                   
 // აქ მთავრდება
 
 // უსასრულო სქროლვა - გაუმჯობესებული ვერსია
