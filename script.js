@@ -1903,7 +1903,7 @@ let feedLimit = 15; // გლობალური ცვლადი (დატ
 let isFeedLoading = false; // გლობალური ცვლადი
 
     
-    function renderTokenFeed() {
+       function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
@@ -1934,19 +1934,8 @@ let isFeedLoading = false; // გლობალური ცვლადი
 
         // 4. ვხატავთ მხოლოდ არეულ ახალ პოსტებს
         newEntries.forEach(([id, post]) => {
-            // --- 🚀 ტრენდის და "შავი ეკრანის" დაცვის ლოგიკა ---
-            if (!post || !post.media) return; // თუ პოსტი ცარიელია
-
-            const now = Date.now();
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-            const postAge = now - (post.timestamp || 0);
-
-            // პირობა: გამოჩნდეს თუ 24 საათზე ახალია ან თუ არის Promoted (ფასიანი)
-            const isVisible = postAge < twentyFourHours || post.isPromoted === true;
-            
-            // თუ არც ახალია და არც ფასიანი - საერთოდ არ ვხატავთ (Skip)
-            if (!isVisible) return; 
-            // ------------------------------------------------
+            // 🛡️ დაცვა: თუ პოსტი წაშლილია ან მონაცემი არ მოყვება, საერთოდ არ შექმნას კარტა
+            if (!post || !post.media || !post.media.some(m => m.type === 'video')) return;
 
             if (post.media && post.media.some(m => m.type === 'video')) {
                 const videoUrl = post.media.find(m => m.type === 'video').url;
@@ -1959,7 +1948,7 @@ let isFeedLoading = false; // გლობალური ცვლადი
                 card.id = `card-${id}`;
                 
                 const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
-                const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];        
+                const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
                 
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
