@@ -2044,17 +2044,23 @@ let isFeedLoading = false; // იცავს ბაზას ზედმეტ
 }
 // აქ მთავრდება
 
-// უსასრულო სქროლვა მთავარი ფიდისთვის
-document.getElementById('main-feed').addEventListener('scroll', function() {
+// უსასრულო სქროლვა - გაუმჯობესებული ვერსია
+window.addEventListener('scroll', function() {
     const feed = document.getElementById('main-feed');
-    // თუ მომხმარებელი ჩავიდა ბოლოდან 600 პიქსელზე
-    if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
-        if (!isFeedLoading) {
-            feedLimit += 15; // ვზრდით ლიმიტს კიდევ 15-ით
-            renderTokenFeed(); // თავიდან ვიძახებთ იგივე ფუნქციას ახალი ლიმიტით
-        }
+    if (!feed || isFeedLoading) return;
+
+    // ვამოწმებთ რამდენია დარჩენილი გვერდის ბოლომდე
+    const scrollHeight = document.documentElement.scrollHeight;
+    const scrollTop = document.documentElement.scrollTop || window.pageYOffset;
+    const clientHeight = document.documentElement.clientHeight;
+
+    // თუ ბოლოდან 800 პიქსელზე მიუახლოვდა (ტელეფონზე მეტი სივრცე გვინდა რეაგირებისთვის)
+    if (scrollTop + clientHeight >= scrollHeight - 800) {
+        console.log("ბოლოში ვართ, ვამატებთ ვიდეოებს..."); // ამას კონსოლში დაინახავ
+        feedLimit += 15; 
+        renderTokenFeed();
     }
-});
+}, { passive: true });
 
 
 
