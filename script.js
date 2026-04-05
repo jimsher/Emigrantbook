@@ -1903,7 +1903,7 @@ function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
 
     const feed = document.getElementById('main-feed');
-    db.ref('posts').once('value', snap => {
+    db.ref('posts').limitToLast(15).once('value', snap => {
         feed.innerHTML = "";
         const data = snap.val(); if (!data) return;
         let postEntries = Object.entries(data);
@@ -1926,7 +1926,7 @@ function renderTokenFeed() {
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 
                 card.innerHTML = `
-                <video src="${videoUrl}" loop playsinline muted onclick="togglePlayPause(this)"></video>
+                <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
                 <div class="side-actions">
                     <div style="position:relative">
@@ -2040,8 +2040,29 @@ function renderTokenFeed() {
         setupAutoPlay();
     });
 }                
+// აქ მთავრდება
+function setupAutoPlay() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target.querySelector('video');
+            if (!video) return;
 
+            if (entry.isIntersecting) {
+                // მხოლოდ მაშინ იწყებს ჩატვირთვას და დაკვრას, როცა ეკრანზეა
+                video.style.opacity = "1";
+                video.play().catch(e => {}); 
+                video.muted = false;
+            } else {
+                // როგორც კი თვალს მიეფარება, ჩერდება და ითიშება მეხსიერებიდან
+                video.pause();
+                video.muted = true;
+                video.style.opacity = "0.5"; // ვიზუალური ეფექტი დაზოგვისთვის
+            }
+        });
+    }, { threshold: 0.5 }); // 50% მაინც თუ ჩანს ეკრანზე
 
+    document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
+}
 
 
 
@@ -2550,37 +2571,7 @@ function openWithdrawHistory() {
 
 
 
-function setupAutoPlay() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const video = entry.target.querySelector('video');
 
-            // ✨ ჩამატებული ლოგიკა: ვამოწმებთ, ჩატი ღიაა თუ არა
-            const isChatOpen = document.getElementById('individualChat').style.display === 'flex';
-
-            if (entry.isIntersecting) {
-                // თუ ჩატი ღიაა, ვიდეო არ ჩართო და პირიქით - დააპაუზე
-                if (isChatOpen) {
-                    if (video) video.pause();
-                    return; // აქ წყდება ფუნქცია და აღარ მიდის ქვემოთ play-ზე
-                }
-
-                if (document.getElementById('profileUI').style.display !== 'flex' && 
-                    document.getElementById('discoveryUI').style.display !== 'flex') {
-                    video.muted = false; 
-                    video.play().catch(e => {}); 
-                }
-            } else { 
-                if (video) {
-                    video.pause(); 
-                    video.muted = true; 
-                }
-            }
-        });
-    }, { root: document.getElementById('main-feed'), threshold: 0.6 });
-
-    document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
-}
 
 
 
