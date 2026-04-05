@@ -835,6 +835,7 @@ function openMessenger() {
 
 function startChat(uid, name, photo) {
     setAppBadge(0);
+    stopMainFeedVideos();
     // ეს ხაზი აცოცხლებს ხმოვანის გაგზავნას
     window.currentChatId = uid;
     currentChatId = uid; 
