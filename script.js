@@ -1917,8 +1917,16 @@ let isFeedLoading = false; // გლობალური ცვლადი
             feed.innerHTML = "";
         }
 
-        let postEntries = Object.entries(data).reverse(); 
+         // --- ჩაანაცვლე ამით (არეულობის ლოგიკა): ---
+        let postEntries = Object.entries(data);
 
+        // Fisher-Yates Shuffle - ალგორითმი, რომელიც იდეალურად არევს სიას
+        for (let i = postEntries.length - 1; i > 0; i--) {
+         const j = Math.floor(Math.random() * (i + 1));
+          [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
+         }
+
+      
         postEntries.forEach(([id, post]) => {
             if (document.getElementById(`card-${id}`)) return;
 
