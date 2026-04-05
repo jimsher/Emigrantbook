@@ -1898,6 +1898,9 @@ function togglePlayPause(vid) {
 
 // აქ იწყება ტოკერის ვიდეოები
 function renderTokenFeed() {
+let feedLimit = 15; // საწყისი რაოდენობა
+let isFeedLoading = false; // იცავს ბაზას ზედმეტი მოთხოვნებისგან
+  
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return; // თუ უკვე იტვირთება, მეორედ აღარ გაუშვას
     
