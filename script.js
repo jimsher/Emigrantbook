@@ -4350,21 +4350,23 @@ function checkNewVisitors(myUid) {
 
 
 
-// ეს ფუნქცია იმუშავებს ყველგან: მთავარ ფიდშიც და პროფილზეც
 window.openShare = function(postId, url) {
+    // ვქმნით შენი საიტის ლინკს ვიდეოს ID-ით
+    const siteLink = `https://emigrantbook.com/?v=${postId}`;
+
     if (navigator.share) {
         navigator.share({
             title: 'Emigrantbook',
-            url: url
+            text: 'ნახე ეს ვიდეო Emigrantbook-ზე!',
+            url: siteLink // აქ უკვე საიტის ლინკი წავა
         }).then(() => {
-            // გაზიარების დათვლა ბაზაში
             db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
         }).catch(() => console.log("Share cancelled"));
     } else {
-        // თუ ტელეფონი ძველია და Native Share არ აქვს
+        // ლინკის დაკოპირება (აქაც საიტის ლინკი)
         const dummy = document.createElement("input");
         document.body.appendChild(dummy);
-        dummy.value = url;
+        dummy.value = siteLink;
         dummy.select();
         document.execCommand("copy");
         document.body.removeChild(dummy);
@@ -4373,3 +4375,4 @@ window.openShare = function(postId, url) {
     }
 };
 
+window.shareVideo = window.openShare;
