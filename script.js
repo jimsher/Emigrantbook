@@ -3248,6 +3248,8 @@ let videoStream = null;
 
 // ეს ფუნქცია იხსნება ტოკენზე დაჭერისას
 async function openUploadModal() {
+   stopMainFeedVideos();
+  
     const modal = document.getElementById('uploadModal');
     if (modal) {
         modal.style.display = 'flex';
