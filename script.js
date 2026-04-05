@@ -1897,33 +1897,32 @@ function togglePlayPause(vid) {
 
 
 // აქ იწყება ტოკერის ვიდეოები
-let feedLimit = 15; // საწყისი რაოდენობა
-let isFeedLoading = false; // იცავს ბაზას ზედმეტი მოთხოვნებისგან
+let feedLimit = 15; // გლობალური ცვლადი (დატოვე ფუნქციის გარეთ)
+let isFeedLoading = false; // გლობალური ცვლადი
 
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
-    if (isFeedLoading) return; // თუ უკვე იტვირთება, მეორედ აღარ გაუშვას
+    if (isFeedLoading) return;
     
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
 
-    // ვიყენებთ feedLimit-ს, რომელიც სქროლვისას იზრდება
     db.ref('posts').limitToLast(feedLimit).once('value', snap => {
-        feed.innerHTML = ""; // ვასუფთავებთ ფიდს ხელახალი რენდერისთვის
         const data = snap.val(); 
         isFeedLoading = false;
-        
         if (!data) return;
-        
-        let postEntries = Object.entries(data);
-        
-        // --- შენი ორიგინალი რანდომიზაცია ---
-        for (let i = postEntries.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [postEntries[i], postEntries[j]] = [postEntries[j], postEntries[i]];
+
+        // მხოლოდ პირველად (როცა 15-ია) ვასუფთავებთ ფიდს
+        if (feedLimit === 15) {
+            feed.innerHTML = "";
         }
 
+        let postEntries = Object.entries(data).reverse(); 
+
         postEntries.forEach(([id, post]) => {
+            // თუ ეს ვიდეო უკვე დევს ეკრანზე, აღარ მივახატოთ (დუბლიკატების დაცვა)
+            if (document.getElementById(`card-${id}`)) return;
+
             if (post.media && post.media.some(m => m.type === 'video')) {
                 const videoUrl = post.media.find(m => m.type === 'video').url;
                 const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
@@ -1937,7 +1936,6 @@ function renderTokenFeed() {
                 const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
                 const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
                 
-                // შენი ორიგინალი HTML სტრუქტურა (დაემატა მხოლოდ preload="none")
                 card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
@@ -1985,13 +1983,11 @@ function renderTokenFeed() {
                     if (post.authorId !== auth.currentUser.uid) return;
                     const activityContainer = document.getElementById(`live-activity-${id}`);
                     if (!activityContainer) return;
-
                     const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
                     if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
                         setTimeout(startLikeCycle, 5000);
                         return;
                     }
-
                     let index = 0;
                     function spawnNext() {
                         const container = document.getElementById(`live-activity-${id}`);
@@ -2041,7 +2037,18 @@ function renderTokenFeed() {
         });
         setupAutoPlay();
     });
-}
+
+    // --- 🚀 Infinite Scroll ლოგიკა (ფუნქციის შიგნით, რომ ყოველთვის იმუშაოს) ---
+    feed.onscroll = function() {
+        if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
+            if (!isFeedLoading) {
+                feedLimit += 15; 
+                renderTokenFeed();
+            }
+        }
+    };
+}                                                setTimeout(startLikeCycle, 10000);
+
 // აქ მთავრდება
 
 // უსასრულო სქროლვა - გაუმჯობესებული ვერსია
