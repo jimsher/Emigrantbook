@@ -1933,6 +1933,29 @@ let isFeedLoading = false; // გლობალური ცვლადი
             [newEntries[i], newEntries[j]] = [newEntries[j], newEntries[i]];
         }
 
+      // ეს კოდი უნდა ჩაიწეროს ახალი ვიდეოების დახატვის (append) შემდეგ
+    function cleanupOldVideos() {
+    const allCards = document.querySelectorAll('.video-card');
+    
+    // თუ 30-ზე მეტი ვიდეო დაგროვდა ეკრანზე
+    if (allCards.length > 30) {
+        // პირველ 10 ვიდეოს (ყველაზე ძველებს) ვასუფთავებთ
+        for (let i = 0; i < 10; i++) {
+            // ვშლით თვითონ ვიდეო ელემენტს, რომ მეხსიერება გათავისუფლდეს
+            const videoTag = allCards[i].querySelector('video');
+            if (videoTag) {
+                videoTag.pause();
+                videoTag.src = "";
+                videoTag.load();
+                videoTag.remove();
+            }
+            // საერთოდ ვაქრობთ ძველ კარტას
+            allCards[i].remove();
+        }
+        console.log("ზედმეტი ვიდეოები წაიშალა მეხსიერებიდან 🧹");
+    }
+}
+
         // 4. ვხატავთ მხოლოდ არეულ ახალ პოსტებს
         newEntries.forEach(([id, post]) => {
             // 🛡️ დაცვა: თუ პოსტი წაშლილია ან მონაცემი არ მოყვება, საერთოდ არ შექმნას კარტა
