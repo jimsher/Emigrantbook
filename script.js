@@ -2013,6 +2013,8 @@ function cleanupOldVideos() {
                 
                 feed.appendChild(card);
 
+                cleanupOldVideos();
+
                 // --- ანიმაციის ლოგიკა (უცვლელი) ---
                 function startLikeCycle() {
                     if (post.authorId !== auth.currentUser.uid) return;
