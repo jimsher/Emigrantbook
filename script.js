@@ -1900,16 +1900,14 @@ function togglePlayPause(vid) {
 
 
 // აქ იწყება ტოკერის ვიდეოები
-let feedLimit = 15; // გლობალური ცვლადი (დატოვე ფუნქციის გარეთ)
-let isFeedLoading = false; // გლობალური ცვლადი
+    // 1. გლობალური ცვლადები
+let feedLimit = 15;
+let isFeedLoading = false;
 
-
-// --- 🚀 ფუნქცია, რომელიც ასუფთავებს მეხსიერებას (დატოვე გარეთ) ---
+// 2. მეხსიერების წმენდის ფუნქცია (რომ არ გაჭედოს)
 function cleanupOldVideos() {
     const allCards = document.querySelectorAll('.video-card');
-    // თუ 25-ზე მეტი ვიდეო დაგროვდა ეკრანზე (30 ბევრია, 25 უფრო სტაბილურია)
     if (allCards.length > 25) {
-        // პირველ 10 ვიდეოს (ყველაზე ძველებს) სრულად ვშლით
         for (let i = 0; i < 10; i++) {
             const videoTag = allCards[i].querySelector('video');
             if (videoTag) {
@@ -1920,18 +1918,17 @@ function cleanupOldVideos() {
             }
             allCards[i].remove();
         }
-        console.log("ზედმეტი ვიდეოები წაიშალა მეხსიერებიდან 🧹");
     }
 }
 
-       function renderTokenFeed() {
+// 3. მთავარი ფუნქცია
+function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
 
-    // ვიყენებთ limitToLast-ს, რომ სულ ახალი პოსტები წამოვიღოთ
     db.ref('posts').limitToLast(feedLimit).once('value', snap => {
         const data = snap.val(); 
         isFeedLoading = false;
@@ -1941,37 +1938,32 @@ function cleanupOldVideos() {
             feed.innerHTML = "";
         }
 
-        // 1. ვიღებთ ყველა პოსტს მასივის სახით
         let postEntries = Object.entries(data);
-
-        // 2. ვფილტრავთ მხოლოდ იმ პოსტებს, რომლებიც ეკრანზე ჯერ არ გვიხატია
+        // ვფილტრავთ იმას, რაც უკვე არ გვიხატია
         let newEntries = postEntries.filter(([id, post]) => !document.getElementById(`card-${id}`));
 
-        // 3. ვურევთ მხოლოდ ახალ პოსტებს (Fisher-Yates Shuffle)
+        // არევა (Shuffle)
         for (let i = newEntries.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [newEntries[i], newEntries[j]] = [newEntries[j], newEntries[i]];
         }
 
-        // 4. ვხატავთ მხოლოდ არეულ ახალ პოსტებს
         newEntries.forEach(([id, post]) => {
-            // 🛡️ დაცვა: თუ პოსტი წაშლილია ან მონაცემი არ მოყვება, საერთოდ არ შექმნას კარტა
             if (!post || !post.media || !post.media.some(m => m.type === 'video')) return;
 
-            if (post.media && post.media.some(m => m.type === 'video')) {
-                const videoUrl = post.media.find(m => m.type === 'video').url;
-                const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
-                const shareCount = post.shares || 0;
-                const saveCount = post.saves || 0;
-                
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.id = `card-${id}`;
-                
-                const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
-                const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
-                
-                card.innerHTML = `
+            const videoUrl = post.media.find(m => m.type === 'video').url;
+            const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
+            const shareCount = post.shares || 0;
+            const saveCount = post.saves || 0;
+            
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            card.id = `card-${id}`;
+            
+            const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
+            const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
+
+            card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
                 <div class="side-actions">
@@ -1996,8 +1988,8 @@ function cleanupOldVideos() {
                         <span id="share-count-${id}">${shareCount}</span>
                     </div>
                     <div class="action-item gift-btn" onclick="window.openGiftPanel('${id}', '${post.authorId}')">
-                       <i class="fas fa-gift" style="color: #ff4d4d;"></i>
-                       <span>Gift</span>
+                        <i class="fas fa-gift" style="color: #ff4d4d;"></i>
+                        <span>Gift</span>
                     </div>
                     ${post.authorId === auth.currentUser.uid ? `
                     <div class="action-item" onclick="deleteMyVideo('${id}')" style="margin-top: 5px;">
@@ -2010,72 +2002,69 @@ function cleanupOldVideos() {
                     <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
                     <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
                 </div>`;
-                
-                feed.appendChild(card);
+            
+            feed.appendChild(card);
+            
+            // 🧹 ყოველი ჩამატებისას ვამოწმებთ, რომ ზედმეტი არ დაგროვდეს
+            cleanupOldVideos();
 
-                cleanupOldVideos();
-
-                // --- ანიმაციის ლოგიკა (უცვლელი) ---
-                function startLikeCycle() {
-                    if (post.authorId !== auth.currentUser.uid) return;
-                    const activityContainer = document.getElementById(`live-activity-${id}`);
-                    if (!activityContainer) return;
-                    const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-                    if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
-                        setTimeout(startLikeCycle, 5000);
+            // --- ანიმაციის ციკლი (Live Like) ---
+            function startLikeCycle() {
+                if (post.authorId !== auth.currentUser.uid) return;
+                const activityContainer = document.getElementById(`live-activity-${id}`);
+                if (!activityContainer) return;
+                const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
+                if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
+                    setTimeout(startLikeCycle, 5000);
+                    return;
+                }
+                let index = 0;
+                function spawnNext() {
+                    const container = document.getElementById(`live-activity-${id}`);
+                    if (!container || index >= currentPostLikes.length) {
+                        setTimeout(startLikeCycle, 10000);
                         return;
                     }
-                    let index = 0;
-                    function spawnNext() {
-                        const container = document.getElementById(`live-activity-${id}`);
-                        if (!container) return;
-                        if (index < currentPostLikes.length) {
-                            const person = currentPostLikes[index];
-                            const avaBox = document.createElement('div');
-                            avaBox.className = 'floating-avatar-box';
-                            avaBox.style.position = 'absolute';
-                            avaBox.style.bottom = '0px'; 
-                            avaBox.style.left = '0px';
-                            avaBox.innerHTML = `
-                                <div style="position:relative; width:48px; height:48px;">
-                                    <img src="${person.photo || 'https://ui-avatars.com/api/?name=' + person.name}" 
-                                         style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                                    <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px; filter:drop-shadow(0 0 2px #000);"></i>
-                                </div>`;
-                            container.appendChild(avaBox);
-                            setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-                            index++;
-                            setTimeout(spawnNext, 1500);
-                        } else {
-                            setTimeout(startLikeCycle, 10000);
-                        }
-                    }
-                    spawnNext();
+                    const person = currentPostLikes[index];
+                    const avaBox = document.createElement('div');
+                    avaBox.className = 'floating-avatar-box';
+                    avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
+                    avaBox.innerHTML = `
+                        <div style="position:relative; width:48px; height:48px;">
+                            <img src="${person.photo || 'https://ui-avatars.com/api/?name=' + person.name}" 
+                                 style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                            <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
+                        </div>`;
+                    container.appendChild(avaBox);
+                    setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
+                    index++;
+                    setTimeout(spawnNext, 1500);
                 }
-                startLikeCycle();
-
-                // --- მონაცემების მოსმენა (უცვლელი) ---
-                db.ref(`comments/${id}`).on('value', cSnap => {
-                    const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
-                    const el = document.getElementById(`comm-count-${id}`);
-                    if(el) el.innerText = count;
-                });
-                db.ref(`users/${post.authorId}`).on('value', uSnap => {
-                    const u = uSnap.val();
-                    const ava = document.getElementById(`ava-${id}`);
-                    const name = document.getElementById(`name-${id}`);
-                    const status = document.getElementById(`mini-status-${id}`);
-                    if(u && u.photo && ava) ava.src = u.photo;
-                    if(u && u.name && name) name.innerText = "@" + u.name;
-                    if(u && u.presence === 'online' && status) status.style.display = 'block';
-                    else if(status) status.style.display = 'none';
-                });
+                spawnNext();
             }
+            startLikeCycle();
+
+            // --- მონაცემების განახლება (Realtime) ---
+            db.ref(`comments/${id}`).on('value', cSnap => {
+                const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
+                const el = document.getElementById(`comm-count-${id}`);
+                if(el) el.innerText = count;
+            });
+            db.ref(`users/${post.authorId}`).on('value', uSnap => {
+                const u = uSnap.val();
+                if(!u) return;
+                const ava = document.getElementById(`ava-${id}`);
+                const nameEl = document.getElementById(`name-${id}`);
+                const status = document.getElementById(`mini-status-${id}`);
+                if(u.photo && ava) ava.src = u.photo;
+                if(u.name && nameEl) nameEl.innerText = "@" + u.name;
+                if(status) status.style.display = (u.presence === 'online') ? 'block' : 'none';
+            });
         });
         setupAutoPlay();
     });
 
-    // --- Infinite Scroll ლოგიკა ---
+    // --- 🚀 Infinite Scroll ლოგიკა ---
     feed.onscroll = function() {
         if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
             if (!isFeedLoading) {
@@ -2084,8 +2073,7 @@ function cleanupOldVideos() {
             }
         }
     };
-}
-                                                       
+}                                                                   
 // აქ მთავრდება
 
 
