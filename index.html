@@ -3029,5 +3029,169 @@ div[style*="overflow-x:auto"] {
         </button>
     </div>
 </div>
+<script>
+ // გლობალური ცვლადები რეკლამისთვის
+let selectedPromoteVideoId = null;
+let selectedPromotePackId = null;
+let selectedPromotePrice = 0;
+
+// 🛑 აუცილებელი! ჩასვი Stripe-ისგან მიღებული API ID-ები (Price ID)
+const STRIPE_PROMOT_PRICES = {
+    1: "price_PROMOTION_PACK_1_ID", // 2.70€
+    2: "price_PROMOTION_PACK_2_ID", // 4.05€
+    3: "price_PROMOTION_PACK_3_ID"  // 5.40€
+};
+
+// 1. რეკლამის გვერდის გახსნა
+function openPromoteUI() {
+    toggleMoreMenu(); // ვხურავთ "More" მენიუს
+    stopMainFeedVideos(); // ვაჩერებთ ვიდეოებს ფიდში
+    
+    document.getElementById('promoteUI').style.display = 'flex';
+    document.getElementById('promoteUserAkho').innerText = myAkho.toFixed(2) + " AKHO";
+    
+    // ვასუფთავებთ არჩევანს
+    selectedPromoteVideoId = null;
+    selectedPromotePackId = null;
+    document.getElementById('promotePayBtn').disabled = true;
+    document.getElementById('promoteTotalDisplay').innerText = "ჯამი: 0.00 €";
+    
+    // ჩავტვირთოთ მომხმარებლის საკუთარი ვიდეოები
+    loadMyVideosForPromotion();
+}
+
+// 2. მომხმარებლის ვიდეოების ჩატვირთვა
+function loadMyVideosForPromotion() {
+    const grid = document.getElementById('promoteVideoGrid');
+    grid.innerHTML = "<p>იტვირთება ვიდეოები...</p>";
+    const myUid = auth.currentUser.uid;
+
+    db.ref('posts').orderByChild('authorId').equalTo(myUid).once('value', snap => {
+        grid.innerHTML = "";
+        const posts = snap.val();
+        
+        if (!posts) {
+            grid.innerHTML = "<p style='color:gray;'>ატვირთეთ ვიდეო რეკლამისთვის</p>";
+            return;
+        }
+
+        Object.entries(posts).reverse().forEach(([id, post]) => {
+            const video = post.media ? post.media.find(m => m.type === 'video') : null;
+            if (video) {
+                const item = document.createElement('div');
+                item.className = 'promote-grid-item';
+                item.id = `promote-vid-${id}`;
+                
+                // views, თუ არ გაქვს, 0 იყოს
+                const views = post.views || 0;
+                
+                item.innerHTML = `
+                    <video src="${video.url}" muted></video>
+                    <div class="views-count"><i class="fas fa-play"></i> ${views}</div>
+                    <div class="select-overlay"><i class="fas fa-check-circle"></i></div>
+                `;
+                
+                // ვიდეოს არჩევის ლოგიკა
+                item.onclick = () => selectPromoteVideo(id);
+                grid.appendChild(item);
+            }
+        });
+    });
+}
+
+// 3. ვიდეოს არჩევა
+function selectPromoteVideo(postId) {
+    // წავშალოთ წინა არჩევანი ვიზუალურად
+    const current = document.querySelector('.promote-grid-item.selected');
+    if (current) current.classList.remove('selected');
+
+    // მოვნიშნოთ ახალი
+    selectedPromoteVideoId = postId;
+    document.getElementById(`promote-vid-${postId}`).classList.add('selected');
+    
+    checkPromoteReady();
+}
+
+// 4. პაკეტის არჩევა
+function selectPromotePack(packId, price, minViews, maxViews) {
+    // წავშალოთ წინა არჩევანი
+    const current = document.querySelector('.promote-pack-card.selected');
+    if (current) current.classList.remove('selected');
+
+    // მოვნიშნოთ ახალი (CSS-ით `border: 2px solid var(--gold)`)
+    const packs = document.querySelectorAll('.promote-pack-card');
+    packs[packId - 1].classList.add('selected');
+
+    selectedPromotePackId = packId;
+    selectedPromotePrice = price;
+    
+    document.getElementById('promoteTotalDisplay').innerText = `ჯამი: ${price} €`;
+    
+    checkPromoteReady();
+}
+
+// 5. შემოწმება, მზად არის თუ არა გადასახდელად
+function checkPromoteReady() {
+    const btn = document.getElementById('promotePayBtn');
+    if (selectedPromoteVideoId && selectedPromotePackId) {
+        btn.disabled = false;
+        btn.style.background = '#fe2c55'; // TikTok-ის წითელი
+    } else {
+        btn.disabled = true;
+        btn.style.background = '#333';
+    }
+}
+
+// 6. 🚀 Stripe გადახდის დაწყება (Payment Checkout)
+async function startStripePromotion() {
+    if (!selectedPromoteVideoId || !selectedPromotePackId) return;
+
+    const priceId = STRIPE_PROMOT_PRICES[selectedPromotePackId];
+    if (!priceId || priceId.includes("PROMOTION")) {
+        alert("შეცდომა! Stripe-ის Price ID-ები არ არის დაყენებული. (Stripe -> Products)");
+        return;
+    }
+
+    const btn = document.getElementById('promotePayBtn');
+    btn.disabled = true;
+    btn.innerText = "მიმდინარეობს Stripe-ზე გადასვლა...";
+
+    // ვიძახებთ შენს Stripe-ის გამზადებულ ლოგიკას
+    // (უნდა გქონდეს Stripe დაინსტალირებული და initializeApp-ში stripeConfig ჩაწერილი)
+    // აქ 'stripe' არის შენი Stripe(publicKey) ინსტანცია.
+
+    try {
+        // ეს არის Firebase function, რომელიც ქმნის Stripe Checkout Session-ს
+        // (უნდა გქონდეს Cloud Function გამზადებული backend-ზე)
+        // თუ Back-end არ გაქვს, Stripe-ის Checkout Link უნდა გამოიყენო
+        
+        // **ინსტრუქცია:** Stripe-ის Checkout Session-ის შექმნა
+        const session = await stripe.redirectToCheckout({
+            lineItems: [{ price: priceId, quantity: 1 }],
+            mode: 'payment',
+            // success_url: გადახდა წარმატებულია, ჩავწეროთ რეკლამა ბაზაში
+            successUrl: window.location.origin + `/promote_success.html?postId=${selectedPromoteVideoId}&packId=${selectedPromotePackId}`,
+            cancelUrl: window.location.origin,
+            customerEmail: auth.currentUser.email
+        });
+
+        if (session.error) {
+            alert("შეცდომა: " + session.error.message);
+            checkPromoteReady(); // ღილაკის აღდგენა
+        }
+
+    } catch (err) {
+        console.error("Stripe Checkout Error:", err);
+        alert("კავშირის შეცდომა!");
+        checkPromoteReady();
+    }
+}
+
+// 7. დახურვა
+function closePromoteUI() {
+    document.getElementById('promoteUI').style.display = 'none';
+    refreshHomeFeed(); // ვიდეოების ხელახლა ჩართვა
+}
+</script>
 </body>
 </html>
