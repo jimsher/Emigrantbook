@@ -1903,7 +1903,27 @@ function togglePlayPause(vid) {
 let feedLimit = 15; // გლობალური ცვლადი (დატოვე ფუნქციის გარეთ)
 let isFeedLoading = false; // გლობალური ცვლადი
 
-    
+
+// --- 🚀 ფუნქცია, რომელიც ასუფთავებს მეხსიერებას (დატოვე გარეთ) ---
+function cleanupOldVideos() {
+    const allCards = document.querySelectorAll('.video-card');
+    // თუ 25-ზე მეტი ვიდეო დაგროვდა ეკრანზე (30 ბევრია, 25 უფრო სტაბილურია)
+    if (allCards.length > 25) {
+        // პირველ 10 ვიდეოს (ყველაზე ძველებს) სრულად ვშლით
+        for (let i = 0; i < 10; i++) {
+            const videoTag = allCards[i].querySelector('video');
+            if (videoTag) {
+                videoTag.pause();
+                videoTag.src = "";
+                videoTag.load();
+                videoTag.remove();
+            }
+            allCards[i].remove();
+        }
+        console.log("ზედმეტი ვიდეოები წაიშალა მეხსიერებიდან 🧹");
+    }
+}
+
        function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
@@ -1932,29 +1952,6 @@ let isFeedLoading = false; // გლობალური ცვლადი
             const j = Math.floor(Math.random() * (i + 1));
             [newEntries[i], newEntries[j]] = [newEntries[j], newEntries[i]];
         }
-
-      // ეს კოდი უნდა ჩაიწეროს ახალი ვიდეოების დახატვის (append) შემდეგ
-    function cleanupOldVideos() {
-    const allCards = document.querySelectorAll('.video-card');
-    
-    // თუ 30-ზე მეტი ვიდეო დაგროვდა ეკრანზე
-    if (allCards.length > 30) {
-        // პირველ 10 ვიდეოს (ყველაზე ძველებს) ვასუფთავებთ
-        for (let i = 0; i < 10; i++) {
-            // ვშლით თვითონ ვიდეო ელემენტს, რომ მეხსიერება გათავისუფლდეს
-            const videoTag = allCards[i].querySelector('video');
-            if (videoTag) {
-                videoTag.pause();
-                videoTag.src = "";
-                videoTag.load();
-                videoTag.remove();
-            }
-            // საერთოდ ვაქრობთ ძველ კარტას
-            allCards[i].remove();
-        }
-        console.log("ზედმეტი ვიდეოები წაიშალა მეხსიერებიდან 🧹");
-    }
-}
 
         // 4. ვხატავთ მხოლოდ არეულ ახალ პოსტებს
         newEntries.forEach(([id, post]) => {
