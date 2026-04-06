@@ -1900,11 +1900,12 @@ function togglePlayPause(vid) {
 
 
 // აქ იწყება ტოკერის ვიდეოები
-    // 1. გლობალური ცვლადები
-let feedLimit = 15;
+    // 1. ცვლადები (დატოვე გარეთ)
+let lastVisibleTimestamp = null; 
 let isFeedLoading = false;
+const FEED_LIMIT = 15;
 
-// 2. მეხსიერების წმენდის ფუნქცია (რომ არ გაჭედოს)
+// 2. წმენდის ფუნქცია
 function cleanupOldVideos() {
     const allCards = document.querySelectorAll('.video-card');
     if (allCards.length > 25) {
@@ -1921,7 +1922,7 @@ function cleanupOldVideos() {
     }
 }
 
-// 3. მთავარი ფუნქცია
+// 3. მთავარი ფუნქცია (შენი სრული ლოგიკით)
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
@@ -1929,27 +1930,25 @@ function renderTokenFeed() {
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
 
-    db.ref('posts').limitToLast(feedLimit).once('value', snap => {
+    // Pagination ლოგიკა
+    let query = db.ref('posts').orderByChild('timestamp');
+    if (lastVisibleTimestamp) {
+        query = query.endAt(lastVisibleTimestamp - 1);
+    }
+
+    query.limitToLast(FEED_LIMIT).once('value', snap => {
         const data = snap.val(); 
         isFeedLoading = false;
         if (!data) return;
 
-        if (feedLimit === 15) {
-            feed.innerHTML = "";
-        }
+        // მასივად გადაყვანა და დროით დალაგება
+        let postEntries = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+        
+        // ვიმახსოვრებთ ბოლო დროს შემდეგი სქროლისთვის
+        lastVisibleTimestamp = postEntries[postEntries.length - 1][1].timestamp;
 
-        let postEntries = Object.entries(data);
-        // ვფილტრავთ იმას, რაც უკვე არ გვიხატია
-        let newEntries = postEntries.filter(([id, post]) => !document.getElementById(`card-${id}`));
-
-        // არევა (Shuffle)
-        for (let i = newEntries.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [newEntries[i], newEntries[j]] = [newEntries[j], newEntries[i]];
-        }
-
-        newEntries.forEach(([id, post]) => {
-            if (!post || !post.media || !post.media.some(m => m.type === 'video')) return;
+        postEntries.forEach(([id, post]) => {
+            if (!post || !post.media || !post.media.some(m => m.type === 'video') || document.getElementById(`card-${id}`)) return;
 
             const videoUrl = post.media.find(m => m.type === 'video').url;
             const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
@@ -1961,8 +1960,9 @@ function renderTokenFeed() {
             card.id = `card-${id}`;
             
             const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
-            const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];
-
+            const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
+            
+            // --- შენი სრული INNER HTML (არაფერია ამოკლებული) ---
             card.innerHTML = `
                 <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
@@ -2004,11 +2004,9 @@ function renderTokenFeed() {
                 </div>`;
             
             feed.appendChild(card);
-            
-            // 🧹 ყოველი ჩამატებისას ვამოწმებთ, რომ ზედმეტი არ დაგროვდეს
-            cleanupOldVideos();
+            cleanupOldVideos(); // 🧹 წმენდა
 
-            // --- ანიმაციის ციკლი (Live Like) ---
+            // --- შენი ორიგინალი LIVE LIKE ციკლი ---
             function startLikeCycle() {
                 if (post.authorId !== auth.currentUser.uid) return;
                 const activityContainer = document.getElementById(`live-activity-${id}`);
@@ -2021,30 +2019,31 @@ function renderTokenFeed() {
                 let index = 0;
                 function spawnNext() {
                     const container = document.getElementById(`live-activity-${id}`);
-                    if (!container || index >= currentPostLikes.length) {
+                    if (!container) return;
+                    if (index < currentPostLikes.length) {
+                        const person = currentPostLikes[index];
+                        const avaBox = document.createElement('div');
+                        avaBox.className = 'floating-avatar-box';
+                        avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
+                        avaBox.innerHTML = `
+                            <div style="position:relative; width:48px; height:48px;">
+                                <img src="${person.photo || 'https://ui-avatars.com/api/?name=' + person.name}" 
+                                     style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                                <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
+                            </div>`;
+                        container.appendChild(avaBox);
+                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
+                        index++;
+                        setTimeout(spawnNext, 1500);
+                    } else {
                         setTimeout(startLikeCycle, 10000);
-                        return;
                     }
-                    const person = currentPostLikes[index];
-                    const avaBox = document.createElement('div');
-                    avaBox.className = 'floating-avatar-box';
-                    avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
-                    avaBox.innerHTML = `
-                        <div style="position:relative; width:48px; height:48px;">
-                            <img src="${person.photo || 'https://ui-avatars.com/api/?name=' + person.name}" 
-                                 style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                            <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
-                        </div>`;
-                    container.appendChild(avaBox);
-                    setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-                    index++;
-                    setTimeout(spawnNext, 1500);
                 }
                 spawnNext();
             }
             startLikeCycle();
 
-            // --- მონაცემების განახლება (Realtime) ---
+            // --- Realtime მსმენელები ---
             db.ref(`comments/${id}`).on('value', cSnap => {
                 const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                 const el = document.getElementById(`comm-count-${id}`);
@@ -2054,26 +2053,24 @@ function renderTokenFeed() {
                 const u = uSnap.val();
                 if(!u) return;
                 const ava = document.getElementById(`ava-${id}`);
-                const nameEl = document.getElementById(`name-${id}`);
+                const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
                 if(u.photo && ava) ava.src = u.photo;
-                if(u.name && nameEl) nameEl.innerText = "@" + u.name;
-                if(status) status.style.display = (u.presence === 'online') ? 'block' : 'none';
+                if(u.name && name) name.innerText = "@" + u.name;
+                if(u.presence === 'online' && status) status.style.display = 'block';
+                else if(status) status.style.display = 'none';
             });
         });
         setupAutoPlay();
     });
 
-    // --- 🚀 Infinite Scroll ლოგიკა ---
+    // --- Infinite Scroll ---
     feed.onscroll = function() {
-        if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 600) {
-            if (!isFeedLoading) {
-                feedLimit += 15; 
-                renderTokenFeed();
-            }
+        if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 800) {
+            renderTokenFeed();
         }
     };
-}                                                                   
+}                                                     
 // აქ მთავრდება
 // უსასრულო სქროლვა - გაუმჯობესებული ვერსია
 window.addEventListener('scroll', function() {
