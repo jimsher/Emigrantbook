@@ -1651,11 +1651,18 @@ function playFullVideo(url, postId, currentIndex) {
             if (giftBtn) {
                 giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
             }
-          // იპოვე playFullVideo ფუნქციის ბოლოში ეს ადგილი და ჩასვი:
+          
+          // იპოვე ეს ადგილი playFullVideo-ში და ჩაანაცვლე ამით:
            const moreBtn = document.querySelector('#fullVideoOverlay .more-btn'); 
            if (moreBtn) {
+           // 🔍 ვამოწმებთ: თუ ვიდეოს ავტორი მე ვარ, გამოჩნდეს, თუ არა - დაიმალოს
+           if (data.authorId === auth.currentUser.uid) {
+            moreBtn.style.display = 'flex'; // ჩანს
             moreBtn.onclick = () => toggleMoreMenu(window.currentFullVideoId);
+            } else {
+            moreBtn.style.display = 'none'; // იმალება სხვის პროფილზე
             }
+           }
         });
 
         db.ref(`comments/${postId}`).on('value', cSnap => {
