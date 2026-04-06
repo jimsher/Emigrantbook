@@ -1651,6 +1651,11 @@ function playFullVideo(url, postId, currentIndex) {
             if (giftBtn) {
                 giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
             }
+          // იპოვე playFullVideo ფუნქციის ბოლოში ეს ადგილი და ჩასვი:
+           const moreBtn = document.querySelector('#fullVideoOverlay .more-btn'); 
+           if (moreBtn) {
+            moreBtn.onclick = () => toggleMoreMenu(window.currentFullVideoId);
+            }
         });
 
         db.ref(`comments/${postId}`).on('value', cSnap => {
