@@ -2072,6 +2072,8 @@ function renderTokenFeed() {
     };
 }                                                     
 // აქ მთავრდება
+
+
 // უსასრულო სქროლვა - გაუმჯობესებული ვერსია
 window.addEventListener('scroll', function() {
     const feed = document.getElementById('main-feed');
@@ -2089,7 +2091,62 @@ window.addEventListener('scroll', function() {
         renderTokenFeed();
     }
 }, { passive: true });
+// აქ მთავრდება სქროლვა
 
+
+// აქ იწყება სტორაგიდან წაშლა ვუდეოსი
+async function deleteMyVideo(postId) {
+    if (!confirm("ნამდვილად გსურთ ვიდეოს სამუდამოდ წაშლა?")) return;
+
+    try {
+        // 1. ჯერ ვიღებთ პოსტის მონაცემებს Database-დან
+        const snap = await db.ref(`posts/${postId}`).once('value');
+        const post = snap.val();
+
+        if (!post) {
+            console.error("პოსტი ვერ მოიძებნა!");
+            return;
+        }
+
+        // 2. წაშლა Storage-დან (ვიდეო ფაილი)
+        const videoMedia = post.media ? post.media.find(m => m.type === 'video') : null;
+        if (videoMedia && videoMedia.url) {
+            try {
+                // firebase.storage().refFromURL პირდაპირ პოულობს ფაილს URL-ით
+                const storageRef = firebase.storage().refFromURL(videoMedia.url);
+                await storageRef.delete();
+                console.log("ფაილი წაიშალა Storage-დან ✅");
+            } catch (storageErr) {
+                console.warn("ფაილი Storage-ში უკვე აღარ არსებობს:", storageErr);
+            }
+        }
+
+        // 3. წაშლა Realtime Database-დან (პოსტის ჩანაწერი)
+        await db.ref(`posts/${postId}`).remove();
+        
+        // 4. წაშლა კომენტარების ბაზიდან (რომ ნაგავი არ დარჩეს)
+        await db.ref(`comments/${postId}`).remove();
+
+        // 5. ვიზუალური წაშლა ეკრანიდან (რომ ეგრევე გაქრეს)
+        const card = document.getElementById(`card-${postId}`);
+        if (card) {
+            const video = card.querySelector('video');
+            if (video) {
+                video.pause();
+                video.src = "";
+                video.load();
+            }
+            card.remove();
+        }
+
+        console.log("პოსტი წარმატებით წაიშალა ყველგან!");
+
+    } catch (error) {
+        console.error("წაშლისას მოხდა შეცდომა:", error);
+        alert("შეცდომა წაშლისას: " + error.message);
+    }
+}
+// აქ მთავრდება ყველაფერი 
 
 
 
