@@ -4501,3 +4501,34 @@ document.addEventListener('focusin', (e) => {
         stopMainFeedVideos();
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// სამი წერტილის ლოგიკა და გახსნა
+function toggleMoreMenu(postId) {
+    const panel = document.getElementById('more-menu-panel');
+    panel.classList.toggle('active');
+    
+    // თუ postId გადავეცით, შეგვიძლია ის გამოვიყენოთ ფუნქციებში
+    if (postId) {
+        window.currentSelectedPost = postId;
+    }
+}
+
+// მაგალითისთვის ერთი ფუნქცია
+function downloadVideo(postId) {
+    alert("ვიდეოს გადმოწერა დაიწყო პოსტისთვის: " + postId);
+    toggleMoreMenu(); // მენიუს დაკეტვა
+}
