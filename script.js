@@ -4546,4 +4546,57 @@ document.addEventListener('focusin', (e) => {
 
 
 
+// ვიდეოს პოპულიზაციის გვერდი
+function openPromoteUI() {
+    const menu = document.getElementById('more-menu-panel');
+    if (menu) menu.classList.remove('active'); // ვხურავთ სამ წერტილს
+    
+    document.getElementById('promoteUI').style.display = 'flex';
+    
+    // ვიდეოების ჩატვირთვა
+    const grid = document.getElementById('promoteVideoGrid');
+    grid.innerHTML = "";
+    db.ref('posts').orderByChild('authorId').equalTo(auth.currentUser.uid).once('value', snap => {
+        const posts = snap.val();
+        if (posts) {
+            Object.entries(posts).reverse().forEach(([id, post]) => {
+                const video = post.media ? post.media.find(m => m.type === 'video') : null;
+                if (video) {
+                    grid.innerHTML += `
+                    <div onclick="selectEbVideo('${id}')" id="vid-${id}" style="min-width:100px; height:130px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:2px solid transparent; position:relative;">
+                        <video src="${video.url}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;"></video>
+                        <div style="position:absolute; bottom:5px; left:5px; font-size:10px;"><i class="fas fa-play"></i> ${post.views || 0}</div>
+                    </div>`;
+                }
+            });
+        }
+    });
+}
 
+let selectedEbVideoId = null;
+function selectEbVideo(id) {
+    selectedEbVideoId = id;
+    document.querySelectorAll('#promoteVideoGrid div').forEach(el => el.style.borderColor = "transparent");
+    document.getElementById('vid-' + id).style.borderColor = "#fe2c55";
+    checkEbReady();
+}
+
+function selectEbPack(el, price) {
+    document.querySelectorAll('.eb-pack').forEach(p => p.style.background = "#1a1a1a");
+    el.style.background = "#261014";
+    document.getElementById('ebTotal').innerText = price.toFixed(2).replace('.', ',') + " $";
+    window.selectedEbPrice = price;
+    checkEbReady();
+}
+
+function checkEbReady() {
+    if (selectedEbVideoId && window.selectedEbPrice) {
+        const btn = document.getElementById('ebPayBtn');
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }
+}
+
+function closePromoteUI() {
+    document.getElementById('promoteUI').style.display = 'none';
+}
