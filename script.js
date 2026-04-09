@@ -2222,11 +2222,11 @@ window.openGiftPanel = function(postId, authorId) {
     const gift22 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/guli1.gif";
     const gift23 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/torti1.gif";
     const gift24 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif";
-    const gift25 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali1.gif";
-    const gift26 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali2.gif";
-    const gift27 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/spilo.gif";
+    const gift25 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali1.png";
+    const gift26 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali2.png";
+    const gift27 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/spilo.png";
     const gift28 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/mikvarxar1.gif";
-    const gift29 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/tagvi.gif";
+    const gift29 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/tagvi.png";
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
