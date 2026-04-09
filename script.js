@@ -2214,6 +2214,19 @@ window.openGiftPanel = function(postId, authorId) {
     const gift14 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin2.gif";
     const gift15 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin3.gif";
     const gift16 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa1.gif";
+    const gift17 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa2.gif";
+    const gift18 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa3.gif";
+    const gift19 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa4.gif";
+    const gift20 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift21 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift22 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift23 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift24 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift25 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift26 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift27 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift28 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
+    const gift29 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -2237,7 +2250,20 @@ window.openGiftPanel = function(postId, authorId) {
             <div onclick="window.processGift('${authorId}', 150, '${gift14}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift14}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
             <div onclick="window.processGift('${authorId}', 150, '${gift15}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift15}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
             <div onclick="window.processGift('${authorId}', 150, '${gift16}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift16}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-        </div>`;
+            <div onclick="window.processGift('${authorId}', 150, '${gift17}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift17}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>     
+            <div onclick="window.processGift('${authorId}', 150, '${gift18}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift18}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift19}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift19}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift20}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift20}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift21}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift21}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift22}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift22}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift23}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift23}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift24}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift24}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift25}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift25}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift26}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift26}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift27}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift27}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift28}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift28}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            <div onclick="window.processGift('${authorId}', 150, '${gift29}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift29}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+           </div>`;
     document.body.appendChild(panel);
 };
 
