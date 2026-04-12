@@ -209,6 +209,8 @@ auth.onAuthStateChanged(user => {
     checkDailyBonus();
     startGlobalUnreadCounter();
     listenForIncomingCalls(user);
+
+    startWallNotificationListener();
     
     // ... დანარჩენი შენი კოდი უცვლელად ...
    
