@@ -2910,6 +2910,7 @@ function loadCommunityPosts() {
         Object.entries(data).reverse().forEach(([id, post]) => {
             const isLiked = (myUid && post.likes && post.likes[myUid]);
             const likeCount = post.likes ? Object.keys(post.likes).length : 0;
+            const isTagged = (myUid && post.taggedBy && post.taggedBy[myUid]);
             
             // --- დროის ფორმატირება ---
             const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
@@ -2923,6 +2924,11 @@ function loadCommunityPosts() {
                    <div style="display:flex; flex-direction:column; align-items:flex-start;">
                    <b style="color:white; font-size:14px; margin:0; line-height:1.2;">${post.authorName}</b>
                     <span style="color:#888; font-size:10px; margin-top:2px; display:block;">${postTime}</span>
+                    </div>
+
+                    <div onclick="window.toggleWallTag('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <i class="${isTagged ? 'fas' : 'far'} fa-user-tag" style="${isTagged ? 'color:var(--gold);' : 'color:#888;'}"></i>
+                    <span style="font-size:14px; font-weight:bold;">${isTagged ? 'მონიშნულია' : 'მონიშვნა'}</span>
                     </div>
                     </div>
                     
