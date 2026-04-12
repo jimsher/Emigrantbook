@@ -2306,7 +2306,7 @@ window.processGift = function(targetUid, cost, giftUrl) {
             </div>
             <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
                 <div class="gift-image-container">
-                    <img src="gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
+                    
                     <div class="golden-glow-overlay"></div>
                 </div>
                 <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
