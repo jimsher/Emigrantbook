@@ -1219,6 +1219,13 @@ function sendMessage() {
  function openProfile(uid) {
  stopMainFeedVideos();
  document.getElementById('profileUI').style.display = 'flex';
+
+   // ვმალავთ და ვასუფთავებთ მონიშნულების სივრცეს ახალ პროფილზე გადასვლისას
+    const taggedList = document.getElementById('userTaggedPostsList');
+    if (taggedList) {
+        taggedList.style.display = 'none';
+        taggedList.innerHTML = ''; 
+    }
  
  // ვინახავთ UID-ს, რომ ფოტოების სექციამ იცოდეს ვისი სურათები წამოიღოს
  const profNameEl = document.getElementById('profName');
