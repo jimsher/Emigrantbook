@@ -3315,16 +3315,10 @@ function switchTab(tabName, btn) {
     } 
       
     else if (tabName === 'tagged') {
-        // ძველ ტექსტს ვმალავთ (თუ noMsg ცვლადით გამოგქონდა)
-        if(typeof noMsg !== 'undefined') noMsg.style.display = 'none'; 
+        noMsg.style.display = 'block';
         noMsg.innerText = " პოსტები არ არის";
-        const taggedList = document.getElementById('userTaggedPostsList');
-      
-        if (taggedList) {
-            taggedList.style.display = 'flex'; // ვაჩენთ ჩვენს ახალ სივრცეს
-            loadMyTaggedWallPosts(viewUid); // ვიძახებთ პოსტების წამომღებს
-        }
     }
+}
   
 
 function loadMySavedPosts() {
