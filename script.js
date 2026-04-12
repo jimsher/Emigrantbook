@@ -2925,11 +2925,6 @@ function loadCommunityPosts() {
                    <b style="color:white; font-size:14px; margin:0; line-height:1.2;">${post.authorName}</b>
                     <span style="color:#888; font-size:10px; margin-top:2px; display:block;">${postTime}</span>
                     </div>
-
-                    <div onclick="window.toggleWallTag('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                    <i class="${isTagged ? 'fas' : 'far'} fa-user-tag" style="${isTagged ? 'color:var(--gold);' : 'color:#888;'}"></i>
-                    <span style="font-size:14px; font-weight:bold;">${isTagged ? 'მონიშნულია' : 'მონიშვნა'}</span>
-                    </div>
                     </div>
                     
                     <div>
