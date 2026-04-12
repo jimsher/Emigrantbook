@@ -4686,3 +4686,105 @@ function startWallNotificationListener() {
     });
 }
 // აქ მატავრდება
+
+
+
+
+
+
+
+
+
+
+
+// პოსრის მონიშვნის ლოგიკა
+// 1. ღილაკზე დაჭერის ლოგიკა კედლის პოსტებისთვის
+window.toggleWallTag = function(postId) {
+    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    const myUid = auth.currentUser.uid;
+    const tagRef = db.ref('community_posts/' + postId + '/taggedBy/' + myUid);
+
+    tagRef.once('value').then(snap => {
+        if (snap.exists()) {
+            tagRef.remove(); // თუ მონიშნულია, ვშლით
+        } else {
+            tagRef.set(true); // თუ არაა, ვნიშნავთ
+        }
+    }).catch(err => console.error("Tag Error:", err));
+};
+
+// 2. პროფილში მონიშნული პოსტების ჩატვირთვა
+function loadMyTaggedWallPosts(viewUid) {
+    const box = document.getElementById('userTaggedPostsList');
+    if (!box) return;
+    
+    // აქ ვწერთ იმ ტექსტს, რაც შენ ფოტოზე გაქვს სანამ ჩაიტვირთება
+    box.innerHTML = "<p style='color:gray; text-align:center;'>იტვირთება...</p>";
+
+    const myUid = auth.currentUser ? auth.currentUser.uid : null;
+
+    db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
+        box.innerHTML = "";
+        const data = snap.val();
+        
+        if (!data) {
+            // თუ საერთოდ არაა პოსტები ბაზაში
+            box.innerHTML = "<p style='color:gray; text-align:center;'>მონიშნული პოსტები არ არის</p>";
+            return;
+        }
+
+        let count = 0;
+        Object.entries(data).reverse().forEach(([id, post]) => {
+            // ვამოწმებთ, აქვს თუ არა მონიშნული იმ იუზერს, ვის პროფილსაც ვუყურებთ
+            if (post.taggedBy && post.taggedBy[viewUid]) {
+                count++;
+                const isLiked = (myUid && post.likes && post.likes[myUid]);
+                const isTagged = (myUid && post.taggedBy && post.taggedBy[myUid]);
+                const likeCount = post.likes ? Object.keys(post.likes).length : 0;
+                const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
+                
+                const card = document.createElement('div');
+                card.className = "post-card";
+                card.innerHTML = `
+                    <div class="post-header" style="display:flex; align-items:center; margin-bottom:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
+                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover; margin-right:10px;">
+                        <div style="display:flex; flex-direction:column;">
+                            <b style="color:white; font-size:14px;">${post.authorName}</b>
+                            <span style="color:#888; font-size:10px;">${postTime}</span>
+                        </div>
+                    </div>
+                    
+                    ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB;">${post.text}</p>` : ''}
+                    ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
+                    
+                    <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
+                        <div onclick="window.toggleWallLike('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
+                            <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
+                        </div>
+                        <div onclick="openComments('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            <i class="far fa-comment"></i>
+                            <span id="comm-count-prof-${id}" style="font-size:14px; font-weight:bold;">0</span>
+                        </div>
+                        <div onclick="window.toggleWallTag('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            <i class="${isTagged ? 'fas' : 'far'} fa-user-tag" style="${isTagged ? 'color:var(--gold);' : 'color:#888;'}"></i>
+                            <span style="font-size:14px; font-weight:bold;">${isTagged ? 'მონიშნულია' : 'მონიშვნა'}</span>
+                        </div>
+                    </div>`;
+                box.appendChild(card);
+
+                // კომენტარების რიცხვის განახლება
+                db.ref('comments/' + id).on('value', cSnap => {
+                    const cElem = document.getElementById('comm-count-prof-' + id);
+                    if (cElem) cElem.innerText = cSnap.numChildren();
+                });
+            }
+        });
+
+        if(count === 0) {
+            // თუ აქვს პოსტები ბაზაში, მაგრამ არცერთი არაა ამ იუზერის მონიშნული
+            box.innerHTML = "<p style='color:gray; text-align:center;'>მონიშნული პოსტები არ არის</p>";
+        }
+    });
+}
+// აქ მთავრდება
