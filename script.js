@@ -4714,43 +4714,68 @@ window.toggleWallTag = function(postId) {
 };
 
 // 2. პროფილში მონიშნული პოსტების ჩატვირთვა
-function loadMyTaggedWallPosts() {
-    const box = document.getElementById('userTaggedPostsList');
-    if (!box) return;
+window.loadMyTaggedWallPosts = function() {
+    // 1. ვმალავთ ყველა სხვა სივრცეს, რომ ხელი არ შეგვიშალონ
+    const profGrid = document.getElementById('profGrid');
+    const photosGrid = document.getElementById('userPhotosGrid');
+    const noPhotos = document.getElementById('noPhotosMsg');
     
-    box.innerHTML = "<p style='color:gray; text-align:center; padding: 20px;'>იტვირთება მონაცემები...</p>";
+    if(profGrid) profGrid.style.display = 'none';
+    if(photosGrid) photosGrid.style.display = 'none';
+    if(noPhotos) noPhotos.style.display = 'none';
+    // თუ რაიმე ტექსტი noMsg გაქვს სადმე, იმასაც ვმალავთ
+    if(typeof noMsg !== 'undefined') noMsg.style.display = 'none';
 
-    // ვამოწმებთ, შესულია თუ არა მომხმარებელი
+    // 2. ვქმნით ჩვენს კონტეინერს დინამიურად (თუ არ არსებობს)
+    let box = document.getElementById('userTaggedPostsList');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'userTaggedPostsList';
+        box.style.display = 'flex';
+        box.style.flexDirection = 'column';
+        box.style.gap = '15px';
+        box.style.padding = '10px';
+        // ვსვამთ profGrid-ის გვერდით HTML-ში
+        if(profGrid && profGrid.parentNode) {
+            profGrid.parentNode.insertBefore(box, profGrid.nextSibling);
+        } else {
+            document.body.appendChild(box); // სათადარიგო გეგმა
+        }
+    }
+    
+    // ვაჩენთ ჩვენს კონტეინერს
+    box.style.display = 'flex';
+    box.innerHTML = "<p style='color:var(--gold); text-align:center; padding:20px;'>ვიძებნით ბაზაში...</p>";
+
+    // 3. ამოწმებს ავტორიზაციას
     const user = auth.currentUser;
     if (!user) {
-        box.innerHTML = "<p style='color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია</p>";
+        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხოვთ გაიაროთ ავტორიზაცია</p>";
         return;
     }
 
-    // ვიღებთ ზუსტად შენს (შესული მომხმარებლის) ID-ს
     const myUid = user.uid;
 
+    // 4. მოგვაქვს მონაცემები
     db.ref('community_posts').once('value', snap => {
-        box.innerHTML = ""; // ვასუფთავებთ ეკრანს
+        box.innerHTML = ""; // ვშლით "ვიძებნით..." ტექსტს
         const data = snap.val();
         
         if (!data) {
-            box.innerHTML = "<p style='color:gray; text-align:center;'>მონიშნული პოსტები არ არის</p>";
+            box.innerHTML = "<p style='color:red; text-align:center; padding:20px;'>ბაზაში პოსტები საერთოდ არ არის</p>";
             return;
         }
 
         let count = 0;
         
-        // გავდივართ ყველა პოსტს სათითაოდ
         Object.keys(data).reverse().forEach(id => {
             const post = data[id];
             
-            // 🔴 მთავარი შემოწმება: აქვს თუ არა შენს ID-ს ეს პოსტი მონიშნული!
+            // ვამოწმებთ მონიშვნას
             if (post.taggedBy && post.taggedBy[myUid]) {
                 count++;
                 
                 const isLiked = (post.likes && post.likes[myUid]);
-                const isTagged = true; // რადგან აქ მოხვდა, ესე იგი მონიშნულია
                 const likeCount = post.likes ? Object.keys(post.likes).length : 0;
                 const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
                 
@@ -4773,29 +4798,19 @@ function loadMyTaggedWallPosts() {
                             <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
                             <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
                         </div>
-                        <div onclick="openComments('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                            <i class="far fa-comment"></i>
-                            <span id="comm-count-prof-${id}" style="font-size:14px; font-weight:bold;">0</span>
-                        </div>
-                        <div onclick="window.toggleWallTag('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <div style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                             <i class="fas fa-user-tag" style="color:var(--gold);"></i>
                             <span style="font-size:14px; font-weight:bold;">მონიშნულია</span>
                         </div>
                     </div>`;
                 box.appendChild(card);
-
-                // კომენტარების რაოდენობის განახლება
-                db.ref('comments/' + id).on('value', cSnap => {
-                    const cElem = document.getElementById('comm-count-prof-' + id);
-                    if (cElem) cElem.innerText = cSnap.numChildren();
-                });
             }
         });
 
-        // თუ ციკლმა ჩაიარა და ვერცერთი შენი მონიშნული ვერ იპოვა
-        if(count === 0) {
-            box.innerHTML = "<p style='color:gray; text-align:center;'>მონიშნული პოსტები არ არის</p>";
+        // თუ ყველაფერმა ჩაიარა და მაინც 0 არის
+        if (count === 0) {
+            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>შენს მიერ მონიშნული პოსტები ვერ მოიძებნა</p>";
         }
     });
-}
+};
 // აქ მთავრდება
