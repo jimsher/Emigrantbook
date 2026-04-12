@@ -4627,3 +4627,48 @@ function checkEbReady() {
 function closePromoteUI() {
     document.getElementById('promoteUI').style.display = 'none';
 }
+
+
+
+
+
+
+
+
+
+
+
+// პოსტების ახალი ნიტიფიკაცია 
+//პოსტის ღილაკზე
+// ==========================================
+// 🔴 პოსტების ნოტიფიკაციის (წითელი ბუშტის) ლოგიკა
+// ==========================================
+let newWallPostsCount = 0;
+
+function startWallNotificationListener() {
+    const myUid = auth.currentUser.uid;
+    let isInitialLoad = true; // ვიყენებთ იმისთვის, რომ ძველ პოსტებზე არ აანთოს
+
+    // ვუსმენთ მხოლოდ ახალ დამატებულ პოსტებს
+    db.ref('community_posts').orderByChild('timestamp').limitToLast(1).on('child_added', snap => {
+        // საიტის ჩატვირთვისას ბოლო არსებულ პოსტს ვაიგნორებთ
+        if (isInitialLoad) {
+            isInitialLoad = false;
+            return;
+        }
+        
+        const post = snap.val();
+        
+        // თუ ახალი პოსტი ვიღაც სხვამ დადო (და არა მე)
+        if (post && post.authorId !== myUid) {
+            newWallPostsCount++; // ვზრდით ციფრს 1-ით
+            
+            const badge = document.getElementById('newPostsBadge');
+            if (badge) {
+                badge.innerText = newWallPostsCount;
+                badge.style.display = 'inline-block'; // ვაჩენთ ეკრანზე
+            }
+        }
+    });
+}
+// აქ მატავრდება
