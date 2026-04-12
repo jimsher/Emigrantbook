@@ -4714,32 +4714,43 @@ window.toggleWallTag = function(postId) {
 };
 
 // 2. პროფილში მონიშნული პოსტების ჩატვირთვა
-function loadMyTaggedWallPosts(viewUid) {
+function loadMyTaggedWallPosts() {
     const box = document.getElementById('userTaggedPostsList');
     if (!box) return;
     
-    // აქ ვწერთ იმ ტექსტს, რაც შენ ფოტოზე გაქვს სანამ ჩაიტვირთება
-    box.innerHTML = "<p style='color:gray; text-align:center;'>იტვირთება...</p>";
+    box.innerHTML = "<p style='color:gray; text-align:center; padding: 20px;'>იტვირთება მონაცემები...</p>";
 
-    const myUid = auth.currentUser ? auth.currentUser.uid : null;
+    // ვამოწმებთ, შესულია თუ არა მომხმარებელი
+    const user = auth.currentUser;
+    if (!user) {
+        box.innerHTML = "<p style='color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია</p>";
+        return;
+    }
 
-    db.ref('community_posts').orderByChild('timestamp').on('value', snap => {
-        box.innerHTML = "";
+    // ვიღებთ ზუსტად შენს (შესული მომხმარებლის) ID-ს
+    const myUid = user.uid;
+
+    db.ref('community_posts').once('value', snap => {
+        box.innerHTML = ""; // ვასუფთავებთ ეკრანს
         const data = snap.val();
         
         if (!data) {
-            // თუ საერთოდ არაა პოსტები ბაზაში
             box.innerHTML = "<p style='color:gray; text-align:center;'>მონიშნული პოსტები არ არის</p>";
             return;
         }
 
         let count = 0;
-        Object.entries(data).reverse().forEach(([id, post]) => {
-            // ვამოწმებთ, აქვს თუ არა მონიშნული იმ იუზერს, ვის პროფილსაც ვუყურებთ
-            if (post.taggedBy && post.taggedBy[viewUid]) {
+        
+        // გავდივართ ყველა პოსტს სათითაოდ
+        Object.keys(data).reverse().forEach(id => {
+            const post = data[id];
+            
+            // 🔴 მთავარი შემოწმება: აქვს თუ არა შენს ID-ს ეს პოსტი მონიშნული!
+            if (post.taggedBy && post.taggedBy[myUid]) {
                 count++;
-                const isLiked = (myUid && post.likes && post.likes[myUid]);
-                const isTagged = (myUid && post.taggedBy && post.taggedBy[myUid]);
+                
+                const isLiked = (post.likes && post.likes[myUid]);
+                const isTagged = true; // რადგან აქ მოხვდა, ესე იგი მონიშნულია
                 const likeCount = post.likes ? Object.keys(post.likes).length : 0;
                 const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
                 
@@ -4767,13 +4778,13 @@ function loadMyTaggedWallPosts(viewUid) {
                             <span id="comm-count-prof-${id}" style="font-size:14px; font-weight:bold;">0</span>
                         </div>
                         <div onclick="window.toggleWallTag('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                            <i class="${isTagged ? 'fas' : 'far'} fa-user-tag" style="${isTagged ? 'color:var(--gold);' : 'color:#888;'}"></i>
-                            <span style="font-size:14px; font-weight:bold;">${isTagged ? 'მონიშნულია' : 'მონიშვნა'}</span>
+                            <i class="fas fa-user-tag" style="color:var(--gold);"></i>
+                            <span style="font-size:14px; font-weight:bold;">მონიშნულია</span>
                         </div>
                     </div>`;
                 box.appendChild(card);
 
-                // კომენტარების რიცხვის განახლება
+                // კომენტარების რაოდენობის განახლება
                 db.ref('comments/' + id).on('value', cSnap => {
                     const cElem = document.getElementById('comm-count-prof-' + id);
                     if (cElem) cElem.innerText = cSnap.numChildren();
@@ -4781,8 +4792,8 @@ function loadMyTaggedWallPosts(viewUid) {
             }
         });
 
+        // თუ ციკლმა ჩაიარა და ვერცერთი შენი მონიშნული ვერ იპოვა
         if(count === 0) {
-            // თუ აქვს პოსტები ბაზაში, მაგრამ არცერთი არაა ამ იუზერის მონიშნული
             box.innerHTML = "<p style='color:gray; text-align:center;'>მონიშნული პოსტები არ არის</p>";
         }
     });
