@@ -3313,11 +3313,19 @@ function switchTab(tabName, btn) {
         profGrid.style.display = 'grid';
         loadMySavedPosts(); 
     } 
+      
     else if (tabName === 'tagged') {
-        noMsg.style.display = 'block';
-        noMsg.innerText = "მონიშნული პოსტები არ არის";
+        // ძველ ტექსტს ვმალავთ (თუ noMsg ცვლადით გამოგქონდა)
+        if(typeof noMsg !== 'undefined') noMsg.style.display = 'none'; 
+        noMsg.innerText = " პოსტები არ არის";
+        const taggedList = document.getElementById('userTaggedPostsList');
+      
+        if (taggedList) {
+            taggedList.style.display = 'flex'; // ვაჩენთ ჩვენს ახალ სივრცეს
+            loadMyTaggedWallPosts(viewUid); // ვიძახებთ პოსტების წამომღებს
+        }
     }
-}
+  
 
 function loadMySavedPosts() {
     const grid = document.getElementById('profGrid');
