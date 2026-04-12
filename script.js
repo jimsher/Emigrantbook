@@ -3330,7 +3330,7 @@ function switchTab(tabName, btn) {
       
     else if (tabName === 'tagged') {
         if (typeof loadMyTaggedWallPosts === 'function') {
-            loadMyTaggedWallPosts(); 
+            loadMyTaggedWallPosts(viewUid); // 🔴 აუცილებლად გადავცეთ viewUid
         }
     }
 }
@@ -4706,12 +4706,41 @@ function startWallNotificationListener() {
 
 
 // პოსრის მონიშვნის ლოგიკა
+window.toggleWallTag = function(postId) {
+    const user = auth.currentUser;
+    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+    
+    const myUid = user.uid;
+    const tagRef = db.ref('community_posts/' + postId + '/taggedBy/' + myUid);
+
+    tagRef.once('value').then(snap => {
+        // ვპოულობთ ღილაკს ეკრანზე, რომ ფერი შევუცვალოთ მომენტალურად
+        const btnElement = event.currentTarget.querySelector('i');
+        const textElement = event.currentTarget.querySelector('span');
+
+        if (snap.exists()) {
+            tagRef.remove(); // ვშლით ბაზიდან
+            if (btnElement) {
+                btnElement.className = "far fa-user-tag";
+                btnElement.style.color = "#888";
+            }
+            if (textElement) textElement.innerText = "მონიშვნა";
+        } else {
+            tagRef.set(true); // ვწერთ ბაზაში
+            if (btnElement) {
+                btnElement.className = "fas fa-user-tag";
+                btnElement.style.color = "var(--gold)";
+            }
+            if (textElement) textElement.innerText = "მონიშნულია";
+        }
+    }).catch(err => console.error("Tag Error:", err));
+};
+
 // 1. ღილაკზე დაჭერის ლოგიკა კედლის პოსტებისთვის
-  window.loadMyTaggedWallPosts = function() {
+  window.loadMyTaggedWallPosts = function(targetUid) {
     let box = document.getElementById('userTaggedPostsList');
     const profGrid = document.getElementById('profGrid');
     
-    // ვქმნით კონტეინერს თუ არ არსებობს
     if (!box) {
         box = document.createElement('div');
         box.id = 'userTaggedPostsList';
@@ -4727,7 +4756,7 @@ function startWallNotificationListener() {
     }
     
     box.style.display = 'flex';
-    box.innerHTML = "<p style='color:var(--gold); text-align:center; padding:20px;'>ვიძებნით ბაზაში...</p>";
+    box.innerHTML = "<p style='color:var(--gold); text-align:center; padding:20px;'>იტვირთება...</p>";
 
     const user = auth.currentUser;
     if (!user) {
@@ -4735,7 +4764,10 @@ function startWallNotificationListener() {
         return;
     }
 
-    const myUid = user.uid;
+    // 🔴 მთავარი ლოგიკა: ვიგებთ ვისი პროფილის პოსტები უნდა ჩავტვირთოთ
+    // თუ targetUid მოვიდა, ე.ი. სხვის (ან ჩვენს) პროფილზე ვართ. თუ არა - ავტომატურად ჩვენსას ვიღებთ.
+    const uidToLoad = targetUid ? targetUid : user.uid;
+    const myUid = user.uid; // ეს გვჭირდება იმისთვის, რომ გავიგოთ ჩვენ დავალაიქეთ თუ არა
 
     db.ref('community_posts').once('value', snap => {
         box.innerHTML = ""; 
@@ -4751,7 +4783,8 @@ function startWallNotificationListener() {
         Object.keys(data).reverse().forEach(id => {
             const post = data[id];
             
-            if (post.taggedBy && post.taggedBy[myUid]) {
+            // 🔴 ვამოწმებთ, აქვს თუ არა იმ იუზერს მონიშნული, ვის პროფილსაც ახლა ვუყურებთ
+            if (post.taggedBy && post.taggedBy[uidToLoad]) {
                 count++;
                 
                 const isLiked = (post.likes && post.likes[myUid]);
@@ -4787,8 +4820,9 @@ function startWallNotificationListener() {
         });
 
         if (count === 0) {
-            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>შენს მიერ მონიშნული პოსტები ვერ მოიძებნა</p>";
+            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ამ მომხმარებელს მონიშნული პოსტები არ აქვს</p>";
         }
     });
-};      
+};                    
+                    
 // აქ მთავრდება
