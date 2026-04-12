@@ -2297,25 +2297,8 @@ window.processGift = function(targetUid, cost, giftUrl) {
         
         
         // --- ანიმაცია ---
-        const animWrapper = document.createElement('div');
-        animWrapper.id = "activeGiftAnimation";
-        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
-        animWrapper.innerHTML = `
-            <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
-            </div>
-            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
-                <div class="gift-image-container">
-                    <img src="gift_box.png" class="golden-gift-img" style="width:200px; position:relative; z-index:2;">
-                    <div class="golden-glow-overlay"></div>
-                </div>
-                <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
-                    <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
-                    <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადმოგეცათ ${cost} AKHO</h2>
-                    <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
-                </div>
-            </div>`;
-        document.body.appendChild(animWrapper);
+        
+        // აქ მთავრდება
 
         if (!document.getElementById('giftEnhancedStyles')) {
             const style = document.createElement('style');
