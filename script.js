@@ -3322,10 +3322,8 @@ function switchTab(tabName, btn) {
     } 
       
     else if (tabName === 'tagged') {
-        noMsg.style.display = 'block';
-        noMsg.innerText = " პოსტები არ არის";
+        loadMyTaggedWallPosts(); 
     }
-}
   
 
 function loadMySavedPosts() {
