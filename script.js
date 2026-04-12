@@ -3322,8 +3322,11 @@ function switchTab(tabName, btn) {
     } 
       
     else if (tabName === 'tagged') {
-        loadMyTaggedWallPosts(); 
+        if (typeof loadMyTaggedWallPosts === 'function') {
+            loadMyTaggedWallPosts(); 
+        }
     }
+}
   
 
 function loadMySavedPosts() {
