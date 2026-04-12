@@ -3281,6 +3281,9 @@ function switchTab(tabName, btn) {
     document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
+    const taggedPostsList = document.getElementById('userTaggedPostsList');
+    if (taggedPostsList) taggedPostsList.style.display = 'none';
+
     const profGrid = document.getElementById('profGrid');
     const userPhotosGrid = document.getElementById('userPhotosGrid');
     const noMsg = document.getElementById('noPhotosMsg');
