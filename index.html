@@ -39,59 +39,11 @@
 
 
 
-<script>
-  // ეს ფუნქცია მუშაობს მაშინაც კი, თუ ბრაუზერი ჯიუტობს
-  function hideVideoIcons() {
-    var style = document.createElement('style');
-    style.innerHTML = `
-      video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
-      video::-webkit-media-controls { display: none !important; }
-      .vjs-big-play-button, .play-button { display: none !important; }
-    `;
-    document.head.appendChild(style);
-    
-    // ყველა ვიდეოს აიძულებს "ჩუმად" ყოფნას, რომ ანდროიდმა არ დაბლოკოს
-    var videos = document.querySelectorAll('video');
-    videos.forEach(function(v) {
-      v.setAttribute('playsinline', 'true');
-      v.muted = true;
-    });
-  }
 
-  // გაუშვი ფუნქცია გვერდის ჩატვირთვისას და 1 წამის მერეც (გადაზღვევისთვის)
-  window.onload = hideVideoIcons;
-  setTimeout(hideVideoIcons, 1000);
-</script>
  
 
  
  <style>
-  /* აპლიკაციის მიერ შექმნილი ნებისმიერი მედია ღილაკის ბლოკირება */
-  *::-webkit-media-controls-start-playback-button {
-      display: none !important;
-      -webkit-appearance: none !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-  }
-
-  /* დამატებითი დაზღვევა ყველა კონტროლერისთვის */
-  *::-webkit-media-controls {
-      display: none !important;
-      -webkit-appearance: none !important;
-  }
-  
-  /* თუ აპლიკაცია რამე კონტეინერს ქმნის ვიდეოზე */
-  video {
-      outline: none;
-  }
-
-
-
-
-
-
-  
-  
 /* აქ არის სამიწერტილის პროფილზე ღილაკის კლასი */
 .tiktok-more-panel {
     position: fixed;
