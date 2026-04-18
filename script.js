@@ -1865,16 +1865,17 @@ async function startTokenUpload() {
     const statusTitle = document.getElementById('uploadStatusTitle');
     const statusText = document.getElementById('uploadStatusText');
     const progressBtn = document.getElementById('uploadProgressBtn');
+    const percentText = document.getElementById('uploadPercent'); // პროცენტის ტექსტი
 
     if (progressModal) {
         progressModal.style.display = 'flex';
         statusTitle.innerText = "Uploading Post!";
         statusText.innerText = "Your video is processing.";
+        if (percentText) percentText.innerText = "0%"; // საწყისი მნიშვნელობა
         progressBtn.innerText = "Processing...";
         progressBtn.disabled = true;
         progressBtn.style.background = "rgba(212,175,55,0.3)";
     }
-    // --------------------------------
 
     const btn = document.getElementById('upBtn');
     if (btn) {
@@ -1889,56 +1890,68 @@ async function startTokenUpload() {
         const videoName = Date.now() + "_" + file.name;
         const videoRef = storageRef.child('videos/' + videoName);
 
-        // 3. ატვირთვა
-        const snapshot = await videoRef.put(file);
-        
-        // 4. ვიდეოს მუდმივი ლინკის მიღება
-        const downloadURL = await snapshot.ref.getDownloadURL();
+        // 3. ატვირთვა (პროცენტების კონტროლით)
+        const uploadTask = videoRef.put(file);
 
-        // 5. მონაცემების შენახვა Realtime Database-ში
-        await db.ref('posts').push({
-            authorId: auth.currentUser.uid,
-            authorName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
-            authorPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
-            text: document.getElementById('videoDesc').value || "",
-            media: [{ url: downloadURL, type: 'video' }],
-            timestamp: Date.now()
-        });
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                // პროცენტის გამოთვლა რეალურ დროში
+                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                
+                // ციფრების განახლება შუაგულში
+                if (percentText) percentText.innerText = progress + "%";
+                
+                // ღილაკზეც რომ ჩანდეს დინამიკურად
+                if (progressBtn) progressBtn.innerText = "Uploading " + progress + "%";
+            }, 
+            (error) => {
+                // შეცდომის დამუშავება
+                console.error("ატვირთვის შეცდომა:", error);
+                if (progressModal) progressModal.style.display = 'none';
+                alert("შეცდომა: " + error.message);
+            }, 
+            async () => {
+                // 4. წარმატებით დასრულება
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
 
-        // ტოკენის ჩამოჭრა
-        spendAkho(5, 'Video Upload');
+                // 5. მონაცემების შენახვა Realtime Database-ში
+                await db.ref('posts').push({
+                    authorId: auth.currentUser.uid,
+                    authorName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+                    authorPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
+                    text: document.getElementById('videoDesc').value || "",
+                    media: [{ url: downloadURL, type: 'video' }],
+                    timestamp: Date.now()
+                });
 
-        // --- ✅ წარმატების ვიზუალი (ფოტოს მიხედვით) ---
-        if (progressModal) {
-            statusTitle.innerText = "Thank You!";
-            statusText.innerText = "Payment received.";
-            progressBtn.innerText = "Check Balance";
-            progressBtn.disabled = false;
-            progressBtn.style.background = "var(--gold)";
-            progressBtn.style.color = "black";
-            progressBtn.style.cursor = "pointer";
-            
-            progressBtn.onclick = () => {
-                progressModal.style.display = 'none';
-                location.reload();
-            };
-        } else {
-            alert("ვიდეო წარმატებით აიტვირთა!");
-            location.reload();
-        }
+                // ტოკენის ჩამოჭრა
+                spendAkho(5, 'Video Upload');
+
+                // --- ✅ წარმატების ვიზუალი (100% და დასრულება) ---
+                if (progressModal) {
+                    if (percentText) percentText.innerText = "100%";
+                    statusTitle.innerText = "Thank You!";
+                    statusText.innerText = "Payment received.";
+                    progressBtn.innerText = "Check Balance";
+                    progressBtn.disabled = false;
+                    progressBtn.style.background = "var(--gold)";
+                    progressBtn.style.color = "black";
+                    progressBtn.style.cursor = "pointer";
+                    
+                    progressBtn.onclick = () => {
+                        progressModal.style.display = 'none';
+                        location.reload();
+                    };
+                } else {
+                    alert("ვიდეო წარმატებით აიტვირთა!");
+                    location.reload();
+                }
+            }
+        );
 
     } catch (err) {
-        console.error("ატვირთვის შეცდომა:", err);
-        
-        // შეცდომის დროს ვმალავთ პროგრესის ფანჯარას
+        console.error("კრიტიკული შეცდომა:", err);
         if (progressModal) progressModal.style.display = 'none';
-
-        if (err.code === 'storage/unauthorized') {
-            alert("შეცდომა: Firebase Rules (წესები) არ გაძლევს წვდომას!");
-        } else {
-            alert("შეცდომა: " + err.message);
-        }
-        
         if (btn) {
             btn.disabled = false;
             btn.innerText = "ატვირთვა";
