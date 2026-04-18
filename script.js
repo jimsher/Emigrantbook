@@ -1860,19 +1860,36 @@ async function startTokenUpload() {
     const file = fileInput.files[0];
     if (!file) return alert("აირჩიეთ ვიდეო");
 
+    // --- 🚀 ახალი ვიზუალის აქტივაცია ---
+    const progressModal = document.getElementById('uploadProgressModal');
+    const statusTitle = document.getElementById('uploadStatusTitle');
+    const statusText = document.getElementById('uploadStatusText');
+    const progressBtn = document.getElementById('uploadProgressBtn');
+
+    if (progressModal) {
+        progressModal.style.display = 'flex';
+        statusTitle.innerText = "Uploading Post!";
+        statusText.innerText = "Your video is processing.";
+        progressBtn.innerText = "Processing...";
+        progressBtn.disabled = true;
+        progressBtn.style.background = "rgba(212,175,55,0.3)";
+    }
+    // --------------------------------
+
     const btn = document.getElementById('upBtn');
-    btn.disabled = true;
-    btn.innerText = "მიმდინარეობს ატვირთვა...";
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = "მიმდინარეობს ატვირთვა...";
+    }
 
     try {
-        // 2. Firebase Storage-ის რეფერენსი (უფრო უსაფრთხო გამოძახება)
+        // 2. Firebase Storage-ის რეფერენსი
         const storage = firebase.storage(); 
         const storageRef = storage.ref();
         const videoName = Date.now() + "_" + file.name;
         const videoRef = storageRef.child('videos/' + videoName);
 
         // 3. ატვირთვა
-        // ვიყენებთ "blob" ფორმატს, რაც ტელეფონისთვის უფრო სტაბილურია
         const snapshot = await videoRef.put(file);
         
         // 4. ვიდეოს მუდმივი ლინკის მიღება
@@ -1891,21 +1908,41 @@ async function startTokenUpload() {
         // ტოკენის ჩამოჭრა
         spendAkho(5, 'Video Upload');
 
-        alert("ვიდეო წარმატებით აიტვირთა!");
-        location.reload();
+        // --- ✅ წარმატების ვიზუალი (ფოტოს მიხედვით) ---
+        if (progressModal) {
+            statusTitle.innerText = "Thank You!";
+            statusText.innerText = "Payment received.";
+            progressBtn.innerText = "Check Balance";
+            progressBtn.disabled = false;
+            progressBtn.style.background = "var(--gold)";
+            progressBtn.style.color = "black";
+            progressBtn.style.cursor = "pointer";
+            
+            progressBtn.onclick = () => {
+                progressModal.style.display = 'none';
+                location.reload();
+            };
+        } else {
+            alert("ვიდეო წარმატებით აიტვირთა!");
+            location.reload();
+        }
 
     } catch (err) {
         console.error("ატვირთვის შეცდომა:", err);
         
-        // თუ შეცდომა მაინც ამოაგდო, გავიგოთ ზუსტად რისი ბრალია
+        // შეცდომის დროს ვმალავთ პროგრესის ფანჯარას
+        if (progressModal) progressModal.style.display = 'none';
+
         if (err.code === 'storage/unauthorized') {
             alert("შეცდომა: Firebase Rules (წესები) არ გაძლევს წვდომას!");
         } else {
             alert("შეცდომა: " + err.message);
         }
         
-        btn.disabled = false;
-        btn.innerText = "ატვირთვა";
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = "ატვირთვა";
+        }
     }
 }
 
