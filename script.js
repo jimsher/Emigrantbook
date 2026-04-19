@@ -1541,16 +1541,20 @@ localStorage.setItem('last_seen_visitor_ts', Date.now());
 
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
-    grid.innerHTML = "";
-    let vCount = 0;
-
-    db.ref('posts').once('value', snap => {
+    
+    // ვიყენებთ .on('value'), რომ ნახვები რეალურ დროში განახლდეს
+    db.ref('posts').on('value', snap => {
+        grid.innerHTML = ""; // ვასუფთავებთ ძველს, რომ განახლებისას არ გაორმაგდეს
+        let vCount = 0;
         const posts = snap.val();
-        if(!posts) return;
+        if(!posts) {
+            document.getElementById('statVidsCount').innerText = 0;
+            return;
+        }
 
         const postEntries = Object.entries(posts).reverse();
 
-        // ინდექსს (i) ვითვლით მხოლოდ იმ პოსტებზე, რომლებიც პირობას აკმაყოფილებს
+        // ინდექსს (displayIdx) ვითვლით მხოლოდ იმ პოსტებზე, რომლებიც პირობას აკმაყოფილებს
         let displayIdx = 0; 
 
         postEntries.forEach(([id, post]) => {
@@ -1582,6 +1586,7 @@ function loadUserVideos(uid) {
         document.getElementById('statVidsCount').innerText = vCount;
     });
 }
+
 
 function playFullVideo(url, postId, currentIndex) {
   killVideo();
