@@ -1559,17 +1559,17 @@ function loadUserVideos(uid) {
                     const item = document.createElement('div');
                     item.className = 'grid-item';
                     item.innerHTML = `
-                        <video src="${video.url}" 
-                               muted 
-                               playsinline 
-                               preload="metadata" 
-                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-                               style="object-fit: cover; width:100%; height:100%; background: #000;">
-                        </video>
-                        <div class="video-views-label">
-                            <i class="fas fa-play"></i> ${formattedViews}
-                        </div>
-                    `;
+                        item.innerHTML = `
+    <video src="${video.url}#t=0.01" 
+           muted 
+           playsinline 
+           preload="metadata" 
+           style="object-fit: cover; width:100%; height:100%; background: #000; pointer-events: none;">
+    </video>
+    <div class="video-views-label">
+        <i class="fas fa-play"></i> ${formattedViews}
+    </div>
+`;
 
                     // ვიყენებთ displayIdx-ს, რომელიც ზუსტად ემთხვევა ბადეში ელემენტის პოზიციას
                     const currentIdx = displayIdx;
