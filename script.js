@@ -1565,16 +1565,19 @@ function loadUserVideos(uid) {
                     
                     // აქ ვიყენებთ "სურათს" როგორც პოსტერს. ეს არასოდეს გაჭედავს!
                     item.innerHTML = `
-                        <video src="${videoUrl}" 
-             loop 
-             playsinline 
-             muted 
-             autoplay
-             preload="metadata" 
-             poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-             style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
-             onclick="togglePlayPause(this)">
-             </video>
+                        <video src="${video.url}" 
+                               muted 
+                               playsinline 
+                               autoplay 
+                               loop 
+                               preload="metadata" 
+                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                               style="object-fit: cover; width:100%; height:100%; background: #000;">
+                        </video>
+                        <div class="video-views-label">
+                            <i class="fas fa-play"></i> ${formattedViews}
+                        </div>
+                    `;
 
                     const currentIdx = displayIdx;
                     item.onclick = () => playFullVideo(video.url, id, currentIdx); 
