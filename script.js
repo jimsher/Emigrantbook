@@ -1601,7 +1601,15 @@ function playFullVideo(url, postId, currentIndex) {
   killVideo();
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
-    
+
+   // --- ჩამატებული ნაწილი ხატულას მოსაშორებლად ---
+    vid.muted = true; // აუცილებელია ავტოპლეისთვის
+    vid.autoplay = true;
+    vid.playsInline = true;
+    vid.setAttribute('poster', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    // -------------------------------------------
+
+  
     vid.src = url; 
     overlay.style.display = 'block'; 
     vid.play();
