@@ -2262,15 +2262,11 @@ function setupAutoPlay() {
             const video = entry.target.querySelector('video');
             if (!video) return;
 
-            // --- 🛠️ აქ ვინახავთ ლინკს (რომ არაფერი დაიკარგოს) ---
-            if (!video.dataset.src) video.dataset.src = video.src;
-
+            // ვიღებთ პოსტის ID-ს ზუსტად შენი მეთოდით
             const postId = entry.target.id.replace('card-', '');
 
             if (entry.isIntersecting) {
-                // --- 🚀 შენი ორიგინალი ჩართვის ლოგიკა ---
-                if (!video.src || video.src === "") video.src = video.dataset.src; 
-
+                // 🚀 შენი ორიგინალი ჩართვის ლოგიკა
                 video.style.opacity = "1";
                 video.play().catch(e => {}); 
                 video.muted = false;
@@ -2283,12 +2279,13 @@ function setupAutoPlay() {
                 }
 
             } else {
-                // --- 🧹 შენი ორიგინალი გათიშვის ლოგიკა + მეხსიერების გაწმენდა ---
+                // 🚀 შენი ორიგინალი გათიშვის ლოგიკა
                 video.pause();
-                video.src = ""; // ეს ათავისუფლებს RAM-ს APK-ში
-                video.load();   // ბრაუზერს ეუბნება, რომ ფაილი "გადააგდოს"
                 video.muted = true;
                 video.style.opacity = "0.5"; 
+                
+                // მხოლოდ ეს დავამატე - ეხმარება APK-ს რომ არ "გაიჭედოს"
+                video.currentTime = 0; 
             }
         });
     }, { threshold: 0.5 });
