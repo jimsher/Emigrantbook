@@ -1569,7 +1569,7 @@ function loadUserVideos(uid) {
                                muted 
                                playsinline 
                                preload="none" 
-                               poster="${thumb.url}" 
+                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                                style="object-fit: cover; width:100%; height:100%; background: #000;">
                         </video>
                         <div class="video-views-label">
