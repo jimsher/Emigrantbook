@@ -2222,18 +2222,31 @@ async function deleteMyVideo(postId) {
 
 
 function setupAutoPlay() {
-  // 🚀 თუ მესინჯერი ღიაა, საერთოდ არაფერი არ ჩართო!
+    // 🚀 თუ მესინჯერი ღიაა, საერთოდ არაფერი არ ჩართო!
     if (document.getElementById('messengerUI').style.display === 'flex') return;
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             const video = entry.target.querySelector('video');
             if (!video) return;
+
+            // ვიღებთ პოსტის ID-ს ქარდის აიდიდან (მაგ: card-Lxyz... -> Lxyz...)
+            const postId = entry.target.id.replace('card-', '');
 
             if (entry.isIntersecting) {
                 // მხოლოდ მაშინ იწყებს ჩატვირთვას და დაკვრას, როცა ეკრანზეა
                 video.style.opacity = "1";
                 video.play().catch(e => {}); 
                 video.muted = false;
+
+                // --- 🔥 ახალი: ნახვის მომატება რეალურ დროში ---
+                if (postId && postId !== "") {
+                    db.ref(`posts/${postId}/views`).transaction(currentViews => {
+                        return (currentViews || 0) + 1;
+                    });
+                }
+                // --------------------------------------------
+
             } else {
                 // როგორც კი თვალს მიეფარება, ჩერდება და ითიშება მეხსიერებიდან
                 video.pause();
