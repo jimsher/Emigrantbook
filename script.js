@@ -1534,22 +1534,18 @@ localStorage.setItem('last_seen_visitor_ts', Date.now());
 
 
 
-
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
-    
-    // ვიყენებთ .on('value'), რომ ნახვები რეალურ დროში განახლდეს
-    db.ref('posts').on('value', snap => {
-        grid.innerHTML = ""; // ვასუფთავებთ ძველს
-        let vCount = 0;
+    grid.innerHTML = "";
+    let vCount = 0;
+
+    db.ref('posts').once('value', snap => {
         const posts = snap.val();
-        if(!posts) {
-            document.getElementById('statVidsCount').innerText = 0;
-            return;
-        }
+        if(!posts) return;
 
         const postEntries = Object.entries(posts).reverse();
 
+        // ინდექსს (i) ვითვლით მხოლოდ იმ პოსტებზე, რომლებიც პირობას აკმაყოფილებს
         let displayIdx = 0; 
 
         postEntries.forEach(([id, post]) => {
@@ -1563,7 +1559,7 @@ function loadUserVideos(uid) {
                     const item = document.createElement('div');
                     item.className = 'grid-item';
                     item.innerHTML = `
-                        <video src="${video.url}#t=0.1" 
+                        <video src="${video.url}" 
                                muted 
                                playsinline 
                                preload="metadata" 
@@ -1575,17 +1571,19 @@ function loadUserVideos(uid) {
                         </div>
                     `;
 
+                    // ვიყენებთ displayIdx-ს, რომელიც ზუსტად ემთხვევა ბადეში ელემენტის პოზიციას
                     const currentIdx = displayIdx;
                     item.onclick = () => playFullVideo(video.url, id, currentIdx); 
                     
                     grid.appendChild(item);
-                    displayIdx++;
+                    displayIdx++; // ვზრდით ინდექსს შემდეგი ნაჩვენები ვიდეოსთვის
                 }
             }
         });
         document.getElementById('statVidsCount').innerText = vCount;
     });
 }
+                    
 
 
 
