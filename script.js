@@ -1536,16 +1536,17 @@ localStorage.setItem('last_seen_visitor_ts', Date.now());
 
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
-    grid.innerHTML = "";
-    let vCount = 0;
-
-    db.ref('posts').once('value', snap => {
+    
+    db.ref('posts').on('value', snap => {
+        grid.innerHTML = ""; 
+        let vCount = 0;
         const posts = snap.val();
-        if(!posts) return;
+        if(!posts) {
+            document.getElementById('statVidsCount').innerText = 0;
+            return;
+        }
 
         const postEntries = Object.entries(posts).reverse();
-
-        // ინდექსს (i) ვითვლით მხოლოდ იმ პოსტებზე, რომლებიც პირობას აკმაყოფილებს
         let displayIdx = 0; 
 
         postEntries.forEach(([id, post]) => {
@@ -1558,25 +1559,25 @@ function loadUserVideos(uid) {
 
                     const item = document.createElement('div');
                     item.className = 'grid-item';
+                    
+                    // აი აქ არის შენი ორიგინალი HTML, მხოლოდ აუცილებელი პარამეტრებით
                     item.innerHTML = `
-                        item.innerHTML = `
-    <video src="${video.url}#t=0.01" 
-           muted 
-           playsinline 
-           preload="metadata" 
-           style="object-fit: cover; width:100%; height:100%; background: #000; pointer-events: none;">
-    </video>
-    <div class="video-views-label">
-        <i class="fas fa-play"></i> ${formattedViews}
-    </div>
-`;
+                        <video src="${video.url}" 
+                               muted 
+                               playsinline 
+                               preload="metadata" 
+                               style="object-fit: cover; width:100%; height:100%; background: #000;">
+                        </video>
+                        <div class="video-views-label">
+                            <i class="fas fa-play"></i> ${formattedViews}
+                        </div>
+                    `;
 
-                    // ვიყენებთ displayIdx-ს, რომელიც ზუსტად ემთხვევა ბადეში ელემენტის პოზიციას
                     const currentIdx = displayIdx;
                     item.onclick = () => playFullVideo(video.url, id, currentIdx); 
                     
                     grid.appendChild(item);
-                    displayIdx++; // ვზრდით ინდექსს შემდეგი ნაჩვენები ვიდეოსთვის
+                    displayIdx++;
                 }
             }
         });
