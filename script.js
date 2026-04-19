@@ -2254,6 +2254,7 @@ async function deleteMyVideo(postId) {
 
 
 function setupAutoPlay() {
+    // 🚀 შენი ორიგინალი მესინჯერის შემოწმება
     if (document.getElementById('messengerUI').style.display === 'flex') return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -2269,7 +2270,7 @@ function setupAutoPlay() {
                 video.play().catch(e => {}); 
                 video.muted = false;
 
-                // --- შენი ორიგინალი ნახვების მომატება ---
+                // --- 🔥 შენი ორიგინალი ნახვების მომატება ---
                 if (postId && postId !== "") {
                     db.ref(`posts/${postId}/views`).transaction(currentViews => {
                         return (currentViews || 0) + 1;
@@ -2277,15 +2278,14 @@ function setupAutoPlay() {
                 }
 
             } else {
-                // 🧹 აი აქ გავაკეთოთ "ჭკვიანი" გაჩერება შენი კოდის დაზიანების გარეშე:
+                // 🚀 შენი ორიგინალი გათიშვის ლოგიკა
                 video.pause();
                 video.muted = true;
-                video.style.opacity = "0.5"; 
-
-                // 🔥 ეს 3 ხაზი მოუხსნის გაჭედვას აპლიკაციას:
-                video.src = video.src; // გადატვირთავს ჩატვირთვის პროცესს
-                video.removeAttribute('src'); // დროებით აჩერებს ფაილის კითხვას
-                video.load(); // ათავისუფლებს მეხსიერებას (RAM)
+                video.style.opacity = "0.5";
+                
+                // 🔥 მხოლოდ ეს ხაზი დავამატოთ - ის აიძულებს ბრაუზერს
+                // რომ ამ ვიდეოს ჩატვირთვაზე რესურსი აღარ დახარჯოს
+                video.preload = "none";
             }
         });
     }, { threshold: 0.5 });
