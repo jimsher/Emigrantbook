@@ -1602,17 +1602,21 @@ function playFullVideo(url, postId, currentIndex) {
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
 
-   // --- ჩამატებული ნაწილი ხატულას მოსაშორებლად ---
-    vid.muted = true; // აუცილებელია ავტოპლეისთვის
-    vid.autoplay = true;
-    vid.playsInline = true;
+   // --- ხატულას მოშორება და ხმის დაბრუნება ---
     vid.setAttribute('poster', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    vid.muted = false; // ვცდილობთ ხმით ჩართვას
+    vid.playsInline = true;
     // -------------------------------------------
 
-  
     vid.src = url; 
     overlay.style.display = 'block'; 
-    vid.play();
+    
+    // ვიდეოს ჩართვა
+    vid.play().catch(error => {
+        // თუ ბრაუზერმა დაბლოკა ხმიანი ავტოპლეი, მაშინ ვრთავთ უხმოდ, რომ არ გაჩერდეს
+        vid.muted = true;
+        vid.play();
+    });
 
     // 🛑 ეს ორი ხაზი აცოცხლებს სქროლვას ყოველ გადასვლაზე:
     window.currentFullVideoId = postId; 
