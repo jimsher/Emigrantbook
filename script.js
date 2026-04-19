@@ -1540,7 +1540,7 @@ function loadUserVideos(uid) {
     
     // ვიყენებთ .on('value'), რომ ნახვები რეალურ დროში განახლდეს
     db.ref('posts').on('value', snap => {
-        grid.innerHTML = ""; // ვასუფთავებთ ძველს, რომ განახლებისას არ გაორმაგდეს
+        grid.innerHTML = ""; // ვასუფთავებთ ძველს
         let vCount = 0;
         const posts = snap.val();
         if(!posts) {
@@ -1550,7 +1550,6 @@ function loadUserVideos(uid) {
 
         const postEntries = Object.entries(posts).reverse();
 
-        // ინდექსს (displayIdx) ვითვლით მხოლოდ იმ პოსტებზე, რომლებიც პირობას აკმაყოფილებს
         let displayIdx = 0; 
 
         postEntries.forEach(([id, post]) => {
@@ -1564,11 +1563,9 @@ function loadUserVideos(uid) {
                     const item = document.createElement('div');
                     item.className = 'grid-item';
                     item.innerHTML = `
-                        <video src="${video.url}" 
+                        <video src="${video.url}#t=0.1" 
                                muted 
                                playsinline 
-                               autoplay 
-                               loop 
                                preload="metadata" 
                                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
                                style="object-fit: cover; width:100%; height:100%; background: #000;">
@@ -1578,12 +1575,11 @@ function loadUserVideos(uid) {
                         </div>
                     `;
 
-                    // ვიყენებთ displayIdx-ს, რომელიც ზუსტად ემთხვევა ბადეში ელემენტის პოზიციას
                     const currentIdx = displayIdx;
                     item.onclick = () => playFullVideo(video.url, id, currentIdx); 
                     
                     grid.appendChild(item);
-                    displayIdx++; // ვზრდით ინდექსს შემდეგი ნაჩვენები ვიდეოსთვის
+                    displayIdx++;
                 }
             }
         });
