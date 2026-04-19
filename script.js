@@ -2086,13 +2086,15 @@ function renderTokenFeed() {
                     </div>
                     ` : ''}
                 </div>
-                  <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none;">
+                  <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
     <div style="display: flex; align-items: center; gap: 6px;">
         <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
         
         <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
     </div>
-    <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
+    <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
+        ${post.text || ''}
+    </p>
 </div>`;
             
             feed.appendChild(card);
