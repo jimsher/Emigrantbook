@@ -2057,7 +2057,7 @@ function renderTokenFeed() {
              playsinline 
              muted 
              autoplay
-             preload="metadata" 
+             preload="none" 
              poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
              style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
              onclick="togglePlayPause(this)">
@@ -2254,7 +2254,6 @@ async function deleteMyVideo(postId) {
 
 
 function setupAutoPlay() {
-    // 🚀 შენი ორიგინალი მესინჯერის შემოწმება
     if (document.getElementById('messengerUI').style.display === 'flex') return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -2262,7 +2261,6 @@ function setupAutoPlay() {
             const video = entry.target.querySelector('video');
             if (!video) return;
 
-            // ვიღებთ პოსტის ID-ს ზუსტად შენი მეთოდით
             const postId = entry.target.id.replace('card-', '');
 
             if (entry.isIntersecting) {
@@ -2271,7 +2269,7 @@ function setupAutoPlay() {
                 video.play().catch(e => {}); 
                 video.muted = false;
 
-                // --- 🔥 შენი ორიგინალი ნახვების მომატება ---
+                // --- შენი ორიგინალი ნახვების მომატება ---
                 if (postId && postId !== "") {
                     db.ref(`posts/${postId}/views`).transaction(currentViews => {
                         return (currentViews || 0) + 1;
@@ -2279,13 +2277,15 @@ function setupAutoPlay() {
                 }
 
             } else {
-                // 🚀 შენი ორიგინალი გათიშვის ლოგიკა
+                // 🧹 აი აქ გავაკეთოთ "ჭკვიანი" გაჩერება შენი კოდის დაზიანების გარეშე:
                 video.pause();
                 video.muted = true;
                 video.style.opacity = "0.5"; 
-                
-                // მხოლოდ ეს დავამატე - ეხმარება APK-ს რომ არ "გაიჭედოს"
-                video.currentTime = 0; 
+
+                // 🔥 ეს 3 ხაზი მოუხსნის გაჭედვას აპლიკაციას:
+                video.src = video.src; // გადატვირთავს ჩატვირთვის პროცესს
+                video.removeAttribute('src'); // დროებით აჩერებს ფაილის კითხვას
+                video.load(); // ათავისუფლებს მეხსიერებას (RAM)
             }
         });
     }, { threshold: 0.5 });
