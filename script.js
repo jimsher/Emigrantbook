@@ -2057,7 +2057,7 @@ function renderTokenFeed() {
              playsinline 
              muted 
              autoplay
-             preload="none" 
+             preload="metadata" 
              poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
              style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
              onclick="togglePlayPause(this)">
