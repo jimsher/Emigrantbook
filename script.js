@@ -2094,7 +2094,7 @@ function renderTokenFeed() {
                   <span style="color: rgba(255,255,255,0.6); font-size: 13px;"> • ${formatPostDate(post.timestamp)}</span>
                 </div>
                 <p style="font-size:14px; margin-top:6px; color: white;">${post.text || ''}</p>
-                 </div>
+                 </div>';
             
             feed.appendChild(card);
             cleanupOldVideos(); // 🧹 წმენდა
