@@ -2086,15 +2086,10 @@ function renderTokenFeed() {
                     </div>
                     ` : ''}
                 </div>
-                  // იპოვე ეს ნაწილი შენს კოდში და ჩაასწორე ასე:
-                 <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none;">
-                 <div style="display: flex; align-items: center; gap: 6px;">
-                 <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto; font-size: 16px;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
-        
-                  <span style="color: rgba(255,255,255,0.6); font-size: 13px;"> • ${formatPostDate(post.timestamp)}</span>
-                </div>
-                <p style="font-size:14px; margin-top:6px; color: white;">${post.text || ''}</p>
-                 </div>';
+                  <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none;">
+                    <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
+                    <p style="font-size:14px; margin-top:6px;">${post.text || ''}</p>
+                </div>`;
             
             feed.appendChild(card);
             cleanupOldVideos(); // 🧹 წმენდა
