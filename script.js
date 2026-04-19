@@ -1552,6 +1552,9 @@ function loadUserVideos(uid) {
         postEntries.forEach(([id, post]) => {
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
+                // ვეძებთ სურათსაც (thumbnail), რომელიც ვიდეოს "გარეკანი" იქნება
+                const thumb = post.media.find(m => m.type === 'image') || {url: ''};
+
                 if(video) {
                     vCount++;
                     const views = post.views || 0;
@@ -1560,12 +1563,13 @@ function loadUserVideos(uid) {
                     const item = document.createElement('div');
                     item.className = 'grid-item';
                     
-                    // აი აქ არის შენი ორიგინალი HTML, მხოლოდ აუცილებელი პარამეტრებით
+                    // აქ ვიყენებთ "სურათს" როგორც პოსტერს. ეს არასოდეს გაჭედავს!
                     item.innerHTML = `
                         <video src="${video.url}" 
                                muted 
                                playsinline 
-                               preload="metadata" 
+                               preload="none" 
+                               poster="${thumb.url}" 
                                style="object-fit: cover; width:100%; height:100%; background: #000;">
                         </video>
                         <div class="video-views-label">
