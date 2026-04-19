@@ -2052,7 +2052,15 @@ function renderTokenFeed() {
             
             // --- შენი სრული INNER HTML (არაფერია ამოკლებული) ---
             card.innerHTML = `
-                <video src="${videoUrl}" loop playsinline muted preload="none" onclick="togglePlayPause(this)"></video>
+                <video src="${videoUrl}" 
+           loop 
+           playsinline 
+           muted 
+           autoplay
+           poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+           style="background: black; object-fit: cover; width:100%; height:100%;"
+           onclick="togglePlayPause(this)">
+           </video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
                 <div class="side-actions">
                     <div style="position:relative">
