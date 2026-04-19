@@ -1998,6 +1998,18 @@ function cleanupOldVideos() {
     }
 }
 
+
+
+
+
+
+function formatPostDate(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${month}-${day}`;
+}
 // 3. მთავარი ფუნქცია (შენი სრული ლოგიკით)
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
