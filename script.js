@@ -2031,19 +2031,6 @@ function renderTokenFeed() {
 
         // მასივად გადაყვანა და დროით დალაგება
         let postEntries = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
-
-        // 1. ჯერ renderTokenFeed ფუნქციაში, სადაც ციკლი (forEach) იწყება, 
-       // პოსტის ტექსტისთვის მოვამზადოთ ცვლადი:
-
-        const rawText = post.text || '';
-        let displayDescription = rawText;
-
-        if (rawText.length > 100) {
-        const shortText = rawText.substring(0, 100);
-        // აქ ვიყენებთ სპეციალურ სიმბოლოებს ბრჭყალებისთვის, რომ კოდი არ გაიჭედოს
-        const safeFullText = rawText.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        displayDescription = `${shortText}... <span style="color: var(--gold); font-weight: bold; cursor: pointer; pointer-events: auto;" onclick="this.parentElement.innerHTML='${safeFullText}'">more</span>`;
-        }
       
         // ვიმახსოვრებთ ბოლო დროს შემდეგი სქროლისთვის
         lastVisibleTimestamp = postEntries[postEntries.length - 1][1].timestamp;
