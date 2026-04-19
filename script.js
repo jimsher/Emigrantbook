@@ -1565,11 +1565,9 @@ function loadUserVideos(uid) {
                     
                     // აქ ვიყენებთ "სურათს" როგორც პოსტერს. ეს არასოდეს გაჭედავს!
                     item.innerHTML = `
-                        <video src="${video.url}" 
+                        <video src="${video.url}#t=0.1" 
                                muted 
                                playsinline 
-                               autoplay 
-                               loop 
                                preload="metadata" 
                                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
                                style="object-fit: cover; width:100%; height:100%; background: #000;">
