@@ -1535,10 +1535,6 @@ localStorage.setItem('last_seen_visitor_ts', Date.now());
 
 
 
-
-
-
-
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     
@@ -1568,7 +1564,15 @@ function loadUserVideos(uid) {
                     const item = document.createElement('div');
                     item.className = 'grid-item';
                     item.innerHTML = `
-                        <video src="${video.url}" muted playsinline></video>
+                        <video src="${video.url}" 
+                               muted 
+                               playsinline 
+                               autoplay 
+                               loop 
+                               preload="metadata" 
+                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                               style="object-fit: cover; width:100%; height:100%; background: #000;">
+                        </video>
                         <div class="video-views-label">
                             <i class="fas fa-play"></i> ${formattedViews}
                         </div>
@@ -1586,6 +1590,10 @@ function loadUserVideos(uid) {
         document.getElementById('statVidsCount').innerText = vCount;
     });
 }
+
+
+
+
 
 
 function playFullVideo(url, postId, currentIndex) {
