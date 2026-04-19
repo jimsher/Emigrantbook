@@ -2254,7 +2254,7 @@ async function deleteMyVideo(postId) {
 
 
 function setupAutoPlay() {
-    // 🚀 თუ მესინჯერი ღიაა, საერთოდ არაფერი არ ჩართო!
+    // 🚀 შენი ორიგინალი მესინჯერის შემოწმება
     if (document.getElementById('messengerUI').style.display === 'flex') return;
 
     const observer = new IntersectionObserver((entries) => {
@@ -2262,34 +2262,40 @@ function setupAutoPlay() {
             const video = entry.target.querySelector('video');
             if (!video) return;
 
-            // ვიღებთ პოსტის ID-ს ქარდის აიდიდან (მაგ: card-Lxyz... -> Lxyz...)
+            // --- 🛠️ აქ ვინახავთ ლინკს (რომ არაფერი დაიკარგოს) ---
+            if (!video.dataset.src) video.dataset.src = video.src;
+
             const postId = entry.target.id.replace('card-', '');
 
             if (entry.isIntersecting) {
-                // მხოლოდ მაშინ იწყებს ჩატვირთვას და დაკვრას, როცა ეკრანზეა
+                // --- 🚀 შენი ორიგინალი ჩართვის ლოგიკა ---
+                if (!video.src || video.src === "") video.src = video.dataset.src; 
+
                 video.style.opacity = "1";
                 video.play().catch(e => {}); 
                 video.muted = false;
 
-                // --- 🔥 ახალი: ნახვის მომატება რეალურ დროში ---
+                // --- 🔥 შენი ორიგინალი ნახვების მომატება ---
                 if (postId && postId !== "") {
                     db.ref(`posts/${postId}/views`).transaction(currentViews => {
                         return (currentViews || 0) + 1;
                     });
                 }
-                // --------------------------------------------
 
             } else {
-                // როგორც კი თვალს მიეფარება, ჩერდება და ითიშება მეხსიერებიდან
+                // --- 🧹 შენი ორიგინალი გათიშვის ლოგიკა + მეხსიერების გაწმენდა ---
                 video.pause();
+                video.src = ""; // ეს ათავისუფლებს RAM-ს APK-ში
+                video.load();   // ბრაუზერს ეუბნება, რომ ფაილი "გადააგდოს"
                 video.muted = true;
-                video.style.opacity = "0.5"; // ვიზუალური ეფექტი დაზოგვისთვის
+                video.style.opacity = "0.5"; 
             }
         });
-    }, { threshold: 0.5 }); // 50% მაინც თუ ჩანს ეკრანზე
+    }, { threshold: 0.5 });
 
     document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
 }
+
 
 
 
