@@ -3349,14 +3349,39 @@ function formatTime(seconds) {
 
 
 
+async function deleteMyVideo(postId, videoUrl) {
+    if (confirm("ნამდვილად გსურთ წაშლა?")) {
+        try {
+            // 1. ჯერ ვშლით ფაილს Storage-დან
+            if (videoUrl) {
+                const storageRef = firebase.storage().refFromURL(videoUrl);
+                await storageRef.delete();
+                console.log("ფაილი Storage-დან წაიშალა");
+            }
 
+            // 2. შემდეგ ვშლით ჩანაწერს ბაზიდან
+            await db.ref(`posts/${postId}`).remove();
+            console.log("მონაცემები ბაზიდან წაიშალა");
 
+            // 3. რეალურ დროში ეკრანიდან გაქრობა
+            // ვეძებთ ელემენტს, რომელსაც აქვს ID (მაგ: id="post-123")
+            const element = document.getElementById(`post-${postId}`);
+            if (element) {
+                element.style.opacity = '0';
+                setTimeout(() => element.remove(), 300); // ლამაზად გაქრობა
+            }
 
-function deleteMyVideo(postId) {
- if(confirm("ნამდვილად გსურთ წაშლა?")) {
- db.ref(`posts/${postId}`).remove();
- }
+            alert("წარმატებით წაიშალა!");
+        } catch (error) {
+            console.error("წაშლის შეცდომა:", error);
+            // თუ ფაილი Storage-ში აღარ იყო, მაინც წავშალოთ ბაზიდან
+            db.ref(`posts/${postId}`).remove();
+        }
+    }
 }
+
+
+
 
 
 // სამი წერტილის ლოგიკა და გახსნა
