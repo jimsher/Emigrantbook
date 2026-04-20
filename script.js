@@ -1539,55 +1539,76 @@ function loadUserVideos(uid) {
     
     db.ref('posts').on('value', snap => {
         grid.innerHTML = ""; 
-        let vCount = 0;
         const posts = snap.val();
         if(!posts) {
             document.getElementById('statVidsCount').innerText = 0;
             return;
         }
 
+        let vCount = 0;
+        let videoList = [];
         const postEntries = Object.entries(posts).reverse();
-        let displayIdx = 0; 
 
+        // ვაგროვებთ ყველა ვიდეოს
         postEntries.forEach(([id, post]) => {
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
-                // ვეძებთ სურათსაც (thumbnail), რომელიც ვიდეოს "გარეკანი" იქნება
-                const thumb = post.media.find(m => m.type === 'image') || {url: ''};
-
                 if(video) {
+                    videoList.push({ id, post, video });
                     vCount++;
-                    const views = post.views || 0;
-                    const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
-
-                    const item = document.createElement('div');
-                    item.className = 'grid-item';
-                    
-                    // აქ ვიყენებთ "სურათს" როგორც პოსტერს. ეს არასოდეს გაჭედავს!
-                    item.innerHTML = `
-                        <div class="video-container" style="width:100%; height:100%; position:relative; background:#000;">
-        <video src="${video.url}" 
-               muted 
-               playsinline 
-               preload="none" 
-               style="width:100%; height:100%; object-fit:cover; display:block;">
-        </video>
-        <div class="video-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.01); z-index:1;"></div>
-    </div>
-    <div class="video-views-label" style="z-index:2;">
-        <i class="fas fa-play"></i> ${formattedViews}
-    </div>
-`;
-
-                    const currentIdx = displayIdx;
-                    item.onclick = () => playFullVideo(video.url, id, currentIdx); 
-                    
-                    grid.appendChild(item);
-                    displayIdx++;
                 }
             }
         });
+
         document.getElementById('statVidsCount').innerText = vCount;
+
+        let currentlyShown = 0; // რამდენი გვაქვს ამჟამად ნაჩვენები
+
+        function showNextSix() {
+            // ვიღებთ შემდეგ 6 ვიდეოს
+            const nextBatch = videoList.slice(currentlyShown, currentlyShown + 6);
+            
+            nextBatch.forEach((itemData) => {
+                const { id, post, video } = itemData;
+                const views = post.views || 0;
+                const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
+
+                const item = document.createElement('div');
+                item.className = 'grid-item';
+                item.innerHTML = `
+                    <div class="video-container" style="width:100%; height:100%; position:relative; background:#000;">
+                        <video src="${video.url}" muted playsinline preload="none" style="width:100%; height:100%; object-fit:cover; display:block;"></video>
+                        <div class="video-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.01); z-index:1;"></div>
+                    </div>
+                    <div class="video-views-label" style="z-index:2;">
+                        <i class="fas fa-play"></i> ${formattedViews}
+                    </div>
+                `;
+                
+                // ინდექსის გადაცემა სრული ვიდეოსთვის
+                const globalIndex = currentlyShown; 
+                item.onclick = () => playFullVideo(video.url, id, globalIndex);
+                
+                grid.appendChild(item);
+                currentlyShown++; // ვზრდით მთლიან რაოდენობას
+            });
+
+            // ღილაკის მართვა
+            const oldBtn = document.getElementById('loadMoreBtn');
+            if(oldBtn) oldBtn.remove(); // ძველს ვშლით
+
+            if (currentlyShown < videoList.length) {
+                const loadMoreBtn = document.createElement('div');
+                loadMoreBtn.id = 'loadMoreBtn';
+                loadMoreBtn.innerHTML = 'მეტის ნახვა <i class="fas fa-chevron-down" style="margin-left:5px;"></i>';
+                loadMoreBtn.style = "grid-column: 1 / -1; text-align: center; padding: 15px; color: #aaa; background: rgba(255,255,255,0.05); border-radius: 8px; margin: 15px 0; cursor: pointer; font-size: 14px;";
+                loadMoreBtn.onclick = () => showNextSix(); // კიდევ 6-ს დაამატებს
+                grid.appendChild(loadMoreBtn);
+            }
+        }
+
+        // პირველი 6-ის გამოჩენა
+        showNextSix();
     });
 }
                     
