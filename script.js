@@ -1576,14 +1576,17 @@ function loadUserVideos(uid) {
                 const item = document.createElement('div');
                 item.className = 'grid-item';
                 item.innerHTML = `
-                    <div class="video-container" style="width:100%; height:100%; position:relative; background:#000;">
-                        <video src="${video.url}" muted playsinline preload="none" style="width:100%; height:100%; object-fit:cover; display:block;"></video>
-                        <div class="video-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.01); z-index:1;"></div>
-                    </div>
-                    <div class="video-views-label" style="z-index:2;">
-                        <i class="fas fa-play"></i> ${formattedViews}
-                    </div>
-                `;
+                    <video src="${video.url}" 
+                               muted 
+                               playsinline 
+                               preload="metadata" 
+                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                               style="object-fit: cover; width:100%; height:100%; background: #000;">
+                        </video>
+                        <div class="video-views-label">
+                            <i class="fas fa-play"></i> ${formattedViews}
+                        </div>
+                    `;
                 
                 // ინდექსის გადაცემა სრული ვიდეოსთვის
                 const globalIndex = currentlyShown; 
