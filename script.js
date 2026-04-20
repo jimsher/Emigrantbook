@@ -2133,12 +2133,12 @@ function renderTokenFeed() {
                         <i class="fas fa-gift" style="color: #ff4d4d;"></i>
                         <span>Gift</span>
                     </div>
-                    ${post.authorId === auth.currentUser.uid ? `
-                    <div class="action-item" onclick="deleteMyVideo('${id}')" style="margin-top: 5px;">
-                        <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
-                        <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
-                    </div>
-                    ` : ''}
+                  ${post.authorId === auth.currentUser.uid ? `
+                  <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
+                  <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
+                  <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
+                 </div>
+                 ` : ''}
                 </div>
                   <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
                 <div style="display: flex; align-items: center; gap: 6px;">
