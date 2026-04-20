@@ -1576,7 +1576,7 @@ function loadUserVideos(uid) {
                 const item = document.createElement('div');
                 item.className = 'grid-item';
                 item.innerHTML = `
-                    <video src="${video.url}" 
+                    <video src="${video.url}#t=0.1" 
                                muted 
                                playsinline 
                                preload="metadata" 
