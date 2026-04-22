@@ -4994,3 +4994,45 @@ window.toggleWallTag = function(postId) {
 };                    
                     
 // აქ მთავრდება
+
+
+
+
+
+
+
+
+
+
+// კამერის დროს გადაღების სახის ფილტრები
+let faceMesh;
+
+async function setupBeautyFilter() {
+    faceMesh = new FaceMesh({locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+    }});
+
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    faceMesh.onResults(onBeautyResults);
+    console.log("Beauty Filter სისტემა მზადაა!");
+}
+
+function onBeautyResults(results) {
+    if (!results.multiFaceLandmarks) return;
+    
+    // აქ მოხდება ჯადოქრობა: 
+    // 1. ავიღებთ სახის კანს
+    // 2. დავადებთ ბლარს (Blur) რომ გასუფთავდეს
+    // 3. დავაბრუნებთ ეკრანზე
+    applySkinSmoothing(results);
+}
+
+// ამ ფუნქციას გამოვიძახებთ როცა კამერა ჩაირთვება
+setupBeautyFilter();
+// აქ მთავრდება
