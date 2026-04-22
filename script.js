@@ -5051,3 +5051,28 @@ function toggleBeautyMode() {
         icon.style.color = "white"; // გამოირთო
     }
 }
+
+
+
+
+
+
+let isBeautyOn = false;
+
+function toggleBeautyMode() {
+    isBeautyOn = !isBeautyOn;
+    const video = document.getElementById('cameraStream');
+    const icon = document.getElementById('beautyIcon');
+    
+    if (isBeautyOn) {
+        // ეფექტის ჩართვა: კანს ოდნავ "აშავებს" და "აპრიალებს" (Soft Focus)
+        video.style.filter = "contrast(1.1) brightness(1.1) saturate(1.1) blur(0.5px)";
+        icon.style.color = "#ff4d4d"; // ღილაკი წითლდება
+        console.log("Beauty Mode: ON");
+    } else {
+        // ეფექტის გამორთვა: აბრუნებს ორიგინალს
+        video.style.filter = "none";
+        icon.style.color = "white"; // ღილაკი თეთრდება
+        console.log("Beauty Mode: OFF");
+    }
+}
