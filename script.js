@@ -5056,3 +5056,38 @@ function toggleBeautyMode() {
         console.log("Beauty Mode: OFF");
     }
 }
+
+
+
+
+
+
+// ფილტრი ფერის შეცვლა
+// ფილტრების მენიუს გამოჩენა/დამალვა
+function toggleFiltersMenu() {
+    const menu = document.getElementById('filtersDropdown');
+    if (menu.style.display === "none" || menu.style.display === "") {
+        menu.style.display = "flex";
+    } else {
+        menu.style.display = "none";
+    }
+}
+
+// ფილტრის დადება ვიდეოზე (და კანვასზეც, თუ ჩართულია)
+function applyVideoFilter(filterValue) {
+    const video = document.getElementById('cameraStream');
+    const canvas = document.getElementById('beautyCanvas');
+    
+    // ვადებთ ფილტრს ვიდეოს
+    video.style.filter = filterValue;
+    
+    // თუ Beauty Mode ჩართულია, კანვასსაც გადაედება იგივე ფილტრი
+    if (canvas) {
+        canvas.style.filter = filterValue;
+    }
+    
+    console.log("Filter applied: " + filterValue);
+    
+    // ფილტრის არჩევის შემდეგ მენიუ რომ დაიმალოს
+    document.getElementById('filtersDropdown').style.display = "none";
+}
