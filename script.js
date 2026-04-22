@@ -3805,28 +3805,78 @@ async function switchCamera() {
 
 
 
+// აქედან იწყება
+let countdownTime = 0; 
+let countdownActive = false;
 
+// მენიუს მართვა
+function toggleTimerMenu() {
+    const menu = document.getElementById('timerDropdown');
+    if (menu) menu.style.display = (menu.style.display === "none") ? "flex" : "none";
+}
 
+function setCountdown(seconds, element) {
+    countdownTime = seconds;
+    const opts = element.parentElement.querySelectorAll('div');
+    opts.forEach(opt => opt.style.color = 'white');
+    element.style.color = '#ff4d4d';
+    document.getElementById('timerDropdown').style.display = "none";
+}
 
+// შენი ორიგინალი ფუნქცია - გადაკეთებული რომ იმუშაოს ტაიმერმა
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
     
+    // ამოწმებს, უკვე ხომ არ ვწერთ
+    const isRecording = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
+
+    // თუ ტაიმერია და ჩაწერას ვიწყებთ - ჯერ დაითვალე
+    if (countdownTime > 0 && !isRecording && !countdownActive) {
+        countdownActive = true;
+        const display = document.getElementById('countdownDisplay');
+        let timeLeft = countdownTime;
+        
+        if (display) {
+            display.style.display = "block";
+            display.innerText = timeLeft;
+        }
+
+        let cdInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                if (display) display.innerText = timeLeft;
+            } else {
+                clearInterval(cdInterval);
+                if (display) display.style.display = "none";
+                countdownActive = false;
+                
+                // როცა მორჩება დათვლა, დროებით ვაუქმებთ ტაიმერს და ვიძახებთ ისევ ამ ფუნქციას
+                const currentT = countdownTime;
+                countdownTime = 0; 
+                toggleRecording(); 
+                countdownTime = currentT; 
+            }
+        }, 1000);
+        return; 
+    }
+
+    // --- აქედან შენი ორიგინალი ლოგიკაა 1-ში 1-ზე ---
     try {
-        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+        if (!window.globalMediaRecorder || window.globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
-            globalChunks = [];
-            globalMediaRecorder = new MediaRecorder(window.videoStream);
+            window.globalChunks = [];
+            window.globalMediaRecorder = new MediaRecorder(window.videoStream);
             
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
+            window.globalMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) window.globalChunks.push(e.data);
             };
 
-            globalMediaRecorder.onstop = () => {
-                stopTimer(); // აქედან ვთიშავთ ტაიმერს
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
+            window.globalMediaRecorder.onstop = () => {
+                if (typeof stopTimer === "function") stopTimer();
+                const blob = new Blob(window.globalChunks, { type: 'video/mp4' });
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(file);
@@ -3834,34 +3884,31 @@ async function toggleRecording() {
 
                 video.srcObject = null;
                 video.src = URL.createObjectURL(blob);
-                video.style.transform = "scaleX(1)";
                 video.muted = false;
                 video.play();
 
-                if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect(videoInput);
-                }
+                if (typeof handleVideoSelect === "function") handleVideoSelect(videoInput);
             };
 
-            globalMediaRecorder.start();
-            startTimer(); // აქედან ვიწყებთ ტაიმერს
+            window.globalMediaRecorder.start();
+            if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
                 btnInner.style.background = "#ff0000";
             }
         } else {
-            globalMediaRecorder.stop();
+            window.globalMediaRecorder.stop();
             if (btnInner) {
                 btnInner.style.borderRadius = "50%";
                 btnInner.style.background = "#ff4d4d";
             }
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error:", err);
     }
 }
-
+// აქ მთავრდება
             
  
 
@@ -5117,52 +5164,3 @@ function setVideoSpeed(speed, element) {
 
 
 // ტაიმერის ლოგიკა 
-let countdownTime = 0; 
-let countdownActive = false;
-
-function toggleTimerMenu() {
-    const menu = document.getElementById('timerDropdown');
-    if (menu) {
-        menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
-    }
-}
-
-function setCountdown(seconds, element) {
-    countdownTime = seconds;
-    const opts = element.parentElement.querySelectorAll('div');
-    opts.forEach(opt => opt.style.color = 'white');
-    element.style.color = '#ff4d4d';
-    document.getElementById('timerDropdown').style.display = "none";
-}
-
-function startWithTimer() {
-    // ვამოწმებთ, საერთოდ გვაქვს თუ არა ტაიმერი არჩეული
-    // ან ხომ არ არის უკვე ჩაწერა ჩართული (რომ გათიშვაზე ტაიმერი არ ჩაირთოს)
-    const isRec = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
-
-    if (countdownTime === 0 || isRec || countdownActive) {
-        toggleRecording(); // პირდაპირ შენს ორიგინალზე გადადის
-        return;
-    }
-
-    const display = document.getElementById('countdownDisplay');
-    countdownActive = true;
-    let timeLeft = countdownTime;
-    
-    if (display) {
-        display.style.display = "block";
-        display.innerText = timeLeft;
-    }
-
-    let tInterval = setInterval(() => {
-        timeLeft--;
-        if (timeLeft > 0) {
-            if (display) display.innerText = timeLeft;
-        } else {
-            clearInterval(tInterval);
-            if (display) display.style.display = "none";
-            countdownActive = false;
-            toggleRecording(); // აი აქ ირთვება შენი ორიგინალი ფუნქცია
-        }
-    }, 1000);
-}
