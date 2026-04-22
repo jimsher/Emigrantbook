@@ -3808,112 +3808,62 @@ async function switchCamera() {
 
 
 
-            
-let countdownTime = 0; // ეს ცვლადი გჭირდება გლობალურად
-let countdownActive = false;
-
 async function toggleRecording() {
-    const btnInner = document.getElementById('recordInner');
-    const videoInput = document.getElementById('videoInput');
-    const video = document.getElementById('cameraStream');
+    const btnInner = document.getElementById('recordInner');
+    const videoInput = document.getElementById('videoInput');
+    const video = document.getElementById('cameraStream');
+    
+    try {
+        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+            if (!window.videoStream) return;
 
-    // --- ტაიმერის ლოგიკა (ჩამატებული) ---
-    if (typeof countdownTime !== 'undefined' && countdownTime > 0 && 
-        (!globalMediaRecorder || globalMediaRecorder.state === "inactive") && !countdownActive) {
-        
-        countdownActive = true;
-        const display = document.getElementById('countdownDisplay');
-        let timeLeft = countdownTime;
-        
-        display.style.display = "block";
-        display.innerText = timeLeft;
+            globalChunks = [];
+            globalMediaRecorder = new MediaRecorder(window.videoStream);
+            
+            globalMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) globalChunks.push(e.data);
+            };
 
-        let countdownInterval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                display.innerText = timeLeft;
-            } else {
-                clearInterval(countdownInterval);
-                display.style.display = "none";
-                countdownActive = false;
-                
-                // აქ ვიძახებთ ისევ შენს ფუნქციას, ოღონდ ტაიმერის გარეშე
-                const savedTimer = countdownTime;
-                countdownTime = 0; 
-                toggleRecording(); 
-                countdownTime = savedTimer; 
-            }
-        }, 1000);
-        
-        return; 
-    }
-    // --- დასასრული ---
+            globalMediaRecorder.onstop = () => {
+                stopTimer(); // აქედან ვთიშავთ ტაიმერს
+                const blob = new Blob(globalChunks, { type: 'video/mp4' });
+                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                videoInput.files = dataTransfer.files;
 
-    try {
-        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) return;
+                video.srcObject = null;
+                video.src = URL.createObjectURL(blob);
+                video.style.transform = "scaleX(1)";
+                video.muted = false;
+                video.play();
 
-            globalChunks = [];
-            globalMediaRecorder = new MediaRecorder(window.videoStream);
-            
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
-            };
+                if (typeof handleVideoSelect === "function") {
+                    handleVideoSelect(videoInput);
+                }
+            };
 
-            globalMediaRecorder.onstop = () => {
-                stopTimer(); // აქედან ვთიშავთ ტაიმერს
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                videoInput.files = dataTransfer.files;
-
-                video.srcObject = null;
-                video.src = URL.createObjectURL(blob);
-                video.style.transform = "scaleX(1)";
-                video.muted = false;
-                video.play();
-
-                if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect(videoInput);
-                }
-            };
-
-            globalMediaRecorder.start();
-            startTimer(); // აქედან ვიწყებთ ტაიმერს
-            
-            if (btnInner) {
-                btnInner.style.borderRadius = "8px";
-                btnInner.style.background = "#ff0000";
-            }
-        } else {
-            globalMediaRecorder.stop();
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-        }
-    } catch (err) {
-        console.error(err);
-    }
+            globalMediaRecorder.start();
+            startTimer(); // აქედან ვიწყებთ ტაიმერს
+            
+            if (btnInner) {
+                btnInner.style.borderRadius = "8px";
+                btnInner.style.background = "#ff0000";
+            }
+        } else {
+            globalMediaRecorder.stop();
+            if (btnInner) {
+                btnInner.style.borderRadius = "50%";
+                btnInner.style.background = "#ff4d4d";
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-
-
-
-
-
-
-
-              
-
-
-
-
-
-
-
-
+            
+ 
 
 
 // პაროლის აღდგენის ლოგიკა
