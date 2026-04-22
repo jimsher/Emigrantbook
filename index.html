@@ -44,97 +44,6 @@
 
  
  <style>
-/* TikTok-ის სტილის სრული გადაწყობა */
-#uploadModal {
-    background: #000 !important;
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 999999;
-    flex-direction: column;
-}
-
-.cam-view-area {
-    position: relative;
-    flex: 1;
-    background: #000;
-}
-
-#cameraStream {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* ქვედა მენიუ */
-.tiktok-footer {
-    height: 150px;
-    background: #000;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-.record-button-outer {
-    width: 76px;
-    height: 76px;
-    border-radius: 50%;
-    border: 4px solid #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* შენი ორიგინალი ID: recordInner */
-#recordInner {
-    width: 62px;
-    height: 62px;
-    background: #fe2c55;
-    border-radius: 50%;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ეტაპი 2: პოსტის გვერდი */
-#postFinalize {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background: #000;
-    z-index: 1000;
-    padding: 20px;
-}
-
-.post-thumb-preview {
-    width: 90px;
-    height: 120px;
-    border-radius: 8px;
-    background: #111;
-    overflow: hidden;
-    border: 1px solid #333;
-}
-
-/* ატვირთვის პროცესის დიზაინი */
-#uploadProgressModal {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 2000;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-/* აქ მთავრდება */
-
-
-
-
-
-
-
-
-  
 /* ეს არის ახალი ვიზუალი ვიდეოს ატვირთვის */
 .eb-loader {
   width: 50px;
@@ -2394,86 +2303,70 @@ div[style*="overflow-x:auto"] {
 
  
 
-<div id="uploadModal" style="display:none; position:fixed; inset:0; z-index:999999; background:#000; flex-direction:column; font-family: sans-serif;">
-    
-    <div id="recordingStage" style="display:flex; flex-direction:column; height:100%;">
-        <div style="position:relative; flex:1;">
-            <div style="position:absolute; top:40px; right:15px; display:flex; flex-direction:column; gap:20px; z-index:10; text-align:center; color:white;">
-                <div onclick="switchCamera()"><i class="fas fa-sync" style="font-size:22px;"></i><p style="font-size:10px;">Flip</p></div>
-                <div><i class="fas fa-bolt" style="font-size:22px;"></i><p style="font-size:10px;">Flash</p></div>
-                <div><i class="fas fa-magic" style="font-size:22px;"></i><p style="font-size:10px;">Beauty</p></div>
-                <div><i class="fas fa-filter" style="font-size:22px;"></i><p style="font-size:10px;">Filters</p></div>
-            </div>
-
-            <i class="fas fa-times" onclick="closeUploadModal()" style="position:absolute; top:20px; left:20px; color:white; font-size:24px; z-index:10;"></i>
-            
-            <video id="cameraStream" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
-            
-            <div id="recordingTimer" style="position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; font-weight:bold; display:none;">
-                <span id="timerMinutes">00</span>:<span id="timerSeconds">00</span>
-            </div>
-        </div>
-
-        <div style="height:160px; background:#000; display:flex; justify-content:space-around; align-items:center; padding-bottom:20px;">
-            <div style="color:white; text-align:center;"><i class="fas fa-magic" style="font-size:24px;"></i><p style="font-size:10px;">Effects</p></div>
-            
-            <div style="width:80px; height:80px; border-radius:50%; border:5px solid white; display:flex; justify-content:center; align-items:center;" onclick="toggleRecording()">
-                <div id="recordInner" style="width:65px; height:65px; background:#fe2c55; border-radius:50%; transition:0.2s;"></div>
-            </div>
-
-            <label for="videoInput" style="color:white; text-align:center; cursor:pointer;">
-                <i class="fas fa-clone" style="font-size:24px;"></i>
-                <p style="font-size:10px;">Upload</p>
-                <input type="file" id="videoInput" accept="video/*" style="display:none;" onchange="handleVideoSelect(this)">
-            </label>
-        </div>
-    </div>
-
-    <div id="previewStage" style="display:none; flex-direction:column; height:100%; position:relative;">
-        <video id="mainPreview" style="width:100%; height:100%; object-fit:cover;" loop muted autoplay></video>
-        <i class="fas fa-chevron-left" onclick="cancelToRecording()" style="position:absolute; top:20px; left:20px; color:white; font-size:24px;"></i>
-        
-        <div style="position:absolute; top:40px; right:15px; display:flex; flex-direction:column; gap:20px; color:white; text-align:center;">
-            <div><i class="fas fa-font"></i><p style="font-size:10px;">Text</p></div>
-            <div><i class="fas fa-sticky-note"></i><p style="font-size:10px;">Stickers</p></div>
-        </div>
-
-        <button onclick="goToFinalStage()" style="position:absolute; bottom:30px; right:20px; background:#fe2c55; color:white; border:none; padding:12px 35px; border-radius:4px; font-weight:bold; font-size:16px;">Next</button>
-    </div>
-
-    <div id="postFinalize" style="display:none; position:absolute; inset:0; background:#000; padding:20px; flex-direction:column;">
-        <div style="display:flex; align-items:center; margin-bottom:30px; color:white;">
-            <i class="fas fa-chevron-left" onclick="backToPreview()" style="font-size:20px; cursor:pointer;"></i>
-            <span style="margin-left:110px; font-weight:bold; font-size:17px;">Post</span>
-        </div>
-
-        <div style="display:flex; gap:15px; background:#000;">
-            <textarea id="videoDesc" placeholder="Describe your video..." style="flex:1; height:150px; background:transparent; border:none; color:white; outline:none; resize:none; font-size:15px;"></textarea>
-            <div style="width:100px; height:140px; border-radius:8px; background:#111; overflow:hidden; border:1px solid #333; position:relative;">
-                <video id="miniPreview" style="width:100%; height:100%; object-fit:cover;" muted autoplay loop></video>
-                <div style="position:absolute; bottom:0; width:100%; background:rgba(0,0,0,0.5); color:white; font-size:10px; text-align:center; padding:2px;">Select cover</div>
-            </div>
-        </div>
-
-        <div style="margin-top:20px; border-top:1px solid #222;">
-            <div style="display:flex; justify-content:space-between; padding:15px 0; color:#ccc; font-size:14px; border-bottom:1px solid #111;">
-                <span><i class="fas fa-user-tag" style="margin-right:10px;"></i> Tag people</span>
-                <i class="fas fa-chevron-right"></i>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:15px 0; color:#ccc; font-size:14px;">
-                <span><i class="fas fa-map-marker-alt" style="margin-right:10px;"></i> Location</span>
-                <i class="fas fa-chevron-right"></i>
-            </div>
-        </div>
-
-        <div style="margin-top:auto; display:flex; gap:10px; padding-bottom:20px;">
-            <button style="flex:1; background:#333; color:white; border:none; padding:15px; border-radius:4px; font-weight:bold;">Drafts</button>
-            <button onclick="startTokenUpload()" style="flex:2; background:#fe2c55; color:white; border:none; padding:15px; border-radius:4px; font-weight:bold;">Post</button>
-        </div>
-    </div>
+ <div id="recordingTimer" style="display:none; position:absolute; top:20px; right:20px; background:rgba(255,0,0,0.7); color:white; padding:5px 12px; border-radius:20px; font-family:monospace; font-size:16px; z-index:1000001; align-items:center; gap:2px;">
+    <span id="timerMinutes">00</span>:<span id="timerSeconds">00</span>
 </div>
 
+<div id="uploadModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center;">
+    <span onclick="closeUploadModal()" style="position:absolute; top:20px; left:20px; color:white; font-size:24px; cursor:pointer; z-index:1000000;"><i class="fas fa-times"></i></span>
+
+    <div id="cameraPreviewContainer" style="position:absolute; top:0; left:0; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <video id="cameraStream" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none; z-index:1;"></video>
+        
+        <div id="placeholderText" style="color:#555; text-align:center; position:relative; z-index:2;">
+            <i class="fas fa-video" style="font-size:50px; margin-bottom:10px;"></i>
+            <p>მოემზადე გადასაღებად</p>
+        </div>
+    </div>
+
+    <div style="position:absolute; bottom:40px; width:100%; display:flex; flex-direction:column; align-items:center; gap:30px; padding:20px; box-sizing:border-box; z-index:1000000;">
+        
+        <textarea id="videoDesc" placeholder="დაწერე აღწერა... #impact" style="width:90%; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:12px; color:white; padding:15px; outline:none; font-size:14px; resize:none;"></textarea>
+
+
+        <div style="width:100%; display:flex; justify-content:space-around; align-items:center;">
+            <div onclick="document.getElementById('videoInput').click()" style="text-align:center; cursor:pointer; width:60px;">
+                <div style="width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:8px; border:2px solid white; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                     <i class="fas fa-images" style="color:white; font-size:20px;"></i>
+                </div>
+
+
+                <span style="color:white; font-size:11px; margin-top:5px; display:block;">გალერეა</span>
+                <input type="file" id="videoInput" accept="video/*" hidden onchange="handleVideoSelect(this)">
+            </div>
+
+            <div onclick="switchCamera()" style="text-align:center; cursor:pointer; width:60px;">
+            <div style="width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; border:2px solid white;">
+            <i class="fas fa-sync-alt" style="color:white; font-size:20px;"></i>
+            </div>
+            <span style="color:white; font-size:11px; margin-top:5px; display:block;">შეცვლა</span>
+            </div>
+
+         
+
+            <div id="recordBtn" onclick="toggleRecording()" style="width:80px; height:80px; border-radius:50%; border:5px solid rgba(255,255,255,0.3); background:white; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                <div id="recordInner" style="width:60px; height:60px; border-radius:50%; background:#ff4d4d; border:2px solid black; transition: all 0.3s ease;"></div>
+            </div>
+
+            <div id="upBtn" onclick="startTokenUpload()" style="text-align:center; cursor:pointer; width:60px;">
+                <div style="width:45px; height:45px; background:var(--gold); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-arrow-up" style="color:black; font-size:20px;"></i>
+                </div>
+                <span style="color:var(--gold); font-size:11px; margin-top:5px; display:block;">ატვირთვა</span>
+            </div>
+        </div>
+    </div>
+
+
+
+<div class="filter-avatar" onclick="applyTikTokFilter('beauty_smooth', this)" style="flex: 0 0 auto; text-align: center; cursor: pointer;">
+    <div style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid white; background: url('https://i.pravatar.cc/100?img=7') center/cover; box-shadow: 0 0 15px rgba(254, 44, 85, 0.5);"></div>
+    <p style="color: white; font-size: 12px; margin-top: 5px; text-shadow: 1px 1px 2px black;">Beauty</p>
+</div>
+
+
  
+</div>
 
 
 
