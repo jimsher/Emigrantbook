@@ -5036,3 +5036,18 @@ function onBeautyResults(results) {
 // ამ ფუნქციას გამოვიძახებთ როცა კამერა ჩაირთვება
 setupBeautyFilter();
 // აქ მთავრდება
+
+
+
+let isBeautyOn = false;
+function toggleBeautyMode() {
+    isBeautyOn = !isBeautyOn;
+    const icon = document.getElementById('beautyIcon');
+    
+    if(isBeautyOn) {
+        icon.style.color = "#ff4d4d"; // ჩაირთო
+        alert("სახის გასუფთავება გააქტიურებულია!");
+    } else {
+        icon.style.color = "white"; // გამოირთო
+    }
+}
