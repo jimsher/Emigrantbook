@@ -3806,10 +3806,9 @@ async function switchCamera() {
 
 
 // აქედან იწყება
-let countdownTime = 0; 
-let countdownActive = false;
+let countdownTime = 0;
+let isCounting = false;
 
-// მენიუს ფუნქციები (ბოლოში გქონდეს)
 function toggleTimerMenu() {
     const menu = document.getElementById('timerDropdown');
     if (menu) menu.style.display = (menu.style.display === "none") ? "flex" : "none";
@@ -3823,38 +3822,37 @@ function setCountdown(seconds, element) {
     document.getElementById('timerDropdown').style.display = "none";
 }
 
-// შენი ორიგინალი ფუნქცია - ზუსტად შენს სახელებზე
+// შენი ორიგინალი ფუნქციის დასაწყისში ჩაამატე მხოლოდ ეს:
 async function toggleRecording() {
-    const btnInner = document.getElementById('recordInner');
-    const videoInput = document.getElementById('videoInput');
-    const video = document.getElementById('cameraStream');
+    // თუ ტაიმერია და ჩაწერას ვიწყებთ
+    const isRecording = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
     
-    // --- ტაიმერის დათვლა ---
-    const isRecordingNow = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
-    if (countdownTime > 0 && !isRecordingNow && !countdownActive) {
-        countdownActive = true;
+    if (countdownTime > 0 && !isRecording && !isCounting) {
+        isCounting = true;
         const display = document.getElementById('countdownDisplay');
         let timeLeft = countdownTime;
-        if (display) {
-            display.style.display = "block";
-            display.innerText = timeLeft;
-        }
+        display.style.display = "block";
+        display.innerText = timeLeft;
+
         let timer = setInterval(() => {
             timeLeft--;
-            if (timeLeft > 0) { if (display) display.innerText = timeLeft; }
-            else {
+            if (timeLeft > 0) {
+                display.innerText = timeLeft;
+            } else {
                 clearInterval(timer);
-                if (display) display.style.display = "none";
-                countdownActive = false;
-                const temp = countdownTime;
+                display.style.display = "none";
+                isCounting = false;
+                // ვიძახებთ ისევ ამავე ფუნქციას, ოღონდ ტაიმერს დროებით "ვაჩუმებთ"
+                const saved = countdownTime;
                 countdownTime = 0;
                 toggleRecording(); 
-                countdownTime = temp;
+                countdownTime = saved;
             }
         }, 1000);
-        return;
+        return; // აჩერებს დანარჩენ კოდს დათვლამდე
     }
 
+    
     // --- შენი ორიგინალი რეკორდერი ---
     try {
         if (!window.globalMediaRecorder || window.globalMediaRecorder.state === "inactive") {
