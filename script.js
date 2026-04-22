@@ -3808,10 +3808,45 @@ async function switchCamera() {
 
 
 
+let countdownTime = 0; // ეს ცვლადი გჭირდება გლობალურად
+let countdownActive = false;
+
 async function toggleRecording() {
-    const btnInner = document.getElementById('recordInner');
-    const videoInput = document.getElementById('videoInput');
-    const video = document.getElementById('cameraStream');
+    const btnInner = document.getElementById('recordInner');
+    const videoInput = document.getElementById('videoInput');
+    const video = document.getElementById('cameraStream');
+
+    // --- ტაიმერის ლოგიკა (ჩამატებული) ---
+    if (typeof countdownTime !== 'undefined' && countdownTime > 0 && 
+        (!globalMediaRecorder || globalMediaRecorder.state === "inactive") && !countdownActive) {
+        
+        countdownActive = true;
+        const display = document.getElementById('countdownDisplay');
+        let timeLeft = countdownTime;
+        
+        display.style.display = "block";
+        display.innerText = timeLeft;
+
+        let countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                display.innerText = timeLeft;
+            } else {
+                clearInterval(countdownInterval);
+                display.style.display = "none";
+                countdownActive = false;
+                
+                // აქ ვიძახებთ ისევ შენს ფუნქციას, ოღონდ ტაიმერის გარეშე
+                const savedTimer = countdownTime;
+                countdownTime = 0; 
+                toggleRecording(); 
+                countdownTime = savedTimer; 
+            }
+        }, 1000);
+        
+        return; 
+    }
+    // --- დასასრული ---
     
     try {
         if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
