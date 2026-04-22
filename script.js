@@ -5117,3 +5117,45 @@ function setVideoSpeed(speed, element) {
 
 
 // ტაიმერის ლოგიკა 
+let countdownTime = 0; 
+
+function setCountdown(seconds, element) {
+    countdownTime = seconds;
+    const opts = element.parentElement.querySelectorAll('div');
+    opts.forEach(opt => opt.style.color = 'white');
+    element.style.color = '#ff4d4d';
+    document.getElementById('timerDropdown').style.display = "none";
+}
+
+function startWithTimer() {
+    const display = document.getElementById('countdownDisplay');
+    
+    // თუ ტაიმერი არ გვაქვს არჩეული, პირდაპირ გაუშვი შენი ორიგინალი ფუნქცია
+    if (countdownTime === 0) {
+        toggleRecording();
+        return;
+    }
+
+    // თუ უკვე ჩაწერის პროცესია (ანუ ვაჩერებთ), ტაიმერი აღარ გვინდა
+    // ამას ვამოწმებთ შენი რეკორდის ღილაკის ფერით ან მდგომარეობით
+    if (document.getElementById('recordInner').style.borderRadius === "8px") {
+        toggleRecording();
+        return;
+    }
+
+    // უკუთვლა
+    let timeLeft = countdownTime;
+    display.style.display = "block";
+    display.innerText = timeLeft;
+
+    let timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+            display.innerText = timeLeft;
+        } else {
+            clearInterval(timerInterval);
+            display.style.display = "none";
+            toggleRecording(); // შენი ორიგინალი ფუნქციის გამოძახება
+        }
+    }, 1000);
+}
