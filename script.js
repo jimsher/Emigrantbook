@@ -5121,7 +5121,7 @@ function setVideoSpeed(speed, element) {
 
 // ტაიმერის ლოგიკა 
 let countdownTime = 0; 
-let countdownActive = false; // ამით გავაკონტროლებთ, რომ ზედმეტი ათვლა არ დაიწყოს
+let countdownActive = false;
 
 function toggleTimerMenu() {
     const menu = document.getElementById('timerDropdown');
@@ -5132,46 +5132,40 @@ function toggleTimerMenu() {
 
 function setCountdown(seconds, element) {
     countdownTime = seconds;
-    
-    // ფერების შეცვლა არჩევისას
     const opts = element.parentElement.querySelectorAll('div');
     opts.forEach(opt => opt.style.color = 'white');
     element.style.color = '#ff4d4d';
-    
     document.getElementById('timerDropdown').style.display = "none";
 }
 
-// აი ეს ფუნქციაა მთავარი, რომელიც არ გაჭედავს:
 function startWithTimer() {
-    // ვამოწმებთ უკვე ხომ არ მიდის ჩაწერა შენი ორიგინალი ობიექტით
-    const isActuallyRecording = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
+    // ვამოწმებთ, საერთოდ გვაქვს თუ არა ტაიმერი არჩეული
+    // ან ხომ არ არის უკვე ჩაწერა ჩართული (რომ გათიშვაზე ტაიმერი არ ჩაირთოს)
+    const isRec = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
 
-    // თუ ტაიმერი არაა ან უკვე ვწერთ - პირდაპირ გაუშვი ჩაწერა/გაჩერება
-    if (countdownTime === 0 || isActuallyRecording || countdownActive) {
-        toggleRecording();
+    if (countdownTime === 0 || isRec || countdownActive) {
+        toggleRecording(); // პირდაპირ შენს ორიგინალზე გადადის
         return;
     }
 
     const display = document.getElementById('countdownDisplay');
-    if (!display) {
-        toggleRecording();
-        return;
-    }
-
     countdownActive = true;
     let timeLeft = countdownTime;
-    display.style.display = "block";
-    display.innerText = timeLeft;
+    
+    if (display) {
+        display.style.display = "block";
+        display.innerText = timeLeft;
+    }
 
-    let timerInterval = setInterval(() => {
+    let tInterval = setInterval(() => {
         timeLeft--;
         if (timeLeft > 0) {
-            display.innerText = timeLeft;
+            if (display) display.innerText = timeLeft;
         } else {
-            clearInterval(timerInterval);
-            display.style.display = "none";
+            clearInterval(tInterval);
+            if (display) display.style.display = "none";
             countdownActive = false;
-            toggleRecording(); // იწყებს რეალურ ჩაწერას
+            toggleRecording(); // აი აქ ირთვება შენი ორიგინალი ფუნქცია
         }
     }, 1000);
 }
