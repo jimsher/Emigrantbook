@@ -5091,3 +5091,32 @@ function applyVideoFilter(filterValue) {
     // ფილტრის არჩევის შემდეგ მენიუ რომ დაიმალოს
     document.getElementById('filtersDropdown').style.display = "none";
 }
+
+
+
+
+
+
+// ვიდეოს აჩქარება ან შენელება
+let currentSpeed = 1.0;
+
+// სიჩქარის მენიუს გამოჩენა/დამალვა
+function toggleSpeedMenu() {
+    const menu = document.getElementById('speedDropdown');
+    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
+}
+
+// სიჩქარის დაყენება
+function setVideoSpeed(speed, element) {
+    currentSpeed = speed;
+    
+    // ვიზუალური ეფექტი მენიუში
+    const options = element.parentElement.querySelectorAll('div');
+    options.forEach(opt => opt.style.color = 'white');
+    element.style.color = '#ff4d4d';
+    
+    console.log("ჩაწერის სიჩქარე: " + currentSpeed + "x");
+    
+    // მენიუს დახურვა არჩევის შემდეგ
+    document.getElementById('speedDropdown').style.display = "none";
+}
