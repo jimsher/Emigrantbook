@@ -5005,60 +5005,57 @@ window.toggleWallTag = function(postId) {
 
 
 // კამერის დროს გადაღების სახის ფილტრები
-let faceMesh;
-
-async function setupBeautyFilter() {
-    faceMesh = new FaceMesh({locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-    }});
-
-    faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-    });
-
-    faceMesh.onResults(onBeautyResults);
-    console.log("Beauty Filter სისტემა მზადაა!");
-}
-
-function onBeautyResults(results) {
-    if (!results.multiFaceLandmarks) return;
-    
-    // აქ მოხდება ჯადოქრობა: 
-    // 1. ავიღებთ სახის კანს
-    // 2. დავადებთ ბლარს (Blur) რომ გასუფთავდეს
-    // 3. დავაბრუნებთ ეკრანზე
-    applySkinSmoothing(results);
-}
-
-// ამ ფუნქციას გამოვიძახებთ როცა კამერა ჩაირთვება
-setupBeautyFilter();
-// აქ მთავრდება
-
-
-
-
-
-
-
 let isBeautyOn = false;
+let beautyCanvas = document.getElementById('beautyCanvas');
+let bCtx = beautyCanvas.getContext('2d');
+let animationId;
 
 function toggleBeautyMode() {
     isBeautyOn = !isBeautyOn;
     const video = document.getElementById('cameraStream');
     const icon = document.getElementById('beautyIcon');
-    
+
     if (isBeautyOn) {
-        // ეფექტის ჩართვა: კანს ოდნავ "აშავებს" და "აპრიალებს" (Soft Focus)
-        video.style.filter = "contrast(1.1) brightness(1.1) saturate(1.1) blur(0.5px)";
-        icon.style.color = "#ff4d4d"; // ღილაკი წითლდება
-        console.log("Beauty Mode: ON");
+        icon.style.color = "#ff4d4d";
+        beautyCanvas.style.display = "block";
+        processBeautyFrame(); // იწყებს დამუშავებას
     } else {
-        // ეფექტის გამორთვა: აბრუნებს ორიგინალს
-        video.style.filter = "none";
-        icon.style.color = "white"; // ღილაკი თეთრდება
-        console.log("Beauty Mode: OFF");
+        icon.style.color = "white";
+        beautyCanvas.style.display = "none";
+        cancelAnimationFrame(animationId);
     }
+}
+
+function processBeautyFrame() {
+    if (!isBeautyOn) return;
+    const video = document.getElementById('cameraStream');
+
+    // ვხატავთ ვიდეოს კადრს კანვასზე
+    beautyCanvas.width = video.videoWidth;
+    beautyCanvas.height = video.videoHeight;
+    bCtx.drawImage(video, 0, 0, beautyCanvas.width, beautyCanvas.height);
+
+    // ვიღებთ პიქსელებს
+    let imageData = bCtx.getImageData(0, 0, beautyCanvas.width, beautyCanvas.height);
+    let data = imageData.data;
+
+    // მარტივი ალგორითმი კანის დასარბილებლად (Skin Smoothing)
+    for (let i = 0; i < data.length; i += 4) {
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+
+        // ვამოწმებთ არის თუ არა პიქსელი "კანის ფერი"
+        if (r > 95 && g > 40 && b > 20 && r > g && r > b && (Math.max(r,g,b) - Math.min(r,g,b) > 15)) {
+            // ოდნავ ვუმატებთ სინათლეს და "ვაბლარავთ" მხოლოდ კანის პიქსელს
+            data[i] = r * 1.05;     // Red
+            data[i+1] = g * 1.05;   // Green
+            data[i+2] = b * 1.05;   // Blue
+        }
+    }
+
+    // ვაბრუნებთ შეცვლილ პიქსელებს ეკრანზე
+    bCtx.putImageData(imageData, 0, 0);
+    
+    animationId = requestAnimationFrame(processBeautyFrame);
 }
