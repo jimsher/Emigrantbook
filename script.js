@@ -5117,33 +5117,34 @@ function setVideoSpeed(speed, element) {
 
 
 // ტაიმერის ლოგიკა 
-let countdownTime = 0; 
+let countdownTime = 0; // რამდენი წამით დააგვიანოს ჩაწერა
+
+function toggleTimerMenu() {
+    const menu = document.getElementById('timerDropdown');
+    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
+}
 
 function setCountdown(seconds, element) {
     countdownTime = seconds;
+    
+    // ვიზუალური მონიშვნა
     const opts = element.parentElement.querySelectorAll('div');
     opts.forEach(opt => opt.style.color = 'white');
     element.style.color = '#ff4d4d';
+    
     document.getElementById('timerDropdown').style.display = "none";
+    console.log("ტაიმერი დაყენდა: " + seconds + " წამზე");
 }
 
+// ეს ფუნქცია უნდა გამოვიყენოთ toggleRecording-ის ნაცვლად
 function startWithTimer() {
+    if (countdownTime === 0 || isRecording) { 
+        // თუ ტაიმერი გამორთულია ან უკვე ვწერთ, პირდაპირ ჩვეულებრივი ფუნქცია გაუშვი
+        toggleRecording(); 
+        return;
+    }
+
     const display = document.getElementById('countdownDisplay');
-    
-    // თუ ტაიმერი არ გვაქვს არჩეული, პირდაპირ გაუშვი შენი ორიგინალი ფუნქცია
-    if (countdownTime === 0) {
-        toggleRecording();
-        return;
-    }
-
-    // თუ უკვე ჩაწერის პროცესია (ანუ ვაჩერებთ), ტაიმერი აღარ გვინდა
-    // ამას ვამოწმებთ შენი რეკორდის ღილაკის ფერით ან მდგომარეობით
-    if (document.getElementById('recordInner').style.borderRadius === "8px") {
-        toggleRecording();
-        return;
-    }
-
-    // უკუთვლა
     let timeLeft = countdownTime;
     display.style.display = "block";
     display.innerText = timeLeft;
@@ -5155,7 +5156,7 @@ function startWithTimer() {
         } else {
             clearInterval(timerInterval);
             display.style.display = "none";
-            toggleRecording(); // შენი ორიგინალი ფუნქციის გამოძახება
+            toggleRecording(); // იწყებს რეალურ ჩაწერას
         }
     }, 1000);
 }
