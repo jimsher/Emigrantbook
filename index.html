@@ -2303,12 +2303,19 @@ div[style*="overflow-x:auto"] {
 
  
 
- <div id="recordingTimer" style="display:none; position:absolute; top:20px; right:20px; background:rgba(255,0,0,0.7); color:white; padding:5px 12px; border-radius:20px; font-family:monospace; font-size:16px; z-index:1000001; align-items:center; gap:2px;">
+<div id="recordingTimer" style="display:none; position:absolute; top:20px; right:20px; background:rgba(255,0,0,0.7); color:white; padding:5px 12px; border-radius:20px; font-family:monospace; font-size:16px; z-index:1000001; align-items:center; gap:2px;">
     <span id="timerMinutes">00</span>:<span id="timerSeconds">00</span>
 </div>
 
 <div id="uploadModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center;">
     <span onclick="closeUploadModal()" style="position:absolute; top:20px; left:20px; color:white; font-size:24px; cursor:pointer; z-index:1000000;"><i class="fas fa-times"></i></span>
+
+    <div style="position:absolute; right:15px; top:15%; display:flex; flex-direction:column; gap:25px; z-index:1000000; color:white; text-align:center;">
+        <div style="cursor:pointer;"><i class="fas fa-sync-alt" style="font-size:22px;"></i><span style="display:block; font-size:10px; margin-top:5px;">Flip</span></div>
+        <div style="cursor:pointer;"><i class="fas fa-bolt" style="font-size:22px;"></i><span style="display:block; font-size:10px; margin-top:5px;">Speed</span></div>
+        <div style="cursor:pointer;"><i class="fas fa-magic" style="font-size:22px;"></i><span style="display:block; font-size:10px; margin-top:5px;">Filters</span></div>
+        <div style="cursor:pointer;"><i class="fas fa-stopwatch" style="font-size:22px;"></i><span style="display:block; font-size:10px; margin-top:5px;">Timer</span></div>
+    </div>
 
     <div id="cameraPreviewContainer" style="position:absolute; top:0; left:0; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
         <video id="cameraStream" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none; z-index:1;"></video>
@@ -2319,43 +2326,38 @@ div[style*="overflow-x:auto"] {
         </div>
     </div>
 
-    <div style="position:absolute; bottom:40px; width:100%; display:flex; flex-direction:column; align-items:center; gap:30px; padding:20px; box-sizing:border-box; z-index:1000000;">
+    <div style="position:absolute; bottom:40px; width:100%; display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; box-sizing:border-box; z-index:1000000;">
         
-        <textarea id="videoDesc" placeholder="დაწერე აღწერა... #impact" style="width:90%; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:12px; color:white; padding:15px; outline:none; font-size:14px; resize:none;"></textarea>
+        <div style="display:flex; gap:20px; color:white; font-size:13px; font-weight:bold; margin-bottom:10px; opacity:0.8;">
+            <span style="cursor:pointer;">15s</span>
+            <span style="cursor:pointer; color:#ff4d4d;">60s</span>
+            <span style="cursor:pointer;">10m</span>
+        </div>
 
+        <textarea id="videoDesc" placeholder="დაწერე აღწერა... #impact" style="width:90%; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:12px; color:white; padding:15px; outline:none; font-size:14px; resize:none;"></textarea>
 
         <div style="width:100%; display:flex; justify-content:space-around; align-items:center;">
             <div onclick="document.getElementById('videoInput').click()" style="text-align:center; cursor:pointer; width:60px;">
                 <div style="width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:8px; border:2px solid white; margin:0 auto; display:flex; align-items:center; justify-content:center;">
                      <i class="fas fa-images" style="color:white; font-size:20px;"></i>
                 </div>
-
-
                 <span style="color:white; font-size:11px; margin-top:5px; display:block;">გალერეა</span>
                 <input type="file" id="videoInput" accept="video/*" hidden onchange="handleVideoSelect(this)">
             </div>
-
-            <div onclick="switchCamera()" style="text-align:center; cursor:pointer; width:60px;">
-            <div style="width:45px; height:45px; background:rgba(255,255,255,0.2); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; border:2px solid white;">
-            <i class="fas fa-sync-alt" style="color:white; font-size:20px;"></i>
-            </div>
-            <span style="color:white; font-size:11px; margin-top:5px; display:block;">შეცვლა</span>
-            </div>
-
-         
 
             <div id="recordBtn" onclick="toggleRecording()" style="width:80px; height:80px; border-radius:50%; border:5px solid rgba(255,255,255,0.3); background:white; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                 <div id="recordInner" style="width:60px; height:60px; border-radius:50%; background:#ff4d4d; border:2px solid black; transition: all 0.3s ease;"></div>
             </div>
 
             <div id="upBtn" onclick="startTokenUpload()" style="text-align:center; cursor:pointer; width:60px;">
-                <div style="width:45px; height:45px; background:var(--gold); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+                <div style="width:45px; height:45px; background:var(--gold, #ffd700); border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
                     <i class="fas fa-arrow-up" style="color:black; font-size:20px;"></i>
                 </div>
-                <span style="color:var(--gold); font-size:11px; margin-top:5px; display:block;">ატვირთვა</span>
+                <span style="color:var(--gold, #ffd700); font-size:11px; margin-top:5px; display:block;">ატვირთვა</span>
             </div>
         </div>
     </div>
+</div>
 
 
 
