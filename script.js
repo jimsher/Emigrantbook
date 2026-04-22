@@ -3814,55 +3814,52 @@ async function toggleRecording() {
     const video = document.getElementById('cameraStream');
     
     try {
-        // აქედან უკვე შენი ორიგინალი if (!globalMediaRecorder... მოდის
-    
-    try {
-        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) return;
+        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+            if (!window.videoStream) return;
 
-            globalChunks = [];
-            globalMediaRecorder = new MediaRecorder(window.videoStream);
-            
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
-            };
+            globalChunks = [];
+            globalMediaRecorder = new MediaRecorder(window.videoStream);
+            
+            globalMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) globalChunks.push(e.data);
+            };
 
-            globalMediaRecorder.onstop = () => {
-                stopTimer(); // აქედან ვთიშავთ ტაიმერს
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                videoInput.files = dataTransfer.files;
+            globalMediaRecorder.onstop = () => {
+                stopTimer(); // აქედან ვთიშავთ ტაიმერს
+                const blob = new Blob(globalChunks, { type: 'video/mp4' });
+                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                videoInput.files = dataTransfer.files;
 
-                video.srcObject = null;
-                video.src = URL.createObjectURL(blob);
-                video.style.transform = "scaleX(1)";
-                video.muted = false;
-                video.play();
+                video.srcObject = null;
+                video.src = URL.createObjectURL(blob);
+                video.style.transform = "scaleX(1)";
+                video.muted = false;
+                video.play();
 
-                if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect(videoInput);
-                }
-            };
+                if (typeof handleVideoSelect === "function") {
+                    handleVideoSelect(videoInput);
+                }
+            };
 
-            globalMediaRecorder.start();
-            startTimer(); // აქედან ვიწყებთ ტაიმერს
-            
-            if (btnInner) {
-                btnInner.style.borderRadius = "8px";
-                btnInner.style.background = "#ff0000";
-            }
-        } else {
-            globalMediaRecorder.stop();
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-        }
-    } catch (err) {
-        console.error(err);
-    }
+            globalMediaRecorder.start();
+            startTimer(); // აქედან ვიწყებთ ტაიმერს
+            
+            if (btnInner) {
+                btnInner.style.borderRadius = "8px";
+                btnInner.style.background = "#ff0000";
+            }
+        } else {
+            globalMediaRecorder.stop();
+            if (btnInner) {
+                btnInner.style.borderRadius = "50%";
+                btnInner.style.background = "#ff4d4d";
+            }
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
             
