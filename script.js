@@ -3806,80 +3806,58 @@ async function switchCamera() {
 
 
 // აქედან იწყება
-let countdownTime = 0;
-let isCounting = false;
-
-function toggleTimerMenu() {
-    const menu = document.getElementById('timerDropdown');
-    if (menu) menu.style.display = (menu.style.display === "none") ? "flex" : "none";
-}
-
-function setCountdown(seconds, element) {
-    countdownTime = seconds;
-    const opts = element.parentElement.querySelectorAll('div');
-    opts.forEach(opt => opt.style.color = 'white');
-    element.style.color = '#ff4d4d';
-    document.getElementById('timerDropdown').style.display = "none";
-}
-
-// შენი ორიგინალი ფუნქციის დასაწყისში ჩაამატე მხოლოდ ეს:
 async function toggleRecording() {
-    // თუ ტაიმერია და ჩაწერას ვიწყებთ
-    const isRecording = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
+    const btnInner = document.getElementById('recordInner');
+    const videoInput = document.getElementById('videoInput');
+    const video = document.getElementById('cameraStream');
     
-    if (countdownTime > 0 && !isRecording && !isCounting) {
-        isCounting = true;
-        const display = document.getElementById('countdownDisplay');
-        let timeLeft = countdownTime;
-        display.style.display = "block";
-        display.innerText = timeLeft;
-
-        let timer = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                display.innerText = timeLeft;
-            } else {
-                clearInterval(timer);
-                display.style.display = "none";
-                isCounting = false;
-                // ვიძახებთ ისევ ამავე ფუნქციას, ოღონდ ტაიმერს დროებით "ვაჩუმებთ"
-                const saved = countdownTime;
-                countdownTime = 0;
-                toggleRecording(); 
-                countdownTime = saved;
-            }
-        }, 1000);
-        return; // აჩერებს დანარჩენ კოდს დათვლამდე
-    }
-
-    
-    // --- შენი ორიგინალი რეკორდერი ---
     try {
-        if (!window.globalMediaRecorder || window.globalMediaRecorder.state === "inactive") {
+        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
-            window.globalChunks = [];
-            window.globalMediaRecorder = new MediaRecorder(window.videoStream);
-            window.globalMediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) window.globalChunks.push(e.data); };
-            window.globalMediaRecorder.onstop = () => {
-                if (typeof stopTimer === "function") stopTimer();
-                const blob = new Blob(window.globalChunks, { type: 'video/mp4' });
+
+            globalChunks = [];
+            globalMediaRecorder = new MediaRecorder(window.videoStream);
+            
+            globalMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) globalChunks.push(e.data);
+            };
+
+            globalMediaRecorder.onstop = () => {
+                stopTimer(); // აქედან ვთიშავთ ტაიმერს
+                const blob = new Blob(globalChunks, { type: 'video/mp4' });
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(file);
                 videoInput.files = dataTransfer.files;
+
                 video.srcObject = null;
                 video.src = URL.createObjectURL(blob);
+                video.style.transform = "scaleX(1)";
+                video.muted = false;
                 video.play();
-                if (typeof handleVideoSelect === "function") handleVideoSelect(videoInput);
+
+                if (typeof handleVideoSelect === "function") {
+                    handleVideoSelect(videoInput);
+                }
             };
-            window.globalMediaRecorder.start();
-            if (typeof startTimer === "function") startTimer();
-            if (btnInner) { btnInner.style.borderRadius = "8px"; btnInner.style.background = "#ff0000"; }
+
+            globalMediaRecorder.start();
+            startTimer(); // აქედან ვიწყებთ ტაიმერს
+            
+            if (btnInner) {
+                btnInner.style.borderRadius = "8px";
+                btnInner.style.background = "#ff0000";
+            }
         } else {
-            window.globalMediaRecorder.stop();
-            if (btnInner) { btnInner.style.borderRadius = "50%"; btnInner.style.background = "#ff4d4d"; }
+            globalMediaRecorder.stop();
+            if (btnInner) {
+                btnInner.style.borderRadius = "50%";
+                btnInner.style.background = "#ff4d4d";
+            }
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+    }
 }
 // აქ მთავრდება
             
