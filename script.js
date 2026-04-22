@@ -3803,11 +3803,48 @@ async function switchCamera() {
     }
 }
 
+
+
+let countdownActive = false; // ეს დაამატე ფუნქციის გარეთ, სულ თავში
+
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
     
+    // --- ტაიმერის (უკუთვლის) ნაწილი ---
+    // ვამოწმებთ, არის თუ არა countdownTime დაყენებული და უკვე ვწერთ თუ არა
+    if (typeof countdownTime !== 'undefined' && countdownTime > 0 && 
+        (!globalMediaRecorder || globalMediaRecorder.state === "inactive") && !countdownActive) {
+        
+        countdownActive = true;
+        const display = document.getElementById('countdownDisplay');
+        let timeLeft = countdownTime;
+        
+        display.style.display = "block";
+        display.innerText = timeLeft;
+
+        let countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                display.innerText = timeLeft;
+            } else {
+                clearInterval(countdownInterval);
+                display.style.display = "none";
+                countdownActive = false;
+                
+                // როცა დათვლა მორჩება, დროებით ვაუქმებთ ტაიმერს, რომ ჩაწერა დაიწყოს
+                const savedTimer = countdownTime;
+                countdownTime = 0; 
+                toggleRecording(); // ვიძახებთ ხელახლა ჩაწერის დასაწყებად
+                countdownTime = savedTimer; // ვაბრუნებთ ტაიმერს შემდეგი ჯერისთვის
+            }
+        }, 1000);
+        
+        return; // ვაჩერებთ ფუნქციას, სანამ დათვლა არ მორჩება
+    }
+    // --- ტაიმერის ნაწილის დასასრული ---
+
     try {
         if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
@@ -3820,7 +3857,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.onstop = () => {
-                stopTimer(); // აქედან ვთიშავთ ტაიმერს
+                stopTimer();
                 const blob = new Blob(globalChunks, { type: 'video/mp4' });
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
@@ -3839,7 +3876,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
-            startTimer(); // აქედან ვიწყებთ ტაიმერს
+            startTimer();
             
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
