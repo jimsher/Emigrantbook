@@ -3809,6 +3809,7 @@ async function switchCamera() {
 let countdownTime = 0;
 let isCounting = false;
 
+// მენიუს ფუნქციები
 function toggleTimerMenu() {
     const menu = document.getElementById('timerDropdown');
     if (menu) menu.style.display = (menu.style.display === "none") ? "flex" : "none";
@@ -3822,42 +3823,48 @@ function setCountdown(seconds, element) {
     document.getElementById('timerDropdown').style.display = "none";
 }
 
-// შენი ორიგინალი ფუნქციის დასაწყისში ჩაამატე მხოლოდ ეს:
+// მთავარი ფუნქცია
 async function toggleRecording() {
-    // თუ ტაიმერია და ჩაწერას ვიწყებთ
-    const isRecording = window.globalMediaRecorder && window.globalMediaRecorder.state === "recording";
-    
-    if (countdownTime > 0 && !isRecording && !isCounting) {
-        isCounting = true;
-        const display = document.getElementById('countdownDisplay');
-        let timeLeft = countdownTime;
-        display.style.display = "block";
-        display.innerText = timeLeft;
-
-        let timer = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                display.innerText = timeLeft;
-            } else {
-                clearInterval(timer);
-                display.style.display = "none";
-                isCounting = false;
-                // ვიძახებთ ისევ ამავე ფუნქციას, ოღონდ ტაიმერს დროებით "ვაჩუმებთ"
-                const saved = countdownTime;
-                countdownTime = 0;
-                toggleRecording(); 
-                countdownTime = saved;
-            }
-        }, 1000);
-        return; // აჩერებს დანარჩენ კოდს დათვლამდე
-    }
-
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
     
+    // ვამოწმებთ რეალურად იწერს თუ არა ახლა
+    const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
+
+    // ტაიმერის ლოგიკა - ეშვება მხოლოდ მაშინ, თუ ჩაწერა ჯერ არ დაწყებულა
+    if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
+        isCounting = true;
+        const display = document.getElementById('countdownDisplay');
+        let timeLeft = countdownTime;
+
+        if (display) {
+            display.style.display = "block";
+            display.innerText = timeLeft;
+        }
+
+        let timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                if (display) display.innerText = timeLeft;
+            } else {
+                clearInterval(timerInterval);
+                if (display) display.style.display = "none";
+                isCounting = false;
+                
+                // კრიტიკული მომენტი: ტაიმერს დროებით ვთიშავთ, რომ toggleRecording-მა ჩაწერა დაიწყოს
+                const currentSetting = countdownTime;
+                countdownTime = 0; 
+                toggleRecording(); 
+                countdownTime = currentSetting; // ვაბრუნებთ მნიშვნელობას შემდეგი ჯერისთვის
+            }
+        }, 1000);
+        return; 
+    }
+
+    // ჩვეულებრივი ჩაწერის ლოგიკა
     try {
-        if (!globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+        if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
             globalChunks = [];
@@ -3868,7 +3875,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.onstop = () => {
-                stopTimer(); // აქედან ვთიშავთ ტაიმერს
+                if (typeof stopTimer === "function") stopTimer();
                 const blob = new Blob(globalChunks, { type: 'video/mp4' });
                 const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
                 const dataTransfer = new DataTransfer();
@@ -3881,13 +3888,11 @@ async function toggleRecording() {
                 video.muted = false;
                 video.play();
 
-                if (typeof handleVideoSelect === "function") {
-                    handleVideoSelect(videoInput);
-                }
+                if (typeof handleVideoSelect === "function") handleVideoSelect(videoInput);
             };
 
             globalMediaRecorder.start();
-            startTimer(); // აქედან ვიწყებთ ტაიმერს
+            if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
                 btnInner.style.borderRadius = "8px";
@@ -3901,7 +3906,7 @@ async function toggleRecording() {
             }
         }
     } catch (err) {
-        console.error(err);
+        console.error("Recording error:", err);
     }
 }
 // აქ მთავრდება
