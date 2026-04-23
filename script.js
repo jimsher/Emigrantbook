@@ -3886,27 +3886,28 @@ async function toggleRecording() {
 
     // ჩვეულებრივი ჩაწერის ლოგიკა
     try {
-    if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-        if (!window.videoStream) return;
+        if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+            if (!window.videoStream) return;
 
-        globalChunks = [];
-        
-        // 🚀 ოპტიმიზაცია: ვარჩევთ კოდეკს და ვზღუდავთ ბიტრეიტს, რომ არ გაჭედოს
-        const options = {
-            mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
-            videoBitsPerSecond: 2500000       // 2.5 Mbps - იდეალურია სუფთა ხარისხისთვის ჭედვის გარეშე
-        };
+            globalChunks = [];
+            
+            // 🚀 ოპტიმიზაცია: ვზღუდავთ ბიტრეიტს 1.2 Mbps-მდე ფაილის შესაკუმშად
+            const options = {
+                mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
+                videoBitsPerSecond: 1200000,      // 1.2 Mbps - ძლიერი შეკუმშვა პატარა ზომისთვის
+                audioBitsPerSecond: 64000         // სუფთა ხმა მცირე მოცულობით
+            };
 
-        // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
-        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-            options.mimeType = 'video/mp4';
-        }
+            // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
+            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                options.mimeType = 'video/mp4';
+            }
 
-        globalMediaRecorder = new MediaRecorder(window.videoStream, options);
-        
-        globalMediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) globalChunks.push(e.data);
-        };
+            globalMediaRecorder = new MediaRecorder(window.videoStream, options);
+            
+            globalMediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) globalChunks.push(e.data);
+            };
 
             globalMediaRecorder.onstop = () => {
                 if (typeof stopTimer === "function") stopTimer();
@@ -3943,6 +3944,7 @@ async function toggleRecording() {
         console.error("Recording error:", err);
     }
 }
+
 // აქ მთავრდება
             
  
