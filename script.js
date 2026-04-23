@@ -3828,7 +3828,12 @@ async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
-    
+
+    const deleteBtn = document.getElementById('deleteLastClipBtn');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'flex';
+    }
+  
     // ვამოწმებთ რეალურად იწერს თუ არა ახლა
     const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
 
