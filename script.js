@@ -3588,14 +3588,19 @@ async function openUploadModal() {
                     frameRate: { ideal: 30 },  // სტაბილური კადრები
                     aspectRatio: 9/16          // ზუსტი ვერტიკალური ფორმატი
                 }, 
-                audio: {
-                    echoCancellation: false,   // გამორთულია ექოს ფილტრი ხმის ხარისხისთვის
-                    noiseSuppression: false,   // გამორთულია ხმაურის დამხშობი (უხეში ხმა რომ არ იყოს)
-                    autoGainControl: false,    // გამორთულია ხმის ავტომატური რეგულირება
-                    sampleRate: 48000,         // მაღალი ხარისხის აუდიო
-                    channelCount: 1            // მონო ჩაწერა უფრო სუფთაა მიკროფონისთვის
-                } 
-            });
+                  audio: {
+                    // --- ხმის "რკინისებური" გასწორება ---
+                    echoCancellation: { ideal: false }, // მკაცრად გამორთული ექო
+                    noiseSuppression: { ideal: false },  // მკაცრად გამორთული ხმაურის ფილტრი
+                    autoGainControl: { ideal: false },   // გამორთული ავტომატური გაძლიერება (რომ ქვევრის ხმა არ ქონდეს)
+        
+                    // ხარისხის პარამეტრები
+                    sampleRate: 48000, 
+                    sampleSize: 16,
+                    channelCount: 1,      // მონო ჩაწერა (აკეთებს უფრო სუფთა ფოკუსირებას ხმაზე)
+                    latency: 0          // მონო ჩაწერა უფრო სუფთაა მიკროფონისთვის
+                 } 
+                });
             
             if (video) {
                 video.srcObject = window.videoStream;
