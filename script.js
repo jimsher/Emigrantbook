@@ -5101,12 +5101,33 @@ function toggleBeautyMode() {
 // ფილტრების მენიუს გამოჩენა/დამალვა
 function toggleFiltersMenu() {
     const menu = document.getElementById('filtersDropdown');
+    if (!menu) return;
+
     if (menu.style.display === "none" || menu.style.display === "") {
-        menu.style.display = "flex";
+        menu.style.display = "block";
+        // პატარა დაყოვნება, რომ ანიმაციამ იმუშაოს
+        setTimeout(() => {
+            menu.style.bottom = "0";
+        }, 10);
     } else {
-        menu.style.display = "none";
+        menu.style.bottom = "-300px";
+        // ველოდებით ანიმაციის დასრულებას და მერე ვმალავთ
+        setTimeout(() => {
+            menu.style.display = "none";
+        }, 400);
     }
 }
+
+function applyVideoFilter(filterValue) {
+    const video = document.getElementById('cameraStream');
+    if (video) {
+        video.style.transition = "filter 0.4s ease";
+        video.style.filter = filterValue;
+    }
+    // ფილტრის არჩევისას მენიუ იხურება
+    toggleFiltersMenu();
+}
+
 
 // ფილტრის დადება ვიდეოზე (და კანვასზეც, თუ ჩართულია)
 function applyVideoFilter(filterValue) {
