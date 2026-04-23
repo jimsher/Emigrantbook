@@ -5223,3 +5223,45 @@ window.onclick = function(event) {
         closeCancelModal();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+// აჩვენებს წაშლის ფანჯარას
+function showDeleteConfirm() {
+    document.getElementById('deleteConfirmModal').style.display = 'flex';
+}
+
+// ხურავს ფანჯარას
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+}
+
+// რეალური წაშლა (ტიკტოკის ლოგიკა)
+function confirmDeleteClip() {
+    if (recordedChunks && recordedChunks.length > 0) {
+        recordedChunks.pop(); // შლის ბოლო კლიპს
+    }
+    closeDeleteModal();
+    
+    // თუ კლიპები აღარ დარჩა, ვმალავთ ღილაკს
+    if (recordedChunks.length === 0) {
+        document.getElementById('deleteLastClipBtn').style.display = 'none';
+    }
+}
+
+// ამას იძახებ toggleRecording-ის ბოლოში, როცა ჩაწერა ჩერდება
+function updateTikTokButtons() {
+    if (recordedChunks && recordedChunks.length > 0) {
+        document.getElementById('deleteLastClipBtn').style.display = 'block';
+    } else {
+        document.getElementById('deleteLastClipBtn').style.display = 'none';
+    }
+}
