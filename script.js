@@ -5105,13 +5105,13 @@ function toggleFiltersMenu() {
 
     if (menu.style.display === "none" || menu.style.display === "") {
         menu.style.display = "block";
-        // პატარა დაყოვნება, რომ ანიმაციამ იმუშაოს
+        // ვაძლევთ მაქსიმალურ პრიორიტეტს
+        menu.style.zIndex = "9999999"; 
         setTimeout(() => {
             menu.style.bottom = "0";
         }, 10);
     } else {
         menu.style.bottom = "-300px";
-        // ველოდებით ანიმაციის დასრულებას და მერე ვმალავთ
         setTimeout(() => {
             menu.style.display = "none";
         }, 400);
