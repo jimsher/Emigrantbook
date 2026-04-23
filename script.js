@@ -5164,4 +5164,62 @@ function setVideoSpeed(speed, element) {
 
 
 
-// ტაიმერის ლოგიკა 
+// კამერითბგადაღებულის წაშლა
+// 1. აჩვენებს დასტურის ფანჯარას
+function showCancelConfirmation() {
+    // თუ საერთოდ არაფერია ჩაწერილი, პირდაპირ გავაუქმოთ
+    if (!recordedChunks || recordedChunks.length === 0) {
+        // აქ შენი ძველი cancelRecording() ფუნქციის ლოგიკა, რაც რეჟიმს ცვლის
+        stopCameraAndReturn(); 
+        return;
+    }
+
+    // თუ არის ჩაწერილი მონაკვეთი, ვხსნით მოდალს
+    const modal = document.getElementById('cancelRecordingModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+// 2. ხურავს მოდალს (თუ "გაგრძელებას" დააჭირა)
+function closeCancelModal() {
+    const modal = document.getElementById('cancelRecordingModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 3. რეალურად შლის ჩაწერილს და იწყებს თავიდან (თუ "თავიდან დაწყებას" დააჭირა)
+function confirmDeleteRecording() {
+    // 1. ვხურავთ მოდალს
+    closeCancelModal();
+
+    // 2. ვასუფთავებთ ჩაწერილ მონაცემებს (MediaRecorder-ის მასივს)
+    recordedChunks = []; 
+    
+    // 3. ვაჩერებთ ტაიმერს და ვიზუალს (აქ ჩასვი შენი არსებული ლოგიკა, რაც გადაღებას აჩერებს)
+    // მაგალითად:
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    
+    // 4. ვაბრუნებთ კამერას საწყის მდგომარეობაში (სავარაუდოდ stopCameraAndReturn() გაქვს)
+    if (typeof stopCameraAndReturn === "function") {
+        stopCameraAndReturn();
+    } else {
+        // თუ ეგ ფუნქცია არ გაქვს, უბრალოდ გადაღების ღილაკი გამოაჩინე და 'X' დამალე
+        document.getElementById('recordBtn').style.display = 'block';
+        document.getElementById('cancelRecordingBtn').style.display = 'none'; // შენი X ღილაკის ID
+        document.getElementById('checkMarkBtn').style.display = 'none';   // შენი Check ღილაკის ID
+    }
+
+    console.log("ჩაწერილი ვიდეო წაიშალა. გადაღება დაწყებულია თავიდან.");
+}
+
+// დამატებით: თუ ფანჯრის გარეთ დააჭერს, დაიხუროს (როგორც ტიკტოკზე)
+window.onclick = function(event) {
+    const modal = document.getElementById('cancelRecordingModal');
+    if (event.target == modal) {
+        closeCancelModal();
+    }
+}
