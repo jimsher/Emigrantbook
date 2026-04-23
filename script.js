@@ -3582,12 +3582,12 @@ async function openUploadModal() {
 
             window.videoStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
-                    facingMode: "user",
-                    width: { ideal: 1920 },    // Full HD სიგანე
-                    height: { ideal: 1080 },   // Full HD სიმაღლე
-                    frameRate: { ideal: 30 },  // სტაბილური კადრები
-                    aspectRatio: 9/16          // ზუსტი ვერტიკალური ფორმატი
-                }, 
+                 facingMode: "user",
+                 width: { ideal: 1280 },  // 720p (HD) - ტელეფონზე Full HD-სგან ვერ გაარჩევ, მაგრამ ჭედვას მოხსნის
+                 height: { ideal: 720 }, 
+                 frameRate: { max: 30 },  // კადრების რაოდენობის შეზღუდვა (რომ არ იხტუნაოს)
+                 aspectRatio: 9/16
+                 },
                   audio: {
                     // --- ხმის "რკინისებური" გასწორება ---
                     echoCancellation: { ideal: false }, // მკაცრად გამორთული ექო
