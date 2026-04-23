@@ -2332,7 +2332,12 @@ div[style*="overflow-x:auto"] {
             </div>
         </div>
 
-        <div id="filtersDropdown" style="display:none; position:fixed; bottom:-300px; left:0; width:100%; background:rgba(10,10,10,0.95); border-radius:25px 25px 0 0; padding:25px 10px; z-index:9999999; transition: bottom 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); border-top: 1px solid rgba(212,175,55,0.4); box-shadow: 0 -10px 25px rgba(0,0,0,0.5);">
+        <div id="filtersBtn" onclick="toggleFiltersMenu()" style="cursor:pointer; text-align:center; position:relative; z-index:1000;">
+    <i class="fas fa-magic" style="font-size:22px;"></i>
+    <span style="display:block; font-size:10px; margin-top:5px;">Filters</span>
+</div>
+
+<div id="filtersDropdown" style="display:none; position:fixed; bottom:-300px; left:0; width:100%; background:rgba(10,10,10,0.98); border-radius:25px 25px 0 0; padding:25px 10px; z-index:9999999; transition: bottom 0.4s cubic-bezier(0.25, 0.1, 0.25, 1); border-top: 1px solid rgba(212,175,55,0.4);">
     
     <div onclick="toggleFiltersMenu()" style="width:40px; height:5px; background:rgba(255,255,255,0.2); border-radius:10px; margin: 0 auto 15px; cursor:pointer;"></div>
 
@@ -2344,29 +2349,55 @@ div[style*="overflow-x:auto"] {
     <div style="display:flex; gap:20px; overflow-x:auto; padding:10px 15px; scrollbar-width: none; -ms-overflow-style: none;">
         
         <div onclick="applyVideoFilter('none')" style="text-align:center; min-width:75px;">
-            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; border:2px solid white; margin:0 auto 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>
-            <span style="font-size:11px; color:white; font-weight:500;">Normal</span>
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; border:2px solid white; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">Normal</span>
         </div>
 
         <div onclick="applyVideoFilter('contrast(1.2) brightness(0.9) saturate(1.1) sepia(0.2)')" style="text-align:center; min-width:75px;">
             <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:contrast(1.2) sepia(0.2); border:2px solid transparent; margin:0 auto 8px;"></div>
-            <span style="font-size:11px; color:white; font-weight:500;">Cinema</span>
+            <span style="font-size:11px; color:white;">Cinema</span>
         </div>
 
         <div onclick="applyVideoFilter('contrast(1.4) brightness(0.7) saturate(0.8) hue-rotate(-10deg)')" style="text-align:center; min-width:75px;">
             <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:contrast(1.4) brightness(0.7); border:2px solid transparent; margin:0 auto 8px;"></div>
-            <span style="font-size:11px; color:white; font-weight:500;">Dramatic</span>
+            <span style="font-size:11px; color:white;">Dramatic</span>
         </div>
 
         <div onclick="applyVideoFilter('contrast(1.1) brightness(1.1) saturate(1.6)')" style="text-align:center; min-width:75px;">
             <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:saturate(1.6); border:2px solid transparent; margin:0 auto 8px;"></div>
-            <span style="font-size:11px; color:white; font-weight:500;">Vivid</span>
+            <span style="font-size:11px; color:white;">Vivid</span>
         </div>
 
         <div onclick="applyVideoFilter('grayscale(100%) contrast(1.5)')" style="text-align:center; min-width:75px;">
-            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:grayscale(100%); border:2px solid transparent; margin:0 auto 8px;"></div>
-            <span style="font-size:11px; color:white; font-weight:500;">Noir</span>
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:grayscale(100%) contrast(1.5); border:2px solid transparent; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">Noir Pro</span>
         </div>
+
+        <div onclick="applyVideoFilter('grayscale(100%)')" style="text-align:center; min-width:75px;">
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:grayscale(100%); border:2px solid transparent; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">B&W</span>
+        </div>
+
+        <div onclick="applyVideoFilter('sepia(100%)')" style="text-align:center; min-width:75px;">
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:sepia(100%); border:2px solid transparent; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">Sepia</span>
+        </div>
+
+        <div onclick="applyVideoFilter('invert(100%)')" style="text-align:center; min-width:75px;">
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:invert(100%); border:2px solid transparent; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">Invert</span>
+        </div>
+
+        <div onclick="applyVideoFilter('hue-rotate(90deg)')" style="text-align:center; min-width:75px;">
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:hue-rotate(90deg); border:2px solid transparent; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">Neon</span>
+        </div>
+
+        <div onclick="applyVideoFilter('contrast(0.9) brightness(1.05) sepia(0.4) saturate(0.9)')" style="text-align:center; min-width:75px;">
+            <div style="width:65px; height:65px; border-radius:50%; background:url('https://emigrantbook.com/token-avatar.png') center/cover; filter:sepia(0.4); border:2px solid transparent; margin:0 auto 8px;"></div>
+            <span style="font-size:11px; color:white;">Vintage</span>
+        </div>
+
     </div>
 </div>
 
