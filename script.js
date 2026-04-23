@@ -5165,3 +5165,23 @@ function setVideoSpeed(speed, element) {
 
 
 // კამერითბგადაღებულის წაშლა
+// 1. აჩვენებს წაშლის ფანჯარას
+function showDeleteConfirm() {
+    document.getElementById('deleteConfirmModal').style.display = 'flex';
+}
+
+// 2. ხურავს ფანჯარას
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+}
+
+// 3. წაშლის ლოგიკა
+function confirmDeleteClip() {
+    if (typeof recordedChunks !== 'undefined' && recordedChunks.length > 0) {
+        recordedChunks.pop(); // ბოლო ნაწილის წაშლა
+        if (recordedChunks.length === 0) {
+            document.getElementById('deleteLastClipBtn').style.display = 'none';
+        }
+    }
+    closeDeleteModal();
+}
