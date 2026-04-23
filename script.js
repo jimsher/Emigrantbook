@@ -5101,22 +5101,46 @@ function toggleBeautyMode() {
 // ფილტრების მენიუს გამოჩენა/დამალვა
 function toggleFiltersMenu() {
     const menu = document.getElementById('filtersDropdown');
+    const filtersBtn = document.getElementById('filtersBtn');
+    
+    // სხვა ღილაკები, რომლებიც ხელს უშლიან (შენი ორიგინალი აიდებით)
+    const recordBtn = document.querySelector('.record-btn-container') || document.getElementById('recordBtn');
+    const galleryBtn = document.getElementById('galleryBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+
     if (!menu) return;
 
     if (menu.style.display === "none" || menu.style.display === "") {
+        // ფილტრების გახსნა
         menu.style.display = "block";
-        // ვაძლევთ მაქსიმალურ პრიორიტეტს
-        menu.style.zIndex = "9999999"; 
+        
+        // ვმალავთ ყველაფერს, რაც ხელს უშლის
+        if (filtersBtn) filtersBtn.style.visibility = "hidden";
+        if (recordBtn) recordBtn.style.display = "none";
+        if (galleryBtn) galleryBtn.style.display = "none";
+        if (uploadBtn) uploadBtn.style.display = "none";
+        
         setTimeout(() => {
             menu.style.bottom = "0";
         }, 10);
     } else {
+        // ფილტრების დახურვა
         menu.style.bottom = "-300px";
+        
         setTimeout(() => {
             menu.style.display = "none";
+            
+            // ვაბრუნებთ ყველაფერს თავის ადგილზე
+            if (filtersBtn) filtersBtn.style.visibility = "visible";
+            if (recordBtn) recordBtn.style.display = "flex";
+            if (galleryBtn) galleryBtn.style.display = "block";
+            if (uploadBtn) uploadBtn.style.display = "block";
         }, 400);
     }
 }
+
+
+
 
 function applyVideoFilter(filterValue) {
     const video = document.getElementById('cameraStream');
