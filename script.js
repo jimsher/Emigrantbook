@@ -3581,8 +3581,20 @@ async function openUploadModal() {
             }
 
             window.videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" }, 
-                audio: true 
+                video: { 
+                    facingMode: "user",
+                    width: { ideal: 1920 },    // Full HD სიგანე
+                    height: { ideal: 1080 },   // Full HD სიმაღლე
+                    frameRate: { ideal: 30 },  // სტაბილური კადრები
+                    aspectRatio: 9/16          // ზუსტი ვერტიკალური ფორმატი
+                }, 
+                audio: {
+                    echoCancellation: false,   // გამორთულია ექოს ფილტრი ხმის ხარისხისთვის
+                    noiseSuppression: false,   // გამორთულია ხმაურის დამხშობი (უხეში ხმა რომ არ იყოს)
+                    autoGainControl: false,    // გამორთულია ხმის ავტომატური რეგულირება
+                    sampleRate: 48000,         // მაღალი ხარისხის აუდიო
+                    channelCount: 1            // მონო ჩაწერა უფრო სუფთაა მიკროფონისთვის
+                } 
             });
             
             if (video) {
