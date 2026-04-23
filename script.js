@@ -3886,15 +3886,27 @@ async function toggleRecording() {
 
     // ჩვეულებრივი ჩაწერის ლოგიკა
     try {
-        if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) return;
+    if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
+        if (!window.videoStream) return;
 
-            globalChunks = [];
-            globalMediaRecorder = new MediaRecorder(window.videoStream);
-            
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
-            };
+        globalChunks = [];
+        
+        // 🚀 ოპტიმიზაცია: ვარჩევთ კოდეკს და ვზღუდავთ ბიტრეიტს, რომ არ გაჭედოს
+        const options = {
+            mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
+            videoBitsPerSecond: 2500000       // 2.5 Mbps - იდეალურია სუფთა ხარისხისთვის ჭედვის გარეშე
+        };
+
+        // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options.mimeType = 'video/mp4';
+        }
+
+        globalMediaRecorder = new MediaRecorder(window.videoStream, options);
+        
+        globalMediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) globalChunks.push(e.data);
+        };
 
             globalMediaRecorder.onstop = () => {
                 if (typeof stopTimer === "function") stopTimer();
