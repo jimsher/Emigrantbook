@@ -2330,7 +2330,7 @@ function setupAutoPlay() {
                 
                 // 🔥 მხოლოდ ეს ხაზი დავამატოთ - ის აიძულებს ბრაუზერს
                 // რომ ამ ვიდეოს ჩატვირთვაზე რესურსი აღარ დახარჯოს
-                video.preload = "none";
+                video.preload = "metadata";
             }
         });
     }, { threshold: 0.5 });
