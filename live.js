@@ -1,18 +1,16 @@
-
-// --- JAVASCRIPT - შენი სრული ორიგინალი ლოგიკა ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
 
-function **startLiveFunc**() { toggleSideMenu(false); startLive(); }
+function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
-async function **startLive**() {
+async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYLB6xlC05H7LAncx9mOfb0e4ZR370LxH7MZ6YwGd6+qMVqUKDOZGlgamBkZpicnmaSZpqUkWRkkGRobJySmp5paWFhaJ31PfZDYEMjKcnjqVmZEBAkF8boaczLLU+OKSotTEXAYGAD0AIxk=";
     
     currentLiveChannel = "live_stream"; 
     
-    // ამოღებულია setAttribute, რომ სრულ ეკრანზე დარჩეს
+    // UI ინიციალიზაცია
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
     document.getElementById('liveHostAva').src = myPhoto;
@@ -50,11 +48,10 @@ async function **startLive**() {
         listenToViewers(currentLiveChannel);
         listenToLikes(currentLiveChannel);
         listenForRequests(currentLiveChannel);
-        console.log("Live started ✅");
     } catch (e) { console.error(e); }
 }
 
-async function **joinLive**(hostUid, channelName) {
+async function joinLive(hostUid, channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYLB6xlC05H7LAncx9mOfb0e4ZR370LxH7MZ6YwGd6+qMVqUKDOZGlgamBkZpicnmaSZpqUkWRkkGRobJySmp5paWFhaJ31PfZDYEMjKcnjqVmZEBAkF8boaczLLU+OKSotTEXAYGAD0AIxk=";
     currentLiveChannel = channelName;
@@ -99,7 +96,7 @@ async function **joinLive**(hostUid, channelName) {
     } catch (e) { console.log(e); }
 }
 
-function **listenToLiveChat**(channel) {
+function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
         const msg = snap.val();
@@ -111,14 +108,14 @@ function **listenToLiveChat**(channel) {
     });
 }
 
-function **sendLiveComment**() {
+function sendLiveComment() {
     const inp = document.getElementById('liveMsgInp');
-    if(!inp.value.trim() || !currentLiveChannel) return;
+    if(!inp || !inp.value.trim() || !currentLiveChannel) return;
     db.ref(`live_chats/${currentLiveChannel}`).push({ name: myName, photo: myPhoto, text: inp.value, ts: Date.now() });
     inp.value = "";
 }
 
-function **updateLiveLayout**(isSplit) {
+function updateLiveLayout(isSplit) {
     const hostWrap = document.getElementById('host-video-wrapper');
     const guestBox = document.getElementById('guest-video-box');
     if (isSplit) {
@@ -132,22 +129,22 @@ function **updateLiveLayout**(isSplit) {
     }
 }
 
-async function **endLive**() {
+async function endLive() {
     if(currentLiveChannel) updateViewerCount(currentLiveChannel, 'leave');
-    if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); }
-    if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); }
+    if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
+    if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
     currentLiveChannel = null;
 }
 
-function **sendLiveHeart**() {
+function sendLiveHeart() {
     if(!currentLiveChannel) return;
     animateHeart();
     db.ref(`lives_meta/${currentLiveChannel}/likes`).transaction(c => (c || 0) + 1);
 }
 
-function **animateHeart**() {
+function animateHeart() {
     const container = document.getElementById('live-video-container');
     const heart = document.createElement('i');
     heart.className = "fas fa-heart";
@@ -157,12 +154,12 @@ function **animateHeart**() {
     setTimeout(() => heart.remove(), 1500);
 }
 
-function **toggleGiftPanel**() { 
+function toggleGiftPanel() { 
     const p = document.getElementById('giftPanel'); 
     p.style.display = p.style.display === 'none' ? 'block' : 'none'; 
 }
 
-function **listenToViewers**(channel) {
+function listenToViewers(channel) {
     db.ref(`lives_meta/${channel}/viewers`).on('value', snap => {
         const viewers = snap.val() || {};
         document.getElementById('vCount').innerText = Object.keys(viewers).length;
@@ -174,13 +171,13 @@ function **listenToViewers**(channel) {
     });
 }
 
-function **listenToLikes**(channel) {
+function listenToLikes(channel) {
     db.ref(`lives_meta/${channel}/likes`).on('value', snap => {
         document.getElementById('liveLikeCount').innerText = snap.val() || 0;
     });
 }
 
-function **listenForRequests**(channel) {
+function listenForRequests(channel) {
     db.ref(`live_requests/${channel}`).on('value', snap => {
         const req = snap.val();
         if(req && req.status === 'pending') {
@@ -192,10 +189,10 @@ function **listenForRequests**(channel) {
     });
 }
 
-function **acceptGuest**() { db.ref(`live_requests/${currentLiveChannel}`).update({ status: 'accepted' }); }
-function **rejectGuest**() { db.ref(`live_requests/${currentLiveChannel}`).remove(); }
+function acceptGuest() { db.ref(`live_requests/${currentLiveChannel}`).update({ status: 'accepted' }); }
+function rejectGuest() { db.ref(`live_requests/${currentLiveChannel}`).remove(); }
 
-function **listenForResponse**(channel) {
+function listenForResponse(channel) {
     db.ref(`live_requests/${channel}`).on('value', snap => {
         const req = snap.val();
         if(req && req.uid === auth.currentUser.uid && req.status === 'accepted') {
@@ -205,7 +202,7 @@ function **listenForResponse**(channel) {
     });
 }
 
-async function **startGuestStreaming**() {
+async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
         const audio = await AgoraRTC.createMicrophoneAudioTrack();
@@ -216,7 +213,7 @@ async function **startGuestStreaming**() {
     } catch (e) { console.log(e); }
 }
 
-function **updateViewerCount**(channel, action) {
+function updateViewerCount(channel, action) {
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
     action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
 }
