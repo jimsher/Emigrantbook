@@ -96,17 +96,9 @@ async function joinLive(hostUid, channelName) {
     } catch (e) { console.log(e); }
 }
 
-function listenToLiveChat(channel) {
-    const chatBox = document.getElementById('liveChatBox');
-    db.ref(`live_chats/${channel}`).on('child_added', snap => {
-        const msg = snap.val();
-        const div = document.createElement('div');
-        div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
-        div.innerHTML = `<img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%;"><div style="color:white; font-size:13px;"><b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    });
-}
+
+
+
 
 function sendLiveComment() {
     const inp = document.getElementById('liveMsgInp');
