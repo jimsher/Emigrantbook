@@ -226,3 +226,54 @@ function updateViewerCount(channel, action) {
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
     action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
 }
+
+
+
+
+
+
+
+// ფანჯრის გაღება-დაკეტვა
+function toggleViewerList(show) {
+    const modal = document.getElementById('viewerListModal');
+    if (show) {
+        modal.style.display = 'block';
+        setTimeout(() => { modal.style.bottom = '0'; }, 10);
+        renderFullViewerList(); // განაახლე სია გახსნისას
+    } else {
+        modal.style.bottom = '-100%';
+        setTimeout(() => { modal.style.display = 'none'; }, 400);
+    }
+}
+
+// რეალურ დროში მაყურებლების სიის გენერაცია
+function renderFullViewerList() {
+    if (!currentLiveChannel) return;
+    
+    db.ref(`lives_meta/${currentLiveChannel}/viewers`).on('value', snap => {
+        const viewers = snap.val() || {};
+        const container = document.getElementById('viewerListContent');
+        const countFull = document.getElementById('vCountFull');
+        
+        if (countFull) countFull.innerText = Object.keys(viewers).length;
+        if (!container) return;
+        
+        container.innerHTML = "";
+        
+        Object.entries(viewers).forEach(([uid, v]) => {
+            const row = document.createElement('div');
+            row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
+            row.innerHTML = `
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); object-fit:cover;">
+                    <div>
+                        <b style="color:white; font-size:14px; display:block;">${v.name}</b>
+                        <small style="color:rgba(255,255,255,0.5); font-size:11px;">Зритель</small>
+                    </div>
+                </div>
+                <button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>
+            `;
+            container.appendChild(row);
+        });
+    });
+}
