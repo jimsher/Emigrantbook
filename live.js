@@ -1,4 +1,5 @@
-// --- TIKTOK STYLE LIVE LOGIC ---
+
+// --- JAVASCRIPT - შენი ორიგინალი სრული ლოგიკა ---
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
@@ -8,7 +9,6 @@ async function startLive() {
     const token = "007eJxTYLB6xlC05H7LAncx9mOfb0e4ZR370LxH7MZ6YwGd6+qMVqUKDOZGlgamBkZpicnmaSZpqUkWRkkGRobJySmp5paWFhaJ31PfZDYEMjKcnjqVmZEBAkF8boaczLLU+OKSotTEXAYGAD0AIxk=";
     currentLiveChannel = "live_stream"; 
     
-    // UI ინიციალიზაცია (ზედმეტი სტილების გარეშე)
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
     document.getElementById('liveHostAva').src = myPhoto;
@@ -16,6 +16,8 @@ async function startLive() {
     try {
         await liveClient.leave(); 
         await liveClient.setClientRole("host");
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
 
         liveClient.on("user-published", async (user, mediaType) => {
@@ -31,11 +33,10 @@ async function startLive() {
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         liveTracks.video.play("remote-live-video");
         
+        await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
-
         db.ref(`lives/${auth.currentUser.uid}`).set({ 
-            hostId: auth.currentUser.uid, hostName: myName, hostPhoto: myPhoto, 
-            channel: currentLiveChannel, status: 'active', ts: Date.now() 
+            hostId: auth.currentUser.uid, hostName: myName, hostPhoto: myPhoto, channel: currentLiveChannel, status: 'active', ts: Date.now() 
         });
 
         listenToLiveChat(currentLiveChannel);
@@ -52,7 +53,10 @@ async function joinLive(hostUid, channelName) {
     currentLiveChannel = channelName;
     
     document.getElementById('liveUI').style.display = 'flex';
-    document.getElementById('requestJoinBtn').style.display = 'block';
+    if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
+    
+    const reqBtn = document.getElementById('requestJoinBtn');
+    if(reqBtn) reqBtn.style.display = 'block';
 
     db.ref(`users/${hostUid}`).once('value', snap => {
         const host = snap.val();
@@ -93,16 +97,18 @@ function listenToLiveChat(channel) {
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
         const msg = snap.val();
         const div = document.createElement('div');
-        div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.3); padding:6px 12px; border-radius:15px; width:fit-content; max-width:90%;";
-        div.innerHTML = `
-            <img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%;">
-            <div>
-                <b style="color:#d4af37; font-size:11px; display:block;">${msg.name}</b>
-                <span style="color:white; font-size:13px;">${msg.text}</span>
-            </div>`;
+        div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
+        div.innerHTML = `<img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%;"><div style="color:white; font-size:13px;"><b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
         chatBox.appendChild(div);
         chatBox.scrollTop = chatBox.scrollHeight;
     });
+}
+
+function sendLiveComment() {
+    const inp = document.getElementById('liveMsgInp');
+    if(!inp.value.trim() || !currentLiveChannel) return;
+    db.ref(`live_chats/${currentLiveChannel}`).push({ name: myName, photo: myPhoto, text: inp.value, ts: Date.now() });
+    inp.value = "";
 }
 
 function updateLiveLayout(isSplit) {
@@ -119,19 +125,91 @@ function updateLiveLayout(isSplit) {
     }
 }
 
-function sendLiveComment() {
-    const inp = document.getElementById('liveMsgInp');
-    if(!inp.value.trim()) return;
-    db.ref(`live_chats/${currentLiveChannel}`).push({ 
-        name: myName, photo: myPhoto, text: inp.value, ts: Date.now() 
-    });
-    inp.value = "";
-}
-
 async function endLive() {
     if(currentLiveChannel) updateViewerCount(currentLiveChannel, 'leave');
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); }
+    if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); }
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
     currentLiveChannel = null;
+}
+
+function sendLiveHeart() {
+    if(!currentLiveChannel) return;
+    animateHeart();
+    db.ref(`lives_meta/${currentLiveChannel}/likes`).transaction(c => (c || 0) + 1);
+}
+
+function animateHeart() {
+    const container = document.getElementById('live-video-container');
+    const heart = document.createElement('i');
+    heart.className = "fas fa-heart";
+    heart.style = `position:absolute; right:20px; bottom:100px; color:hsl(${Math.random()*360},100%,70%); font-size:24px; transition:all 1.5s ease-out; z-index:100; pointer-events:none;`;
+    container.appendChild(heart);
+    setTimeout(() => { heart.style.bottom = "400px"; heart.style.opacity = "0"; }, 50);
+    setTimeout(() => heart.remove(), 1500);
+}
+
+function toggleGiftPanel() { 
+    const p = document.getElementById('giftPanel'); 
+    p.style.display = p.style.display === 'none' ? 'block' : 'none'; 
+}
+
+function listenToViewers(channel) {
+    db.ref(`lives_meta/${channel}/viewers`).on('value', snap => {
+        const viewers = snap.val() || {};
+        document.getElementById('vCount').innerText = Object.keys(viewers).length;
+        const avDiv = document.getElementById('viewerAvatars');
+        avDiv.innerHTML = "";
+        Object.values(viewers).slice(-3).forEach(v => {
+            avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px;">`;
+        });
+    });
+}
+
+function listenToLikes(channel) {
+    db.ref(`lives_meta/${channel}/likes`).on('value', snap => {
+        document.getElementById('liveLikeCount').innerText = snap.val() || 0;
+    });
+}
+
+function listenForRequests(channel) {
+    db.ref(`live_requests/${channel}`).on('value', snap => {
+        const req = snap.val();
+        if(req && req.status === 'pending') {
+            document.getElementById('guestRequestPanel').style.display = 'block';
+            document.getElementById('reqUserName').innerText = req.name;
+        } else {
+            document.getElementById('guestRequestPanel').style.display = 'none';
+        }
+    });
+}
+
+function acceptGuest() { db.ref(`live_requests/${currentLiveChannel}`).update({ status: 'accepted' }); }
+function rejectGuest() { db.ref(`live_requests/${currentLiveChannel}`).remove(); }
+
+function listenForResponse(channel) {
+    db.ref(`live_requests/${channel}`).on('value', snap => {
+        const req = snap.val();
+        if(req && req.uid === auth.currentUser.uid && req.status === 'accepted') {
+            startGuestStreaming();
+            db.ref(`live_requests/${channel}`).remove();
+        }
+    });
+}
+
+async function startGuestStreaming() {
+    try {
+        await liveClient.setClientRole("host");
+        const audio = await AgoraRTC.createMicrophoneAudioTrack();
+        const video = await AgoraRTC.createCameraVideoTrack();
+        updateLiveLayout(true);
+        video.play("guest-remote-video");
+        await liveClient.publish([audio, video]);
+    } catch (e) { console.log(e); }
+}
+
+function updateViewerCount(channel, action) {
+    const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
+    action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
 }
