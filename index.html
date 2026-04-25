@@ -2471,12 +2471,13 @@ div[style*="overflow-x:auto"] {
 
 
 
-<div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; font-family: sans-serif; overflow: hidden;">
+<div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column; font-family: sans-serif; overflow: hidden;">
     
     <div id="live-video-container" style="width:100%; height:100%; background:#111; position:absolute; top:0; left:0; overflow: hidden; display: flex; flex-direction: row; align-items: center; justify-content: center; z-index: 1;">
         <div id="host-video-wrapper" style="width: 100%; height: 100%; position: relative; background: #000; transition: all 0.4s ease;">
             <div id="remote-live-video" style="width:100%; height:100%; object-fit: cover;"></div>
         </div>
+
         <div id="guest-video-box" style="display:none; width: 0%; height: 100%; position: relative; background: #000; border-left: 2px solid var(--gold); transition: all 0.4s ease;">
             <div id="guest-remote-video" style="width:100%; height:100%; object-fit: cover;"></div>
         </div>
@@ -2493,7 +2494,9 @@ div[style*="overflow-x:auto"] {
     <div style="position:absolute; top:20px; left:15px; right:15px; display:flex; justify-content:space-between; align-items:center; z-index: 100;">
         <div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.4); padding:4px 12px 4px 4px; border-radius:30px; backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.2); cursor: pointer;" 
              onclick="followHostLive(currentLiveChannel ? currentLiveChannel.replace('live_', '') : '')">
+            
             <img id="liveHostAva" src="" style="width:36px; height:36px; border-radius:50%; border:1.5px solid var(--gold); object-fit: cover;">
+            
             <div style="overflow: hidden; max-width: 100px;"> 
                 <b id="liveHostName" style="color:white; font-size:12px; display:block; white-space: nowrap; text-overflow: ellipsis;">Host</b>
                 <div style="display: flex; align-items: center; gap: 4px; color:rgba(255,255,255,0.8); font-size:10px;">
@@ -2504,22 +2507,25 @@ div[style*="overflow-x:auto"] {
             </div>
             <button id="followHostBtn" style="background:var(--gold); border:none; border-radius:20px; padding:6px 12px; font-size:11px; font-weight:900; margin-left:5px; cursor: pointer;">Follow</button>
         </div>
+        
         <div id="viewerAvatars" style="display:flex; gap:-10px; align-items:center;"></div>
     </div>
 
-    <div id="liveChatBox" style="position:absolute; bottom:90px; left:15px; width:75%; max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; z-index: 50; pointer-events:auto; mask-image: linear-gradient(to top, black 80%, transparent 100%);"></div>
+    <div id="liveChatBox" style="position:absolute; bottom:90px; left:15px; width:75%; max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; pointer-events:auto; mask-image: linear-gradient(to top, black 80%, transparent 100%); z-index: 50;"></div>
     
     <div style="position:absolute; bottom:20px; left:0; width:100%; padding:0 15px; display:flex; gap:10px; align-items: center; z-index: 100;">
         <div style="flex:1; position: relative;">
             <input type="text" id="liveMsgInp" style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:25px; padding:12px 20px; color:white; outline:none; backdrop-filter: blur(10px);" placeholder="თქვი რამე...">
         </div>
         
-        <button onclick="sendLiveComment()" style="background:var(--gold); border:none; width:45px; height:45px; border-radius:50%; color:black; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(212,175,55,0.3); cursor: pointer;">
+        <button onclick="sendLiveComment()" style="background:var(--gold); border:none; width:45px; height:45px; border-radius:50%; color:black; display: flex; align-items: center; justify-content: center; cursor: pointer;">
             <i class="fas fa-paper-plane"></i>
         </button>
 
         <div style="display:flex; gap:12px; align-items: center;">
-            <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:none; cursor: pointer;"><i class="fas fa-hand-paper" style="color:#3498db; font-size:28px;"></i></div>
+            <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:none; cursor: pointer;">
+                <i class="fas fa-hand-paper" style="color:#3498db; font-size:28px;"></i>
+            </div>
             <div class="live-action-btn" onclick="sendLiveHeart()" style="cursor: pointer;"><i class="fas fa-heart" style="color:#ff4d4d; font-size:32px;"></i></div>
             <div class="live-action-btn" onclick="toggleGiftPanel()" style="cursor: pointer;"><i class="fas fa-gift" style="color:var(--gold); font-size:32px;"></i></div>
             <div class="live-action-btn" onclick="shareLive()" style="cursor: pointer;"><i class="fas fa-share" style="color:white; font-size:28px;"></i></div>
