@@ -132,9 +132,32 @@ function updateLiveLayout(isSplit) {
 }
 
 async function endLive() {
-    if(currentLiveChannel) updateViewerCount(currentLiveChannel, 'leave');
+    if (currentLiveChannel) {
+        // 1. მაყურებლების რაოდენობის განახლება (გასვლა)
+        updateViewerCount(currentLiveChannel, 'leave');
+
+        // 2. ჩატის ისტორიის წაშლა ბაზიდან
+        db.ref(`live_chats/${currentLiveChannel}`).remove();
+
+        // 3. ლაიქების და სხვა მეტამონაცემების განულება
+        db.ref(`lives_meta/${currentLiveChannel}`).remove();
+        
+        // 4. თუ სტუმრის მოთხოვნები იყო, მათი გასუფთავება
+        db.ref(`live_requests/${currentLiveChannel}`).remove();
+
+        // 5. ეკრანიდან (UI) კომენტარების ფიზიკურად წაშლა
+        const chatBox = document.getElementById('liveChatBox');
+        if (chatBox) chatBox.innerHTML = "";
+        
+        // 6. ლაიქების მთვლელის ვიზუალური განულება
+        const likeCountEl = document.getElementById('liveLikeCount');
+        if (likeCountEl) likeCountEl.innerText = "0";
+    }
+
+    // აგორას ტრეკების გათიშვა (შენი ორიგინალი კოდი)
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
+    
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
     currentLiveChannel = null;
