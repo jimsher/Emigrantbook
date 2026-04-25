@@ -162,12 +162,21 @@ function toggleGiftPanel() {
 function listenToViewers(channel) {
     db.ref(`lives_meta/${channel}/viewers`).on('value', snap => {
         const viewers = snap.val() || {};
-        document.getElementById('vCount').innerText = Object.keys(viewers).length;
+        const count = Object.keys(viewers).length;
+        
+        // რაოდენობის განახლება
+        const countEl = document.getElementById('vCount');
+        if(countEl) countEl.innerText = count;
+
+        // ავატარების განახლება (ზუსტად ფოტოს სტილში)
         const avDiv = document.getElementById('viewerAvatars');
-        avDiv.innerHTML = "";
-        Object.values(viewers).slice(-3).forEach(v => {
-            avDiv.innerHTML += `<img src="${v.photo}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px;">`;
-        });
+        if(avDiv) {
+            avDiv.innerHTML = "";
+            Object.values(viewers).slice(-1).forEach(v => {
+                // ბოლო შემოსულის ფოტო ოქროსფერი კანტით (როგორც ფოტოზეა 20+)
+                avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"><span style="position:absolute; bottom:-2px; right:-2px; background:rgba(0,0,0,0.6); color:white; font-size:7px; padding:1px 2px; border-radius:4px;">20+</span></div>`;
+            });
+        }
     });
 }
 
