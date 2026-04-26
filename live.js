@@ -51,6 +51,38 @@ async function startLive() {
     } catch (e) { console.error(e); }
 }
 
+
+function loadActiveLives() {
+    const activeLivesContainer = document.getElementById('activeLivesList'); // ეს ID უნდა გქონდეს მოდალში
+    activeLivesContainer.innerHTML = "<p style='color:white; text-align:center;'>ლაივების ძებნა...</p>";
+
+    db.ref('lives_active').once('value', (snapshot) => {
+        activeLivesContainer.innerHTML = ""; // ვასუფთავებთ კონტეინერს
+        
+        if (!snapshot.exists()) {
+            activeLivesContainer.innerHTML = "<p style='color:gray; text-align:center;'>ამჟამად აქტიური ლაივები არ არის.</p>";
+            return;
+        }
+
+        snapshot.forEach((childSnapshot) => {
+            const live = childSnapshot.val();
+            
+            // ვქმნით ლაივის ბარათს (როგორც TikTok-ზეა)
+            const liveCard = `
+                <div class="live-card" onclick="joinLive('${live.channel}')">
+                    <div class="live-card-info">
+                        <strong>${live.host}</strong>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+            `;
+            activeLivesContainer.innerHTML += liveCard;
+        });
+    });
+}
+
+
+
 async function joinLive(hostUid, channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYLB6xlC05H7LAncx9mOfb0e4ZR370LxH7MZ6YwGd6+qMVqUKDOZGlgamBkZpicnmaSZpqUkWRkkGRobJySmp5paWFhaJ31PfZDYEMjKcnjqVmZEBAkF8boaczLLU+OKSotTEXAYGAD0AIxk=";
@@ -336,31 +368,3 @@ function registerLiveInDatabase(channelName, hostNickname) {
 
 
 
-function loadActiveLives() {
-    const activeLivesContainer = document.getElementById('activeLivesList'); // ეს ID უნდა გქონდეს მოდალში
-    activeLivesContainer.innerHTML = "<p style='color:white; text-align:center;'>ლაივების ძებნა...</p>";
-
-    db.ref('lives_active').once('value', (snapshot) => {
-        activeLivesContainer.innerHTML = ""; // ვასუფთავებთ კონტეინერს
-        
-        if (!snapshot.exists()) {
-            activeLivesContainer.innerHTML = "<p style='color:gray; text-align:center;'>ამჟამად აქტიური ლაივები არ არის.</p>";
-            return;
-        }
-
-        snapshot.forEach((childSnapshot) => {
-            const live = childSnapshot.val();
-            
-            // ვქმნით ლაივის ბარათს (როგორც TikTok-ზეა)
-            const liveCard = `
-                <div class="live-card" onclick="joinLive('${live.channel}')">
-                    <div class="live-card-info">
-                        <strong>${live.host}</strong>
-                        <span>LIVE</span>
-                    </div>
-                </div>
-            `;
-            activeLivesContainer.innerHTML += liveCard;
-        });
-    });
-}
