@@ -353,6 +353,7 @@ function registerLiveInDatabase(channelName, hostNickname) {
     liveRef.set({
         channel: channelName,
         host: hostNickname,
+        hostPhoto: myPhoto,
         startTime: Date.now(),
         viewers: 1,
         status: "online"
