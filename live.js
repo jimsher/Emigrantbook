@@ -22,6 +22,9 @@ async function startLive() {
 
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
 
+        // შენს startLive ფუნქციაში იპოვე ადგილი, სადაც არხში შედიხარ და დაამატე ეს:
+        registerLiveInDatabase(currentChannelName, userNickname);
+
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") {
