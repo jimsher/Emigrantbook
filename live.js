@@ -146,19 +146,30 @@ function sendLiveComment() {
     inp.value = "";
 }
 
+
 function updateLiveLayout(isSplit) {
-    const hostWrap = document.getElementById('host-video-wrapper');
+    const container = document.getElementById('live-video-container');
     const guestBox = document.getElementById('guest-video-box');
+    const hostWrap = document.getElementById('host-video-wrapper');
+
     if (isSplit) {
-        hostWrap.style.width = "50%";
+        // სტუმარი შემოვიდა
+        container.classList.add('split-mode');
+        container.style.top = "15%"; // აიწია მაღლა
+        container.style.height = "40vh"; // დაპატარავდა სიმაღლეში
+        
         guestBox.style.display = "block";
-        setTimeout(() => { guestBox.style.width = "50%"; }, 10);
     } else {
-        hostWrap.style.width = "100%";
-        guestBox.style.width = "0%";
-        setTimeout(() => { guestBox.style.display = "none"; }, 400);
+        // სტუმარი გავიდა (ჩვეულებრივი რეჟიმი)
+        container.classList.remove('split-mode');
+        container.style.top = "0";
+        container.style.height = "100vh"; // ისევ მთლიანი ეკრანი
+        
+        guestBox.style.display = "none";
     }
 }
+
+
 
 async function endLive() {
     if (currentLiveChannel) {
