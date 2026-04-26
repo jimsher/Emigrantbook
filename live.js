@@ -99,8 +99,18 @@ async function joinLive(channelName) {
             currentHostUid = liveData.uid || liveData.hostId;
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
-        }
-    });
+
+            // --- აი აქ ჩაამატე ზუსტად ეს ბლოკი (დაიწყე აქედან) ---
+            db.ref(`followers/${hostId}/${auth.currentUser.uid}`).once('value', followSnap => {
+                const followBtn = document.getElementById('liveFollowBtn'); 
+                if (followBtn) { // ჯერ ვამოწმებთ საერთოდ არსებობს თუ არა ღილაკი ეკრანზე
+                    if (followSnap.exists() || hostId === auth.currentUser.uid) {
+                        followBtn.style.display = 'none'; // თუ გამოწერილია ან საკუთარი თავია - დამალე
+                    } else {
+                        followBtn.style.display = 'block'; // თუ უცხოა - აჩვენე
+                 }
+            }
+       });
 
     try {
         await liveClient.leave(); 
