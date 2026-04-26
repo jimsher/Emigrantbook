@@ -114,30 +114,23 @@ async function joinLive(channelName) { // ამოვიღოთ hostUid პ�
         listenForResponse(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
-            await liveClient.subscribe(user, mediaType);
-            
-            if (mediaType === "video") {
-                // 1. თუ შემოსული ვიდეო ჰოსტისაა (ლაივის პატრონის)
-                if (user.uid == currentHostUid) {
-                    user.videoTrack.play("remote-live-video");
-                } 
-                // 2. თუ შემოსული ვიდეო სტუმრისაა (და არა მაყურებლის საკუთარი)
-                else {
-                    window.currentGuest = user; // ვიმახსოვრებთ სტუმარს
-                    updateLiveLayout(true); // ვწევთ ეკრანს მაყურებლისთვისაც
-                    
-                    // მაყურებლის ეკრანზეც რომ გამოჩნდეს სტუმარი თავის ყუთში
-                    user.videoTrack.play("guest-remote-video");
+    await liveClient.subscribe(user, mediaType);
+    
+    if (mediaType === "video") {
+        // ეს ხაზი აუცილებელია: თუ ვიდეო შემოდის, ნებისმიერ შემთხვევაში გაუშვი დიდ ეკრანზე
+        user.videoTrack.play("remote-live-video");
 
-                    // დავარესტარტოთ ჰოსტის ვიდეოც, რომ არ გაშავდეს აწევისას
-                    const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
-                    if (hostUser && hostUser.videoTrack) {
-                        hostUser.videoTrack.play("remote-live-video");
-                    }
-                }
-            }
-            if (mediaType === "audio") user.audioTrack.play();
-        });
+        // თუ ეს შემოსული ვიდეო სტუმრისაა (და არა ჰოსტის), მაშინ აწიე ეკრანი
+        // (აქ ჩაწერე შენი ლოგიკა, რომლითაც ხვდები რომ სტუმარია)
+        if (user.uid !== currentHostUid) {
+            updateLiveLayout(true);
+            
+            // და დამატებით სტუმარი გაუშვი თავის პატარა ყუთშიც
+            user.videoTrack.play("guest-remote-video");
+        }
+    }
+    if (mediaType === "audio") user.audioTrack.play();
+});
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
