@@ -71,14 +71,13 @@ function loadActiveLives() {
             const live = childSnapshot.val();
             
             // ვქმნით ლაივის ბარათს (როგორც TikTok-ზეა)
-            const liveCard = `
-                <div class="live-card" onclick="joinLive('${live.channel}')">
-                    <div class="live-card-info">
-                        <strong>${live.host}</strong>
-                        <span>LIVE</span>
-                    </div>
-                </div>
-            `;
+            // loadActiveLives ფუნქციის შიგნით, სადაც liveCard იქმნება:
+          const liveCard = `
+          <div class="live-item" onclick="joinLive('${live.channel}')">
+          <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
+           <strong>${live.host}</strong>
+         </div>
+         `;
             activeLivesContainer.innerHTML += liveCard;
         });
     });
