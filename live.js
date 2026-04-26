@@ -273,8 +273,36 @@ function listenForRequests(channel) {
     });
 }
 
-function acceptGuest() { db.ref(`live_requests/${currentLiveChannel}`).update({ status: 'accepted' }); }
-function rejectGuest() { db.ref(`live_requests/${currentLiveChannel}`).remove(); }
+
+
+
+
+
+// ჰოსტი აჭერს "მიღებას"
+function acceptGuest() {
+    if (!currentLiveChannel) return;
+    
+    db.ref(`live_requests/${currentLiveChannel}`).update({
+        status: 'accepted'
+    }).then(() => {
+        document.getElementById('guestRequestPanel').style.display = 'none';
+    });
+}
+
+// ჰოსტი აჭერს "უარყოფას"
+function rejectGuest() {
+    if (!currentLiveChannel) return;
+    
+    // უბრალოდ ვშლით მოთხოვნას
+    db.ref(`live_requests/${currentLiveChannel}`).remove().then(() => {
+        document.getElementById('guestRequestPanel').style.display = 'none';
+    });
+}
+
+
+
+
+
 
 function listenForResponse(channel) {
     db.ref(`live_requests/${channel}`).on('value', snap => {
