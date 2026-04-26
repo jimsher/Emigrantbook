@@ -44,6 +44,71 @@
 
  
  <style>
+.live-modal {
+    display: none; /* თავიდან დამალულია */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+}
+
+.live-modal-content {
+    background-color: #1a1a1a;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #333;
+    width: 80%;
+    max-width: 400px;
+    border-radius: 15px;
+    color: white;
+}
+
+.live-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.live-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* ლაივის "ბარათი" სიაში */
+.live-item {
+    background: rgba(255,255,255,0.1);
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+/* აქ მთავრდება */
+
+
+
+
+
+
+  
 /* ლაივის ნიშანი მთავარ გვერდზე */
 .live-nav-button {
     display: flex;
@@ -3187,6 +3252,22 @@ div[style*="overflow-x:auto"] {
 
 
 
+
+
+
+
+
+
+ <div id="active_lives_modal" class="live-modal">
+    <div class="live-modal-content">
+        <div class="live-modal-header">
+            <span>აქტიური ლაივები</span>
+            <button onclick="closeActiveLivesModal()" class="close-btn">&times;</button>
+        </div>
+        <div id="activeLivesList" class="live-list-container">
+            </div>
+    </div>
+</div>
 
  </body>
 </html>
