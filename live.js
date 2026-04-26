@@ -113,36 +113,19 @@ async function joinLive(channelName) { // ამოვიღოთ hostUid პ�
         listenToLikes(channelName);
         listenForResponse(channelName);
 
-
         liveClient.on("user-published", async (user, mediaType) => {
-    await liveClient.subscribe(user, mediaType);
-    
-    if (mediaType === "video") {
-        window.currentGuest = user; // ვინახავთ სტუმარს
-
-        // თუ ჩვენ ვართ ჰოსტი და ვიღაც სხვა (სტუმარი) შემოვიდა
-        if (currentRole === 'host') {
-            updateLiveLayout(true); // აიწია ეკრანი
-            user.videoTrack.play("guest-remote-video"); // სტუმარი თავის ყუთში
-        } 
-        // თუ ჩვენ ვართ მაყურებელი და შევედით ჰოსტის ლაივში
-        else {
-            // თუ ეს იუზერი არის თავად ლაივის პატრონი (ჰოსტი)
-            if (user.uid == hostUid) {
-                user.videoTrack.play("remote-live-video"); // ჰოსტი დიდ ეკრანზე
-            } else {
-                // თუ კიდევ სხვა სტუმარია იმ ლაივში
-                updateLiveLayout(true);
-                user.videoTrack.play("guest-remote-video");
+            await liveClient.subscribe(user, mediaType);
+            if (mediaType === "video") {
+                // აქ შევცვალოთ: თუ ვიდეო არის ჰოსტის, გაუშვი დიდ ეკრანზე
+                user.videoTrack.play("remote-live-video");
             }
-        }
-    }
-    
-    if (mediaType === "audio") user.audioTrack.play();
-});
+            if (mediaType === "audio") user.audioTrack.play();
+        });
+        listenToLiveChat(channelName);
+    } catch (e) { console.log(e); }
+}
 
 
-        
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
