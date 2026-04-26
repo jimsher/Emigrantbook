@@ -85,7 +85,7 @@ function loadActiveLives() {
 
 
 
-async function joinLive(channelName) { 
+async function joinLive(channelName) { // ამოვიღოთ hostUid პარამეტრი, რადგან ბაზიდან წამოვიღებთ
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     currentLiveChannel = channelName;
@@ -93,11 +93,10 @@ async function joinLive(channelName) {
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    let currentHostUid = null;
+    // წამოვიღოთ ჰოსტის მონაცემები პირდაპირ აქტიური ლაივიდან
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
         if(liveData) {
-            currentHostUid = liveData.hostId || liveData.uid;
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
         }
@@ -108,6 +107,7 @@ async function joinLive(channelName) {
         await liveClient.setClientRole("audience");
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
         
+        // დანარჩენი შენი კოდი უცვლელია...
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
         listenToLikes(channelName);
@@ -115,38 +115,15 @@ async function joinLive(channelName) {
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
-            
             if (mediaType === "video") {
-                window.currentGuest = user; 
-
-                if (user.uid == currentHostUid) {
-                    // ჰოსტი ჩვეულებრივ დიდ ეკრანზე
-                    user.videoTrack.play("remote-live-video");
-                } 
-                else {
-                    // სტუმარი შემოვიდა - ჯერ ვწევთ ეკრანს
-                    updateLiveLayout(true); 
-
-                    // აი აქ არის მთავარი: ხელახლა ვუშვებთ ორივეს, რომ შავი ეკრანი არ იყოს
-                    // 1. ვუშვებთ ჰოსტს (რომელიც უკვე შენახულია აგორაში)
-                    const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
-                    if (hostUser && hostUser.videoTrack) {
-                        hostUser.videoTrack.play("remote-live-video");
-                    }
-
-                    // 2. ვუშვებთ ახალ სტუმარს
-                    setTimeout(() => {
-                        user.videoTrack.play("guest-remote-video");
-                    }, 200);
-                }
+                // აქ შევცვალოთ: თუ ვიდეო არის ჰოსტის, გაუშვი დიდ ეკრანზე
+                user.videoTrack.play("remote-live-video");
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
-
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
-
 
 
 function listenToLiveChat(channel) {
