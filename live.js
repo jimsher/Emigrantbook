@@ -1,15 +1,14 @@
 let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
-let currentHostUid = null; // დაემატა მხოლოდ ეს ცვლადი ID-ების გასარჩევად
+let currentHostUid = null; 
 
 function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = null; // რადგან სერტიფიკატი გათიშულია
+    const token = null; 
     
-    // დინამიური არხი, რომ ყველას თავისი ოთახი ჰქონდეს
     currentLiveChannel = "live_" + auth.currentUser.uid; 
     currentHostUid = auth.currentUser.uid;
 
@@ -23,6 +22,8 @@ async function startLive() {
         await new Promise(resolve => setTimeout(resolve, 500)); 
 
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
+        
+        // აქ სწორი რეგისტრაციაა საჭირო
         registerLiveInDatabase(currentLiveChannel, myName);
 
         liveClient.on("user-published", async (user, mediaType) => {
@@ -30,7 +31,6 @@ async function startLive() {
             if (mediaType === "video") {
                 window.currentGuest = user;
                 updateLiveLayout(true);
-                // ჰოსტის (შენი) ვიდეოს გაცოცხლება აწევისას
                 if (liveTracks.video) liveTracks.video.play("remote-live-video");
                 user.videoTrack.play("guest-remote-video");
             }
@@ -50,10 +50,7 @@ async function startLive() {
         await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
-        db.ref(`lives/${auth.currentUser.uid}`).set({ 
-            hostId: auth.currentUser.uid, hostName: myName, hostPhoto: myPhoto, channel: currentLiveChannel, status: 'active', ts: Date.now() 
-        });
-
+        // ჰოსტისთვისაც ჩავრთოთ მოსმენის ფუნქციები
         listenToLiveChat(currentLiveChannel);
         updateViewerCount(currentLiveChannel, 'join');
         listenToViewers(currentLiveChannel);
@@ -66,7 +63,7 @@ async function startLive() {
 function loadActiveLives() {
     const activeLivesContainer = document.getElementById('activeLivesList'); 
     activeLivesContainer.innerHTML = "<p style='color:white; text-align:center;'>ლაივების ძებნა...</p>";
-    db.ref('lives_active').once('value', (snapshot) => {
+    db.ref('lives_active').on('value', (snapshot) => {
         activeLivesContainer.innerHTML = ""; 
         if (!snapshot.exists()) {
             activeLivesContainer.innerHTML = "<p style='color:gray; text-align:center;'>ამჟამად აქტიური ლაივები არ არის.</p>";
@@ -74,7 +71,6 @@ function loadActiveLives() {
         }
         snapshot.forEach((childSnapshot) => {
             const live = childSnapshot.val();
-            // აქ channel პირდაპირ ბაზიდან მოდის
             const liveCard = `
             <div class="live-item" onclick="joinLive('${live.channel}')">
             <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
@@ -94,7 +90,6 @@ async function joinLive(channelName) {
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    // წამოვიღოთ ჰოსტის UID ბაზიდან, რომ მაყურებელმა იცოდეს ვინ სად დასვას
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
         if(liveData) {
@@ -102,7 +97,6 @@ async function joinLive(channelName) {
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
 
-            // გამომწერის ღილაკის ლოგიკა currentHostUid-ის მიხედვით
             db.ref(`followers/${currentHostUid}/${auth.currentUser.uid}`).once('value', followSnap => {
                 const followBtn = document.getElementById('liveFollowBtn'); 
                 if (followBtn) {
@@ -125,6 +119,7 @@ async function joinLive(channelName) {
         listenToViewers(channelName);
         listenToLikes(channelName);
         listenForResponse(channelName);
+        listenToLiveChat(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
@@ -148,12 +143,13 @@ async function joinLive(channelName) {
             }
         });
 
-        listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
 
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
+    if(!chatBox) return;
+    db.ref(`live_chats/${channel}`).off(); // ძველი ლისენერის გათიშვა
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
         const msg = snap.val();
         const div = document.createElement('div');
@@ -174,7 +170,7 @@ function sendLiveComment() {
 function updateLiveLayout(isSplit) {
     const container = document.getElementById('live-video-container');
     const guestBox = document.getElementById('guest-video-box');
-    const hostWrap = document.getElementById('host-video-wrapper');
+    if (!container) return;
 
     if (isSplit) {
         container.classList.add('split-mode');
@@ -195,21 +191,15 @@ async function endLive() {
         db.ref(`live_chats/${currentLiveChannel}`).remove();
         db.ref(`lives_meta/${currentLiveChannel}`).remove();
         db.ref(`live_requests/${currentLiveChannel}`).remove();
+        db.ref(`lives_active/${currentLiveChannel}`).remove();
         const chatBox = document.getElementById('liveChatBox');
         if (chatBox) chatBox.innerHTML = "";
-        const likeCountEl = document.getElementById('liveLikeCount');
-        if (likeCountEl) likeCountEl.innerText = "0";
-        const vCountEl = document.getElementById('vCount');
-        if (vCountEl) vCountEl.innerText = "0";
-        const avDiv = document.getElementById('viewerAvatars');
-        if (avDiv) avDiv.innerHTML = "";
     }
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
     currentLiveChannel = null;
-    if (typeof updateLiveLayout === "function") { updateLiveLayout(false); }
 }
 
 function sendLiveHeart() {
@@ -220,6 +210,7 @@ function sendLiveHeart() {
 
 function animateHeart() {
     const container = document.getElementById('live-video-container');
+    if(!container) return;
     const heart = document.createElement('i');
     heart.className = "fas fa-heart";
     heart.style = `position:absolute; right:20px; bottom:100px; color:hsl(${Math.random()*360},100%,70%); font-size:24px; transition:all 1.5s ease-out; z-index:100; pointer-events:none;`;
@@ -230,7 +221,7 @@ function animateHeart() {
 
 function toggleGiftPanel() { 
     const p = document.getElementById('giftPanel'); 
-    p.style.display = p.style.display === 'none' ? 'block' : 'none'; 
+    if(p) p.style.display = p.style.display === 'none' ? 'block' : 'none'; 
 }
 
 function listenToViewers(channel) {
@@ -243,7 +234,7 @@ function listenToViewers(channel) {
         if(avDiv) {
             avDiv.innerHTML = "";
             Object.values(viewers).slice(-1).forEach(v => {
-                avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"><span style="position:absolute; bottom:-2px; right:-2px; background:rgba(0,0,0,0.6); color:white; font-size:7px; padding:1px 2px; border-radius:4px;">20+</span></div>`;
+                avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
             });
         }
     });
@@ -251,22 +242,22 @@ function listenToViewers(channel) {
 
 function listenToLikes(channel) {
     db.ref(`lives_meta/${channel}/likes`).on('value', snap => {
-        document.getElementById('liveLikeCount').innerText = snap.val() || 0;
+        const el = document.getElementById('liveLikeCount');
+        if(el) el.innerText = snap.val() || 0;
     });
 }
 
 function listenForRequests(channel) {
     db.ref(`live_requests/${channel}`).on('value', snap => {
         const req = snap.val();
+        const panel = document.getElementById('guestRequestPanel');
+        const nameEl = document.getElementById('reqUserName');
         if(req && req.status === 'pending') {
-            const panel = document.getElementById('guestRequestPanel');
-            const nameEl = document.getElementById('reqUserName');
             if (panel && nameEl) {
                 nameEl.innerText = req.name;
                 panel.style.display = 'block';
             }
         } else {
-            const panel = document.getElementById('guestRequestPanel');
             if (panel) panel.style.display = 'none';
         }
     });
@@ -329,14 +320,12 @@ function renderFullViewerList() {
     db.ref(`lives_meta/${currentLiveChannel}/viewers`).on('value', snap => {
         const viewers = snap.val() || {};
         const container = document.getElementById('viewerListContent');
-        const countFull = document.getElementById('vCountFull');
-        if (countFull) countFull.innerText = Object.keys(viewers).length;
         if (!container) return;
         container.innerHTML = "";
         Object.entries(viewers).forEach(([uid, v]) => {
             const row = document.createElement('div');
             row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
-            row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,0.1); object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b><small style="color:rgba(255,255,255,0.5); font-size:11px;">Зритель</small></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
+            row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
             container.appendChild(row);
         });
     });
@@ -344,25 +333,38 @@ function renderFullViewerList() {
 
 function registerLiveInDatabase(channelName, hostNickname) {
     const liveRef = db.ref(`lives_active/${channelName}`);
-    liveRef.set({ channel: channelName, host: hostNickname, hostPhoto: myPhoto, startTime: Date.now(), viewers: 1, status: "online", uid: auth.currentUser.uid });
+    liveRef.set({ 
+        channel: channelName, 
+        host: hostNickname, 
+        hostPhoto: myPhoto, 
+        startTime: Date.now(), 
+        status: "online", 
+        uid: auth.currentUser.uid 
+    });
     liveRef.onDisconnect().remove();
 }
 
 function openActiveLivesModal() {
-    document.getElementById('active_lives_modal').style.display = 'block';
+    const modal = document.getElementById('active_lives_modal');
+    if(modal) modal.style.display = 'block';
     loadActiveLives();
 }
 
 function closeActiveLivesModal() {
-    document.getElementById('active_lives_modal').style.display = 'none';
+    const modal = document.getElementById('active_lives_modal');
+    if(modal) modal.style.display = 'none';
 }
 
 function sendJoinRequest() {
     if (!currentLiveChannel) return;
-    const guestUid = auth.currentUser.uid;
-    db.ref(`live_requests/${currentLiveChannel}`).set({ uid: guestUid, name: myName, photo: myPhoto, status: 'pending', ts: Date.now() }).then(() => {
+    db.ref(`live_requests/${currentLiveChannel}`).set({ 
+        uid: auth.currentUser.uid, 
+        name: myName, 
+        photo: myPhoto, 
+        status: 'pending', 
+        ts: Date.now() 
+    }).then(() => {
         alert("მოთხოვნა გაიგზავნა!");
-        document.getElementById('requestJoinBtn').style.display = 'none';
     });
 }
 
@@ -371,11 +373,11 @@ function followHost() {
     db.ref(`lives_active/${currentLiveChannel}`).once('value', snap => {
         const liveData = snap.val();
         if (liveData) {
-            const hostId = liveData.uid || liveData.hostId;
-            const myUid = auth.currentUser.uid;
-            db.ref(`followers/${hostId}/${myUid}`).set(true).then(() => {
-                db.ref(`following/${myUid}/${hostId}`).set(true);
-                document.getElementById('liveFollowBtn').style.display = 'none';
+            const hostId = liveData.uid;
+            db.ref(`followers/${hostId}/${auth.currentUser.uid}`).set(true).then(() => {
+                db.ref(`following/${auth.currentUser.uid}/${hostId}`).set(true);
+                const btn = document.getElementById('liveFollowBtn');
+                if(btn) btn.style.display = 'none';
                 alert("წარმატებით გამოიწერეთ!");
             });
         }
