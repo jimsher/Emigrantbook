@@ -6,7 +6,7 @@ let currentHostUid = null;
 function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
-    const appId = "7290502fac7f4feb82b021ccde79988a"; 
+    const appId = "258897e8fb5f4dd089b761eca6568b24"; 
     const token = null; 
     
     currentLiveChannel = "live_" + auth.currentUser.uid; 
@@ -83,7 +83,7 @@ function loadActiveLives() {
 }
 
 async function joinLive(channelName) {
-    const appId = "7290502fac7f4feb82b021ccde79988a"; 
+    const appId = "258897e8fb5f4dd089b761eca6568b24"; 
     const token = null; 
     currentLiveChannel = channelName;
 
