@@ -302,3 +302,27 @@ function renderFullViewerList() {
         });
     });
 }
+
+
+
+
+
+
+
+
+
+
+// ეს ფუნქცია ლაივს ხილვადს ხდის ყველასთვის
+function registerLiveInDatabase(channelName, hostNickname) {
+    const liveRef = db.ref(`lives_active/${channelName}`);
+    liveRef.set({
+        channel: channelName,
+        host: hostNickname,
+        startTime: Date.now(),
+        viewers: 1,
+        status: "online"
+    });
+
+    // თუ ჰოსტი ინტერნეტს გათიშავს ან "გავარდება", ლაივი ავტომატურად წაიშალოს
+    liveRef.onDisconnect().remove();
+}
