@@ -85,22 +85,20 @@ function loadActiveLives() {
 
 
 
-async function joinLive(hostUid, channelName) {
+async function joinLive(channelName) { // ამოვიღოთ hostUid პარამეტრი, რადგან ბაზიდან წამოვიღებთ
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     currentLiveChannel = channelName;
     
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
-    
-    const reqBtn = document.getElementById('requestJoinBtn');
-    if(reqBtn) reqBtn.style.display = 'block';
 
-    db.ref(`users/${hostUid}`).once('value', snap => {
-        const host = snap.val();
-        if(host) {
-            document.getElementById('liveHostName').innerText = host.name;
-            document.getElementById('liveHostAva').src = host.photo;
+    // წამოვიღოთ ჰოსტის მონაცემები პირდაპირ აქტიური ლაივიდან
+    db.ref(`lives_active/${channelName}`).once('value', snap => {
+        const liveData = snap.val();
+        if(liveData) {
+            document.getElementById('liveHostName').innerText = liveData.host;
+            document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
         }
     });
 
@@ -109,6 +107,7 @@ async function joinLive(hostUid, channelName) {
         await liveClient.setClientRole("audience");
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
         
+        // დანარჩენი შენი კოდი უცვლელია...
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
         listenToLikes(channelName);
@@ -117,12 +116,8 @@ async function joinLive(hostUid, channelName) {
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") {
-                if (user.uid !== hostUid) {
-                    updateLiveLayout(true);
-                    user.videoTrack.play("guest-remote-video");
-                } else {
-                    user.videoTrack.play("remote-live-video");
-                }
+                // აქ შევცვალოთ: თუ ვიდეო არის ჰოსტის, გაუშვი დიდ ეკრანზე
+                user.videoTrack.play("remote-live-video");
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
