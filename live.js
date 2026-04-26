@@ -23,7 +23,6 @@ async function startLive() {
 
         await liveClient.join(appId, currentLiveChannel, token, auth.currentUser.uid);
         
-        // აქ სწორი რეგისტრაციაა საჭირო
         registerLiveInDatabase(currentLiveChannel, myName);
 
         liveClient.on("user-published", async (user, mediaType) => {
@@ -50,12 +49,13 @@ async function startLive() {
         await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
-        // ჰოსტისთვისაც ჩავრთოთ მოსმენის ფუნქციები
         listenToLiveChat(currentLiveChannel);
         updateViewerCount(currentLiveChannel, 'join');
         listenToViewers(currentLiveChannel);
         listenToLikes(currentLiveChannel);
         listenForRequests(currentLiveChannel);
+        // ჩავამატეთ ფოტოს/ვიდეოს სტატუსის მოსმენა
+        listenForGuestStatus(currentLiveChannel);
 
     } catch (e) { console.error(e); }
 }
@@ -120,6 +120,8 @@ async function joinLive(channelName) {
         listenToLikes(channelName);
         listenForResponse(channelName);
         listenToLiveChat(channelName);
+        // ჩავამატეთ ფოტოს/ვიდეოს სტატუსის მოსმენა მაყურებლისთვისაც
+        listenForGuestStatus(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
@@ -149,7 +151,7 @@ async function joinLive(channelName) {
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
     if(!chatBox) return;
-    db.ref(`live_chats/${channel}`).off(); // ძველი ლისენერის გათიშვა
+    db.ref(`live_chats/${channel}`).off(); 
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
         const msg = snap.val();
         const div = document.createElement('div');
@@ -194,6 +196,12 @@ async function endLive() {
         db.ref(`lives_active/${currentLiveChannel}`).remove();
         const chatBox = document.getElementById('liveChatBox');
         if (chatBox) chatBox.innerHTML = "";
+        
+        // დავმალოთ კამერის მართვა და ფოტო გასვლისას
+        const controls = document.getElementById('guest-cam-controls');
+        if(controls) controls.style.display = 'none';
+        const guestImg = document.getElementById('guest-static-photo');
+        if(guestImg) guestImg.style.display = 'none';
     }
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
@@ -294,7 +302,13 @@ async function startGuestStreaming() {
         const video = await AgoraRTC.createCameraVideoTrack();
         updateLiveLayout(true);
         video.play("guest-remote-video");
+        
         await liveClient.publish([audio, video]);
+        
+        // სტუმარს ვუჩვენებთ კამერის მართვის ღილაკს
+        const controls = document.getElementById('guest-cam-controls');
+        if(controls) controls.style.display = 'block';
+
     } catch (e) { console.log(e); }
 }
 
@@ -384,35 +398,25 @@ function followHost() {
     });
 }
 
+// --- ახალი ფუნქციები ფოტოს/ვიდეოს მართვისთვის ---
 
-
-
-
-
-
-
-// ფოტოს არჩევა ვიდეო ზარის გარდა
 let guestCamEnabled = true;
 
 async function toggleGuestCamera() {
-    if (!liveTracks.video) return; // თუ ვიდეო ტრეკი არ არსებობს, არაფერი ქნას
+    if (!liveTracks.video) return; 
 
     const camIcon = document.getElementById('camIcon');
-    const guestImg = document.getElementById('guest-static-photo');
 
     if (guestCamEnabled) {
-        // კამერის გათიშვა
         await liveTracks.video.setEnabled(false);
         guestCamEnabled = false;
         if(camIcon) camIcon.className = "fas fa-video-slash";
         
-        // ბაზაში სტატუსის შეცვლა, რომ სხვებმაც დაინახონ ფოტო
         db.ref(`lives_active/${currentLiveChannel}/guest_status`).set({
             showPhoto: true,
-            photoUrl: myPhoto // შენი პროფილის ფოტო
+            photoUrl: myPhoto 
         });
     } else {
-        // კამერის ჩართვა
         await liveTracks.video.setEnabled(true);
         guestCamEnabled = true;
         if(camIcon) camIcon.className = "fas fa-video";
@@ -421,4 +425,23 @@ async function toggleGuestCamera() {
             showPhoto: false
         });
     }
+}
+
+function listenForGuestStatus(channel) {
+    db.ref(`lives_active/${channel}/guest_status`).on('value', snap => {
+        const status = snap.val();
+        const guestImg = document.getElementById('guest-static-photo');
+        const guestVid = document.getElementById('guest-remote-video');
+
+        if (status && status.showPhoto) {
+            if (guestImg) {
+                guestImg.src = status.photoUrl;
+                guestImg.style.display = 'block';
+            }
+            if (guestVid) guestVid.style.opacity = '0';
+        } else {
+            if (guestImg) guestImg.style.display = 'none';
+            if (guestVid) guestVid.style.opacity = '1';
+        }
+    });
 }
