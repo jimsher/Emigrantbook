@@ -115,9 +115,26 @@ async function joinLive(channelName) { // ამოვიღოთ hostUid პ�
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
+            
             if (mediaType === "video") {
-                // აქ შევცვალოთ: თუ ვიდეო არის ჰოსტის, გაუშვი დიდ ეკრანზე
-                user.videoTrack.play("remote-live-video");
+                // 1. თუ შემოსული ვიდეო ჰოსტისაა (ლაივის პატრონის)
+                if (user.uid == currentHostUid) {
+                    user.videoTrack.play("remote-live-video");
+                } 
+                // 2. თუ შემოსული ვიდეო სტუმრისაა (და არა მაყურებლის საკუთარი)
+                else {
+                    window.currentGuest = user; // ვიმახსოვრებთ სტუმარს
+                    updateLiveLayout(true); // ვწევთ ეკრანს მაყურებლისთვისაც
+                    
+                    // მაყურებლის ეკრანზეც რომ გამოჩნდეს სტუმარი თავის ყუთში
+                    user.videoTrack.play("guest-remote-video");
+
+                    // დავარესტარტოთ ჰოსტის ვიდეოც, რომ არ გაშავდეს აწევისას
+                    const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
+                    if (hostUser && hostUser.videoTrack) {
+                        hostUser.videoTrack.play("remote-live-video");
+                    }
+                }
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
