@@ -54,7 +54,6 @@ async function startLive() {
         listenToViewers(currentLiveChannel);
         listenToLikes(currentLiveChannel);
         listenForRequests(currentLiveChannel);
-        // ჩავამატეთ ფოტოს/ვიდეოს სტატუსის მოსმენა
         listenForGuestStatus(currentLiveChannel);
 
     } catch (e) { console.error(e); }
@@ -120,7 +119,6 @@ async function joinLive(channelName) {
         listenToLikes(channelName);
         listenForResponse(channelName);
         listenToLiveChat(channelName);
-        // ჩავამატეთ ფოტოს/ვიდეოს სტატუსის მოსმენა მაყურებლისთვისაც
         listenForGuestStatus(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
@@ -197,7 +195,6 @@ async function endLive() {
         const chatBox = document.getElementById('liveChatBox');
         if (chatBox) chatBox.innerHTML = "";
         
-        // დავმალოთ კამერის მართვა და ფოტო გასვლისას
         const controls = document.getElementById('guest-cam-controls');
         if(controls) controls.style.display = 'none';
         const guestImg = document.getElementById('guest-static-photo');
@@ -298,14 +295,15 @@ function listenForResponse(channel) {
 async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
-        const audio = await AgoraRTC.createMicrophoneAudioTrack();
-        const video = await AgoraRTC.createCameraVideoTrack();
+        // აქ შევასწორე: ვიყენებთ გლობალურ liveTracks-ს
+        liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+        liveTracks.video = await AgoraRTC.createCameraVideoTrack();
+        
         updateLiveLayout(true);
-        video.play("guest-remote-video");
+        liveTracks.video.play("guest-remote-video");
         
-        await liveClient.publish([audio, video]);
+        await liveClient.publish([liveTracks.audio, liveTracks.video]);
         
-        // სტუმარს ვუჩვენებთ კამერის მართვის ღილაკს
         const controls = document.getElementById('guest-cam-controls');
         if(controls) controls.style.display = 'block';
 
@@ -398,12 +396,15 @@ function followHost() {
     });
 }
 
-// --- ახალი ფუნქციები ფოტოს/ვიდეოს მართვისთვის ---
+// --- აქ არის მთავარი ცვლილება: window-ით გამოტანილი ფუნქცია ---
 
 let guestCamEnabled = true;
 
-async function toggleGuestCamera() {
-    if (!liveTracks.video) return; 
+window.toggleGuestCamera = async function() {
+    if (!liveTracks.video) {
+        console.error("ვიდეო ტრეკი არ არსებობს!");
+        return; 
+    }
 
     const camIcon = document.getElementById('camIcon');
 
