@@ -486,3 +486,7 @@ function sendJoinRequest() {
         console.error("შეცდომა მოთხოვნისას:", e);
     });
 }
+
+
+
+
