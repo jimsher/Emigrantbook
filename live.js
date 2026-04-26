@@ -25,14 +25,26 @@ async function startLive() {
         // --- აქ ჩავსვი და გამოვიყენე შენი კოდის რეალური ცვლადები (currentLiveChannel და myName) ---
         registerLiveInDatabase(currentLiveChannel, myName);
 
-        liveClient.on("user-published", async (user, mediaType) => {
-            await liveClient.subscribe(user, mediaType);
-            if (mediaType === "video") {
-                updateLiveLayout(true);
-                user.videoTrack.play("guest-remote-video");
-            }
-            if (mediaType === "audio") user.audioTrack.play();
-        });
+        // ... startLive-ის შიგნით user-published ნაწილი შეცვალე ასე:
+liveClient.on("user-published", async (user, mediaType) => {
+    await liveClient.subscribe(user, mediaType);
+    if (mediaType === "video") {
+        window.currentGuest = user;
+        updateLiveLayout(true);
+        
+        // შენი ვიდეო (ჰოსტის) რომ არ გაქრეს
+        if (liveTracks.video) liveTracks.video.play("remote-live-video");
+        
+        // სტუმრის ვიდეო
+        user.videoTrack.play("guest-remote-video");
+    }
+    if (mediaType === "audio") user.audioTrack.play();
+});
+
+liveClient.on("user-left", () => {
+    updateLiveLayout(false);
+    if (liveTracks.video) liveTracks.video.play("remote-live-video");
+});
         
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
