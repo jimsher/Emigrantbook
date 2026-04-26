@@ -9,8 +9,10 @@ async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     
-    currentLiveChannel = "live_stream"; 
-    currentHostUid = auth.currentUser.uid; // ჰოსტი ინახავს თავის ID-ს
+    // --- აი ეს შეცვალე: "live_stream"-ის ნაცვლად ჩაწერე ეს ---
+    currentLiveChannel = "live_" + auth.currentUser.uid; 
+    currentHostUid = auth.currentUser.uid;
+    // -------------------------------------------------------
 
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
