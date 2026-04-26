@@ -326,3 +326,41 @@ function registerLiveInDatabase(channelName, hostNickname) {
     // თუ ჰოსტი ინტერნეტს გათიშავს ან "გავარდება", ლაივი ავტომატურად წაიშალოს
     liveRef.onDisconnect().remove();
 }
+
+
+
+
+
+
+
+
+
+
+function loadActiveLives() {
+    const activeLivesContainer = document.getElementById('activeLivesList'); // ეს ID უნდა გქონდეს მოდალში
+    activeLivesContainer.innerHTML = "<p style='color:white; text-align:center;'>ლაივების ძებნა...</p>";
+
+    db.ref('lives_active').once('value', (snapshot) => {
+        activeLivesContainer.innerHTML = ""; // ვასუფთავებთ კონტეინერს
+        
+        if (!snapshot.exists()) {
+            activeLivesContainer.innerHTML = "<p style='color:gray; text-align:center;'>ამჟამად აქტიური ლაივები არ არის.</p>";
+            return;
+        }
+
+        snapshot.forEach((childSnapshot) => {
+            const live = childSnapshot.val();
+            
+            // ვქმნით ლაივის ბარათს (როგორც TikTok-ზეა)
+            const liveCard = `
+                <div class="live-card" onclick="joinLive('${live.channel}')">
+                    <div class="live-card-info">
+                        <strong>${live.host}</strong>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+            `;
+            activeLivesContainer.innerHTML += liveCard;
+        });
+    });
+}
