@@ -383,3 +383,42 @@ function followHost() {
         }
     });
 }
+
+
+
+
+
+
+
+
+// ფოტოს არჩევა ვიდეო ზარის გარდა
+let guestCamEnabled = true;
+
+async function toggleGuestCamera() {
+    if (!liveTracks.video) return; // თუ ვიდეო ტრეკი არ არსებობს, არაფერი ქნას
+
+    const camIcon = document.getElementById('camIcon');
+    const guestImg = document.getElementById('guest-static-photo');
+
+    if (guestCamEnabled) {
+        // კამერის გათიშვა
+        await liveTracks.video.setEnabled(false);
+        guestCamEnabled = false;
+        if(camIcon) camIcon.className = "fas fa-video-slash";
+        
+        // ბაზაში სტატუსის შეცვლა, რომ სხვებმაც დაინახონ ფოტო
+        db.ref(`lives_active/${currentLiveChannel}/guest_status`).set({
+            showPhoto: true,
+            photoUrl: myPhoto // შენი პროფილის ფოტო
+        });
+    } else {
+        // კამერის ჩართვა
+        await liveTracks.video.setEnabled(true);
+        guestCamEnabled = true;
+        if(camIcon) camIcon.className = "fas fa-video";
+        
+        db.ref(`lives_active/${currentLiveChannel}/guest_status`).set({
+            showPhoto: false
+        });
+    }
+}
