@@ -4,33 +4,43 @@
 
 /* მთავარი კონტეინერი, სადაც ვიდეოებია (ეკრანის ზედა ნაწილი) */
 
-/* მთავარი კონტეინერი */
+/* მთავარი კონტეინერი, სადაც ვიდეოები ზის */
 #live-video-container {
-    position: absolute;
-    top: 15%; /* აწევა ზემოთ, რომ ქვემოთ ადგილი დარჩეს */
-    left: 0;
-    width: 100%;
-    height: 40vh; /* ეკრანის სიმაღლის მხოლოდ 40% (შეგიძლია შეცვალო) */
     display: flex;
-    justify-content: center;
+    flex-direction: row; /* ჰორიზონტალურად გვერდიგვერდ */
     align-items: center;
-    z-index: 5;
-    transition: all 0.3s ease;
-}
-
-/* თითოეული ვიდეოს ყუთი სტუმრის დროს */
-.video-box {
+    justify-content: center;
+    position: absolute;
     width: 100%;
-    height: 100%;
-    position: relative;
     overflow: hidden;
-    background: #000;
+    transition: all 0.4s ease;
 }
 
-/* როცა სტუმარი შემოდის, ორივე ვიდეო გახდეს 50% სიგანის */
-.split-mode .video-box {
-    width: 50% !important;
-    border: 1px solid rgba(255,255,255,0.2);
+/* ჰოსტის ვიდეოს ყუთი */
+#host-video-wrapper {
+    position: relative;
+    height: 100%;
+    transition: all 0.4s ease;
+    flex-shrink: 0; /* რომ არ შეიკუმშოს არასწორად */
+}
+
+/* სტუმრის ვიდეოს ყუთი */
+#guest-video-box {
+    position: relative;
+    height: 100%;
+    background: #000;
+    transition: all 0.4s ease;
+    flex-shrink: 0; /* რომ არ შეიკუმშოს არასწორად */
+    border-left: 1px solid #d4af37; /* აი ეს ყვითელი გამყოფი ზოლი */
+}
+
+/* როცა სტუმარი ერთდება (Split Mode) */
+#live-video-container.split-mode #host-video-wrapper {
+    width: 50% !important; /* ზუსტად ნახევარი */
+}
+
+#live-video-container.split-mode #guest-video-box {
+    width: 50% !important; /* ზუსტად მეორე ნახევარი */
 }
 
 
