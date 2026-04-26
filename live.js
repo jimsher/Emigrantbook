@@ -108,7 +108,7 @@ async function joinLive(channelName) {
                         followBtn.style.display = 'none'; // თუ გამოწერილია ან საკუთარი თავია - დამალე
                     } else {
                         followBtn.style.display = 'block'; // თუ უცხოა - აჩვენე
-                 }
+                 
             }
        });
 
