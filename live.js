@@ -181,15 +181,28 @@ async function endLive() {
         // 6. ლაიქების მთვლელის ვიზუალური განულება
         const likeCountEl = document.getElementById('liveLikeCount');
         if (likeCountEl) likeCountEl.innerText = "0";
+
+        // --- დამატებული ნაწილი: მაყურებლების UI-ს გასუფთავება ---
+        const vCountEl = document.getElementById('vCount');
+        if (vCountEl) vCountEl.innerText = "0";
+
+        const avDiv = document.getElementById('viewerAvatars');
+        if (avDiv) avDiv.innerHTML = "";
+        // -----------------------------------------------------
     }
 
-    // აგორას ტრეკების გათიშვა (შენი ორიგინალი კოდი)
+    // აგორას ტრეკების გათიშვა
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
     
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
     currentLiveChannel = null;
+    
+    // დამატებითი უსაფრთხოება: თუ სტუმარი იყო ჩართული, მისი ლეიაუტიც დავაბრუნოთ
+    if (typeof updateLiveLayout === "function") {
+        updateLiveLayout(false);
+    }
 }
 
 function sendLiveHeart() {
