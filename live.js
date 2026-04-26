@@ -105,11 +105,10 @@ async function joinLive(channelName) {
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    let currentHostUid = null; 
+    // 1. ჰოსტის მონაცემები
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
         if(liveData) {
-            currentHostUid = liveData.uid || liveData.hostId;
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
         }
@@ -117,7 +116,7 @@ async function joinLive(channelName) {
 
     try {
         await liveClient.leave(); 
-        await liveClient.setClientRole("audience"); 
+        await liveClient.setClientRole("audience"); // მაყურებლის როლი - რომ საკუთარი თავი არ დაინახოს
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
         
         updateViewerCount(channelName, 'join');
@@ -129,32 +128,33 @@ async function joinLive(channelName) {
             await liveClient.subscribe(user, mediaType);
             
             if (mediaType === "video") {
-                // 1. თუ ვიდეო ჰოსტისაა
-                if (user.uid == currentHostUid) {
-                    user.videoTrack.play("remote-live-video");
-                } 
-                // 2. თუ ვიდეო სტუმრისაა
-                else {
-                    // მაყურებლისთვისაც ვრთავთ გაყოფილ რეჟიმს
+                // რამდენი ადამიანი სტრიმავს რეალურად?
+                const streamers = liveClient.remoteUsers.filter(u => u.hasVideo);
+
+                if (streamers.length > 1) {
+                    // თუ 2 ადამიანია - მაყურებლისთვისაც ვყოფთ ეკრანს
                     updateLiveLayout(true);
                     
-                    // სტუმრის ვიდეოს ვსვამთ თავის პატარა ყუთში
-                    user.videoTrack.play("guest-remote-video");
-
-                    // კრიტიკული მომენტი: ჰოსტის ვიდეო ხელახლა უნდა გაეშვას, 
-                    // რომ აწეულ ეკრანზეც გამოჩნდეს მაყურებელთან
-                    const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
-                    if (hostUser && hostUser.videoTrack) {
-                        hostUser.videoTrack.play("remote-live-video");
+                    // ვინც ეხლა შემოვიდა, თუ ის პირველი არაა, სტუმრის ყუთში ვსვამთ
+                    // დანარჩენს ავტომატურად გაანაწილებს ID-ების მიხედვით
+                    if (user.uid === streamers[0].uid) {
+                        user.videoTrack.play("remote-live-video");
+                    } else {
+                        user.videoTrack.play("guest-remote-video");
                     }
+                } else {
+                    // თუ მხოლოდ 1 კაცია - ჩვეულებრივი სრული ეკრანი
+                    updateLiveLayout(false);
+                    user.videoTrack.play("remote-live-video");
                 }
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
 
-        liveClient.on("user-left", (user) => {
-            // თუ სტუმარი გადის, მაყურებლის ეკრანიც ჩამოდის
-            if (user.uid != currentHostUid) {
+        liveClient.on("user-left", () => {
+            // თუ ვინმე გადის და რჩება 1 ან 0, ეკრანი ჩამოდის
+            const streamers = liveClient.remoteUsers.filter(u => u.hasVideo);
+            if (streamers.length <= 1) {
                 updateLiveLayout(false);
             }
         });
@@ -162,6 +162,9 @@ async function joinLive(channelName) {
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
+                    
+
+        
 
 
 function listenToLiveChat(channel) {
