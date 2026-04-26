@@ -92,6 +92,8 @@ async function joinLive(channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = null; "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     currentLiveChannel = channelName;
+
+    
     
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
