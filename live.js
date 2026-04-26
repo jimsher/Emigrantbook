@@ -85,7 +85,7 @@ function loadActiveLives() {
 
 
 
-async function joinLive(channelName) { // ამოვიღოთ hostUid პარამეტრი, რადგან ბაზიდან წამოვიღებთ
+async function joinLive(channelName) { 
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     currentLiveChannel = channelName;
@@ -93,10 +93,12 @@ async function joinLive(channelName) { // ამოვიღოთ hostUid პ�
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    // წამოვიღოთ ჰოსტის მონაცემები პირდაპირ აქტიური ლაივიდან
+    // 1. წამოვიღოთ ჰოსტის UID და მონაცემები (ეს გვჭირდება სტუმრის გასარჩევად)
+    let currentHostUid = null;
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
         if(liveData) {
+            currentHostUid = liveData.hostId || liveData.uid; // შეინახე ჰოსტის ID
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
         }
@@ -107,7 +109,6 @@ async function joinLive(channelName) { // ამოვიღოთ hostUid პ�
         await liveClient.setClientRole("audience");
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
         
-        // დანარჩენი შენი კოდი უცვლელია...
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
         listenToLikes(channelName);
@@ -115,12 +116,24 @@ async function joinLive(channelName) { // ამოვიღოთ hostUid პ�
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
+            
             if (mediaType === "video") {
-                // აქ შევცვალოთ: თუ ვიდეო არის ჰოსტის, გაუშვი დიდ ეკრანზე
-                user.videoTrack.play("remote-live-video");
+                window.currentGuest = user; // სტუმრის შენახვა
+
+                // 2. მთავარი შემოწმება:
+                // თუ შემოსული ვიდეო ეკუთვნის ჰოსტს -> გაუშვი დიდ ეკრანზე
+                if (user.uid == currentHostUid) {
+                    user.videoTrack.play("remote-live-video");
+                } 
+                // თუ სხვა ვინმეა (ანუ სტუმარი) -> აწიე ეკრანი და გაუშვი სტუმრის ყუთში
+                else {
+                    updateLiveLayout(true); 
+                    user.videoTrack.play("guest-remote-video");
+                }
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
+
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
