@@ -93,7 +93,6 @@ async function joinLive(channelName) {
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    // 1. წამოვიღოთ ჰოსტის UID და მონაცემები
     let currentHostUid = null;
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
@@ -118,21 +117,27 @@ async function joinLive(channelName) {
             await liveClient.subscribe(user, mediaType);
             
             if (mediaType === "video") {
-                window.currentGuest = user; // სტუმრის შენახვა
+                window.currentGuest = user; 
 
-                // 2. მთავარი შემოწმება:
                 if (user.uid == currentHostUid) {
-                    // ჰოსტი ყოველთვის დიდ ეკრანზე
+                    // ჰოსტი ჩვეულებრივ დიდ ეკრანზე
                     user.videoTrack.play("remote-live-video");
                 } 
                 else {
-                    // თუ სტუმარია -> აწიე ეკრანი და გაუშვი სტუმრის ყუთში
+                    // სტუმარი შემოვიდა - ჯერ ვწევთ ეკრანს
                     updateLiveLayout(true); 
-                    
-                    // პატარა დაყოვნება, რომ Layout-მა მოასწროს აწევა და მერე ჩაირთოს ვიდეო
+
+                    // აი აქ არის მთავარი: ხელახლა ვუშვებთ ორივეს, რომ შავი ეკრანი არ იყოს
+                    // 1. ვუშვებთ ჰოსტს (რომელიც უკვე შენახულია აგორაში)
+                    const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
+                    if (hostUser && hostUser.videoTrack) {
+                        hostUser.videoTrack.play("remote-live-video");
+                    }
+
+                    // 2. ვუშვებთ ახალ სტუმარს
                     setTimeout(() => {
                         user.videoTrack.play("guest-remote-video");
-                    }, 100);
+                    }, 200);
                 }
             }
             if (mediaType === "audio") user.audioTrack.play();
@@ -141,6 +146,7 @@ async function joinLive(channelName) {
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
+
 
 
 function listenToLiveChat(channel) {
