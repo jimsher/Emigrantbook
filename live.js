@@ -93,12 +93,12 @@ async function joinLive(channelName) {
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    // 1. წამოვიღოთ ჰოსტის UID და მონაცემები (ეს გვჭირდება სტუმრის გასარჩევად)
+    // 1. წამოვიღოთ ჰოსტის UID და მონაცემები
     let currentHostUid = null;
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
         if(liveData) {
-            currentHostUid = liveData.hostId || liveData.uid; // შეინახე ჰოსტის ID
+            currentHostUid = liveData.hostId || liveData.uid;
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
         }
@@ -121,14 +121,18 @@ async function joinLive(channelName) {
                 window.currentGuest = user; // სტუმრის შენახვა
 
                 // 2. მთავარი შემოწმება:
-                // თუ შემოსული ვიდეო ეკუთვნის ჰოსტს -> გაუშვი დიდ ეკრანზე
                 if (user.uid == currentHostUid) {
+                    // ჰოსტი ყოველთვის დიდ ეკრანზე
                     user.videoTrack.play("remote-live-video");
                 } 
-                // თუ სხვა ვინმეა (ანუ სტუმარი) -> აწიე ეკრანი და გაუშვი სტუმრის ყუთში
                 else {
+                    // თუ სტუმარია -> აწიე ეკრანი და გაუშვი სტუმრის ყუთში
                     updateLiveLayout(true); 
-                    user.videoTrack.play("guest-remote-video");
+                    
+                    // პატარა დაყოვნება, რომ Layout-მა მოასწროს აწევა და მერე ჩაირთოს ვიდეო
+                    setTimeout(() => {
+                        user.videoTrack.play("guest-remote-video");
+                    }, 100);
                 }
             }
             if (mediaType === "audio") user.audioTrack.play();
