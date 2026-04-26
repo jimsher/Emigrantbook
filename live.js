@@ -387,3 +387,45 @@ function openActiveLivesModal() {
 function closeActiveLivesModal() {
     document.getElementById('active_lives_modal').style.display = 'none';
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function sendJoinRequest() {
+    // ვამოწმებთ, საერთოდ ვართ თუ არა ლაივში
+    if (!currentLiveChannel) {
+        console.error("არხი არ არის განსაზღვრული");
+        return;
+    }
+
+    const guestUid = auth.currentUser.uid;
+    
+    // მოთხოვნის გაგზავნა ბაზაში
+    // ვიყენებთ შენს ორიგინალ სტრუქტურას: live_requests / არხის_სახელი
+    db.ref(`live_requests/${currentLiveChannel}`).set({
+        uid: guestUid,
+        name: myName, // შენი ცვლადი
+        photo: myPhoto, // შენი ცვლადი
+        status: 'pending',
+        ts: Date.now()
+    }).then(() => {
+        alert("მოთხოვნა გაიგზავნა! დაელოდეთ ჰოსტის პასუხს.");
+        
+        // გაგზავნის შემდეგ ღილაკი დავმალოთ, რომ ბევრჯერ არ დააჭიროს
+        document.getElementById('requestJoinBtn').style.display = 'none';
+    }).catch(e => {
+        console.error("შეცდომა მოთხოვნისას:", e);
+    });
+}
