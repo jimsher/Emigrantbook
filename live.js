@@ -7,12 +7,11 @@ function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = null; 
+    const token = null; // რადგან სერტიფიკატი გათიშულია
     
-    // --- აი ეს შეცვალე: "live_stream"-ის ნაცვლად ჩაწერე ეს ---
+    // დინამიური არხი, რომ ყველას თავისი ოთახი ჰქონდეს
     currentLiveChannel = "live_" + auth.currentUser.uid; 
     currentHostUid = auth.currentUser.uid;
-    // -------------------------------------------------------
 
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
@@ -75,26 +74,23 @@ function loadActiveLives() {
         }
         snapshot.forEach((childSnapshot) => {
             const live = childSnapshot.val();
+            // აქ channel პირდაპირ ბაზიდან მოდის
             const liveCard = `
             <div class="live-item" onclick="joinLive('${live.channel}')">
             <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
              <strong>${live.host}</strong>
-           </div>
-           `;
+            </div>
+            `;
             activeLivesContainer.innerHTML += liveCard;
         });
     });
 }
-
-
 
 async function joinLive(channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = null; 
     currentLiveChannel = channelName;
 
-    
-    
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
@@ -106,27 +102,23 @@ async function joinLive(channelName) {
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
 
-            // --- შესწორებული ბლოკი: ცვლადის სახელი გასწორდა currentHostUid-ზე ---
+            // გამომწერის ღილაკის ლოგიკა currentHostUid-ის მიხედვით
             db.ref(`followers/${currentHostUid}/${auth.currentUser.uid}`).once('value', followSnap => {
                 const followBtn = document.getElementById('liveFollowBtn'); 
                 if (followBtn) {
-                    // თუ გამოწერილია ან საკუთარი თავია - დამალე
                     if (followSnap.exists() || currentHostUid === auth.currentUser.uid) {
                         followBtn.style.display = 'none'; 
                     } else {
-                        // თუ უცხოა - აჩვენე (flex გამოიყენება შენი სტილის Gap-ის შესანარჩუნებლად)
                         followBtn.style.display = 'flex'; 
                     }
                 }
             });
-            // --- ჩამატების დასასრული ---
-                 
         }
     });
 
     try {
         await liveClient.leave(); 
-        await liveClient.setClientRole("audience"); // მაყურებლის მკაცრი როლი
+        await liveClient.setClientRole("audience"); 
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
         
         updateViewerCount(channelName, 'join');
@@ -138,14 +130,11 @@ async function joinLive(channelName) {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") {
                 if (user.uid == currentHostUid) {
-                    // ჰოსტი დიდ ეკრანზე
                     user.videoTrack.play("remote-live-video");
                 } else {
-                    // სტუმარი - ეკრანის გაყოფა და პატარა ყუთში ჩართვა
                     updateLiveLayout(true);
                     user.videoTrack.play("guest-remote-video");
                     
-                    // მაყურებლისთვისაც "გავაცოცხლოთ" ჰოსტის ვიდეო
                     const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                     if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
                 }
@@ -162,8 +151,6 @@ async function joinLive(channelName) {
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
-
-
 
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
@@ -379,24 +366,15 @@ function sendJoinRequest() {
     });
 }
 
-
-// გამომწერის ღილაკის ლოგიკა
 function followHost() {
     if (!currentLiveChannel) return;
-
-    // ჯერ ვიგებთ ვინ არის ჰოსტი ამ ლაივში
     db.ref(`lives_active/${currentLiveChannel}`).once('value', snap => {
         const liveData = snap.val();
         if (liveData) {
             const hostId = liveData.uid || liveData.hostId;
             const myUid = auth.currentUser.uid;
-
-            // ვამატებთ გამომწერებში
             db.ref(`followers/${hostId}/${myUid}`).set(true).then(() => {
-                // ვამატებთ ჩემს "following" სიაშიც (სურვილისამებრ)
                 db.ref(`following/${myUid}/${hostId}`).set(true);
-                
-                // ღილაკს ვმალავთ ეგრევე
                 document.getElementById('liveFollowBtn').style.display = 'none';
                 alert("წარმატებით გამოიწერეთ!");
             });
