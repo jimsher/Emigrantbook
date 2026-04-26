@@ -84,6 +84,7 @@ function loadActiveLives() {
 }
 
 
+
 async function joinLive(channelName) { 
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
@@ -92,7 +93,7 @@ async function joinLive(channelName) {
     document.getElementById('liveUI').style.display = 'flex';
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
-    // 1. ჰოსტის UID-ის წამოღება (რომ მაყურებელმა იცოდეს ვინ არის ლაივის პატრონი)
+    // 1. ჰოსტის UID-ის წამოღება
     let currentHostUid = null;
     db.ref(`lives_active/${channelName}`).once('value', snap => {
         const liveData = snap.val();
@@ -105,41 +106,44 @@ async function joinLive(channelName) {
 
     try {
         await liveClient.leave(); 
-        
-        // --- აი ეს არის მთავარი მაყურებლისთვის ---
-        await liveClient.setClientRole("audience"); // მაყურებელი მხოლოდ უყურებს!
-        
+        await liveClient.setClientRole("audience"); // მაყურებლის მკაცრი როლი
         await liveClient.join(appId, channelName, token, auth.currentUser.uid);
         
         updateViewerCount(channelName, 'join');
         listenToViewers(channelName);
         listenToLikes(channelName);
-        listenForResponse(channelName);
+        
+        // --- ეს არის ნებართვის მოსმენა (არ წაშალო!) ---
+        listenForResponse(channelName); 
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             
             if (mediaType === "video") {
-                // თუ ეს არის ჰოსტი, დააჯინე დიდ ეკრანზე
+                // ა) თუ ვიდეო ჰოსტისაა - აჩვენე დიდ ეკრანზე
                 if (user.uid == currentHostUid) {
                     user.videoTrack.play("remote-live-video");
                 } 
-                // თუ ეს არის სტუმარი
+                // ბ) თუ ვიდეო სხვისია (სტუმრის), ოღონდ მხოლოდ მაშინ თუ Layout უკვე აწეულია
+                // ეს ნიშნავს რომ ჰოსტმა უკვე დაადასტურა სტუმარი
                 else {
-                    updateLiveLayout(true); // აუწიე ეკრანი მაყურებელსაც
+                    window.currentGuest = user;
+                    // თუ სტუმარი ჩაირთო, ესე იგი ნებართვა გაცემულია და ვწევთ ეკრანს
+                    updateLiveLayout(true);
                     user.videoTrack.play("guest-remote-video");
                 }
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
 
-        // თუ ვინმე გადის, ეკრანი ისევ ჩამოდის მაყურებლისთვისაც
-        liveClient.on("user-left", () => { updateLiveLayout(false); });
+        // სტუმრის გასვლაზე ეკრანის ჩამოწევა
+        liveClient.on("user-left", () => {
+            updateLiveLayout(false);
+        });
 
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
-
 
 
 
