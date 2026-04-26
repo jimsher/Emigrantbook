@@ -368,3 +368,28 @@ function sendJoinRequest() {
         document.getElementById('requestJoinBtn').style.display = 'none';
     });
 }
+
+
+// გამომწერის ღილაკის ლოგიკა
+function followHost() {
+    if (!currentLiveChannel) return;
+
+    // ჯერ ვიგებთ ვინ არის ჰოსტი ამ ლაივში
+    db.ref(`lives_active/${currentLiveChannel}`).once('value', snap => {
+        const liveData = snap.val();
+        if (liveData) {
+            const hostId = liveData.uid || liveData.hostId;
+            const myUid = auth.currentUser.uid;
+
+            // ვამატებთ გამომწერებში
+            db.ref(`followers/${hostId}/${myUid}`).set(true).then(() => {
+                // ვამატებთ ჩემს "following" სიაშიც (სურვილისამებრ)
+                db.ref(`following/${myUid}/${hostId}`).set(true);
+                
+                // ღილაკს ვმალავთ ეგრევე
+                document.getElementById('liveFollowBtn').style.display = 'none';
+                alert("წარმატებით გამოიწერეთ!");
+            });
+        }
+    });
+}
