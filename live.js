@@ -256,11 +256,19 @@ function listenToLikes(channel) {
 function listenForRequests(channel) {
     db.ref(`live_requests/${channel}`).on('value', snap => {
         const req = snap.val();
+        // თუ მოთხოვნა არსებობს და სტატუსი არის 'pending' (მოლოდინში)
         if(req && req.status === 'pending') {
-            document.getElementById('guestRequestPanel').style.display = 'block';
-            document.getElementById('reqUserName').innerText = req.name;
+            const panel = document.getElementById('guestRequestPanel');
+            const nameEl = document.getElementById('reqUserName');
+            
+            if (panel && nameEl) {
+                nameEl.innerText = req.name;
+                panel.style.display = 'block'; // ვაჩვენებთ პანელს ჰოსტს
+            }
         } else {
-            document.getElementById('guestRequestPanel').style.display = 'none';
+            // თუ მოთხოვნა წაიშალა ან სტატუსი შეიცვალა, ვმალავთ პანელს
+            const panel = document.getElementById('guestRequestPanel');
+            if (panel) panel.style.display = 'none';
         }
     });
 }
