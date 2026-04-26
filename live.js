@@ -84,6 +84,8 @@ function loadActiveLives() {
     });
 }
 
+
+
 async function joinLive(channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
     const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
@@ -100,21 +102,23 @@ async function joinLive(channelName) {
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
 
-            // --- აი აქ ჩაამატე ზუსტად ეს ბლოკი (დაიწყე აქედან) ---
-            db.ref(`followers/${hostId}/${auth.currentUser.uid}`).once('value', followSnap => {
+            // --- შესწორებული ბლოკი: ცვლადის სახელი გასწორდა currentHostUid-ზე ---
+            db.ref(`followers/${currentHostUid}/${auth.currentUser.uid}`).once('value', followSnap => {
                 const followBtn = document.getElementById('liveFollowBtn'); 
-                if (followBtn) { // ჯერ ვამოწმებთ საერთოდ არსებობს თუ არა ღილაკი ეკრანზე
-                    if (followSnap.exists() || hostId === auth.currentUser.uid) {
-                        followBtn.style.display = 'none'; // თუ გამოწერილია ან საკუთარი თავია - დამალე
+                if (followBtn) {
+                    // თუ გამოწერილია ან საკუთარი თავია - დამალე
+                    if (followSnap.exists() || currentHostUid === auth.currentUser.uid) {
+                        followBtn.style.display = 'none'; 
                     } else {
-                        followBtn.style.display = 'block'; // თუ უცხოა - აჩვენე
+                        // თუ უცხოა - აჩვენე (flex გამოიყენება შენი სტილის Gap-ის შესანარჩუნებლად)
+                        followBtn.style.display = 'flex'; 
                     }
                 }
             });
-            // --- აქ დაამთავრე ჩამატება --
+            // --- ჩამატების დასასრული ---
                  
-            }
-       });
+        }
+    });
 
     try {
         await liveClient.leave(); 
@@ -154,6 +158,8 @@ async function joinLive(channelName) {
         listenToLiveChat(channelName);
     } catch (e) { console.log(e); }
 }
+
+
 
 function listenToLiveChat(channel) {
     const chatBox = document.getElementById('liveChatBox');
