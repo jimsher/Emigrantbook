@@ -371,3 +371,11 @@ function registerLiveInDatabase(channelName, hostNickname) {
 
 
 
+function openActiveLivesModal() {
+    document.getElementById('active_lives_modal').style.display = 'block';
+    loadActiveLives(); // აქ იძახებს ბაზიდან წამოღების ფუნქციას, რომელიც წეღან დავწერეთ
+}
+
+function closeActiveLivesModal() {
+    document.getElementById('active_lives_modal').style.display = 'none';
+}
