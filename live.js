@@ -6,7 +6,7 @@ function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYIhZxZ5rKBZWqdrvNnVS3gVOIf/Ognlz2HTuHi5pk/rZIqfAYG5kaWBqYJSWmGyeZpKWmmRhlGRgZJicnJJqbmlpYZF4fcfbzIZARoY+2WQmRgYIBPG5GXIyy1Lji0uKUhNzGRgAZF0gig=";
+    const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     
     currentLiveChannel = "live_stream"; 
     
@@ -88,7 +88,7 @@ function loadActiveLives() {
 
 async function joinLive(hostUid, channelName) {
     const appId = "7290502fac7f4feb82b021ccde79988a"; 
-    const token = "007eJxTYIhZxZ5rKBZWqdrvNnVS3gVOIf/Ognlz2HTuHi5pk/rZIqfAYG5kaWBqYJSWmGyeZpKWmmRhlGRgZJicnJJqbmlpYZF4fcfbzIZARoY+2WQmRgYIBPG5GXIyy1Lji0uKUhNzGRgAZF0gig=";
+    const token = "007eJxTYPglo7PwnK/blzcd8ZsuPzDfzxm9WaOoyGL5Tcm5K05qpV9RYDA3sjQwNTBKS0w2TzNJS02yMEoyMDJMTk5JNbe0tLBILN79NrMhkJFh5vswBkYoBPG5GXIyy1Lji0uKUhNzGRgA0ggktw==";
     currentLiveChannel = channelName;
     
     document.getElementById('liveUI').style.display = 'flex';
