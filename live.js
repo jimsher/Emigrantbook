@@ -25,7 +25,6 @@ async function startLive() {
         
         registerLiveInDatabase(currentLiveChannel, myName);
 
-        // --- ხმის აღდგენის მთავარი ბლოკი ---
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") {
@@ -35,7 +34,7 @@ async function startLive() {
                 user.videoTrack.play("guest-remote-video");
             }
             if (mediaType === "audio") {
-                user.audioTrack.play(); // აქ ირთვება სხვისი ხმა შენთან
+                user.audioTrack.play(); 
             }
         });
 
@@ -58,7 +57,7 @@ async function startLive() {
         listenForRequests(currentLiveChannel);
         listenForGuestStatus(currentLiveChannel);
 
-    } catch (e) { console.error("ჰოსტის შეცდომა:", e); }
+    } catch (e) { console.error(e); }
 }
 
 function loadActiveLives() {
@@ -136,7 +135,7 @@ async function joinLive(channelName) {
                 }
             }
             if (mediaType === "audio") {
-                user.audioTrack.play(); // მაყურებელი უსმენს ყველას
+                user.audioTrack.play();
             }
         });
 
@@ -146,7 +145,7 @@ async function joinLive(channelName) {
             }
         });
 
-    } catch (e) { console.log("შესვლის შეცდომა:", e); }
+    } catch (e) { console.log(e); }
 }
 
 function listenToLiveChat(channel) {
@@ -309,44 +308,15 @@ async function startGuestStreaming() {
         
         const controls = document.getElementById('guest-cam-controls');
         if(controls) {
-            controls.style.display = 'flex';
-            controls.style.gap = '10px';
+            controls.style.display = 'block';
         }
 
-    } catch (e) { console.error("სტუმრად ასვლის შეცდომა:", e); }
+    } catch (e) { console.error(e); }
 }
 
 function updateViewerCount(channel, action) {
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
     action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
-}
-
-function toggleViewerList(show) {
-    const modal = document.getElementById('viewerListModal');
-    if (show) {
-        modal.style.display = 'block';
-        setTimeout(() => { modal.style.bottom = '0'; }, 10);
-        renderFullViewerList();
-    } else {
-        modal.style.bottom = '-100%';
-        setTimeout(() => { modal.style.display = 'none'; }, 400);
-    }
-}
-
-function renderFullViewerList() {
-    if (!currentLiveChannel) return;
-    db.ref(`lives_meta/${currentLiveChannel}/viewers`).on('value', snap => {
-        const viewers = snap.val() || {};
-        const container = document.getElementById('viewerListContent');
-        if (!container) return;
-        container.innerHTML = "";
-        Object.entries(viewers).forEach(([uid, v]) => {
-            const row = document.createElement('div');
-            row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
-            row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
-            container.appendChild(row);
-        });
-    });
 }
 
 function registerLiveInDatabase(channelName, hostNickname) {
@@ -402,25 +372,9 @@ function followHost() {
     });
 }
 
-// --- მართვის ფუნქციები ---
+// --- კამერის მართვის ფუნქციები (მიკროფონი ამოღებულია) ---
 
 let guestCamEnabled = true;
-let guestMicEnabled = true;
-
-window.toggleGuestMic = async function() {
-    if (!liveTracks.audio) return;
-    const micIcon = document.getElementById('micIcon');
-    
-    if (guestMicEnabled) {
-        await liveTracks.audio.setEnabled(false);
-        guestMicEnabled = false;
-        if(micIcon) micIcon.className = "fas fa-microphone-slash";
-    } else {
-        await liveTracks.audio.setEnabled(true);
-        guestMicEnabled = true;
-        if(micIcon) micIcon.className = "fas fa-microphone";
-    }
-}
 
 window.toggleGuestCamera = async function() {
     if (!liveTracks.video) return; 
