@@ -33,7 +33,9 @@ async function startLive() {
                 if (liveTracks.video) liveTracks.video.play("remote-live-video");
                 user.videoTrack.play("guest-remote-video");
             }
-            if (mediaType === "audio") user.audioTrack.play();
+            if (mediaType === "audio") {
+                user.audioTrack.play(); // ხმის აღდგენა
+            }
         });
 
         liveClient.on("user-left", (user) => {
@@ -55,6 +57,7 @@ async function startLive() {
         listenToLikes(currentLiveChannel);
         listenForRequests(currentLiveChannel);
         listenForGuestStatus(currentLiveChannel);
+        listenToGifts(currentLiveChannel); // საჩუქრების მოსმენა
 
     } catch (e) { console.error(e); }
 }
@@ -120,6 +123,7 @@ async function joinLive(channelName) {
         listenForResponse(channelName);
         listenToLiveChat(channelName);
         listenForGuestStatus(channelName);
+        listenToGifts(channelName); // საჩუქრების მოსმენა
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
@@ -295,7 +299,6 @@ function listenForResponse(channel) {
 async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
-        // აქ შევასწორე: ვიყენებთ გლობალურ liveTracks-ს
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
@@ -343,11 +346,8 @@ function renderFullViewerList() {
     });
 }
 
-
 function registerLiveInDatabase(channelName, hostNickname) {
-    // მხოლოდ იმ შემთხვევაში ჩაწეროს onDisconnect, თუ ეს იუზერი თავისივე ლაივის ჰოსტია
     const liveRef = db.ref(`lives_active/${channelName}`);
-    
     const liveData = { 
         channel: channelName, 
         host: hostNickname, 
@@ -356,16 +356,11 @@ function registerLiveInDatabase(channelName, hostNickname) {
         status: "online", 
         uid: auth.currentUser.uid 
     };
-
     liveRef.set(liveData);
-
-    // მთავარი დაზღვევა: onDisconnect იმუშავებს მხოლოდ ჰოსტისთვის
-    // თუ მე ვარ ამ ლაივის პატრონი (uid ემთხვევა), მხოლოდ მაშინ წაშალოს გასვლისას
     if (channelName === "live_" + auth.currentUser.uid) {
         liveRef.onDisconnect().remove();
     }
 }
-
 
 function openActiveLivesModal() {
     const modal = document.getElementById('active_lives_modal');
@@ -407,8 +402,7 @@ function followHost() {
     });
 }
 
-// --- აქ არის მთავარი ცვლილება: window-ით გამოტანილი ფუნქცია ---
-
+// --- გლობალური მართვის ფუნქციები ---
 let guestCamEnabled = true;
 
 window.toggleGuestCamera = async function() {
@@ -416,14 +410,11 @@ window.toggleGuestCamera = async function() {
         console.error("ვიდეო ტრეკი არ არსებობს!");
         return; 
     }
-
     const camIcon = document.getElementById('camIcon');
-
     if (guestCamEnabled) {
         await liveTracks.video.setEnabled(false);
         guestCamEnabled = false;
         if(camIcon) camIcon.className = "fas fa-video-slash";
-        
         db.ref(`lives_active/${currentLiveChannel}/guest_status`).set({
             showPhoto: true,
             photoUrl: myPhoto 
@@ -432,7 +423,6 @@ window.toggleGuestCamera = async function() {
         await liveTracks.video.setEnabled(true);
         guestCamEnabled = true;
         if(camIcon) camIcon.className = "fas fa-video";
-        
         db.ref(`lives_active/${currentLiveChannel}/guest_status`).set({
             showPhoto: false
         });
@@ -444,7 +434,6 @@ function listenForGuestStatus(channel) {
         const status = snap.val();
         const guestImg = document.getElementById('guest-static-photo');
         const guestVid = document.getElementById('guest-remote-video');
-
         if (status && status.showPhoto) {
             if (guestImg) {
                 guestImg.src = status.photoUrl;
@@ -458,68 +447,61 @@ function listenForGuestStatus(channel) {
     });
 }
 
-
-
-
-
-
-
-
-
-
-// ლაივის ღილაკის აციმციმება
 function listenForActiveLivesStatus() {
     const liveBtn = document.querySelector('.live-nav-button');
     if (!liveBtn) return;
-
     db.ref('lives_active').on('value', (snapshot) => {
         if (snapshot.exists() && snapshot.numChildren() > 0) {
-            // თუ ვინმე ლაივშია - დაამატე კლასი
             liveBtn.classList.add('is-live');
         } else {
-            // თუ არავინაა - მოაშორე კლასი
             liveBtn.classList.remove('is-live');
         }
     });
 }
-
-// აუცილებლად გამოიძახე ეს ფუნქცია გვერდის ჩატვირთვისას
 listenForActiveLivesStatus();
 
+// --- საჩუქრების ლოგიკა (TikTok სტილი + ბალანსი) ---
 
+window.sendGift = async function(giftName, giftImg, price) {
+    if (!currentLiveChannel) return;
+    const userBalanceRef = db.ref(`users/${auth.currentUser.uid}/coins`);
+    
+    userBalanceRef.once('value').then(async (snap) => {
+        let currentBalance = snap.val() || 0;
+        if (currentBalance < price) {
+            alert("ბალანსი არ არის საკმარისი!");
+            return;
+        }
+        await userBalanceRef.set(currentBalance - price);
+        const giftData = {
+            senderName: myName,
+            senderPhoto: myPhoto,
+            giftImage: giftImg,
+            giftName: giftName,
+            timestamp: Date.now()
+        };
+        db.ref(`live_gifts/${currentLiveChannel}`).push(giftData);
+        toggleGiftPanel();
+    });
+}
 
+function listenToGifts(channel) {
+    db.ref(`live_gifts/${channel}`).on('child_added', (snap) => {
+        const gift = snap.val();
+        showGiftAnimation(gift); // პატარა ტოსტი
+        showMainGiftAnimation(gift); // ცენტრალური ანიმაცია
+    });
+}
 
-
-
-
-
-
-
-
-
-
-
-// ლაივში საჩუქრ3ბის ლოგიკა
 function showGiftAnimation(gift) {
     const container = document.getElementById('liveUI');
     const giftToast = document.createElement('div');
-    
-    // TikTok Combo Style
     giftToast.style = `
-        position: absolute;
-        left: 10px;
-        top: 35%;
-        display: flex;
-        align-items: center;
+        position: absolute; left: 10px; top: 35%; display: flex; align-items: center;
         background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%);
-        padding: 4px;
-        border-radius: 50px;
-        min-width: 200px;
-        z-index: 3000;
-        border-left: 2px solid #fe2c55;
-        animation: tiktokGift 4s ease-in-out forwards;
+        padding: 4px; border-radius: 50px; min-width: 200px; z-index: 3000;
+        border-left: 2px solid #fe2c55; animation: tiktokGift 4s ease-in-out forwards;
     `;
-
     giftToast.innerHTML = `
         <img src="${gift.senderPhoto}" style="width:38px; height:38px; border-radius:50%; border: 1px solid #fff;">
         <div style="margin-left: 10px; flex-grow: 1;">
@@ -530,7 +512,28 @@ function showGiftAnimation(gift) {
             <img src="${gift.giftImage}" style="width: 100%; height: 100%; object-fit: contain;">
         </div>
     `;
-
     container.appendChild(giftToast);
     setTimeout(() => giftToast.remove(), 4000);
+}
+
+function showMainGiftAnimation(gift) {
+    const overlay = document.getElementById('fullScreenGiftOverlay');
+    if (!overlay) return;
+    const giftElement = document.createElement('div');
+    giftElement.style = `
+        position: relative; display: flex; flex-direction: column; align-items: center;
+        animation: tiktokMainGift 4s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+    `;
+    giftElement.innerHTML = `
+        <div style="position: relative;">
+            <img src="${gift.giftImage}" style="width: 250px; height: 250px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(255,215,0,0.6));">
+            <div style="position: absolute; top: 50%; left: 50%; width: 400px; height: 400px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 70%); z-index: -1; animation: rotateLight 10s linear infinite;"></div>
+        </div>
+        <div style="margin-top: 20px; background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 50px; border: 1px solid var(--gold); backdrop-filter: blur(5px);">
+            <b style="color: var(--gold); font-size: 20px;">${gift.senderName}</b>
+            <span style="color: white; font-size: 18px;"> SENT ${gift.giftName.toUpperCase()}</span>
+        </div>
+    `;
+    overlay.appendChild(giftElement);
+    setTimeout(() => giftElement.remove(), 4000);
 }
