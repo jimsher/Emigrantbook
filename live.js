@@ -446,3 +446,31 @@ function listenForGuestStatus(channel) {
         }
     });
 }
+
+
+
+
+
+
+
+
+
+
+// ლაივის ღილაკის აციმციმება
+function listenForActiveLivesStatus() {
+    const liveBtn = document.querySelector('.live-nav-button');
+    if (!liveBtn) return;
+
+    db.ref('lives_active').on('value', (snapshot) => {
+        if (snapshot.exists() && snapshot.numChildren() > 0) {
+            // თუ ვინმე ლაივშია - დაამატე კლასი
+            liveBtn.classList.add('is-live');
+        } else {
+            // თუ არავინაა - მოაშორე კლასი
+            liveBtn.classList.remove('is-live');
+        }
+    });
+}
+
+// აუცილებლად გამოიძახე ეს ფუნქცია გვერდის ჩატვირთვისას
+listenForActiveLivesStatus();
