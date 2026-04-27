@@ -305,7 +305,10 @@ async function startGuestStreaming() {
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
         
         const controls = document.getElementById('guest-cam-controls');
-        if(controls) controls.style.display = 'flex'; // flex რომ გვერდიგვერდ დადგეს
+        if(controls) {
+            controls.style.display = 'flex'; // აქ flex აუცილებელია
+            controls.style.gap = '10px';
+        }
 
     } catch (e) { console.log(e); }
 }
@@ -396,13 +399,17 @@ function followHost() {
     });
 }
 
-// --- ფოტოს/ვიდეოს და მიკროფონის მართვა ---
+// --- მართვის ფუნქციები (გლობალური Scope) ---
 
 let guestCamEnabled = true;
 let guestMicEnabled = true;
 
 window.toggleGuestMic = async function() {
-    if (!liveTracks.audio) return;
+    console.log("მიკროფონის ღილაკს დაეჭირა");
+    if (!liveTracks.audio) {
+        console.error("აუდიო ტრეკი არ არსებობს");
+        return;
+    }
     const micIcon = document.getElementById('micIcon');
     
     if (guestMicEnabled) {
@@ -417,7 +424,11 @@ window.toggleGuestMic = async function() {
 }
 
 window.toggleGuestCamera = async function() {
-    if (!liveTracks.video) return; 
+    console.log("კამერის ღილაკს დაეჭირა");
+    if (!liveTracks.video) {
+        console.error("ვიდეო ტრეკი არ არსებობს");
+        return; 
+    }
     const camIcon = document.getElementById('camIcon');
 
     if (guestCamEnabled) {
