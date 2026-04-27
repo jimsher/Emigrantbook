@@ -296,6 +296,7 @@ async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
         
+        // აქ შევასწორე: პირდაპირ გლობალურ ცვლადებში ვწერთ
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
@@ -306,11 +307,11 @@ async function startGuestStreaming() {
         
         const controls = document.getElementById('guest-cam-controls');
         if(controls) {
-            controls.style.display = 'flex'; // აქ flex აუცილებელია
+            controls.style.display = 'flex';
             controls.style.gap = '10px';
         }
 
-    } catch (e) { console.log(e); }
+    } catch (e) { console.error("სტუმრად ასვლის შეცდომა:", e); }
 }
 
 function updateViewerCount(channel, action) {
@@ -399,15 +400,14 @@ function followHost() {
     });
 }
 
-// --- მართვის ფუნქციები (გლობალური Scope) ---
+// --- მართვის ფუნქციები (HTML-ისთვის ხელმისაწვდომი) ---
 
 let guestCamEnabled = true;
 let guestMicEnabled = true;
 
 window.toggleGuestMic = async function() {
-    console.log("მიკროფონის ღილაკს დაეჭირა");
     if (!liveTracks.audio) {
-        console.error("აუდიო ტრეკი არ არსებობს");
+        console.error("მიკროფონის ტრეკი ვერ მოიძებნა!");
         return;
     }
     const micIcon = document.getElementById('micIcon');
@@ -424,9 +424,8 @@ window.toggleGuestMic = async function() {
 }
 
 window.toggleGuestCamera = async function() {
-    console.log("კამერის ღილაკს დაეჭირა");
     if (!liveTracks.video) {
-        console.error("ვიდეო ტრეკი არ არსებობს");
+        console.error("ვიდეო ტრეკი ვერ მოიძებნა!");
         return; 
     }
     const camIcon = document.getElementById('camIcon');
