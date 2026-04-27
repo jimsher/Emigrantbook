@@ -12,10 +12,11 @@ const liveGiftsLibrary = [
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif" 
     },
     { 
-        id: "diamond", 
-        name: "Diamond", 
-        price: 50, 
-        img: "https://i.ibb.co/m09YvYn/diamond-gift.gif" 
+        id: "rose", 
+        name: "Rose", 
+        price: 1, 
+        img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
+        sound: "assets/sounds/gift_alert.mp3" // <-- აქ ჩაწერე შენი ფაილის ზუსტი გზა
     },
     // აქ დაამატებ სხვებსაც იმავე სტრუქტურით
 ];
