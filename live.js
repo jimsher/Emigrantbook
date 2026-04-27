@@ -33,9 +33,7 @@ async function startLive() {
                 if (liveTracks.video) liveTracks.video.play("remote-live-video");
                 user.videoTrack.play("guest-remote-video");
             }
-            if (mediaType === "audio") {
-                user.audioTrack.play(); 
-            }
+            if (mediaType === "audio") user.audioTrack.play();
         });
 
         liveClient.on("user-left", (user) => {
@@ -48,6 +46,7 @@ async function startLive() {
         
         liveTracks.video.play("remote-live-video");
         
+        await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
         listenToLiveChat(currentLiveChannel);
@@ -130,13 +129,12 @@ async function joinLive(channelName) {
                 } else {
                     updateLiveLayout(true);
                     user.videoTrack.play("guest-remote-video");
+                    
                     const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                     if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
                 }
             }
-            if (mediaType === "audio") {
-                user.audioTrack.play();
-            }
+            if (mediaType === "audio") user.audioTrack.play();
         });
 
         liveClient.on("user-left", (user) => {
@@ -297,7 +295,7 @@ function listenForResponse(channel) {
 async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
-        
+        // აქ შევასწორე: ვიყენებთ გლობალურ liveTracks-ს
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
@@ -307,16 +305,42 @@ async function startGuestStreaming() {
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
         
         const controls = document.getElementById('guest-cam-controls');
-        if(controls) {
-            controls.style.display = 'block';
-        }
+        if(controls) controls.style.display = 'block';
 
-    } catch (e) { console.error(e); }
+    } catch (e) { console.log(e); }
 }
 
 function updateViewerCount(channel, action) {
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
     action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
+}
+
+function toggleViewerList(show) {
+    const modal = document.getElementById('viewerListModal');
+    if (show) {
+        modal.style.display = 'block';
+        setTimeout(() => { modal.style.bottom = '0'; }, 10);
+        renderFullViewerList();
+    } else {
+        modal.style.bottom = '-100%';
+        setTimeout(() => { modal.style.display = 'none'; }, 400);
+    }
+}
+
+function renderFullViewerList() {
+    if (!currentLiveChannel) return;
+    db.ref(`lives_meta/${currentLiveChannel}/viewers`).on('value', snap => {
+        const viewers = snap.val() || {};
+        const container = document.getElementById('viewerListContent');
+        if (!container) return;
+        container.innerHTML = "";
+        Object.entries(viewers).forEach(([uid, v]) => {
+            const row = document.createElement('div');
+            row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
+            row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
+            container.appendChild(row);
+        });
+    });
 }
 
 function registerLiveInDatabase(channelName, hostNickname) {
@@ -372,12 +396,16 @@ function followHost() {
     });
 }
 
-// --- კამერის მართვის ფუნქციები (მიკროფონი ამოღებულია) ---
+// --- აქ არის მთავარი ცვლილება: window-ით გამოტანილი ფუნქცია ---
 
 let guestCamEnabled = true;
 
 window.toggleGuestCamera = async function() {
-    if (!liveTracks.video) return; 
+    if (!liveTracks.video) {
+        console.error("ვიდეო ტრეკი არ არსებობს!");
+        return; 
+    }
+
     const camIcon = document.getElementById('camIcon');
 
     if (guestCamEnabled) {
