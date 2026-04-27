@@ -343,18 +343,29 @@ function renderFullViewerList() {
     });
 }
 
+
 function registerLiveInDatabase(channelName, hostNickname) {
+    // მხოლოდ იმ შემთხვევაში ჩაწეროს onDisconnect, თუ ეს იუზერი თავისივე ლაივის ჰოსტია
     const liveRef = db.ref(`lives_active/${channelName}`);
-    liveRef.set({ 
+    
+    const liveData = { 
         channel: channelName, 
         host: hostNickname, 
         hostPhoto: myPhoto, 
         startTime: Date.now(), 
         status: "online", 
         uid: auth.currentUser.uid 
-    });
-    liveRef.onDisconnect().remove();
+    };
+
+    liveRef.set(liveData);
+
+    // მთავარი დაზღვევა: onDisconnect იმუშავებს მხოლოდ ჰოსტისთვის
+    // თუ მე ვარ ამ ლაივის პატრონი (uid ემთხვევა), მხოლოდ მაშინ წაშალოს გასვლისას
+    if (channelName === "live_" + auth.currentUser.uid) {
+        liveRef.onDisconnect().remove();
+    }
 }
+
 
 function openActiveLivesModal() {
     const modal = document.getElementById('active_lives_modal');
