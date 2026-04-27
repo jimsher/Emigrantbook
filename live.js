@@ -295,7 +295,7 @@ function listenForResponse(channel) {
 async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
-        // აქ შევასწორე: ვიყენებთ გლობალურ liveTracks-ს
+        
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
@@ -305,7 +305,7 @@ async function startGuestStreaming() {
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
         
         const controls = document.getElementById('guest-cam-controls');
-        if(controls) controls.style.display = 'block';
+        if(controls) controls.style.display = 'flex'; // flex რომ გვერდიგვერდ დადგეს
 
     } catch (e) { console.log(e); }
 }
@@ -396,16 +396,28 @@ function followHost() {
     });
 }
 
-// --- აქ არის მთავარი ცვლილება: window-ით გამოტანილი ფუნქცია ---
+// --- ფოტოს/ვიდეოს და მიკროფონის მართვა ---
 
 let guestCamEnabled = true;
+let guestMicEnabled = true;
+
+window.toggleGuestMic = async function() {
+    if (!liveTracks.audio) return;
+    const micIcon = document.getElementById('micIcon');
+    
+    if (guestMicEnabled) {
+        await liveTracks.audio.setEnabled(false);
+        guestMicEnabled = false;
+        if(micIcon) micIcon.className = "fas fa-microphone-slash";
+    } else {
+        await liveTracks.audio.setEnabled(true);
+        guestMicEnabled = true;
+        if(micIcon) micIcon.className = "fas fa-microphone";
+    }
+}
 
 window.toggleGuestCamera = async function() {
-    if (!liveTracks.video) {
-        console.error("ვიდეო ტრეკი არ არსებობს!");
-        return; 
-    }
-
+    if (!liveTracks.video) return; 
     const camIcon = document.getElementById('camIcon');
 
     if (guestCamEnabled) {
