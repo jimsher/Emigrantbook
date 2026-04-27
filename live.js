@@ -11,6 +11,8 @@ async function startLive() {
     
     currentLiveChannel = "live_" + auth.currentUser.uid; 
     currentHostUid = auth.currentUser.uid;
+    // ინიციალიზაცია გლობალური ცვლადისთვის
+    window.currentLiveHostUid = auth.currentUser.uid;
 
     document.getElementById('liveUI').style.display = 'flex';
     document.getElementById('liveHostName').innerText = myName;
@@ -96,6 +98,8 @@ async function joinLive(channelName) {
         const liveData = snap.val();
         if(liveData) {
             currentHostUid = liveData.uid || liveData.hostId;
+            window.currentLiveHostUid = currentHostUid; // მასპინძლის ID-ს შენახვა საჩუქრებისთვის
+            
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
 
@@ -460,100 +464,90 @@ function listenForActiveLivesStatus() {
 }
 listenForActiveLivesStatus();
 
-// --- საჩუქრების ლოგიკა (TikTok სტილი + ბალანსი) ---
+// --- საჩუქრების ლოგიკა (TikTok სტილი + ბალანსი + საფულე) ---
 window.sendGift = async function(giftName, giftImg, price) {
     if (!currentLiveChannel) return;
+    const user = auth.currentUser;
+    const hostUid = window.currentLiveHostUid; // მასპინძლის ID
 
-    // 🎯 მისამართი გასწორდა: შენს ბაზაში ფულს ჰქვია "akho"
-    const userBalanceRef = db.ref(`users/${auth.currentUser.uid}/akho`); 
+    if (!hostUid) return alert("მასპინძლის ID ვერ მოიძებნა!");
+    if (user.uid === hostUid) return alert("საკუთარ თავს ვერ აჩუქებთ!");
+
+    // 💰 მისამართი: შენს ბაზაში ფულს ჰქვია "akho"
+    const userBalanceRef = db.ref(`users/${user.uid}/akho`); 
     
     userBalanceRef.once('value').then(async (snap) => {
-        let currentBalance = snap.val();
-
-        // თუ ბალანსი საერთოდ არ არსებობს (null), ჩავთვალოთ რომ 0-ია
-        if (currentBalance === null) currentBalance = 0;
+        let currentBalance = snap.val() || 0;
 
         if (currentBalance < price) {
-            alert(`ბალანსი არ არის საკმარისი! გაქვს: ${currentBalance.toFixed(2)} AKHO, საჭიროა: ${price}`);
+            alert(`ბალანსი არ არის საკმარისი! გაქვს: ${currentBalance.toFixed(2)} AKHO`);
             return;
         }
 
-        // 💰 ბალანსის ჩამოჭრა (akho-დან)
+        // 1. ჩამოვაკლოთ გამგზავნს (akho)
         await userBalanceRef.set(currentBalance - price);
-        
-        const giftData = {
-            senderName: myName,
-            senderPhoto: myPhoto,
-            giftImage: giftImg,
-            giftName: giftName,
-            timestamp: Date.now()
-        };
 
-        // საჩუქრის გაგზავნა ლაივ არხზე
+        // 2. დავუმატოთ მასპინძელს საფულეში (gift_balance)
+        db.ref(`users/${hostUid}/gift_balance`).transaction(c => (c || 0) + price);
+
+        // 3. ჩავწეროთ კოლექციაში (რომ საფულის ისტორიაში გამოჩნდეს)
+        db.ref(`received_gifts/${hostUid}`).push({
+            giftUrl: giftImg,
+            price: price,
+            fromName: myName,
+            fromPhoto: myPhoto,
+            timestamp: Date.now()
+        });
+
+        // 4. გავაგზავნოთ სიგნალი ლაივში ანიმაციისთვის
+        const giftData = {
+            giftImage: giftImg,
+            ts: Date.now()
+        };
         db.ref(`live_gifts/${currentLiveChannel}`).push(giftData);
         
-        // პანელის დახურვა
-        if (typeof toggleGiftPanel === "function") {
-            toggleGiftPanel();
-        }
-        
-        console.log(`საჩუქარი ${giftName} წარმატებით გაიგზავნა!`);
+        if (typeof toggleGiftPanel === "function") toggleGiftPanel();
     }).catch(e => {
         console.error("Firebase Gift Error:", e);
-        alert("შეცდომა ბალანსის შემოწმებისას.");
     });
 }
-
 
 function listenToGifts(channel) {
     db.ref(`live_gifts/${channel}`).on('child_added', (snap) => {
         const gift = snap.val();
-        showGiftAnimation(gift); // პატარა ტოსტი
-        showMainGiftAnimation(gift); // ცენტრალური ანიმაცია
+        // ძველი საჩუქრები რომ არ ამოხტეს ხელახლა შესვლისას
+        if (!gift || (Date.now() - gift.ts > 10000)) return; 
+        
+        showMainGiftAnimation(gift); // მხოლოდ გიფის ანიმაცია
     });
 }
 
-function showGiftAnimation(gift) {
-    const container = document.getElementById('liveUI');
-    const giftToast = document.createElement('div');
-    giftToast.style = `
-        position: absolute; left: 10px; top: 35%; display: flex; align-items: center;
-        background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%);
-        padding: 4px; border-radius: 50px; min-width: 200px; z-index: 3000;
-        border-left: 2px solid #fe2c55; animation: tiktokGift 4s ease-in-out forwards;
-    `;
-    giftToast.innerHTML = `
-        <img src="${gift.senderPhoto}" style="width:38px; height:38px; border-radius:50%; border: 1px solid #fff;">
-        <div style="margin-left: 10px; flex-grow: 1;">
-            <div style="font-size: 13px; font-weight: bold; color: white;">${gift.senderName}</div>
-            <div style="font-size: 11px; color: #ffd700;">Sent ${gift.giftName}</div>
-        </div>
-        <div style="width: 50px; height: 50px; margin-left: 10px;">
-            <img src="${gift.giftImage}" style="width: 100%; height: 100%; object-fit: contain;">
-        </div>
-    `;
-    container.appendChild(giftToast);
-    setTimeout(() => giftToast.remove(), 4000);
-}
-
 function showMainGiftAnimation(gift) {
-    const overlay = document.getElementById('fullScreenGiftOverlay');
-    if (!overlay) return;
-    const giftElement = document.createElement('div');
-    giftElement.style = `
-        position: relative; display: flex; flex-direction: column; align-items: center;
-        animation: tiktokMainGift 4s cubic-bezier(0.17, 0.67, 0.83, 0.67) forwards;
+    const container = document.getElementById('liveUI');
+    if (!container) return;
+
+    const animDiv = document.createElement('div');
+    animDiv.style = `
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        z-index: 10000; pointer-events: none;
     `;
-    giftElement.innerHTML = `
-        <div style="position: relative;">
-            <img src="${gift.giftImage}" style="width: 250px; height: 250px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(255,215,0,0.6));">
-            <div style="position: absolute; top: 50%; left: 50%; width: 400px; height: 400px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0) 70%); z-index: -1; animation: rotateLight 10s linear infinite;"></div>
-        </div>
-        <div style="margin-top: 20px; background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 50px; border: 1px solid var(--gold); backdrop-filter: blur(5px);">
-            <b style="color: var(--gold); font-size: 20px;">${gift.senderName}</b>
-            <span style="color: white; font-size: 18px;"> SENT ${gift.giftName.toUpperCase()}</span>
-        </div>
+    
+    // გამოჩნდება მხოლოდ გიფი
+    animDiv.innerHTML = `
+        <img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">
     `;
-    overlay.appendChild(giftElement);
-    setTimeout(() => giftElement.remove(), 4000);
+
+    container.appendChild(animDiv);
+
+    // ხმის ეფექტი
+    const giftSound = new Audio('https://www.myinstants.com/media/sounds/tiktok-gift.mp3');
+    giftSound.volume = 0.4;
+    giftSound.play().catch(e => {});
+
+    // გაქრობა
+    setTimeout(() => {
+        animDiv.style.opacity = '0';
+        animDiv.style.transition = 'opacity 1s';
+        setTimeout(() => animDiv.remove(), 1000);
+    }, 4000);
 }
