@@ -3,6 +3,23 @@ let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
 let currentHostUid = null; 
 
+// --- საჩუქრების ბიბლიოთეკა (აქ ჩაამატე ახალი საჩუქრები) ---
+const liveGiftsLibrary = [
+    { 
+        id: "rose", 
+        name: "Rose", 
+        price: 1, 
+        img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif" 
+    },
+    { 
+        id: "diamond", 
+        name: "Diamond", 
+        price: 50, 
+        img: "https://i.ibb.co/m09YvYn/diamond-gift.gif" 
+    },
+    // აქ დაამატებ სხვებსაც იმავე სტრუქტურით
+];
+
 function startLiveFunc() { toggleSideMenu(false); startLive(); }
 
 async function startLive() {
@@ -232,9 +249,39 @@ function animateHeart() {
     setTimeout(() => heart.remove(), 1500);
 }
 
+// --- განახლებული საჩუქრების პანელის ლოგიკა ---
+
+function renderLiveGifts() {
+    const grid = document.getElementById('giftGrid');
+    if (!grid) return;
+    grid.innerHTML = ""; 
+
+    liveGiftsLibrary.forEach(gift => {
+        const card = document.createElement('div');
+        card.className = "gift-card";
+        card.onclick = () => sendGift(gift.name, gift.img, gift.price);
+        
+        card.innerHTML = `
+            <div class="gift-img-container">
+                <img src="${gift.img}" alt="${gift.name}" onerror="this.src='img/gift-default.png'">
+            </div>
+            <div class="gift-name">${gift.name}</div>
+            <div class="gift-price"><i class="fas fa-coins"></i> ${gift.price}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
 function toggleGiftPanel() { 
     const p = document.getElementById('giftPanel'); 
-    if(p) p.style.display = p.style.display === 'none' ? 'block' : 'none'; 
+    if(p) {
+        if (p.style.display === 'none' || p.style.display === '') {
+            p.style.display = 'block';
+            renderLiveGifts(); // ყოველ გახსნაზე ვხატავთ სიას
+        } else {
+            p.style.display = 'none';
+        }
+    }
 }
 
 function listenToViewers(channel) {
@@ -490,7 +537,7 @@ window.sendGift = async function(giftName, giftImg, price) {
         // 2. დავუმატოთ მასპინძელს საფულეში (gift_balance)
         db.ref(`users/${hostUid}/gift_balance`).transaction(c => (c || 0) + price);
 
-        // 3. ჩავწეროთ კოლექციაში (რომ საფულის ისტორიაში გამოჩნდეს)
+        // 3. ჩავწეროთ კოლექციაში
         db.ref(`received_gifts/${hostUid}`).push({
             giftUrl: giftImg,
             price: price,
@@ -499,7 +546,7 @@ window.sendGift = async function(giftName, giftImg, price) {
             timestamp: Date.now()
         });
 
-        // 4. გავაგზავნოთ სიგნალი ლაივში ანიმაციისთვის
+        // 4. გავაგზავნოთ სიგნალი ლაივში
         const giftData = {
             giftImage: giftImg,
             ts: Date.now()
@@ -515,10 +562,8 @@ window.sendGift = async function(giftName, giftImg, price) {
 function listenToGifts(channel) {
     db.ref(`live_gifts/${channel}`).on('child_added', (snap) => {
         const gift = snap.val();
-        // ძველი საჩუქრები რომ არ ამოხტეს ხელახლა შესვლისას
         if (!gift || (Date.now() - gift.ts > 10000)) return; 
-        
-        showMainGiftAnimation(gift); // მხოლოდ გიფის ანიმაცია
+        showMainGiftAnimation(gift);
     });
 }
 
@@ -532,19 +577,16 @@ function showMainGiftAnimation(gift) {
         z-index: 10000; pointer-events: none;
     `;
     
-    // გამოჩნდება მხოლოდ გიფი
     animDiv.innerHTML = `
         <img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">
     `;
 
     container.appendChild(animDiv);
 
-    // ხმის ეფექტი
     const giftSound = new Audio('https://www.myinstants.com/media/sounds/tiktok-gift.mp3');
     giftSound.volume = 0.4;
     giftSound.play().catch(e => {});
 
-    // გაქრობა
     setTimeout(() => {
         animDiv.style.opacity = '0';
         animDiv.style.transition = 'opacity 1s';
