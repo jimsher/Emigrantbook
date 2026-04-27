@@ -2655,8 +2655,31 @@ div[style*="overflow-x:auto"] {
         </div>
     </div>
 
-    <div id="giftPanel" style="display:none; position:absolute; bottom:0; left:0; width:100%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(212,175,55,0.5); padding:25px 20px; border-radius:25px 25px 0 0; z-index:100000; backdrop-filter: blur(20px);"></div>
+    <div id="giftPanel" style="display:none; position:fixed; bottom:0; left:0; width:100%; height: 420px; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px 20px 0 0; z-index: 2000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; animation: slideUp 0.3s ease-out;">
+    <div onclick="toggleGiftPanel()" style="width: 40px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; margin: 12px auto; cursor: pointer;"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px 15px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-coins" style="color: #ffd700;"></i>
+            <span id="userBalance" style="font-weight: 600; font-size: 15px;">1,250</span>
+            <i class="fas fa-chevron-right" style="font-size: 10px; color: #888;"></i>
+        </div>
+        <div style="font-weight: bold; font-size: 14px; color: #eee;">Gifts</div>
+        <div onclick="toggleGiftPanel()" style="color: #888; font-size: 18px; cursor: pointer;"><i class="fas fa-times"></i></div>
+    </div>
+    <div id="giftGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; height: 280px; overflow-y: auto;">
+        <div class="gift-card" onclick="sendGift('Rose', 'img/rose.png', 1)">
+            <div class="gift-img-container">
+                <img src="img/rose.png" alt="Rose"> </div>
+            <div class="gift-name">Rose</div>
+            <div class="gift-price"><i class="fas fa-coins"></i> 1</div>
+        </div>
+        </div>
+    <div style="display: flex; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+        <button id="sendGiftBtn" style="background: #fe2c55; color: white; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s;">Send</button>
+    </div>
+</div>
 
+ 
     <div id="viewerListModal" style="display:none; position:absolute; bottom:-100%; left:0; width:100%; height:60%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(255,255,255,0.1); border-radius:20px 20px 0 0; z-index:200000; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); backdrop-filter: blur(20px);">
         <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
             <b style="color:white; font-size:16px;">Зრიтели (<span id="vCountFull">0</span>)</b>
