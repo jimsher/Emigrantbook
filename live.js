@@ -461,18 +461,26 @@ function listenForActiveLivesStatus() {
 listenForActiveLivesStatus();
 
 // --- საჩუქრების ლოგიკა (TikTok სტილი + ბალანსი) ---
-
 window.sendGift = async function(giftName, giftImg, price) {
     if (!currentLiveChannel) return;
-    const userBalanceRef = db.ref(`users/${auth.currentUser.uid}/coins`);
+
+    // 🎯 მისამართი გასწორდა: შენს ბაზაში ფულს ჰქვია "akho"
+    const userBalanceRef = db.ref(`users/${auth.currentUser.uid}/akho`); 
     
     userBalanceRef.once('value').then(async (snap) => {
-        let currentBalance = snap.val() || 0;
+        let currentBalance = snap.val();
+
+        // თუ ბალანსი საერთოდ არ არსებობს (null), ჩავთვალოთ რომ 0-ია
+        if (currentBalance === null) currentBalance = 0;
+
         if (currentBalance < price) {
-            alert("ბალანსი არ არის საკმარისი!");
+            alert(`ბალანსი არ არის საკმარისი! გაქვს: ${currentBalance.toFixed(2)} AKHO, საჭიროა: ${price}`);
             return;
         }
+
+        // 💰 ბალანსის ჩამოჭრა (akho-დან)
         await userBalanceRef.set(currentBalance - price);
+        
         const giftData = {
             senderName: myName,
             senderPhoto: myPhoto,
@@ -480,10 +488,22 @@ window.sendGift = async function(giftName, giftImg, price) {
             giftName: giftName,
             timestamp: Date.now()
         };
+
+        // საჩუქრის გაგზავნა ლაივ არხზე
         db.ref(`live_gifts/${currentLiveChannel}`).push(giftData);
-        toggleGiftPanel();
+        
+        // პანელის დახურვა
+        if (typeof toggleGiftPanel === "function") {
+            toggleGiftPanel();
+        }
+        
+        console.log(`საჩუქარი ${giftName} წარმატებით გაიგზავნა!`);
+    }).catch(e => {
+        console.error("Firebase Gift Error:", e);
+        alert("შეცდომა ბალანსის შემოწმებისას.");
     });
 }
+
 
 function listenToGifts(channel) {
     db.ref(`live_gifts/${channel}`).on('child_added', (snap) => {
