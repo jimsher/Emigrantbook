@@ -485,3 +485,52 @@ function listenForActiveLivesStatus() {
 
 // აუცილებლად გამოიძახე ეს ფუნქცია გვერდის ჩატვირთვისას
 listenForActiveLivesStatus();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ლაივში საჩუქრ3ბის ლოგიკა
+function showGiftAnimation(gift) {
+    const container = document.getElementById('liveUI');
+    const giftToast = document.createElement('div');
+    
+    // TikTok Combo Style
+    giftToast.style = `
+        position: absolute;
+        left: 10px;
+        top: 35%;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%);
+        padding: 4px;
+        border-radius: 50px;
+        min-width: 200px;
+        z-index: 3000;
+        border-left: 2px solid #fe2c55;
+        animation: tiktokGift 4s ease-in-out forwards;
+    `;
+
+    giftToast.innerHTML = `
+        <img src="${gift.senderPhoto}" style="width:38px; height:38px; border-radius:50%; border: 1px solid #fff;">
+        <div style="margin-left: 10px; flex-grow: 1;">
+            <div style="font-size: 13px; font-weight: bold; color: white;">${gift.senderName}</div>
+            <div style="font-size: 11px; color: #ffd700;">Sent ${gift.giftName}</div>
+        </div>
+        <div style="width: 50px; height: 50px; margin-left: 10px;">
+            <img src="${gift.giftImage}" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+    `;
+
+    container.appendChild(giftToast);
+    setTimeout(() => giftToast.remove(), 4000);
+}
