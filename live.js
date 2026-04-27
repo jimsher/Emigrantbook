@@ -25,6 +25,7 @@ async function startLive() {
         
         registerLiveInDatabase(currentLiveChannel, myName);
 
+        // --- ხმის აღდგენის მთავარი ბლოკი ---
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
             if (mediaType === "video") {
@@ -33,7 +34,9 @@ async function startLive() {
                 if (liveTracks.video) liveTracks.video.play("remote-live-video");
                 user.videoTrack.play("guest-remote-video");
             }
-            if (mediaType === "audio") user.audioTrack.play();
+            if (mediaType === "audio") {
+                user.audioTrack.play(); // აქ ირთვება სხვისი ხმა შენთან
+            }
         });
 
         liveClient.on("user-left", (user) => {
@@ -46,7 +49,6 @@ async function startLive() {
         
         liveTracks.video.play("remote-live-video");
         
-        await new Promise(resolve => setTimeout(resolve, 500));
         await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
         listenToLiveChat(currentLiveChannel);
@@ -56,7 +58,7 @@ async function startLive() {
         listenForRequests(currentLiveChannel);
         listenForGuestStatus(currentLiveChannel);
 
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("ჰოსტის შეცდომა:", e); }
 }
 
 function loadActiveLives() {
@@ -129,12 +131,13 @@ async function joinLive(channelName) {
                 } else {
                     updateLiveLayout(true);
                     user.videoTrack.play("guest-remote-video");
-                    
                     const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                     if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
                 }
             }
-            if (mediaType === "audio") user.audioTrack.play();
+            if (mediaType === "audio") {
+                user.audioTrack.play(); // მაყურებელი უსმენს ყველას
+            }
         });
 
         liveClient.on("user-left", (user) => {
@@ -143,7 +146,7 @@ async function joinLive(channelName) {
             }
         });
 
-    } catch (e) { console.log(e); }
+    } catch (e) { console.log("შესვლის შეცდომა:", e); }
 }
 
 function listenToLiveChat(channel) {
@@ -296,7 +299,6 @@ async function startGuestStreaming() {
     try {
         await liveClient.setClientRole("host");
         
-        // აქ შევასწორე: პირდაპირ გლობალურ ცვლადებში ვწერთ
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
         liveTracks.video = await AgoraRTC.createCameraVideoTrack();
         
@@ -400,16 +402,13 @@ function followHost() {
     });
 }
 
-// --- მართვის ფუნქციები (HTML-ისთვის ხელმისაწვდომი) ---
+// --- მართვის ფუნქციები ---
 
 let guestCamEnabled = true;
 let guestMicEnabled = true;
 
 window.toggleGuestMic = async function() {
-    if (!liveTracks.audio) {
-        console.error("მიკროფონის ტრეკი ვერ მოიძებნა!");
-        return;
-    }
+    if (!liveTracks.audio) return;
     const micIcon = document.getElementById('micIcon');
     
     if (guestMicEnabled) {
@@ -424,10 +423,7 @@ window.toggleGuestMic = async function() {
 }
 
 window.toggleGuestCamera = async function() {
-    if (!liveTracks.video) {
-        console.error("ვიდეო ტრეკი ვერ მოიძებნა!");
-        return; 
-    }
+    if (!liveTracks.video) return; 
     const camIcon = document.getElementById('camIcon');
 
     if (guestCamEnabled) {
