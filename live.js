@@ -3,7 +3,7 @@ let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
 let currentHostUid = null; 
 
-// --- საჩუქრების ბიბლიოთეკა (აქ ჩაამატე ახალი საჩუქრები) ---
+// --- საჩუქრების ბიბლიოთეკა ---
 const liveGiftsLibrary = [
     { 
         id: "rose", 
@@ -63,7 +63,7 @@ async function startLive() {
                 window.currentGuest = null;
                 updateLiveLayout(false);
                 
-                // ბაზიდან ვშლით სტუმრის სტატუსს, რომ სხვებთანაც გასწორდეს
+                // 🎯 შესწორება: ბაზის გასუფთავება სტუმრის გასვლისას
                 if (currentLiveChannel) {
                     db.ref(`lives_active/${currentLiveChannel}/guest_status`).remove();
                     db.ref(`live_requests/${currentLiveChannel}`).remove();
@@ -103,13 +103,16 @@ function loadActiveLives() {
         }
         snapshot.forEach((childSnapshot) => {
             const live = childSnapshot.val();
-            const liveCard = `
-            <div class="live-item" onclick="joinLive('${live.channel}')">
-            <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
-             <strong>${live.host}</strong>
-            </div>
-            `;
-            activeLivesContainer.innerHTML += liveCard;
+            // 🎯 დაცვა undefined-ისგან
+            if (live && live.host) {
+                const liveCard = `
+                <div class="live-item" onclick="joinLive('${live.channel}')">
+                <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
+                 <strong>${live.host}</strong>
+                </div>
+                `;
+                activeLivesContainer.innerHTML += liveCard;
+            }
         });
     });
 }
@@ -179,7 +182,7 @@ async function joinLive(channelName) {
                 const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                 if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
             } else {
-                endLive(); 
+                endLive();
             }
         });
 
@@ -192,11 +195,13 @@ function listenToLiveChat(channel) {
     db.ref(`live_chats/${channel}`).off(); 
     db.ref(`live_chats/${channel}`).on('child_added', snap => {
         const msg = snap.val();
-        const div = document.createElement('div');
-        div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
-        div.innerHTML = `<img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%;"><div style="color:white; font-size:13px;"><b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        if (msg && msg.name) {
+            const div = document.createElement('div');
+            div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
+            div.innerHTML = `<img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%;"><div style="color:white; font-size:13px;"><b style="color:var(--gold); font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
     });
 }
 
@@ -226,21 +231,30 @@ function updateLiveLayout(isSplit) {
 }
 
 async function endLive() {
-    if (currentLiveChannel && auth.currentUser.uid === currentHostUid) {
-        db.ref(`live_chats/${currentLiveChannel}`).remove();
-        db.ref(`lives_meta/${currentLiveChannel}`).remove();
-        db.ref(`live_requests/${currentLiveChannel}`).remove();
-        db.ref(`lives_active/${currentLiveChannel}`).remove();
-        db.ref(`live_gifts/${currentLiveChannel}`).remove();
+    if (currentLiveChannel) {
+        // 🎯 წმენდა მხოლოდ ჰოსტისთვის
+        if (auth.currentUser.uid === currentHostUid) {
+            db.ref(`live_chats/${currentLiveChannel}`).remove();
+            db.ref(`lives_meta/${currentLiveChannel}`).remove();
+            db.ref(`live_requests/${currentLiveChannel}`).remove();
+            db.ref(`lives_active/${currentLiveChannel}`).remove();
+            db.ref(`live_gifts/${currentLiveChannel}`).remove();
+        }
+        updateViewerCount(currentLiveChannel, 'leave');
+        const chatBox = document.getElementById('liveChatBox');
+        if (chatBox) chatBox.innerHTML = "";
+        
+        const controls = document.getElementById('guest-cam-controls');
+        if(controls) controls.style.display = 'none';
+        const guestImg = document.getElementById('guest-static-photo');
+        if(guestImg) guestImg.style.display = 'none';
     }
-    
-    if (currentLiveChannel) updateViewerCount(currentLiveChannel, 'leave');
-
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
     await liveClient.leave();
     document.getElementById('liveUI').style.display = 'none';
     currentLiveChannel = null;
+    currentHostUid = null;
 }
 
 function sendLiveHeart() {
@@ -302,8 +316,7 @@ function listenToViewers(channel) {
         const avDiv = document.getElementById('viewerAvatars');
         if(avDiv) {
             avDiv.innerHTML = "";
-            // აქ გასწორდა: თუ მონაცემი undefined-ია, არ გამოაჩინოს
-            Object.values(viewers).forEach(v => {
+            Object.values(viewers).slice(-1).forEach(v => {
                 if (v && v.photo) {
                     avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
                 }
@@ -377,13 +390,9 @@ async function startGuestStreaming() {
 }
 
 function updateViewerCount(channel, action) {
-    if(!auth.currentUser) return;
+    if (!auth.currentUser) return;
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
-    if (action === 'join') {
-        vRef.set({ name: myName, photo: myPhoto });
-    } else {
-        vRef.remove();
-    }
+    action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
 }
 
 function toggleViewerList(show) {
@@ -517,8 +526,11 @@ function listenForActiveLivesStatus() {
     const liveBtn = document.querySelector('.live-nav-button');
     if (!liveBtn) return;
     db.ref('lives_active').on('value', (snapshot) => {
+        // 🎯 ციმციმას გაქრობა
         if (snapshot.exists() && snapshot.numChildren() > 0) {
-            liveBtn.classList.add('is-live');
+            let hasReal = false;
+            snapshot.forEach(c => { if(c.val().host) hasReal = true; });
+            hasReal ? liveBtn.classList.add('is-live') : liveBtn.classList.remove('is-live');
         } else {
             liveBtn.classList.remove('is-live');
         }
@@ -531,28 +543,19 @@ window.sendGift = async function(giftName, giftImg, price) {
     const user = auth.currentUser;
     const hostUid = window.currentLiveHostUid;
 
-    if (!hostUid) return alert("მასპინძლის ID ვერ მოიძებნა!");
-    if (user.uid === hostUid) return alert("საკუთარ თავს ვერ აჩუქებთ!");
+    if (!hostUid || user.uid === hostUid) return;
 
     const userBalanceRef = db.ref(`users/${user.uid}/akho`); 
     
     userBalanceRef.once('value').then(async (snap) => {
         let currentBalance = snap.val() || 0;
-
-        if (currentBalance < price) {
-            alert(`ბალანსი არ არის საკმარისი! გაქვს: ${currentBalance.toFixed(2)} AKHO`);
-            return;
-        }
+        if (currentBalance < price) { alert(`ბალანსი არ გყოფნით!`); return; }
 
         await userBalanceRef.set(currentBalance - price);
         db.ref(`users/${hostUid}/gift_balance`).transaction(c => (c || 0) + price);
 
         db.ref(`received_gifts/${hostUid}`).push({
-            giftUrl: giftImg,
-            price: price,
-            fromName: myName,
-            fromPhoto: myPhoto,
-            timestamp: Date.now()
+            giftUrl: giftImg, price, fromName: myName, fromPhoto: myPhoto, timestamp: Date.now()
         });
 
         const giftData = {
@@ -561,11 +564,8 @@ window.sendGift = async function(giftName, giftImg, price) {
             ts: Date.now()
         };
         db.ref(`live_gifts/${currentLiveChannel}`).push(giftData);
-        
         if (typeof toggleGiftPanel === "function") toggleGiftPanel();
-    }).catch(e => {
-        console.error("Firebase Gift Error:", e);
-    });
+    }).catch(e => console.error(e));
 }
 
 function listenToGifts(channel) {
@@ -583,24 +583,15 @@ function showMainGiftAnimation(gift) {
     if (gift.giftSound) {
         const audio = new Audio(gift.giftSound);
         audio.volume = 0.5;
-        audio.play().catch(e => console.log("Audio play error:", e));
+        audio.play().catch(e => {});
     }
 
     const animDiv = document.createElement('div');
-    animDiv.style = `
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        z-index: 10000; pointer-events: none;
-    `;
-    
-    animDiv.innerHTML = `
-        <img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">
-    `;
-
+    animDiv.style = `position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; pointer-events: none;`;
+    animDiv.innerHTML = `<img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out;">`;
     container.appendChild(animDiv);
-
     setTimeout(() => {
-        animDiv.style.opacity = '0';
-        animDiv.style.transition = 'opacity 1s';
+        animDiv.style.opacity = '0'; animDiv.style.transition = 'opacity 1s';
         setTimeout(() => animDiv.remove(), 1000);
     }, 4000);
 }
