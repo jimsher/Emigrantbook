@@ -3,7 +3,7 @@ let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
 let currentHostUid = null; 
 
-// --- საჩუქრების ბიბლიოთეკა ---
+// --- საჩუქრების ბიბლიოთეკა (აქ ჩაამატე ახალი საჩუქრები) ---
 const liveGiftsLibrary = [
     { 
         id: "rose", 
@@ -57,17 +57,21 @@ async function startLive() {
             }
         });
 
+        // 🎯 აქ გასწორდა: სტუმრის გასვლისას ყველაფერი იწმინდება
         liveClient.on("user-left", (user) => {
-            console.log("მომხმარებელი გავიდა:", user.uid);
             if (window.currentGuest && user.uid === window.currentGuest.uid) {
                 window.currentGuest = null;
                 updateLiveLayout(false);
                 
-                // 🎯 შესწორება: ბაზის გასუფთავება სტუმრის გასვლისას
+                // ბაზიდან წაშლა რომ "სტუმარი" აღარ ეგონოს
                 if (currentLiveChannel) {
                     db.ref(`lives_active/${currentLiveChannel}/guest_status`).remove();
                     db.ref(`live_requests/${currentLiveChannel}`).remove();
                 }
+
+                // ვიდეოს "დახურვა" რომ გაყინული კადრი არ დარჩეს
+                const guestDiv = document.getElementById("guest-remote-video");
+                if (guestDiv) guestDiv.innerHTML = "";
 
                 if (liveTracks.video) liveTracks.video.play("remote-live-video");
             }
@@ -103,7 +107,6 @@ function loadActiveLives() {
         }
         snapshot.forEach((childSnapshot) => {
             const live = childSnapshot.val();
-            // 🎯 დაცვა undefined-ისგან
             if (live && live.host) {
                 const liveCard = `
                 <div class="live-item" onclick="joinLive('${live.channel}')">
@@ -179,6 +182,8 @@ async function joinLive(channelName) {
         liveClient.on("user-left", (user) => {
             if (user.uid != currentHostUid) {
                 updateLiveLayout(false);
+                const guestDiv = document.getElementById("guest-remote-video");
+                if (guestDiv) guestDiv.innerHTML = "";
                 const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                 if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
             } else {
@@ -232,7 +237,6 @@ function updateLiveLayout(isSplit) {
 
 async function endLive() {
     if (currentLiveChannel) {
-        // 🎯 წმენდა მხოლოდ ჰოსტისთვის
         if (auth.currentUser.uid === currentHostUid) {
             db.ref(`live_chats/${currentLiveChannel}`).remove();
             db.ref(`lives_meta/${currentLiveChannel}`).remove();
@@ -526,7 +530,6 @@ function listenForActiveLivesStatus() {
     const liveBtn = document.querySelector('.live-nav-button');
     if (!liveBtn) return;
     db.ref('lives_active').on('value', (snapshot) => {
-        // 🎯 ციმციმას გაქრობა
         if (snapshot.exists() && snapshot.numChildren() > 0) {
             let hasReal = false;
             snapshot.forEach(c => { if(c.val().host) hasReal = true; });
@@ -555,7 +558,11 @@ window.sendGift = async function(giftName, giftImg, price) {
         db.ref(`users/${hostUid}/gift_balance`).transaction(c => (c || 0) + price);
 
         db.ref(`received_gifts/${hostUid}`).push({
-            giftUrl: giftImg, price, fromName: myName, fromPhoto: myPhoto, timestamp: Date.now()
+            giftUrl: giftImg,
+            price: price,
+            fromName: myName,
+            fromPhoto: myPhoto,
+            timestamp: Date.now()
         });
 
         const giftData = {
@@ -583,15 +590,24 @@ function showMainGiftAnimation(gift) {
     if (gift.giftSound) {
         const audio = new Audio(gift.giftSound);
         audio.volume = 0.5;
-        audio.play().catch(e => {});
+        audio.play().catch(e => console.log("Audio play error:", e));
     }
 
     const animDiv = document.createElement('div');
-    animDiv.style = `position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; pointer-events: none;`;
-    animDiv.innerHTML = `<img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out;">`;
+    animDiv.style = `
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        z-index: 10000; pointer-events: none;
+    `;
+    
+    animDiv.innerHTML = `
+        <img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">
+    `;
+
     container.appendChild(animDiv);
+
     setTimeout(() => {
-        animDiv.style.opacity = '0'; animDiv.style.transition = 'opacity 1s';
+        animDiv.style.opacity = '0';
+        animDiv.style.transition = 'opacity 1s';
         setTimeout(() => animDiv.remove(), 1000);
     }, 4000);
 }
