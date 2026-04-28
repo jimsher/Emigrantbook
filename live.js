@@ -57,14 +57,13 @@ async function startLive() {
             }
         });
 
-        // 🎯 აქ გასწორდა: როცა სტუმარი გადის, ლაივი არ იშლება ბაზიდან, მაგრამ იწმინდება Split სტატუსი!
         liveClient.on("user-left", (user) => {
             console.log("მომხმარებელი გავიდა:", user.uid);
             if (window.currentGuest && user.uid === window.currentGuest.uid) {
                 window.currentGuest = null;
                 updateLiveLayout(false);
                 
-                // ბაზის გასუფთავება, რომ შემდეგ შემოსვლაზე Split აღარ დაგხვდეს
+                // ბაზიდან ვშლით სტუმრის სტატუსს, რომ სხვებთანაც გასწორდეს
                 if (currentLiveChannel) {
                     db.ref(`lives_active/${currentLiveChannel}/guest_status`).remove();
                     db.ref(`live_requests/${currentLiveChannel}`).remove();
@@ -174,7 +173,6 @@ async function joinLive(channelName) {
             if (mediaType === "audio") user.audioTrack.play();
         });
 
-        // 🎯 აქაც გასწორდა მაყურებლისთვის: რომ სტუმრის გასვლამ ჰოსტი არ გათიშოს
         liveClient.on("user-left", (user) => {
             if (user.uid != currentHostUid) {
                 updateLiveLayout(false);
@@ -228,7 +226,6 @@ function updateLiveLayout(isSplit) {
 }
 
 async function endLive() {
-    // 🎯 მხოლოდ ჰოსტს შეუძლია ბაზიდან ლაივის სრული წაშლა
     if (currentLiveChannel && auth.currentUser.uid === currentHostUid) {
         db.ref(`live_chats/${currentLiveChannel}`).remove();
         db.ref(`lives_meta/${currentLiveChannel}`).remove();
@@ -305,8 +302,11 @@ function listenToViewers(channel) {
         const avDiv = document.getElementById('viewerAvatars');
         if(avDiv) {
             avDiv.innerHTML = "";
-            Object.values(viewers).slice(-1).forEach(v => {
-                avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
+            // აქ გასწორდა: თუ მონაცემი undefined-ია, არ გამოაჩინოს
+            Object.values(viewers).forEach(v => {
+                if (v && v.photo) {
+                    avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
+                }
             });
         }
     });
@@ -377,8 +377,13 @@ async function startGuestStreaming() {
 }
 
 function updateViewerCount(channel, action) {
+    if(!auth.currentUser) return;
     const vRef = db.ref(`lives_meta/${channel}/viewers/${auth.currentUser.uid}`);
-    action === 'join' ? vRef.set({ name: myName, photo: myPhoto }) : vRef.remove();
+    if (action === 'join') {
+        vRef.set({ name: myName, photo: myPhoto });
+    } else {
+        vRef.remove();
+    }
 }
 
 function toggleViewerList(show) {
@@ -401,10 +406,12 @@ function renderFullViewerList() {
         if (!container) return;
         container.innerHTML = "";
         Object.entries(viewers).forEach(([uid, v]) => {
-            const row = document.createElement('div');
-            row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
-            row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
-            container.appendChild(row);
+            if (v && v.name) {
+                const row = document.createElement('div');
+                row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
+                row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
+                container.appendChild(row);
+            }
         });
     });
 }
@@ -468,10 +475,7 @@ function followHost() {
 let guestCamEnabled = true;
 
 window.toggleGuestCamera = async function() {
-    if (!liveTracks.video) {
-        console.error("ვიდეო ტრეკი არ არსებობს!");
-        return; 
-    }
+    if (!liveTracks.video) return; 
     const camIcon = document.getElementById('camIcon');
     if (guestCamEnabled) {
         await liveTracks.video.setEnabled(false);
