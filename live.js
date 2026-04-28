@@ -18,7 +18,7 @@ const liveGiftsLibrary = [
         price: 1, 
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
         sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
-    }
+    },
     { 
         id: "rose", 
         name: "Rose", 
