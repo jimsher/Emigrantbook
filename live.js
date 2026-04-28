@@ -574,6 +574,13 @@ function showMainGiftAnimation(gift) {
     const container = document.getElementById('liveUI');
     if (!container) return;
 
+    // 1. ხმის გაშვება ყველასთვის
+    if (gift.giftSound) {
+        const audio = new Audio(gift.giftSound);
+        audio.volume = 0.5; // ხმის სიმძლავრე
+        audio.play().catch(e => console.log("Audio play blocked or error:", e));
+    }
+    // 2. ან8მაციის ჩვენება
     const animDiv = document.createElement('div');
     animDiv.style = `
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
