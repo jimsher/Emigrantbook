@@ -16,7 +16,7 @@ const liveGiftsLibrary = [
         name: "Rose", 
         price: 1, 
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
-        sound: "assets/sounds/gift_alert.mp3" // <-- აქ ჩაწერე შენი ფაილის ზუსტი გზა
+        sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" // <-- აქ ჩაწერე შენი ფაილის ზუსტი გზა
     },
     // აქ დაამატებ სხვებსაც იმავე სტრუქტურით
 ];
