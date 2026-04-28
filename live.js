@@ -549,8 +549,10 @@ window.sendGift = async function(giftName, giftImg, price) {
 
         // 4. გავაგზავნოთ სიგნალი ლაივში
         const giftData = {
-            giftImage: giftImg,
-            ts: Date.now()
+        giftImage: giftImg,
+        giftSound: liveGiftsLibrary.find(g => g.img === giftImg)?.sound || "", // პოულობს შესაბამის ხმას
+        ts: Date.now()
+            
         };
         db.ref(`live_gifts/${currentLiveChannel}`).push(giftData);
         
