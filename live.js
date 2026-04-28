@@ -57,12 +57,19 @@ async function startLive() {
             }
         });
 
-        // 🎯 აქ გასწორდა: როცა სტუმარი გადის, ლაივი არ იშლება ბაზიდან!
+        // 🎯 აქ გასწორდა: როცა სტუმარი გადის, ლაივი არ იშლება ბაზიდან, მაგრამ იწმინდება Split სტატუსი!
         liveClient.on("user-left", (user) => {
             console.log("მომხმარებელი გავიდა:", user.uid);
             if (window.currentGuest && user.uid === window.currentGuest.uid) {
                 window.currentGuest = null;
                 updateLiveLayout(false);
+                
+                // ბაზის გასუფთავება, რომ შემდეგ შემოსვლაზე Split აღარ დაგხვდეს
+                if (currentLiveChannel) {
+                    db.ref(`lives_active/${currentLiveChannel}/guest_status`).remove();
+                    db.ref(`live_requests/${currentLiveChannel}`).remove();
+                }
+
                 if (liveTracks.video) liveTracks.video.play("remote-live-video");
             }
         });
@@ -221,7 +228,7 @@ function updateLiveLayout(isSplit) {
 }
 
 async function endLive() {
-    // 🎯 მხოლოდ ჰოსტს შეუძლია ბაზიდან ლაივის წაშლა!
+    // 🎯 მხოლოდ ჰოსტს შეუძლია ბაზიდან ლაივის სრული წაშლა
     if (currentLiveChannel && auth.currentUser.uid === currentHostUid) {
         db.ref(`live_chats/${currentLiveChannel}`).remove();
         db.ref(`lives_meta/${currentLiveChannel}`).remove();
