@@ -57,8 +57,9 @@ async function startLive() {
             }
         });
 
+        // 🎯 აქ გასწორდა: როცა სტუმარი გადის, ლაივი არ იშლება ბაზიდან!
         liveClient.on("user-left", (user) => {
-            // თუ გადის სტუმარი, ჰოსტი რჩება სრულ ეკრანზე
+            console.log("მომხმარებელი გავიდა:", user.uid);
             if (window.currentGuest && user.uid === window.currentGuest.uid) {
                 window.currentGuest = null;
                 updateLiveLayout(false);
@@ -166,15 +167,14 @@ async function joinLive(channelName) {
             if (mediaType === "audio") user.audioTrack.play();
         });
 
+        // 🎯 აქაც გასწორდა მაყურებლისთვის: რომ სტუმრის გასვლამ ჰოსტი არ გათიშოს
         liveClient.on("user-left", (user) => {
-            // თუ გადის სტუმარი (არა ჰოსტი), ლაივი გრძელდება
             if (user.uid != currentHostUid) {
                 updateLiveLayout(false);
                 const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                 if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
             } else {
-                // თუ ჰოსტი გავიდა, მაყურებელსაც ეთიშება
-                endLive();
+                endLive(); 
             }
         });
 
@@ -221,20 +221,17 @@ function updateLiveLayout(isSplit) {
 }
 
 async function endLive() {
-    if (currentLiveChannel) {
-        updateViewerCount(currentLiveChannel, 'leave');
+    // 🎯 მხოლოდ ჰოსტს შეუძლია ბაზიდან ლაივის წაშლა!
+    if (currentLiveChannel && auth.currentUser.uid === currentHostUid) {
         db.ref(`live_chats/${currentLiveChannel}`).remove();
         db.ref(`lives_meta/${currentLiveChannel}`).remove();
         db.ref(`live_requests/${currentLiveChannel}`).remove();
         db.ref(`lives_active/${currentLiveChannel}`).remove();
-        const chatBox = document.getElementById('liveChatBox');
-        if (chatBox) chatBox.innerHTML = "";
-        
-        const controls = document.getElementById('guest-cam-controls');
-        if(controls) controls.style.display = 'none';
-        const guestImg = document.getElementById('guest-static-photo');
-        if(guestImg) guestImg.style.display = 'none';
+        db.ref(`live_gifts/${currentLiveChannel}`).remove();
     }
+    
+    if (currentLiveChannel) updateViewerCount(currentLiveChannel, 'leave');
+
     if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
     if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
     await liveClient.leave();
