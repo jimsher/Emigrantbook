@@ -10,16 +10,15 @@ const liveGiftsLibrary = [
         name: "Rose", 
         price: 1, 
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif", 
-        sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" // <-- აქ ჩაწერე შენი ფაილის ზუსტი გზა
+        sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
     },
     { 
         id: "rose", 
         name: "Rose", 
         price: 1, 
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
-        sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" // <-- აქ ჩაწერე შენი ფაილის ზუსტი გზა
-    },
-    // აქ დაამატებ სხვებსაც იმავე სტრუქტურით
+        sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+    }
 ];
 
 function startLiveFunc() { toggleSideMenu(false); startLive(); }
@@ -30,7 +29,6 @@ async function startLive() {
     
     currentLiveChannel = "live_" + auth.currentUser.uid; 
     currentHostUid = auth.currentUser.uid;
-    // ინიციალიზაცია გლობალური ცვლადისთვის
     window.currentLiveHostUid = auth.currentUser.uid;
 
     document.getElementById('liveUI').style.display = 'flex';
@@ -55,13 +53,17 @@ async function startLive() {
                 user.videoTrack.play("guest-remote-video");
             }
             if (mediaType === "audio") {
-                user.audioTrack.play(); // ხმის აღდგენა
+                user.audioTrack.play();
             }
         });
 
         liveClient.on("user-left", (user) => {
-            updateLiveLayout(false);
-            if (liveTracks.video) liveTracks.video.play("remote-live-video");
+            // თუ გადის სტუმარი, ჰოსტი რჩება სრულ ეკრანზე
+            if (window.currentGuest && user.uid === window.currentGuest.uid) {
+                window.currentGuest = null;
+                updateLiveLayout(false);
+                if (liveTracks.video) liveTracks.video.play("remote-live-video");
+            }
         });
         
         liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
@@ -78,7 +80,7 @@ async function startLive() {
         listenToLikes(currentLiveChannel);
         listenForRequests(currentLiveChannel);
         listenForGuestStatus(currentLiveChannel);
-        listenToGifts(currentLiveChannel); // საჩუქრების მოსმენა
+        listenToGifts(currentLiveChannel);
 
     } catch (e) { console.error(e); }
 }
@@ -117,7 +119,7 @@ async function joinLive(channelName) {
         const liveData = snap.val();
         if(liveData) {
             currentHostUid = liveData.uid || liveData.hostId;
-            window.currentLiveHostUid = currentHostUid; // მასპინძლის ID-ს შენახვა საჩუქრებისთვის
+            window.currentLiveHostUid = currentHostUid;
             
             document.getElementById('liveHostName').innerText = liveData.host;
             document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
@@ -146,7 +148,7 @@ async function joinLive(channelName) {
         listenForResponse(channelName);
         listenToLiveChat(channelName);
         listenForGuestStatus(channelName);
-        listenToGifts(channelName); // საჩუქრების მოსმენა
+        listenToGifts(channelName);
 
         liveClient.on("user-published", async (user, mediaType) => {
             await liveClient.subscribe(user, mediaType);
@@ -165,8 +167,14 @@ async function joinLive(channelName) {
         });
 
         liveClient.on("user-left", (user) => {
+            // თუ გადის სტუმარი (არა ჰოსტი), ლაივი გრძელდება
             if (user.uid != currentHostUid) {
                 updateLiveLayout(false);
+                const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
+                if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
+            } else {
+                // თუ ჰოსტი გავიდა, მაყურებელსაც ეთიშება
+                endLive();
             }
         });
 
@@ -251,8 +259,6 @@ function animateHeart() {
     setTimeout(() => heart.remove(), 1500);
 }
 
-// --- განახლებული საჩუქრების პანელის ლოგიკა ---
-
 function renderLiveGifts() {
     const grid = document.getElementById('giftGrid');
     if (!grid) return;
@@ -279,7 +285,7 @@ function toggleGiftPanel() {
     if(p) {
         if (p.style.display === 'none' || p.style.display === '') {
             p.style.display = 'block';
-            renderLiveGifts(); // ყოველ გახსნაზე ვხატავთ სიას
+            renderLiveGifts();
         } else {
             p.style.display = 'none';
         }
@@ -455,7 +461,6 @@ function followHost() {
     });
 }
 
-// --- გლობალური მართვის ფუნქციები ---
 let guestCamEnabled = true;
 
 window.toggleGuestCamera = async function() {
@@ -513,16 +518,14 @@ function listenForActiveLivesStatus() {
 }
 listenForActiveLivesStatus();
 
-// --- საჩუქრების ლოგიკა (TikTok სტილი + ბალანსი + საფულე) ---
 window.sendGift = async function(giftName, giftImg, price) {
     if (!currentLiveChannel) return;
     const user = auth.currentUser;
-    const hostUid = window.currentLiveHostUid; // მასპინძლის ID
+    const hostUid = window.currentLiveHostUid;
 
     if (!hostUid) return alert("მასპინძლის ID ვერ მოიძებნა!");
     if (user.uid === hostUid) return alert("საკუთარ თავს ვერ აჩუქებთ!");
 
-    // 💰 მისამართი: შენს ბაზაში ფულს ჰქვია "akho"
     const userBalanceRef = db.ref(`users/${user.uid}/akho`); 
     
     userBalanceRef.once('value').then(async (snap) => {
@@ -533,13 +536,9 @@ window.sendGift = async function(giftName, giftImg, price) {
             return;
         }
 
-        // 1. ჩამოვაკლოთ გამგზავნს (akho)
         await userBalanceRef.set(currentBalance - price);
-
-        // 2. დავუმატოთ მასპინძელს საფულეში (gift_balance)
         db.ref(`users/${hostUid}/gift_balance`).transaction(c => (c || 0) + price);
 
-        // 3. ჩავწეროთ კოლექციაში
         db.ref(`received_gifts/${hostUid}`).push({
             giftUrl: giftImg,
             price: price,
@@ -548,12 +547,10 @@ window.sendGift = async function(giftName, giftImg, price) {
             timestamp: Date.now()
         });
 
-        // 4. გავაგზავნოთ სიგნალი ლაივში
         const giftData = {
-        giftImage: giftImg,
-        giftSound: liveGiftsLibrary.find(g => g.img === giftImg)?.sound || "", // პოულობს შესაბამის ხმას
-        ts: Date.now()
-            
+            giftImage: giftImg,
+            giftSound: liveGiftsLibrary.find(g => g.img === giftImg)?.sound || "",
+            ts: Date.now()
         };
         db.ref(`live_gifts/${currentLiveChannel}`).push(giftData);
         
@@ -575,13 +572,12 @@ function showMainGiftAnimation(gift) {
     const container = document.getElementById('liveUI');
     if (!container) return;
 
-    // 1. ხმის გაშვება ყველასთვის
     if (gift.giftSound) {
         const audio = new Audio(gift.giftSound);
-        audio.volume = 0.5; // ხმის სიმძლავრე
-        audio.play().catch(e => console.log("Audio play blocked or error:", e));
+        audio.volume = 0.5;
+        audio.play().catch(e => console.log("Audio play error:", e));
     }
-    // 2. ან8მაციის ჩვენება
+
     const animDiv = document.createElement('div');
     animDiv.style = `
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -593,10 +589,6 @@ function showMainGiftAnimation(gift) {
     `;
 
     container.appendChild(animDiv);
-
-    const giftSound = new Audio('https://www.myinstants.com/media/sounds/tiktok-gift.mp3');
-    giftSound.volume = 0.4;
-    giftSound.play().catch(e => {});
 
     setTimeout(() => {
         animDiv.style.opacity = '0';
