@@ -3,7 +3,7 @@ let liveTracks = { video: null, audio: null };
 let currentLiveChannel = null;
 let currentHostUid = null; 
 
-// --- საჩუქრების ბიბლიოთეკა (აქ ჩაამატე ახალი საჩუქრები) ---
+// --- საჩუქრების ბიბლიოთეკა ---
 const liveGiftsLibrary = [
     { 
         id: "rose", 
@@ -57,19 +57,17 @@ async function startLive() {
             }
         });
 
-        // 🎯 აქ გასწორდა: სტუმრის გასვლისას ყველაფერი იწმინდება
         liveClient.on("user-left", (user) => {
             if (window.currentGuest && user.uid === window.currentGuest.uid) {
                 window.currentGuest = null;
                 updateLiveLayout(false);
                 
-                // ბაზიდან წაშლა რომ "სტუმარი" აღარ ეგონოს
+                // ბაზიდან წაშლა რომ სტუმარი აღარ ეგონოს
                 if (currentLiveChannel) {
                     db.ref(`lives_active/${currentLiveChannel}/guest_status`).remove();
                     db.ref(`live_requests/${currentLiveChannel}`).remove();
                 }
 
-                // ვიდეოს "დახურვა" რომ გაყინული კადრი არ დარჩეს
                 const guestDiv = document.getElementById("guest-remote-video");
                 if (guestDiv) guestDiv.innerHTML = "";
 
@@ -126,6 +124,12 @@ async function joinLive(channelName) {
     currentLiveChannel = channelName;
 
     document.getElementById('liveUI').style.display = 'flex';
+    
+    // 🎯 შესწორება: შემოსვლისას ვასუფთავებთ სტუმრის ფანჯარას და ვაბრუნებთ ჰოსტს სრულ ეკრანზე
+    updateLiveLayout(false);
+    const guestDiv = document.getElementById("guest-remote-video");
+    if (guestDiv) guestDiv.innerHTML = "";
+
     if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
 
     db.ref(`lives_active/${channelName}`).once('value', snap => {
@@ -182,8 +186,8 @@ async function joinLive(channelName) {
         liveClient.on("user-left", (user) => {
             if (user.uid != currentHostUid) {
                 updateLiveLayout(false);
-                const guestDiv = document.getElementById("guest-remote-video");
-                if (guestDiv) guestDiv.innerHTML = "";
+                const guestBox = document.getElementById("guest-remote-video");
+                if (guestBox) guestBox.innerHTML = "";
                 const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
                 if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
             } else {
