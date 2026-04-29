@@ -5332,58 +5332,59 @@ async function renderSongs() {
 
 
 // 1. მუსიკის არჩევის ფუნქცია
+// 1. მუსიკის დაკვრა
 function pickSong(url, title) {
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
-        currentBackgroundMusic.src = "";
     }
 
+    // პირდაპირ ვქმნით და ვრთავთ
     currentBackgroundMusic = new Audio(url);
     currentBackgroundMusic.crossOrigin = "anonymous";
-    
-    // ეგრევე ვრთავთ, ყოველგვარი ზედმეტი ტექსტების გარეშე
     currentBackgroundMusic.play();
 
+    // ღილაკზე სახელის შეცვლა
     const label = document.getElementById('selected-music-name');
     if (label) label.innerText = title;
 
     closeMusicPicker();
 }
 
-// 2. ბაზიდან წამოღება (onclick-ის გარეშე, რომ ლინკი არ გაფუჭდეს)
+// 2. ბაზიდან წამოღება და გამოჩენა
 async function loadMusicFromDB() {
     const list = document.getElementById('music-list');
     if (!list) return;
-    list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება...</p>";
+    list.innerHTML = "ჩაიტვირთა...";
 
     try {
         const querySnapshot = await db.collection("music").get();
-        list.innerHTML = ""; // ვასუფთავებთ
+        list.innerHTML = ""; 
 
         querySnapshot.forEach((doc) => {
             const s = doc.data();
-            
-            // ვქმნით ელემენტს ხელით, რომ URL უსაფრთხოდ გადაეცეს
+            const musicName = s.name || s.title || "Unknown";
+            const musicUrl = s.url;
+
+            // ვქმნით ელემენტს
             const row = document.createElement('div');
             row.className = "music-item-row";
             row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
             row.innerHTML = `
-                <img src="${s.img || 'https://via.placeholder.com/50'}" class="music-thumb" style="width:50px; height:50px; border-radius:4px; margin-right:15px;">
+                <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px;">
                 <div style="flex:1;">
-                    <div style="font-weight:500; color:white;">${s.name || s.title}</div>
+                    <div style="font-weight:500; color:white;">${musicName}</div>
                     <div style="color:#888; font-size:12px;">${s.artist || 'Artist'}</div>
                 </div>
             `;
-            
-            // აქ ვუკავშირებთ მუსიკას დაჭერაზე
-            row.addEventListener('click', () => {
-                pickSong(s.url, s.name || s.title);
-            });
+
+            // პირდაპირ ვაბამთ ფუნქციას ელემენტზე
+            row.onclick = function() {
+                pickSong(musicUrl, musicName);
+            };
 
             list.appendChild(row);
         });
-
     } catch (error) {
-        list.innerHTML = "<p style='color:red;'>ბაზის შეცდომა</p>";
+        console.error(error);
     }
 }
