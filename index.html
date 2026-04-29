@@ -44,60 +44,53 @@
 
  
  <style>
+/* 1. ზედა "Add Sound" ღილაკი */
+#music-select-btn {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 2. მთავარი მუსიკის პანელი (Bottom Sheet) */
 #music-picker-modal {
     position: fixed !important;
-    /* ეკრანის ქვემოდან 110%-ით დაბლაა, რომ საერთოდ არ ჩანდეს */
-    bottom: -110% !important; 
+    bottom: -110% !important; /* თავიდან დამალულია ეკრანის ქვემოთ */
     left: 0;
     width: 100%;
-    
-    /* 🚀 სიმაღლე: 55vh ნიშნავს ეკრანის სიმაღლის 55%-ს (ნახევარზე ოდნავ მეტი) */
-    height: 55vh !important; 
+    height: 55vh !important; /* TikTok-ის სიმაღლე: ნახევარ ეკრანზე ოდნავ მეტი */
     max-height: 55vh !important;
-
     background-color: #121212;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    z-index: 2147483647 !important;
+    border-radius: 20px 20px 0 0;
+    z-index: 2147483647 !important; /* ყველაზე მაღალი პრიორიტეტი */
     transition: bottom 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-    overflow: hidden; /* რომ შიგთავსი გარეთ არ გამოვიდეს */
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+    color: white;
+    overflow: hidden;
 }
 
-/* როცა ამოიწევა */
+/* პანელის გამოჩენის კლასი (JS-ით სამართავად) */
 #music-picker-modal.show {
     bottom: 0 !important;
 }
 
-/* სქროლი რომ მხოლოდ სიმღერების სიაზე მუშაობდეს */
-#music-list-container {
-    flex: 1;
-    overflow-y: auto; 
-    padding: 10px 20px 30px 20px; /* ქვემოთ პატარა ადგილი დავუტოვოთ */
-}
-
-  
-#music-picker-modal {
-    position: fixed !important;
-    bottom: -100%; /* დამალულია ქვემოთ */
-    left: 0;
-    width: 100%;
-    height: 60vh;
-    background-color: #121212;
-    border-radius: 20px 20px 0 0;
-    z-index: 2147483647 !important; /* ყველაზე მაღლა */
-    transition: bottom 0.3s ease-out;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-}
-
-
-
+/* 3. შიდა კონტენტი და ელემენტები */
 .modal-content-wrapper {
-    padding: 20px;
+    padding: 15px 20px;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -118,64 +111,11 @@
     margin-bottom: 20px;
 }
 
+/* 4. სიმღერების სია და სქროლი */
 #music-list-container {
     flex: 1;
-    overflow-y: auto;
-}
-
-  
-  
-/* მუსიკის დიზაინი */
-/* ზედა ღილაკი */
-#music-select-btn {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 100;
-    cursor: pointer;
-    backdrop-filter: blur(5px);
-}
-
-/* ქვედა ჩარჩო (Modal) */
-#music-picker-modal {
-    position: fixed;
-    bottom: -100%; /* თავიდან დამალულია */
-    left: 0;
-    width: 100%;
-    height: 70%;
-    background: #121212;
-    border-radius: 15px 15px 0 0;
-    transition: bottom 0.3s ease-out;
-    z-index: 2000;
-    color: white;
-}
-
-#music-picker-modal.open {
-    bottom: 0;
-}
-
-.music-picker-content {
-    padding: 15px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.drag-handle {
-    width: 40px;
-    height: 4px;
-    background: #333;
-    border-radius: 2px;
-    margin: 0 auto 10px;
+    overflow-y: auto; /* სქროლი მხოლოდ აქ მუშაობს */
+    padding-bottom: 20px;
 }
 
 .music-item {
@@ -186,16 +126,30 @@
     cursor: pointer;
 }
 
+.music-item:active {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
 .music-img {
     width: 50px;
     height: 50px;
-    border-radius: 5px;
+    border-radius: 6px;
     margin-right: 15px;
     object-fit: cover;
+    background: #222;
 }
 
-.music-info h4 { margin: 0; font-size: 15px; }
-.music-info p { margin: 0; font-size: 13px; color: #888; }
+.music-info h4 { 
+    margin: 0; 
+    font-size: 15px; 
+    font-weight: 600;
+}
+
+.music-info p { 
+    margin: 2px 0 0 0; 
+    font-size: 13px; 
+    color: #888; 
+}
 /* აქ მთავრდება*/
 
 
