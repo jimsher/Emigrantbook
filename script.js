@@ -5252,6 +5252,26 @@ function confirmDeleteClip() {
 
 
 // ვიდეოზე დასადები მუსიკის ლოგიკა
+// 1. აქ განსაზღვრავ სიმღერებს
+const myMusicLibrary = [
+    { 
+        name: "Let me go", 
+        artist: "Vailedmoon music", 
+        url: "https://შენი_ლინკი_1.mp3", 
+        img: "https://შენი_სურათი_1.jpg",
+        duration: "2:52"
+    },
+    { 
+        name: "Синий туман", 
+        artist: "Leonid", 
+        url: "https://შენი_ლინკი_2.mp3", 
+        img: "https://შენი_სურათი_2.jpg",
+        duration: "2:43"
+    }
+];
+
+
+
 // სიმღერების ბაზა (აქ შეგიძლია შენი Firebase-იდან წამოღებული მონაცემები ჩასვა)
 // ვიდეოზე დასადები მუსიკის ლოგიკა
 let currentBackgroundMusic = null; 
