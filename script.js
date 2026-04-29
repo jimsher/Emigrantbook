@@ -5307,3 +5307,30 @@ function pickSong(url, title) {
     closeMusicPicker();
 }
 // აქ მთავრდება
+
+async function loadMusicFromDB() {
+    const list = document.getElementById('music-list');
+    list.innerHTML = "იტვირთება...";
+
+    try {
+        // აქ ვგულისხმობ რომ Firestore-ში გაქვს კოლექცია "musics"
+        const querySnapshot = await db.collection("musics").get();
+        let html = "";
+        
+        querySnapshot.forEach((doc) => {
+            const s = doc.data();
+            html += `
+                <div class="music-item-row" onclick="pickSong('${s.url}', '${s.name}')">
+                    <img src="${s.img || 'default.jpg'}" class="music-thumb">
+                    <div style="flex:1;">
+                        <div style="font-weight:500;">${s.name}</div>
+                        <div style="color:#888; font-size:12px;">${s.artist}</div>
+                    </div>
+                </div>
+            `;
+        });
+        list.innerHTML = html;
+    } catch (error) {
+        console.error("მუსიკის ჩატვირთვის შეცდომა:", error);
+    }
+}
