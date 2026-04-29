@@ -5238,3 +5238,60 @@ function confirmDeleteClip() {
     }
     closeDeleteModal();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ვიდეოზე დასადები მუსიკის ლოგიკა
+// სიმღერების ბაზა (აქ შეგიძლია შენი Firebase-იდან წამოღებული მონაცემები ჩასვა)
+const songs = [
+    { id: 1, title: "Let me go", artist: "Vailedmoon music", url: "url_to_mp3", img: "url_to_img" },
+    { id: 2, title: "Синий туман", artist: "Leonid", url: "url_to_mp3", img: "url_to_img" }
+];
+
+function openMusicPicker() {
+    document.getElementById('music-picker-modal').classList.add('open');
+    renderMusicList();
+}
+
+function closeMusicPicker() {
+    document.getElementById('music-picker-modal').classList.remove('open');
+}
+
+function renderMusicList() {
+    const list = document.getElementById('music-list');
+    list.innerHTML = songs.map(song => `
+        <div class="music-item" onclick="pickSong('${song.url}', '${song.title}')">
+            <img src="${song.img}" class="music-img">
+            <div class="music-info">
+                <h4>${song.title}</h4>
+                <p>${song.artist}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function pickSong(url, title) {
+    if (currentBackgroundMusic) {
+        currentBackgroundMusic.pause();
+    }
+    
+    // ვქმნით ახალ Audio ობიექტს
+    currentBackgroundMusic = new Audio(url);
+    currentBackgroundMusic.crossOrigin = "anonymous";
+    
+    // ზედა ღილაკზე ტექსტის შეცვლა
+    document.getElementById('selected-music-name').innerText = title;
+    
+    closeMusicPicker();
+}
+// აქ მთავრდება
