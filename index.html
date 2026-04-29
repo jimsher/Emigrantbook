@@ -44,58 +44,59 @@
 
  
  <style>
-/* 📦 მუსიკის ასარჩევი ჩარჩო (შესწორებული) */
-#music-picker-modal {
-    position: fixed;
-    bottom: -100%; 
+/* მუსიკის პანელის სტილი */
+.tiktok-music-modal {
+    position: fixed !important;
+    bottom: -100%;
     left: 0;
     width: 100%;
-    /* სიმაღლე შევზღუდოთ, რომ ნახევარ ეკრანზე ამოვიდეს (როგორც ტიკტოკზეა) */
-    height: 60vh; 
-    background: #121212;
-    border-radius: 20px 20px 0 0;
+    height: 60vh;
+    background-color: #121212;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 2147483647 !important; /* მაქსიმალური სიმაღლე */
     transition: bottom 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    
-    /* 🚀 ყველაზე მაღალი z-index, რომ გადაღების ღილაკებს გადაეფაროს */
-    z-index: 999999 !important; 
-    
-    color: white;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-    overflow: hidden;
-}
-
-#music-picker-modal.open {
-    bottom: 0;
-}
-
-.music-picker-content {
-    padding: 15px;
-    height: 100%;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+    color: white;
+    font-family: sans-serif;
 }
 
-/* რომ მუსიკის სიაში სქროლი მუშაობდეს და გარეთ არ გავარდეს */
-.music-list {
+.tiktok-music-modal.show {
+    bottom: 0 !important;
+}
+
+.modal-header {
+    padding: 15px;
+    text-align: center;
+}
+
+.modal-drag-line {
+    width: 40px;
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    margin: 0 auto 10px;
+}
+
+.modal-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.close-music-modal {
+    font-size: 30px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+#music-list-container {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 20px;
-}
-
-/* 🔙 უკანა ფონი (Overlay), რომელიც მუქდება როცა მუსიკებს ვირჩევთ */
-.picker-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    z-index: 999998; /* ჩარჩოზე 1-ით ნაკლები */
-}
-
-.picker-overlay.show {
-    display: block;
+    padding: 10px 20px;
 }
 
   
@@ -3472,17 +3473,6 @@ div[style*="overflow-x:auto"] {
 
 
  
-<div id="music-picker-modal" style="position: fixed; bottom: -100%; left: 0; width: 100%; height: 60vh; background: #121212; border-radius: 20px 20px 0 0; transition: bottom 0.3s ease; z-index: 999999999 !important; color: white; display: flex; flex-direction: column;">
-    <div style="padding: 15px; height: 100%; display: flex; flex-direction: column;">
-        <div style="width: 40px; height: 4px; background: #333; border-radius: 2px; margin: 0 auto 10px;"></div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0;">Sounds</h3>
-            <span onclick="closeMusicPicker()" style="font-size: 30px; cursor: pointer; padding: 0 10px;">&times;</span>
-        </div>
-        
-        <div id="music-list" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
-            </div>
-    </div>
-</div>
+
  </body>
 </html>
