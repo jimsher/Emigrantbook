@@ -3840,70 +3840,71 @@ function setCountdown(seconds, element) {
     document.getElementById('timerDropdown').style.display = "none";
 }
 
+
 // მთავარი ფუნქცია
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
-
     const deleteBtn = document.getElementById('deleteLastClipBtn');
-    if (deleteBtn) {
-        deleteBtn.style.display = 'flex';
-    }
-  
-    // ვამოწმებთ რეალურად იწერს თუ არა ახლა
+    
+    if (deleteBtn) deleteBtn.style.display = 'flex';
+
     const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
 
-    // ტაიმერის ლოგიკა - ეშვება მხოლოდ მაშინ, თუ ჩაწერა ჯერ არ დაწყებულა
     if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
         isCounting = true;
         const display = document.getElementById('countdownDisplay');
         let timeLeft = countdownTime;
-
-        if (display) {
-            display.style.display = "block";
-            display.innerText = timeLeft;
-        }
-
+        if (display) { display.style.display = "block"; display.innerText = timeLeft; }
         let timerInterval = setInterval(() => {
             timeLeft--;
-            if (timeLeft > 0) {
-                if (display) display.innerText = timeLeft;
-            } else {
+            if (timeLeft > 0) { if (display) display.innerText = timeLeft; } 
+            else {
                 clearInterval(timerInterval);
                 if (display) display.style.display = "none";
                 isCounting = false;
-                
-                // კრიტიკული მომენტი: ტაიმერს დროებით ვთიშავთ, რომ toggleRecording-მა ჩაწერა დაიწყოს
                 const currentSetting = countdownTime;
                 countdownTime = 0; 
                 toggleRecording(); 
-                countdownTime = currentSetting; // ვაბრუნებთ მნიშვნელობას შემდეგი ჯერისთვის
+                countdownTime = currentSetting; 
             }
         }, 1000);
         return; 
     }
 
-    // ჩვეულებრივი ჩაწერის ლოგიკა
     try {
         if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
-            globalChunks = [];
-            
-            // 🚀 ოპტიმიზაცია: ვზღუდავთ ბიტრეიტს 1.2 Mbps-მდე ფაილის შესაკუმშად
-            const options = {
-                mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
-                videoBitsPerSecond: 1200000,      // 1.2 Mbps - ძლიერი შეკუმშვა პატარა ზომისთვის
-                audioBitsPerSecond: 64000         // სუფთა ხმა მცირე მოცულობით
-            };
+            // 🎨 CANVAS-ის შექმნა, რომელიც ფიზიკურად "ხატავს" ვიდეოს ფილტრით
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth || 720;
+            canvas.height = video.videoHeight || 1280;
 
-            // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options.mimeType = 'video/mp4';
+            const currentFilter = getComputedStyle(video).filter;
+
+            function drawFrame() {
+                if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
+                    ctx.filter = currentFilter; // აქ ედება ფილტრი თითოეულ კადრს
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    requestAnimationFrame(drawFrame);
+                }
             }
 
-            globalMediaRecorder = new MediaRecorder(window.videoStream, options);
+            // 🚀 კრიტიკული ხაზი: სტრიმს ვიღებთ Canvas-იდან და არა პირდაპირ კამერიდან!
+            const filteredStream = canvas.captureStream(30); 
+            window.videoStream.getAudioTracks().forEach(track => filteredStream.addTrack(track));
+
+            globalChunks = [];
+            const options = {
+                mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8' : 'video/mp4',
+                videoBitsPerSecond: 1500000 
+            };
+
+            // ჩაწერა ხდება ფილტრიანი სტრიმისგან
+            globalMediaRecorder = new MediaRecorder(filteredStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) globalChunks.push(e.data);
@@ -3922,11 +3923,11 @@ async function toggleRecording() {
                 video.style.transform = "scaleX(1)";
                 video.muted = false;
                 video.play();
-
                 if (typeof handleVideoSelect === "function") handleVideoSelect(videoInput);
             };
 
             globalMediaRecorder.start();
+            drawFrame(); // ვიწყებთ ხატვას Canvas-ზე
             if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
@@ -3944,7 +3945,6 @@ async function toggleRecording() {
         console.error("Recording error:", err);
     }
 }
-
 // აქ მთავრდება
             
  
