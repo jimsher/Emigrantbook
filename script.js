@@ -3840,22 +3840,21 @@ function setCountdown(seconds, element) {
     document.getElementById('timerDropdown').style.display = "none";
 }
 
-
-
 // მთავარი ფუნქცია
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
+
     const deleteBtn = document.getElementById('deleteLastClipBtn');
-    
     if (deleteBtn) {
         deleteBtn.style.display = 'flex';
     }
-
+  
+    // ვამოწმებთ რეალურად იწერს თუ არა ახლა
     const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
 
-    // --- ტაიმერის ლოგიკა (უცვლელად) ---
+    // ტაიმერის ლოგიკა - ეშვება მხოლოდ მაშინ, თუ ჩაწერა ჯერ არ დაწყებულა
     if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
         isCounting = true;
         const display = document.getElementById('countdownDisplay');
@@ -3875,57 +3874,36 @@ async function toggleRecording() {
                 if (display) display.style.display = "none";
                 isCounting = false;
                 
+                // კრიტიკული მომენტი: ტაიმერს დროებით ვთიშავთ, რომ toggleRecording-მა ჩაწერა დაიწყოს
                 const currentSetting = countdownTime;
                 countdownTime = 0; 
                 toggleRecording(); 
-                countdownTime = currentSetting; 
+                countdownTime = currentSetting; // ვაბრუნებთ მნიშვნელობას შემდეგი ჯერისთვის
             }
         }, 1000);
         return; 
     }
 
-    // --- ჩაწერის ძირითადი ლოგიკა ---
+    // ჩვეულებრივი ჩაწერის ლოგიკა
     try {
         if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
-            // 🚀 Canvas-ის მომზადება ფილტრისთვის (ზომები შენი ორიგინალიდან)
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = video.videoWidth || 720;
-            canvas.height = video.videoHeight || 1280;
-
-            function drawWithFilter() {
-                if (typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder.state === "recording") {
-                    // 🎨 აქ ედება ფილტრი გარანტირებულად
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    // ამ ხაზით Canvas იღებს იმავე ფილტრს, რასაც ვიდეოზე ხედავ ეკრანზე
-                    ctx.globalCompositeOperation = 'multiply'; 
-                    ctx.fillStyle = 'rgba(255, 200, 100, 0.2)'; // თბილი ფილტრი
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.globalCompositeOperation = 'source-over';
-
-                    requestAnimationFrame(drawWithFilter);
-                }
-            }
-
-            const filteredStream = canvas.captureStream(30); 
-            window.videoStream.getAudioTracks().forEach(track => filteredStream.addTrack(track));
-
             globalChunks = [];
             
+            // 🚀 ოპტიმიზაცია: ვზღუდავთ ბიტრეიტს 1.2 Mbps-მდე ფაილის შესაკუმშად
             const options = {
-                mimeType: 'video/webm;codecs=vp8',
-                videoBitsPerSecond: 1200000, 
-                audioBitsPerSecond: 64000
+                mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
+                videoBitsPerSecond: 1200000,      // 1.2 Mbps - ძლიერი შეკუმშვა პატარა ზომისთვის
+                audioBitsPerSecond: 64000         // სუფთა ხმა მცირე მოცულობით
             };
 
+            // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                 options.mimeType = 'video/mp4';
             }
 
-            globalMediaRecorder = new MediaRecorder(filteredStream, options);
+            globalMediaRecorder = new MediaRecorder(window.videoStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) globalChunks.push(e.data);
@@ -3949,7 +3927,6 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
-            drawWithFilter(); // იწყებს ხატვას
             if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
@@ -3967,6 +3944,7 @@ async function toggleRecording() {
         console.error("Recording error:", err);
     }
 }
+
 // აქ მთავრდება
             
  
