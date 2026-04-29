@@ -44,34 +44,51 @@
 
  
  <style>
-/* მაქსიმალურად პრიორიტეტული სტილი */
-.tiktok-music-modal {
+#music-picker-modal {
     position: fixed !important;
-    bottom: -110% !important; /* ეკრანის ქვემოთ */
-    left: 0 !important;
-    width: 100% !important;
-    height: 65vh !important;
-    background-color: #121212 !important;
-    border-top-left-radius: 20px !important;
-    border-top-right-radius: 20px !important;
-    z-index: 9999999999 !important; /* ამაზე მაღალი არაფერია */
-    transition: bottom 0.4s ease-in-out !important;
-    display: flex !important;
-    flex-direction: column !important;
-    color: white !important;
+    bottom: -100%; /* დამალულია ქვემოთ */
+    left: 0;
+    width: 100%;
+    height: 60vh;
+    background-color: #121212;
+    border-radius: 20px 20px 0 0;
+    z-index: 2147483647 !important; /* ყველაზე მაღლა */
+    transition: bottom 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
 }
 
-/* კლასი რომელიც ამოწევს ჩარჩოს */
-.tiktok-music-modal.active {
+/* როცა JS-ით დავამატებთ 'show' კლასს, ამოვა ზემოთ */
+#music-picker-modal.show {
     bottom: 0 !important;
 }
 
-.modal-inner-content {
+.modal-content-wrapper {
     padding: 20px;
-    flex: 1;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100%;
+}
+
+.drag-handle {
+    width: 40px;
+    height: 4px;
+    background: #333;
+    margin: 0 auto 15px;
+    border-radius: 2px;
+}
+
+.modal-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#music-list-container {
+    flex: 1;
+    overflow-y: auto;
 }
 
   
