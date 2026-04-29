@@ -5330,30 +5330,47 @@ async function renderSongs() {
     }
 }
 
+
 function pickSong(url, title) {
-    // 1. თუ რამე მღერის, ეგრევე გავაჩეროთ და წავშალოთ
+    // 1. შემოწმება: საერთოდ მოდის ლინკი?
+    if (!url || url === "undefined") {
+        alert("შეცდომა: მუსიკის ლინკი (URL) ვერ მოიძებნა ბაზაში!");
+        return;
+    }
+
+    // 2. თუ რამე უკვე მღერის, გავაჩეროთ
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
         currentBackgroundMusic.src = "";
-        currentBackgroundMusic.load();
     }
     
-    // 2. ახალი ობიექტი შევქმნათ პირდაპირ ლინკით
-    currentBackgroundMusic = new Audio(url);
-    currentBackgroundMusic.crossOrigin = "anonymous";
-    
-    // 3. ეგრევე ვუბრძანოთ დაკვრა (ტელეფონზე ეს ყველაზე საიმედოა)
-    currentBackgroundMusic.play();
-    
-    // 4. ღილაკზე სახელი შევცვალოთ
-    const label = document.getElementById('selected-music-name');
-    if (label) {
-        label.innerText = title;
+    try {
+        // 3. შევქმნათ აუდიო
+        currentBackgroundMusic = new Audio(url);
+        currentBackgroundMusic.crossOrigin = "anonymous";
+        
+        // 4. დაუკარი
+        let playPromise = currentBackgroundMusic.play();
+
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                console.log("Started playing");
+            }).catch(error => {
+                alert("ბრაუზერმა დაბლოკა ხმა. დააჭირე ეკრანს და მერე აირჩიე სიმღერა.");
+            });
+        }
+
+        // 5. ტექსტის შეცვლა
+        const label = document.getElementById('selected-music-name');
+        if (label) label.innerText = title;
+        
+        closeMusicPicker();
+
+    } catch (e) {
+        alert("ვერ ჩაირთო: " + e.message);
     }
-    
-    // 5. პანელი დავხუროთ
-    closeMusicPicker();
 }
+
 
 // Firestore-დან წამოღება (თუ ბაზაშიც გიწერია მონაცემები)
 async function loadMusicFromDB() {
@@ -5383,3 +5400,7 @@ async function loadMusicFromDB() {
         console.error("Firestore Error:", error);
     }
 }   
+
+
+
+
