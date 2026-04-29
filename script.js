@@ -5254,9 +5254,9 @@ function confirmDeleteClip() {
 // ვიდეოზე დასადები მუსიკის ლოგიკა
 // 1. აქ განსაზღვრავ სიმღერებს
  // ვიდეოზე დასადები მუსიკის ლოგიკა
-let currentBackgroundMusic = null; 
+    let currentBackgroundMusic = null; 
 
-// რეალური დროის ფორმატირების ფუნქცია
+// 1. დროის ფორმატირება
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -5264,7 +5264,7 @@ function formatTime(seconds) {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// რეალური ხანგრძლივობის გაგების ფუნქცია
+// 2. რეალური ხანგრძლივობის გაგება
 async function getDuration(url) {
     return new Promise((resolve) => {
         const audio = new Audio();
@@ -5274,117 +5274,77 @@ async function getDuration(url) {
     });
 }
 
-function openMusicPicker() {
-    const modal = document.getElementById('music-picker-modal');
-    if (modal) {
-        modal.classList.add('show');
-        renderSongs(); // 👈 ავტომატურად იწყებს ძებნას Storage-ში
-    }
-}
-
-function closeMusicPicker() {
-    const modal = document.getElementById('music-picker-modal');
-    if (modal) {
-        modal.classList.remove('show');
-    }
-}
-
-// 🔥 მთავარი ფუნქცია: ყველაფერს იღებს STORAGE-იდან
-async function renderSongs() {
-    const list = document.getElementById('music-list');
-    if (!list) return;
-
-    list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება მუსიკები Storage-იდან...</p>";
-
-    try {
-        // მივმართავთ Storage-ის საქაღალდეს 'musics'
-        const storageRef = firebase.storage().ref('musics'); 
-        const result = await storageRef.listAll();
-        
-        if (result.items.length === 0) {
-            list.innerHTML = "<p style='color:white; padding:15px;'>Storage-ში მუსიკები არ არის (საქაღალდე: musics)</p>";
-            return;
-        }
-
-        // სათითაოდ ვიღებთ ლინკს და დროს თითოეული ფაილისთვის
-        const songRows = await Promise.all(result.items.map(async (itemRef) => {
-            const url = await itemRef.getDownloadURL();
-            const realTime = await getDuration(url);
-            const fileName = itemRef.name.replace('.mp3', '').replace(/_/g, ' ');
-
-            return `
-                <div class="music-item-row" onclick="pickSong('${url}', '${fileName}')" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
-                    <div style="width:50px; height:50px; border-radius:4px; margin-right:15px; background:#333; display:flex; align-items:center; justify-content:center; font-size:20px;">🎵</div>
-                    <div style="flex:1;">
-                        <div style="font-weight:500; font-size:15px; color:white;">${fileName}</div>
-                        <div style="color:#888; font-size:13px;">Firebase Storage · ${realTime}</div>
-                    </div>
-                </div>
-            `;
-        }));
-
-        list.innerHTML = songRows.join('');
-    } catch (error) {
-        console.error("Storage Error:", error);
-        list.innerHTML = "<p style='color:red; padding:15px;'>შეცდომა: შეამოწმე Firebase Storage წესები (Rules).</p>";
-    }
-}
-
-
-// 1. მუსიკის არჩევის ფუნქცია
-// 1. მუსიკის დაკვრა
+// 3. მუსიკის არჩევა და ეგრევე დაკვრა
 function pickSong(url, title) {
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
+        currentBackgroundMusic.src = "";
     }
 
-    // პირდაპირ ვქმნით და ვრთავთ
     currentBackgroundMusic = new Audio(url);
     currentBackgroundMusic.crossOrigin = "anonymous";
-    currentBackgroundMusic.play();
+    
+    // დაკვრის ბრძანება
+    currentBackgroundMusic.play().catch(e => console.log("Play failed", e));
 
-    // ღილაკზე სახელის შეცვლა
     const label = document.getElementById('selected-music-name');
     if (label) label.innerText = title;
 
     closeMusicPicker();
 }
 
-// 2. ბაზიდან წამოღება და გამოჩენა
+// 4. მოდალის მართვა
+function openMusicPicker() {
+    const modal = document.getElementById('music-picker-modal');
+    if (modal) {
+        modal.classList.add('show');
+        loadMusicFromDB(); // მხოლოდ ბაზიდან ვტვირთავთ
+    }
+}
+
+function closeMusicPicker() {
+    const modal = document.getElementById('music-picker-modal');
+    if (modal) modal.classList.remove('show');
+}
+
+// 5. ბაზიდან (Firestore) წამოღება - ყველაზე სუფთა ვერსია
 async function loadMusicFromDB() {
     const list = document.getElementById('music-list');
     if (!list) return;
-    list.innerHTML = "ჩაიტვირთა...";
+    list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება...</p>";
 
     try {
         const querySnapshot = await db.collection("music").get();
         list.innerHTML = ""; 
 
-        querySnapshot.forEach((doc) => {
-            const s = doc.data();
-            const musicName = s.name || s.title || "Unknown";
-            const musicUrl = s.url;
+        if (querySnapshot.empty) {
+            list.innerHTML = "<p style='color:white; padding:15px;'>ბაზა ცარიელია</p>";
+            return;
+        }
 
-            // ვქმნით ელემენტს
-            const row = document.createElement('div');
-            row.className = "music-item-row";
-            row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
-            row.innerHTML = `
-                <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px;">
-                <div style="flex:1;">
-                    <div style="font-weight:500; color:white;">${musicName}</div>
-                    <div style="color:#888; font-size:12px;">${s.artist || 'Artist'}</div>
+        // მონაცემების დამუშავება
+        const songs = [];
+        querySnapshot.forEach(doc => songs.push(doc.data()));
+
+        const rows = await Promise.all(songs.map(async (s) => {
+            const realTime = await getDuration(s.url);
+            const mName = s.name || s.title || "Unknown";
+            
+            return `
+                <div class="music-item-row" onclick="pickSong('${s.url}', '${mName}')" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
+                    <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
+                    <div style="flex:1;">
+                        <div style="font-weight:500; color:white; font-size:15px;">${mName}</div>
+                        <div style="color:#888; font-size:12px;">${s.artist || 'Artist'} · ${realTime}</div>
+                    </div>
                 </div>
             `;
+        }));
 
-            // პირდაპირ ვაბამთ ფუნქციას ელემენტზე
-            row.onclick = function() {
-                pickSong(musicUrl, musicName);
-            };
+        list.innerHTML = rows.join('');
 
-            list.appendChild(row);
-        });
     } catch (error) {
         console.error(error);
+        list.innerHTML = "<p style='color:red; padding:15px;'>ბაზის შეცდომა</p>";
     }
 }
