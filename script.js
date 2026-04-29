@@ -3889,6 +3889,25 @@ async function toggleRecording() {
         if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
+            // --- 🚀 ფილტრის რეალურად ჩაწერის დამატება (Canvas Bridge) ---
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth || 720;
+            canvas.height = video.videoHeight || 1280;
+            const currentFilter = getComputedStyle(video).filter;
+
+            function drawFrame() {
+                if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
+                    ctx.filter = currentFilter;
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    requestAnimationFrame(drawFrame);
+                }
+            }
+
+            const filteredStream = canvas.captureStream(30); 
+            window.videoStream.getAudioTracks().forEach(track => filteredStream.addTrack(track));
+            // --------------------------------------------------------
+
             globalChunks = [];
             
             // 🚀 ოპტიმიზაცია: ვზღუდავთ ბიტრეიტს 1.2 Mbps-მდე ფაილის შესაკუმშად
@@ -3903,7 +3922,8 @@ async function toggleRecording() {
                 options.mimeType = 'video/mp4';
             }
 
-            globalMediaRecorder = new MediaRecorder(window.videoStream, options);
+            // მნიშვნელოვანი: ვაწოდებთ filteredStream-ს window.videoStream-ის ნაცვლად
+            globalMediaRecorder = new MediaRecorder(filteredStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) globalChunks.push(e.data);
@@ -3927,6 +3947,8 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
+            drawFrame(); // ვიწყებთ ფილტრიანი კადრების ხატვას
+            
             if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
@@ -3943,8 +3965,6 @@ async function toggleRecording() {
     } catch (err) {
         console.error("Recording error:", err);
     }
-}
-
 // აქ მთავრდება
             
  
