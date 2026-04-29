@@ -5261,10 +5261,8 @@ const songs = [
 function openMusicPicker() {
     const modal = document.getElementById('music-picker-modal');
     if (modal) {
-        modal.classList.add('show'); // აქ აუცილებლად 'show' უნდა ეწეროს
-        renderMusicList(); 
-    } else {
-        console.error("ვერ ვიპოვე ელემენტი ID-ით: music-picker-modal");
+        modal.classList.add('show');
+        renderSongs(); // სიმღერების ჩასაწერად
     }
 }
 
@@ -5275,14 +5273,20 @@ function closeMusicPicker() {
     }
 }
 
-function renderMusicList() {
+function renderSongs() {
     const list = document.getElementById('music-list');
-    list.innerHTML = songs.map(song => `
-        <div class="music-item" onclick="pickSong('${song.url}', '${song.title}')">
-            <img src="${song.img}" class="music-img">
-            <div class="music-info">
-                <h4>${song.title}</h4>
-                <p>${song.artist}</p>
+    // აქ ჩასვი შენი რეალური სიმღერების მონაცემები
+    const songs = [
+        { name: "Let me go", artist: "Vailedmoon music", duration: "2:52", img: "https://via.placeholder.com/50" },
+        { name: "Синий туман", artist: "Leonid", duration: "2:43", img: "https://via.placeholder.com/50" }
+    ];
+
+    list.innerHTML = songs.map(s => `
+        <div class="music-item-row" onclick="pickSong('${s.url}', '${s.name}')">
+            <img src="${s.img}" class="music-thumb">
+            <div style="flex:1;">
+                <div style="font-weight:500; font-size:15px;">${s.name}</div>
+                <div style="color:#888; font-size:13px;">${s.artist} · ${s.duration}</div>
             </div>
         </div>
     `).join('');
