@@ -5252,12 +5252,10 @@ function confirmDeleteClip() {
 
 
 // ვიდეოზე დასადები მუსიკის ლოგიკა
-// 1. აქ განსაზღვრავ სიმღერებს
- // ვიდეოზე დასადები მუსიკის ლოგიკა
-// 1. გლობალური ცვლადები
+// 1. გლობალური ცვლადი
 let currentBackgroundMusic = null; 
 
-// 2. რეალური დროის ფორმატირების ფუნქცია (formatTime)
+// 2. დროის ფორმატირება
 function formatTime(seconds) {
     if (isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -5265,7 +5263,7 @@ function formatTime(seconds) {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// 3. რეალური ხანგრძლივობის გაგების ფუნქცია (getDuration)
+// 3. ხანგრძლივობის გაგება
 async function getDuration(url) {
     return new Promise((resolve) => {
         const audio = new Audio();
@@ -5275,23 +5273,21 @@ async function getDuration(url) {
     });
 }
 
-// 4. მოდალის მართვის ფუნქციები (open/close)
+// 4. მოდალის მართვა
 function openMusicPicker() {
     const modal = document.getElementById('music-picker-modal');
     if (modal) {
         modal.classList.add('show');
-        renderSongs(); // იძახებს მთავარ რენდერს
+        renderSongs(); 
     }
 }
 
 function closeMusicPicker() {
     const modal = document.getElementById('music-picker-modal');
-    if (modal) {
-        modal.classList.remove('show');
-    }
+    if (modal) modal.classList.remove('show');
 }
 
-// 5. მუსიკის არჩევის და დაკვრის ფუნქცია (pickSong)
+// 5. მუსიკის არჩევა და დაკვრა
 function pickSong(url, title) {
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
@@ -5301,8 +5297,6 @@ function pickSong(url, title) {
 
     currentBackgroundMusic = new Audio(url);
     currentBackgroundMusic.crossOrigin = "anonymous";
-    
-    // პირდაპირი დაკვრა
     currentBackgroundMusic.play().catch(e => console.log("Play blocked", e));
 
     const label = document.getElementById('selected-music-name');
@@ -5311,7 +5305,7 @@ function pickSong(url, title) {
     closeMusicPicker();
 }
 
-// 6. მთავარი რენდერის ფუნქცია (Firestore + Storage 'musics' ფოლდერი)
+// 6. მთავარი რენდერი (გასწორებული სახელით: 'musics')
 async function renderSongs() {
     const list = document.getElementById('music-list');
     if (!list) return;
@@ -5319,66 +5313,70 @@ async function renderSongs() {
     list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება მუსიკები...</p>";
 
     try {
-        // ჯერ ვამოწმებთ Firestore-ს (კოლექცია: music)
-        const querySnapshot = await db.collection("music").get();
-        let allMusicData = [];
-
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            allMusicData.push({
-                url: data.url,
-                name: data.name || data.title,
-                artist: data.artist || "Artist",
-                img: data.img || "https://via.placeholder.com/50"
-            });
-        });
-
-        // თუ ბაზა ცარიელია, მივდივართ Storage-ში (საქაღალდე: musics)
-        if (allMusicData.length === 0) {
-            const storageRef = firebase.storage().ref('musics'); // 🚀 გასწორდა 'musics'
-            const result = await storageRef.listAll();
-            const storagePromises = result.items.map(async (itemRef) => {
-                const url = await itemRef.getDownloadURL();
-                return {
-                    url: url,
-                    name: itemRef.name.replace('.mp3', '').replace(/_/g, ' '),
-                    artist: "Storage",
-                    img: "https://via.placeholder.com/50"
-                };
-            });
-            allMusicData = await Promise.all(storagePromises);
+        // 🚀 აქ გასწორდა: 'musics' საქაღალდე Storage-ში
+        const storageRef = firebase.storage().ref('musics'); 
+        const result = await storageRef.listAll();
+        
+        if (result.items.length === 0) {
+            list.innerHTML = "<p style='color:white; padding:15px;'>საქაღალდე 'musics' ცარიელია.</p>";
+            return;
         }
 
-        // გამოსახვა რეალური დროით
-        const htmlRows = await Promise.all(allMusicData.map(async (s) => {
-            const realTime = await getDuration(s.url);
-            return `
-                <div class="music-item-row" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
-                    <img src="${s.img}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
-                    <div style="flex:1;">
-                        <div style="font-weight:500; color:white;">${s.name}</div>
-                        <div style="color:#888; font-size:12px;">${s.artist} · ${realTime}</div>
-                    </div>
-                </div>
-            `;
-        }));
+        const promises = result.items.map(async (itemRef) => {
+            const url = await itemRef.getDownloadURL();
+            const realTime = await getDuration(url);
+            const fileName = itemRef.name.replace('.mp3', '').replace(/_/g, ' ');
 
-        list.innerHTML = htmlRows.join('');
-
-        // დაჭერის ლოგიკა
-        const rows = list.querySelectorAll('.music-item-row');
-        rows.forEach((row, index) => {
-            row.onclick = () => pickSong(allMusicData[index].url, allMusicData[index].name);
+            return { url, name: fileName, duration: realTime };
         });
+
+        const songsData = await Promise.all(promises);
+
+        list.innerHTML = songsData.map(s => `
+            <div class="music-item-row" onclick="pickSong('${s.url}', '${s.name}')" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
+                <div style="width:50px; height:50px; border-radius:4px; margin-right:15px; background:#333; display:flex; align-items:center; justify-content:center; font-size:20px;">🎵</div>
+                <div style="flex:1;">
+                    <div style="font-weight:500; color:white; font-size:15px;">${s.name}</div>
+                    <div style="color:#888; font-size:13px;">Storage · ${s.duration}</div>
+                </div>
+            </div>
+        `).join('');
 
     } catch (error) {
         console.error("Error:", error);
-        list.innerHTML = "<p style='color:red; padding:15px;'>ჩატვირთვის შეცდომა</p>";
+        // თუ Storage-ში შეცდომაა, ვცდილობთ Firestore ბაზიდან (კოლექცია: musics)
+        loadMusicFromDB();
     }
 }
 
-// 7. შენი Firestore ფუნქცია (loadMusicFromDB)
+// 7. Firestore-დან წამოღება (აქაც გასწორდა 'musics')
 async function loadMusicFromDB() {
-    // ეს ფუნქცია იყენებს ზედა რენდერს, რომ არ გაორდეს კოდი
-    renderSongs();
-}
+    const list = document.getElementById('music-list');
+    if (!list) return;
+
+    try {
+        const querySnapshot = await db.collection("musics").get();
+        if (querySnapshot.empty) return;
+
+        list.innerHTML = "";
+        querySnapshot.forEach(async (doc) => {
+            const s = doc.data();
+            const realTime = await getDuration(s.url);
+            
+            const row = document.createElement('div');
+            row.className = "music-item-row";
+            row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
+            row.innerHTML = `
+                <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
+                <div style="flex:1;">
+                    <div style="font-weight:500; color:white;">${s.name || s.title}</div>
+                    <div style="color:#888; font-size:12px;">${s.artist || 'Artist'} · ${realTime}</div>
+                </div>
+            `;
+            row.onclick = () => pickSong(s.url, s.name || s.title);
+            list.appendChild(row);
+        });
+    } catch (e) {
+        console.error(e);
+    }
+}                    
