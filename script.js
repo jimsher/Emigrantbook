@@ -5289,20 +5289,49 @@ function closeMusicPicker() {
 
 // 5. მუსიკის არჩევა და დაკვრა
 function pickSong(url, title) {
+    // 1. თუ რამე უკრავს, სრულად გავთიშოთ და გავასუფთავოთ მეხსიერება
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
         currentBackgroundMusic.src = "";
-        currentBackgroundMusic.load();
+        currentBackgroundMusic.load(); 
+        currentBackgroundMusic.remove(); // მთლიანად ამოშლა
     }
 
-    currentBackgroundMusic = new Audio(url);
+    // 2. ახალი აუდიო ობიექტი
+    currentBackgroundMusic = new Audio();
+    
+    // 3. უსაფრთხოების პარამეტრები (მნიშვნელოვანია Storage-სთვის)
     currentBackgroundMusic.crossOrigin = "anonymous";
-    currentBackgroundMusic.play().catch(e => console.log("Play blocked", e));
+    currentBackgroundMusic.preload = "auto";
+    
+    // 4. მოვლენების მოსმენა შეცდომების დასაჭერად
+    currentBackgroundMusic.onerror = function() {
+        console.error("Error loading audio from:", url);
+        alert("მუსიკის ჩატვირთვა ვერ მოხერხდა. შეამოწმეთ ფაილის ფორმატი.");
+    };
 
-    const label = document.getElementById('selected-music-name');
-    if (label) label.innerText = title;
+    // 5. წყაროს მინიჭება და დაკვრა
+    currentBackgroundMusic.src = url;
+    
+    // ზოგიერთ ბრაუზერს სჭირდება load() გამოძახება src-ს მერე
+    currentBackgroundMusic.load();
 
-    closeMusicPicker();
+    const playPromise = currentBackgroundMusic.play();
+
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            console.log("Music started successfully!");
+            const label = document.getElementById('selected-music-name');
+            if (label) label.innerText = title;
+            closeMusicPicker();
+        }).catch(error => {
+            console.log("Autoplay blocked or URL invalid:", error);
+            // თუ ბრაუზერმა დაბლოკა, მაინც ჩავწეროთ სახელი რომ მომხმარებელმა იცოდეს რა აირჩია
+            const label = document.getElementById('selected-music-name');
+            if (label) label.innerText = title + " (დაკლიკეთ დაკვრისთვის)";
+            closeMusicPicker();
+        });
+    }
 }
 
 // 6. მთავარი რენდერი (გასწორებული სახელით: 'musics')
