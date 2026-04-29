@@ -5289,49 +5289,44 @@ function closeMusicPicker() {
 
 // 5. მუსიკის არჩევა და დაკვრა
 function pickSong(url, title) {
-    // 1. თუ რამე უკრავს, სრულად გავთიშოთ და გავასუფთავოთ მეხსიერება
+    const label = document.getElementById('selected-music-name');
+    if (label) label.innerText = "იტვირთება...";
+
+    // 1. თუ რამე უკრავს, ვაჩერებთ ბოლომდე
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
         currentBackgroundMusic.src = "";
-        currentBackgroundMusic.load(); 
-        currentBackgroundMusic.remove(); // მთლიანად ამოშლა
     }
 
-    // 2. ახალი აუდიო ობიექტი
+    // 2. ვქმნით აუდიო ელემენტს
     currentBackgroundMusic = new Audio();
     
-    // 3. უსაფრთხოების პარამეტრები (მნიშვნელოვანია Storage-სთვის)
-    currentBackgroundMusic.crossOrigin = "anonymous";
+    // 🚀 მნიშვნელოვანია Kodular-ისთვის: 
+    // წავშალოთ crossOrigin, თუ ის პრობლემას ქმნის აპლიკაციაში
+    // და გამოვიყენოთ encodeURI სახელისთვის
+    const encodedUrl = encodeURI(url);
+
+    currentBackgroundMusic.src = encodedUrl;
     currentBackgroundMusic.preload = "auto";
-    
-    // 4. მოვლენების მოსმენა შეცდომების დასაჭერად
-    currentBackgroundMusic.onerror = function() {
-        console.error("Error loading audio from:", url);
-        alert("მუსიკის ჩატვირთვა ვერ მოხერხდა. შეამოწმეთ ფაილის ფორმატი.");
+
+    // 3. მოვლენების დამუშავება
+    currentBackgroundMusic.oncanplaythrough = function() {
+        currentBackgroundMusic.play();
+        if (label) label.innerText = title;
+        closeMusicPicker();
     };
 
-    // 5. წყაროს მინიჭება და დაკვრა
-    currentBackgroundMusic.src = url;
-    
-    // ზოგიერთ ბრაუზერს სჭირდება load() გამოძახება src-ს მერე
-    currentBackgroundMusic.load();
-
-    const playPromise = currentBackgroundMusic.play();
-
-    if (playPromise !== undefined) {
-        playPromise.then(() => {
-            console.log("Music started successfully!");
-            const label = document.getElementById('selected-music-name');
-            if (label) label.innerText = title;
-            closeMusicPicker();
-        }).catch(error => {
-            console.log("Autoplay blocked or URL invalid:", error);
-            // თუ ბრაუზერმა დაბლოკა, მაინც ჩავწეროთ სახელი რომ მომხმარებელმა იცოდეს რა აირჩია
-            const label = document.getElementById('selected-music-name');
-            if (label) label.innerText = title + " (დაკლიკეთ დაკვრისთვის)";
-            closeMusicPicker();
+    currentBackgroundMusic.onerror = function() {
+        console.error("Error loading audio");
+        // თუ მაინც ერორია, ვცადოთ crossOrigin-ის გარეშე და პირდაპირი დაკვრით
+        currentBackgroundMusic.src = url; 
+        currentBackgroundMusic.play().catch(e => {
+            console.log("Final attempt failed");
         });
-    }
+    };
+
+    // 4. იძულებითი გაშვება
+    currentBackgroundMusic.load();
 }
 
 // 6. მთავარი რენდერი (გასწორებული სახელით: 'musics')
