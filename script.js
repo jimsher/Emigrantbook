@@ -5259,12 +5259,20 @@ const songs = [
 ];
 
 function openMusicPicker() {
-    document.getElementById('music-picker-modal').classList.add('open');
-    renderMusicList();
+    const modal = document.getElementById('music-picker-modal');
+    if (modal) {
+        modal.classList.add('show'); // აქ აუცილებლად 'show' უნდა ეწეროს
+        renderMusicList(); 
+    } else {
+        console.error("ვერ ვიპოვე ელემენტი ID-ით: music-picker-modal");
+    }
 }
 
 function closeMusicPicker() {
-    document.getElementById('music-picker-modal').classList.remove('open');
+    const modal = document.getElementById('music-picker-modal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 function renderMusicList() {
