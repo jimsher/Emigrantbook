@@ -3840,6 +3840,8 @@ function setCountdown(seconds, element) {
     document.getElementById('timerDropdown').style.display = "none";
 }
 
+
+
 // მთავარი ფუნქცია
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
@@ -3847,7 +3849,9 @@ async function toggleRecording() {
     const video = document.getElementById('cameraStream');
     const deleteBtn = document.getElementById('deleteLastClipBtn');
     
-    if (deleteBtn) deleteBtn.style.display = 'flex';
+    if (deleteBtn) {
+        deleteBtn.style.display = 'flex';
+    }
 
     const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
 
@@ -3856,7 +3860,11 @@ async function toggleRecording() {
         isCounting = true;
         const display = document.getElementById('countdownDisplay');
         let timeLeft = countdownTime;
-        if (display) { display.style.display = "block"; display.innerText = timeLeft; }
+
+        if (display) {
+            display.style.display = "block";
+            display.innerText = timeLeft;
+        }
 
         let timerInterval = setInterval(() => {
             timeLeft--;
@@ -3866,6 +3874,7 @@ async function toggleRecording() {
                 clearInterval(timerInterval);
                 if (display) display.style.display = "none";
                 isCounting = false;
+                
                 const currentSetting = countdownTime;
                 countdownTime = 0; 
                 toggleRecording(); 
@@ -3880,25 +3889,28 @@ async function toggleRecording() {
         if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
-            // 🚀 ახალი ნაწილი: Canvas-ის მომზადება ფილტრისთვის
+            // 🚀 Canvas-ის მომზადება ფილტრისთვის (ზომები შენი ორიგინალიდან)
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            // ვიყენებთ კამერის რეალურ ზომებს
             canvas.width = video.videoWidth || 720;
             canvas.height = video.videoHeight || 1280;
 
             function drawWithFilter() {
                 if (typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder.state === "recording") {
-                    // 🎨 აქ ედება ფილტრი! 
-                    // ctx.filter = getComputedStyle(video).filter; // იღებს ფილტრს პირდაპირ CSS-დან
+                    // 🎨 აქ ედება ფილტრი გარანტირებულად
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // ამ ხაზით Canvas იღებს იმავე ფილტრს, რასაც ვიდეოზე ხედავ ეკრანზე
+                    ctx.globalCompositeOperation = 'multiply'; 
+                    ctx.fillStyle = 'rgba(255, 200, 100, 0.2)'; // თბილი ფილტრი
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.globalCompositeOperation = 'source-over';
+
                     requestAnimationFrame(drawWithFilter);
                 }
             }
 
-            // ვქმნით ახალ სტრიმს Canvas-იდან
             const filteredStream = canvas.captureStream(30); 
-            // ვამატებთ აუდიოს ორიგინალი კამერიდან
             window.videoStream.getAudioTracks().forEach(track => filteredStream.addTrack(track));
 
             globalChunks = [];
@@ -3913,7 +3925,6 @@ async function toggleRecording() {
                 options.mimeType = 'video/mp4';
             }
 
-            // 🚀 კრიტიკული ცვლილება: ვაწვდით filteredStream-ს window.videoStream-ის ნაცვლად
             globalMediaRecorder = new MediaRecorder(filteredStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
@@ -3938,7 +3949,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
-            drawWithFilter(); // ვიწყებთ ფილტრიანი კადრების ხატვას
+            drawWithFilter(); // იწყებს ხატვას
             if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
@@ -3956,7 +3967,6 @@ async function toggleRecording() {
         console.error("Recording error:", err);
     }
 }
-
 // აქ მთავრდება
             
  
