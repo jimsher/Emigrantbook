@@ -3840,6 +3840,7 @@ function setCountdown(seconds, element) {
     document.getElementById('timerDropdown').style.display = "none";
 }
 
+
 // მთავარი ფუნქცია
 async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
@@ -3851,10 +3852,8 @@ async function toggleRecording() {
         deleteBtn.style.display = 'flex';
     }
   
-    // ვამოწმებთ რეალურად იწერს თუ არა ახლა
     const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
 
-    // ტაიმერის ლოგიკა - ეშვება მხოლოდ მაშინ, თუ ჩაწერა ჯერ არ დაწყებულა
     if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
         isCounting = true;
         const display = document.getElementById('countdownDisplay');
@@ -3873,23 +3872,20 @@ async function toggleRecording() {
                 clearInterval(timerInterval);
                 if (display) display.style.display = "none";
                 isCounting = false;
-                
-                // კრიტიკული მომენტი: ტაიმერს დროებით ვთიშავთ, რომ toggleRecording-მა ჩაწერა დაიწყოს
                 const currentSetting = countdownTime;
                 countdownTime = 0; 
                 toggleRecording(); 
-                countdownTime = currentSetting; // ვაბრუნებთ მნიშვნელობას შემდეგი ჯერისთვის
+                countdownTime = currentSetting;
             }
         }, 1000);
         return; 
     }
 
-    // ჩვეულებრივი ჩაწერის ლოგიკა
     try {
         if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
-            // --- 🚀 ფილტრის რეალურად ჩაწერის დამატება (Canvas Bridge) ---
+            // --- 🎨 აი ეს ნაწილია "ჩაწვის" გარანტია ---
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = video.videoWidth || 720;
@@ -3904,25 +3900,25 @@ async function toggleRecording() {
                 }
             }
 
+            // ვქმნით ფილტრიან სტრიმს კანვასიდან
             const filteredStream = canvas.captureStream(30); 
+            // ვამატებთ ხმას ორიგინალი სტრიმიდან
             window.videoStream.getAudioTracks().forEach(track => filteredStream.addTrack(track));
-            // --------------------------------------------------------
+            // ----------------------------------------
 
             globalChunks = [];
             
-            // 🚀 ოპტიმიზაცია: ვზღუდავთ ბიტრეიტს 1.2 Mbps-მდე ფაილის შესაკუმშად
             const options = {
-                mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
-                videoBitsPerSecond: 1200000,      // 1.2 Mbps - ძლიერი შეკუმშვა პატარა ზომისთვის
-                audioBitsPerSecond: 64000         // სუფთა ხმა მცირე მოცულობით
+                mimeType: 'video/webm;codecs=vp8',
+                videoBitsPerSecond: 1200000,
+                audioBitsPerSecond: 64000
             };
 
-            // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                 options.mimeType = 'video/mp4';
             }
 
-            // მნიშვნელოვანი: ვაწოდებთ filteredStream-ს window.videoStream-ის ნაცვლად
+            // 🚀 აქ არის ცვლილება: ვაწვდით filteredStream-ს!
             globalMediaRecorder = new MediaRecorder(filteredStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
@@ -3965,6 +3961,7 @@ async function toggleRecording() {
     } catch (err) {
         console.error("Recording error:", err);
     }
+}
 // აქ მთავრდება
             
  
