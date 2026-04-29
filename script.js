@@ -3845,25 +3845,18 @@ async function toggleRecording() {
     const btnInner = document.getElementById('recordInner');
     const videoInput = document.getElementById('videoInput');
     const video = document.getElementById('cameraStream');
-
     const deleteBtn = document.getElementById('deleteLastClipBtn');
-    if (deleteBtn) {
-        deleteBtn.style.display = 'flex';
-    }
-  
-    // ვამოწმებთ რეალურად იწერს თუ არა ახლა
+    
+    if (deleteBtn) deleteBtn.style.display = 'flex';
+
     const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
 
-    // ტაიმერის ლოგიკა - ეშვება მხოლოდ მაშინ, თუ ჩაწერა ჯერ არ დაწყებულა
+    // --- ტაიმერის ლოგიკა (უცვლელად) ---
     if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
         isCounting = true;
         const display = document.getElementById('countdownDisplay');
         let timeLeft = countdownTime;
-
-        if (display) {
-            display.style.display = "block";
-            display.innerText = timeLeft;
-        }
+        if (display) { display.style.display = "block"; display.innerText = timeLeft; }
 
         let timerInterval = setInterval(() => {
             timeLeft--;
@@ -3873,37 +3866,55 @@ async function toggleRecording() {
                 clearInterval(timerInterval);
                 if (display) display.style.display = "none";
                 isCounting = false;
-                
-                // კრიტიკული მომენტი: ტაიმერს დროებით ვთიშავთ, რომ toggleRecording-მა ჩაწერა დაიწყოს
                 const currentSetting = countdownTime;
                 countdownTime = 0; 
                 toggleRecording(); 
-                countdownTime = currentSetting; // ვაბრუნებთ მნიშვნელობას შემდეგი ჯერისთვის
+                countdownTime = currentSetting; 
             }
         }, 1000);
         return; 
     }
 
-    // ჩვეულებრივი ჩაწერის ლოგიკა
+    // --- ჩაწერის ძირითადი ლოგიკა ---
     try {
         if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
             if (!window.videoStream) return;
 
+            // 🚀 ახალი ნაწილი: Canvas-ის მომზადება ფილტრისთვის
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            // ვიყენებთ კამერის რეალურ ზომებს
+            canvas.width = video.videoWidth || 720;
+            canvas.height = video.videoHeight || 1280;
+
+            function drawWithFilter() {
+                if (typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder.state === "recording") {
+                    // 🎨 აქ ედება ფილტრი! 
+                    // ctx.filter = getComputedStyle(video).filter; // იღებს ფილტრს პირდაპირ CSS-დან
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    requestAnimationFrame(drawWithFilter);
+                }
+            }
+
+            // ვქმნით ახალ სტრიმს Canvas-იდან
+            const filteredStream = canvas.captureStream(30); 
+            // ვამატებთ აუდიოს ორიგინალი კამერიდან
+            window.videoStream.getAudioTracks().forEach(track => filteredStream.addTrack(track));
+
             globalChunks = [];
             
-            // 🚀 ოპტიმიზაცია: ვზღუდავთ ბიტრეიტს 1.2 Mbps-მდე ფაილის შესაკუმშად
             const options = {
-                mimeType: 'video/webm;codecs=vp8', // ყველაზე სწრაფი კოდეკია ჩაწერისთვის
-                videoBitsPerSecond: 1200000,      // 1.2 Mbps - ძლიერი შეკუმშვა პატარა ზომისთვის
-                audioBitsPerSecond: 64000         // სუფთა ხმა მცირე მოცულობით
+                mimeType: 'video/webm;codecs=vp8',
+                videoBitsPerSecond: 1200000, 
+                audioBitsPerSecond: 64000
             };
 
-            // თუ vp8 არ არის მხარდაჭერილი (მაგ. iPhone-ზე), ვიყენებთ სტანდარტულს
             if (!MediaRecorder.isTypeSupported(options.mimeType)) {
                 options.mimeType = 'video/mp4';
             }
 
-            globalMediaRecorder = new MediaRecorder(window.videoStream, options);
+            // 🚀 კრიტიკული ცვლილება: ვაწვდით filteredStream-ს window.videoStream-ის ნაცვლად
+            globalMediaRecorder = new MediaRecorder(filteredStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) globalChunks.push(e.data);
@@ -3927,6 +3938,7 @@ async function toggleRecording() {
             };
 
             globalMediaRecorder.start();
+            drawWithFilter(); // ვიწყებთ ფილტრიანი კადრების ხატვას
             if (typeof startTimer === "function") startTimer();
             
             if (btnInner) {
