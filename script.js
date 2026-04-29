@@ -5331,76 +5331,59 @@ async function renderSongs() {
 }
 
 
+// 1. მუსიკის არჩევის ფუნქცია
 function pickSong(url, title) {
-    // 1. შემოწმება: საერთოდ მოდის ლინკი?
-    if (!url || url === "undefined") {
-        alert("შეცდომა: მუსიკის ლინკი (URL) ვერ მოიძებნა ბაზაში!");
-        return;
-    }
-
-    // 2. თუ რამე უკვე მღერის, გავაჩეროთ
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
         currentBackgroundMusic.src = "";
     }
+
+    currentBackgroundMusic = new Audio(url);
+    currentBackgroundMusic.crossOrigin = "anonymous";
     
-    try {
-        // 3. შევქმნათ აუდიო
-        currentBackgroundMusic = new Audio(url);
-        currentBackgroundMusic.crossOrigin = "anonymous";
-        
-        // 4. დაუკარი
-        let playPromise = currentBackgroundMusic.play();
+    // ეგრევე ვრთავთ, ყოველგვარი ზედმეტი ტექსტების გარეშე
+    currentBackgroundMusic.play();
 
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                console.log("Started playing");
-            }).catch(error => {
-                alert("ბრაუზერმა დაბლოკა ხმა. დააჭირე ეკრანს და მერე აირჩიე სიმღერა.");
-            });
-        }
+    const label = document.getElementById('selected-music-name');
+    if (label) label.innerText = title;
 
-        // 5. ტექსტის შეცვლა
-        const label = document.getElementById('selected-music-name');
-        if (label) label.innerText = title;
-        
-        closeMusicPicker();
-
-    } catch (e) {
-        alert("ვერ ჩაირთო: " + e.message);
-    }
+    closeMusicPicker();
 }
 
-
-// Firestore-დან წამოღება (თუ ბაზაშიც გიწერია მონაცემები)
+// 2. ბაზიდან წამოღება (onclick-ის გარეშე, რომ ლინკი არ გაფუჭდეს)
 async function loadMusicFromDB() {
     const list = document.getElementById('music-list');
     if (!list) return;
-    list.innerHTML = "იტვირთება...";
+    list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება...</p>";
 
     try {
-        const querySnapshot = await db.collection("musics").get();
-        const dbSongs = [];
-        querySnapshot.forEach(doc => dbSongs.push(doc.data()));
+        const querySnapshot = await db.collection("music").get();
+        list.innerHTML = ""; // ვასუფთავებთ
 
-        const rows = await Promise.all(dbSongs.map(async (s) => {
-            const realTime = await getDuration(s.url);
-            return `
-                <div class="music-item-row" onclick="pickSong('${s.url}', '${s.name}')" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
-                    <img src="${s.img || 'https://via.placeholder.com/50'}" class="music-thumb" style="width:50px; height:50px; border-radius:4px; margin-right:15px;">
-                    <div style="flex:1;">
-                        <div style="font-weight:500; color:white;">${s.name}</div>
-                        <div style="color:#888; font-size:12px;">${s.artist || 'Unknown'} · ${realTime}</div>
-                    </div>
+        querySnapshot.forEach((doc) => {
+            const s = doc.data();
+            
+            // ვქმნით ელემენტს ხელით, რომ URL უსაფრთხოდ გადაეცეს
+            const row = document.createElement('div');
+            row.className = "music-item-row";
+            row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
+            row.innerHTML = `
+                <img src="${s.img || 'https://via.placeholder.com/50'}" class="music-thumb" style="width:50px; height:50px; border-radius:4px; margin-right:15px;">
+                <div style="flex:1;">
+                    <div style="font-weight:500; color:white;">${s.name || s.title}</div>
+                    <div style="color:#888; font-size:12px;">${s.artist || 'Artist'}</div>
                 </div>
             `;
-        }));
-        list.innerHTML = rows.join('');
+            
+            // აქ ვუკავშირებთ მუსიკას დაჭერაზე
+            row.addEventListener('click', () => {
+                pickSong(s.url, s.name || s.title);
+            });
+
+            list.appendChild(row);
+        });
+
     } catch (error) {
-        console.error("Firestore Error:", error);
+        list.innerHTML = "<p style='color:red;'>ბაზის შეცდომა</p>";
     }
-}   
-
-
-
-
+}
