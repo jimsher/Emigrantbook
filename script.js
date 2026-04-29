@@ -5331,16 +5331,28 @@ async function renderSongs() {
 }
 
 function pickSong(url, title) {
+    // 1. თუ რამე უკვე მღეროდა, გავაჩეროთ ბოლომდე
     if (currentBackgroundMusic) {
         currentBackgroundMusic.pause();
+        currentBackgroundMusic.currentTime = 0;
     }
     
+    // 2. შევქმნათ ახალი აუდიო ობიექტი
     currentBackgroundMusic = new Audio(url);
-    currentBackgroundMusic.crossOrigin = "anonymous";
+    currentBackgroundMusic.crossOrigin = "anonymous"; // ჩაწერისთვის აუცილებელია
     
+    // 3. 🚀 აი ეს ხაზი აამღერებს არჩევისთანავე!
+    currentBackgroundMusic.play()
+        .then(() => console.log("მუსიკა ჩაირთო!"))
+        .catch(err => console.error("დაკვრის შეცდომა (შესაძლოა ბრაუზერმა დაბლოკა):", err));
+    
+    // 4. ზედა ღილაკზე ტექსტის შეცვლა
     const label = document.getElementById('selected-music-name');
-    if (label) label.innerText = title;
+    if (label) {
+        label.innerText = title;
+    }
     
+    // 5. დავხუროთ პანელი
     closeMusicPicker();
 }
 
