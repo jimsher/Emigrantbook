@@ -7,6 +7,9 @@ const firebaseConfig = {
   appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
 };
 
+
+let audioCtx, audioSource, audioDest;
+
 // ინიციალიზაცია
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
