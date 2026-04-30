@@ -3908,6 +3908,7 @@ async function toggleRecording() {
             }
 
             // --- 2. შენი ორიგინალი Canvas/Filter ლოგიკა (უცვლელად) ---
+            // --- 2. შენი ორიგინალი Canvas/Filter ლოგიკა (უცვლელად) ---
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = video.videoWidth || 720;
@@ -3922,16 +3923,15 @@ async function toggleRecording() {
                 }
             }
 
-            // ვქმნით ფილტრიან სტრიმს კანვასიდან
+            // 🚀 აქ სწორდება ხმის ჩაწერა:
             const filteredStream = canvas.captureStream(30); 
+            const finalStream = new MediaStream();
+
+            // ვამატებთ ვიდეოს კანვასიდან
+            filteredStream.getVideoTracks().forEach(track => finalStream.addTrack(track));
             
-            // ვაერთებთ ვიდეოს და არჩეულ აუდიოს (მუსიკას ან მიკროფონს)
-            const combinedStream = new MediaStream([
-                ...filteredStream.getVideoTracks()
-            ]);
-            
-            // ვამატებთ აუდიო ტრეკებს
-            audioStreamToUse.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+            // ვამატებთ ხმას (მუსიკას ან მიკროფონს)
+            audioStreamToUse.getAudioTracks().forEach(track => finalStream.addTrack(track));
 
             globalChunks = [];
             
@@ -3945,7 +3945,8 @@ async function toggleRecording() {
                 options.mimeType = 'video/mp4';
             }
 
-            globalMediaRecorder = new MediaRecorder(combinedStream, options);
+            // ვიყენებთ finalStream-ს, რომელშიც ვიდეოც არის და ხმაც
+            globalMediaRecorder = new MediaRecorder(finalStream, options);
             
             globalMediaRecorder.ondataavailable = (e) => {
                 if (e.data.size > 0) globalChunks.push(e.data);
@@ -3962,10 +3963,9 @@ async function toggleRecording() {
                 video.srcObject = null;
                 video.src = URL.createObjectURL(blob);
                 video.style.transform = "scaleX(1)";
-                video.muted = false;
+                video.muted = false; // ჩაწერილ ვიდეოზე ხმა რომ ჩაირთოს
                 video.play();
 
-                // მუსიკის გაჩერება ჩაწერის დასრულებისას
                 if (currentBackgroundMusic) {
                     currentBackgroundMusic.pause();
                 }
@@ -3976,7 +3976,6 @@ async function toggleRecording() {
             globalMediaRecorder.start();
             drawFrame(); 
             
-            // თუ მუსიკა გვაქვს, ჩაწერისას იწყებს თავიდან სინქრონისთვის
             if (currentBackgroundMusic && !currentBackgroundMusic.paused) {
                 currentBackgroundMusic.currentTime = 0;
                 currentBackgroundMusic.play();
@@ -3989,7 +3988,6 @@ async function toggleRecording() {
                 btnInner.style.background = "#ff0000";
             }
         } else {
-            // ჩაწერის გაჩერება
             globalMediaRecorder.stop();
             if (btnInner) {
                 btnInner.style.borderRadius = "50%";
@@ -4000,6 +3998,7 @@ async function toggleRecording() {
         console.error("Recording error:", err);
     }
 }
+
 // აქ მთავრდება
             
  
