@@ -2113,7 +2113,7 @@ function renderTokenFeed() {
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
                 <div class="side-actions">
                     <div style="position:relative">
-                        <img id="ava-${id}" src="token-avatar.png=${post.authorName}" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
+                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
                         <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none;"></div>
                     </div>
                     <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
