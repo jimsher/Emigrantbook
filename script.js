@@ -2178,7 +2178,7 @@ function renderTokenFeed() {
                         avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
                         avaBox.innerHTML = `
                             <div style="position:relative; width:48px; height:48px;">
-                                <img src="${person.photo || 'https://ui-avatars.com/api/?name=' + person.name}" 
+                                <img src="${person.photo || 'token-avatar.png' + person.name}" 
                                      style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
                                 <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
                             </div>`;
