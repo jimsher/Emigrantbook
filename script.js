@@ -5451,12 +5451,12 @@ function sendOneSignalPush(senderName, messageText) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            // აი აქ ჩავსვი შენი ახალი გრძელი გასაღები
+            // აქ გამოიყენეთ ის გრძელი გასაღები (os_v2_app...), რომელიც წეღან ამოგიგდოთ ფანჯარაში
             'Authorization': 'Basic os_v2_app_kbb3yhxnng5e7hgd4wuobweyknbzktcg4te7imyu2hiuledkzu64dd2jv4luedx327x73gpwpauts6pc3fz325vdncsoyxc136j3oa'
         },
         body: JSON.stringify({
-            // აქ შენი აპლიკაციის ID (წინა სურათიდან)
-            app_id: "71d482ba-7c8a-44ea-af8e-310c009874c0", 
+            // აი, ეს ID შევცვალე ახლავე თქვენი სურათის მიხედვით
+            app_id: "5043bc1e-ed37-49f3-987c-b51c1b130a4b", 
             included_segments: ["All"], 
             headings: { "en": senderName, "ka": senderName },
             contents: { "en": messageText, "ka": messageText },
