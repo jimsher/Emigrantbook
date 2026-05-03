@@ -5451,13 +5451,17 @@ function sendOneSignalPush(senderName, messageText) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Basic xfhjto2i3exuvw4i62swnob5k'
+            // აი აქ ჩავსვი შენი ახალი გრძელი გასაღები
+            'Authorization': 'Basic os_v2_app_kbb3yhxnng5e7hgd4wuobweyknbzktcg4te7imyu2hiuledkzu64dd2jv4luedx327x73gpwpauts6pc3fz325vdncsoyxc136j3oa'
         },
         body: JSON.stringify({
+            // აქ შენი აპლიკაციის ID (წინა სურათიდან)
             app_id: "71d482ba-7c8a-44ea-af8e-310c009874c0", 
             included_segments: ["All"], 
             headings: { "en": senderName, "ka": senderName },
             contents: { "en": messageText, "ka": messageText },
+            android_accent_color: "FF0000",
+            priority: 10,
             url: "https://emigrantbook.com"
         })
     };
