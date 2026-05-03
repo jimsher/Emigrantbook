@@ -2994,7 +2994,7 @@ async function submitWallPost() {
 
     try {
         if(file) {
-            // Cloudinary-ს ნაცვლად ვიყენებთ ImgBB-ს, რომელიც ფოტოებს უპრობლემოდ იღებს
+            // ImgBB ატვირთვა
             const formData = new FormData();
             formData.append('image', file);
 
@@ -3019,9 +3019,12 @@ async function submitWallPost() {
             authorName: myName,
             authorPhoto: myPhoto,
             text: text,
-            image: finalUrl, // აქ უკვე იქნება ImgBB-ს ლინკი
+            image: finalUrl,
             timestamp: Date.now()
         });
+
+        // 🚀 ახალი: ნოტიფიკაციის გაგზავნა ყველასთან
+        sendOneSignalPush(myName, text || "ახალი ფოტო გამოქვეყნდა!");
 
         spendAkho(2, 'Community Post');
         document.getElementById('wallPostText').value = "";
