@@ -5438,3 +5438,33 @@ async function loadMusicFromDB() {
         console.error(e);
     }
 }                    
+
+
+
+
+
+
+
+// ნოთიპიკაციების კოდი პოდულარისთვის
+function sendOneSignalPush(senderName, messageText) {
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic YOUR_REST_API_KEY' // 🔴 აქ ჩასვი OneSignal-ის REST API KEY
+        },
+        body: JSON.stringify({
+            app_id: "YOUR_ONESIGNAL_APP_ID", // 🔴 აქ ჩასვი OneSignal-ის APP ID
+            included_segments: ["All"], 
+            headings: { "en": senderName, "ka": senderName },
+            contents: { "en": messageText, "ka": messageText },
+            url: "https://emigrantbook.com"
+        })
+    };
+
+    fetch('https://onesignal.com/api/v1/notifications', options)
+        .then(res => res.json())
+        .then(data => console.log("Push Sent ✅", data))
+        .catch(err => console.error("Push Error ❌", err));
+}
+// აქ მთავრდება
