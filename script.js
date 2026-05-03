@@ -5451,10 +5451,10 @@ function sendOneSignalPush(senderName, messageText) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'xfhjto2i3exuvw4i62swnob5k' // 🔴 აქ ჩასვი OneSignal-ის REST API KEY
+            'Authorization': 'Basic xfhjto2i3exuvw4i62swnob5k'
         },
         body: JSON.stringify({
-            app_id: "71d482ba-7c8a-44ea-af8e-310c009874c0", // 🔴 აქ ჩასვი OneSignal-ის APP ID
+            app_id: "71d482ba-7c8a-44ea-af8e-310c009874c0", 
             included_segments: ["All"], 
             headings: { "en": senderName, "ka": senderName },
             contents: { "en": messageText, "ka": messageText },
