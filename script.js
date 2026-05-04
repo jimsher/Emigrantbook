@@ -2965,20 +2965,77 @@ function openCommunityWall() {
 function closeCommunityWall() {
  document.getElementById('communityWallUI').style.display = 'none';
 }
+
+// ფოსტის სურათის ახალი ფუნქცია კოლაჟი
 function previewWallImage(input) {
- if (input.files && input.files[0]) {
- const reader = new FileReader();
- reader.onload = e => {
- document.getElementById('wallImgPreview').src = e.target.result;
- document.getElementById('wallImgPreviewBox').style.display = 'block';
- }
- reader.readAsDataURL(input.files[0]);
- }
+    const box = document.getElementById('wallImgPreviewBox');
+    const previewImg = document.getElementById('wallImgPreview');
+
+    if (input.files && input.files.length > 0) {
+        // 1. ვალიდაცია: მაქსიმუმ 3 ფოტო
+        if (input.files.length > 3) {
+            alert("შეგიძლიათ აირჩიოთ მაქსიმუმ 3 ფოტო!");
+            input.value = "";
+            box.style.display = 'none';
+            return;
+        }
+
+        // 2. თუ მხოლოდ 1 ფოტოა, შენი ორიგინალი ლოგიკა მუშაობს
+        if (input.files.length === 1) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+                // თუ ადრე კოლაჟი იყო, Grid-ს ვაშორებთ
+                box.style.display = 'block';
+                box.style.flexDirection = 'column'; 
+            }
+            reader.readAsDataURL(input.files[0]);
+        } 
+        // 3. თუ 2 ან 3 ფოტოა, ვაკეთებთ კოლაჟს იმავე Box-ში
+        else {
+            box.innerHTML = ''; // ვასუფთავებთ შიგთავსს ახალი პრევიუსთვის
+            box.style.display = 'grid';
+            box.style.gridTemplateColumns = 'repeat(auto-fit, minmax(100px, 1fr))';
+            box.style.gap = '5px';
+
+            Array.from(input.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100%';
+                    img.style.height = '150px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '10px';
+                    img.style.border = '1px solid var(--gold)';
+                    box.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // ვაბრუნებთ X ღილაკს, რადგან innerHTML-მა წაშალა
+            const closeBtn = document.createElement('i');
+            closeBtn.className = 'fas fa-times-circle';
+            closeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; color: white; font-size: 20px; cursor: pointer; z-index: 10;';
+            closeBtn.onclick = cancelWallImg;
+            box.appendChild(closeBtn);
+        }
+    }
 }
+
 function cancelWallImg() {
- document.getElementById('wallImgInput').value = "";
- document.getElementById('wallImgPreviewBox').style.display = 'none';
+    const box = document.getElementById('wallImgPreviewBox');
+    document.getElementById('wallImgInput').value = "";
+    box.style.display = 'none';
+    box.innerHTML = `
+        <img id="wallImgPreview" style="width: 100%; border-radius: 10px; border: 1px solid var(--gold); max-height: 200px; object-fit: cover;">
+        <i class="fas fa-times-circle" style="position: absolute; top: 5px; right: 5px; color: white; font-size: 20px; cursor: pointer;" onclick="cancelWallImg()"></i>
+    `;
 }
+
+// აქ მთავრდება
+
 
 async function submitWallPost() {
     const text = document.getElementById('wallPostText').value;
