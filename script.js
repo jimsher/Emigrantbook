@@ -2058,7 +2058,8 @@ function formatPostDate(ts) {
     const day = d.getDate().toString().padStart(2, '0');
     return `${month}-${day}`;
 }
-// 3. მთავარი ფუნქცია (შენი სრული ლოგიკით)
+
+// 3. მთავარი ფუნქცია (ზუსტად შენი ორიგინალი)
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
@@ -2098,7 +2099,7 @@ function renderTokenFeed() {
             const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
-            // --- შენი სრული INNER HTML (არაფერია ამოკლებული) ---
+            // --- შენი სრული INNER HTML (დამატებულია ava-wrapper ციმციმისთვის) ---
             card.innerHTML = `
              <video src="${videoUrl}" 
              loop 
@@ -2112,9 +2113,9 @@ function renderTokenFeed() {
              </video>
                 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
                 <div class="side-actions">
-                    <div style="position:relative">
-                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
-                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none;"></div>
+                    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
+                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
+                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
                     </div>
                     <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
                         <i class="fas fa-heart"></i>
@@ -2155,7 +2156,7 @@ function renderTokenFeed() {
                </div>`;
             
             feed.appendChild(card);
-            cleanupOldVideos(); // 🧹 წმენდა
+            cleanupOldVideos();
 
             // --- შენი ორიგინალი LIVE LIKE ციკლი ---
             function startLikeCycle() {
@@ -2200,14 +2201,29 @@ function renderTokenFeed() {
                 const el = document.getElementById(`comm-count-${id}`);
                 if(el) el.innerText = count;
             });
+
             db.ref(`users/${post.authorId}`).on('value', uSnap => {
                 const u = uSnap.val();
                 if(!u) return;
                 const ava = document.getElementById(`ava-${id}`);
+                const wrapper = document.getElementById(`ava-wrapper-${id}`);
                 const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
+                
                 if(u.photo && ava) ava.src = u.photo;
                 if(u.name && name) name.innerText = "@" + u.name;
+                
+                // --- LIVE ლოგიკა შენს მსმენელში ---
+                if(u.Lives && wrapper) {
+                    wrapper.classList.add('is-live-now');
+                    // თუ ლაივშია, ავატარზე დაჭერით გადადის ლაივზე
+                    ava.onclick = () => window.location.href = `https://emigrantbook.com/live/${post.authorId}`;
+                } else if(wrapper) {
+                    wrapper.classList.remove('is-live-now');
+                    // თუ არაა ლაივში, ჩვეულებრივი openProfile
+                    ava.onclick = () => openProfile(post.authorId);
+                }
+
                 if(u.presence === 'online' && status) status.style.display = 'block';
                 else if(status) status.style.display = 'none';
             });
@@ -2221,7 +2237,8 @@ function renderTokenFeed() {
             renderTokenFeed();
         }
     };
-}                                                     
+}
+                                                             
 // აქ მთავრდება
 
 
