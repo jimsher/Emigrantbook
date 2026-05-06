@@ -2098,28 +2098,38 @@ function renderTokenFeed() {
             const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
-            // --- შენი სრული INNER HTML (არაფერია ამოკლებული) ---
-            card.innerHTML = `
-             <video src="${videoUrl}" 
-             loop 
-             playsinline 
-             muted 
-             autoplay
-             preload="metadata" 
-             poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-             style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
-             onclick="togglePlayPause(this)">
-             </video>
-                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
-                <div class="side-actions">
-                    <div style="position:relative">
-                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
-                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none;"></div>
-                    </div>
-                    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
-                        <i class="fas fa-heart"></i>
-                        <span id="like-count-${id}">${likeCount}</span>
-                    </div>
+            // --- შენი სრული INNER HTML (გასწორებული ავატარის ნაწილით) ---
+card.innerHTML = `
+<video src="${videoUrl}" 
+loop 
+playsinline 
+muted 
+autoplay
+preload="metadata" 
+poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
+onclick="togglePlayPause(this)">
+</video>
+<div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
+
+<div class="side-actions">
+    <!-- 🚀 აი აქ არის TikTok-ის სტილის ავატარი -->
+    <div class="author-ava-container" id="ava-wrapper-${id}">
+        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" 
+             style="width:48px; height:48px; border-radius:50%; border:2px solid #000; object-fit:cover; position:relative; z-index:5;"
+             onclick="openProfile('${post.authorId}')">
+        
+        <!-- პატარა პლუს ღილაკი (როგორც Screenshot_20260505_224751_TikTok.jpg-ზეა) -->
+        <div class="follow-plus-btn" id="plus-${id}" onclick="event.stopPropagation(); followUser('${post.authorId}')">
+            <i class="fas fa-plus"></i>
+        </div>
+    </div>
+
+    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+        <i class="fas fa-heart"></i>
+        <span id="like-count-${id}">${likeCount}</span>
+    </div>
+    
                     <div class="action-item" onclick="openComments('${id}')">
                         <i class="fas fa-comment-dots"></i>
                         <span id="comm-count-${id}">0</span>
