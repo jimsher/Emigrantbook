@@ -2216,21 +2216,40 @@ function renderTokenFeed() {
                 else if(status) status.style.display = 'none';
             });
 
-            // 🚀 რეალურ დროში LIVE-ის დაჭერა lives_active-დან
+            // ... (formatPostDate და renderTokenFeed-ის დასაწყისი უცვლელია შენი ორიგინალიდან)
+
+            // 🚀 LIVE სტატუსის შემოწმება (ზუსტად lives_active-დან)
             db.ref(`lives_active/${post.authorId}`).on('value', lSnap => {
                 const wrapper = document.getElementById(`ava-wrapper-${id}`);
                 const ava = document.getElementById(`ava-${id}`);
                 
-                if(lSnap.exists() && wrapper) {
-                    wrapper.classList.add('is-live-now');
-                    // თუ ლაივშია, ავატარზე დაჭერით გადადის ლაივზე
-                    ava.onclick = () => window.location.href = `https://emigrantbook.com/live/${post.authorId}`;
-                } else if(wrapper) {
+                if (lSnap.exists() && wrapper) {
+                    // თუ ლაივშია - პირდაპირ აქ ვუწერთ სტილებს, რომ CSS-მა არ დაგვაღალატოს
+                    wrapper.style.boxShadow = "0 0 0 2px #000, 0 0 0 4px #fe2c55";
+                    wrapper.style.borderRadius = "50%";
+                    wrapper.classList.add('is-live-now'); // ანიმაციისთვის მაინც დავუტოვოთ
+                    
+                    if (ava) {
+                        ava.style.border = "2px solid #fe2c55";
+                        ava.onclick = () => {
+                            window.location.href = `https://emigrantbook.com/live/${post.authorId}`;
+                        };
+                    }
+                } else if (wrapper) {
+                    // თუ არაა ლაივში - ვაბრუნებთ საწყის მდგომარეობას
+                    wrapper.style.boxShadow = "none";
                     wrapper.classList.remove('is-live-now');
-                    // თუ არაა ლაივში, ჩვეულებრივი openProfile
-                    ava.onclick = () => openProfile(post.authorId);
+                    
+                    if (ava) {
+                        ava.style.border = "2px solid #000";
+                        ava.onclick = () => {
+                            openProfile(post.authorId);
+                        };
+                    }
                 }
             });
+
+// ... (დანარჩენი კოდი - Like Cycle, Comments და ა.შ. - აბსოლუტურად ხელუხლებელია)
         });
         setupAutoPlay();
     });
