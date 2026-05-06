@@ -2227,7 +2227,7 @@ onclick="togglePlayPause(this)">
 
                 // 2. 🚀 TikTok LIVE ანიმაციის მართვა
                 // თუ მომხმარებელი ლაივშია (ბაზაში u.isLive უნდა გქონდეს true)
-                if(u.isLive && avaWrapper) {
+                if(u.Lives && avaWrapper) {
                     avaWrapper.classList.add('is-live-now');
                     if(plusBtn) plusBtn.style.display = 'none'; // ლაივის დროს პლუსი იმალება
                 } else if(avaWrapper) {
