@@ -2051,7 +2051,7 @@ function cleanupOldVideos() {
 
 
 
-function formatPostDate(ts) {
+   function formatPostDate(ts) {
     if (!ts) return "";
     const d = new Date(ts);
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -2059,7 +2059,7 @@ function formatPostDate(ts) {
     return `${month}-${day}`;
 }
 
-// 3. მთავარი ფუნქცია (ზუსტად შენი ორიგინალი)
+// 3. მთავარი ფუნქცია (სრულად შენი ორიგინალი)
 function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
@@ -2099,28 +2099,31 @@ function renderTokenFeed() {
             const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
-            // --- შენი სრული INNER HTML (დამატებულია ava-wrapper ციმციმისთვის) ---
+            // --- შენი სრული INNER HTML ---
             card.innerHTML = `
-             <video src="${videoUrl}" 
-             loop 
-             playsinline 
-             muted 
-             autoplay
-             preload="metadata" 
-             poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-             style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
-             onclick="togglePlayPause(this)">
-             </video>
-                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
-                <div class="side-actions">
-                    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
-                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
-                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
-                    </div>
-                    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
-                        <i class="fas fa-heart"></i>
-                        <span id="like-count-${id}">${likeCount}</span>
-                    </div>
+<video src="${videoUrl}" 
+loop 
+playsinline 
+muted 
+autoplay
+preload="metadata" 
+poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
+onclick="togglePlayPause(this)">
+</video>
+<div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
+
+<div class="side-actions">
+    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
+        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
+        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
+    </div>
+
+    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+        <i class="fas fa-heart"></i>
+        <span id="like-count-${id}">${likeCount}</span>
+    </div>
+    
                     <div class="action-item" onclick="openComments('${id}')">
                         <i class="fas fa-comment-dots"></i>
                         <span id="comm-count-${id}">0</span>
@@ -2202,54 +2205,35 @@ function renderTokenFeed() {
                 if(el) el.innerText = count;
             });
 
+            // 1. მომხმარებლის ძირითადი მონაცემები (ავატარი, სახელი, ონლაინ სტატუსი)
             db.ref(`users/${post.authorId}`).on('value', uSnap => {
                 const u = uSnap.val();
                 if(!u) return;
                 const ava = document.getElementById(`ava-${id}`);
                 const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
-                
                 if(u.photo && ava) ava.src = u.photo;
                 if(u.name && name) name.innerText = "@" + u.name;
-                
                 if(u.presence === 'online' && status) status.style.display = 'block';
                 else if(status) status.style.display = 'none';
             });
 
-            // ... (formatPostDate და renderTokenFeed-ის დასაწყისი უცვლელია შენი ორიგინალიდან)
-
-            // 🚀 LIVE სტატუსის შემოწმება (ზუსტად lives_active-დან)
-            db.ref(`lives_active/${post.authorId}`).on('value', lSnap => {
+            // 2. 🚀 LIVE სტატუსის დაჭერა (ზუსტი მისამართით: live_ID)
+            const liveChannelName = "live_" + post.authorId;
+            db.ref(`lives_active/${liveChannelName}`).on('value', lSnap => {
                 const wrapper = document.getElementById(`ava-wrapper-${id}`);
                 const ava = document.getElementById(`ava-${id}`);
                 
-                if (lSnap.exists() && wrapper) {
-                    // თუ ლაივშია - პირდაპირ აქ ვუწერთ სტილებს, რომ CSS-მა არ დაგვაღალატოს
-                    wrapper.style.boxShadow = "0 0 0 2px #000, 0 0 0 4px #fe2c55";
-                    wrapper.style.borderRadius = "50%";
-                    wrapper.classList.add('is-live-now'); // ანიმაციისთვის მაინც დავუტოვოთ
-                    
-                    if (ava) {
-                        ava.style.border = "2px solid #fe2c55";
-                        ava.onclick = () => {
-                            window.location.href = `https://emigrantbook.com/live/${post.authorId}`;
-                        };
-                    }
-                } else if (wrapper) {
-                    // თუ არაა ლაივში - ვაბრუნებთ საწყის მდგომარეობას
-                    wrapper.style.boxShadow = "none";
+                if(lSnap.exists() && wrapper) {
+                    wrapper.classList.add('is-live-now');
+                    // თუ ლაივშია, ავატარზე დაჭერით გადადის ლაივზე
+                    if(ava) ava.onclick = () => joinLive(liveChannelName);
+                } else if(wrapper) {
                     wrapper.classList.remove('is-live-now');
-                    
-                    if (ava) {
-                        ava.style.border = "2px solid #000";
-                        ava.onclick = () => {
-                            openProfile(post.authorId);
-                        };
-                    }
+                    // თუ არაა ლაივში, ჩვეულებრივი openProfile
+                    if(ava) ava.onclick = () => openProfile(post.authorId);
                 }
             });
-
-// ... (დანარჩენი კოდი - Like Cycle, Comments და ა.შ. - აბსოლუტურად ხელუხლებელია)
         });
         setupAutoPlay();
     });
@@ -2260,8 +2244,7 @@ function renderTokenFeed() {
             renderTokenFeed();
         }
     };
-}
-                                                             
+}                                                          
 // აქ მთავრდება
 
 
