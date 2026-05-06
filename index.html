@@ -62,67 +62,54 @@
  
  <style>
 /* ეს არის ავატარზე ლაივის ციმციმა */
- /* ავატარის კონტეინერი */
-.author-ava-container {
+/* 1. ავატარის კონტეინერი და ციმციმა ჩარჩო */
+.author-ava-container.is-live-now {
     position: relative;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 20px;
+    padding: 3px; /* სივრცე ციმციმისთვის */
 }
 
-/* ანიმაციური წითელი რგოლი (TikTok Style) */
-.author-ava-container.is-live-now::before {
+/* წითელი მფეთქავი ჩარჩო */
+.author-ava-container.is-live-now::after {
     content: '';
     position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
-    border: 2px solid #ff0050;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid #fe2c55;
     border-radius: 50%;
-    animation: tiktok-pulse 1.5s infinite;
+    animation: tiktok-pulse 1.2s infinite ease-in-out;
+    pointer-events: none;
 }
 
-/* LIVE წარწერა ავატარის ქვეშ */
-.author-ava-container.is-live-now::after {
+/* 2. "LIVE" (ეთერი) ბეიჯი ავატარის დაბლა */
+.author-ava-container.is-live-now::before {
     content: 'LIVE';
     position: absolute;
-    bottom: -8px;
+    bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
-    background: #ff0050;
+    background: #fe2c55;
     color: white;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: bold;
-    padding: 1px 6px;
-    border-radius: 4px;
-    border: 1.5px solid #000;
+    padding: 1px 5px;
+    border-radius: 2px;
     z-index: 10;
+    border: 1px solid black;
 }
 
+/* 3. პულსაციის ანიმაცია */
 @keyframes tiktok-pulse {
     0% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(1.15); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
-/* პატარა პლუსი, თუ გინდა რომ იყოს როგორც სურათზეა */
-.follow-plus-btn {
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 18px;
-    height: 18px;
-    background: #ff0050;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    border: 2px solid #000;
-    z-index: 11;
-} 
+/* პლუს ღილაკის დამალვა ლაივის დროს */
+.author-ava-container.is-live-now .follow-plus-btn {
+    display: none !important;
+}
 /* აქ მთავრდება */
 
 
