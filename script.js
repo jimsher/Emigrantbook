@@ -2204,22 +2204,43 @@ onclick="togglePlayPause(this)">
             }
             startLikeCycle();
 
-            // --- Realtime მსმენელები ---
+            // --- Realtime მსმენელები (განახლებული LIVE სტატუსით) ---
             db.ref(`comments/${id}`).on('value', cSnap => {
                 const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                 const el = document.getElementById(`comm-count-${id}`);
                 if(el) el.innerText = count;
             });
+
             db.ref(`users/${post.authorId}`).on('value', uSnap => {
                 const u = uSnap.val();
                 if(!u) return;
+
                 const ava = document.getElementById(`ava-${id}`);
                 const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
+                const avaWrapper = document.getElementById(`ava-wrapper-${id}`); // ახალი კონტეინერი
+                const plusBtn = document.getElementById(`plus-${id}`); // პლუს ღილაკი
+
+                // 1. ავატარის და სახელის განახლება
                 if(u.photo && ava) ava.src = u.photo;
                 if(u.name && name) name.innerText = "@" + u.name;
-                if(u.presence === 'online' && status) status.style.display = 'block';
-                else if(status) status.style.display = 'none';
+
+                // 2. 🚀 TikTok LIVE ანიმაციის მართვა
+                // თუ მომხმარებელი ლაივშია (ბაზაში u.isLive უნდა გქონდეს true)
+                if(u.isLive && avaWrapper) {
+                    avaWrapper.classList.add('is-live-now');
+                    if(plusBtn) plusBtn.style.display = 'none'; // ლაივის დროს პლუსი იმალება
+                } else if(avaWrapper) {
+                    avaWrapper.classList.remove('is-live-now');
+                    if(plusBtn) plusBtn.style.display = 'flex';
+                }
+
+                // 3. შენი ძველი ონლაინ სტატუსი (მწვანე წერტილი)
+                if(u.presence === 'online' && status) {
+                    status.style.display = 'block';
+                } else if(status) {
+                    status.style.display = 'none';
+                }
             });
         });
         setupAutoPlay();
