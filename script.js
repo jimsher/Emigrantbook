@@ -2059,7 +2059,7 @@ function formatPostDate(ts) {
     return `${month}-${day}`;
 }
 // 3. მთავარი ფუნქცია (შენი სრული ლოგიკით)
-   function renderTokenFeed() {
+function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
@@ -2098,35 +2098,28 @@ function formatPostDate(ts) {
             const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
-            // --- შენი სრული INNER HTML (დამატებულია handleAvatarClick) ---
+            // --- შენი სრული INNER HTML (არაფერია ამოკლებული) ---
             card.innerHTML = `
-<video src="${videoUrl}" 
-loop 
-playsinline 
-muted 
-autoplay
-preload="metadata" 
-poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
-onclick="togglePlayPause(this)">
-</video>
-<div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
-
-<div class="side-actions">
-    <div class="author-ava-container" id="ava-wrapper-${id}" onclick="handleAvatarClick('${post.authorId}', '${id}')">
-        <img id="ava-${id}" src="${post.authorPhoto || 'token-avatar.png'}" class="author-mini-ava" 
-             style="width:48px; height:48px; border-radius:50%; border:2px solid #000; object-fit:cover; position:relative; z-index:5;">
-        
-        <div class="follow-plus-btn" id="plus-${id}" onclick="event.stopPropagation(); followUser('${post.authorId}')">
-            <i class="fas fa-plus"></i>
-        </div>
-    </div>
-
-    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
-        <i class="fas fa-heart"></i>
-        <span id="like-count-${id}">${likeCount}</span>
-    </div>
-    
+             <video src="${videoUrl}" 
+             loop 
+             playsinline 
+             muted 
+             autoplay
+             preload="metadata" 
+             poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+             style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
+             onclick="togglePlayPause(this)">
+             </video>
+                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
+                <div class="side-actions">
+                    <div style="position:relative">
+                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')">
+                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none;"></div>
+                    </div>
+                    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+                        <i class="fas fa-heart"></i>
+                        <span id="like-count-${id}">${likeCount}</span>
+                    </div>
                     <div class="action-item" onclick="openComments('${id}')">
                         <i class="fas fa-comment-dots"></i>
                         <span id="comm-count-${id}">0</span>
@@ -2201,40 +2194,22 @@ onclick="togglePlayPause(this)">
             }
             startLikeCycle();
 
-            // --- Realtime მსმენელები (განახლებული LIVE სტატუსით) ---
+            // --- Realtime მსმენელები ---
             db.ref(`comments/${id}`).on('value', cSnap => {
                 const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
                 const el = document.getElementById(`comm-count-${id}`);
                 if(el) el.innerText = count;
             });
-
             db.ref(`users/${post.authorId}`).on('value', uSnap => {
                 const u = uSnap.val();
                 if(!u) return;
-
                 const ava = document.getElementById(`ava-${id}`);
                 const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
-                const avaWrapper = document.getElementById(`ava-wrapper-${id}`); 
-                const plusBtn = document.getElementById(`plus-${id}`); 
-
                 if(u.photo && ava) ava.src = u.photo;
                 if(u.name && name) name.innerText = "@" + u.name;
-
-                // 🚀 TikTok LIVE ანიმაციის მართვა
-                if(u.Lives && avaWrapper) {
-                    avaWrapper.classList.add('is-live-now');
-                    if(plusBtn) plusBtn.style.display = 'none'; 
-                } else if(avaWrapper) {
-                    avaWrapper.classList.remove('is-live-now');
-                    if(plusBtn) plusBtn.style.display = 'flex';
-                }
-
-                if(u.presence === 'online' && status) {
-                    status.style.display = 'block';
-                } else if(status) {
-                    status.style.display = 'none';
-                }
+                if(u.presence === 'online' && status) status.style.display = 'block';
+                else if(status) status.style.display = 'none';
             });
         });
         setupAutoPlay();
@@ -2246,19 +2221,7 @@ onclick="togglePlayPause(this)">
             renderTokenFeed();
         }
     };
-}
-
-// 🛑 აუცილებელია: ეს ფუნქცია დაამატე renderTokenFeed-ის გარეთ, რომ დაჭერამ იმუშაოს
-window.handleAvatarClick = function(authorId, cardId) {
-    const wrapper = document.getElementById(`ava-wrapper-${cardId}`);
-    if (wrapper && wrapper.classList.contains('is-live-now')) {
-        // გადამისამართება ლაივზე
-        window.location.href = `https://emigrantbook.com/live/${authorId}`;
-    } else {
-        // ჩვეულებრივი პროფილის გახსნა
-        openProfile(authorId);
-    }
-};                                                                  
+}                                                     
 // აქ მთავრდება
 
 
