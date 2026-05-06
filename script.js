@@ -2206,15 +2206,22 @@ function renderTokenFeed() {
                 const u = uSnap.val();
                 if(!u) return;
                 const ava = document.getElementById(`ava-${id}`);
-                const wrapper = document.getElementById(`ava-wrapper-${id}`);
                 const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
                 
                 if(u.photo && ava) ava.src = u.photo;
                 if(u.name && name) name.innerText = "@" + u.name;
                 
-                // --- LIVE ლოგიკა შენს მსმენელში ---
-                if(u.Lives && wrapper) {
+                if(u.presence === 'online' && status) status.style.display = 'block';
+                else if(status) status.style.display = 'none';
+            });
+
+            // 🚀 რეალურ დროში LIVE-ის დაჭერა lives_active-დან
+            db.ref(`lives_active/${post.authorId}`).on('value', lSnap => {
+                const wrapper = document.getElementById(`ava-wrapper-${id}`);
+                const ava = document.getElementById(`ava-${id}`);
+                
+                if(lSnap.exists() && wrapper) {
                     wrapper.classList.add('is-live-now');
                     // თუ ლაივშია, ავატარზე დაჭერით გადადის ლაივზე
                     ava.onclick = () => window.location.href = `https://emigrantbook.com/live/${post.authorId}`;
@@ -2223,9 +2230,6 @@ function renderTokenFeed() {
                     // თუ არაა ლაივში, ჩვეულებრივი openProfile
                     ava.onclick = () => openProfile(post.authorId);
                 }
-
-                if(u.presence === 'online' && status) status.style.display = 'block';
-                else if(status) status.style.display = 'none';
             });
         });
         setupAutoPlay();
