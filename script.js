@@ -2113,13 +2113,10 @@ onclick="togglePlayPause(this)">
 <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
 
 <div class="side-actions">
-    <!-- 🚀 აი აქ არის TikTok-ის სტილის ავატარი -->
-    <div class="author-ava-container" id="ava-wrapper-${id}">
-        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" 
-             style="width:48px; height:48px; border-radius:50%; border:2px solid #000; object-fit:cover; position:relative; z-index:5;"
-             onclick="openProfile('${post.authorId}')">
+    <div class="author-ava-container" id="ava-wrapper-${id}" onclick="handleAvatarClick('${post.authorId}', '${id}')">
+        <img id="ava-${id}" src="${post.authorPhoto || 'token-avatar.png'}" class="author-mini-ava" 
+             style="width:48px; height:48px; border-radius:50%; border:2px solid #000; object-fit:cover; position:relative; z-index:5;">
         
-        <!-- პატარა პლუს ღილაკი (როგორც Screenshot_20260505_224751_TikTok.jpg-ზეა) -->
         <div class="follow-plus-btn" id="plus-${id}" onclick="event.stopPropagation(); followUser('${post.authorId}')">
             <i class="fas fa-plus"></i>
         </div>
