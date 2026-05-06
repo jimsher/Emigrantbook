@@ -2059,7 +2059,7 @@ function formatPostDate(ts) {
     return `${month}-${day}`;
 }
 // 3. მთავარი ფუნქცია (შენი სრული ლოგიკით)
-function renderTokenFeed() {
+   function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
@@ -2098,8 +2098,8 @@ function renderTokenFeed() {
             const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
-            // --- შენი სრული INNER HTML (გასწორებული ავატარის ნაწილით) ---
-card.innerHTML = `
+            // --- შენი სრული INNER HTML (დამატებულია handleAvatarClick) ---
+            card.innerHTML = `
 <video src="${videoUrl}" 
 loop 
 playsinline 
@@ -2215,24 +2215,21 @@ onclick="togglePlayPause(this)">
                 const ava = document.getElementById(`ava-${id}`);
                 const name = document.getElementById(`name-${id}`);
                 const status = document.getElementById(`mini-status-${id}`);
-                const avaWrapper = document.getElementById(`ava-wrapper-${id}`); // ახალი კონტეინერი
-                const plusBtn = document.getElementById(`plus-${id}`); // პლუს ღილაკი
+                const avaWrapper = document.getElementById(`ava-wrapper-${id}`); 
+                const plusBtn = document.getElementById(`plus-${id}`); 
 
-                // 1. ავატარის და სახელის განახლება
                 if(u.photo && ava) ava.src = u.photo;
                 if(u.name && name) name.innerText = "@" + u.name;
 
-                // 2. 🚀 TikTok LIVE ანიმაციის მართვა
-                // თუ მომხმარებელი ლაივშია (ბაზაში u.isLive უნდა გქონდეს true)
+                // 🚀 TikTok LIVE ანიმაციის მართვა
                 if(u.Lives && avaWrapper) {
                     avaWrapper.classList.add('is-live-now');
-                    if(plusBtn) plusBtn.style.display = 'none'; // ლაივის დროს პლუსი იმალება
+                    if(plusBtn) plusBtn.style.display = 'none'; 
                 } else if(avaWrapper) {
                     avaWrapper.classList.remove('is-live-now');
                     if(plusBtn) plusBtn.style.display = 'flex';
                 }
 
-                // 3. შენი ძველი ონლაინ სტატუსი (მწვანე წერტილი)
                 if(u.presence === 'online' && status) {
                     status.style.display = 'block';
                 } else if(status) {
@@ -2249,7 +2246,19 @@ onclick="togglePlayPause(this)">
             renderTokenFeed();
         }
     };
-}                                                     
+}
+
+// 🛑 აუცილებელია: ეს ფუნქცია დაამატე renderTokenFeed-ის გარეთ, რომ დაჭერამ იმუშაოს
+window.handleAvatarClick = function(authorId, cardId) {
+    const wrapper = document.getElementById(`ava-wrapper-${cardId}`);
+    if (wrapper && wrapper.classList.contains('is-live-now')) {
+        // გადამისამართება ლაივზე
+        window.location.href = `https://emigrantbook.com/live/${authorId}`;
+    } else {
+        // ჩვეულებრივი პროფილის გახსნა
+        openProfile(authorId);
+    }
+};                                                                  
 // აქ მთავრდება
 
 
