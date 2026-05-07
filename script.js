@@ -4913,59 +4913,7 @@ document.addEventListener('focusin', (e) => {
 
 
 // ვიდეოს პოპულიზაციის გვერდი
-function openPromoteUI() {
-    const menu = document.getElementById('more-menu-panel');
-    if (menu) menu.classList.remove('active'); // ვხურავთ სამ წერტილს
-    
-    document.getElementById('promoteUI').style.display = 'flex';
-    
-    // ვიდეოების ჩატვირთვა
-    const grid = document.getElementById('promoteVideoGrid');
-    grid.innerHTML = "";
-    db.ref('posts').orderByChild('authorId').equalTo(auth.currentUser.uid).once('value', snap => {
-        const posts = snap.val();
-        if (posts) {
-            Object.entries(posts).reverse().forEach(([id, post]) => {
-                const video = post.media ? post.media.find(m => m.type === 'video') : null;
-                if (video) {
-                    grid.innerHTML += `
-                    <div onclick="selectEbVideo('${id}')" id="vid-${id}" style="min-width:100px; height:130px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:2px solid transparent; position:relative;">
-                        <video src="${video.url}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;"></video>
-                        <div style="position:absolute; bottom:5px; left:5px; font-size:10px;"><i class="fas fa-play"></i> ${post.views || 0}</div>
-                    </div>`;
-                }
-            });
-        }
-    });
-}
 
-let selectedEbVideoId = null;
-function selectEbVideo(id) {
-    selectedEbVideoId = id;
-    document.querySelectorAll('#promoteVideoGrid div').forEach(el => el.style.borderColor = "transparent");
-    document.getElementById('vid-' + id).style.borderColor = "#fe2c55";
-    checkEbReady();
-}
-
-function selectEbPack(el, price) {
-    document.querySelectorAll('.eb-pack').forEach(p => p.style.background = "#1a1a1a");
-    el.style.background = "#261014";
-    document.getElementById('ebTotal').innerText = price.toFixed(2).replace('.', ',') + " $";
-    window.selectedEbPrice = price;
-    checkEbReady();
-}
-
-function checkEbReady() {
-    if (selectedEbVideoId && window.selectedEbPrice) {
-        const btn = document.getElementById('ebPayBtn');
-        btn.disabled = false;
-        btn.style.opacity = "1";
-    }
-}
-
-function closePromoteUI() {
-    document.getElementById('promoteUI').style.display = 'none';
-}
 
 
 
@@ -5513,73 +5461,105 @@ function sendOneSignalPush(senderName, messageText) {
 
 
 
-// ვიდეოს არჩევა და პოპულიზაცია 24 საათით
-// --- პოპულარიზაციის ლოგიკა ---
-
-let selectedPromotePrice = 0;
-let videoIdToPromote = null;
-
-// პანელის გახსნა (გამოიძახე სამი წერტილიდან)
-function openPromoteUI(vidId) {
-    videoIdToPromote = vidId;
+// --- ვიდეოს პოპულიზაციის გვერდი ---
+function openPromoteUI() {
+    const menu = document.getElementById('more-menu-panel');
+    if (menu) menu.classList.remove('active'); 
+    
     document.getElementById('promoteUI').style.display = 'flex';
+    
+    // მონაცემების გასუფთავება ყოველი გახსნისას
+    selectedEbVideoId = null;
+    window.selectedEbPrice = 0;
+    const btn = document.getElementById('ebPayBtn');
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
     document.getElementById('ebTotal').innerText = "0,00 $";
+
+    const grid = document.getElementById('promoteVideoGrid');
+    grid.innerHTML = "";
+    
+    db.ref('posts').orderByChild('authorId').equalTo(auth.currentUser.uid).once('value', snap => {
+        const posts = snap.val();
+        if (posts) {
+            Object.entries(posts).reverse().forEach(([id, post]) => {
+                const video = post.media ? post.media.find(m => m.type === 'video') : null;
+                if (video) {
+                    grid.innerHTML += `
+                    <div onclick="selectEbVideo('${id}')" id="vid-${id}" style="min-width:100px; height:130px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:2px solid transparent; position:relative; flex-shrink:0;">
+                        <video src="${video.url}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;"></video>
+                        <div style="position:absolute; bottom:5px; left:5px; font-size:10px;"><i class="fas fa-play"></i> ${post.views || 0}</div>
+                    </div>`;
+                }
+            });
+        }
+    });
 }
 
-function closePromoteUI() {
-    document.getElementById('promoteUI').style.display = 'none';
-    selectedPromotePrice = 0;
+let selectedEbVideoId = null;
+function selectEbVideo(id) {
+    selectedEbVideoId = id;
+    document.querySelectorAll('#promoteVideoGrid div').forEach(el => el.style.borderColor = "transparent");
+    const target = document.getElementById('vid-' + id);
+    if(target) target.style.borderColor = "#fe2c55";
+    checkEbReady();
 }
 
-// პაკეტის არჩევა
 function selectEbPack(el, price) {
-    // მონიშვნის ვიზუალი
-    document.querySelectorAll('.eb-pack').forEach(p => p.style.borderColor = "#333");
+    document.querySelectorAll('.eb-pack').forEach(p => {
+        p.style.background = "#1a1a1a";
+        p.style.borderColor = "#333";
+    });
+    el.style.background = "#261014";
     el.style.borderColor = "#fe2c55";
-    
-    selectedPromotePrice = price;
-    document.getElementById('ebTotal').innerText = price.toFixed(2) + " $";
-    
-    const payBtn = document.getElementById('ebPayBtn');
-    payBtn.disabled = false;
-    payBtn.style.opacity = "1";
+    document.getElementById('ebTotal').innerText = price.toFixed(2).replace('.', ',') + " $";
+    window.selectedEbPrice = price;
+    checkEbReady();
 }
 
-// გადახდა და ვიდეოს გაპიარება
-async function startPayment() {
-    if (!videoIdToPromote || selectedPromotePrice === 0) return;
+function checkEbReady() {
+    if (selectedEbVideoId && window.selectedEbPrice) {
+        const btn = document.getElementById('ebPayBtn');
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }
+}
+
+// 🚀 აქ არის მთავარი ფუნქცია - გადახდა და დაპრიორიტეტება
+function startPayment() {
+    if (!selectedEbVideoId || !window.selectedEbPrice) return;
 
     const user = auth.currentUser;
-    const userRef = db.ref(`users/${user.uid}`);
-    
-    // 1$ = 10 AKHO (შენი ვალეტის მიხედვით)
-    const akhoCost = Math.ceil(selectedPromotePrice * 10);
+    // 1$ = 10 AKHO-ს ლოგიკით (შეგიძლია შეცვალო კურსი)
+    const akhoPrice = Math.ceil(window.selectedEbPrice * 10); 
 
-    userRef.once('value', snap => {
-        const userData = snap.val();
-        const currentBalance = userData.akho || 0;
+    db.ref(`users/${user.uid}`).once('value', snap => {
+        const u = snap.val();
+        const currentBalance = u.akho || 0;
 
-        if (currentBalance < akhoCost) {
-            alert("ბალანსი არ გყოფნით! გთხოვთ შეავსოთ AKHO.");
+        if (currentBalance < akhoPrice) {
+            alert("ბალანსი არ გყოფნით! თქვენ გჭირდებათ " + akhoPrice + " AKHO.");
             return;
         }
 
-        // თანხის ჩამოჭრა
-        userRef.update({ akho: currentBalance - akhoCost });
+        // 1. ბალანსის ჩამოჭრა
+        db.ref(`users/${user.uid}/akho`).set(currentBalance - akhoPrice);
 
-        // ვიდეოსთვის პრიორიტეტის მიცემა 24 საათით
-        const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // +24 საათი
+        // 2. პოსტის დაპრიორიტეტება 24 საათით
+        const expireDate = Date.now() + (24 * 60 * 60 * 1000);
         
-        db.ref(`posts/${videoIdToPromote}`).update({
+        db.ref(`posts/${selectedEbVideoId}`).update({
             isPromoted: true,
-            promoteExpires: expiryTime,
-            promoteWeight: selectedPromotePrice // რაც მეტს იხდის, მით წინ იქნება
+            promoteExpires: expireDate,
+            promoteWeight: window.selectedEbPrice // რაც მეტი გადაიხადა, მით წინ იქნება
         }).then(() => {
             alert("ვიდეო წარმატებით გაპიარდა 24 საათით! 🚀");
             closePromoteUI();
-            location.reload(); // ფიდის განახლება
+            location.reload(); // გვერდის განახლება, რომ ფიდმა ახალი რიგითობით დაალაგოს
         });
     });
 }
 
-// აქ მთავრდება
+function closePromoteUI() {
+    document.getElementById('promoteUI').style.display = 'none';
+}
