@@ -5499,3 +5499,87 @@ function sendOneSignalPush(senderName, messageText) {
         .catch(err => console.error("Push Error ❌", err));
 }
 // აქ მთავრდება
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ვიდეოს არჩევა და პოპულიზაცია 24 საათით
+// --- პოპულარიზაციის ლოგიკა ---
+
+let selectedPromotePrice = 0;
+let videoIdToPromote = null;
+
+// პანელის გახსნა (გამოიძახე სამი წერტილიდან)
+function openPromoteUI(vidId) {
+    videoIdToPromote = vidId;
+    document.getElementById('promoteUI').style.display = 'flex';
+    document.getElementById('ebTotal').innerText = "0,00 $";
+}
+
+function closePromoteUI() {
+    document.getElementById('promoteUI').style.display = 'none';
+    selectedPromotePrice = 0;
+}
+
+// პაკეტის არჩევა
+function selectEbPack(el, price) {
+    // მონიშვნის ვიზუალი
+    document.querySelectorAll('.eb-pack').forEach(p => p.style.borderColor = "#333");
+    el.style.borderColor = "#fe2c55";
+    
+    selectedPromotePrice = price;
+    document.getElementById('ebTotal').innerText = price.toFixed(2) + " $";
+    
+    const payBtn = document.getElementById('ebPayBtn');
+    payBtn.disabled = false;
+    payBtn.style.opacity = "1";
+}
+
+// გადახდა და ვიდეოს გაპიარება
+async function startPayment() {
+    if (!videoIdToPromote || selectedPromotePrice === 0) return;
+
+    const user = auth.currentUser;
+    const userRef = db.ref(`users/${user.uid}`);
+    
+    // 1$ = 10 AKHO (შენი ვალეტის მიხედვით)
+    const akhoCost = Math.ceil(selectedPromotePrice * 10);
+
+    userRef.once('value', snap => {
+        const userData = snap.val();
+        const currentBalance = userData.akho || 0;
+
+        if (currentBalance < akhoCost) {
+            alert("ბალანსი არ გყოფნით! გთხოვთ შეავსოთ AKHO.");
+            return;
+        }
+
+        // თანხის ჩამოჭრა
+        userRef.update({ akho: currentBalance - akhoCost });
+
+        // ვიდეოსთვის პრიორიტეტის მიცემა 24 საათით
+        const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // +24 საათი
+        
+        db.ref(`posts/${videoIdToPromote}`).update({
+            isPromoted: true,
+            promoteExpires: expiryTime,
+            promoteWeight: selectedPromotePrice // რაც მეტს იხდის, მით წინ იქნება
+        }).then(() => {
+            alert("ვიდეო წარმატებით გაპიარდა 24 საათით! 🚀");
+            closePromoteUI();
+            location.reload(); // ფიდის განახლება
+        });
+    });
+}
+
+// აქ მთავრდება
