@@ -2078,8 +2078,28 @@ function renderTokenFeed() {
         isFeedLoading = false;
         if (!data) return;
 
-        // მასივად გადაყვანა და დროით დალაგება
-        let postEntries = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+       // --- ძველი სორტირების ნაცვლად ჩასვი ეს ---
+       let postEntries = Object.entries(data).sort((a, b) => {
+        const now = Date.now();
+        
+        // 1. ვამოწმებთ არის თუ არა პოსტი პიარში და დრო ხომ არ გაუვიდა
+        const aIsPromoted = a[1].isPromoted && a[1].promoteExpires > now;
+        const bIsPromoted = b[1].isPromoted && b[1].promoteExpires > now;
+
+        // 2. პრიორიტეტი პიარ ვიდეოებს
+        if (aIsPromoted && !bIsPromoted) return -1;
+        if (!aIsPromoted && bIsPromoted) return 1;
+        
+        // 3. თუ ორივე პიარშია, ვინც მეტი გადაიხადა (Weight) ის წინ
+        if (aIsPromoted && bIsPromoted) {
+            return (b[1].promoteWeight || 0) - (a[1].promoteWeight || 0);
+        }
+
+        // 4. სხვა შემთხვევაში ჩვეულებრივი დროით სორტირება
+        return b[1].timestamp - a[1].timestamp;
+        });
+         // --- სორტირების დასასრული
+      
       
         // ვიმახსოვრებთ ბოლო დროს შემდეგი სქროლისთვის
         lastVisibleTimestamp = postEntries[postEntries.length - 1][1].timestamp;
