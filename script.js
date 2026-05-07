@@ -2078,25 +2078,26 @@ function renderTokenFeed() {
         isFeedLoading = false;
         if (!data) return;
 
-       // --- ძველი სორტირების ნაცვლად ჩასვი ეს ---
-       let postEntries = Object.entries(data).sort((a, b) => {
-        const now = Date.now();
+        // 1. ჯერ ავიღოთ ყველა ჩანაწერი მასივად
+        let rawEntries = Object.entries(data);
         
-        // 1. ვამოწმებთ არის თუ არა პოსტი პიარში და დრო ხომ არ გაუვიდა
-        const aIsPromoted = a[1].isPromoted && a[1].promoteExpires > now;
-        const bIsPromoted = b[1].isPromoted && b[1].promoteExpires > now;
+        // 2. დავიმახსოვროთ ყველაზე ძველი ვიდეოს დრო სორტირებამდე (Pagination-ისთვის)
+        // rawEntries უკვე დროით არის მოწოდებული Firebase-დან, ამიტომ პირველი ელემენტია ყველაზე ძველი
+        lastVisibleTimestamp = rawEntries[0][1].timestamp;
 
-        // 2. პრიორიტეტი პიარ ვიდეოებს
-        if (aIsPromoted && !bIsPromoted) return -1;
-        if (!aIsPromoted && bIsPromoted) return 1;
-        
-        // 3. თუ ორივე პიარშია, ვინც მეტი გადაიხადა (Weight) ის წინ
-        if (aIsPromoted && bIsPromoted) {
-            return (b[1].promoteWeight || 0) - (a[1].promoteWeight || 0);
-        }
+        // 3. ახლა უკვე დავალაგოთ პრიორიტეტებით (შენი ახალი ლოგიკა)
+        let postEntries = rawEntries.sort((a, b) => {
+            const now = Date.now();
+            const aIsPromoted = a[1].isPromoted && a[1].promoteExpires > now;
+            const bIsPromoted = b[1].isPromoted && b[1].promoteExpires > now;
 
-        // 4. სხვა შემთხვევაში ჩვეულებრივი დროით სორტირება
-        return b[1].timestamp - a[1].timestamp;
+            if (aIsPromoted && !bIsPromoted) return -1;
+            if (!aIsPromoted && bIsPromoted) return 1;
+            
+            if (aIsPromoted && bIsPromoted) {
+                return (b[1].promoteWeight || 0) - (a[1].promoteWeight || 0);
+            }
+            return b[1].timestamp - a[1].timestamp;
         });
          // --- სორტირების დასასრული
       
