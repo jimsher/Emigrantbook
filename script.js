@@ -5551,7 +5551,6 @@ function startPayment() {
     if (!selectedEbVideoId || !window.selectedEbPrice) return;
 
     const user = auth.currentUser;
-    // 1$ = 10 AKHO-ს ლოგიკით (შეგიძლია შეცვალო კურსი)
     const akhoPrice = Math.ceil(window.selectedEbPrice * 10); 
 
     db.ref(`users/${user.uid}`).once('value', snap => {
@@ -5559,24 +5558,27 @@ function startPayment() {
         const currentBalance = u.akho || 0;
 
         if (currentBalance < akhoPrice) {
-            alert("ბალანსი არ გყოფნით! თქვენ გჭირდებათ " + akhoPrice + " AKHO.");
+            alert("ბალანსი არ გყოფნით!");
             return;
         }
 
         // 1. ბალანსის ჩამოჭრა
         db.ref(`users/${user.uid}/akho`).set(currentBalance - akhoPrice);
 
-        // 2. პოსტის დაპრიორიტეტება 24 საათით
-        const expireDate = Date.now() + (24 * 60 * 60 * 1000);
+        // 2. ვიდეოს "გახალისება" და პრიორიტეტი
+        const now = Date.now();
+        const expireDate = now + (24 * 60 * 60 * 1000);
         
         db.ref(`posts/${selectedEbVideoId}`).update({
             isPromoted: true,
             promoteExpires: expireDate,
-            promoteWeight: window.selectedEbPrice // რაც მეტი გადაიხადა, მით წინ იქნება
+            promoteWeight: window.selectedEbPrice,
+            // 🚀 აი ეს ხაზი აგდებს ვიდეოს თავში, რადგან დროს აახლებს
+            timestamp: now 
         }).then(() => {
-            alert("ვიდეო წარმატებით გაპიარდა 24 საათით! 🚀");
+            alert("ვიდეო დაწინაურდა და ამოვარდა სათავეში! 🚀");
             closePromoteUI();
-            location.reload(); // გვერდის განახლება, რომ ფიდმა ახალი რიგითობით დაალაგოს
+            location.reload(); 
         });
     });
 }
