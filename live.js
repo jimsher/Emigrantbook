@@ -15,15 +15,22 @@ const liveGiftsLibrary = [
     { 
         id: "rose", 
         name: "Rose", 
-        price: 1, 
+        price: 2, 
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
         sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
     },
     { 
         id: "rose", 
         name: "Rose", 
-        price: 1, 
+        price: 3, 
         img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/arwivi.gif",
+        sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+    },
+    { 
+        id: "rose", 
+        name: "Rose", 
+        price: 4, 
+        img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Vedma.gif",
         sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
     }
 ];
