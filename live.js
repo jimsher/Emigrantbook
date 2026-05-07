@@ -30,7 +30,7 @@ const liveGiftsLibrary = [
         id: "rose", 
         name: "Rose", 
         price: 20, 
-        img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Vedma.gif",
+        img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Xelebi.gif",
         sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
     }
 ];
