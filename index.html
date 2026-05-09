@@ -63,6 +63,55 @@
 
  
  <style>
+/* ეს არის ინსტალაციის სტილი */
+ #pwa-notification {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+    z-index: 10001;
+    padding: 16px;
+    border: 1px solid #eee;
+    font-family: -apple-system, system-ui, sans-serif;
+    animation: slideDown 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes slideDown {
+    from { top: -120px; opacity: 0; }
+    to { top: 20px; opacity: 1; }
+}
+
+.notif-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.notif-btn {
+    background: #007aff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+} 
+/* აქ მთავრდება */
+
+
+
+
+
+  
 /* 1. მთავარი ანიმაცია ავატარის გარშემო */
 .is-live-now {
     box-shadow: 0 0 0 2px #000, 0 0 0 4px #fe2c55 !important;
@@ -1706,6 +1755,23 @@ div[style*="overflow-x:auto"] {
 
  
 <body>
+<div id="pwa-notification">
+    <div class="notif-content">
+        <img src="icon-192.png" width="45" height="45" style="border-radius: 10px; object-fit: cover;">
+        <div id="notif-text" style="color: #333; font-size: 13px; line-height: 1.4;">
+            <!-- აქ ტექსტი ჩაიწერება ავტომატურად JS-ით -->
+        </div>
+        <div id="action-area">
+            <!-- აქ ღილაკი გამოჩნდება მხოლოდ ანდროიდისთვის -->
+        </div>
+        <div onclick="document.getElementById('pwa-notification').style.display='none'" style="cursor:pointer; color:#999; font-size:22px; margin-left:5px;">&times;</div>
+    </div>
+</div>
+
+
+
+
+ 
 <div id="lastGiftWidget" onclick="openReceivedGifts()" style="display:none; position:fixed; top:80px; left:15px; z-index:2147483647; cursor:pointer; background:rgba(0,0,0,0.7); padding:6px; border-radius:50px; border:1.5px solid #fbd14b; align-items:center; backdrop-filter:blur(10px); box-shadow: 0 0 15px rgba(255,215,0,0.3);">
     <img id="widgetGiftImg" src="" style="width:35px; height:35px; object-fit:contain; border-radius:50%;">
     <span id="widgetGiftAmount" style="color:#fbd14b; font-weight:bold; font-size:14px; margin:0 10px; font-family:sans-serif;">0</span>
