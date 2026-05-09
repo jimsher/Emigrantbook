@@ -5632,3 +5632,35 @@ function closePromoteUI() {
     });
 })();
 // აქ მთავრდება
+
+
+
+
+
+
+
+
+
+
+
+// აქ იქნება აიფონის ინსტრუქციის ლოგუკა
+(function() {
+    const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+    };
+
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+    // თუ აიფონია და ჯერ არ აქვს დაინსტალირებული
+    if (isIos() && !isInStandaloneMode()) {
+        const iosModal = document.getElementById('pwa-ios-instruction');
+        if (iosModal) {
+            // ვაჩვენებთ 3 წამის შემდეგ, რომ საიტი ჩაიტვირთოს მშვიდად
+            setTimeout(() => {
+                iosModal.style.display = 'block';
+            }, 3000);
+        }
+    }
+})();
+// აქ მთავრდება
