@@ -5601,27 +5601,34 @@ function closePromoteUI() {
 
 
 // ეს არის აპლიკაციის ინსტალაციის ლოგიკა
-
+// PWA ინსტალაციის ლოგიკა - დაცული ვერსია
+(function() {
     let deferredPrompt;
-const installAppBtn = document.getElementById('installAppBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    // ღილაკის გამოჩენა
-    if (installAppBtn) {
-        installAppBtn.style.display = 'flex';
-    }
-});
-
-if (installAppBtn) {
-    installAppBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            installAppBtn.style.display = 'none';
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // ბრაუზერის სტანდარტული ფანჯრის დაბლოკვა
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // ღილაკის პოვნა და გამოჩენა
+        const btn = document.getElementById('installAppBtn');
+        if (btn) {
+            btn.style.setProperty('display', 'flex', 'important');
         }
     });
-}
+
+    // დელეგირება, რომ "click" ივენთმა საიტი არ გააჩეროს
+    document.addEventListener('click', async (e) => {
+        if (e.target && (e.target.id === 'installAppBtn' || e.target.closest('#installAppBtn'))) {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('User choice:', outcome);
+                deferredPrompt = null;
+                const btn = document.getElementById('installAppBtn');
+                if (btn) btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    });
+})();
 // აქ მთავრდება
