@@ -5602,5 +5602,26 @@ function closePromoteUI() {
 
 // ეს არის აპლიკაციის ინსტალაციის ლოგიკა
 
-    
+    let deferredPrompt;
+const installAppBtn = document.getElementById('installAppBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // ღილაკის გამოჩენა
+    if (installAppBtn) {
+        installAppBtn.style.display = 'flex';
+    }
+});
+
+if (installAppBtn) {
+    installAppBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            installAppBtn.style.display = 'none';
+        }
+    });
+}
 // აქ მთავრდება
