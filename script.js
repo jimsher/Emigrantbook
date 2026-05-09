@@ -5586,3 +5586,57 @@ function startPayment() {
 function closePromoteUI() {
     document.getElementById('promoteUI').style.display = 'none';
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ეს არის აპლიკაციის ინსტალაციის ლოგიკა
+
+    let deferredPrompt;
+    const notification = document.getElementById('pwa-notification');
+    const textElement = document.getElementById('notif-text');
+    const actionArea = document.getElementById('action-area');
+
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+    // 1. ანდროიდის მომზადება
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        if (!isStandalone) {
+            showAndroidNotif();
+        }
+    });
+
+    // ანდროიდის ნოთიფიკაციის ჩვენება
+    function showAndroidNotif() {
+        textElement.innerHTML = "<b>Emigrantbook</b><br>გინდა დააყენო აპლიკაცია?";
+        actionArea.innerHTML = '<button class="notif-btn" id="install-button">დაყენება</button>';
+        notification.style.display = 'block';
+
+        document.getElementById('install-button').addEventListener('click', () => {
+            notification.style.display = 'none';
+            deferredPrompt.prompt();
+        });
+    }
+
+    // 2. აიფონის ლოგიკა (საიტზე შესვლიდან 3 წამში)
+    if (isIos && !isStandalone) {
+        setTimeout(() => {
+            textElement.innerHTML = "<b>დააყენე Emigrantbook</b><br>დააჭირე <img src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/IOS_Share_Icon.svg/1200px-IOS_Share_Icon.svg.png' width='14'> და მერე <b>'Add to Home Screen'</b>";
+            notification.style.display = 'block';
+        }, 3000);
+    }
+// აქ მთავრდება
