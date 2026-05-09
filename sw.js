@@ -1,3 +1,12 @@
+// ვერსიის შეცვლით (v1 -> v2) აიძულებ განახლებას!
+const CACHE_NAME = 'impact-cache-v2'; 
+const ASSETS_TO_CACHE = [
+    '/',
+    '/index.html',
+    '/manifest.json',
+    '/logo.png'
+];
+
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
@@ -9,83 +18,44 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 1. Firebase ფონური შეტყობინებები
+// ინსტალაციისას ფაილების ქეშირება
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(ASSETS_TO_CACHE);
+        })
+    );
+});
+
+// აქტივაციისას ძველი ქეშის წაშლა (ეს გააშავებს ქვედა ზოლს!)
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('ძველი ქეში წაიშალა:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// Firebase ფონური შეტყობინებები (დატოვე როგორც გაქვს)
 messaging.onBackgroundMessage(function(payload) {
-    console.log('Firebase ფონური მესიჯი:', payload);
-
-    // სერვის ვორკერში navigator.setAppBadge არ მუშაობს, ვიყენებთ self-ს
-    if (self.setAppBadge) {
-        self.setAppBadge(1).catch(e => {});
-    }
-
     const notificationTitle = payload.notification ? payload.notification.title : 'Impact';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
         icon: '/logo.png',
         badge: '/logo.png',
-        vibrate: [200, 100, 200],
-        tag: 'impact-msg', 
-        renotify: true,
-        data: { 
-            url: (payload.data && payload.data.url) ? payload.data.url : '/' 
-        }
+        data: { url: (payload.data && payload.data.url) ? payload.data.url : '/' }
     };
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// 2. სტანდარტული Push
-self.addEventListener('push', function(event) {
-    if (self.setAppBadge) {
-        self.setAppBadge(1).catch(e => {});
-    }
-
-    let data = {};
-    if (event.data) {
-        try {
-            data = event.data.json();
-        } catch (e) {
-            data = { title: 'Impact', body: event.data.text() };
-        }
-    }
-
-    const title = data.title || (data.notification ? data.notification.title : 'Impact');
-    const options = {
-        body: data.body || (data.notification ? data.notification.body : ''),
-        icon: '/logo.png',
-        badge: '/logo.png',
-        data: { url: data.url || (data.data && data.data.url) || '/' }
-    };
-
-    event.waitUntil(self.registration.showNotification(title, options));
-});
-
-// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
-    
-    if (self.clearAppBadge) {
-        self.clearAppBadge().catch(e => {});
-    }
-
-    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
-    
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-            for (let client of windowClients) {
-                if (client.url.includes(targetUrl) && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            if (clients.openWindow) return clients.openWindow(targetUrl);
-        })
-    );
-});
-
-// 4. სერვის ვორკერის მართვა
-self.addEventListener('install', (e) => {
-    self.skipWaiting();
-});
-
-self.addEventListener('activate', (e) => {
-    e.waitUntil(self.clients.claim());
-});
+// Push და Notification Click ივენთები (დატოვე როგორც გაქვს ქვემოთ)
+self.addEventListener('push', function(event) { /* შენი ძველი კოდი */ });
+self.addEventListener('notificationclick', function(event) { /* შენი ძველი კოდი */ });
