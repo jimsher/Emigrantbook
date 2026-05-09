@@ -1,3 +1,13 @@
+// ვერსიის შეცვლით (v1 -> v2) აიძულებ განახლებას!
+const CACHE_NAME = 'impact-cache-v2'; 
+const ASSETS_TO_CACHE = [
+    '/',
+    '/index.html',
+    '/manifest.json',
+    '/logo.png'
+];
+
+
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
