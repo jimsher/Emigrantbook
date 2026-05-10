@@ -5664,3 +5664,37 @@ function closePromoteUI() {
     }
 })();
 // აქ მთავრდება
+
+
+
+
+
+
+
+
+
+
+// მესინჯერის ლოგიკა რექვესტისთვის
+// ეს ფუნქცია ყოველთვის ამოწმებს რექვესტებს
+function checkMessageRequests() {
+    const myId = auth.currentUser.uid;
+    db.ref(`message_requests/${myId}`).on('value', snapshot => {
+        const count = snapshot.numChildren();
+        const btn = document.getElementById('messengerRequestsBtn');
+        const countBadge = document.getElementById('msgReqCount');
+
+        if (count > 0) {
+            btn.style.display = 'flex'; // თუ რექვესტია, გამოჩნდება
+            countBadge.innerText = count;
+        } else {
+            btn.style.display = 'none'; // თუ არ არის, დაიმალება
+        }
+    });
+}
+
+// რექვესტების ფანჯრის დახურვა
+function closeMessageRequests() {
+    document.getElementById('messageRequestsUI').style.display = 'none';
+}
+
+// აქ მთავტდება
