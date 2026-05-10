@@ -5675,8 +5675,11 @@ function closePromoteUI() {
 
 
 // მესინჯერის ლოგიკა რექვესტისთვის
+// 1. მუდმივი მონიტორინგი: აჩვენებს ნოტიფიკაციის ციფრს (Badge)
 function monitorMessageRequests() {
-    const myId = auth.currentUser.uid;
+    const myId = auth.currentUser ? auth.currentUser.uid : null;
+    if (!myId) return;
+
     db.ref(`message_requests/${myId}`).on('value', snapshot => {
         const badge = document.getElementById('msgReqBadge');
         if (badge) {
@@ -5690,5 +5693,86 @@ function monitorMessageRequests() {
         }
     });
 }
+
+// 2. რექვესტების ფანჯრის გახსნა და სიის ჩატვირთვა
+function openMessageRequests() {
+    const myId = auth.currentUser.uid;
+    const list = document.getElementById('msgReqList');
+    
+    // UI-ს გამოჩენა
+    document.getElementById('messageRequestsUI').style.display = 'flex';
+    list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ჩატვირთვა...</div>';
+
+    db.ref(`message_requests/${myId}`).on('value', snapshot => {
+        list.innerHTML = '';
+        
+        if (!snapshot.exists()) {
+            list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">მოთხოვნები არ არის.</div>';
+            return;
+        }
+
+        snapshot.forEach(child => {
+            const senderId = child.key;
+            const messages = child.val();
+            const lastMsg = Object.values(messages).pop();
+
+            // მომხმარებლის ინფოს წამოღება
+            db.ref(`users/${senderId}`).once('value', uSnap => {
+                const user = uSnap.val();
+                const div = document.createElement('div');
+                div.className = 'chat-list-item'; // ვიყენებთ შენს სტანდარტულ კლასს
+                div.style.cssText = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #111; gap:12px;";
+                
+                div.innerHTML = `
+                    <img src="${user.avatar || 'logo.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
+                    <div style="flex:1;">
+                        <div style="color:white; font-weight:bold;">${user.name || 'User'}</div>
+                        <div style="color:gray; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">${lastMsg.text}</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="acceptMsgReq('${senderId}')" style="background:#0084ff; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">Accept</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        });
+    });
+}
+
+// 3. მესიჯის მიღება და ჩატში გადატანა
+function acceptMsgReq(senderId) {
+    const myId = auth.currentUser.uid;
+    
+    // ვქმნით ჩატის უნიკალურ Key-ს (შენი getChatKey ფუნქცია გამოიყენე)
+    const chatKey = myId < senderId ? `${myId}_${senderId}` : `${senderId}_${myId}`;
+
+    db.ref(`message_requests/${myId}/${senderId}`).once('value', snap => {
+        const messages = snap.val();
+        
+        // გადაგვაქვს მთავარ ჩატში
+        db.ref(`chats/${chatKey}`).update(messages).then(() => {
+            // ვშლით რექვესტებიდან
+            db.ref(`message_requests/${myId}/${senderId}`).remove();
+            
+            // ვხურავთ რექვესტებს და ვხსნით ჩატს
+            closeMessageRequests();
+            if (typeof openIndividualChat === "function") {
+                openIndividualChat(senderId);
+            }
+        });
+    });
+}
+
+// 4. ფანჯრის დახურვა
+function closeMessageRequests() {
+    document.getElementById('messageRequestsUI').style.display = 'none';
+}
+
+// 5. გააქტიურება სისტემაში შესვლისას
+auth.onAuthStateChanged(user => {
+    if (user) {
+        monitorMessageRequests();
+    }
+});
 
 // აქ მთავტდება
