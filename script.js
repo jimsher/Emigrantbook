@@ -1131,42 +1131,47 @@ function sendMessage() {
     const inp = document.getElementById('messageInp');
     const myUid = auth.currentUser.uid;
     
-    // ვიღებთ ტექსტს და ვაცილებთ ზედმეტ სფეისებს
     let msgText = inp.value.trim();
 
-    // --- ✨ ახალი ლოგიკა: თუ ინპუტი ცარიელია, msgText ხდება ლაიქი ---
-    // თუ ტექსტი ცარიელია, მაგრამ მომხმარებელმა მაინც დააჭირა ღილაკს
     if (!msgText) {
         msgText = "👍";
     }
-    // --------------------------------------------------------
 
     if (!currentChatId) return;
     const chatId = getChatId(myUid, currentChatId);
 
-    // 1. მესიჯის გაგზავნა ბაზაში (ტექსტი იქნება ან ნაწერი, ან ლაიქი)
-    db.ref(`messages/${chatId}`).push({
-        senderId: myUid,
-        text: msgText,
-        ts: Date.now(),
-        seen: false
+    // --- 📥 აქ ჩავამატე მხოლოდ მეგობრობის შემოწმება ---
+    db.ref(`users/${myUid}/following/${currentChatId}`).once('value', snapshot => {
+        const isFollowing = snapshot.exists();
+        
+        // თუ მეგობარია, გზა არის messages, თუ არა - message_requests
+        const targetPath = isFollowing 
+            ? `messages/${chatId}` 
+            : `message_requests/${currentChatId}/${myUid}`;
+
+        // 1. მესიჯის გაგზავნა (შენი ორიგინალი ობიექტით)
+        db.ref(targetPath).push({
+            senderId: myUid,
+            text: msgText,
+            ts: Date.now(),
+            seen: false
+        });
+
+        // 2. ნოტიფიკაციის გაგზავნა
+        if (typeof sendPushToUser === "function") {
+            sendPushToUser(currentChatId, myName, msgText);
+        }
+
+        // 3. სტატუსების გასუფთავება და გადახდა (შენი ხაზები)
+        db.ref(`typing/${chatId}/${myUid}`).remove();
+        spendAkho(0.2, 'Message');
+        
+        inp.value = ""; 
+
+        if (typeof handleTyping === "function") {
+            handleTyping();
+        }
     });
-
-    // 2. ნოტიფიკაციის გაგზავნა მეორე იუზერთან
-    if (typeof sendPushToUser === "function") {
-        sendPushToUser(currentChatId, myName, msgText);
-    }
-
-    // 3. სტატუსების გასუფთავება და გადახდა (შენი ორიგინალი ხაზები)
-    db.ref(`typing/${chatId}/${myUid}`).remove();
-    spendAkho(0.2, 'Message');
-    
-    inp.value = ""; // ვასუფთავებთ ინპუტს
-
-    // აუცილებელია გამოვიძახოთ handleTyping, რომ ღილაკი ისევ ლაიქად იქცეს
-    if (typeof handleTyping === "function") {
-        handleTyping();
-    }
 }
 
 
