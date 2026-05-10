@@ -5699,13 +5699,12 @@ function openMessageRequests() {
     const myId = auth.currentUser.uid;
     const list = document.getElementById('msgReqList');
     
-    // ჯერ ვხსნით ფანჯარას
     document.getElementById('messageRequestsUI').style.display = 'flex';
     list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">იტვირთება...</div>';
 
-    // ვუსმენთ რექვესტების კვანძს
+    // ვუსმენთ რექვესტებს
     db.ref(`message_requests/${myId}`).on('value', snapshot => {
-        list.innerHTML = ''; // ვასუფთავებთ სიას
+        list.innerHTML = '';
 
         if (!snapshot.exists()) {
             list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ახალი მოთხოვნები არ არის.</div>';
@@ -5713,34 +5712,27 @@ function openMessageRequests() {
         }
 
         snapshot.forEach(child => {
-            const senderId = child.key; // ვინც მოგწერა იმის ID
+            const senderId = child.key;
             const messages = child.val();
             
-            // ვიღებთ ბოლო მესიჯს სიიდან
             const messageKeys = Object.keys(messages);
-            const lastMsgKey = messageKeys[messageKeys.length - 1];
-            const lastMsg = messages[lastMsgKey];
+            const lastMsg = messages[messageKeys[messageKeys.length - 1]];
 
-            // ვიღებთ გამგზავნის ინფორმაციას (სახელი, ფოტო)
             db.ref(`users/${senderId}`).once('value', userSnap => {
                 const user = userSnap.val() || {};
                 
-                const requestItem = document.createElement('div');
-                requestItem.style.cssText = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px; cursor:pointer;";
+                const item = document.createElement('div');
+                item.style = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px;";
                 
-                requestItem.innerHTML = `
-                    <img src="${user.avatar || 'logo.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border: 1px solid #333;">
+                item.innerHTML = `
+                    <img src="${user.photo || 'token-avatar.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
                     <div style="flex:1;">
-                        <div style="color:white; font-weight:600; font-size:15px;">${user.name || 'User'}</div>
-                        <div style="color:#888; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
-                            ${lastMsg.text || 'ფოტო/ფაილი'}
-                        </div>
+                        <div style="color:white; font-weight:bold;">${user.name || 'User'}</div>
+                        <div style="color:#888; font-size:12px;">${lastMsg.text || '📷 Media'}</div>
                     </div>
-                    <div style="display:flex; gap:8px;">
-                        <button onclick="acceptMsgReq('${senderId}')" style="background:var(--gold); color:black; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;">Accept</button>
-                    </div>
+                    <button onclick="acceptMsgReq('${senderId}')" style="background:var(--gold); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">Accept</button>
                 `;
-                list.appendChild(requestItem);
+                list.appendChild(item);
             });
         });
     });
