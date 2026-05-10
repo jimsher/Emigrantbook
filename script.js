@@ -5746,24 +5746,32 @@ function openMessageRequests() {
 // 3. მესიჯის მიღება და ჩატში გადატანა
 function acceptMsgReq(senderId) {
     const myId = auth.currentUser.uid;
-    
-    // ვქმნით ჩატის უნიკალურ Key-ს (შენი getChatKey ფუნქცია გამოიყენე)
-    const chatKey = myId < senderId ? `${myId}_${senderId}` : `${senderId}_${myId}`;
+    const chatId = getChatId(myId, senderId);
 
     db.ref(`message_requests/${myId}/${senderId}`).once('value', snap => {
-        const messages = snap.val();
-        
-        // გადაგვაქვს მთავარ ჩატში
-        db.ref(`chats/${chatKey}`).update(messages).then(() => {
-            // ვშლით რექვესტებიდან
-            db.ref(`message_requests/${myId}/${senderId}`).remove();
+        if (snap.exists()) {
+            const messages = snap.val();
             
-            // ვხურავთ რექვესტებს და ვხსნით ჩატს
-            closeMessageRequests();
-            if (typeof openIndividualChat === "function") {
-                openIndividualChat(senderId);
-            }
-        });
+            // 1. ჯერ ვამატებთ მომხმარებელს შენს მეგობრებში (Following), რომ მესენჯერმა დაინახოს
+            db.ref(`users/${senderId}`).once('value', uSnap => {
+                const user = uSnap.val() || {};
+                
+                db.ref(`users/${myId}/following/${senderId}`).set({
+                    name: user.name || "User",
+                    photo: user.photo || ""
+                }).then(() => {
+                    // 2. შემდეგ გადაგვაქვს მესიჯები მთავარ ბაზაში
+                    return db.ref(`messages/${chatId}`).update(messages);
+                }).then(() => {
+                    // 3. ბოლოს ვშლით რექვესტებიდან
+                    return db.ref(`message_requests/${myId}/${senderId}`).remove();
+                }).then(() => {
+                    // 4. ვხურავთ ფანჯარას და გადავდივართ ჩატში
+                    closeMessageRequests();
+                    startChat(senderId, user.name || "User", user.photo || "");
+                });
+            });
+        }
     });
 }
 
