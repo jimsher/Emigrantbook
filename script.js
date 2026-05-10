@@ -5675,26 +5675,20 @@ function closePromoteUI() {
 
 
 // მესინჯერის ლოგიკა რექვესტისთვის
-// ეს ფუნქცია ყოველთვის ამოწმებს რექვესტებს
-function checkMessageRequests() {
+function monitorMessageRequests() {
     const myId = auth.currentUser.uid;
     db.ref(`message_requests/${myId}`).on('value', snapshot => {
-        const count = snapshot.numChildren();
-        const btn = document.getElementById('messengerRequestsBtn');
-        const countBadge = document.getElementById('msgReqCount');
-
-        if (count > 0) {
-            btn.style.display = 'flex'; // თუ რექვესტია, გამოჩნდება
-            countBadge.innerText = count;
-        } else {
-            btn.style.display = 'none'; // თუ არ არის, დაიმალება
+        const badge = document.getElementById('msgReqBadge');
+        if (badge) {
+            if (snapshot.exists()) {
+                const count = snapshot.numChildren();
+                badge.innerText = count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
         }
     });
-}
-
-// რექვესტების ფანჯრის დახურვა
-function closeMessageRequests() {
-    document.getElementById('messageRequestsUI').style.display = 'none';
 }
 
 // აქ მთავტდება
