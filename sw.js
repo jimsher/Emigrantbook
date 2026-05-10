@@ -1,5 +1,5 @@
-// ვერსიის შეცვლით (v1 -> v2) აიძულებ განახლებას!
-const CACHE_NAME = 'impact-cache-v2'; 
+// ვერსიის შეცვლით (v1 -> v2) ვაიძულებთ ბრაუზერს ახალი მანიფესტის წაკითხვას
+const CACHE_NAME = 'impact-cache-v2';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -18,7 +18,78 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// ინსტალაციისას ფაილების ქეშირება
+// 1. Firebase ფონური შეტყობინებები
+messaging.onBackgroundMessage(function(payload) {
+    console.log('Firebase ფონური მესიჯი:', payload);
+
+    if (self.setAppBadge) {
+        self.setAppBadge(1).catch(e => {});
+    }
+
+    const notificationTitle = payload.notification ? payload.notification.title : 'Impact';
+    const notificationOptions = {
+        body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
+        icon: '/logo.png',
+        badge: '/logo.png',
+        vibrate: [200, 100, 200],
+        tag: 'impact-msg', 
+        renotify: true,
+        data: { 
+            url: (payload.data && payload.data.url) ? payload.data.url : '/' 
+        }
+    };
+    return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// 2. სტანდარტული Push
+self.addEventListener('push', function(event) {
+    if (self.setAppBadge) {
+        self.setAppBadge(1).catch(e => {});
+    }
+
+    let data = {};
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data = { title: 'Impact', body: event.data.text() };
+        }
+    }
+
+    const title = data.title || (data.notification ? data.notification.title : 'Impact');
+    const options = {
+        body: data.body || (data.notification ? data.notification.body : ''),
+        icon: '/logo.png',
+        badge: '/logo.png',
+        data: { url: data.url || (data.data && data.data.url) || '/' }
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    
+    if (self.clearAppBadge) {
+        self.clearAppBadge().catch(e => {});
+    }
+
+    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+    
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            for (let client of windowClients) {
+                if (client.url.includes(targetUrl) && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) return clients.openWindow(targetUrl);
+        })
+    );
+});
+
+// 4. სერვის ვორკერის ინსტალაცია და ქეშირება
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
@@ -28,14 +99,13 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// აქტივაციისას ძველი ქეშის წაშლა (ეს გააშავებს ქვედა ზოლს!)
+// 5. გააქტიურება და ძველი ქეშის წაშლა (ეს წაშლის ძველ მანიფესტს)
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('ძველი ქეში წაიშალა:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -44,18 +114,11 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Firebase ფონური შეტყობინებები (დატოვე როგორც გაქვს)
-messaging.onBackgroundMessage(function(payload) {
-    const notificationTitle = payload.notification ? payload.notification.title : 'Impact';
-    const notificationOptions = {
-        body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
-        icon: '/logo.png',
-        badge: '/logo.png',
-        data: { url: (payload.data && payload.data.url) ? payload.data.url : '/' }
-    };
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+// 6. ფაილების მიწოდება ქეშიდან
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        })
+    );
 });
-
-// Push და Notification Click ივენთები (დატოვე როგორც გაქვს ქვემოთ)
-self.addEventListener('push', function(event) { /* შენი ძველი კოდი */ });
-self.addEventListener('notificationclick', function(event) { /* შენი ძველი კოდი */ });
