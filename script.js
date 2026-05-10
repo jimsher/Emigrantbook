@@ -5699,41 +5699,48 @@ function openMessageRequests() {
     const myId = auth.currentUser.uid;
     const list = document.getElementById('msgReqList');
     
-    // UI-ს გამოჩენა
+    // ჯერ ვხსნით ფანჯარას
     document.getElementById('messageRequestsUI').style.display = 'flex';
-    list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ჩატვირთვა...</div>';
+    list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">იტვირთება...</div>';
 
+    // ვუსმენთ რექვესტების კვანძს
     db.ref(`message_requests/${myId}`).on('value', snapshot => {
-        list.innerHTML = '';
-        
+        list.innerHTML = ''; // ვასუფთავებთ სიას
+
         if (!snapshot.exists()) {
-            list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">მოთხოვნები არ არის.</div>';
+            list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ახალი მოთხოვნები არ არის.</div>';
             return;
         }
 
         snapshot.forEach(child => {
-            const senderId = child.key;
+            const senderId = child.key; // ვინც მოგწერა იმის ID
             const messages = child.val();
-            const lastMsg = Object.values(messages).pop();
+            
+            // ვიღებთ ბოლო მესიჯს სიიდან
+            const messageKeys = Object.keys(messages);
+            const lastMsgKey = messageKeys[messageKeys.length - 1];
+            const lastMsg = messages[lastMsgKey];
 
-            // მომხმარებლის ინფოს წამოღება
-            db.ref(`users/${senderId}`).once('value', uSnap => {
-                const user = uSnap.val();
-                const div = document.createElement('div');
-                div.className = 'chat-list-item'; // ვიყენებთ შენს სტანდარტულ კლასს
-                div.style.cssText = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #111; gap:12px;";
+            // ვიღებთ გამგზავნის ინფორმაციას (სახელი, ფოტო)
+            db.ref(`users/${senderId}`).once('value', userSnap => {
+                const user = userSnap.val() || {};
                 
-                div.innerHTML = `
-                    <img src="${user.avatar || 'logo.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
+                const requestItem = document.createElement('div');
+                requestItem.style.cssText = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px; cursor:pointer;";
+                
+                requestItem.innerHTML = `
+                    <img src="${user.avatar || 'logo.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border: 1px solid #333;">
                     <div style="flex:1;">
-                        <div style="color:white; font-weight:bold;">${user.name || 'User'}</div>
-                        <div style="color:gray; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px;">${lastMsg.text}</div>
+                        <div style="color:white; font-weight:600; font-size:15px;">${user.name || 'User'}</div>
+                        <div style="color:#888; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
+                            ${lastMsg.text || 'ფოტო/ფაილი'}
+                        </div>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button onclick="acceptMsgReq('${senderId}')" style="background:#0084ff; color:white; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">Accept</button>
+                        <button onclick="acceptMsgReq('${senderId}')" style="background:var(--gold); color:black; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;">Accept</button>
                     </div>
                 `;
-                list.appendChild(div);
+                list.appendChild(requestItem);
             });
         });
     });
