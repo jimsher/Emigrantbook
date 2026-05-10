@@ -5752,23 +5752,32 @@ function acceptMsgReq(senderId) {
         if (snap.exists()) {
             const messages = snap.val();
             
-            // 1. ჯერ ვამატებთ მომხმარებელს შენს მეგობრებში (Following), რომ მესენჯერმა დაინახოს
+            // 1. ვიღებთ ორივე იუზერის მონაცემებს, რომ მეგობრობა ორმხრივი გახდეს
             db.ref(`users/${senderId}`).once('value', uSnap => {
-                const user = uSnap.val() || {};
+                const senderData = uSnap.val() || {};
                 
+                // ა) ვამატებთ გამგზავნს ჩემს მეგობრებში
                 db.ref(`users/${myId}/following/${senderId}`).set({
-                    name: user.name || "User",
-                    photo: user.photo || ""
-                }).then(() => {
-                    // 2. შემდეგ გადაგვაქვს მესიჯები მთავარ ბაზაში
-                    return db.ref(`messages/${chatId}`).update(messages);
-                }).then(() => {
-                    // 3. ბოლოს ვშლით რექვესტებიდან
-                    return db.ref(`message_requests/${myId}/${senderId}`).remove();
-                }).then(() => {
-                    // 4. ვხურავთ ფანჯარას და გადავდივართ ჩატში
+                    name: senderData.name || "User",
+                    photo: senderData.photo || ""
+                });
+
+                // ბ) ვამატებთ ჩემს თავს გამგზავნის მეგობრებში (ეს აკლდა!)
+                // რომ იმასთანაც გამოჩნდეს მესენჯერში
+                db.ref(`users/${senderId}/following/${myId}`).set({
+                    name: myName, // შენი გლობალური ცვლადი
+                    photo: myPhoto // შენი გლობალური ცვლადი
+                });
+
+                // 2. გადაგვაქვს მესიჯები რექვესტებიდან მთავარ ჩატში
+                db.ref(`messages/${chatId}`).update(messages).then(() => {
+                    
+                    // 3. ვშლით რექვესტს
+                    db.ref(`message_requests/${myId}/${senderId}`).remove();
+                    
+                    // 4. ვიზუალური მხარე
                     closeMessageRequests();
-                    startChat(senderId, user.name || "User", user.photo || "");
+                    startChat(senderId, senderData.name || "User", senderData.photo || "");
                 });
             });
         }
