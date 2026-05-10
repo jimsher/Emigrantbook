@@ -1140,12 +1140,13 @@ function sendMessage() {
     if (!currentChatId) return;
     const chatId = getChatId(myUid, currentChatId);
 
-    // --- 📥 აქ ჩავამატე მხოლოდ მეგობრობის შემოწმება ---
-    db.ref(`users/${myUid}/following/${currentChatId}`).once('value', snapshot => {
-        const isFollowing = snapshot.exists();
+    // --- 🎯 სწორი ლოგიკა: ვამოწმებთ იმას (მიმღებს) ვყავართ თუ არა ფოლოვინგში ---
+    db.ref(`users/${currentChatId}/following/${myUid}`).once('value', snapshot => {
+        const heFollowsMe = snapshot.exists();
         
-        // თუ მეგობარია, გზა არის messages, თუ არა - message_requests
-        const targetPath = isFollowing 
+        // თუ იმას ვყავართ მეგობრებში, გზა არის messages. 
+        // თუ არ ვყავართ (ანუ ჯერ არ დაუდასტურებია), ჩაუვარდეს რექვესტებში (message_requests).
+        const targetPath = heFollowsMe 
             ? `messages/${chatId}` 
             : `message_requests/${currentChatId}/${myUid}`;
 
