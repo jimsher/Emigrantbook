@@ -1224,7 +1224,7 @@ function sendMessage() {
 
 
 
-
+// აქ იწტება პროფილის დიზაინნლოგიკა
  function openProfile(uid) {
  stopMainFeedVideos();
  document.getElementById('profileUI').style.display = 'flex';
@@ -1407,9 +1407,7 @@ if (editNameBtn) {
      }
  });
 }
-
-
-
+// აქ მთავრდება 1 ნაწილი
 
 
 
@@ -1623,7 +1621,7 @@ function loadUserVideos(uid) {
         showNextSix();
     });
 }
-                    
+// აქ მთავრდება სრულად ფპროფილის ლოგიკა                    
 
 
 
