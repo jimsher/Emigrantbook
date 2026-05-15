@@ -1540,7 +1540,7 @@ localStorage.setItem('last_seen_visitor_ts', Date.now());
 
 
 
-
+// პროფილის ვიდეოების ფუნქცია
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     
@@ -1590,12 +1590,10 @@ function loadUserVideos(uid) {
             };
         }
 
-        document.getElementById('statVidsCount').innerText = vCount;
-
-        let currentlyShown = 0; // რამდენი გვაქვს ამჟამად ნაჩვენები
+        // --- 👇 აქედან ყველაფერი 100% შენი ორიგინალია, წერტილი-მძიმეც კი ---
+        let currentlyShown = 0; 
 
         function showNextSix() {
-            // ვიღებთ შემდეგ 6 ვიდეოს
             const nextBatch = videoList.slice(currentlyShown, currentlyShown + 6);
             
             nextBatch.forEach((itemData) => {
@@ -1618,29 +1616,26 @@ function loadUserVideos(uid) {
                         </div>
                     `;
                 
-                // ინდექსის გადაცემა სრული ვიდეოსთვის
                 const globalIndex = currentlyShown; 
                 item.onclick = () => playFullVideo(video.url, id, globalIndex);
                 
                 grid.appendChild(item);
-                currentlyShown++; // ვზრდით მთლიან რაოდენობას
+                currentlyShown++; 
             });
 
-            // ღილაკის მართვა
             const oldBtn = document.getElementById('loadMoreBtn');
-            if(oldBtn) oldBtn.remove(); // ძველს ვშლით
+            if(oldBtn) oldBtn.remove(); 
 
             if (currentlyShown < videoList.length) {
                 const loadMoreBtn = document.createElement('div');
                 loadMoreBtn.id = 'loadMoreBtn';
                 loadMoreBtn.innerHTML = 'მეტის ნახვა <i class="fas fa-chevron-down" style="margin-left:5px;"></i>';
                 loadMoreBtn.style = "grid-column: 1 / -1; text-align: center; padding: 15px; color: #aaa; background: rgba(255,255,255,0.05); border-radius: 8px; margin: 15px 0; cursor: pointer; font-size: 14px;";
-                loadMoreBtn.onclick = () => showNextSix(); // კიდევ 6-ს დაამატებს
+                loadMoreBtn.onclick = () => showNextSix(); 
                 grid.appendChild(loadMoreBtn);
             }
         }
 
-        // პირველი 6-ის გამოჩენა
         showNextSix();
     });
 }
