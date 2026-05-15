@@ -1540,7 +1540,7 @@ localStorage.setItem('last_seen_visitor_ts', Date.now());
 
 
 
-// პროფილის ვიდეოების ფუნქცია
+
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     
@@ -1553,23 +1553,11 @@ function loadUserVideos(uid) {
         }
 
         let vCount = 0;
-        let totalLikes = 0; // ✨ დავამატე ლაიქების ჯამი
-        let likersList = []; // ✨ დავამატე ლაიქერების სია
         let videoList = [];
         const postEntries = Object.entries(posts).reverse();
 
+        // ვაგროვებთ ყველა ვიდეოს
         postEntries.forEach(([id, post]) => {
-            // --- 🎯 აქ არის ის, რაც დაემატა შენს კოდს ---
-            if(post.authorId === uid || post.uid === uid) {
-                if(post.likes) {
-                    totalLikes += Object.keys(post.likes).length;
-                    Object.keys(post.likes).forEach(lUid => {
-                        if(!likersList.includes(lUid)) likersList.push(lUid);
-                    });
-                }
-            }
-            // ----------------------------------------
-
             if(post.authorId === uid && post.media) {
                 const video = post.media.find(m => m.type === 'video');
                 if(video) {
@@ -1579,21 +1567,12 @@ function loadUserVideos(uid) {
             }
         });
 
-        // 🌟 აქ შენს vCount-ს ვანაცვლებთ totalLikes-ით, რომ პროფილზე ლაიქები გამოჩნდეს
-        document.getElementById('statVidsCount').innerText = totalLikes;
+        document.getElementById('statVidsCount').innerText = vCount;
 
-        // 🌟 ვაბამთ სიის გახსნას (მხოლოდ შენთვის)
-        const likesBtn = document.getElementById('likesStatBtn');
-        if(likesBtn) {
-            likesBtn.onclick = () => {
-                if(uid === auth.currentUser.uid) openLikesOverlay(likersList);
-            };
-        }
-
-        // --- 👇 აქედან ყველაფერი 100% შენი ორიგინალია, წერტილი-მძიმეც კი ---
-        let currentlyShown = 0; 
+        let currentlyShown = 0; // რამდენი გვაქვს ამჟამად ნაჩვენები
 
         function showNextSix() {
+            // ვიღებთ შემდეგ 6 ვიდეოს
             const nextBatch = videoList.slice(currentlyShown, currentlyShown + 6);
             
             nextBatch.forEach((itemData) => {
@@ -1616,26 +1595,29 @@ function loadUserVideos(uid) {
                         </div>
                     `;
                 
+                // ინდექსის გადაცემა სრული ვიდეოსთვის
                 const globalIndex = currentlyShown; 
                 item.onclick = () => playFullVideo(video.url, id, globalIndex);
                 
                 grid.appendChild(item);
-                currentlyShown++; 
+                currentlyShown++; // ვზრდით მთლიან რაოდენობას
             });
 
+            // ღილაკის მართვა
             const oldBtn = document.getElementById('loadMoreBtn');
-            if(oldBtn) oldBtn.remove(); 
+            if(oldBtn) oldBtn.remove(); // ძველს ვშლით
 
             if (currentlyShown < videoList.length) {
                 const loadMoreBtn = document.createElement('div');
                 loadMoreBtn.id = 'loadMoreBtn';
                 loadMoreBtn.innerHTML = 'მეტის ნახვა <i class="fas fa-chevron-down" style="margin-left:5px;"></i>';
                 loadMoreBtn.style = "grid-column: 1 / -1; text-align: center; padding: 15px; color: #aaa; background: rgba(255,255,255,0.05); border-radius: 8px; margin: 15px 0; cursor: pointer; font-size: 14px;";
-                loadMoreBtn.onclick = () => showNextSix(); 
+                loadMoreBtn.onclick = () => showNextSix(); // კიდევ 6-ს დაამატებს
                 grid.appendChild(loadMoreBtn);
             }
         }
 
+        // პირველი 6-ის გამოჩენა
         showNextSix();
     });
 }
@@ -5814,58 +5796,3 @@ auth.onAuthStateChanged(user => {
 });
 
 // აქ მთავტდება
-
-
-
-
-
-
-
-
-
-// ვიდეოს ლაიქების ჩვენება პროფილზე
-function openLikesOverlay(uids) {
-    let overlay = document.getElementById('likesOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'likesOverlay';
-        overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; display:none; flex-direction:column;";
-        overlay.innerHTML = `
-            <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222; background:#000;">
-                <button onclick="document.getElementById('likesOverlay').style.display='none'" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">←</button>
-                <span style="color:white; font-weight:bold; margin-left:15px; font-size:18px;">Лайки</span>
-            </div>
-            <div id="likesListContent" style="flex:1; overflow-y:auto; padding:10px; background:#000;"></div>
-        `;
-        document.body.appendChild(overlay);
-    }
-    
-    const content = document.getElementById('likesListContent');
-    content.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>Загрузка...</p>";
-    overlay.style.display = 'flex';
-
-    if (!uids || uids.length === 0) {
-        content.innerHTML = `<p style="color:gray; text-align:center; margin-top:20px;">ჯერ ლაიქები არ არის</p>`;
-        return;
-    }
-
-    content.innerHTML = "";
-    uids.forEach(likerUid => {
-        db.ref(`users/${likerUid}`).once('value', uSnap => {
-            const user = uSnap.val();
-            if (!user) return;
-
-            const item = document.createElement('div');
-            item.style = "display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid #111;";
-            item.innerHTML = `
-                <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="document.getElementById('likesOverlay').style.display='none'; openProfile('${likerUid}')">
-                    <img src="${user.photo || 'token-avatar.png'}" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:1px solid #333;">
-                    <span style="color:white; font-weight:bold;">${user.name}</span>
-                </div>
-                <div style="color:#ff3b30; font-size:18px;">❤️</div>
-            `;
-            content.appendChild(item);
-        });
-    });
-}
-                       
