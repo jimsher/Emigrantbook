@@ -8,7 +8,7 @@ let camMuted = false;
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
 const TOKEN = null;
 
-const FIXED_CHANNEL = "live_stream"; 
+const FIXED_CHANNEL = "live_"; 
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
