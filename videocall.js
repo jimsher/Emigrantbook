@@ -5,8 +5,8 @@ let micMuted = false;
 let camMuted = false;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
-const AGORA_APP_ID = "258897e8fb5f4dd089b761eca6568b24";
-const AGORA_TOKEN = " ";
+const APPID = "258897e8fb5f4dd089b761eca6568b24";
+const TOKEN = null;
 
 const FIXED_CHANNEL = "live_stream"; 
 
