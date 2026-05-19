@@ -2,25 +2,32 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
+    <!-- ეს ხაზი ამატებს მობილურის ადაპტაციას, რაც გაკლია -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Emigrantbook Games</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { background: #000; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        #gamesPage { max-width: 800px; margin: 0 auto; }
-        #gameBalance { font-size: 24px; color: #d4af37; text-align: center; margin: 20px 0; }
-        .games-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .games-grid button { background: #1a1a1a; color: #d4af37; border: 1px solid #d4af37; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .games-grid button:hover { background: #d4af37; color: #000; }
-        .game-container { display: none; border: 1px solid #333; padding: 20px; border-radius: 10px; background: #0a0a0a; margin-top: 20px; flex-direction: column; align-items: center; }
+        /* აქ ვტოვებთ მხოლოდ იმას, რაც მობილურისთვისაა საჭირო */
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+        #gamesPage { width: 100%; max-width: 500px; margin: 0 auto; }
+        #gameBalance { font-size: 20px; color: #d4af37; text-align: center; margin: 15px 0; }
+        
+        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .games-grid button { background: #1a1a1a; color: #d4af37; border: 1px solid #d4af37; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        
+        .game-container { display: none; border: 1px solid #333; padding: 10px; border-radius: 10px; background: #0a0a0a; margin-top: 10px; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
+        
+        /* რომ არ გაცდეს ეკრანს */
+        canvas { max-width: 100% !important; height: auto !important; }
+        .reels-wrapper { width: 100%; display: flex; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div id="gamesPage">
-        <a href="index.html" style="color:#888; text-decoration:none;">← მთავარზე დაბრუნება</a>
+        <a href="index.html" style="color:#888; text-decoration:none; display: block; margin-bottom: 10px;">← უკან</a>
         <div id="gameBalance">0.00 AKHO</div>
 
-        <!-- თამაშების სია -->
         <div id="gamesList" class="games-grid">
             <button onclick="openWheel()">Lucky Spin</button>
             <button onclick="openLotto()">Lotto 5/25</button>
@@ -28,11 +35,10 @@
             <button onclick="openKingOfAkho()">King of Akho</button>
         </div>
 
-        <!-- აქ არის თითოეული თამაშის კონტეინერი -->
         <div id="wheelGameContainer" class="game-container">
             <canvas id="wheelCanvas" width="280" height="280"></canvas>
-            <button id="spinBtn" onclick="spinWheel()">დატრიალება (1.00 AKHO)</button>
-            <button onclick="backToGames()">უკან</button>
+            <button id="spinBtn" onclick="spinWheel()" style="margin-top:10px;">დატრიალება (1.00 AKHO)</button>
+            <button onclick="backToGames()" style="margin-top:10px;">უკან</button>
         </div>
 
         <div id="lottoGameContainer" class="game-container">
@@ -70,7 +76,7 @@
             document.getElementById('gamesList').style.display = 'none';
             document.getElementById('wheelGameContainer').style.display = 'flex';
         }
-        // დანარჩენი გახსნის ფუნქციებიც ასე იქნება...
+        // დაამატე დანარჩენი გახსნის ფუნქციები აქ...
     </script>
 </body>
 </html>
