@@ -1,13 +1,14 @@
 // --- EMIGRANTBOOK VIDEO CALL MODULE ---
-const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+// დაყენდა ზუსტად ისე, როგორც ლაივშია (mode: "live")
+const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 let localTracks = { videoTrack: null, audioTrack: null };
 let micMuted = false;
 let camMuted = false;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
-const TOKEN = ""; // ცარიელი ტექსტი აიძულებს Agora-ს იმუშაოს მუდმივ კოდზე ტოკენის გარეშე
-const FIXED_CHANNEL = "live_stream"; // შენი ორიგინალი არხის სახელი ქვემოდან
+const TOKEN = null; // მუდმივი კოდი, როგორც ლაივში
+const FIXED_CHANNEL = "live_stream"; 
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
@@ -45,7 +46,11 @@ async function startVideoCall() {
     
     try {
         const uid = Math.floor(Math.random() * 10000);
-        // გასწორდა: ცვლადები შეესაბამება ზემოთ აღწერილ APPID, FIXED_CHANNEL და TOKEN-ს
+        
+        // როცა რეჟიმი არის "live", კლიენტს სჭირდება როლის მინიჭება (host - ვინც აჩვენებს ვიდეოს)
+        await client.setClientRole("host");
+        
+        // უერთდება ზემოთ აღწერილ APPID-ს, FIXED_CHANNEL-ს და მუდმივ TOKEN-ს
         await client.join(APPID, FIXED_CHANNEL, TOKEN, uid);
         
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -54,7 +59,7 @@ async function startVideoCall() {
         localTracks.videoTrack.play("local-video");
         await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
 
-        // Sxvishi videos gamoჩena
+        // სხვისი ვიდეოს გამოჩენა
         client.on("user-published", async (user, mediaType) => {
             await client.subscribe(user, mediaType);
             if (mediaType === "video") {
@@ -72,8 +77,7 @@ async function startVideoCall() {
     }
 }
 
-// 3. შემოსული ზარის მოსმენა (ეს უნდა იდოს auth.onAuthStateChanged-ში)
-// 2. listenForIncomingCalls-ში (როცა გირეკავენ)
+// 3. შემოსული ზარის მოსმენა
 function listenForIncomingCalls(user) {
     db.ref(`video_calls/${user.uid}`).on('value', snap => {
         const call = snap.val();
@@ -82,7 +86,7 @@ function listenForIncomingCalls(user) {
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'flex';
 
-            // ვწერთ სახელს და ფოტოს (შენი ID-ების მიხედვით)
+            // ვწერთ სახელს და ფოტოს
             document.getElementById('callerNameDisplay').innerText = call.callerName;
             if (call.callerPhoto) {
                 document.getElementById('callerAva').src = call.callerPhoto;
@@ -140,27 +144,18 @@ function minimizeVideoCall() {
 
 // 1. ფუნქცია პასუხისთვის (მწვანე ღილაკი)
 async function acceptCall() {
-    // ბაზაში ვცვლით სტატუსს, რომ იუზერმა უპასუხა
     if (window.activeIncomingCall) {
         await db.ref(`video_calls/${auth.currentUser.uid}`).update({ 
             status: 'accepted' 
         });
     }
 
-    // ვმალავთ ამ ფანჯარას
     document.getElementById('incomingCallModal').style.display = 'none';
-
-    // ვრთავთ შენს ორიგინალ ვიდეო ფუნქციას
     startVideoCall();
 }
 
 // 2. ფუნქცია უარყოფისთვის (წითელი ღილაკი)
 function declineCall() {
-    // ბაზიდან ვშლით ზარის მოთხოვნას
     db.ref(`video_calls/${auth.currentUser.uid}`).remove();
-    
-    // ვმალავთ ფანჯარას
     document.getElementById('incomingCallModal').style.display = 'none';
 }
-
-// პატარა ჩარჩო ლოკალ ვიდეოს ლოგიკა
