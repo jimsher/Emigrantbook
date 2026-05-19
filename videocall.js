@@ -7,7 +7,7 @@ let camMuted = false;
 
 // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
 // აქ ჩაწერე შენი აუდიო ფაილების ზუსტი გზები (მაგ: "sounds/calling.mp3")
-const outgoingAudio = new Audio("https://actions.google.com/sounds/v1/science_fiction/glitchy_digital_ringtone.ogg.mp3");
+const outgoingAudio = new Audio("https://github.com/jimsher/Emigrantbook/blob/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
 const incomingAudio = new Audio("https://raw.githubusercontent.com/Video zari Shemavali/Emigrantbook/main/calling.mp3");
 
 // ჩავრთოთ მუსიკის მუდმივი ტრიალი (Loop), სანამ ზარს არ ვუპასუხებთ ან არ გაითიშება
