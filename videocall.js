@@ -292,3 +292,59 @@ setTimeout(() => {
     makeCallElementDraggable("local-video");
     makeCallElementDraggable("remote-video");
 }, 1500);            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 1. ზარის დაწყება (როცა შენ რეკავ) - შესწორებული ვერსია ავატარის გამოჩენით
+async function requestVideoCall() {
+    const targetUid = window.currentChatId;
+    if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
+
+    // UI-ს მომზადება (კამერის ჩართვამდე)
+    const ui = document.getElementById('videoCallUI');
+    if(ui) ui.style.display = 'flex';
+
+    // ბაზიდან სახელისა და ავატარის ამოღება, რომ ზუსტად გამოჩნდეს ვისაც ვურეკავთ
+    db.ref('users/' + targetUid).once('value').then(snap => {
+        const userData = snap.val();
+        
+        // ა) სახელის დასმა (შენი ორიგინალი კოდი)
+        const rName = document.getElementById('remote-name');
+        if(rName) {
+            rName.innerText = (userData && userData.name) ? userData.name : "Emigrant";
+        }
+        
+        // ბ) ახალი ნაწილი: ავატარის დასმა და გამოჩენა (ზუსტად შენი HTML-ის ID-ზე: calling-user-avatar)
+        const avatarBox = document.getElementById('calling-user-avatar');
+        if (avatarBox) {
+            const userPhoto = (userData && userData.photo) ? userData.photo : 'token-avatar.png'; // თუ ფოტო არ აქვს, დაჯდება ნაგულისხმევი
+            avatarBox.style.backgroundImage = `url('${userPhoto}')`;
+            avatarBox.style.display = 'block'; // ვახდენთ ბლოკის ჩვენებას (რადგან HTML-ში საწყისად display:none ადევს)
+        }
+    });
+
+    // შენი ორიგინალი Firebase ლოგიკა
+    await db.ref('video_calls/' + targetUid).set({
+        callerUid: auth.currentUser.uid,
+        callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+        channel: FIXED_CHANNEL,
+        status: 'calling',
+        ts: Date.now()
+    });
+
+    startVideoCall(); // ეს რთავს აგორას და კამერას
+}
