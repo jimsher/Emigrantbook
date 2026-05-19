@@ -67,6 +67,157 @@
 
  
  <style>
+/* ვიდეო ზარის დიზაინი */
+  /* ვიდეო ზარის მთლიანი ეკრანი */
+#videoCallUI {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 999999;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* ზედა ზონა: პროფილის სურათი და სახელი */
+.call-header-zone {
+    width: 100%;
+    padding: 40px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+    z-index: 10;
+}
+
+#callerAva, .call-top-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold, #d4af37);
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.call-header-zone h2 {
+    color: #fff;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.call-status-text {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* ქვედა მართვის პანელი (Frosted Glass ეფექტით) */
+.call-control-panel {
+    width: calc(100% - 40px);
+    max-width: 450px;
+    background: rgba(30, 30, 30, 0.65);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 24px;
+    padding: 16px 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 30px;
+    z-index: 10;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ღილაკების კონტეინერები (იკონკა + ტექსტი ერთად) */
+.panel-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex: 1;
+}
+
+/* თავად მრგვალი ღილაკები */
+.panel-round-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    transition: all 0.2s ease;
+}
+
+.panel-btn-wrapper:hover .panel-round-btn {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+/* გათიშვის წითელი ღილაკი */
+.panel-btn-wrapper.end-call-wrapper .panel-round-btn {
+    background: #ff3b30;
+    border: none;
+}
+.panel-btn-wrapper.end-call-wrapper:hover .panel-round-btn {
+    background: #e02e24;
+}
+
+/* ღილაკის ქვედა პატარა ტექსტები */
+.panel-btn-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* ვიდეო ეკრანების ზომები */
+#remote-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+#local-video {
+    position: absolute;
+    width: 110px;
+    height: 150px;
+    bottom: 110px; /* რომ პანელის თავზე დაჯდეს ლამაზად */
+    right: 20px;
+    border-radius: 16px;
+    border: 2px solid var(--gold, #d4af37);
+    overflow: hidden;
+    z-index: 5;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+  /* აქ მთავრდება */
+
+
+
+
+
+
+
+
+
+  
 /* ეს არის ინსტალაციის სტილი */
  #pwa-notification {
     display: none;
