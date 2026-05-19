@@ -5,6 +5,9 @@ let localTracks = { videoTrack: null, audioTrack: null };
 let micMuted = false;
 let camMuted = false;
 
+// მასივი ჯგუფში მყოფი აქტიური იუზერების დასათვლელად
+let activeUsersInCall = [];
+
 // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
 // გამავალი ზარის ხმა შენთვის
 const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
@@ -68,6 +71,8 @@ async function startVideoCall() {
     try {
         const uid = Math.floor(Math.random() * 10000);
         
+        if(!activeUsersInCall.includes("local")) activeUsersInCall.push("local");
+        
         // როცა რეჟიმი არის "live", კლიენტს სჭირდება როლის მინიჭება (host - ვინც აჩვენებს ვიდეოს)
         await client.setClientRole("host");
         
@@ -86,13 +91,31 @@ async function startVideoCall() {
             if (mediaType === "video") {
                 const remoteLabel = document.getElementById('remote-label');
                 if (remoteLabel) remoteLabel.innerText = "Connected";
-                user.videoTrack.play("remote-video");
+
+                if(!activeUsersInCall.includes(user.uid)) activeUsersInCall.push(user.uid);
+
+                // თუ სულ 2 ადამიანია, მუშაობს შენი ორიგინალი ეკრანის სისტემა
+                if(activeUsersInCall.length <= 2) {
+                    user.videoTrack.play("remote-video");
+                } 
+                // თუ მესამე დაემატა, ირთვება ჯგუფური Grid რეჟიმი
+                else {
+                    handleGroupVideoJoined(user);
+                }
                 
                 // როგორც კი მეორე მხარე შემოვა (ზარი შედგება), ჩვენთან გამავალი ზარის ხმა უნდა გაჩუმდეს
                 outgoingAudio.pause();
                 outgoingAudio.currentTime = 0;
             }
             if (mediaType === "audio") user.audioTrack.play();
+        });
+
+        // როცა ვინმე ტოვებს ჯგუფურ ზარს
+        client.on("user-left", (user) => {
+            activeUsersInCall = activeUsersInCall.filter(id => id !== user.uid);
+            const div = document.getElementById(`group-user-${user.uid}`);
+            if(div) div.remove();
+            updateGroupGridStyles();
         });
 
     } catch (err) {
@@ -177,6 +200,13 @@ async function endVideoCall() {
     // 2. ჩვენს საკუთარ ჩანაწერსაც ვუკეთებთ 'ended'-ს და ვშლით
     await db.ref(`video_calls/${myUid}`).update({ status: 'ended' });
     setTimeout(() => { db.ref(`video_calls/${myUid}`).remove(); }, 1000);
+
+    // ჯგუფური პარამეტრების სრული განულება
+    activeUsersInCall = [];
+    document.getElementById("group-video-container").innerHTML = "";
+    document.getElementById("group-video-container").style.display = "none";
+    document.getElementById("remote-video").style.display = "block";
+    document.getElementById("local-video").style.cssText = "width:120px; height:180px; background:#222; position:absolute; bottom:140px; right:20px; border-radius:15px; border:2px solid var(--gold, #d4af37); overflow:hidden; z-index:100; box-shadow: 0 10px 25px rgba(0,0,0,0.6);";
 }
 
 // 3. შემოსული ზარის მოსმენა (Realtime-ში უსმენს სტატუსის ცვლილებებს)
@@ -198,7 +228,9 @@ function listenForIncomingCalls(user) {
             try {
                 outgoingAudio.pause();
                 outgoingAudio.currentTime = 0;
-                incomingAudio.play();
+                incomingAudio.muted = false;
+                // გასწორდა აქ: ჩაიწერა რეალური შემომავალი ზარის ხმის გამოძახება!
+                incomingAudio.play().catch(err => console.log("Autoplay block:", err));
             } catch (e) {
                 console.log("აუდიოს დაკვრის ხარვეზი:", e);
             }
@@ -271,7 +303,6 @@ function minimizeVideoCall() {
 
 // 1. ფუნქცია პასუხისთვის (მწვანე ღილაკი)
 async function acceptCall() {
-    // როგორც კი პასუხს აჭერს იუზერი, ეგრევე ვაჩუმებთ შემომავალ ზარს
     outgoingAudio.pause();
     outgoingAudio.currentTime = 0;
     incomingAudio.pause();
@@ -289,7 +320,6 @@ async function acceptCall() {
 
 // 2. ფუნქცია უარყოფისთვის (წითელი ღილაკი)
 function declineCall() {
-    // უარყოფისას ვაჩუმებთ შემომავალ მელოდიას
     outgoingAudio.pause();
     outgoingAudio.currentTime = 0;
     incomingAudio.pause();
@@ -305,6 +335,8 @@ let isCallWindowsSwapped = false;
 
 // 1. ეკრანების ადგილების გაცვლა (Swap)
 function swapVideoTracksContainers() {
+    if(activeUsersInCall.length > 2) return; // ჯგუფურ რეჟიმში სვოპი აღარ გვინდა
+
     const localContainer = document.getElementById("local-video");
     const remoteContainer = document.getElementById("remote-video");
 
@@ -355,6 +387,7 @@ function makeCallElementDraggable(elementId) {
     const dragStart = (e) => {
         // ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
         if (e.target !== el && !el.contains(e.target)) return;
+        if (activeUsersInCall.length > 2) return; // ჯგუფის დროს იბლოკება Drag
 
         // შემოწმება: თუ კონტეინერი არის დიდი სრული ეკრანი (100% სიგანით), ვბლოკავთ მოძრაობას
         const isFullScreen = el.style.width === "100%" || window.getComputedStyle(el).width === window.innerWidth + "px";
@@ -496,4 +529,96 @@ function showCallEndedScreen() {
     setTimeout(() => {
         endedUI.style.display = 'none';
     }, 8000);
+}
+
+
+// --- 🚀 ახალი ჩამატებული ფუნქციები ჯგუფური ზარის მართვისთვის (Add Person) ---
+
+// 1. მესამე პირის მოწვევა (Firebase-ით უგზავნის ზარს)
+async function inviteToGroupCall() {
+    const friendUid = prompt("გთხოვთ შეიყვანოთ დასამატებელი მომხმარებლის UID:");
+    if (!friendUid) return;
+
+    await db.ref('video_calls/' + friendUid).set({
+        callerUid: auth.currentUser.uid,
+        callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+        channel: FIXED_CHANNEL,
+        status: 'calling',
+        ts: Date.now()
+    });
+    alert("მოწვევა წარმატებით გაიგზავნა!");
+}
+
+// 2. ახალი ადამიანის ვიდეო ნაკადის ჩასმა და Grid-ის გადართვა
+function handleGroupVideoJoined(user) {
+    const mainRemoteBox = document.getElementById("remote-video");
+    const mainLocalBox = document.getElementById("local-video");
+    const container = document.getElementById("group-video-container");
+
+    // ვმალავთ ძველ ორმხრივ ჩარჩოებს, რომ გადავიდეთ Grid-ზე
+    if (mainRemoteBox) mainRemoteBox.style.display = "none";
+    if (mainLocalBox) mainLocalBox.style.display = "none";
+    if (container) container.style.display = "grid";
+
+    // ა) ჩვენი საკუთარი კამერის გადატანა Grid-ში
+    let myGridBox = document.getElementById("group-user-local");
+    if(!myGridBox && container) {
+        myGridBox = document.createElement("div");
+        myGridBox.id = "group-user-local";
+        container.appendChild(myGridBox);
+    }
+
+    // ბ) ახალი პარტნიორის ჩარჩოს შექმნა Grid-ში
+    let partnerGridBox = document.getElementById(`group-user-${user.uid}`);
+    if(!partnerGridBox && container) {
+        partnerGridBox = document.createElement("div");
+        partnerGridBox.id = `group-user-${user.uid}`;
+        container.appendChild(partnerGridBox);
+    }
+
+    // გ) პირველი პარტნიორის ჩარჩოს პოვნაც და ჩასმა, თუ ისიც ზარშია
+    client.remoteUsers.forEach(rUser => {
+        if(rUser.uid !== user.uid && rUser.videoTrack && container) {
+            let firstPartnerBox = document.getElementById(`group-user-${rUser.uid}`);
+            if(!firstPartnerBox) {
+                firstPartnerBox = document.createElement("div");
+                firstPartnerBox.id = `group-user-${rUser.uid}`;
+                container.appendChild(firstPartnerBox);
+                rUser.videoTrack.play(`group-user-${rUser.uid}`);
+            }
+        }
+    });
+
+    // სტილების განახლება რაოდენობის მიხედვით
+    updateGroupGridStyles();
+
+    // ვრთავთ ვიდეოებს ახალ ბლოკებში
+    if(localTracks.videoTrack) localTracks.videoTrack.play("group-user-local");
+    user.videoTrack.play(`group-user-${user.uid}`);
+}
+
+// 3. Grid სტილების ავტომატური მართვა (3 ან 4 კაცისთვის)
+function updateGroupGridStyles() {
+    const container = document.getElementById("group-video-container");
+    if (!container) return;
+    
+    const boxes = container.children;
+    const count = boxes.length;
+
+    // ყველას ერთნაირი ლამაზი მომრგვალებული სტილი
+    for(let box of boxes) {
+        box.style.cssText = "width:100%; height:100%; background:#222; border-radius:15px; overflow:hidden; border:2px solid rgba(212,175,55,0.3); position:relative;";
+    }
+
+    if (count === 3) {
+        container.style.gridTemplateColumns = "1fr 1fr";
+        container.style.gridTemplateRows = "1fr 1fr";
+        // პირველი ბლოკი (შენი) დაჯდეს მთელ სიგანეზე ზემოთ
+        if(boxes[0]) boxes[0].style.gridColumn = "span 2";
+    } 
+    else if (count >= 4) {
+        container.style.gridTemplateColumns = "1fr 1fr";
+        container.style.gridTemplateRows = "1fr 1fr";
+        if(boxes[0]) boxes[0].style.gridColumn = "auto";
+    }
 }
