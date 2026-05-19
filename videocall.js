@@ -510,7 +510,7 @@ function showCallEndedScreen() {
 }
 
 
-// --- 🚀 ჭკვიანი და უნივერსალური ფუნქცია, რომელიც ყველა ფორმატის მეგობარს წამოიღებს სიაში ---
+// --- 🚀 აი აქ არის 100%-ით სწორი და გარანტირებული მეგობრების წამოღების კოდი შენი რეალური სტრუქტურისთვის ---
 
 function openInviteFriendsModal() {
     const modal = document.getElementById("inviteFriendsModal");
@@ -521,6 +521,7 @@ function openInviteFriendsModal() {
 
     const myUid = auth.currentUser.uid;
 
+    // შევდივართ users -> შენი ID -> friends პაპკაში
     db.ref(`users/${myUid}/friends`).once('value').then(friendsSnapshot => {
         if (!container) return;
         container.innerHTML = ""; 
@@ -529,22 +530,13 @@ function openInviteFriendsModal() {
 
         friendsSnapshot.forEach(friendSnap => {
             const friendData = friendSnap.val();
-            let friendUid = null;
-
-            // 🚀 ჭკვიანი შემოწმება: თუ Key არის 'friendUid' ან 'id', ან თუ პირდაპირ ტექსტია ჩაწერილი
-            if (friendData) {
-                if (friendData.friendUid) {
-                    friendUid = friendData.friendUid;
-                } else if (friendData.id) {
-                    friendUid = friendData.id;
-                } else if (typeof friendData === 'string') {
-                    friendUid = friendData;
-                }
-            }
-
-            if (friendUid) {
+            
+            // 🚀 გასწორდა აქ: რადგან friends-ის შიგნით ციფრებია (0,1,2), რეალურ ID-ს ვიღებთ ობიექტის შიგნიდან: friendData.friendUid
+            if (friendData && friendData.friendUid) {
+                const friendUid = friendData.friendUid;
                 hasFriends = true;
 
+                // მეგობრის რეალური ID-ით შევდივართ users პაპკაში მისი მონაცემების წამოსაღებად
                 db.ref(`users/${friendUid}`).once('value').then(userSnapshot => {
                     const userData = userSnapshot.val();
                     if (!userData) return;
