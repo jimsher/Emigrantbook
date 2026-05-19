@@ -282,24 +282,17 @@ function toggleCam() {
     document.getElementById('camBtn').style.background = camMuted ? '#ff4d4d' : '#333';
 }
 
-// ჩაკეცვა - აღდგენილია და გასწორებული
 function minimizeVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if (!ui) return;
-    if (ui.style.width === '100%' || ui.style.width === '') {
-        ui.style.width = '150px'; 
-        ui.style.height = '220px';
-        ui.style.top = '80px'; 
-        ui.style.left = '20px';
-        ui.style.borderRadius = '20px';
-        ui.style.border = '2px solid #d4af37';
+    if (ui.style.width === '100%') {
+        ui.style.width = '150px'; ui.style.height = '220px';
+        ui.style.top = '80px'; ui.style.left = '20px';
+        ui.style.borderRadius = '20px'; ui.style.border = '2px solid #d4af37';
     } else {
-        ui.style.width = '100%'; 
-        ui.style.height = '100%';
-        ui.style.top = '0'; 
-        ui.style.left = '0';
-        ui.style.borderRadius = '0';
-        ui.style.border = 'none';
+        ui.style.width = '100%'; ui.style.height = '100%';
+        ui.style.top = '0'; ui.style.left = '0';
+        ui.style.borderRadius = '0'; ui.style.border = 'none';
     }
 }
 
