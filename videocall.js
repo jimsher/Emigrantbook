@@ -18,7 +18,7 @@ const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigr
 outgoingAudio.loop = true;
 incomingAudio.loop = true;
 outgoingAudio.volume = 1.0;
-incomingAudio.volume = 1.0;
+outgoingAudio.volume = 1.0;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
@@ -285,14 +285,29 @@ function toggleCam() {
 function minimizeVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if (!ui) return;
-    if (ui.style.width === '100%') {
-        ui.style.width = '150px'; ui.style.height = '220px';
-        ui.style.top = '80px'; ui.style.left = '20px';
-        ui.style.borderRadius = '20px'; ui.style.border = '2px solid #d4af37';
+    
+    // ჩაკეცვის ლოგიკა: ვიტოვებთ მარტო შენს ჩარჩოს
+    if (ui.style.width === '100%' || ui.style.width === '') {
+        ui.style.width = '150px'; 
+        ui.style.height = '180px';
+        ui.style.top = '80px'; 
+        ui.style.left = '20px';
+        ui.style.borderRadius = '20px';
+        
+        // ვმალავთ ყველაფერს გარდა შენი ჩარჩოსი
+        document.getElementById('remote-video').style.display = 'none';
+        document.getElementById('group-video-container').style.display = 'none';
+        document.getElementById('local-video').style.cssText = "width:100%; height:100%; top:0; left:0; position:relative; border-radius:20px;";
     } else {
-        ui.style.width = '100%'; ui.style.height = '100%';
-        ui.style.top = '0'; ui.style.left = '0';
-        ui.style.borderRadius = '0'; ui.style.border = 'none';
+        // გადიდების ლოგიკა
+        ui.style.width = '100%'; 
+        ui.style.height = '100%';
+        ui.style.top = '0'; 
+        ui.style.left = '0';
+        ui.style.borderRadius = '0';
+        
+        document.getElementById('remote-video').style.display = 'block';
+        document.getElementById('local-video').style.cssText = "width:120px; height:180px; background:#222; position:absolute; bottom:140px; right:20px; border-radius:15px; border:2px solid var(--gold, #d4af37); overflow:hidden; z-index:100; box-shadow: 0 10px 25px rgba(0,0,0,0.6);";
     }
 }
 
@@ -330,7 +345,7 @@ let isCallWindowsSwapped = false;
 
 // 1. ეკრანების ადგილების გაცვლა (Swap)
 function swapVideoTracksContainers() {
-    if(activeUsersInCall.length > 2) return; // ჯგუფურ რეჟიმში სვოპი აღარ გვინდა
+    if(activeUsersInCall.length > 2) return; 
 
     const localContainer = document.getElementById("local-video");
     const remoteContainer = document.getElementById("remote-video");
@@ -506,7 +521,7 @@ function showCallEndedScreen() {
 }
 
 
-// --- 🚀 გასწორებული ახალი სექცია: შედის პირდაპირ users / myUid / friends პაპკაში ---
+// --- 🚀 ფუნქცია მეგობრების სიისთვის ---
 
 function openInviteFriendsModal() {
     const modal = document.getElementById("inviteFriendsModal");
@@ -517,7 +532,6 @@ function openInviteFriendsModal() {
 
     const myUid = auth.currentUser.uid;
 
-    // 🚀 ზუსტი გზა სკრინშოტის მიხედვით: შევდივართ users -> შენი ID -> friends პაპკაში
     db.ref(`users/${myUid}/friends`).once('value').then(friendsSnapshot => {
         if (!container) return;
         container.innerHTML = ""; 
@@ -525,12 +539,22 @@ function openInviteFriendsModal() {
         let hasFriends = false;
 
         friendsSnapshot.forEach(friendSnap => {
-            const friendUid = friendSnap.key; // ეს არის შენი მეგობრის რეალური ID
-            
+            const friendData = friendSnap.val();
+            let friendUid = null;
+
+            if (friendData) {
+                if (friendData.friendUid) {
+                    friendUid = friendData.friendUid;
+                } else if (friendData.id) {
+                    friendUid = friendData.id;
+                } else if (typeof friendData === 'string') {
+                    friendUid = friendData;
+                }
+            }
+
             if (friendUid) {
                 hasFriends = true;
 
-                // შევდივართ მეგობრის ID-ით users-ში სახელი და ფოტოს წამოსაღებად
                 db.ref(`users/${friendUid}`).once('value').then(userSnapshot => {
                     const userData = userSnapshot.val();
                     if (!userData) return;
