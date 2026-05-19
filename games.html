@@ -137,119 +137,12 @@
         const db = firebase.database();
         const auth = firebase.auth();
 
+
+
+        
         /* --- აქ არის შენი მოწოდებული სრული ლოგიკა --- */
         
-        function updateGameBalance() {
-            const user = auth.currentUser;
-            if (user) {
-                db.ref(`users/${user.uid}/akho`).on('value', snap => {
-                    const bal = snap.val() || 0;
-                    const balElem = document.getElementById('gameBalance');
-                    if(balElem) balElem.innerText = bal.toFixed(2) + " AKHO";
-                });
-            }
-        }
-
-        const prizes = [0.5, 2, 0, 5, 1, 0.5, 10, 0];
-        const colors = ["#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#ff4d4d", "#1a1a1a"];
-        let currentRotation = 0;
-        let isSpinning = false;
-
-        function backToGamesList() {
-            document.querySelectorAll('.game-container').forEach(c => c.style.display = 'none');
-            document.getElementById('gamesList').style.display = 'grid';
-        }
-
-        function playGame(type) {
-            if(type === 'spin') {
-                document.getElementById('gamesList').style.display = 'none';
-                document.getElementById('wheelGameContainer').style.display = 'flex';
-                drawWheel();
-            }
-        }
-
-        function drawWheel() {
-            const canvas = document.getElementById('wheelCanvas');
-            const ctx = canvas.getContext('2d');
-            const center = 140;
-            const sliceAngle = (2 * Math.PI) / prizes.length;
-            ctx.clearRect(0, 0, 280, 280);
-            prizes.forEach((prize, i) => {
-                ctx.beginPath();
-                ctx.fillStyle = colors[i];
-                ctx.moveTo(center, center);
-                ctx.arc(center, center, center, i * sliceAngle, (i + 1) * sliceAngle);
-                ctx.fill();
-            });
-        }
-
-        function spinWheel() {
-            if(isSpinning) return;
-            isSpinning = true;
-            const canvas = document.getElementById('wheelCanvas');
-            const extraDegrees = Math.floor(Math.random() * 360) + 2160;
-            currentRotation += extraDegrees;
-            canvas.style.transition = "transform 4s ease-out";
-            canvas.style.transform = `rotate(${currentRotation}deg)`;
-            setTimeout(() => { isSpinning = false; alert("თამაში დასრულდა!"); }, 4000);
-        }
-
-        function openLotto() {
-            document.getElementById('gamesList').style.display = 'none';
-            document.getElementById('lottoGameContainer').style.display = 'flex';
-            const grid = document.getElementById('lottoGrid');
-            grid.innerHTML = "";
-            for(let i=1; i<=25; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'num-btn';
-                btn.innerText = i;
-                btn.onclick = () => btn.classList.toggle('selected');
-                grid.appendChild(btn);
-            }
-        }
-
-        async function startLottoDraw() {
-            const btn = document.getElementById('playLottoBtn');
-            btn.disabled = true;
-            alert("გათამაშება დაწყებულია...");
-            await new Promise(r => setTimeout(r, 2000));
-            alert("გათამაშება დასრულდა!");
-            btn.disabled = false;
-        }
-
-        function backFromSlots() {
-            document.getElementById('burningSlotsContainer').style.display = 'none';
-            document.getElementById('gamesList').style.display = 'grid';
-        }
-        
-        function openBurningSlots() {
-            document.getElementById('gamesList').style.display = 'none';
-            document.getElementById('burningSlotsContainer').style.display = 'flex';
-        }
-
-        function openKingOfAkho() {
-            document.getElementById('gamesList').style.display = 'none';
-            document.getElementById('kingOfAkhoContainer').style.display = 'flex';
-        }
-        
-        function backToGamesListFromKing() {
-            document.getElementById('kingOfAkhoContainer').style.display = 'none';
-            document.getElementById('gamesList').style.display = 'grid';
-        }
-
-        function triggerBurningSpin() { alert("სლოტები ტრიალებს!"); }
-        function startKingSpin() { alert("King of Akho დაწყებულია!"); }
-
-        auth.onAuthStateChanged(user => { if(user) updateGameBalance(); });
-
-
-
-
-
-
-
-       // --- თამაშების ლოგიკა ---
-function openGamesPage() {
+                function openGamesPage() {
  document.getElementById('gamesPage').style.display = 'flex';
  // განვაახლოთ ბალანსი
  db.ref(`users/${auth.currentUser.uid}/akho`).on('value', snap => {
