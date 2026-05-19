@@ -6,13 +6,16 @@ let micMuted = false;
 let camMuted = false;
 
 // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
-// აქ ჩაწერე შენი აუდიო ფაილების ზუსტი გზები (მაგ: "sounds/calling.mp3")
+// გამავალი ზარის ხმა შენთვის
 const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
-const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20Shemavali.mp3");
+// შემომავალი ზარის ხმა მისთვის, ვისაც ურეკავ (აქ ჩაწერე შენი მეორე ფაილის ზუსტი სახელი ბოლოში)
+const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
 
-// ჩავრთოთ მუსიკის მუდმივი ტრიალი (Loop), სანამ ზარს არ ვუპასუხებთ ან არ გაითიშება
+// ჩავრთოთ მუსიკის მუდმივი ტრიალი (Loop) და წინასწარ გავხსნათ ხმა
 outgoingAudio.loop = true;
 incomingAudio.loop = true;
+outgoingAudio.volume = 1.0;
+incomingAudio.volume = 1.0;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
