@@ -175,129 +175,120 @@ function declineCall() {
 
 
 
-// --- პატარა ჩარჩოს გადაადგილების (Drag) და ადგილების გაცვლის (Swap) ლოგიკა ---
+// --- ემოგრანტბუქის ვიდეო ჩარჩოების DRAG & SWAP მოდული (FINAL FIX) ---
 
-document.addEventListener("DOMContentLoaded", () => {
-    const localBox = document.getElementById("local-video");
-    const remoteBox = document.getElementById("remote-video");
-    
-    if (!localBox || !remoteBox) return;
+let isCallWindowsSwapped = false;
 
-    // თავიდანვე მივცეთ საჭირო სტილები კოდიდან, რომ არ აირიოს
-    localBox.style.position = "absolute";
-    localBox.style.cursor = "grab";
-    localBox.style.touchAction = "none"; // მობილურზე სქროლვა რომ არ აირიოს თითის წაღებისას
+// 1. ეკრანების ადგილების გაცვლა (Swap)
+function swapVideoTracksContainers() {
+    const localContainer = document.getElementById("local-video");
+    const remoteContainer = document.getElementById("remote-video");
 
-    let isDragging = false;
-    let hasMoved = false; // ამოწმებს თითი უბრალოდ დააჭირა (კლიკი) თუ წაიღო (Drag)
-    let startX, startY, initialLeft, initialTop;
+    if (!localContainer || !remoteContainer) return;
 
-    // --- გადაადგილების დაწყება (მაუსი და თითი) ---
-    const dragStart = (e) => {
-        isDragging = true;
-        hasMoved = false;
-        localBox.style.cursor = "grabbing";
+    // მოძრაობის განულება, რომ გაცვლისას ეკრანიდან არ გაიქცეს
+    localContainer.style.transform = "none";
+    remoteContainer.style.transform = "none";
 
-        // თავსებადობა მობილურისთვის და კომპიუტერისთვის
-        const pageX = e.type.includes('touch') ? e.touches[0].pageX : e.pageX;
-        const pageY = e.type.includes('touch') ? e.touches[0].pageY : e.pageY;
-
-        startX = pageX;
-        startY = pageY;
-
-        initialLeft = localBox.offsetLeft;
-        initialTop = localBox.offsetTop;
-    };
-
-    // --- მოძრაობის პროცესი ---
-    const dragMove = (e) => {
-        if (!isDragging) return;
-        
-        const pageX = e.type.includes('touch') ? e.touches[0].pageX : e.pageX;
-        const pageY = e.type.includes('touch') ? e.touches[0].pageY : e.pageY;
-
-        const deltaX = pageX - startX;
-        const deltaY = pageY - startY;
-
-        // თუ მოძრაობა 5 პიქსელზე მეტია, ესე იგი მომხმარებელს გადააქვს და არა უბრალოდ აჭერს
-        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-            hasMoved = true;
-        }
-
-        // ახალი პოზიციის დასმა
-        localBox.style.left = `${initialLeft + deltaX}px`;
-        localBox.style.top = `${initialTop + deltaY}px`;
-        localBox.style.bottom = "auto";
-        localBox.style.right = "auto";
-    };
-
-    // --- მოძრაობის დასრულება / კლიკი ---
-    const dragEnd = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        localBox.style.cursor = "grab";
-
-        // თუ თითი არ გაუყოლებია და უბრალოდ დააჭირა (Click / Tap), ვცვლით ადგილებს
-        if (!hasMoved) {
-            swapVideoViews();
-        }
-    };
-
-    // ივენთების მიბმა მაუსზე
-    localBox.addEventListener("mousedown", dragStart);
-    document.addEventListener("mousemove", dragMove);
-    document.addEventListener("mouseup", dragEnd);
-
-    // ივენთების მიბმა სენსორულ ეკრანზე (მობილურებისთვის)
-    localBox.addEventListener("touchstart", dragStart, { passive: true });
-    document.addEventListener("touchmove", dragMove, { passive: false });
-    document.addEventListener("touchend", dragEnd);
-
-    // --- გამოსახულებების გაცვლის ფუნქცია (Swap) ---
-    let isSwapped = false;
-    function swapVideoViews() {
-        if (!isSwapped) {
-            // საკუთარი ვიდეო ხდება დიდი (სრული ეკრანი)
-            localBox.style.width = "100%";
-            localBox.style.height = "100%";
-            localBox.style.top = "0";
-            localBox.style.left = "0";
-            localBox.style.zIndex = "1";
-
-            // სხვისი ვიდეო პატარავდება და ხდება ჩარჩო
-            remoteBox.style.width = "120px";
-            remoteBox.style.height = "160px";
-            remoteBox.style.position = "absolute";
-            remoteBox.style.bottom = "80px";
-            remoteBox.style.right = "20px";
-            remoteBox.style.top = "auto";
-            remoteBox.style.left = "auto";
-            remoteBox.style.zIndex = "10";
-            remoteBox.style.borderRadius = "12px";
-            remoteBox.style.border = "2px solid var(--gold, #d4af37)";
-            
-            isSwapped = true;
-        } else {
-            // ბრუნდება საწყის მდგომარეობაში (სხვისი დიდი, შენი პატარა)
-            remoteBox.style.width = "100%";
-            remoteBox.style.height = "100%";
-            remoteBox.style.top = "0";
-            remoteBox.style.left = "0";
-            remoteBox.style.borderRadius = "0";
-            remoteBox.style.border = "none";
-            remoteBox.style.zIndex = "1";
-
-            localBox.style.width = "120px";
-            localBox.style.height = "160px";
-            localBox.style.bottom = "80px";
-            localBox.style.right = "20px";
-            localBox.style.top = "auto";
-            localBox.style.left = "auto";
-            localBox.style.zIndex = "10";
-            localBox.style.borderRadius = "12px";
-            localBox.style.border = "2px solid var(--gold, #d4af37)";
-
-            isSwapped = false;
-        }
+    if (!isCallWindowsSwapped) {
+        // შენი ვიდეო (local) ხდება დიდი, სხვისი (remote) პატარავდება
+        remoteContainer.style.cssText = "position: absolute !important; width: 120px !important; height: 160px !important; bottom: 80px !important; right: 20px !important; top: auto !important; left: auto !important; z-index: 99999 !important; border-radius: 12px !important; border: 2px solid var(--gold, #d4af37) !important; overflow: hidden !important;";
+        localContainer.style.cssText = "position: absolute !important; width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border-radius: 0 !important; border: none !important; overflow: hidden !important;";
+        isCallWindowsSwapped = true;
+    } else {
+        // ბრუნდება საწყისზე: სხვისი (remote) დიდი, შენი (local) პატარა
+        localContainer.style.cssText = "position: absolute !important; width: 120px !important; height: 160px !important; bottom: 80px !important; right: 20px !important; top: auto !important; left: auto !important; z-index: 99999 !important; border-radius: 12px !important; border: 2px solid var(--gold, #d4af37) !important; overflow: hidden !important;";
+        remoteContainer.style.cssText = "position: absolute !important; width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border-radius: 0 !important; border: none !important; overflow: hidden !important;";
+        isCallWindowsSwapped = false;
     }
+
+    // ვიდეოების გადატვირთვა ახალ ზომებზე, რომ არ გაშავდეს
+    try {
+        if (localTracks && localTracks.videoTrack) {
+            localTracks.videoTrack.stop();
+            localTracks.videoTrack.play("local-video");
+        }
+        client.remoteUsers.forEach(user => {
+            if (user.videoTrack) {
+                user.videoTrack.stop();
+                user.videoTrack.play("remote-video");
+            }
+        });
+    } catch (e) {
+        console.error("ვიდეოს რეფრეშის ხარვეზი:", e);
+    }
+}
+
+// 2. თითის გაყოლების (Drag) ლოგიკა, რომელიც უსმენს Window-ს დონეზე
+function makeCallElementDraggable(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    let isMovingNow = false;
+    let clickTimer;
+    let currentX = 0, currentY = 0, startX = 0, startY = 0;
+
+    const dragStart = (e) => {
+        // კრიტიკული მომენტი: ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
+        if (e.target !== el && !el.contains(e.target)) return;
+
+        isMovingNow = false;
+        clickTimer = setTimeout(() => { isMovingNow = true; }, 180);
+
+        startX = e.type.includes('touch') ? e.touches[0].clientX - currentX : e.clientX - currentX;
+        startY = e.type.includes('touch') ? e.touches[0].clientY - currentY : e.clientY - currentY;
+
+        // ვამაგრებთ მსმენელებს მთელ დოკუმენტზე, რომ თითის სწრაფად წაღებისას არ აიწყვიტოს
+        document.addEventListener(e.type.includes('touch') ? "touchmove" : "mousemove", dragMove, { passive: false });
+        document.addEventListener(e.type.includes('touch') ? "touchend" : "mouseup", dragEnd);
+    };
+
+    const dragMove = (e) => {
+        if (e.cancelable) e.preventDefault(); // მობილურზე ეკრანის ზედმეტ სქროლვას ბლოკავს
+
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        const xDiff = clientX - (startX + currentX);
+        const yDiff = clientY - (startY + currentY);
+
+        if (Math.abs(xDiff) > 3 || Math.abs(yDiff) > 3) {
+            isMovingNow = true;
+        }
+
+        currentX = clientX - startX;
+        currentY = clientY - startY;
+
+        // ვამოძრავებთ თავად კონტეინერს 3D ტრანსფორმაციით
+        el.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+    };
+
+    const dragEnd = () => {
+        clearTimeout(clickTimer);
+        document.removeEventListener("mousemove", dragMove);
+        document.removeEventListener("touchmove", dragMove);
+        document.removeEventListener("mouseup", dragEnd);
+        document.removeEventListener("touchend", dragEnd);
+
+        // თუ არ უმოძრავია — უბრალო კლიკია და ვცვლით ადგილებს
+        if (!isMovingNow) {
+            swapVideoTracksContainers();
+        }
+    };
+
+    // ვუსმენთ დაჭერას როგორც მაუსით, ისე თითით
+    el.addEventListener("mousedown", dragStart);
+    el.addEventListener("touchstart", dragStart, { passive: true });
+}
+
+// ჩართვა გლობალურად
+document.addEventListener("DOMContentLoaded", () => {
+    makeCallElementDraggable("local-video");
+    makeCallElementDraggable("remote-video");
 });
+
+// უსაფრთხოების ჩართვა იმ შემთხვევისთვის, თუ აგორამ ელემენტები მოგვიანებით ჩატვირთა
+setTimeout(() => {
+    makeCallElementDraggable("local-video");
+    makeCallElementDraggable("remote-video");
+}, 1500);            
