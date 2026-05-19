@@ -258,7 +258,7 @@ function listenForIncomingCalls(user) {
             // გამოვდივართ აგორას არხიდან
             client.leave().catch(e => console.log(e));
 
-            // ვმალავთ შემოსული ზარის მოდალს (თუ ჯერ არ უპასუხია)
+            // ვმალავთ შემოსული ზარის მოდას (თუ ჯგუფურშიც ვინმე მუშაობს)
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'none';
 
@@ -385,23 +385,19 @@ function makeCallElementDraggable(elementId) {
     let currentX = 0, currentY = 0, startX = 0, startY = 0;
 
     const dragStart = (e) => {
-        // ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
         if (e.target !== el && !el.contains(e.target)) return;
         if (activeUsersInCall.length > 2) return; // ჯგუფის დროს იბლოკება Drag
 
-        // შემოწმება: თუ კონტეინერი არის დიდი სრული ეკრანი (100% სიგანით), ვბლოკავთ მოძრაობას
         const isFullScreen = el.style.width === "100%" || window.getComputedStyle(el).width === window.innerWidth + "px";
 
         isMovingNow = false;
         clickTimer = setTimeout(() => { 
-            // თუ დიდი ეკრანია, Drag-ის სტატუსს არ ვრთავთ
             if (!isFullScreen) isMovingNow = true; 
         }, 180);
 
         startX = e.type.includes('touch') ? e.touches[0].clientX - currentX : e.clientX - currentX;
         startY = e.type.includes('touch') ? e.touches[0].clientY - currentY : e.clientY - currentY;
 
-        // თითის გაყოლების ივენთს ვამაგრებთ მხოლოდ მაშინ, თუ ელემენტი არ არის სრულ ეკრანზე
         if (!isFullScreen) {
             document.addEventListener(e.type.includes('touch') ? "touchmove" : "mousemove", dragMove, { passive: false });
         }
@@ -409,7 +405,7 @@ function makeCallElementDraggable(elementId) {
     };
 
     const dragMove = (e) => {
-        if (e.cancelable) e.preventDefault(); // მობილურზე ეკრანის ზედმეტ სქროლვას ბლოკავს
+        if (e.cancelable) e.preventDefault();
 
         const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -424,7 +420,6 @@ function makeCallElementDraggable(elementId) {
         currentX = clientX - startX;
         currentY = clientY - startY;
 
-        // ვამოძრავებთ თავად კონტეინერს 3D ტრანსფორმაციით
         el.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
     };
 
@@ -435,24 +430,20 @@ function makeCallElementDraggable(elementId) {
         document.removeEventListener("mouseup", dragEnd);
         document.removeEventListener("touchend", dragEnd);
 
-        // თუ არ უმოძრავია — უბრალო კლიკია და ვცვლით ადგილებს (მუშაობს დიდ ეკრანზეც)
         if (!isMovingNow) {
             swapVideoTracksContainers();
         }
     };
 
-    // ვუსმენთ დაჭერას როგორც მაუსით, ისე თითით
     el.addEventListener("mousedown", dragStart);
     el.addEventListener("touchstart", dragStart, { passive: true });
 }
 
-// ჩართვა გლობალურად
 document.addEventListener("DOMContentLoaded", () => {
     makeCallElementDraggable("local-video");
     makeCallElementDraggable("remote-video");
 });
 
-// უსაფრთხოების ჩართვა იმ შემთხვევისთვის, თუ აგორამ ელემენტები მოგვიანებით ჩატვირთა
 setTimeout(() => {
     makeCallElementDraggable("local-video");
     makeCallElementDraggable("remote-video");
@@ -463,15 +454,12 @@ async function requestVideoCall() {
     const targetUid = window.currentChatId;
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
-    // UI-ს მომზადება (კამერის ჩართვამდე)
     const ui = document.getElementById('videoCallUI');
     if(ui) ui.style.display = 'flex';
 
-    // ბაზიდან სახელისა და ავატარის ამოღება, რომ ზუსტად გამოჩნდეს ვისაც ვურეკავთ
     db.ref('users/' + targetUid).once('value').then(snap => {
         const userData = snap.val();
         
-        // ა) სახელის დასმა (შენი ორიგინალი კოდი - მიბმულია HTML-ის ID-ზე: remote-name-display)
         const rNameDisplay = document.getElementById('remote-name-display');
         const rName = document.getElementById('remote-name');
         if(rNameDisplay) {
@@ -480,16 +468,14 @@ async function requestVideoCall() {
             rName.innerText = (userData && userData.name) ? userData.name : "Emigrant";
         }
         
-        // ბ) ახალი ნაწილი: ავატარის დასმა და გამოჩენა (ზუსტად შენი HTML-ის ID-ზე: calling-user-avatar)
         const avatarBox = document.getElementById('calling-user-avatar');
         if (avatarBox) {
-            const userPhoto = (userData && userData.photo) ? userData.photo : 'token-avatar.png'; // თუ ფოტო არ აქვს, დაჯდება ნაგულისხმევი
+            const userPhoto = (userData && userData.photo) ? userData.photo : 'token-avatar.png';
             avatarBox.style.backgroundImage = `url('${userPhoto}')`;
-            avatarBox.style.display = 'block'; // ვახდენთ ბლოკის ჩვენებას (რადგან HTML-ში საწყისად display:none ადევს)
+            avatarBox.style.display = 'block';
         }
     });
 
-    // შენი ორიგინალი Firebase ლოგიკა
     await db.ref('video_calls/' + targetUid).set({
         callerUid: auth.currentUser.uid,
         callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
@@ -498,7 +484,6 @@ async function requestVideoCall() {
         ts: Date.now()
     });
 
-    // ჩავრთოთ გამავალი ზარის გუგუნი ჩვენთან
     try {
         incomingAudio.pause();
         incomingAudio.currentTime = 0;
@@ -507,10 +492,9 @@ async function requestVideoCall() {
         console.log("აუდიოს დაკვრის ხარვეზი:", e);
     }
 
-    startVideoCall(); // ეს რთავს აგორას და კამერას
+    startVideoCall();
 }
 
-// --- ახალი დამხმარე ფუნქცია მესინჯერის სტილის შეფასების ეკრანის გამოსაჩენად ---
 function showCallEndedScreen() {
     const videoUI = document.getElementById('videoCallUI');
     if (videoUI) videoUI.style.display = 'none';
@@ -532,12 +516,67 @@ function showCallEndedScreen() {
 }
 
 
-// --- 🚀 ახალი ჩამატებული ფუნქციები ჯგუფური ზარის მართვისთვის (Add Person) ---
+// --- 🚀 აი აქედან ემატება ახალი ლოგიკა მხოლოდ შენი მეგობრების სიის წამოღებისთვის ---
 
-// 1. მესამე პირის მოწვევა (Firebase-ით უგზავნის ზარს)
-async function inviteToGroupCall() {
-    const friendUid = prompt("გთხოვთ შეიყვანოთ დასამატებელი მომხმარებლის UID:");
-    if (!friendUid) return;
+function openInviteFriendsModal() {
+    const modal = document.getElementById("inviteFriendsModal");
+    const container = document.getElementById("friendsListContainer");
+    
+    if (modal) modal.style.display = "flex";
+    if (container) container.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; font-size:14px; margin:20px 0;">Loading friends list...</p>';
+
+    const myUid = auth.currentUser.uid;
+
+    // 1. შევდივართ კონკრეტულად შენს მეგობრების პაპკაში (friends/myUid)
+    db.ref(`friends/${myUid}`).once('value').then(friendsSnapshot => {
+        if (!container) return;
+        container.innerHTML = ""; 
+
+        let hasFriends = false;
+
+        // 2. გადავუყვებით მხოლოდ იმ იუზერების ID-ებს, ვინც მართლა შენი მეგობარია
+        friendsSnapshot.forEach(friendSnap => {
+            const friendUid = friendSnap.key; 
+            
+            if (friendSnap.val() === true || friendSnap.val().status === "active" || friendSnap.val() === "friends") {
+                hasFriends = true;
+
+                // 3. თითოეული მეგობრის ID-ით შევდივართ users პაპკაში მათი სახელის და ფოტოს წამოსაღებად
+                db.ref(`users/${friendUid}`).once('value').then(userSnapshot => {
+                    const userData = userSnapshot.val();
+                    if (!userData) return;
+
+                    const name = userData.name || "Emigrant User";
+                    const photo = userData.photo || "token-avatar.png";
+
+                    const friendRow = document.createElement("div");
+                    friendRow.style.cssText = "display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:16px; border:1px solid rgba(255,255,255,0.02);";
+
+                    friendRow.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:42px; height:42px; border-radius:50%; background-image:url('${photo}'); background-size:cover; background-position:center; border:1px solid rgba(212,175,55,0.3);"></div>
+                            <span style="font-size:14px; font-weight:500; color:white;">${name}</span>
+                        </div>
+                        <button onclick="executeGroupCallInvite('${friendUid}')" style="background:#d4af37; color:black; border:none; padding:6px 14px; border-radius:12px; font-size:12px; font-weight:600; cursor:pointer; transition:0.2s;">Add</button>
+                    `;
+                    container.appendChild(friendRow);
+                });
+            }
+        });
+
+        setTimeout(() => {
+            if (!hasFriends && container) {
+                container.innerHTML = '<p style="color:rgba(255,255,255,0.4); text-align:center; font-size:13px;">You have no friends added yet.</p>';
+            }
+        }, 600);
+
+    }).catch(err => {
+        if (container) container.innerHTML = `<p style="color:#ff4d4d; text-align:center; font-size:13px;">Error loading list.</p>`;
+    });
+}
+
+async function executeGroupCallInvite(friendUid) {
+    document.getElementById('inviteFriendsModal').style.display = 'none';
 
     await db.ref('video_calls/' + friendUid).set({
         callerUid: auth.currentUser.uid,
@@ -546,21 +585,17 @@ async function inviteToGroupCall() {
         status: 'calling',
         ts: Date.now()
     });
-    alert("მოწვევა წარმატებით გაიგზავნა!");
 }
 
-// 2. ახალი ადამიანის ვიდეო ნაკადის ჩასმა და Grid-ის გადართვა
 function handleGroupVideoJoined(user) {
     const mainRemoteBox = document.getElementById("remote-video");
     const mainLocalBox = document.getElementById("local-video");
     const container = document.getElementById("group-video-container");
 
-    // ვმალავთ ძველ ორმხრივ ჩარჩოებს, რომ გადავიდეთ Grid-ზე
     if (mainRemoteBox) mainRemoteBox.style.display = "none";
     if (mainLocalBox) mainLocalBox.style.display = "none";
     if (container) container.style.display = "grid";
 
-    // ა) ჩვენი საკუთარი კამერის გადატანა Grid-ში
     let myGridBox = document.getElementById("group-user-local");
     if(!myGridBox && container) {
         myGridBox = document.createElement("div");
@@ -568,7 +603,6 @@ function handleGroupVideoJoined(user) {
         container.appendChild(myGridBox);
     }
 
-    // ბ) ახალი პარტნიორის ჩარჩოს შექმნა Grid-ში
     let partnerGridBox = document.getElementById(`group-user-${user.uid}`);
     if(!partnerGridBox && container) {
         partnerGridBox = document.createElement("div");
@@ -576,7 +610,6 @@ function handleGroupVideoJoined(user) {
         container.appendChild(partnerGridBox);
     }
 
-    // გ) პირველი პარტნიორის ჩარჩოს პოვნაც და ჩასმა, თუ ისიც ზარშია
     client.remoteUsers.forEach(rUser => {
         if(rUser.uid !== user.uid && rUser.videoTrack && container) {
             let firstPartnerBox = document.getElementById(`group-user-${rUser.uid}`);
@@ -589,15 +622,12 @@ function handleGroupVideoJoined(user) {
         }
     });
 
-    // სტილების განახლება რაოდენობის მიხედვით
     updateGroupGridStyles();
 
-    // ვრთავთ ვიდეოებს ახალ ბლოკებში
     if(localTracks.videoTrack) localTracks.videoTrack.play("group-user-local");
     user.videoTrack.play(`group-user-${user.uid}`);
 }
 
-// 3. Grid სტილების ავტომატური მართვა (3 ან 4 კაცისთვის)
 function updateGroupGridStyles() {
     const container = document.getElementById("group-video-container");
     if (!container) return;
@@ -605,7 +635,6 @@ function updateGroupGridStyles() {
     const boxes = container.children;
     const count = boxes.length;
 
-    // ყველას ერთნაირი ლამაზი მომრგვალებული სტილი
     for(let box of boxes) {
         box.style.cssText = "width:100%; height:100%; background:#222; border-radius:15px; overflow:hidden; border:2px solid rgba(212,175,55,0.3); position:relative;";
     }
@@ -613,7 +642,6 @@ function updateGroupGridStyles() {
     if (count === 3) {
         container.style.gridTemplateColumns = "1fr 1fr";
         container.style.gridTemplateRows = "1fr 1fr";
-        // პირველი ბლოკი (შენი) დაჯდეს მთელ სიგანეზე ზემოთ
         if(boxes[0]) boxes[0].style.gridColumn = "span 2";
     } 
     else if (count >= 4) {
