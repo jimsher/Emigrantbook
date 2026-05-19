@@ -116,7 +116,8 @@ async function endVideoCall() {
         console.error("Agora leave error:", e);
     }
     
-    document.getElementById('videoCallUI').style.display = 'none';
+    // ჩანაცვლდა: პირდაპირ გაქრობის ნაცვლად, იძახებს დასრულების მესინჯერის გვერდს
+    showCallEndedScreen();
 
     const myUid = auth.currentUser.uid;
     const targetUid = window.currentChatId;
@@ -166,9 +167,8 @@ function listenForIncomingCalls(user) {
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'none';
 
-            // ვმალავთ მთავარ ვიდეო ინტერფეისსაც, თუ უკვე ლაპარაკობდნენ
-            const videoUI = document.getElementById('videoCallUI');
-            if (videoUI) videoUI.style.display = 'none';
+            // ჩანაცვლდა: როცა მეორე მხარე გითიშავს, შენთანაც დასრულების ეკრანი ამოდის
+            showCallEndedScreen();
             
             console.log("ზარი დასრულდა მეორე მხარის მიერ.");
         }
@@ -219,21 +219,6 @@ function declineCall() {
     db.ref(`video_calls/${auth.currentUser.uid}`).remove();
     document.getElementById('incomingCallModal').style.display = 'none';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // --- ემოგრანტბუქის ვიდეო ჩარჩოების DRAG & SWAP მოდული (FINAL FIX) ---
 
@@ -351,23 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
 setTimeout(() => {
     makeCallElementDraggable("local-video");
     makeCallElementDraggable("remote-video");
-}, 1500);            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}, 1500);
 
 // 1. ზარის დაწყება (როცა შენ რეკავ) - შესწორებული ვერსია ავატარის გამოჩენით
 async function requestVideoCall() {
@@ -407,4 +376,25 @@ async function requestVideoCall() {
     });
 
     startVideoCall(); // ეს რთავს აგორას და კამერას
+}
+
+// --- ახალი დამხმარე ფუნქცია მესინჯერის სტილის შეფასების ეკრანის გამოსაჩენად ---
+function showCallEndedScreen() {
+    const videoUI = document.getElementById('videoCallUI');
+    if (videoUI) videoUI.style.display = 'none';
+
+    const endedUI = document.getElementById('callEndedUI');
+    if (!endedUI) return;
+
+    const mainAvatar = document.getElementById('calling-user-avatar');
+    const endedAvatar = document.getElementById('endedCallAvatar');
+    if (mainAvatar && endedAvatar) {
+        endedAvatar.style.backgroundImage = mainAvatar.style.backgroundImage;
+    }
+
+    endedUI.style.display = 'flex';
+
+    setTimeout(() => {
+        endedUI.style.display = 'none';
+    }, 8000);
 }
