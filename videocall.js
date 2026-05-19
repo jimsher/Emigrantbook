@@ -5,6 +5,15 @@ let localTracks = { videoTrack: null, audioTrack: null };
 let micMuted = false;
 let camMuted = false;
 
+// --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
+// აქ ჩაწერე შენი აუდიო ფაილების ზუსტი გზები (მაგ: "sounds/calling.mp3")
+const outgoingAudio = new Audio("შენი_გამავალი_ზარის_აუდიო_ლინკი.mp3");
+const incomingAudio = new Audio("შენი_შემომავალი_ზარის_აუდიო_ლინკი.mp3");
+
+// ჩავრთოთ მუსიკის მუდმივი ტრიალი (Loop), სანამ ზარს არ ვუპასუხებთ ან არ გაითიშება
+outgoingAudio.loop = true;
+incomingAudio.loop = true;
+
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
 const TOKEN = null; // მუდმივი კოდი, როგორც ლაივში
@@ -33,6 +42,15 @@ async function requestVideoCall() {
         status: 'calling',
         ts: Date.now()
     });
+
+    // ჩავრთოთ გამავალი ზარის გუგუნი ჩვენთან
+    try {
+        incomingAudio.pause(); // ყოველი შემთხვევისთვის, მეორე ხმა რომ გაჩუმდეს
+        incomingAudio.currentTime = 0;
+        outgoingAudio.play();
+    } catch (e) {
+        console.log("აუდიოს დაკვრის ხარვეზი:", e);
+    }
 
     startVideoCall(); // ეს რთავს აგორას და კამერას
 }
@@ -66,6 +84,10 @@ async function startVideoCall() {
                 const remoteLabel = document.getElementById('remote-label');
                 if (remoteLabel) remoteLabel.innerText = "Connected";
                 user.videoTrack.play("remote-video");
+                
+                // როგორც კი მეორე მხარე შემოვა (ზარი შედგება), ჩვენთან გამავალი ზარის ხმა უნდა გაჩუმდეს
+                outgoingAudio.pause();
+                outgoingAudio.currentTime = 0;
             }
             if (mediaType === "audio") user.audioTrack.play();
         });
@@ -92,12 +114,25 @@ function listenForIncomingCalls(user) {
                 document.getElementById('callerAva').src = call.callerPhoto;
             }
 
+            // ჩავრთოთ შემომავალი ზარის მელოდია მასთან, ვისაც ვურეკავთ
+            try {
+                outgoingAudio.pause();
+                outgoingAudio.currentTime = 0;
+                incomingAudio.play();
+            } catch (e) {
+                console.log("აუდიოს დაკვრის ხარვეზი:", e);
+            }
+
             // ვინახავთ ზარის მონაცემებს პასუშისთვის
             window.activeIncomingCall = call;
         } else if (!call) {
             // თუ დამრეკმა გათიშა, ვმალავთ ფანჯარას
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'none';
+            
+            // ვაჩუმებთ შემომავალ ზარს, თუ დამრეკმა გადაიფიქრა
+            incomingAudio.pause();
+            incomingAudio.currentTime = 0;
         }
     });
 }
@@ -105,6 +140,12 @@ function listenForIncomingCalls(user) {
 // 4. ზარის დასრულება
 // 4. ზარის დასრულება (როცა შენ აჭერ წითელ ღილაკს)
 async function endVideoCall() {
+    // პირველ რიგში ვაჩუმებთ ყველა ზარის ხმას
+    outgoingAudio.pause();
+    outgoingAudio.currentTime = 0;
+    incomingAudio.pause();
+    incomingAudio.currentTime = 0;
+
     // პირველ რიგში ვხურავთ ადგილობრივ ტრეკებს, რომ კამერა ეგრევე ჩაქრეს
     if (localTracks.audioTrack) { localTracks.audioTrack.stop(); localTracks.audioTrack.close(); }
     if (localTracks.videoTrack) { localTracks.videoTrack.stop(); localTracks.videoTrack.close(); }
@@ -150,11 +191,26 @@ function listenForIncomingCalls(user) {
                 document.getElementById('callerAva').src = call.callerPhoto;
             }
 
+            // ჩავრთოთ შემომავალი ზარის მელოდია
+            try {
+                outgoingAudio.pause();
+                outgoingAudio.currentTime = 0;
+                incomingAudio.play();
+            } catch (e) {
+                console.log("აუდიოს დაკვრის ხარვეზი:", e);
+            }
+
             window.activeIncomingCall = call;
         } 
-        // ბ) ახალი დაზღვეული პირობა: თუ დამრეკმა დააჭირა გათიშვას (status ხდება 'ended') ან ჩანაწერი წაიშალა (!call)
+        // ბ) თუ დამრეკმა დააჭირა გათიშვას (status ხდება 'ended') ან ჩანაწერი წაიშალა (!call)
         else if (!call || (call && call.status === 'ended')) {
             
+            // ზარი რომ წყდება, ორივე აუდიოს ვაჩუმებთ მომენტალურად
+            outgoingAudio.pause();
+            outgoingAudio.currentTime = 0;
+            incomingAudio.pause();
+            incomingAudio.currentTime = 0;
+
             // ვამოწმებთ, რეალურად გახსნილია თუ არა ვიდეო ზარის ინტერფეისი ეკრანზე (რეფრეშის დაცვა)
             const videoUI = document.getElementById('videoCallUI');
             const isCallActiveNow = videoUI && videoUI.style.display === 'flex';
@@ -212,6 +268,12 @@ function minimizeVideoCall() {
 
 // 1. ფუნქცია პასუხისთვის (მწვანე ღილაკი)
 async function acceptCall() {
+    // როგორც კი პასუხს აჭერს იუზერი, ეგრევე ვაჩუმებთ შემომავალ ზარს
+    outgoingAudio.pause();
+    outgoingAudio.currentTime = 0;
+    incomingAudio.pause();
+    incomingAudio.currentTime = 0;
+
     if (window.activeIncomingCall) {
         await db.ref(`video_calls/${auth.currentUser.uid}`).update({ 
             status: 'accepted' 
@@ -224,6 +286,12 @@ async function acceptCall() {
 
 // 2. ფუნქცია უარყოფისთვის (წითელი ღილაკი)
 function declineCall() {
+    // უარყოფისას ვაჩუმებთ შემომავალ მელოდიას
+    outgoingAudio.pause();
+    outgoingAudio.currentTime = 0;
+    incomingAudio.pause();
+    incomingAudio.currentTime = 0;
+
     db.ref(`video_calls/${auth.currentUser.uid}`).remove();
     document.getElementById('incomingCallModal').style.display = 'none';
 }
@@ -282,7 +350,7 @@ function makeCallElementDraggable(elementId) {
     let currentX = 0, currentY = 0, startX = 0, startY = 0;
 
     const dragStart = (e) => {
-        // კრიტიკული მომენტი: ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
+        // ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
         if (e.target !== el && !el.contains(e.target)) return;
 
         // შემოწმება: თუ კონტეინერი არის დიდი სრული ეკრანი (100% სიგანით), ვბლოკავთ მოძრაობას
@@ -393,6 +461,15 @@ async function requestVideoCall() {
         status: 'calling',
         ts: Date.now()
     });
+
+    // ჩავრთოთ გამავალი ზარის გუგუნი ჩვენთან
+    try {
+        incomingAudio.pause();
+        incomingAudio.currentTime = 0;
+        outgoingAudio.play();
+    } catch (e) {
+        console.log("აუდიოს დაკვრის ხარვეზი:", e);
+    }
 
     startVideoCall(); // ეს რთავს აგორას და კამერას
 }
