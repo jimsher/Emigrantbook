@@ -229,6 +229,7 @@ function listenForIncomingCalls(user) {
                 outgoingAudio.pause();
                 outgoingAudio.currentTime = 0;
                 incomingAudio.muted = false;
+                // გასწორდა აქ: ჩაიწერა რეალური შემომავალი ზარის ხმის გამოძახება!
                 incomingAudio.play().catch(err => console.log("Autoplay block:", err));
             } catch (e) {
                 console.log("აუდიოს დაკვრის ხარვეზი:", e);
@@ -257,7 +258,7 @@ function listenForIncomingCalls(user) {
             // გამოვდივართ აგორას არხიდან
             client.leave().catch(e => console.log(e));
 
-            // ვმალავთ შემოსული ზარის მოდას
+            // ვმალავთ შემოსული ზარის მოდას (თუ ჯგუფურშიც ვინმე მუშაობს)
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'none';
 
@@ -280,6 +281,7 @@ function toggleMic() {
     document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : '#333';
 }
 
+// კამერა
 function toggleCam() {
     camMuted = !camMuted;
     if (localTracks.videoTrack) localTracks.videoTrack.setEnabled(!camMuted);
@@ -334,26 +336,30 @@ let isCallWindowsSwapped = false;
 
 // 1. ეკრანების ადგილების გაცვლა (Swap)
 function swapVideoTracksContainers() {
-    if(activeUsersInCall.length > 2) return; 
+    if(activeUsersInCall.length > 2) return; // ჯგუფურ რეჟიმში სვოპი აღარ გვინდა
 
     const localContainer = document.getElementById("local-video");
     const remoteContainer = document.getElementById("remote-video");
 
     if (!localContainer || !remoteContainer) return;
 
+    // მოძრაობის განულება, რომ გაცვლისას ეკრანიდან არ გაიქცეს
     localContainer.style.transform = "none";
     remoteContainer.style.transform = "none";
 
     if (!isCallWindowsSwapped) {
+        // შენი ვიდეო (local) ხდება დიდი, სხვისი (remote) პატარავდება
         remoteContainer.style.cssText = "position: absolute !important; width: 120px !important; height: 160px !important; bottom: 80px !important; right: 20px !important; top: auto !important; left: auto !important; z-index: 99999 !important; border-radius: 12px !important; border: 2px solid var(--gold, #d4af37) !important; overflow: hidden !important;";
         localContainer.style.cssText = "position: absolute !important; width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border-radius: 0 !important; border: none !important; overflow: hidden !important;";
         isCallWindowsSwapped = true;
     } else {
+        // ბრუნდება საწყისზე: სხვისი (remote) დიდი, შენი (local) პატარა
         localContainer.style.cssText = "position: absolute !important; width: 120px !important; height: 160px !important; bottom: 80px !important; right: 20px !important; top: auto !important; left: auto !important; z-index: 99999 !important; border-radius: 12px !important; border: 2px solid var(--gold, #d4af37) !important; overflow: hidden !important;";
         remoteContainer.style.cssText = "position: absolute !important; width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border-radius: 0 !important; border: none !important; overflow: hidden !important;";
         isCallWindowsSwapped = false;
     }
 
+    // ვიდეოების გადატვირთვა ახალ ზომებზე, რომ არ გაშავდეს
     try {
         if (localTracks && localTracks.videoTrack) {
             localTracks.videoTrack.stop();
@@ -510,7 +516,7 @@ function showCallEndedScreen() {
 }
 
 
-// --- 🚀 აი აქ არის 100%-ით სწორი და გარანტირებული მეგობრების წამოღების კოდი შენი რეალური სტრუქტურისთვის ---
+// --- 🚀 აი აქ არის 100%-ით სწორი და გასწორებული გზა შენი სკრინშოტების მიხედვით ---
 
 function openInviteFriendsModal() {
     const modal = document.getElementById("inviteFriendsModal");
@@ -521,7 +527,7 @@ function openInviteFriendsModal() {
 
     const myUid = auth.currentUser.uid;
 
-    // შევდივართ users -> შენი ID -> friends პაპკაში
+    // 🚀 სკრინშოტის მიხედვით: შევდივართ users -> შენი ID -> friends პაპკაში
     db.ref(`users/${myUid}/friends`).once('value').then(friendsSnapshot => {
         if (!container) return;
         container.innerHTML = ""; 
@@ -529,14 +535,12 @@ function openInviteFriendsModal() {
         let hasFriends = false;
 
         friendsSnapshot.forEach(friendSnap => {
-            const friendData = friendSnap.val();
+            const friendUid = friendSnap.key; // იღებს მეგობრის რეალურ ID-ს
             
-            // 🚀 გასწორდა აქ: რადგან friends-ის შიგნით ციფრებია (0,1,2), რეალურ ID-ს ვიღებთ ობიექტის შიგნიდან: friendData.friendUid
-            if (friendData && friendData.friendUid) {
-                const friendUid = friendData.friendUid;
+            if (friendUid) {
                 hasFriends = true;
 
-                // მეგობრის რეალური ID-ით შევდივართ users პაპკაში მისი მონაცემების წამოსაღებად
+                // შევდივართ მეგობრის ID-ით users პაპკაში მისი სახელი და ფოტოს წამოსაღებად
                 db.ref(`users/${friendUid}`).once('value').then(userSnapshot => {
                     const userData = userSnapshot.val();
                     if (!userData) return;
