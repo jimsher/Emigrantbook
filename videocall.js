@@ -281,6 +281,7 @@ function toggleMic() {
     document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : '#333';
 }
 
+// კამერა
 function toggleCam() {
     camMuted = !camMuted;
     if (localTracks.videoTrack) localTracks.videoTrack.setEnabled(!camMuted);
@@ -375,7 +376,7 @@ function swapVideoTracksContainers() {
     }
 }
 
-// 2. თითის გაყოლების (Drag) ლოგიკა, რომელიც უსმენს Window-ს დონეზე
+// Drag
 function makeCallElementDraggable(elementId) {
     const el = document.getElementById(elementId);
     if (!el) return;
@@ -385,23 +386,19 @@ function makeCallElementDraggable(elementId) {
     let currentX = 0, currentY = 0, startX = 0, startY = 0;
 
     const dragStart = (e) => {
-        // ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
         if (e.target !== el && !el.contains(e.target)) return;
-        if (activeUsersInCall.length > 2) return; // ჯგუფის დროს იბლოკება Drag
+        if (activeUsersInCall.length > 2) return; 
 
-        // შემოწმება: თუ კონტეინერი არის დიდი სრული ეკრანი (100% სიგანით), ვბლოკავთ მოძრაობას
         const isFullScreen = el.style.width === "100%" || window.getComputedStyle(el).width === window.innerWidth + "px";
 
         isMovingNow = false;
         clickTimer = setTimeout(() => { 
-            // თუ დიდი ეკრანია, Drag-ის სტატუსს არ ვრთავთ
             if (!isFullScreen) isMovingNow = true; 
         }, 180);
 
         startX = e.type.includes('touch') ? e.touches[0].clientX - currentX : e.clientX - currentX;
         startY = e.type.includes('touch') ? e.touches[0].clientY - currentY : e.clientY - currentY;
 
-        // თითის გაყოლების ივენთს ვამაგრებთ მხოლოდ მაშინ, თუ ელემენტი არ არის სრულ ეკრანზე
         if (!isFullScreen) {
             document.addEventListener(e.type.includes('touch') ? "touchmove" : "mousemove", dragMove, { passive: false });
         }
@@ -409,7 +406,7 @@ function makeCallElementDraggable(elementId) {
     };
 
     const dragMove = (e) => {
-        if (e.cancelable) e.preventDefault(); // მობილურზე ეკრანის ზედმეტ სქროლვას ბლოკავს
+        if (e.cancelable) e.preventDefault();
 
         const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -424,7 +421,6 @@ function makeCallElementDraggable(elementId) {
         currentX = clientX - startX;
         currentY = clientY - startY;
 
-        // ვამოძრავებთ თავად კონტეინერს 3D ტრანსფორმაციით
         el.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
     };
 
@@ -435,43 +431,35 @@ function makeCallElementDraggable(elementId) {
         document.removeEventListener("mouseup", dragEnd);
         document.removeEventListener("touchend", dragEnd);
 
-        // თუ არ უმოძრავია — უბრალო კლიკია და ვცვლით ადგილებს (მუშაობს დიდ ეკრანზეც)
         if (!isMovingNow) {
             swapVideoTracksContainers();
         }
     };
 
-    // ვუსმენთ დაჭერას როგორც მაუსით, ისე თითით
     el.addEventListener("mousedown", dragStart);
     el.addEventListener("touchstart", dragStart, { passive: true });
 }
 
-// ჩართვა გლობალურად
 document.addEventListener("DOMContentLoaded", () => {
     makeCallElementDraggable("local-video");
     makeCallElementDraggable("remote-video");
 });
 
-// უსაფრთხოების ჩართვა იმ შემთხვევისთვის, თუ აგორამ ელემენტები მოგვიანებით ჩატვირთა
 setTimeout(() => {
     makeCallElementDraggable("local-video");
     makeCallElementDraggable("remote-video");
 }, 1500);
 
-// 1. ზარის დაწყება (როცა შენ რეკავ) - შესწორებული ვერსია ავატარის გამოჩენით
+// ზარის დაწყება
 async function requestVideoCall() {
     const targetUid = window.currentChatId;
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
 
-    // UI-ს მომზადება (კამერის ჩართვამდე)
     const ui = document.getElementById('videoCallUI');
     if(ui) ui.style.display = 'flex';
 
-    // ბაზიდან სახელისა და ავატარის ამოღება, რომ ზუსტად გამოჩნდეს ვისაც ვურეკავთ
     db.ref('users/' + targetUid).once('value').then(snap => {
         const userData = snap.val();
-        
-        // ა) სახელის დასმა (შენი ორიგინალი კოდი - მიბმულია HTML-ის ID-ზე: remote-name-display)
         const rNameDisplay = document.getElementById('remote-name-display');
         const rName = document.getElementById('remote-name');
         if(rNameDisplay) {
@@ -480,16 +468,14 @@ async function requestVideoCall() {
             rName.innerText = (userData && userData.name) ? userData.name : "Emigrant";
         }
         
-        // ბ) ახალი ნაწილი: ავატარის დასმა და გამოჩენა (ზუსტად შენი HTML-ის ID-ზე: calling-user-avatar)
         const avatarBox = document.getElementById('calling-user-avatar');
         if (avatarBox) {
-            const userPhoto = (userData && userData.photo) ? userData.photo : 'token-avatar.png'; // თუ ფოტო არ აქვს, დაჯდება ნაგულისხმევი
+            const userPhoto = (userData && userData.photo) ? userData.photo : 'token-avatar.png';
             avatarBox.style.backgroundImage = `url('${userPhoto}')`;
-            avatarBox.style.display = 'block'; // ვახდენთ ბლოკის ჩვენებას (რადგან HTML-ში საწყისად display:none ადევს)
+            avatarBox.style.display = 'block';
         }
     });
 
-    // შენი ორიგინალი Firebase ლოგიკა
     await db.ref('video_calls/' + targetUid).set({
         callerUid: auth.currentUser.uid,
         callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
@@ -498,7 +484,6 @@ async function requestVideoCall() {
         ts: Date.now()
     });
 
-    // ჩავრთოთ გამავალი ზარის გუგუნი ჩვენთან
     try {
         incomingAudio.pause();
         incomingAudio.currentTime = 0;
@@ -507,10 +492,9 @@ async function requestVideoCall() {
         console.log("აუდიოს დაკვრის ხარვეზი:", e);
     }
 
-    startVideoCall(); // ეს რთავს აგორას და კამერას
+    startVideoCall();
 }
 
-// --- ახალი დამხმარე ფუნქცია მესინჯერის სტილის შეფასების ეკრანის გამოსაჩენად ---
 function showCallEndedScreen() {
     const videoUI = document.getElementById('videoCallUI');
     if (videoUI) videoUI.style.display = 'none';
@@ -532,31 +516,31 @@ function showCallEndedScreen() {
 }
 
 
-// --- 🚀 აი აქედან ემატება ახალი გლობალური ფუნქციები მეგობრების სიის რეალური გამოჩენისთვის ---
+// --- 🚀 აი აქ არის 100%-ით სწორი და გასწორებული გზა შენი სკრინშოტების მიხედვით ---
 
 function openInviteFriendsModal() {
     const modal = document.getElementById("inviteFriendsModal");
     const container = document.getElementById("friendsListContainer");
     
-    // მოდალი იხსნება მომენტალურად, ყოველგვარი Agora-ს პირობების გარეშე
     if (modal) modal.style.display = "flex";
     if (container) container.innerHTML = '<p style="color:rgba(255,255,255,0.5); text-align:center; font-size:14px; margin:20px 0;">Loading friends list...</p>';
 
     const myUid = auth.currentUser.uid;
 
-    // შევდივართ პირდაპირ შენს მეგობრებში
-    db.ref(`friends/${myUid}`).once('value').then(friendsSnapshot => {
+    // 🚀 სკრინშოტის მიხედვით: შევდივართ users -> შენი ID -> friends პაპკაში
+    db.ref(`users/${myUid}/friends`).once('value').then(friendsSnapshot => {
         if (!container) return;
         container.innerHTML = ""; 
 
         let hasFriends = false;
 
         friendsSnapshot.forEach(friendSnap => {
-            const friendUid = friendSnap.key; 
+            const friendUid = friendSnap.key; // იღებს მეგობრის რეალურ ID-ს
             
-            if (friendSnap.val() === true || friendSnap.val().status === "active" || friendSnap.val() === "friends") {
+            if (friendUid) {
                 hasFriends = true;
 
+                // შევდივართ მეგობრის ID-ით users პაპკაში მისი სახელი და ფოტოს წამოსაღებად
                 db.ref(`users/${friendUid}`).once('value').then(userSnapshot => {
                     const userData = userSnapshot.val();
                     if (!userData) return;
