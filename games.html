@@ -3,81 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <title>Emigrantbook Games</title>
-    <link rel="stylesheet" href="style.css"> <!-- შენი მთავარი CSS -->
-
-
-<style>
-    /* თამაშების მთავარი გვერდის სტილი */
-    #gamesPage {
-        padding: 20px;
-        max-width: 800px;
-        margin: 0 auto;
-        font-family: Arial, sans-serif;
-    }
-
-    #gameBalance {
-        font-size: 24px;
-        font-weight: bold;
-        color: #d4af37; /* ოქროსფერი */
-        margin: 20px 0;
-        text-align: center;
-    }
-
-    .games-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
-    }
-
-    .games-grid button {
-        background: #1a1a1a;
-        color: #d4af37;
-        border: 1px solid #d4af37;
-        padding: 15px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.3s;
-    }
-
-    .games-grid button:hover {
-        background: #d4af37;
-        color: #000;
-    }
-
-    /* უკან დაბრუნების ლინკი */
-    #gamesPage > a {
-        color: #888;
-        text-decoration: none;
-        font-size: 16px;
-    }
-
-    /* დამატებითი თამაშების კონტეინერების დამალვა/გამოჩენა */
-    .game-container {
-        border: 1px solid #333;
-        padding: 20px;
-        border-radius: 10px;
-        background: #0a0a0a;
-        margin-top: 20px;
-    }
-</style>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        #gamesPage { max-width: 800px; margin: 0 auto; }
+        #gameBalance { font-size: 24px; color: #d4af37; text-align: center; margin: 20px 0; }
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .games-grid button { background: #1a1a1a; color: #d4af37; border: 1px solid #d4af37; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .games-grid button:hover { background: #d4af37; color: #000; }
+        .game-container { display: none; border: 1px solid #333; padding: 20px; border-radius: 10px; background: #0a0a0a; margin-top: 20px; flex-direction: column; align-items: center; }
+    </style>
 </head>
+<body>
 
-
-
-    
-<body style="background: #000; color: #fff;">
-
-    <!-- თამაშების კონტეინერი -->
     <div id="gamesPage">
-        <a href="index.html">← მთავარზე დაბრუნება</a>
+        <a href="index.html" style="color:#888; text-decoration:none;">← მთავარზე დაბრუნება</a>
         <div id="gameBalance">0.00 AKHO</div>
 
-        <!-- აქ ჩაყარე ის თამაშების კონტეინერები, რაც ადრე მოგეცი -->
-        <div id="gamesList">...</div>
+        <!-- თამაშების სია -->
+        <div id="gamesList" class="games-grid">
+            <button onclick="openWheel()">Lucky Spin</button>
+            <button onclick="openLotto()">Lotto 5/25</button>
+            <button onclick="openBurningSlots()">Burning Slots</button>
+            <button onclick="openKingOfAkho()">King of Akho</button>
+        </div>
+
+        <!-- აქ არის თითოეული თამაშის კონტეინერი -->
+        <div id="wheelGameContainer" class="game-container">
+            <canvas id="wheelCanvas" width="280" height="280"></canvas>
+            <button id="spinBtn" onclick="spinWheel()">დატრიალება (1.00 AKHO)</button>
+            <button onclick="backToGames()">უკან</button>
+        </div>
+
+        <div id="lottoGameContainer" class="game-container">
+            <div id="lottoGrid" class="lotto-grid"></div>
+            <div id="lottoBalls"></div>
+            <button id="playLottoBtn" onclick="startLottoDraw()">დაწყება (5.00 AKHO)</button>
+            <button onclick="backToGames()">უკან</button>
+        </div>
+
+        <div id="burningSlotsContainer" class="game-container">
+            <div id="reelsWrapper" class="reels-wrapper">
+                <div id="reel_1" class="reel"></div>
+                <div id="reel_2" class="reel"></div>
+                <div id="reel_3" class="reel"></div>
+            </div>
+            <button onclick="triggerBurningSpin()">Spin</button>
+            <button onclick="backToGames()">უკან</button>
+        </div>
+        
+        <div id="kingOfAkhoContainer" class="game-container">
+            <div id="kingMultiplier">Multiplier: x1</div>
+            <div id="kingGrid" class="king-grid"></div>
+            <button onclick="startKingSpin()">Start King Spin</button>
+            <button onclick="backToGames()">უკან</button>
+        </div>
     </div>
 
-    <script src="script.js"></script> <!-- შენი მთავარი JS -->
+    <script src="script.js"></script>
+    <script>
+        function backToGames() {
+            document.querySelectorAll('.game-container').forEach(c => c.style.display = 'none');
+            document.getElementById('gamesList').style.display = 'grid';
+        }
+        function openWheel() {
+            document.getElementById('gamesList').style.display = 'none';
+            document.getElementById('wheelGameContainer').style.display = 'flex';
+        }
+        // დანარჩენი გახსნის ფუნქციებიც ასე იქნება...
+    </script>
 </body>
 </html>
