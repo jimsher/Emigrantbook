@@ -7,8 +7,8 @@ let camMuted = false;
 
 // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
 // აქ ჩაწერე შენი აუდიო ფაილების ზუსტი გზები (მაგ: "sounds/calling.mp3")
-const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20Shemavali.mp3");
-const incomingAudio = new Audio("");
+const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
+const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
 
 // ჩავრთოთ მუსიკის მუდმივი ტრიალი (Loop), სანამ ზარს არ ვუპასუხებთ ან არ გაითიშება
 outgoingAudio.loop = true;
