@@ -3287,6 +3287,8 @@ div[style*="overflow-x:auto"] {
         </div>
     </div>
 
+    <div id="group-video-container" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; grid-template-columns:1fr; grid-template-rows:1fr; gap:10px; padding:10px; box-sizing:border-box; z-index:2; background:#111;"></div>
+
     <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:140px; right:20px; border-radius:15px; border:2px solid var(--gold, #d4af37); overflow:hidden; z-index:100; box-shadow: 0 10px 25px rgba(0,0,0,0.6);"></div>
 
     <div onclick="minimizeVideoCall()" style="position:absolute; top:25px; right:25px; color:white; cursor:pointer; background:rgba(255,255,255,0.15); padding:12px; border-radius:50%; z-index:130; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); width:20px; height:20px; display:flex; align-items:center; justify-content:center;">
@@ -3309,7 +3311,7 @@ div[style*="overflow-x:auto"] {
             <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Audio</span>
         </div>
 
-        <div onclick="inviteToGroupCall()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
+        <div onclick="openInviteFriendsModal()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
             <div id="addBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#d4af37; transition:all 0.2s; border:1px solid rgba(212,175,55,0.2);">
                 <i class="fas fa-user-plus" style="font-size:16px;"></i>
             </div>
@@ -3332,17 +3334,26 @@ div[style*="overflow-x:auto"] {
 
     </div>
 </div>
- <div id="callEndedUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; color:white; padding:20px; text-align:center;">
-    
+
+<div id="inviteFriendsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999999; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;">
+    <div style="width:100%; max-width:380px; background:rgba(30, 30, 30, 0.85); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:24px; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.5); color:white;">
+        
+        <i class="fas fa-times" onclick="document.getElementById('inviteFriendsModal').style.display='none'" style="position:absolute; top:20px; right:20px; font-size:18px; color:rgba(255,255,255,0.5); cursor:pointer;"></i>
+        
+        <h3 style="font-size:18px; margin:0 0 15px; font-weight:600; color:#d4af37; display:flex; align-items:center; gap:8px;"><i class="fas fa-users"></i> Add to Group Call</h3>
+        
+        <div id="friendsListContainer" style="max-height:280px; overflow-y:auto; margin-top:10px; padding-right:5px; display:flex; flex-direction:column; gap:12px;">
+            <p id="friendsLoadingText" style="color:rgba(255,255,255,0.5); text-align:center; font-size:14px; margin:20px 0;">Loading friends list...</p>
+        </div>
+    </div>
+</div>
+
+<div id="callEndedUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; color:white; padding:20px; text-align:center;">
     <i class="fas fa-times" onclick="document.getElementById('callEndedUI').style.display='none'" style="position:absolute; top:25px; right:25px; font-size:22px; color:rgba(255,255,255,0.6); cursor:pointer; padding:5px;"></i>
-
     <div id="endedCallAvatar" style="width:110px; height:110px; border-radius:50%; border:2px solid #d4af37; background-size:cover; background-position:center; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
-
     <h2 style="font-size:24px; margin:0 0 5px; font-weight:600;">Call ended</h2>
     <p style="color:rgba(255,255,255,0.5); font-size:15px; margin:0 0 50px;">Messenger Video Call</p>
-
     <h3 style="font-size:18px; margin:0 0 30px; font-weight:500; color:rgba(255,255,255,0.9);">How was the quality of your call?</h3>
-
     <div style="display:flex; gap:50px; margin-bottom:60px;">
         <div onclick="document.getElementById('callEndedUI').style.display='none'" style="display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;">
             <div style="width:65px; height:65px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; color:white; transition:0.2s;"><i class="fas fa-thumbs-up"></i></div>
@@ -3353,7 +3364,6 @@ div[style*="overflow-x:auto"] {
             <span style="font-size:14px; color:rgba(255,255,255,0.7); font-weight:500;">Not good</span>
         </div>
     </div>
-
     <p style="font-size:11px; color:rgba(255,255,255,0.3); max-width:300px; line-height:1.5;">We may use your data for personalization, innovation, research and other purposes described in our <span style="color:#0084ff; cursor:pointer; text-decoration:underline;">Privacy Policy</span>.</p>
 </div>
 <!-- აქ მთავრდება -->
