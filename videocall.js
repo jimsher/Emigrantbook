@@ -190,14 +190,12 @@ function toggleMic() {
     document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : '#333';
 }
 
-// კამერა
 function toggleCam() {
     camMuted = !camMuted;
     if (localTracks.videoTrack) localTracks.videoTrack.setEnabled(!camMuted);
     document.getElementById('camBtn').style.background = camMuted ? '#ff4d4d' : '#333';
 }
 
-// მინიმიზაცია
 function minimizeVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if (!ui) return;
@@ -287,14 +285,22 @@ function makeCallElementDraggable(elementId) {
         // კრიტიკული მომენტი: ვამოწმებთ, დავაჭირეთ თუ არა კონკრეტულ ელემენტს ან მის შიგნით არსებულ ნებისმიერ ვიდეოს
         if (e.target !== el && !el.contains(e.target)) return;
 
+        // შემოწმება: თუ კონტეინერი არის დიდი სრული ეკრანი (100% სიგანით), ვბლოკავთ მოძრაობას
+        const isFullScreen = el.style.width === "100%" || window.getComputedStyle(el).width === window.innerWidth + "px";
+
         isMovingNow = false;
-        clickTimer = setTimeout(() => { isMovingNow = true; }, 180);
+        clickTimer = setTimeout(() => { 
+            // თუ დიდი ეკრანია, Drag-ის სტატუსს არ ვრთავთ
+            if (!isFullScreen) isMovingNow = true; 
+        }, 180);
 
         startX = e.type.includes('touch') ? e.touches[0].clientX - currentX : e.clientX - currentX;
         startY = e.type.includes('touch') ? e.touches[0].clientY - currentY : e.clientY - currentY;
 
-        // ვამაგრებთ მსმენელებს მთელ დოკუმენტზე, რომ თითის სწრაფად წაღებისას არ აიწყვიტოს
-        document.addEventListener(e.type.includes('touch') ? "touchmove" : "mousemove", dragMove, { passive: false });
+        // თითის გაყოლების ივენთს ვამაგრებთ მხოლოდ მაშინ, თუ ელემენტი არ არის სრულ ეკრანზე
+        if (!isFullScreen) {
+            document.addEventListener(e.type.includes('touch') ? "touchmove" : "mousemove", dragMove, { passive: false });
+        }
         document.addEventListener(e.type.includes('touch') ? "touchend" : "mouseup", dragEnd);
     };
 
@@ -325,7 +331,7 @@ function makeCallElementDraggable(elementId) {
         document.removeEventListener("mouseup", dragEnd);
         document.removeEventListener("touchend", dragEnd);
 
-        // თუ არ უმოძრავია — უბრალო კლიკია და ვცვლით ადგილებს
+        // თუ არ უმოძრავია — უბრალო კლიკია და ვცვლით ადგილებს (მუშაობს დიდ ეკრანზეც)
         if (!isMovingNow) {
             swapVideoTracksContainers();
         }
