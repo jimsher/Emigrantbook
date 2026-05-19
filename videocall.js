@@ -103,16 +103,76 @@ function listenForIncomingCalls(user) {
 }
 
 // 4. ზარის დასრულება
+// 4. ზარის დასრულება (როცა შენ აჭერ წითელ ღილაკს)
 async function endVideoCall() {
+    // პირველ რიგში ვხურავთ ადგილობრივ ტრეკებს, რომ კამერა ეგრევე ჩაქრეს
     if (localTracks.audioTrack) { localTracks.audioTrack.stop(); localTracks.audioTrack.close(); }
     if (localTracks.videoTrack) { localTracks.videoTrack.stop(); localTracks.videoTrack.close(); }
     localTracks = { videoTrack: null, audioTrack: null };
 
-    await client.leave();
+    try {
+        await client.leave();
+    } catch (e) {
+        console.error("Agora leave error:", e);
+    }
+    
     document.getElementById('videoCallUI').style.display = 'none';
 
-    if (window.currentChatId) db.ref(`video_calls/${window.currentChatId}`).remove();
-    if (auth.currentUser) db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+    const myUid = auth.currentUser.uid;
+    const targetUid = window.currentChatId;
+
+    // უსაფრთხო და მყარი გათიშვა სინქრონისთვის:
+    // 1. ჯერ მეორე იუზერის ბაზაში ვწერთ სტატუსს 'ended', რომ მისმა ტელეფონმა ეგრევე გათიშოს
+    if (targetUid) {
+        await db.ref(`video_calls/${targetUid}`).update({ status: 'ended' });
+        // 1 წამში ვშლით ჩანაწერს, რომ ბაზა გასუფთავდეს
+        setTimeout(() => { db.ref(`video_calls/${targetUid}`).remove(); }, 1000);
+    }
+
+    // 2. ჩვენს საკუთარ ჩანაწერსაც ვუკეთებთ 'ended'-ს და ვშლით
+    await db.ref(`video_calls/${myUid}`).update({ status: 'ended' });
+    setTimeout(() => { db.ref(`video_calls/${myUid}`).remove(); }, 1000);
+}
+
+// 3. შემოსული ზარის მოსმენა (Realtime-ში უსმენს სტატუსის ცვლილებებს)
+function listenForIncomingCalls(user) {
+    db.ref(`video_calls/${user.uid}`).on('value', snap => {
+        const call = snap.val();
+        
+        // ა) თუ ვინმე გვირეკავს
+        if (call && call.status === 'calling') {
+            const modal = document.getElementById('incomingCallModal');
+            if (modal) modal.style.display = 'flex';
+
+            document.getElementById('callerNameDisplay').innerText = call.callerName;
+            if (call.callerPhoto) {
+                document.getElementById('callerAva').src = call.callerPhoto;
+            }
+
+            window.activeIncomingCall = call;
+        } 
+        // ბ) ახალი დაზღვეული პირობა: თუ დამრეკმა დააჭირა გათიშვას (status ხდება 'ended') ან ჩანაწერი წაიშალა (!call)
+        else if (!call || (call && call.status === 'ended')) {
+            
+            // მომენტალურად ვუთიშავთ კამერას და მიკროფონს მეორე მხარესაც
+            if (localTracks.audioTrack) { localTracks.audioTrack.stop(); localTracks.audioTrack.close(); }
+            if (localTracks.videoTrack) { localTracks.videoTrack.stop(); localTracks.videoTrack.close(); }
+            localTracks = { videoTrack: null, audioTrack: null };
+
+            // გამოვდივართ აგორას არხიდან
+            client.leave().catch(e => console.log(e));
+
+            // ვმალავთ შემოსული ზარის მოდალს (თუ ჯერ არ უპასუხია)
+            const modal = document.getElementById('incomingCallModal');
+            if (modal) modal.style.display = 'none';
+
+            // ვმალავთ მთავარ ვიდეო ინტერფეისსაც, თუ უკვე ლაპარაკობდნენ
+            const videoUI = document.getElementById('videoCallUI');
+            if (videoUI) videoUI.style.display = 'none';
+            
+            console.log("ზარი დასრულდა მეორე მხარის მიერ.");
+        }
+    });
 }
 
 // 5. მართვის ღილაკები
