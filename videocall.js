@@ -18,7 +18,7 @@ const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigr
 outgoingAudio.loop = true;
 incomingAudio.loop = true;
 outgoingAudio.volume = 1.0;
-outgoingAudio.volume = 1.0;
+incomingAudio.volume = 1.0;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
@@ -163,6 +163,7 @@ function listenForIncomingCalls(user) {
     });
 }
 
+// 4. ზარის დასრულება
 // 4. ზარის დასრულება (როცა შენ აჭერ წითელ ღილაკს)
 async function endVideoCall() {
     // პირველ რიგში ვაჩუმებთ ყველა ზარის ხმას
@@ -189,11 +190,14 @@ async function endVideoCall() {
     const targetUid = window.currentChatId;
 
     // უსაფრთხო და მყარი გათიშვა სინქრონისთვის:
+    // 1. ჯერ მეორე იუზერის ბაზაში ვწერთ სტატუსს 'ended', რომ მისმა ტელეფონმა ეგრევე გათიშოს
     if (targetUid) {
         await db.ref(`video_calls/${targetUid}`).update({ status: 'ended' });
+        // 1 წამში ვშლით ჩანაწერს, რომ ბაზა გასუფთავდეს
         setTimeout(() => { db.ref(`video_calls/${targetUid}`).remove(); }, 1000);
     }
 
+    // 2. ჩვენს საკუთარ ჩანაწერსაც ვუკეთებთ 'ended'-ს და ვშლით
     await db.ref(`video_calls/${myUid}`).update({ status: 'ended' });
     setTimeout(() => { db.ref(`video_calls/${myUid}`).remove(); }, 1000);
 
@@ -225,6 +229,7 @@ function listenForIncomingCalls(user) {
                 outgoingAudio.pause();
                 outgoingAudio.currentTime = 0;
                 incomingAudio.muted = false;
+                // გასწორდა აქ: ჩაიწერა რეალური შემომავალი ზარის ხმის გამოძახება!
                 incomingAudio.play().catch(err => console.log("Autoplay block:", err));
             } catch (e) {
                 console.log("აუდიოს დაკვრის ხარვეზი:", e);
@@ -253,7 +258,7 @@ function listenForIncomingCalls(user) {
             // გამოვდივართ აგორას არხიდან
             client.leave().catch(e => console.log(e));
 
-            // ვმალავთ შემოსული ზარის მოდას
+            // ვმალავთ შემოსული ზარის მოდას (თუ ჯგუფურშიც ვინმე მუშაობს)
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'none';
 
@@ -276,6 +281,7 @@ function toggleMic() {
     document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : '#333';
 }
 
+// კამერა
 function toggleCam() {
     camMuted = !camMuted;
     if (localTracks.videoTrack) localTracks.videoTrack.setEnabled(!camMuted);
@@ -330,26 +336,30 @@ let isCallWindowsSwapped = false;
 
 // 1. ეკრანების ადგილების გაცვლა (Swap)
 function swapVideoTracksContainers() {
-    if(activeUsersInCall.length > 2) return; 
+    if(activeUsersInCall.length > 2) return; // ჯგუფურ რეჟიმში სვოპი აღარ გვინდა
 
     const localContainer = document.getElementById("local-video");
     const remoteContainer = document.getElementById("remote-video");
 
     if (!localContainer || !remoteContainer) return;
 
+    // მოძრაობის განულება, რომ გაცვლისას ეკრანიდან არ გაიქცეს
     localContainer.style.transform = "none";
     remoteContainer.style.transform = "none";
 
     if (!isCallWindowsSwapped) {
+        // შენი ვიდეო (local) ხდება დიდი, სხვისი (remote) პატარავდება
         remoteContainer.style.cssText = "position: absolute !important; width: 120px !important; height: 160px !important; bottom: 80px !important; right: 20px !important; top: auto !important; left: auto !important; z-index: 99999 !important; border-radius: 12px !important; border: 2px solid var(--gold, #d4af37) !important; overflow: hidden !important;";
         localContainer.style.cssText = "position: absolute !important; width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border-radius: 0 !important; border: none !important; overflow: hidden !important;";
         isCallWindowsSwapped = true;
     } else {
+        // ბრუნდება საწყისზე: სხვისი (remote) დიდი, შენი (local) პატარა
         localContainer.style.cssText = "position: absolute !important; width: 120px !important; height: 160px !important; bottom: 80px !important; right: 20px !important; top: auto !important; left: auto !important; z-index: 99999 !important; border-radius: 12px !important; border: 2px solid var(--gold, #d4af37) !important; overflow: hidden !important;";
         remoteContainer.style.cssText = "position: absolute !important; width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; z-index: 1 !important; border-radius: 0 !important; border: none !important; overflow: hidden !important;";
         isCallWindowsSwapped = false;
     }
 
+    // ვიდეოების გადატვირთვა ახალ ზომებზე, რომ არ გაშავდეს
     try {
         if (localTracks && localTracks.videoTrack) {
             localTracks.videoTrack.stop();
@@ -440,6 +450,7 @@ setTimeout(() => {
     makeCallElementDraggable("remote-video");
 }, 1500);
 
+// ზარის დაწყება
 async function requestVideoCall() {
     const targetUid = window.currentChatId;
     if (!targetUid) return alert("ჯერ აირჩიეთ ჩატი!");
@@ -504,6 +515,9 @@ function showCallEndedScreen() {
     }, 8000);
 }
 
+
+// --- 🚀 აი აქ არის 100%-ით სწორი და გასწორებული გზა შენი სკრინშოტების მიხედვით ---
+
 function openInviteFriendsModal() {
     const modal = document.getElementById("inviteFriendsModal");
     const container = document.getElementById("friendsListContainer");
@@ -513,6 +527,7 @@ function openInviteFriendsModal() {
 
     const myUid = auth.currentUser.uid;
 
+    // 🚀 სკრინშოტის მიხედვით: შევდივართ users -> შენი ID -> friends პაპკაში
     db.ref(`users/${myUid}/friends`).once('value').then(friendsSnapshot => {
         if (!container) return;
         container.innerHTML = ""; 
@@ -520,22 +535,12 @@ function openInviteFriendsModal() {
         let hasFriends = false;
 
         friendsSnapshot.forEach(friendSnap => {
-            const friendData = friendSnap.val();
-            let friendUid = null;
-
-            if (friendData) {
-                if (friendData.friendUid) {
-                    friendUid = friendData.friendUid;
-                } else if (friendData.id) {
-                    friendUid = friendData.id;
-                } else if (typeof friendData === 'string') {
-                    friendUid = friendData;
-                }
-            }
-
+            const friendUid = friendSnap.key; // იღებს მეგობრის რეალურ ID-ს
+            
             if (friendUid) {
                 hasFriends = true;
 
+                // შევდივართ მეგობრის ID-ით users პაპკაში მისი სახელი და ფოტოს წამოსაღებად
                 db.ref(`users/${friendUid}`).once('value').then(userSnapshot => {
                     const userData = userSnapshot.val();
                     if (!userData) return;
