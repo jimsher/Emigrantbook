@@ -66,6 +66,39 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+            authDomain: "emigrantbook.firebaseapp.com", 
+            databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+            projectId: "emigrantbook", 
+            storageBucket: "emigrantbook.firebasestorage.app", 
+            appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        // ბალანსის რეალურ დროში დაკავშირება
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                db.ref('users/' + user.uid + '/akho').on('value', snapshot => {
+                    const balance = snapshot.val() || 0;
+                    document.getElementById('gameBalance').innerText = parseFloat(balance).toFixed(2) + " AKHO";
+                });
+            }
+        });
+    </script>
+
     <script src="script.js"></script>
     <script>
         function backToGames() {
@@ -76,7 +109,18 @@
             document.getElementById('gamesList').style.display = 'none';
             document.getElementById('wheelGameContainer').style.display = 'flex';
         }
-        // დაამატე დანარჩენი გახსნის ფუნქციები აქ...
+        function openLotto() {
+            document.getElementById('gamesList').style.display = 'none';
+            document.getElementById('lottoGameContainer').style.display = 'flex';
+        }
+        function openBurningSlots() {
+            document.getElementById('gamesList').style.display = 'none';
+            document.getElementById('burningSlotsContainer').style.display = 'flex';
+        }
+        function openKingOfAkho() {
+            document.getElementById('gamesList').style.display = 'none';
+            document.getElementById('kingOfAkhoContainer').style.display = 'flex';
+        }
     </script>
 </body>
 </html>
