@@ -3124,43 +3124,61 @@ div[style*="overflow-x:auto"] {
  
 
 <!-- ვიდეო ზარის დიზაინი მესინჯერში -->
- <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif;">
+<div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:space-between; font-family:sans-serif; overflow:hidden;">
     
-    <div id="remote-video" style="width:100%; height:100%; background:#111; position:relative;">
-        <div id="remote-label" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; font-size:12px; z-index:30;">Waiting for partner...</div>
+    <div id="remote-video" style="width:100%; height:100%; background:#111; position:absolute; top:0; left:0; z-index:1;">
+        <div id="remote-label" style="position:absolute; top:25px; left:25px; color:white; background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:20px; font-size:12px; z-index:30; font-weight:500; border:1px solid rgba(255,255,255,0.1);">Waiting for partner...</div>
         
-        <div style="position:absolute; top:80px; width:100%; text-align:center; z-index:25;">
-            <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover;"></div>
-            <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Calling...</h2>
-            <p style="color:rgba(255,255,255,0.7); font-size:15px; margin-top:5px;">Messenger Video Call</p>
+        <div style="position:absolute; top:60px; width:100%; text-align:center; z-index:25; display:flex; flex-direction:column; align-items:center; background:linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); padding-bottom:30px;">
+            <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover; background-position:center; box-shadow:0 4px 15px rgba(0,0,0,0.5);"></div>
+            <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; font-weight:600; text-shadow:0 2px 10px rgba(0,0,0,0.8); letter-spacing:0.5px;">Calling...</h2>
+            <p style="color:rgba(255,255,255,0.6); font-size:14px; margin-top:5px; font-weight:500;">Messenger Video Call</p>
         </div>
     </div>
 
-    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:130px; right:20px; border-radius:15px; border:2px solid var(--gold); overflow:hidden; z-index:100; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
+    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:140px; right:20px; border-radius:15px; border:2px solid var(--gold, #d4af37); overflow:hidden; z-index:100; box-shadow: 0 10px 25px rgba(0,0,0,0.6);"></div>
 
-    <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:110; width:90%; justify-content:center;">
-        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-magic"></i> Touch up</div>
-        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-smile"></i> Effects</div>
-        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-image"></i> Backgrounds</div>
-    </div>
-
-    <div class="call-controls" style="position:absolute; bottom:30px; display:flex; gap:20px; z-index:120; align-items:center;">
-        <div onclick="toggleCam()" id="camBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
-            <i class="fas fa-video"></i>
-        </div>
-        <div onclick="toggleMic()" id="micBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
-            <i class="fas fa-microphone"></i>
-        </div>
-        <div style="width:55px; height:55px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
-            <i class="fas fa-gamepad"></i>
-        </div>
-        <div onclick="endVideoCall()" style="width:70px; height:70px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:26px; box-shadow:0 0 15px rgba(255,77,77,0.5);">
-            <i class="fas fa-phone-slash"></i>
-        </div>
-    </div>
-
-    <div onclick="minimizeVideoCall()" style="position:absolute; top:20px; right:20px; color:white; cursor:pointer; background:rgba(255,255,255,0.15); padding:12px; border-radius:50%; z-index:130; backdrop-filter:blur(5px);">
+    <div onclick="minimizeVideoCall()" style="position:absolute; top:25px; right:25px; color:white; cursor:pointer; background:rgba(255,255,255,0.15); padding:12px; border-radius:50%; z-index:130; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); width:20px; height:20px; display:flex; align-items:center; justify-content:center;">
         <i class="fas fa-expand-alt"></i>
+    </div>
+
+    <div style="position:absolute; bottom:30px; width:calc(100% - 40px); max-width:480px; background:rgba(20, 20, 20, 0.7); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(212, 175, 55, 0.25); border-radius:24px; padding:14px 8px; display:flex; justify-content:space-around; align-items:center; z-index:120; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        
+        <div onclick="toggleCam()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
+            <div id="camBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
+                <i class="fas fa-video" style="font-size:16px;"></i>
+            </div>
+            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Video</span>
+        </div>
+
+        <div onclick="toggleMic()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
+            <div id="micBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
+                <i class="fas fa-microphone" style="font-size:16px;"></i>
+            </div>
+            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Audio</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
+            <div style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#d4af37; transition:all 0.2s; border:1px solid rgba(212,175,55,0.2);">
+                <i class="fas fa-magic" style="font-size:16px;"></i>
+            </div>
+            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Effects</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
+            <div style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
+                <i class="fas fa-gamepad" style="font-size:16px;"></i>
+            </div>
+            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Focus</span>
+        </div>
+
+        <div onclick="endVideoCall()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
+            <div style="width:54px; height:54px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; transition:all 0.2s; box-shadow:0 4px 15px rgba(255,77,77,0.4);">
+                <i class="fas fa-phone-slash" style="transform: rotate(135deg);"></i>
+            </div>
+            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">End Call</span>
+        </div>
+
     </div>
 </div>
 <!-- აქ მთავრდება -->
