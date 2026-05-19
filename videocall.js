@@ -6,9 +6,8 @@ let camMuted = false;
 
 // კონფიგურაცია - ერთი და იგივე მონაცემები ორივე მხარისთვის
 const APPID = "258897e8fb5f4dd089b761eca6568b24";
-const TOKEN = null;
-
-
+const TOKEN = ""; // ცარიელი ტექსტი აიძულებს Agora-ს იმუშაოს მუდმივ კოდზე ტოკენის გარეშე
+const FIXED_CHANNEL = "live_stream"; // შენი ორიგინალი არხის სახელი ქვემოდან
 
 // 1. ზარის დაწყება (როცა შენ რეკავ)
 async function requestVideoCall() {
@@ -29,15 +28,13 @@ async function requestVideoCall() {
     await db.ref('video_calls/' + targetUid).set({
         callerUid: auth.currentUser.uid,
         callerName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
-        channel: "live_stream",
+        channel: FIXED_CHANNEL,
         status: 'calling',
         ts: Date.now()
     });
 
     startVideoCall(); // ეს რთავს აგორას და კამერას
 }
-
-
 
 // 2. მთავარი ვიდეო ფუნქცია
 async function startVideoCall() {
@@ -48,7 +45,8 @@ async function startVideoCall() {
     
     try {
         const uid = Math.floor(Math.random() * 10000);
-        await client.join(AGORA_APP_ID, FIXED_CHANNEL, AGORA_TOKEN, uid);
+        // გასწორდა: ცვლადები შეესაბამება ზემოთ აღწერილ APPID, FIXED_CHANNEL და TOKEN-ს
+        await client.join(APPID, FIXED_CHANNEL, TOKEN, uid);
         
         localTracks.audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
         localTracks.videoTrack = await AgoraRTC.createCameraVideoTrack();
@@ -56,7 +54,7 @@ async function startVideoCall() {
         localTracks.videoTrack.play("local-video");
         await client.publish([localTracks.audioTrack, localTracks.videoTrack]);
 
-        // სხვისი ვიდეოს გამოჩენა
+        // Sxvishi videos gamoჩena
         client.on("user-published", async (user, mediaType) => {
             await client.subscribe(user, mediaType);
             if (mediaType === "video") {
@@ -140,23 +138,6 @@ function minimizeVideoCall() {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // 1. ფუნქცია პასუხისთვის (მწვანე ღილაკი)
 async function acceptCall() {
     // ბაზაში ვცვლით სტატუსს, რომ იუზერმა უპასუხა
@@ -181,20 +162,5 @@ function declineCall() {
     // ვმალავთ ფანჯარას
     document.getElementById('incomingCallModal').style.display = 'none';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // პატარა ჩარჩო ლოკალ ვიდეოს ლოგიკა
