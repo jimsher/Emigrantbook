@@ -92,7 +92,7 @@ function listenForIncomingCalls(user) {
                 document.getElementById('callerAva').src = call.callerPhoto;
             }
 
-            // ვინახავთ ზარის მონაცემებს პასუხისთვის
+            // ვინახავთ ზარის მონაცემებს პასუშისთვის
             window.activeIncomingCall = call;
         } else if (!call) {
             // თუ დამრეკმა გათიშა, ვმალავთ ფანჯარას
@@ -116,7 +116,7 @@ async function endVideoCall() {
         console.error("Agora leave error:", e);
     }
     
-    // ჩანაცვლდა: პირდაპირ გაქრობის ნაცვლად, იძახებს დასრულების მესინჯერის გვერდს
+    // იძახებს დასრულების მესინჯერის გვერდს
     showCallEndedScreen();
 
     const myUid = auth.currentUser.uid;
@@ -155,6 +155,10 @@ function listenForIncomingCalls(user) {
         // ბ) ახალი დაზღვეული პირობა: თუ დამრეკმა დააჭირა გათიშვას (status ხდება 'ended') ან ჩანაწერი წაიშალა (!call)
         else if (!call || (call && call.status === 'ended')) {
             
+            // ვამოწმებთ, რეალურად გახსნილია თუ არა ვიდეო ზარის ინტერფეისი ეკრანზე (რეფრეშის დაცვა)
+            const videoUI = document.getElementById('videoCallUI');
+            const isCallActiveNow = videoUI && videoUI.style.display === 'flex';
+            
             // მომენტალურად ვუთიშავთ კამერას და მიკროფონს მეორე მხარესაც
             if (localTracks.audioTrack) { localTracks.audioTrack.stop(); localTracks.audioTrack.close(); }
             if (localTracks.videoTrack) { localTracks.videoTrack.stop(); localTracks.videoTrack.close(); }
@@ -167,8 +171,12 @@ function listenForIncomingCalls(user) {
             const modal = document.getElementById('incomingCallModal');
             if (modal) modal.style.display = 'none';
 
-            // ჩანაცვლდა: როცა მეორე მხარე გითიშავს, შენთანაც დასრულების ეკრანი ამოდის
-            showCallEndedScreen();
+            // თუ ვიდეო ზარი რეალურად მიმდინარეობდა, მხოლოდ მაშინ ვაჩენთ დასრულების გვერდს
+            if (isCallActiveNow) {
+                showCallEndedScreen();
+            } else {
+                if (videoUI) videoUI.style.display = 'none';
+            }
             
             console.log("ზარი დასრულდა მეორე მხარის მიერ.");
         }
@@ -182,12 +190,14 @@ function toggleMic() {
     document.getElementById('micBtn').style.background = micMuted ? '#ff4d4d' : '#333';
 }
 
+// კამერა
 function toggleCam() {
     camMuted = !camMuted;
     if (localTracks.videoTrack) localTracks.videoTrack.setEnabled(!camMuted);
     document.getElementById('camBtn').style.background = camMuted ? '#ff4d4d' : '#333';
 }
 
+// მინიმიზაცია
 function minimizeVideoCall() {
     const ui = document.getElementById('videoCallUI');
     if (!ui) return;
@@ -220,7 +230,7 @@ function declineCall() {
     document.getElementById('incomingCallModal').style.display = 'none';
 }
 
-// --- ემოგრანტბუქის ვიდეო ჩარჩოების DRAG & SWAP მოდული (FINAL FIX) ---
+// --- 2. თითის გაყოლების (Drag) და ადგილების გაცვლის (Swap) ლოგიკა ---
 
 let isCallWindowsSwapped = false;
 
@@ -351,9 +361,12 @@ async function requestVideoCall() {
     db.ref('users/' + targetUid).once('value').then(snap => {
         const userData = snap.val();
         
-        // ა) სახელის დასმა (შენი ორიგინალი კოდი)
+        // ა) სახელის დასმა (შენი ორიგინალი კოდი - მიბმულია HTML-ის ID-ზე: remote-name-display)
+        const rNameDisplay = document.getElementById('remote-name-display');
         const rName = document.getElementById('remote-name');
-        if(rName) {
+        if(rNameDisplay) {
+            rNameDisplay.innerText = (userData && userData.name) ? userData.name : "Emigrant";
+        } else if (rName) {
             rName.innerText = (userData && userData.name) ? userData.name : "Emigrant";
         }
         
