@@ -276,7 +276,9 @@
         '💎': 'https://i.postimg.cc/Xq6g6vXz/diamond.gif',
         '💰': 'https://i.postimg.cc/Z5Xg5vXz/moneybag.png',
         '⚡': 'https://i.postimg.cc/V5Xg5vXz/lightning.png',
-        '🦁': 'https://i.postimg.cc/L5Xg5vXz/lion.png'
+        '🦁': 'https://i.postimg.cc/L5Xg5vXz/lion.png',
+        '❓': 'https://i.postimg.cc/9F4f7Z8M/hd-seven.png', // საწყისი იკონებისთვის
+        '🏆': 'https://i.postimg.cc/Hng3vXz2/crown.gif'
     };
 
     var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
@@ -323,6 +325,9 @@
     function openGamesPage() {
         document.getElementById('gamesPage').style.display = 'flex';
         bgMusic.play().catch(() => {});
+        
+        // პირველადი იკონების ჩასმა საწყის უჯრებში, რომ წარწერები არ ეგდოს
+        setupInitialImages();
     }
 
     function closeGamesPage() {
@@ -335,6 +340,21 @@
         const containers = ['wheelGameContainer', 'lottoGameContainer', 'burningSlotsContainer', 'slotGameContainer', 'slot3DContainer', 'kingOfAkhoContainer'];
         containers.forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById('gamesList').style.display = 'grid';
+    }
+
+    function setupInitialImages() {
+        const targets = {
+            'reel_1': '7️⃣', 'reel_2': '🍉', 'reel_3': '🍒',
+            'goldReel_1': '👑', 'goldReel_2': '👑', 'goldReel_3': '👑',
+            'royalReel_1': '👑', 'royalReel_2': '👑', 'royalReel_3': '👑'
+        };
+        for(let id in targets) {
+            const el = document.getElementById(id);
+            if(el) {
+                const imgSize = id.includes('royal') ? 50 : 55;
+                el.innerHTML = `<div class="${id.includes('royal') ? 'cell-3d' : 'reel-cell'}"><img src="${fruitHDFiles[targets[id]]}" style="width:${imgSize}px; height:${imgSize}px; object-fit:contain;"></div>`;
+            }
+        }
     }
 
     // --- 1. იღბლიანი ბორბალი ---
