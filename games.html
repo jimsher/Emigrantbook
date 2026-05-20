@@ -143,21 +143,22 @@
             justify-content: center;
             font-size: 34px;
             box-sizing: border-box;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
         
-        /* 🍀 ეფექტი გახეთქილი და გაფართოებული ფოთლებისთვის */
+        /* 🍀 ახალი სუპერ ეფექტი გახეთქილი ფოთლებისთვის */
         .bh-cell.wild-expanded {
-            animation: wildExplode 0.4s ease-in-out;
+            animation: wildExplode 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             text-shadow: 0 0 15px #62c431, 0 0 30px #297a09, 0 0 45px #fff;
-            transform: scale(1.05);
-            background: rgba(98, 196, 49, 0.15);
+            background: rgba(98, 196, 49, 0.25);
+            border: 1px solid #8be05c;
+            border-radius: 4px;
         }
         
         @keyframes wildExplode {
-            0% { transform: scale(0.3); opacity: 0.3; filter: brightness(2); }
-            50% { transform: scale(1.1); filter: brightness(1.5); }
-            100% { transform: scale(1.05); opacity: 1; }
+            0% { transform: scale(0.2); opacity: 0; filter: brightness(3); }
+            50% { transform: scale(1.15); filter: brightness(1.5); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .bh-status-bar {
@@ -873,35 +874,43 @@
             setTimeout(() => { r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`; r.style.transform = 'translateY(0px)'; }, 50);
         }
 
-        setTimeout(() => {
+        setTimeout(async () => {
             // 🚀 --- ახალი დაზუსტებული 🍀 ფოთლების გახეთქვისა და გაფართოების წესები ---
             let hasWildReel1 = finalMatrix[0].includes('🍀');
             let hasWildReel3 = finalMatrix[2].includes('🍀');
             let hasWildReel4 = finalMatrix[3].includes('🍀');
 
-            let jackpotTriggered = false;
+            let multiplyBonusTriggered = false;
+            let cellsToExpand = []; // მასივი ფოთლების მიმდევრობითი დახეთქვისთვის
 
             // ა) თუ პირველ, მესამე და მეოთხე რელსზე ერთდროულად დაჯდა -> სრული ეკრანი ფოთლებია (JACKPOT)
             if (hasWildReel1 && hasWildReel3 && hasWildReel4) {
-                jackpotTriggered = true;
+                multiplyBonusTriggered = true;
                 for (let r = 0; r < 5; r++) {
                     finalMatrix[r] = ['🍀', '🍀', '🍀'];
                     for (let k = 0; k < 3; k++) {
-                        let cell = document.getElementById('reel5_' + (r + 1)).children[k];
-                        cell.innerText = '🍀';
-                        cell.classList.add('wild-expanded');
+                        cellsToExpand.push({ reel: r + 1, cellIndex: k });
                     }
                 }
             } 
             // ბ) თუ პირველ და მესამე რელსზე დაჯდა ფოთოლი -> ივსება 1, 2 და 3 რელსები მთლიანად
             else if (hasWildReel1 && hasWildReel3) {
+                multiplyBonusTriggered = true;
                 for (let r = 0; r < 3; r++) {
                     finalMatrix[r] = ['🍀', '🍀', '🍀'];
                     for (let k = 0; k < 3; k++) {
-                        let cell = document.getElementById('reel5_' + (r + 1)).children[k];
-                        cell.innerText = '🍀';
-                        cell.classList.add('wild-expanded');
+                        cellsToExpand.push({ reel: r + 1, cellIndex: k });
                     }
+                }
+            }
+
+            // 💥 ლამაზი მიმდევრობითი დახეთქვის ეფექტის გაშვება (ასინქრონულად)
+            if (cellsToExpand.length > 0) {
+                for (let item of cellsToExpand) {
+                    let cellElement = document.getElementById('reel5_' + item.reel).children[item.cellIndex];
+                    cellElement.innerText = '🍀';
+                    cellElement.classList.add('wild-expanded');
+                    await new Promise(resolve => setTimeout(resolve, 150)); // ლამაზი მიმდევრობითი დაყოვნება
                 }
             }
 
@@ -953,8 +962,8 @@
                 totalWin += 6.00 * betMultiplier;
             }
 
-            // 💰 ჯეკპოტის ბონუსის დარიცხვა: მიმდინარე ფსონი მრავლდება 5-ზე
-            if (jackpotTriggered) {
+            // 💰 ფსონის 5-მაგად გამრავლება და დამატება მოგებაზე, როცა ფოთლები სრულად ხეთქავს ზოლებს
+            if (multiplyBonusTriggered) {
                 totalWin += (burningStake5 * 5);
             }
 
