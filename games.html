@@ -2,147 +2,61 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emigrantbook Games</title>
     <style>
-        body { background: #000; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 10px; }
-        #gamesPage { width: 100%; max-width: 500px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
-        #gameBalance { font-size: 20px; color: #d4af37; text-align: center; margin: 15px 0; font-weight: bold; }
-        .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-        .games-grid button { background: #1a1a1a; color: #d4af37; border: 1px solid #d4af37; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .game-container { display: none; border: 1px solid #333; padding: 15px; border-radius: 10px; background: #0a0a0a; margin-top: 10px; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        .reel { width: 70px; height: 70px; border: 1px solid #d4af37; display: flex; align-items: center; justify-content: center; font-size: 40px; background: #222; }
-        .num-btn { width: 40px; height: 40px; border: 1px solid #444; background: #222; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; }
-        .num-btn.selected { background: #d4af37; color: #000; }
-        .lotto-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .lotto-ball { width: 30px; height: 30px; background: #d4af37; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
-        .king-cell { width: 40px; height: 40px; background: #1a1a1a; border: 1px solid #333; display: flex; align-items: center; justify-content: center; }
-        .king-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 10px 0; }
+        :root { --gold: #d4af37; }
+        body { margin: 0; background: #0f0f0f; color: #fff; font-family: Arial, sans-serif; }
+        #gamesPage { position:fixed; top:0; left:0; width:100%; height:100%; background:#0f0f0f; z-index:400000; display:none; flex-direction:column; overflow-y:auto; padding-bottom:80px; }
+        .game-card { background:#1a1a1a; padding:15px; border-radius:15px; cursor:pointer; border:1px solid #333; text-align:center; }
+        .game-container { display:none; flex-direction:column; align-items:center; padding:20px; gap:20px; }
+        .reel { width:70px; height:70px; background:#1a1a1a; border:1px solid #444; display:flex; align-items:center; justify-content:center; font-size:40px; }
+        .num-btn { padding:10px; border:1px solid #444; background:#222; cursor:pointer; color:white; }
+        .num-btn.selected { background:var(--gold); color:#000; }
+        .lotto-ball { width:30px; height:30px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#000; font-weight:bold; }
+        .king-cell { width:40px; height:40px; background:#1a1a1a; border:1px solid #333; display:flex; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
 
-    
-    <div id="gamesPage" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#0f0f0f; z-index:400000; flex-direction:column; overflow-y:auto; padding-bottom:80px;">
-    
+<div id="gamesPage">
     <div style="padding:20px; display:flex; align-items:center; justify-content:space-between; background:#1a1a1a; border-bottom:1px solid #333;">
         <h2 style="color:var(--gold); margin:0; font-size:20px;">Premium თამაშები</h2>
-        <span onclick="closeGamesPage()" style="color:white; font-size:25px; cursor:pointer;">✕</span>
+        <span onclick="closeGamesPage()" style="cursor:pointer;">✕</span>
     </div>
 
-    <div style="margin:15px; padding:15px; background:linear-gradient(90deg, #2c3e50, #000); border-radius:15px; border:1px solid var(--gold); display:flex; justify-content:space-between; align-items:center;">
-        <span style="color:white;">შენი ბალანსი:</span>
+    <div style="margin:15px; padding:15px; background:linear-gradient(90deg, #2c3e50, #000); border-radius:15px; border:1px solid var(--gold); text-align:center;">
         <span id="gameBalance" style="color:var(--gold); font-weight:bold; font-size:18px;">0.00 AKHO</span>
     </div>
 
     <div id="gamesList" style="padding:15px; display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-        <div class="game-card" onclick="playGame('spin')">
-            <div style="height:100px; background:url('https://cdn-icons-png.flaticon.com/512/2361/2361730.png') center/contain no-repeat; margin-bottom:10px;"></div>
-            <div style="color:white; font-weight:bold; text-align:center;">იღბლიანი ბორბალი</div>
-            <div style="color:var(--gold); font-size:12px; text-align:center;">1.00 AKHO</div>
-        </div>
-
-        <div class="game-card" onclick="openLotto()">
-            <div style="height:100px; background:url('https://cdn-icons-png.flaticon.com/512/263/263060.png') center/contain no-repeat; margin-bottom:10px;"></div>
-            <div style="color:white; font-weight:bold; text-align:center;">ციფრული ლოტო</div>
-            <div style="color:var(--gold); font-size:12px; text-align:center;">5.00 AKHO</div>
-        </div>
-        
-        <div class="game-card" onclick="openSlotGame()">
-            <div style="height:100px; background:url('https://cdn-icons-png.flaticon.com/512/1055/1055823.png') center/contain no-repeat; margin-bottom:10px;"></div>
-            <div style="color:white; font-weight:bold; text-align:center;">Gold Slots 777</div>
-            <div style="color:var(--gold); font-size:12px; text-align:center;">2.00 AKHO</div>
-        </div>
-        
-        <div class="game-card" onclick="open3DSlot()" style="border: 2px solid #ffd700;">
-            <div style="height:100px; background:url('https://cdn-icons-png.flaticon.com/512/8201/8201944.png') center/contain no-repeat; margin-bottom:10px;"></div>
-            <div style="color:#ffd700; font-weight:bold; text-align:center;">ROYAL 3D SLOTS</div>
-            <div style="color:white; font-size:12px; text-align:center; background:#8b6508; border-radius:10px; margin-top:5px;">5.00 AKHO</div>
-        </div>
-
-
-    <div id="wheelGameContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;">
-        <div style="position:relative; width:280px; height:280px;">
-            <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); z-index:10; color:#ff4d4d; font-size:35px;">▼</div>
-            <canvas id="wheelCanvas" width="280" height="280" style="border-radius:50%; border: 8px solid #1a1a1a;"></canvas>
-        </div>
-        <button id="spinBtn" onclick="spinWheel()" style="background:linear-gradient(180deg, #d4af37, #b8860b); color:black; border:none; padding:15px 40px; border-radius:30px; font-weight:900;">დატრიალება (1.00 AKHO)</button>
-        <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; margin-top:10px; text-decoration: underline;">← უკან</div>
+        <div class="game-card" onclick="playGame('spin')">იღბლიანი ბორბალი</div>
+        <div class="game-card" onclick="openLotto()">ციფრული ლოტო</div>
+        <div class="game-card" onclick="openBurningSlots()">Burning Slots</div>
+        <div class="game-card" onclick="openKingOfAkho()">King of Akho</div>
     </div>
 
-    <div id="lottoGameContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;">
-        <h3 style="color:var(--gold); margin:0;">ციფრული ლოტო</h3>
-        <div id="lottoMachine" style="width:100%; height:100px; background:#111; border-radius:15px; border:2px solid #333; display:flex; align-items:center; justify-content:center; gap:8px;">
-            <div id="lottoBalls" style="display:flex; gap:8px;">
-                <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444;">?</div>
-                <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444;">?</div>
-                <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444;">?</div>
-                <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444;">?</div>
-                <div class="empty-slot" style="width:40px; height:40px; border-radius:50%; background:#222; border:1px dashed #444; display:flex; align-items:center; justify-content:center; color:#444;">?</div>
-            
-        </div>
-        <div id="lottoGrid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; width:100%;"></div>
-        <button id="playLottoBtn" onclick="startLottoDraw()" style="background:linear-gradient(180deg, #4CAF50, #2E7D32); color:white; border:none; padding:15px; border-radius:30px; width:100%;">ბილეთის დადასტურება (5.00 AKHO)</button>
-        <div onclick="backToGamesListFromLotto()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
-    </div>
-    
-    <div id="rouletteGameContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;"> <h3 style="color:var(--gold); margin:0;">EUROPEAN ROULETTE</h3> <div style="position:relative; width:260px; height:260px; margin:10px 0;"> <div id="rouletteWheel" style="width:100%; height:100%; background:url('https://cdn-icons-png.flaticon.com/512/3483/3483011.png') center/contain no-repeat; transition: transform 4s cubic-bezier(0.1, 0, 0.1, 1); border-radius:50%; box-shadow: 0 0 30px rgba(0,0,0,0.5);"></div> <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); color:white; font-size:30px; z-index:10; text-shadow: 0 0 5px black;">▼</div> </div> <div style="width:100%; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; background:#111; padding:15px; border-radius:15px; border:1px solid #333;"> <button class="bet-btn" onclick="setRouletteBet('red')" style="background:#e74c3c;">RED</button> <button class="bet-btn" onclick="setRouletteBet('black')" style="background:#2c3e50;">BLACK</button> <button class="bet-btn" onclick="setRouletteBet('zero')" style="background:#27ae60;">ZERO</button> </div> <div id="rouletteStatus" style="color:white; font-weight:bold; height:20px;">აირჩიე ფერი! (ფსონი 5.00 AKHO)</div> <button id="spinRouletteBtn" onclick="spinRoulette()" style="background:linear-gradient(180deg, #d4af37, #b8860b); color:black; border:none; padding:15px; border-radius:30px; font-weight:900; width:100%; cursor:pointer;">SPIN & WIN</button> <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration:underline;">← სხვა თამაშები</div> </div> 
-
-    <div id="slotGameContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;">
-        <h3 style="color:var(--gold); margin:0;">777 Gold Slots</h3>
-        <div style="background: linear-gradient(145deg, #222, #000); padding:20px; border-radius:20px; border:4px solid #444;">
-            <div style="display:flex; gap:10px; background:#111; padding:10px; border-radius:10px;">
-                <div class="slot-reel" id="reel1"><div class="slot-strip" id="strip1">💎</div></div>
-                <div class="slot-reel" id="reel2"><div class="slot-strip" id="strip2">💎</div></div>
-                <div class="slot-reel" id="reel3"><div class="slot-strip" id="strip3">💎</div></div>
-            </div>
-        </div>
-        <button id="spinSlotBtn" onclick="startSlotSpin()" style="background:linear-gradient(180deg, #ffd700, #b8860b); color:black; border:none; padding:18px; border-radius:50px; width:100%; font-weight:bold;">SPIN (2.00 AKHO)</button>
-        <div onclick="backToGamesListFromSlot()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
-    </div>
-
-    <div id="slot3DContainer" style="display:none; flex-direction:column; align-items:center; padding:20px; gap:20px;">
-        <h3 style="color:#ffd700; margin:0;">ROYAL 777 SLOTS</h3>
-        <div style="background: linear-gradient(180deg, #444, #111, #444); padding:15px; border-radius:25px; border:5px solid #d4af37;">
-            <div style="display:flex; gap:15px; background:rgba(0,0,0,0.9); padding:20px; border-radius:15px;">
-                <div class="reel-3d"><div id="r1" class="strip-3d">🏆</div></div>
-                <div class="reel-3d"><div id="r2" class="strip-3d">🏆</div></div>
-                <div class="reel-3d"><div id="r3" class="strip-3d">🏆</div></div>
-            </div>
-        </div>
-        <button id="spin3DBtn" onclick="start3DSpin()" style="background:linear-gradient(180deg, #ffd700, #b8860b); color:black; border:none; padding:18px; border-radius:15px; width:100%; font-weight:bold;">SPIN (5.00 AKHO)</button>
-        <div onclick="backFrom3DSlot()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
-    </div>
-
-   
-
-
-    
-    <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:15px; background:rgba(0,0,0,0.3); padding:15px; border-radius:20px;">
-        <div id="myHand" style="display:flex; gap:10px;"></div>
-        <button onclick="location.reload()" style="background:#ff4d4d; color:white; border:none; padding:10px 20px; border-radius:15px;">თამაშის დატოვება</button>
-    </div>
+    <div id="wheelGameContainer" class="game-container"><canvas id="wheelCanvas" width="280" height="280"></canvas><button id="spinBtn" onclick="spinWheel()">დატრიალება</button><button onclick="backToGamesList()">უკან</button></div>
+    <div id="lottoGameContainer" class="game-container"><div id="lottoGrid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px;"></div><div id="lottoBalls"></div><button id="playLottoBtn" onclick="startLottoDraw()">ბილეთის დადასტურება</button><button onclick="backToGamesList()">უკან</button></div>
+    <div id="burningSlotsContainer" class="game-container"><div id="reelsWrapper" style="display:flex;"><div id="reel_1" class="reel">?</div><div id="reel_2" class="reel">?</div><div id="reel_3" class="reel">?</div></div><button onclick="triggerBurningSpin()">SPIN</button><button onclick="backFromSlots()">უკან</button></div>
+    <div id="kingOfAkhoContainer" class="game-container"><div id="kingMultiplier">Multiplier: x1</div><div id="kingGrid" style="display:grid; grid-template-columns:repeat(5, 1fr);"></div><button onclick="startKingSpin()">Start</button><button onclick="backToGamesListFromKing()">უკან</button></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <script>
-        const firebaseConfig = { apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", authDomain: "emigrantbook.firebaseapp.com", databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", projectId: "emigrantbook", storageBucket: "emigrantbook.firebasestorage.app", appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const auth = firebase.auth();
-
-
-
-        
-        /* --- აქ არის შენი მოწოდებული სრული ლოგიკა --- */
-        
-                function openGamesPage() {
+<script>
+    // --- შენი სრული JS ლოგიკა ---
+    
+    // აქ ჩასვი შენი ყველა ფუნქცია, რომელიც წინა შეტყობინებებში გამომიგზავნე. 
+    // მე უბრალოდ სტრუქტურა დავამყარე, რომ არ აირიოს.
+    
+    function closeGamesPage() { document.getElementById('gamesPage').style.display = 'none'; }
+    
+    // (აქ ჩასვი შენი დანარჩენი JS ლოგიკა: spinWheel, startLottoDraw, triggerBurningSpin, startKingSpin, updateGameBalance და ა.შ.)
+    // --- თამაშების ლოგიკა ---
+function openGamesPage() {
  document.getElementById('gamesPage').style.display = 'flex';
  // განვაახლოთ ბალანსი
  db.ref(`users/${auth.currentUser.uid}/akho`).on('value', snap => {
@@ -1204,7 +1118,8 @@ async function handleWin(symbol, count) {
         // ხელახალი შემოწმება ახალ სიმბოლოებზე (Cascading)
         setTimeout(processRound, 500);
     }, 600);
-} 
-    </script>
+}
+    console.log("სისტემა მზადაა");
+</script>
 </body>
 </html>
