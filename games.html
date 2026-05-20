@@ -78,6 +78,30 @@
             border: 3px solid #1f8a3c;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
+        
+        /* 💎 SUPREME HOT PREMIUM STYLE */
+        .sh-wrapper {
+            width: 100%;
+            max-width: 430px;
+            background: radial-gradient(circle at center, #0a1c4d 0%, #030b1f 100%);
+            border-radius: 20px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 3px solid #1f508a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        
+        .sh-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #0055ff;
+            letter-spacing: 2px;
+            margin: 5px 0 12px 0;
+            font-family: 'Arial Black', sans-serif;
+        }
+
         .bh-jackpot-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -198,6 +222,14 @@
             color: #fff;
             box-shadow: 0 0 10px rgba(98,196,49,0.5);
         }
+        /* სპეციფიკური ლურჯი სტილი უმაღლესი სლოტის ღილაკებისთვის */
+        .sh-bet-btn.active {
+            background: linear-gradient(180deg, #1f69ca, #09317a);
+            border-color: #5ca1e0;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(31,105,202,0.5);
+        }
+
         .bh-controls {
             display: flex;
             justify-content: space-around;
@@ -387,8 +419,14 @@
             <div style="color:var(--gold); font-size:12px;">0.15 AKHO</div>
         </div>
         
+        <div class="game-card" onclick="openSupremeSlot()">
+            <div style="height:80px; background:url('https://cdn-icons-png.flaticon.com/512/1055/1055647.png') center/contain no-repeat; margin-bottom:10px;"></div>
+            <div style="color:#00ffff; font-weight:bold;">Supreme Hot</div>
+            <div style="color:white; font-size:12px;">0.20 AKHO</div>
+        </div>
+        
         <div class="game-card" onclick="open3DSlot()">
-            <div style="height:80px; background:url('https://cdn-icons-png.flaticon.com/512/8201/8201944.png center/contain no-repeat; margin-bottom:10px;"></div>
+            <div style="height:80px; background:url('https://cdn-icons-png.flaticon.com/512/8201/8201944.png') center/contain no-repeat; margin-bottom:10px;"></div>
             <div style="color:#ffd700; font-weight:bold;">Secrets of Cairo</div>
             <div style="color:white; font-size:12px;">1.00 AKHO</div>
         </div>
@@ -483,6 +521,62 @@
         </div>
     </div>
 
+    <div id="supremeSlotContainer" class="game-container">
+        <div id="shWinPopup" class="premium-win-popup">
+            <div id="shWinTitle" class="premium-win-title">WIN!</div>
+            <div id="shWinAmt" class="premium-win-amt">0.00</div>
+            <div class="premium-win-currency">AKHO</div>
+        </div>
+
+        <div class="sh-wrapper">
+            <div class="bh-jackpot-grid">
+                <div class="bh-jackpot-box"><span>💎</span><div class="bh-jack-val"><span id="sh_jack_spades">2500.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span style="color:#00ffff;">⭐</span><div class="bh-jack-val"><span id="sh_jack_hearts">500.00</span><span class="bh-gel">AKHO</span></div></div>
+            </div>
+
+            <div class="sh-title">SUPREME HOT</div>
+
+            <div class="bh-board">
+                <div id="shReel_1" class="bh-reel">
+                    <div class="bh-cell">🍎</div><div class="bh-cell">💎</div><div class="bh-cell">7️⃣</div>
+                </div>
+                <div id="shReel_2" class="bh-reel">
+                    <div class="bh-cell">🍇</div><div class="bh-cell">🍒</div><div class="bh-cell">🍉</div>
+                </div>
+                <div id="shReel_3" class="bh-reel">
+                    <div class="bh-cell">🔔</div><div class="bh-cell">⭐</div><div class="bh-cell">🍋</div>
+                </div>
+                <div id="shReel_4" class="bh-reel">
+                    <div class="bh-cell">7️⃣</div><div class="bh-cell">🍎</div><div class="bh-cell">🍇</div>
+                </div>
+                <div id="shReel_5" class="bh-reel">
+                    <div class="bh-cell">💎</div><div class="bh-cell">🍉</div><div class="bh-cell">🔔</div>
+                </div>
+            </div>
+
+            <div class="bh-status-bar">
+                <div style="font-size:12px; color:#aaa; margin-bottom:4px;">ბალანსი: <span id="shBalanceVal" style="color:#00ffff; font-size:16px;">0.00</span> AKHO</div>
+                <div id="shInfoText" style="color:#00ffff; font-size:13px;">გთხოვთ, განათავსოთ თქვენი უმაღლესი ფსონი</div>
+            </div>
+
+            <div class="bh-bet-grid">
+                <button class="bh-bet-btn sh-bet-btn active" onclick="updateSupremeBet(0.20, this)"><div>0.20</div>ფსონი</button>
+                <button class="bh-bet-btn sh-bet-btn" onclick="updateSupremeBet(0.50, this)"><div>0.50</div>ფსონი</button>
+                <button class="bh-bet-btn sh-bet-btn" onclick="updateSupremeBet(1.00, this)"><div>1.00</div>ფსონი</button>
+                <button class="bh-bet-btn sh-bet-btn" onclick="updateSupremeBet(1.50, this)"><div>1.50</div>ფსონი</button>
+                <button class="bh-bet-btn sh-bet-btn" onclick="updateSupremeBet(2.00, this)"><div>2.00</div>ფსონი</button>
+            </div>
+
+            <div class="bh-controls">
+                <div class="bh-side-btn" onclick="backToGamesList()">🏠</div>
+                <div class="bh-spin-outer" onclick="triggerSupremeSpin()">
+                    <div class="bh-spin-inner" style="background: radial-gradient(circle, #fff 0%, #aed6f1 60%, #3498db 100%);">SPIN<br><span style="font-size:7px;color:#0b317a;">SUPREME</span></div>
+                </div>
+                <div class="bh-side-btn">ℹ️</div>
+            </div>
+        </div>
+    </div>
+
     <div id="slot3DContainer" class="game-container">
         <div id="scWinPopup" class="premium-win-popup">
             <div id="scWinTitle" class="premium-win-title">WIN!</div>
@@ -567,12 +661,15 @@
     let isGameRunning = false;
 
     var burningIcons = ['🍒', '🍋', '🍊', '🍇', '🍉', '🔔', '7️⃣', '⭐', '🍀'];
+    var supremeIcons = ['🍎', '🍇', '🍊', '🍋', '🍒', '🍉', '🔔', '7️⃣', '⭐', '💎'];
     var cairoIcons = ['👨‍🦱', '👸', '👁️', '🪲', 'K', 'Q', 'J'];
 
     var burningStake5 = 0.15; 
+    var supremeStake = 0.20;
     var cairoStake = 1.00; 
     var isSpinningNow = false;
     var isSpinning5 = false;
+    var isSupremeSpinning = false;
     var isCairoSpinning = false;
 
     // მუდმივი ჯეკპოტები localStorage-ში
@@ -580,6 +677,9 @@
     let jackHearts = parseFloat(localStorage.getItem('jack_hearts')) || 0.00;
     let jackDiamonds = parseFloat(localStorage.getItem('jack_diamonds')) || 0.00;
     let jackClubs = parseFloat(localStorage.getItem('jack_clubs')) || 0.00;
+
+    let shJackSpades = parseFloat(localStorage.getItem('sh_jack_spades')) || 2500.00;
+    let shJackHearts = parseFloat(localStorage.getItem('sh_jack_hearts')) || 500.00;
 
     let scJackSpades = parseFloat(localStorage.getItem('sc_jack_spades')) || 1000.00;
     let scJackHearts = parseFloat(localStorage.getItem('sc_jack_hearts')) || 0.00;
@@ -592,6 +692,9 @@
         if(document.getElementById('jack_diamonds')) document.getElementById('jack_diamonds').innerText = jackDiamonds.toFixed(2);
         if(document.getElementById('jack_clubs')) document.getElementById('jack_clubs').innerText = jackClubs.toFixed(2);
 
+        if(document.getElementById('sh_jack_spades')) document.getElementById('sh_jack_spades').innerText = shJackSpades.toFixed(2);
+        if(document.getElementById('sh_jack_hearts')) document.getElementById('sh_jack_hearts').innerText = shJackHearts.toFixed(2);
+
         if(document.getElementById('sc_jack_spades')) document.getElementById('sc_jack_spades').innerText = scJackSpades.toFixed(2);
         if(document.getElementById('sc_jack_hearts')) document.getElementById('sc_jack_hearts').innerText = scJackHearts.toFixed(2);
         if(document.getElementById('sc_jack_diamonds')) document.getElementById('sc_jack_diamonds').innerText = scJackDiamonds.toFixed(2);
@@ -600,12 +703,16 @@
 
     setInterval(() => {
         jackSpades += 0.05; jackHearts += 0.03; jackDiamonds += 0.02; jackClubs += 0.01;
+        shJackSpades += 0.08; shJackHearts += 0.04;
         scJackSpades += 0.06; scJackHearts += 0.04; scJackDiamonds += 0.02; scJackClubs += 0.01;
 
         localStorage.setItem('jack_spades', jackSpades);
         localStorage.setItem('jack_hearts', jackHearts);
         localStorage.setItem('jack_diamonds', jackDiamonds);
         localStorage.setItem('jack_clubs', jackClubs);
+        
+        localStorage.setItem('sh_jack_spades', shJackSpades);
+        localStorage.setItem('sh_jack_hearts', shJackHearts);
 
         localStorage.setItem('sc_jack_spades', scJackSpades);
         localStorage.setItem('sc_jack_hearts', scJackHearts);
@@ -676,11 +783,13 @@
     function backToGamesList() {
         document.getElementById('wheelGameContainer').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'none';
+        document.getElementById('supremeSlotContainer').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'none';
         document.getElementById('lottoGameContainer').style.display = 'none';
         document.getElementById('gamesList').style.display = 'grid';
         
         if(document.getElementById('bhWinPopup')) document.getElementById('bhWinPopup').classList.remove('show');
+        if(document.getElementById('shWinPopup')) document.getElementById('shWinPopup').classList.remove('show');
         if(document.getElementById('scWinPopup')) document.getElementById('scWinPopup').classList.remove('show');
     }
 
@@ -688,6 +797,13 @@
         if (isSpinning5) return;
         burningStake5 = parseFloat(amount);
         document.querySelectorAll('.bh-bet-grid .bh-bet-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    
+    function updateSupremeBet(amount, btn) {
+        if (isSupremeSpinning) return;
+        supremeStake = parseFloat(amount);
+        document.querySelectorAll('#supremeSlotContainer .bh-bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     }
 
@@ -701,6 +817,7 @@
     function updateAllGameBalances() {
         const val = (typeof myAkho !== 'undefined') ? myAkho : 0;
         if(document.getElementById('slotBalanceVal')) document.getElementById('slotBalanceVal').innerText = val.toFixed(2);
+        if(document.getElementById('shBalanceVal')) document.getElementById('shBalanceVal').innerText = val.toFixed(2);
         if(document.getElementById('scBalanceVal')) document.getElementById('scBalanceVal').innerText = val.toFixed(2);
     }
 
@@ -883,19 +1000,17 @@
         }
 
         setTimeout(async () => {
-            // 🚀 --- ახალი დაზუსტებული 🍀 ფოთლების გახეთქვისა და გაფართოების წესები ---
             let hasWildReel1 = finalMatrix[0].includes('🍀');
             let hasWildReel3 = finalMatrix[2].includes('🍀');
             let hasWildReel4 = finalMatrix[3].includes('🍀');
 
             let customBonusWin = 0;
             let isJackpot = false;
-            let cellsToExpand = []; // მასივი ფოთლების მიმდევრობითი დახეთქვისთვის
+            let cellsToExpand = [];
 
-            // ა) თუ პირველ, მესამე და მეოთხე რელსზე ერთდროულად დაჯდა -> სრული ეკრანი ფოთლებია (500-მაგი მოგება!)
             if (hasWildReel1 && hasWildReel3 && hasWildReel4) {
                 isJackpot = true;
-                customBonusWin = burningStake5 * 500; // ფსონი მრავლდება 500-ზე
+                customBonusWin = burningStake5 * 500; 
                 for (let r = 0; r < 5; r++) {
                     finalMatrix[r] = ['🍀', '🍀', '🍀'];
                     for (let k = 0; k < 3; k++) {
@@ -903,9 +1018,8 @@
                     }
                 }
             } 
-            // ბ) თუ პირველ და მესამე რელსზე დაჯდა ფოთოლი -> ივსება 1, 2 და 3 რელსები მთლიანად (200-მაგი მოგება!)
             else if (hasWildReel1 && hasWildReel3) {
-                customBonusWin = burningStake5 * 200; // ფსონი მრავლდება 200-ზე
+                customBonusWin = burningStake5 * 200; 
                 for (let r = 0; r < 3; r++) {
                     finalMatrix[r] = ['🍀', '🍀', '🍀'];
                     for (let k = 0; k < 3; k++) {
@@ -914,13 +1028,12 @@
                 }
             }
 
-            // 💥 ლამაზი მიმდევრობითი კაშკაშა ციმციმით დახეთქვის ეფექტის გაშვება
             if (cellsToExpand.length > 0) {
                 for (let item of cellsToExpand) {
                     let cellElement = document.getElementById('reel5_' + item.reel).children[item.cellIndex];
                     cellElement.innerText = '🍀';
                     cellElement.classList.add('wild-expanded');
-                    await new Promise(resolve => setTimeout(resolve, 120)); // ლამაზი და სწრაფი მიმდევრობითი დაყოვნება
+                    await new Promise(resolve => setTimeout(resolve, 120)); 
                 }
             }
 
@@ -942,7 +1055,6 @@
                 }
             }
 
-            // ხაზების სტანდარტული დათვლა
             if (baseIcon === '7️⃣') {
                 if (matches === 5) totalWin = 180.00 * betMultiplier;
                 else if (matches === 4) totalWin = 12.00 * betMultiplier;
@@ -973,7 +1085,6 @@
                 totalWin += 6.00 * betMultiplier;
             }
 
-            // 💰 ახალი გამრავლებული მოგების დარიცხვა
             if (customBonusWin > 0) {
                 totalWin += customBonusWin;
             }
@@ -991,7 +1102,97 @@
         }, 3200);
     }
 
-    // --- 🇪🇬 4. SECRETS OF CAIRO (🔥 რეალური მათემატიკური კომბინაციები) ---
+    // --- 🎰 4. NEW SUPREME HOT 5-REEL LOGIC ---
+    function openSupremeSlot() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('supremeSlotContainer').style.display = 'flex';
+        updateAllGameBalances(); updateJackpotsOnScreen();
+    }
+
+    function triggerSupremeSpin() {
+        if (isSupremeSpinning) return;
+        if (!canAfford(supremeStake)) { alert("ბალანსი არ გყოფნის!"); return; }
+
+        isSupremeSpinning = true;
+        spendAkho(supremeStake, 'Supreme Slots Bet');
+        document.getElementById('shBalanceVal').innerText = (myAkho).toFixed(2);
+        document.getElementById('shInfoText').innerText = "სუპერ ტრიალი დაწყებულია...";
+
+        try { slotLoseSnd.pause(); winSnd.pause(); jackpotSnd.pause(); Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
+
+        let finalMatrix = [];
+
+        for (let i = 1; i <= 5; i++) {
+            const r = document.getElementById('shReel_' + i); r.innerHTML = '';
+            for (let j = 0; j < 35; j++) {
+                const cell = document.createElement('div'); cell.className = 'bh-cell';
+                cell.innerText = supremeIcons[Math.floor(Math.random() * supremeIcons.length)]; r.appendChild(cell);
+            }
+
+            let r1 = supremeIcons[Math.floor(Math.random() * supremeIcons.length)];
+            let r2 = supremeIcons[Math.floor(Math.random() * supremeIcons.length)];
+            let r3 = supremeIcons[Math.floor(Math.random() * supremeIcons.length)];
+            
+            r.children[0].innerText = r1; r.children[1].innerText = r2; r.children[2].innerText = r3;
+            finalMatrix.push([r1, r2, r3]);
+
+            r.style.transition = 'none'; r.style.transform = 'translateY(-1620px)'; 
+            setTimeout(() => { r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.1, 0.8, 0.3, 1)`; r.style.transform = 'translateY(0px)'; }, 50);
+        }
+
+        setTimeout(() => {
+            isSupremeSpinning = false;
+            
+            let betMultiplier = supremeStake / 0.20; 
+            let totalWin = 0;
+            let middleLine = [finalMatrix[0][1], finalMatrix[1][1], finalMatrix[2][1], finalMatrix[3][1], finalMatrix[4][1]];
+
+            let baseIcon = middleLine[0];
+            let matches = 1;
+            for (let i = 1; i < 5; i++) {
+                if (middleLine[i] === baseIcon) {
+                    matches++;
+                } else {
+                    break;
+                }
+            }
+
+            // მათემატიკური კომბინაციები Supreme Hot-ისთვის
+            if (baseIcon === '💎') {
+                if (matches === 5) totalWin = 250.00 * betMultiplier;
+                else if (matches === 4) totalWin = 25.00 * betMultiplier;
+                else if (matches === 3) totalWin = 5.00 * betMultiplier;
+            }
+            else if (baseIcon === '7️⃣') {
+                if (matches === 5) totalWin = 150.00 * betMultiplier;
+                else if (matches === 4) totalWin = 15.00 * betMultiplier;
+                else if (matches === 3) totalWin = 3.00 * betMultiplier;
+            }
+            else if (baseIcon === '⭐' || baseIcon === '🔔') {
+                if (matches === 5) totalWin = 40.00 * betMultiplier;
+                else if (matches === 4) totalWin = 8.00 * betMultiplier;
+                else if (matches === 3) totalWin = 2.00 * betMultiplier;
+            }
+            else if (['🍎', '🍇', '🍉', '🍊', '🍋', '🍒'].includes(baseIcon)) {
+                if (matches === 5) totalWin = 10.00 * betMultiplier;
+                else if (matches === 4) totalWin = 2.00 * betMultiplier;
+                else if (matches === 3) totalWin = 0.50 * betMultiplier;
+            }
+
+            if (totalWin > 0) {
+                try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
+                earnAkho(auth.currentUser.uid, totalWin, 'Supreme Slots Win');
+                document.getElementById('shInfoText').innerText = `🎉 მოგება: +${totalWin.toFixed(2)} AKHO!`;
+                animateWinDisplay('shWinAmt', 'shWinTitle', totalWin);
+            } else {
+                try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
+                document.getElementById('shInfoText').innerText = "სცადეთ კიდევ ერთხელ";
+            }
+            updateAllGameBalances();
+        }, 3200);
+    }
+
+    // --- 🇪🇬 5. SECRETS OF CAIRO (🔥 რეალური მათემატიკური კომბინაციები) ---
     function open3DSlot() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'flex';
@@ -1085,7 +1286,7 @@
         }, 3200);
     }
 
-    // --- 5. KING OF AKHO LOGIC ---
+    // --- 6. KING OF AKHO LOGIC ---
     let kingIcons = ['👑', '🦁', '💎', '💰', '🍇', '🍉', '🔔', '7️⃣'];
     let kingStake = 10; let currentMultiplier = 1; let isKingSpinning = false;
     function openKingOfAkho() { document.getElementById('gamesList').style.display = 'none'; document.getElementById('kingOfAkhoContainer').style.display = 'flex'; initializeKingGrid(); }
