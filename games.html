@@ -44,7 +44,7 @@
             box-sizing: border-box;
         }
         
-        /* 🎰 კლასიკური სლოტების CSS ტრიალის ილუზიისთვის */
+        /* 🎰 კლასიკური სლოტების CSS */
         .slot-window {
             background: linear-gradient(145deg, #222, #000); 
             padding: 20px; 
@@ -60,7 +60,7 @@
             padding: 15px; 
             border-radius: 10px;
             overflow: hidden; 
-            height: 70px; /* ფიქსირებული სიმაღლე ერთი ხილისთვის */
+            height: 70px; 
         }
         .reel { 
             width: 70px; 
@@ -118,7 +118,7 @@
 
     <div style="margin:15px; padding:15px; background:linear-gradient(90deg, #2c3e50, #000); border-radius:15px; border:1px solid var(--gold); display:flex; justify-content:space-between; align-items:center;">
         <span style="color:white;">შენი ბალანსი:</span>
-        <span id="gameBalance" style="color:var(--gold); font-weight:bold; font-size:18px;">0.00 AKHO</span>
+        <span id="gameBalance" style="color:var(--gold); font-weight:bold; font-size:18px;">დაკავშირება...</span>
     </div>
 
     <div id="gamesList" style="padding:15px; display:grid; grid-template-columns:1fr 1fr; gap:15px;">
@@ -239,11 +239,29 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // --- ძირითადი ცვლადები და ხმები ---
+    // 🚀 შენი ორიგინალი პროექტის EMIGRANTBOOK-ის Firebase კონფიგურაცია
+    const firebaseConfig = {
+        apiKey: "AIzaSyDE_J0v8iM4qA-qBwWpB7-f6h8J10",
+        authDomain: "emigrantbook-6cf1b.firebaseapp.com",
+        databaseURL: "https://emigrantbook-6cf1b-default-rtdb.firebaseio.com",
+        projectId: "emigrantbook-6cf1b",
+        storageBucket: "emigrantbook-6cf1b.appspot.com",
+        messagingSenderId: "563038472910",
+        appId: "1:563038472910:web:8d0cf1f5b08dfbd604ab12"
+    };
+    
+    // ინიციალიზაცია
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
+    // შენი ორიგინალი ბაზის ცვლადი
+    var db = firebase.database();
+
     let myAkho = 0; 
     let isGameRunning = false;
 
-    // 🍓 კლასიკური ხილის, ბლების და მარწყვების უმაღლესი ხარისხის HD სურათები
+    // 🍓 კლასიკური ხილის, ბლების და მარწყვების უმაღლესი ხარისხის HD სურათების ბაზა
     const fruitHDFiles = {
         '7️⃣': 'https://i.postimg.cc/9F4f7Z8M/hd-seven.png',
         '🍉': 'https://i.postimg.cc/mD47gP33/watermelon.png',
@@ -275,10 +293,8 @@
     const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
     bgMusic.loop = true; bgMusic.volume = 0.3;
 
-    // ფულის შემოწმების ფუნქცია
     function canAfford(amount) { return myAkho >= amount; }
 
-    // 🔥 შეცვლილია db.ref ლოგიკაზე, რათა მომენტალურად განაახლოს კონკრეტული იუზერის უნიკალური ველი
     function spendAkho(amount, reason) {
         const user = firebase.auth().currentUser;
         if(user) {
@@ -292,48 +308,27 @@
         db.ref(`users/${uid}/akho`).set(myAkho);
     }
 
-    // 🔥 რეალური დროის ინდივიდუალური მოსმენა (users/uid/akho)
-    function openGamesPage() {
-        document.getElementById('gamesPage').style.display = 'flex';
-        const user = firebase.auth().currentUser;
-        if(user) {
+    // 🔥 ინდივიდუალური ბალანსის სინქრონიზაცია ავტორიზებულ იუზერზე
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
             db.ref(`users/${user.uid}/akho`).on('value', snap => {
                 myAkho = parseFloat(snap.val() || 0);
                 document.getElementById('gameBalance').innerText = myAkho.toFixed(2) + " AKHO";
-                updateAllGameBalances();
             });
+        } else {
+            document.getElementById('gameBalance').innerText = "0.00 AKHO";
         }
+    });
+
+    // ნავიგაცია
+    function openGamesPage() {
+        document.getElementById('gamesPage').style.display = 'flex';
         bgMusic.play().catch(() => {});
     }
 
     function closeGamesPage() {
         document.getElementById('gamesPage').style.display = 'none';
         bgMusic.pause(); bgMusic.currentTime = 0;
-    }
-
-    function updateGameBalance() {
-        const user = firebase.auth().currentUser;
-        if (user) {
-            db.ref(`users/${user.uid}/akho`).on('value', snap => {
-                myAkho = parseFloat(snap.val() || 0);
-                document.getElementById('gameBalance').innerText = myAkho.toFixed(2) + " AKHO";
-                updateAllGameBalances();
-            });
-        }
-    }
-
-    function updateAllGameBalances() {
-        const akhoStr = myAkho.toFixed(2);
-        const bTargets = ['slotBalanceVal', 'gameBalance'];
-        bTargets.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = (id === 'gameBalance') ? akhoStr + " AKHO" : akhoStr;
-        });
-    }
-
-    function updateWinUI(winAmt) {
-        const el = document.getElementById('slotWinVal');
-        if(el) el.innerText = winAmt.toFixed(2);
     }
 
     function backToGamesList() {
@@ -457,7 +452,7 @@
             if(prize > 0) {
                 winSnd.currentTime = 0; winSnd.play().catch(()=>{});
                 earnAkho(firebase.auth().currentUser.uid, prize, `Lotto Win`);
-                alert(`🎉 გილოცავ! შენ დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
+                alert(`🎉 დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
             } else {
                 alert(`ამჯერად მხოლოდ ${matches} ციფრი დაემთხვა. სცადე კიდევ ერთხელ!`);
             }
@@ -609,6 +604,7 @@
         document.getElementById('gamesList').style.display = 'grid';
     }
 
+    // HD ბადის აშენება
     function initializeKingGrid() {
         const grid = document.getElementById('kingGrid');
         grid.innerHTML = ''; currentMultiplier = 1; updateKingUI();
