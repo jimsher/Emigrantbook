@@ -146,16 +146,18 @@
             transition: all 0.3s ease;
         }
         
-        /* 🍀 ანიმაცია გაფართოებული ფოთლებისთვის */
+        /* 🍀 ეფექტი გახეთქილი და გაფართოებული ფოთლებისთვის */
         .bh-cell.wild-expanded {
-            animation: wildExplode 0.4s ease-in-out double alternate;
-            text-shadow: 0 0 15px #62c431, 0 0 30px #297a09;
-            transform: scale(1.1);
+            animation: wildExplode 0.4s ease-in-out;
+            text-shadow: 0 0 15px #62c431, 0 0 30px #297a09, 0 0 45px #fff;
+            transform: scale(1.05);
+            background: rgba(98, 196, 49, 0.15);
         }
         
         @keyframes wildExplode {
-            0% { transform: scale(0.5); opacity: 0.5; }
-            100% { transform: scale(1.1); opacity: 1; }
+            0% { transform: scale(0.3); opacity: 0.3; filter: brightness(2); }
+            50% { transform: scale(1.1); filter: brightness(1.5); }
+            100% { transform: scale(1.05); opacity: 1; }
         }
 
         .bh-status-bar {
@@ -833,7 +835,7 @@
         updateGameBalance();
     }
 
-    // --- 🎰 3. GOLD SLOTS 777 (🔥 BURNING HOT ზუსტი მათემატიკური კომბინაციებით და Wild გაფართოებით) ---
+    // --- 🎰 3. GOLD SLOTS 777 (🔥 BURNING HOT) ---
     function openSlotGame() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'flex';
@@ -872,36 +874,33 @@
         }
 
         setTimeout(() => {
-            // 🚀 --- ახალი 🍀 ფოთლების (WILD) გახეთქვისა და გაფართოების ეფექტები ---
+            // 🚀 --- ახალი დაზუსტებული 🍀 ფოთლების გახეთქვისა და გაფართოების წესები ---
+            let hasWildReel1 = finalMatrix[0].includes('🍀');
             let hasWildReel3 = finalMatrix[2].includes('🍀');
             let hasWildReel4 = finalMatrix[3].includes('🍀');
-            let hasWildReel2 = finalMatrix[1].includes('🍀');
 
-            // 1. თუ ფოთოლი მოვიდა მეორე და მეოთხე ზოლში -> ავსებს მე-3 და მე-4 ზოლებს სრულად
-            if (hasWildReel2 && hasWildReel4) {
-                finalMatrix[2] = ['🍀', '🍀', '🍀'];
-                finalMatrix[3] = ['🍀', '🍀', '🍀'];
-                for(let k=0; k<3; k++) {
-                    document.getElementById('reel5_3').children[k].innerText = '🍀';
-                    document.getElementById('reel5_3').children[k].classList.add('wild-expanded');
-                    document.getElementById('reel5_4').children[k].innerText = '🍀';
-                    document.getElementById('reel5_4').children[k].classList.add('wild-expanded');
-                }
-            } 
-            // 2. ჩვეულებრივი გაფართოება: თუ ფოთოლი დაჯდა მე-3 ან მე-4 ზოლზე, ავსებს მთელ ვერტიკალს
-            else {
-                if (hasWildReel3) {
-                    finalMatrix[2] = ['🍀', '🍀', '🍀'];
-                    for(let k=0; k<3; k++) {
-                        document.getElementById('reel5_3').children[k].innerText = '🍀';
-                        document.getElementById('reel5_3').children[k].classList.add('wild-expanded');
+            let jackpotTriggered = false;
+
+            // ა) თუ პირველ, მესამე და მეოთხე რელსზე ერთდროულად დაჯდა -> სრული ეკრანი ფოთლებია (JACKPOT)
+            if (hasWildReel1 && hasWildReel3 && hasWildReel4) {
+                jackpotTriggered = true;
+                for (let r = 0; r < 5; r++) {
+                    finalMatrix[r] = ['🍀', '🍀', '🍀'];
+                    for (let k = 0; k < 3; k++) {
+                        let cell = document.getElementById('reel5_' + (r + 1)).children[k];
+                        cell.innerText = '🍀';
+                        cell.classList.add('wild-expanded');
                     }
                 }
-                if (hasWildReel4) {
-                    finalMatrix[3] = ['🍀', '🍀', '🍀'];
-                    for(let k=0; k<3; k++) {
-                        document.getElementById('reel5_4').children[k].innerText = '🍀';
-                        document.getElementById('reel5_4').children[k].classList.add('wild-expanded');
+            } 
+            // ბ) თუ პირველ და მესამე რელსზე დაჯდა ფოთოლი -> ივსება 1, 2 და 3 რელსები მთლიანად
+            else if (hasWildReel1 && hasWildReel3) {
+                for (let r = 0; r < 3; r++) {
+                    finalMatrix[r] = ['🍀', '🍀', '🍀'];
+                    for (let k = 0; k < 3; k++) {
+                        let cell = document.getElementById('reel5_' + (r + 1)).children[k];
+                        cell.innerText = '🍀';
+                        cell.classList.add('wild-expanded');
                     }
                 }
             }
@@ -954,15 +953,9 @@
                 totalWin += 6.00 * betMultiplier;
             }
 
-            // 💰 სრული ეკრანის შემოწმება ჯეკპოტისთვის (თუ ყველა უჯრა ფოთოლია)
-            let isFullCloverScreen = true;
-            for(let r=0; r<5; r++) {
-                for(let c=0; c<3; c++) {
-                    if(finalMatrix[r][c] !== '🍀') isFullCloverScreen = false;
-                }
-            }
-            if(isFullCloverScreen) {
-                totalWin += (burningStake5 * 5); // ფსონი მრავლდება 5-ზე და ემატება
+            // 💰 ჯეკპოტის ბონუსის დარიცხვა: მიმდინარე ფსონი მრავლდება 5-ზე
+            if (jackpotTriggered) {
+                totalWin += (burningStake5 * 5);
             }
 
             if (totalWin > 0) {
