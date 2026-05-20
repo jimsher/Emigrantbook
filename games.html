@@ -162,7 +162,7 @@
     <div id="wheelGameContainer" class="game-container">
         <div style="position:relative; width:280px; height:280px;">
             <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); z-index:10; color:#ff4d4d; font-size:35px;">▼</div>
-            <canvas id="wheelCanvas" width="280" height="280" style="border-radius:50%; border: 8px solid #1a1a1a("></canvas>
+            <canvas id="wheelCanvas" width="280" height="280" style="border-radius:50%; border: 8px solid #1a1a1a;"></canvas>
         </div>
         <button id="spinBtn" onclick="spinWheel()" style="background:linear-gradient(180deg, #d4af37, #b8860b); color:black; border:none; padding:15px 40px; border-radius:30px; font-weight:900; cursor:pointer;">დატრიალება (1.00 AKHO)</button>
         <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
@@ -245,29 +245,28 @@
 
     // 🍓 კლასიკური ხილის, ბლების და მარწყვების უმაღლესი ხარისხის HD სურათები
     const fruitHDFiles = {
-        '7️⃣': 'https://i.postimg.cc/9F4f7Z8M/hd-seven.png',       // წითელი კლასიკური შვიდიანი
-        '🍉': 'https://i.postimg.cc/mD47gP33/watermelon.png',   // HD საზამთრო
-        '🍇': 'https://i.postimg.cc/6p6mYgXz/grapes.png',       // HD ყურძენი
-        '🔔': 'https://i.postimg.cc/dV3S0Y7x/hd-bell.png',       // ოქროს ზარი
-        '🍒': 'https://i.postimg.cc/g2Xg2vXz/cherry.png',       // HD ბალი / ალუბალი
-        '🍋': 'https://i.postimg.cc/Y9XgYvXz/lemon.png',        // HD ლიმონი
-        '⭐': 'https://i.postimg.cc/NfXgXvXz/hd-star.png',       // ოქროს იღბლიანი ვარსკვლავი
-        '🍓': 'https://i.postimg.cc/0yXgYvXz/strawberry.png',   // HD მარწყვი
-        '🍊': 'https://i.postimg.cc/NjXgXvXz/orange.png',       // HD ფორთოხალი
-        '💲': 'https://i.postimg.cc/P5Xg5vXz/dollar.png',       // დოლარის ნიშანი
-        '👑': 'https://i.postimg.cc/Hng3vXz2/crown.gif',        // სამეფო გვირგვინი
-        '💎': 'https://i.postimg.cc/Xq6g6vXz/diamond.gif',      // ბრილიანტი
-        '💰': 'https://i.postimg.cc/Z5Xg5vXz/moneybag.png',     // ფულის ტომარა
-        '⚡': 'https://i.postimg.cc/V5Xg5vXz/lightning.png',    // ელვა
-        '🦁': 'https://i.postimg.cc/L5Xg5vXz/lion.png'         // ლომი
+        '7️⃣': 'https://i.postimg.cc/9F4f7Z8M/hd-seven.png',
+        '🍉': 'https://i.postimg.cc/mD47gP33/watermelon.png',
+        '🍇': 'https://i.postimg.cc/6p6mYgXz/grapes.png',
+        '🔔': 'https://i.postimg.cc/dV3S0Y7x/hd-bell.png',
+        '🍒': 'https://i.postimg.cc/g2Xg2vXz/cherry.png',
+        '🍋': 'https://i.postimg.cc/Y9XgYvXz/lemon.png',
+        '⭐': 'https://i.postimg.cc/NfXgXvXz/hd-star.png',
+        '🍓': 'https://i.postimg.cc/0yXgYvXz/strawberry.png',
+        '🍊': 'https://i.postimg.cc/NjXgXvXz/orange.png',
+        '💲': 'https://i.postimg.cc/P5Xg5vXz/dollar.png',
+        '👑': 'https://i.postimg.cc/Hng3vXz2/crown.gif',
+        '💎': 'https://i.postimg.cc/Xq6g6vXz/diamond.gif',
+        '💰': 'https://i.postimg.cc/Z5Xg5vXz/moneybag.png',
+        '⚡': 'https://i.postimg.cc/V5Xg5vXz/lightning.png',
+        '🦁': 'https://i.postimg.cc/L5Xg5vXz/lion.png'
     };
 
     var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
     var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
     const kingIcons = ['👑', '🦁', '💎', '💰', '🍇', '🍉', '🔔', '7️⃣'];
 
-    var burningStake = 0.15;  
-    var burningStake5 = 0.20; 
+    var burningStake = 0.20;  
     let kingStake = 10.00; 
     let currentMultiplier = 1;
 
@@ -276,36 +275,35 @@
     const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
     bgMusic.loop = true; bgMusic.volume = 0.3;
 
-    // ფულის შემოწმების ფუნქცია (მიბმული შენს რეალურ ცვლადზე)
+    // ფულის შემოწმების ფუნქცია
     function canAfford(amount) { return myAkho >= amount; }
 
+    // 🔥 შეცვლილია db.ref ლოგიკაზე, რათა მომენტალურად განაახლოს კონკრეტული იუზერის უნიკალური ველი
     function spendAkho(amount, reason) {
         const user = firebase.auth().currentUser;
         if(user) {
-            myAkho -= amount;
-            firebase.database().ref(`users/${user.uid}/akho`).set(myAkho);
+            myAkho = parseFloat((myAkho - amount).toFixed(2));
+            db.ref(`users/${user.uid}/akho`).set(myAkho);
         }
     }
 
     function earnAkho(uid, amount, reason) {
-        myAkho += amount;
-        firebase.database().ref(`users/${uid}/akho`).set(myAkho);
+        myAkho = parseFloat((myAkho + amount).toFixed(2));
+        db.ref(`users/${uid}/akho`).set(myAkho);
     }
 
-    // 🔥 რეალური დროის კავშირი FIREBASE-თან (ბალანსის ავტომატური სინქრონიზაცია)
+    // 🔥 რეალური დროის ინდივიდუალური მოსმენა (users/uid/akho)
     function openGamesPage() {
         document.getElementById('gamesPage').style.display = 'flex';
         const user = firebase.auth().currentUser;
         if(user) {
-            firebase.database().ref(`users/${user.uid}/akho`).on('value', snap => {
-                myAkho = snap.val() || 0;
+            db.ref(`users/${user.uid}/akho`).on('value', snap => {
+                myAkho = parseFloat(snap.val() || 0);
                 document.getElementById('gameBalance').innerText = myAkho.toFixed(2) + " AKHO";
                 updateAllGameBalances();
             });
         }
-        bgMusic.play().catch(() => {
-            window.addEventListener('click', () => { bgMusic.play(); }, { once: true });
-        });
+        bgMusic.play().catch(() => {});
     }
 
     function closeGamesPage() {
@@ -316,10 +314,9 @@
     function updateGameBalance() {
         const user = firebase.auth().currentUser;
         if (user) {
-            firebase.database().ref(`users/${user.uid}/akho`).on('value', snap => {
-                myAkho = snap.val() || 0;
-                const balElem = document.getElementById('gameBalance');
-                if(balElem) balElem.innerText = myAkho.toFixed(2) + " AKHO";
+            db.ref(`users/${user.uid}/akho`).on('value', snap => {
+                myAkho = parseFloat(snap.val() || 0);
+                document.getElementById('gameBalance').innerText = myAkho.toFixed(2) + " AKHO";
                 updateAllGameBalances();
             });
         }
@@ -327,7 +324,7 @@
 
     function updateAllGameBalances() {
         const akhoStr = myAkho.toFixed(2);
-        const bTargets = ['slot5BalanceVal', 'slot5BalanceVal_inner', 'slotBalanceVal', 'gameBalance'];
+        const bTargets = ['slotBalanceVal', 'gameBalance'];
         bTargets.forEach(id => {
             const el = document.getElementById(id);
             if(el) el.innerText = (id === 'gameBalance') ? akhoStr + " AKHO" : akhoStr;
@@ -335,12 +332,8 @@
     }
 
     function updateWinUI(winAmt) {
-        const akhoStr = winAmt.toFixed(2);
-        const wTargets = ['slot5WinVal', 'slot5WinVal_inner', 'slotWinVal'];
-        wTargets.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.innerText = akhoStr;
-        });
+        const el = document.getElementById('slotWinVal');
+        if(el) el.innerText = winAmt.toFixed(2);
     }
 
     function backToGamesList() {
@@ -381,7 +374,7 @@
     }
 
     function spinWheel() {
-        if(isGameRunning || !canAfford(1.00)) { if(!canAfford(1.00)) alert("ბალანსი არ გყოფნის! (საჭიროა 1.00 AKHO)"); return; }
+        if(isGameRunning || !canAfford(1.00)) { if(!canAfford(1.00)) alert("ბალანსი არ გყოფნის!"); return; }
         isGameRunning = true; spendAkho(1.00, "Lucky Spin Bet");
         
         const canvas = document.getElementById('wheelCanvas');
@@ -435,7 +428,7 @@
 
     async function startLottoDraw() {
         if(selectedNumbers.length < 5) { alert("გთხოვთ აირჩიოთ 5 ციფრი!"); return; }
-        if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის (5.00 AKHO)"); return; }
+        if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის!"); return; }
 
         isGameRunning = true; spendAkho(5.00, "Lotto Bet");
         document.getElementById('playLottoBtn').disabled = true;
@@ -471,7 +464,7 @@
         }, 500);
     }
 
-    // --- 🎰 პრემიუმ HD სლოტების ტრიალის ძრავი (გრაფიკული რენდერით) ---
+    // --- 🎰 პრემიუმ HD სლოტების ტრიალის ძრავი ---
     function animateReel(reelId, finalSymbol, delay) {
         const r = document.getElementById(reelId);
         r.innerHTML = '';
@@ -479,7 +472,6 @@
         const size = reelId.includes('royal') ? 75 : 70;
         const imgSize = reelId.includes('royal') ? 50 : 55;
 
-        // აშენებს 40 ცალ რეალურ HD სურათს ზოლში ტრიალის ილუზიისთვის
         for (let j = 0; j < 40; j++) {
             const randKey = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             const s = document.createElement('div');
@@ -488,8 +480,6 @@
             r.appendChild(s);
         }
         r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-        
-        // ზუსტად 30-ე ელემენტს ვსვამთ ფინალურ HD სურათს, რაც ბაზამ დააგეგმა
         r.children[30].innerHTML = `<img src="${fruitHDFiles[finalSymbol]}" style="width:${imgSize}px; height:${imgSize}px; object-fit:contain;">`;
         
         setTimeout(() => {
@@ -506,7 +496,7 @@
     }
 
     function triggerBurningSpin() {
-        if (isGameRunning || !canAfford(burningStake)) { if(!canAfford(burningStake)) alert("ბალანსი არ გყოფნის! (საჭიროა 0.20 AKHO)"); return; }
+        if (isGameRunning || !canAfford(burningStake)) { if(!canAfford(burningStake)) alert("ბალანსი არ გყოფნის!"); return; }
         isGameRunning = true; spendAkho(burningStake, 'Burning Slots Bet');
         document.getElementById('slotWinVal').innerText = "0.00";
         ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
@@ -542,7 +532,7 @@
     }
 
     function startGoldSpin() {
-        if (isGameRunning || !canAfford(2.00)) { if(!canAfford(2.00)) alert("ბალანსი არ გყოფნის! (საჭიროა 2.00 AKHO)"); return; }
+        if (isGameRunning || !canAfford(2.00)) { if(!canAfford(2.00)) alert("ბალანსი არ გყოფნის!"); return; }
         isGameRunning = true; spendAkho(2.00, 'Gold Slots Bet');
         document.getElementById('goldWinVal').innerText = "0.00";
         ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
@@ -578,7 +568,7 @@
     }
 
     function startRoyalSpin() {
-        if (isGameRunning || !canAfford(5.00)) { if(!canAfford(5.00)) alert("ბალანსი არ გყოფნის! (საჭიროა 5.00 AKHO)"); return; }
+        if (isGameRunning || !canAfford(5.00)) { if(!canAfford(5.00)) alert("ბალანსი არ გყოფნის!"); return; }
         isGameRunning = true; spendAkho(5.00, 'Royal Slots Bet');
         document.getElementById('royalWinVal').innerText = "0.00";
         ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
@@ -606,7 +596,7 @@
         }, 2500);
     }
 
-    // --- 6. KING OF AKHO (ბადის HD ხილის რენდერი) ---
+    // --- 6. KING OF AKHO ---
     function openKingOfAkho() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('kingOfAkhoContainer').style.display = 'flex';
@@ -634,7 +624,7 @@
     function updateKingUI() { document.getElementById('kingMultiplier').innerText = `Multiplier: x${currentMultiplier}`; }
 
     async function startKingSpin() {
-        if (isGameRunning || !canAfford(kingStake)) { if(!canAfford(kingStake)) alert("ბალანსი არ გყოფნის! (საჭიროა 10.00 AKHO)"); return; }
+        if (isGameRunning || !canAfford(kingStake)) { if(!canAfford(kingStake)) alert("ბალანსი არ გყოფნის!"); return; }
         isGameRunning = true; currentMultiplier = 1; updateKingUI();
         spendAkho(kingStake, 'King Of Akho');
         await dropNewSymbols();
