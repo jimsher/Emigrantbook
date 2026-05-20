@@ -53,26 +53,6 @@
             display: flex;
             justify-content: center;
         }
-
-        /* 3D სლოტების ვიზუალი */
-        .reel-3d {
-            width: 75px;
-            height: 75px;
-            background: #050505;
-            border: 2px solid var(--gold);
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        .cell-3d {
-            height: 75px;
-            min-height: 75px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-        }
         
         /* ლოტოს ელემენტები */
         .num-btn { padding: 12px; border: 1px solid #444; background: #222; cursor: pointer; color: white; border-radius: 8px; font-size: 16px; }
@@ -239,6 +219,65 @@
             font-size: 16px;
             cursor: pointer;
         }
+
+        /* 🇪🇬 SECRETS OF CAIRO PREMIUM STYLE */
+        .sc-wrapper {
+            width: 100%;
+            max-width: 430px;
+            background: radial-gradient(circle at center, #7a4b11 0%, #2b1702 100%);
+            border-radius: 20px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 3px solid #d4af37;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            position: relative;
+        }
+        .sc-header-anubis {
+            text-align: center;
+            margin: -5px 0 5px 0;
+            font-size: 28px;
+        }
+        .sc-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 8px #d4af37, 0 0 15px #ffaa00;
+            letter-spacing: 1px;
+            margin: 0 0 12px 0;
+            font-family: 'Georgia', serif;
+        }
+        .sc-board {
+            background: rgba(20, 10, 2, 0.92);
+            border: 4px solid #5c3a0d;
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            overflow: hidden;
+            height: 180px;
+        }
+        .sc-buy-bonus {
+            position: absolute;
+            right: 12px;
+            bottom: 85px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(180deg, #b32c14, #5e1104);
+            border: 2px solid #ff7359;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 900;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -275,8 +314,8 @@
         
         <div class="game-card" onclick="open3DSlot()">
             <div style="height:80px; background:url('https://cdn-icons-png.flaticon.com/512/8201/8201944.png') center/contain no-repeat; margin-bottom:10px;"></div>
-            <div style="color:#ffd700; font-weight:bold;">ROYAL 3D SLOTS</div>
-            <div style="color:white; font-size:12px;">5.00 AKHO</div>
+            <div style="color:#ffd700; font-weight:bold;">Secrets of Cairo</div>
+            <div style="color:white; font-size:12px;">1.00 AKHO</div>
         </div>
 
         <div class="game-card" onclick="openKingOfAkho()">
@@ -364,17 +403,48 @@
     </div>
 
     <div id="slot3DContainer" class="game-container">
-        <h3 style="color:#ffd700; margin:0;">ROYAL 777 SLOTS</h3>
-        <div style="color:#888;">მოგება: <span id="royalWinVal" style="color:white; font-weight:bold;">0.00</span> AKHO</div>
-        <div style="background: linear-gradient(180deg, #444, #111, #444); padding:15px; border-radius:25px; border:5px solid #d4af37;">
-            <div style="display:flex; gap:15px; background:rgba(0,0,0,0.9); padding:20px; border-radius:15px;">
-                <div class="reel-3d" id="royalReel_1"><div class="cell-3d">🏆</div></div>
-                <div class="reel-3d" id="royalReel_2"><div class="cell-3d">🏆</div></div>
-                <div class="reel-3d" id="royalReel_3"><div class="cell-3d">🏆</div></div>
+        <div class="sc-wrapper">
+            <div class="bh-jackpot-grid">
+                <div class="bh-jackpot-box"><span>♠️</span><div class="bh-jack-val"><span id="sc_jack_spades">1000.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span style="color:#ff4d4d;">♥️</span><div class="bh-jack-val"><span id="sc_jack_hearts">0.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span style="color:#ff4d4d;">♦️</span><div class="bh-jack-val"><span id="sc_jack_diamonds">0.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span>♣️</span><div class="bh-jack-val"><span id="sc_jack_clubs">0.00</span><span class="bh-gel">AKHO</span></div></div>
+            </div>
+
+            <div class="sc-header-anubis">🦹‍♂️</div>
+            <div class="sc-title">SECRETS OF CAIRO</div>
+
+            <div class="sc-board">
+                <div id="scReel_1" class="bh-reel"><div class="bh-cell">👸</div><div class="bh-cell">👁️</div><div class="bh-cell">K</div></div>
+                <div id="scReel_2" class="bh-reel"><div class="bh-cell">👁️</div><div class="bh-cell">👨‍🦱</div><div class="bh-cell">Q</div></div>
+                <div id="scReel_3" class="bh-reel"><div class="bh-cell">K</div><div class="bh-cell">🪲</div><div class="bh-cell">👸</div></div>
+                <div id="scReel_4" class="bh-reel"><div class="bh-cell">Q</div><div class="bh-cell">👁️</div><div class="bh-cell">J</div></div>
+                <div id="scReel_5" class="bh-reel"><div class="bh-cell">J</div><div class="bh-cell">K</div><div class="bh-cell">👨‍🦱</div></div>
+            </div>
+
+            <div class="sc-buy-bonus"><span>BUY</span><span style="color:gold;font-weight:900;">BONUS</span></div>
+
+            <div class="bh-status-bar">
+                <div style="font-size:12px; color:#aaa; margin-bottom:4px;">ბალანსი: <span id="scBalanceVal" style="color:#ffd700; font-size:16px;">0.00</span> AKHO</div>
+                <div id="scInfoText" style="color:#ffea00; font-size:13px;">აირჩიეთ ეგვიპტური ფსონი</div>
+            </div>
+
+            <div class="bh-bet-grid">
+                <button class="bh-bet-btn active" onclick="updateScBet(1.00, this)"><div>1.00</div>ფსონი</button>
+                <button class="bh-bet-btn" onclick="updateScBet(2.00, this)"><div>2.00</div>ფსონი</button>
+                <button class="bh-bet-btn" onclick="updateScBet(3.00, this)"><div>3.00</div>ფსონი</button>
+                <button class="bh-bet-btn" onclick="updateScBet(4.00, this)"><div>4.00</div>ფსონი</button>
+                <button class="bh-bet-btn" onclick="updateScBet(5.00, this)"><div>5.00</div>ფსონი</button>
+            </div>
+
+            <div class="bh-controls">
+                <div class="bh-side-btn" onclick="backToGamesList()">🏠</div>
+                <div class="bh-spin-outer" onclick="triggerCairoSpin()">
+                    <div class="bh-spin-inner">დაატრიალე<br><span style="font-size:7px;color:#555;">TURBO</span></div>
+                </div>
+                <div class="bh-side-btn">ℹ️</div>
             </div>
         </div>
-        <button id="spin3DBtn" onclick="startRoyalSpin()" style="background:linear-gradient(180deg, #ffd700, #b8860b); color:black; border:none; padding:18px; border-radius:15px; width:100%; font-weight:bold; cursor:pointer;">SPIN (5.00 AKHO)</button>
-        <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
     </div>
 
     <div id="kingOfAkhoContainer" class="game-container">
@@ -410,35 +480,52 @@
     let isGameRunning = false;
 
     var burningIcons = ['🍒', '🍋', '🍊', '🍇', '🍉', '🔔', '7️⃣', '⭐', '🍀'];
+    var cairoIcons = ['👨‍🦱', '👸', '👁️', '🪲', 'K', 'Q', 'J']; // კაიროს იკონები
 
     var burningStake5 = 0.15; 
+    var cairoStake = 1.00; // კაიროს ფსონი
     var isSpinningNow = false;
     var isSpinning5 = false;
+    var isCairoSpinning = false;
 
-    // 🚀 ჯეკპოტების მუდმივი მეხსიერების ჩატვირთვა და ლოგიკა
+    // მუდმივი მეხსიერების ჩატვირთვა ჯეკპოტებისთვის
     let jackSpades = parseFloat(localStorage.getItem('jack_spades')) || 1000.00;
     let jackHearts = parseFloat(localStorage.getItem('jack_hearts')) || 0.00;
     let jackDiamonds = parseFloat(localStorage.getItem('jack_diamonds')) || 0.00;
     let jackClubs = parseFloat(localStorage.getItem('jack_clubs')) || 0.00;
+
+    let scJackSpades = parseFloat(localStorage.getItem('sc_jack_spades')) || 1000.00;
+    let scJackHearts = parseFloat(localStorage.getItem('sc_jack_hearts')) || 0.00;
+    let scJackDiamonds = parseFloat(localStorage.getItem('sc_jack_diamonds')) || 0.00;
+    let scJackClubs = parseFloat(localStorage.getItem('sc_jack_clubs')) || 0.00;
 
     function updateJackpotsOnScreen() {
         if(document.getElementById('jack_spades')) document.getElementById('jack_spades').innerText = jackSpades.toFixed(2);
         if(document.getElementById('jack_hearts')) document.getElementById('jack_hearts').innerText = jackHearts.toFixed(2);
         if(document.getElementById('jack_diamonds')) document.getElementById('jack_diamonds').innerText = jackDiamonds.toFixed(2);
         if(document.getElementById('jack_clubs')) document.getElementById('jack_clubs').innerText = jackClubs.toFixed(2);
+
+        if(document.getElementById('sc_jack_spades')) document.getElementById('sc_jack_spades').innerText = scJackSpades.toFixed(2);
+        if(document.getElementById('sc_jack_hearts')) document.getElementById('sc_jack_hearts').innerText = scJackHearts.toFixed(2);
+        if(document.getElementById('sc_jack_diamonds')) document.getElementById('sc_jack_diamonds').innerText = scJackDiamonds.toFixed(2);
+        if(document.getElementById('sc_jack_clubs')) document.getElementById('sc_jack_clubs').innerText = scJackClubs.toFixed(2);
     }
 
-    // უწყვეტი ათვლა რეალურ დროში (გათიშულზეც რომ გაგრძელდეს ბრაუზერის ბაზაზე)
     setInterval(() => {
-        jackSpades += 0.05;
-        jackHearts += 0.03;
-        jackDiamonds += 0.02;
-        jackClubs += 0.01;
+        // ბერნინგ ჰოტის მატება
+        jackSpades += 0.05; jackHearts += 0.03; jackDiamonds += 0.02; jackClubs += 0.01;
+        // კაიროს მატება
+        scJackSpades += 0.06; scJackHearts += 0.04; scJackDiamonds += 0.02; scJackClubs += 0.01;
 
         localStorage.setItem('jack_spades', jackSpades);
         localStorage.setItem('jack_hearts', jackHearts);
         localStorage.setItem('jack_diamonds', jackDiamonds);
         localStorage.setItem('jack_clubs', jackClubs);
+
+        localStorage.setItem('sc_jack_spades', scJackSpades);
+        localStorage.setItem('sc_jack_hearts', scJackHearts);
+        localStorage.setItem('sc_jack_diamonds', scJackDiamonds);
+        localStorage.setItem('sc_jack_clubs', scJackClubs);
 
         updateJackpotsOnScreen();
     }, 1000);
@@ -523,9 +610,17 @@
         btn.classList.add('active');
     }
 
+    function updateScBet(amount, btn) {
+        if (isCairoSpinning) return;
+        cairoStake = parseFloat(amount);
+        document.querySelectorAll('#slot3DContainer .bh-bet-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
     function updateAllGameBalances() {
         const val = (typeof myAkho !== 'undefined') ? myAkho : 0;
         if(document.getElementById('slotBalanceVal')) document.getElementById('slotBalanceVal').innerText = val.toFixed(2);
+        if(document.getElementById('scBalanceVal')) document.getElementById('scBalanceVal').innerText = val.toFixed(2);
     }
 
     // --- GAME AUDIO SYSTEM ---
@@ -635,7 +730,7 @@
         updateGameBalance();
     }
 
-    // --- 🎰 3. GOLD SLOTS 777 (🔥 REAL 5-REEL BURNING HOT LOGIC) ---
+    // --- 🎰 3. GOLD SLOTS 777 (BURNING HOT 5-REEL) ---
     function openSlotGame() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'flex';
@@ -652,27 +747,76 @@
         document.getElementById('slotBalanceVal').innerText = (myAkho).toFixed(2);
         document.getElementById('bhInfoText').innerText = "მიმდინარეობს ტრიალი...";
 
-        try {
-            slotLoseSnd.pause(); winSnd.pause(); jackpotSnd.pause();
-            Sloti_dartyma.currentTime = 0; Sloti_dartyma.play();
-        } catch(e){}
+        try { slotLoseSnd.pause(); winSnd.pause(); jackpotSnd.pause(); Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
 
         let finalMatrix = [];
 
         for (let i = 1; i <= 5; i++) {
-            const r = document.getElementById('reel5_' + i);
+            const r = document.getElementById('reel5_' + i); r.innerHTML = '';
+            for (let j = 0; j < 35; j++) {
+                const cell = document.createElement('div'); cell.className = 'bh-cell';
+                cell.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)]; r.appendChild(cell);
+            }
+            let r1 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            let r2 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            let r3 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            r.children[0].innerText = r1; r.children[1].innerText = r2; r.children[2].innerText = r3;
+            finalMatrix.push([r1, r2, r3]);
+            r.style.transition = 'none'; r.style.transform = 'translateY(-1620px)'; 
+            setTimeout(() => { r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`; r.style.transform = 'translateY(0px)'; }, 50);
+        }
+
+        setTimeout(() => {
+            isSpinning5 = false;
+            let winAmt = 0; let matchCount = 1; let firstIcon = finalMatrix[0][1]; 
+            for(let i=1; i<5; i++) { if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🍀') matchCount++; else break; }
+            if(matchCount >= 3) { winAmt = burningStake5 * (matchCount === 3 ? 4 : matchCount === 4 ? 15 : 60); if(firstIcon === '7️⃣') winAmt *= 5; }
+            if (winAmt > 0) {
+                try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
+                earnAkho(auth.currentUser.uid, winAmt, 'Gold Slots Win'); document.getElementById('bhInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
+            } else {
+                try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
+                document.getElementById('bhInfoText').innerText = "სცადეთ კიდევ ერთხელ";
+            }
+            updateAllGameBalances();
+        }, 3200);
+    }
+
+    // --- 🇪🇬 4. SECRETS OF CAIRO (🔥 REAL 5-REEL CAIRO LOGIC) ---
+    function open3DSlot() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('slot3DContainer').style.display = 'flex';
+        updateAllGameBalances();
+        updateJackpotsOnScreen();
+    }
+
+    function triggerCairoSpin() {
+        if (isCairoSpinning) return;
+        if (!canAfford(cairoStake)) { alert("ბალანსი არ გყოფნის!"); return; }
+
+        isCairoSpinning = true;
+        spendAkho(cairoStake, 'Secrets of Cairo Bet');
+        document.getElementById('scBalanceVal').innerText = (myAkho).toFixed(2);
+        document.getElementById('scInfoText').innerText = "ეგვიპტე ცოცხლდება...";
+
+        try { slotLoseSnd.pause(); winSnd.pause(); jackpotSnd.pause(); Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
+
+        let finalMatrix = [];
+
+        for (let i = 1; i <= 5; i++) {
+            const r = document.getElementById('scReel_' + i);
             r.innerHTML = '';
             
             for (let j = 0; j < 35; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'bh-cell';
-                cell.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+                cell.innerText = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
                 r.appendChild(cell);
             }
 
-            let r1 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
-            let r2 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
-            let r3 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            let r1 = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
+            let r2 = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
+            let r3 = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
             
             r.children[0].innerText = r1;
             r.children[1].innerText = r2;
@@ -690,20 +834,20 @@
         }
 
         setTimeout(() => {
-            isSpinning5 = false;
+            isCairoSpinning = false;
             
             let winAmt = 0;
             let matchCount = 1;
-            let firstIcon = finalMatrix[0][1]; 
+            let firstIcon = finalMatrix[0][1]; // ცენტრალური ხაზის შემოწმება
 
             for(let i=1; i<5; i++) {
-                if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🍀') matchCount++;
+                if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🪲') matchCount++;
                 else break;
             }
 
             if(matchCount >= 3) {
-                winAmt = burningStake5 * (matchCount === 3 ? 4 : matchCount === 4 ? 15 : 60);
-                if(firstIcon === '7️⃣') winAmt *= 5; 
+                winAmt = cairoStake * (matchCount === 3 ? 5 : matchCount === 4 ? 20 : 80);
+                if(firstIcon === '👸' || firstIcon === '👨‍🦱') winAmt *= 3; // ფარაონებზე მეტი მოგება
             }
 
             if (winAmt > 0) {
@@ -711,42 +855,17 @@
                     Sloti_dartyma.pause();
                     winSnd.currentTime = 0; winSnd.play();
                 } catch(e){}
-                earnAkho(auth.currentUser.uid, winAmt, 'Gold Slots Win');
-                document.getElementById('bhInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
+                earnAkho(auth.currentUser.uid, winAmt, 'Secrets of Cairo Win');
+                document.getElementById('scInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
             } else {
                 try {
                     Sloti_dartyma.pause();
                     slotLoseSnd.currentTime = 0; slotLoseSnd.play();
                 } catch(e){}
-                document.getElementById('bhInfoText').innerText = "სცადეთ კიდევ ერთხელ";
+                document.getElementById('scInfoText').innerText = "სცადეთ კიდევ ერთხელ";
             }
             updateAllGameBalances();
         }, 3200);
-    }
-
-    // --- 4. ROYAL 3D SLOTS ---
-    function open3DSlot() {
-        document.getElementById('gamesList').style.display = 'none';
-        document.getElementById('slot3DContainer').style.display = 'flex';
-    }
-    function startRoyalSpin() {
-        if (isSpinningNow || !canAfford(5.00)) return;
-        isSpinningNow = true; spendAkho(5.00, 'Royal Slots Bet');
-        try { Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
-        animateReel('royalReel_1', '🏆', 0.0); animateReel('royalReel_2', '🏆', 0.4); animateReel('royalReel_3', '🏆', 0.8);
-        setTimeout(() => { isSpinningNow = false; try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){} updateAllGameBalances(); }, 3200);
-    }
-
-    function animateReel(reelId, finalSymbol, delay) {
-        const r = document.getElementById(reelId); if(!r) return; r.innerHTML = '';
-        const size = reelId.includes('royal') ? 75 : 70;
-        for (let j = 0; j < 40; j++) {
-            const s = document.createElement('div'); s.className = reelId.includes('royal') ? 'cell-3d' : 'reel-cell';
-            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)]; r.appendChild(s);
-        }
-        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-        r.children[30].innerText = finalSymbol;
-        setTimeout(() => { r.style.transition = `transform ${1.5 + delay}s cubic-bezier(0.2, 0, 0.1, 1)`; r.style.transform = `translateY(-${30 * size}px)`; }, 50);
     }
 
     // --- 5. KING OF AKHO LOGIC ---
