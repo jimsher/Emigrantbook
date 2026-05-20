@@ -597,10 +597,11 @@
     function updateBet5(amount, btn) {
         if (isSpinning5) return;
         burningStake5 = parseFloat(amount);
-        document.querySelectorAll('.bh-bet-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.bh-bet-grid .bh-bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     }
 
+    // 🚀 გასწორდა სელექტორი: Secrets of Cairo-ს ფსონის მართვა
     function updateScBet(amount, btn) {
         if (isCairoSpinning) return;
         cairoStake = parseFloat(amount);
@@ -751,12 +752,10 @@
         setTimeout(() => {
             isSpinning5 = false;
             
-            // 🚀 ზუსტი მოგების დათვლა ფოტოების მიხედვით (ბაზა მრავლდება ფსონის მულტიპლიკატორზე)
             let betMultiplier = burningStake5 / 0.15; 
             let totalWin = 0;
             let middleLine = [finalMatrix[0][1], finalMatrix[1][1], finalMatrix[2][1], finalMatrix[3][1], finalMatrix[4][1]];
 
-            // შემოწმება Wild სიმბოლოზე (🍀 ანაცვლებს ყველაფერს გარდა ვარსკვლავისა)
             let baseIcon = middleLine[0];
             if (baseIcon === '🍀' && middleLine[1] !== '⭐') baseIcon = middleLine[1];
 
@@ -769,7 +768,6 @@
                 }
             }
 
-            // 🎯 რეალური მოგების კოეფიციენტების ბადე (სკრინშოტების მიხედვით):
             if (baseIcon === '7️⃣') {
                 if (matches === 5) totalWin = 180.00 * betMultiplier;
                 else if (matches === 4) totalWin = 12.00 * betMultiplier;
@@ -792,7 +790,6 @@
                 else if (matches === 3) totalWin = 0.60 * betMultiplier;
             }
 
-            // ⭐ SCATTER (ვარსკვლავის) სპეციალური შემოწმება (ეკრანის 1-ელ, მე-3 და მე-5 ვერტიკალზე)
             let starCount = 0;
             if (finalMatrix[0].includes('⭐')) starCount++;
             if (finalMatrix[2].includes('⭐')) starCount++;
@@ -813,7 +810,7 @@
         }, 3200);
     }
 
-    // --- 🇪🇬 4. SECRETS OF CAIRO ---
+    // --- 🇪🇬 4. SECRETS OF CAIRO (🔥 რეალური მათემატიკური კომბინაციები) ---
     function open3DSlot() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'flex';
@@ -850,13 +847,57 @@
 
         setTimeout(() => {
             isCairoSpinning = false;
-            let winAmt = 0; let matchCount = 1; let firstIcon = finalMatrix[0][1]; 
-            for(let i=1; i<5; i++) { if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🪲') matchCount++; else break; }
-            if(matchCount >= 3) { winAmt = cairoStake * (matchCount === 3 ? 5 : matchCount === 4 ? 20 : 80); if(firstIcon === '👸' || firstIcon === '👨‍🦱') winAmt *= 3; }
-            if (winAmt > 0) {
+            
+            // 🚀 ახალი მათემატიკა ეგვიპტური სლოტისთვის ფოტოების შესაბამისად
+            let betMultiplier = cairoStake / 1.00; 
+            let totalWin = 0;
+            let middleLine = [finalMatrix[0][1], finalMatrix[1][1], finalMatrix[2][1], finalMatrix[3][1], finalMatrix[4][1]];
+
+            // 🪲 Scarab Wild-ის შემოწმება ხაზზე
+            let baseIcon = middleLine[0];
+            if (baseIcon === '🪲') baseIcon = middleLine[1];
+
+            let matches = 1;
+            for (let i = 1; i < 5; i++) {
+                if (middleLine[i] === baseIcon || middleLine[i] === '🪲') {
+                    matches++;
+                } else {
+                    break;
+                }
+            }
+
+            // 🎯 SECRETS OF CAIRO-ს ზუსტი კოეფიციენტების ცხრილი:
+            if (baseIcon === '👨‍🦱') { // Anubis
+                if (matches === 5) totalWin = 50.00 * betMultiplier;
+                else if (matches === 4) totalWin = 10.00 * betMultiplier;
+                else if (matches === 3) totalWin = 2.50 * betMultiplier;
+                else if (matches === 2) totalWin = 0.25 * betMultiplier;
+            } 
+            else if (baseIcon === '👸') { // Cleopatra
+                if (matches === 5) totalWin = 20.00 * betMultiplier;
+                else if (matches === 4) totalWin = 4.00 * betMultiplier;
+                else if (matches === 3) totalWin = 1.00 * betMultiplier;
+            } 
+            else if (baseIcon === '👁️') { // Horus Eye
+                if (matches === 5) totalWin = 10.00 * betMultiplier;
+                else if (matches === 4) totalWin = 2.00 * betMultiplier;
+                else if (matches === 3) totalWin = 0.50 * betMultiplier;
+            } 
+            else if (baseIcon === 'K' || baseIcon === 'Q') {
+                if (matches === 5) totalWin = 5.00 * betMultiplier;
+                else if (matches === 4) totalWin = 1.00 * betMultiplier;
+                else if (matches === 3) totalWin = 0.25 * betMultiplier;
+            } 
+            else if (baseIcon === 'J') {
+                if (matches === 5) totalWin = 4.00 * betMultiplier;
+                else if (matches === 4) totalWin = 0.50 * betMultiplier;
+                else if (matches === 3) totalWin = 0.20 * betMultiplier;
+            }
+
+            if (totalWin > 0) {
                 try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
-                earnAkho(auth.currentUser.uid, winAmt, 'Secrets of Cairo Win');
-                document.getElementById('scInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
+                earnAkho(auth.currentUser.uid, totalWin, 'Secrets of Cairo Win');
+                document.getElementById('scInfoText').innerText = `🎉 მოგება: +${totalWin.toFixed(2)} AKHO!`;
             } else {
                 try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
                 document.getElementById('scInfoText').innerText = "სცადეთ კიდევ ერთხელ";
@@ -872,10 +913,7 @@
     function backToGamesListFromKing() { if (!isKingSpinning) { document.getElementById('kingOfAkhoContainer').style.display = 'none'; document.getElementById('gamesList').style.display = 'grid'; } }
     function initializeKingGrid() {
         const grid = document.getElementById('kingGrid'); grid.innerHTML = ''; currentMultiplier = 1; updateKingUI();
-        for (let i = 0; i < 25; i++) {
-            const cell = document.createElement('div'); cell.className = 'king-cell';
-            cell.innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)]; grid.appendChild(cell);
-        }
+        for (let i = 0; i < 25; i++) { const cell = document.createElement('div'); cell.className = 'king-cell'; cell.innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)]; grid.appendChild(cell); }
     }
     function updateKingUI() { const m = document.getElementById('kingMultiplier'); if(m) m.innerText = `Multiplier: x${currentMultiplier}`; }
     async function startKingSpin() {
