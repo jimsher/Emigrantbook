@@ -108,6 +108,10 @@
         
         /* King Of Akho ბადე */
         .king-cell { width: 55px; height: 55px; background: #1a1a1a; border: 1px solid #333; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 32px; }
+
+        /* ფსონის ღილაკების კონტეინერის სტილი */
+        .bet-selector-container { display: flex; gap: 8px; justify-content: center; width: 100%; margin: 5px 0; }
+        .bet-opt { background: #222; color: gold; border: 1px solid #444; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
     </style>
 </head>
 <body>
@@ -188,7 +192,7 @@
     
     <div id="burningSlotsContainer" class="game-container">
         <h3 style="color:var(--gold); margin:0;">Burning Slots</h3>
-        <div style="color:#888;">მოგება: <span id="slotWinVal" style="color:white; font-weight:bold;">0.00</span> AKHO</div>
+        <div style="color:#888;">ბალანსი: <span id="slotBalanceVal" style="color:white; font-weight:bold;">0.00</span> | მოგება: <span id="slotWinVal" style="color:white; font-weight:bold;">0.00</span> AKHO</div>
         <div class="slot-window">
             <div class="reels-wrapper-flex" id="reelsWrapper">
                 <div id="reel_1" class="reel"><div class="reel-cell">7️⃣</div></div>
@@ -196,7 +200,16 @@
                 <div id="reel_3" class="reel"><div class="reel-cell">🍇</div></div>
             </div>
         </div>
-        <button id="spinSlotBtn" onclick="triggerBurningSpin()" style="background:linear-gradient(180deg, #ffd700, #b8860b); color:black; border:none; padding:18px; border-radius:50px; width:100%; font-weight:bold; cursor:pointer;">SPIN (0.20 AKHO)</button>
+
+        <div class="bet-selector-container">
+            <button class="bet-opt" style="background:gold; color:black;" onclick="updateBet(0.20, this)">0.20</button>
+            <button class="bet-opt" onclick="updateBet(0.50, this)">0.50</button>
+            <button class="bet-opt" onclick="updateBet(1.00, this)">1.00</button>
+            <button class="bet-opt" onclick="updateBet(2.00, this)">2.00</button>
+            <button class="bet-opt" onclick="updateBet(5.00, this)">5.00</button>
+        </div>
+
+        <button id="spinSlotBtn" onclick="triggerBurningSpin()" style="background:linear-gradient(180deg, #ffd700, #b8860b); color:black; border:none; padding:18px; border-radius:50px; width:100%; font-weight:bold; cursor:pointer;">SPIN</button>
         <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
     </div>
 
@@ -256,7 +269,7 @@
     }
     
     var db = firebase.database();
-    var auth = firebase.auth(); // სინქრონიზაცია შენს კოდთან
+    var auth = firebase.auth(); // سინქრონიზაცია შენს კოდთან
 
     let myAkho = 0; 
     let isGameRunning = false;
@@ -272,7 +285,7 @@
         window.spinCount5 = 0;
     }
 
-    var burningStake = 0.15;  
+    var burningStake = 0.20;  // საწყისი ფსონი დაყენდა 0.20-ზე
     var burningStake5 = 0.20; 
     var isSpinningNow = false;
     var isSpinning5 = false;
@@ -408,7 +421,7 @@
         const bTargets = ['slot5BalanceVal', 'slot5BalanceVal_inner', 'slotBalanceVal', 'gameBalance'];
         bTargets.forEach(id => {
             const el = document.getElementById(id);
-            if(el) el.innerText = (id === 'gameBalance') ? akhoStr + " ₳" : akhoStr;
+            if(el) el.innerText = (id === 'gameBalance') ? akhoStr + " AKHO" : akhoStr;
         });
 
         if(document.getElementById('slot5RealBalance')) 
@@ -670,22 +683,22 @@
 
         if (rand < 0.01) { 
             result = ['7️⃣', '7️⃣', '7️⃣']; 
-            winAmt = burningStake * 100;
+            winAmt = burningStake * 100; // 777-ზე რჩება ტოპ x100 მოგება
         } else if (rand < 0.03) {
             let icon = Math.random() < 0.5 ? '🍉' : '🍇';
             result = [icon, icon, icon];
-            winAmt = burningStake * 20;
+            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
         } else if (rand < 0.06) {
             result = ['🔔', '🔔', '🔔'];
-            winAmt = burningStake * 8;
+            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
         } else if (rand < 0.12) {
             let fruitIcons = ['🍒', '🍋', '🍇']; 
             let icon = fruitIcons[Math.floor(Math.random() * fruitIcons.length)];
             result = [icon, icon, icon];
-            winAmt = burningStake * 4;
+            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
         } else if (rand < 0.20) {
             result = ['⭐', burningIcons[Math.floor(Math.random() * burningIcons.length)], '⭐'];
-            winAmt = burningStake * 3;
+            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
         } else {
             while(true) {
                 result = [
@@ -698,12 +711,32 @@
             winAmt = 0;
         }
 
-        // 2. რილების ტრიალი
-        animateReel('reel_1', result[0], 0.0);
-        animateReel('reel_2', result[1], 0.4);
-        animateReel('reel_3', result[2], 0.8);
+        // 2. რილების ტრიალი (RESET + ფიზიკური შევსება)
+        for (let i = 1; i <= 3; i++) {
+            const r = document.getElementById('reel_' + i);
+            
+            r.innerHTML = ''; 
+            for (let j = 0; j < 50; j++) {
+                const s = document.createElement('div');
+                s.style = "height:70px; display:flex; align-items:center; justify-content:center; font-size:45px;";
+                s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+                r.appendChild(s);
+            }
+
+            r.style.transition = 'none';
+            r.style.transform = 'translateY(0)';
+            
+            const stopIdx = 35;
+            r.children[stopIdx].innerText = result[i-1];
+
+            setTimeout(() => {
+                const move = stopIdx * 70;
+                r.style.transition = `transform ${1.8 + (i * 0.4)}s cubic-bezier(0.2, 0, 0.1, 1)`;
+                r.style.transform = `translateY(-${move}px)`;
+            }, 50);
+        }
         
-        // 3. გაჩერება და მოგება
+        // 3. გაჩერება და მოგება (მუშა ორიგინალი)
         setTimeout(() => {
             isSpinningNow = false;
             if (winAmt > 0) {
@@ -711,14 +744,14 @@
                 
                 earnAkho(auth.currentUser.uid, winAmt, '3-Reel Win');
                 
-                const sWin = document.getElementById('slotWinVal');
-                if(sWin) sWin.innerText = winAmt.toFixed(2);
+                document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
                 
                 if(document.getElementById('slot5WinVal')) {
                     document.getElementById('slot5WinVal').innerText = winAmt.toFixed(2);
                 }
+
+                updateAllGameBalances();
             }
-            updateAllGameBalances();
         }, 3200);
     }
 
@@ -782,7 +815,7 @@
             if (winAmt > 0) {
                 earnAkho(auth.currentUser.uid, winAmt, 'Scatter Win');
                 updateWinUI(winAmt);
-                if (winAmt >= 50 && typeof startJackpotAnimation === 'function') startJackpotAnimation(winAmt, "BIG WIN!");
+                if (winAmt >= 50) startJackpotAnimation(winAmt, "BIG WIN!");
                 setTimeout(updateAllGameBalances, 500);
             }
         }, 4500);
