@@ -8,7 +8,6 @@
         :root { --gold: #d4af37; }
         body { margin: 0; background: #0f0f0f; color: #fff; font-family: Arial, sans-serif; }
         
-        /* მთავარი გვერდის სტრუქტურა */
         #gamesPage { 
             position: fixed; 
             top: 0; 
@@ -44,7 +43,6 @@
             box-sizing: border-box;
         }
         
-        /* 🎰 კლასიკური სლოტების CSS */
         .slot-window {
             background: linear-gradient(145deg, #222, #000); 
             padding: 20px; 
@@ -80,7 +78,6 @@
             font-size: 45px;
         }
 
-        /* 3D სლოტების ვიზუალი */
         .reel-3d {
             width: 75px;
             height: 75px;
@@ -100,16 +97,13 @@
             font-size: 40px;
         }
         
-        /* ლოტოს ელემენტები */
         .num-btn { padding: 12px; border: 1px solid #444; background: #222; cursor: pointer; color: white; border-radius: 8px; font-size: 16px; }
         .num-btn.selected { background: var(--gold); color: #000; font-weight: bold; }
         .lotto-ball { width: 42px; height: 42px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 16px; box-shadow: 0 0 12px var(--gold); }
         .empty-slot { width: 42px; height: 42px; border-radius: 50%; background: #222; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; color: #444; }
         
-        /* King Of Akho ბადე */
         .king-cell { width: 55px; height: 55px; background: #1a1a1a; border: 1px solid #333; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 32px; }
 
-        /* ფსონის ღილაკების კონტეინერის სტილი */
         .bet-selector-container { display: flex; gap: 8px; justify-content: center; width: 100%; margin: 5px 0; }
         .bet-opt { background: #222; color: gold; border: 1px solid #444; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
     </style>
@@ -254,7 +248,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // 🚀 პროექტის EMIGRANTBOOK-ის Firebase კონფიგურაცია
     const firebaseConfig = { 
         apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
         authDomain: "emigrantbook.firebaseapp.com", 
@@ -274,9 +267,6 @@
     let myAkho = 0; 
     let isGameRunning = false;
 
-    // ==========================================
-    // 1. კონფიგურაცია და ცვლადები
-    // ==========================================
     var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
     var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
 
@@ -289,7 +279,6 @@
     var isSpinningNow = false;
     var isSpinning5 = false;
 
-    // --- თამაშების ლოგიკა ---
     function openGamesPage() {
         document.getElementById('gamesPage').style.display = 'flex';
         try {
@@ -378,9 +367,6 @@
         document.getElementById('gamesList').style.display = 'grid';
     }
 
-    // ==========================================
-    // 2. ფსონის შეცვლის ფუნქციები
-    // ==========================================
     function updateBet(amount, btn) {
         if (isSpinningNow) return;
         burningStake = parseFloat(amount);
@@ -390,9 +376,6 @@
         btn.style.background = 'gold'; btn.style.color = 'black';
     }
 
-    // ==========================================
-    // 3. UI განახლება
-    // ==========================================
     function updateAllGameBalances() {
         const val = (typeof myAkho !== 'undefined') ? myAkho : 0;
         const akhoStr = val.toFixed(2);
@@ -420,13 +403,12 @@
             document.getElementById('slot5RealWin').innerText = euroStr;
     }
 
-    // --- GAME AUDIO SYSTEM (სინქრონიზებული შენი ფაილის სახელთან და ლინკთან) ---
+    // --- GAME AUDIO SYSTEM (შენი ორიგინალი ცვლადი და იდეალური ლინკი) ---
     const bgMusic = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3");
     const ballPopSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3");
     const winSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3");
     
-    // 🚀 ლინკში ჩაიწერა "Sloti%20dartyma.mp3" — დიდი "S" და 1 გამოტოვება!
-    const Slotidartyma = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Sloti%20dartyma.mp3");
+    const Sloti_dartyma = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Sloti%20dartyma.mp3");
     const slotLoseSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3");
     const jackpotSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3");
 
@@ -435,7 +417,7 @@
     bgMusic.crossOrigin = "anonymous";
     ballPopSnd.crossOrigin = "anonymous";
     winSnd.crossOrigin = "anonymous";
-    Slotidartyma.crossOrigin = "anonymous";
+    Sloti_dartyma.crossOrigin = "anonymous";
     slotLoseSnd.crossOrigin = "anonymous";
     jackpotSnd.crossOrigin = "anonymous";
 
@@ -486,8 +468,8 @@
         try {
             slotLoseSnd.pause();
             winSnd.pause();
-            Slotidartyma.currentTime = 0;
-            Slotidartyma.play();
+            Sloti_dartyma.currentTime = 0;
+            Sloti_dartyma.play();
         } catch(e){}
 
         const canvas = document.getElementById('wheelCanvas');
@@ -520,7 +502,7 @@
             
             if(win > 0) {
                 try {
-                    Slotidartyma.pause();
+                    Sloti_dartyma.pause();
                     winSnd.currentTime = 0;
                     winSnd.play();
                 } catch(e){}
@@ -530,7 +512,7 @@
                 alert("🎉 გილოცავ! შენ მოიგე " + win + " AKHO!");
             } else {
                 try {
-                    Slotidartyma.pause();
+                    Sloti_dartyma.pause();
                     slotLoseSnd.currentTime = 0;
                     slotLoseSnd.play();
                 } catch(e){}
@@ -636,7 +618,6 @@
         }, 500);
     }
 
-    // 🎰 უნივერსალური სლოტების ტრიალის ძრავი
     function animateReel(reelId, finalSymbol, delay) {
         const r = document.getElementById(reelId);
         if(!r) return;
@@ -683,8 +664,8 @@
             slotLoseSnd.pause();
             winSnd.pause();
             jackpotSnd.pause();
-            Slotidartyma.currentTime = 0;
-            Slotidartyma.play();
+            Sloti_dartyma.currentTime = 0;
+            Sloti_dartyma.play();
         } catch (e) {
             console.log("აუდიოს დაკვრის ხარვეზი:", e);
         }
@@ -749,7 +730,7 @@
             isSpinningNow = false;
             if (winAmt > 0) {
                 try {
-                    Slotidartyma.pause();
+                    Sloti_dartyma.pause();
                     if (isJackpot) {
                         jackpotSnd.currentTime = 0;
                         jackpotSnd.play();
@@ -763,7 +744,7 @@
                 document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
             } else {
                 try {
-                    Slotidartyma.pause();
+                    Sloti_dartyma.pause();
                     slotLoseSnd.currentTime = 0;
                     slotLoseSnd.play();
                 } catch(e){}
@@ -794,8 +775,8 @@
         document.getElementById('goldWinVal').innerText = "0.00";
         
         try {
-            Slotidartyma.currentTime = 0; 
-            Slotidartyma.play();
+            Sloti_dartyma.currentTime = 0; 
+            Sloti_dartyma.play();
         } catch(e){}
 
         animateReel('goldReel_1', '👑', 0.0);
@@ -805,7 +786,7 @@
         setTimeout(() => { 
             isSpinningNow = false; 
             try {
-                Slotidartyma.pause();
+                Sloti_dartyma.pause();
                 winSnd.currentTime = 0;
                 winSnd.play();
             } catch(e){}
@@ -825,8 +806,8 @@
         document.getElementById('royalWinVal').innerText = "0.00";
         
         try {
-            Slotidartyma.currentTime = 0; 
-            Slotidartyma.play();
+            Sloti_dartyma.currentTime = 0; 
+            Sloti_dartyma.play();
         } catch(e){}
 
         animateReel('royalReel_1', '🏆', 0.0);
@@ -836,7 +817,7 @@
         setTimeout(() => { 
             isSpinningNow = false; 
             try {
-                Slotidartyma.pause();
+                Sloti_dartyma.pause();
                 winSnd.currentTime = 0;
                 winSnd.play();
             } catch(e){}
@@ -916,8 +897,8 @@
         updateAllGameBalances();
 
         try {
-            Slotidartyma.currentTime = 0;
-            Slotidartyma.play();
+            Sloti_dartyma.currentTime = 0;
+            Sloti_dartyma.play();
         } catch(e){}
 
         await dropNewSymbols();
@@ -963,7 +944,7 @@
         } else {
             isKingSpinning = false; 
             try {
-                Slotidartyma.pause();
+                Sloti_dartyma.pause();
                 slotLoseSnd.currentTime = 0;
                 slotLoseSnd.play();
             } catch(e){}
