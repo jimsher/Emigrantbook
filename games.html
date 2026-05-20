@@ -269,7 +269,7 @@
     }
     
     var db = firebase.database();
-    var auth = firebase.auth(); // سინქრონიზაცია შენს კოდთან
+    var auth = firebase.auth(); // სინქრონიზაცია შენს კოდთან
 
     let myAkho = 0; 
     let isGameRunning = false;
@@ -285,7 +285,7 @@
         window.spinCount5 = 0;
     }
 
-    var burningStake = 0.20;  // საწყისი ფსონი დაყენდა 0.20-ზე
+    var burningStake = 0.20;  
     var burningStake5 = 0.20; 
     var isSpinningNow = false;
     var isSpinning5 = false;
@@ -621,10 +621,11 @@
     }
 
     // --- GAME AUDIO SYSTEM ---
-    const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20sloti%20%20dartyma.mp3');
-    const ballPopSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20sloti%20%20dartyma.mp3');
-    const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20sloti%20%20dartyma.mp3');
-    // 🚀 შენი ახალი, მუშა სლოტის დარტყმის ხმა GitHub-იდან
+    const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3');
+    const ballPopSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
+    const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
+    
+    // 🚀 შენი ახალი სლოტის დარტყმის ხმა - სწორად ინიციალიზებული
     const Sloti_dartyma = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20sloti%20%20dartyma.mp3');
 
     bgMusic.loop = true;
@@ -632,6 +633,7 @@
     bgMusic.crossOrigin = "anonymous";
     ballPopSnd.crossOrigin = "anonymous";
     winSnd.crossOrigin = "anonymous";
+    Sloti_dartyma.crossOrigin = "anonymous"; // ამოქმედდა crossOrigin იდეალურად
 
     // 🎰 უნივერსალური სლოტების ტრიალის ძრავი
     function animateReel(reelId, finalSymbol, delay) {
@@ -676,7 +678,9 @@
         const oldLine = document.getElementById('winLine');
         if(oldLine) oldLine.remove();
 
-        new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3').play().catch(()=>{});
+        // 🚀 აქ სწორად ირთვება შენი სლოტის დარტყმის ხმა და ძველი "pop" ხმა წაიშალა რომ კონფლიქტი არ მოხდეს
+        Sloti_dartyma.currentTime = 0;
+        Sloti_dartyma.play().catch(e => console.log("Audio play error:", e));
 
         // 1. მოგების დაგეგმვა
         const rand = Math.random();
@@ -685,22 +689,22 @@
 
         if (rand < 0.01) { 
             result = ['7️⃣', '7️⃣', '7️⃣']; 
-            winAmt = burningStake * 100; // 777-ზე რჩება ტოპ x100 მოგება
+            winAmt = burningStake * 100;
         } else if (rand < 0.03) {
             let icon = Math.random() < 0.5 ? '🍉' : '🍇';
             result = [icon, icon, icon];
-            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
+            winAmt = burningStake * 3; // გასამაგება
         } else if (rand < 0.06) {
             result = ['🔔', '🔔', '🔔'];
-            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
+            winAmt = burningStake * 3; // გასამაგება
         } else if (rand < 0.12) {
             let fruitIcons = ['🍒', '🍋', '🍇']; 
             let icon = fruitIcons[Math.floor(Math.random() * fruitIcons.length)];
             result = [icon, icon, icon];
-            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
+            winAmt = burningStake * 3; // გასამაგება
         } else if (rand < 0.20) {
             result = ['⭐', burningIcons[Math.floor(Math.random() * burningIcons.length)], '⭐'];
-            winAmt = burningStake * 3; // 🚀 გასამაგება (სამმაგი მოგება)
+            winAmt = burningStake * 3; // გასამაგება
         } else {
             while(true) {
                 result = [
@@ -879,6 +883,7 @@
         setTimeout(() => { isSpinningNow = false; updateAllGameBalances(); }, 3200);
     }
 
+    // 3D სლოტების მართვა
     function open3DSlot() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'flex';
@@ -907,6 +912,7 @@
         document.getElementById('burningSlotsContainer').style.display = 'flex';
         updateAllGameBalances();
     }
+    // 5-რილიანი გვერდი
     function openBurningSlots5() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('burningSlots5Container').style.display = 'flex';
@@ -933,12 +939,14 @@
     let currentMultiplier = 1;
     let isKingSpinning = false;
 
+    // გახსნა
     function openKingOfAkho() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('kingOfAkhoContainer').style.display = 'flex';
         initializeKingGrid(); 
     }
 
+    // დახურვა
     function backToGamesListFromKing() {
         if (isKingSpinning) return; 
         document.getElementById('kingOfAkhoContainer').style.display = 'none';
