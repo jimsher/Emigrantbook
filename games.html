@@ -143,7 +143,21 @@
             justify-content: center;
             font-size: 34px;
             box-sizing: border-box;
+            transition: all 0.3s ease;
         }
+        
+        /* 🍀 ანიმაცია გაფართოებული ფოთლებისთვის */
+        .bh-cell.wild-expanded {
+            animation: wildExplode 0.4s ease-in-out double alternate;
+            text-shadow: 0 0 15px #62c431, 0 0 30px #297a09;
+            transform: scale(1.1);
+        }
+        
+        @keyframes wildExplode {
+            0% { transform: scale(0.5); opacity: 0.5; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
         .bh-status-bar {
             text-align: center;
             margin: 12px 0;
@@ -658,7 +672,6 @@
         document.getElementById('lottoGameContainer').style.display = 'none';
         document.getElementById('gamesList').style.display = 'grid';
         
-        // უკან გასვლისას ვმალავთ პოპაპებსაც ყოველი შემთხვევისთვის
         if(document.getElementById('bhWinPopup')) document.getElementById('bhWinPopup').classList.remove('show');
         if(document.getElementById('scWinPopup')) document.getElementById('scWinPopup').classList.remove('show');
     }
@@ -683,13 +696,11 @@
         if(document.getElementById('scBalanceVal')) document.getElementById('scBalanceVal').innerText = val.toFixed(2);
     }
 
-    // 🚀 ახალი დამხმარე ფუნქცია მზარდი ციფრების ანიმაციისთვის (Count Up Logic)
     function animateWinDisplay(elementId, titleId, targetAmount) {
         const popup = document.getElementById(elementId).parentElement;
         const txtAmount = document.getElementById(elementId);
         const txtTitle = document.getElementById(titleId);
 
-        // სათაურის მორგება
         if(targetAmount >= 15) {
             txtTitle.innerText = "BIG WIN!";
             txtTitle.style.color = "#ffd700";
@@ -700,12 +711,11 @@
 
         popup.classList.add('show');
 
-        // თუ 15-ზე ნაკლებია, ეგრევე ვწერთ რიცხვს, თუ 15 ან მეტია - ვზრდით 0-დან ლამაზად
         if (targetAmount < 15) {
             txtAmount.innerText = targetAmount.toFixed(2);
         } else {
             let start = 0;
-            let duration = 1500; // 1.5 წამი ზრდისთვის
+            let duration = 1500; 
             let startTime = null;
 
             function countStep(timestamp) {
@@ -722,7 +732,6 @@
             window.requestAnimationFrame(countStep);
         }
 
-        // 4 წამში პოპაპის ავტომატური გაქრობა
         setTimeout(() => {
             popup.classList.remove('show');
         }, 4000);
@@ -824,7 +833,7 @@
         updateGameBalance();
     }
 
-    // --- 🎰 3. GOLD SLOTS 777 (🔥 BURNING HOT ზუსტი მათემატიკური კომბინაციებით) ---
+    // --- 🎰 3. GOLD SLOTS 777 (🔥 BURNING HOT ზუსტი მათემატიკური კომბინაციებით და Wild გაფართოებით) ---
     function openSlotGame() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'flex';
@@ -863,6 +872,40 @@
         }
 
         setTimeout(() => {
+            // 🚀 --- ახალი 🍀 ფოთლების (WILD) გახეთქვისა და გაფართოების ეფექტები ---
+            let hasWildReel3 = finalMatrix[2].includes('🍀');
+            let hasWildReel4 = finalMatrix[3].includes('🍀');
+            let hasWildReel2 = finalMatrix[1].includes('🍀');
+
+            // 1. თუ ფოთოლი მოვიდა მეორე და მეოთხე ზოლში -> ავსებს მე-3 და მე-4 ზოლებს სრულად
+            if (hasWildReel2 && hasWildReel4) {
+                finalMatrix[2] = ['🍀', '🍀', '🍀'];
+                finalMatrix[3] = ['🍀', '🍀', '🍀'];
+                for(let k=0; k<3; k++) {
+                    document.getElementById('reel5_3').children[k].innerText = '🍀';
+                    document.getElementById('reel5_3').children[k].classList.add('wild-expanded');
+                    document.getElementById('reel5_4').children[k].innerText = '🍀';
+                    document.getElementById('reel5_4').children[k].classList.add('wild-expanded');
+                }
+            } 
+            // 2. ჩვეულებრივი გაფართოება: თუ ფოთოლი დაჯდა მე-3 ან მე-4 ზოლზე, ავსებს მთელ ვერტიკალს
+            else {
+                if (hasWildReel3) {
+                    finalMatrix[2] = ['🍀', '🍀', '🍀'];
+                    for(let k=0; k<3; k++) {
+                        document.getElementById('reel5_3').children[k].innerText = '🍀';
+                        document.getElementById('reel5_3').children[k].classList.add('wild-expanded');
+                    }
+                }
+                if (hasWildReel4) {
+                    finalMatrix[3] = ['🍀', '🍀', '🍀'];
+                    for(let k=0; k<3; k++) {
+                        document.getElementById('reel5_4').children[k].innerText = '🍀';
+                        document.getElementById('reel5_4').children[k].classList.add('wild-expanded');
+                    }
+                }
+            }
+
             isSpinning5 = false;
             
             let betMultiplier = burningStake5 / 0.15; 
@@ -911,11 +954,21 @@
                 totalWin += 6.00 * betMultiplier;
             }
 
+            // 💰 სრული ეკრანის შემოწმება ჯეკპოტისთვის (თუ ყველა უჯრა ფოთოლია)
+            let isFullCloverScreen = true;
+            for(let r=0; r<5; r++) {
+                for(let c=0; c<3; c++) {
+                    if(finalMatrix[r][c] !== '🍀') isFullCloverScreen = false;
+                }
+            }
+            if(isFullCloverScreen) {
+                totalWin += (burningStake5 * 5); // ფსონი მრავლდება 5-ზე და ემატება
+            }
+
             if (totalWin > 0) {
                 try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
                 earnAkho(auth.currentUser.uid, totalWin, 'Gold Slots Win');
                 document.getElementById('bhInfoText').innerText = `🎉 მოგება: +${totalWin.toFixed(2)} AKHO!`;
-                // 🚀 ჩაჯდა ახალი პრემიუმ ანიმაცია ბერნინგისთვის
                 animateWinDisplay('bhWinAmt', 'bhWinTitle', totalWin);
             } else {
                 try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
@@ -1010,7 +1063,6 @@
                 try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
                 earnAkho(auth.currentUser.uid, totalWin, 'Secrets of Cairo Win');
                 document.getElementById('scInfoText').innerText = `🎉 მოგება: +${totalWin.toFixed(2)} AKHO!`;
-                // 🚀 ჩაჯდა ახალი პრემიუმ ანიმაცია კაიროსთვის
                 animateWinDisplay('scWinAmt', 'scWinTitle', totalWin);
             } else {
                 try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
