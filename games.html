@@ -480,15 +480,15 @@
     let isGameRunning = false;
 
     var burningIcons = ['🍒', '🍋', '🍊', '🍇', '🍉', '🔔', '7️⃣', '⭐', '🍀'];
-    var cairoIcons = ['👨‍🦱', '👸', '👁️', '🪲', 'K', 'Q', 'J']; // კაიროს იკონები
+    var cairoIcons = ['👨‍🦱', '👸', '👁️', '🪲', 'K', 'Q', 'J'];
 
     var burningStake5 = 0.15; 
-    var cairoStake = 1.00; // კაიროს ფსონი
+    var cairoStake = 1.00; 
     var isSpinningNow = false;
     var isSpinning5 = false;
     var isCairoSpinning = false;
 
-    // მუდმივი მეხსიერების ჩატვირთვა ჯეკპოტებისთვის
+    // მუდმივი ჯეკპოტები localStorage-ში
     let jackSpades = parseFloat(localStorage.getItem('jack_spades')) || 1000.00;
     let jackHearts = parseFloat(localStorage.getItem('jack_hearts')) || 0.00;
     let jackDiamonds = parseFloat(localStorage.getItem('jack_diamonds')) || 0.00;
@@ -512,9 +512,7 @@
     }
 
     setInterval(() => {
-        // ბერნინგ ჰოტის მატება
         jackSpades += 0.05; jackHearts += 0.03; jackDiamonds += 0.02; jackClubs += 0.01;
-        // კაიროს მატება
         scJackSpades += 0.06; scJackHearts += 0.04; scJackDiamonds += 0.02; scJackClubs += 0.01;
 
         localStorage.setItem('jack_spades', jackSpades);
@@ -532,10 +530,7 @@
 
     function openGamesPage() {
         document.getElementById('gamesPage').style.display = 'flex';
-        try {
-            bgMusic.play().catch(e => console.log("Music play blocked"));
-        } catch(e){}
-        
+        try { bgMusic.play().catch(e => console.log("Music play blocked")); } catch(e){}
         db.ref(`users/${auth.currentUser.uid}/akho`).on('value', snap => {
             document.getElementById('gameBalance').innerText = (snap.val() || 0).toFixed(2) + " AKHO";
         });
@@ -544,10 +539,7 @@
 
     function closeGamesPage() {
         document.getElementById('gamesPage').style.display = 'none';
-        try {
-            bgMusic.pause();
-            bgMusic.currentTime = 0;
-        } catch(e){}
+        try { bgMusic.pause(); bgMusic.currentTime = 0; } catch(e){}
     }
 
     function playGame(gameType) {
@@ -563,8 +555,7 @@
         const user = auth.currentUser;
         if (user) {
             db.ref(`users/${user.uid}/akho`).on('value', snap => {
-                const bal = snap.val() || 0;
-                myAkho = bal;
+                const bal = snap.val() || 0; myAkho = bal;
                 if(document.getElementById('gameBalance')) document.getElementById('gameBalance').innerText = bal.toFixed(2) + " AKHO";
             });
         }
@@ -627,32 +618,22 @@
     const bgMusic = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3");
     const ballPopSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3");
     const winSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3");
-    
     const Sloti_dartyma = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Sloti%20dartyma.mp3");
     const slotLoseSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3");
     const jackpotSnd = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3");
 
-    bgMusic.loop = true;
-    bgMusic.volume = 0.3;
-    bgMusic.crossOrigin = "anonymous";
-    ballPopSnd.crossOrigin = "anonymous";
-    winSnd.crossOrigin = "anonymous";
-    Sloti_dartyma.crossOrigin = "anonymous";
-    slotLoseSnd.crossOrigin = "anonymous";
-    jackpotSnd.crossOrigin = "anonymous";
+    bgMusic.loop = true; bgMusic.volume = 0.3; bgMusic.crossOrigin = "anonymous";
+    ballPopSnd.crossOrigin = "anonymous"; winSnd.crossOrigin = "anonymous";
+    Sloti_dartyma.crossOrigin = "anonymous"; slotLoseSnd.crossOrigin = "anonymous"; jackpotSnd.crossOrigin = "anonymous";
 
     // --- 1. იღბლიანი ბორბალი ---
     const prizes = [0.5, 2, 0, 5, 1, 0.5, 10, 0]; 
     const colors = ["#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#ff4d4d", "#1a1a1a"];
-    let currentRotation = 0;
-    let isSpinning = false;
+    let currentRotation = 0; let isSpinning = false;
 
     function drawWheel() {
-        const canvas = document.getElementById('wheelCanvas');
-        if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const center = 140;
-        const sliceAngle = (2 * Math.PI) / prizes.length;
+        const canvas = document.getElementById('wheelCanvas'); if(!canvas) return;
+        const ctx = canvas.getContext('2d'); const center = 140; const sliceAngle = (2 * Math.PI) / prizes.length;
         ctx.clearRect(0, 0, 280, 280);
         prizes.forEach((prize, i) => {
             ctx.beginPath(); ctx.fillStyle = colors[i]; ctx.moveTo(center, center);
@@ -664,8 +645,7 @@
     }
 
     function spinWheel() {
-        if(isSpinning) return;
-        if(!canAfford(1.00)) { alert("ბალანსი არ გყოფნის!"); return; }
+        if(isSpinning) return; if(!canAfford(1.00)) { alert("ბალანსი არ გყოფნის!"); return; }
         spendAkho(1.00, "Lucky Spin Bet"); isSpinning = true;
         try { slotLoseSnd.pause(); winSnd.pause(); Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
         const canvas = document.getElementById('wheelCanvas');
@@ -730,12 +710,11 @@
         updateGameBalance();
     }
 
-    // --- 🎰 3. GOLD SLOTS 777 (BURNING HOT 5-REEL) ---
+    // --- 🎰 3. GOLD SLOTS 777 (🔥 BURNING HOT ზუსტი მათემატიკური კომბინაციებით) ---
     function openSlotGame() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'flex';
-        updateAllGameBalances();
-        updateJackpotsOnScreen();
+        updateAllGameBalances(); updateJackpotsOnScreen();
     }
 
     function triggerBurning5Spin() {
@@ -757,23 +736,75 @@
                 const cell = document.createElement('div'); cell.className = 'bh-cell';
                 cell.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)]; r.appendChild(cell);
             }
+
             let r1 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             let r2 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             let r3 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
+            
             r.children[0].innerText = r1; r.children[1].innerText = r2; r.children[2].innerText = r3;
             finalMatrix.push([r1, r2, r3]);
+
             r.style.transition = 'none'; r.style.transform = 'translateY(-1620px)'; 
             setTimeout(() => { r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`; r.style.transform = 'translateY(0px)'; }, 50);
         }
 
         setTimeout(() => {
             isSpinning5 = false;
-            let winAmt = 0; let matchCount = 1; let firstIcon = finalMatrix[0][1]; 
-            for(let i=1; i<5; i++) { if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🍀') matchCount++; else break; }
-            if(matchCount >= 3) { winAmt = burningStake5 * (matchCount === 3 ? 4 : matchCount === 4 ? 15 : 60); if(firstIcon === '7️⃣') winAmt *= 5; }
-            if (winAmt > 0) {
+            
+            // 🚀 ზუსტი მოგების დათვლა ფოტოების მიხედვით (ბაზა მრავლდება ფსონის მულტიპლიკატორზე)
+            let betMultiplier = burningStake5 / 0.15; 
+            let totalWin = 0;
+            let middleLine = [finalMatrix[0][1], finalMatrix[1][1], finalMatrix[2][1], finalMatrix[3][1], finalMatrix[4][1]];
+
+            // შემოწმება Wild სიმბოლოზე (🍀 ანაცვლებს ყველაფერს გარდა ვარსკვლავისა)
+            let baseIcon = middleLine[0];
+            if (baseIcon === '🍀' && middleLine[1] !== '⭐') baseIcon = middleLine[1];
+
+            let matches = 1;
+            for (let i = 1; i < 5; i++) {
+                if (middleLine[i] === baseIcon || middleLine[i] === '🍀') {
+                    if (baseIcon !== '⭐') matches++;
+                } else {
+                    break;
+                }
+            }
+
+            // 🎯 რეალური მოგების კოეფიციენტების ბადე (სკრინშოტების მიხედვით):
+            if (baseIcon === '7️⃣') {
+                if (matches === 5) totalWin = 180.00 * betMultiplier;
+                else if (matches === 4) totalWin = 12.00 * betMultiplier;
+                else if (matches === 3) totalWin = 3.00 * betMultiplier;
+                else if (matches === 2) totalWin = 0.60 * betMultiplier;
+            } 
+            else if (baseIcon === '🍉' || baseIcon === '🍇') {
+                if (matches === 5) totalWin = 30.00 * betMultiplier;
+                else if (matches === 4) totalWin = 6.00 * betMultiplier;
+                else if (matches === 3) totalWin = 2.40 * betMultiplier;
+            } 
+            else if (baseIcon === '🔔') {
+                if (matches === 5) totalWin = 15.00 * betMultiplier;
+                else if (matches === 4) totalWin = 4.00 * betMultiplier;
+                else if (matches === 3) totalWin = 1.50 * betMultiplier;
+            } 
+            else if (['🍊', '🍒', '🍋'].includes(baseIcon)) {
+                if (matches === 5) totalWin = 6.00 * betMultiplier;
+                else if (matches === 4) totalWin = 1.80 * betMultiplier;
+                else if (matches === 3) totalWin = 0.60 * betMultiplier;
+            }
+
+            // ⭐ SCATTER (ვარსკვლავის) სპეციალური შემოწმება (ეკრანის 1-ელ, მე-3 და მე-5 ვერტიკალზე)
+            let starCount = 0;
+            if (finalMatrix[0].includes('⭐')) starCount++;
+            if (finalMatrix[2].includes('⭐')) starCount++;
+            if (finalMatrix[4].includes('⭐')) starCount++;
+            if (starCount === 3) {
+                totalWin += 6.00 * betMultiplier;
+            }
+
+            if (totalWin > 0) {
                 try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
-                earnAkho(auth.currentUser.uid, winAmt, 'Gold Slots Win'); document.getElementById('bhInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
+                earnAkho(auth.currentUser.uid, totalWin, 'Gold Slots Win');
+                document.getElementById('bhInfoText').innerText = `🎉 მოგება: +${totalWin.toFixed(2)} AKHO!`;
             } else {
                 try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
                 document.getElementById('bhInfoText').innerText = "სცადეთ კიდევ ერთხელ";
@@ -782,12 +813,11 @@
         }, 3200);
     }
 
-    // --- 🇪🇬 4. SECRETS OF CAIRO (🔥 REAL 5-REEL CAIRO LOGIC) ---
+    // --- 🇪🇬 4. SECRETS OF CAIRO ---
     function open3DSlot() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'flex';
-        updateAllGameBalances();
-        updateJackpotsOnScreen();
+        updateAllGameBalances(); updateJackpotsOnScreen();
     }
 
     function triggerCairoSpin() {
@@ -804,64 +834,31 @@
         let finalMatrix = [];
 
         for (let i = 1; i <= 5; i++) {
-            const r = document.getElementById('scReel_' + i);
-            r.innerHTML = '';
-            
+            const r = document.getElementById('scReel_' + i); r.innerHTML = '';
             for (let j = 0; j < 35; j++) {
-                const cell = document.createElement('div');
-                cell.className = 'bh-cell';
-                cell.innerText = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
-                r.appendChild(cell);
+                const cell = document.createElement('div'); cell.className = 'bh-cell';
+                cell.innerText = cairoIcons[Math.floor(Math.random() * cairoIcons.length)]; r.appendChild(cell);
             }
-
             let r1 = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
             let r2 = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
             let r3 = cairoIcons[Math.floor(Math.random() * cairoIcons.length)];
-            
-            r.children[0].innerText = r1;
-            r.children[1].innerText = r2;
-            r.children[2].innerText = r3;
-            
+            r.children[0].innerText = r1; r.children[1].innerText = r2; r.children[2].innerText = r3;
             finalMatrix.push([r1, r2, r3]);
-
-            r.style.transition = 'none';
-            r.style.transform = 'translateY(-1620px)'; 
-
-            setTimeout(() => {
-                r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`;
-                r.style.transform = 'translateY(0px)';
-            }, 50);
+            r.style.transition = 'none'; r.style.transform = 'translateY(-1620px)'; 
+            setTimeout(() => { r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`; r.style.transform = 'translateY(0px)'; }, 50);
         }
 
         setTimeout(() => {
             isCairoSpinning = false;
-            
-            let winAmt = 0;
-            let matchCount = 1;
-            let firstIcon = finalMatrix[0][1]; // ცენტრალური ხაზის შემოწმება
-
-            for(let i=1; i<5; i++) {
-                if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🪲') matchCount++;
-                else break;
-            }
-
-            if(matchCount >= 3) {
-                winAmt = cairoStake * (matchCount === 3 ? 5 : matchCount === 4 ? 20 : 80);
-                if(firstIcon === '👸' || firstIcon === '👨‍🦱') winAmt *= 3; // ფარაონებზე მეტი მოგება
-            }
-
+            let winAmt = 0; let matchCount = 1; let firstIcon = finalMatrix[0][1]; 
+            for(let i=1; i<5; i++) { if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🪲') matchCount++; else break; }
+            if(matchCount >= 3) { winAmt = cairoStake * (matchCount === 3 ? 5 : matchCount === 4 ? 20 : 80); if(firstIcon === '👸' || firstIcon === '👨‍🦱') winAmt *= 3; }
             if (winAmt > 0) {
-                try {
-                    Sloti_dartyma.pause();
-                    winSnd.currentTime = 0; winSnd.play();
-                } catch(e){}
+                try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){}
                 earnAkho(auth.currentUser.uid, winAmt, 'Secrets of Cairo Win');
                 document.getElementById('scInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
             } else {
-                try {
-                    Sloti_dartyma.pause();
-                    slotLoseSnd.currentTime = 0; slotLoseSnd.play();
-                } catch(e){}
+                try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
                 document.getElementById('scInfoText').innerText = "სცადეთ კიდევ ერთხელ";
             }
             updateAllGameBalances();
@@ -886,13 +883,8 @@
         isKingSpinning = true; currentMultiplier = 1; updateKingUI(); spendAkho(kingStake, 'King Bet'); updateAllGameBalances();
         try { Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
         const cells = document.querySelectorAll('.king-cell');
-        for (let i = 0; i < cells.length; i++) {
-            cells[i].innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)];
-        }
-        setTimeout(() => {
-            isKingSpinning = false;
-            try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){}
-        }, 1000);
+        for (let i = 0; i < cells.length; i++) { cells[i].innerText = kingIcons[Math.floor(Math.random() * kingIcons.length)]; }
+        setTimeout(() => { isKingSpinning = false; try { Sloti_dartyma.pause(); slotLoseSnd.currentTime = 0; slotLoseSnd.play(); } catch(e){} }, 1000);
     }
 </script>
 </body>
