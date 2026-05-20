@@ -53,32 +53,6 @@
             display: flex;
             justify-content: center;
         }
-        .reels-wrapper-flex {
-            display: flex; 
-            gap: 15px; 
-            background: #111; 
-            padding: 15px; 
-            border-radius: 10px;
-            overflow: hidden; 
-            height: 70px; 
-        }
-        .reel { 
-            width: 70px; 
-            height: 70px; 
-            background: #1a1a1a; 
-            border: 1px solid #444; 
-            display: flex; 
-            flex-direction: column;
-            text-align: center;
-        }
-        .reel-cell {
-            height: 70px;
-            min-height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 45px;
-        }
 
         /* 3D სლოტების ვიზუალი */
         .reel-3d {
@@ -292,17 +266,11 @@
             <div style="color:white; font-weight:bold;">ციფრული ლოტო</div>
             <div style="color:var(--gold); font-size:12px;">5.00 AKHO</div>
         </div>
-        
-        <div class="game-card" onclick="openBurningSlots()">
-            <div style="height:80px; background:url('https://cdn-icons-png.flaticon.com/512/1055/1055823.png') center/contain no-repeat; margin-bottom:10px;"></div>
-            <div style="color:white; font-weight:bold;">Burning Hot (5-Reel)</div>
-            <div style="color:var(--gold); font-size:12px;">0.15 AKHO</div>
-        </div>
 
         <div class="game-card" onclick="openSlotGame()">
             <div style="height:80px; background:url('https://cdn-icons-png.flaticon.com/512/1055/1055823.png') center/contain no-repeat; margin-bottom:10px;"></div>
             <div style="color:white; font-weight:bold;">Gold Slots 777</div>
-            <div style="color:var(--gold); font-size:12px;">2.00 AKHO</div>
+            <div style="color:var(--gold); font-size:12px;">0.15 AKHO</div>
         </div>
         
         <div class="game-card" onclick="open3DSlot()">
@@ -343,7 +311,7 @@
         <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
     </div>
     
-    <div id="burningSlotsContainer" class="game-container">
+    <div id="slotGameContainer" class="game-container">
         <div class="bh-wrapper">
             <div class="bh-jackpot-grid">
                 <div class="bh-jackpot-box"><span>♠️</span><div class="bh-jack-val">10 578 262.99<span class="bh-gel">GEL</span></div></div>
@@ -362,7 +330,7 @@
                     <div class="bh-cell">🍉</div><div class="bh-cell">🍇</div><div class="bh-cell">7️⃣</div>
                 </div>
                 <div id="reel5_3" class="bh-reel">
-                    <div class="bh-cell">🍇</div><div class="bh-cell">🍒</div><div class="bh-cell">🍒</div>
+                    <div class="bh-cell">🍇</div><div class="bh-cell">🍀</div><div class="bh-cell">🍒</div>
                 </div>
                 <div id="reel5_4" class="bh-reel">
                     <div class="bh-cell">🍊</div><div class="bh-cell">🍊</div><div class="bh-cell">🍊</div>
@@ -393,20 +361,6 @@
                 <div class="bh-side-btn">ℹ️</div>
             </div>
         </div>
-    </div>
-
-    <div id="slotGameContainer" class="game-container">
-        <h3 style="color:var(--gold); margin:0;">777 Gold Slots</h3>
-        <div style="color:#888;">მოგება: <span id="goldWinVal" style="color:white; font-weight:bold;">0.00</span> AKHO</div>
-        <div class="slot-window">
-            <div class="reels-wrapper-flex">
-                <div id="goldReel_1" class="reel"><div class="reel-cell">👑</div></div>
-                <div id="goldReel_2" class="reel"><div class="reel-cell">👑</div></div>
-                <div id="goldReel_3" class="reel"><div class="reel-cell">👑</div></div>
-            </div>
-        </div>
-        <button id="spinGoldBtn" onclick="startGoldSpin()" style="background:linear-gradient(180deg, #ffd700, #b8860b); color:black; border:none; padding:18px; border-radius:50px; width:100%; font-weight:bold; cursor:pointer;">SPIN (2.00 AKHO)</button>
-        <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
     </div>
 
     <div id="slot3DContainer" class="game-container">
@@ -455,7 +409,8 @@
     let myAkho = 0; 
     let isGameRunning = false;
 
-    var burningIcons = ['🍒', '🍋', '🍊', '🍇', '🍉', '🔔', '7️⃣', '⭐'];
+    // 🚀 გასწორდა: ზუსტად ფოტოს მიხედვით ორიგინალი Burning Hot-ის იკონები!
+    var burningIcons = ['🍒', '🍋', '🍊', '🍇', '🍉', '🔔', '7️⃣', '⭐', '🍀'];
 
     var burningStake5 = 0.15; 
     var isSpinningNow = false;
@@ -527,7 +482,6 @@
 
     function backToGamesList() {
         document.getElementById('wheelGameContainer').style.display = 'none';
-        document.getElementById('burningSlotsContainer').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'none';
         document.getElementById('lottoGameContainer').style.display = 'none';
@@ -653,10 +607,10 @@
         updateGameBalance();
     }
 
-    // --- 🎰 3. BURNING HOT (5-REEL FIXED ANIMATION) ---
-    function openBurningSlots() {
+    // --- 🎰 3. GOLD SLOTS 777 (🔥 REAL 5-REEL BURNING HOT LOGIC) ---
+    function openSlotGame() {
         document.getElementById('gamesList').style.display = 'none';
-        document.getElementById('burningSlotsContainer').style.display = 'flex';
+        document.getElementById('slotGameContainer').style.display = 'flex';
         updateAllGameBalances();
     }
 
@@ -665,7 +619,7 @@
         if (!canAfford(burningStake5)) { alert("ბალანსი არ გყოფნის!"); return; }
 
         isSpinning5 = true;
-        spendAkho(burningStake5, 'Burning Hot Bet');
+        spendAkho(burningStake5, 'Gold Slots Bet');
         document.getElementById('slotBalanceVal').innerText = (myAkho).toFixed(2);
         document.getElementById('bhInfoText').innerText = "მიმდინარეობს ტრიალი...";
 
@@ -676,12 +630,10 @@
 
         let finalMatrix = [];
 
-        // 🚀 ანიმაციის სრული გასწორება: სიმბოლოების ჩამოსვლა გაქრობის გარეშე
         for (let i = 1; i <= 5; i++) {
             const r = document.getElementById('reel5_' + i);
             r.innerHTML = '';
             
-            // ვავსებთ ლენტას 35 სიმბოლოთი
             for (let j = 0; j < 35; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'bh-cell';
@@ -689,23 +641,19 @@
                 r.appendChild(cell);
             }
 
-            // ფინალური 3 იკონი, რომელიც უნდა დარჩეს ეკრანზე
             let r1 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             let r2 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             let r3 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             
-            // ვსვამთ ზუსტად იმ პოზიციებზე, სადაც ანიმაცია სრულდება
             r.children[0].innerText = r1;
             r.children[1].innerText = r2;
             r.children[2].innerText = r3;
             
             finalMatrix.push([r1, r2, r3]);
 
-            // ჯერ ვწევთ ლენტას მაღლა მომენტალურად
             r.style.transition = 'none';
             r.style.transform = 'translateY(-1620px)'; 
 
-            // შემდეგ ჩამოვაგორებთ რბილად საწყის პოზიციაზე (0px-ზე), რომ სიმბოლოები არ დაიკარგოს
             setTimeout(() => {
                 r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`;
                 r.style.transform = 'translateY(0px)';
@@ -717,10 +665,10 @@
             
             let winAmt = 0;
             let matchCount = 1;
-            let firstIcon = finalMatrix[0][1]; // შუა ხაზის შემოწმება
+            let firstIcon = finalMatrix[0][1]; 
 
             for(let i=1; i<5; i++) {
-                if(finalMatrix[i][1] === firstIcon) matchCount++;
+                if(finalMatrix[i][1] === firstIcon || finalMatrix[i][1] === '🍀') matchCount++;
                 else break;
             }
 
@@ -734,7 +682,7 @@
                     Sloti_dartyma.pause();
                     winSnd.currentTime = 0; winSnd.play();
                 } catch(e){}
-                earnAkho(auth.currentUser.uid, winAmt, 'Burning Hot Win');
+                earnAkho(auth.currentUser.uid, winAmt, 'Gold Slots Win');
                 document.getElementById('bhInfoText').innerText = `🎉 მოგება: +${winAmt.toFixed(2)} AKHO!`;
             } else {
                 try {
@@ -747,20 +695,7 @@
         }, 3200);
     }
 
-    // --- 4. GOLD SLOTS 777 ---
-    function openSlotGame() {
-        document.getElementById('gamesList').style.display = 'none';
-        document.getElementById('slotGameContainer').style.display = 'flex';
-    }
-    function startGoldSpin() {
-        if (isSpinningNow || !canAfford(2.00)) return;
-        isSpinningNow = true; spendAkho(2.00, 'Gold Slots Bet');
-        try { Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
-        animateReel('goldReel_1', '👑', 0.0); animateReel('goldReel_2', '👑', 0.4); animateReel('goldReel_3', '👑', 0.8);
-        setTimeout(() => { isSpinningNow = false; try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){} updateAllGameBalances(); }, 3200);
-    }
-
-    // --- 5. ROYAL 3D SLOTS ---
+    // --- 4. ROYAL 3D SLOTS ---
     function open3DSlot() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slot3DContainer').style.display = 'flex';
@@ -773,19 +708,7 @@
         setTimeout(() => { isSpinningNow = false; try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){} updateAllGameBalances(); }, 3200);
     }
 
-    function animateReel(reelId, finalSymbol, delay) {
-        const r = document.getElementById(reelId); if(!r) return; r.innerHTML = '';
-        const size = reelId.includes('royal') ? 75 : 70;
-        for (let j = 0; j < 40; j++) {
-            const s = document.createElement('div'); s.className = reelId.includes('royal') ? 'cell-3d' : 'reel-cell';
-            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)]; r.appendChild(s);
-        }
-        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
-        r.children[30].innerText = finalSymbol;
-        setTimeout(() => { r.style.transition = `transform ${1.5 + delay}s cubic-bezier(0.2, 0, 0.1, 1)`; r.style.transform = `translateY(-${30 * size}px)`; }, 50);
-    }
-
-    // --- 6. KING OF AKHO LOGIC ---
+    // --- 5. KING OF AKHO LOGIC ---
     let kingIcons = ['👑', '🦁', '💎', '💰', '🍇', '🍉', '🔔', '7️⃣'];
     let kingStake = 10; let currentMultiplier = 1; let isKingSpinning = false;
     function openKingOfAkho() { document.getElementById('gamesList').style.display = 'none'; document.getElementById('kingOfAkhoContainer').style.display = 'flex'; initializeKingGrid(); }
