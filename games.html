@@ -112,7 +112,7 @@
         .bet-selector-container { display: flex; gap: 8px; justify-content: center; width: 100%; margin: 5px 0; }
         .bet-opt { background: #222; color: gold; border: 1px solid #444; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
 
-        /* 🔥 BURNING HOT PREMIUM 5-REEL STYLE (ზუსტად სკრინშოტის მიხედვით) */
+        /* 🔥 BURNING HOT PREMIUM 5-REEL STYLE */
         .bh-wrapper {
             width: 100%;
             max-width: 430px;
@@ -162,7 +162,7 @@
             font-family: 'Arial Black', sans-serif;
         }
         .bh-board {
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             border: 4px solid #111;
             border-radius: 12px;
             padding: 8px;
@@ -179,7 +179,6 @@
             border-radius: 4px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
         .bh-cell {
             height: 60px;
@@ -188,7 +187,6 @@
             align-items: center;
             justify-content: center;
             font-size: 34px;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
             box-sizing: border-box;
         }
         .bh-status-bar {
@@ -655,7 +653,7 @@
         updateGameBalance();
     }
 
-    // --- 🎰 3. BURNING HOT (🔥 REAL 5-REEL LOGIC) ---
+    // --- 🎰 3. BURNING HOT (5-REEL FIXED ANIMATION) ---
     function openBurningSlots() {
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('burningSlotsContainer').style.display = 'flex';
@@ -678,45 +676,48 @@
 
         let finalMatrix = [];
 
+        // 🚀 ანიმაციის სრული გასწორება: სიმბოლოების ჩამოსვლა გაქრობის გარეშე
         for (let i = 1; i <= 5; i++) {
             const r = document.getElementById('reel5_' + i);
             r.innerHTML = '';
             
-            // ვქმნით მოძრავ ილუზიას ბადეში
-            for (let j = 0; j < 30; j++) {
+            // ვავსებთ ლენტას 35 სიმბოლოთი
+            for (let j = 0; j < 35; j++) {
                 const cell = document.createElement('div');
                 cell.className = 'bh-cell';
                 cell.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)];
                 r.appendChild(cell);
             }
 
-            // ვსვამთ ფინალურ 3 სიმბოლოს თითოეულ ვერტიკალზე
+            // ფინალური 3 იკონი, რომელიც უნდა დარჩეს ეკრანზე
             let r1 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             let r2 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             let r3 = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             
-            r.children[27].innerText = r1;
-            r.children[28].innerText = r2;
-            r.children[29].innerText = r3;
+            // ვსვამთ ზუსტად იმ პოზიციებზე, სადაც ანიმაცია სრულდება
+            r.children[0].innerText = r1;
+            r.children[1].innerText = r2;
+            r.children[2].innerText = r3;
             
             finalMatrix.push([r1, r2, r3]);
 
+            // ჯერ ვწევთ ლენტას მაღლა მომენტალურად
             r.style.transition = 'none';
-            r.style.transform = 'translateY(0)';
+            r.style.transform = 'translateY(-1620px)'; 
 
+            // შემდეგ ჩამოვაგორებთ რბილად საწყის პოზიციაზე (0px-ზე), რომ სიმბოლოები არ დაიკარგოს
             setTimeout(() => {
-                r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.1, 0, 0.1, 1)`;
-                r.style.transform = 'translateY(-1620px)'; // ჩამოცურება
+                r.style.transition = `transform ${1.5 + (i * 0.3)}s cubic-bezier(0.15, 0.85, 0.35, 1)`;
+                r.style.transform = 'translateY(0px)';
             }, 50);
         }
 
         setTimeout(() => {
             isSpinning5 = false;
             
-            // უმარტივესი მოგების ალგორითმი 5 რილზე
             let winAmt = 0;
             let matchCount = 1;
-            let firstIcon = finalMatrix[0][1]; // ცენტრალური ხაზი
+            let firstIcon = finalMatrix[0][1]; // შუა ხაზის შემოწმება
 
             for(let i=1; i<5; i++) {
                 if(finalMatrix[i][1] === firstIcon) matchCount++;
@@ -724,8 +725,8 @@
             }
 
             if(matchCount >= 3) {
-                winAmt = burningStake5 * (matchCount === 3 ? 3 : matchCount === 4 ? 10 : 50);
-                if(firstIcon === '7️⃣') winAmt *= 5; // შვიდიანებზე დიდი მულტიპლიკატორი
+                winAmt = burningStake5 * (matchCount === 3 ? 4 : matchCount === 4 ? 15 : 60);
+                if(firstIcon === '7️⃣') winAmt *= 5; 
             }
 
             if (winAmt > 0) {
