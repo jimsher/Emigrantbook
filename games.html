@@ -77,7 +77,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 45px;
         }
 
         /* 3D სლოტების ვიზუალი */
@@ -97,7 +96,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
         }
         
         /* ლოტოს ელემენტები */
@@ -107,7 +105,7 @@
         .empty-slot { width: 42px; height: 42px; border-radius: 50%; background: #222; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; color: #444; }
         
         /* King Of Akho ბადე */
-        .king-cell { width: 55px; height: 55px; background: #1a1a1a; border: 1px solid #333; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 28px; }
+        .king-cell { width: 55px; height: 55px; background: #1a1a1a; border: 1px solid #333; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -164,7 +162,7 @@
     <div id="wheelGameContainer" class="game-container">
         <div style="position:relative; width:280px; height:280px;">
             <div style="position:absolute; top:-15px; left:50%; transform:translateX(-50%); z-index:10; color:#ff4d4d; font-size:35px;">▼</div>
-            <canvas id="wheelCanvas" width="280" height="280" style="border-radius:50%; border: 8px solid #1a1a1a;"></canvas>
+            <canvas id="wheelCanvas" width="280" height="280" style="border-radius:50%; border: 8px solid #1a1a1a("></canvas>
         </div>
         <button id="spinBtn" onclick="spinWheel()" style="background:linear-gradient(180deg, #d4af37, #b8860b); color:black; border:none; padding:15px 40px; border-radius:30px; font-weight:900; cursor:pointer;">დატრიალება (1.00 AKHO)</button>
         <div onclick="backToGamesList()" style="color:var(--gold); cursor:pointer; text-decoration: underline;">← უკან</div>
@@ -242,370 +240,461 @@
 
 <script>
     // --- ძირითადი ცვლადები და ხმები ---
-        // --- ძირითადი ცვლადები და ხმები ---
-let myAkho = 0; 
-let isSpinningNow = false;
-let isSpinning5 = false;
+    let myAkho = 0; 
+    let isGameRunning = false;
 
-// 🍓 კლასიკური ხილის, ბლების და მარწყვების უმაღლესი ხარისხის HD სურათების ბაზა
-const fruitHDFiles = {
-    '7️⃣': 'https://i.postimg.cc/9F4f7Z8M/hd-seven.png',        // წითელი კლასიკური 7️⃣
-    '🍉': 'https://i.postimg.cc/mD47gP33/watermelon.png',    // HD საზამთრო
-    '🍇': 'https://i.postimg.cc/6p6mYgXz/grapes.png',        // HD ყურძენი
-    '🔔': 'https://i.postimg.cc/dV3S0Y7x/hd-bell.png',         // ოქროს ზარი
-    '🍒': 'https://i.postimg.cc/g2Xg2vXz/cherry.png',        // HD ბალი / ალუბალი
-    '🍋': 'https://i.postimg.cc/Y9XgYvXz/lemon.png',         // HD ლიმონი
-    '⭐': 'https://i.postimg.cc/NfXgXvXz/hd-star.png',         // ოქროს ვარსკვლავი
-    '🍓': 'https://i.postimg.cc/0yXgYvXz/strawberry.png',    // HD მარწყვი
-    '🍊': 'https://i.postimg.cc/NjXgXvXz/orange.png',        // HD ფორთოხალი
-    '💲': 'https://i.postimg.cc/P5Xg5vXz/dollar.png',        // დოლარის ნიშანი
-    '👑': 'https://i.postimg.cc/Hng3vXz2/crown.gif',         // სამეფო გვირგვინი
-    '💎': 'https://i.postimg.cc/Xq6g6vXz/diamond.gif',       // ბრილიანტი
-    '💰': 'https://i.postimg.cc/Z5Xg5vXz/moneybag.png',      // ფულის ტომარა
-    '⚡': 'https://i.postimg.cc/V5Xg5vXz/lightning.png',     // ელვა
-    '🦁': 'https://i.postimg.cc/L5Xg5vXz/lion.png'          // ლომი
-};
+    // 🍓 კლასიკური ხილის, ბლების და მარწყვების უმაღლესი ხარისხის HD სურათები
+    const fruitHDFiles = {
+        '7️⃣': 'https://i.postimg.cc/9F4f7Z8M/hd-seven.png',       // წითელი კლასიკური შვიდიანი
+        '🍉': 'https://i.postimg.cc/mD47gP33/watermelon.png',   // HD საზამთრო
+        '🍇': 'https://i.postimg.cc/6p6mYgXz/grapes.png',       // HD ყურძენი
+        '🔔': 'https://i.postimg.cc/dV3S0Y7x/hd-bell.png',       // ოქროს ზარი
+        '🍒': 'https://i.postimg.cc/g2Xg2vXz/cherry.png',       // HD ბალი / ალუბალი
+        '🍋': 'https://i.postimg.cc/Y9XgYvXz/lemon.png',        // HD ლიმონი
+        '⭐': 'https://i.postimg.cc/NfXgXvXz/hd-star.png',       // ოქროს იღბლიანი ვარსკვლავი
+        '🍓': 'https://i.postimg.cc/0yXgYvXz/strawberry.png',   // HD მარწყვი
+        '🍊': 'https://i.postimg.cc/NjXgXvXz/orange.png',       // HD ფორთოხალი
+        '💲': 'https://i.postimg.cc/P5Xg5vXz/dollar.png',       // დოლარის ნიშანი
+        '👑': 'https://i.postimg.cc/Hng3vXz2/crown.gif',        // სამეფო გვირგვინი
+        '💎': 'https://i.postimg.cc/Xq6g6vXz/diamond.gif',      // ბრილიანტი
+        '💰': 'https://i.postimg.cc/Z5Xg5vXz/moneybag.png',     // ფულის ტომარა
+        '⚡': 'https://i.postimg.cc/V5Xg5vXz/lightning.png',    // ელვა
+        '🦁': 'https://i.postimg.cc/L5Xg5vXz/lion.png'         // ლომი
+    };
 
-var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
-var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
-let kingIcons = ['👑', '🦁', '💎', '💰', '🍇', '🍉', '🔔', '7️⃣'];
+    var burningIcons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '⭐'];
+    var slot5Icons = ['7️⃣', '🍉', '🍇', '🔔', '🍒', '🍋', '🍊', '⭐', '💲'];
+    const kingIcons = ['👑', '🦁', '💎', '💰', '🍇', '🍉', '🔔', '7️⃣'];
 
-var burningStake = 0.15;  
-var burningStake5 = 0.20; 
-let kingStake = 10;
-let currentMultiplier = 1;
-let isKingSpinning = false;
+    var burningStake = 0.15;  
+    var burningStake5 = 0.20; 
+    let kingStake = 10.00; 
+    let currentMultiplier = 1;
 
-const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3');
-const ballPopSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
-const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
-bgMusic.loop = true; bgMusic.volume = 0.3;
+    const bgMusic = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-over-the-horizon-329304.mp3');
+    const ballPopSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/u_edtmwfwu7c-pop-331070.mp3');
+    const winSnd = new Audio('https://raw.githubusercontent.com/jimsher/Emigrantbook/main/breakzstudios-upbeat-p-170110.mp3');
+    bgMusic.loop = true; bgMusic.volume = 0.3;
 
-// ფულის შემოწმების ფუნქცია (შენი canAfford-ზე მიბმული)
-function canAfford(amount) { 
-    return myAkho >= amount; 
-}
+    // ფულის შემოწმების ფუნქცია (მიბმული შენს რეალურ ცვლადზე)
+    function canAfford(amount) { return myAkho >= amount; }
 
-function spendAkho(amount, reason) {
-    const user = auth.currentUser;
-    if(user) {
-        myAkho -= amount;
-        db.ref(`users/${user.uid}/akho`).set(myAkho);
+    function spendAkho(amount, reason) {
+        const user = firebase.auth().currentUser;
+        if(user) {
+            myAkho -= amount;
+            firebase.database().ref(`users/${user.uid}/akho`).set(myAkho);
+        }
     }
-}
 
-function earnAkho(uid, amount, reason) {
-    myAkho += amount;
-    db.ref(`users/${uid}/akho`).set(myAkho);
-}
+    function earnAkho(uid, amount, reason) {
+        myAkho += amount;
+        firebase.database().ref(`users/${uid}/akho`).set(myAkho);
+    }
 
-// რეალური დროის ბალანსის განახლება შენი ორიგინალი სტრუქტურით
-function openGamesPage() {
-    document.getElementById('gamesPage').style.display = 'flex';
-    db.ref(`users/${auth.currentUser.uid}/akho`).on('value', snap => {
-        myAkho = snap.val() || 0;
-        document.getElementById('gameBalance').innerText = myAkho.toFixed(2) + " AKHO";
-        updateAllGameBalances();
-    });
-    bgMusic.play().catch(e => console.log("Music play pending interaction"));
-}
-
-function closeGamesPage() {
-    document.getElementById('gamesPage').style.display = 'none';
-    bgMusic.pause(); bgMusic.currentTime = 0;
-}
-
-function updateGameBalance() {
-    const user = auth.currentUser;
-    if (user) {
-        db.ref(`users/${user.uid}/akho`).on('value', snap => {
-            myAkho = snap.val() || 0;
-            const balElem = document.getElementById('gameBalance');
-            if(balElem) balElem.innerText = myAkho.toFixed(2) + " AKHO";
-            updateAllGameBalances();
+    // 🔥 რეალური დროის კავშირი FIREBASE-თან (ბალანსის ავტომატური სინქრონიზაცია)
+    function openGamesPage() {
+        document.getElementById('gamesPage').style.display = 'flex';
+        const user = firebase.auth().currentUser;
+        if(user) {
+            firebase.database().ref(`users/${user.uid}/akho`).on('value', snap => {
+                myAkho = snap.val() || 0;
+                document.getElementById('gameBalance').innerText = myAkho.toFixed(2) + " AKHO";
+                updateAllGameBalances();
+            });
+        }
+        bgMusic.play().catch(() => {
+            window.addEventListener('click', () => { bgMusic.play(); }, { once: true });
         });
     }
-}
 
-// ბალანსის ასახვა ყველა ველში
-function updateAllGameBalances() {
-    const akhoStr = myAkho.toFixed(2);
-    const bTargets = ['slot5BalanceVal', 'slot5BalanceVal_inner', 'slotBalanceVal', 'gameBalance'];
-    bTargets.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.innerText = (id === 'gameBalance') ? akhoStr + " AKHO" : akhoStr;
-    });
-}
-
-function updateWinUI(winAmt) {
-    const akhoStr = winAmt.toFixed(2);
-    const wTargets = ['slot5WinVal', 'slot5WinVal_inner', 'slotWinVal'];
-    wTargets.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.innerText = akhoStr;
-    });
-}
-
-function backToGamesList() {
-    document.getElementById('wheelGameContainer').style.display = 'none';
-    document.getElementById('lottoGameContainer').style.display = 'none';
-    document.getElementById('burningSlotsContainer').style.display = 'none';
-    document.getElementById('gamesList').style.display = 'grid';
-}
-
-// --- 1. იღბლიანი ბორბალი ---
-function playGame(type) {
-    if(type === 'spin') {
-        document.getElementById('gamesList').style.display = 'none';
-        document.getElementById('wheelGameContainer').style.display = 'flex';
-        setTimeout(drawWheel, 100);
+    function closeGamesPage() {
+        document.getElementById('gamesPage').style.display = 'none';
+        bgMusic.pause(); bgMusic.currentTime = 0;
     }
-}
 
-function drawWheel() {
-    const canvas = document.getElementById('wheelCanvas');
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const center = 140;
-    const sliceAngle = (2 * Math.PI) / prizes.length;
-    ctx.clearRect(0, 0, 280, 280);
+    function updateGameBalance() {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            firebase.database().ref(`users/${user.uid}/akho`).on('value', snap => {
+                myAkho = snap.val() || 0;
+                const balElem = document.getElementById('gameBalance');
+                if(balElem) balElem.innerText = myAkho.toFixed(2) + " AKHO";
+                updateAllGameBalances();
+            });
+        }
+    }
 
-    prizes.forEach((prize, i) => {
-        ctx.beginPath(); ctx.fillStyle = colors[i]; ctx.moveTo(center, center);
-        ctx.arc(center, center, center, i * sliceAngle, (i + 1) * sliceAngle); ctx.fill();
-        ctx.save(); ctx.translate(center, center); ctx.rotate(i * sliceAngle + sliceAngle / 2);
-        ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
-        ctx.fillText(prize + " ₳", center - 20, 5); ctx.restore();
-    });
-}
+    function updateAllGameBalances() {
+        const akhoStr = myAkho.toFixed(2);
+        const bTargets = ['slot5BalanceVal', 'slot5BalanceVal_inner', 'slotBalanceVal', 'gameBalance'];
+        bTargets.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = (id === 'gameBalance') ? akhoStr + " AKHO" : akhoStr;
+        });
+    }
 
-function spinWheel() {
-    if(isSpinning || !canAfford(1.00)) { if(!canAfford(1.00)) alert("ბალანსი არ გყოფნის!"); return; }
-    isSpinning = true; spendAkho(1.00, "Lucky Spin Bet");
+    function updateWinUI(winAmt) {
+        const akhoStr = winAmt.toFixed(2);
+        const wTargets = ['slot5WinVal', 'slot5WinVal_inner', 'slotWinVal'];
+        wTargets.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = akhoStr;
+        });
+    }
 
-    const canvas = document.getElementById('wheelCanvas');
-    const btn = document.getElementById('spinBtn');
-    btn.disabled = true; btn.style.opacity = "0.5"; btn.innerText = "ტრიალებს...";
+    function backToGamesList() {
+        if(isGameRunning) return;
+        const containers = ['wheelGameContainer', 'lottoGameContainer', 'burningSlotsContainer', 'slotGameContainer', 'slot3DContainer', 'kingOfAkhoContainer'];
+        containers.forEach(id => document.getElementById(id).style.display = 'none');
+        document.getElementById('gamesList').style.display = 'grid';
+    }
 
-    const extraDegrees = Math.floor(Math.random() * 360) + 2160; 
-    currentRotation += extraDegrees;
-    canvas.style.transition = "transform 5s cubic-bezier(0.15, 0, 0.2, 1)";
-    canvas.style.transform = `rotate(${currentRotation}deg)`;
+    // --- 1. იღბლიანი ბორბალი ---
+    const prizes = [0.5, 2, 0, 5, 1, 0.5, 10, 0]; 
+    const colors = ["#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#1a1a1a", "#d4af37", "#ff4d4d", "#1a1a1a"];
+    let currentRotation = 0;
 
-    setTimeout(() => {
-        isSpinning = false; btn.disabled = false; btn.style.opacity = "1"; btn.innerText = "დატრიალება (1.00 AKHO)";
-        const actualDeg = currentRotation % 360;
-        const sliceSize = 360 / prizes.length;
-        const prizeIndex = Math.floor(((360 - actualDeg + 270) % 360) / sliceSize) % prizes.length;
-        const win = prizes[prizeIndex];
+    function playGame(type) {
+        if(type === 'spin') {
+            document.getElementById('gamesList').style.display = 'none';
+            document.getElementById('wheelGameContainer').style.display = 'flex';
+            setTimeout(drawWheel, 100);
+        }
+    }
+
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const center = 140;
+        const sliceAngle = (2 * Math.PI) / prizes.length;
+        ctx.clearRect(0, 0, 280, 280);
+
+        prizes.forEach((prize, i) => {
+            ctx.beginPath(); ctx.fillStyle = colors[i]; ctx.moveTo(center, center);
+            ctx.arc(center, center, center, i * sliceAngle, (i + 1) * sliceAngle); ctx.fill();
+            ctx.save(); ctx.translate(center, center); ctx.rotate(i * sliceAngle + sliceAngle / 2);
+            ctx.fillStyle = "white"; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
+            ctx.fillText(prize + " ₳", center - 20, 5); ctx.restore();
+        });
+    }
+
+    function spinWheel() {
+        if(isGameRunning || !canAfford(1.00)) { if(!canAfford(1.00)) alert("ბალანსი არ გყოფნის! (საჭიროა 1.00 AKHO)"); return; }
+        isGameRunning = true; spendAkho(1.00, "Lucky Spin Bet");
         
-        if(win > 0) {
-            earnAkho(auth.currentUser.uid, win, "Lucky Spin Win");
-            updateGameBalance(); 
-            alert("🎉 გილოცავ! შენ მოიგე " + win + " AKHO!");
-        } else {
-            alert("😢 ამჯერად ვერ მოიგე, სცადე კიდევ ერთხელ!");
-        }
-    }, 5000);
-}
+        const canvas = document.getElementById('wheelCanvas');
+        const btn = document.getElementById('spinBtn');
+        btn.disabled = true; btn.innerText = "ტრიალებს...";
 
-// --- 2. ციფრული ლოტო ---
-let selectedNumbers = [];
-function openLotto() {
-    document.getElementById('gamesList').style.display = 'none';
-    document.getElementById('lottoGameContainer').style.display = 'flex';
-    const grid = document.getElementById('lottoGrid');
-    grid.innerHTML = ""; selectedNumbers = [];
-    for(let i=1; i<=25; i++) {
-        const btn = document.createElement('button');
-        btn.className = 'num-btn'; btn.innerText = i;
-        btn.onclick = () => {
-            if(selectedNumbers.includes(i)) {
-                selectedNumbers = selectedNumbers.filter(n => n !== i); btn.classList.remove('selected');
-            } else if(selectedNumbers.length < 5) {
-                selectedNumbers.push(i); btn.classList.add('selected');
+        const extraDegrees = Math.floor(Math.random() * 360) + 2160; 
+        currentRotation += extraDegrees;
+        canvas.style.transition = "transform 5s cubic-bezier(0.15, 0, 0.2, 1)";
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+        setTimeout(() => {
+            isGameRunning = false; btn.disabled = false; btn.innerText = "დატრიალება (1.00 AKHO)";
+            const actualDeg = currentRotation % 360;
+            const sliceSize = 360 / prizes.length;
+            const prizeIndex = Math.floor(((360 - actualDeg + 270) % 360) / sliceSize) % prizes.length;
+            const win = prizes[prizeIndex];
+            
+            if(win > 0) {
+                winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+                earnAkho(firebase.auth().currentUser.uid, win, "Lucky Spin Win");
+                alert("🎉 გილოცავ! შენ მოიგე " + win + " AKHO!");
+            } else {
+                alert("😢 ამჯერად ვერ მოიგე, სცადე კიდევ ერთხელ!");
             }
-        };
-        grid.appendChild(btn);
-    }
-}
-
-async function startLottoDraw() {
-    if(selectedNumbers.length < 5) { alert("გთხოვთ აირჩიოთ 5 ციფრი!"); return; }
-    if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის (5.00 AKHO)"); return; }
-
-    spendAkho(5.00, "Lotto Bet");
-    const btn = document.getElementById('playLottoBtn');
-    btn.disabled = true; btn.style.opacity = "0.5";
-    const container = document.getElementById('lottoBalls');
-    container.innerHTML = ""; 
-
-    let winningNumbers = [];
-    while(winningNumbers.length < 5) {
-        let n = Math.floor(Math.random() * 25) + 1;
-        if(!winningNumbers.includes(n)) winningNumbers.push(n);
+        }, 5000);
     }
 
-    for(let i=0; i<5; i++) {
-        await new Promise(r => setTimeout(r, 800));
-        ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
-        const ball = document.createElement('div');
-        ball.className = 'lotto-ball'; ball.innerText = winningNumbers[i];
-        container.appendChild(ball);
-    }
-
-    setTimeout(() => {
-        const matches = selectedNumbers.filter(n => winningNumbers.includes(n)).length;
-        let prize = [0, 0, 2, 10, 50, 250][matches] || 0;
-        if(prize > 0) {
-            winSnd.play().catch(()=>{});
-            earnAkho(auth.currentUser.uid, prize, `Lotto Win`);
-            alert(`🎉 გილოცავ! შენ დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
-        } else {
-            alert(`ამჯერად მხოლოდ ${matches} ციფრი დაემთხვა. სცადე კიდევ ერთხელ!`);
+    // --- 2. ციფრული ლოტო ---
+    let selectedNumbers = [];
+    function openLotto() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('lottoGameContainer').style.display = 'flex';
+        document.getElementById('lottoBalls').innerHTML = '<div class="empty-slot">?</div>'.repeat(5);
+        
+        const grid = document.getElementById('lottoGrid');
+        grid.innerHTML = ""; selectedNumbers = [];
+        for(let i=1; i<=25; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'num-btn'; btn.innerText = i;
+            btn.onclick = () => {
+                if(selectedNumbers.includes(i)) {
+                    selectedNumbers = selectedNumbers.filter(n => n !== i); btn.classList.remove('selected');
+                } else if(selectedNumbers.length < 5) {
+                    selectedNumbers.push(i); btn.classList.add('selected');
+                }
+            };
+            grid.appendChild(btn);
         }
-        btn.disabled = false; btn.style.opacity = "1";
-    }, 500);
-}
-
-// --- 🎰 3-РИЛИᲐᲜᲘ BURNING SLOTS (ხატავს HD ხილს და მარწყვებს) ---
-function triggerBurningSpin() {
-    if (isSpinningNow || !canAfford(burningStake)) return;
-    isSpinningNow = true;
-    spendAkho(burningStake, 'Burning Slots Bet');
-    updateAllGameBalances(); updateWinUI(0);
-
-    ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
-
-    const rand = Math.random();
-    let result = []; let winAmt = 0;
-
-    if (rand < 0.02) { result = ['7️⃣', '7️⃣', '7️⃣']; winAmt = burningStake * 100; } 
-    else if (rand < 0.08) { let icon = Math.random() < 0.5 ? '🍉' : '🍇'; result = [icon, icon, icon]; winAmt = burningStake * 20; } 
-    else if (rand < 0.15) { result = ['🔔', '🔔', '🔔']; winAmt = burningStake * 8; } 
-    else {
-        while(true) {
-            result = [burningIcons[Math.floor(Math.random() * 7)], burningIcons[Math.floor(Math.random() * 7)], burningIcons[Math.floor(Math.random() * 7)]];
-            if (!(result[0] === result[1] && result[1] === result[2])) break;
-        }
-        winAmt = 0;
     }
 
-    // ფიზიკურად ვავსებთ რეალურ HD სურათებით ანიმაციისთვის
-    for (let i = 1; i <= 3; i++) {
-        const r = document.getElementById('reel_' + i);
-        r.innerHTML = ''; 
+    async function startLottoDraw() {
+        if(selectedNumbers.length < 5) { alert("გთხოვთ აირჩიოთ 5 ციფრი!"); return; }
+        if(!canAfford(5.00)) { alert("ბალანსი არ გყოფნის (5.00 AKHO)"); return; }
+
+        isGameRunning = true; spendAkho(5.00, "Lotto Bet");
+        document.getElementById('playLottoBtn').disabled = true;
+        const container = document.getElementById('lottoBalls');
+        container.innerHTML = "";
+
+        let winningNumbers = [];
+        while(winningNumbers.length < 5) {
+            let n = Math.floor(Math.random() * 25) + 1;
+            if(!winningNumbers.includes(n)) winningNumbers.push(n);
+        }
+
+        for(let i = 0; i < 5; i++) {
+            await new Promise(r => setTimeout(r, 800));
+            ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
+            const ball = document.createElement('div');
+            ball.className = 'lotto-ball'; ball.innerText = winningNumbers[i];
+            container.appendChild(ball);
+        }
+
+        setTimeout(() => {
+            isGameRunning = false; document.getElementById('playLottoBtn').disabled = false;
+            const matches = selectedNumbers.filter(n => winningNumbers.includes(n)).length;
+            let prize = [0, 0, 2, 10, 50, 250][matches] || 0;
+
+            if(prize > 0) {
+                winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+                earnAkho(firebase.auth().currentUser.uid, prize, `Lotto Win`);
+                alert(`🎉 გილოცავ! შენ დასვი ${matches} ციფრი და მოიგე ${prize} AKHO!`);
+            } else {
+                alert(`ამჯერად მხოლოდ ${matches} ციფრი დაემთხვა. სცადე კიდევ ერთხელ!`);
+            }
+        }, 500);
+    }
+
+    // --- 🎰 პრემიუმ HD სლოტების ტრიალის ძრავი (გრაფიკული რენდერით) ---
+    function animateReel(reelId, finalSymbol, delay) {
+        const r = document.getElementById(reelId);
+        r.innerHTML = '';
+        
+        const size = reelId.includes('royal') ? 75 : 70;
+        const imgSize = reelId.includes('royal') ? 50 : 55;
+
+        // აშენებს 40 ცალ რეალურ HD სურათს ზოლში ტრიალის ილუზიისთვის
         for (let j = 0; j < 40; j++) {
-            const randKey = burningIcons[Math.floor(Math.random() * 7)];
+            const randKey = burningIcons[Math.floor(Math.random() * burningIcons.length)];
             const s = document.createElement('div');
-            s.className = 'reel-cell';
-            s.innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:55px; height:55px; object-fit:contain;">`;
+            s.className = reelId.includes('royal') ? 'cell-3d' : 'reel-cell';
+            s.innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:${imgSize}px; height:${imgSize}px; object-fit:contain;">`;
             r.appendChild(s);
         }
         r.style.transition = 'none'; r.style.transform = 'translateY(0)';
         
-        const stopIdx = 30;
-        r.children[stopIdx].innerHTML = `<img src="${fruitHDFiles[result[i-1]]}" style="width:55px; height:55px; object-fit:contain;">`;
-
+        // ზუსტად 30-ე ელემენტს ვსვამთ ფინალურ HD სურათს, რაც ბაზამ დააგეგმა
+        r.children[30].innerHTML = `<img src="${fruitHDFiles[finalSymbol]}" style="width:${imgSize}px; height:${imgSize}px; object-fit:contain;">`;
+        
         setTimeout(() => {
-            r.style.transition = `transform ${1.5 + (i * 0.4)}s cubic-bezier(0.15, 0.88, 0.3, 1)`;
-            r.style.transform = `translateY(-${stopIdx * 70}px)`;
+            r.style.transition = `transform ${1.5 + delay}s cubic-bezier(0.1, 0.88, 0.25, 1)`;
+            r.style.transform = `translateY(-${30 * size}px)`;
         }, 50);
     }
 
-    setTimeout(() => {
-        isSpinningNow = false;
-        if (winAmt > 0) {
-            winSnd.currentTime = 0; winSnd.play().catch(()=>{});
-            earnAkho(auth.currentUser.uid, winAmt, '3-Reel Win');
-            document.getElementById('slotWinVal').innerText = winAmt.toFixed(2);
-            updateAllGameBalances();
-            alert(`🎉 მოიგე ${winAmt.toFixed(2)} AKHO!`);
-        }
-    }, 3000);
-}
-
-// --- 4. KING OF AKHO (ბადის HD რენდერი) ---
-function initializeKingGrid() {
-    const grid = document.getElementById('kingGrid');
-    grid.innerHTML = ''; currentMultiplier = 1; updateKingUI();
-    for (let i = 0; i < 25; i++) {
-        const randKey = kingIcons[Math.floor(Math.random() * kingIcons.length)];
-        const cell = document.createElement('div');
-        cell.className = 'king-cell';
-        cell.innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:40px; height:40px; object-fit:contain;">`;
-        grid.appendChild(cell);
+    // --- 3. BURNING SLOTS (0.20 AKHO) ---
+    function openBurningSlots() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('burningSlotsContainer').style.display = 'flex';
+        document.getElementById('slotWinVal').innerText = "0.00";
     }
-}
 
-async function startKingSpin() {
-    if (isKingSpinning || !canAfford(kingStake)) return;
-    isKingSpinning = true; currentMultiplier = 1; updateKingUI();
-    spendAkho(kingStake, 'King Of Akho Bet');
-    updateAllGameBalances();
-    await dropNewSymbols();
-    processRound();
-}
+    function triggerBurningSpin() {
+        if (isGameRunning || !canAfford(burningStake)) { if(!canAfford(burningStake)) alert("ბალანსი არ გყოფნის! (საჭიროა 0.20 AKHO)"); return; }
+        isGameRunning = true; spendAkho(burningStake, 'Burning Slots Bet');
+        document.getElementById('slotWinVal').innerText = "0.00";
+        ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
 
-async function dropNewSymbols() {
-    const cells = document.querySelectorAll('.king-cell');
-    for (let i = 0; i < cells.length; i++) {
-        const randKey = kingIcons[Math.floor(Math.random() * kingIcons.length)];
-        cells[i].style.opacity = "0"; cells[i].style.transform = "translateY(-30px)";
-        cells[i].innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:40px; height:40px; object-fit:contain;" data-key="${randKey}">`;
-        
+        const rand = Math.random();
+        let res = [], win = 0;
+        if (rand < 0.05) { res = ['7️⃣', '7️⃣', '7️⃣']; win = burningStake * 100; }
+        else if (rand < 0.15) { res = ['🍉', '🍉', '🍉']; win = burningStake * 20; }
+        else { 
+            res = [burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)]];
+            if(res[0] === res[1] && res[1] === res[2]) res[2] = burningIcons[(burningIcons.indexOf(res[2])+1)%7];
+        }
+
+        animateReel('reel_1', res[0], 0.0);
+        animateReel('reel_2', res[1], 0.4);
+        animateReel('reel_3', res[2], 0.8);
+
         setTimeout(() => {
-            cells[i].style.transition = "all 0.25s cubic-bezier(0.1, 0.8, 0.3, 1)";
-            cells[i].style.opacity = "1"; cells[i].style.transform = "translateY(0)";
-        }, i * 15);
-    }
-    await new Promise(r => setTimeout(r, 550));
-}
-
-function processRound() {
-    const cells = document.querySelectorAll('.king-cell');
-    let symbolsOnScreen = Array.from(cells).map(c => c.querySelector('img').getAttribute('data-key'));
-    let counts = {};
-    symbolsOnScreen.forEach(s => counts[s] = (counts[s] || 0) + 1);
-
-    let winningSymbol = null; let winCount = 0;
-    for (let sym in counts) {
-        if (counts[sym] >= 8) { winningSymbol = sym; winCount = counts[sym]; break; }
+            isGameRunning = false;
+            if(win > 0) {
+                winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+                earnAkho(firebase.auth().currentUser.uid, win, 'Burning Slots Win');
+                document.getElementById('slotWinVal').innerText = win.toFixed(2);
+            }
+        }, 2500);
     }
 
-    if (winningSymbol) { handleWin(winningSymbol, winCount); } 
-    else { isKingSpinning = false; }
-}
+    // --- 4. GOLD SLOTS 777 (2.00 AKHO) ---
+    function openSlotGame() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('slotGameContainer').style.display = 'flex';
+        document.getElementById('goldWinVal').innerText = "0.00";
+    }
 
-async function handleWin(symbol, count) {
-    const cells = document.querySelectorAll('.king-cell');
-    let winAmount = (count * 0.5) * currentMultiplier;
+    function startGoldSpin() {
+        if (isGameRunning || !canAfford(2.00)) { if(!canAfford(2.00)) alert("ბალანსი არ გყოფნის! (საჭიროა 2.00 AKHO)"); return; }
+        isGameRunning = true; spendAkho(2.00, 'Gold Slots Bet');
+        document.getElementById('goldWinVal').innerText = "0.00";
+        ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
 
-    cells.forEach(cell => {
-        if (cell.querySelector('img').getAttribute('data-key') === symbol) {
-            cell.style.background = "gold"; cell.style.transform = "scale(0.6)"; cell.style.opacity = "0";
+        const rand = Math.random();
+        let res = [], win = 0;
+        if (rand < 0.04) { res = ['⭐', '⭐', '⭐']; win = 100.00; }
+        else if (rand < 0.14) { res = ['🔔', '🔔', '🔔']; win = 16.00; }
+        else {
+            res = [burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)]];
+            if(res[0] === res[1] && res[1] === res[2]) res[2] = burningIcons[(burningIcons.indexOf(res[2])+1)%7];
         }
-    });
 
-    earnAkho(auth.currentUser.uid, winAmount, 'King Win');
-    currentMultiplier++; updateKingUI();
-    winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+        animateReel('goldReel_1', res[0], 0.0);
+        animateReel('goldReel_2', res[1], 0.4);
+        animateReel('goldReel_3', res[2], 0.8);
 
-    setTimeout(() => {
+        setTimeout(() => {
+            isGameRunning = false;
+            if(win > 0) {
+                winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+                earnAkho(firebase.auth().currentUser.uid, win, 'Gold Slots Win');
+                document.getElementById('goldWinVal').innerText = win.toFixed(2);
+            }
+        }, 2500);
+    }
+
+    // --- 5. ROYAL 3D SLOTS (5.00 AKHO) ---
+    function open3DSlot() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('slot3DContainer').style.display = 'flex';
+        document.getElementById('royalWinVal').innerText = "0.00";
+    }
+
+    function startRoyalSpin() {
+        if (isGameRunning || !canAfford(5.00)) { if(!canAfford(5.00)) alert("ბალანსი არ გყოფნის! (საჭიროა 5.00 AKHO)"); return; }
+        isGameRunning = true; spendAkho(5.00, 'Royal Slots Bet');
+        document.getElementById('royalWinVal').innerText = "0.00";
+        ballPopSnd.currentTime = 0; ballPopSnd.play().catch(()=>{});
+
+        const rand = Math.random();
+        let res = [], win = 0;
+        if (rand < 0.03) { res = ['7️⃣', '7️⃣', '7️⃣']; win = 500.00; }
+        else if (rand < 0.12) { res = ['🍇', '🍇', '🍇']; win = 40.00; }
+        else {
+            res = [burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)], burningIcons[Math.floor(Math.random()*7)]];
+            if(res[0] === res[1] && res[1] === res[2]) res[2] = burningIcons[(burningIcons.indexOf(res[2])+1)%7];
+        }
+
+        animateReel('royalReel_1', res[0], 0.0);
+        animateReel('royalReel_2', res[1], 0.4);
+        animateReel('royalReel_3', res[2], 0.8);
+
+        setTimeout(() => {
+            isGameRunning = false;
+            if(win > 0) {
+                winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+                earnAkho(firebase.auth().currentUser.uid, win, 'Royal Slots Win');
+                document.getElementById('royalWinVal').innerText = win.toFixed(2);
+            }
+        }, 2500);
+    }
+
+    // --- 6. KING OF AKHO (ბადის HD ხილის რენდერი) ---
+    function openKingOfAkho() {
+        document.getElementById('gamesList').style.display = 'none';
+        document.getElementById('kingOfAkhoContainer').style.display = 'flex';
+        initializeKingGrid();
+    }
+
+    function backToGamesListFromKing() {
+        if (isGameRunning) return;
+        document.getElementById('kingOfAkhoContainer').style.display = 'none';
+        document.getElementById('gamesList').style.display = 'grid';
+    }
+
+    function initializeKingGrid() {
+        const grid = document.getElementById('kingGrid');
+        grid.innerHTML = ''; currentMultiplier = 1; updateKingUI();
+        for (let i = 0; i < 25; i++) {
+            const randKey = kingIcons[Math.floor(Math.random() * kingIcons.length)];
+            const cell = document.createElement('div');
+            cell.className = 'king-cell';
+            cell.innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:40px; height:40px; object-fit:contain;">`;
+            grid.appendChild(cell);
+        }
+    }
+
+    function updateKingUI() { document.getElementById('kingMultiplier').innerText = `Multiplier: x${currentMultiplier}`; }
+
+    async function startKingSpin() {
+        if (isGameRunning || !canAfford(kingStake)) { if(!canAfford(kingStake)) alert("ბალანსი არ გყოფნის! (საჭიროა 10.00 AKHO)"); return; }
+        isGameRunning = true; currentMultiplier = 1; updateKingUI();
+        spendAkho(kingStake, 'King Of Akho');
+        await dropNewSymbols();
+        processRound();
+    }
+
+    async function dropNewSymbols() {
+        const cells = document.querySelectorAll('.king-cell');
+        for (let i = 0; i < cells.length; i++) {
+            const randKey = kingIcons[Math.floor(Math.random() * kingIcons.length)];
+            cells[i].style.opacity = "0"; cells[i].style.transform = "translateY(-20px)";
+            cells[i].innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:40px; height:40px; object-fit:contain;" data-key="${randKey}">`;
+            setTimeout(() => {
+                cells[i].style.transition = "all 0.2s ease-out";
+                cells[i].style.opacity = "1"; cells[i].style.transform = "translateY(0)";
+            }, i * 12);
+        }
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    function processRound() {
+        const cells = document.querySelectorAll('.king-cell');
+        let symbolsOnScreen = Array.from(cells).map(c => c.querySelector('img').getAttribute('data-key'));
+        let counts = {};
+        symbolsOnScreen.forEach(s => counts[s] = (counts[s] || 0) + 1);
+
+        let winningSymbol = null; let winCount = 0;
+        for (let sym in counts) {
+            if (counts[sym] >= 8) { winningSymbol = sym; winCount = counts[sym]; break; }
+        }
+
+        if (winningSymbol) { handleWin(winningSymbol, winCount); } 
+        else { isGameRunning = false; }
+    }
+
+    async function handleWin(symbol, count) {
+        const cells = document.querySelectorAll('.king-cell');
+        let winAmount = (count * 0.5) * currentMultiplier;
+
         cells.forEach(cell => {
-            if (cell.style.opacity === "0") {
-                const randKey = kingIcons[Math.floor(Math.random() * kingIcons.length)];
-                cell.innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:40px; height:40px; object-fit:contain;" data-key="${randKey}">`;
-                cell.style.opacity = "1"; cell.style.transform = "scale(1)"; cell.style.background = "#1a1a1a";
+            if (cell.querySelector('img').getAttribute('data-key') === symbol) {
+                cell.style.background = "gold"; cell.style.transform = "scale(0.6)"; cell.style.opacity = "0";
             }
         });
-        setTimeout(processRound, 400);
-    }, 500);
-}
 
-// ჩართვის ივენთი
-document.querySelector('.game-btn-container')?.addEventListener('click', updateGameBalance);
-window.onload = function() { checkAndFixVariables(); };                    
+        earnAkho(firebase.auth().currentUser.uid, winAmount, 'King Win');
+        currentMultiplier++; updateKingUI();
+        winSnd.currentTime = 0; winSnd.play().catch(()=>{});
+
+        setTimeout(() => {
+            cells.forEach(cell => {
+                if (cell.style.opacity === "0") {
+                    const randKey = kingIcons[Math.floor(Math.random() * kingIcons.length)];
+                    cell.innerHTML = `<img src="${fruitHDFiles[randKey]}" style="width:40px; height:40px; object-fit:contain;" data-key="${randKey}">`;
+                    cell.style.opacity = "1"; cell.style.transform = "scale(1)"; cell.style.background = "#1a1a1a";
+                }
+            });
+            setTimeout(processRound, 400);
+        }, 500);
+    }
 </script>
 </body>
 </html>
