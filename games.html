@@ -314,10 +314,10 @@
     <div id="slotGameContainer" class="game-container">
         <div class="bh-wrapper">
             <div class="bh-jackpot-grid">
-                <div class="bh-jackpot-box"><span>♠️</span><div class="bh-jack-val">10 578 262.99<span class="bh-gel">GEL</span></div></div>
-                <div class="bh-jackpot-box"><span style="color:#ff4d4d;">♥️</span><div class="bh-jack-val">156 939.73<span class="bh-gel">GEL</span></div></div>
-                <div class="bh-jackpot-box"><span style="color:#ff4d4d;">♦️</span><div class="bh-jack-val">486.99<span class="bh-gel">GEL</span></div></div>
-                <div class="bh-jackpot-box"><span>♣️</span><div class="bh-jack-val">139.35<span class="bh-gel">GEL</span></div></div>
+                <div class="bh-jackpot-box"><span>♠️</span><div class="bh-jack-val"><span id="jack_spades">1000.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span style="color:#ff4d4d;">♥️</span><div class="bh-jack-val"><span id="jack_hearts">0.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span style="color:#ff4d4d;">♦️</span><div class="bh-jack-val"><span id="jack_diamonds">0.00</span><span class="bh-gel">AKHO</span></div></div>
+                <div class="bh-jackpot-box"><span>♣️</span><div class="bh-jack-val"><span id="jack_clubs">0.00</span><span class="bh-gel">AKHO</span></div></div>
             </div>
 
             <div class="bh-title">BURNING HOT</div>
@@ -409,12 +409,39 @@
     let myAkho = 0; 
     let isGameRunning = false;
 
-    // 🚀 გასწორდა: ზუსტად ფოტოს მიხედვით ორიგინალი Burning Hot-ის იკონები!
     var burningIcons = ['🍒', '🍋', '🍊', '🍇', '🍉', '🔔', '7️⃣', '⭐', '🍀'];
 
     var burningStake5 = 0.15; 
     var isSpinningNow = false;
     var isSpinning5 = false;
+
+    // 🚀 ჯეკპოტების მუდმივი მეხსიერების ჩატვირთვა და ლოგიკა
+    let jackSpades = parseFloat(localStorage.getItem('jack_spades')) || 1000.00;
+    let jackHearts = parseFloat(localStorage.getItem('jack_hearts')) || 0.00;
+    let jackDiamonds = parseFloat(localStorage.getItem('jack_diamonds')) || 0.00;
+    let jackClubs = parseFloat(localStorage.getItem('jack_clubs')) || 0.00;
+
+    function updateJackpotsOnScreen() {
+        if(document.getElementById('jack_spades')) document.getElementById('jack_spades').innerText = jackSpades.toFixed(2);
+        if(document.getElementById('jack_hearts')) document.getElementById('jack_hearts').innerText = jackHearts.toFixed(2);
+        if(document.getElementById('jack_diamonds')) document.getElementById('jack_diamonds').innerText = jackDiamonds.toFixed(2);
+        if(document.getElementById('jack_clubs')) document.getElementById('jack_clubs').innerText = jackClubs.toFixed(2);
+    }
+
+    // უწყვეტი ათვლა რეალურ დროში (გათიშულზეც რომ გაგრძელდეს ბრაუზერის ბაზაზე)
+    setInterval(() => {
+        jackSpades += 0.05;
+        jackHearts += 0.03;
+        jackDiamonds += 0.02;
+        jackClubs += 0.01;
+
+        localStorage.setItem('jack_spades', jackSpades);
+        localStorage.setItem('jack_hearts', jackHearts);
+        localStorage.setItem('jack_diamonds', jackDiamonds);
+        localStorage.setItem('jack_clubs', jackClubs);
+
+        updateJackpotsOnScreen();
+    }, 1000);
 
     function openGamesPage() {
         document.getElementById('gamesPage').style.display = 'flex';
@@ -425,6 +452,7 @@
         db.ref(`users/${auth.currentUser.uid}/akho`).on('value', snap => {
             document.getElementById('gameBalance').innerText = (snap.val() || 0).toFixed(2) + " AKHO";
         });
+        updateJackpotsOnScreen();
     }
 
     function closeGamesPage() {
@@ -612,6 +640,7 @@
         document.getElementById('gamesList').style.display = 'none';
         document.getElementById('slotGameContainer').style.display = 'flex';
         updateAllGameBalances();
+        updateJackpotsOnScreen();
     }
 
     function triggerBurning5Spin() {
@@ -706,6 +735,18 @@
         try { Sloti_dartyma.currentTime = 0; Sloti_dartyma.play(); } catch(e){}
         animateReel('royalReel_1', '🏆', 0.0); animateReel('royalReel_2', '🏆', 0.4); animateReel('royalReel_3', '🏆', 0.8);
         setTimeout(() => { isSpinningNow = false; try { Sloti_dartyma.pause(); winSnd.currentTime = 0; winSnd.play(); } catch(e){} updateAllGameBalances(); }, 3200);
+    }
+
+    function animateReel(reelId, finalSymbol, delay) {
+        const r = document.getElementById(reelId); if(!r) return; r.innerHTML = '';
+        const size = reelId.includes('royal') ? 75 : 70;
+        for (let j = 0; j < 40; j++) {
+            const s = document.createElement('div'); s.className = reelId.includes('royal') ? 'cell-3d' : 'reel-cell';
+            s.innerText = burningIcons[Math.floor(Math.random() * burningIcons.length)]; r.appendChild(s);
+        }
+        r.style.transition = 'none'; r.style.transform = 'translateY(0)';
+        r.children[30].innerText = finalSymbol;
+        setTimeout(() => { r.style.transition = `transform ${1.5 + delay}s cubic-bezier(0.2, 0, 0.1, 1)`; r.style.transform = `translateY(-${30 * size}px)`; }, 50);
     }
 
     // --- 5. KING OF AKHO LOGIC ---
