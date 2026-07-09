@@ -125,7 +125,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     if (sessionId && packAmount) {
         const amountToAdd = parseFloat(packAmount);
         
-        // Supabase-ის ვერსია payments_processed-ის შესამოწმებლად
         const { data: paySnap } = await supabase
             .from('payments_processed')
             .select('*')
@@ -133,7 +132,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
             .maybeSingle();
 
         if (!paySnap) {
-            // ბალანსის განახლება ტრანზაქციის ლოგიკით (RPC) ან პირდაპირი განახლებით
             const { data: userData } = await supabase
                 .from('users')
                 .select('akho')
@@ -169,12 +167,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     
     setTimeout(async () => {
       console.log("ვცდილობ ჩაწერას...");
-      // ტესტ ჩაწერა Supabase-ში
       await supabase.from('users').update({ test_field: "მუშაობს" }).eq('id', user.id);
       saveMessagingToken(user);
     }, 2000);
 
-    // ევრო ბალანსის რეალთაიმ მოსმენა (Supabase Realtime)
     supabase
         .channel('euro-changes')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
@@ -184,7 +180,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         })
         .subscribe();
 
-    // პირველადი წაკითხვა ევრო ბალანსის
     supabase.from('users').select('euro_balance').eq('id', user.id).single().then(({ data }) => {
         const euro = data ? (data.euro_balance || 0) : 0;
         const euroEl = document.getElementById('euroBalanceDisplay');
@@ -207,7 +202,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
             if (localStorage.getItem(tokenKey)) return; 
 
             try {
-                // FCM ფუნქციონალი რჩება ზუსტად იგივე
                 const messaging = firebase.messaging();
                 messaging.requestPermission()
                     .then(() => messaging.getToken({ 
@@ -228,7 +222,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     }, 3000);
 
     let currentIncomingCall = null;
-    // ვიდეო ზარების რეალთაიმ მოსმენა
     supabase
         .channel('video-calls')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'video_calls', filter: `receiver_id=eq.${user.id}` }, payload => {
@@ -247,7 +240,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 
     document.getElementById('authUI').style.display = 'none';
     
-    // მომხმარებლის ძირითადი მონაცემების რეალთაიმ მოსმენა
     supabase
         .channel('user-data')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
@@ -255,7 +247,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         })
         .subscribe();
 
-    // პირველადი წაკითხვა მომხმარებლის პროფილის
     const { data: d } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
     if(d) { handleUserData(d); }
 
@@ -535,7 +526,6 @@ function loadComments(postId, isGallery = false) {
 
     const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
 
-    // ოპტიმიზაცია: .on-ის ნაცვლად .once, რომ კომენტარის დაწერამ გვერდი არ გაჭედოს
     db.ref(commentPath).once('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
@@ -668,7 +658,6 @@ function openMessenger() {
     if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
     if (!auth.currentUser) return;
 
-    // ოპტიმიზაცია: მესინჯერის ჩატების ერთჯერადი სწრაფი წაკითხვა
     db.ref(`users/${auth.currentUser.uid}/following`).once('value', async snap => {
         if (!list) return;
         const followers = snap.val();
@@ -1333,11 +1322,8 @@ function deleteNotification(id) {
     db.ref(`notifications/${auth.currentUser.uid}/${id}`).remove().then(() => openRequestsUI());
 }
 
-// ოპტიმიზირებული პროფილის ვიდეოების ფუნქცია
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
-    
-    // `.once` და `orderByChild` მთელი ბაზის ტვირთვის ასარიდებლად
     db.ref('posts').orderByChild('authorId').equalTo(uid).once('value', snap => {
         grid.innerHTML = ""; 
         const posts = snap.val();
@@ -1361,7 +1347,6 @@ function loadUserVideos(uid) {
         });
 
         document.getElementById('statVidsCount').innerText = vCount;
-
         let currentlyShown = 0;
 
         function showNextSix() {
@@ -1376,15 +1361,15 @@ function loadUserVideos(uid) {
                 item.className = 'grid-item';
                 item.innerHTML = `
                     <video src="${video.url}#t=0.1" 
-                               muted 
-                               playsinline 
-                               preload="metadata" 
-                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-                               style="object-fit: cover; width:100%; height:100%; background: #000;">
-                        </video>
-                        <div class="video-views-label">
-                            <i class="fas fa-play"></i> ${formattedViews}
-                        </div>`;
+                           muted 
+                           playsinline 
+                           preload="metadata" 
+                           poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                           style="object-fit: cover; width:100%; height:100%; background: #000;">
+                    </video>
+                    <div class="video-views-label">
+                        <i class="fas fa-play"></i> ${formattedViews}
+                    </div>`;
                 
                 const globalIndex = currentlyShown; 
                 item.onclick = () => playFullVideo(video.url, id, globalIndex);
@@ -1449,7 +1434,6 @@ function playFullVideo(url, postId, currentIndex) {
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
-        // შეცვლილია .once-ზე, რომ სრულად გახსნამ არ ტვირთოს ტელეფონი
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
@@ -1830,29 +1814,29 @@ function renderTokenFeed() {
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
             card.innerHTML = `
-<video src="${videoUrl}" 
-loop 
-playsinline 
-muted 
-autoplay
-preload="metadata" 
-poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
-onclick="togglePlayPause(this)">
-</video>
-<div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
+                <video src="${videoUrl}" 
+                loop 
+                playsinline 
+                muted 
+                autoplay
+                preload="metadata" 
+                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
+                onclick="togglePlayPause(this)">
+                </video>
+                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
 
-<div class="side-actions">
-    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
-        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
-        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
-    </div>
+                <div class="side-actions">
+                    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
+                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
+                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
+                    </div>
 
-    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
-        <i class="fas fa-heart"></i>
-        <span id="like-count-${id}">${likeCount}</span>
-    </div>
-    
+                    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+                        <i class="fas fa-heart"></i>
+                        <span id="like-count-${id}">${likeCount}</span>
+                    </div>
+                    
                     <div class="action-item" onclick="openComments('${id}')">
                         <i class="fas fa-comment-dots"></i>
                         <span id="comm-count-${id}">0</span>
@@ -1869,23 +1853,21 @@ onclick="togglePlayPause(this)">
                         <i class="fas fa-gift" style="color: #ff4d4d;"></i>
                         <span>Gift</span>
                     </div>
-                  ${post.authorId === auth.currentUser.uid ? `
-                   <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
-                   <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
-                   <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
-                  </div>
-                  ` : ''}
+                    ${post.authorId === auth.currentUser.uid ? `
+                    <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
+                        <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
+                        <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
+                    </div>` : ''}
                 </div>
-                  <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
-        
-                <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
-              </div>
-                 <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
-                 ${post.text || ''}
-                  </p>
-               </div>`;
+                <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
+                        <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
+                    </div>
+                    <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
+                        ${post.text || ''}
+                    </p>
+                </div>`;
             
             feed.appendChild(card);
             cleanupOldVideos();
@@ -2499,7 +2481,7 @@ window.selectPackage = function(el, amount) {
 
 window.confirmPurchase = function() {
     if (selectedAkhoAmount === 0) return alert("გთხოვთ აირჩიოთ პაკეტი!");
-    alert("გადახდის სისტემა მზადების პროცესშია. არჩეულია: " + selectedAkhoAmount + " AKHO");
+    alert("გავაგრძელოთ გადახდის სისტემაში. არჩეულია: " + selectedAkhoAmount + " AKHO");
 };
 
 function openWithdrawHistory() {
@@ -2646,7 +2628,6 @@ async function submitWallPost() {
     }
 }
 
-// ოპტიმიზირებული კედლის პოსტები (წაკითხვა .once-ით, რომ რეალურ დროში არ გაჭედოს)
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
@@ -2882,7 +2863,6 @@ function downloadVideo(postId) {
     toggleMoreMenu();
 }
 
-// ოპტიმიზირებული Unread Counter: უყურებს მხოლოდ კონკრეტულ იუზერს და არა მთელ ბაზას
 function startGlobalUnreadCounter() {
     const myUid = auth.currentUser.uid;
     const chatBadge = document.getElementById('chatCountBadge');
@@ -2891,7 +2871,6 @@ function startGlobalUnreadCounter() {
         const lastReadData = readSnap.val() || {};
         let totalUnread = 0;
 
-        // მხოლოდ ამ იუზერის ჩატებს ვამოწმებთ სათითაოდ
         db.ref('messages').once('value', snap => {
             const allChats = snap.val();
             if (!allChats) return;
@@ -3043,7 +3022,7 @@ async function openUploadModal() {
         } catch (err) {
             alert("კამერა ვერ ჩაირთო. შეამოწმეთ ნებართვები პარამეტრებში.");
         }
-    }
+   }
 }
 
 async function startLiveCamera() {
