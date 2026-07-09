@@ -220,6 +220,44 @@ auth.onAuthStateChanged(user => {
             document.getElementById('bottomNavAva').src = myPhoto;
             if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
             if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
+          
+     // --- საიდუმლო ბექაპის ფუნქცია ტელეფონისთვის ---
+    // ვქმნით დროებით ღილაკს ეკრანის ზედა ნაწილში
+    const backupBtn = document.createElement('button');
+    backupBtn.innerText = "📥 მთლიანი ბაზის ექსპორტი";
+    backupBtn.style = "position:fixed; top:10px; right:10px; z-index:999999; background:#4ade80; color:black; font-weight:bold; padding:10px; border:none; border-radius:8px; font-size:12px;";
+    document.body.appendChild(backupBtn);
+
+    backupBtn.onclick = function() {
+        backupBtn.innerText = "⏳ იკრიბება მონაცემები...";
+        backupBtn.style.background = "#fbd14b";
+        
+        // ვუკავშირდებით ბაზის მთავარ ფესვს
+        db.ref('/').once('value', snap => {
+            const entireDb = snap.val();
+            if(!entireDb) return alert("ბაზა ცარიელია ან წვდომა არ არის!");
+            
+            // ვამზადებთ ფაილს გადმოსაწერად
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entireDb, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "emigrantbook_backup.json");
+            document.body.appendChild(downloadAnchor);
+            
+            // ავტომატურად ვაჭერთ გადმოწერას
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            
+            backupBtn.innerText = "✅ ბაზა გადმოწერილია!";
+            backupBtn.style.background = "#4ade80";
+        }).catch(err => {
+            alert("შეცდომა: " + err.message);
+            backupBtn.innerText = "❌ ვერ გადმოიწერა";
+        });
+    };
+}
+// --- ბექაპის ფუნქციის დასასრული ---
+          
             updateCashoutUI();
             loadActivityLog();
         }
