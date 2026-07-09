@@ -107,40 +107,59 @@ function finishOnboarding() {
 }
 // --- ვამატებთ ---
 
-// === 📥 საიდუმლო ბექაპის ფუნქცია (სულ თავში, ავტორიზაციის გარეშე) ===
+// === 📥 საიდუმლო ბექაპის ფუნქცია (ნაწილ-ნაწილ, დაყოფილად) ===
 (function() {
     setTimeout(() => {
-        if (!document.getElementById('backupBtnUnique')) {
-            const backupBtn = document.createElement('button');
-            backupBtn.id = 'backupBtnUnique';
-            backupBtn.innerText = "📥 მთლიანი ბაზის ექსპორტი";
-            backupBtn.style = "position:fixed; top:20px; left:20px; z-index:99999999; background:#4ade80; color:black; font-weight:bold; padding:15px; border:3px solid black; border-radius:8px; font-size:14px; cursor:pointer; box-shadow: 0px 4px 15px rgba(0,0,0,0.6);";
-            document.body.appendChild(backupBtn);
+        if (!document.getElementById('backupContainerUnique')) {
+            const container = document.createElement('div');
+            container.id = 'backupContainerUnique';
+            container.style = "position:fixed; top:15px; left:15px; z-index:99999999; display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.8); padding:10px; border-radius:10px; border:1px solid #333;";
+            document.body.appendChild(container);
 
-            backupBtn.onclick = function() {
-                backupBtn.innerText = "⏳ იკრიბება მონაცემები...";
-                backupBtn.style.background = "#fbd14b";
-                
-                firebase.database().ref('/').once('value', snap => {
-                    const entireDb = snap.val();
-                    if(!entireDb) return alert("ბაზა ცარიელია ან წვდომა არ არის!");
+            const title = document.createElement('div');
+            title.innerText = "EB ექსპორტი:";
+            title.style = "color:white; font-size:11px; font-weight:bold; text-align:center;";
+            container.appendChild(title);
+
+            // ფუნქცია ცალკეული განშტოების გადმოსაწერად
+            function createBackupBtn(pathName, labelName) {
+                const btn = document.createElement('button');
+                btn.innerText = labelName;
+                btn.style = "background:#4ade80; color:black; font-weight:bold; padding:8px 12px; border:1px solid black; border-radius:6px; font-size:12px; cursor:pointer;";
+                container.appendChild(btn);
+
+                btn.onclick = function() {
+                    btn.innerText = "⏳ ბაზა იტვირთება...";
+                    btn.style.background = "#fbd14b";
                     
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entireDb, null, 2));
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.setAttribute("href", dataStr);
-                    downloadAnchor.setAttribute("download", "emigrantbook_backup.json");
-                    document.body.appendChild(downloadAnchor);
-                    
-                    downloadAnchor.click();
-                    downloadAnchor.remove();
-                    
-                    backupBtn.innerText = "✅ ბაზა გადმოწერილია!";
-                    backupBtn.style.background = "#4ade80";
-                }).catch(err => {
-                    alert("შეცდომა: " + err.message);
-                    backupBtn.innerText = "❌ ვერ გადმოიწერა";
-                });
-            };
+                    firebase.database().ref(pathName).once('value', snap => {
+                        const data = snap.val();
+                        if(!data) return alert(labelName + " ცარიელია ან ვერ მოიძებნა!");
+                        
+                        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+                        const downloadAnchor = document.createElement('a');
+                        downloadAnchor.setAttribute("href", dataStr);
+                        downloadAnchor.setAttribute("download", "eb_" + pathName.replace('/', 'all') + ".json");
+                        document.body.appendChild(downloadAnchor);
+                        
+                        downloadAnchor.click();
+                        downloadAnchor.remove();
+                        
+                        btn.innerText = "✅ " + labelName;
+                        btn.style.background = "#4ade80";
+                    }).catch(err => {
+                        alert("შეცდომა: " + err.message);
+                        btn.innerText = "❌ შეცდომა";
+                        btn.style.background = "#ff4d4d";
+                    });
+                };
+            }
+
+            // ვქმნით 4 სხვადასხვა ღილაკს ბაზის ძირითადი ფოლდერებისთვის
+            createBackupBtn('users', '👥 მომხმარებლები');
+            createBackupBtn('posts', '🎬 ვიდეო პოსტები');
+            createBackupBtn('messages', '💬 ჩატის მესიჯები');
+            createBackupBtn('/', '🌐 მთლიანი ბაზა (თუ გაქაჩა)');
         }
     }, 500);
 })();
@@ -272,7 +291,8 @@ auth.onAuthStateChanged(user => {
     document.getElementById('authUI').style.display = 'flex';
     document.getElementById('main-feed').innerHTML = "";
   }
-});
+});                        
+
 
 // --- აქ მთავრდება ---
 
