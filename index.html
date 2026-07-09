@@ -3169,11 +3169,7 @@ div[style*="overflow-x:auto"] {
  
 <audio id="msgSound" src="notify.mp3" preload="auto"></audio>
  
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
 
@@ -3181,7 +3177,6 @@ div[style*="overflow-x:auto"] {
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
 
- 
 <script src="languages.js"></script>
 
 <script src="script.js"></script>
@@ -3195,38 +3190,20 @@ div[style*="overflow-x:auto"] {
 <script src="videocall.js"></script>
 
 <script>
-  const firebaseConfig = { 
-    apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-    authDomain: "emigrantbook.firebaseapp.com", 
-    databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-    projectId: "emigrantbook", 
-    storageBucket: "emigrantbook.firebasestorage.app", 
-    appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
-  };
-  
+  // Supabase-ის ახალი კავშირი
+  const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
+
   // ინიციალიზაცია
-  if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-  }
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  console.log("Supabase წარმატებით ჩაიტვირთა და მომზადებულია! ✅");
 
-
-  // ... ინიციალიზაციის მერე ...
-  console.log("Firebase ჩაიტვირთა:", firebase.SDK_VERSION);
-  if (firebase.storage) {
-      console.log("Storage ნაპოვნია! ✅");
-  } else {
-      console.log("Storage დაკარგულია! ❌");
-      alert("კრიტიკული შეცდომა: Storage ბიბლიოთეკა არ ჩაიტვირთა!");
-  }
-
-
- 
-  
-  // გლობალური ცვლადები
-  const db = firebase.database();
-  const auth = firebase.auth();
-  const storage = firebase.storage(); // აი, აქ ვააქტიურებთ Storage-ს საბოლოოდ
+  // იმისთვის, რომ შენს სხვა JS ფაილებში (script.js, videocall.js...) კოდი არ დაზიანდეს,
+  // დროებით ვინახავთ ძველ ცვლადებს, რომლებსაც ნელ-ნელა გადავაწყობთ
+  const db = null; 
+  const auth = null; 
+  const storage = null; 
 </script>
 
 
