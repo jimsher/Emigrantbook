@@ -3189,8 +3189,9 @@ div[style*="overflow-x:auto"] {
 <script src="fotogaleria.js"></script>
 <script src="videocall.js"></script>
 
+
 <script>
-  // Supabase-ის ახალი კავშირი
+  // Supabase-ის კავშირი (ორიგინალი მონაცემები უცვლელად)
   const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
 
@@ -3199,13 +3200,33 @@ div[style*="overflow-x:auto"] {
 
   console.log("Supabase წარმატებით ჩაიტვირთა და მომზადებულია! ✅");
 
-  // იმისთვის, რომ შენს სხვა JS ფაილებში (script.js, videocall.js...) კოდი არ დაზიანდეს,
-  // დროებით ვინახავთ ძველ ცვლადებს, რომლებსაც ნელ-ნელა გადავაწყობთ
+  // ცვლადების სწორი გადამისამართება, რომ script.js არ გაითიშოს და ფორმები ამუშავდეს:
   const db = null; 
-  const auth = null; 
   const storage = null; 
-</script>
+  
+  // auth-ს ვაბამთ Supabase-ის ავტორიზაციას, რომ auth.currentUser-ზე კოდი არ დაქრაშოს
+  const auth = supabase.auth;
 
+  // ავტორიზაციის მდგომარეობის მართვა - ამოწმებს სესიას და მართავს ფორმების გამოჩენას
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    const user = session ? session.user : null;
+    
+    // ხელოვნურად ვუქმნით currentUser თავსებადობას ძველი კოდისთვის
+    auth.currentUser = user ? { uid: user.id, email: user.email } : null;
+    
+    if (user) {
+      // თუ შესულია მომხმარებელი, ვმალავთ ფორმას და ვრთავთ ფუნქციებს
+      if (document.getElementById('authUI')) document.getElementById('authUI').style.display = 'none';
+      if (document.getElementById('main-feed')) document.getElementById('main-feed').style.display = 'block';
+      console.log("მომხმარებელი ავტორიზებულია ID-ით:", user.id);
+    } else {
+      // თუ მომხმარებელი არ არის შესული, პირდაპირ ვაჩენთ შესვლის/რეგისტრაციის ბლოკს
+      if (document.getElementById('authUI')) document.getElementById('authUI').style.display = 'flex';
+      if (document.getElementById('main-feed')) document.getElementById('main-feed').style.display = 'none';
+      console.log("მომხმარებელი არ არის შესული. ნაჩვენებია შესვლის ფორმა.");
+    }
+  });
+</script>
 
 
 <script>
