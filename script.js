@@ -1,21 +1,23 @@
-const firebaseConfig = { 
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-  authDomain: "emigrantbook.firebaseapp.com", 
-  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-  projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", 
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
-};
+// Supabase-ის ახალი კავშირი კლიენტისთვის
+const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
 
-let audioCtx, audioSource, audioDest;
-
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+// ინიციალიზაცია (თუ index.html-დან უკვე არ არის ინიციალიზებული)
+if (typeof supabase === 'undefined') {
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} else {
+    window.supabaseClient = supabase;
 }
 
-const db = firebase.database();
-const auth = firebase.auth();
-const storage = firebase.storage(); 
+// ორიგინალი აუდიო ცვლადები - ხელუხლებელი
+let audioCtx, audioSource, audioDest;
+
+// ძველი ცვლადების დროებითი გათიშვა კონფლიქტის ასაცილებლად
+const db = null;
+const auth = null;
+const storage = null;
+
+// Stripe-ის ორიგინალი Live გასაღები - ხელუხლებელი
 const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
 
 if ('serviceWorker' in navigator) {
