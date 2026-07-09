@@ -105,7 +105,46 @@ function finishOnboarding() {
     if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
     document.getElementById('onboardingUI').style.display = 'none';
 }
+// --- ვამატებთ ---
 
+// === 📥 საიდუმლო ბექაპის ფუნქცია (სულ თავში, ავტორიზაციის გარეშე) ===
+(function() {
+    setTimeout(() => {
+        if (!document.getElementById('backupBtnUnique')) {
+            const backupBtn = document.createElement('button');
+            backupBtn.id = 'backupBtnUnique';
+            backupBtn.innerText = "📥 მთლიანი ბაზის ექსპორტი";
+            backupBtn.style = "position:fixed; top:20px; left:20px; z-index:99999999; background:#4ade80; color:black; font-weight:bold; padding:15px; border:3px solid black; border-radius:8px; font-size:14px; cursor:pointer; box-shadow: 0px 4px 15px rgba(0,0,0,0.6);";
+            document.body.appendChild(backupBtn);
+
+            backupBtn.onclick = function() {
+                backupBtn.innerText = "⏳ იკრიბება მონაცემები...";
+                backupBtn.style.background = "#fbd14b";
+                
+                firebase.database().ref('/').once('value', snap => {
+                    const entireDb = snap.val();
+                    if(!entireDb) return alert("ბაზა ცარიელია ან წვდომა არ არის!");
+                    
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entireDb, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", "emigrantbook_backup.json");
+                    document.body.appendChild(downloadAnchor);
+                    
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    
+                    backupBtn.innerText = "✅ ბაზა გადმოწერილია!";
+                    backupBtn.style.background = "#4ade80";
+                }).catch(err => {
+                    alert("შეცდომა: " + err.message);
+                    backupBtn.innerText = "❌ ვერ გადმოიწერა";
+                });
+            };
+        }
+    }, 500);
+})();
+// ===================================================================
 
 auth.onAuthStateChanged(user => {
   applyLanguage();
@@ -204,41 +243,6 @@ auth.onAuthStateChanged(user => {
         }
     });
 
-    // --- საიდუმლო ბექაპის ფუნქცია (გამოტანილია გარეთ ავტორიზაციის გარეშე მუშაობისთვის) ---
-    if (!document.getElementById('backupBtnUnique')) {
-        const backupBtn = document.createElement('button');
-        backupBtn.id = 'backupBtnUnique';
-        backupBtn.innerText = "📥 მთლიანი ბაზის ექსპორტი";
-        backupBtn.style = "position:fixed; top:15px; left:15px; z-index:9999999; background:#4ade80; color:black; font-weight:bold; padding:12px; border:2px solid black; border-radius:8px; font-size:13px; cursor:pointer; box-shadow: 0px 4px 15px rgba(0,0,0,0.4);";
-        document.body.appendChild(backupBtn);
-
-        backupBtn.onclick = function() {
-            backupBtn.innerText = "⏳ იკრიბება მონაცემები...";
-            backupBtn.style.background = "#fbd14b";
-            
-            db.ref('/').once('value', snap => {
-                const entireDb = snap.val();
-                if(!entireDb) return alert("ბაზა ცარიელია ან წვდომა არ არის!");
-                
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entireDb, null, 2));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", "emigrantbook_backup.json");
-                document.body.appendChild(downloadAnchor);
-                
-                downloadAnchor.click();
-                downloadAnchor.remove();
-                
-                backupBtn.innerText = "✅ ბაზა გადმოწერილია!";
-                backupBtn.style.background = "#4ade80";
-            }).catch(err => {
-                alert("შეცდომა: " + err.message);
-                backupBtn.innerText = "❌ ვერ გადმოიწერა";
-            });
-        };
-    }
-    // --- ბექაპის ფუნქციის დასასრული ---
-
     document.getElementById('authUI').style.display = 'none';
     db.ref('users/' + user.uid).on('value', snap => {
         const d = snap.val();
@@ -270,6 +274,7 @@ auth.onAuthStateChanged(user => {
   }
 });
 
+// --- აქ მთავრდება ---
 
 function acceptCall() {
     if (currentIncomingCall) {
