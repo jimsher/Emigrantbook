@@ -108,7 +108,12 @@ function finishOnboarding() {
     document.getElementById('onboardingUI').style.display = 'none';
 }
 
-auth.onAuthStateChanged(user => {
+
+
+// Firebase-ის onAuthStateChanged-ის შეცვლა Supabase-ის ექვივალენტით
+supabase.auth.onAuthStateChange(async (event, session) => {
+  const user = session ? session.user : null;
+  
   applyLanguage();
   if (user) {
     setTimeout(() => {
@@ -121,40 +126,71 @@ auth.onAuthStateChanged(user => {
 
     if (sessionId && packAmount) {
         const amountToAdd = parseFloat(packAmount);
-        db.ref(`payments_processed/${sessionId}`).once('value', snap => {
-            if (!snap.exists()) {
-                db.ref(`users/${user.uid}/akho`).transaction(current => {
-                    return (current || 0) + amountToAdd;
-                }).then(() => {
-                    db.ref(`payments_processed/${sessionId}`).set({
-                        uid: user.uid,
-                        amount: amountToAdd,
-                        ts: Date.now()
-                    });
-                    addToLog('Stripe Purchase', amountToAdd);
-                    if (typeof showCustomAlert === "function") {
-                        showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                    } else {
-                        alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                    }
-                    window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Supabase-ის ვერსია payments_processed-ის შესამოწმებლად
+        const { data: paySnap } = await supabase
+            .from('payments_processed')
+            .select('*')
+            .eq('id', sessionId)
+            .maybeSingle();
+
+        if (!paySnap) {
+            // ბალანსის განახლება ტრანზაქციის ლოგიკით (RPC) ან პირდაპირი განახლებით
+            const { data: userData } = await supabase
+                .from('users')
+                .select('akho')
+                .eq('id', user.id)
+                .single();
+                
+            const currentAkho = userData ? (userData.akho || 0) : 0;
+            const newAkho = currentAkho + amountToAdd;
+
+            await supabase
+                .from('users')
+                .update({ akho: newAkho })
+                .eq('id', user.id);
+
+            await supabase
+                .from('payments_processed')
+                .insert({
+                    id: sessionId,
+                    uid: user.id,
+                    amount: amountToAdd,
+                    ts: Date.now()
                 });
+
+            addToLog('Stripe Purchase', amountToAdd);
+            if (typeof showCustomAlert === "function") {
+                showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+            } else {
+                alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
             }
-        });
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }
     
-    setTimeout(() => {
+    setTimeout(async () => {
       console.log("ვცდილობ ჩაწერას...");
-      db.ref('users/' + user.uid + '/test').set("მუშაობს");
+      // ტესტ ჩაწერა Supabase-ში
+      await supabase.from('users').update({ test_field: "მუშაობს" }).eq('id', user.id);
       saveMessagingToken(user);
     }, 2000);
 
-    db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
-        const euro = snap.val() || 0;
+    // ევრო ბალანსის რეალთაიმ მოსმენა (Supabase Realtime)
+    supabase
+        .channel('euro-changes')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
+            const euro = payload.new.euro_balance || 0;
+            const euroEl = document.getElementById('euroBalanceDisplay');
+            if (euroEl) { euroEl.innerText = euro.toFixed(2) + " €"; }
+        })
+        .subscribe();
+
+    // პირველადი წაკითხვა ევრო ბალანსის
+    supabase.from('users').select('euro_balance').eq('id', user.id).single().then(({ data }) => {
+        const euro = data ? (data.euro_balance || 0) : 0;
         const euroEl = document.getElementById('euroBalanceDisplay');
-        if (euroEl) {
-            euroEl.innerText = euro.toFixed(2) + " €";
-        }
+        if (euroEl) { euroEl.innerText = euro.toFixed(2) + " €"; }
     });
 
     updatePresence();
@@ -165,13 +201,15 @@ auth.onAuthStateChanged(user => {
     listenForIncomingCalls(user);
     startWallNotificationListener();
     
-    setTimeout(function() {
-        const user = firebase.auth().currentUser;
-        if (user) {
-            const tokenKey = 'fcm_token_sent_' + user.uid;
+    setTimeout(async function() {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session ? session.user : null;
+        if (currentUser) {
+            const tokenKey = 'fcm_token_sent_' + currentUser.id;
             if (localStorage.getItem(tokenKey)) return; 
 
             try {
+                // FCM ფუნქციონალი რჩება ზუსტად იგივე
                 const messaging = firebase.messaging();
                 messaging.requestPermission()
                     .then(() => messaging.getToken({ 
@@ -179,7 +217,7 @@ auth.onAuthStateChanged(user => {
                     }))
                     .then((token) => {
                         if (token) {
-                            db.ref('users/' + user.uid + '/fcmToken').set(token);
+                            supabase.from('users').update({ fcmToken: token }).eq('id', currentUser.id);
                             showTestNotification(); 
                             localStorage.setItem(tokenKey, 'true'); 
                         }
@@ -192,41 +230,56 @@ auth.onAuthStateChanged(user => {
     }, 3000);
 
     let currentIncomingCall = null;
-    db.ref(`video_calls/${user.uid}`).on('value', snap => {
-        const call = snap.val();
-        if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-            currentIncomingCall = call; 
-            document.getElementById('callerNameDisplay').innerText = call.callerName;
-            document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
-            const modal = document.getElementById('incomingCallModal');
-            modal.style.display = 'flex';
-        } else {
-            document.getElementById('incomingCallModal').style.display = 'none';
-        }
-    });
+    // ვიდეო ზარების რეალთაიმ მოსმენა
+    supabase
+        .channel('video-calls')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'video_calls', filter: `receiver_id=eq.${user.id}` }, payload => {
+            const call = payload.new;
+            if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+                currentIncomingCall = call; 
+                document.getElementById('callerNameDisplay').innerText = call.callerName;
+                document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
+                const modal = document.getElementById('incomingCallModal');
+                modal.style.display = 'flex';
+            } else {
+                document.getElementById('incomingCallModal').style.display = 'none';
+            }
+        })
+        .subscribe();
 
     document.getElementById('authUI').style.display = 'none';
-    db.ref('users/' + user.uid).on('value', snap => {
-        const d = snap.val();
-        if(d) {
-            currentUserData = d;
-            if(d.isBanned) {
-                document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
-                return;
-            }
-            myName = d.name || "User";
-            myPhoto = d.photo || "token-avatar.png";
-            myAkho = d.akho || 0;
-            document.getElementById('userAkho').innerText = myAkho.toFixed(2);
-            document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
-            document.getElementById('bottomNavAva').src = myPhoto;
-            if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
-            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
-          
-            updateCashoutUI();
-            loadActivityLog();
+    
+    // მომხმარებლის ძირითადი მონაცემების რეალთაიმ მოსმენა
+    supabase
+        .channel('user-data')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
+            handleUserData(payload.new);
+        })
+        .subscribe();
+
+    // პირველადი წაკითხვა მომხმარებლის პროფილის
+    const { data: d } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
+    if(d) { handleUserData(d); }
+
+    function handleUserData(dataVal) {
+        currentUserData = dataVal;
+        if(dataVal.is_banned) {
+            document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
+            return;
         }
-    });
+        myName = dataVal.name || "User";
+        myPhoto = dataVal.photo || "token-avatar.png";
+        myAkho = dataVal.akho || 0;
+        document.getElementById('userAkho').innerText = Number(myAkho).toFixed(2);
+        document.getElementById('realCash').innerText = (Number(myAkho) / 10).toFixed(2);
+        document.getElementById('bottomNavAva').src = myPhoto;
+        if(!dataVal.has_seen_rules) document.getElementById('onboardingUI').style.display = 'flex';
+        if(dataVal.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
+    
+        updateCashoutUI();
+        loadActivityLog();
+    }
+
     renderTokenFeed();
     loadDiscoveryUsers();
     listenToRequests();
@@ -235,6 +288,8 @@ auth.onAuthStateChanged(user => {
     document.getElementById('main-feed').innerHTML = "";
   }
 });
+
+    
 
 function acceptCall() {
     if (currentIncomingCall) {
