@@ -203,72 +203,78 @@ auth.onAuthStateChanged(user => {
         }
     });
 
+    
     document.getElementById('authUI').style.display = 'none';
-    db.ref('users/' + user.uid).on('value', snap => {
-        const d = snap.val();
-        if(d) {
-            currentUserData = d;
-            if(d.isBanned) {
-                document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
-                return;
-            }
-            myName = d.name || "User";
-            myPhoto = d.photo || "token-avatar.png";
-            myAkho = d.akho || 0;
-            document.getElementById('userAkho').innerText = myAkho.toFixed(2);
-            document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
-            document.getElementById('bottomNavAva').src = myPhoto;
-            if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
-            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
-          
-     // --- საიდუმლო ბექაპის ფუნქცია ტელეფონისთვის ---
-    // ვქმნით დროებით ღილაკს ეკრანის ზედა ნაწილში
-    const backupBtn = document.createElement('button');
-    backupBtn.innerText = "📥 მთლიანი ბაზის ექსპორტი";
-    backupBtn.style = "position:fixed; top:10px; right:10px; z-index:999999; background:#4ade80; color:black; font-weight:bold; padding:10px; border:none; border-radius:8px; font-size:12px;";
-    document.body.appendChild(backupBtn);
+        db.ref('users/' + user.uid).on('value', snap => {
+            const d = snap.val();
+            if(d) {
+                currentUserData = d;
+                if(d.isBanned) {
+                    document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
+                    return;
+                }
+                myName = d.name || "User";
+                myPhoto = d.photo || "token-avatar.png";
+                myAkho = d.akho || 0;
+                document.getElementById('userAkho').innerText = myAkho.toFixed(2);
+                document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
+                document.getElementById('bottomNavAva').src = myPhoto;
+                if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
+                
+                if(d.role === 'admin') { 
+                    document.getElementById('adminMenuBtn').style.display = 'flex'; 
 
-    backupBtn.onclick = function() {
-        backupBtn.innerText = "⏳ იკრიბება მონაცემები...";
-        backupBtn.style.background = "#fbd14b";
-        
-        // ვუკავშირდებით ბაზის მთავარ ფესვს
-        db.ref('/').once('value', snap => {
-            const entireDb = snap.val();
-            if(!entireDb) return alert("ბაზა ცარიელია ან წვდომა არ არის!");
-            
-            // ვამზადებთ ფაილს გადმოსაწერად
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entireDb, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "emigrantbook_backup.json");
-            document.body.appendChild(downloadAnchor);
-            
-            // ავტომატურად ვაჭერთ გადმოწერას
-            downloadAnchor.click();
-            downloadAnchor.remove();
-            
-            backupBtn.innerText = "✅ ბაზა გადმოწერილია!";
-            backupBtn.style.background = "#4ade80";
-        }).catch(err => {
-            alert("შეცდომა: " + err.message);
-            backupBtn.innerText = "❌ ვერ გადმოიწერა";
+                    // --- საიდუმლო ბექაპის ფუნქცია ტელეხონისთვის ---
+                    // ვქმნით დროებით ღილაკს ეკრანის ზედა ნაწილში
+                    if (!document.getElementById('backupBtnUnique')) {
+                        const backupBtn = document.createElement('button');
+                        backupBtn.id = 'backupBtnUnique';
+                        backupBtn.innerText = "📥 მთლიანი ბაზის ექსპორტი";
+                        backupBtn.style = "position:fixed; top:10px; right:10px; z-index:999999; background:#4ade80; color:black; font-weight:bold; padding:10px; border:none; border-radius:8px; font-size:12px; cursor:pointer;";
+                        document.body.appendChild(backupBtn);
+
+                        backupBtn.onclick = function() {
+                            backupBtn.innerText = "⏳ იკრიბება მონაცემები...";
+                            backupBtn.style.background = "#fbd14b";
+                            
+                            // ვუკავშირდებით ბაზის მთავარ ფესვს
+                            db.ref('/').once('value', snap => {
+                                const entireDb = snap.val();
+                                if(!entireDb) return alert("ბაზა ცარიელია ან წვდომა არ არის!");
+                                
+                                // ვამზადებთ ფაილს გადმოსაწერად
+                                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(entireDb, null, 2));
+                                const downloadAnchor = document.createElement('a');
+                                downloadAnchor.setAttribute("href", dataStr);
+                                downloadAnchor.setAttribute("download", "emigrantbook_backup.json");
+                                document.body.appendChild(downloadAnchor);
+                                
+                                // ავტომატურად ვაჭერთ გადმოწერას
+                                downloadAnchor.click();
+                                downloadAnchor.remove();
+                                
+                                backupBtn.innerText = "✅ ბაზა გადმოწერილია!";
+                                backupBtn.style.background = "#4ade80";
+                            }).catch(err => {
+                                alert("შეცდომა: " + err.message);
+                                backupBtn.innerText = "❌ ვერ გადმოიწერა";
+                            });
+                        };
+                    }
+                    // --- ბექაპის ფუნქციის დასასრული ---
+                }
+              
+                updateCashoutUI();
+                loadActivityLog();
+            }
         });
-    };
-}
-// --- ბექაპის ფუნქციის დასასრული ---
-        
-            updateCashoutUI();
-            loadActivityLog();
-        }
-    });
-    renderTokenFeed();
-    loadDiscoveryUsers();
-    listenToRequests();
-  } else {
-    document.getElementById('authUI').style.display = 'flex';
-    document.getElementById('main-feed').innerHTML = "";
-  }
+        renderTokenFeed();
+        loadDiscoveryUsers();
+        listenToRequests();
+    } else {
+        document.getElementById('authUI').style.display = 'flex';
+        document.getElementById('main-feed').innerHTML = "";
+    }
 });
 
 function acceptCall() {
