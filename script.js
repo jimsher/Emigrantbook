@@ -1,6 +1,6 @@
 // Supabase-ის ახალი კავშირი კლიენტისთვის
 const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM6MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
 
 // ინიციალიზაცია (თუ index.html-დან უკვე არ არის ინიციალიზებული)
 if (typeof supabase === 'undefined') {
@@ -107,8 +107,6 @@ function finishOnboarding() {
     if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
     document.getElementById('onboardingUI').style.display = 'none';
 }
-
-
 
 // Firebase-ის onAuthStateChanged-ის შეცვლა Supabase-ის ექვივალენტით
 supabase.auth.onAuthStateChange(async (event, session) => {
@@ -288,8 +286,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     document.getElementById('main-feed').innerHTML = "";
   }
 });
-
-    
 
 function acceptCall() {
     if (currentIncomingCall) {
@@ -539,7 +535,7 @@ function loadComments(postId, isGallery = false) {
 
     const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
 
-    // 🚀 ოპტიმიზაცია: .on-ის ნაცვლად .once, რომ კომენტარის დაწერამ გვერდი არ გაჭედოს
+    // ოპტიმიზაცია: .on-ის ნაცვლად .once, რომ კომენტარის დაწერამ გვერდი არ გაჭედოს
     db.ref(commentPath).once('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
@@ -672,7 +668,7 @@ function openMessenger() {
     if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
     if (!auth.currentUser) return;
 
-    // 🚀 ოპტიმიზაცია: მესინჯერის ჩატების ერთჯერადი სწრაფი წაკითხვა
+    // ოპტიმიზაცია: მესინჯერის ჩატების ერთჯერადი სწრაფი წაკითხვა
     db.ref(`users/${auth.currentUser.uid}/following`).once('value', async snap => {
         if (!list) return;
         const followers = snap.val();
@@ -1337,7 +1333,7 @@ function deleteNotification(id) {
     db.ref(`notifications/${auth.currentUser.uid}/${id}`).remove().then(() => openRequestsUI());
 }
 
-// 🚀 ოპტიმიზირებული პროფილის ვიდეოების ფუნქცია
+// ოპტიმიზირებული პროფილის ვიდეოების ფუნქცია
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     
@@ -1453,7 +1449,7 @@ function playFullVideo(url, postId, currentIndex) {
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
-        // 🚀 შეცვლილია .once-ზე, რომ სრულად გახსნამ არ ტვირთოს ტელეფონი
+        // შეცვლილია .once-ზე, რომ სრულად გახსნამ არ ტვირთოს ტელეფონი
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
@@ -2381,7 +2377,7 @@ window.showEuroHistory = function() {
     
     historyModal.innerHTML = `
         <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222; background:#121212;">
-            <i class="fas fa-chevron-left" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
+            <i class="fas fa-chevron-left" onclick="window.showFinancialWallet(); this.parentElement.parentElement.remove();" style="font-size:20px; cursor:pointer; width:30px;"></i>
             <div style="flex:1; text-align:center; font-weight:bold; font-size:16px;">ტრანზაქციების ისტორია</div>
             <div style="width:30px;"></div>
         </div>
@@ -2598,7 +2594,7 @@ function previewWallImage(input) {
 function cancelWallImg() {
     document.getElementById('wallImgInput').value = "";
     document.getElementById('wallImgPreviewBox').style.display = 'none';
-}                   
+}                       
 
 async function submitWallPost() {
     const text = document.getElementById('wallPostText').value;
@@ -2650,7 +2646,7 @@ async function submitWallPost() {
     }
 }
 
-// 🚀 ოპტიმიზირებული კედლის პოსტები (წაკითხვა .once-ით, რომ რეალურ დროში არ გაჭედოს)
+// ოპტიმიზირებული კედლის პოსტები (წაკითხვა .once-ით, რომ რეალურ დროში არ გაჭედოს)
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
@@ -2886,7 +2882,7 @@ function downloadVideo(postId) {
     toggleMoreMenu();
 }
 
-// 🚀 ოპტიმიზირებული Unread Counter: უყურებს მხოლოდ კონკრეტულ იუზერს და არა მთელ ბაზას
+// ოპტიმიზირებული Unread Counter: უყურებს მხოლოდ კონკრეტულ იუზერს და არა მთელ ბაზას
 function startGlobalUnreadCounter() {
     const myUid = auth.currentUser.uid;
     const chatBadge = document.getElementById('chatCountBadge');
@@ -3951,7 +3947,7 @@ window.loadMyTaggedWallPosts = function(targetUid) {
 
     const user = auth.currentUser;
     if (!user) {
-        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხაღო გაიაროთ ავტორიზაცია</p>";
+        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხოვთ გაიაროთ ავტორიზაცია</p>";
         return;
     }
 
@@ -4426,9 +4422,7 @@ function acceptMsgReq(senderId) {
     });
 }
 
-
-
-    function closeMessageRequests() {
+function closeMessageRequests() {
     document.getElementById('messageRequestsUI').style.display = 'none';
 }
 
