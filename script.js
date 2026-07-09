@@ -219,7 +219,7 @@ auth.onAuthStateChanged(user => {
             document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
             document.getElementById('bottomNavAva').src = myPhoto;
             if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
-            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; 
+            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
           
      // --- საიდუმლო ბექაპის ფუნქცია ტელეფონისთვის ---
     // ვქმნით დროებით ღილაკს ეკრანის ზედა ნაწილში
@@ -257,7 +257,7 @@ auth.onAuthStateChanged(user => {
     };
 }
 // --- ბექაპის ფუნქციის დასასრული ---
-}          
+        
             updateCashoutUI();
             loadActivityLog();
         }
