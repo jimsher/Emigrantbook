@@ -1,4 +1,4 @@
-// Supabase-ის ახალი კავშირი კლიენტისთვის
+ // Supabase-ის ახალი კავშირი კლიენტისთვის
 const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM6MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
 
@@ -396,12 +396,12 @@ function loadAdminRequests() {
             if(req.status === 'pending') {
                 list.innerHTML += `
                 <div class="admin-req-card">
-                <b>User: ${req.name}</b>
-                <span>Amt: ${req.amountEur} € (${req.amountAkho} AKHO)</span>
-                <span>IBAN: ${req.iban}</span>
-                <div style="display:flex; gap:10px;">
-                <button class="withdraw-btn" style="background:var(--green);" onclick="approveReq('${id}')">Approve</button>
-                <button class="withdraw-btn" style="background:var(--red);" onclick="declineReq('${id}', '${req.uid}', ${req.amountAkho})">Decline</button>
+                b>User: ${req.name}</b>
+                span>Amt: ${req.amountEur} € (${req.amountAkho} AKHO)</span>
+                span>IBAN: ${req.iban}</span>
+                div style="display:flex; gap:10px;">
+                button class="withdraw-btn" style="background:var(--green);" onclick="approveReq('${id}')">Approve</button>
+                button class="withdraw-btn" style="background:var(--red);" onclick="declineReq('${id}', '${req.uid}', ${req.amountAkho})">Decline</button>
                 </div>
                 </div>`;
             }
@@ -442,6 +442,13 @@ function initStripePayment(url) {
     document.getElementById('walletMain').style.display = 'none';
     document.getElementById('paymentPending').style.display = 'block';
     window.location.href = finalUrl; 
+}
+
+function canAffOut(cost) {
+    if (myAkho >= cost) return true;
+    alert(currentLang === 'ka' ? "შეავსეთ ბალანსი!" : "Top up your balance!");
+    openWalletUI();
+    return false;
 }
 
 function canAfford(cost) {
@@ -780,7 +787,7 @@ function startChat(uid, name, photo) {
                 statusEl.style.color = '#4ade80';
             } else {
                 const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + '   ago' : 'offline';
+                statusEl.innerText = timeAgo ? timeAgo + '    ago' : 'offline';
                 statusEl.style.color = '#888';
             }
         });
@@ -2788,7 +2795,7 @@ async function sendVoiceMessage(blob) {
     } catch (err) { 
         alert("ატვირთვის შეცდომა"); 
     }
-}       
+}        
 
 let waveSurfers = {}; 
 
@@ -3000,7 +3007,7 @@ async function openUploadModal() {
                  },
                  audio: {
                     echoCancellation: { ideal: false }, 
-                    noiseSuppression: { ideal: false },  
+                    noiseSuppression: { ideal: false },    
                     autoGainControl: { ideal: false },   
                     sampleRate: 48000, 
                     sampleSize: 16,
