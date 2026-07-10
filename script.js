@@ -1,27 +1,3 @@
-// ეს დაამატე პირდაპირ script.js-ის თავში
-console.log("სისტემა ამოწმებს მომხმარებელს...");
-
-// ეს არის მთავარი ფუნქცია, რომელიც აკონტროლებს შესვლას
-// დარწმუნდი რომ აქ არაფერი აბრუნებს 'true'-ს თუ ბაზა ცარიელია
-function checkAuth() {
-    const user = localStorage.getItem('user'); // ან შენი Auth მეთოდი
-    console.log("ნაპოვნი მომხმარებელი:", user);
-    
-    if (user) {
-        // აქ არის პრობლემა - ეს გიშვებს შიგნით
-        console.log("შესვლა დაფიქსირდა - ვხსნი პროფილს");
-    } else {
-        // ეს უნდა მუშაობდეს
-        console.log("მომხმარებელი არ არის - ვხსნი რეგისტრაციის ფორმას");
-        document.getElementById('authUI').style.display = 'block'; 
-        // დაამატე ეს, თუ ადრე არ გეწერა
-    }
-}
-checkAuth();
-
-
-
-
 
 // Supabase-ის ახალი კავშირი კლიენტისთვის
 const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
