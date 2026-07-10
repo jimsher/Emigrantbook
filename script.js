@@ -1,25 +1,26 @@
+const firebaseConfig = { 
+  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+  authDomain: "emigrantbook.firebaseapp.com", 
+  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+  projectId: "emigrantbook", 
+  storageBucket: "emigrantbook.firebasestorage.app", // <-- ეს ხაზი აუცილებლად უნდა იყოს აქ!
+  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+};
 
-// Supabase-ის ახალი კავშირი კლიენტისთვის
-const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM6MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
 
-// ინიციალიზაცია (თუ index.html-დან უკვე არ არის ინიციალიზებული)
-if (typeof supabase === 'undefined') {
-    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-    window.supabaseClient = supabase;
-}
-
-// ორიგინალი აუდიო ცვლადები - ხელუხლებელი
 let audioCtx, audioSource, audioDest;
 
-// ძველი ცვლადების დროებითი გათიშვა კონფლიქტის ასაცილებლად
-const db = null;
-const auth = null;
-const storage = null;
+// ინიციალიზაცია
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-// Stripe-ის ორიგინალი Live გასაღები - ხელუხლებელი
+// გლობალური ცვლადები
+const db = firebase.database();
+const auth = firebase.auth();
+const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
 const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
+
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -29,254 +30,249 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-let myName = "User";
-let myPhoto = "";
-let myAkho = 0;
-let currentChatId = null;
-let activePostId = null;
-let activeReplyTo = null;
-let currentAdmTarget = null;
-let currentUserData = null;
-let typingTimeout = null;
 
-function updatePresence() {
-    const user = auth.currentUser;
-    if (!user) return;
-    const onlineRef = db.ref(`.info/connected`);
-    const userPresenceRef = db.ref(`users/${user.uid}/presence`);
-    
-    onlineRef.on('value', snap => {
-        if (snap.val() === false) return;
-        userPresenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP).then(() => {
-            userPresenceRef.set('online');
-        });
-    });
-}
 
-function formatTimeShort(timestamp) {
+
+
+
+
+
+
+
+
+
+ let myName = "User";
+ let myPhoto = "";
+ let myAkho = 0;
+ let currentChatId = null;
+ let activePostId = null;
+ let activeReplyTo = null;
+ let currentAdmTarget = null;
+ let currentUserData = null;
+ let typingTimeout = null;
+
+ // ONLINE STATUS TRACKER
+ function updatePresence() {
+ const user = auth.currentUser;
+ if (!user) return;
+ const onlineRef = db.ref(`.info/connected`);
+ const userPresenceRef = db.ref(`users/${user.uid}/presence`);
+ 
+ onlineRef.on('value', snap => {
+ if (snap.val() === false) return;
+ userPresenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP).then(() => {
+ userPresenceRef.set('online');
+ });
+ });
+ }
+
+
+ function formatTimeShort(timestamp) {
     if (!timestamp || timestamp === 'online') return 'online';
     const date = new Date(timestamp);
+    // საათი და წუთი (მაგ: 12:45)
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
+    // დღე და თვე (მაგ: 28 Feb)
     const day = date.getDate();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const month = months[date.getMonth()];
+    // აბრუნებს ფორმატს: "12:45, 28 Feb"
     return `${hours}:${minutes}, ${day} ${month}`;
 }
 
-function stopMainFeedVideos() {
-    document.querySelectorAll('#main-feed video').forEach(v => v.pause());
+
+ function stopMainFeedVideos() {
+ document.querySelectorAll('#main-feed video').forEach(v => v.pause());
+ }
+
+ function refreshHomeFeed() {
+ stopMainFeedVideos();
+ document.getElementById('discoveryUI').style.display = 'none';
+ document.getElementById('profileUI').style.display = 'none';
+ document.getElementById('messengerUI').style.display = 'none';
+ document.getElementById('settingsUI').style.display = 'none';
+ renderTokenFeed();
+ }
+
+ function toggleSideMenu(open) {
+ const menu = document.getElementById('sideMenu');
+ const overlay = document.getElementById('sideMenuOverlay');
+ if (open) {
+ menu.classList.add('active');
+ overlay.style.display = 'block';
+ } else {
+ menu.classList.remove('active');
+ overlay.style.display = 'none';
+ }
+ }
+
+ 
+
+ function nextObSlide(n) {
+ document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
+ document.getElementById('obSlide' + n).style.display = 'block';
+ }
+ function runSuccessAndFinish() {
+ document.getElementById('rulesList').style.display = 'none';
+ document.getElementById('finishBtn').style.display = 'none';
+ const animBox = document.getElementById('tokenSuccessAnim');
+ animBox.style.display = 'block';
+ animBox.classList.add('token-pop');
+ setTimeout(() => finishOnboarding(), 1800);
+ }
+ function finishOnboarding() {
+ const user = auth.currentUser;
+ if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
+ document.getElementById('onboardingUI').style.display = 'none';
 }
 
-function refreshHomeFeed() {
-    stopMainFeedVideos();
-    document.getElementById('discoveryUI').style.display = 'none';
-    document.getElementById('profileUI').style.display = 'none';
-    document.getElementById('messengerUI').style.display = 'none';
-    document.getElementById('settingsUI').style.display = 'none';
-    renderTokenFeed();
-}
 
-function toggleSideMenu(open) {
-    const menu = document.getElementById('sideMenu');
-    const overlay = document.getElementById('sideMenuOverlay');
-    if (open) {
-        menu.classList.add('active');
-        overlay.style.display = 'block';
-    } else {
-        menu.classList.remove('active');
-        overlay.style.display = 'none';
-    }
-}
 
-function nextObSlide(n) {
-    document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
-    document.getElementById('obSlide' + n).style.display = 'block';
-}
 
-function runSuccessAndFinish() {
-    document.getElementById('rulesList').style.display = 'none';
-    document.getElementById('finishBtn').style.display = 'none';
-    const animBox = document.getElementById('tokenSuccessAnim');
-    animBox.style.display = 'block';
-    animBox.classList.add('token-pop');
-    setTimeout(() => finishOnboarding(), 1800);
-}
 
-function finishOnboarding() {
-    const user = auth.currentUser;
-    if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
-    document.getElementById('onboardingUI').style.display = 'none';
-}
 
-// Firebase-ის onAuthStateChanged-ის შეცვლა Supabase-ის ექვივალენტით
-supabase.auth.onAuthStateChange(async (event, session) => {
-  const user = session ? session.user : null;
-  
+
+
+
+
+        
+
+
+auth.onAuthStateChanged(user => {
   applyLanguage();
   if (user) {
+    // --- ახალი: ნებართვების მოთხოვნა ავტორიზაციისთანავე ---
     setTimeout(() => {
         askInitialPermissions(); 
     }, 1500);
 
+//სკრიპის ფუნქცია რომ ფული დარიცხოს აკნო
+// --- 💰 Stripe-იდან დაბრუნების და ავტომატური დარიცხვის ლოგიკა ---
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
-    const packAmount = urlParams.get('pack');
+    const packAmount = urlParams.get('pack'); // ვიღებთ AKHO-ს რაოდენობას URL-იდან
 
     if (sessionId && packAmount) {
         const amountToAdd = parseFloat(packAmount);
         
-        const { data: paySnap } = await supabase
-            .from('payments_processed')
-            .select('*')
-            .eq('id', sessionId)
-            .maybeSingle();
-
-        if (!paySnap) {
-            const { data: userData } = await supabase
-                .from('users')
-                .select('akho')
-                .eq('id', user.id)
-                .single();
-                
-            const currentAkho = userData ? (userData.akho || 0) : 0;
-            const newAkho = currentAkho + amountToAdd;
-
-            await supabase
-                .from('users')
-                .update({ akho: newAkho })
-                .eq('id', user.id);
-
-            await supabase
-                .from('payments_processed')
-                .insert({
-                    id: sessionId,
-                    uid: user.id,
-                    amount: amountToAdd,
-                    ts: Date.now()
+        // ვამოწმებთ, ეს კონკრეტული სესია უკვე დამუშავებული ხომ არ არის
+        db.ref(`payments_processed/${sessionId}`).once('value', snap => {
+            if (!snap.exists()) {
+                // ბალანსის გაზრდა
+                db.ref(`users/${user.uid}/akho`).transaction(current => {
+                    return (current || 0) + amountToAdd;
+                }).then(() => {
+                    // სესიის მონიშვნა, რომ მეორედ აღარ დაერიცხოს
+                    db.ref(`payments_processed/${sessionId}`).set({
+                        uid: user.uid,
+                        amount: amountToAdd,
+                        ts: Date.now()
+                    });
+                    
+                    addToLog('Stripe Purchase', amountToAdd);
+                    
+                    // მომხმარებლისთვის ლამაზი შეტყობინება
+                    if (typeof showCustomAlert === "function") {
+                        showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    } else {
+                        alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    }
+                    
+                    // URL-ის გასუფთავება (პარამეტრების მოცილება)
+                    window.history.replaceState({}, document.title, window.location.pathname);
                 });
-
-            addToLog('Stripe Purchase', amountToAdd);
-            if (typeof showCustomAlert === "function") {
-                showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-            } else {
-                alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
             }
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        });
     }
+    // --- 💰 დასასრული ---
+// აქ მთავრდება ეს ფუნქცია
     
-    setTimeout(async () => {
+    setTimeout(() => {
       console.log("ვცდილობ ჩაწერას...");
-      await supabase.from('users').update({ test_field: "მუშაობს" }).eq('id', user.id);
+      db.ref('users/' + user.uid + '/test').set("მუშაობს");
       saveMessagingToken(user);
     }, 2000);
 
-    supabase
-        .channel('euro-changes')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
-            const euro = payload.new.euro_balance || 0;
+
+   // 🚀 აი აქ ჩაამატე ევროს ბალანსის მოსმენაც:
+        db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
+            const euro = snap.val() || 0;
             const euroEl = document.getElementById('euroBalanceDisplay');
-            if (euroEl) { euroEl.innerText = euro.toFixed(2) + " €"; }
-        })
-        .subscribe();
+            if (euroEl) {
+                euroEl.innerText = euro.toFixed(2) + " €";
+            }
+        });
 
-    supabase.from('users').select('euro_balance').eq('id', user.id).single().then(({ data }) => {
-        const euro = data ? (data.euro_balance || 0) : 0;
-        const euroEl = document.getElementById('euroBalanceDisplay');
-        if (euroEl) { euroEl.innerText = euro.toFixed(2) + " €"; }
-    });
 
+    
     updatePresence();
     listenToGlobalMessages();
     startNotificationListener();
     checkDailyBonus();
     startGlobalUnreadCounter();
     listenForIncomingCalls(user);
+
     startWallNotificationListener();
     
-    setTimeout(async function() {
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session ? session.user : null;
-        if (currentUser) {
-            const tokenKey = 'fcm_token_sent_' + currentUser.id;
-            if (localStorage.getItem(tokenKey)) return; 
+    // ... დანარჩენი შენი კოდი უცვლელად ...
+   
 
-            try {
-                const messaging = firebase.messaging();
-                messaging.requestPermission()
-                    .then(() => messaging.getToken({ 
-                        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-                    }))
-                    .then((token) => {
-                        if (token) {
-                            supabase.from('users').update({ fcmToken: token }).eq('id', currentUser.id);
-                            showTestNotification(); 
-                            localStorage.setItem(tokenKey, 'true'); 
-                        }
-                    })
-                    .catch((err) => console.log("Push error or denied"));
-            } catch (e) {
-                console.log("Messaging skip");
-            }
+
+// ეს არის შეტყობინების ველი
+setTimeout(function() {
+    const user = firebase.auth().currentUser;
+    if (user) {
+        const tokenKey = 'fcm_token_sent_' + user.uid;
+        
+        // ვამოწმებთ, უკვე გავუგზავნეთ თუ არა ეს შეტყობინება ამ იუზერს
+        if (localStorage.getItem(tokenKey)) return; 
+
+        try {
+            const messaging = firebase.messaging();
+            messaging.requestPermission()
+                .then(() => messaging.getToken({ 
+                    vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
+                }))
+                .then((token) => {
+                    if (token) {
+                        db.ref('users/' + user.uid + '/fcmToken').set(token);
+                        
+                        // აი აქ ერთხელ გამოვუგზავნოთ დასტური
+                        showTestNotification(); 
+                        
+                        // დავიმახსოვროთ ბრაუზერში, რომ მეორედ აღარ შევაწუხოთ
+                        localStorage.setItem(tokenKey, 'true'); 
+                    }
+                })
+                .catch((err) => console.log("Push error or denied"));
+        } catch (e) {
+            console.log("Messaging skip");
         }
-    }, 3000);
-
-    let currentIncomingCall = null;
-    supabase
-        .channel('video-calls')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'video_calls', filter: `receiver_id=eq.${user.id}` }, payload => {
-            const call = payload.new;
-            if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-                currentIncomingCall = call; 
-                document.getElementById('callerNameDisplay').innerText = call.callerName;
-                document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
-                const modal = document.getElementById('incomingCallModal');
-                modal.style.display = 'flex';
-            } else {
-                document.getElementById('incomingCallModal').style.display = 'none';
-            }
-        })
-        .subscribe();
-
-    document.getElementById('authUI').style.display = 'none';
-    
-    supabase
-        .channel('user-data')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
-            handleUserData(payload.new);
-        })
-        .subscribe();
-
-    const { data: d } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle();
-    if(d) { handleUserData(d); }
-
-    function handleUserData(dataVal) {
-        currentUserData = dataVal;
-        if(dataVal.is_banned) {
-            document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
-            return;
-        }
-        myName = dataVal.name || "User";
-        myPhoto = dataVal.photo || "token-avatar.png";
-        myAkho = dataVal.akho || 0;
-        document.getElementById('userAkho').innerText = Number(myAkho).toFixed(2);
-        document.getElementById('realCash').innerText = (Number(myAkho) / 10).toFixed(2);
-        document.getElementById('bottomNavAva').src = myPhoto;
-        if(!dataVal.has_seen_rules) document.getElementById('onboardingUI').style.display = 'flex';
-        if(dataVal.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
-    
-        updateCashoutUI();
-        loadActivityLog();
     }
+}, 3000);
 
-    renderTokenFeed();
-    loadDiscoveryUsers();
-    listenToRequests();
-  } else {
-    document.getElementById('authUI').style.display = 'flex';
-    document.getElementById('main-feed').innerHTML = "";
-  }
+
+
+// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
+let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
+
+db.ref(`video_calls/${user.uid}`).on('value', snap => {
+    const call = snap.val();
+    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+        currentIncomingCall = call; // ვინახავთ ინფორმაციას
+        
+        // ვავსებთ ფანჯარას მონაცემებით
+        document.getElementById('callerNameDisplay').innerText = call.callerName;
+        document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
+        
+        // ვაჩენთ ლამაზ ფანჯარას
+        const modal = document.getElementById('incomingCallModal');
+        modal.style.display = 'flex';
+    } else {
+        // თუ ზარი გაუქმდა გამომძახებლის მიერ
+        document.getElementById('incomingCallModal').style.display = 'none';
+    }
 });
 
 function acceptCall() {
