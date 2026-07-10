@@ -3200,27 +3200,50 @@ div[style*="overflow-x:auto"] {
 
   console.log("Supabase წარმატებით ჩაიტვირთა და მომზადებულია! ✅");
 
-  // ცვლადების სწორი გადამისამართება, რომ script.js არ გაითიშოს და ფორმები ამუშავდეს:
-  const db = null; 
-  const storage = null; 
+  // იმისთვის, რომ ძველმა Firebase კოდებმა script.js-ში შეცდომა არ ამოაგდონ,
+  // მათ გადავამისამართებთ Supabase-ის შესაბამის ფუნქციებზე:
+  const db = {
+    collection: (name) => {
+      return {
+        get: () => supabase.from(name).select('*'),
+        add: (data) => supabase.from(name).insert([data]),
+        doc: (id) => {
+          return {
+            update: (data) => supabase.from(name).update(data).eq('id', id),
+            delete: () => supabase.from(name).delete().eq('id', id)
+          }
+        }
+      };
+    }
+  };
+
+  const storage = {
+    ref: (path) => {
+      return {
+        put: (file) => supabase.storage.from('emigrantbook-bucket').upload(path, file),
+        getDownloadURL: () => supabase.storage.from('emigrantbook-bucket').getPublicUrl(path).data.publicUrl
+      };
+    }
+  };
   
-  // auth-ს ვაბამთ Supabase-ის ავტორიზაციას, რომ auth.currentUser-ზე კოდი არ დაქრაშოს
+  // auth-ს ვაბამთ Supabase-ის ავტორიზაციას
   const auth = supabase.auth;
 
-  // ავტორიზაციის მდგომარეობის მართვა - ამოწმებს სესიას და მართავს ფორმების გამოჩენას
+  // ავტორიზაციის მდგომარეობის მართვა
   supabase.auth.onAuthStateChange(async (event, session) => {
     const user = session ? session.user : null;
     
-    // ხელოვნურად ვუქმნით currentUser თავსებადობას ძველი კოდისთვის
+    // თავსებადობა ძველი კოდისთვის
     auth.currentUser = user ? { uid: user.id, email: user.email } : null;
     
     if (user) {
-      // თუ შესულია მომხმარებელი, ვმალავთ ფორმას და ვრთავთ ფუნქციებს
       if (document.getElementById('authUI')) document.getElementById('authUI').style.display = 'none';
       if (document.getElementById('main-feed')) document.getElementById('main-feed').style.display = 'block';
       console.log("მომხმარებელი ავტორიზებულია ID-ით:", user.id);
+      
+      // თუ script.js-ში გაქვს ფიდის ჩატვირთვის ფუნქცია, აქედანაც შეგვიძლია გამოვიძახოთ უსაფრთხოდ:
+      if (typeof refreshHomeFeed === 'function') refreshHomeFeed();
     } else {
-      // თუ მომხმარებელი არ არის შესული, პირდაპირ ვაჩენთ შესვლის/რეგისტრაციის ბლოკს
       if (document.getElementById('authUI')) document.getElementById('authUI').style.display = 'flex';
       if (document.getElementById('main-feed')) document.getElementById('main-feed').style.display = 'none';
       console.log("მომხმარებელი არ არის შესული. ნაჩვენებია შესვლის ფორმა.");
