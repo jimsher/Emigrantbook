@@ -132,6 +132,47 @@ async function loadFeed() {
 
 // გვერდის ჩატვირთვისას ავტომატურად გავუშვათ
 loadFeed(); 
+
+
+   async function uploadPost() {
+    const fileInput = document.getElementById('fileInput');
+    const caption = document.getElementById('captionInput').value;
+    const file = fileInput.files[0];
+
+    if (!file) return alert("გთხოვთ აირჩიოთ ფოტო!");
+
+    // 1. ფოტოს ატვირთვა Storage-ში
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('posts') // დარწმუნდი, რომ Supabase-ში შექმნილი გაქვს Bucket სახელად 'posts'
+        .upload(fileName, file);
+
+    if (uploadError) return alert("ატვირთვის შეცდომა: " + uploadError.message);
+
+    // 2. ფოტოს URL-ის მიღება
+    const { data: publicUrlData } = supabase.storage.from('posts').getPublicUrl(fileName);
+
+    // 3. მონაცემების შენახვა 'posts' ცხრილში
+    const { error: dbError } = await supabase
+        .from('posts')
+        .insert([{
+            image_url: publicUrlData.publicUrl,
+            caption: caption,
+            user_id: 'აქ_ჩაწერე_შენი_user_id' // რეალურ აპლიკაციაში აქ auth.user().id იქნება
+        }]);
+
+    if (dbError) return alert("ბაზაში შენახვის შეცდომა: " + dbError.message);
+
+    alert("პოსტი წარმატებით აიტვირთა!");
+    loadFeed(); // ფიდის განახლება
+}     
 </script>
+
+    <section id="create-post" style="padding: 20px; background: white; border: 1px solid #dbdbdb; margin-bottom: 20px;">
+    <input type="file" id="fileInput" accept="image/*">
+    <input type="text" id="captionInput" placeholder="აღწერა...">
+    <button onclick="uploadPost()">ატვირთვა</button>
+</section>
 </body>
 </html>
