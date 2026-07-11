@@ -5,232 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instagram Clone</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    
     <style>
-        /* CSS სტილები */
+        body { margin: 0; background-color: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .navbar { display: flex; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid #262626; position: sticky; top: 0; background: #000; z-index: 10; }
+        .logo { font-weight: bold; font-size: 24px; font-style: italic; }
+        .container { max-width: 470px; margin: 0 auto; padding-top: 20px; }
         
-    /* მუქი თემა (Dark Mode) */
-    body { 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif; 
-        background-color: #000; /* შავი ფონი */
-        color: #fff; /* თეთრი ტექსტი */
-        margin: 0; 
-        padding-top: 60px; 
-    }
-    
-    /* ნავიგაცია */
-    .navbar { 
-        background: #000; 
-        border-bottom: 1px solid #262626; 
-        padding: 12px 20px; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        position: fixed; 
-        top: 0; 
-        width: 100%; 
-        box-sizing: border-box; 
-        z-index: 100; 
-    }
-    .logo { font-size: 24px; font-weight: bold; }
-    .nav-links button { background: none; border: none; color: white; font-weight: 600; cursor: pointer; margin-left: 15px; }
-
-    /* პოსტის დიზაინი */
-    .post { 
-        background: #000; 
-        border: 1px solid #262626; 
-        border-radius: 8px; 
-        margin-bottom: 30px; 
-        overflow: hidden; 
-    }
-    .post-header { padding: 12px; display: flex; align-items: center; }
-    .avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 10px; border: 1px solid #333; }
-    .username { font-weight: 600; font-size: 14px; }
-    .post-media img { width: 100%; display: block; }
-    .post-actions { padding: 12px; }
-    .post-actions button { background: none; border: none; color: white; font-size: 22px; cursor: pointer; margin-right: 10px; }
-
-    /* ატვირთვის ფორმა */
-    #create-post { 
-        background: #121212; 
-        border: 1px solid #262626; 
-        padding: 20px; 
-        border-radius: 8px; 
-        margin-bottom: 20px; 
-    }
-    #create-post input { 
-        background: #000; 
-        color: white; 
-        border: 1px solid #333; 
-        padding: 10px; 
-        display: block; 
-        margin-bottom: 10px; 
-        width: 100%; 
-        box-sizing: border-box; 
-    }
-
-
-
-
-
+        /* პოსტის სტილი */
+        .post { margin-bottom: 30px; border-bottom: 1px solid #262626; padding-bottom: 15px; }
+        .post-header { display: flex; align-items: center; padding: 10px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 10px; background: #333; }
+        .post-media { width: 100%; aspect-ratio: 1/1; background: #111; overflow: hidden; }
+        .post-media img { width: 100%; height: 100%; object-fit: cover; }
+        .post-actions { padding: 10px; font-size: 24px; display: flex; gap: 15px; }
         
+        /* ატვირთვის სექცია */
+        #create-post { background: #121212; padding: 15px; border-radius: 12px; margin: 20px; text-align: center; }
+        input, button { padding: 10px; border-radius: 5px; border: none; margin-top: 5px; }
+        button { background: #0095f6; color: white; cursor: pointer; font-weight: bold; }
     </style>
-
-    
 </head>
 <body>
 
     <nav class="navbar">
         <div class="logo">Instagram</div>
         <div class="nav-links">
-            <button onclick="showSection('feed')">Home</button>
-            <button onclick="showSection('profile')">Profile</button>
+            <button onclick="showSection('feed')" style="background:none; color:white; border:none; cursor:pointer;">Home</button>
+            <button onclick="showSection('profile')" style="background:none; color:white; border:none; cursor:pointer;">Profile</button>
         </div>
     </nav>
 
     <main class="container">
-        <section id="feed" class="feed-container">
-            <article class="post">
-                <header class="post-header">
-                    <img src="avatar.jpg" class="avatar" id="user-avatar">
-                    <span class="username">username</span>
-                </header>
-                <div class="post-media">
-                    <img src="post-image.jpg" alt="Post content">
-                </div>
-                <div class="post-actions">
-                    <button>Like</button>
-                    <button>Comment</button>
-                    <button>Share</button>
-                </div>
-            </article>
+        <section id="create-post">
+            <input type="file" id="fileInput" accept="image/*">
+            <input type="text" id="captionInput" placeholder="დაწერე აღწერა..." style="width: 90%;">
+            <button onclick="uploadPost()">ატვირთვა</button>
         </section>
 
-        <section id="profile" class="profile-container" style="display:none;">
-            <div class="profile-header">
-                <img src="avatar.jpg" class="profile-avatar">
-                <div class="profile-stats">
-                    <p>10 Posts | 100 Followers</p>
-                </div>
-            </div>
-            <div class="profile-grid"></div>
+        <section id="feed" class="feed-container"></section>
+
+        <section id="profile" class="profile-container" style="display:none; text-align:center;">
+            <h3>შენი პროფილი</h3>
+            <p>აქ გამოჩნდება შენი პოსტები</p>
         </section>
     </main>
 
     <script>
-    // Supabase კონფიგურაცია
-    const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx';
+        const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ტესტი: შევამოწმოთ კავშირი კონსოლში
-    async function checkConnection() {
-        try {
-            const { data, error } = await supabase.from('profiles').select('*').limit(1);
-            if (error) throw error;
-            console.log("წარმატება! კავშირი დამყარებულია:", data);
-        } catch (err) {
-            console.error("შეცდომა კავშირის დროს:", err.message);
+        async function loadFeed() {
+            const { data: posts, error } = await supabase.from('posts').select('*, profiles(username, avatar_url)').order('created_at', { ascending: false });
+            if (error) return console.error(error);
+            
+            const feed = document.getElementById('feed');
+            feed.innerHTML = posts.map(post => `
+                <article class="post">
+                    <header class="post-header">
+                        <img src="${post.profiles?.avatar_url || 'https://via.placeholder.com/32'}" class="avatar">
+                        <span class="username">${post.profiles?.username || 'user'}</span>
+                    </header>
+                    <div class="post-media"><img src="${post.image_url}"></div>
+                    <div class="post-actions">
+                        <span>❤️</span> <span>💬</span> <span>✈️</span>
+                    </div>
+                    <div style="padding: 0 10px;"><strong>${post.profiles?.username || ''}</strong> ${post.caption || ''}</div>
+                </article>
+            `).join('');
         }
-    }
 
-    checkConnection();
+        async function uploadPost() {
+            const file = document.getElementById('fileInput').files[0];
+            const caption = document.getElementById('captionInput').value;
+            if (!file) return alert("აირჩიე ფოტო!");
 
-    // ნავიგაციის ფუნქცია
-    function showSection(id) {
-        document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
-        document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
-    }
+            const fileName = `${Date.now()}_${file.name}`;
+            const { error: uploadError } = await supabase.storage.from('posts').upload(fileName, file);
+            if (uploadError) return alert(uploadError.message);
 
+            const { data } = supabase.storage.from('posts').getPublicUrl(fileName);
+            const { error: dbError } = await supabase.from('posts').insert([{ image_url: data.publicUrl, caption: caption }]);
+            
+            if (dbError) alert(dbError.message);
+            else { alert("ატვირთულია!"); loadFeed(); }
+        }
 
-       /**
- * პოსტების წამოღება Supabase-დან
- */
-async function loadFeed() {
-    const { data: posts, error } = await supabase
-        .from('posts')
-        .select(`
-            id,
-            image_url,
-            caption,
-            profiles (username, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
+        function showSection(id) {
+            document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
+            document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
+        }
 
-    if (error) {
-        console.error("პოსტების ჩატვირთვის შეცდომა:", error);
-        return;
-    }
-
-    const feedContainer = document.getElementById('feed');
-    feedContainer.innerHTML = ''; // გასუფთავება
-
-    posts.forEach(post => {
-        const postElement = `
-            <article class="post">
-                <header class="post-header">
-                    <img src="${post.profiles.avatar_url || 'default-avatar.png'}" class="avatar">
-                    <span class="username">${post.profiles.username}</span>
-                </header>
-                <div class="post-media">
-                    <img src="${post.image_url}" alt="Post content">
-                </div>
-                <div class="post-actions">
-                    <p><strong>${post.profiles.username}</strong> ${post.caption || ''}</p>
-                    <button>Like</button>
-                    <button>Comment</button>
-                </div>
-            </article>
-        `;
-        feedContainer.innerHTML += postElement;
-    });
-}
-
-// გვერდის ჩატვირთვისას ავტომატურად გავუშვათ
-loadFeed(); 
-
-
-   async function uploadPost() {
-    const fileInput = document.getElementById('fileInput');
-    const caption = document.getElementById('captionInput').value;
-    const file = fileInput.files[0];
-
-    if (!file) return alert("გთხოვთ აირჩიოთ ფოტო!");
-
-    // 1. ფოტოს ატვირთვა Storage-ში
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('posts') // დარწმუნდი, რომ Supabase-ში შექმნილი გაქვს Bucket სახელად 'posts'
-        .upload(fileName, file);
-
-    if (uploadError) return alert("ატვირთვის შეცდომა: " + uploadError.message);
-
-    // 2. ფოტოს URL-ის მიღება
-    const { data: publicUrlData } = supabase.storage.from('posts').getPublicUrl(fileName);
-
-    // 3. მონაცემების შენახვა 'posts' ცხრილში
-    const { error: dbError } = await supabase
-        .from('posts')
-        .insert([{
-            image_url: publicUrlData.publicUrl,
-            caption: caption,
-            user_id: 'აქ_ჩაწერე_შენი_user_id' // რეალურ აპლიკაციაში აქ auth.user().id იქნება
-        }]);
-
-    if (dbError) return alert("ბაზაში შენახვის შეცდომა: " + dbError.message);
-
-    alert("პოსტი წარმატებით აიტვირთა!");
-    loadFeed(); // ფიდის განახლება
-}     
-</script>
-
-    <section id="create-post" style="padding: 20px; background: white; border: 1px solid #dbdbdb; margin-bottom: 20px;">
-    <input type="file" id="fileInput" accept="image/*">
-    <input type="text" id="captionInput" placeholder="აღწერა...">
-    <button onclick="uploadPost()">ატვირთვა</button>
-</section>
+        loadFeed();
+    </script>
 </body>
 </html>
