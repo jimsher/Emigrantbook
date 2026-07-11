@@ -106,148 +106,127 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        async function loadFeed() {
-            const { data: posts, error } = await supabase.from('posts').select('*, profiles(username, avatar_url)').order('created_at', { ascending: false });
-            if (error) return console.error(error);
-            
-            const feed = document.getElementById('feed');
-            feed.innerHTML = posts.map(post => `
-                <article class="post">
-                    <header class="post-header">
-                        <img src="${post.profiles?.avatar_url || 'https://via.placeholder.com/32'}" class="avatar">
-                        <span class="username">${post.profiles?.username || 'user'}</span>
-                    </header>
-                    <div class="post-media"><img src="${post.image_url}"></div>
-                    <div class="post-actions">
-                        <span>❤️</span> <span>💬</span> <span>✈️</span>
-                    </div>
-                    <div style="padding: 0 10px;"><strong>${post.profiles?.username || ''}</strong> ${post.caption || ''}</div>
-                </article>
-            `).join('');
-        }
-
-        async function uploadPost() {
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
-    const caption = document.getElementById('captionInput').value;
-
-    if (!file) return alert("ფაილი არ არის არჩეული!");
-
-    console.log("ფაილის სახელი:", file.name);
-    
-    // ვცვლით სახელს, რომ არ იყოს სპეციალური სიმბოლოები
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-
-    const { data, error } = await supabase.storage
-        .from('posts') // აქ დარწმუნდი რომ ბაკეტის სახელია
-        .upload(fileName, file);
-
-    if (error) {
-        // ეს გამოაჩენს შეცდომას კონსოლში, რომელიც გვჭირდება
-        console.error("Supabase Storage Error:", error);
-        alert("ატვირთვა ვერ მოხერხდა: " + error.message);
-        return;
-    }
-
-    console.log("ატვირთვა წარმატებით დასრულდა:", data);
-    alert("პოსტი წარმატებით აიტვირთა!");
-}
-
-        function showSection(id) {
-            document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
-            document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
-        }
-
-        loadFeed();
-
-
-
-        // ავტორიზაცია და შესვლის 
-        async function signUp() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) alert("შეცდომა: " + error.message);
-    else alert("რეგისტრაცია წარმატებულია! შეამოწმე ელ-ფოსტა.");
-}
-
-async function signIn() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-        alert("შეცდომა შესვლისას: " + error.message);
-    } else {
-        alert("წარმატებით შეხვედი!");
-        document.getElementById('auth-section').style.display = 'none'; // ვმალავთ ფორმას
-        loadFeed(); // ვტვირთავთ პოსტებს
-    }
-}
-
-
-
-function showRegisterForm() {
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('register-section').style.display = 'block';
-}
-
-function showLoginForm() {
-    document.getElementById('login-section').style.display = 'block';
-    document.getElementById('register-section').style.display = 'none';
-}
-
-async function performRegistration() {
-    const email = document.getElementById('reg-email').value;
-    const password = document.getElementById('reg-pass').value;
-    const confirmPassword = document.getElementById('reg-pass-confirm').value;
-
-    if (password !== confirmPassword) {
-        alert("პაროლები არ ემთხვევა!");
-        return;
-    }
-
-    // Supabase რეგისტრაცია
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    
-    if (error) {
-        alert("შეცდომა: " + error.message);
-    } else {
-        alert("რეგისტრაცია წარმატებულია!");
-        // აქ შეგიძლია დაამატო მონაცემების შენახვა 'profiles' ცხრილში (სახელი, გვარი და ა.შ.)
-        showLoginForm();
-    }
-}
+    async function loadFeed() {
+        const { data: posts, error } = await supabase.from('posts').select('*, profiles(username, avatar_url)').order('created_at', { ascending: false });
+        if (error) return console.error(error);
         
-
-
-        // ფუნქცია, რომელიც მალავს ერთს და აჩვენებს მეორეს
-function showApp() {
-    document.getElementById('auth-page').style.display = 'none';
-    document.getElementById('main-page').style.display = 'block';
-}
-
-// შემოწმება შესვლისას:
-async function handleAuth(type) {
-    // ... შენი არსებული ავტორიზაციის კოდი
-    if (!error) {
-        alert("წარმატებით შეხვედი!");
-        showApp(); // აქ ხდება გადართვა
+        const feed = document.getElementById('feed');
+        feed.innerHTML = posts.map(post => `
+            <article class="post">
+                <header class="post-header">
+                    <img src="${post.profiles?.avatar_url || 'https://via.placeholder.com/32'}" class="avatar">
+                    <span class="username">${post.profiles?.username || 'user'}</span>
+                </header>
+                <div class="post-media"><img src="${post.image_url}"></div>
+                <div class="post-actions">
+                    <span>❤️</span> <span>💬</span> <span>✈️</span>
+                </div>
+                <div style="padding: 0 10px;"><strong>${post.profiles?.username || ''}</strong> ${post.caption || ''}</div>
+            </article>
+        `).join('');
     }
-}
 
-// შემოწმება გვერდის ჩატვირთვისას (თუ უკვე შესულია)
-supabase.auth.onAuthStateChange((event, session) => {
-    if (session) {
-        showApp();
+    async function uploadPost() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const caption = document.getElementById('captionInput').value;
+
+        if (!file) return alert("ფაილი არ არის არჩეული!");
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+
+        const { data, error } = await supabase.storage.from('posts').upload(fileName, file);
+
+        if (error) {
+            console.error("Supabase Storage Error:", error);
+            alert("ატვირთვა ვერ მოხერხდა: " + error.message);
+            return;
+        }
+
+        // პოსტის მონაცემების შენახვა ცხრილში (საჭიროა ატვირთვის შემდეგ)
+        const { error: dbError } = await supabase.from('posts').insert([{ image_url: fileName, caption: caption }]);
+        
+        console.log("ატვირთვა წარმატებით დასრულდა:", data);
+        alert("პოსტი წარმატებით აიტვირთა!");
+        loadFeed();
     }
-});
-    </script>
+
+    function showSection(id) {
+        document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
+        document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
+    }
+
+    // ავტორიზაცია და შესვლა
+    async function signUp() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) alert("შეცდომა: " + error.message);
+        else alert("რეგისტრაცია წარმატებულია! შეამოწმე ელ-ფოსტა.");
+    }
+
+    async function signIn() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            alert("შეცდომა შესვლისას: " + error.message);
+        } else {
+            alert("წარმატებით შეხვედი!");
+            showApp();
+            loadFeed();
+        }
+    }
+
+    function showRegisterForm() {
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('register-section').style.display = 'block';
+    }
+
+    function showLoginForm() {
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('register-section').style.display = 'none';
+    }
+
+    async function performRegistration() {
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-pass').value;
+        const confirmPassword = document.getElementById('reg-pass-confirm').value;
+
+        if (password !== confirmPassword) {
+            alert("პაროლები არ ემთხვევა!");
+            return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        
+        if (error) {
+            alert("შეცდომა: " + error.message);
+        } else {
+            alert("რეგისტრაცია წარმატებულია!");
+            showLoginForm();
+        }
+    }
+
+    function showApp() {
+        document.getElementById('auth-page').style.display = 'none';
+        document.getElementById('main-page').style.display = 'block';
+    }
+
+    // შემოწმება გვერდის ჩატვირთვისას
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (session) showApp();
+    });
+
+    loadFeed();
+</script>
+    
 
     <script>
     // 1. Supabase კონფიგურაცია და ინიციალიზაცია (აქ რჩება)
