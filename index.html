@@ -61,20 +61,30 @@
     </main>
 
     <script>
-        // Supabase კონფიგურაცია
-        const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
-        // შენი JWT გასაღებიდან გამოყოფილი ანონიმური გასაღები
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // აქ ჩასვი შენი რეალური გასაღები
+    // Supabase კონფიგურაცია
+    const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx';
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ნავიგაციის ლოგიკა
-        function showSection(id) {
-            document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
-            document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
+    // ტესტი: შევამოწმოთ კავშირი კონსოლში
+    async function checkConnection() {
+        try {
+            const { data, error } = await supabase.from('profiles').select('*').limit(1);
+            if (error) throw error;
+            console.log("წარმატება! კავშირი დამყარებულია:", data);
+        } catch (err) {
+            console.error("შეცდომა კავშირის დროს:", err.message);
         }
+    }
 
-        console.log("Supabase კავშირი დამყარებულია");
-    </script>
+    checkConnection();
+
+    // ნავიგაციის ფუნქცია
+    function showSection(id) {
+        document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
+        document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
+    }
+</script>
 </body>
 </html>
