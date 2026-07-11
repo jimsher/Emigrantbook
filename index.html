@@ -76,20 +76,32 @@
         }
 
         async function uploadPost() {
-            const file = document.getElementById('fileInput').files[0];
-            const caption = document.getElementById('captionInput').value;
-            if (!file) return alert("აირჩიე ფოტო!");
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    const caption = document.getElementById('captionInput').value;
 
-            const fileName = `${Date.now()}_${file.name}`;
-            const { error: uploadError } = await supabase.storage.from('posts').upload(fileName, file);
-            if (uploadError) return alert(uploadError.message);
+    if (!file) return alert("ფაილი არ არის არჩეული!");
 
-            const { data } = supabase.storage.from('posts').getPublicUrl(fileName);
-            const { error: dbError } = await supabase.from('posts').insert([{ image_url: data.publicUrl, caption: caption }]);
-            
-            if (dbError) alert(dbError.message);
-            else { alert("ატვირთულია!"); loadFeed(); }
-        }
+    console.log("ფაილის სახელი:", file.name);
+    
+    // ვცვლით სახელს, რომ არ იყოს სპეციალური სიმბოლოები
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+        .from('posts') // აქ დარწმუნდი რომ ბაკეტის სახელია
+        .upload(fileName, file);
+
+    if (error) {
+        // ეს გამოაჩენს შეცდომას კონსოლში, რომელიც გვჭირდება
+        console.error("Supabase Storage Error:", error);
+        alert("ატვირთვა ვერ მოხერხდა: " + error.message);
+        return;
+    }
+
+    console.log("ატვირთვა წარმატებით დასრულდა:", data);
+    alert("პოსტი წარმატებით აიტვირთა!");
+}
 
         function showSection(id) {
             document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
