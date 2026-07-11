@@ -3,10 +3,9 @@ const firebaseConfig = {
   authDomain: "emigrantbook.firebaseapp.com", 
   databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
   projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", // <-- ეს ხაზი აუცილებლად უნდა იყოს აქ!
+  storageBucket: "emigrantbook.firebasestorage.app", 
   appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
 };
-
 
 let audioCtx, audioSource, audioDest;
 
@@ -18,9 +17,8 @@ if (!firebase.apps.length) {
 // გლობალური ცვლადები
 const db = firebase.database();
 const auth = firebase.auth();
-const storage = firebase.storage(); // <-- აქ ვააქტიურებთ Storage-ს
+const storage = firebase.storage();
 const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
-
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -30,250 +28,175 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+let myName = "User";
+let myPhoto = "";
+let myAkho = 0;
+let currentChatId = null;
+let activePostId = null;
+let activeReplyTo = null;
+let currentAdmTarget = null;
+let currentUserData = null;
+let typingTimeout = null;
 
+// ONLINE STATUS TRACKER
+function updatePresence() {
+    const user = auth.currentUser;
+    if (!user) return;
+    const onlineRef = db.ref(`.info/connected`);
+    const userPresenceRef = db.ref(`users/${user.uid}/presence`);
+    
+    onlineRef.on('value', snap => {
+        if (snap.val() === false) return;
+        userPresenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP).then(() => {
+            userPresenceRef.set('online');
+        });
+    });
+}
 
-
-
-
-
-
-
-
-
-
- let myName = "User";
- let myPhoto = "";
- let myAkho = 0;
- let currentChatId = null;
- let activePostId = null;
- let activeReplyTo = null;
- let currentAdmTarget = null;
- let currentUserData = null;
- let typingTimeout = null;
-
- // ONLINE STATUS TRACKER
- function updatePresence() {
- const user = auth.currentUser;
- if (!user) return;
- const onlineRef = db.ref(`.info/connected`);
- const userPresenceRef = db.ref(`users/${user.uid}/presence`);
- 
- onlineRef.on('value', snap => {
- if (snap.val() === false) return;
- userPresenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP).then(() => {
- userPresenceRef.set('online');
- });
- });
- }
-
-
- function formatTimeShort(timestamp) {
+function formatTimeShort(timestamp) {
     if (!timestamp || timestamp === 'online') return 'online';
     const date = new Date(timestamp);
-    // საათი და წუთი (მაგ: 12:45)
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-    // დღე და თვე (მაგ: 28 Feb)
     const day = date.getDate();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const month = months[date.getMonth()];
-    // აბრუნებს ფორმატს: "12:45, 28 Feb"
     return `${hours}:${minutes}, ${day} ${month}`;
 }
 
-
- function stopMainFeedVideos() {
- document.querySelectorAll('#main-feed video').forEach(v => v.pause());
- }
-
- function refreshHomeFeed() {
- stopMainFeedVideos();
- document.getElementById('discoveryUI').style.display = 'none';
- document.getElementById('profileUI').style.display = 'none';
- document.getElementById('messengerUI').style.display = 'none';
- document.getElementById('settingsUI').style.display = 'none';
- renderTokenFeed();
- }
-
- function toggleSideMenu(open) {
- const menu = document.getElementById('sideMenu');
- const overlay = document.getElementById('sideMenuOverlay');
- if (open) {
- menu.classList.add('active');
- overlay.style.display = 'block';
- } else {
- menu.classList.remove('active');
- overlay.style.display = 'none';
- }
- }
-
- 
-
- function nextObSlide(n) {
- document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
- document.getElementById('obSlide' + n).style.display = 'block';
- }
- function runSuccessAndFinish() {
- document.getElementById('rulesList').style.display = 'none';
- document.getElementById('finishBtn').style.display = 'none';
- const animBox = document.getElementById('tokenSuccessAnim');
- animBox.style.display = 'block';
- animBox.classList.add('token-pop');
- setTimeout(() => finishOnboarding(), 1800);
- }
- function finishOnboarding() {
- const user = auth.currentUser;
- if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
- document.getElementById('onboardingUI').style.display = 'none';
+function stopMainFeedVideos() {
+    document.querySelectorAll('#main-feed video').forEach(v => v.pause());
 }
 
+function refreshHomeFeed() {
+    stopMainFeedVideos();
+    document.getElementById('discoveryUI').style.display = 'none';
+    document.getElementById('profileUI').style.display = 'none';
+    document.getElementById('messengerUI').style.display = 'none';
+    document.getElementById('settingsUI').style.display = 'none';
+    renderTokenFeed();
+}
 
-
-
-
-
-
-
-
-
-        
-
-
-auth.onAuthStateChanged(user => {
-  applyLanguage();
-  if (user) {
-    // --- ახალი: ნებართვების მოთხოვნა ავტორიზაციისთანავე ---
-    setTimeout(() => {
-        askInitialPermissions(); 
-    }, 1500);
-
-//სკრიპის ფუნქცია რომ ფული დარიცხოს აკნო
-// --- 💰 Stripe-იდან დაბრუნების და ავტომატური დარიცხვის ლოგიკა ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-    const packAmount = urlParams.get('pack'); // ვიღებთ AKHO-ს რაოდენობას URL-იდან
-
-    if (sessionId && packAmount) {
-        const amountToAdd = parseFloat(packAmount);
-        
-        // ვამოწმებთ, ეს კონკრეტული სესია უკვე დამუშავებული ხომ არ არის
-        db.ref(`payments_processed/${sessionId}`).once('value', snap => {
-            if (!snap.exists()) {
-                // ბალანსის გაზრდა
-                db.ref(`users/${user.uid}/akho`).transaction(current => {
-                    return (current || 0) + amountToAdd;
-                }).then(() => {
-                    // სესიის მონიშვნა, რომ მეორედ აღარ დაერიცხოს
-                    db.ref(`payments_processed/${sessionId}`).set({
-                        uid: user.uid,
-                        amount: amountToAdd,
-                        ts: Date.now()
-                    });
-                    
-                    addToLog('Stripe Purchase', amountToAdd);
-                    
-                    // მომხმარებლისთვის ლამაზი შეტყობინება
-                    if (typeof showCustomAlert === "function") {
-                        showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                    } else {
-                        alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                    }
-                    
-                    // URL-ის გასუფთავება (პარამეტრების მოცილება)
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                });
-            }
-        });
+function toggleSideMenu(open) {
+    const menu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('sideMenuOverlay');
+    if (open) {
+        menu.classList.add('active');
+        overlay.style.display = 'block';
+    } else {
+        menu.classList.remove('active');
+        overlay.style.display = 'none';
     }
-    // --- 💰 დასასრული ---
-// აქ მთავრდება ეს ფუნქცია
-    
-    setTimeout(() => {
-      console.log("ვცდილობ ჩაწერას...");
-      db.ref('users/' + user.uid + '/test').set("მუშაობს");
-      saveMessagingToken(user);
-    }, 2000);
+}
 
+function nextObSlide(n) {
+    document.querySelectorAll('.ob-step').forEach(s => s.style.display = 'none');
+    document.getElementById('obSlide' + n).style.display = 'block';
+}
 
-   // 🚀 აი აქ ჩაამატე ევროს ბალანსის მოსმენაც:
+function runSuccessAndFinish() {
+    document.getElementById('rulesList').style.display = 'none';
+    document.getElementById('finishBtn').style.display = 'none';
+    const animBox = document.getElementById('tokenSuccessAnim');
+    animBox.style.display = 'block';
+    animBox.classList.add('token-pop');
+    setTimeout(() => finishOnboarding(), 1800);
+}
+
+function finishOnboarding() {
+    const user = auth.currentUser;
+    if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
+    document.getElementById('onboardingUI').style.display = 'none';
+}
+
+// MAIN AUTH LISTENER
+auth.onAuthStateChanged(user => {
+    applyLanguage();
+    if (user) {
+        // ნებართვები
+        setTimeout(() => askInitialPermissions(), 1500);
+
+        // Stripe ლოგიკა
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const packAmount = urlParams.get('pack');
+
+        if (sessionId && packAmount) {
+            const amountToAdd = parseFloat(packAmount);
+            db.ref(`payments_processed/${sessionId}`).once('value', snap => {
+                if (!snap.exists()) {
+                    db.ref(`users/${user.uid}/akho`).transaction(current => (current || 0) + amountToAdd).then(() => {
+                        db.ref(`payments_processed/${sessionId}`).set({ uid: user.uid, amount: amountToAdd, ts: Date.now() });
+                        addToLog('Stripe Purchase', amountToAdd);
+                        if (typeof showCustomAlert === "function") showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    });
+                }
+            });
+        }
+
+        // სხვა ფუნქციები
+        setTimeout(() => {
+            db.ref('users/' + user.uid + '/test').set("მუშაობს");
+            saveMessagingToken(user);
+        }, 2000);
+
         db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
             const euro = snap.val() || 0;
             const euroEl = document.getElementById('euroBalanceDisplay');
-            if (euroEl) {
-                euroEl.innerText = euro.toFixed(2) + " €";
-            }
+            if (euroEl) euroEl.innerText = euro.toFixed(2) + " €";
         });
 
+        updatePresence();
+        listenToGlobalMessages();
+        startNotificationListener();
+        checkDailyBonus();
+        startGlobalUnreadCounter();
+        listenForIncomingCalls(user);
+        startWallNotificationListener();
+        monitorMessageRequests();
 
-    
-    updatePresence();
-    listenToGlobalMessages();
-    startNotificationListener();
-    checkDailyBonus();
-    startGlobalUnreadCounter();
-    listenForIncomingCalls(user);
+        // შეტყობინებების მოდული
+        setTimeout(function() {
+            const tokenKey = 'fcm_token_sent_' + user.uid;
+            if (localStorage.getItem(tokenKey)) return; 
+            try {
+                const messaging = firebase.messaging();
+                messaging.requestPermission()
+                    .then(() => messaging.getToken({ vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' }))
+                    .then((token) => {
+                        if (token) {
+                            db.ref('users/' + user.uid + '/fcmToken').set(token);
+                            showTestNotification();
+                            localStorage.setItem(tokenKey, 'true');
+                        }
+                    }).catch(err => console.log("Push error"));
+            } catch (e) { console.log("Messaging skip"); }
+        }, 3000);
 
-    startWallNotificationListener();
-    
-    // ... დანარჩენი შენი კოდი უცვლელად ...
-   
-
-
-// ეს არის შეტყობინების ველი
-setTimeout(function() {
-    const user = firebase.auth().currentUser;
-    if (user) {
-        const tokenKey = 'fcm_token_sent_' + user.uid;
-        
-        // ვამოწმებთ, უკვე გავუგზავნეთ თუ არა ეს შეტყობინება ამ იუზერს
-        if (localStorage.getItem(tokenKey)) return; 
-
-        try {
-            const messaging = firebase.messaging();
-            messaging.requestPermission()
-                .then(() => messaging.getToken({ 
-                    vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
-                }))
-                .then((token) => {
-                    if (token) {
-                        db.ref('users/' + user.uid + '/fcmToken').set(token);
-                        
-                        // აი აქ ერთხელ გამოვუგზავნოთ დასტური
-                        showTestNotification(); 
-                        
-                        // დავიმახსოვროთ ბრაუზერში, რომ მეორედ აღარ შევაწუხოთ
-                        localStorage.setItem(tokenKey, 'true'); 
-                    }
-                })
-                .catch((err) => console.log("Push error or denied"));
-        } catch (e) {
-            console.log("Messaging skip");
-        }
-    }
-}, 3000);
-
-
-
-// აი ეს არის ის ადგილი, სადაც "ნაღმია" და სადაც უნდა ჩაანაცვლო:
-let currentIncomingCall = null; // აქ შევინახავთ ზარის მონაცემებს
-
-db.ref(`video_calls/${user.uid}`).on('value', snap => {
-    const call = snap.val();
-    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        currentIncomingCall = call; // ვინახავთ ინფორმაციას
-        
-        // ვავსებთ ფანჯარას მონაცემებით
-        document.getElementById('callerNameDisplay').innerText = call.callerName;
-        document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
-        
-        // ვაჩენთ ლამაზ ფანჯარას
-        const modal = document.getElementById('incomingCallModal');
-        modal.style.display = 'flex';
     } else {
-        // თუ ზარი გაუქმდა გამომძახებლის მიერ
-        document.getElementById('incomingCallModal').style.display = 'none';
+        console.log("მომხმარებელი გასულია");
     }
 });
+
+// ვიდეო ზარები
+let currentIncomingCall = null;
+// შენიშვნა: დავამატე user-ის შემოწმება აქაც, რომ ერორი არ ამოაგდოს
+db.ref(`video_calls`).on('value', snap => {
+    const user = auth.currentUser;
+    if(!user) return;
+    const call = snap.val() ? snap.val()[user.uid] : null;
+    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+        currentIncomingCall = call;
+        document.getElementById('callerNameDisplay').innerText = call.callerName;
+        document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
+        document.getElementById('incomingCallModal').style.display = 'flex';
+    } else {
+        const modal = document.getElementById('incomingCallModal');
+        if(modal) modal.style.display = 'none';
+    }
+});
+
 
 function acceptCall() {
     if (currentIncomingCall) {
