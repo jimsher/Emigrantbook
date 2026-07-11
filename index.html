@@ -137,6 +137,31 @@
         }
 
         loadFeed();
+
+
+
+        // ავტორიზაცია და შესვლის 
+        async function signUp() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) alert("შეცდომა: " + error.message);
+    else alert("რეგისტრაცია წარმატებულია! შეამოწმე ელ-ფოსტა.");
+}
+
+async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+        alert("შეცდომა შესვლისას: " + error.message);
+    } else {
+        alert("წარმატებით შეხვედი!");
+        document.getElementById('auth-section').style.display = 'none'; // ვმალავთ ფორმას
+        loadFeed(); // ვტვირთავთ პოსტებს
+    }
+}
     </script>
 </body>
 </html>
