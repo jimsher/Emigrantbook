@@ -4,17 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instagram Clone</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* CSS სტილები */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fafafa; margin: 0; }
+        .navbar { display: flex; justify-content: space-between; padding: 10px 20px; background: white; border-bottom: 1px solid #dbdbdb; position: sticky; top: 0; z-index: 10; }
+        .logo { font-family: cursive; font-size: 24px; font-weight: bold; }
+        .container { max-width: 935px; margin: 20px auto; }
+        .post { background: white; border: 1px solid #dbdbdb; margin-bottom: 20px; border-radius: 8px; }
+        .post-header { display: flex; align-items: center; padding: 15px; }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 10px; }
+        .post-media img { width: 100%; display: block; }
+        .post-actions { padding: 10px; }
+        .profile-container { text-align: center; }
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; }
+        .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 20px; }
+    </style>
 </head>
 <body>
 
     <nav class="navbar">
         <div class="logo">Instagram</div>
         <div class="nav-links">
-            <button>Home</button>
-            <button>Search</button>
-            <button>Create</button>
-            <button>Profile</button>
+            <button onclick="showSection('feed')">Home</button>
+            <button onclick="showSection('profile')">Profile</button>
         </div>
     </nav>
 
@@ -22,7 +35,7 @@
         <section id="feed" class="feed-container">
             <article class="post">
                 <header class="post-header">
-                    <img src="avatar.jpg" class="avatar">
+                    <img src="avatar.jpg" class="avatar" id="user-avatar">
                     <span class="username">username</span>
                 </header>
                 <div class="post-media">
@@ -40,14 +53,28 @@
             <div class="profile-header">
                 <img src="avatar.jpg" class="profile-avatar">
                 <div class="profile-stats">
-                    <span>10 Posts</span>
-                    <span>100 Followers</span>
+                    <p>10 Posts | 100 Followers</p>
                 </div>
             </div>
-            <div class="profile-grid">
-                </div>
+            <div class="profile-grid"></div>
         </section>
     </main>
 
+    <script>
+        // Supabase კონფიგურაცია
+        const SUPABASE_URL = 'https://mohkxmwphwywkqkoairj.supabase.co';
+        // შენი JWT გასაღებიდან გამოყოფილი ანონიმური გასაღები
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // აქ ჩასვი შენი რეალური გასაღები
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ნავიგაციის ლოგიკა
+        function showSection(id) {
+            document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
+            document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
+        }
+
+        console.log("Supabase კავშირი დამყარებულია");
+    </script>
 </body>
 </html>
