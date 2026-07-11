@@ -167,6 +167,30 @@ async function signIn() {
         loadFeed(); // ვტვირთავთ პოსტებს
     }
 }
+
+
+
+        // ფუნქცია, რომელიც მალავს ერთს და აჩვენებს მეორეს
+function showApp() {
+    document.getElementById('auth-page').style.display = 'none';
+    document.getElementById('main-page').style.display = 'block';
+}
+
+// შემოწმება შესვლისას:
+async function handleAuth(type) {
+    // ... შენი არსებული ავტორიზაციის კოდი
+    if (!error) {
+        alert("წარმატებით შეხვედი!");
+        showApp(); // აქ ხდება გადართვა
+    }
+}
+
+// შემოწმება გვერდის ჩატვირთვისას (თუ უკვე შესულია)
+supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        showApp();
+    }
+});
     </script>
 
     <script>
