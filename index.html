@@ -192,6 +192,40 @@ async function signIn() {
 
 
 
+function showRegisterForm() {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('register-section').style.display = 'block';
+}
+
+function showLoginForm() {
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('register-section').style.display = 'none';
+}
+
+async function performRegistration() {
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-pass').value;
+    const confirmPassword = document.getElementById('reg-pass-confirm').value;
+
+    if (password !== confirmPassword) {
+        alert("პაროლები არ ემთხვევა!");
+        return;
+    }
+
+    // Supabase რეგისტრაცია
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    
+    if (error) {
+        alert("შეცდომა: " + error.message);
+    } else {
+        alert("რეგისტრაცია წარმატებულია!");
+        // აქ შეგიძლია დაამატო მონაცემების შენახვა 'profiles' ცხრილში (სახელი, გვარი და ა.შ.)
+        showLoginForm();
+    }
+}
+        
+
+
         // ფუნქცია, რომელიც მალავს ერთს და აჩვენებს მეორეს
 function showApp() {
     document.getElementById('auth-page').style.display = 'none';
