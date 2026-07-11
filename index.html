@@ -85,6 +85,53 @@
         document.getElementById('feed').style.display = (id === 'feed') ? 'block' : 'none';
         document.getElementById('profile').style.display = (id === 'profile') ? 'block' : 'none';
     }
+
+
+       /**
+ * პოსტების წამოღება Supabase-დან
+ */
+async function loadFeed() {
+    const { data: posts, error } = await supabase
+        .from('posts')
+        .select(`
+            id,
+            image_url,
+            caption,
+            profiles (username, avatar_url)
+        `)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("პოსტების ჩატვირთვის შეცდომა:", error);
+        return;
+    }
+
+    const feedContainer = document.getElementById('feed');
+    feedContainer.innerHTML = ''; // გასუფთავება
+
+    posts.forEach(post => {
+        const postElement = `
+            <article class="post">
+                <header class="post-header">
+                    <img src="${post.profiles.avatar_url || 'default-avatar.png'}" class="avatar">
+                    <span class="username">${post.profiles.username}</span>
+                </header>
+                <div class="post-media">
+                    <img src="${post.image_url}" alt="Post content">
+                </div>
+                <div class="post-actions">
+                    <p><strong>${post.profiles.username}</strong> ${post.caption || ''}</p>
+                    <button>Like</button>
+                    <button>Comment</button>
+                </div>
+            </article>
+        `;
+        feedContainer.innerHTML += postElement;
+    });
+}
+
+// გვერდის ჩატვირთვისას ავტომატურად გავუშვათ
+loadFeed(); 
 </script>
 </body>
 </html>
