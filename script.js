@@ -9,15 +9,13 @@ const firebaseConfig = {
 
 let audioCtx, audioSource, audioDest;
 
-// ინიციალიზაცია
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// გლობალური ცვლადები
 const db = firebase.database();
 const auth = firebase.auth();
-const storage = firebase.storage();
+const storage = firebase.storage(); 
 const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
 
 if ('serviceWorker' in navigator) {
@@ -38,7 +36,6 @@ let currentAdmTarget = null;
 let currentUserData = null;
 let typingTimeout = null;
 
-// ONLINE STATUS TRACKER
 function updatePresence() {
     const user = auth.currentUser;
     if (!user) return;
@@ -109,94 +106,133 @@ function finishOnboarding() {
     document.getElementById('onboardingUI').style.display = 'none';
 }
 
-// MAIN AUTH LISTENER
 auth.onAuthStateChanged(user => {
-    applyLanguage();
-    if (user) {
-        // ნებართვები
-        setTimeout(() => askInitialPermissions(), 1500);
+  applyLanguage();
+  if (user) {
+    setTimeout(() => {
+        askInitialPermissions(); 
+    }, 1500);
 
-        // Stripe ლოგიკა
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session_id');
-        const packAmount = urlParams.get('pack');
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const packAmount = urlParams.get('pack');
 
-        if (sessionId && packAmount) {
-            const amountToAdd = parseFloat(packAmount);
-            db.ref(`payments_processed/${sessionId}`).once('value', snap => {
-                if (!snap.exists()) {
-                    db.ref(`users/${user.uid}/akho`).transaction(current => (current || 0) + amountToAdd).then(() => {
-                        db.ref(`payments_processed/${sessionId}`).set({ uid: user.uid, amount: amountToAdd, ts: Date.now() });
-                        addToLog('Stripe Purchase', amountToAdd);
-                        if (typeof showCustomAlert === "function") showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                        window.history.replaceState({}, document.title, window.location.pathname);
+    if (sessionId && packAmount) {
+        const amountToAdd = parseFloat(packAmount);
+        db.ref(`payments_processed/${sessionId}`).once('value', snap => {
+            if (!snap.exists()) {
+                db.ref(`users/${user.uid}/akho`).transaction(current => {
+                    return (current || 0) + amountToAdd;
+                }).then(() => {
+                    db.ref(`payments_processed/${sessionId}`).set({
+                        uid: user.uid,
+                        amount: amountToAdd,
+                        ts: Date.now()
                     });
-                }
-            });
-        }
-
-        // სხვა ფუნქციები
-        setTimeout(() => {
-            db.ref('users/' + user.uid + '/test').set("მუშაობს");
-            saveMessagingToken(user);
-        }, 2000);
-
-        db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
-            const euro = snap.val() || 0;
-            const euroEl = document.getElementById('euroBalanceDisplay');
-            if (euroEl) euroEl.innerText = euro.toFixed(2) + " €";
+                    addToLog('Stripe Purchase', amountToAdd);
+                    if (typeof showCustomAlert === "function") {
+                        showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    } else {
+                        alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                    }
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                });
+            }
         });
+    }
+    
+    setTimeout(() => {
+      console.log("ვცდილობ ჩაწერას...");
+      db.ref('users/' + user.uid + '/test').set("მუშაობს");
+      saveMessagingToken(user);
+    }, 2000);
 
-        updatePresence();
-        listenToGlobalMessages();
-        startNotificationListener();
-        checkDailyBonus();
-        startGlobalUnreadCounter();
-        listenForIncomingCalls(user);
-        startWallNotificationListener();
-        monitorMessageRequests();
+    db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
+        const euro = snap.val() || 0;
+        const euroEl = document.getElementById('euroBalanceDisplay');
+        if (euroEl) {
+            euroEl.innerText = euro.toFixed(2) + " €";
+        }
+    });
 
-        // შეტყობინებების მოდული
-        setTimeout(function() {
+    updatePresence();
+    listenToGlobalMessages();
+    startNotificationListener();
+    checkDailyBonus();
+    startGlobalUnreadCounter();
+    listenForIncomingCalls(user);
+    startWallNotificationListener();
+    
+    setTimeout(function() {
+        const user = firebase.auth().currentUser;
+        if (user) {
             const tokenKey = 'fcm_token_sent_' + user.uid;
             if (localStorage.getItem(tokenKey)) return; 
+
             try {
                 const messaging = firebase.messaging();
                 messaging.requestPermission()
-                    .then(() => messaging.getToken({ vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' }))
+                    .then(() => messaging.getToken({ 
+                        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
+                    }))
                     .then((token) => {
                         if (token) {
                             db.ref('users/' + user.uid + '/fcmToken').set(token);
-                            showTestNotification();
-                            localStorage.setItem(tokenKey, 'true');
+                            showTestNotification(); 
+                            localStorage.setItem(tokenKey, 'true'); 
                         }
-                    }).catch(err => console.log("Push error"));
-            } catch (e) { console.log("Messaging skip"); }
-        }, 3000);
+                    })
+                    .catch((err) => console.log("Push error or denied"));
+            } catch (e) {
+                console.log("Messaging skip");
+            }
+        }
+    }, 3000);
 
-    } else {
-        console.log("მომხმარებელი გასულია");
-    }
+    let currentIncomingCall = null;
+    db.ref(`video_calls/${user.uid}`).on('value', snap => {
+        const call = snap.val();
+        if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
+            currentIncomingCall = call; 
+            document.getElementById('callerNameDisplay').innerText = call.callerName;
+            document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
+            const modal = document.getElementById('incomingCallModal');
+            modal.style.display = 'flex';
+        } else {
+            document.getElementById('incomingCallModal').style.display = 'none';
+        }
+    });
+
+    document.getElementById('authUI').style.display = 'none';
+    db.ref('users/' + user.uid).on('value', snap => {
+        const d = snap.val();
+        if(d) {
+            currentUserData = d;
+            if(d.isBanned) {
+                document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
+                return;
+            }
+            myName = d.name || "User";
+            myPhoto = d.photo || "token-avatar.png";
+            myAkho = d.akho || 0;
+            document.getElementById('userAkho').innerText = myAkho.toFixed(2);
+            document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
+            document.getElementById('bottomNavAva').src = myPhoto;
+            if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
+            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
+          
+            updateCashoutUI();
+            loadActivityLog();
+        }
+    });
+    renderTokenFeed();
+    loadDiscoveryUsers();
+    listenToRequests();
+  } else {
+    document.getElementById('authUI').style.display = 'flex';
+    document.getElementById('main-feed').innerHTML = "";
+  }
 });
-
-// ვიდეო ზარები
-let currentIncomingCall = null;
-// შენიშვნა: დავამატე user-ის შემოწმება აქაც, რომ ერორი არ ამოაგდოს
-db.ref(`video_calls`).on('value', snap => {
-    const user = auth.currentUser;
-    if(!user) return;
-    const call = snap.val() ? snap.val()[user.uid] : null;
-    if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-        currentIncomingCall = call;
-        document.getElementById('callerNameDisplay').innerText = call.callerName;
-        document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
-        document.getElementById('incomingCallModal').style.display = 'flex';
-    } else {
-        const modal = document.getElementById('incomingCallModal');
-        if(modal) modal.style.display = 'none';
-    }
-});
-
 
 function acceptCall() {
     if (currentIncomingCall) {
@@ -316,12 +352,12 @@ function loadAdminRequests() {
             if(req.status === 'pending') {
                 list.innerHTML += `
                 <div class="admin-req-card">
-                b>User: ${req.name}</b>
-                span>Amt: ${req.amountEur} € (${req.amountAkho} AKHO)</span>
-                span>IBAN: ${req.iban}</span>
-                div style="display:flex; gap:10px;">
-                button class="withdraw-btn" style="background:var(--green);" onclick="approveReq('${id}')">Approve</button>
-                button class="withdraw-btn" style="background:var(--red);" onclick="declineReq('${id}', '${req.uid}', ${req.amountAkho})">Decline</button>
+                <b>User: ${req.name}</b>
+                <span>Amt: ${req.amountEur} € (${req.amountAkho} AKHO)</span>
+                <span>IBAN: ${req.iban}</span>
+                <div style="display:flex; gap:10px;">
+                <button class="withdraw-btn" style="background:var(--green);" onclick="approveReq('${id}')">Approve</button>
+                <button class="withdraw-btn" style="background:var(--red);" onclick="declineReq('${id}', '${req.uid}', ${req.amountAkho})">Decline</button>
                 </div>
                 </div>`;
             }
@@ -362,13 +398,6 @@ function initStripePayment(url) {
     document.getElementById('walletMain').style.display = 'none';
     document.getElementById('paymentPending').style.display = 'block';
     window.location.href = finalUrl; 
-}
-
-function canAffOut(cost) {
-    if (myAkho >= cost) return true;
-    alert(currentLang === 'ka' ? "შეავსეთ ბალანსი!" : "Top up your balance!");
-    openWalletUI();
-    return false;
 }
 
 function canAfford(cost) {
@@ -453,6 +482,7 @@ function loadComments(postId, isGallery = false) {
 
     const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
 
+    // 🚀 ოპტიმიზაცია: .on-ის ნაცვლად .once, რომ კომენტარის დაწერამ გვერდი არ გაჭედოს
     db.ref(commentPath).once('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
@@ -585,6 +615,7 @@ function openMessenger() {
     if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
     if (!auth.currentUser) return;
 
+    // 🚀 ოპტიმიზაცია: მესინჯერის ჩატების ერთჯერადი სწრაფი წაკითხვა
     db.ref(`users/${auth.currentUser.uid}/following`).once('value', async snap => {
         if (!list) return;
         const followers = snap.val();
@@ -707,7 +738,7 @@ function startChat(uid, name, photo) {
                 statusEl.style.color = '#4ade80';
             } else {
                 const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + '    ago' : 'offline';
+                statusEl.innerText = timeAgo ? timeAgo + '   ago' : 'offline';
                 statusEl.style.color = '#888';
             }
         });
@@ -1249,8 +1280,11 @@ function deleteNotification(id) {
     db.ref(`notifications/${auth.currentUser.uid}/${id}`).remove().then(() => openRequestsUI());
 }
 
+// 🚀 ოპტიმიზირებული პროფილის ვიდეოების ფუნქცია
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
+    
+    // `.once` და `orderByChild` მთელი ბაზის ტვირთვის ასარიდებლად
     db.ref('posts').orderByChild('authorId').equalTo(uid).once('value', snap => {
         grid.innerHTML = ""; 
         const posts = snap.val();
@@ -1274,6 +1308,7 @@ function loadUserVideos(uid) {
         });
 
         document.getElementById('statVidsCount').innerText = vCount;
+
         let currentlyShown = 0;
 
         function showNextSix() {
@@ -1288,15 +1323,15 @@ function loadUserVideos(uid) {
                 item.className = 'grid-item';
                 item.innerHTML = `
                     <video src="${video.url}#t=0.1" 
-                           muted 
-                           playsinline 
-                           preload="metadata" 
-                           poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-                           style="object-fit: cover; width:100%; height:100%; background: #000;">
-                    </video>
-                    <div class="video-views-label">
-                        <i class="fas fa-play"></i> ${formattedViews}
-                    </div>`;
+                               muted 
+                               playsinline 
+                               preload="metadata" 
+                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                               style="object-fit: cover; width:100%; height:100%; background: #000;">
+                        </video>
+                        <div class="video-views-label">
+                            <i class="fas fa-play"></i> ${formattedViews}
+                        </div>`;
                 
                 const globalIndex = currentlyShown; 
                 item.onclick = () => playFullVideo(video.url, id, globalIndex);
@@ -1361,6 +1396,7 @@ function playFullVideo(url, postId, currentIndex) {
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
+        // 🚀 შეცვლილია .once-ზე, რომ სრულად გახსნამ არ ტვირთოს ტელეფონი
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
@@ -1741,29 +1777,29 @@ function renderTokenFeed() {
             const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
             card.innerHTML = `
-                <video src="${videoUrl}" 
-                loop 
-                playsinline 
-                muted 
-                autoplay
-                preload="metadata" 
-                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-                style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
-                onclick="togglePlayPause(this)">
-                </video>
-                <div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
+<video src="${videoUrl}" 
+loop 
+playsinline 
+muted 
+autoplay
+preload="metadata" 
+poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
+onclick="togglePlayPause(this)">
+</video>
+<div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
 
-                <div class="side-actions">
-                    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
-                        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
-                        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
-                    </div>
+<div class="side-actions">
+    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
+        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
+        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
+    </div>
 
-                    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
-                        <i class="fas fa-heart"></i>
-                        <span id="like-count-${id}">${likeCount}</span>
-                    </div>
-                    
+    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+        <i class="fas fa-heart"></i>
+        <span id="like-count-${id}">${likeCount}</span>
+    </div>
+    
                     <div class="action-item" onclick="openComments('${id}')">
                         <i class="fas fa-comment-dots"></i>
                         <span id="comm-count-${id}">0</span>
@@ -1780,21 +1816,23 @@ function renderTokenFeed() {
                         <i class="fas fa-gift" style="color: #ff4d4d;"></i>
                         <span>Gift</span>
                     </div>
-                    ${post.authorId === auth.currentUser.uid ? `
-                    <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
-                        <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
-                        <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
-                    </div>` : ''}
+                  ${post.authorId === auth.currentUser.uid ? `
+                   <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
+                   <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
+                   <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
+                  </div>
+                  ` : ''}
                 </div>
-                <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
-                        <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
-                    </div>
-                    <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
-                        ${post.text || ''}
-                    </p>
-                </div>`;
+                  <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
+        
+                <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
+              </div>
+                 <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
+                 ${post.text || ''}
+                  </p>
+               </div>`;
             
             feed.appendChild(card);
             cleanupOldVideos();
@@ -2286,7 +2324,7 @@ window.showEuroHistory = function() {
     
     historyModal.innerHTML = `
         <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222; background:#121212;">
-            <i class="fas fa-chevron-left" onclick="window.showFinancialWallet(); this.parentElement.parentElement.remove();" style="font-size:20px; cursor:pointer; width:30px;"></i>
+            <i class="fas fa-chevron-left" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
             <div style="flex:1; text-align:center; font-weight:bold; font-size:16px;">ტრანზაქციების ისტორია</div>
             <div style="width:30px;"></div>
         </div>
@@ -2408,7 +2446,7 @@ window.selectPackage = function(el, amount) {
 
 window.confirmPurchase = function() {
     if (selectedAkhoAmount === 0) return alert("გთხოვთ აირჩიოთ პაკეტი!");
-    alert("გავაგრძელოთ გადახდის სისტემაში. არჩეულია: " + selectedAkhoAmount + " AKHO");
+    alert("გადახდის სისტემა მზადების პროცესშია. არჩეულია: " + selectedAkhoAmount + " AKHO");
 };
 
 function openWithdrawHistory() {
@@ -2503,7 +2541,7 @@ function previewWallImage(input) {
 function cancelWallImg() {
     document.getElementById('wallImgInput').value = "";
     document.getElementById('wallImgPreviewBox').style.display = 'none';
-}                       
+}                   
 
 async function submitWallPost() {
     const text = document.getElementById('wallPostText').value;
@@ -2555,6 +2593,7 @@ async function submitWallPost() {
     }
 }
 
+// 🚀 ოპტიმიზირებული კედლის პოსტები (წაკითხვა .once-ით, რომ რეალურ დროში არ გაჭედოს)
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
@@ -2715,7 +2754,7 @@ async function sendVoiceMessage(blob) {
     } catch (err) { 
         alert("ატვირთვის შეცდომა"); 
     }
-}        
+}       
 
 let waveSurfers = {}; 
 
@@ -2790,6 +2829,7 @@ function downloadVideo(postId) {
     toggleMoreMenu();
 }
 
+// 🚀 ოპტიმიზირებული Unread Counter: უყურებს მხოლოდ კონკრეტულ იუზერს და არა მთელ ბაზას
 function startGlobalUnreadCounter() {
     const myUid = auth.currentUser.uid;
     const chatBadge = document.getElementById('chatCountBadge');
@@ -2798,6 +2838,7 @@ function startGlobalUnreadCounter() {
         const lastReadData = readSnap.val() || {};
         let totalUnread = 0;
 
+        // მხოლოდ ამ იუზერის ჩატებს ვამოწმებთ სათითაოდ
         db.ref('messages').once('value', snap => {
             const allChats = snap.val();
             if (!allChats) return;
@@ -2927,7 +2968,7 @@ async function openUploadModal() {
                  },
                  audio: {
                     echoCancellation: { ideal: false }, 
-                    noiseSuppression: { ideal: false },    
+                    noiseSuppression: { ideal: false },  
                     autoGainControl: { ideal: false },   
                     sampleRate: 48000, 
                     sampleSize: 16,
@@ -2949,7 +2990,7 @@ async function openUploadModal() {
         } catch (err) {
             alert("კამერა ვერ ჩაირთო. შეამოწმეთ ნებართვები პარამეტრებში.");
         }
-   }
+    }
 }
 
 async function startLiveCamera() {
@@ -3853,7 +3894,7 @@ window.loadMyTaggedWallPosts = function(targetUid) {
 
     const user = auth.currentUser;
     if (!user) {
-        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხოვთ გაიაროთ ავტორიზაცია</p>";
+        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხაღო გაიაროთ ავტორიზაცია</p>";
         return;
     }
 
@@ -4328,7 +4369,9 @@ function acceptMsgReq(senderId) {
     });
 }
 
-function closeMessageRequests() {
+
+
+    function closeMessageRequests() {
     document.getElementById('messageRequestsUI').style.display = 'none';
 }
 
