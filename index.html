@@ -10,18 +10,14 @@
  <link rel="stylesheet" href="chatvirtva.css">
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
- <link rel="manifest" href="manifest.json?v=2">
- 
- <!-- შეცვალე ეს ხაზი -->
-<meta name="theme-color" content="#000000">
+ <link rel="manifest" href="manifest.json">
+ <meta name="theme-color" content="#000000">
 
 
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Impact">
-
-
 
 
  
@@ -42,410 +38,12 @@
 </script>
 
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "5043bc1e-ed37-49f3-987c-b51c1b130a4b",
-    });
-  });
-</script>
-
-
-
-
-
- <script>
- function saveUserToken(tokenId) {
-    alert("მივიღე ID: " + tokenId); // ეს ფანჯარა თუ ამოხტა ტელეფონზე, ყველაფერი მუშაობს!
-    // აქ მოდის შენი ბაზაში შენახვის კოდი...
-}
- </script>
-
 
 
  
+
+ 
  <style>
-/* ვიდეო ზარის დიზაინი */
-  /* ვიდეო ზარის მთლიანი ეკრანი */
-#videoCallUI {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #000;
-    z-index: 999999;
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-}
-
-/* ზედა ზონა: პროფილის სურათი და სახელი */
-.call-header-zone {
-    width: 100%;
-    padding: 40px 20px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-    z-index: 10;
-}
-
-#callerAva, .call-top-avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--gold, #d4af37);
-    margin-bottom: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-}
-
-.call-header-zone h2 {
-    color: #fff;
-    margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-.call-status-text {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 14px;
-    margin-top: 5px;
-}
-
-/* ქვედა მართვის პანელი (Frosted Glass ეფექტით) */
-.call-control-panel {
-    width: calc(100% - 40px);
-    max-width: 450px;
-    background: rgba(30, 30, 30, 0.65);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    border-radius: 24px;
-    padding: 16px 10px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-bottom: 30px;
-    z-index: 10;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-/* ღილაკების კონტეინერები (იკონკა + ტექსტი ერთად) */
-.panel-btn-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    flex: 1;
-}
-
-/* თავად მრგვალი ღილაკები */
-.panel-round-btn {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 18px;
-    transition: all 0.2s ease;
-}
-
-.panel-btn-wrapper:hover .panel-round-btn {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.05);
-}
-
-/* გათიშვის წითელი ღილაკი */
-.panel-btn-wrapper.end-call-wrapper .panel-round-btn {
-    background: #ff3b30;
-    border: none;
-}
-.panel-btn-wrapper.end-call-wrapper:hover .panel-round-btn {
-    background: #e02e24;
-}
-
-/* ღილაკის ქვედა პატარა ტექსტები */
-.panel-btn-label {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 11px;
-    font-weight: 500;
-}
-
-/* ვიდეო ეკრანების ზომები */
-#remote-video {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-}
-
-#local-video {
-    position: absolute;
-    width: 110px;
-    height: 150px;
-    bottom: 110px; /* რომ პანელის თავზე დაჯდეს ლამაზად */
-    right: 20px;
-    border-radius: 16px;
-    border: 2px solid var(--gold, #d4af37);
-    overflow: hidden;
-    z-index: 5;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-}
-  /* აქ მთავრდება */
-
-
-
-
-
-
-
-
-
-  
-/* ეს არის ინსტალაციის სტილი */
- #pwa-notification {
-    display: none;
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.15);
-    z-index: 10001;
-    padding: 16px;
-    border: 1px solid #eee;
-    font-family: -apple-system, system-ui, sans-serif;
-    animation: slideDown 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-@keyframes slideDown {
-    from { top: -120px; opacity: 0; }
-    to { top: 20px; opacity: 1; }
-}
-
-.notif-content {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.notif-btn {
-    background: #007aff;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    white-space: nowrap;
-} 
-/* აქ მთავრდება */
-
-
-
-
-
-  
-/* 1. მთავარი ანიმაცია ავატარის გარშემო */
-.is-live-now {
-    box-shadow: 0 0 0 2px #000, 0 0 0 4px #fe2c55 !important;
-    animation: tiktok-pulse 1.5s infinite ease-in-out !important;
-    position: relative;
-    z-index: 10;
-}
-
-/* 2. LIVE წარწერა, რომელიც ავატარის ქვევით ჩნდება */
-.is-live-now::after {
-    content: "LIVE" !important;
-    position: absolute !important;
-    bottom: -6px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    background: #fe2c55 !important;
-    color: #fff !important;
-    font-size: 8px !important;
-    padding: 1px 4px !important;
-    border-radius: 3px !important;
-    font-weight: bold !important;
-    border: 1px solid #000 !important;
-    z-index: 100 !important;
-    line-height: 1 !important;
-}
-
-/* 3. ციმციმის ეფექტი (პულსაცია) */
-@keyframes tiktok-pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(254, 44, 85, 0.7), 0 0 0 2px #000;
-    }
-    70% {
-        box-shadow: 0 0 0 8px rgba(254, 44, 85, 0), 0 0 0 2px #000;
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(254, 44, 85, 0), 0 0 0 2px #000;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-  
-/* 1. ავატარის გარშემო წითელი რგოლი და ციმციმი */
-
-/* აქ მთავრდება */
-
-
-
-
-  
-/* ზედა ღილაკი */
-#music-select-btn {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
-    z-index: 1000;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-/* მთავარი კონტეინერი */
-#music-picker-modal {
-    position: fixed !important;
-    bottom: -110% !important;
-    left: 0;
-    width: 100%;
-    height: 55vh !important; /* ნახევარ ეკრანზე ცოტა მეტი */
-    background: #121212;
-    border-radius: 15px 15px 0 0;
-    z-index: 2147483647 !important;
-    transition: bottom 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    color: white;
-    font-family: sans-serif;
-}
-
-/* აქტიური მდგომარეობა */
-#music-picker-modal.show {
-    bottom: 0 !important;
-}
-
-.music-picker-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.music-header {
-    text-align: center;
-    padding: 10px 0;
-    position: relative;
-    border-bottom: 1px solid #222;
-}
-
-.drag-handle {
-    width: 35px;
-    height: 4px;
-    background: #333;
-    border-radius: 10px;
-    margin: 0 auto 10px;
-}
-
-.music-header h3 {
-    font-size: 16px;
-    margin: 0;
-}
-
-.close-picker {
-    position: absolute;
-    right: 20px;
-    top: 15px;
-    font-size: 28px;
-    cursor: pointer;
-    color: #888;
-}
-
-.music-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    padding: 15px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #888;
-}
-
-.music-tabs span.active {
-    color: white;
-    border-bottom: 2px solid white;
-    padding-bottom: 5px;
-}
-
-/* სიმღერების სია */
-#music-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 20px;
-}
-
-/* სიმღერის დიზაინი (JS-ში გამოსაყენებლად) */
-.music-item-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #1a1a1a;
-    cursor: pointer;
-}
-
-.music-thumb {
-    width: 50px;
-    height: 50px;
-    border-radius: 4px;
-    margin-right: 15px;
-    object-fit: cover;
-}
-/* აქ მთავრდება*/
-
-
-
-
-
-  
 .live-modal {
     display: none; /* თავიდან დამალულია */
     position: fixed;
@@ -1910,23 +1508,6 @@ div[style*="overflow-x:auto"] {
 
  
 <body>
-<div id="pwa-notification">
-    <div class="notif-content">
-        <img src="icon-192.png" width="45" height="45" style="border-radius: 10px; object-fit: cover;">
-        <div id="notif-text" style="color: #333; font-size: 13px; line-height: 1.4;">
-            <!-- აქ ტექსტი ჩაიწერება ავტომატურად JS-ით -->
-        </div>
-        <div id="action-area">
-            <!-- აქ ღილაკი გამოჩნდება მხოლოდ ანდროიდისთვის -->
-        </div>
-        <div onclick="document.getElementById('pwa-notification').style.display='none'" style="cursor:pointer; color:#999; font-size:22px; margin-left:5px;">&times;</div>
-    </div>
-</div>
-
-
-
-
- 
 <div id="lastGiftWidget" onclick="openReceivedGifts()" style="display:none; position:fixed; top:80px; left:15px; z-index:2147483647; cursor:pointer; background:rgba(0,0,0,0.7); padding:6px; border-radius:50px; border:1.5px solid #fbd14b; align-items:center; backdrop-filter:blur(10px); box-shadow: 0 0 15px rgba(255,215,0,0.3);">
     <img id="widgetGiftImg" src="" style="width:35px; height:35px; object-fit:contain; border-radius:50%;">
     <span id="widgetGiftAmount" style="color:#fbd14b; font-weight:bold; font-size:14px; margin:0 10px; font-family:sans-serif;">0</span>
@@ -1976,7 +1557,7 @@ div[style*="overflow-x:auto"] {
 
 <div id="authUI" class="auth-overlay">
     <img src="https://emigrantbook.com/logo.png" class="auth-logo-img" alt="Tk Logo">
-    <h1 class="glowing-token">TOKEN</h1>
+    <h1 class="glowing-token">Emigrantebi</h1>
 
     <div id="authError" style="display:none; background: rgba(211, 47, 47, 0.2); border-left: 4px solid #ff4444; color: #fff; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 13px; width: 100%; max-width: 320px; text-align: left;">
         <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
@@ -2129,7 +1710,6 @@ div[style*="overflow-x:auto"] {
  </div>
  </div>
 
- <!-- ადმინ პანელი სამართავი მომხმარებლის მართვა -->
  <div id="adminUI">
  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
  <h2 style="color:var(--gold); font-weight:900;">ADMIN PANEL</h2>
@@ -2157,13 +1737,13 @@ div[style*="overflow-x:auto"] {
  <h3 style="color:var(--gold); margin: 15px 0 10px 0;">გატანის მოთხოვნები</h3>
  <div id="adminReqList" style="flex:1; overflow-y:auto;"></div>
 
-<!-- აქ მთავრდება -->
+
 
 
 
 
   
-<!-- ადმინ პანელი მაღაზიის მაეთვა -->
+
 <button onclick="toggleStoreManager()" style="background:var(--gold); color:black; border:none; padding:10px; border-radius:8px; font-weight:bold; margin:5px; cursor:pointer;">
     🛍️ მაღაზიის მართვა
 </button>
@@ -2301,14 +1881,20 @@ div[style*="overflow-x:auto"] {
             </tbody>
     </table>
 </div>
+
+ 
 </div>
+
+
+
+
+
+
+
+
+  
+  
  </div>
-
-
-
-
-
- <!-- საიტის ინფორმაციის დიზა8ნი -->
  <div id="infoUI">
  <div style="display:flex; justify-content:space-between; align-items:center;">
  <h2 style="color:var(--gold); font-weight:900;" data-key="rules_title">წესები და განმარტება</h2>
@@ -2317,14 +1903,10 @@ div[style*="overflow-x:auto"] {
  <div class="info-content">
  <div class="info-section">
  <div class="info-title"><i class="fas fa-coins"></i> <span data-key="what_is_akho">რა არის AKHO?</span></div>
- <p data-key="akho_desc">აკნო არის Emigrantbook-ის ოფიციალური ციფრული ერთეული, რომელიც მომხმარებელს საშუალებას აძლევს პლატფორმაზე განახორციელოს სხვადასხვა ფინანსური და სოციალური აქტივობა.</p>
+ <p data-key="akho_desc">AKHO არის პლატფორმის შიდა აქტივი. მისი საშუალებით თქვენ შეგიძლიათ გამოხატოთ მხარდაჭერა და დააჯილდოოთ საინტერესო კონტენტი. 1 ევრო = 10 AKHO.</p>
  </div>
  <div class="info-section">
  <div class="info-title"><i class="fas fa-money-bill-wave"></i> <span data-key="make_money">როგორ ვიშოვოთ ფული?</span></div>
- <p data-key="make_money_desc">ატვირთეთ TOKEN (ვიდეო). როცა ვინმე თქვენს ვიდეოს "დაალაიქებს", თქვენს ბალანსზე ავტომატურად დაირიცხება <b>2.00 AKHO</b>.</p>
- </div>
- <div class="info-section">
- <div class="info-title"><i class="fas fa-money-bill-wave"></i> <span data-key="make_money">ჯიმშერი?</span></div>
  <p data-key="make_money_desc">ატვირთეთ TOKEN (ვიდეო). როცა ვინმე თქვენს ვიდეოს "დაალაიქებს", თქვენს ბალანსზე ავტომატურად დაირიცხება <b>2.00 AKHO</b>.</p>
  </div>
  <div class="info-section">
@@ -2338,9 +1920,6 @@ div[style*="overflow-x:auto"] {
  </div>
  </div>
  </div>
-<!-- აქ მთავრდება -->
-
- 
 
  <div id="commentsUI">
  <div style="padding:18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(212, 175, 55, 0.2);">
@@ -2362,8 +1941,6 @@ div[style*="overflow-x:auto"] {
  <div id="reqList"></div>
  </div>
 
-
- 
  <div id="discoveryUI">
  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
  <h2 style="color:var(--gold); font-weight:900;" data-key="discover">აღმოაჩინე</h2>
@@ -2373,7 +1950,6 @@ div[style*="overflow-x:auto"] {
  <div id="discoverGrid" class="discover-grid"></div>
  </div>
 
- <!-- პროფილის ნახვების დიზაინი -->
  <div id="visitorsUI">
  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
  <h2 style="color:var(--gold); font-weight:900; font-size: 20px;" data-key="profile_views">პროფილის ნახვები</h2>
@@ -2381,7 +1957,6 @@ div[style*="overflow-x:auto"] {
  </div>
  <div id="visitorsList" style="flex:1; overflow-y:auto;"></div>
  </div>
- <!-- აქ მთავრდება -->
 
  <div id="editProfileUI">
  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -2473,8 +2048,6 @@ div[style*="overflow-x:auto"] {
  </div>
  
 
-
-  <!-- პროფილის დიზაინი -->
 <div class="profile-header">
     <div class="profile-ava-wrapper">
         <img id="profAva" src="" class="profile-ava-main">
@@ -2564,11 +2137,11 @@ div[style*="overflow-x:auto"] {
 </div>
 </div>
  </div>
-<!-- აქ მთავრდება -->
+
 
   
 
-<!-- ბურგერ მენიუს დიზაინი -->
+
 <div id="sideMenuOverlay" class="side-menu-overlay" onclick="toggleSideMenu(false)"></div>
 <div id="sideMenu" class="side-menu">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding: 0 10px;">
@@ -2617,15 +2190,6 @@ div[style*="overflow-x:auto"] {
     <i class="fas fa-chevron-right" style="color: #444; font-size: 14px;"></i>
 </a>
 
-
- <!-- თამაშების ღილაკი -->
-    <a href="games.html" class="menu-item" style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-gamepad" style="color: #d4af37;"></i> 
-            <span data-key="games">თამაშები</span>
-        </div>
-        <i class="fas fa-chevron-right" style="color: #444; font-size: 14px;"></i>
-    </a>
  
 
     <a href="#" class="menu-item" style="display: flex; justify-content: space-between; align-items: center;">
@@ -2681,7 +2245,7 @@ div[style*="overflow-x:auto"] {
         <i class="fas fa-sign-out-alt" style="color: #ff4d4d;"></i> <span data-key="logout">გასვლა</span>
     </a>
 </div>
-<!-- აქ მთავრდება -->
+
 
 
 
@@ -2907,29 +2471,6 @@ div[style*="overflow-x:auto"] {
         </div>
     </div>
 
-
-<div id="music-select-btn" onclick="openMusicPicker()">
-    <i class="fas fa-music"></i>
-    <span id="selected-music-name">Add sound</span>
-</div>
-<div id="music-picker-modal">
-    <div class="music-picker-content">
-        <div class="music-header">
-            <div class="drag-handle"></div>
-            <h3>Sounds</h3>
-            <span class="close-picker" onclick="closeMusicPicker()">&times;</span>
-        </div>
-        <div class="music-tabs">
-            <span class="active">Discover</span>
-            <span>Favorites</span>
-        </div>
-        <div class="music-list" id="music-list">
-            </div>
-    </div>
-</div>
-
- 
-
     <div style="position:absolute; bottom:40px; width:100%; display:flex; flex-direction:column; align-items:center; gap:20px; padding:20px; box-sizing:border-box; z-index:1000000;">
         <div style="display:flex; gap:20px; color:white; font-size:13px; font-weight:bold; margin-bottom:10px; opacity:0.8;">
             <span onclick="setRecordingDuration(15, this)" style="cursor:pointer;">15s</span>
@@ -2997,21 +2538,6 @@ div[style*="overflow-x:auto"] {
  <div id="socialContentArea" style="flex:1; overflow-y:auto; padding-bottom:20px;"></div>
  </div>
 
-
-<!-- შენი CSS-ის მიხედვით ამ ღილაკს აქვს ანიმაცია და ოქროსფერი დიზაინი -->
-<button id="installAppBtn" style="display:none;">
-    <i class="fas fa-download"></i> ინსტალაცია
-</button>
-
-<!-- აიფონის ინსტრუქციის ღილაკი -->
-<div id="pwa-ios-instruction" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: rgba(25, 25, 25, 0.95); border: 1px solid #d4af37; border-radius: 15px; padding: 15px; z-index: 9999999; color: white; text-align: center; font-family: sans-serif; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-    <p style="margin: 0 0 10px 0; font-size: 14px;">დააინსტალირე <b>EmigrantBook</b> შენს აიფონზე:</p>
-    <div style="font-size: 13px; opacity: 0.9;">
-        დააჭირე <i class="fas fa-external-link-alt" style="color: #007aff;"></i> (Share) ღილაკს ქვედა მენიუში და აირჩიე <b>"Add to Home Screen"</b> <i class="far fa-plus-square"></i>
-    </div>
-    <button onclick="this.parentElement.style.display='none'" style="margin-top: 10px; background: transparent; border: none; color: #d4af37; font-weight: bold; cursor: pointer;">გავიგე</button>
-</div>
- <!-- აქ მთავრდება -->
  
 <div class="mobile-bottom-nav">
     <a href="/" class="m-nav-item active" onclick="event.preventDefault(); refreshHomeFeed();">
@@ -3151,7 +2677,7 @@ div[style*="overflow-x:auto"] {
  
     <div id="viewerListModal" style="display:none; position:absolute; bottom:-100%; left:0; width:100%; height:60%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(255,255,255,0.1); border-radius:20px 20px 0 0; z-index:200000; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); backdrop-filter: blur(20px);">
         <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <b style="color:white; font-size:16px;">მაყურებელი (<span id="vCountFull">0</span>)</b>
+            <b style="color:white; font-size:16px;">Зრიтели (<span id="vCountFull">0</span>)</b>
             <div onclick="toggleViewerList(false)" style="color:white; font-size:24px; cursor:pointer;">&times;</div>
         </div>
         <div id="viewerListContent" style="padding: 10px; overflow-y: auto; height: calc(100% - 60px);"></div>
@@ -3169,7 +2695,11 @@ div[style*="overflow-x:auto"] {
  
 <audio id="msgSound" src="notify.mp3" preload="auto"></audio>
  
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
 <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
 
@@ -3177,6 +2707,7 @@ div[style*="overflow-x:auto"] {
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
 
+ 
 <script src="languages.js"></script>
 
 <script src="script.js"></script>
@@ -3190,20 +2721,38 @@ div[style*="overflow-x:auto"] {
 <script src="videocall.js"></script>
 
 <script>
-  // Supabase-ის ახალი კავშირი
-  const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vaGt4bXdwaHd5d2txa29haXJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MDc3MzEsImV4cCI6MjA5OTE4MzczMX0.IVGUFWGJAa4X-R6Ul8m4XMpcw1MdP4pcRfwzG9C70ag";
-
+  const firebaseConfig = { 
+    apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
+    authDomain: "emigrantbook.firebaseapp.com", 
+    databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
+    projectId: "emigrantbook", 
+    storageBucket: "emigrantbook.firebasestorage.app", 
+    appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+  };
+  
   // ინიციალიზაცია
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
 
-  console.log("Supabase წარმატებით ჩაიტვირთა და მომზადებულია! ✅");
 
-  // იმისთვის, რომ შენს სხვა JS ფაილებში (script.js, videocall.js...) კოდი არ დაზიანდეს,
-  // დროებით ვინახავთ ძველ ცვლადებს, რომლებსაც ნელ-ნელა გადავაწყობთ
-  const db = null; 
-  const auth = null; 
-  const storage = null; 
+
+  // ... ინიციალიზაციის მერე ...
+  console.log("Firebase ჩაიტვირთა:", firebase.SDK_VERSION);
+  if (firebase.storage) {
+      console.log("Storage ნაპოვნია! ✅");
+  } else {
+      console.log("Storage დაკარგულია! ❌");
+      alert("კრიტიკული შეცდომა: Storage ბიბლიოთეკა არ ჩაიტვირთა!");
+  }
+
+
+ 
+  
+  // გლობალური ცვლადები
+  const db = firebase.database();
+  const auth = firebase.auth();
+  const storage = firebase.storage(); // აი, აქ ვააქტიურებთ Storage-ს საბოლოოდ
 </script>
 
 
@@ -3260,99 +2809,47 @@ div[style*="overflow-x:auto"] {
 
  
 
-<!-- ვიდეო ზარის დიზაინი მესინჯერში -->
-<div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:space-between; font-family:sans-serif; overflow:hidden;">
+
+ <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif;">
     
-    <div id="remote-video" style="width:100%; height:100%; background:#111; position:absolute; top:0; left:0; z-index:1;">
-        <div id="remote-label" style="position:absolute; top:25px; left:25px; color:white; background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:20px; font-size:12px; z-index:30; font-weight:500; border:1px solid rgba(255,255,255,0.1);">Waiting for partner...</div>
+    <div id="remote-video" style="width:100%; height:100%; background:#111; position:relative;">
+        <div id="remote-label" style="position:absolute; top:20px; left:20px; color:white; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; font-size:12px; z-index:30;">Waiting for partner...</div>
         
-        <div style="position:absolute; top:60px; width:100%; text-align:center; z-index:25; display:flex; flex-direction:column; align-items:center; background:linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); padding-bottom:30px;">
-            <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover; background-position:center; box-shadow:0 4px 15px rgba(0,0,0,0.5);"></div>
-            <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; font-weight:600; text-shadow:0 2px 10px rgba(0,0,0,0.8); letter-spacing:0.5px;">Calling...</h2>
-            <p style="color:rgba(255,255,255,0.6); font-size:14px; margin-top:5px; font-weight:500;">Messenger Video Call</p>
+        <div style="position:absolute; top:80px; width:100%; text-align:center; z-index:25;">
+            <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover;"></div>
+            <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; text-shadow:0 2px 10px rgba(0,0,0,0.8);">Calling...</h2>
+            <p style="color:rgba(255,255,255,0.7); font-size:15px; margin-top:5px;">Messenger Video Call</p>
         </div>
     </div>
 
-    <div id="group-video-container" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; grid-template-columns:1fr; grid-template-rows:1fr; gap:10px; padding:10px; box-sizing:border-box; z-index:2; background:#111;"></div>
+    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:130px; right:20px; border-radius:15px; border:2px solid var(--gold); overflow:hidden; z-index:100; box-shadow: 0 10px 20px rgba(0,0,0,0.5);"></div>
 
-    <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:140px; right:20px; border-radius:15px; border:2px solid var(--gold, #d4af37); overflow:hidden; z-index:100; box-shadow: 0 10px 25px rgba(0,0,0,0.6);"></div>
+    <div style="position:absolute; bottom:120px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:110; width:90%; justify-content:center;">
+        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-magic"></i> Touch up</div>
+        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-smile"></i> Effects</div>
+        <div style="background:rgba(255,255,255,0.1); padding:8px 15px; border-radius:20px; color:white; font-size:12px; display:flex; align-items:center; gap:5px;"><i class="fas fa-image"></i> Backgrounds</div>
+    </div>
 
-    <div onclick="minimizeVideoCall()" style="position:absolute; top:25px; right:25px; color:white; cursor:pointer; background:rgba(255,255,255,0.15); padding:12px; border-radius:50%; z-index:130; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); width:20px; height:20px; display:flex; align-items:center; justify-content:center;">
+    <div class="call-controls" style="position:absolute; bottom:30px; display:flex; gap:20px; z-index:120; align-items:center;">
+        <div onclick="toggleCam()" id="camBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
+            <i class="fas fa-video"></i>
+        </div>
+        <div onclick="toggleMic()" id="micBtn" style="width:55px; height:55px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; backdrop-filter:blur(10px);">
+            <i class="fas fa-microphone"></i>
+        </div>
+        <div style="width:55px; height:55px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+            <i class="fas fa-gamepad"></i>
+        </div>
+        <div onclick="endVideoCall()" style="width:70px; height:70px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:26px; box-shadow:0 0 15px rgba(255,77,77,0.5);">
+            <i class="fas fa-phone-slash"></i>
+        </div>
+    </div>
+
+    <div onclick="minimizeVideoCall()" style="position:absolute; top:20px; right:20px; color:white; cursor:pointer; background:rgba(255,255,255,0.15); padding:12px; border-radius:50%; z-index:130; backdrop-filter:blur(5px);">
         <i class="fas fa-expand-alt"></i>
     </div>
-
-    <div style="position:absolute; bottom:30px; width:calc(100% - 40px); max-width:480px; background:rgba(20, 20, 20, 0.7); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(212, 175, 55, 0.25); border-radius:24px; padding:14px 8px; display:flex; justify-content:space-around; align-items:center; z-index:120; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-        
-        <div onclick="toggleCam()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-            <div id="camBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
-                <i class="fas fa-video" style="font-size:16px;"></i>
-            </div>
-            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Video</span>
-        </div>
-
-        <div onclick="toggleMic()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-            <div id="micBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
-                <i class="fas fa-microphone" style="font-size:16px;"></i>
-            </div>
-            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Audio</span>
-        </div>
-
-        <div onclick="openInviteFriendsModal()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-            <div id="addBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#d4af37; transition:all 0.2s; border:1px solid rgba(212,175,55,0.2);">
-                <i class="fas fa-user-plus" style="font-size:16px;"></i>
-            </div>
-            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Add Person</span>
-        </div>
-
-        <div style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-            <div style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
-                <i class="fas fa-gamepad" style="font-size:16px;"></i>
-            </div>
-            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Focus</span>
-        </div>
-
-        <div onclick="endVideoCall()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-            <div style="width:54px; height:54px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; transition:all 0.2s; box-shadow:0 4px 15px rgba(255,77,77,0.4);">
-                <i class="fas fa-phone-slash" style="transform: rotate(135deg);"></i>
-            </div>
-            <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">End Call</span>
-        </div>
-
-    </div>
 </div>
 
-<div id="inviteFriendsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999999; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;">
-    <div style="width:100%; max-width:380px; background:rgba(30, 30, 30, 0.85); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:24px; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.5); color:white;">
-        
-        <i class="fas fa-times" onclick="document.getElementById('inviteFriendsModal').style.display='none'" style="position:absolute; top:20px; right:20px; font-size:18px; color:rgba(255,255,255,0.5); cursor:pointer;"></i>
-        
-        <h3 style="font-size:18px; margin:0 0 15px; font-weight:600; color:#d4af37; display:flex; align-items:center; gap:8px;"><i class="fas fa-users"></i> Add to Group Call</h3>
-        
-        <div id="friendsListContainer" style="max-height:280px; overflow-y:auto; margin-top:10px; padding-right:5px; display:flex; flex-direction:column; gap:12px;">
-            <p id="friendsLoadingText" style="color:rgba(255,255,255,0.5); text-align:center; font-size:14px; margin:20px 0;">Loading friends list...</p>
-        </div>
-    </div>
-</div>
-
-<div id="callEndedUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; color:white; padding:20px; text-align:center;">
-    <i class="fas fa-times" onclick="document.getElementById('callEndedUI').style.display='none'" style="position:absolute; top:25px; right:25px; font-size:22px; color:rgba(255,255,255,0.6); cursor:pointer; padding:5px;"></i>
-    <div id="endedCallAvatar" style="width:110px; height:110px; border-radius:50%; border:2px solid #d4af37; background-size:cover; background-position:center; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
-    <h2 style="font-size:24px; margin:0 0 5px; font-weight:600;">Call ended</h2>
-    <p style="color:rgba(255,255,255,0.5); font-size:15px; margin:0 0 50px;">Messenger Video Call</p>
-    <h3 style="font-size:18px; margin:0 0 30px; font-weight:500; color:rgba(255,255,255,0.9);">How was the quality of your call?</h3>
-    <div style="display:flex; gap:50px; margin-bottom:60px;">
-        <div onclick="document.getElementById('callEndedUI').style.display='none'" style="display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;">
-            <div style="width:65px; height:65px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; color:white; transition:0.2s;"><i class="fas fa-thumbs-up"></i></div>
-            <span style="font-size:14px; color:rgba(255,255,255,0.7); font-weight:500;">Good</span>
-        </div>
-        <div onclick="document.getElementById('callEndedUI').style.display='none'" style="display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;">
-            <div style="width:65px; height:65px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; color:white; transition:0.2s;"><i class="fas fa-thumbs-down"></i></div>
-            <span style="font-size:14px; color:rgba(255,255,255,0.7); font-weight:500;">Not good</span>
-        </div>
-    </div>
-    <p style="font-size:11px; color:rgba(255,255,255,0.3); max-width:300px; line-height:1.5;">We may use your data for personalization, innovation, research and other purposes described in our <span style="color:#0084ff; cursor:pointer; text-decoration:underline;">Privacy Policy</span>.</p>
-</div>
-<!-- აქ მთავრდება -->
 
 
 
@@ -3501,7 +2998,7 @@ div[style*="overflow-x:auto"] {
 
 
 
-<!-- შ3მავალი ვიდეო ზარის ფონი -->
+
  <div id="liveNotification" style="display:none; position:fixed; bottom:20px; left:20px; background:#1a1a1a; border:1px solid var(--gold); border-radius:12px; padding:15px; z-index:200000; width:280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.5s ease-out;">
     <div style="display:flex; align-items:center; gap:12px;">
         <div id="notifIcon" style="font-size:24px;">🚀</div>
@@ -3628,16 +3125,13 @@ div[style*="overflow-x:auto"] {
 
 
 
- <!-- მეს3ნჯერის სრულ8 კონტეინერი -->
+ 
 <div id="messengerUI" style="display:none;">
+    
     <div class="impact-messenger-header" style="padding:12px 16px; background:#000; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a;">
+        
         <div style="display:flex; align-items:center; gap:10px;">
             <h2 style="margin:0; font-size:20px; font-weight:700; color:white;">messenger</h2> 
-        </div>
-
-        <div id="messengerRequestsBtn" onclick="openMessageRequests()" style="position: relative; cursor: pointer; margin-left: auto; margin-right: 15px; display: flex; align-items: center;">
-            <i class="fas fa-user-clock" style="color: #888; font-size: 20px;"></i>
-            <span id="msgReqBadge" style="display: none; position: absolute; top: -5px; right: -8px; background: #fe2c55; color: white; min-width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-weight: bold; align-items: center; justify-content: center; border: 2px solid #000; padding: 0 2px;">0</span>
         </div>
         
         <div style="display:flex; gap:16px; align-items:center;">
@@ -3646,6 +3140,8 @@ div[style*="overflow-x:auto"] {
         </div>
     </div>
 
+
+
     <div style="padding: 10px 15px;">
         <div style="background: #1c1c1c; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px;">
             <i class="fas fa-search" style="color: #888; font-size: 14px;"></i>
@@ -3653,18 +3149,8 @@ div[style*="overflow-x:auto"] {
         </div>
     </div>
 
-    <div id="chatList"></div>
-</div>
-
-<div id="messageRequestsUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:2000001; flex-direction:column;">
-    <div class="impact-messenger-header" style="padding:12px 16px; background:#000; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a;">
-        <i class="fas fa-arrow-left" onclick="closeMessageRequests()" style="cursor:pointer; color:#0084ff; font-size:20px;"></i>
-        <h2 style="color:white; font-size:18px; margin:0;">Requests</h2>
-        <div style="width:20px;"></div>
-    </div>
-    <div id="msgReqList" style="flex:1; overflow-y:auto; padding:10px 0;"></div>
-</div>
-   <!-- აქ მთავრდება სრულად -->
+    <div id="chatList">
+        </div>
 </div>
 
 
@@ -3717,7 +3203,7 @@ div[style*="overflow-x:auto"] {
 
 
 
-<!-- ვიდეოს გაპიარების კონტეინერი -->
+
   <div id="promoteUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999999; flex-direction:column; color:white; font-family:sans-serif;">
     <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222;">
         <i class="fas fa-times" onclick="closePromoteUI()" style="cursor:pointer; font-size:20px;"></i>
@@ -3764,7 +3250,6 @@ div[style*="overflow-x:auto"] {
         <button id="ebPayBtn" disabled onclick="startPayment()" style="background:#fe2c55; color:white; border:none; padding:12px 35px; border-radius:4px; font-weight:bold; opacity:0.5;">Оплатить</button>
     </div>
 </div>   
-<!-- აქ მთავრდება -->
 
 
 
@@ -3774,7 +3259,8 @@ div[style*="overflow-x:auto"] {
 
 
 
-<!-- ვიდეოს ატვირთვის  პროცენტულობის მაჩვენებელი -->
+
+
  <div id="uploadProgressModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
     <div style="width:320px; background:#1a1a1a; border:2px solid var(--gold); border-radius:25px; padding:40px 20px; text-align:center; position:relative; box-shadow: 0 0 20px rgba(212,175,55,0.2);">
         
@@ -3790,7 +3276,6 @@ div[style*="overflow-x:auto"] {
         </button>
     </div>
 </div>
-<!-- აქ მთავრდება -->
 
 
 
@@ -3802,7 +3287,8 @@ div[style*="overflow-x:auto"] {
 
 
 
-<!-- აქტიური ლაივების მაჩვენებელი -->
+
+
  <div id="active_lives_modal" class="live-modal">
     <div class="live-modal-content">
         <div class="live-modal-header">
@@ -3813,34 +3299,6 @@ div[style*="overflow-x:auto"] {
             </div>
     </div>
 </div>
-<!-- აქ მთავრდება -->
 
-
-
-
-
-
-
-
-
-
-
-
-
-
- <!-- ვიდეოზე მუსიკის დად3ბის კონტეინერი -->
-<div id="music-picker-modal" style="position: fixed !important; bottom: -110%; left: 0; width: 100%; height: 60vh; background: #121212; border-top: 1px solid #333; border-radius: 20px 20px 0 0; z-index: 2147483647 !important; color: white; display: flex; flex-direction: column; transition: bottom 0.3s ease;">
-    <div style="padding: 15px; flex: 1; display: flex; flex-direction: column;">
-        <div style="width: 40px; height: 4px; background: #444; border-radius: 2px; margin: 0 auto 10px;"></div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0; font-family: sans-serif;">Sounds</h3>
-            <span onclick="closeMusicPicker()" style="font-size: 30px; cursor: pointer; padding: 5px;">&times;</span>
-        </div>
-        <div id="music-list-container" style="flex: 1; overflow-y: auto;">
-            </div>
-    </div>
-</div>
-<!-- აქ მთავრდება -->
- 
  </body>
 </html>
