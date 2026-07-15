@@ -6,13 +6,14 @@
   <title>Emigrantbook - ავტორიზაცია</title>
   
   <script>
+    // შეცდომის დამჭერი ალერტი, რომელიც აპლიკაციაშივე ამოაგდებს პრობლემას
     window.onerror = function(message, source, lineno, colno, error) {
-      alert("შეცდომაა!: " + message + "\nფაილი: " + source + "\nხაზი: " + lineno);
+      alert("აპლიკაციის შეცდომა!: " + message + "\nხაზი: " + lineno);
       return false;
     };
   </script>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
   
   <style>
     * {
@@ -138,33 +139,31 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
-    const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
-    let supabase = null; // თავიდან ცარიელია, სანამ სკრიპტი არ ჩაიტვირთება
+    var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
+    var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
+    var supabase;
 
-    // ეს ფუნქცია ავტომატურად გაეშვება, როგორც კი ბიბლიოთეკა ბოლომდე ჩაიტვირთება!
-    function initSupabase() {
-      try {
-        if (window.supabase) {
-          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          console.log("Supabase წარმატებით დაინიციალიზდა! ✅");
-        } else {
-          alert("შეცდომა: Supabase ბიბლიოთეკა ვერ მოიძებნა window-ში.");
-        }
-      } catch (e) {
-        alert("ინიციალიზაციის ერორი: " + e.message);
+    // WebView თავსებადი კავშირის შექმნა
+    try {
+      if (window.supabase && window.supabase.createClient) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase დაკავშირდა აპლიკაციაში! ✅");
+      } else {
+        alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა აპლიკაციაში.");
       }
+    } catch (e) {
+      alert("კავშირის შეცდომა აპლიკაციაში: " + e.message);
     }
 
-    let isLoginMode = true;
+    var isLoginMode = true;
 
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
-      const subtitle = document.getElementById('auth-subtitle');
-      const btn = document.getElementById('auth-btn');
-      const toggleLink = document.getElementById('toggle-link');
-      const errorDiv = document.getElementById('error-message');
-      const nameGroup = document.getElementById('name-group');
+      var subtitle = document.getElementById('auth-subtitle');
+      var btn = document.getElementById('auth-btn');
+      var toggleLink = document.getElementById('toggle-link');
+      var errorDiv = document.getElementById('error-message');
+      var nameGroup = document.getElementById('name-group');
       
       errorDiv.style.display = 'none';
 
@@ -181,18 +180,16 @@
       }
     }
 
-    async function handleAuth() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const fullname = document.getElementById('fullname').value.trim();
-      const errorDiv = document.getElementById('error-message');
+    function handleAuth() {
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value.trim();
+      var fullname = document.getElementById('fullname').value.trim();
+      var errorDiv = document.getElementById('error-message');
 
       errorDiv.style.display = 'none';
 
-      // ვამოწმებთ, საერთოდ ჩაიტვირთა თუ არა Supabase
       if (!supabase) {
-        errorDiv.innerText = "სისტემა ჯერ კიდევ იტვირთება, გთხოვთ სცადოთ 2 წამში...";
-        errorDiv.style.display = 'block';
+        alert("კავშირი არ არის! აპლიკაცია ჯერ კიდევ იტვირთება.");
         return;
       }
 
@@ -203,47 +200,47 @@
       }
 
       if (isLoginMode) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        // LOGIN (შესვლა)
+        supabase.auth.signInWithPassword({
           email: email,
-          password: password,
+          password: password
+        }).then(function(result) {
+          if (result.error) {
+            errorDiv.innerText = "შეცდომა: " + result.error.message;
+            errorDiv.style.display = 'block';
+          } else {
+            alert("წარმატებით შეხვედი!");
+            window.location.href = "home.html";
+          }
         });
-
-        if (error) {
-          errorDiv.innerText = "შეცდომა: " + error.message;
-          errorDiv.style.display = 'block';
-        } else {
-          alert("წარმატებით შეხვედი!");
-          window.location.href = "home.html"; 
-        }
       } else {
-        const { data, error } = await supabase.auth.signUp({
+        // REGISTER (რეგისტრაცია)
+        supabase.auth.signUp({
           email: email,
-          password: password,
-        });
+          password: password
+        }).then(function(result) {
+          if (result.error) {
+            errorDiv.innerText = "შეცდომა: " + result.error.message;
+            errorDiv.style.display = 'block';
+            return;
+          }
 
-        if (error) {
-          errorDiv.innerText = "შეცდომა: " + error.message;
-          errorDiv.style.display = 'block';
-          return;
-        }
-
-        if (data && data.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([
+          if (result.data && result.data.user) {
+            supabase.from('profiles').insert([
               { 
-                id: data.user.id, 
+                id: result.data.user.id, 
                 full_name: fullname,
                 updated_at: new Date()
               }
-            ]);
-
-          if (profileError) {
-            console.error("პროფილის შექმნის შეცდომა:", profileError.message);
+            ]).then(function(profileResult) {
+              if (profileResult.error) {
+                console.error("პროფილის შექმნის შეცდომა:", profileResult.error.message);
+              }
+            });
           }
-        }
 
-        alert("რეგისტრაცია წარმატებით დასრულდა! გთხოვთ შეამოწმოთ თქვენი ელ-ფოსტა აქტივაციისთვის.");
+          alert("რეგისტრაცია წარმატებით დასრულდა! გთხოვთ შეამოწმოთ თქვენი ელ-ფოსტა აქტივაციისთვის.");
+        });
       }
     }
   </script>
