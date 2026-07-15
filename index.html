@@ -2740,24 +2740,52 @@ div[style*="overflow-x:auto"] {
 
   const supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ძირითადი ცვლადები
-  const db = supabaseInstance;
-  const auth = supabaseInstance.auth;
-  const storage = supabaseInstance.storage;
-
-  // 🛠️ დამცავი კოდი: Firebase-ის ძველ გამოძახებებს ვაიგნორებთ, რომ საიტი არ გაიჭედოს!
-  db.ref = function() {
-    console.warn("გაფრთხილება: Firebase-ის .ref() გამოიძახა live.js-მა, მაგრამ ახლა Supabase-ზე ვართ.");
-    return {
-      on: function() { return this; },
-      once: function() { return Promise.resolve({ val: () => null }); },
-      set: function() { return Promise.resolve(); },
-      update: function() { return Promise.resolve(); },
-      push: function() { return { key: 'temp_key', set: () => Promise.resolve() }; }
-    };
+  // 🛠️ ჯადოსნური "ხიდი" – ვქმნით ფეიქ Firebase-ს, რომ შენმა 4300-ხაზიანმა JS-მა არ იჭყვლაპიროს
+  window.firebase = {
+    apps: { length: 1 },
+    SDK_VERSION: "Supabase-Bridge",
+    initializeApp: function() { return this; },
+    
+    // მონაცემთა ბაზის ხიდი
+    database: function() {
+      return {
+        ref: function() {
+          return {
+            on: function(event, callback) { 
+              console.log("Firebase 'on' მოვლენა დაიბლოკა უსაფრთხოდ");
+              if (callback) callback({ val: () => null });
+              return this; 
+            },
+            once: function() { 
+              return Promise.resolve({ val: () => null }); 
+            },
+            set: function() { return Promise.resolve(); },
+            update: function() { return Promise.resolve(); },
+            push: function() { 
+              return { key: 'temp_key', set: () => Promise.resolve() }; 
+            }
+          };
+        }
+      };
+    },
+    
+    // ავტორიზაციის ხიდი
+    auth: function() {
+      return supabaseInstance.auth;
+    },
+    
+    // ფაილების საცავის ხიდი
+    storage: function() {
+      return supabaseInstance.storage;
+    }
   };
 
-  console.log("Supabase კავშირი წარმატებით დამყარდა! ✅");
+  // გლობალური ცვლადებიც მივმართოთ ამავე ხიდზე
+  const db = window.firebase.database();
+  const auth = window.firebase.auth();
+  const storage = window.firebase.storage();
+
+  console.log("Supabase-Firebase თავსებადობის ხიდი ჩაირთო! 🚀");
 </script>
 
 
