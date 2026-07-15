@@ -105,6 +105,11 @@
     <div class="logo">Emigrantbook</div>
     <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
 
+    <div class="input-group" id="name-group" style="display: none;">
+      <label>სახელი და გვარი</label>
+      <input type="text" id="fullname" placeholder="გიორგი ბერიძე">
+    </div>
+
     <div class="input-group">
       <label>ელ-ფოსტა</label>
       <input type="email" id="email" placeholder="example@mail.com">
@@ -125,20 +130,19 @@
   </div>
 
   <script>
-    // Supabase კონფიგურაცია
     const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let isLoginMode = true;
 
-    // რეჟიმის გადართვა (შესვლა / რეგისტრაცია)
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       const subtitle = document.getElementById('auth-subtitle');
       const btn = document.getElementById('auth-btn');
       const toggleLink = document.getElementById('toggle-link');
       const errorDiv = document.getElementById('error-message');
+      const nameGroup = document.getElementById('name-group');
       
       errorDiv.style.display = 'none';
 
@@ -146,22 +150,24 @@
         subtitle.innerText = "შედი შენს პროფილში";
         btn.innerText = "შესვლა";
         toggleLink.innerText = "არ გაქვს ანგარიში? დარეგისტრირდი";
+        nameGroup.style.display = 'none'; // ვმალავთ სახელს შესვლისას
       } else {
         subtitle.innerText = "შექმენი ახალი ანგარიში";
         btn.innerText = "რეგისტრაცია";
         toggleLink.innerText = "უკვე გაქვს ანგარიში? შედი";
+        nameGroup.style.display = 'block'; // ვაჩენთ სახელს რეგისტრაციისას
       }
     }
 
-    // ავტორიზაციის ლოგიკა
     async function handleAuth() {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
+      const fullname = document.getElementById('fullname').value.trim();
       const errorDiv = document.getElementById('error-message');
 
       errorDiv.style.display = 'none';
 
-      if (!email || !password) {
+      if (!email || !password || (!isLoginMode && !fullname)) {
         errorDiv.innerText = "გთხოვთ შეავსოთ ყველა ველი!";
         errorDiv.style.display = 'block';
         return;
@@ -178,8 +184,7 @@
           errorDiv.innerText = "შეცდომა: " + error.message;
           errorDiv.style.display = 'block';
         } else {
-          alert("წარმატებით შეხვედი! გადავდივართ საიტზე...");
-          // აქ გადავიყვანთ მთავარ გვერდზე
+          alert("წარმატებით შეხვედი!");
           window.location.href = "home.html"; 
         }
       } else {
@@ -192,9 +197,27 @@
         if (error) {
           errorDiv.innerText = "შეცდომა: " + error.message;
           errorDiv.style.display = 'block';
-        } else {
-          alert("რეგისტრაცია წარმატებით დასრულდა! გთხოვთ შეამოწმოთ თქვენი ელ-ფოსტა აქტივაციისთვის.");
+          return;
         }
+
+        // თუ რეგისტრაცია წარმატებულია, მომხმარებლის სახელს ვწერთ 'profiles' ცხრილში
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              { 
+                id: data.user.id, 
+                full_name: fullname,
+                updated_at: new Date()
+              }
+            ]);
+
+          if (profileError) {
+            console.error("პროფილის შექმნის შეცდომა:", profileError.message);
+          }
+        }
+
+        alert("რეგისტრაცია წარმატებით დასრულდა! გთხოვთ შეამოწმოთ თქვენი ელ-ფოსტა აქტივაციისთვის.");
       }
     }
   </script>
