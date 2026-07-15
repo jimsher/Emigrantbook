@@ -27,9 +27,7 @@
       color: #1c1e21;
     }
 
-    /* --------------------------------------
-       1. ავტორიზაციის ეკრანის სტილები
-    -------------------------------------- */
+    /* 1. ავტორიზაციის ეკრანი */
     #auth-screen {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
       height: 100vh;
@@ -76,10 +74,6 @@
       border-radius: 8px;
       font-size: 14px;
       outline: none;
-      transition: 0.3s;
-    }
-    .input-group input:focus {
-      border-color: #1e3c72;
     }
     .btn {
       width: 100%;
@@ -91,11 +85,6 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
-      margin-top: 10px;
-    }
-    .btn:hover {
-      background: #2a5298;
     }
     .toggle-text {
       margin-top: 20px;
@@ -115,11 +104,9 @@
       display: none;
     }
 
-    /* --------------------------------------
-       2. მთავარი კედლის (Home) სტილები
-    -------------------------------------- */
-    #home-screen {
-      display: none; /* თავიდან დამალულია */
+    /* 2. მთავარი კედლის და პროფილის სტილები */
+    #home-screen, #profile-screen {
+      display: none;
     }
     .header {
       background-color: #ffffff;
@@ -138,20 +125,31 @@
       font-weight: bold;
       color: #1877f2;
       letter-spacing: -0.5px;
-    }
-    .user-info {
-      font-size: 14px;
-      font-weight: 600;
-      color: #050505;
-    }
-    .logout-btn {
-      background: none;
-      border: none;
-      color: #d9534f;
-      font-weight: bold;
-      font-size: 12px;
       cursor: pointer;
     }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    /* ფეისბუქის სტილის მრგვალი ავატარი ჰედერში */
+    .header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #e4e6eb;
+      color: #1c1e21;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      border: 1px solid #ced0d4;
+      text-transform: uppercase;
+    }
+
     .feed-container {
       max-width: 500px;
       margin: 0 auto;
@@ -223,6 +221,7 @@
       font-weight: bold;
       font-size: 16px;
       margin-right: 10px;
+      text-transform: uppercase;
     }
     .post-author-info {
       display: flex;
@@ -271,10 +270,58 @@
       font-size: 14px;
       cursor: pointer;
     }
+
+    /* პროფილის გვერდის ვიზუალი */
+    .profile-card {
+      background: #white;
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .profile-main-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      font-weight: bold;
+      margin: 0 auto 15px auto;
+      text-transform: uppercase;
+      border: 3px solid #e4e6eb;
+    }
+    .profile-name {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .profile-email {
+      font-size: 14px;
+      color: #65676b;
+      margin-bottom: 20px;
+    }
+    .logout-btn-large {
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      max-width: 200px;
+    }
   </style>
 </head>
 <body>
 
+  <!-- 1. ავტორიზაციის ეკრანი -->
   <div id="auth-screen">
     <div class="auth-container">
       <div class="logo">Emigrantbook</div>
@@ -305,12 +352,13 @@
     </div>
   </div>
 
+  <!-- 2. მთავარი კედლის ეკრანი -->
   <div id="home-screen">
     <div class="header">
-      <div class="logo-text">Emigrantbook</div>
-      <div>
-        <span class="user-info" id="current-user-name">იტვირთება...</span>
-        <button class="logout-btn" onclick="logout()" style="margin-left: 10px;">გამოსვლა</button>
+      <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
+      <div class="header-right">
+        <!-- მრგვალი ავატარი, რომელიც გადადის პროფილზე -->
+        <div class="header-avatar" id="header-avatar-btn" onclick="showScreen('profile')">?</div>
       </div>
     </div>
 
@@ -330,6 +378,22 @@
     </div>
   </div>
 
+  <!-- 3. საკუთარი პროფილის ეკრანი -->
+  <div id="profile-screen">
+    <div class="header">
+      <div class="logo-text" onclick="showScreen('home')">← კედელზე დაბრუნება</div>
+    </div>
+    
+    <div class="feed-container">
+      <div class="profile-card">
+        <div class="profile-main-avatar" id="profile-big-avatar">?</div>
+        <div class="profile-name" id="profile-user-name">იტვირთება...</div>
+        <div class="profile-email" id="profile-user-email">...</div>
+        <button class="logout-btn-large" onclick="logout()">სისტემიდან გამოსვლა</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
@@ -337,11 +401,10 @@
     var currentUser = null;
     var userProfile = null;
 
-    // Supabase კავშირის შექმნა
     try {
       if (window.supabase && window.supabase.createClient) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        checkSession(); // ვამოწმებთ, უკვე შესულია თუ არა
+        checkSession();
       } else {
         alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა.");
       }
@@ -349,34 +412,51 @@
       alert("კავშირის შეცდომა: " + e.message);
     }
 
-    // ვამოწმებთ სესიას საიტის გახსნისას
+    // ეკრანების გადართვის მართვა (Single Page Application)
+    function showScreen(screenName) {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('home-screen').style.display = 'none';
+      document.getElementById('profile-screen').style.display = 'none';
+
+      if (screenName === 'auth') {
+        document.getElementById('auth-screen').style.display = 'flex';
+      } else if (screenName === 'home') {
+        document.getElementById('home-screen').style.display = 'block';
+        loadPosts();
+      } else if (screenName === 'profile') {
+        document.getElementById('profile-screen').style.display = 'block';
+      }
+    }
+
     function checkSession() {
       supabase.auth.getUser().then(function(res) {
         if (res.data && res.data.user) {
           currentUser = res.data.user;
-          // თუ შესულია, ვმალავთ ავტორიზაციას, ვაჩენთ კედელს
-          document.getElementById('auth-screen').style.display = 'none';
-          document.getElementById('home-screen').style.display = 'block';
           
-          // მომხმარებლის სახელის წაკითხვა
           supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
+            var finalName = currentUser.email;
             if (profileRes.data) {
               userProfile = profileRes.data;
-              document.getElementById('current-user-name').innerText = userProfile.full_name;
-            } else {
-              document.getElementById('current-user-name').innerText = currentUser.email;
+              finalName = userProfile.full_name;
             }
-            loadPosts();
+            
+            // სახელის პირველი ასო ავატარისთვის
+            var firstLetter = finalName.charAt(0).toUpperCase();
+            document.getElementById('header-avatar-btn').innerText = firstLetter;
+            document.getElementById('profile-big-avatar').innerText = firstLetter;
+            
+            // პროფილის ეკრანის მონაცემების შევსება
+            document.getElementById('profile-user-name').innerText = finalName;
+            document.getElementById('profile-user-email').innerText = currentUser.email;
+
+            showScreen('home');
           });
         } else {
-          // თუ შესული არ არის, ვაჩენთ ავტორიზაციას
-          document.getElementById('auth-screen').style.display = 'flex';
-          document.getElementById('home-screen').style.display = 'none';
+          showScreen('auth');
         }
       });
     }
 
-    // ავტორიზაციის რეჟიმების გადართვა
     var isLoginMode = true;
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
@@ -401,7 +481,6 @@
       }
     }
 
-    // შესვლა და რეგისტრაცია
     function handleAuth() {
       var email = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value.trim();
@@ -425,8 +504,7 @@
             errorDiv.innerText = "შეცდომა: " + result.error.message;
             errorDiv.style.display = 'block';
           } else {
-            alert("წარმატებით შეხვედი!");
-            checkSession(); // გადავრთოთ ეკრანი
+            checkSession();
           }
         });
       } else {
@@ -445,17 +523,17 @@
               { 
                 id: result.data.user.id, 
                 full_name: fullname,
-                updated_at: new Date().toISOString() // შესწორებულია ISO ფორმატზე, რომ არ გაჭედოს
+                updated_at: new Date().toISOString()
               }
             ]).then(function(pRes) {
-              alert("რეგისტრაცია წარმატებულია! შეამოწმეთ ელ-ფოსტა აქტივაციისთვის.");
+              alert("რეგისტრაცია წარმატებულია!");
+              checkSession();
             });
           }
         });
       }
     }
 
-    // პოსტების ჩამოტვირთვა
     function loadPosts() {
       supabase.from('posts').select('*').order('created_at', { ascending: false }).then(function(res) {
         var postsWall = document.getElementById('posts-wall');
@@ -478,7 +556,6 @@
       });
     }
 
-    // პოსტის ვიზუალი
     function createPostCardHtml(post) {
       var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
@@ -515,7 +592,6 @@
       `;
     }
 
-    // პოსტის შექმნა
     function createPost() {
       var text = document.getElementById('post-text-input').value.trim();
       var media = document.getElementById('post-media-input').value.trim();
@@ -543,7 +619,6 @@
       });
     }
 
-    // ლაიქი
     function likePost(postId, currentLikes) {
       supabase.from('posts')
         .update({ likes_count: currentLikes + 1 })
@@ -553,11 +628,10 @@
         });
     }
 
-    // სისტემიდან გამოსვლა
     function logout() {
       supabase.auth.signOut().then(function() {
         alert("გახვედით სისტემიდან!");
-        checkSession();
+        location.reload();
       });
     }
   </script>
