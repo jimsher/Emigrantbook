@@ -2720,52 +2720,32 @@ div[style*="overflow-x:auto"] {
 <script src="fotogaleria.js"></script>
 <script src="videocall.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  const firebaseConfig = { 
-    apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-    authDomain: "emigrantbook.firebaseapp.com", 
-    databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-    projectId: "emigrantbook", 
-    storageBucket: "emigrantbook.firebasestorage.app", 
-    appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
-  };
-  
-  // ინიციალიზაცია
-  if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-  }
+  // შენი Supabase პროექტის პარამეტრები
+  const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
+  const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
 
+  // კავშირის ინიციალიზაცია
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // იმისათვის, რომ შენს დანარჩენ კოდში (JS ფაილებში) არაფერი გაფუჭდეს,
+  // ძველ ცვლადებს (db, auth, storage) პირდაპირ ვუკავშირებთ Supabase-ს:
+  const db = supabase;
+  const auth = supabase.auth;
+  const storage = supabase.storage;
 
-  // ... ინიციალიზაციის მერე ...
-  console.log("Firebase ჩაიტვირთა:", firebase.SDK_VERSION);
-  if (firebase.storage) {
-      console.log("Storage ნაპოვნია! ✅");
-  } else {
-      console.log("Storage დაკარგულია! ❌");
-      alert("კრიტიკული შეცდომა: Storage ბიბლიოთეკა არ ჩაიტვირთა!");
-  }
-
-
- 
-  
-  // გლობალური ცვლადები
-  const db = firebase.database();
-  const auth = firebase.auth();
-  const storage = firebase.storage(); // აი, აქ ვააქტიურებთ Storage-ს საბოლოოდ
+  console.log("Supabase კავშირი წარმატებით დამყარდა! ✅");
 </script>
-
-
 
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/sw.js')
             .then(function(registration) {
-                // წარმატებით დარეგისტრირდა
                 console.log('ServiceWorker registered with scope: ', registration.scope);
             }, function(err) {
-                // რეგისტრაცია ჩაიშალა
                 console.log('ServiceWorker registration failed: ', err);
             });
         });
