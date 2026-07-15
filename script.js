@@ -1,10 +1,11 @@
 // ==========================================
 // 1. SUPABASE-ის კონფიგურაცია და ინიციალიზაცია
 // ==========================================
-const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; // ჩაწერე შენი პროექტის URL
-const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; // ჩაწერე შენი Anon Key
+const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; // შენი პროექტის URL
+const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; // შენი Anon Key
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ბიბლიოთეკიდან ვქმნით კავშირს 'supabase' ცვლადში
+const supabase = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 let audioCtx, audioSource, audioDest;
 
