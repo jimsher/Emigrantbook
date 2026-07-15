@@ -90,6 +90,7 @@
       color: #1e3c72;
       cursor: pointer;
       font-weight: bold;
+      text-decoration: underline;
     }
     .error-msg {
       color: #d9534f;
@@ -136,6 +137,7 @@
 
     let isLoginMode = true;
 
+    // ფუნქცია, რომელიც გადართავს შესვლასა და რეგისტრაციას შორის
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       const subtitle = document.getElementById('auth-subtitle');
@@ -150,15 +152,16 @@
         subtitle.innerText = "შედი შენს პროფილში";
         btn.innerText = "შესვლა";
         toggleLink.innerText = "არ გაქვს ანგარიში? დარეგისტრირდი";
-        nameGroup.style.display = 'none'; // ვმალავთ სახელს შესვლისას
+        nameGroup.style.display = 'none'; // ვმალავთ სახელის ველს
       } else {
         subtitle.innerText = "შექმენი ახალი ანგარიში";
         btn.innerText = "რეგისტრაცია";
         toggleLink.innerText = "უკვე გაქვს ანგარიში? შედი";
-        nameGroup.style.display = 'block'; // ვაჩენთ სახელს რეგისტრაციისას
+        nameGroup.style.display = 'block'; // ვაჩენთ სახელის ველს
       }
     }
 
+    // ავტორიზაციის და რეგისტრაციის დამუშავება
     async function handleAuth() {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -167,6 +170,7 @@
 
       errorDiv.style.display = 'none';
 
+      // შემოწმება, რომ ველები ცარიელი არ იყოს
       if (!email || !password || (!isLoginMode && !fullname)) {
         errorDiv.innerText = "გთხოვთ შეავსოთ ყველა ველი!";
         errorDiv.style.display = 'block';
@@ -174,7 +178,7 @@
       }
 
       if (isLoginMode) {
-        // LOGIN (შესვლა)
+        // --- შესვლა ---
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email,
           password: password,
@@ -188,7 +192,7 @@
           window.location.href = "home.html"; 
         }
       } else {
-        // REGISTER (რეგისტრაცია)
+        // --- რეგისტრაცია ---
         const { data, error } = await supabase.auth.signUp({
           email: email,
           password: password,
@@ -200,8 +204,8 @@
           return;
         }
 
-        // თუ რეგისტრაცია წარმატებულია, მომხმარებლის სახელს ვწერთ 'profiles' ცხრილში
-        if (data.user) {
+        // თუ მომხმარებელი წარმატებით შეიქმნა, სახელს ვწერთ 'profiles' ცხრილში
+        if (data && data.user) {
           const { error: profileError } = await supabase
             .from('profiles')
             .insert([
