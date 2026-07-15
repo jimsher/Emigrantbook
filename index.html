@@ -149,7 +149,6 @@
       border: 1px solid #ced0d4;
       text-transform: uppercase;
       overflow: hidden;
-      object-fit: cover;
     }
     .header-avatar img {
       width: 100%;
@@ -475,7 +474,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      margin-top: -60px;
+      margin-top: -60px; /* ავატარი გადმოდის ქავერზე */
     }
     .profile-avatar-holder {
       position: relative;
@@ -493,7 +492,7 @@
       align-items: center;
       font-size: 42px;
       font-weight: bold;
-      border: 4px solid #ffffff;
+      border: 4px solid #ffffff; /* თეთრი ჩარჩო */
       text-transform: uppercase;
       box-shadow: 0 1px 3px rgba(0,0,0,0.15);
       overflow: hidden;
@@ -642,6 +641,7 @@
 </head>
 <body>
 
+  <!-- დამალული ფაილის შესაყვანი პროფილის სურათის ასატვირთად -->
   <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
 
   <div id="auth-screen">
@@ -772,6 +772,7 @@
     var supabase;
     var currentUser = null;
     var userProfile = null;
+    var cachedProfiles = {}; // ყველა მომხმარებლის პროფილის ქეში
 
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -827,15 +828,16 @@
       }
     }
 
-    // ავატარის ასახვის დამხმარე დამზღვევი ფუნქცია
+    // ავატარის ასახვა
     function renderAvatar(elementId, avatarUrl, name) {
       var el = document.getElementById(elementId);
       if (!el) return;
       
       if (avatarUrl) {
-        el.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+        el.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`;
       } else {
         var firstLetter = name ? name.charAt(0).toUpperCase() : "?";
+        el.innerHTML = "";
         el.innerText = firstLetter;
       }
     }
@@ -854,7 +856,7 @@
               avatarUrl = userProfile.avatar_url;
             }
             
-            // ავატარების ინდივიდუალური ასახვა ჰედერში, პროფილში და კომენტარებში
+            // ავატარების დაყენება
             renderAvatar('header-avatar-btn', avatarUrl, finalName);
             renderAvatar('profile-big-avatar', avatarUrl, finalName);
             
@@ -869,12 +871,11 @@
       });
     }
 
-    // ავატარის ატვირთვის გამოძახება
     function triggerAvatarUpload() {
       document.getElementById('avatar-file-input').click();
     }
 
-    // პროფილის ახალი სურათის ატვირთვის ფუნქცია
+    // ავატარის ატვირთვა
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
       if (fileInput.files.length === 0) return;
@@ -885,17 +886,14 @@
 
       alert("სურათი იტვირთება...");
 
-      // 1. ფაილის ატვირთვა Supabase Storage 'avatars' ბაკეტში
       supabase.storage.from('avatars').upload(fileName, file).then(function(storageRes) {
         if (storageRes.error) {
           alert("ავატარის ატვირთვის შეცდომა: " + storageRes.error.message);
           return;
         }
 
-        // საჯარო ლინკის აწყობა
         var avatarPublicUrl = SUPABASE_URL + "/storage/v1/object/public/avatars/" + fileName;
 
-        // 2. profiles ტაბულის განახლება (სვეტში: avatar_url)
         supabase.from('profiles')
           .update({ avatar_url: avatarPublicUrl })
           .eq('id', currentUser.id)
@@ -904,7 +902,7 @@
               alert("პროფილის განახლების შეცდომა: " + updateRes.error.message);
             } else {
               alert("პროფილის სურათი წარმატებით განახლდა!");
-              checkSession(); // გვერდის მონაცემების გადატვირთვა
+              checkSession();
             }
           });
       });
@@ -987,19 +985,15 @@
       }
     }
 
+    // პოსტების უსაფრთხო ჩატვირთვა
     function loadPosts() {
-      // ვკითხულობთ პოსტებს და ავტორების ავატარებს 'profiles' ტაბულიდან Join-ით
-      supabase.from('posts').select(`
-        *,
-        profiles (
-          avatar_url
-        )
-      `).order('created_at', { ascending: false }).then(function(res) {
+      // 1. ჯერ ჩვეულებრივად ვკითხულობთ პოსტებს (ყველაზე უსაფრთხო გზა)
+      supabase.from('posts').select('*').order('created_at', { ascending: false }).then(function(res) {
         var postsWall = document.getElementById('posts-wall');
         postsWall.innerHTML = "";
 
         if (res.error) {
-          postsWall.innerHTML = '<div style="color:red; text-align:center;">პოსტები ვერ ჩაიტვირთა.</div>';
+          postsWall.innerHTML = '<div style="color:red; text-align:center;">პოსტები ვერ ჩაიტვირთა: ' + res.error.message + '</div>';
           return;
         }
 
@@ -1009,11 +1003,22 @@
           return;
         }
 
-        posts.forEach(function(post) {
-          postsWall.innerHTML += createPostCardHtml(post);
-        });
+        // 2. ვკითხულობთ ყველა მომხმარებლის პროფილის ავატარებს 'profiles'-დან
+        supabase.from('profiles').select('id, avatar_url').then(function(profilesRes) {
+          cachedProfiles = {};
+          if (profilesRes.data) {
+            profilesRes.data.forEach(function(p) {
+              cachedProfiles[p.id] = p.avatar_url;
+            });
+          }
 
-        observeVideos();
+          // 3. პოსტების გამოტანა ინდივიდუალური ავატარებით
+          posts.forEach(function(post) {
+            postsWall.innerHTML += createPostCardHtml(post);
+          });
+
+          observeVideos();
+        });
       });
     }
 
@@ -1077,11 +1082,11 @@
       var myAvatarUrl = userProfile ? userProfile.avatar_url : null;
       var myInitial = myName.charAt(0).toUpperCase();
 
-      // პოსტის ავტორის ინდივიდუალური ავატარი
-      var authorAvatarUrl = (post.profiles && post.profiles.avatar_url) ? post.profiles.avatar_url : null;
+      // პოსტის ავტორის ინდივიდუალური ავატარი მეხსიერებიდან (Cached Profiles)
+      var authorAvatarUrl = cachedProfiles[post.user_id] || null;
       
-      var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar">` : initial;
-      var myCommentAvatar = myAvatarUrl ? `<img src="${myAvatarUrl}" alt="Avatar">` : myInitial;
+      var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
+      var myCommentAvatar = myAvatarUrl ? `<img src="${myAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : myInitial;
 
       var mediaHtml = buildCollageHtml(post.media_url);
 
