@@ -2720,7 +2720,7 @@ div[style*="overflow-x:auto"] {
 <script src="fotogaleria.js"></script>
 <script src="videocall.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 
 
 <script>
@@ -2732,36 +2732,25 @@ div[style*="overflow-x:auto"] {
 </script>
 
 
- 
+ <!-- 1. შემოგვაქვს Supabase-ის ოფიციალური ბიბლიოთეკა -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  // შენი Supabase პროექტის პარამეტრები
+  // შენი პროექტის პარამეტრები
   const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
   const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
 
-  // კავშირის ინიციალიზაცია
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // აქ ცვლადს დავარქვით 'supabaseInstance', რომ სახელი არ შეეჯახოს ბიბლიოთეკას!
+  const supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // იმისათვის, რომ შენს დანარჩენ კოდში (JS ფაილებში) არაფერი გაფუჭდეს,
-  // ძველ ცვლადებს (db, auth, storage) პირდაპირ ვუკავშირებთ Supabase-ს:
-  const db = supabase;
-  const auth = supabase.auth;
-  const storage = supabase.storage;
+  // ამის შემდეგ, ძველ ცვლადებს (db, auth, storage) ვუკავშირებთ ახალ კავშირს
+  const db = supabaseInstance;
+  const auth = supabaseInstance.auth;
+  const storage = supabaseInstance.storage;
 
   console.log("Supabase კავშირი წარმატებით დამყარდა! ✅");
 </script>
 
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
-                console.log('ServiceWorker registered with scope: ', registration.scope);
-            }, function(err) {
-                console.log('ServiceWorker registration failed: ', err);
-            });
-        });
-    }
-</script>
 
  
  
