@@ -637,7 +637,7 @@
       `;
     }
 
-    // ახალი: პოსტის შექმნა ტელეფონიდან ფოტოს/ვიდეოს ატვირთვით
+    // ჩასწორებულია: პოსტის შექმნა დაზღვეული საჯარო ლინკით
     function createPost() {
       var text = document.getElementById('post-text-input').value.trim();
       var fileInput = document.getElementById('post-media-file');
@@ -656,7 +656,6 @@
       // თუ მომხმარებელმა აირჩია ფაილი
       if (fileInput.files.length > 0) {
         var file = fileInput.files[0];
-        // ვქმნით ფაილის უნიკალურ სახელს ბაზისთვის
         var fileExt = file.name.split('.').pop();
         var fileName = currentUser.id + "_" + Date.now() + "." + fileExt;
         
@@ -669,9 +668,8 @@
             return;
           }
 
-          // 2. ვიღებთ ფაილის საჯარო ლინკს
-          var publicUrlData = supabase.storage.from('post-media').getPublicUrl(fileName);
-          var mediaUrl = publicUrlData.data.publicUrl;
+          // 2. ხელით ვაწყობთ 100%-ით სწორ საჯარო ლინკს (დაზღვევის მიზნით)
+          var mediaUrl = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
           var mediaType = file.type.startsWith('video') ? "video" : "image";
 
           // 3. პოსტის ჩაწერა მონაცემთა ბაზაში
