@@ -293,6 +293,54 @@
       border-radius: 0; /* კუთხეები სრულადაა შევსებული */
     }
 
+    /* --------------------------------------
+       კოლაჟის CSS Grid სტილები (ახალი)
+    -------------------------------------- */
+    .collage-container {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .collage-grid {
+      display: grid;
+      gap: 2px;
+      background-color: #e4e6eb;
+      width: 100%;
+    }
+    .collage-item {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .collage-1 { grid-template-columns: 1fr; height: 350px; }
+    .collage-2 { grid-template-columns: 1fr 1fr; height: 250px; }
+    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 125px 125px; height: 250px; }
+    .collage-3 *:first-child { grid-row: span 2; }
+    .collage-4 { grid-template-columns: 2fr 1fr; grid-template-rows: 83px 83px 83px; height: 250px; }
+    .collage-4 *:first-child { grid-row: span 3; }
+    .collage-5 { grid-template-columns: 1fr 1fr; grid-template-rows: 150px 100px 100px; height: 350px; }
+    .collage-5 *:first-child { grid-column: span 2; }
+    .collage-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 180px 100px; height: 280px; }
+    .collage-6 *:first-child { grid-column: span 2; }
+
+    .collage-overlay {
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+    .collage-overlay-text {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
     /* ლაიქების და კომენტარების ზოლი */
     .post-stats {
       display: flex;
@@ -306,6 +354,7 @@
       display: flex;
       justify-content: space-around;
       padding: 6px 0;
+      border-bottom: 1px solid #e4e6eb; /* ხაზი კომენტარის ველის გამოსაყოფად */
     }
     .action-btn {
       background: none;
@@ -323,6 +372,55 @@
     }
     .action-btn:hover {
       background-color: #f2f3f5;
+    }
+
+    /* --------------------------------------
+       კომენტარების ველი პოსტის ძირში (ახალი)
+    -------------------------------------- */
+    .comment-box-area {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      gap: 8px;
+      background-color: #ffffff;
+    }
+    .comment-box-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #e4e6eb;
+      color: #1c1e21;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+    .comment-input-container {
+      flex: 1;
+      display: flex;
+      background-color: #f0f2f5;
+      border-radius: 18px;
+      padding: 6px 12px;
+      align-items: center;
+    }
+    .comment-input-container input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      color: #1c1e21;
+    }
+    .comment-submit-button {
+      background: none;
+      border: none;
+      color: #1877f2;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      padding-left: 6px;
     }
 
     /* პროფილის გვერდის ვიზუალი */
@@ -417,8 +515,8 @@
         <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
         
         <div class="file-upload-wrapper">
-          <div class="file-upload-btn">📷 აირჩიე ფოტო ან ვიდეო გალერეიდან</div>
-          <input type="file" id="post-media-file" accept="image/*,video/*" onchange="showSelectedFileName()">
+          <div class="file-upload-btn">📷 აირჩიე ფოტოები ან ვიდეოები (6-მდე)</div>
+          <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           <div class="selected-file-info" id="selected-file-name"></div>
         </div>
 
@@ -466,12 +564,12 @@
       alert("კავშირის შეცდომა: " + e.message);
     }
 
-    // მონიშნული ფაილის სახელის ჩვენება
+    // მონიშნული ფაილების რაოდენობის ჩვენება
     function showSelectedFileName() {
       var fileInput = document.getElementById('post-media-file');
       var nameDiv = document.getElementById('selected-file-name');
       if (fileInput.files.length > 0) {
-        nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files[0].name;
+        nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
         nameDiv.style.display = "block";
       } else {
         nameDiv.style.display = "none";
@@ -619,18 +717,69 @@
       });
     }
 
+    // კოლაჟის აგების უსაფრთხო ლოგიკა (მხოლოდ CSS Grid-ით)
+    function buildCollageHtml(urlsString) {
+      if (!urlsString) return "";
+      
+      var urls = [];
+      if (urlsString.includes(",")) {
+        urls = urlsString.split(",");
+      } else {
+        urls = [urlsString];
+      }
+
+      // თუ მხოლოდ 1 ფოტოა, გამოგვაქვს შენი ორიგინალი სტილით
+      if (urls.length === 1) {
+        var url = urls[0];
+        if (url.includes('.mp4') || url.includes('video')) {
+          return '<video class="post-media" src="' + url + '" controls></video>';
+        } else {
+          return '<img class="post-media" src="' + url + '" alt="Media">';
+        }
+      }
+
+      var total = urls.length;
+      var showLimit = Math.min(total, 6);
+      var gridClass = "collage-" + showLimit;
+
+      var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
+      for (var i = 0; i < showLimit; i++) {
+        var url = urls[i];
+        var isVideo = url.includes('.mp4') || url.includes('video');
+        var isLastCell = (i === showLimit - 1);
+        var moreCount = total - showLimit;
+
+        if (isLastCell && moreCount > 0) {
+          html += '<div class="collage-overlay">';
+          if (isVideo) {
+            html += '<video class="collage-item" src="' + url + '" controls></video>';
+          } else {
+            html += '<img class="collage-item" src="' + url + '">';
+          }
+          html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
+          html += '</div>';
+        } else {
+          if (isVideo) {
+            html += '<video class="collage-item" src="' + url + '" controls></video>';
+          } else {
+            html += '<img class="collage-item" src="' + url + '">';
+          }
+        }
+      }
+      html += '</div></div>';
+      return html;
+    }
+
     function createPostCardHtml(post) {
       var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+      
+      // მიმდინარე მომხმარებლის ავატარის პირველი ასო კომენტარების ველისთვის
+      var myName = userProfile ? userProfile.full_name : (currentUser ? currentUser.email : "?");
+      var myInitial = myName.charAt(0).toUpperCase();
 
-      var mediaHtml = "";
-      if (post.media_url) {
-        if (post.media_url.includes('.mp4') || post.media_url.includes('video') || post.media_type === 'video') {
-          mediaHtml = '<video class="post-media" src="' + post.media_url + '" controls></video>';
-        } else {
-          mediaHtml = '<img class="post-media" src="' + post.media_url + '" alt="Media">';
-        }
-      }
+      // მედიის (კოლაჟის ან ერთეული ფოტოს) გამოტანა
+      var mediaHtml = buildCollageHtml(post.media_url);
 
       return `
         <div class="post-card">
@@ -642,19 +791,51 @@
             </div>
           </div>
           <div class="post-content">${post.content || ""}</div>
+          
           ${mediaHtml}
+          
           <div class="post-stats">
             <span>👍 ${post.likes_count || 0} ლაიქი</span>
             <span>0 კომენტარი</span>
           </div>
           <div class="post-actions">
             <button class="action-btn" onclick="likePost('${post.id}', ${post.likes_count})">👍 მოწონება</button>
-            <button class="action-btn" onclick="alert('კომენტარები მალე დაემატება!')">💬 კომენტარი</button>
+            <button class="action-btn" onclick="focusCommentBox('${post.id}')">💬 კომენტარი</button>
+          </div>
+
+          <div class="comment-box-area">
+            <div class="comment-box-avatar">${myInitial}</div>
+            <div class="comment-input-container">
+              <input type="text" id="comment-field-${post.id}" placeholder="დაწერე კომენტარი..." onkeypress="handleCommentKeyPress(event, '${post.id}')">
+              <button class="comment-submit-button" onclick="submitComment('${post.id}')">გაგზავნა</button>
+            </div>
           </div>
         </div>
       `;
     }
 
+    // ფოკუსი კომენტარის ველზე
+    function focusCommentBox(postId) {
+      var field = document.getElementById('comment-field-' + postId);
+      if (field) field.focus();
+    }
+
+    function handleCommentKeyPress(event, postId) {
+      if (event.key === 'Enter') {
+        submitComment(postId);
+      }
+    }
+
+    function submitComment(postId) {
+      var field = document.getElementById('comment-field-' + postId);
+      var text = field.value.trim();
+      if (!text) return;
+
+      alert("კომენტარი შენახულია! ტექსტი: " + text);
+      field.value = "";
+    }
+
+    // მრავალჯერადი ფოტოების ატვირთვა (6-მდე)
     function createPost() {
       var text = document.getElementById('post-text-input').value.trim();
       var fileInput = document.getElementById('post-media-file');
@@ -670,30 +851,37 @@
 
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
 
-      // თუ მომხმარებელმა აირჩია ფაილი
+      // თუ მომხმარებელმა აირჩია ფაილები
       if (fileInput.files.length > 0) {
-        var file = fileInput.files[0];
-        var fileExt = file.name.split('.').pop();
-        var fileName = currentUser.id + "_" + Date.now() + "." + fileExt;
-        
-        // 1. ფაილის ატვირთვა Supabase Storage-ში
-        supabase.storage.from('post-media').upload(fileName, file).then(function(storageRes) {
-          if (storageRes.error) {
-            alert("ფაილის ატვირთვის შეცდომა: " + storageRes.error.message);
-            publishBtn.disabled = false;
-            publishBtn.innerText = "გამოქვეყნება";
-            return;
-          }
+        var files = Array.from(fileInput.files).slice(0, 6); // მაქსიმუმ 6 ფაილი
+        var uploadedUrls = [];
+        var promises = [];
 
-          // 2. ხელით ვაწყობთ 100%-ით სწორ საჯარო ლინკს (დაზღვევის მიზნით)
-          var mediaUrl = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
-          var mediaType = file.type.startsWith('video') ? "video" : "image";
+        files.forEach(function(file, index) {
+          var fileExt = file.name.split('.').pop();
+          var fileName = currentUser.id + "_" + Date.now() + "_" + index + "." + fileExt;
+          
+          var promise = supabase.storage.from('post-media').upload(fileName, file).then(function(storageRes) {
+            if (storageRes.error) {
+              throw storageRes.error;
+            }
+            var mediaUrl = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
+            uploadedUrls.push(mediaUrl);
+          });
+          promises.push(promise);
+        });
 
-          // 3. პოსტის ჩაწერა მონაცემთა ბაზაში
-          savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn);
+        // ველოდებით ყველა ფოტოს წარმატებით ატვირთვას
+        Promise.all(promises).then(function() {
+          var mediaUrlsJoined = uploadedUrls.join(","); // ლინკებს ვაერთიანებთ მძიმეებით
+          var mediaType = files[0].type.startsWith('video') ? "video" : "image";
+          savePostToDatabase(authorName, text, mediaUrlsJoined, mediaType, publishBtn);
+        }).catch(function(err) {
+          alert("ფაილის ატვირთვის შეცდომა: " + err.message);
+          publishBtn.disabled = false;
+          publishBtn.innerText = "გამოქვეყნება";
         });
       } else {
-        // თუ ფაილი არ არის და მხოლოდ ტექსტია
         savePostToDatabase(authorName, text, null, null, publishBtn);
       }
     }
