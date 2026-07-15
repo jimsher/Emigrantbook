@@ -67,13 +67,18 @@
       margin-bottom: 5px;
       font-weight: 600;
     }
-    .input-group input {
+    .input-group input, .input-group select, .input-group textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 14px;
       outline: none;
+      background-color: white;
+    }
+    .input-group textarea {
+      resize: vertical;
+      height: 80px;
     }
     .btn {
       width: 100%;
@@ -105,7 +110,7 @@
     }
 
     /* 2. მთავარი კედლის და პროფილის სტილები */
-    #home-screen, #profile-screen {
+    #home-screen, #profile-screen, #edit-profile-screen {
       display: none;
     }
     .header {
@@ -265,7 +270,7 @@
       margin-right: 10px;
       text-transform: uppercase;
       overflow: hidden;
-      cursor: pointer; /* მიუთითებს, რომ დაჭერადია */
+      cursor: pointer;
     }
     .post-avatar img {
       width: 100%;
@@ -280,7 +285,7 @@
       font-weight: bold;
       font-size: 15px;
       color: #050505;
-      cursor: pointer; /* მიუთითებს, რომ დაჭერადია */
+      cursor: pointer;
     }
     .post-author:hover {
       text-decoration: underline;
@@ -479,7 +484,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      margin-top: -60px; /* ავატარი გადმოდის ქავერზე */
+      margin-top: -60px;
     }
     .profile-avatar-holder {
       position: relative;
@@ -497,7 +502,7 @@
       align-items: center;
       font-size: 42px;
       font-weight: bold;
-      border: 4px solid #ffffff; /* თეთრი ჩარჩო */
+      border: 4px solid #ffffff;
       text-transform: uppercase;
       box-shadow: 0 1px 3px rgba(0,0,0,0.15);
       overflow: hidden;
@@ -642,6 +647,36 @@
       background-color: #f0f2f5;
       text-align: center;
     }
+
+    /* 3. პროფილის რედაქტირების გვერდის სტილები */
+    .edit-profile-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 12px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .edit-header {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1c1e21;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e4e6eb;
+      padding-bottom: 10px;
+    }
+    .edit-buttons-wrapper {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-save {
+      background-color: #1877f2;
+      color: white;
+    }
+    .btn-cancel {
+      background-color: #e4e6eb;
+      color: #050505;
+    }
   </style>
 </head>
 <body>
@@ -732,28 +767,13 @@
 
           <div class="profile-action-row" id="profile-action-panel">
             <button class="btn-add-story">➕ ისტორიაში დამატება</button>
-            <button class="btn-edit-profile">✏️ პროფილის რედაქტირება</button>
+            <button class="btn-edit-profile" onclick="showEditProfileScreen()">✏️ პროფილის რედაქტირება</button>
             <button class="btn-more-options">•••</button>
           </div>
         </div>
 
-        <div class="profile-details-box">
-          <div class="detail-item">
-            <span class="icon">💼</span>
-            <span>მუშაობს პოზიციაზე: <strong>დეველოპერი</strong></span>
-          </div>
-          <div class="detail-item">
-            <span class="icon">🎓</span>
-            <span>ისწავლა: <strong>სტუ-ში (GTU)</strong></span>
-          </div>
-          <div class="detail-item">
-            <span class="icon">🏠</span>
-            <span>ცხოვრობს ქალაქში: <strong>თბილისი</strong></span>
-          </div>
-          <div class="detail-item">
-            <span class="icon">📍</span>
-            <span>წარმოშობით ქალაქიდან: <strong>თბილისი</strong></span>
-          </div>
+        <div class="profile-details-box" id="profile-details-container">
+          <div style="text-align:center; color:#65676b; padding:10px;">დეტალები იტვირთება...</div>
         </div>
 
         <div class="profile-tabs">
@@ -766,6 +786,65 @@
           <button class="logout-btn-large" onclick="logout()">სისტემიდან გამოსვლა</button>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-profile-screen">
+    <div class="header">
+      <div class="logo-text" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
+    </div>
+
+    <div class="feed-container">
+      <div class="edit-profile-card">
+        <div class="edit-header">✏️ პროფილის ინფორმაციის განახლება</div>
+
+        <div class="input-group">
+          <label>სახელი და გვარი</label>
+          <input type="text" id="edit-fullname" placeholder="გიორგი ბერიძე">
+        </div>
+
+        <div class="input-group">
+          <label>ასაკი</label>
+          <input type="number" id="edit-age" placeholder="მაგ. 25">
+        </div>
+
+        <div class="input-group">
+          <label>სამუშაო ადგილი (პოზიცია, კომპანია)</label>
+          <input type="text" id="edit-job" placeholder="მაგ. დეველოპერი">
+        </div>
+
+        <div class="input-group">
+          <label>ამჟამინდელი ქალაქი</label>
+          <input type="text" id="edit-city" placeholder="მაგ. თბილისი">
+        </div>
+
+        <div class="input-group">
+          <label>ქვეყანა</label>
+          <input type="text" id="edit-country" placeholder="მაგ. საქართველო">
+        </div>
+
+        <div class="input-group">
+          <label>ურთიერთობის სტატუსი</label>
+          <select id="edit-relationship">
+            <option value="">არ არის მითითებული</option>
+            <option value="დასაოჯახებელი">დასაოჯახებელი</option>
+            <option value="ურთიერთობაშია">ურთიერთობაშია</option>
+            <option value="დანიშნულია">დანიშნულია</option>
+            <option value="დაოჯახებულია">დაოჯახებულია</option>
+            <option value="რთულია">რთულია</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>ცხოვრებისეული მოვლენები (Life Events)</label>
+          <textarea id="edit-events" placeholder="მაგ. დავიწყე ახალი სამსახური, გადმოვედი ემიგრაციაში..."></textarea>
+        </div>
+
+        <div class="edit-buttons-wrapper">
+          <button class="btn btn-save" onclick="saveProfileChanges()">ცვლილებების შენახვა</button>
+          <button class="btn btn-cancel" onclick="showScreen('profile')">გაუქმება</button>
+        </div>
       </div>
     </div>
   </div>
@@ -821,6 +900,7 @@
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('home-screen').style.display = 'none';
       document.getElementById('profile-screen').style.display = 'none';
+      document.getElementById('edit-profile-screen').style.display = 'none';
 
       if (screenName === 'auth') {
         document.getElementById('auth-screen').style.display = 'flex';
@@ -829,6 +909,8 @@
         loadPosts();
       } else if (screenName === 'profile') {
         document.getElementById('profile-screen').style.display = 'block';
+      } else if (screenName === 'edit-profile') {
+        document.getElementById('edit-profile-screen').style.display = 'block';
       }
     }
 
@@ -860,7 +942,6 @@
               avatarUrl = userProfile.avatar_url;
             }
             
-            // ავატარების დაყენება
             renderAvatar('header-avatar-btn', avatarUrl, finalName);
             renderAvatar('profile-big-avatar', avatarUrl, finalName);
             
@@ -875,43 +956,102 @@
       });
     }
 
-    // მომხმარებლის საკუთარი პროფილის გახსნა (Story-ის და რედაქტირების ღილაკებით)
+    // დეტალების დახატვა პროფილის გვერდზე
+    function renderProfileDetails(profileData) {
+      var container = document.getElementById('profile-details-container');
+      if (!container) return;
+
+      var ageHtml = profileData.age ? `
+        <div class="detail-item">
+          <span class="icon">🎂</span>
+          <span>ასაკი: <strong>${profileData.age} წლის</strong></span>
+        </div>` : '';
+
+      var jobHtml = profileData.job_title ? `
+        <div class="detail-item">
+          <span class="icon">💼</span>
+          <span>მუშაობს პოზიციაზე: <strong>${profileData.job_title}</strong></span>
+        </div>` : `
+        <div class="detail-item">
+          <span class="icon">💼</span>
+          <span>მუშაობს პოზიციაზე: <strong>დეველოპერი</strong></span>
+        </div>`;
+
+      var cityHtml = profileData.current_city ? `
+        <div class="detail-item">
+          <span class="icon">🏠</span>
+          <span>ცხოვრობს ქალაქში: <strong>${profileData.current_city}</strong></span>
+        </div>` : `
+        <div class="detail-item">
+          <span class="icon">🏠</span>
+          <span>ცხოვრობს ქალაქში: <strong>თბილისი</strong></span>
+        </div>`;
+
+      var countryHtml = profileData.country ? `
+        <div class="detail-item">
+          <span class="icon">📍</span>
+          <span>წარმოშობით ქვეყნიდან: <strong>${profileData.country}</strong></span>
+        </div>` : `
+        <div class="detail-item">
+          <span class="icon">📍</span>
+          <span>წარმოშობით ქალაქიდან: <strong>თბილისი</strong></span>
+        </div>`;
+
+      var relHtml = profileData.relationship ? `
+        <div class="detail-item">
+          <span class="icon">❤️</span>
+          <span>ურთიერთობის სტატუსი: <strong>${profileData.relationship}</strong></span>
+        </div>` : '';
+
+      var eventHtml = profileData.life_events ? `
+        <div class="detail-item">
+          <span class="icon">✨</span>
+          <span>ცხოვრებისეული მოვლენა: <strong>${profileData.life_events}</strong></span>
+        </div>` : '';
+
+      container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
+    }
+
+    // საკუთარი პროფილის ჩვენება
     function showMyProfile() {
       if (!currentUser) return;
       
-      var finalName = userProfile ? userProfile.full_name : currentUser.email;
-      var avatarUrl = userProfile ? userProfile.avatar_url : null;
-      
-      renderAvatar('profile-big-avatar', avatarUrl, finalName);
-      document.getElementById('profile-user-name').innerText = finalName;
-      document.getElementById('profile-user-email').innerText = currentUser.email;
+      supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
+        if (profileRes.data) {
+          userProfile = profileRes.data;
+        }
 
-      // ვაჩვენებთ ფოტოს დაყენების და ქავერის ღილაკებს
-      document.getElementById('avatar-camera-btn').style.display = "flex";
-      document.getElementById('cover-camera-btn').style.display = "flex";
+        var finalName = userProfile ? userProfile.full_name : currentUser.email;
+        var avatarUrl = userProfile ? userProfile.avatar_url : null;
+        
+        renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        document.getElementById('profile-user-name').innerText = finalName;
+        document.getElementById('profile-user-email').innerText = currentUser.email;
 
-      // პირადი პროფილის ღილაკები
-      document.getElementById('profile-action-panel').innerHTML = `
-        <button class="btn-add-story">➕ ისტორიაში დამატება</button>
-        <button class="btn-edit-profile">✏️ პროფილის რედაქტირება</button>
-        <button class="btn-more-options">•••</button>
-      `;
+        document.getElementById('avatar-camera-btn').style.display = "flex";
+        document.getElementById('cover-camera-btn').style.display = "flex";
 
-      // პირადი პროფილის დროს ვაჩვენებთ სისტემიდან გამოსვლის ღილაკს
-      document.getElementById('profile-logout-section').style.display = "block";
+        document.getElementById('profile-action-panel').innerHTML = `
+          <button class="btn-add-story">➕ ისტორიაში დამატება</button>
+          <button class="btn-edit-profile" onclick="showEditProfileScreen()">✏️ პროფილის რედაქტირება</button>
+          <button class="btn-more-options">•••</button>
+        `;
 
-      showScreen('profile');
+        document.getElementById('profile-logout-section').style.display = "block";
+        
+        renderProfileDetails(userProfile || {});
+        showScreen('profile');
+      });
     }
 
-    // სხვა მომხმარებლის პროფილის გახსნის ფუნქცია (ავატარზე დაჭერისას)
+    // სხვა მომხმარებლის პროფილის ჩვენება
     function viewUserProfile(userId) {
       if (!userId) return;
       if (userId === currentUser.id) {
-        showMyProfile(); // თუ საკუთარ თავს დააჭირა, ჩვეულებრივად თავისი პროფილი გაეხსნას
+        showMyProfile();
         return;
       }
 
-      // ვკითხულობთ სხვის მონაცემებს 'profiles' ტაბულიდან
       supabase.from('profiles').select('*').eq('id', userId).single().then(function(res) {
         if (res.error || !res.data) {
           alert("მომხმარებლის პროფილი ვერ მოიძებნა.");
@@ -924,24 +1064,85 @@
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName);
         document.getElementById('profile-user-name').innerText = finalName;
-        document.getElementById('profile-user-email').innerText = ""; // სხვის მეილს უსაფრთხოების გამო ვმალავთ
+        document.getElementById('profile-user-email').innerText = ""; 
 
-        // სხვის გვერდზე ვმალავთ ფოტოს ატვირთვის/ქავერის ღილაკებს
         document.getElementById('avatar-camera-btn').style.display = "none";
         document.getElementById('cover-camera-btn').style.display = "none";
 
-        // სხვისი პროფილის სამოქმედო ღილაკები (Add Friend, Message)
         document.getElementById('profile-action-panel').innerHTML = `
           <button class="btn-add-story">👤 მეგობრობის გაგზავნა</button>
           <button class="btn-edit-profile" style="background-color:#1877f2; color:white;">💬 მესიჯის გაგზავნა</button>
           <button class="btn-more-options">•••</button>
         `;
 
-        // სხვის პროფილზე ვმალავთ სისტემიდან გამოსვლის ღილაკს
         document.getElementById('profile-logout-section').style.display = "none";
 
+        renderProfileDetails(selectedUser);
         showScreen('profile');
       });
+    }
+
+    // რედაქტირების გვერდის გახსნა და მონაცემების შევსება
+    function showEditProfileScreen() {
+      if (!userProfile) return;
+
+      document.getElementById('edit-fullname').value = userProfile.full_name || "";
+      document.getElementById('edit-age').value = userProfile.age || "";
+      document.getElementById('edit-job').value = userProfile.job_title || "";
+      document.getElementById('edit-city').value = userProfile.current_city || "";
+      document.getElementById('edit-country').value = userProfile.country || "";
+      document.getElementById('edit-relationship').value = userProfile.relationship || "";
+      document.getElementById('edit-events').value = userProfile.life_events || "";
+
+      showScreen('edit-profile');
+    }
+
+    // ცვლილებების შენახვა
+    function saveProfileChanges() {
+      var fullName = document.getElementById('edit-fullname').value.trim();
+      var age = document.getElementById('edit-age').value.trim();
+      var job = document.getElementById('edit-job').value.trim();
+      var city = document.getElementById('edit-city').value.trim();
+      var country = document.getElementById('edit-country').value.trim();
+      var relationship = document.getElementById('edit-relationship').value;
+      var events = document.getElementById('edit-events').value.trim();
+
+      if (!fullName) {
+        alert("სახელი და გვარის შევსება აუცილებელია!");
+        return;
+      }
+
+      var updateData = {
+        full_name: fullName,
+        age: age,
+        job_title: job,
+        current_city: city,
+        country: country,
+        relationship: relationship,
+        life_events: events,
+        updated_at: new Date().toISOString()
+      };
+
+      alert("მონაცემები ინახება...");
+
+      supabase.from('profiles')
+        .update(updateData)
+        .eq('id', currentUser.id)
+        .then(function(res) {
+          if (res.error) {
+            alert("შეცდომა შენახვისას: " + res.error.message);
+          } else {
+            alert("პროფილი წარმატებით განახლდა!");
+            
+            // სესიის და მონაცემების ხელახალი წაკითხვა და პროფილზე დაბრუნება
+            supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
+              if (profileRes.data) {
+                userProfile = profileRes.data;
+              }
+              showMyProfile();
+            });
+          }
+        });
     }
 
     function triggerAvatarUpload() {
@@ -1147,12 +1348,10 @@
       var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
       
-      // მიმდინარე მომხმარებლის სახელი და ავატარი კომენტარებისთვის
       var myName = userProfile ? userProfile.full_name : (currentUser ? currentUser.email : "?");
       var myAvatarUrl = userProfile ? userProfile.avatar_url : null;
       var myInitial = myName.charAt(0).toUpperCase();
 
-      // პოსტის ავტორის ინდივიდუალური ავატარი მეხსიერებიდან (Cached Profiles)
       var authorAvatarUrl = cachedProfiles[post.user_id] || null;
       
       var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
@@ -1160,7 +1359,6 @@
 
       var mediaHtml = buildCollageHtml(post.media_url);
 
-      // ავატარზე და სახელზე დაჭერისას ვიძახებთ viewUserProfile-ს შესაბამისი მომხმარებლის ID-ით
       return `
         <div class="post-card">
           <div class="post-header">
