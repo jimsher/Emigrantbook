@@ -294,8 +294,8 @@
     }
 
     /* --------------------------------------
-       კოლაჟის CSS Grid სტილები (ახალი)
-    -------------------------------------- */
+        კოლაჟის CSS Grid სტილები
+     -------------------------------------- */
     .collage-container {
       width: 100%;
       margin: 0;
@@ -375,8 +375,8 @@
     }
 
     /* --------------------------------------
-       კომენტარების ველი პოსტის ძირში (ახალი)
-    -------------------------------------- */
+        კომენტარების ველი პოსტის ძირში
+     -------------------------------------- */
     .comment-box-area {
       display: flex;
       align-items: center;
@@ -553,6 +553,26 @@
     var currentUser = null;
     var userProfile = null;
 
+    // ვიდეოების ავტომატური გაჩერების (დაპაუზების) დამკვირვებელი
+    var videoObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        // თუ ვიდეო აღარ არის ეკრანზე ხილვადი (თუნდაც ნაწილობრივ)
+        if (!entry.isIntersecting) {
+          entry.target.pause();
+        }
+      });
+    }, {
+      threshold: 0.1 // რეაგირებს, როცა ვიდეოს 10%-ზე ნაკლები ჩანს ეკრანზე
+    });
+
+    // ახლად ჩატვირთულ ვიდეოებზე დამკვირვებლის მიბმა
+    function observeVideos() {
+      var videos = document.querySelectorAll('video');
+      videos.forEach(function(video) {
+        videoObserver.observe(video);
+      });
+    }
+
     try {
       if (window.supabase && window.supabase.createClient) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -714,6 +734,9 @@
         posts.forEach(function(post) {
           postsWall.innerHTML += createPostCardHtml(post);
         });
+
+        // პოსტების ჩატვირთვის შემდეგ, ვააქტიურებთ ვიდეოების მეთვალყურეს
+        observeVideos();
       });
     }
 
