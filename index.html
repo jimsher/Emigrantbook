@@ -2732,21 +2732,30 @@ div[style*="overflow-x:auto"] {
 </script>
 
 
- <!-- 1. შემოგვაქვს Supabase-ის ოფიციალური ბიბლიოთეკა -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // შენი პროექტის პარამეტრები
   const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
   const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
 
-  // აქ ცვლადს დავარქვით 'supabaseInstance', რომ სახელი არ შეეჯახოს ბიბლიოთეკას!
   const supabaseInstance = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ამის შემდეგ, ძველ ცვლადებს (db, auth, storage) ვუკავშირებთ ახალ კავშირს
+  // ძირითადი ცვლადები
   const db = supabaseInstance;
   const auth = supabaseInstance.auth;
   const storage = supabaseInstance.storage;
+
+  // 🛠️ დამცავი კოდი: Firebase-ის ძველ გამოძახებებს ვაიგნორებთ, რომ საიტი არ გაიჭედოს!
+  db.ref = function() {
+    console.warn("გაფრთხილება: Firebase-ის .ref() გამოიძახა live.js-მა, მაგრამ ახლა Supabase-ზე ვართ.");
+    return {
+      on: function() { return this; },
+      once: function() { return Promise.resolve({ val: () => null }); },
+      set: function() { return Promise.resolve(); },
+      update: function() { return Promise.resolve(); },
+      push: function() { return { key: 'temp_key', set: () => Promise.resolve() }; }
+    };
+  };
 
   console.log("Supabase კავშირი წარმატებით დამყარდა! ✅");
 </script>
