@@ -16,159 +16,184 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
   
   <style>
-    /* უნიკალური გლობალური ცვლადები ულამაზესი დიზაინისთვის */
+    /* უნიკალური ფუტურისტული ფერების პალიტრა */
     :root {
-      --bg-gradient: linear-gradient(135deg, #0b0f19 0%, #111827 100%);
-      --panel-bg: rgba(22, 30, 49, 0.75);
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --accent-neon: #6366f1;
-      --accent-neon-hover: #4f46e5;
-      --text-primary: #f8fafc;
-      --text-muted: #94a3b8;
-      --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --bg-space: radial-gradient(circle at 50% 50%, #0d0b21 0%, #05050d 100%);
+      --glass-panel: rgba(13, 11, 33, 0.65);
+      --glass-border: rgba(99, 102, 241, 0.2);
+      --glass-glow: 0 8px 32px 0 rgba(99, 102, 241, 0.15);
+      
+      --neon-pink: #f43f5e;
+      --neon-cyan: #06b6d4;
+      --neon-indigo: #6366f1;
+      
+      --text-main: #f8fafc;
+      --text-glow: #e2e8f0;
+      --text-dim: #64748b;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
     }
 
     body {
-      background: var(--bg-gradient);
+      background: var(--bg-space);
       background-attachment: fixed;
-      color: var(--text-primary);
+      color: var(--text-main);
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ულამაზესი ხაზობრივი გადასვლების ეფექტი */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--neon-indigo);
+      border-radius: 10px;
     }
 
     /* 1. ავტორიზაციის ეკრანი */
     #auth-screen {
-      background: var(--bg-gradient);
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 20px;
+      background: radial-gradient(circle at top left, rgba(244, 63, 94, 0.15), transparent 40%),
+                  radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.15), transparent 40%);
     }
 
     .auth-container {
-      background: var(--panel-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--panel-border);
-      padding: 40px 30px;
-      border-radius: 24px;
-      box-shadow: var(--shadow-premium);
+      background: var(--glass-panel);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid var(--glass-border);
+      padding: 45px 35px;
+      border-radius: 30px;
+      box-shadow: var(--glass-glow), 0 20px 40px rgba(0,0,0,0.5);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       text-align: center;
-      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .auth-container::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      background: linear-gradient(135deg, var(--neon-pink), var(--neon-indigo), var(--neon-cyan));
+      border-radius: 32px;
+      z-index: -1;
+      opacity: 0.3;
     }
 
     .logo {
-      font-size: 32px;
-      font-weight: 900;
-      background: linear-gradient(to right, #818cf8, #c084fc);
+      font-size: 38px;
+      font-weight: 950;
+      background: linear-gradient(to right, #ffffff, var(--neon-cyan), var(--neon-indigo));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-      letter-spacing: -1px;
+      margin-bottom: 5px;
+      letter-spacing: -1.5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
     }
 
     .subtitle {
-      color: var(--text-muted);
-      font-size: 14px;
-      margin-bottom: 30px;
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-bottom: 35px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
     .input-group {
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       text-align: left;
     }
 
     .input-group label {
       display: block;
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      font-size: 11px;
+      color: var(--neon-cyan);
+      margin-bottom: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .input-group input, .input-group select, .input-group textarea {
       width: 100%;
-      padding: 14px;
-      border: 1px solid var(--panel-border);
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 14px;
       font-size: 14px;
-      color: var(--text-primary);
+      color: #fff;
       outline: none;
-      transition: all 0.3s ease;
-    }
-
-    .input-group input::placeholder, .input-group textarea::placeholder {
-      color: #64748b;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
-      border-color: var(--accent-neon);
-      background: rgba(255, 255, 255, 0.07);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    }
-
-    .input-group textarea {
-      resize: vertical;
-      height: 90px;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.3), inset 0 2px 4px rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.6);
     }
 
     .btn {
       width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, var(--accent-neon) 0%, #a855f7 100%);
+      padding: 16px;
+      background: linear-gradient(135deg, var(--neon-pink) 0%, var(--neon-indigo) 50%, var(--neon-cyan) 100%);
       color: white;
       border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 800;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
       transition: all 0.3s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+      box-shadow: 0 6px 25px rgba(244, 63, 94, 0.6);
+      filter: brightness(1.1);
     }
 
     .toggle-text {
       margin-top: 25px;
-      font-size: 14px;
-      color: var(--text-muted);
+      font-size: 13px;
+      color: var(--text-dim);
     }
 
     .toggle-text span {
-      color: var(--accent-neon);
+      color: var(--neon-cyan);
       cursor: pointer;
-      font-weight: bold;
-      text-decoration: none;
-      transition: color 0.2s ease;
+      font-weight: 700;
     }
 
     .toggle-text span:hover {
-      color: #818cf8;
       text-decoration: underline;
     }
 
     .error-msg {
-      color: #f87171;
-      background: rgba(248, 113, 113, 0.1);
-      border: 1px solid rgba(248, 113, 113, 0.2);
-      padding: 10px;
-      border-radius: 8px;
+      color: var(--neon-pink);
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+      padding: 12px;
+      border-radius: 10px;
       font-size: 13px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       display: none;
     }
 
@@ -178,57 +203,57 @@
     }
 
     .header {
-      background: var(--panel-bg);
+      background: rgba(13, 11, 33, 0.8);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--panel-border);
-      height: 64px;
+      border-bottom: 1px solid var(--glass-border);
+      height: 70px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 30px;
       position: sticky;
       top: 0;
       z-index: 100;
     }
 
     .header .logo-text {
-      font-size: 24px;
-      font-weight: 900;
-      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      font-size: 26px;
+      font-weight: 950;
+      background: linear-gradient(135deg, #fff 30%, var(--neon-cyan) 70%, var(--neon-indigo) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      letter-spacing: -1px;
       cursor: pointer;
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
     }
     
     .header-avatar {
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.05);
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid var(--neon-indigo);
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
-      border: 1px solid var(--panel-border);
-      text-transform: uppercase;
       overflow: hidden;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
       transition: all 0.3s ease;
     }
 
     .header-avatar:hover {
-      border-color: var(--accent-neon);
-      transform: scale(1.05);
+      transform: scale(1.1) rotate(5deg);
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
     }
 
     .header-avatar img {
@@ -238,138 +263,130 @@
     }
 
     .feed-container {
-      max-width: 550px;
+      max-width: 600px;
       margin: 0 auto;
-      padding: 16px 8px;
+      padding: 24px 12px;
     }
 
+    /* პრემიუმ ნეო ბარათები */
     .premium-card {
-      background: var(--panel-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--panel-border);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-premium);
+      background: var(--glass-panel);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--glass-glow);
+      position: relative;
     }
 
     .create-post-card {
-      padding: 16px;
+      background: linear-gradient(135deg, rgba(13, 11, 33, 0.8) 0%, rgba(99, 102, 241, 0.05) 100%);
     }
 
     .create-post-input {
       width: 100%;
-      height: 70px;
+      height: 80px;
       border: none;
       resize: none;
       outline: none;
       font-size: 16px;
       background: transparent;
-      color: var(--text-primary);
-      margin-bottom: 12px;
+      color: var(--text-main);
+      margin-bottom: 15px;
     }
 
-    /* ფაილის ატვირთვის ახალი ლამაზი ღილაკი */
     .file-upload-wrapper {
       position: relative;
-      margin-bottom: 12px;
+      margin-bottom: 15px;
     }
 
     .file-upload-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      background-color: rgba(255, 255, 255, 0.03);
-      color: var(--text-primary);
-      padding: 12px;
-      border-radius: 10px;
-      font-weight: 600;
+      gap: 10px;
+      background-color: rgba(255, 255, 255, 0.02);
+      color: var(--neon-cyan);
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 700;
       font-size: 14px;
       cursor: pointer;
-      border: 1px dashed var(--panel-border);
+      border: 1px dashed var(--glass-border);
       width: 100%;
-      transition: 0.2s;
+      transition: all 0.3s ease;
     }
 
     .file-upload-btn:hover {
-      background-color: rgba(255, 255, 255, 0.07);
-      border-color: var(--accent-neon);
-    }
-
-    .file-upload-wrapper input[type="file"] {
-      position: absolute;
-      left: 0;
-      top: 0;
-      opacity: 0;
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
+      background-color: rgba(6, 182, 212, 0.05);
+      border-color: var(--neon-cyan);
     }
 
     .selected-file-info {
       font-size: 13px;
-      color: var(--accent-neon);
+      color: var(--neon-pink);
       margin-top: 8px;
-      font-weight: 600;
-      display: none;
+      font-weight: bold;
     }
 
     .create-post-actions {
       display: flex;
       justify-content: flex-end;
-      align-items: center;
-      border-top: 1px solid var(--panel-border);
-      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 15px;
     }
 
     .publish-btn {
-      background: linear-gradient(135deg, var(--accent-neon) 0%, #818cf8 100%);
-      color: #ffffff;
+      background: linear-gradient(135deg, var(--neon-indigo) 0%, var(--neon-cyan) 100%);
+      color: white;
       border: none;
-      padding: 10px 24px;
-      border-radius: 10px;
-      font-weight: bold;
+      padding: 12px 30px;
+      border-radius: 12px;
+      font-weight: 800;
       font-size: 14px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+      transition: all 0.3s ease;
     }
 
     .publish-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
     }
 
-    /* პოსტის ბარათის სტილი */
+    /* პოსტის ბარათის Neo სტილი */
     .post-card {
-      display: flex;
-      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+      box-shadow: 0 12px 40px rgba(6, 182, 212, 0.15);
     }
 
     .post-header {
       display: flex;
       align-items: center;
-      padding-bottom: 12px;
+      padding-bottom: 15px;
     }
 
     .post-avatar {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      background-color: var(--accent-neon);
+      background-color: var(--neon-indigo);
       color: white;
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
       font-size: 16px;
-      margin-right: 12px;
-      text-transform: uppercase;
+      margin-right: 15px;
       overflow: hidden;
       cursor: pointer;
-      border: 1px solid var(--panel-border);
+      border: 2px solid var(--neon-indigo);
     }
 
     .post-avatar img {
@@ -385,28 +402,27 @@
 
     .post-author {
       font-weight: bold;
-      font-size: 15px;
-      color: var(--text-primary);
+      font-size: 16px;
+      color: white;
       cursor: pointer;
       transition: color 0.2s ease;
     }
 
     .post-author:hover {
-      color: var(--accent-neon);
+      color: var(--neon-cyan);
     }
 
     .post-time {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 1px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
     }
 
     .post-content {
       font-size: 15px;
-      line-height: 1.5;
+      line-height: 1.6;
       color: #e2e8f0;
-      padding-bottom: 12px;
-      white-space: pre-wrap;
+      padding-bottom: 15px;
     }
 
     .post-media {
@@ -414,30 +430,29 @@
       max-height: 450px;
       object-fit: cover;
       display: block;
-      border-radius: 12px;
-      margin-bottom: 12px;
+      border-radius: 16px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* კოლაჟის სტილები */
+    /* კოლაჟი */
     .collage-container {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      margin-bottom: 12px;
+      margin-bottom: 15px;
     }
 
     .collage-grid {
       display: grid;
       gap: 4px;
-      background-color: var(--panel-border);
-      width: 100%;
+      background-color: rgba(255, 255, 255, 0.05);
     }
 
     .collage-item {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
     }
 
     .collage-1 { grid-template-columns: 1fr; height: 350px; }
@@ -451,82 +466,61 @@
     .collage-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 180px 100px; height: 280px; }
     .collage-6 *:first-child { grid-column: span 2; }
 
-    .collage-overlay {
-      position: relative;
-      height: 100%;
-      width: 100%;
-    }
-
-    .collage-overlay-text {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
     /* ლაიქები და კომენტარები */
     .post-stats {
       display: flex;
       justify-content: space-between;
       font-size: 13px;
-      color: var(--text-muted);
-      padding: 10px 0;
-      border-bottom: 1px solid var(--panel-border);
+      color: var(--text-dim);
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .post-actions {
       display: flex;
       justify-content: space-around;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--panel-border);
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .action-btn {
       background: none;
       border: none;
-      color: var(--text-muted);
-      font-weight: 600;
+      color: var(--text-dim);
+      font-weight: 700;
       font-size: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      transition: all 0.3s ease;
     }
 
     .action-btn:hover {
-      background-color: rgba(255, 255, 255, 0.05);
-      color: var(--text-primary);
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--neon-cyan);
     }
 
     .comment-box-area {
       display: flex;
       align-items: center;
-      padding-top: 12px;
-      gap: 10px;
+      padding-top: 15px;
+      gap: 12px;
     }
 
     .comment-box-avatar {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       background-color: rgba(255, 255, 255, 0.05);
-      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
-      font-size: 13px;
-      text-transform: uppercase;
       overflow: hidden;
-      border: 1px solid var(--panel-border);
     }
 
     .comment-box-avatar img {
@@ -538,17 +532,11 @@
     .comment-input-container {
       flex: 1;
       display: flex;
-      background-color: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--panel-border);
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 20px;
-      padding: 8px 16px;
+      padding: 10px 18px;
       align-items: center;
-      transition: all 0.3s ease;
-    }
-
-    .comment-input-container:focus-within {
-      border-color: var(--accent-neon);
-      background-color: rgba(255, 255, 255, 0.06);
     }
 
     .comment-input-container input {
@@ -557,55 +545,44 @@
       outline: none;
       background: transparent;
       font-size: 14px;
-      color: var(--text-primary);
-    }
-
-    .comment-input-container input::placeholder {
-      color: #64748b;
+      color: white;
     }
 
     .comment-submit-button {
       background: none;
       border: none;
-      color: var(--accent-neon);
+      color: var(--neon-cyan);
       font-weight: bold;
-      font-size: 13px;
+      font-size: 14px;
       cursor: pointer;
-      padding-left: 8px;
-      transition: color 0.2s ease;
-    }
-
-    .comment-submit-button:hover {
-      color: #818cf8;
     }
 
     /* --------------------------------------
-        Facebook-ის იდენტური პროფილის სტილები
+        ულამაზესი პროფილის განლაგება (Grid Layout)
      -------------------------------------- */
     .facebook-profile-container {
       width: 100%;
-      display: flex;
-      flex-direction: column;
     }
-    
-    /* ქავერის სექცია */
+
+    /* ქავერი პანორამული რკალით */
     .profile-cover-wrapper {
       position: relative;
       width: 100%;
-      height: 220px;
-      background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
-      border-radius: 16px;
+      height: 240px;
+      background: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #0d0b21 100%);
+      border-radius: 24px;
       overflow: hidden;
+      border: 1px solid var(--glass-border);
     }
 
     .cover-camera-btn {
       position: absolute;
-      right: 15px;
-      bottom: 15px;
-      width: 40px;
-      height: 40px;
+      right: 20px;
+      bottom: 20px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background-color: rgba(15, 23, 42, 0.8);
+      background-color: rgba(0,0,0,0.6);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       color: white;
@@ -613,46 +590,41 @@
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      border: 1px solid var(--panel-border);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: all 0.2s ease;
+      border: 1px solid var(--glass-border);
     }
 
-    .cover-camera-btn:hover {
-      transform: scale(1.05);
-      border-color: var(--accent-neon);
-    }
-
-    /* ავატარის და მომხმარებლის ბლოკი */
+    /* პროფილის ინფორმაცია */
     .profile-info-wrapper {
       position: relative;
-      padding: 0 20px 20px 20px;
+      padding: 0 24px 24px 24px;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      margin-top: -60px;
+      align-items: center;
+      text-align: center;
+      margin-top: -75px;
     }
 
     .profile-avatar-holder {
       position: relative;
-      width: 130px;
-      height: 130px;
+      width: 150px;
+      height: 150px;
     }
 
+    /* ორმაგი ნეონის მცურავი ავატარი */
     .profile-fb-avatar {
-      width: 130px;
-      height: 130px;
+      width: 150px;
+      height: 150px;
       border-radius: 50%;
-      background-color: var(--accent-neon);
+      background-color: #0d0b21;
       color: white;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 46px;
-      font-weight: bold;
-      border: 4px solid #111827;
+      font-size: 50px;
+      font-weight: 900;
+      border: 4px solid var(--neon-cyan);
       text-transform: uppercase;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
       overflow: hidden;
     }
 
@@ -664,234 +636,196 @@
 
     .avatar-camera-btn {
       position: absolute;
-      right: 0;
+      right: 5px;
       bottom: 5px;
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      background-color: var(--accent-neon);
+      background-color: var(--neon-pink);
       color: white;
       display: flex;
       justify-content: center;
       align-items: center;
-      border: 3px solid #111827;
+      border: 3px solid #0d0b21;
       cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s ease;
     }
 
-    .avatar-camera-btn:hover {
-      transform: scale(1.1);
-      background-color: var(--accent-neon-hover);
-    }
-
-    /* მომხმარებლის სახელი */
     .profile-user-headline {
-      margin-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      margin-top: 20px;
     }
 
     .profile-fb-name {
-      font-size: 26px;
-      font-weight: 900;
-      color: var(--text-primary);
+      font-size: 30px;
+      font-weight: 950;
       letter-spacing: -0.5px;
+      background: linear-gradient(to right, white, #fff, var(--neon-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .profile-fb-email {
       font-size: 14px;
-      color: var(--text-muted);
+      color: var(--text-dim);
+      margin-top: 4px;
     }
 
-    /* ღილაკების პანელი */
+    /* ულამაზესი Follow & მესიჯის პანელი */
     .profile-action-row {
       display: flex;
       width: 100%;
-      gap: 10px;
-      margin-top: 20px;
+      gap: 12px;
+      margin-top: 25px;
     }
 
     .btn-add-story {
       flex: 1;
-      background: linear-gradient(135deg, var(--accent-neon) 0%, #818cf8 100%);
+      background: linear-gradient(135deg, var(--neon-pink) 0%, var(--neon-indigo) 100%);
       color: #ffffff;
       border: none;
-      border-radius: 10px;
-      padding: 12px;
+      border-radius: 14px;
+      padding: 14px;
       font-weight: bold;
       font-size: 14px;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(99,102,241,0.25);
-      transition: all 0.2s ease;
-    }
-
-    .btn-add-story:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(99,102,241,0.4);
+      gap: 8px;
     }
 
     .btn-edit-profile {
       flex: 1;
-      background-color: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--panel-border);
-      color: var(--text-primary);
-      border-radius: 10px;
-      padding: 12px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: white;
+      border-radius: 14px;
+      padding: 14px;
       font-weight: bold;
       font-size: 14px;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
-    }
-
-    .btn-edit-profile:hover {
-      background-color: rgba(255, 255, 255, 0.08);
-      border-color: var(--text-muted);
+      gap: 8px;
     }
 
     .btn-more-options {
-      width: 44px;
-      background-color: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--panel-border);
-      color: var(--text-primary);
-      border-radius: 10px;
-      font-weight: bold;
+      width: 54px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: white;
+      border-radius: 14px;
       cursor: pointer;
       font-size: 18px;
-      transition: all 0.2s ease;
     }
 
-    .btn-more-options:hover {
-      background-color: rgba(255, 255, 255, 0.08);
-    }
-
-    /* დეტალების სექცია */
+    /* დეტალების ბლოკები (Neo-Grid Cards) */
     .profile-details-box {
-      border-top: 1px solid var(--panel-border);
-      padding: 20px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 24px 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
     }
 
     .detail-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 16px;
+      border-radius: 16px;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
-      font-size: 15px;
-      color: #e2e8f0;
+      text-align: center;
+      gap: 8px;
     }
 
     .detail-item span.icon {
-      font-size: 20px;
-      color: var(--accent-neon);
-      width: 28px;
-      text-align: center;
+      font-size: 24px;
+      color: var(--neon-cyan);
+    }
+
+    .detail-item span {
+      font-size: 12px;
+      color: var(--text-dim);
     }
 
     .detail-item strong {
       font-weight: 700;
-      color: var(--text-primary);
+      color: white;
+      font-size: 14px;
     }
 
     /* მენიუს ჩანართები */
     .profile-tabs {
       display: flex;
-      border-top: 1px solid var(--panel-border);
-      padding: 8px 4px;
-      gap: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 12px 0;
+      gap: 12px;
     }
 
     .tab-button {
       background: none;
       border: none;
-      padding: 10px 18px;
+      padding: 12px 24px;
       font-size: 14px;
-      font-weight: 700;
-      color: var(--text-muted);
+      font-weight: bold;
+      color: var(--text-dim);
       cursor: pointer;
-      border-radius: 10px;
-      transition: all 0.2s ease;
-    }
-
-    .tab-button:hover {
-      background-color: rgba(255, 255, 255, 0.03);
-      color: var(--text-primary);
+      border-radius: 12px;
     }
 
     .tab-button.active {
-      background-color: rgba(99, 102, 241, 0.1);
-      color: var(--accent-neon);
+      background-color: rgba(6, 182, 212, 0.1);
+      color: var(--neon-cyan);
     }
 
     /* პროფილის ქვედა ნაცრისფერი ზოლი */
     .profile-logout-section {
-      padding: 20px 10px 10px 10px;
-      text-align: center;
+      padding: 24px 0 0 0;
     }
 
     .logout-btn-large {
       width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      padding: 14px;
+      background: linear-gradient(135deg, var(--neon-pink) 0%, #be123c 100%);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       font-weight: bold;
       font-size: 14px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
-      transition: all 0.2s ease;
-    }
-
-    .logout-btn-large:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 15px rgba(239, 68, 68, 0.35);
     }
 
     /* 3. პროფილის რედაქტირების გვერდის სტილები */
     .edit-profile-card {
-      padding: 24px;
+      padding: 30px;
     }
 
     .edit-header {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text-primary);
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--panel-border);
-      padding-bottom: 12px;
-      letter-spacing: -0.5px;
+      font-size: 24px;
+      font-weight: 900;
+      color: white;
+      margin-bottom: 25px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 15px;
     }
 
     .edit-buttons-wrapper {
       display: flex;
       gap: 12px;
-      margin-top: 24px;
+      margin-top: 30px;
     }
 
     .btn-save {
-      background: linear-gradient(135deg, var(--accent-neon) 0%, #818cf8 100%);
+      background: linear-gradient(135deg, var(--neon-indigo) 0%, var(--neon-cyan) 100%);
       color: white;
     }
 
     .btn-cancel {
-      background-color: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--panel-border);
-      color: var(--text-primary);
-    }
-
-    .btn-cancel:hover {
-      background-color: rgba(255, 255, 255, 0.08);
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      color: white;
     }
   </style>
 </head>
@@ -953,7 +887,7 @@
       </div>
 
       <div id="posts-wall">
-        <div style="text-align: center; padding: 20px; color: var(--text-muted);">პოსტები იტვირთება...</div>
+        <div style="text-align: center; padding: 20px; color: var(--text-dim);">პოსტები იტვირთება...</div>
       </div>
     </div>
   </div>
@@ -989,7 +923,7 @@
         </div>
 
         <div class="profile-details-box" id="profile-details-container">
-          <div style="text-align:center; color: var(--text-muted); padding:10px;">დეტალები იტვირთება...</div>
+          <div style="text-align:center; color: var(--text-dim); padding:10px;">დეტალები იტვირთება...</div>
         </div>
 
         <div class="profile-tabs">
@@ -1180,49 +1114,58 @@
       var ageHtml = profileData.age ? `
         <div class="detail-item">
           <span class="icon">🎂</span>
-          <span>ასაკი: <strong>${profileData.age} წლის</strong></span>
+          <span>ასაკი</span>
+          <strong>${profileData.age} წლის</strong>
         </div>` : '';
 
       var jobHtml = profileData.job_title ? `
         <div class="detail-item">
           <span class="icon">💼</span>
-          <span>მუშაობს პოზიციაზე: <strong>${profileData.job_title}</strong></span>
+          <span>სამუშაო</span>
+          <strong>${profileData.job_title}</strong>
         </div>` : `
         <div class="detail-item">
           <span class="icon">💼</span>
-          <span>მუშაობს პოზიციაზე: <strong>დეველოპერი</strong></span>
+          <span>სამუშაო</span>
+          <strong>დეველოპერი</strong>
         </div>`;
 
       var cityHtml = profileData.current_city ? `
         <div class="detail-item">
           <span class="icon">🏠</span>
-          <span>ცხოვრობს ქალაქში: <strong>${profileData.current_city}</strong></span>
+          <span>ქალაქი</span>
+          <strong>${profileData.current_city}</strong>
         </div>` : `
         <div class="detail-item">
           <span class="icon">🏠</span>
-          <span>ცხოვრობს ქალაქში: <strong>თბილისი</strong></span>
+          <span>ქალაქი</span>
+          <strong>თბილისი</strong>
         </div>`;
 
       var countryHtml = profileData.country ? `
         <div class="detail-item">
           <span class="icon">📍</span>
-          <span>წარმოშობით ქვეყნიდან: <strong>${profileData.country}</strong></span>
+          <span>ქვეყანა</span>
+          <strong>${profileData.country}</strong>
         </div>` : `
         <div class="detail-item">
           <span class="icon">📍</span>
-          <span>წარმოშობით ქალაქიდან: <strong>თბილისი</strong></span>
+          <span>ქვეყანა</span>
+          <strong>საქართველო</strong>
         </div>`;
 
       var relHtml = profileData.relationship ? `
         <div class="detail-item">
           <span class="icon">❤️</span>
-          <span>ურთიერთობის სტატუსი: <strong>${profileData.relationship}</strong></span>
+          <span>სტატუსი</span>
+          <strong>${profileData.relationship}</strong>
         </div>` : '';
 
       var eventHtml = profileData.life_events ? `
         <div class="detail-item">
           <span class="icon">✨</span>
-          <span>ცხოვრებისეული მოვლენა: <strong>${profileData.life_events}</strong></span>
+          <span>მოვლენა</span>
+          <strong>${profileData.life_events}</strong>
         </div>` : '';
 
       container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
@@ -1249,7 +1192,7 @@
 
         document.getElementById('profile-action-panel').innerHTML = `
           <button class="btn-add-story">➕ ისტორიაში დამატება</button>
-          <button class="btn-edit-profile" onclick="showEditProfileScreen()">✏️ პროფილის რედაქტირება</button>
+          <button class="btn-edit-profile" onclick="showEditProfileScreen()">✏️ რედაქტირება</button>
           <button class="btn-more-options">•••</button>
         `;
 
@@ -1286,8 +1229,8 @@
         document.getElementById('cover-camera-btn').style.display = "none";
 
         document.getElementById('profile-action-panel').innerHTML = `
-          <button class="btn-add-story">👤 მეგობრობის გაგზავნა</button>
-          <button class="btn-edit-profile" style="background-color: var(--accent-neon); color:white; border: none;">💬 მესიჯის გაგზავნა</button>
+          <button class="btn-add-story" style="background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-indigo) 100%);">👤 მიყევი</button>
+          <button class="btn-edit-profile" style="background-color: var(--neon-pink); border: none;">💬 მიწერე</button>
           <button class="btn-more-options">•••</button>
         `;
 
@@ -1487,7 +1430,7 @@
 
         var posts = res.data;
         if (posts.length === 0) {
-          postsWall.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">კედელი ცარიელია. დაწერე პირველი პოსტი!</div>';
+          postsWall.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-dim);">კედელი ცარიელია. დაწერე პირველი პოსტი!</div>';
           return;
         }
 
