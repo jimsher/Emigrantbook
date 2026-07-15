@@ -148,6 +148,13 @@
       cursor: pointer;
       border: 1px solid #ced0d4;
       text-transform: uppercase;
+      overflow: hidden;
+      object-fit: cover;
+    }
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .feed-container {
@@ -232,7 +239,7 @@
       cursor: pointer;
     }
 
-    /* განახლებული პოსტის ბარათის სტილი Facebook-ის იდენტურად */
+    /* პოსტის ბარათის სტილი */
     .post-card {
       background: #ffffff;
       margin-bottom: 12px;
@@ -258,6 +265,12 @@
       font-size: 16px;
       margin-right: 10px;
       text-transform: uppercase;
+      overflow: hidden;
+    }
+    .post-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .post-author-info {
       display: flex;
@@ -388,6 +401,12 @@
       font-weight: bold;
       font-size: 13px;
       text-transform: uppercase;
+      overflow: hidden;
+    }
+    .comment-box-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .comment-input-container {
       flex: 1;
@@ -456,7 +475,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      margin-top: -60px; /* ავატარი გადმოდის ქავერზე */
+      margin-top: -60px;
     }
     .profile-avatar-holder {
       position: relative;
@@ -474,9 +493,15 @@
       align-items: center;
       font-size: 42px;
       font-weight: bold;
-      border: 4px solid #ffffff; /* თეთრი ჩარჩო */
+      border: 4px solid #ffffff;
       text-transform: uppercase;
       box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .profile-fb-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .avatar-camera-btn {
       position: absolute;
@@ -512,7 +537,7 @@
       color: #65676b;
     }
 
-    /* ღილაკების პანელი (Add to Story, Edit Profile) */
+    /* ღილაკების პანელი */
     .profile-action-row {
       display: flex;
       width: 100%;
@@ -560,7 +585,7 @@
       font-size: 18px;
     }
 
-    /* დეტალების სექცია (Bio / Info) */
+    /* დეტალების სექცია */
     .profile-details-box {
       border-top: 1px solid #e4e6eb;
       padding: 16px;
@@ -585,7 +610,7 @@
       font-weight: 600;
     }
 
-    /* მენიუს ჩანართები (Tabs) */
+    /* მენიუს ჩანართები */
     .profile-tabs {
       display: flex;
       border-top: 1px solid #e4e6eb;
@@ -616,6 +641,8 @@
   </style>
 </head>
 <body>
+
+  <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
 
   <div id="auth-screen">
     <div class="auth-container">
@@ -691,7 +718,7 @@
         <div class="profile-info-wrapper">
           <div class="profile-avatar-holder">
             <div class="profile-fb-avatar" id="profile-big-avatar">?</div>
-            <button class="avatar-camera-btn">📷</button>
+            <button class="avatar-camera-btn" onclick="triggerAvatarUpload()">📷</button>
           </div>
           
           <div class="profile-user-headline">
@@ -746,7 +773,6 @@
     var currentUser = null;
     var userProfile = null;
 
-    // ვიდეოების ავტომატური გაჩერების (დაპაუზების) დამკვირვებელი
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         if (!entry.isIntersecting) {
@@ -801,6 +827,19 @@
       }
     }
 
+    // ავატარის ასახვის დამხმარე დამზღვევი ფუნქცია
+    function renderAvatar(elementId, avatarUrl, name) {
+      var el = document.getElementById(elementId);
+      if (!el) return;
+      
+      if (avatarUrl) {
+        el.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+      } else {
+        var firstLetter = name ? name.charAt(0).toUpperCase() : "?";
+        el.innerText = firstLetter;
+      }
+    }
+
     function checkSession() {
       supabase.auth.getUser().then(function(res) {
         if (res.data && res.data.user) {
@@ -808,14 +847,16 @@
           
           supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
             var finalName = currentUser.email;
+            var avatarUrl = null;
             if (profileRes.data) {
               userProfile = profileRes.data;
               finalName = userProfile.full_name;
+              avatarUrl = userProfile.avatar_url;
             }
             
-            var firstLetter = finalName.charAt(0).toUpperCase();
-            document.getElementById('header-avatar-btn').innerText = firstLetter;
-            document.getElementById('profile-big-avatar').innerText = firstLetter;
+            // ავატარების ინდივიდუალური ასახვა ჰედერში, პროფილში და კომენტარებში
+            renderAvatar('header-avatar-btn', avatarUrl, finalName);
+            renderAvatar('profile-big-avatar', avatarUrl, finalName);
             
             document.getElementById('profile-user-name').innerText = finalName;
             document.getElementById('profile-user-email').innerText = currentUser.email;
@@ -825,6 +866,47 @@
         } else {
           showScreen('auth');
         }
+      });
+    }
+
+    // ავატარის ატვირთვის გამოძახება
+    function triggerAvatarUpload() {
+      document.getElementById('avatar-file-input').click();
+    }
+
+    // პროფილის ახალი სურათის ატვირთვის ფუნქცია
+    function uploadAvatar() {
+      var fileInput = document.getElementById('avatar-file-input');
+      if (fileInput.files.length === 0) return;
+
+      var file = fileInput.files[0];
+      var fileExt = file.name.split('.').pop();
+      var fileName = currentUser.id + "_avatar_" + Date.now() + "." + fileExt;
+
+      alert("სურათი იტვირთება...");
+
+      // 1. ფაილის ატვირთვა Supabase Storage 'avatars' ბაკეტში
+      supabase.storage.from('avatars').upload(fileName, file).then(function(storageRes) {
+        if (storageRes.error) {
+          alert("ავატარის ატვირთვის შეცდომა: " + storageRes.error.message);
+          return;
+        }
+
+        // საჯარო ლინკის აწყობა
+        var avatarPublicUrl = SUPABASE_URL + "/storage/v1/object/public/avatars/" + fileName;
+
+        // 2. profiles ტაბულის განახლება (სვეტში: avatar_url)
+        supabase.from('profiles')
+          .update({ avatar_url: avatarPublicUrl })
+          .eq('id', currentUser.id)
+          .then(function(updateRes) {
+            if (updateRes.error) {
+              alert("პროფილის განახლების შეცდომა: " + updateRes.error.message);
+            } else {
+              alert("პროფილის სურათი წარმატებით განახლდა!");
+              checkSession(); // გვერდის მონაცემების გადატვირთვა
+            }
+          });
       });
     }
 
@@ -906,7 +988,13 @@
     }
 
     function loadPosts() {
-      supabase.from('posts').select('*').order('created_at', { ascending: false }).then(function(res) {
+      // ვკითხულობთ პოსტებს და ავტორების ავატარებს 'profiles' ტაბულიდან Join-ით
+      supabase.from('posts').select(`
+        *,
+        profiles (
+          avatar_url
+        )
+      `).order('created_at', { ascending: false }).then(function(res) {
         var postsWall = document.getElementById('posts-wall');
         postsWall.innerHTML = "";
 
@@ -984,15 +1072,23 @@
       var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
       
+      // მიმდინარე მომხმარებლის სახელი და ავატარი კომენტარებისთვის
       var myName = userProfile ? userProfile.full_name : (currentUser ? currentUser.email : "?");
+      var myAvatarUrl = userProfile ? userProfile.avatar_url : null;
       var myInitial = myName.charAt(0).toUpperCase();
+
+      // პოსტის ავტორის ინდივიდუალური ავატარი
+      var authorAvatarUrl = (post.profiles && post.profiles.avatar_url) ? post.profiles.avatar_url : null;
+      
+      var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar">` : initial;
+      var myCommentAvatar = myAvatarUrl ? `<img src="${myAvatarUrl}" alt="Avatar">` : myInitial;
 
       var mediaHtml = buildCollageHtml(post.media_url);
 
       return `
         <div class="post-card">
           <div class="post-header">
-            <div class="post-avatar">${initial}</div>
+            <div class="post-avatar">${avatarContent}</div>
             <div class="post-author-info">
               <span class="post-author">${post.author_name}</span>
               <span class="post-time">${date}</span>
@@ -1012,7 +1108,7 @@
           </div>
 
           <div class="comment-box-area">
-            <div class="comment-box-avatar">${myInitial}</div>
+            <div class="comment-box-avatar">${myCommentAvatar}</div>
             <div class="comment-input-container">
               <input type="text" id="comment-field-${post.id}" placeholder="დაწერე კომენტარი..." onkeypress="handleCommentKeyPress(event, '${post.id}')">
               <button class="comment-submit-button" onclick="submitComment('${post.id}')">გაგზავნა</button>
