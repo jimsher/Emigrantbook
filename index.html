@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="ka">
 <head>
-
-<script>
-  // ეს კოდი დაიჭერს ნებისმიერ შეცდომას და ეკრანზე გამოგიტანს
-  window.onerror = function(message, source, lineno, colno, error) {
-    alert("შეცდომაა!: " + message + "\nფაილი: " + source + "\nხაზი: " + lineno);
-    return false;
-  };
-</script>
-  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Emigrantbook - ავტორიზაცია</title>
   
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      alert("შეცდომაა!: " + message + "\nფაილი: " + source + "\nხაზი: " + lineno);
+      return false;
+    };
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
@@ -146,7 +144,6 @@
 
     let isLoginMode = true;
 
-    // ფუნქცია, რომელიც გადართავს შესვლასა და რეგისტრაციას შორის
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       const subtitle = document.getElementById('auth-subtitle');
@@ -161,16 +158,15 @@
         subtitle.innerText = "შედი შენს პროფილში";
         btn.innerText = "შესვლა";
         toggleLink.innerText = "არ გაქვს ანგარიში? დარეგისტრირდი";
-        nameGroup.style.display = 'none'; // ვმალავთ სახელის ველს
+        nameGroup.style.display = 'none';
       } else {
         subtitle.innerText = "შექმენი ახალი ანგარიში";
         btn.innerText = "რეგისტრაცია";
         toggleLink.innerText = "უკვე გაქვს ანგარიში? შედი";
-        nameGroup.style.display = 'block'; // ვაჩენთ სახელის ველს
+        nameGroup.style.display = 'block';
       }
     }
 
-    // ავტორიზაციის და რეგისტრაციის დამუშავება
     async function handleAuth() {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -179,7 +175,6 @@
 
       errorDiv.style.display = 'none';
 
-      // შემოწმება, რომ ველები ცარიელი არ იყოს
       if (!email || !password || (!isLoginMode && !fullname)) {
         errorDiv.innerText = "გთხოვთ შეავსოთ ყველა ველი!";
         errorDiv.style.display = 'block';
@@ -187,7 +182,6 @@
       }
 
       if (isLoginMode) {
-        // --- შესვლა ---
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email,
           password: password,
@@ -201,7 +195,6 @@
           window.location.href = "home.html"; 
         }
       } else {
-        // --- რეგისტრაცია ---
         const { data, error } = await supabase.auth.signUp({
           email: email,
           password: password,
@@ -213,7 +206,6 @@
           return;
         }
 
-        // თუ მომხმარებელი წარმატებით შეიქმნა, სახელს ვწერთ 'profiles' ცხრილში
         if (data && data.user) {
           const { error: profileError } = await supabase
             .from('profiles')
