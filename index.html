@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Emigrantbook - ავტორიზაცია</title>
+  <title>Emigrantbook</title>
   
   <script>
-    // შეცდომის დამჭერი ალერტი, რომელიც აპლიკაციაშივე ამოაგდებს პრობლემას
+    // შეცდომის დამჭერი
     window.onerror = function(message, source, lineno, colno, error) {
       alert("აპლიკაციის შეცდომა!: " + message + "\nხაზი: " + lineno);
       return false;
@@ -20,9 +20,17 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
+      background-color: #f0f2f5;
+      color: #1c1e21;
+    }
+
+    /* --------------------------------------
+       1. ავტორიზაციის ეკრანის სტილები
+    -------------------------------------- */
+    #auth-screen {
       background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
       height: 100vh;
       display: flex;
@@ -106,35 +114,219 @@
       margin-top: 10px;
       display: none;
     }
+
+    /* --------------------------------------
+       2. მთავარი კედლის (Home) სტილები
+    -------------------------------------- */
+    #home-screen {
+      display: none; /* თავიდან დამალულია */
+    }
+    .header {
+      background-color: #ffffff;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header .logo-text {
+      font-size: 22px;
+      font-weight: bold;
+      color: #1877f2;
+      letter-spacing: -0.5px;
+    }
+    .user-info {
+      font-size: 14px;
+      font-weight: 600;
+      color: #050505;
+    }
+    .logout-btn {
+      background: none;
+      border: none;
+      color: #d9534f;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .feed-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 8px;
+    }
+    .create-post-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .create-post-input {
+      width: 100%;
+      height: 60px;
+      border: none;
+      resize: none;
+      outline: none;
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+    .create-post-media {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #e4e6eb;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      outline: none;
+    }
+    .create-post-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #e4e6eb;
+      padding-top: 10px;
+    }
+    .publish-btn {
+      background-color: #1877f2;
+      color: #ffffff;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .post-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .post-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    .post-author-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .post-author {
+      font-weight: bold;
+      font-size: 15px;
+      color: #050505;
+    }
+    .post-time {
+      font-size: 12px;
+      color: #65676b;
+    }
+    .post-content {
+      font-size: 15px;
+      line-height: 1.4;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+    }
+    .post-media {
+      width: 100%;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      max-height: 400px;
+      object-fit: cover;
+    }
+    .post-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #65676b;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .post-actions {
+      display: flex;
+      justify-content: space-around;
+      padding-top: 8px;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      color: #65676b;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <div class="auth-container">
-    <div class="logo">Emigrantbook</div>
-    <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
+  <div id="auth-screen">
+    <div class="auth-container">
+      <div class="logo">Emigrantbook</div>
+      <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
 
-    <div class="input-group" id="name-group" style="display: none;">
-      <label>სახელი და გვარი</label>
-      <input type="text" id="fullname" placeholder="გიორგი ბერიძე">
+      <div class="input-group" id="name-group" style="display: none;">
+        <label>სახელი და გვარი</label>
+        <input type="text" id="fullname" placeholder="გიორგი ბერიძე">
+      </div>
+
+      <div class="input-group">
+        <label>ელ-ფოსტა</label>
+        <input type="email" id="email" placeholder="example@mail.com">
+      </div>
+
+      <div class="input-group">
+        <label>პაროლი</label>
+        <input type="password" id="password" placeholder="******">
+      </div>
+
+      <div class="error-msg" id="error-message"></div>
+
+      <button class="btn" id="auth-btn" onclick="handleAuth()">შესვლა</button>
+
+      <div class="toggle-text">
+        <span id="toggle-link" onclick="toggleAuthMode()">არ გაქვს ანგარიში? დარეგისტრირდი</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="home-screen">
+    <div class="header">
+      <div class="logo-text">Emigrantbook</div>
+      <div>
+        <span class="user-info" id="current-user-name">იტვირთება...</span>
+        <button class="logout-btn" onclick="logout()" style="margin-left: 10px;">გამოსვლა</button>
+      </div>
     </div>
 
-    <div class="input-group">
-      <label>ელ-ფოსტა</label>
-      <input type="email" id="email" placeholder="example@mail.com">
-    </div>
+    <div class="feed-container">
+      <div class="create-post-card">
+        <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
+        <input type="text" class="create-post-media" id="post-media-input" placeholder="ჩასვით სურათის ან ვიდეოს ლინკი (არასავალდებულო)">
+        <div class="create-post-actions">
+          <span style="font-size: 12px; color: #65676b;">მედიის ატვირთვა</span>
+          <button class="publish-btn" onclick="createPost()">გამოქვეყნება</button>
+        </div>
+      </div>
 
-    <div class="input-group">
-      <label>პაროლი</label>
-      <input type="password" id="password" placeholder="******">
-    </div>
-
-    <div class="error-msg" id="error-message"></div>
-
-    <button class="btn" id="auth-btn" onclick="handleAuth()">შესვლა</button>
-
-    <div class="toggle-text">
-      <span id="toggle-link" onclick="toggleAuthMode()">არ გაქვს ანგარიში? დარეგისტრირდი</span>
+      <div id="posts-wall">
+        <div style="text-align: center; padding: 20px; color: #65676b;">პოსტები იტვირთება...</div>
+      </div>
     </div>
   </div>
 
@@ -142,21 +334,50 @@
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
     var supabase;
+    var currentUser = null;
+    var userProfile = null;
 
-    // WebView თავსებადი კავშირის შექმნა
+    // Supabase კავშირის შექმნა
     try {
       if (window.supabase && window.supabase.createClient) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log("Supabase დაკავშირდა აპლიკაციაში! ✅");
+        checkSession(); // ვამოწმებთ, უკვე შესულია თუ არა
       } else {
-        alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა აპლიკაციაში.");
+        alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა.");
       }
     } catch (e) {
-      alert("კავშირის შეცდომა აპლიკაციაში: " + e.message);
+      alert("კავშირის შეცდომა: " + e.message);
     }
 
-    var isLoginMode = true;
+    // ვამოწმებთ სესიას საიტის გახსნისას
+    function checkSession() {
+      supabase.auth.getUser().then(function(res) {
+        if (res.data && res.data.user) {
+          currentUser = res.data.user;
+          // თუ შესულია, ვმალავთ ავტორიზაციას, ვაჩენთ კედელს
+          document.getElementById('auth-screen').style.display = 'none';
+          document.getElementById('home-screen').style.display = 'block';
+          
+          // მომხმარებლის სახელის წაკითხვა
+          supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
+            if (profileRes.data) {
+              userProfile = profileRes.data;
+              document.getElementById('current-user-name').innerText = userProfile.full_name;
+            } else {
+              document.getElementById('current-user-name').innerText = currentUser.email;
+            }
+            loadPosts();
+          });
+        } else {
+          // თუ შესული არ არის, ვაჩენთ ავტორიზაციას
+          document.getElementById('auth-screen').style.display = 'flex';
+          document.getElementById('home-screen').style.display = 'none';
+        }
+      });
+    }
 
+    // ავტორიზაციის რეჟიმების გადართვა
+    var isLoginMode = true;
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       var subtitle = document.getElementById('auth-subtitle');
@@ -180,6 +401,7 @@
       }
     }
 
+    // შესვლა და რეგისტრაცია
     function handleAuth() {
       var email = document.getElementById('email').value.trim();
       var password = document.getElementById('password').value.trim();
@@ -188,11 +410,6 @@
 
       errorDiv.style.display = 'none';
 
-      if (!supabase) {
-        alert("კავშირი არ არის! აპლიკაცია ჯერ კიდევ იტვირთება.");
-        return;
-      }
-
       if (!email || !password || (!isLoginMode && !fullname)) {
         errorDiv.innerText = "გთხოვთ შეავსოთ ყველა ველი!";
         errorDiv.style.display = 'block';
@@ -200,7 +417,6 @@
       }
 
       if (isLoginMode) {
-        // LOGIN (შესვლა)
         supabase.auth.signInWithPassword({
           email: email,
           password: password
@@ -210,11 +426,10 @@
             errorDiv.style.display = 'block';
           } else {
             alert("წარმატებით შეხვედი!");
-            window.location.href = "home.html";
+            checkSession(); // გადავრთოთ ეკრანი
           }
         });
       } else {
-        // REGISTER (რეგისტრაცია)
         supabase.auth.signUp({
           email: email,
           password: password
@@ -232,16 +447,118 @@
                 full_name: fullname,
                 updated_at: new Date()
               }
-            ]).then(function(profileResult) {
-              if (profileResult.error) {
-                console.error("პროფილის შექმნის შეცდომა:", profileResult.error.message);
-              }
+            ]).then(function(pRes) {
+              alert("რეგისტრაცია წარმატებულია! შეამოწმეთ ელ-ფოსტა აქტივაციისთვის.");
             });
           }
-
-          alert("რეგისტრაცია წარმატებით დასრულდა! გთხოვთ შეამოწმოთ თქვენი ელ-ფოსტა აქტივაციისთვის.");
         });
       }
+    }
+
+    // პოსტების ჩამოტვირთვა
+    function loadPosts() {
+      supabase.from('posts').select('*').order('created_at', { ascending: false }).then(function(res) {
+        var postsWall = document.getElementById('posts-wall');
+        postsWall.innerHTML = "";
+
+        if (res.error) {
+          postsWall.innerHTML = '<div style="color:red; text-align:center;">პოსტები ვერ ჩაიტვირთა.</div>';
+          return;
+        }
+
+        var posts = res.data;
+        if (posts.length === 0) {
+          postsWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #65676b;">კედელი ცარიელია. დაწერე პირველი პოსტი!</div>';
+          return;
+        }
+
+        posts.forEach(function(post) {
+          postsWall.innerHTML += createPostCardHtml(post);
+        });
+      });
+    }
+
+    // პოსტის ვიზუალი
+    function createPostCardHtml(post) {
+      var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
+      var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+
+      var mediaHtml = "";
+      if (post.media_url) {
+        if (post.media_url.includes('.mp4') || post.media_url.includes('video')) {
+          mediaHtml = '<video class="post-media" src="' + post.media_url + '" controls></video>';
+        } else {
+          mediaHtml = '<img class="post-media" src="' + post.media_url + '" alt="Media">';
+        }
+      }
+
+      return `
+        <div class="post-card">
+          <div class="post-header">
+            <div class="post-avatar">${initial}</div>
+            <div class="post-author-info">
+              <span class="post-author">${post.author_name}</span>
+              <span class="post-time">${date}</span>
+            </div>
+          </div>
+          <div class="post-content">${post.content || ""}</div>
+          ${mediaHtml}
+          <div class="post-stats">
+            <span>👍 ${post.likes_count || 0} ლაიქი</span>
+            <span>0 კომენტარი</span>
+          </div>
+          <div class="post-actions">
+            <button class="action-btn" onclick="likePost('${post.id}', ${post.likes_count})">👍 მოწონება</button>
+            <button class="action-btn" onclick="alert('კომენტარები მალე დაემატება!')">💬 კომენტარი</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // პოსტის შექმნა
+    function createPost() {
+      var text = document.getElementById('post-text-input').value.trim();
+      var media = document.getElementById('post-media-input').value.trim();
+
+      if (!text && !media) {
+        alert("შეავსეთ პოსტის ველი!");
+        return;
+      }
+
+      var authorName = userProfile ? userProfile.full_name : currentUser.email;
+      var mediaType = (media.includes('.mp4') || media.includes('video')) ? "video" : "image";
+
+      supabase.from('posts').insert([
+        {
+          user_id: currentUser.id,
+          author_name: authorName,
+          content: text,
+          media_url: media ? media : null,
+          media_type: media ? mediaType : null
+        }
+      ]).then(function(res) {
+        document.getElementById('post-text-input').value = "";
+        document.getElementById('post-media-input').value = "";
+        loadPosts();
+      });
+    }
+
+    // ლაიქი
+    function likePost(postId, currentLikes) {
+      supabase.from('posts')
+        .update({ likes_count: currentLikes + 1 })
+        .eq('id', postId)
+        .then(function() {
+          loadPosts();
+        });
+    }
+
+    // სისტემიდან გამოსვლა
+    function logout() {
+      supabase.auth.signOut().then(function() {
+        alert("გახვედით სისტემიდან!");
+        checkSession();
+      });
     }
   </script>
 </body>
