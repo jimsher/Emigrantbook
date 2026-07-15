@@ -1,8 +1,8 @@
 // ==========================================
 // 1. SUPABASE-ის კონფიგურაცია და ინიციალიზაცია
 // ==========================================
-const SUPABASE_URL = "https://your-supabase-project.supabase.co"; // ჩაწერე შენი პროექტის URL
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // ჩაწერე შენი Anon Key
+const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; // ჩაწერე შენი პროექტის URL
+const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; // ჩაწერე შენი Anon Key
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
