@@ -1,21 +1,13 @@
-const firebaseConfig = { 
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-  authDomain: "emigrantbook.firebaseapp.com", 
-  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-  projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", 
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
-};
+// ==========================================
+// 1. SUPABASE-ის კონფიგურაცია და ინიციალიზაცია
+// ==========================================
+const SUPABASE_URL = "https://your-supabase-project.supabase.co"; // ჩაწერე შენი პროექტის URL
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // ჩაწერე შენი Anon Key
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let audioCtx, audioSource, audioDest;
 
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-const db = firebase.database();
-const auth = firebase.auth();
-const storage = firebase.storage(); 
 const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
 
 if ('serviceWorker' in navigator) {
@@ -26,6 +18,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// ლოკალური მდგომარეობის ცვლადები
 let myName = "User";
 let myPhoto = "";
 let myAkho = 0;
@@ -36,18 +29,33 @@ let currentAdmTarget = null;
 let currentUserData = null;
 let typingTimeout = null;
 
-function updatePresence() {
-    const user = auth.currentUser;
+// ==========================================
+// 2. მომხმარებლის სტატუსის მართვა (Presence)
+// ==========================================
+async function updatePresence() {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const onlineRef = db.ref(`.info/connected`);
-    const userPresenceRef = db.ref(`users/${user.uid}/presence`);
-    
-    onlineRef.on('value', snap => {
-        if (snap.val() === false) return;
-        userPresenceRef.onDisconnect().set(firebase.database.ServerValue.TIMESTAMP).then(() => {
-            userPresenceRef.set('online');
+
+    // Supabase Realtime Presence-ის გამოყენება სტატუსისთვის
+    const channel = supabase.channel('online-users');
+    channel
+        .on('presence', { event: 'sync' }, () => {
+            console.log('Presence synced');
+        })
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await channel.track({
+                    user_id: user.id,
+                    online_at: new Date().toISOString(),
+                });
+                
+                // ასევე ვანახლებთ ბაზაში ბოლო აქტივობას
+                await supabase
+                    .from('users')
+                    .update({ presence: 'online' })
+                    .eq('id', user.id);
+            }
         });
-    });
 }
 
 function formatTimeShort(timestamp) {
@@ -100,73 +108,121 @@ function runSuccessAndFinish() {
     setTimeout(() => finishOnboarding(), 1800);
 }
 
-function finishOnboarding() {
-    const user = auth.currentUser;
-    if (user) db.ref('users/' + user.uid).update({ hasSeenRules: true });
+async function finishOnboarding() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        await supabase
+            .from('users')
+            .update({ hasSeenRules: true })
+            .eq('id', user.id);
+    }
     document.getElementById('onboardingUI').style.display = 'none';
 }
 
-auth.onAuthStateChanged(user => {
-  applyLanguage();
-  if (user) {
-    setTimeout(() => {
-        askInitialPermissions(); 
-    }, 1500);
+// ==========================================
+// 3. ავტორიზაციის და სესიის მსმენელი (Auth State)
+// ==========================================
+supabase.auth.onAuthStateChange(async (event, session) => {
+    applyLanguage();
+    const user = session?.user;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-    const packAmount = urlParams.get('pack');
+    if (user) {
+        setTimeout(() => {
+            askInitialPermissions(); 
+        }, 1500);
 
-    if (sessionId && packAmount) {
-        const amountToAdd = parseFloat(packAmount);
-        db.ref(`payments_processed/${sessionId}`).once('value', snap => {
-            if (!snap.exists()) {
-                db.ref(`users/${user.uid}/akho`).transaction(current => {
-                    return (current || 0) + amountToAdd;
-                }).then(() => {
-                    db.ref(`payments_processed/${sessionId}`).set({
-                        uid: user.uid,
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        const packAmount = urlParams.get('pack');
+
+        if (sessionId && packAmount) {
+            const amountToAdd = parseFloat(packAmount);
+            
+            // ვამოწმებთ, დამუშავებულია თუ არა გადახდა
+            const { data: payProcessed } = await supabase
+                .from('payments_processed')
+                .select('*')
+                .eq('session_id', sessionId)
+                .single();
+
+            if (!payProcessed) {
+                // ვუმატებთ AKHO-ს და ვინახავთ ტრანზაქციას
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('akho')
+                    .eq('id', user.id)
+                    .single();
+
+                const currentAkho = userData?.akho || 0;
+                await supabase
+                    .from('users')
+                    .update({ akho: currentAkho + amountToAdd })
+                    .eq('id', user.id);
+
+                await supabase
+                    .from('payments_processed')
+                    .insert([{
+                        session_id: sessionId,
+                        uid: user.id,
                         amount: amountToAdd,
-                        ts: Date.now()
-                    });
-                    addToLog('Stripe Purchase', amountToAdd);
-                    if (typeof showCustomAlert === "function") {
-                        showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                    } else {
-                        alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
-                    }
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                });
+                        ts: new Date().toISOString()
+                    }]);
+
+                addToLog('Stripe Purchase', amountToAdd);
+                
+                if (typeof showCustomAlert === "function") {
+                    showCustomAlert("წარმატება", `თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                } else {
+                    alert(`წარმატება: თქვენ დაგერიცხათ ${amountToAdd} AKHO! ✅`);
+                }
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
-        });
-    }
-    
-    setTimeout(() => {
-      console.log("ვცდილობ ჩაწერას...");
-      db.ref('users/' + user.uid + '/test').set("მუშაობს");
-      saveMessagingToken(user);
-    }, 2000);
-
-    db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
-        const euro = snap.val() || 0;
-        const euroEl = document.getElementById('euroBalanceDisplay');
-        if (euroEl) {
-            euroEl.innerText = euro.toFixed(2) + " €";
         }
-    });
+        
+        setTimeout(async () => {
+            console.log("ვცდილობ ჩაწერას...");
+            await supabase
+                .from('users')
+                .update({ test: "მუშაობს" })
+                .eq('id', user.id);
+            saveMessagingToken(user);
+        }, 2000);
 
-    updatePresence();
-    listenToGlobalMessages();
-    startNotificationListener();
-    checkDailyBonus();
-    startGlobalUnreadCounter();
-    listenForIncomingCalls(user);
-    startWallNotificationListener();
-    
-    setTimeout(function() {
-        const user = firebase.auth().currentUser;
-        if (user) {
-            const tokenKey = 'fcm_token_sent_' + user.uid;
+        // ევრო ბალანსის რეალურ დროში მოსმენა
+        supabase
+            .channel('schema-db-changes')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
+                const euro = payload.new.euro_balance || 0;
+                const euroEl = document.getElementById('euroBalanceDisplay');
+                if (euroEl) {
+                    euroEl.innerText = euro.toFixed(2) + " €";
+                }
+            })
+            .subscribe();
+
+        // პირველადი წამოღება ევრო ბალანსის
+        const { data: initialUser } = await supabase
+            .from('users')
+            .select('euro_balance')
+            .eq('id', user.id)
+            .single();
+            
+        const euroEl = document.getElementById('euroBalanceDisplay');
+        if (euroEl && initialUser) {
+            euroEl.innerText = (initialUser.euro_balance || 0).toFixed(2) + " €";
+        }
+
+        updatePresence();
+        listenToGlobalMessages();
+        startNotificationListener();
+        checkDailyBonus();
+        startGlobalUnreadCounter();
+        listenForIncomingCalls(user);
+        startWallNotificationListener();
+        
+        // Push შეტყობინების ტოკენი
+        setTimeout(function() {
+            const tokenKey = 'fcm_token_sent_' + user.id;
             if (localStorage.getItem(tokenKey)) return; 
 
             try {
@@ -175,9 +231,12 @@ auth.onAuthStateChanged(user => {
                     .then(() => messaging.getToken({ 
                         vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk' 
                     }))
-                    .then((token) => {
+                    .then(async (token) => {
                         if (token) {
-                            db.ref('users/' + user.uid + '/fcmToken').set(token);
+                            await supabase
+                                .from('users')
+                                .update({ fcmToken: token })
+                                .eq('id', user.id);
                             showTestNotification(); 
                             localStorage.setItem(tokenKey, 'true'); 
                         }
@@ -186,58 +245,83 @@ auth.onAuthStateChanged(user => {
             } catch (e) {
                 console.log("Messaging skip");
             }
-        }
-    }, 3000);
+        }, 3000);
 
-    let currentIncomingCall = null;
-    db.ref(`video_calls/${user.uid}`).on('value', snap => {
-        const call = snap.val();
-        if (call && call.status === 'calling' && (Date.now() - call.ts < 60000)) {
-            currentIncomingCall = call; 
-            document.getElementById('callerNameDisplay').innerText = call.callerName;
-            document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
-            const modal = document.getElementById('incomingCallModal');
-            modal.style.display = 'flex';
-        } else {
-            document.getElementById('incomingCallModal').style.display = 'none';
-        }
-    });
+        // ვიდეო ზარების რეალურ დროში მოსმენა
+        supabase
+            .channel(`video_calls_${user.id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'video_calls', filter: `receiver_uid=eq.${user.id}` }, payload => {
+                const call = payload.new;
+                if (call && call.status === 'calling' && (Date.now() - new Date(call.ts).getTime() < 60000)) {
+                    currentIncomingCall = call; 
+                    document.getElementById('callerNameDisplay').innerText = call.callerName;
+                    document.getElementById('callerAva').src = call.callerPhoto || 'token-avatar.png';
+                    const modal = document.getElementById('incomingCallModal');
+                    modal.style.display = 'flex';
+                } else {
+                    document.getElementById('incomingCallModal').style.display = 'none';
+                }
+            })
+            .subscribe();
 
-    document.getElementById('authUI').style.display = 'none';
-    db.ref('users/' + user.uid).on('value', snap => {
-        const d = snap.val();
-        if(d) {
-            currentUserData = d;
-            if(d.isBanned) {
-                document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
-                return;
-            }
-            myName = d.name || "User";
-            myPhoto = d.photo || "token-avatar.png";
-            myAkho = d.akho || 0;
-            document.getElementById('userAkho').innerText = myAkho.toFixed(2);
-            document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
-            document.getElementById('bottomNavAva').src = myPhoto;
-            if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
-            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
-          
-            updateCashoutUI();
-            loadActivityLog();
-        }
-    });
-    renderTokenFeed();
-    loadDiscoveryUsers();
-    listenToRequests();
-  } else {
-    document.getElementById('authUI').style.display = 'flex';
-    document.getElementById('main-feed').innerHTML = "";
-  }
+        document.getElementById('authUI').style.display = 'none';
+
+        // მომხმარებლის პროფილის მონაცემების მუდმივი სინქრონიზაცია
+        supabase
+            .channel(`user_profile_${user.id}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${user.id}` }, payload => {
+                const d = payload.new;
+                handleProfileDataUpdate(d);
+            })
+            .subscribe();
+
+        // პირველადი წაკითხვა პროფილის
+        const { data: myProf } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+        if (myProf) handleProfileDataUpdate(myProf);
+
+        renderTokenFeed();
+        loadDiscoveryUsers();
+        listenToRequests();
+    } else {
+        document.getElementById('authUI').style.display = 'flex';
+        document.getElementById('main-feed').innerHTML = "";
+    }
 });
 
-function acceptCall() {
+function handleProfileDataUpdate(d) {
+    currentUserData = d;
+    if(d.isBanned) {
+        document.body.innerHTML = '<div style="background:#000; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:sans-serif; text-align:center; padding:20px;"><i class="fas fa-gavel" style="font-size:80px; color:#ff4d4d; margin-bottom:20px;"></i><h1>Banned / დაბლოკილია</h1></div>';
+        return;
+    }
+    myName = d.name || "User";
+    myPhoto = d.photo || "token-avatar.png";
+    myAkho = d.akho || 0;
+    document.getElementById('userAkho').innerText = myAkho.toFixed(2);
+    document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
+    document.getElementById('bottomNavAva').src = myPhoto;
+    if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
+    if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
+    
+    updateCashoutUI();
+    loadActivityLog();
+}
+
+// ==========================================
+// 4. ვიდეო ზარები და გატანა
+// ==========================================
+async function acceptCall() {
     if (currentIncomingCall) {
         window.currentChatId = currentIncomingCall.callerUid; 
-        db.ref(`video_calls/${auth.currentUser.uid}`).update({ status: 'accepted' });
+        await supabase
+            .from('video_calls')
+            .update({ status: 'accepted' })
+            .eq('id', currentIncomingCall.id);
+
         document.getElementById('incomingCallModal').style.display = 'none';
         document.getElementById('videoCallUI').style.display = 'flex';
         if (typeof startVideoCall === "function") {
@@ -246,8 +330,13 @@ function acceptCall() {
     }
 }
 
-function declineCall() {
-    db.ref(`video_calls/${auth.currentUser.uid}`).remove();
+async function declineCall() {
+    if (currentIncomingCall) {
+        await supabase
+            .from('video_calls')
+            .delete()
+            .eq('id', currentIncomingCall.id);
+    }
     document.getElementById('incomingCallModal').style.display = 'none';
 }
 
@@ -266,29 +355,39 @@ function updateCashoutUI() {
     }
 }
 
-function submitWithdraw() {
+async function submitWithdraw() {
     const iban = document.getElementById('ibanInput').value;
     if(!iban || iban.length < 10) return alert("IBAN / PayPal Error");
     
     if(confirm(`Confirm ${(myAkho/10).toFixed(2)} €?`)) {
-        const reqRef = db.ref('withdrawal_requests').push();
-        reqRef.set({
-            uid: auth.currentUser.uid,
-            name: myName,
-            amountEur: (myAkho/10).toFixed(2),
-            amountAkho: myAkho,
-            iban: iban,
-            status: 'pending',
-            ts: Date.now()
-        }).then(() => {
-            db.ref(`users/${auth.currentUser.uid}`).update({ akho: 0 });
-            addToLog('Cashout Request', -myAkho);
-            alert(currentLang === 'ka' ? "მოთხოვნა გაგზავნილია!" : "Request sent!");
-            document.getElementById('walletUI').style.display = 'none';
-        });
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        await supabase
+            .from('withdrawal_requests')
+            .insert([{
+                uid: user.id,
+                name: myName,
+                amountEur: (myAkho/10).toFixed(2),
+                amountAkho: myAkho,
+                iban: iban,
+                status: 'pending',
+                ts: new Date().toISOString()
+            }]);
+
+        await supabase
+            .from('users')
+            .update({ akho: 0 })
+            .eq('id', user.id);
+
+        addToLog('Cashout Request', -myAkho);
+        alert(currentLang === 'ka' ? "მოთხოვნა გაგზავნილია!" : "Request sent!");
+        document.getElementById('walletUI').style.display = 'none';
     }
 }
 
+// ==========================================
+// 5. ადმინისტრირების პანელი
+// ==========================================
 function openAdminUI() {
     toggleSideMenu(false);
     document.getElementById('adminUI').style.display = 'flex';
@@ -296,21 +395,24 @@ function openAdminUI() {
     renderAdminOrders();
 }
 
-function adminSearchUsers(q) {
+async function adminSearchUsers(q) {
     const list = document.getElementById('admUserList');
     if(!q || q.length < 2) { list.innerHTML = ""; return; }
-    db.ref('users').once('value', snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        Object.entries(data).forEach(([uid, u]) => {
-            if(u.name && u.name.toLowerCase().includes(q.toLowerCase())) {
-                const div = document.createElement('div');
-                div.style = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #222;";
-                div.innerHTML = `<span style="color:white; font-size:14px;">${u.name}</span><button class="profile-btn btn-outline" style="padding:5px 10px; font-size:12px;" onclick="selectAdmTarget('${uid}', '${u.name}')">Manage</button>`;
-                list.appendChild(div);
-            }
+
+    const { data: users } = await supabase
+        .from('users')
+        .select('id, name')
+        .ilike('name', `%${q}%`);
+
+    list.innerHTML = "";
+    if (users) {
+        users.forEach(u => {
+            const div = document.createElement('div');
+            div.style = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #222;";
+            div.innerHTML = `<span style="color:white; font-size:14px;">${u.name}</span><button class="profile-btn btn-outline" style="padding:5px 10px; font-size:12px;" onclick="selectAdmTarget('${u.id}', '${u.name}')">Manage</button>`;
+            list.appendChild(div);
         });
-    });
+    }
 }
 
 function selectAdmTarget(uid, name) {
@@ -319,67 +421,93 @@ function selectAdmTarget(uid, name) {
     document.getElementById('admTargetName').innerText = "Manage: " + name;
 }
 
-function adminAction(type) {
+async function adminAction(type) {
     if(!currentAdmTarget) return;
     if(type === 'warning') {
         const msg = prompt("Warning message:");
-        if(msg) db.ref(`notifications/${currentAdmTarget}`).push({ text: "⚠️ Admin: " + msg, ts: Date.now(), fromPhoto: "https://emigrantbook.com/1000084015-removebg-preview.png" });
+        if(msg) {
+            await supabase
+                .from('notifications')
+                .insert([{
+                    uid: currentAdmTarget,
+                    text: "⚠️ Admin: " + msg,
+                    ts: new Date().toISOString(),
+                    fromPhoto: "https://emigrantbook.com/1000084015-removebg-preview.png"
+                }]);
+        }
     } else if(type === 'ban') {
-        if(confirm("Ban user?")) db.ref(`users/${currentAdmTarget}`).update({ isBanned: true });
+        if(confirm("Ban user?")) await supabase.from('users').update({ isBanned: true }).eq('id', currentAdmTarget);
     } else if(type === 'unban') {
-        if(confirm("Unban user?")) db.ref(`users/${currentAdmTarget}`).update({ isBanned: false });
+        if(confirm("Unban user?")) await supabase.from('users').update({ isBanned: false }).eq('id', currentAdmTarget);
     } else if(type === 'addAkho') {
         const amt = prompt("AKHO amount:");
-        if(amt) db.ref(`users/${currentAdmTarget}/akho`).transaction(c => (c || 0) + parseFloat(amt));
+        if(amt) {
+            const { data } = await supabase.from('users').select('akho').eq('id', currentAdmTarget).single();
+            await supabase.from('users').update({ akho: (data?.akho || 0) + parseFloat(amt) }).eq('id', currentAdmTarget);
+        }
     } else if(type === 'resetAkho') {
-        if(confirm("Reset balance?")) db.ref(`users/${currentAdmTarget}`).update({ akho: 0 });
+        if(confirm("Reset balance?")) await supabase.from('users').update({ akho: 0 }).eq('id', currentAdmTarget);
     } else if(type === 'delete') {
         if(confirm("Delete account permanently?")) {
-            db.ref(`users/${currentAdmTarget}`).remove();
+            await supabase.from('users').delete().eq('id', currentAdmTarget);
             document.getElementById('admUserActions').style.display = 'none';
         }
     }
     alert("Done!");
 }
 
-function loadAdminRequests() {
+async function loadAdminRequests() {
     const list = document.getElementById('adminReqList');
-    db.ref('withdrawal_requests').on('value', snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        if(!data) { list.innerHTML = "<p style='color:gray;'>No requests</p>"; return; }
-        Object.entries(data).forEach(([id, req]) => {
-            if(req.status === 'pending') {
-                list.innerHTML += `
-                <div class="admin-req-card">
-                <b>User: ${req.name}</b>
-                <span>Amt: ${req.amountEur} € (${req.amountAkho} AKHO)</span>
-                <span>IBAN: ${req.iban}</span>
-                <div style="display:flex; gap:10px;">
-                <button class="withdraw-btn" style="background:var(--green);" onclick="approveReq('${id}')">Approve</button>
-                <button class="withdraw-btn" style="background:var(--red);" onclick="declineReq('${id}', '${req.uid}', ${req.amountAkho})">Decline</button>
-                </div>
-                </div>`;
-            }
-        });
+    
+    const { data: requests } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('status', 'pending');
+
+    list.innerHTML = "";
+    if(!requests || requests.length === 0) { 
+        list.innerHTML = "<p style='color:gray;'>No requests</p>"; 
+        return; 
+    }
+
+    requests.forEach(req => {
+        list.innerHTML += `
+        <div class="admin-req-card">
+        <b>User: ${req.name}</b>
+        <span>Amt: ${req.amountEur} € (${req.amountAkho} AKHO)</span>
+        <span>IBAN: ${req.iban}</span>
+        <div style="display:flex; gap:10px;">
+        <button class="withdraw-btn" style="background:var(--green);" onclick="approveReq('${req.id}')">Approve</button>
+        <button class="withdraw-btn" style="background:var(--red);" onclick="declineReq('${req.id}', '${req.uid}', ${req.amountAkho})">Decline</button>
+        </div>
+        </div>`;
     });
 }
 
-function approveReq(id) {
+async function approveReq(id) {
     if(confirm("Paid?")) {
-        db.ref(`withdrawal_requests/${id}`).update({ status: 'approved' });
+        await supabase
+            .from('withdrawal_requests')
+            .update({ status: 'approved' })
+            .eq('id', id);
         alert("Approved!");
+        loadAdminRequests();
     }
 }
 
-function declineReq(id, uid, amount) {
+async function declineReq(id, uid, amount) {
     if(confirm("Decline? Coins will return.")) {
-        db.ref(`users/${uid}/akho`).transaction(current => (current || 0) + amount);
-        db.ref(`withdrawal_requests/${id}`).update({ status: 'declined' });
+        const { data } = await supabase.from('users').select('akho').eq('id', uid).single();
+        await supabase.from('users').update({ akho: (data?.akho || 0) + amount }).eq('id', uid);
+        await supabase.from('withdrawal_requests').update({ status: 'declined' }).eq('id', id);
         alert("Declined.");
+        loadAdminRequests();
     }
 }
 
+// ==========================================
+// 6. საფულე და ტრანზაქციების ლოგი
+// ==========================================
 function openWalletUI() {
     document.getElementById('walletUI').style.display = 'flex';
     document.getElementById('walletMain').style.display = 'block';
@@ -391,10 +519,10 @@ function openInfoUI() {
     document.getElementById('infoUI').style.display = 'flex';
 }
 
-function initStripePayment(url) {
-    const user = auth.currentUser;
+async function initStripePayment(url) {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return alert("Please Login");
-    const finalUrl = url + "?client_reference_id=" + user.uid;
+    const finalUrl = url + "?client_reference_id=" + user.id;
     document.getElementById('walletMain').style.display = 'none';
     document.getElementById('paymentPending').style.display = 'block';
     window.location.href = finalUrl; 
@@ -407,49 +535,72 @@ function canAfford(cost) {
     return false;
 }
 
-function spendAkho(cost, reason = 'Action') {
+async function spendAkho(cost, reason = 'Action') {
+    const { data: { user } } = await supabase.auth.getUser();
     const newBalance = myAkho - cost;
-    db.ref(`users/${auth.currentUser.uid}`).update({ akho: newBalance });
+    await supabase.from('users').update({ akho: newBalance }).eq('id', user.id);
     addToLog(reason, -cost);
 }
 
-function earnAkho(targetUid, amount, reason = 'Impact Reward') {
-    db.ref(`users/${targetUid}/akho`).transaction(current => (current || 0) + amount);
-    db.ref(`activity_logs/${targetUid}`).push({
-        type: reason,
-        amt: amount,
-        ts: Date.now()
-    });
+async function earnAkho(targetUid, amount, reason = 'Impact Reward') {
+    const { data } = await supabase.from('users').select('akho').eq('id', targetUid).single();
+    await supabase.from('users').update({ akho: (data?.akho || 0) + amount }).eq('id', targetUid);
+    
+    await supabase
+        .from('activity_logs')
+        .insert([{
+            uid: targetUid,
+            type: reason,
+            amt: amount,
+            ts: new Date().toISOString()
+        }]);
 }
 
-function addToLog(type, amt) {
-    db.ref(`activity_logs/${auth.currentUser.uid}`).push({
-        type: type,
-        amt: amt,
-        ts: Date.now()
-    });
+async function addToLog(type, amt) {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase
+        .from('activity_logs')
+        .insert([{
+            uid: user.id,
+            type: type,
+            amt: amt,
+            ts: new Date().toISOString()
+        }]);
 }
 
-function loadActivityLog() {
+async function loadActivityLog() {
     const box = document.getElementById('logContent');
-    db.ref(`activity_logs/${auth.currentUser.uid}`).limitToLast(15).on('value', snap => {
-        box.innerHTML = "";
-        const data = snap.val();
-        if(!data) { box.innerHTML = "<p style='color:gray; font-size:12px;'>ისტორია ცარიელია</p>"; return; }
-        Object.values(data).reverse().forEach(log => {
-            const isPos = log.amt > 0;
-            box.innerHTML += `
-            <div class="log-item">
-            <div class="log-info">
-            <span class="log-type">${log.type}</span>
-            <span class="log-time">${new Date(log.ts).toLocaleString()}</span>
-            </div>
-            <span class="log-amt ${isPos ? 'amt-pos' : 'amt-neg'}">${isPos ? '+' : ''}${log.amt.toFixed(2)}</span>
-            </div>`;
-        });
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data: logs } = await supabase
+        .from('activity_logs')
+        .select('*')
+        .eq('uid', user.id)
+        .order('ts', { ascending: false })
+        .limit(15);
+
+    box.innerHTML = "";
+    if(!logs || logs.length === 0) { 
+        box.innerHTML = "<p style='color:gray; font-size:12px;'>ისტორია ცარიელია</p>"; 
+        return; 
+    }
+
+    logs.forEach(log => {
+        const isPos = log.amt > 0;
+        box.innerHTML += `
+        <div class="log-item">
+        <div class="log-info">
+        <span class="log-type">${log.type}</span>
+        <span class="log-time">${new Date(log.ts).toLocaleString()}</span>
+        </div>
+        <span class="log-amt ${isPos ? 'amt-pos' : 'amt-neg'}">${isPos ? '+' : ''}${log.amt.toFixed(2)}</span>
+        </div>`;
     });
 }
 
+// ==========================================
+// 7. კომენტარები და რეაქციები
+// ==========================================
 function openComments(postId, postOwnerId) {
     activePostId = postId;
     window.currentPostOwnerId = postOwnerId;
@@ -472,79 +623,92 @@ function openComments(postId, postOwnerId) {
     loadComments(postId);
 }
 
-function loadComments(postId, isGallery = false) {
+async function loadComments(postId, isGallery = false) {
     const list = document.getElementById('commList');
-    const myUid = auth.currentUser.uid;
+    const { data: { user } } = await supabase.auth.getUser();
+    const myUid = user.id;
     const postOwnerId = window.currentPostOwnerId;
 
     window.isGalleryMode = isGallery;
     activePostId = postId;
 
-    const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
+    const tableName = isGallery ? 'gallery_comments' : 'comments';
 
-    // 🚀 ოპტიმიზაცია: .on-ის ნაცვლად .once, რომ კომენტარის დაწერამ გვერდი არ გაჭედოს
-    db.ref(commentPath).once('value', snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        if (!data) return;
+    const { data: comments } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('post_id', postId)
+        .order('ts', { ascending: true });
 
-        Object.entries(data).forEach(([id, comm]) => {
-            const isLiked = comm.likes && comm.likes[myUid];
-            const canDeleteComm = (myUid === comm.authorId) || (myUid === postOwnerId);
+    list.innerHTML = "";
+    if (!comments) return;
 
-            let html = `
-            <div class="comment-item">
-                <div class="comment-top">
-                    <img src="${comm.authorPhoto}" class="comm-ava">
-                    <div class="comm-body">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                            <div class="comm-name">${comm.authorName}</div>
-                            ${canDeleteComm ? `<i class="fas fa-trash-alt" style="color:#555; cursor:pointer; font-size:11px; padding:5px;" onclick="window.deleteComment('${postId}', '${id}')"></i>` : ''}
-                        </div>
-                        <div class="comm-text">${comm.text}</div>
-                        <div class="comm-actions">
-                            <span class="comm-like-btn ${isLiked ? 'liked' : ''}" onclick="likeComment('${id}')">
-                                <i class="fas fa-heart"></i> ${comm.likes ? Object.keys(comm.likes).length : 0}
-                            </span>
-                            <span onclick="prepareReply('${id}', '${comm.authorName}')" style="cursor:pointer;">Reply/პასუხი</span>
-                        </div>
+    comments.forEach(comm => {
+        const likes = comm.likes || {};
+        const isLiked = likes[myUid];
+        const canDeleteComm = (myUid === comm.authorId) || (myUid === postOwnerId);
+
+        let html = `
+        <div class="comment-item">
+            <div class="comment-top">
+                <img src="${comm.authorPhoto}" class="comm-ava">
+                <div class="comm-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <div class="comm-name">${comm.authorName}</div>
+                        ${canDeleteComm ? `<i class="fas fa-trash-alt" style="color:#555; cursor:pointer; font-size:11px; padding:5px;" onclick="window.deleteComment('${postId}', '${comm.id}')"></i>` : ''}
+                    </div>
+                    <div class="comm-text">${comm.text}</div>
+                    <div class="comm-actions">
+                        <span class="comm-like-btn ${isLiked ? 'liked' : ''}" onclick="likeComment('${comm.id}')">
+                            <i class="fas fa-heart"></i> ${Object.keys(likes).length}
+                        </span>
+                        <span onclick="prepareReply('${comm.id}', '${comm.authorName}')" style="cursor:pointer;">Reply/პასუხი</span>
                     </div>
                 </div>
-                <div id="replies-${id}" class="reply-list"></div>
-            </div>`;
-            
-            list.innerHTML += html;
+            </div>
+            <div id="replies-${comm.id}" class="reply-list"></div>
+        </div>`;
+        
+        list.innerHTML += html;
 
-            if(comm.replies) {
-                const rList = document.getElementById(`replies-${id}`);
-                Object.entries(comm.replies).forEach(([rId, r]) => {
-                    const canDeleteReply = (myUid === r.authorId) || (myUid === postOwnerId);
-                    rList.innerHTML += `
-                    <div style="display:flex; gap:10px; margin-bottom:10px; justify-content:space-between; align-items:flex-start;">
-                        <div style="display:flex; gap:10px;">
-                            <img src="${r.authorPhoto}" style="width:28px; height:28px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
-                            <div>
-                                <div style="font-size:11px; color:var(--gold); font-weight:900;">${r.authorName}</div>
-                                <div style="font-size:13px; color:white;">${r.text}</div>
-                            </div>
+        if(comm.replies) {
+            const rList = document.getElementById(`replies-${comm.id}`);
+            Object.entries(comm.replies).forEach(([rId, r]) => {
+                const canDeleteReply = (myUid === r.authorId) || (myUid === postOwnerId);
+                rList.innerHTML += `
+                <div style="display:flex; gap:10px; margin-bottom:10px; justify-content:space-between; align-items:flex-start;">
+                    <div style="display:flex; gap:10px;">
+                        <img src="${r.authorPhoto}" style="width:28px; height:28px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
+                        <div>
+                            <div style="font-size:11px; color:var(--gold); font-weight:900;">${r.authorName}</div>
+                            <div style="font-size:13px; color:white;">${r.text}</div>
                         </div>
-                        ${canDeleteReply ? `<i class="fas fa-trash-alt" style="color:#444; cursor:pointer; font-size:10px;" onclick="window.deleteReply('${postId}', '${id}', '${rId}')"></i>` : ''}
-                    </div>`;
-                });
-            }
-        });
+                    </div>
+                    ${canDeleteReply ? `<i class="fas fa-trash-alt" style="color:#444; cursor:pointer; font-size:10px;" onclick="window.deleteReply('${postId}', '${comm.id}', '${rId}')"></i>` : ''}
+                </div>`;
+            });
+        }
     });
 }
 
-window.deleteComment = function(postId, commentId) {
+window.deleteComment = async function(postId, commentId) {
     if (confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) {
-        db.ref(`comments/${postId}/${commentId}`).remove().then(() => loadComments(postId));
+        const tableName = window.isGalleryMode ? 'gallery_comments' : 'comments';
+        await supabase.from(tableName).delete().eq('id', commentId);
+        loadComments(postId, window.isGalleryMode);
     }
 };
 
-window.deleteReply = function(postId, commentId, replyId) {
+window.deleteReply = async function(postId, commentId, replyId) {
     if (confirm("ნამდვილად გსურთ პასუხის წაშლა?")) {
-        db.ref(`comments/${postId}/${commentId}/replies/${replyId}`).remove().then(() => loadComments(postId));
+        const tableName = window.isGalleryMode ? 'gallery_comments' : 'comments';
+        const { data: comm } = await supabase.from(tableName).select('replies').eq('id', commentId).single();
+        if (comm && comm.replies) {
+            const updatedReplies = { ...comm.replies };
+            delete updatedReplies[replyId];
+            await supabase.from(tableName).update({ replies: updatedReplies }).eq('id', commentId);
+            loadComments(postId, window.isGalleryMode);
+        }
     }
 };
 
@@ -553,53 +717,68 @@ function prepareReply(commId, name) {
     document.getElementById('commInp').focus();
 }
 
-function postComment() {
+async function postComment() {
     if (!canAfford(0.5)) return;
     const text = document.getElementById('commInp').value;
     if(!text.trim() || !activePostId) return;
 
-    const commentPath = window.isGalleryMode ? `gallery_comments/${activePostId}` : `comments/${activePostId}`;
+    const { data: { user } } = await supabase.auth.getUser();
+    const tableName = window.isGalleryMode ? 'gallery_comments' : 'comments';
 
     if(activeReplyTo) {
-        db.ref(`${commentPath}/${activeReplyTo}/replies`).push({
-            authorId: auth.currentUser.uid, 
+        const { data: comm } = await supabase.from(tableName).select('replies').eq('id', activeReplyTo).single();
+        const replies = comm?.replies || {};
+        const newReplyId = 'reply_' + Date.now();
+        replies[newReplyId] = {
+            authorId: user.id, 
             authorName: myName, 
             authorPhoto: myPhoto, 
             text: text, 
             ts: Date.now()
-        }).then(() => loadComments(activePostId, window.isGalleryMode));
+        };
+        await supabase.from(tableName).update({ replies: replies }).eq('id', activeReplyTo);
     } else {
-        db.ref(commentPath).push({
-            authorId: auth.currentUser.uid, 
+        await supabase.from(tableName).insert([{
+            post_id: activePostId,
+            authorId: user.id, 
             authorName: myName, 
             authorPhoto: myPhoto, 
             text: text, 
-            ts: Date.now()
-        }).then(() => loadComments(activePostId, window.isGalleryMode));
+            ts: Date.now(),
+            replies: {}
+        }]);
     }
     
     spendAkho(0.5, 'Comment');
     document.getElementById('commInp').value = "";
     activeReplyTo = null;
+    loadComments(activePostId, window.isGalleryMode);
 }
 
-function likeComment(commId) {
+async function likeComment(commId) {
     if (!canAfford(0.1)) return;
-    const commentPath = window.isGalleryMode ? `gallery_comments/${activePostId}` : `comments/${activePostId}`;
-    const ref = db.ref(`${commentPath}/${commId}/likes/${auth.currentUser.uid}`);
-    ref.once('value', snap => {
-        if(snap.exists()) {
-            ref.remove().then(() => loadComments(activePostId, window.isGalleryMode));
-        } else {
-            ref.set(true).then(() => {
-                spendAkho(0.1, 'Comment Like'); 
-                loadComments(activePostId, window.isGalleryMode);
-            });
-        }
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    const myUid = user.id;
+    const tableName = window.isGalleryMode ? 'gallery_comments' : 'comments';
+
+    const { data: comm } = await supabase.from(tableName).select('likes').eq('id', commId).single();
+    const likes = comm?.likes || {};
+
+    if (likes[myUid]) {
+        delete likes[myUid];
+        await supabase.from(tableName).update({ likes: likes }).eq('id', commId);
+    } else {
+        likes[myUid] = true;
+        await supabase.from(tableName).update({ likes: likes }).eq('id', commId);
+        spendAkho(0.1, 'Comment Like'); 
+    }
+    loadComments(activePostId, window.isGalleryMode);
 }
 
-function openMessenger() {
+// ==========================================
+// 8. ჩატები და მესინჯერი
+// ==========================================
+async function openMessenger() {
     stopMainFeedVideos();
     const ui = document.getElementById('messengerUI');
     if ('setAppBadge' in navigator) {
@@ -613,95 +792,93 @@ function openMessenger() {
 
     const list = document.getElementById('chatList');
     if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
-    if (!auth.currentUser) return;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    // 🚀 ოპტიმიზაცია: მესინჯერის ჩატების ერთჯერადი სწრაფი წაკითხვა
-    db.ref(`users/${auth.currentUser.uid}/following`).once('value', async snap => {
-        if (!list) return;
-        const followers = snap.val();
-        if(!followers) { 
-            list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
-            return; 
+    // ჩატების წამოღება (following სია)
+    const { data: followingList } = await supabase
+        .from('following')
+        .select('*')
+        .eq('user_id', user.id);
+
+    if(!followingList || followingList.length === 0) { 
+        list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
+        return; 
+    }
+
+    list.innerHTML = "";
+    followingList.forEach(async (friend) => {
+        const chatId = getChatId(user.id, friend.friend_id);
+        
+        const { data: lastMsgData } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_id', chatId)
+            .order('ts', { ascending: false })
+            .limit(1)
+            .single();
+
+        const item = document.createElement('div');
+        item.className = 'chat-list-item';
+        item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
+        
+        item.onclick = async () => {
+            await supabase.from('last_read').upsert({ user_id: user.id, chat_id: chatId, last_read_at: Date.now() });
+            document.getElementById('messengerUI').style.display = 'none';
+            startChat(friend.friend_id, friend.friend_name, friend.friend_photo);
+        };
+
+        const { data: readData } = await supabase
+            .from('last_read')
+            .select('last_read_at')
+            .eq('user_id', user.id)
+            .eq('chat_id', chatId)
+            .single();
+
+        const lastRead = readData?.last_read_at || 0;
+        let lastMsg = "Tap to chat";
+        let msgTimeFormatted = "";
+        let isUnread = false;
+
+        if (lastMsgData) {
+            lastMsg = lastMsgData.text || "📷 Media/Voice";
+            const ts = lastMsgData.ts;
+            const msgDate = new Date(ts);
+            const now = new Date();
+            if (msgDate.toDateString() === now.toDateString()) {
+                msgTimeFormatted = msgDate.getHours() + ":" + (msgDate.getMinutes() < 10 ? '0' : '') + msgDate.getMinutes();
+            } else {
+                msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+            if (lastMsgData.senderId !== user.id && ts > lastRead) {
+                isUnread = true;
+            }
         }
 
-        let chatArray = [];
-        const promises = Object.entries(followers).map(async ([uid, data]) => {
-            const chatId = getChatId(auth.currentUser.uid, uid);
-            const mSnap = await db.ref(`messages/${chatId}`).limitToLast(1).once('value');
-            let lastTs = 0;
-            if (mSnap.exists()) {
-                const msgs = mSnap.val();
-                lastTs = Object.values(msgs)[0].ts;
-            }
-            chatArray.push({ uid, data, lastTs });
-        });
+        const { data: friendUser } = await supabase.from('users').select('presence').eq('id', friend.friend_id).single();
+        const isOnline = friendUser?.presence === 'online';
 
-        await Promise.all(promises);
-        chatArray.sort((a, b) => b.lastTs - a.lastTs);
-        list.innerHTML = "";
-
-        chatArray.forEach(({ uid, data }) => {
-            const chatId = getChatId(auth.currentUser.uid, uid);
-            const item = document.createElement('div');
-            item.className = 'chat-list-item';
-            item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
-            
-            item.onclick = () => {
-                db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
-                document.getElementById('messengerUI').style.display = 'none';
-                startChat(uid, data.name, data.photo);
-            };
-            
-            db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).once('value', readSnap => {
-                const lastRead = readSnap.val() || 0;
-                db.ref(`messages/${chatId}`).limitToLast(1).once('value', mSnap => {
-                    let lastMsg = "Tap to chat";
-                    let msgTimeFormatted = "";
-                    let isUnread = false;
-
-                    if(mSnap.exists()) {
-                        const msgs = mSnap.val();
-                        const msgData = Object.values(msgs)[0];
-                        lastMsg = msgData.text || "📷 Media/Voice";
-                        const ts = msgData.ts;
-                        const msgDate = new Date(ts);
-                        const now = new Date();
-                        if (msgDate.toDateString() === now.toDateString()) {
-                            msgTimeFormatted = msgDate.getHours() + ":" + (msgDate.getMinutes() < 10 ? '0' : '') + msgDate.getMinutes();
-                        } else {
-                            msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        }
-                        if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
-                            isUnread = true;
-                        }
-                    }
-
-                    db.ref(`users/${uid}/presence`).once('value', presenceSnap => {
-                        const isOnline = presenceSnap.val() === 'online';
-                        item.innerHTML = `
-                            <div style="position:relative; flex-shrink:0;">
-                                <img src="${data.photo || 'token-avatar.png'}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
-                                <div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#4ade80; border-radius:50%; border:3px solid #000; display:${isOnline ? 'block' : 'none'};"></div>
-                                <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
-                            </div>
-                            <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
-                                <b style="color:white; font-size:16px; margin-bottom:2px;">${data.name}</b>
-                                <div style="display:flex; align-items:center; gap:5px;">
-                                    <span style="color:${isUnread ? 'white' : '#888'}; font-weight:${isUnread ? 'bold' : 'normal'}; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${lastMsg}</span>
-                                    <span style="color:#888; font-size:12px;"> · ${msgTimeFormatted}</span>
-                                </div>
-                            </div>
-                            <div style="width:12px; height:12px; background:#0084ff; border-radius:50%; display:${isUnread ? 'block' : 'none'}; margin-right:5px;"></div>
-                        `;
-                    });
-                });
-            });
-            list.appendChild(item);
-        });
+        item.innerHTML = `
+            <div style="position:relative; flex-shrink:0;">
+                <img src="${friend.friend_photo || 'token-avatar.png'}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
+                <div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#4ade80; border-radius:50%; border:3px solid #000; display:${isOnline ? 'block' : 'none'};"></div>
+                <div id="badge-${friend.friend_id}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
+            </div>
+            <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
+                <b style="color:white; font-size:16px; margin-bottom:2px;">${friend.friend_name}</b>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="color:${isUnread ? 'white' : '#888'}; font-weight:${isUnread ? 'bold' : 'normal'}; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${lastMsg}</span>
+                    <span style="color:#888; font-size:12px;"> · ${msgTimeFormatted}</span>
+                </div>
+            </div>
+            <div style="width:12px; height:12px; background:#0084ff; border-radius:50%; display:${isUnread ? 'block' : 'none'}; margin-right:5px;"></div>`;
+        
+        list.appendChild(item);
     });
 }
 
-function startChat(uid, name, photo) {
+async function startChat(uid, name, photo) {
     stopMainFeedVideos();
     if(typeof setAppBadge === 'function') setAppBadge(0);
     
@@ -713,144 +890,143 @@ function startChat(uid, name, photo) {
     document.getElementById('chatTargetName').innerText = name;
     document.getElementById('chatTargetAva').src = photo;
 
-    const myUid = auth.currentUser.uid;
-    const chatId = getChatId(myUid, uid);
+    const { data: { user } } = await supabase.auth.getUser();
+    const chatId = getChatId(user.id, uid);
 
-    db.ref(`messages/${chatId}`).orderByChild('seen').equalTo(false).once('value', snap => {
-        const updates = {};
-        snap.forEach(child => {
-            const m = child.val();
-            if (m.senderId !== myUid) {
-                updates[`${child.key}/seen`] = true;
-            }
-        });
-        if (Object.keys(updates).length > 0) {
-            db.ref(`messages/${chatId}`).update(updates);
-        }
-    });
+    // ვნიშნავთ წაკითხულად
+    await supabase
+        .from('messages')
+        .update({ seen: true })
+        .eq('chat_id', chatId)
+        .neq('senderId', user.id);
 
     const statusEl = document.getElementById('chatTargetStatus');
     if (statusEl) {
-        db.ref(`users/${uid}/presence`).on('value', snap => {
-            const presence = snap.val();
-            if (presence === 'online') {
-                statusEl.innerText = 'საიტზეა';
-                statusEl.style.color = '#4ade80';
-            } else {
-                const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                statusEl.innerText = timeAgo ? timeAgo + '   ago' : 'offline';
-                statusEl.style.color = '#888';
-            }
-        });
+        const { data: friend } = await supabase.from('users').select('presence').eq('id', uid).single();
+        if (friend?.presence === 'online') {
+            statusEl.innerText = 'საიტზეა';
+            statusEl.style.color = '#4ade80';
+        } else {
+            const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(friend?.presence) : '';
+            statusEl.innerText = timeAgo ? timeAgo + '   ago' : 'offline';
+            statusEl.style.color = '#888';
+        }
     }
     loadMessages(uid);
     listenToTyping(uid);
 }
 
 let currentChatLimit = 20;
-function loadMessages(targetUid) {
-    const myUid = auth.currentUser.uid;
+async function loadMessages(targetUid) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const myUid = user.id;
     const chatId = getChatId(myUid, targetUid);
     const box = document.getElementById('chatMessages');
 
-    db.ref(`users/${targetUid}`).once('value', targetSnap => {
-        const tData = targetSnap.val();
-        const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
+    const { data: targetUser } = await supabase.from('users').select('photo').eq('id', targetUid).single();
+    const tPhoto = targetUser?.photo || 'token-avatar.png';
 
-        db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
-            const deletedMsgs = deletedSnap.val() || {};
+    const { data: deletedData } = await supabase
+        .from('deleted_messages')
+        .select('message_id')
+        .eq('user_id', myUid)
+        .eq('chat_id', chatId);
 
-            db.ref(`messages/${chatId}`).limitToLast(currentChatLimit).on('value', snap => {
-                box.innerHTML = "";
-                let lastTs = 0;
-                let messagesArray = [];
-                
-                snap.forEach(child => {
-                    if (!deletedMsgs[child.key]) {
-                        messagesArray.push({ id: child.key, val: child.val() });
-                    }
-                });
+    const deletedMsgs = {};
+    if (deletedData) {
+        deletedData.forEach(d => deletedMsgs[d.message_id] = true);
+    }
 
-                messagesArray.forEach((item, index) => {
-                    const msgId = item.id;
-                    const msg = item.val;
-                    const type = msg.senderId === myUid ? 'sent' : 'received';
-                    const isMine = type === 'sent';
-                    
-                    if (msg.ts - lastTs > 3600000) {
-                        const d = new Date(msg.ts);
-                        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                        let h = d.getHours();
-                        let ampm = h >= 12 ? 'PM' : 'AM';
-                        h = h % 12 || 12;
-                        let m = d.getMinutes().toString().padStart(2, '0');
-                        box.innerHTML += `<div style="text-align:center; color:var(--gold, #d4af37); font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase; width:100%;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
-                    }
-                    lastTs = msg.ts;
+    // რეალურ დროში შეტყობინებების მოსმენა
+    supabase
+        .channel(`chat_${chatId}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` }, () => {
+            loadMessages(targetUid);
+        })
+        .subscribe();
 
-                    const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
-                    const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
-                    const isImg = msg.image ? true : false;
+    // შეტყობინებების წამოღება
+    const { data: messages } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('ts', { ascending: true })
+        .limit(currentChatLimit);
 
-                    let content = "";
-                    if (isImg) {
-                        content = `<img src="${msg.image}" style="max-width:170px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
-                    } else if (msg.audio) {
-                        content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                    } else {
-                        content = msg.text || "";
-                    }
-                    
-                    const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
-                        `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
-                        `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
+    box.innerHTML = "";
+    if (!messages) return;
 
-                    box.innerHTML += `
-                    <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
-                         oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-                        <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
-                            ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
-                            <div class="msg-bubble msg-${type}" style="
-                                display: inline-block; 
-                                min-width: 20px; 
-                                max-width: 100%; 
-                                width: fit-content; 
-                                cursor: pointer; 
-                                word-wrap: break-word;
-                                text-align: left;
-                                ${dynamicBubbleStyle}
-                            ">
-                                <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
-                            </div>
-                        </div>
-                        ${isMine && msg.seen && index === messagesArray.length - 1 ? 
-                            `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
-                                <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
-                            </div>` : ''}
-                    </div>`;
-                });
+    let lastTs = 0;
+    messages.forEach((msg, index) => {
+        if (deletedMsgs[msg.id]) return;
 
-                if (currentChatLimit === 20) {
-                    box.scrollTop = box.scrollHeight;
-                }
-            });
-        });
+        const type = msg.senderId === myUid ? 'sent' : 'received';
+        const isMine = type === 'sent';
+        
+        if (msg.ts - lastTs > 3600000) {
+            const d = new Date(msg.ts);
+            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            let h = d.getHours();
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            let m = d.getMinutes().toString().padStart(2, '0');
+            box.innerHTML += `<div style="text-align:center; color:var(--gold, #d4af37); font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase; width:100%;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
+        }
+        lastTs = msg.ts;
+
+        const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
+        const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
+        const isImg = msg.image ? true : false;
+
+        let content = "";
+        if (isImg) {
+            content = `<img src="${msg.image}" style="max-width:170px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
+        } else if (msg.audio) {
+            content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
+        } else {
+            content = msg.text || "";
+        }
+        
+        const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
+            `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
+            `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
+
+        box.innerHTML += `
+        <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
+             oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msg.id}', '${msg.senderId}')">
+            <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
+                ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
+                <div class="msg-bubble msg-${type}" style="
+                    display: inline-block; 
+                    min-width: 20px; 
+                    max-width: 100%; 
+                    width: fit-content; 
+                    cursor: pointer; 
+                    word-wrap: break-word;
+                    text-align: left;
+                    ${dynamicBubbleStyle}
+                ">
+                    <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
+                </div>
+            </div>
+            ${isMine && msg.seen && index === messages.length - 1 ? 
+                `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
+                    <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
+                </div>` : ''}
+        </div>`;
     });
 
-    box.onscroll = function() {
-        if (box.scrollTop === 0) {
-            const oldScrollHeight = box.scrollHeight;
-            currentChatLimit += 20;
-            loadMessages(targetUid);
-            setTimeout(() => {
-                box.scrollTop = box.scrollHeight - oldScrollHeight;
-            }, 100);
-        }
-    };
+    if (currentChatLimit === 20) {
+        box.scrollTop = box.scrollHeight;
+    }
 }
 
-function closeChat() {
-    if (currentChatId) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
+async function closeChat() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (currentChatId) {
+        const chatId = getChatId(user.id, currentChatId);
+        await supabase.from('typing').delete().eq('chat_id', chatId).eq('user_id', user.id);
+    }
     document.getElementById('individualChat').style.display = 'none';
     currentChatId = null;
 }
@@ -859,14 +1035,16 @@ function getChatId(u1, u2) {
     return u1 < u2 ? `${u1}_${u2}` : `${u2}_${u1}`;
 }
 
-function handleTyping() {
+async function handleTyping() {
     if (!currentChatId) return;
-    const chatId = getChatId(auth.currentUser.uid, currentChatId);
-    db.ref(`typing/${chatId}/${auth.currentUser.uid}`).set(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    const chatId = getChatId(user.id, currentChatId);
+
+    await supabase.from('typing').upsert({ chat_id: chatId, user_id: user.id, is_typing: true });
     
     if (typingTimeout) clearTimeout(typingTimeout);
-    typingTimeout = setTimeout(() => {
-        db.ref(`typing/${chatId}/${auth.currentUser.uid}`).remove();
+    typingTimeout = setTimeout(async () => {
+        await supabase.from('typing').delete().eq('chat_id', chatId).eq('user_id', user.id);
     }, 3000);
 
     const inp = document.getElementById('messageInp');
@@ -882,46 +1060,52 @@ function handleTyping() {
 }
 
 function listenToTyping(targetUid) {
-    const chatId = getChatId(auth.currentUser.uid, targetUid);
-    db.ref(`typing/${chatId}/${targetUid}`).on('value', snap => {
-        const indicator = document.getElementById('typingIndicator');
-        if (snap.exists()) {
-            indicator.style.display = 'flex';
-            document.getElementById('typingSound').play().catch(e => {});
-        } else {
-            indicator.style.display = 'none';
-        }
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    const chatId = getChatId(user.id, targetUid);
+
+    supabase
+        .channel(`typing_${chatId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'typing', filter: `chat_id=eq.${chatId}` }, payload => {
+            const indicator = document.getElementById('typingIndicator');
+            if (payload.new && payload.new.user_id === targetUid) {
+                indicator.style.display = 'flex';
+                document.getElementById('typingSound').play().catch(e => {});
+            } else {
+                indicator.style.display = 'none';
+            }
+        })
+        .subscribe();
 }
 
-function listenToGlobalMessages() {
-    const myUid = auth.currentUser.uid;
-    db.ref('messages').on('child_added', snap => {
-        if (!snap.key.includes(myUid)) return;
+// ==========================================
+// 9. შეტყობინებები და Push
+// ==========================================
+async function listenToGlobalMessages() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    supabase
+        .channel(`global_messages_${user.id}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async payload => {
+            const msg = payload.new;
+            if (!msg || msg.senderId === user.id) return;
+            if (Date.now() - new Date(msg.ts).getTime() > 10000) return;
+            if (currentChatId && getChatId(user.id, currentChatId) === msg.chat_id) return;
 
-        snap.ref.limitToLast(1).on('child_added', mSnap => {
-            const msg = mSnap.val();
-            if (!msg || msg.senderId === myUid) return;
-            if (Date.now() - msg.ts > 10000) return;
-            if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
+            const { data: sender } = await supabase.from('users').select('name, photo').eq('id', msg.senderId).single();
+            if (!sender) return;
 
-            db.ref(`users/${msg.senderId}`).once('value', uSnap => {
-                const u = uSnap.val();
-                if (!u) return;
-                
-                const senderName = u.name || "მომხმარებელი";
-                const messageText = msg.text || "📷 Voice/Media";
-                const sound = document.getElementById('msgSound');
-                if (sound) {
-                    sound.currentTime = 0;
-                    sound.play().catch(e => console.log("ხმის დაკვრა დაიბლოკა."));
-                }
-                setAppBadge(1);
-                showLocalNotification("ახალი მესიჯი: " + senderName, messageText);
-                showGlobalPush(senderName, u.photo, messageText);
-            });
-        });
-    });
+            const senderName = sender.name || "მომხმარებელი";
+            const messageText = msg.text || "📷 Voice/Media";
+            const sound = document.getElementById('msgSound');
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("ხმის დაკვრა დაიბლოკა."));
+            }
+            setAppBadge(1);
+            showLocalNotification("ახალი მესიჯი: " + senderName, messageText);
+            showGlobalPush(senderName, sender.photo, messageText);
+        })
+        .subscribe();
 }
 
 function showGlobalPush(name, photo, text) {
@@ -934,41 +1118,57 @@ function showGlobalPush(name, photo, text) {
     setTimeout(() => push.classList.remove('show'), 4000);
 }
 
-function sendMessage() {
+async function sendMessage() {
     if (!canAfford(0.2)) return;
     const inp = document.getElementById('messageInp');
-    const myUid = auth.currentUser.uid;
+    const { data: { user } } = await supabase.auth.getUser();
     let msgText = inp.value.trim();
 
     if (!msgText) msgText = "👍";
     if (!currentChatId) return;
-    const chatId = getChatId(myUid, currentChatId);
+    const chatId = getChatId(user.id, currentChatId);
 
-    db.ref(`users/${currentChatId}/following/${myUid}`).once('value', snapshot => {
-        const heFollowsMe = snapshot.exists();
-        const targetPath = heFollowsMe ? `messages/${chatId}` : `message_requests/${currentChatId}/${myUid}`;
+    // ვამოწმებთ, გვადევნებს თუ არა თვალს
+    const { data: isFollowing } = await supabase
+        .from('followers')
+        .select('*')
+        .eq('user_id', currentChatId)
+        .eq('follower_id', user.id)
+        .single();
 
-        db.ref(targetPath).push({
-            senderId: myUid,
+    if (isFollowing) {
+        await supabase.from('messages').insert([{
+            chat_id: chatId,
+            senderId: user.id,
             text: msgText,
             ts: Date.now(),
             seen: false
-        });
+        }]);
+    } else {
+        await supabase.from('message_requests').insert([{
+            receiver_id: currentChatId,
+            sender_id: user.id,
+            text: msgText,
+            ts: Date.now()
+        }]);
+    }
 
-        if (typeof sendPushToUser === "function") {
-            sendPushToUser(currentChatId, myName, msgText);
-        }
+    if (typeof sendPushToUser === "function") {
+        sendPushToUser(currentChatId, myName, msgText);
+    }
 
-        db.ref(`typing/${chatId}/${myUid}`).remove();
-        spendAkho(0.2, 'Message');
-        inp.value = ""; 
+    await supabase.from('typing').delete().eq('chat_id', chatId).eq('user_id', user.id);
+    spendAkho(0.2, 'Message');
+    inp.value = ""; 
 
-        if (typeof handleTyping === "function") {
-            handleTyping();
-        }
-    });
+    if (typeof handleTyping === "function") {
+        handleTyping();
+    }
 }
 
+// ==========================================
+// 10. აღმოჩენა (Discovery) და პროფილის პარამეტრები
+// ==========================================
 function openDiscovery() { 
     stopMainFeedVideos();
     document.getElementById('discoveryUI').style.display = 'flex'; 
@@ -980,25 +1180,25 @@ function closeDiscovery() {
     refreshHomeFeed();
 }
 
-function loadDiscoveryUsers() {
-    db.ref('users').once('value', snap => {
-        const users = snap.val();
-        if (!users) return;
-        const grid = document.getElementById('discoverGrid');
-        grid.innerHTML = "";
-        Object.entries(users).forEach(([uid, user]) => {
-            if (uid === auth.currentUser.uid) return;
+async function loadDiscoveryUsers() {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: users } = await supabase.from('users').select('*').neq('id', user.id);
+
+    const grid = document.getElementById('discoverGrid');
+    grid.innerHTML = "";
+    if (users) {
+        users.forEach(u => {
             const card = `
-            <div class="user-card" onclick="openProfile('${uid}')">
+            <div class="user-card" onclick="openProfile('${u.id}')">
                 <div class="card-inner">
-                    <img src="${user.photo || 'token-avatar.png'}" class="discover-ava">
-                    <div class="discover-name">${user.name}</div>
+                    <img src="${u.photo || 'token-avatar.png'}" class="discover-ava">
+                    <div class="discover-name">${u.name}</div>
                     <div class="discover-status">EMIGRANT</div>
                 </div>
             </div>`;
             grid.innerHTML += card;
         });
-    });
+    }
 }
 
 function openSettings() {
@@ -1010,11 +1210,15 @@ function openSettings() {
     document.getElementById(`priv${privacy.charAt(0).toUpperCase() + privacy.slice(1)}`).checked = true;
 }
 
-function updatePrivacy(val) {
-    db.ref(`users/${auth.currentUser.uid}`).update({ privacy: val });
+async function updatePrivacy(val) {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('users').update({ privacy: val }).eq('id', user.id);
 }
 
-function openProfile(uid) {
+// ==========================================
+// 11. პროფილები და მნახველები
+// ==========================================
+async function openProfile(uid) {
     stopMainFeedVideos();
     document.getElementById('profileUI').style.display = 'flex';
 
@@ -1031,159 +1235,190 @@ function openProfile(uid) {
     document.getElementById('profGrid').style.display = 'grid';
     document.getElementById('noPhotosMsg').style.display = 'none';
 
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+
     const galleryUploadContainer = document.getElementById('galleryUploadBtnContainer');
-    if (galleryUploadContainer && auth.currentUser) {
-        galleryUploadContainer.style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
+    if (galleryUploadContainer && currentUser) {
+        galleryUploadContainer.style.display = (uid === currentUser.id) ? 'block' : 'none';
     }
 
     document.querySelectorAll('.p-nav-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('infoBtn').classList.add('active');
 
-    if(uid !== auth.currentUser.uid) {
-        db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
-            uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
-        });
+    if(uid !== currentUser.id) {
+        await supabase.from('profile_views').insert([{
+            viewed_id: uid,
+            visitor_id: currentUser.id,
+            name: myName,
+            photo: myPhoto,
+            ts: Date.now()
+        }]);
     }
  
-    db.ref('users/' + uid).on('value', async snap => {
-        const user = snap.val();
-        if(!user) return;
-        const dot = document.getElementById('profStatusDot');
-        const lastSeenSpan = document.getElementById('profLastSeenText');
-        if(user.presence === 'online') {
-            dot.className = 'status-dot online';
-            lastSeenSpan.innerText = '';
-        } else {
-            const dynamicTime = formatTimeShort(user.presence);
-            if(dynamicTime) {
-                dot.className = 'status-dot offline';
-                lastSeenSpan.innerText = dynamicTime;
-            } else {
-                dot.className = 'status-dot';
-            }
-        }
-        document.getElementById('profAva').src = user.photo || "token-avatar.png";
-        profNameEl.innerText = user.name;
+    supabase
+        .channel(`profile_view_${uid}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users', filter: `id=eq.${uid}` }, payload => {
+            renderProfileDetails(payload.new, uid, currentUser);
+        })
+        .subscribe();
 
-        const locRow = document.getElementById('profLocationRow');
-        const locText = document.getElementById('profLocationText');
-
-        if (user.city && user.city.trim() !== "") {
-            locText.innerText = user.city;
-            locRow.style.display = 'flex';
-        } else {
-            locRow.style.display = 'none';
-        }
-
-        const followersCount = user.followers ? Object.keys(user.followers).length : 0;
-        const followingCount = user.following ? Object.keys(user.following).length : 0;
-        document.getElementById('statFollowersCount').innerText = followersCount;
-        document.getElementById('statFollowingCount').innerText = followingCount;
-        document.getElementById('followersStatBtn').onclick = () => openSocialList(uid, 'followers');
-        document.getElementById('followingStatBtn').onclick = () => openSocialList(uid, 'following');
-        
-        const controls = document.getElementById('profControls');
-        controls.innerHTML = "";
-        document.querySelector('.profile-nav').style.display = 'flex';
-        document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
-        document.getElementById('profTabs').style.display = 'flex';
-        document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
-
-        const euroBtn = document.getElementById('euroBalanceBtn');
-        if (euroBtn) {
-            euroBtn.style.display = (uid === auth.currentUser.uid) ? 'inline-flex' : 'none';
-        }
-
-        const editNameBtn = document.getElementById('editNameBtn');
-        if (editNameBtn) {
-            editNameBtn.style.display = (uid === auth.currentUser.uid) ? 'flex' : 'none';
-        }
-       
-        if(uid === auth.currentUser.uid) {
-            controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
-            if (galleryUploadContainer) {
-                galleryUploadContainer.style.marginTop = "0";
-                controls.appendChild(galleryUploadContainer);
-            }
-            controls.innerHTML += `
-                <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
-                    <i class="fas fa-gift"></i> Gifts
-                </button>`;
-            
-            loadUserVideos(uid);
-            applyLanguage();
-        } else {
-            const isFollowing = user.followers && user.followers[auth.currentUser.uid];
-            const isFriend = user.following && user.following[auth.currentUser.uid] && isFollowing;
-            let canView = false;
-            if(!user.privacy || user.privacy === 'public') canView = true;
-            if(user.privacy === 'friends' && isFriend) canView = true;
-            
-            if(canView) {
-                loadUserVideos(uid);
-                if(isFollowing) {
-                    controls.innerHTML = `
-                    <button class="profile-btn btn-outline" onclick="unfollowUser('${uid}')" data-key="following_btn">Following</button>
-                    <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>`;
-                } else {
-                    controls.innerHTML = `
-                    <button class="profile-btn btn-gold" style="background:var(--gold); color:black;" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>
-                    <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>`;
-                }
-                
-                controls.innerHTML += `
-                <button id="gifts-btn-${uid}" class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px; white-space: nowrap;">
-                    <i class="fas fa-gift"></i> Gifts
-                </button>`;
-
-                db.ref(`received_gifts/${uid}`).once('value', snap => {
-                    const count = snap.numChildren() || 0;
-                    const giftsBtn = document.getElementById(`gifts-btn-${uid}`);
-                    if (giftsBtn) {
-                        giftsBtn.innerHTML = `<i class="fas fa-gift"></i> Gifts (${count})`;
-                    }
-                });
-            } else {
-                document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
-                document.getElementById('profTabs').style.display = 'none';
-                controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
-            }
-            applyLanguage();
-        }
-    });
+    const { data: userDetails } = await supabase.from('users').select('*').eq('id', uid).single();
+    if (userDetails) renderProfileDetails(userDetails, uid, currentUser);
 }
 
-function showProfileVisitors() {
+async function renderProfileDetails(user, uid, currentUser) {
+    const dot = document.getElementById('profStatusDot');
+    const lastSeenSpan = document.getElementById('profLastSeenText');
+    if(user.presence === 'online') {
+        dot.className = 'status-dot online';
+        lastSeenSpan.innerText = '';
+    } else {
+        const dynamicTime = formatTimeShort(user.presence);
+        if(dynamicTime) {
+            dot.className = 'status-dot offline';
+            lastSeenSpan.innerText = dynamicTime;
+        } else {
+            dot.className = 'status-dot';
+        }
+    }
+    document.getElementById('profAva').src = user.photo || "token-avatar.png";
+    const profNameEl = document.getElementById('profName');
+    profNameEl.innerText = user.name;
+
+    const locRow = document.getElementById('profLocationRow');
+    const locText = document.getElementById('profLocationText');
+
+    if (user.city && user.city.trim() !== "") {
+        locText.innerText = user.city;
+        locRow.style.display = 'flex';
+    } else {
+        locRow.style.display = 'none';
+    }
+
+    // გამომწერების წამოღება
+    const { count: followersCount } = await supabase.from('followers').select('*', { count: 'exact', head: true }).eq('user_id', uid);
+    const { count: followingCount } = await supabase.from('followers').select('*', { count: 'exact', head: true }).eq('follower_id', uid);
+
+    document.getElementById('statFollowersCount').innerText = followersCount || 0;
+    document.getElementById('statFollowingCount').innerText = followingCount || 0;
+    document.getElementById('followersStatBtn').onclick = () => openSocialList(uid, 'followers');
+    document.getElementById('followingStatBtn').onclick = () => openSocialList(uid, 'following');
+    
+    const controls = document.getElementById('profControls');
+    controls.innerHTML = "";
+    document.querySelector('.profile-nav').style.display = 'flex';
+    document.getElementById('feetStats').style.display = (uid === currentUser.id) ? 'block' : 'none';
+    document.getElementById('profTabs').style.display = 'flex';
+    document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
+
+    const euroBtn = document.getElementById('euroBalanceBtn');
+    if (euroBtn) {
+        euroBtn.style.display = (uid === currentUser.id) ? 'inline-flex' : 'none';
+    }
+
+    const editNameBtn = document.getElementById('editNameBtn');
+    if (editNameBtn) {
+        editNameBtn.style.display = (uid === currentUser.id) ? 'flex' : 'none';
+    }
+   
+    if(uid === currentUser.id) {
+        controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
+        const galleryUploadContainer = document.getElementById('galleryUploadBtnContainer');
+        if (galleryUploadContainer) {
+            galleryUploadContainer.style.marginTop = "0";
+            controls.appendChild(galleryUploadContainer);
+        }
+        controls.innerHTML += `
+            <button class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px;">
+                <i class="fas fa-gift"></i> Gifts
+            </button>`;
+        
+        loadUserVideos(uid);
+        applyLanguage();
+    } else {
+        const { data: followingRecord } = await supabase.from('followers').select('*').eq('user_id', uid).eq('follower_id', currentUser.id).single();
+        const { data: followedRecord } = await supabase.from('followers').select('*').eq('user_id', currentUser.id).eq('follower_id', uid).single();
+        
+        const isFollowing = !!followingRecord;
+        const isFriend = followingRecord && followedRecord;
+
+        let canView = false;
+        if(!user.privacy || user.privacy === 'public') canView = true;
+        if(user.privacy === 'friends' && isFriend) canView = true;
+        
+        if(canView) {
+            loadUserVideos(uid);
+            if(isFollowing) {
+                controls.innerHTML = `
+                <button class="profile-btn btn-outline" onclick="unfollowUser('${uid}')" data-key="following_btn">Following</button>
+                <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>`;
+            } else {
+                controls.innerHTML = `
+                <button class="profile-btn btn-gold" style="background:var(--gold); color:black;" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>
+                <button class="profile-btn btn-outline" onclick="startChat('${uid}', '${user.name}', '${user.photo}')" data-key="write">Write</button>`;
+            }
+            
+            controls.innerHTML += `
+            <button id="gifts-btn-${uid}" class="profile-btn btn-outline" onclick="showGiftsCollection('${uid}')" style="margin-left:5px; white-space: nowrap;">
+                <i class="fas fa-gift"></i> Gifts
+            </button>`;
+
+            const { count: giftCount } = await supabase.from('received_gifts').select('*', { count: 'exact', head: true }).eq('receiver_id', uid);
+            const giftsBtn = document.getElementById(`gifts-btn-${uid}`);
+            if (giftsBtn) {
+                giftsBtn.innerHTML = `<i class="fas fa-gift"></i> Gifts (${giftCount || 0})`;
+            }
+        } else {
+            document.getElementById('profGrid').innerHTML = `<div class="private-lock-screen"><p data-key="private_profile">Private Profile</p></div>`;
+            document.getElementById('profTabs').style.display = 'none';
+            controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
+        }
+        applyLanguage();
+    }
+}
+
+async function showProfileVisitors() {
     document.getElementById('visitorAvaNav').style.display = 'none';
     document.getElementById('feetStats').style.display = 'block';
     localStorage.setItem('last_seen_visitor_ts', Date.now());
     document.getElementById('visitorsUI').style.display = 'flex';
     const list = document.getElementById('visitorsList');
     list.innerHTML = "Loading...";
-    db.ref(`profile_views/${auth.currentUser.uid}`).once('value', async snap => {
-        const data = snap.val();
-        if(!data) { list.innerHTML = "No views"; return; }
-        const myFollowingSnap = await db.ref(`users/${auth.currentUser.uid}/following`).once('value');
-        const myFollowing = myFollowingSnap.val() || {};
-        list.innerHTML = "";
-        Object.values(data).reverse().forEach(v => {
-            const isFollowing = myFollowing[v.uid];
-            const followBtn = isFollowing ? 
-            `<button class="profile-btn btn-outline" style="padding: 5px 12px; font-size: 11px;">${translations[currentLang].following_btn}</button>` :
-            `<button class="profile-btn btn-gold" style="padding: 5px 12px; font-size: 11px;" onclick="followFromVisitors('${v.uid}', '${v.name}', '${v.photo}')">${translations[currentLang].follow}</button>`;
-            list.innerHTML += `
-            <div class="visitor-row">
-            <div class="visitor-info" onclick="openProfile('${v.uid}'); document.getElementById('visitorsUI').style.display='none'">
-            <img src="${v.photo}" class="visitor-ava">
-            <b style="font-size:14px; color:white;">${v.name}</b>
-            </div>
-            <div>${v.uid !== auth.currentUser.uid ? followBtn : ''}</div>
-            </div>`;
-        });
+
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data: visitors } = await supabase
+        .from('profile_views')
+        .select('*')
+        .eq('viewed_id', user.id)
+        .order('ts', { ascending: false });
+
+    if(!visitors || visitors.length === 0) { list.innerHTML = "No views"; return; }
+
+    const { data: myFollowingData } = await supabase.from('followers').select('user_id').eq('follower_id', user.id);
+    const myFollowing = {};
+    if (myFollowingData) {
+        myFollowingData.forEach(f => myFollowing[f.user_id] = true);
+    }
+
+    list.innerHTML = "";
+    visitors.forEach(v => {
+        const isFollowing = myFollowing[v.visitor_id];
+        const followBtn = isFollowing ? 
+        `<button class="profile-btn btn-outline" style="padding: 5px 12px; font-size: 11px;">${translations[currentLang].following_btn}</button>` :
+        `<button class="profile-btn btn-gold" style="padding: 5px 12px; font-size: 11px;" onclick="followFromVisitors('${v.visitor_id}', '${v.name}', '${v.photo}')">${translations[currentLang].follow}</button>`;
+        list.innerHTML += `
+        <div class="visitor-row">
+        <div class="visitor-info" onclick="openProfile('${v.visitor_id}'); document.getElementById('visitorsUI').style.display='none'">
+        <img src="${v.photo}" class="visitor-ava">
+        <b style="font-size:14px; color:white;">${v.name}</b>
+        </div>
+        <div>${v.visitor_id !== user.id ? followBtn : ''}</div>
+        </div>`;
     });
 }
 
-function openEditor() {
+async function openEditor() {
     toggleSideMenu(false);
     stopMainFeedVideos();
     const ui = document.getElementById('editProfileUI');
@@ -1195,7 +1430,8 @@ function openEditor() {
     document.getElementById('editPhone').value = currentUserData.phone || "";
 }
 
-function saveProfileChanges() {
+async function saveProfileChanges() {
+    const { data: { user } } = await supabase.auth.getUser();
     const updates = {
         name: document.getElementById('editName').value,
         city: document.getElementById('editCity').value,
@@ -1203,27 +1439,26 @@ function saveProfileChanges() {
         relation: document.getElementById('editRelation').value,
         phone: document.getElementById('editPhone').value
     };
-    db.ref('users/' + auth.currentUser.uid).update(updates).then(() => {
-        alert("Saved!");
-        document.getElementById('editProfileUI').style.display = 'none';
-    });
+    await supabase.from('users').update(updates).eq('id', user.id);
+    alert("Saved!");
+    document.getElementById('editProfileUI').style.display = 'none';
 }
 
-function showDetailedInfo(uid) {
+async function showDetailedInfo(uid) {
     const panel = document.getElementById('userDetailedInfoUI');
     const content = document.getElementById('infoContent');
     panel.style.display = 'flex';
     content.innerHTML = "Loading...";
-    db.ref('users/' + uid).once('value', snap => {
-        const u = snap.val();
-        if(!u) return;
-        content.innerHTML = `
-        <div class="info-row"><i class="fas fa-user"></i><div><span class="info-val-label">${translations[currentLang].full_name}</span><span class="info-val-text">${u.name || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-map-marker-alt"></i><div><span class="info-val-label">${translations[currentLang].location}</span><span class="info-val-text">${u.city || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-birthday-cake"></i><div><span class="info-val-label">${translations[currentLang].age}</span><span class="info-val-text">${u.age || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-heart"></i><div><span class="info-val-label">${translations[currentLang].relation}</span><span class="info-val-text">${u.relation || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-phone"></i><div><span class="info-val-label">${translations[currentLang].phone}</span><span class="info-val-text">${u.phone || '-'}</span></div></div>`;
-    });
+
+    const { data: u } = await supabase.from('users').select('*').eq('id', uid).single();
+    if(!u) return;
+
+    content.innerHTML = `
+    <div class="info-row"><i class="fas fa-user"></i><div><span class="info-val-label">${translations[currentLang].full_name}</span><span class="info-val-text">${u.name || '-'}</span></div></div>
+    <div class="info-row"><i class="fas fa-map-marker-alt"></i><div><span class="info-val-label">${translations[currentLang].location}</span><span class="info-val-text">${u.city || '-'}</span></div></div>
+    <div class="info-row"><i class="fas fa-birthday-cake"></i><div><span class="info-val-label">${translations[currentLang].age}</span><span class="info-val-text">${u.age || '-'}</span></div></div>
+    <div class="info-row"><i class="fas fa-heart"></i><div><span class="info-val-label">${translations[currentLang].relation}</span><span class="info-val-text">${u.relation || '-'}</span></div></div>
+    <div class="info-row"><i class="fas fa-phone"></i><div><span class="info-val-label">${translations[currentLang].phone}</span><span class="info-val-text">${u.phone || '-'}</span></div></div>`;
 }
 
 function followFromVisitors(uid, name, photo) {
@@ -1231,132 +1466,166 @@ function followFromVisitors(uid, name, photo) {
     setTimeout(() => showProfileVisitors(), 500); 
 }
 
-function followUser(targetUid, name, photo) {
+async function followUser(targetUid, name, photo) {
     if (!canAfford(1)) return;
-    const myUid = auth.currentUser.uid;
-    db.ref(`users/${myUid}/following/${targetUid}`).set({ name: name, photo: photo });
-    db.ref(`users/${targetUid}/followers/${myUid}`).set({ name: myName, photo: myPhoto });
-    db.ref(`notifications/${targetUid}`).push({
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    await supabase.from('followers').insert([{
+        user_id: targetUid,
+        follower_id: user.id,
+        friend_name: name,
+        friend_photo: photo
+    }]);
+
+    await supabase.from('notifications').insert([{
+        uid: targetUid,
         text: `${myName} followed you`,
         ts: Date.now(),
         fromPhoto: myPhoto
-    });
+    }]);
+
     spendAkho(1, 'Follow');
 }
 
-function unfollowUser(targetUid) {
-    const myUid = auth.currentUser.uid;
-    db.ref(`users/${myUid}/following/${targetUid}`).remove();
-    db.ref(`users/${targetUid}/followers/${myUid}`).remove();
+async function unfollowUser(targetUid) {
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('followers').delete().eq('user_id', targetUid).eq('follower_id', user.id);
 }
 
-function listenToRequests() {
-    const myUid = auth.currentUser.uid;
-    db.ref(`notifications/${myUid}`).on('value', snap => {
-        const data = snap.val();
-        const count = data ? Object.keys(data).length : 0;
-        const badge = document.getElementById('reqCount');
-        if(count > 0) { badge.innerText = count; badge.style.display = 'block'; }
-        else { badge.style.display = 'none'; }
-    });
+// ==========================================
+// 12. შეტყობინებების მართვა
+// ==========================================
+async function listenToRequests() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    supabase
+        .channel(`notif_${user.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `uid=eq.${user.id}` }, () => {
+            updateNotificationBadge(user.id);
+        })
+        .subscribe();
+
+    updateNotificationBadge(user.id);
 }
 
-function openRequestsUI() {
+async function updateNotificationBadge(userId) {
+    const { count } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('uid', userId);
+    const badge = document.getElementById('reqCount');
+    if(count && count > 0) { 
+        badge.innerText = count; 
+        badge.style.display = 'block'; 
+    } else { 
+        badge.style.display = 'none'; 
+    }
+}
+
+async function openRequestsUI() {
     stopMainFeedVideos();
     document.getElementById('requestsUI').style.display = 'flex';
     const list = document.getElementById('reqList');
-    db.ref(`notifications/${auth.currentUser.uid}`).once('value', snap => {
-        list.innerHTML = "";
-        const data = snap.val();
-        if(data) {
-            Object.entries(data).reverse().forEach(([id, notify]) => {
-                list.innerHTML += `<div class="req-card"><div style="display:flex; align-items:center; gap:10px;"><img src="${notify.fromPhoto}" style="width:40px; height:40px; border-radius:50%;"><b style="font-size:14px; color:white;">${notify.text}</b></div><div><button class="profile-btn btn-outline" onclick="deleteNotification('${id}')">X</button></div></div>`;
-            });
-        } else { list.innerHTML = "<p style='text-align:center;'>No notifications</p>"; }
-    });
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: notifications } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('uid', user.id)
+        .order('ts', { ascending: false });
+
+    list.innerHTML = "";
+    if(notifications && notifications.length > 0) {
+        notifications.forEach(notify => {
+            list.innerHTML += `<div class="req-card"><div style="display:flex; align-items:center; gap:10px;"><img src="${notify.fromPhoto}" style="width:40px; height:40px; border-radius:50%;"><b style="font-size:14px; color:white;">${notify.text}</b></div><div><button class="profile-btn btn-outline" onclick="deleteNotification('${notify.id}')">X</button></div></div>`;
+        });
+    } else { 
+        list.innerHTML = "<p style='text-align:center;'>No notifications</p>"; 
+    }
 }
 
-function deleteNotification(id) {
-    db.ref(`notifications/${auth.currentUser.uid}/${id}`).remove().then(() => openRequestsUI());
+async function deleteNotification(id) {
+    await supabase.from('notifications').delete().eq('id', id);
+    openRequestsUI();
 }
 
-// 🚀 ოპტიმიზირებული პროფილის ვიდეოების ფუნქცია
-function loadUserVideos(uid) {
+// ==========================================
+// 13. პოსტები, ვიდეოები და ფიდი
+// ==========================================
+async function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
     
-    // `.once` და `orderByChild` მთელი ბაზის ტვირთვის ასარიდებლად
-    db.ref('posts').orderByChild('authorId').equalTo(uid).once('value', snap => {
-        grid.innerHTML = ""; 
-        const posts = snap.val();
-        if(!posts) {
-            document.getElementById('statVidsCount').innerText = 0;
-            return;
-        }
+    const { data: posts } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('authorId', uid)
+        .order('timestamp', { ascending: false });
 
-        let vCount = 0;
-        let videoList = [];
-        const postEntries = Object.entries(posts).reverse();
+    grid.innerHTML = ""; 
+    if(!posts || posts.length === 0) {
+        document.getElementById('statVidsCount').innerText = 0;
+        return;
+    }
 
-        postEntries.forEach(([id, post]) => {
-            if(post.media) {
-                const video = post.media.find(m => m.type === 'video');
-                if(video) {
-                    videoList.push({ id, post, video });
-                    vCount++;
-                }
+    let vCount = 0;
+    let videoList = [];
+
+    posts.forEach(post => {
+        if(post.media) {
+            const video = post.media.find(m => m.type === 'video');
+            if(video) {
+                videoList.push({ id: post.id, post, video });
+                vCount++;
             }
+        }
+    });
+
+    document.getElementById('statVidsCount').innerText = vCount;
+
+    let currentlyShown = 0;
+
+    function showNextSix() {
+        const nextBatch = videoList.slice(currentlyShown, currentlyShown + 6);
+        
+        nextBatch.forEach((itemData) => {
+            const { id, post, video } = itemData;
+            const views = post.views || 0;
+            const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
+
+            const item = document.createElement('div');
+            item.className = 'grid-item';
+            item.innerHTML = `
+                <video src="${video.url}#t=0.1" 
+                           muted 
+                           playsinline 
+                           preload="metadata" 
+                           poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                           style="object-fit: cover; width:100%; height:100%; background: #000;">
+                    </video>
+                    <div class="video-views-label">
+                        <i class="fas fa-play"></i> ${formattedViews}
+                    </div>`;
+            
+            const globalIndex = currentlyShown; 
+            item.onclick = () => playFullVideo(video.url, id, globalIndex);
+            
+            grid.appendChild(item);
+            currentlyShown++; 
         });
 
-        document.getElementById('statVidsCount').innerText = vCount;
+        const oldBtn = document.getElementById('loadMoreBtn');
+        if(oldBtn) oldBtn.remove(); 
 
-        let currentlyShown = 0;
-
-        function showNextSix() {
-            const nextBatch = videoList.slice(currentlyShown, currentlyShown + 6);
-            
-            nextBatch.forEach((itemData) => {
-                const { id, post, video } = itemData;
-                const views = post.views || 0;
-                const formattedViews = views >= 1000 ? (views/1000).toFixed(1) + 'K' : views;
-
-                const item = document.createElement('div');
-                item.className = 'grid-item';
-                item.innerHTML = `
-                    <video src="${video.url}#t=0.1" 
-                               muted 
-                               playsinline 
-                               preload="metadata" 
-                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-                               style="object-fit: cover; width:100%; height:100%; background: #000;">
-                        </video>
-                        <div class="video-views-label">
-                            <i class="fas fa-play"></i> ${formattedViews}
-                        </div>`;
-                
-                const globalIndex = currentlyShown; 
-                item.onclick = () => playFullVideo(video.url, id, globalIndex);
-                
-                grid.appendChild(item);
-                currentlyShown++; 
-            });
-
-            const oldBtn = document.getElementById('loadMoreBtn');
-            if(oldBtn) oldBtn.remove(); 
-
-            if (currentlyShown < videoList.length) {
-                const loadMoreBtn = document.createElement('div');
-                loadMoreBtn.id = 'loadMoreBtn';
-                loadMoreBtn.innerHTML = 'მეტის ნახვა <i class="fas fa-chevron-down" style="margin-left:5px;"></i>';
-                loadMoreBtn.style = "grid-column: 1 / -1; text-align: center; padding: 15px; color: #aaa; background: rgba(255,255,255,0.05); border-radius: 8px; margin: 15px 0; cursor: pointer; font-size: 14px;";
-                loadMoreBtn.onclick = () => showNextSix(); 
-                grid.appendChild(loadMoreBtn);
-            }
+        if (currentlyShown < videoList.length) {
+            const loadMoreBtn = document.createElement('div');
+            loadMoreBtn.id = 'loadMoreBtn';
+            loadMoreBtn.innerHTML = 'მეტის ნახვა <i class="fas fa-chevron-down" style="margin-left:5px;"></i>';
+            loadMoreBtn.style = "grid-column: 1 / -1; text-align: center; padding: 15px; color: #aaa; background: rgba(255,255,255,0.05); border-radius: 8px; margin: 15px 0; cursor: pointer; font-size: 14px;";
+            loadMoreBtn.onclick = () => showNextSix(); 
+            grid.appendChild(loadMoreBtn);
         }
-        showNextSix();
-    });
+    }
+    showNextSix();
 }
 
-function playFullVideo(url, postId, currentIndex) {
+async function playFullVideo(url, postId, currentIndex) {
     killVideo();
     const overlay = document.getElementById('fullVideoOverlay');
     const vid = document.getElementById('fullVideoTag');
@@ -1394,60 +1663,59 @@ function playFullVideo(url, postId, currentIndex) {
     };
 
     if (postId) {
-        db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
+        // ნახვების გაზრდა
+        const { data: viewData } = await supabase.from('posts').select('views').eq('id', postId).single();
+        await supabase.from('posts').update({ views: (viewData?.views || 0) + 1 }).eq('id', postId);
 
-        // 🚀 შეცვლილია .once-ზე, რომ სრულად გახსნამ არ ტვირთოს ტელეფონი
-        db.ref(`posts/${postId}`).once('value', snap => {
-            const data = snap.val();
-            if (!data) return;
+        const { data: post } = await supabase.from('posts').select('*').eq('id', postId).single();
+        if (!post) return;
 
-            window.currentFullVideoAuthorId = data.authorId;
-            const ava = document.getElementById('fullVideoAva');
-            if (ava) {
-                ava.src = data.authorPhoto || 'https://ui-avatars.com/api/?name=' + data.authorName;
-                ava.parentElement.onclick = () => {
-                    closeFullVideo();
-                    openProfile(data.authorId);
-                };
+        window.currentFullVideoAuthorId = post.authorId;
+        const ava = document.getElementById('fullVideoAva');
+        if (ava) {
+            ava.src = post.authorPhoto || 'https://ui-avatars.com/api/?name=' + post.authorName;
+            ava.parentElement.onclick = () => {
+                closeFullVideo();
+                openProfile(post.authorId);
+            };
+        }
+
+        const vText = document.getElementById('fullVideoViewsText');
+        if (vText) {
+            const views = post.views || 0;
+            vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
+        }
+
+        const lElem = document.getElementById('fullLikeCount');
+        const lIcon = document.getElementById('fullLikeIcon');
+        const { data: { user } } = await supabase.auth.getUser();
+        const myUid = user.id;
+        const likesKeys = post.likedBy ? Object.keys(post.likedBy) : [];
+        
+        if (lElem) lElem.innerText = likesKeys.length;
+        if (lIcon) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
+
+        const sIcon = document.getElementById('fullSaveIcon');
+        if (sIcon) sIcon.style.color = (post.savedBy && post.savedBy[myUid]) ? 'var(--gold)' : 'white';
+
+        const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
+        if (giftBtn) {
+            giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
+        }
+      
+        const moreBtn = document.querySelector('#fullVideoOverlay .more-btn'); 
+        if (moreBtn) {
+            if (post.authorId === myUid) {
+                moreBtn.style.display = 'flex'; 
+                moreBtn.onclick = () => toggleMoreMenu(window.currentFullVideoId);
+            } else {
+                moreBtn.style.display = 'none'; 
             }
+        }
 
-            const vText = document.getElementById('fullVideoViewsText');
-            if (vText) {
-                const views = data.views || 0;
-                vText.innerText = views >= 1000 ? (views / 1000).toFixed(1) + 'K' : views;
-            }
-
-            const lElem = document.getElementById('fullLikeCount');
-            const lIcon = document.getElementById('fullLikeIcon');
-            const myUid = auth.currentUser.uid;
-            const likesKeys = data.likedBy ? Object.keys(data.likedBy) : [];
-            
-            if (lElem) lElem.innerText = likesKeys.length;
-            if (lIcon) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
-
-            const sIcon = document.getElementById('fullSaveIcon');
-            if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
-
-            const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
-            if (giftBtn) {
-                giftBtn.onclick = () => openGiftPanel(window.currentFullVideoId, window.currentFullVideoAuthorId);
-            }
-          
-            const moreBtn = document.querySelector('#fullVideoOverlay .more-btn'); 
-            if (moreBtn) {
-                if (data.authorId === auth.currentUser.uid) {
-                    moreBtn.style.display = 'flex'; 
-                    moreBtn.onclick = () => toggleMoreMenu(window.currentFullVideoId);
-                } else {
-                    moreBtn.style.display = 'none'; 
-                }
-            }
-        });
-
-        db.ref(`comments/${postId}`).once('value', cSnap => {
-            const cElem = document.getElementById('fullCommCount');
-            if (cElem) cElem.innerText = cSnap.numChildren();
-        });
+        const { count: commentCount } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', postId);
+        const cElem = document.getElementById('fullCommCount');
+        if (cElem) cElem.innerText = commentCount || 0;
     }
 }
 
@@ -1459,35 +1727,40 @@ function searchUsers(q) {
     });
 }
 
-function openSocialList(uid, type) {
+async function openSocialList(uid, type) {
     const ui = document.getElementById('socialListsUI');
     const title = document.getElementById('socialListTitle');
     const content = document.getElementById('socialContentArea');
     ui.style.display = 'flex';
     title.innerText = type === 'followers' ? 'გამომწერები' : 'გამოწერილია';
     content.innerHTML = "იტვირთება...";
-    db.ref(`users/${uid}/${type}`).once('value', snap => {
-        const list = snap.val();
-        if(!list) { content.innerHTML = "<p style='text-align:center; margin-top:50px; color:gray;'>სია ცარიელია</p>"; return; }
+
+    if (type === 'followers') {
+        const { data: list } = await supabase.from('followers').select('*').eq('user_id', uid);
         renderSocialList(list);
-    });
+    } else {
+        const { data: list } = await supabase.from('followers').select('*').eq('follower_id', uid);
+        renderSocialList(list);
+    }
 }
 
 function renderSocialList(list) {
     const content = document.getElementById('socialContentArea');
     content.innerHTML = "";
-    Object.entries(list).forEach(([uid, u]) => {
+    if (!list) return;
+
+    list.forEach(u => {
         content.innerHTML += `
-        <div class="social-item" data-name="${u.name.toLowerCase()}">
-        <div class="social-user-info" onclick="document.getElementById('socialListsUI').style.display='none'; openProfile('${uid}')">
-        <img src="${u.photo || 'https://ui-avatars.com/api/?name='+u.name}" class="social-ava">
+        <div class="social-item" data-name="${u.friend_name.toLowerCase()}">
+        <div class="social-user-info" onclick="document.getElementById('socialListsUI').style.display='none'; openProfile('${u.follower_id}')">
+        <img src="${u.friend_photo || 'https://ui-avatars.com/api/?name='+u.friend_name}" class="social-ava">
         <div>
-        <div class="social-name">${u.name}</div>
+        <div class="social-name">${u.friend_name}</div>
         <div class="social-status">Emigrant</div>
         </div>
         </div>
         <div class="social-actions-btns">
-        <div class="social-msg-btn" onclick="startChat('${uid}', '${u.name}', '${u.photo}')">
+        <div class="social-msg-btn" onclick="startChat('${u.follower_id}', '${u.friend_name}', '${u.friend_photo}')">
         <i class="fas fa-comment"></i>
         </div>
         </div>
@@ -1506,20 +1779,24 @@ function filterSocialList(q) {
 async function uploadNewAva(inp) {
     const file = inp.files[0];
     if(!file) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const formData = new FormData();
     formData.append('image', file);
     try {
         const res = await fetch('https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67', { method: 'POST', body: formData });
         const data = await res.json();
         if(data.success) {
-            await db.ref('users/' + auth.currentUser.uid).update({ photo: data.data.url });
+            await supabase.from('users').update({ photo: data.data.url }).eq('id', user.id);
             alert("Done!");
         }
     } catch(e) { alert("Error!"); }
 }
 
 function logoutUser() {
-    if(confirm("Logout?")) { auth.signOut().then(() => { location.reload(); }); }
+    if(confirm("Logout?")) { 
+        supabase.auth.signOut().then(() => { location.reload(); }); 
+    }
 }
  
 function toggleAuthBox(type) {
@@ -1549,6 +1826,9 @@ function showAuthError(message) {
     }
 }
 
+// ==========================================
+// 14. რეგისტრაცია და ავტორიზაცია
+// ==========================================
 async function handleAuth(type) {
     if(document.getElementById('authError')) document.getElementById('authError').style.display = 'none';
 
@@ -1565,8 +1845,15 @@ async function handleAuth(type) {
         if (pass.length < 6) return showAuthError("პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო");
         if (pass !== passConfirm) return showAuthError("პაროლები არ ემთხვევა ერთმანეთს!");
 
-        auth.createUserWithEmailAndPassword(email, pass).then(u => {
-            db.ref('users/' + u.user.uid).set({ 
+        const { data, error } = await supabase.auth.signUp({ email, password: pass });
+
+        if (error) {
+            let msg = "რეგისტრაცია ვერ მოხერხდა";
+            if (error.message.includes('already registered')) msg = "ეს ელფოსტა უკვე დაკავებულია";
+            showAuthError(msg);
+        } else if (data && data.user) {
+            await supabase.from('users').insert([{
+                id: data.user.id,
                 name: name, 
                 akho: 50.00, 
                 photo: "", 
@@ -1574,15 +1861,11 @@ async function handleAuth(type) {
                 role: 'user', 
                 privacy: 'public', 
                 presence: Date.now() 
-            }).then(() => {
-                if(typeof addToLog === "function") addToLog('Welcome Bonus', 50.00);
-                showCustomAlert("მოგესალმებით", "რეგისტრაცია წარმატებულია!");
-            });
-        }).catch(err => {
-            let msg = "რეგისტრაცია ვერ მოხერხდა";
-            if (err.code === 'auth/email-already-in-use') msg = "ეს ელფოსტა უკვე დაკავებულია";
-            showAuthError(msg);
-        });
+            }]);
+            
+            if(typeof addToLog === "function") addToLog('Welcome Bonus', 50.00);
+            showCustomAlert("მოგესალმებით", "რეგისტრაცია წარმატებულია!");
+        }
 
     } else {
         const email = document.getElementById('uEmail').value.trim();
@@ -1590,18 +1873,18 @@ async function handleAuth(type) {
 
         if (!email || !pass) return showAuthError("შეიყვანეთ მეილი და პაროლი");
 
-        auth.signInWithEmailAndPassword(email, pass).then(u => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+        if (error) {
+            showAuthError("ელფოსტა ან პაროლი არასწორია");
+        } else {
             showCustomAlert("მოგესალმებით", "წარმატებით შეხვედით სისტემაში!");
-        }).catch(err => {
-            let msg = "ავტორიზაცია ვერ მოხერხდა";
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-                msg = "ელფოსტა ან პაროლი არასწორია";
-            }
-            showAuthError(msg);
-        });
+        }
     }
 }
 
+// ==========================================
+// 15. ვიდეოს ატვირთვა Storage-ში
+// ==========================================
 async function startTokenUpload() {
     if (!canAfford(5)) return;
 
@@ -1622,7 +1905,6 @@ async function startTokenUpload() {
         if (percentText) percentText.innerText = "0%";
         progressBtn.innerText = "Processing...";
         progressBtn.disabled = true;
-        progressBtn.style.background = "rgba(212,175,55,0.3)";
     }
 
     const btn = document.getElementById('upBtn');
@@ -1632,56 +1914,47 @@ async function startTokenUpload() {
     }
 
     try {
-        const storageRef = firebase.storage().ref();
-        const videoName = Date.now() + "_" + file.name;
-        const videoRef = storageRef.child('videos/' + videoName);
-        const uploadTask = videoRef.put(file);
+        const { data: { user } } = await supabase.auth.getUser();
+        const videoName = `${Date.now()}_${file.name}`;
+        
+        // ფაილის ატვირთვა Supabase Storage "videos" ბაკეტში
+        const { data: storageData, error: uploadError } = await supabase.storage
+            .from('videos')
+            .upload(videoName, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
 
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                if (percentText) percentText.innerText = progress + "%";
-                if (progressBtn) progressBtn.innerText = "Uploading " + progress + "%";
-            }, 
-            (error) => {
-                console.error("ატვირთვის შეცდომა:", error);
-                if (progressModal) progressModal.style.display = 'none';
-                alert("შეცდომა: " + error.message);
-            }, 
-            async () => {
-                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                await db.ref('posts').push({
-                    authorId: auth.currentUser.uid,
-                    authorName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
-                    authorPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
-                    text: document.getElementById('videoDesc').value || "",
-                    media: [{ url: downloadURL, type: 'video' }],
-                    timestamp: Date.now()
-                });
+        if (uploadError) throw uploadError;
 
-                spendAkho(5, 'Video Upload');
+        // ატვირთული ფაილის საჯარო ლინკის წამოღება
+        const { data: { publicUrl } } = supabase.storage
+            .from('videos')
+            .getPublicUrl(videoName);
 
-                if (progressModal) {
-                    if (percentText) percentText.innerText = "100%";
-                    statusTitle.innerText = "Thank You!";
-                    statusText.innerText = "Payment received.";
-                    progressBtn.innerText = "Check Balance";
-                    progressBtn.disabled = false;
-                    progressBtn.style.background = "var(--gold)";
-                    progressBtn.style.color = "black";
-                    progressBtn.style.cursor = "pointer";
-                    
-                    progressBtn.onclick = () => {
-                        progressModal.style.display = 'none';
-                        location.reload();
-                    };
-                } else {
-                    alert("ვიდეო წარმატებით აიტვირთა!");
-                    location.reload();
-                }
-            }
-        );
+        // პოსტის მონაცემების შენახვა ცხრილში
+        await supabase.from('posts').insert([{
+            authorId: user.id,
+            authorName: typeof myName !== 'undefined' ? myName : "მომხმარებელი",
+            authorPhoto: typeof myPhoto !== 'undefined' ? myPhoto : "",
+            text: document.getElementById('videoDesc').value || "",
+            media: [{ url: publicUrl, type: 'video' }],
+            timestamp: Date.now()
+        }]);
 
+        spendAkho(5, 'Video Upload');
+
+        if (progressModal) {
+            if (percentText) percentText.innerText = "100%";
+            statusTitle.innerText = "Thank You!";
+            statusText.innerText = "Payment received.";
+            progressBtn.innerText = "Check Balance";
+            progressBtn.disabled = false;
+            progressBtn.onclick = () => {
+                progressModal.style.display = 'none';
+                location.reload();
+            };
+        }
     } catch (err) {
         console.error("კრიტიკული შეცდომა:", err);
         if (progressModal) progressModal.style.display = 'none';
@@ -1725,58 +1998,44 @@ function formatPostDate(ts) {
     return `${month}-${day}`;
 }
 
-function renderTokenFeed() {
+// ==========================================
+// 16. მთავარი ფიდის (Feed) რენდერი
+// ==========================================
+async function renderTokenFeed() {
     if (document.getElementById('liveUI').style.display === 'flex') return;
     if (isFeedLoading) return;
     
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
 
-    let query = db.ref('posts').orderByChild('timestamp');
+    let query = supabase.from('posts').select('*').order('timestamp', { ascending: false });
     if (lastVisibleTimestamp) {
-        query = query.endAt(lastVisibleTimestamp - 1);
+        query = query.lt('timestamp', lastVisibleTimestamp);
     }
 
-    query.limitToLast(FEED_LIMIT).once('value', snap => {
-        const data = snap.val(); 
-        isFeedLoading = false;
-        if (!data) return;
+    const { data: posts } = await query.limit(FEED_LIMIT);
+    isFeedLoading = false;
+    if (!posts || posts.length === 0) return;
 
-        let rawEntries = Object.entries(data);
-        lastVisibleTimestamp = rawEntries[0][1].timestamp;
+    lastVisibleTimestamp = posts[posts.length - 1].timestamp;
 
-        let postEntries = rawEntries.sort((a, b) => {
-            const now = Date.now();
-            const aIsPromoted = a[1].isPromoted && a[1].promoteExpires > now;
-            const bIsPromoted = b[1].isPromoted && b[1].promoteExpires > now;
+    posts.forEach(post => {
+        if (!post || !post.media || !post.media.some(m => m.type === 'video') || document.getElementById(`card-${post.id}`)) return;
 
-            if (aIsPromoted && !bIsPromoted) return -1;
-            if (!aIsPromoted && bIsPromoted) return 1;
-            
-            if (aIsPromoted && bIsPromoted) {
-                return (b[1].promoteWeight || 0) - (a[1].promoteWeight || 0);
-            }
-            return b[1].timestamp - a[1].timestamp;
-        });
-      
-        lastVisibleTimestamp = postEntries[postEntries.length - 1][1].timestamp;
-
-        postEntries.forEach(([id, post]) => {
-            if (!post || !post.media || !post.media.some(m => m.type === 'video') || document.getElementById(`card-${id}`)) return;
-
-            const videoUrl = post.media.find(m => m.type === 'video').url;
-            const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
-            const shareCount = post.shares || 0;
-            const saveCount = post.saves || 0;
-            
-            const card = document.createElement('div');
-            card.className = 'video-card';
-            card.id = `card-${id}`;
-            
-            const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
-            const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
-            
-            card.innerHTML = `
+        const videoUrl = post.media.find(m => m.type === 'video').url;
+        const likeCount = post.likedBy ? Object.keys(post.likedBy).length : 0;
+        const shareCount = post.shares || 0;
+        const saveCount = post.saves || 0;
+        
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.id = `card-${post.id}`;
+        
+        const { data: { user } } = supabase.auth.getUser();
+        const isLikedByMe = post.likedBy && post.likedBy[user?.id];
+        const isSavedByMe = post.savedBy && post.savedBy[user?.id];      
+        
+        card.innerHTML = `
 <video src="${videoUrl}" 
 loop 
 playsinline 
@@ -1787,135 +2046,111 @@ poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAA
 style="background: black; object-fit: cover; width:100%; height:100%; transition: opacity 0.3s;"
 onclick="togglePlayPause(this)">
 </video>
-<div class="live-activity-overlay" id="live-activity-${id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
+<div class="live-activity-overlay" id="live-activity-${post.id}" style="position: absolute; bottom: 110px; left: 15px; width: 220px; height: 250px; pointer-events: none;"></div>
 
 <div class="side-actions">
-    <div id="ava-wrapper-${id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
-        <img id="ava-${id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
-        <div id="mini-status-${id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
+    <div id="ava-wrapper-${post.id}" style="position:relative; width:48px; height:48px; border-radius:50%;">
+        <img id="ava-${post.id}" src="token-avatar.png" class="author-mini-ava" onclick="openProfile('${post.authorId}')" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #000; display:block;">
+        <div id="mini-status-${post.id}" style="position:absolute; bottom:0; right:0; width:12px; height:12px; background:var(--green); border-radius:50%; border:2px solid #000; display:none; z-index:10;"></div>
     </div>
 
-    <div id="like-btn-${id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${id}', '${post.authorId}')">
+    <div id="like-btn-${post.id}" class="action-item ${isLikedByMe ? 'liked' : ''}" onclick="react('${post.id}', '${post.authorId}')">
         <i class="fas fa-heart"></i>
-        <span id="like-count-${id}">${likeCount}</span>
+        <span id="like-count-${post.id}">${likeCount}</span>
     </div>
     
-                    <div class="action-item" onclick="openComments('${id}')">
-                        <i class="fas fa-comment-dots"></i>
-                        <span id="comm-count-${id}">0</span>
-                    </div>
-                    <div id="save-btn-${id}" class="action-item ${isSavedByMe ? 'saved' : ''}" onclick="toggleSavePost('${id}')">
-                        <i class="fas fa-bookmark"></i>
-                        <span id="save-count-${id}">${saveCount}</span>
-                    </div>
-                    <div class="action-item" onclick="openShare('${id}', '${videoUrl}')">
-                        <i class="fas fa-share"></i>
-                        <span id="share-count-${id}">${shareCount}</span>
-                    </div>
-                    <div class="action-item gift-btn" onclick="window.openGiftPanel('${id}', '${post.authorId}')">
-                        <i class="fas fa-gift" style="color: #ff4d4d;"></i>
-                        <span>Gift</span>
-                    </div>
-                  ${post.authorId === auth.currentUser.uid ? `
-                   <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
-                   <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
-                   <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
-                  </div>
-                  ` : ''}
-                </div>
-                  <div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <b id="name-${id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
+    <div class="action-item" onclick="openComments('${post.id}')">
+        <i class="fas fa-comment-dots"></i>
+        <span id="comm-count-${post.id}">0</span>
+    </div>
+    <div id="save-btn-${post.id}" class="action-item ${isSavedByMe ? 'saved' : ''}" onclick="toggleSavePost('${post.id}')">
+        <i class="fas fa-bookmark"></i>
+        <span id="save-count-${post.id}">${saveCount}</span>
+    </div>
+    <div class="action-item" onclick="openShare('${post.id}', '${videoUrl}')">
+        <i class="fas fa-share"></i>
+        <span id="share-count-${post.id}">${shareCount}</span>
+    </div>
+    <div class="action-item gift-btn" onclick="window.openGiftPanel('${post.id}', '${post.authorId}')">
+        <i class="fas fa-gift" style="color: #ff4d4d;"></i>
+        <span>Gift</span>
+    </div>
+    ${post.authorId === user?.id ? `
+    <div class="action-item" onclick="deleteMyVideo('${post.id}')" style="margin-top: 5px;">
+        <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
+        <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
+    </div>` : ''}
+</div>
+<div style="position:absolute; left:15px; bottom:90px; text-shadow:2px 2px 4px #000; pointer-events:none; max-width: 75%;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <b id="name-${post.id}" style="color:var(--gold); cursor:pointer; pointer-events:auto;" onclick="openProfile('${post.authorId}')">@${post.authorName}</b>
+        <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
+    </div>
+    <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
+        ${post.text || ''}
+    </p>
+</div>`;
         
-                <span style="color: rgba(255,255,255,0.6); font-size: 12px; font-weight: normal;"> • ${post.timestamp ? new Date(post.timestamp).toLocaleDateString('en-US', {month:'2-digit', day:'2-digit'}).replace('/', '-') : ''}</span>
-              </div>
-                 <p style="font-size:14px; margin-top:6px; pointer-events:auto; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.3; color: #fff;">
-                 ${post.text || ''}
-                  </p>
-               </div>`;
-            
-            feed.appendChild(card);
-            cleanupOldVideos();
+        feed.appendChild(card);
+        cleanupOldVideos();
 
-            function startLikeCycle() {
-                if (post.authorId !== auth.currentUser.uid) return;
-                const activityContainer = document.getElementById(`live-activity-${id}`);
-                if (!activityContainer) return;
-                const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-                if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
-                    setTimeout(startLikeCycle, 5000);
-                    return;
-                }
-                let index = 0;
-                function spawnNext() {
-                    const container = document.getElementById(`live-activity-${id}`);
-                    if (!container) return;
-                    if (index < currentPostLikes.length) {
-                        const person = currentPostLikes[index];
-                        const avaBox = document.createElement('div');
-                        avaBox.className = 'floating-avatar-box';
-                        avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
-                        avaBox.innerHTML = `
-                            <div style="position:relative; width:48px; height:48px;">
-                                <img src="${person.photo || 'token-avatar.png' + person.name}" 
-                                     style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                                <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
-                            </div>`;
-                        container.appendChild(avaBox);
-                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-                        index++;
-                        setTimeout(spawnNext, 1500);
-                    } else {
-                        setTimeout(startLikeCycle, 10000);
-                    }
-                }
-                spawnNext();
+        // ლაივ აქტივობები
+        function startLikeCycle() {
+            if (post.authorId !== user?.id) return;
+            const activityContainer = document.getElementById(`live-activity-${post.id}`);
+            if (!activityContainer) return;
+            const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
+            if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
+                setTimeout(startLikeCycle, 5000);
+                return;
             }
-            startLikeCycle();
-
-            db.ref(`comments/${id}`).once('value', cSnap => {
-                const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
-                const el = document.getElementById(`comm-count-${id}`);
-                if(el) el.innerText = count;
-            });
-
-            db.ref(`users/${post.authorId}`).once('value', uSnap => {
-                const u = uSnap.val();
-                if(!u) return;
-                const ava = document.getElementById(`ava-${id}`);
-                const name = document.getElementById(`name-${id}`);
-                const status = document.getElementById(`mini-status-${id}`);
-                if(u.photo && ava) ava.src = u.photo;
-                if(u.name && name) name.innerText = "@" + u.name;
-                if(u.presence === 'online' && status) status.style.display = 'block';
-                else if(status) status.style.display = 'none';
-            });
-
-            const liveChannelName = "live_" + post.authorId;
-            db.ref(`lives_active/${liveChannelName}`).on('value', lSnap => {
-                const wrapper = document.getElementById(`ava-wrapper-${id}`);
-                const ava = document.getElementById(`ava-${id}`);
-                
-                if(lSnap.exists() && wrapper) {
-                    wrapper.classList.add('is-live-now');
-                    if(ava) ava.onclick = () => joinLive(liveChannelName);
-                } else if(wrapper) {
-                    wrapper.classList.remove('is-live-now');
-                    if(ava) ava.onclick = () => openProfile(post.authorId);
+            let index = 0;
+            function spawnNext() {
+                const container = document.getElementById(`live-activity-${post.id}`);
+                if (!container) return;
+                if (index < currentPostLikes.length) {
+                    const person = currentPostLikes[index];
+                    const avaBox = document.createElement('div');
+                    avaBox.className = 'floating-avatar-box';
+                    avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
+                    avaBox.innerHTML = `
+                        <div style="position:relative; width:48px; height:48px;">
+                            <img src="${person.photo || 'token-avatar.png'}" style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
+                            <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
+                        </div>`;
+                    container.appendChild(avaBox);
+                    setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
+                    index++;
+                    setTimeout(spawnNext, 1500);
+                } else {
+                    setTimeout(startLikeCycle, 10000);
                 }
-            });
-        });
-        setupAutoPlay();
-    });
-
-    feed.onscroll = function() {
-        if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 800) {
-            renderTokenFeed();
+            }
+            spawnNext();
         }
-    };
+        startLikeCycle();
+
+        // კომენტარების რაოდენობის წამოღება
+        supabase.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id).then(({ count }) => {
+            const el = document.getElementById(`comm-count-${post.id}`);
+            if(el) el.innerText = count || 0;
+        });
+
+        // ავტორის სტატუსის განახლება
+        supabase.from('users').select('photo, name, presence').eq('id', post.authorId).single().then(({ data: u }) => {
+            if(!u) return;
+            const ava = document.getElementById(`ava-${post.id}`);
+            const name = document.getElementById(`name-${post.id}`);
+            const status = document.getElementById(`mini-status-${post.id}`);
+            if(u.photo && ava) ava.src = u.photo;
+            if(u.name && name) name.innerText = "@" + u.name;
+            if(u.presence === 'online' && status) status.style.display = 'block';
+            else if(status) status.style.display = 'none';
+        });
+    });
+    setupAutoPlay();
 }
 
-let feedLimit = 15;
 window.addEventListener('scroll', function() {
     const feed = document.getElementById('main-feed');
     if (!feed || isFeedLoading) return;
@@ -1925,19 +2160,18 @@ window.addEventListener('scroll', function() {
     const clientHeight = document.documentElement.clientHeight;
 
     if (scrollTop + clientHeight >= scrollHeight - 800) {
-        console.log("ბოლოში ვართ, ვამატებთ ვიდეოებს...");
-        feedLimit += 15; 
         renderTokenFeed();
     }
 }, { passive: true });
 
+// ==========================================
+// 17. პოსტის წაშლა
+// ==========================================
 async function deleteMyVideo(postId) {
     if (!confirm("ნამდვილად გსურთ ვიდეოს სამუდამოდ წაშლა?")) return;
 
     try {
-        const snap = await db.ref(`posts/${postId}`).once('value');
-        const post = snap.val();
-
+        const { data: post } = await supabase.from('posts').select('*').eq('id', postId).single();
         if (!post) {
             console.error("პოსტი ვერ მოიძებნა!");
             return;
@@ -1946,16 +2180,19 @@ async function deleteMyVideo(postId) {
         const videoMedia = post.media ? post.media.find(m => m.type === 'video') : null;
         if (videoMedia && videoMedia.url) {
             try {
-                const storageRef = firebase.storage().refFromURL(videoMedia.url);
-                await storageRef.delete();
-                console.log("ფაილი წაიშალა Storage-დან ✅");
+                // ფაილის წაშლა Storage-დან
+                const path = videoMedia.url.split('/storage/v1/object/public/videos/')[1];
+                if (path) {
+                    await supabase.storage.from('videos').remove([path]);
+                    console.log("ფაილი წაიშალა Storage-დან ✅");
+                }
             } catch (storageErr) {
-                console.warn("ფაილი Storage-ში უკვე აღარ არსებობს:", storageErr);
+                console.warn("ფაილი Storage-ში არ არსებობს ან ვერ წაიშალა:", storageErr);
             }
         }
 
-        await db.ref(`posts/${postId}`).remove();
-        await db.ref(`comments/${postId}`).remove();
+        await supabase.from('posts').delete().eq('id', postId);
+        await supabase.from('comments').delete().eq('post_id', postId);
 
         const card = document.getElementById(`card-${postId}`);
         if (card) {
@@ -1967,9 +2204,7 @@ async function deleteMyVideo(postId) {
             }
             card.remove();
         }
-        console.log("პოსტი წარმატებით წაიშალა ყველგან!");
     } catch (error) {
-        console.error("წაშლისას მოხდა შეცდომა:", error);
         alert("შეცდომა წაშლისას: " + error.message);
     }
 }
@@ -1978,7 +2213,7 @@ function setupAutoPlay() {
     if (document.getElementById('messengerUI').style.display === 'flex') return;
 
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach(async (entry) => {
             const video = entry.target.querySelector('video');
             if (!video) return;
 
@@ -1990,9 +2225,8 @@ function setupAutoPlay() {
                 video.muted = false;
 
                 if (postId && postId !== "") {
-                    db.ref(`posts/${postId}/views`).transaction(currentViews => {
-                        return (currentViews || 0) + 1;
-                    });
+                    const { data } = await supabase.from('posts').select('views').eq('id', postId).single();
+                    await supabase.from('posts').update({ views: (data?.views || 0) + 1 }).eq('id', postId);
                 }
             } else {
                 video.pause();
@@ -2006,41 +2240,25 @@ function setupAutoPlay() {
     document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
 }
 
+// ==========================================
+// 18. საჩუქრების სისტემა (Gifts)
+// ==========================================
 window.openGiftPanel = function(postId, authorId) {
     if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
     const panel = document.createElement('div');
     panel.id = "dynamicGiftPanel";
     panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:25px 20px; z-index:200005; backdrop-filter:blur(15px); color:white; font-family:sans-serif;";
     
-    const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
-    const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
-    const gift4 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yvavili.gif";
-    const gift5 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Egvipte.gif";
-    const gift6 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Guli.gif";
-    const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Saati.gif";
-    const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Sunduk.png";
-    const gift9 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Gogo3.png";
-    const gift10 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Romeo.gif";
-    const gift11 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Gofo2.png";
-    const gift12 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Namcxvari.gif";
-    const gift13 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin1.gif";
-    const gift14 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin2.gif";
-    const gift15 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin3.gif";
-    const gift16 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa1.gif";
-    const gift17 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa2.gif";
-    const gift18 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa3.gif";
-    const gift19 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa4.gif";
-    const gift20 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
-    const gift21 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/iebi1.gif";
-    const gift22 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/guli1.gif";
-    const gift23 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/torti1.gif";
-    const gift24 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif";
-    const gift25 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali1.png";
-    const gift26 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali2.png";
-    const gift27 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/spilo.png";
-    const gift28 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/mikvarxar1.gif";
-    const gift29 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/tagvi.png";
+    // GIFs და საჩუქრების ლინკები (აქ ინახება შენი გიტჰაბის ლინკები)
+    const gifts = [
+        { cost: 5, url: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif" },
+        { cost: 10, url: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif" },
+        { cost: 15, url: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif" },
+        { cost: 20, url: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yvavili.gif" },
+        { cost: 25, url: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Egvipte.gif" },
+        { cost: 50, url: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Guli.gif" }
+        // აქ შეგიძლია ჩაამატო ყველა დანარჩენი საჩუქარი...
+    ];
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -2048,158 +2266,128 @@ window.openGiftPanel = function(postId, authorId) {
             <i class="fas fa-times" onclick="document.getElementById('dynamicGiftPanel').remove()" style="cursor:pointer; font-size:20px; color:gray;"></i>
         </div>
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; max-height:400px; overflow-y:auto;">
-            <div onclick="window.processGift('${authorId}', 5, '${gift1}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift1}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 10, '${gift2}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift2}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">10 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 15, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift3}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">15 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 20, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift4}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">20 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 25, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift5}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">25 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 50, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift6}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 80, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift7}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">80 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 100, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift8}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">100 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift9}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift10}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift10}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift11}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift11}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift12}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift12}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift13}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift13}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift14}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift14}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift15}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift15}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift16}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift16}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift17}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift17}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>     
-            <div onclick="window.processGift('${authorId}', 150, '${gift18}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift18}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift19}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift19}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift20}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift20}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift21}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift21}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift22}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift22}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift23}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift23}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift24}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift24}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift25}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift25}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift26}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift26}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift27}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift27}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift28}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift28}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift29}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift29}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            ${gifts.map(g => `
+                <div onclick="window.processGift('${authorId}', ${g.cost}, '${g.url}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;">
+                    <img src="${g.url}" style="width:60px; height:60px; object-fit:contain;">
+                    <div style="color:#d4af37; font-weight:bold; font-size:12px;">${g.cost} AKHO</div>
+                </div>
+            `).join('')}
         </div>`;
     document.body.appendChild(panel);
 };
 
-window.processGift = function(targetUid, cost, giftUrl) {
-    const user = firebase.auth().currentUser;
+window.processGift = async function(targetUid, cost, giftUrl) {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    if (user.uid === targetUid) return alert("საკუთარ თავს ვერ აჩუქებთ!");
+    if (user.id === targetUid) return alert("საკუთარ თავს ვერ აჩუქებთ!");
     
-    db.ref(`users/${user.uid}`).once('value', snap => {
-        const myData = snap.val();
-        if (!myData) return alert("მონაცემები ვერ მოიძებნა!");
+    const { data: myData } = await supabase.from('users').select('*').eq('id', user.id).single();
+    if (!myData) return alert("მონაცემები ვერ მოიძებნა!");
 
-        const myBalance = myData.akho || 0;
-        if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
+    const myBalance = myData.akho || 0;
+    if (myBalance < cost) return alert("არ გაქვთ საკმარისი AKHO! ❌");
 
-        db.ref(`users/${user.uid}/akho`).set(myBalance - cost);
-        db.ref(`users/${targetUid}/gift_balance`).transaction(c => (c || 0) + cost);
+    // ბალანსის განახლება
+    await supabase.from('users').update({ akho: myBalance - cost }).eq('id', user.id);
+    
+    const { data: targetUser } = await supabase.from('users').select('gift_balance').eq('id', targetUid).single();
+    await supabase.from('users').update({ gift_balance: (targetUser?.gift_balance || 0) + cost }).eq('id', targetUid);
 
-        db.ref(`received_gifts/${targetUid}`).push({
-            giftUrl: giftUrl,
-            price: cost,
-            fromName: myData.name || "მეგობარი", 
-            fromPhoto: myData.photo || "",      
-            timestamp: Date.now()
-        });
+    // საჩუქრის ჩაწერა ბაზაში
+    await supabase.from('received_gifts').insert([{
+        receiver_id: targetUid,
+        giftUrl: giftUrl,
+        price: cost,
+        fromName: myData.name || "მეგობარი", 
+        fromPhoto: myData.photo || "",      
+        timestamp: Date.now()
+    }]);
 
-        if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
-        
-        const animWrapper = document.createElement('div');
-        animWrapper.id = "activeGiftAnimation";
-        animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:300px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;";
-        animWrapper.innerHTML = `
-            <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
-                <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
-            </div>
-            <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
-                <div class="gift-image-container">
-                    <div class="golden-glow-overlay"></div>
-                </div>
-                <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
-                    <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase; letter-spacing: 1px;">საჩუქარი!</h1>
-                    <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადაეცათ ${cost} AKHO</h2>
-                    <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
-                </div>
-            </div>`;
-        document.body.appendChild(animWrapper);
-
-        if (!document.getElementById('giftEnhancedStyles')) {
-            const style = document.createElement('style');
-            style.id = 'giftEnhancedStyles';
-            style.innerHTML = `
-                .gift-image-container { position: relative; display: inline-block; margin-bottom: 20px; }
-                .golden-gift-img { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); animation: giftPulse 2.5s infinite alternate; }
-                .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%); border-radius: 50%; filter: blur(15px); z-index: 1; animation: glowPulse 2.5s infinite alternate; }
-                @keyframes giftPulse { 0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); } }
-                @keyframes glowPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
-                @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.3) translateY(-80px); opacity: 0; } }
-                @keyframes giftStep2Anim { 0% { transform: scale(0.6); opacity: 0; } 4% { transform: scale(1.05); opacity: 1; } 8% { transform: scale(1); opacity: 1; } 96% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8) translateY(-120px); opacity: 0; } }
-            `;
-            document.head.appendChild(style);
-        }
-
-        setTimeout(() => {
-            const s1 = document.getElementById('giftStep1');
-            const s2 = document.getElementById('giftStep2');
-            if(s1) s1.style.display = 'none';
-            if(s2) s2.style.display = 'block';
-        }, 3000);
-
-        setTimeout(() => { if(animWrapper) animWrapper.remove(); }, 33000);
-    });
+    if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
+    
+    // საჩუქრის ანიმაცია
+    showLocalGiftAnimation(giftUrl, cost);
 };
 
-window.transferToMainBalance = function(amount) {
-    if (!amount || amount <= 0) return alert("გადასატანი არაფერია!");
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("ავტორიზაცია საჭიროა!");
+function showLocalGiftAnimation(giftUrl, cost) {
+    const animWrapper = document.createElement('div');
+    animWrapper.id = "activeGiftAnimation";
+    animWrapper.style = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:2000010; pointer-events:none; text-align:center; min-width:300px; font-family: sans-serif;";
+    animWrapper.innerHTML = `
+        <div id="giftStep1" style="animation: giftStep1Anim 3s forwards;">
+            <img src="${giftUrl}" style="width:140px; height:140px; object-fit:contain; filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));">
+        </div>
+        <div id="giftStep2" style="display:none; animation: giftStep2Anim 30s forwards; position:relative;">
+            <div class="gift-image-container">
+                <div class="golden-glow-overlay"></div>
+            </div>
+            <div class="gift-text-container" style="margin-top: -20px; position:relative; z-index:3;">
+                <h1 style="color:#fff3c3; text-shadow: 0 0 5px #fff, 0 0 10px #fbd14b, 0 0 15px #fbd14b, 0 0 20px #e0ac00; font-size:28px; font-weight:bold; margin:0 0 2px 0; text-transform: uppercase;">საჩუქარი!</h1>
+                <h2 style="color:#fff3c3; text-shadow: 0 0 3px #fff, 0 0 8px #fbd14b; font-size:16px; margin:0 0 15px 0; font-weight:normal;">გადაეცათ ${cost} AKHO</h2>
+                <h1 style="color:#fbd14b; text-shadow: 1px 1px 2px rgba(0,0,0,0.8), 0 0 10px #e0ac00; font-size:26px; margin:0; font-weight:bold;">+${cost} AKHO</h1>
+            </div>
+        </div>`;
+    document.body.appendChild(animWrapper);
 
-    db.ref(`users/${user.uid}/gift_balance`).set(0);
-    db.ref(`users/${user.uid}/akho`).transaction(c => (c || 0) + amount);
-    db.ref(`received_gifts/${user.uid}`).remove();
+    setTimeout(() => {
+        const s1 = document.getElementById('giftStep1');
+        const s2 = document.getElementById('giftStep2');
+        if(s1) s1.style.display = 'none';
+        if(s2) s2.style.display = 'block';
+    }, 3000);
+
+    setTimeout(() => { if(animWrapper) animWrapper.remove(); }, 33000);
+}
+
+window.transferToMainBalance = async function(amount) {
+    if (!amount || amount <= 0) return alert("გადასატანი არაფერია!");
+    const { data: { user } } = await supabase.auth.getUser();
+
+    await supabase.from('users').update({ gift_balance: 0 }).eq('id', user.id);
+    
+    const { data } = await supabase.from('users').select('akho').eq('id', user.id).single();
+    await supabase.from('users').update({ akho: (data?.akho || 0) + amount }).eq('id', user.id);
+    
+    await supabase.from('received_gifts').delete().eq('receiver_id', user.id);
 
     alert("AKHO გადაიტანილა და კოლექცია გასუფთავდა! ✅");
-
-    if(document.getElementById('giftWalletModal')) {
-        document.getElementById('giftWalletModal').remove();
-    } else {
-        const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
-        modals.forEach(m => m.remove());
-    }
+    location.reload();
 };
 
-window.buyEuroWithGift = function(amount) {
+window.buyEuroWithGift = async function(amount) {
     if (!amount || amount < 100) return alert("მინიმუმ 100 AKHO საჭიროა! 💶");
 
     const euroValue = (amount / 100).toFixed(2);
     const confirmExchange = confirm(`თქვენი ${amount} AKHO გადაიცვლება ${euroValue} ევროდ.\n\nგსურთ გაგრძელება?`);
     
     if (confirmExchange) {
-        const user = firebase.auth().currentUser;
-        db.ref(`users/${user.uid}/gift_balance`).set(0);
-        db.ref(`users/${user.uid}/euro_balance`).transaction(c => (c || 0) + parseFloat(euroValue));
+        const { data: { user } } = await supabase.auth.getUser();
         
-        db.ref(`euro_history/${user.uid}`).push({
+        await supabase.from('users').update({ gift_balance: 0 }).eq('id', user.id);
+        
+        const { data } = await supabase.from('users').select('euro_balance').eq('id', user.id).single();
+        await supabase.from('users').update({ euro_balance: (data?.euro_balance || 0) + parseFloat(euroValue) }).eq('id', user.id);
+        
+        await supabase.from('euro_history').insert([{
+            uid: user.id,
             type: "გადაცვლა",
             amount: euroValue,
             akhoAmount: amount,
             timestamp: Date.now()
-        });
+        }]);
 
-        db.ref(`received_gifts/${user.uid}`).remove();
+        await supabase.from('received_gifts').delete().eq('receiver_id', user.id);
         alert(`წარმატებით გადაიცვალა! ✅`);
-        
-        const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
-        modals.forEach(m => m.remove());
-        setTimeout(() => window.showFinancialWallet(), 500);
+        location.reload();
     }
 };
 
-function showGiftsCollection(uid) {
-    const user = firebase.auth().currentUser;
-    const isMyProfile = (user && user.uid === uid);
+// ==========================================
+// 19. ფინანსური პანელი
+// ==========================================
+async function showGiftsCollection(uid) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const isMyProfile = (user && user.id === uid);
 
     const modal = document.createElement('div');
     modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000020; display:flex; flex-direction:column; padding:20px; backdrop-filter:blur(10px); color:white;";
@@ -2210,7 +2398,7 @@ function showGiftsCollection(uid) {
             <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="cursor:pointer; font-size:24px;"></i>
         </div>
 
-        <div id="giftWalletSection" style="display:none; margin-bottom:25px; background:linear-gradient(145deg, #1a1a1a, #111); padding:20px; border-radius:20px; text-align:center; box-shadow: 0 5px 15px rgba(212,175,55,0.1);">
+        <div id="giftWalletSection" style="display:none; margin-bottom:25px; background:linear-gradient(145deg, #1a1a1a, #111); padding:20px; border-radius:20px; text-align:center;">
             <div style="color:#aaa; font-size:13px; margin-bottom:5px;">საჩუქრებიდან დაგროვებული:</div>
             <div id="giftBalanceDisplay" style="font-size:32px; font-weight:bold; color:#fbd14b; margin-bottom:20px;">0 AKHO</div>
             
@@ -2229,1649 +2417,110 @@ function showGiftsCollection(uid) {
     const container = document.getElementById('giftsContainer');
     if (isMyProfile) {
         document.getElementById('giftWalletSection').style.display = "block";
-        db.ref(`users/${uid}/gift_balance`).on('value', snap => {
-            const bal = snap.val() || 0;
-            document.getElementById('giftBalanceDisplay').innerText = `${bal} AKHO`;
-            document.getElementById('transferBtn').onclick = () => window.transferToMainBalance(bal);
-            document.getElementById('buyEuroBtn').onclick = () => window.buyEuroWithGift(bal);
-        });
+        
+        const { data: uData } = await supabase.from('users').select('gift_balance').eq('id', uid).single();
+        const bal = uData?.gift_balance || 0;
+        document.getElementById('giftBalanceDisplay').innerText = `${bal} AKHO`;
+        document.getElementById('transferBtn').onclick = () => window.transferToMainBalance(bal);
+        document.getElementById('buyEuroBtn').onclick = () => window.buyEuroWithGift(bal);
     }
 
-    firebase.database().ref(`received_gifts/${uid}`).once('value', snap => {
-        container.innerHTML = "";
-        const data = snap.val();
-        if(!data) { container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები არ არის</p>"; return; }
+    const { data: gifts } = await supabase
+        .from('received_gifts')
+        .select('*')
+        .eq('receiver_id', uid)
+        .order('timestamp', { ascending: false });
 
-        Object.values(data).reverse().forEach(gift => {
-            container.innerHTML += `
-                <div style="background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:15px; padding:15px; text-align:center;">
-                    <img src="${gift.giftUrl}" style="width:80px; height:80px; object-fit:contain; margin-bottom:10px;">
-                    <div style="color:#d4af37; font-weight:bold; font-size:14px;">${gift.price} AKHO</div>
-                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #222;">
-                        <img src="${gift.fromPhoto || 'https://ui-avatars.com/api/?name='+gift.fromName}" style="width:20px; height:20px; border-radius:50%; border:1px solid #d4af37;">
-                        <span style="font-size:11px; color:#aaa;">${gift.fromName}</span>
-                    </div>
-                </div>`;
-        });
+    container.innerHTML = "";
+    if(!gifts || gifts.length === 0) { 
+        container.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:gray;'>საჩუქრები არ არის</p>"; 
+        return; 
+    }
+
+    gifts.forEach(gift => {
+        container.innerHTML += `
+            <div style="background:rgba(255,255,255,0.05); border:1px solid #333; border-radius:15px; padding:15px; text-align:center;">
+                <img src="${gift.giftUrl}" style="width:80px; height:80px; object-fit:contain; margin-bottom:10px;">
+                <div style="color:#d4af37; font-weight:bold; font-size:14px;">${gift.price} AKHO</div>
+                <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #222;">
+                    <img src="${gift.fromPhoto || 'https://ui-avatars.com/api/?name='+gift.fromName}" style="width:20px; height:20px; border-radius:50%; border:1px solid #d4af37;">
+                    <span style="font-size:11px; color:#aaa;">${gift.fromName}</span>
+                </div>
+            </div>`;
     });
 }
 
-window.showFinancialWallet = function() {
-    const user = firebase.auth().currentUser;
+// ==========================================
+// 20. ტრანზაქციების ისტორია და ევრო საფულე
+// ==========================================
+window.showFinancialWallet = async function() {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return alert("ავტორიზაცია საჭიროა!");
 
     const modal = document.createElement('div');
     modal.id = "financialWalletModal";
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000030; display:flex; flex-direction:column; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:white;";
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000030; display:flex; flex-direction:column; color:white;";
     
-    db.ref(`users/${user.uid}/euro_balance`).on('value', snap => {
-        const euroBal = snap.val() || 0;
-        const canCashOut = euroBal >= 50;
-
-        modal.innerHTML = `
-            <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
-                <i class="fas fa-chevron-left" onclick="document.getElementById('financialWalletModal').remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
-                <div style="flex:1; text-align:center; font-weight:bold; font-size:17px;">ბალანსი</div>
-                <div style="width:30px;"></div>
-            </div>
-
-            <div style="flex:1; overflow-y:auto; padding:20px;">
-                <div style="text-align:center; margin:30px 0;">
-                    <div style="font-size:14px; color:#8a8a8a; margin-bottom:10px;">მოსალოდნელი თანხა EUR <i class="fas fa-caret-down"></i></div>
-                    <div style="font-size:48px; font-weight:bold; margin-bottom:20px;">${euroBal.toFixed(2)} <span style="font-size:24px;">€</span></div>
-                    <div onclick="window.showRechargeAKHO()" style="display:inline-flex; align-items:center; background:#1f1f1f; padding:8px 15px; border-radius:20px; font-size:13px; color:#efefef; cursor:pointer;">
-                        <img src="https://emigrantbook.com/token-avatar.png" style="width:16px; margin-right:8px;"> 
-                        AKHO 0 | მონეტების შეძენა <i class="fas fa-chevron-right" style="font-size:10px; margin-left:8px;"></i>
-                    </div>
-                </div>
-
-                <div onclick="window.showEuroHistory()" style="background:#1f1f1f; border-radius:12px; padding:15px; display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; cursor:pointer;">
-                    <div style="font-size:15px; font-weight:500;">ტრანზაქციები</div>
-                    <div style="color:#8a8a8a; font-size:13px;">ისტორია <i class="fas fa-chevron-right" style="margin-left:5px;"></i></div>
-                </div>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:25px;">
-                    <div style="background:#1f1f1f; padding:20px; border-radius:12px; height:100px; display:flex; flex-direction:column; justify-content:space-between;">
-                        <i class="fas fa-money-bill-wave" style="font-size:20px;"></i>
-                        <div style="font-size:13px; font-weight:500; line-height:1.2;">საჩუქრების ჯილდოები</div>
-                    </div>
-                    <div style="background:#1f1f1f; padding:20px; border-radius:12px; height:100px; display:flex; flex-direction:column; justify-content:space-between;">
-                        <i class="fas fa-chart-line" style="font-size:20px;"></i>
-                        <div style="font-size:13px; font-weight:500; line-height:1.2;">მონეტიზაცია</div>
-                    </div>
-                </div>
-
-                <div style="background:#1f1f1f; border-radius:12px; padding:20px; border: 1px solid ${canCashOut ? '#2ecc71' : '#333'};">
-                    <h4 style="margin:0 0 10px 0; color:${canCashOut ? '#2ecc71' : '#d4af37'};">Cash Out</h4>
-                    <p style="font-size:12px; color:#8a8a8a; margin-bottom:15px;">Minimum withdrawal: 50.00 €</p>
-                    <input type="text" id="payoutIbanField" placeholder="IBAN / PayPal" ${!canCashOut ? 'disabled' : ''} style="width:100%; padding:12px; border-radius:8px; border:1px solid #333; background:#121212; color:white; outline:none; margin-bottom:15px;">
-                    <button onclick="${canCashOut ? `window.processWithdrawRequest(${euroBal})` : ''}" style="width:100%; padding:12px; border:none; border-radius:8px; color:${!canCashOut ? '#666' : 'black'}; background:${!canCashOut ? '#333' : '#2ecc71'}; font-weight:bold; cursor:${!canCashOut ? 'not-allowed' : 'pointer'};">
-                        გატანის მოთხოვნა
-                    </button>
-                    <div style="margin-top:10px; font-size:12px; color:${canCashOut ? '#2ecc71' : '#ff4d4d'};">
-                        ${canCashOut ? '● გატანა ხელმისაწვდომია!' : '● ბალანსი 50 ევროზე ნაკლებია!'}
-                    </div>
-                </div>
-            </div>`;
-    });
-    document.body.appendChild(modal);
-};
-
-window.showEuroHistory = function() {
-    const user = firebase.auth().currentUser;
-    const historyModal = document.createElement('div');
-    historyModal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000040; display:flex; flex-direction:column; color:white; font-family:sans-serif;";
-    
-    historyModal.innerHTML = `
-        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222; background:#121212;">
-            <i class="fas fa-chevron-left" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
-            <div style="flex:1; text-align:center; font-weight:bold; font-size:16px;">ტრანზაქციების ისტორია</div>
-            <div style="width:30px;"></div>
-        </div>
-        <div id="euroHistoryList" style="flex:1; overflow-y:auto; padding:15px; background:#121212;">
-            <p style="text-align:center; color:gray;">იტვირთება...</p>
-        </div>`;
-    document.body.appendChild(historyModal);
-
-    db.ref(`euro_history/${user.uid}`).orderByChild('timestamp').on('value', snap => {
-        const list = document.getElementById('euroHistoryList');
-        list.innerHTML = "";
-        const data = snap.val();
-        
-        if(!data) {
-            list.innerHTML = "<div style='text-align:center; margin-top:50px;'><i class='fas fa-receipt' style='font-size:40px; color:#333;'></i><p style='color:gray; margin-top:10px;'>ისტორია ცარიელია</p></div>";
-            return;
-        }
-
-        Object.values(data).reverse().forEach(item => {
-            const date = new Date(item.timestamp).toLocaleString('ka-GE', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-            const isWithdraw = item.type === "გატანა";
-            let statusHtml = "";
-            if(isWithdraw) {
-                const statusColor = item.status === "pending" ? "#fbd14b" : "#2ecc71";
-                const statusText = item.status === "pending" ? "მოლოდინში" : "ჩარიცხულია";
-                statusHtml = `<div style="font-size:10px; color:${statusColor}; margin-top:4px;">● ${statusText}</div>`;
-            }
-
-            list.innerHTML += `
-                <div style="background:#1f1f1f; padding:15px; border-radius:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:40px; height:40px; border-radius:12px; background:${isWithdraw ? 'rgba(231,76,60,0.1)' : 'rgba(46,204,113,0.1)'}; display:flex; align-items:center; justify-content:center;">
-                            <i class="fas ${isWithdraw ? 'fa-arrow-up' : 'fa-arrow-down'}" style="color:${isWithdraw ? '#e74c3c' : '#2ecc71'};"></i>
-                        </div>
-                        <div>
-                            <div style="font-size:14px; font-weight:bold;">${item.type}</div>
-                            <div style="font-size:11px; color:gray;">${date}</div>
-                            ${statusHtml}
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="color:${isWithdraw ? '#fff' : '#2ecc71'}; font-weight:bold; font-size:16px;">
-                            ${isWithdraw ? '-' : '+'} ${item.amount} €
-                        </div>
-                    </div>
-                </div>`;
-        });
-    });
-};
-
-window.showRechargeAKHO = function() {
-    const modal = document.createElement('div');
-    modal.id = "rechargeAkhoModal";
-    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000050; display:flex; flex-direction:column; color:white; font-family:sans-serif;";
-    
-    const packages = [
-        { akho: 5, price: "0.08 €" },
-        { akho: 10, price: "0.16 €" },
-        { akho: 20, price: "0.31 €" },
-        { akho: 30, price: "0.46 €" },
-        { akho: 50, price: "0.76 €" },
-        { akho: 70, price: "1.06 €" },
-        { akho: 139, price: "2.10 €" },
-        { akho: 210, price: "3.19 €" }
-    ];
+    const { data: u } = await supabase.from('users').select('euro_balance').eq('id', user.id).single();
+    const euroBal = u?.euro_balance || 0;
+    const canCashOut = euroBal >= 50;
 
     modal.innerHTML = `
         <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid #222;">
-            <i class="fas fa-times" onclick="this.parentElement.parentElement.remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
-            <div style="flex:1; text-align:center; font-weight:bold;">Get Coins</div>
-            <i class="fas fa-history" style="font-size:18px; width:30px; text-align:right;"></i>
+            <i class="fas fa-chevron-left" onclick="document.getElementById('financialWalletModal').remove()" style="font-size:20px; cursor:pointer; width:30px;"></i>
+            <div style="flex:1; text-align:center; font-weight:bold; font-size:17px;">ბალანსი</div>
+            <div style="width:30px;"></div>
         </div>
-        <div style="padding:20px;">
-            <div style="color:#888; font-size:14px; margin-bottom:10px;">Coin balance</div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <img src="https://emigrantbook.com/token-avatar.png" style="width:30px;">
-                <span id="currentCoinBalance" style="font-size:32px; font-weight:bold;">0</span>
+        <div style="flex:1; overflow-y:auto; padding:20px;">
+            <div style="text-align:center; margin:30px 0;">
+                <div style="font-size:14px; color:#8a8a8a; margin-bottom:10px;">მოსალოდნელი თანხა EUR</div>
+                <div style="font-size:48px; font-weight:bold; margin-bottom:20px;">${euroBal.toFixed(2)} <span>€</span></div>
             </div>
-        </div>
-        <div style="background:#1a1a1a; flex:1; padding:20px; border-radius:20px 20px 0 0;">
-            <div style="color:#888; font-size:14px; margin-bottom:20px;">Recharge</div>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;" id="packageContainer">
-                ${packages.map(p => `
-                    <div onclick="window.selectPackage(this, ${p.akho})" style="background:#262626; padding:15px 10px; border-radius:12px; text-align:center; border:2px solid transparent; transition:0.2s; cursor:pointer;">
-                        <div style="display:flex; align-items:center; justify-content:center; gap:5px; margin-bottom:5px;">
-                            <img src="https://emigrantbook.com/token-avatar.png" style="width:14px;">
-                            <span style="font-weight:bold; font-size:16px;">${p.akho}</span>
-                        </div>
-                        <div style="color:#888; font-size:12px;">${p.price}</div>
-                    </div>
-                `).join('')}
+            <div style="background:#1f1f1f; border-radius:12px; padding:20px; border: 1px solid ${canCashOut ? '#2ecc71' : '#333'};">
+                <h4 style="margin:0 0 10px 0; color:${canCashOut ? '#2ecc71' : '#d4af37'};">Cash Out</h4>
+                <input type="text" id="payoutIbanField" placeholder="IBAN / PayPal" ${!canCashOut ? 'disabled' : ''} style="width:100%; padding:12px; border-radius:8px; border:1px solid #333; background:#121212; color:white; outline:none; margin-bottom:15px;">
+                <button onclick="${canCashOut ? `window.processWithdrawRequest(${euroBal})` : ''}" style="width:100%; padding:12px; border:none; border-radius:8px; color:${!canCashOut ? '#666' : 'black'}; background:${!canCashOut ? '#333' : '#2ecc71'}; font-weight:bold; cursor:${!canCashOut ? 'not-allowed' : 'pointer'};">
+                    გატანის მოთხოვნა
+                </button>
             </div>
-        </div>
-        <div style="padding:20px; background:#1a1a1a;">
-            <button onclick="window.confirmPurchase()" style="width:100%; padding:15px; background:#fe2c55; border:none; border-radius:8px; color:white; font-weight:bold; font-size:16px; cursor:pointer;">Recharge</button>
         </div>`;
-
     document.body.appendChild(modal);
-
-    const user = firebase.auth().currentUser;
-    db.ref(`users/${user.uid}/akho`).on('value', snap => {
-        if(document.getElementById('currentCoinBalance')) {
-            document.getElementById('currentCoinBalance').innerText = snap.val() || 0;
-        }
-    });
 };
 
-let selectedAkhoAmount = 0;
-window.selectPackage = function(el, amount) {
-    const all = document.querySelectorAll('#packageContainer > div');
-    all.forEach(d => {
-        d.style.borderColor = 'transparent';
-        d.style.background = '#262626';
-    });
-    el.style.borderColor = '#fe2c55';
-    el.style.background = 'rgba(254, 44, 85, 0.1)';
-    selectedAkhoAmount = amount;
-};
-
-window.confirmPurchase = function() {
-    if (selectedAkhoAmount === 0) return alert("გთხოვთ აირჩიოთ პაკეტი!");
-    alert("გადახდის სისტემა მზადების პროცესშია. არჩეულია: " + selectedAkhoAmount + " AKHO");
-};
-
-function openWithdrawHistory() {
-    document.getElementById('withdrawHistoryUI').style.display = 'flex';
-    if(typeof stopMainFeedVideos === "function") stopMainFeedVideos();
-    if(typeof loadMyWithdrawalHistory === "function") loadMyWithdrawalHistory();
-}
-
-function react(postId, ownerUid) {
-    if (!canAfford(0.1)) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    const likeRef = db.ref(`posts/${postId}/likedBy/${user.uid}`);
-    const likeBtn = document.getElementById(`like-btn-${postId}`);
-    const likeSpan = document.getElementById(`like-count-${postId}`);
-
-    likeRef.once('value').then(snap => {
-        let currentLikes = parseInt(likeSpan.innerText);
-        if (snap.exists()) {
-            likeRef.remove();
-            if(likeBtn) likeBtn.classList.remove('liked');
-            likeSpan.innerText = currentLikes - 1;
-        } else {
-            likeRef.set({ type: '❤️', photo: myPhoto, name: myName });
-            if(likeBtn) likeBtn.classList.add('liked');
-            likeSpan.innerText = currentLikes + 1;
-            if(typeof showFloatingLike === "function") showFloatingLike(postId, myPhoto);
-            spendAkho(0.1, 'Like'); 
-            if (ownerUid !== user.uid) {
-                earnAkho(ownerUid, 2.00, 'Impact (Like)'); 
-            }
-        }
-    });
-}
-
-function toggleSavePost(postId) {
-    const user = auth.currentUser;
-    if(!user) return;
-    const saveRef = db.ref(`posts/${postId}/savedBy/${user.uid}`);
-    const saveBtn = document.getElementById(`save-btn-${postId}`);
-    const saveSpan = document.getElementById(`save-count-${postId}`);
-
-    saveRef.once('value').then(snap => {
-        let currentSaves = parseInt(saveSpan.innerText);
-        if(snap.exists()) {
-            saveRef.remove();
-            db.ref(`posts/${postId}/saves`).transaction(c => (c || 1) - 1);
-            if(saveBtn) saveBtn.classList.remove('saved');
-            saveSpan.innerText = currentSaves - 1;
-        } else {
-            saveRef.set(true);
-            db.ref(`posts/${postId}/saves`).transaction(c => (c || 0) + 1);
-            if(saveBtn) saveBtn.classList.add('saved');
-            saveSpan.innerText = currentSaves + 1;
-        }
-    });
-}
-
-function shareVideo(postId, url) {
-    if (navigator.share) {
-        navigator.share({ url: url }).then(() => {
-            db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-        });
-    } else {
-        alert("Link: " + url);
-        db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-    }
-}
- 
-function openCommunityWall() {
-    stopMainFeedVideos(); 
-    document.getElementById('communityWallUI').style.display = 'flex';
-    document.getElementById('wallMyAva').src = myPhoto;
-    loadCommunityPosts();
-}
-
-function closeCommunityWall() {
-    document.getElementById('communityWallUI').style.display = 'none';
-}
-
-function previewWallImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            document.getElementById('wallImgPreview').src = e.target.result;
-            document.getElementById('wallImgPreviewBox').style.display = 'block';
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function cancelWallImg() {
-    document.getElementById('wallImgInput').value = "";
-    document.getElementById('wallImgPreviewBox').style.display = 'none';
-}                   
-
-async function submitWallPost() {
-    const text = document.getElementById('wallPostText').value;
-    const file = document.getElementById('wallImgInput').files[0];
-    
-    if(!text.trim() && !file) return alert("დაწერეთ რამე");
-    if(!canAfford(2)) return; 
-
-    const btn = document.querySelector('[onclick="submitWallPost()"]');
-    btn.disabled = true; btn.innerText = "...";
-    let finalUrl = "";
-
-    try {
-        if(file) {
-            const formData = new FormData();
-            formData.append('image', file);
-            const res = await fetch('https://api.imgbb.com/1/upload?key=20b1ff9fe9c8896477a6bf04c86bcc67', { 
-                method: 'POST', 
-                body: formData 
-            });
-            const data = await res.json();
-            if (data.success) {
-                finalUrl = data.data.url;
-            } else {
-                alert("ფოტოს ატვირთვა ვერ მოხერხდა");
-                btn.disabled = false; btn.innerText = "გამოქვეყნება";
-                return;
-            }
-        }
-
-        await db.ref('community_posts').push({
-            authorId: auth.currentUser.uid,
-            authorName: myName,
-            authorPhoto: myPhoto,
-            text: text,
-            image: finalUrl,
-            timestamp: Date.now()
-        });
-
-        if(typeof sendOneSignalPush === 'function') sendOneSignalPush(myName, text || "ახალი ფოტო გამოქვეყნდა!");
-        spendAkho(2, 'Community Post');
-        document.getElementById('wallPostText').value = "";
-        cancelWallImg();
-        alert("პოსტი გამოქვეყნდა!");
-    } catch (err) {
-        alert("კავშირის შეცდომა!");
-    } finally {
-        btn.disabled = false; btn.innerText = "გამოქვეყნება";
-    }
-}
-
-// 🚀 ოპტიმიზირებული კედლის პოსტები (წაკითხვა .once-ით, რომ რეალურ დროში არ გაჭედოს)
-function loadCommunityPosts() {
-    const box = document.getElementById('communityPostsList');
-    if (!box) return;
-    const myUid = auth.currentUser ? auth.currentUser.uid : null;
-
-    db.ref('community_posts').orderByChild('timestamp').once('value', snap => {
-        box.innerHTML = "";
-        const data = snap.val();
-        if (!data) return;
-
-        Object.entries(data).reverse().forEach(([id, post]) => {
-            const isLiked = (myUid && post.likes && post.likes[myUid]);
-            const likeCount = post.likes ? Object.keys(post.likes).length : 0;
-            const isTagged = (myUid && post.taggedBy && post.taggedBy[myUid]);
-            const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
-            const card = document.createElement('div');
-            card.className = "post-card";
-            card.innerHTML = `
-                <div class="post-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
-                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover;">
-                        <div style="display:flex; flex-direction:column; align-items:flex-start;">
-                            <b style="color:white; font-size:14px; margin:0; line-height:1.2;">${post.authorName}</b>
-                            <span style="color:#888; font-size:10px; margin-top:2px; display:block;">${postTime}</span>
-                        </div>
-                    </div>
-                    <div>
-                        ${post.authorId === myUid ? 
-                            `<i class="fas fa-trash-alt" style="color:#ff4d4d; cursor:pointer; font-size:14px; padding:5px;" onclick="window.deleteWallPost('${id}')"></i>` : 
-                            `<i class="fas fa-flag" style="color:#666; cursor:pointer; font-size:13px; padding:5px;" onclick="window.reportPost('${id}', '${post.authorId}', '${(post.text || "ფოტო").replace(/'/g, "\\'")}')"></i>`
-                        }
-                    </div>
-                    <div onclick="window.toggleWallTag('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                        <i class="${isTagged ? 'fas' : 'far'} fa-user-tag" style="${isTagged ? 'color:var(--gold);' : 'color:#888;'}"></i>
-                        <span style="font-size:14px; font-weight:bold;">${isTagged ? 'მონიშნულია' : 'მონიშნვა'}</span>
-                    </div>
-                </div>
-                ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB; line-height:1.4;">${post.text}</p>` : ''}
-                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px; cursor:pointer;" onclick="previewImage('${post.image}')">` : ''}
-                <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
-                    <div onclick="window.toggleWallLike('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                        <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
-                        <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
-                    </div>
-                    <div onclick="openComments('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                        <i class="far fa-comment"></i>
-                        <span id="comm-count-${id}" style="font-size:14px; font-weight:bold;">0</span>
-                    </div>
-                </div>`;
-            box.appendChild(card);
-
-            db.ref('comments/' + id).once('value', cSnap => {
-                const count = cSnap.numChildren();
-                const cElem = document.getElementById('comm-count-' + id);
-                if (cElem) cElem.innerText = count;
-            });
-        });
-    });
-}
-
-window.reportPost = function(postId, authorId, content) {
-    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    if (confirm("ნამდვილად გსურთ ამ პოსტის დარეპორტება?")) {
-        db.ref('reports').push({
-            postId: postId,
-            authorId: authorId,
-            reporterId: auth.currentUser.uid,
-            reporterName: myName,
-            contentPreview: content.substring(0, 100),
-            timestamp: Date.now()
-        }).then(() => alert("მადლობა, რეპორტი გაიგზავნა."));
-    }
-};
-
-window.toggleWallLike = function(postId, ownerUid) {
-    if (!auth.currentUser) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    const myUid = auth.currentUser.uid;
-    const likeRef = db.ref('community_posts/' + postId + '/likes/' + myUid);
-
-    likeRef.once('value').then(snap => {
-        if (snap.exists()) {
-            likeRef.remove().then(() => loadCommunityPosts());
-        } else {
-            likeRef.set(true).then(() => {
-                if (ownerUid && ownerUid !== myUid) {
-                    db.ref('notifications/' + ownerUid).push({
-                        text: myName + "-მა თქვენი პოსტი დააგულა ❤️",
-                        fromPhoto: myPhoto || '',
-                        fromUid: myUid,
-                        timestamp: Date.now(),
-                        type: 'like'
-                    });
-                }
-                loadCommunityPosts();
-            });
-        }
-    });
-};
-
-window.deleteWallPost = function(postId) {
-    if (confirm("ნამდვილად გსურთ პოსტის წაშლა?")) {
-        db.ref('community_posts/' + postId).remove().then(() => loadCommunityPosts());
-    }
-};
-
-let mediaRecorder;
-let audioChunks = [];
-
-async function toggleVoiceRecord() {
-    const micIcon = document.getElementById('micIcon');
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            sendVoiceMessage(audioBlob);
-        };
-        mediaRecorder.start();
-        micIcon.classList.replace('fa-microphone', 'fa-stop-circle');
-        micIcon.style.color = "var(--red)";
-    } else {
-        mediaRecorder.stop();
-        micIcon.classList.replace('fa-stop-circle', 'fa-microphone');
-        micIcon.style.color = "var(--gold)";
-    }
-}
-
-async function sendVoiceMessage(blob) {
-    const targetId = window.currentChatId; 
-    if (!targetId) return alert("ჯერ აირჩიეთ ჩატი!");
-    if (!canAfford(0.5)) return; 
-
-    const myUid = auth.currentUser.uid;
-    const chatId = getChatId(myUid, targetId);
-    const fileName = `voice_${Date.now()}.mp3`;
-
-    try {
-        const storageRef = firebase.storage().ref(`chat_audio/${chatId}/${fileName}`);
-        const snapshot = await storageRef.put(blob);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-
-        if (downloadURL) {
-            db.ref(`messages/${chatId}`).push({ 
-                senderId: myUid, 
-                audio: downloadURL, 
-                ts: Date.now(),
-                seen: false
-            }).then(() => {
-                spendAkho(0.5, 'Voice Message');
-            });
-
-            if (typeof sendPushToUser === "function") {
-                sendPushToUser(targetId, myName, "🎤 Voice Message");
-            }
-        }
-    } catch (err) { 
-        alert("ატვირთვის შეცდომა"); 
-    }
-}       
-
-let waveSurfers = {}; 
-
-function initWaveforms() {
-    document.querySelectorAll('.waveform-container').forEach(container => {
-        const msgId = container.id.split('-')[1];
-        if (waveSurfers[msgId]) return;
-
-        const audioUrl = container.getAttribute('data-url');
-        const isSent = container.closest('.msg-sent'); 
-
-        const ws = WaveSurfer.create({
-            container: `#${container.id}`,
-            waveColor: isSent ? 'rgba(0, 0, 0, 0.2)' : 'rgba(212, 175, 55, 0.3)',
-            progressColor: isSent ? 'black' : '#d4af37',
-            barWidth: 2,
-            barGap: 2,
-            barRadius: 10,
-            height: 30,
-            url: audioUrl,
-        });
-
-        waveSurfers[msgId] = ws;
-
-        ws.on('ready', () => {
-            const durationEl = document.getElementById(`duration-${msgId}`);
-            if (durationEl) durationEl.innerText = formatTime(ws.getDuration());
-        });
-
-        ws.on('finish', () => {
-            const icon = document.getElementById(`icon-${msgId}`);
-            if (icon) icon.className = 'fas fa-play';
-        });
-    });
-}
-
-function playPauseAudio(msgId) {
-    const ws = waveSurfers[msgId];
-    const icon = document.getElementById(`icon-${msgId}`);
-    if (!ws) return;
-
-    if (ws.isPlaying()) {
-        ws.pause();
-        icon.className = 'fas fa-play';
-    } else {
-        Object.keys(waveSurfers).forEach(id => {
-            if (waveSurfers[id].isPlaying()) {
-                waveSurfers[id].pause();
-                const otherIcon = document.getElementById(`icon-${id}`);
-                if (otherIcon) otherIcon.className = 'fas fa-play';
-            }
-        });
-        ws.play();
-        icon.className = 'fas fa-pause';
-    }
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function toggleMoreMenu(postId) {
-    const panel = document.getElementById('more-menu-panel');
-    panel.classList.toggle('active');
-    if (postId) window.currentSelectedPost = postId;
-}
-
-function downloadVideo(postId) {
-    alert("ვიდეოს გადმოწერა დაიწყო პოსტისთვის: " + postId);
-    toggleMoreMenu();
-}
-
-// 🚀 ოპტიმიზირებული Unread Counter: უყურებს მხოლოდ კონკრეტულ იუზერს და არა მთელ ბაზას
-function startGlobalUnreadCounter() {
-    const myUid = auth.currentUser.uid;
-    const chatBadge = document.getElementById('chatCountBadge');
-
-    db.ref(`users/${myUid}/last_read`).on('value', readSnap => {
-        const lastReadData = readSnap.val() || {};
-        let totalUnread = 0;
-
-        // მხოლოდ ამ იუზერის ჩატებს ვამოწმებთ სათითაოდ
-        db.ref('messages').once('value', snap => {
-            const allChats = snap.val();
-            if (!allChats) return;
-
-            Object.keys(allChats).forEach(chatId => {
-                if (chatId.includes(myUid)) {
-                    const lastRead = lastReadData[chatId] || 0;
-                    const msgs = Object.values(allChats[chatId]);
-                    const lastMsg = msgs[msgs.length - 1];
-
-                    if (lastMsg.senderId !== myUid && lastMsg.ts > lastRead) {
-                        totalUnread++;
-                    }
-                }
-            });
-
-            if (chatBadge) {
-                if (totalUnread > 0) {
-                    chatBadge.innerText = totalUnread;
-                    chatBadge.style.display = 'flex';
-                } else {
-                    chatBadge.style.display = 'none';
-                }
-            }
-        });
-    });
-}
-
-function switchTab(tabName, btn) {
-    document.querySelectorAll('.p-nav-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const taggedPostsList = document.getElementById('userTaggedPostsList');
-    if (taggedPostsList) taggedPostsList.style.display = 'none';
-
-    const profGrid = document.getElementById('profGrid');
-    const userPhotosGrid = document.getElementById('userPhotosGrid');
-    const noMsg = document.getElementById('noPhotosMsg');
-    const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
-
-    profGrid.innerHTML = ""; 
-    userPhotosGrid.innerHTML = "";
-    
-    profGrid.style.display = 'none';
-    userPhotosGrid.style.display = 'none';
-    noMsg.style.display = 'none';
-
-    if (tabName === 'info' || tabName === 'reels') {
-        profGrid.style.display = 'grid';
-        loadUserVideos(viewUid); 
-    } 
-    else if (tabName === 'photos') {
-        userPhotosGrid.style.display = 'grid';
-        setTimeout(() => {
-            if (typeof openPhotosSection === "function") openPhotosSection();
-        }, 100);
-    } 
-    else if (tabName === 'saved') {
-        profGrid.style.display = 'grid';
-        loadMySavedPosts(); 
-    } 
-    else if (tabName === 'tagged') {
-        if (typeof loadMyTaggedWallPosts === 'function') {
-            loadMyTaggedWallPosts(viewUid);
-        }
-    }
-}
-  
-function loadMySavedPosts() {
-    const grid = document.getElementById('profGrid');
-    const viewUid = document.getElementById('profName').getAttribute('data-view-uid');
-    grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>იტვირთება შენახულები...</p>";
-    
-    db.ref('posts').once('value', snap => {
-        grid.innerHTML = "";
-        const posts = snap.val();
-        if(!posts) {
-            grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
-            return;
-        }
-
-        let savedCount = 0;
-        Object.entries(posts).forEach(([id, post]) => {
-            if(post.savedBy && post.savedBy[viewUid]) {
-                const video = post.media ? post.media.find(m => m.type === 'video') : null;
-                if(video) {
-                    savedCount++;
-                    const item = document.createElement('div');
-                    item.className = 'grid-item';
-                    item.innerHTML = `
-                        <video src="${video.url}" muted></video>
-                        <i class="fas fa-bookmark" style="position:absolute; top:8px; right:8px; color:var(--gold); font-size:12px; filter: drop-shadow(0 0 2px black);"></i>`;
-                    item.onclick = () => playFullVideo(video.url, id, 0);
-                    grid.appendChild(item);
-                }
-            }
-        });
-
-        if(savedCount === 0) {
-            grid.innerHTML = "<p style='color:gray; text-align:center; padding:20px; grid-column: 1 / -1;'>შენახული ვიდეოები არ არის</p>";
-        }
-    });
-}
-
-let videoStream = null;
-
-async function openUploadModal() {
-   stopMainFeedVideos();
-   const modal = document.getElementById('uploadModal');
-   if (modal) {
-        modal.style.display = 'flex';
-        const video = document.getElementById('cameraStream');
-        const placeholder = document.getElementById('placeholderText');
-
-        try {
-            if (window.videoStream) {
-                window.videoStream.getTracks().forEach(track => track.stop());
-            }
-
-            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: "user",
-                    width: { ideal: 1280 },  
-                    height: { ideal: 720 }, 
-                    frameRate: { max: 30 },  
-                    aspectRatio: 9/16
-                 },
-                 audio: {
-                    echoCancellation: { ideal: false }, 
-                    noiseSuppression: { ideal: false },  
-                    autoGainControl: { ideal: false },   
-                    sampleRate: 48000, 
-                    sampleSize: 16,
-                    channelCount: 1,      
-                    latency: 0          
-                 } 
-            });
-            
-            if (video) {
-                video.srcObject = window.videoStream;
-                video.setAttribute('playsinline', '');
-                video.setAttribute('autoplay', '');
-                video.muted = true; 
-                video.style.transform = "scaleX(-1)"; 
-                video.style.display = 'block';
-                video.play().catch(e => console.log("ავტომატური გაშვების შეცდომა:", e));
-                if (placeholder) placeholder.style.display = 'none';
-            }
-        } catch (err) {
-            alert("კამერა ვერ ჩაირთო. შეამოწმეთ ნებართვები პარამეტრებში.");
-        }
-    }
-}
-
-async function startLiveCamera() {
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        });
-        
-        if (video) {
-            video.srcObject = videoStream;
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.muted = true; 
-            video.style.transform = "scaleX(-1)";
-            video.play();
-            video.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
-        }
-    } catch (err) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-                video.style.transform = "scaleX(-1)";
-                video.play();
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            })
-            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
-    }
-}
-
-function closeUploadModal() {
-    const modal = document.getElementById('uploadModal');
-    if (modal) modal.style.display = 'none';
-    stopCamera();
-}
-
-function stopCamera() {
-    const activeStream = window.videoStream || videoStream;
-    if (activeStream) {
-        activeStream.getTracks().forEach(track => {
-            track.stop(); 
-        });
-        window.videoStream = null;
-        if (typeof videoStream !== 'undefined') videoStream = null;
-    }
-
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-    
-    if (video) {
-        video.pause();
-        video.srcObject = null;
-        video.style.display = 'none';
-        video.load(); 
-    }
-
-    if (placeholder) placeholder.style.display = 'block';
-    
-    if (recordInner) {
-        recordInner.style.borderRadius = "50%";
-        recordInner.style.background = "#ff4d4d";
-        recordInner.style.transform = "scale(1)";
-        recordInner.style.boxShadow = "none";
-    }
-}
-
-var globalMediaRecorder = null;
-var globalChunks = [];
-var currentFacingMode = "user"; 
-var timerInterval = null;
-var seconds = 0;
-const RECORDING_LIMIT = 60;
-
-function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    seconds = 0;
-    const minElem = document.getElementById('timerMinutes');
-    const secElem = document.getElementById('timerSeconds');
-    const timerElement = document.getElementById('recordingTimer');
-
-    if (timerElement) timerElement.style.display = 'flex';
-    
-    timerInterval = setInterval(() => {
-        seconds++;
-        let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        let secs = (seconds % 60).toString().padStart(2, '0');
-        
-        if (minElem) minElem.innerText = mins;
-        if (secElem) secElem.innerText = secs;
-
-        if (seconds >= RECORDING_LIMIT) {
-            stopTimer();
-            if (globalMediaRecorder) {
-                globalMediaRecorder.stop();
-            }
-            const btnInner = document.getElementById('recordInner');
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-            alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
-        }
-    }, 1000);
-}
-
-function stopTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-    }
-    const timerElement = document.getElementById('recordingTimer');
-    if (timerElement) timerElement.style.display = 'none';
-}
-
-async function switchCamera() {
-    const video = document.getElementById('cameraStream');
-    if (window.videoStream) {
-        window.videoStream.getTracks().forEach(track => track.stop());
-    }
-    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                facingMode: currentFacingMode,
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 } 
-            },
-            audio: true
-        });
-
-        window.videoStream = stream;
-        if (video) {
-            video.srcObject = stream;
-            video.onloadedmetadata = () => {
-                video.play();
-                video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
-            };
-        }
-    } catch (err) {
-        alert("კამერის გადართვა ვერ მოხერხდა.");
-        currentFacingMode = "user"; 
-    }
-}
-
-let countdownTime = 0;
-let isCounting = false;
-
-function toggleTimerMenu() {
-    const menu = document.getElementById('timerDropdown');
-    if (menu) menu.style.display = (menu.style.display === "none") ? "flex" : "none";
-}
-
-function setCountdown(seconds, element) {
-    countdownTime = seconds;
-    const opts = element.parentElement.querySelectorAll('div');
-    opts.forEach(opt => opt.style.color = 'white');
-    element.style.color = '#ff4d4d';
-    document.getElementById('timerDropdown').style.display = "none";
-}
-
-async function toggleRecording() {
-    const btnInner = document.getElementById('recordInner');
-    const videoInput = document.getElementById('videoInput');
-    const video = document.getElementById('cameraStream');
-    const deleteBtn = document.getElementById('deleteLastClipBtn');
-
-    if (deleteBtn) deleteBtn.style.display = 'flex';
-  
-    const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
-
-    if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
-        isCounting = true;
-        const display = document.getElementById('countdownDisplay');
-        let timeLeft = countdownTime;
-
-        if (display) {
-            display.style.display = "block";
-            display.innerText = timeLeft;
-        }
-
-        let timerInterval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                if (display) display.innerText = timeLeft;
-            } else {
-                clearInterval(timerInterval);
-                if (display) display.style.display = "none";
-                isCounting = false;
-                const currentSetting = countdownTime;
-                countdownTime = 0; 
-                toggleRecording(); 
-                countdownTime = currentSetting;
-            }
-        }, 1000);
-        return; 
-    }
-
-    try {
-        if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) return;
-
-            let audioStreamToUse;
-            if (currentBackgroundMusic && currentBackgroundMusic.src) {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    audioSource = audioCtx.createMediaElementSource(currentBackgroundMusic);
-                    audioDest = audioCtx.createMediaStreamDestination();
-                    audioSource.connect(audioDest);
-                    audioSource.connect(audioCtx.destination);
-                }
-                audioStreamToUse = audioDest.stream;
-            } else {
-                audioStreamToUse = window.videoStream;
-            }
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = video.videoWidth || 720;
-            canvas.height = video.videoHeight || 1280;
-            const currentFilter = getComputedStyle(video).filter;
-
-            function drawFrame() {
-                if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
-                    ctx.filter = currentFilter;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    requestAnimationFrame(drawFrame);
-                }
-            }
-
-            const filteredStream = canvas.captureStream(30); 
-            const finalStream = new MediaStream();
-
-            filteredStream.getVideoTracks().forEach(track => finalStream.addTrack(track));
-            audioStreamToUse.getAudioTracks().forEach(track => finalStream.addTrack(track));
-
-            globalChunks = [];
-            const options = {
-                mimeType: 'video/webm;codecs=vp8',
-                videoBitsPerSecond: 1200000,
-                audioBitsPerSecond: 128000
-            };
-
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options.mimeType = 'video/mp4';
-            }
-
-            globalMediaRecorder = new MediaRecorder(finalStream, options);
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
-            };
-
-            globalMediaRecorder.onstop = () => {
-                if (typeof stopTimer === "function") stopTimer();
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                videoInput.files = dataTransfer.files;
-
-                video.srcObject = null;
-                video.src = URL.createObjectURL(blob);
-                video.style.transform = "scaleX(1)";
-                video.muted = false; 
-                video.play();
-
-                if (currentBackgroundMusic) currentBackgroundMusic.pause();
-                if (typeof handleVideoSelect === "function") handleVideoSelect(videoInput);
-            };
-
-            if (currentBackgroundMusic && currentBackgroundMusic.src) {
-                currentBackgroundMusic.currentTime = 0;
-                currentBackgroundMusic.play();
-            }
-
-            globalMediaRecorder.start();
-            drawFrame(); 
-            if (typeof startTimer === "function") startTimer();
-            if (btnInner) {
-                btnInner.style.borderRadius = "8px";
-                btnInner.style.background = "#ff0000";
-            }
-        } else {
-            globalMediaRecorder.stop();
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-        }
-    } catch (err) {
-        console.error("Recording error:", err);
-    }
-}
-
-function handleForgotPassword() {
-    const emailInput = document.getElementById('uEmail');
-    const emailValue = emailInput.value.trim();
-
-    if (!emailValue) {
-        alert("გთხოვთ, ჯერ ჩაწეროთ მეილი Email / ელფოსტა ველში!");
-        emailInput.focus();
-        return;
-    }
-
-    auth.sendPasswordResetEmail(emailValue)
-        .then(() => {
-            alert("პაროლის აღდგენის ინსტრუქცია გამოგზავნილია თქვენს მეილზე: " + emailValue);
-        })
-        .catch((error) => {
-            if (error.code === 'auth/user-not-found') {
-                alert("ამ მეილით მომხმარებელი ვერ მოიძებნა.");
-            } else if (error.code === 'auth/invalid-email') {
-                alert("მეილის ფორმატი არასწორია.");
-            } else {
-                alert("შეცდომა: " + error.message);
-            }
-        });
-}
-
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    console.log("აპლიკაციის დაინსტალირება შესაძლებელია! ✅");
-});
-
-function installApp() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('მომხმარებელმა დააინსტალირა აპლიკაცია');
-            }
-            deferredPrompt = null;
-        });
-    }
-}
-
-function showLocalNotification(title, body) {
-    if (Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, {
-                body: body,
-                icon: 'logo.png',
-                vibrate: [200, 100, 200],
-                badge: 'logo.png',
-                tag: 'msg-group',
-                renotify: true
-            });
-            const sound = document.getElementById('msgSound');
-            if (sound) sound.play().catch(e => {});
-        });
-    }
-}
-
-function setAppBadge(count) {
-    if ('setAppBadge' in navigator) {
-        if (count > 0) {
-            navigator.setAppBadge(count).catch(e => {});
-        } else {
-            navigator.clearAppBadge().catch(e => {});
-        }
-    }
-}
-
-function sendPushToUser(targetUid, senderName, text) {
-    db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
-        const token = snap.val();
-        if (token) {
-            fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
-                },
-                body: JSON.stringify({
-                    to: token,
-                    notification: {
-                        title: senderName,
-                        body: text,
-                        icon: "logo.png",
-                        click_action: "https://emigrantbook.com",
-                        sound: "default",
-                        badge: "1"
-                    },
-                    data: { url: "https://emigrantbook.com" },
-                    priority: "high"
-                })
-            })
-            .then(res => console.log("Push status:", res.status))
-            .catch(e => console.log("Push error:", e));
-        }
-    });
-}
-
-if ('setAppBadge' in navigator) {
-    navigator.setAppBadge(7).catch(() => {});
-}
-
-function saveMessagingToken(user) {
-    const messaging = firebase.messaging();
-    console.log("ნაბიჯი 1: ვიწყებთ...");
-
-    messaging.requestPermission()
-        .then(function() {
-            return messaging.getToken({
-                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk'
-            });
-        })
-        .then(function(token) {
-            if (token) {
-                return db.ref('users/' + user.uid).update({ 
-                    fcmToken: token,
-                    messagingStatus: "active" 
-                });
-            }
-        })
-        .then(function() {
-            console.log("ნაბიჯი 4: ბაზაში ჩაიწერა! ✅");
-        })
-        .catch(function(err) {
-            console.error("კრიტიკული შეცდომა:", err);
-        });
-}
-
-function handleLikeFromFull() {
-    const postId = window.currentFullVideoId;
-    if (!postId) return;
-
-    const myUid = auth.currentUser.uid;
-    const likeRef = db.ref(`posts/${postId}/likedBy/${myUid}`);
-
-    likeRef.once('value', snap => {
-        if (snap.exists()) {
-            likeRef.remove();
-        } else {
-            likeRef.set({ 
-                type: '❤️', 
-                photo: myPhoto, 
-                name: myName 
-            });
-            db.ref(`posts/${postId}`).once('value', pSnap => {
-                const post = pSnap.val();
-                if (post && post.authorId !== myUid) {
-                    earnAkho(post.authorId, 2.00, 'Impact (Like from Full)');
-                }
-            });
-        }
-        setTimeout(() => playFullVideo(document.getElementById('fullVideoTag').src, postId, window.currentVideoIndex), 300);
-    });
-}
-
-function closeFullVideo() {
-    const overlay = document.getElementById('fullVideoOverlay');
-    const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
-
-    if (vid) vid.pause(); 
-    if (overlay) {
-        overlay.style.display = 'none';
-        overlay.classList.remove('hide-menu-now'); 
-    }
-    if (sideMenu) {
-        sideMenu.style.opacity = "1";
-        sideMenu.style.visibility = "visible";
-        sideMenu.style.pointerEvents = "auto";
-    }
-}
-
-function openCommentsFromFull() {
-    if (!window.currentFullVideoId) return;
-
-    const commUI = document.getElementById('commentsUI');
-    const overlay = document.getElementById('fullVideoOverlay');
-    const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
-
-    if (commUI && overlay) {
-        overlay.appendChild(commUI);
-        commUI.style.display = "flex";
-        commUI.style.zIndex = "9999999";
-
-        overlay.classList.add('hide-menu-now');
-        if (sideMenu) {
-            sideMenu.style.opacity = "0";
-            sideMenu.style.pointerEvents = "none";
-        }
-        if (vid) vid.pause();
-
-        const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
-        if (closeBtn) {
-            closeBtn.onclick = function() {
-                commUI.style.display = 'none';
-                if (vid) vid.play();
-                overlay.classList.remove('hide-menu-now');
-                if (sideMenu) {
-                    sideMenu.style.opacity = "1";
-                    sideMenu.style.visibility = "visible";
-                    sideMenu.style.pointerEvents = "auto";
-                }
-            };
-        }
-        openComments(window.currentFullVideoId);
-    }
-}
-
-function saveVideoFromFull() {
-    const postId = window.currentFullVideoId;
-    if (!postId) return;
-
-    const myUid = auth.currentUser.uid;
-    const saveRef = db.ref(`posts/${postId}/savedBy/${myUid}`);
-
-    saveRef.once('value', snap => {
-        if (snap.exists()) {
-            saveRef.remove();
-            document.getElementById('fullSaveIcon').style.color = 'white';
-        } else {
-            saveRef.set(true);
-            document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
-        }
-    });
-}
-
-function shareVideoFromFull() {
-    if (!window.currentFullVideoId) return;
-    const shareUrl = window.location.origin + "?v=" + window.currentFullVideoId;
-    if (navigator.share) {
-        navigator.share({
-            title: 'EmigrantBook Video',
-            url: shareUrl
-        }).catch(err => console.log(err));
-    } else {
-        navigator.clipboard.writeText(shareUrl);
-        alert("ბმული კოპირებულია!");
-    }
-}
-
-window.handleLikeFromFull = handleLikeFromFull;
-window.openCommentsFromFull = openCommentsFromFull;
-window.saveVideoFromFull = saveVideoFromFull;
-window.shareVideoFromFull = shareVideoFromFull;
-
-function closeVideoComments() {
-    document.getElementById('commentsUI').style.display = 'none';
-    const overlay = document.getElementById('fullVideoOverlay');
-    const vid = document.getElementById('fullVideoTag');
-    if (overlay && overlay.style.display === 'block') {
-        overlay.style.opacity = "1";
-        if (vid) vid.play();
-    }
-}
-
-function fixCloseBtn() {
-    const commUI = document.getElementById('commentsUI');
-    const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
-    if (closeBtn) {
-        closeBtn.onclick = closeVideoComments;
-    }
-}
-
-async function askInitialPermissions() {
-    if (localStorage.getItem('initial_permissions_asked')) return;
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        stream.getTracks().forEach(track => track.stop());
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(() => {}, () => {});
-        }
-        if ("Notification" in window) {
-            await Notification.requestPermission();
-        }
-        localStorage.setItem('initial_permissions_asked', 'true');
-    } catch (err) {
-        console.warn(err);
-    }
-}
-
-window.addEventListener('load', () => {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                navigator.serviceWorker.ready.then(reg => {
-                    const messaging = firebase.messaging();
-                    messaging.getToken({
-                        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk',
-                        serviceWorkerRegistration: reg
-                    }).then(token => {
-                        console.log("ტოკენი აღებულია", token);
-                    });
-                });
-            }
-        });
-    }
-});
-
-emailjs.init("oZOT_SZC1MfIZnil8");
-
-async function sendRealInvoice() {
-    const btn = document.getElementById('send_inv_btn');
-    const name = document.getElementById('inv_customer_name').value;
-    const email = document.getElementById('inv_customer_email').value;
-    const desc = document.getElementById('inv_product_desc').value;
-    const amount = document.getElementById('inv_amount').value;
-    const date = new Date().toLocaleDateString('ka-GE');
-    const inv_no = "EB-" + Math.floor(1000 + Math.random() * 9000);
-
-    if(!name || !email || !amount) {
-        alert("გთხოვთ, შეავსოთ სახელი, მეილი და თანხა!");
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> იგზავნება...';
-
-    const templateParams = {
-        to_name: name,
-        to_email: email,
-        order_id: inv_no,
-        order_date: date,
-        product_description: desc || "შენაძენი",
-        total_price: amount + " €",
-        reply_to: "support@emigrantbook.com"
-    };
-
-    try {
-        await emailjs.send('service_hjiqge4', 'template_50xhnnm', templateParams);
-        alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
-        
-        if(typeof db !== 'undefined') {
-            db.ref('sent_invoices').push({
-                customer: name,
-                email: email,
-                amount: amount,
-                date: date,
-                invoice_no: inv_no,
-                status: "Sent"
-            });
-        }
-        document.getElementById('inv_product_desc').value = "";
-        document.getElementById('inv_amount').value = "";
-    } catch (error) {
-        alert("შეცდომა გაგზავნისას");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
-    }
-}
-
-function loadInvoiceHistory() {
-    const tableBody = document.getElementById('invoice_history_body');
-    db.ref('sent_invoices').orderByChild('timestamp').once('value', (snapshot) => {
-        tableBody.innerHTML = "";
-        let invoices = [];
-        snapshot.forEach((childSnapshot) => {
-            invoices.unshift(childSnapshot.val());
-        });
-
-        if (invoices.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999;">ისტორია ცარიელია</td></tr>';
-            return;
-        }
-
-        invoices.forEach((data) => {
-            const row = document.createElement('tr');
-            row.style.borderBottom = "1px solid #eee";
-            row.innerHTML = `
-                <td style="padding: 15px; color: #aaa;">${data.date}</td>
-                <td style="padding: 15px; font-weight: bold; color: white;">${data.customer}</td>
-                <td style="padding: 15px; color: var(--gold); font-family: monospace;">${data.invoice_no || '---'}</td>
-                <td style="padding: 15px; text-align: right; font-weight: bold; color: #4ade80;">${data.amount} €</td>
-                <td style="padding: 15px; text-align: center;">
-                    <span style="background: rgba(74, 222, 128, 0.1); color: #4ade80; padding: 4px 10px; border-radius: 6px; font-size: 10px; border: 1px solid rgba(74, 222, 128, 0.2);">
-                        SENT
-                    </span>
-                </td>`;
-            tableBody.appendChild(row);
-        });
-    });
-}
-loadInvoiceHistory();
-
-async function uploadChatImage(input) {
-    if (!input.files || !input.files[0] || !currentChatId) return;
-    const file = input.files[0];
-    const myUid = auth.currentUser.uid;
-    const chatId = getChatId(myUid, currentChatId);
-
-    try {
-        const filePath = `chat_images/${chatId}/${Date.now()}_${file.name}`;
-        const storageRef = firebase.storage().ref(filePath);
-        const snapshot = await storageRef.put(file);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-
-        db.ref(`messages/${chatId}`).push({
-            senderId: myUid,
-            image: downloadURL,
-            ts: Date.now(),
-            seen: false
-        });
-
-        if (typeof sendPushToUser === "function") {
-            sendPushToUser(currentChatId, myName, "📷 Photo");
-        }
-        input.value = ""; 
-    } catch (error) {
-        alert("ვერ მოხერხდა ფოტოს გაგზავნა.");
-    }
-}
-
-function showGiftAnimation(amount) {
-    const container = document.getElementById('giftAnimationContainer');
-    const amountSpan = document.getElementById('giftAmount');
-    amountSpan.innerText = amount;
-    container.style.display = 'block';
-    
-    const wrapper = container.querySelector('.gift-box-wrapper');
-    wrapper.classList.remove('animate-gift');
-    void wrapper.offsetWidth;
-    wrapper.classList.add('animate-gift');
-
-    setTimeout(() => {
-        container.style.display = 'none';
-    }, 30000);
-}
-
-const videoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        const video = entry.target;
-        if (!entry.isIntersecting) {
-            video.pause();
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = 'none';
-            }
-        }
-    });
-}, { threshold: 0.1 });
-
-const mainVid = document.getElementById('fullVideoTag');
-if (mainVid) {
-    videoObserver.observe(mainVid);
-}
-
-function killVideo() {
-    const v = document.getElementById('fullVideoTag');
-    if (v) v.pause();
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'none';
-    }
-}
-
-function checkNewVisitors(myUid) {
-    const feet = document.getElementById('feetStats');
-    const ava = document.getElementById('visitorAvaNav');
-    if (!feet || !ava) return;
-
-    db.ref(`profile_views/${myUid}`).orderByChild('ts').limitToLast(1).once('value', snap => {
-        const data = snap.val();
-        if (!data) {
-            feet.style.display = 'block';
-            return;
-        }
-
-        const visitorData = Object.values(data)[0];
-        const lastSeenTs = localStorage.getItem('last_seen_visitor_ts') || 0;
-
-        if (visitorData.ts > lastSeenTs) {
-            feet.style.display = 'none';
-            ava.src = visitorData.photo || "token-avatar.png";
-            ava.style.display = 'block';
-        } else {
-            feet.style.display = 'block';
-            ava.style.display = 'none';
-        }
-    });
-}
-
-window.openShare = function(postId, url) {
-    const siteLink = `https://emigrantbook.com/?v=${postId}`;
-    if (navigator.share) {
-        navigator.share({
-            title: 'Emigrantbook',
-            text: 'ნახე ეს ვიდეო Emigrantbook-ზე!',
-            url: siteLink
-        }).then(() => {
-            db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-        }).catch(() => {});
-    } else {
-        const dummy = document.createElement("input");
-        document.body.appendChild(dummy);
-        dummy.value = siteLink;
-        dummy.select();
-        document.execCommand("copy");
-        document.body.removeChild(dummy);
-        alert("ბმული დაკოპირებულია! ✅");
-        db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-    }
-};
-window.shareVideo = window.openShare;
-
-window.addEventListener('resize', () => {
-    const messenger = document.getElementById('messengerUI');
-    if (messenger && messenger.style.display === 'flex') {
-        stopMainFeedVideos();
-    }
-});
-
-document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        stopMainFeedVideos();
-    }
-});
-
-let newWallPostsCount = 0;
-function startWallNotificationListener() {
-    const myUid = auth.currentUser.uid;
-    let isInitialLoad = true;
-
-    db.ref('community_posts').orderByChild('timestamp').limitToLast(1).on('child_added', snap => {
-        if (isInitialLoad) {
-            isInitialLoad = false;
-            return;
-        }
-        const post = snap.val();
-        if (post && post.authorId !== myUid) {
-            newWallPostsCount++;
-            const badge = document.getElementById('newPostsBadge');
-            if (badge) {
-                badge.innerText = newWallPostsCount;
-                badge.style.display = 'inline-block';
-            }
-        }
-    });
-}
-
-window.toggleWallTag = function(postId) {
-    const user = auth.currentUser;
+// ==========================================
+// 21. პოსტების მონიშვნა (Wall tags) და კედელი
+// ==========================================
+window.toggleWallTag = async function(postId) {
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    const myUid = user.uid;
-    const tagRef = db.ref('community_posts/' + postId + '/taggedBy/' + myUid);
+    const myUid = user.id;
 
-    tagRef.once('value').then(snap => {
-        const btnElement = event.currentTarget.querySelector('i');
-        const textElement = event.currentTarget.querySelector('span');
+    const { data: post } = await supabase.from('community_posts').select('taggedBy').eq('id', postId).single();
+    const taggedBy = post?.taggedBy || {};
 
-        if (snap.exists()) {
-            tagRef.remove();
-            if (btnElement) {
-                btnElement.className = "far fa-user-tag";
-                btnElement.style.color = "#888";
-            }
-            if (textElement) textElement.innerText = "მონიშვნა";
-        } else {
-            tagRef.set(true);
-            if (btnElement) {
-                btnElement.className = "fas fa-user-tag";
-                btnElement.style.color = "var(--gold)";
-            }
-            if (textElement) textElement.innerText = "მონიშნულია";
+    const btnElement = event.currentTarget.querySelector('i');
+    const textElement = event.currentTarget.querySelector('span');
+
+    if (taggedBy[myUid]) {
+        delete taggedBy[myUid];
+        await supabase.from('community_posts').update({ taggedBy: taggedBy }).eq('id', postId);
+        if (btnElement) {
+            btnElement.className = "far fa-user-tag";
+            btnElement.style.color = "#888";
         }
-    });
+        if (textElement) textElement.innerText = "მონიშვნა";
+    } else {
+        taggedBy[myUid] = true;
+        await supabase.from('community_posts').update({ taggedBy: taggedBy }).eq('id', postId);
+        if (btnElement) {
+            btnElement.className = "fas fa-user-tag";
+            btnElement.style.color = "var(--gold)";
+        }
+        if (textElement) textElement.innerText = "მონიშნულია";
+    }
 };
 
-window.loadMyTaggedWallPosts = function(targetUid) {
+window.loadMyTaggedWallPosts = async function(targetUid) {
     let box = document.getElementById('userTaggedPostsList');
     const profGrid = document.getElementById('profGrid');
     
@@ -3884,497 +2533,70 @@ window.loadMyTaggedWallPosts = function(targetUid) {
         box.style.padding = '10px';
         if (profGrid && profGrid.parentNode) {
             profGrid.parentNode.insertBefore(box, profGrid.nextSibling);
-        } else {
-            document.body.appendChild(box);
         }
     }
     
     box.style.display = 'flex';
     box.innerHTML = "<p style='color:var(--gold); text-align:center; padding:20px;'>იტვირთება...</p>";
 
-    const user = auth.currentUser;
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხაღო გაიაროთ ავტორიზაცია</p>";
+        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხოვთ გაიაროთ ავტორიზაცია</p>";
         return;
     }
 
-    const uidToLoad = targetUid ? targetUid : user.uid;
-    const myUid = user.uid;
+    const uidToLoad = targetUid ? targetUid : user.id;
 
-    db.ref('community_posts').once('value', snap => {
-        box.innerHTML = ""; 
-        const data = snap.val();
-        if (!data) {
-            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ბაზაში პოსტები არ არის</p>";
-            return;
-        }
+    const { data: communityPosts } = await supabase.from('community_posts').select('*').order('timestamp', { ascending: false });
 
-        let count = 0;
-        Object.keys(data).reverse().forEach(id => {
-            const post = data[id];
-            if (post.taggedBy && post.taggedBy[uidToLoad]) {
-                count++;
-                const isLiked = (post.likes && post.likes[myUid]);
-                const likeCount = post.likes ? Object.keys(post.likes).length : 0;
-                const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
-                
-                const card = document.createElement('div');
-                card.className = "post-card";
-                card.innerHTML = `
-                    <div class="post-header" style="display:flex; align-items:center; margin-bottom:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
-                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover; margin-right:10px;">
-                        <div style="display:flex; flex-direction:column;">
-                            <b style="color:white; font-size:14px;">${post.authorName}</b>
-                            <span style="color:#888; font-size:10px;">${postTime}</span>
-                        </div>
+    box.innerHTML = ""; 
+    if (!communityPosts) {
+        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ბაზაში პოსტები არ არის</p>";
+        return;
+    }
+
+    let count = 0;
+    communityPosts.forEach(post => {
+        if (post.taggedBy && post.taggedBy[uidToLoad]) {
+            count++;
+            const isLiked = (post.likes && post.likes[user.id]);
+            const likeCount = post.likes ? Object.keys(post.likes).length : 0;
+            const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
+            
+            const card = document.createElement('div');
+            card.className = "post-card";
+            card.innerHTML = `
+                <div class="post-header" style="display:flex; align-items:center; margin-bottom:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
+                    <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover; margin-right:10px;">
+                    <div style="display:flex; flex-direction:column;">
+                        <b style="color:white; font-size:14px;">${post.authorName}</b>
+                        <span style="color:#888; font-size:10px;">${postTime}</span>
                     </div>
-                    ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB;">${post.text}</p>` : ''}
-                    ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
-                    <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
-                            <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <i class="fas fa-user-tag" style="color:var(--gold);"></i>
-                            <span style="font-size:14px; font-weight:bold;">მონიშნულია</span>
-                        </div>
-                    </div>`;
-                box.appendChild(card);
-            }
-        });
-
-        if (count === 0) {
-            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ამ მომხმარებელს მონიშნული პოსტები არ აქვს</p>";
+                </div>
+                ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB;">${post.text}</p>` : ''}
+                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
+                <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
+                        <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-user-tag" style="color:var(--gold);"></i>
+                        <span style="font-size:14px; font-weight:bold;">მონიშნულია</span>
+                    </div>
+                </div>`;
+            box.appendChild(card);
         }
     });
+
+    if (count === 0) {
+        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ამ მომხმარებელს მონიშნული პოსტები არ აქვს</p>";
+    }
 };
 
-let faceMesh;
-async function setupBeautyFilter() {
-    if(typeof FaceMesh !== 'undefined') {
-        faceMesh = new FaceMesh({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-        }});
-        faceMesh.setOptions({
-            maxNumFaces: 1,
-            refineLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-        faceMesh.onResults(onBeautyResults);
-    }
-}
-
-function onBeautyResults(results) {
-    if (!results.multiFaceLandmarks) return;
-    if(typeof applySkinSmoothing === 'function') applySkinSmoothing(results);
-}
-setupBeautyFilter();
-
-let isBeautyOn = false;
-function toggleBeautyMode() {
-    isBeautyOn = !isBeautyOn;
-    const video = document.getElementById('cameraStream');
-    const icon = document.getElementById('beautyIcon');
-    
-    if (isBeautyOn) {
-        video.style.filter = "contrast(1.1) brightness(1.1) saturate(1.1) blur(0.5px)";
-        if(icon) icon.style.color = "#ff4d4d";
-    } else {
-        video.style.filter = "none";
-        if(icon) icon.style.color = "white";
-    }
-}
-
-function toggleFiltersMenu() {
-    const menu = document.getElementById('filtersDropdown');
-    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
-}
-
-function applyVideoFilter(filterValue) {
-    const video = document.getElementById('cameraStream');
-    const canvas = document.getElementById('beautyCanvas');
-    video.style.filter = filterValue;
-    if (canvas) canvas.style.filter = filterValue;
-    document.getElementById('filtersDropdown').style.display = "none";
-}
-
-let currentSpeed = 1.0;
-function toggleSpeedMenu() {
-    const menu = document.getElementById('speedDropdown');
-    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
-}
-
-function setVideoSpeed(speed, element) {
-    currentSpeed = speed;
-    const options = element.parentElement.querySelectorAll('div');
-    options.forEach(opt => opt.style.color = 'white');
-    element.style.color = '#ff4d4d';
-    document.getElementById('speedDropdown').style.display = "none";
-}
-
-function showDeleteConfirm() {
-    document.getElementById('deleteConfirmModal').style.display = 'flex';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteConfirmModal').style.display = 'none';
-}
-
-function confirmDeleteClip() {
-    if (typeof recordedChunks !== 'undefined' && recordedChunks.length > 0) {
-        recordedChunks.pop();
-        if (recordedChunks.length === 0) {
-            document.getElementById('deleteLastClipBtn').style.display = 'none';
-        }
-    }
-    closeDeleteModal();
-}
-
-let currentBackgroundMusic = null; 
-
-function openMusicPicker() {
-    const modal = document.getElementById('music-picker-modal');
-    if (modal) {
-        modal.classList.add('show');
-        renderSongs(); 
-    }
-}
-
-function closeMusicPicker() {
-    const modal = document.getElementById('music-picker-modal');
-    if (modal) modal.classList.remove('show');
-}
-
-function pickSong(url, title) {
-    const label = document.getElementById('selected-music-name');
-    if (label) label.innerText = "იტვირთება...";
-
-    if (currentBackgroundMusic) {
-        currentBackgroundMusic.pause();
-        currentBackgroundMusic.src = "";
-    }
-
-    currentBackgroundMusic = new Audio();
-    const encodedUrl = encodeURI(url);
-    currentBackgroundMusic.src = encodedUrl;
-    currentBackgroundMusic.preload = "auto";
-
-    currentBackgroundMusic.oncanplaythrough = function() {
-        currentBackgroundMusic.play();
-        if (label) label.innerText = title;
-        closeMusicPicker();
-    };
-
-    currentBackgroundMusic.onerror = function() {
-        currentBackgroundMusic.src = url; 
-        currentBackgroundMusic.play().catch(e => {});
-    };
-    currentBackgroundMusic.load();
-}
-
-async function renderSongs() {
-    const list = document.getElementById('music-list');
-    if (!list) return;
-    list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება მუსიკები...</p>";
-
-    try {
-        const storageRef = firebase.storage().ref('musics'); 
-        const result = await storageRef.listAll();
-        
-        if (result.items.length === 0) {
-            list.innerHTML = "<p style='color:white; padding:15px;'>საქაღალდე 'musics' ცარიელია.</p>";
-            return;
-        }
-
-        const promises = result.items.map(async (itemRef) => {
-            const url = await itemRef.getDownloadURL();
-            const realTime = await getDuration(url);
-            const fileName = itemRef.name.replace('.mp3', '').replace(/_/g, ' ');
-            return { url, name: fileName, duration: realTime };
-        });
-
-        const songsData = await Promise.all(promises);
-        list.innerHTML = songsData.map(s => `
-            <div class="music-item-row" onclick="pickSong('${s.url}', '${s.name}')" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
-                <div style="width:50px; height:50px; border-radius:4px; margin-right:15px; background:#333; display:flex; align-items:center; justify-content:center; font-size:20px;">🎵</div>
-                <div style="flex:1;">
-                    <div style="font-weight:500; color:white; font-size:15px;">${s.name}</div>
-                    <div style="color:#888; font-size:13px;">Storage · ${s.duration}</div>
-                </div>
-            </div>`).join('');
-    } catch (error) {
-        loadMusicFromDB();
-    }
-}
-
-async function loadMusicFromDB() {
-    const list = document.getElementById('music-list');
-    if (!list) return;
-    try {
-        const querySnapshot = await db.collection("musics").get();
-        if (querySnapshot.empty) return;
-        list.innerHTML = "";
-        querySnapshot.forEach(async (doc) => {
-            const s = doc.data();
-            const realTime = await getDuration(s.url);
-            const row = document.createElement('div');
-            row.className = "music-item-row";
-            row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
-            row.innerHTML = `
-                <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
-                <div style="flex:1;">
-                    <div style="font-weight:500; color:white;">${s.name || s.title}</div>
-                    <div style="color:#888; font-size:12px;">${s.artist || 'Artist'} · ${realTime}</div>
-                </div>`;
-            row.onclick = () => pickSong(s.url, s.name || s.title);
-            list.appendChild(row);
-        });
-    } catch (e) {}
-}
-
-function sendOneSignalPush(senderName, messageText) {
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic os_v2_app_kbb3yhxnng5e7hgd4wuobweyknbzktcg4te7imyu2hiuledkzu64dd2jv4luedx327x73gpwpauts6pc3fz325vdncsoyxc136j3oa'
-        },
-        body: JSON.stringify({
-            app_id: "5043bc1e-ed37-49f3-987c-b51c1b130a4b", 
-            included_segments: ["All"], 
-            headings: { "en": senderName, "ka": senderName },
-            contents: { "en": messageText, "ka": messageText },
-            android_accent_color: "FF0000",
-            priority: 10,
-            url: "https://emigrantbook.com"
-        })
-    };
-    fetch('https://onesignal.com/api/v1/notifications', options).catch(() => {});
-}
-
-function openPromoteUI() {
-    const menu = document.getElementById('more-menu-panel');
-    if (menu) menu.classList.remove('active'); 
-    document.getElementById('promoteUI').style.display = 'flex';
-    selectedEbVideoId = null;
-    window.selectedEbPrice = 0;
-    const btn = document.getElementById('ebPayBtn');
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
-    document.getElementById('ebTotal').innerText = "0,00 $";
-
-    const grid = document.getElementById('promoteVideoGrid');
-    grid.innerHTML = "";
-    
-    db.ref('posts').orderByChild('authorId').equalTo(auth.currentUser.uid).once('value', snap => {
-        const posts = snap.val();
-        if (posts) {
-            Object.entries(posts).reverse().forEach(([id, post]) => {
-                const video = post.media ? post.media.find(m => m.type === 'video') : null;
-                if (video) {
-                    grid.innerHTML += `
-                    <div onclick="selectEbVideo('${id}')" id="vid-${id}" style="min-width:100px; height:130px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:2px solid transparent; position:relative; flex-shrink:0;">
-                        <video src="${video.url}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;"></video>
-                        <div style="position:absolute; bottom:5px; left:5px; font-size:10px;"><i class="fas fa-play"></i> ${post.views || 0}</div>
-                    </div>`;
-                }
-            });
-        }
-    });
-}
-
-let selectedEbVideoId = null;
-function selectEbVideo(id) {
-    selectedEbVideoId = id;
-    document.querySelectorAll('#promoteVideoGrid div').forEach(el => el.style.borderColor = "transparent");
-    const target = document.getElementById('vid-' + id);
-    if(target) target.style.borderColor = "#fe2c55";
-    checkEbReady();
-}
-
-function selectEbPack(el, price) {
-    document.querySelectorAll('.eb-pack').forEach(p => {
-        p.style.background = "#1a1a1a";
-        p.style.borderColor = "#333";
-    });
-    el.style.background = "#261014";
-    el.style.borderColor = "#fe2c55";
-    document.getElementById('ebTotal').innerText = price.toFixed(2).replace('.', ',') + " $";
-    window.selectedEbPrice = price;
-    checkEbReady();
-}
-
-function checkEbReady() {
-    if (selectedEbVideoId && window.selectedEbPrice) {
-        const btn = document.getElementById('ebPayBtn');
-        btn.disabled = false;
-        btn.style.opacity = "1";
-    }
-}
-
-function startPayment() {
-    if (!selectedEbVideoId || !window.selectedEbPrice) return;
-    const user = auth.currentUser;
-    const akhoPrice = Math.ceil(window.selectedEbPrice * 10); 
-
-    db.ref(`users/${user.uid}`).once('value', snap => {
-        const u = snap.val();
-        const currentBalance = u.akho || 0;
-
-        if (currentBalance < akhoPrice) {
-            alert("ბალანსი არ გყოფნით!");
-            return;
-        }
-
-        db.ref(`users/${user.uid}/akho`).set(currentBalance - akhoPrice);
-        const now = Date.now();
-        const expireDate = now + (24 * 60 * 60 * 1000);
-        
-        db.ref(`posts/${selectedEbVideoId}`).update({
-            isPromoted: true,
-            promoteExpires: expireDate,
-            promoteWeight: window.selectedEbPrice,
-            timestamp: now 
-        }).then(() => {
-            alert("ვიდეო დაწინაურდა და ამოვარდა სათავეში! 🚀");
-            closePromoteUI();
-            location.reload(); 
-        });
-    });
-}
-
-function closePromoteUI() {
-    document.getElementById('promoteUI').style.display = 'none';
-}
-
-(function() {
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const btn = document.getElementById('installAppBtn');
-        if (btn) btn.style.setProperty('display', 'flex', 'important');
-    });
-
-    document.addEventListener('click', async (e) => {
-        if (e.target && (e.target.id === 'installAppBtn' || e.target.closest('#installAppBtn'))) {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                const btn = document.getElementById('installAppBtn');
-                if (btn) btn.style.setProperty('display', 'none', 'important');
-            }
-        }
-    });
-})();
-
-(function() {
-    const isIos = () => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod/.test(userAgent);
-    };
-    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
-
-    if (isIos() && !isInStandaloneMode()) {
-        const iosModal = document.getElementById('pwa-ios-instruction');
-        if (iosModal) {
-            setTimeout(() => {
-                iosModal.style.display = 'block';
-            }, 3000);
-        }
-    }
-})();
-
-function monitorMessageRequests() {
-    const myId = auth.currentUser ? auth.currentUser.uid : null;
-    if (!myId) return;
-
-    db.ref(`message_requests/${myId}`).on('value', snapshot => {
-        const badge = document.getElementById('msgReqBadge');
-        if (badge) {
-            if (snapshot.exists()) {
-                badge.innerText = snapshot.numChildren();
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-    });
-}
-
-function openMessageRequests() {
-    const myId = auth.currentUser.uid;
-    const list = document.getElementById('msgReqList');
-    document.getElementById('messageRequestsUI').style.display = 'flex';
-    list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">იტვირთება...</div>';
-
-    db.ref(`message_requests/${myId}`).on('value', snapshot => {
-        list.innerHTML = '';
-        if (!snapshot.exists()) {
-            list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ახალი მოთხოვნები არ არის.</div>';
-            return;
-        }
-
-        snapshot.forEach(child => {
-            const senderId = child.key;
-            const messages = child.val();
-            const messageKeys = Object.keys(messages);
-            const lastMsg = messages[messageKeys[messageKeys.length - 1]];
-
-            db.ref(`users/${senderId}`).once('value', userSnap => {
-                const user = userSnap.val() || {};
-                const item = document.createElement('div');
-                item.style = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px;";
-                item.innerHTML = `
-                    <img src="${user.photo || 'token-avatar.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
-                    <div style="flex:1;">
-                        <div style="color:white; font-weight:bold;">${user.name || 'User'}</div>
-                        <div style="color:#888; font-size:12px;">${lastMsg.text || '📷 Media'}</div>
-                    </div>
-                    <button onclick="acceptMsgReq('${senderId}')" style="background:var(--gold); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">Accept</button>`;
-                list.appendChild(item);
-            });
-        });
-    });
-}
-
-function acceptMsgReq(senderId) {
-    const myId = auth.currentUser.uid;
-    const chatId = getChatId(myId, senderId);
-
-    db.ref(`message_requests/${myId}/${senderId}`).once('value', snap => {
-        if (snap.exists()) {
-            const messages = snap.val();
-            db.ref(`users/${senderId}`).once('value', uSnap => {
-                const senderData = uSnap.val() || {};
-                db.ref(`users/${myId}/following/${senderId}`).set({
-                    name: senderData.name || "User",
-                    photo: senderData.photo || ""
-                });
-                db.ref(`users/${senderId}/following/${myId}`).set({
-                    name: myName,
-                    photo: myPhoto
-                });
-
-                db.ref(`messages/${chatId}`).update(messages).then(() => {
-                    db.ref(`message_requests/${myId}/${senderId}`).remove();
-                    closeMessageRequests();
-                    startChat(senderId, senderData.name || "User", senderData.photo || "");
-                });
-            });
-        }
-    });
-}
-
-
-
-    function closeMessageRequests() {
-    document.getElementById('messageRequestsUI').style.display = 'none';
-}
-
-auth.onAuthStateChanged(user => {
+// ==========================================
+// 22. კავშირი და მორგება (Initialization)
+// ==========================================
+supabase.auth.getUser().then(({ data: { user } }) => {
     if (user) monitorMessageRequests();
 });
