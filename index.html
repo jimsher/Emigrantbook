@@ -12,7 +12,7 @@
     };
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="initSupabase()"></script>
   
   <style>
     * {
@@ -140,7 +140,21 @@
   <script>
     const SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     const SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let supabase = null; // თავიდან ცარიელია, სანამ სკრიპტი არ ჩაიტვირთება
+
+    // ეს ფუნქცია ავტომატურად გაეშვება, როგორც კი ბიბლიოთეკა ბოლომდე ჩაიტვირთება!
+    function initSupabase() {
+      try {
+        if (window.supabase) {
+          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          console.log("Supabase წარმატებით დაინიციალიზდა! ✅");
+        } else {
+          alert("შეცდომა: Supabase ბიბლიოთეკა ვერ მოიძებნა window-ში.");
+        }
+      } catch (e) {
+        alert("ინიციალიზაციის ერორი: " + e.message);
+      }
+    }
 
     let isLoginMode = true;
 
@@ -174,6 +188,13 @@
       const errorDiv = document.getElementById('error-message');
 
       errorDiv.style.display = 'none';
+
+      // ვამოწმებთ, საერთოდ ჩაიტვირთა თუ არა Supabase
+      if (!supabase) {
+        errorDiv.innerText = "სისტემა ჯერ კიდევ იტვირთება, გთხოვთ სცადოთ 2 წამში...";
+        errorDiv.style.display = 'block';
+        return;
+      }
 
       if (!email || !password || (!isLoginMode && !fullname)) {
         errorDiv.innerText = "გთხოვთ შეავსოთ ყველა ველი!";
