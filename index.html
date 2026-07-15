@@ -265,6 +265,7 @@
       margin-right: 10px;
       text-transform: uppercase;
       overflow: hidden;
+      cursor: pointer; /* მიუთითებს, რომ დაჭერადია */
     }
     .post-avatar img {
       width: 100%;
@@ -279,6 +280,10 @@
       font-weight: bold;
       font-size: 15px;
       color: #050505;
+      cursor: pointer; /* მიუთითებს, რომ დაჭერადია */
+    }
+    .post-author:hover {
+      text-decoration: underline;
     }
     .post-time {
       font-size: 12px;
@@ -641,7 +646,6 @@
 </head>
 <body>
 
-  <!-- დამალული ფაილის შესაყვანი პროფილის სურათის ასატვირთად -->
   <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
 
   <div id="auth-screen">
@@ -678,7 +682,7 @@
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
       <div class="header-right">
-        <div class="header-avatar" id="header-avatar-btn" onclick="showScreen('profile')">?</div>
+        <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
       </div>
     </div>
 
@@ -712,21 +716,21 @@
       <div class="facebook-profile-container">
         
         <div class="profile-cover-wrapper">
-          <button class="cover-camera-btn">📷</button>
+          <button class="cover-camera-btn" id="cover-camera-btn">📷</button>
         </div>
 
         <div class="profile-info-wrapper">
           <div class="profile-avatar-holder">
             <div class="profile-fb-avatar" id="profile-big-avatar">?</div>
-            <button class="avatar-camera-btn" onclick="triggerAvatarUpload()">📷</button>
+            <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">📷</button>
           </div>
           
           <div class="profile-user-headline">
-            <div class="profile-fb-name" id="profile-user-name">ჩემი პროფილი</div>
-            <div class="profile-fb-email" id="profile-user-email">email@mail.com</div>
+            <div class="profile-fb-name" id="profile-user-name">იტვირთება...</div>
+            <div class="profile-fb-email" id="profile-user-email">...</div>
           </div>
 
-          <div class="profile-action-row">
+          <div class="profile-action-row" id="profile-action-panel">
             <button class="btn-add-story">➕ ისტორიაში დამატება</button>
             <button class="btn-edit-profile">✏️ პროფილის რედაქტირება</button>
             <button class="btn-more-options">•••</button>
@@ -758,7 +762,7 @@
           <button class="tab-button">ვიდეოები</button>
         </div>
 
-        <div class="profile-logout-section">
+        <div class="profile-logout-section" id="profile-logout-section">
           <button class="logout-btn-large" onclick="logout()">სისტემიდან გამოსვლა</button>
         </div>
 
@@ -868,6 +872,75 @@
         } else {
           showScreen('auth');
         }
+      });
+    }
+
+    // მომხმარებლის საკუთარი პროფილის გახსნა (Story-ის და რედაქტირების ღილაკებით)
+    function showMyProfile() {
+      if (!currentUser) return;
+      
+      var finalName = userProfile ? userProfile.full_name : currentUser.email;
+      var avatarUrl = userProfile ? userProfile.avatar_url : null;
+      
+      renderAvatar('profile-big-avatar', avatarUrl, finalName);
+      document.getElementById('profile-user-name').innerText = finalName;
+      document.getElementById('profile-user-email').innerText = currentUser.email;
+
+      // ვაჩვენებთ ფოტოს დაყენების და ქავერის ღილაკებს
+      document.getElementById('avatar-camera-btn').style.display = "flex";
+      document.getElementById('cover-camera-btn').style.display = "flex";
+
+      // პირადი პროფილის ღილაკები
+      document.getElementById('profile-action-panel').innerHTML = `
+        <button class="btn-add-story">➕ ისტორიაში დამატება</button>
+        <button class="btn-edit-profile">✏️ პროფილის რედაქტირება</button>
+        <button class="btn-more-options">•••</button>
+      `;
+
+      // პირადი პროფილის დროს ვაჩვენებთ სისტემიდან გამოსვლის ღილაკს
+      document.getElementById('profile-logout-section').style.display = "block";
+
+      showScreen('profile');
+    }
+
+    // სხვა მომხმარებლის პროფილის გახსნის ფუნქცია (ავატარზე დაჭერისას)
+    function viewUserProfile(userId) {
+      if (!userId) return;
+      if (userId === currentUser.id) {
+        showMyProfile(); // თუ საკუთარ თავს დააჭირა, ჩვეულებრივად თავისი პროფილი გაეხსნას
+        return;
+      }
+
+      // ვკითხულობთ სხვის მონაცემებს 'profiles' ტაბულიდან
+      supabase.from('profiles').select('*').eq('id', userId).single().then(function(res) {
+        if (res.error || !res.data) {
+          alert("მომხმარებლის პროფილი ვერ მოიძებნა.");
+          return;
+        }
+
+        var selectedUser = res.data;
+        var finalName = selectedUser.full_name || "მომხმარებელი";
+        var avatarUrl = selectedUser.avatar_url;
+
+        renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        document.getElementById('profile-user-name').innerText = finalName;
+        document.getElementById('profile-user-email').innerText = ""; // სხვის მეილს უსაფრთხოების გამო ვმალავთ
+
+        // სხვის გვერდზე ვმალავთ ფოტოს ატვირთვის/ქავერის ღილაკებს
+        document.getElementById('avatar-camera-btn').style.display = "none";
+        document.getElementById('cover-camera-btn').style.display = "none";
+
+        // სხვისი პროფილის სამოქმედო ღილაკები (Add Friend, Message)
+        document.getElementById('profile-action-panel').innerHTML = `
+          <button class="btn-add-story">👤 მეგობრობის გაგზავნა</button>
+          <button class="btn-edit-profile" style="background-color:#1877f2; color:white;">💬 მესიჯის გაგზავნა</button>
+          <button class="btn-more-options">•••</button>
+        `;
+
+        // სხვის პროფილზე ვმალავთ სისტემიდან გამოსვლის ღილაკს
+        document.getElementById('profile-logout-section').style.display = "none";
+
+        showScreen('profile');
       });
     }
 
@@ -987,7 +1060,6 @@
 
     // პოსტების უსაფრთხო ჩატვირთვა
     function loadPosts() {
-      // 1. ჯერ ჩვეულებრივად ვკითხულობთ პოსტებს (ყველაზე უსაფრთხო გზა)
       supabase.from('posts').select('*').order('created_at', { ascending: false }).then(function(res) {
         var postsWall = document.getElementById('posts-wall');
         postsWall.innerHTML = "";
@@ -1003,7 +1075,6 @@
           return;
         }
 
-        // 2. ვკითხულობთ ყველა მომხმარებლის პროფილის ავატარებს 'profiles'-დან
         supabase.from('profiles').select('id, avatar_url').then(function(profilesRes) {
           cachedProfiles = {};
           if (profilesRes.data) {
@@ -1012,7 +1083,6 @@
             });
           }
 
-          // 3. პოსტების გამოტანა ინდივიდუალური ავატარებით
           posts.forEach(function(post) {
             postsWall.innerHTML += createPostCardHtml(post);
           });
@@ -1090,12 +1160,13 @@
 
       var mediaHtml = buildCollageHtml(post.media_url);
 
+      // ავატარზე და სახელზე დაჭერისას ვიძახებთ viewUserProfile-ს შესაბამისი მომხმარებლის ID-ით
       return `
         <div class="post-card">
           <div class="post-header">
-            <div class="post-avatar">${avatarContent}</div>
+            <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
             <div class="post-author-info">
-              <span class="post-author">${post.author_name}</span>
+              <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
               <span class="post-time">${date}</span>
             </div>
           </div>
@@ -1113,7 +1184,7 @@
           </div>
 
           <div class="comment-box-area">
-            <div class="comment-box-avatar">${myCommentAvatar}</div>
+            <div class="comment-box-avatar" onclick="viewUserProfile('${currentUser.id}')">${myCommentAvatar}</div>
             <div class="comment-input-container">
               <input type="text" id="comment-field-${post.id}" placeholder="დაწერე კომენტარი..." onkeypress="handleCommentKeyPress(event, '${post.id}')">
               <button class="comment-submit-button" onclick="submitComment('${post.id}')">გაგზავნა</button>
