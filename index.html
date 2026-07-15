@@ -133,7 +133,6 @@
       gap: 12px;
     }
     
-    /* ფეისბუქის სტილის მრგვალი ავატარი ჰედერში */
     .header-avatar {
       width: 40px;
       height: 40px;
@@ -153,13 +152,13 @@
     .feed-container {
       max-width: 500px;
       margin: 0 auto;
-      padding: 0; /* კიდეებიდან თეთრი დაშორებები მთლიანად მოხსნილია */
+      padding: 0;
     }
     .create-post-card {
       background: #ffffff;
       border-radius: 8px;
       padding: 12px;
-      margin: 12px 8px; /* პოსტის დასაწერ ველს ვუტოვებთ მცირე კიდეებს */
+      margin: 12px 8px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     .create-post-input {
@@ -172,7 +171,6 @@
       margin-bottom: 10px;
     }
 
-    /* ფაილის ატვირთვის ახალი ლამაზი ღილაკი */
     .file-upload-wrapper {
       position: relative;
       margin-bottom: 12px;
@@ -197,7 +195,6 @@
     .file-upload-btn:hover {
       background-color: #d8dadf;
     }
-    /* ვმალავთ ბრაუზერის სტანდარტულ მახინჯ "Choose File"-ს */
     .file-upload-wrapper input[type="file"] {
       position: absolute;
       left: 0;
@@ -207,7 +204,6 @@
       height: 100%;
       cursor: pointer;
     }
-    /* მონიშნული ფაილის სახელის პანელი */
     .selected-file-info {
       font-size: 13px;
       color: #1877f2;
@@ -234,7 +230,7 @@
       cursor: pointer;
     }
 
-    /* განახლებული პოსტის ბარათის სტილი Facebook-ის იდენტურად */
+    /* პოსტის ბარათის სტილი Facebook-ის იდენტურად */
     .post-card {
       background: #ffffff;
       margin-bottom: 12px;
@@ -245,7 +241,7 @@
     .post-header {
       display: flex;
       align-items: center;
-      padding: 12px 12px 8px 12px; /* დაშორება მხოლოდ ტექსტურ ნაწილს */
+      padding: 12px 12px 8px 12px;
     }
     .post-avatar {
       width: 40px;
@@ -278,19 +274,53 @@
     .post-content {
       font-size: 15px;
       line-height: 1.4;
-      padding: 0 12px 12px 12px; /* გვერდითა და ქვედა დაშორება */
+      padding: 0 12px 12px 12px;
       white-space: pre-wrap;
     }
 
-    /* ფოტო/ვიდეო, რომელიც სრულად ებჯინება ეკრანის კუთხეებს */
-    .post-media {
+    /* --------------------------------------
+       კოლაჟის ბადის (Grid) სტილები
+    -------------------------------------- */
+    .collage-grid {
+      display: grid;
+      gap: 2px;
+      background-color: #e4e6eb;
       width: 100%;
-      max-height: 500px;
-      object-fit: cover;
-      display: block;
       margin: 0;
       padding: 0;
-      border-radius: 0; /* კუთხეები სრულადაა შევსებული */
+    }
+    .collage-img, .collage-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* სხვადასხვა რაოდენობის ფოტოების განლაგება */
+    .collage-1 { grid-template-columns: 1fr; height: 350px; }
+    .collage-2 { grid-template-columns: 1fr 1fr; height: 300px; }
+    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 150px 150px; height: 300px; }
+    .collage-3 *:first-child { grid-row: span 2; }
+    .collage-4 { grid-template-columns: 2fr 1fr; grid-template-rows: 100px 100px 100px; height: 300px; }
+    .collage-4 *:first-child { grid-row: span 3; }
+    .collage-5 { grid-template-columns: 1fr 1fr; grid-template-rows: 180px 120px 120px; height: 420px; }
+    .collage-5 *:first-child { grid-column: span 2; }
+    .collage-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 200px 120px; height: 320px; }
+    .collage-6 *:first-child { grid-column: span 2; }
+
+    .more-photos-overlay {
+      position: relative;
+    }
+    .more-photos-text {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: bold;
     }
 
     /* ლაიქების და კომენტარების ზოლი */
@@ -305,7 +335,8 @@
     .post-actions {
       display: flex;
       justify-content: space-around;
-      padding: 6px 0;
+      padding: 4px 0;
+      border-bottom: 1px solid #e4e6eb;
     }
     .action-btn {
       background: none;
@@ -320,9 +351,63 @@
       padding: 6px 12px;
       border-radius: 4px;
       transition: 0.1s;
+      width: 50%;
+      justify-content: center;
     }
     .action-btn:hover {
       background-color: #f2f3f5;
+    }
+
+    /* --------------------------------------
+       ახალი კომენტარების სექციის სტილი (Facebook-ის იდენტურად)
+    -------------------------------------- */
+    .comments-section {
+      padding: 8px 12px;
+      background-color: #ffffff;
+    }
+    .comment-input-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+    .comment-input-box {
+      flex: 1;
+      background-color: #f0f2f5;
+      border-radius: 20px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+    }
+    .comment-input-box input {
+      width: 100%;
+      border: none;
+      background: none;
+      outline: none;
+      font-size: 14px;
+      color: #1c1e21;
+    }
+    .comment-send-btn {
+      background: none;
+      border: none;
+      color: #1877f2;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      padding-left: 8px;
     }
 
     /* პროფილის გვერდის ვიზუალი */
@@ -417,8 +502,8 @@
         <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
         
         <div class="file-upload-wrapper">
-          <div class="file-upload-btn">📷 აირჩიე ფოტო ან ვიდეო გალერეიდან</div>
-          <input type="file" id="post-media-file" accept="image/*,video/*" onchange="showSelectedFileName()">
+          <div class="file-upload-btn">📷 აირჩიე ფოტოები/ვიდეო (6-მდე)</div>
+          <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           <div class="selected-file-info" id="selected-file-name"></div>
         </div>
 
@@ -466,12 +551,11 @@
       alert("კავშირის შეცდომა: " + e.message);
     }
 
-    // მონიშნული ფაილის სახელის ჩვენება
     function showSelectedFileName() {
       var fileInput = document.getElementById('post-media-file');
       var nameDiv = document.getElementById('selected-file-name');
       if (fileInput.files.length > 0) {
-        nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files[0].name;
+        nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
         nameDiv.style.display = "block";
       } else {
         nameDiv.style.display = "none";
@@ -619,18 +703,65 @@
       });
     }
 
+    // კოლაჟის ბადის გენერირების ფუნქცია
+    function generateCollageHtml(mediaUrlsString) {
+      if (!mediaUrlsString) return "";
+      
+      var urls = [];
+      try {
+        // ვამოწმებთ, მასივის სახითაა შენახული (JSON) თუ ჩვეულებრივი ტექსტია
+        if (mediaUrlsString.startsWith("[")) {
+          urls = JSON.parse(mediaUrlsString);
+        } else {
+          urls = [mediaUrlsString];
+        }
+      } catch (e) {
+        urls = [mediaUrlsString];
+      }
+
+      if (urls.length === 0) return "";
+
+      var total = urls.length;
+      var limit = Math.min(total, 6);
+      var gridClass = "collage-" + limit;
+
+      var html = `<div class="collage-grid ${gridClass}">`;
+      
+      for (var i = 0; i < limit; i++) {
+        var url = urls[i];
+        var isVideo = url.includes('.mp4') || url.includes('video');
+        var isLast = (i === limit - 1);
+        var remaining = total - limit;
+
+        var cellClass = (isLast && remaining > 0) ? "more-photos-overlay" : "";
+
+        html += `<div class="${cellClass}">`;
+        if (isVideo) {
+          html += `<video class="collage-video" src="${url}" controls></video>`;
+        } else {
+          html += `<img class="collage-img" src="${url}" alt="Media">`;
+        }
+
+        // თუ 6-ზე მეტი ფოტოა, ბოლოზე ვადებთ გადაფარვას (+X)
+        if (isLast && remaining > 0) {
+          html += `<div class="more-photos-text">+${remaining + 1}</div>`;
+        }
+        html += `</div>`;
+      }
+      
+      html += `</div>`;
+      return html;
+    }
+
     function createPostCardHtml(post) {
       var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+      
+      // საკუთარი ავატარის პირველი ასო კომენტარის ველისთვის
+      var myInitial = userProfile ? userProfile.full_name.charAt(0).toUpperCase() : (currentUser ? currentUser.email.charAt(0).toUpperCase() : "?");
 
-      var mediaHtml = "";
-      if (post.media_url) {
-        if (post.media_url.includes('.mp4') || post.media_url.includes('video') || post.media_type === 'video') {
-          mediaHtml = '<video class="post-media" src="' + post.media_url + '" controls></video>';
-        } else {
-          mediaHtml = '<img class="post-media" src="' + post.media_url + '" alt="Media">';
-        }
-      }
+      // კოლაჟის გენერირება
+      var mediaHtml = generateCollageHtml(post.media_url);
 
       return `
         <div class="post-card">
@@ -642,19 +773,57 @@
             </div>
           </div>
           <div class="post-content">${post.content || ""}</div>
+          
           ${mediaHtml}
+          
           <div class="post-stats">
             <span>👍 ${post.likes_count || 0} ლაიქი</span>
             <span>0 კომენტარი</span>
           </div>
           <div class="post-actions">
             <button class="action-btn" onclick="likePost('${post.id}', ${post.likes_count})">👍 მოწონება</button>
-            <button class="action-btn" onclick="alert('კომენტარები მალე დაემატება!')">💬 კომენტარი</button>
+            <button class="action-btn" onclick="focusCommentInput('${post.id}')">💬 კომენტარი</button>
+          </div>
+
+          <div class="comments-section">
+            <div class="comment-input-area">
+              <div class="comment-avatar">${myInitial}</div>
+              <div class="comment-input-box">
+                <input type="text" id="comment-input-${post.id}" placeholder="დაწერე კომენტარი..." onkeypress="handleCommentSubmit(event, '${post.id}')">
+                <button class="comment-send-btn" onclick="submitComment('${post.id}')">გაგზავნა</button>
+              </div>
+            </div>
           </div>
         </div>
       `;
     }
 
+    // კომენტარის ველზე ფოკუსირება
+    function focusCommentInput(postId) {
+      var input = document.getElementById('comment-input-' + postId);
+      if (input) {
+        input.focus();
+      }
+    }
+
+    // Enter-ზე დაჭერისას კომენტარის გაგზავნა
+    function handleCommentSubmit(event, postId) {
+      if (event.key === 'Enter') {
+        submitComment(postId);
+      }
+    }
+
+    // კომენტარის გაგზავნის ლოგიკა
+    function submitComment(postId) {
+      var input = document.getElementById('comment-input-' + postId);
+      var text = input.value.trim();
+      if (!text) return;
+
+      alert("კომენტარი მალე დაემატება ბაზაში! ტექსტი: " + text);
+      input.value = "";
+    }
+
+    // მრავალჯერადი ფოტოების ატვირთვა და პოსტის შექმნა
     function createPost() {
       var text = document.getElementById('post-text-input').value.trim();
       var fileInput = document.getElementById('post-media-file');
@@ -670,35 +839,37 @@
 
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
 
-      // თუ მომხმარებელმა აირჩია ფაილი
+      // თუ მომხმარებელმა აირჩია ფაილები
       if (fileInput.files.length > 0) {
-        var file = fileInput.files[0];
-        var fileExt = file.name.split('.').pop();
-        var fileName = currentUser.id + "_" + Date.now() + "." + fileExt;
-        
-        // 1. ფაილის ატვირთვა Supabase Storage-ში
-        supabase.storage.from('post-media').upload(fileName, file).then(function(storageRes) {
-          if (storageRes.error) {
-            alert("ფაილის ატვირთვის შეცდომა: " + storageRes.error.message);
-            publishBtn.disabled = false;
-            publishBtn.innerText = "გამოქვეყნება";
-            return;
-          }
+        var files = Array.from(fileInput.files).slice(0, 6); // მაქსიმუმ 6 ფოტო
+        var uploadedUrls = [];
+        var uploadPromises = [];
 
-          // 2. ხელით ვაწყობთ 100%-ით სწორ საჯარო ლინკს (დაზღვევის მიზნით)
-          var mediaUrl = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
-          var mediaType = file.type.startsWith('video') ? "video" : "image";
+        files.forEach(function(file, index) {
+          var fileExt = file.name.split('.').pop();
+          var fileName = currentUser.id + "_" + Date.now() + "_" + index + "." + fileExt;
+          
+          var promise = supabase.storage.from('post-media').upload(fileName, file).then(function(storageRes) {
+            if (!storageRes.error) {
+              var mediaUrl = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
+              uploadedUrls.push(mediaUrl);
+            }
+          });
+          uploadPromises.push(promise);
+        });
 
-          // 3. პოსტის ჩაწერა მონაცემთა ბაზაში
-          savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn);
+        // ველოდებით ყველა ფოტოს წარმატებით ატვირთვას
+        Promise.all(uploadPromises).then(function() {
+          var mediaType = files[0].type.startsWith('video') ? "video" : "image";
+          // ლინკების მასივს ვინახავთ JSON ტექსტის სახით media_url სვეტში
+          var mediaUrlsString = JSON.stringify(uploadedUrls);
+          savePostToDatabase(authorName, text, mediaUrlsString, mediaType, publishBtn);
         });
       } else {
-        // თუ ფაილი არ არის და მხოლოდ ტექსტია
         savePostToDatabase(authorName, text, null, null, publishBtn);
       }
     }
 
-    // პოსტის შენახვის დამხმარე ფუნქცია
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
       supabase.from('posts').insert([
         {
