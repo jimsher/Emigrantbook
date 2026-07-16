@@ -1047,6 +1047,7 @@
         renderAvatar('profile-big-avatar', avatarUrl, finalName);
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-email').innerText = currentUser.email;
+        document.getElementById('profile-user-email').style.fontWeight = "normal";
 
         document.getElementById('avatar-camera-btn').style.display = "flex";
         document.getElementById('cover-camera-btn').style.display = "flex";
@@ -1087,15 +1088,20 @@
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName);
         document.getElementById('profile-user-name').innerText = finalName;
-        document.getElementById('profile-user-email').innerText = ""; 
+        
+        // ატვირთული ფოტოს მიხედვით, ელ-ფოსტის ნაცვლად ვწერთ გამომწერებს
+        var followersText = "9 გამომწერი • 9 გამოწერილი";
+        document.getElementById('profile-user-email').innerText = followersText;
+        document.getElementById('profile-user-email').style.fontWeight = "600";
+        document.getElementById('profile-user-email').style.color = "#65676b";
 
         document.getElementById('avatar-camera-btn').style.display = "none";
         document.getElementById('cover-camera-btn').style.display = "none";
 
-        // სხვისი პროფილის მოქმედების ღილაკები - ზუსტად როგორც ატვირთულ სურათზეა (ერთი-ერთში განლაგებით)
+        // სხვისი პროფილის მოქმედების ღილაკები - ზუსტად როგორც ატვირთულ სურათზეა (ერთი-ერთში განლაგებითა და ფერებით)
         document.getElementById('profile-action-panel').innerHTML = `
-          <button class="btn-add-story" style="background-color: #1877f2; color: #ffffff;">👤 მეგობრები</button>
-          <button class="btn-edit-profile" style="background-color: #e4e6eb; color: #050505;">💬 მესიჯი</button>
+          <button class="btn-add-story" onclick="sendFriendRequest()" style="background-color: #1877f2; color: #ffffff;">👤 მეგობრობის დამატება</button>
+          <button class="btn-edit-profile" onclick="sendMessage()" style="background-color: #e4e6eb; color: #050505;">💬 მესინჯერი</button>
           <button class="btn-more-options" style="background-color: #e4e6eb; color: #050505;">•••</button>
         `;
 
