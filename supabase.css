@@ -1,1 +1,877 @@
+* {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background-color: #f0f2f5;
+      color: #1c1e21;
+    }
 
+    /* 1. ავტორიზაციის ეკრანი */
+    #auth-screen {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .auth-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1e3c72;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+    .input-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: #333;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    .input-group input, .input-group select, .input-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background-color: white;
+    }
+    .input-group textarea {
+      resize: vertical;
+      height: 80px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #1e3c72;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .toggle-text {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #555;
+    }
+    .toggle-text span {
+      color: #1e3c72;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .error-msg {
+      color: #d9534f;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* 2. მთავარი კედლის და პროფილის სტილები */
+    #home-screen, #profile-screen, #edit-profile-screen {
+      display: none;
+    }
+    
+    .header {
+      background-color: #ffffff;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header .logo-text {
+      font-size: 22px;
+      font-weight: bold;
+      color: #1877f2;
+      letter-spacing: -0.5px;
+      cursor: pointer;
+    }
+    
+    /* პროფილის ნავბარის იკონების ბლოკი */
+    .nav-icons-center {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .nav-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #65676b;
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-icon-btn:hover, .nav-icon-btn.active {
+      background-color: #f2f3f5;
+      color: #1877f2;
+    }
+    .nav-icon-svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+    
+    /* წითელი ბეიჯი პროფილის ნავბარისთვის */
+    .notification-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background-color: #e41e3f;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 50%;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 2px solid white;
+    }
+
+    /* შეტყობინებების ჩამოსაშლელი Dropdown პროფილზე */
+    .requests-dropdown {
+      position: absolute;
+      top: 52px;
+      right: 16px;
+      width: 330px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+      border: 1px solid #ced0d4;
+      display: none;
+      flex-direction: column;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .dropdown-header {
+      padding: 12px 16px;
+      font-weight: bold;
+      font-size: 17px;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .dropdown-empty {
+      padding: 20px;
+      text-align: center;
+      color: #65676b;
+      font-size: 14px;
+    }
+    .request-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .request-item-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .request-item-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .request-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .request-item-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #050505;
+    }
+    .request-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .req-btn-confirm {
+      background-color: #1877f2;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .req-btn-delete {
+      background-color: #e4e6eb;
+      color: #050505;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #e4e6eb;
+      color: #1c1e21;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      border: 1px solid #ced0d4;
+      text-transform: uppercase;
+      overflow: hidden;
+    }
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .feed-container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    /* პოსტის შექმნის ბარათი */
+    .create-post-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .create-post-input {
+      width: 100%;
+      height: 60px;
+      border: none;
+      resize: none;
+      outline: none;
+      font-size: 15px;
+      margin-bottom: 10px;
+    }
+
+    /* ღილაკების კონტეინერი - განლაგება ერთ ხაზზე */
+    .create-post-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #e4e6eb;
+      padding-top: 10px;
+      gap: 10px; /* ღილაკებს შორის დაშორება */
+    }
+
+    /* ფაილის ატვირთვის კონტეინერი */
+    .file-upload-wrapper {
+      position: relative;
+      flex: 1; /* იკავებს დარჩენილ თავისუფალ ადგილს */
+      max-width: 180px; /* ღილაკი რომ ძალიან არ გაიწელოს */
+    }
+    .file-upload-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background-color: #f0f2f5;
+      color: #050505;
+      padding: 0 12px;
+      border-radius: 20px; /* უფრო მომრგვალებული და თანამედროვე ფეისბუქის სტილი */
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      border: none;
+      width: 100%;
+      height: 36px; /* თანაბარი სიმაღლე გამოქვეყნების ღილაკთან */
+      transition: background 0.2s;
+    }
+    .file-upload-btn:hover {
+      background-color: #e4e6eb;
+    }
+    .file-upload-wrapper input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* გამოქვეყნების ღილაკი */
+    .publish-btn {
+      background-color: #1877f2;
+      color: #ffffff;
+      border: none;
+      padding: 0 20px;
+      border-radius: 20px; /* იდენტური მომრგვალება */
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      height: 36px; /* თანაბარი სიმაღლე ფოტოს ღილაკთან */
+      transition: background 0.2s;
+    }
+    .publish-btn:hover {
+      background-color: #1565c0;
+    }
+
+    /* არჩეული ფაილების ინფორმაცია */
+    .selected-file-info {
+      font-size: 13px;
+      color: #1877f2;
+      margin-top: 10px;
+      font-weight: 600;
+      display: none;
+      text-align: left;
+      padding-left: 5px;
+    }
+    
+
+    
+    
+
+    .post-card {
+      background: #ffffff;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    .post-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 12px 8px 12px;
+    }
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      margin-right: 10px;
+      text-transform: uppercase;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .post-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .post-author-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .post-author {
+      font-weight: bold;
+      font-size: 15px;
+      color: #050505;
+      cursor: pointer;
+    }
+    .post-author:hover {
+      text-decoration: underline;
+    }
+    .post-time {
+      font-size: 12px;
+      color: #65676b;
+      margin-top: 1px;
+    }
+    .post-content {
+      font-size: 15px;
+      line-height: 1.4;
+      padding: 0 12px 12px 12px;
+      white-space: pre-wrap;
+    }
+
+    .post-media {
+      width: 100%;
+      max-height: 500px;
+      object-fit: cover;
+      display: block;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .collage-container {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .collage-grid {
+      display: grid;
+      gap: 2px;
+      background-color: #e4e6eb;
+      width: 100%;
+    }
+    .collage-item {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .collage-1 { grid-template-columns: 1fr; height: 350px; }
+    .collage-2 { grid-template-columns: 1fr 1fr; height: 250px; }
+    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 125px 125px; height: 250px; }
+    .collage-3 *:first-child { grid-row: span 2; }
+    .collage-4 { grid-template-columns: 2fr 1fr; grid-template-rows: 83px 83px 83px; height: 250px; }
+    .collage-4 *:first-child { grid-row: span 3; }
+    .collage-5 { grid-template-columns: 1fr 1fr; grid-template-rows: 150px 100px 100px; height: 350px; }
+    .collage-5 *:first-child { grid-column: span 2; }
+    .collage-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 180px 100px; height: 280px; }
+    .collage-6 *:first-child { grid-column: span 2; }
+
+    .collage-overlay {
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+    .collage-overlay-text {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .post-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #65676b;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .post-actions {
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 0;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      color: #65676b;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: 0.1s;
+    }
+    .action-btn:hover {
+      background-color: #f2f3f5;
+    }
+
+    .comment-box-area {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      gap: 8px;
+      background-color: #ffffff;
+    }
+    .comment-box-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #e4e6eb;
+      color: #1c1e21;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 13px;
+      text-transform: uppercase;
+      overflow: hidden;
+    }
+    .comment-box-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .comment-input-container {
+      flex: 1;
+      display: flex;
+      background-color: #f0f2f5;
+      border-radius: 18px;
+      padding: 6px 12px;
+      align-items: center;
+    }
+    .comment-input-container input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      color: #1c1e21;
+    }
+    .comment-submit-button {
+      background: none;
+      border: none;
+      color: #1877f2;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      padding-left: 6px;
+    }
+
+    /* --------------------------------------
+        Facebook-ის იდენტური პროფილის სტილები
+     -------------------------------------- */
+    .facebook-profile-container {
+      background-color: #ffffff;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .profile-cover-wrapper {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      background-color: #cbd0d8;
+    }
+    .cover-camera-btn {
+      position: absolute;
+      right: 15px;
+      bottom: 15px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #e4e6eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .profile-info-wrapper {
+      position: relative;
+      padding: 0 16px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: -30px;
+    }
+
+    .avatar-stats-row {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+
+    .profile-avatar-holder {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      flex-shrink: 0;
+    }
+    .profile-fb-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      font-weight: bold;
+      border: 4px solid #ffffff;
+      text-transform: uppercase;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .profile-fb-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .avatar-camera-btn {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #ffffff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .profile-stats-block {
+      flex: 1;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      padding-right: 10px;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #050505;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #65676b;
+      font-weight: 600;
+    }
+
+    .profile-user-headline {
+      margin-top: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 100%;
+    }
+    .profile-fb-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: #050505;
+    }
+    .profile-fb-subtitle {
+      font-size: 14px;
+      color: #65676b;
+      font-weight: 600;
+    }
+
+    .profile-action-column {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .fb-btn-primary, .fb-btn-secondary, .fb-btn-danger, .fb-btn-success {
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      transition: background 0.1s;
+    }
+
+    .fb-btn-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .fb-btn-primary {
+      background-color: #1877f2;
+      color: #ffffff;
+    }
+    .fb-btn-secondary {
+      background-color: #e4e6eb;
+      color: #050505;
+    }
+    .fb-btn-danger {
+      background-color: #fa3e3e;
+      color: #ffffff;
+    }
+    .fb-btn-success {
+      background-color: #42b72a;
+      color: #ffffff;
+    }
+
+    .btn-group-row {
+      display: flex;
+      width: 100%;
+      gap: 8px;
+    }
+
+    .btn-more-options {
+      width: 100%;
+      height: 38px;
+      background-color: #e4e6eb;
+      color: #050505;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .profile-details-box {
+      border-top: 1px solid #e4e6eb;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #050505;
+    }
+    .detail-item span.icon {
+      font-size: 18px;
+      color: #8a8d91;
+      width: 24px;
+      text-align: center;
+    }
+    .detail-item strong {
+      font-weight: 600;
+    }
+
+    .profile-tabs {
+      display: flex;
+      border-top: 1px solid #e4e6eb;
+      padding: 4px 8px;
+      gap: 8px;
+    }
+    .tab-button {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #65676b;
+      cursor: pointer;
+      border-radius: 20px;
+    }
+    .tab-button.active {
+      background-color: #e7f3ff;
+      color: #1877f2;
+    }
+
+    .profile-logout-section {
+      padding: 16px;
+      background-color: #f0f2f5;
+      text-align: center;
+    }
+    .logout-btn-large {
+      padding: 10px 20px;
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    /* 3. პროფილის რედაქტირების გვერდის სტილები */
+    .edit-profile-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 12px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .edit-header {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1c1e21;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e4e6eb;
+      padding-bottom: 10px;
+    }
+    .edit-buttons-wrapper {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-save {
+      background-color: #1877f2;
+      color: white;
+    }
+    .btn-cancel {
+      background-color: #e4e6eb;
+      color: #050505;
+    }
