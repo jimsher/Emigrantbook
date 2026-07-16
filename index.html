@@ -113,6 +113,8 @@
     #home-screen, #profile-screen, #edit-profile-screen {
       display: none;
     }
+    
+    /* განახლებული ნავბარი იკონებისთვის */
     .header {
       background-color: #ffffff;
       height: 56px;
@@ -132,6 +134,145 @@
       letter-spacing: -0.5px;
       cursor: pointer;
     }
+    
+    /* ნავბარის იკონების ბლოკი */
+    .nav-icons-center {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .nav-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #65676b;
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-icon-btn:hover, .nav-icon-btn.active {
+      background-color: #f2f3f5;
+      color: #1877f2;
+    }
+    .nav-icon-svg {
+      width: 28px;
+      height: 28px;
+      fill: currentColor;
+    }
+    
+    /* წითელი ბეიჯი შეტყობინებებისთვის */
+    .notification-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background-color: #e41e3f;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 50%;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 2px solid white;
+    }
+
+    /* შეტყობინებების ჩამოსაშლელი Dropdown */
+    .requests-dropdown {
+      position: absolute;
+      top: 52px;
+      right: 16px;
+      width: 330px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+      border: 1px solid #ced0d4;
+      display: none;
+      flex-direction: column;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .dropdown-header {
+      padding: 12px 16px;
+      font-weight: bold;
+      font-size: 17px;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .dropdown-empty {
+      padding: 20px;
+      text-align: center;
+      color: #65676b;
+      font-size: 14px;
+    }
+    .request-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .request-item-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .request-item-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .request-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .request-item-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #050505;
+    }
+    .request-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .req-btn-confirm {
+      background-color: #1877f2;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .req-btn-delete {
+      background-color: #e4e6eb;
+      color: #050505;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
     .header-right {
       display: flex;
       align-items: center;
@@ -619,7 +760,6 @@
       color: #ffffff;
     }
 
-    /* მოთხოვნის მიღება-უარყოფის ღილაკების ჯგუფი (გვერდიგვერდ) */
     .btn-group-row {
       display: flex;
       width: 100%;
@@ -772,8 +912,31 @@
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
+      
+      <div class="nav-icons-center">
+        <button class="nav-icon-btn active" onclick="showScreen('home')">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+        </button>
+        
+        <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
+          </svg>
+          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
+        </button>
+      </div>
+
       <div class="header-right">
         <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
+      </div>
+    </div>
+
+    <div class="requests-dropdown" id="requests-dropdown">
+      <div class="dropdown-header">მეგობრობის მოთხოვნები</div>
+      <div id="dropdown-items-container">
+        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
 
@@ -961,6 +1124,24 @@
       alert("კავშირის შეცდომა: " + e.message);
     }
 
+    // შეტყობინებების მენიუს ჩამოშლა და დამალვა
+    function toggleRequestsDropdown(event) {
+      event.stopPropagation();
+      var dropdown = document.getElementById('requests-dropdown');
+      if (dropdown.style.display === 'flex') {
+        dropdown.style.display = 'none';
+      } else {
+        dropdown.style.display = 'flex';
+        loadIncomingFriendRequests(); // მენიუს გახსნისას ვტვირთავთ მოთხოვნებს
+      }
+    }
+
+    // ჩამოსაშლელი მენიუს დამალვა გარე კლიკზე
+    document.addEventListener('click', function() {
+      var dropdown = document.getElementById('requests-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
+    });
+
     function showSelectedFileName() {
       var fileInput = document.getElementById('post-media-file');
       var nameDiv = document.getElementById('selected-file-name');
@@ -983,6 +1164,7 @@
       } else if (screenName === 'home') {
         document.getElementById('home-screen').style.display = 'block';
         loadPosts();
+        checkPendingRequestsCount(); // ვამოწმებთ შემოსულ მოთხოვნებს ბეიჯისთვის
       } else if (screenName === 'profile') {
         document.getElementById('profile-screen').style.display = 'block';
       } else if (screenName === 'edit-profile') {
@@ -1024,9 +1206,110 @@
             document.getElementById('profile-user-subtitle').innerText = currentUser.email;
 
             showScreen('home');
+            
+            // ვუსმენთ 'friend_requests' ცხრილის რეალურ დროში ცვლილებებს
+            subscribeToFriendRequests();
           });
         } else {
           showScreen('auth');
+        }
+      });
+    }
+
+    // მეგობრობის ცხრილზე რეალური დროის (Realtime) მსმენელი
+    function subscribeToFriendRequests() {
+      supabase.channel('custom-filter-channel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_requests' }, function(payload) {
+          checkPendingRequestsCount();
+          // თუ მენიუ გახსნილია, განვაახლოთ სია
+          var dropdown = document.getElementById('requests-dropdown');
+          if (dropdown && dropdown.style.display === 'flex') {
+            loadIncomingFriendRequests();
+          }
+        })
+        .subscribe();
+    }
+
+    // ბეიჯის განახლება შემოსული მოთხოვნების რაოდენობის მიხედვით
+    function checkPendingRequestsCount() {
+      if (!currentUser) return;
+      supabase.from('friend_requests')
+        .select('id')
+        .eq('receiver_id', currentUser.id)
+        .eq('status', 'pending')
+        .then(function(res) {
+          var badge = document.getElementById('requests-badge');
+          if (res.data && res.data.length > 0) {
+            badge.innerText = res.data.length;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        });
+    }
+
+    // შემოსული მეგობრობის მოთხოვნების სიის ჩატვირთვა Dropdown-ში
+    function loadIncomingFriendRequests() {
+      var container = document.getElementById('dropdown-items-container');
+      container.innerHTML = `<div style="text-align: center; padding: 20px; color: #65676b;">იტვირთება...</div>`;
+
+      supabase.from('friend_requests')
+        .select('*, profiles:sender_id(*)')
+        .eq('receiver_id', currentUser.id)
+        .eq('status', 'pending')
+        .then(function(res) {
+          if (res.error || !res.data || res.data.length === 0) {
+            container.innerHTML = `<div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>`;
+            return;
+          }
+
+          container.innerHTML = "";
+          res.data.forEach(function(req) {
+            var sender = req.profiles;
+            var senderName = sender ? sender.full_name : "მომხმარებელი";
+            var senderAvatar = sender ? sender.avatar_url : null;
+            var initial = senderName.charAt(0).toUpperCase();
+
+            var avatarContent = senderAvatar ? `<img src="${senderAvatar}" alt="Avatar">` : initial;
+
+            container.innerHTML += `
+              <div class="request-item">
+                <div class="request-item-avatar" onclick="viewUserProfile('${req.sender_id}')">${avatarContent}</div>
+                <div class="request-item-info">
+                  <span class="request-item-name" onclick="viewUserProfile('${req.sender_id}')">${senderName}</span>
+                  <div class="request-item-actions">
+                    <button class="req-btn-confirm" onclick="acceptRequestFromNavbar('${req.id}', event)">დადასტურება</button>
+                    <button class="req-btn-delete" onclick="rejectRequestFromNavbar('${req.id}', event)">წაშლა</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+        });
+    }
+
+    // ნავბარის მენიუდან მოთხოვნის დადასტურება
+    function acceptRequestFromNavbar(requestId, event) {
+      event.stopPropagation();
+      supabase.from('friend_requests').update({ status: 'accepted' }).eq('id', requestId).then(function(res) {
+        if (res.error) {
+          alert("შეცდომა: " + res.error.message);
+        } else {
+          checkPendingRequestsCount();
+          loadIncomingFriendRequests();
+        }
+      });
+    }
+
+    // ნავბარის მენიუდან მოთხოვნის უარყოფა (წაშლა)
+    function rejectRequestFromNavbar(requestId, event) {
+      event.stopPropagation();
+      supabase.from('friend_requests').delete().eq('id', requestId).then(function(res) {
+        if (res.error) {
+          alert("შეცდომა: " + res.error.message);
+        } else {
+          checkPendingRequestsCount();
+          loadIncomingFriendRequests();
         }
       });
     }
@@ -1097,7 +1380,6 @@
       });
     }
 
-    // საკუთარი პროფილის ჩვენება
     function showMyProfile() {
       if (!currentUser) return;
       
@@ -1136,7 +1418,6 @@
       });
     }
 
-    // სხვა მომხმარებლის პროფილის ჩვენება და მეგობრობის სტატუსის მუშაობა რეალურ დროში
     function viewUserProfile(userId) {
       if (!userId) return;
       if (userId === currentUser.id) {
@@ -1166,17 +1447,14 @@
         loadUserPosts(userId);
         showScreen('profile');
 
-        // მოთხოვნის სტატუსის გადამოწმება ბაზაში რეალურ დროში
         updateFriendshipButtons(userId);
       });
     }
 
-    // მეგობრობის ღილაკების დინამიური ხატვა და ფუნქციონალი
     function updateFriendshipButtons(targetUserId) {
       var actionPanel = document.getElementById('profile-action-panel');
       actionPanel.innerHTML = `<div style="text-align: center; padding: 10px; color:#65676b;">მოწმდება მეგობრობა...</div>`;
 
-      // ვეძებთ ორმხრივ ჩანაწერს
       supabase.from('friend_requests')
         .select('*')
         .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${currentUser.id})`)
@@ -1189,7 +1467,6 @@
           var request = res.data[0];
 
           if (!request) {
-            // თუ არავითარი მოთხოვნა არ არსებობს -> მეგობრის დამატება
             actionPanel.innerHTML = `
               <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">
                 <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M11 6a3 3 0 11-6 0 3 3 0 016 0zM14 17a6 6 0 00-12 0h12zM18 8a1 1 0 10-2 0v2h-2a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z"></path></svg>
@@ -1203,7 +1480,6 @@
             `;
           } else if (request.status === 'pending') {
             if (request.sender_id === currentUser.id) {
-              // თუ მოთხოვნა მე გავაგზავნე -> მოთხოვნის გაუქმება
               actionPanel.innerHTML = `
                 <button class="fb-btn-secondary" onclick="cancelFriendRequest('${request.id}', '${targetUserId}')" style="background-color: #cbd0d8;">
                   <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 11.293a1 1 0 001.414 1.414L12 10.414l1.879 1.879a1 1 0 001.414-1.414L13.414 9l1.879-1.879a1 1 0 00-1.414-1.414L12 7.586l-1.879-1.879a1 1 0 00-1.414 1.414L10.586 9l-1.879 1.879z"></path></svg>
@@ -1216,7 +1492,6 @@
                 <button class="btn-more-options">•••</button>
               `;
             } else {
-              // თუ მოთხოვნა სხვამ გამომიგზავნა -> მიღება / უარყოფა (გვერდიგვერდ)
               actionPanel.innerHTML = `
                 <div class="btn-group-row">
                   <button class="fb-btn-success" onclick="acceptFriendRequest('${request.id}', '${targetUserId}')">
@@ -1234,7 +1509,6 @@
               `;
             }
           } else if (request.status === 'accepted') {
-            // თუ უკვე მეგობრები ვართ -> მეგობრობის წაშლა (მწვანე ღილაკი)
             actionPanel.innerHTML = `
               <button class="fb-btn-success" onclick="deleteFriendship('${request.id}', '${targetUserId}')">
                 <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg>
@@ -1250,7 +1524,6 @@
         });
     }
 
-    // მეგობრობის მოთხოვნის გაგზავნა
     function sendFriendRequest(targetUserId) {
       supabase.from('friend_requests').insert([
         { sender_id: currentUser.id, receiver_id: targetUserId, status: 'pending' }
@@ -1264,7 +1537,6 @@
       });
     }
 
-    // მოთხოვნის გაუქმება
     function cancelFriendRequest(requestId, targetUserId) {
       supabase.from('friend_requests').delete().eq('id', requestId).then(function(res) {
         if (res.error) {
@@ -1276,7 +1548,6 @@
       });
     }
 
-    // მეგობრობის მოთხოვნის მიღება
     function acceptFriendRequest(requestId, targetUserId) {
       supabase.from('friend_requests').update({ status: 'accepted' }).eq('id', requestId).then(function(res) {
         if (res.error) {
@@ -1288,7 +1559,6 @@
       });
     }
 
-    // მოთხოვნის უარყოფა
     function rejectFriendRequest(requestId, targetUserId) {
       supabase.from('friend_requests').delete().eq('id', requestId).then(function(res) {
         if (res.error) {
@@ -1300,7 +1570,6 @@
       });
     }
 
-    // მეგობრობის წაშლა
     function deleteFriendship(requestId, targetUserId) {
       if (confirm("ნამდვილად გსურთ მეგობრობის გაუქმება?")) {
         supabase.from('friend_requests').delete().eq('id', requestId).then(function(res) {
@@ -1767,10 +2036,6 @@
             loadPosts();
           }
         });
-    }
-
-    function sendMessage() {
-      alert("მესინჯერი იხსნება...");
     }
 
     function logout() {
