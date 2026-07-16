@@ -51,8 +51,102 @@
       color: #1e3c72;
       margin-bottom: 10px;
     }
-        
 
+    /* =======================================================
+       ახალი სტილები: გამოწერების და კავშირების ეკრანისთვის
+       (შეგიძლია ეს ბლოკი გადაიტანო სხვაგან)
+       ======================================================= */
+    .stat-item {
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .stat-item:hover {
+      opacity: 0.8;
+    }
+    
+    /* კავშირების ეკრანის სტრუქტურა */
+    .connections-container {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .connections-header {
+      font-size: 18px;
+      font-weight: bold;
+      color: #050505;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e4e6eb;
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .connections-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .connection-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .connection-user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+    .connection-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: #1877f2;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-size: 16px;
+    }
+    .connection-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .connection-name {
+      font-weight: bold;
+      font-size: 15px;
+      color: #050505;
+    }
+    .connection-name:hover {
+      text-decoration: underline;
+    }
+    .btn-remove-connection {
+      background-color: #fa3e3e;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-remove-connection:hover {
+      background-color: #d93030;
+    }
+    .connections-empty {
+      text-align: center;
+      color: #65676b;
+      padding: 20px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -93,8 +187,6 @@
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
       
-      
-
       <div class="header-right">
         <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
       </div>
@@ -107,28 +199,26 @@
       </div>
     </div>
   
-
-    
     <div class="feed-container">
-  <div class="create-post-card">
-    <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
-    
-    <div class="create-post-actions">
-      <div class="file-upload-wrapper">
-        <div class="file-upload-btn">📷 ფოტო/ვიდეო</div>
-        <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
+      <div class="create-post-card">
+        <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
+        
+        <div class="create-post-actions">
+          <div class="file-upload-wrapper">
+            <div class="file-upload-btn">📷 ფოტო/ვიდეო</div>
+            <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
+          </div>
+          
+          <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">გამოქვეყნება</button>
+        </div>
+
+        <div class="selected-file-info" id="selected-file-name"></div>
       </div>
-      
-      <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">გამოქვეყნება</button>
+
+      <div id="posts-wall">
+        <div style="text-align: center; padding: 20px; color: #65676b;">პოსტები იტვირთება...</div>
+      </div>
     </div>
-
-    <div class="selected-file-info" id="selected-file-name"></div>
-  </div>
-
-  <div id="posts-wall">
-    <div style="text-align: center; padding: 20px; color: #65676b;">პოსტები იტვირთება...</div>
-  </div>
-</div>
   </div>
     
   <div id="profile-screen">
@@ -176,11 +266,11 @@
                 <span class="stat-value" id="stat-posts-count">0</span>
                 <span class="stat-label">პოსტი</span>
               </div>
-              <div class="stat-item">
+              <div class="stat-item" onclick="openConnectionsScreen('followers')">
                 <span class="stat-value" id="stat-followers-count">0</span>
                 <span class="stat-label">გამომწერი</span>
               </div>
-              <div class="stat-item">
+              <div class="stat-item" onclick="openConnectionsScreen('following')">
                 <span class="stat-value" id="stat-following-count">0</span>
                 <span class="stat-label">გამოწერილი</span>
               </div>
@@ -278,6 +368,24 @@
     </div>
   </div>
 
+  <div id="connections-screen">
+    <div class="header">
+      <div class="logo-text" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
+    </div>
+
+    <div class="feed-container">
+      <div class="connections-container">
+        <div class="connections-header">
+          <span id="connections-title">მეგობრები</span>
+          <span style="font-size: 14px; color: #65676b;" id="connections-count">0 მომხმარებელი</span>
+        </div>
+        <div class="connections-list" id="connections-list-wrapper">
+          <div class="connections-empty">იტვირთება...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
@@ -356,6 +464,7 @@
       document.getElementById('home-screen').style.display = 'none';
       document.getElementById('profile-screen').style.display = 'none';
       document.getElementById('edit-profile-screen').style.display = 'none';
+      document.getElementById('connections-screen').style.display = 'none';
 
       // მენიუების დამალვა გვერდის გადართვისას
       var dropdownHome = document.getElementById('requests-dropdown-home');
@@ -370,6 +479,8 @@
         loadPosts();
       } else if (screenName === 'profile') {
         document.getElementById('profile-screen').style.display = 'block';
+      } else if (screenName === 'connections') {
+        document.getElementById('connections-screen').style.display = 'block';
       }
       
       if (currentUser) {
@@ -432,6 +543,11 @@
           var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
           if (dropdown && dropdown.style.display === 'flex') {
             loadIncomingFriendRequests();
+          }
+          // რეალურ დროში სტატისტიკის განახლება
+          if (currentUser) {
+            var activeProfileId = document.getElementById('profile-logout-section').style.display === 'block' ? currentUser.id : userProfile.id;
+            updateRealtimeStats(activeProfileId);
           }
         })
         .subscribe();
@@ -601,15 +717,147 @@
       container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
     }
 
+    /* =======================================================
+       რეალურ დროში გამომწერების და გამოწერილების რაოდენობის დათვლა
+       ======================================================= */
+    function updateRealtimeStats(userId) {
+      // 1. დავითვალოთ გამომწერები (მომხმარებლები, რომლებმაც გამომიგზავნეს და დადასტურდა)
+      supabase.from('friend_requests')
+        .select('sender_id')
+        .eq('receiver_id', userId)
+        .eq('status', 'accepted')
+        .then(function(followersRes) {
+          var followersCount = followersRes.data ? followersRes.data.length : 0;
+          document.getElementById('stat-followers-count').innerText = followersCount;
+
+          // 2. დავითვალოთ გამოწერილები (მომხმარებლები, ვისაც მე გავუგზავნე და დადასტურდა)
+          supabase.from('friend_requests')
+            .select('receiver_id')
+            .eq('sender_id', userId)
+            .eq('status', 'accepted')
+            .then(function(followingRes) {
+              var followingCount = followingRes.data ? followingRes.data.length : 0;
+              document.getElementById('stat-following-count').innerText = followingCount;
+            });
+        });
+    }
+
     function updateProfileStats(userId, postsCount) {
       document.getElementById('stat-posts-count').innerText = postsCount;
+      updateRealtimeStats(userId);
+    }
+
+    /* =======================================================
+       გამომწერებისა და გამოწერილების ახალი გვერდის ლოგიკა
+       ======================================================= */
+    var activeConnectionsUserId = null;
+    var activeConnectionsType = 'followers';
+
+    function openConnectionsScreen(type) {
+      activeConnectionsType = type;
+      // თუ ჩემს პროფილზე ვართ, ჩემი ID ავიღოთ, წინააღმდეგ შემთხვევაში - შესაბამისი მომხმარებლის
+      activeConnectionsUserId = document.getElementById('profile-logout-section').style.display === 'block' ? currentUser.id : userProfile.id;
       
-      supabase.from('profiles').select('followers_count, following_count').eq('id', userId).single().then(function(res) {
-        if (res.data) {
-          document.getElementById('stat-followers-count').innerText = res.data.followers_count || "9";
-          document.getElementById('stat-following-count').innerText = res.data.following_count || "9";
-        }
-      });
+      document.getElementById('connections-title').innerText = type === 'followers' ? 'გამომწერები' : 'გამოწერილი მომხმარებლები';
+      showScreen('connections');
+      loadConnectionsData();
+    }
+
+    function loadConnectionsData() {
+      var listWrapper = document.getElementById('connections-list-wrapper');
+      var countLabel = document.getElementById('connections-count');
+      listWrapper.innerHTML = `<div class="connections-empty">იტვირთება...</div>`;
+
+      if (activeConnectionsType === 'followers') {
+        // გამომწერების წამოღება (receiver_id ვარ მე)
+        supabase.from('friend_requests')
+          .select('id, sender_id')
+          .eq('receiver_id', activeConnectionsUserId)
+          .eq('status', 'accepted')
+          .then(function(res) {
+            handleConnectionsResult(res, 'sender_id', listWrapper, countLabel);
+          });
+      } else {
+        // გამოწერილების წამოღება (sender_id ვარ მე)
+        supabase.from('friend_requests')
+          .select('id, receiver_id')
+          .eq('sender_id', activeConnectionsUserId)
+          .eq('status', 'accepted')
+          .then(function(res) {
+            handleConnectionsResult(res, 'receiver_id', listWrapper, countLabel);
+          });
+      }
+    }
+
+    function handleConnectionsResult(res, targetIdKey, listWrapper, countLabel) {
+      if (res.error || !res.data || res.data.length === 0) {
+        listWrapper.innerHTML = `<div class="connections-empty">მონაცემები ვერ მოიძებნა</div>`;
+        countLabel.innerText = "0 მომხმარებელი";
+        return;
+      }
+
+      var connections = res.data;
+      countLabel.innerText = connections.length + " მომხმარებელი";
+      
+      var userIds = connections.map(function(c) { return c[targetIdKey]; });
+
+      supabase.from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds)
+        .then(function(profilesRes) {
+          if (profilesRes.error || !profilesRes.data) {
+            listWrapper.innerHTML = `<div class="connections-empty">მონაცემების ჩატვირთვა ვერ მოხერხდა</div>`;
+            return;
+          }
+
+          var profilesMap = {};
+          profilesRes.data.forEach(function(p) {
+            profilesMap[p.id] = p;
+          });
+
+          listWrapper.innerHTML = "";
+          connections.forEach(function(conn) {
+            var targetUserId = conn[targetIdKey];
+            var profile = profilesMap[targetUserId];
+            if (!profile) return;
+
+            var finalName = profile.full_name || "მომხმარებელი";
+            var avatarUrl = profile.avatar_url;
+            var initial = finalName.charAt(0).toUpperCase();
+
+            var avatarContent = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
+
+            // მხოლოდ ჩემს პროფილზე ყოფნისას შეგვიძლია წაშლა (მეგობრობის გაუქმება)
+            var showDeleteButton = activeConnectionsUserId === currentUser.id;
+            var deleteBtnHtml = showDeleteButton ? 
+              `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${conn.id}', event)">წაშლა</button>` : '';
+
+            listWrapper.innerHTML += `
+              <div class="connection-row">
+                <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
+                  <div class="connection-avatar">${avatarContent}</div>
+                  <span class="connection-name">${finalName}</span>
+                </div>
+                ${deleteBtnHtml}
+              </div>
+            `;
+          });
+        });
+    }
+
+    function deleteConnectionFromList(requestId, event) {
+      event.stopPropagation();
+      if (confirm("ნამდვილად გსურთ ამ კავშირის წაშლა?")) {
+        supabase.from('friend_requests').delete().eq('id', requestId).then(function(res) {
+          if (res.error) {
+            alert("შეცდომა წაშლისას: " + res.error.message);
+          } else {
+            alert("კავშირი წარმატებით წაიშალა!");
+            loadConnectionsData();
+            updateRealtimeStats(currentUser.id);
+          }
+        });
+      }
     }
 
     function showMyProfile() {
@@ -718,7 +966,7 @@
                   მოთხოვნის გაუქმება
                 </button>
                 <button class="fb-btn-secondary" onclick="sendMessage()">
-                  <svg class="fb-btn-icon" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.134-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
+                  <svg class="fb-btn-icon" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path></svg>
                   მესინჯერი
                 </button>
                 <button class="btn-more-options">•••</button>
@@ -1173,7 +1421,6 @@
       }
     }
 
-    // placeholder ლოკალური ფასადისთვის
     function submitComment(postId) {
       var field = document.getElementById('comment-field-' + postId);
       var text = field.value.trim();
