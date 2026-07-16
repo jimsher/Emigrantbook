@@ -911,8 +911,31 @@
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
+      
+      <div class="nav-icons-center">
+        <button class="nav-icon-btn active" onclick="showScreen('home')">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+        </button>
+        
+        <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
+          </svg>
+          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
+        </button>
+      </div>
+
       <div class="header-right">
         <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
+      </div>
+    </div>
+
+    <div class="requests-dropdown" id="requests-dropdown-home" style="display: none;">
+      <div class="dropdown-header">მეგობრობის მოთხოვნები</div>
+      <div id="dropdown-items-container-home">
+        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
 
@@ -952,7 +975,7 @@
           <svg class="nav-icon-svg" viewBox="0 0 24 24">
             <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
           </svg>
-          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
+          <div class="notification-badge" id="requests-badge-profile" style="display: none;">0</div>
         </button>
       </div>
 
@@ -961,9 +984,9 @@
       </div>
     </div>
 
-    <div class="requests-dropdown" id="requests-dropdown">
+    <div class="requests-dropdown" id="requests-dropdown-profile" style="display: none;">
       <div class="dropdown-header">მეგობრობის მოთხოვნები</div>
-      <div id="dropdown-items-container">
+      <div id="dropdown-items-container-profile">
         <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
@@ -1126,22 +1149,30 @@
       alert("კავშირის შეცდომა: " + e.message);
     }
 
-    // შეტყობინებების მენიუს ჩამოშლა და დამალვა პროფილის გვერდზე
+    // შეტყობინებების მენიუს ჩამოშლა და დამალვა ნებისმიერ ეკრანზე
     function toggleRequestsDropdown(event) {
       event.stopPropagation();
-      var dropdown = document.getElementById('requests-dropdown');
+      var isHome = document.getElementById('home-screen').style.display === 'block';
+      var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
+      
+      // ყველა სხვა დროპდაუნის დამალვა
+      document.getElementById('requests-dropdown-home').style.display = 'none';
+      document.getElementById('requests-dropdown-profile').style.display = 'none';
+
       if (dropdown.style.display === 'flex') {
         dropdown.style.display = 'none';
       } else {
         dropdown.style.display = 'flex';
-        loadIncomingFriendRequests(); // მენიუს გახსნისას ვტვირთავთ მოთხოვნებს
+        loadIncomingFriendRequests(); 
       }
     }
 
     // ჩამოსაშლელი მენიუს დამალვა გარე კლიკზე
     document.addEventListener('click', function() {
-      var dropdown = document.getElementById('requests-dropdown');
-      if (dropdown) dropdown.style.display = 'none';
+      var dropdownHome = document.getElementById('requests-dropdown-home');
+      var dropdownProfile = document.getElementById('requests-dropdown-profile');
+      if (dropdownHome) dropdownHome.style.display = 'none';
+      if (dropdownProfile) dropdownProfile.style.display = 'none';
     });
 
     function showSelectedFileName() {
@@ -1161,9 +1192,11 @@
       document.getElementById('profile-screen').style.display = 'none';
       document.getElementById('edit-profile-screen').style.display = 'none';
 
-      // მენიუს დახურვა გვერდის გადართვისას
-      var dropdown = document.getElementById('requests-dropdown');
-      if (dropdown) dropdown.style.display = 'none';
+      // მენიუების დამალვა გვერდის გადართვისას
+      var dropdownHome = document.getElementById('requests-dropdown-home');
+      var dropdownProfile = document.getElementById('requests-dropdown-profile');
+      if (dropdownHome) dropdownHome.style.display = 'none';
+      if (dropdownProfile) dropdownProfile.style.display = 'none';
 
       if (screenName === 'auth') {
         document.getElementById('auth-screen').style.display = 'flex';
@@ -1172,9 +1205,10 @@
         loadPosts();
       } else if (screenName === 'profile') {
         document.getElementById('profile-screen').style.display = 'block';
-        checkPendingRequestsCount(); // ვამოწმებთ შემოსულ მოთხოვნებს ბეიჯისთვის პროფილის გახსნისას
-      } else if (screenName === 'edit-profile') {
-        document.getElementById('edit-profile-screen').style.display = 'block';
+      }
+      
+      if (currentUser) {
+        checkPendingRequestsCount();
       }
     }
 
@@ -1213,7 +1247,8 @@
 
             showScreen('home');
             
-            // ვუსმენთ 'friend_requests' ცხრილის რეალურ დროში ცვლილებებს
+            // გლობალური რეალური დროის მსმენელი და პირველადი შემოწმება
+            checkPendingRequestsCount();
             subscribeToFriendRequests();
           });
         } else {
@@ -1224,11 +1259,12 @@
 
     // მეგობრობის ცხრილზე რეალური დროის (Realtime) მსმენელი
     function subscribeToFriendRequests() {
-      supabase.channel('custom-filter-channel')
+      supabase.channel('friend-reqs-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_requests' }, function(payload) {
           checkPendingRequestsCount();
           // თუ მენიუ გახსნილია, განვაახლოთ სია
-          var dropdown = document.getElementById('requests-dropdown');
+          var isHome = document.getElementById('home-screen').style.display === 'block';
+          var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
           if (dropdown && dropdown.style.display === 'flex') {
             loadIncomingFriendRequests();
           }
@@ -1236,7 +1272,7 @@
         .subscribe();
     }
 
-    // ბეიჯის განახლება შემოსული მოთხოვნების რაოდენობის მიხედვით
+    // ბეიჯის განახლება შემოსული მოთხოვნების რაოდენობის მიხედვით ორივე ნავბარში
     function checkPendingRequestsCount() {
       if (!currentUser) return;
       supabase.from('friend_requests')
@@ -1244,24 +1280,31 @@
         .eq('receiver_id', currentUser.id)
         .eq('status', 'pending')
         .then(function(res) {
-          var badge = document.getElementById('requests-badge');
-          if (res.data && res.data.length > 0) {
-            badge.innerText = res.data.length;
-            badge.style.display = 'flex';
+          var badgeHome = document.getElementById('requests-badge');
+          var badgeProfile = document.getElementById('requests-badge-profile');
+          var count = (res.data && res.data.length > 0) ? res.data.length : 0;
+          
+          if (count > 0) {
+            if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
+            if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
           } else {
-            badge.style.display = 'none';
+            if (badgeHome) badgeHome.style.display = 'none';
+            if (badgeProfile) badgeProfile.style.display = 'none';
           }
         });
     }
 
-    // შემოსული მეგობრობის მოთხოვნების სიის ჩატვირთვა Dropdown-ში
+    // შემოსული მეგობრობის მოთხოვნების სიის ჩატვირთვა შესაბამის Dropdown-ში
     function loadIncomingFriendRequests() {
-      var container = document.getElementById('dropdown-items-container');
+      var isHome = document.getElementById('home-screen').style.display === 'block';
+      var container = document.getElementById(isHome ? 'dropdown-items-container-home' : 'dropdown-items-container-profile');
+      if (!container) return;
+      
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #65676b;">იტვირთება...</div>`;
 
-      // მხოლოდ იმ მოთხოვნების წამოღება, სადაც მიმღები მიმდინარე იუზერია
+      // 1. ჯერ წამოვიღოთ მხოლოდ შემოსული მოთხოვნები, სადაც მიმღები მე ვარ
       supabase.from('friend_requests')
-        .select('*, profiles:sender_id(*)')
+        .select('*')
         .eq('receiver_id', currentUser.id)
         .eq('status', 'pending')
         .then(function(res) {
@@ -1270,28 +1313,45 @@
             return;
           }
 
-          container.innerHTML = "";
-          res.data.forEach(function(req) {
-            var sender = req.profiles;
-            var senderName = sender ? sender.full_name : "მომხმარებელი";
-            var senderAvatar = sender ? sender.avatar_url : null;
-            var initial = senderName.charAt(0).toUpperCase();
+          var reqs = res.data;
+          // გამომგზავნების ID-ების მასივი
+          var senderIds = reqs.map(function(r) { return r.sender_id; });
 
-            var avatarContent = senderAvatar ? `<img src="${senderAvatar}" alt="Avatar">` : initial;
+          // 2. ახლა წამოვიღოთ ამ გამომგზავნების პროფილები (Foreign key შეცდომების თავიდან ასაცილებლად)
+          supabase.from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', senderIds)
+            .then(function(profilesRes) {
+              var profilesMap = {};
+              if (profilesRes.data) {
+                profilesRes.data.forEach(function(p) {
+                  profilesMap[p.id] = p;
+                });
+              }
 
-            container.innerHTML += `
-              <div class="request-item">
-                <div class="request-item-avatar" onclick="viewUserProfile('${req.sender_id}')">${avatarContent}</div>
-                <div class="request-item-info">
-                  <span class="request-item-name" onclick="viewUserProfile('${req.sender_id}')">${senderName}</span>
-                  <div class="request-item-actions">
-                    <button class="req-btn-confirm" onclick="acceptRequestFromNavbar('${req.id}', event)">დადასტურება</button>
-                    <button class="req-btn-delete" onclick="rejectRequestFromNavbar('${req.id}', event)">წაშლა</button>
+              container.innerHTML = "";
+              reqs.forEach(function(req) {
+                var sender = profilesMap[req.sender_id];
+                var senderName = sender ? sender.full_name : "მომხმარებელი";
+                var senderAvatar = sender ? sender.avatar_url : null;
+                var initial = senderName.charAt(0).toUpperCase();
+
+                var avatarContent = senderAvatar ? `<img src="${senderAvatar}" alt="Avatar">` : initial;
+
+                container.innerHTML += `
+                  <div class="request-item">
+                    <div class="request-item-avatar" onclick="viewUserProfile('${req.sender_id}')">${avatarContent}</div>
+                    <div class="request-item-info">
+                      <span class="request-item-name" onclick="viewUserProfile('${req.sender_id}')">${senderName}</span>
+                      <div class="request-item-actions">
+                        <button class="req-btn-confirm" onclick="acceptRequestFromNavbar('${req.id}', event)">დადასტურება</button>
+                        <button class="req-btn-delete" onclick="rejectRequestFromNavbar('${req.id}', event)">წაშლა</button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            `;
-          });
+                `;
+              });
+            });
         });
     }
 
@@ -1474,7 +1534,6 @@
           var request = res.data[0];
 
           if (!request) {
-            // თუ მეგობრობა საერთოდ არ არსებობს
             actionPanel.innerHTML = `
               <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">
                 <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M11 6a3 3 0 11-6 0 3 3 0 016 0zM14 17a6 6 0 00-12 0h12zM18 8a1 1 0 10-2 0v2h-2a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z"></path></svg>
@@ -1488,7 +1547,6 @@
             `;
           } else if (request.status === 'pending') {
             if (request.sender_id === currentUser.id) {
-              // ლოგიკა შესწორებულია: თუ მე გავაგზავნე, შემიძლია მხოლოდ გავაუქმო!
               actionPanel.innerHTML = `
                 <button class="fb-btn-secondary" onclick="cancelFriendRequest('${request.id}', '${targetUserId}')" style="background-color: #cbd0d8;">
                   <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 11.293a1 1 0 001.414 1.414L12 10.414l1.879 1.879a1 1 0 001.414-1.414L13.414 9l1.879-1.879a1 1 0 00-1.414-1.414L12 7.586l-1.879-1.879a1 1 0 00-1.414 1.414L10.586 9l-1.879 1.879z"></path></svg>
@@ -1501,7 +1559,6 @@
                 <button class="btn-more-options">•••</button>
               `;
             } else {
-              // თუ მოთხოვნა სხვა მომხმარებელმა გამომიგზავნა მე, მხოლოდ მაშინ ვხედავ დადასტურება/უარყოფის ღილაკებს!
               actionPanel.innerHTML = `
                 <div class="btn-group-row">
                   <button class="fb-btn-success" onclick="acceptFriendRequest('${request.id}', '${targetUserId}')">
@@ -1951,6 +2008,7 @@
       }
     }
 
+    // placeholder ლოკალური ფასადისთვის
     function submitComment(postId) {
       var field = document.getElementById('comment-field-' + postId);
       var text = field.value.trim();
