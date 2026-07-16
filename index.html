@@ -53,8 +53,7 @@
     }
 
     /* =======================================================
-       ახალი სტილები: გამოწერების და კავშირების ეკრანისთვის
-       (შეგიძლია ეს ბლოკი გადაიტანო სხვაგან)
+       ახალი სტილები: პროფილის მეგობრების ქსელისა და კავშირებისთვის
        ======================================================= */
     .stat-item {
       cursor: pointer;
@@ -64,6 +63,88 @@
       opacity: 0.8;
     }
     
+    /* მეგობრების მინი-ბლოკი პროფილზე (Facebook style) */
+    .profile-friends-preview-box {
+      background: #ffffff;
+      margin: 8px 0;
+      padding: 12px 16px;
+      border-top: 1px solid #e4e6eb;
+      border-bottom: 1px solid #e4e6eb;
+    }
+    .friends-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .friends-preview-title-area {
+      display: flex;
+      flex-direction: column;
+    }
+    .friends-preview-title {
+      font-size: 17px;
+      font-weight: bold;
+      color: #050505;
+    }
+    .friends-preview-count {
+      font-size: 13px;
+      color: #65676b;
+      margin-top: 2px;
+    }
+    .friends-see-all-btn {
+      color: #1877f2;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .friends-see-all-btn:hover {
+      text-decoration: underline;
+    }
+    
+    /* მეგობრების ქსელი (3 სვეტიანი) */
+    .friends-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .friend-grid-item {
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .friend-grid-avatar-holder {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background-color: #cbd0d8;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      text-transform: uppercase;
+    }
+    .friend-grid-avatar-holder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .friend-grid-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #050505;
+      margin-top: 6px;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     /* კავშირების ეკრანის სტრუქტურა */
     .connections-container {
       background: #ffffff;
@@ -289,6 +370,18 @@
 
         <div class="profile-details-box" id="profile-details-container">
           <div style="text-align:center; color:#65676b; padding:10px;">დეტალები იტვირთება...</div>
+        </div>
+
+        <div class="profile-friends-preview-box">
+          <div class="friends-preview-header">
+            <div class="friends-preview-title-area">
+              <span class="friends-preview-title">გამომწერები</span>
+              <span class="friends-preview-count" id="mini-friends-count">0 გამომწერი</span>
+            </div>
+            <button class="friends-see-all-btn" onclick="openConnectionsScreen('followers')">ყველას ნახვა</button>
+          </div>
+          <div class="friends-preview-grid" id="mini-friends-grid">
+            </div>
         </div>
 
         <div class="profile-tabs">
@@ -544,7 +637,7 @@
           if (dropdown && dropdown.style.display === 'flex') {
             loadIncomingFriendRequests();
           }
-          // რეალურ დროში სტატისტიკის განახლება
+          // რეალურ დროში სტატისტიკის და მინი-ქსელის განახლება
           if (currentUser) {
             var activeProfileId = document.getElementById('profile-logout-section').style.display === 'block' ? currentUser.id : userProfile.id;
             updateRealtimeStats(activeProfileId);
@@ -719,6 +812,7 @@
 
     /* =======================================================
        რეალურ დროში გამომწერების და გამოწერილების რაოდენობის დათვლა
+       და მინი-პრევიუ ქსელის (Grid) ჩატვირთვა
        ======================================================= */
     function updateRealtimeStats(userId) {
       // 1. დავითვალოთ გამომწერები (მომხმარებლები, რომლებმაც გამომიგზავნეს და დადასტურდა)
@@ -729,6 +823,10 @@
         .then(function(followersRes) {
           var followersCount = followersRes.data ? followersRes.data.length : 0;
           document.getElementById('stat-followers-count').innerText = followersCount;
+          document.getElementById('mini-friends-count').innerText = followersCount + " გამომწერი";
+
+          // ჩავტვირთოთ მინი პრევიუ ქსელი (მაქსიმუმ 6 მეგობარი)
+          loadMiniFriendsGrid(followersRes.data || []);
 
           // 2. დავითვალოთ გამოწერილები (მომხმარებლები, ვისაც მე გავუგზავნე და დადასტურდა)
           supabase.from('friend_requests')
@@ -739,6 +837,46 @@
               var followingCount = followingRes.data ? followingRes.data.length : 0;
               document.getElementById('stat-following-count').innerText = followingCount;
             });
+        });
+    }
+
+    /* მინი-ქსელის (6 მეგობრის) ჩატვირთვა პროფილზე */
+    function loadMiniFriendsGrid(connections) {
+      var grid = document.getElementById('mini-friends-grid');
+      if (!grid) return;
+
+      if (connections.length === 0) {
+        grid.innerHTML = `<div style="grid-column: span 3; text-align: center; color: #65676b; font-size: 13px; padding: 10px;">გამომწერები არ არის</div>`;
+        return;
+      }
+
+      // მაქსიმუმ 6 მეგობარი ავარჩიოთ საჩვენებლად
+      var previewUsers = connections.slice(0, 6);
+      var userIds = previewUsers.map(function(c) { return c.sender_id; });
+
+      supabase.from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds)
+        .then(function(res) {
+          if (res.error || !res.data) return;
+
+          grid.innerHTML = "";
+          res.data.forEach(function(profile) {
+            var finalName = profile.full_name || "მომხმარებელი";
+            var avatarUrl = profile.avatar_url;
+            var initial = finalName.charAt(0).toUpperCase();
+
+            var avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
+
+            grid.innerHTML += `
+              <div class="friend-grid-item" onclick="viewUserProfile('${profile.id}')">
+                <div class="friend-grid-avatar-holder">
+                  ${avatarHtml}
+                </div>
+                <div class="friend-grid-name">${finalName}</div>
+              </div>
+            `;
+          });
         });
     }
 
