@@ -647,6 +647,17 @@
       background-color: #f0f2f5;
       text-align: center;
     }
+    .logout-btn-large {
+      padding: 10px 20px;
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+    }
 
     /* 3. პროფილის რედაქტირების გვერდის სტილები */
     .edit-profile-card {
@@ -780,6 +791,10 @@
           <button class="tab-button active">პოსტები</button>
           <button class="tab-button">ფოტოები</button>
           <button class="tab-button">ვიდეოები</button>
+        </div>
+
+        <div id="profile-posts-wall" style="padding: 8px 0;">
+          <div style="text-align: center; padding: 20px; color: #65676b;">პოსტები იტვირთება...</div>
         </div>
 
         <div class="profile-logout-section" id="profile-logout-section">
@@ -1040,6 +1055,9 @@
         document.getElementById('profile-logout-section').style.display = "block";
         
         renderProfileDetails(userProfile || {});
+        
+        // საკუთარი პოსტების ჩატვირთვა პროფილზე
+        loadUserPosts(currentUser.id);
         showScreen('profile');
       });
     }
@@ -1078,8 +1096,51 @@
         document.getElementById('profile-logout-section').style.display = "none";
 
         renderProfileDetails(selectedUser);
+        
+        // სხვა იუზერის პოსტების ჩატვირთვა პროფილზე
+        loadUserPosts(userId);
         showScreen('profile');
       });
+    }
+
+    // კონკრეტული მომხმარებლის პოსტების ჩატვირთვა პროფილის კედელზე
+    function loadUserPosts(userId) {
+      var profileWall = document.getElementById('profile-posts-wall');
+      profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #65676b;">პოსტები იტვირთება...</div>';
+
+      supabase.from('posts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .then(function(res) {
+          if (res.error) {
+            profileWall.innerHTML = '<div style="color:red; text-align:center;">პოსტები ვერ ჩაიტვირთა: ' + res.error.message + '</div>';
+            return;
+          }
+
+          var posts = res.data;
+          if (posts.length === 0) {
+            profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #65676b;">მომხმარებელს ჯერ პოსტები არ აქვს გამოქვეყნებული.</div>';
+            return;
+          }
+
+          profileWall.innerHTML = "";
+          
+          supabase.from('profiles').select('id, avatar_url').then(function(profilesRes) {
+            cachedProfiles = {};
+            if (profilesRes.data) {
+              profilesRes.data.forEach(function(p) {
+                cachedProfiles[p.id] = p.avatar_url;
+              });
+            }
+
+            posts.forEach(function(post) {
+              profileWall.innerHTML += createPostCardHtml(post);
+            });
+
+            observeVideos();
+          });
+        });
     }
 
     // რედაქტირების გვერდის გახსნა და მონაცემების შევსება
@@ -1489,7 +1550,15 @@
         .update({ likes_count: currentLikes + 1 })
         .eq('id', postId)
         .then(function() {
-          loadPosts();
+          // თუ პროფილის ეკრანზე ვართ, პროფილის პოსტებიც განვაახლოთ
+          if (document.getElementById('profile-screen').style.display === 'block') {
+            var activeProfileId = document.getElementById('profile-logout-section').style.display === 'block' ? currentUser.id : null;
+            if (activeProfileId) {
+              loadUserPosts(activeProfileId);
+            }
+          } else {
+            loadPosts();
+          }
         });
     }
 
