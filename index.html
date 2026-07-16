@@ -939,7 +939,7 @@
 
   <div id="profile-screen">
     <div class="header">
-      
+      <div class="logo-text" onclick="showScreen('home')">← კედელზე დაბრუნება</div>
       
       <div class="nav-icons-center">
         <button class="nav-icon-btn" onclick="showScreen('home')">
@@ -1259,6 +1259,7 @@
       var container = document.getElementById('dropdown-items-container');
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #65676b;">იტვირთება...</div>`;
 
+      // მხოლოდ იმ მოთხოვნების წამოღება, სადაც მიმღები მიმდინარე იუზერია
       supabase.from('friend_requests')
         .select('*, profiles:sender_id(*)')
         .eq('receiver_id', currentUser.id)
@@ -1473,6 +1474,7 @@
           var request = res.data[0];
 
           if (!request) {
+            // თუ მეგობრობა საერთოდ არ არსებობს
             actionPanel.innerHTML = `
               <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">
                 <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M11 6a3 3 0 11-6 0 3 3 0 016 0zM14 17a6 6 0 00-12 0h12zM18 8a1 1 0 10-2 0v2h-2a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z"></path></svg>
@@ -1486,6 +1488,7 @@
             `;
           } else if (request.status === 'pending') {
             if (request.sender_id === currentUser.id) {
+              // ლოგიკა შესწორებულია: თუ მე გავაგზავნე, შემიძლია მხოლოდ გავაუქმო!
               actionPanel.innerHTML = `
                 <button class="fb-btn-secondary" onclick="cancelFriendRequest('${request.id}', '${targetUserId}')" style="background-color: #cbd0d8;">
                   <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 11.293a1 1 0 001.414 1.414L12 10.414l1.879 1.879a1 1 0 001.414-1.414L13.414 9l1.879-1.879a1 1 0 00-1.414-1.414L12 7.586l-1.879-1.879a1 1 0 00-1.414 1.414L10.586 9l-1.879 1.879z"></path></svg>
@@ -1498,6 +1501,7 @@
                 <button class="btn-more-options">•••</button>
               `;
             } else {
+              // თუ მოთხოვნა სხვა მომხმარებელმა გამომიგზავნა მე, მხოლოდ მაშინ ვხედავ დადასტურება/უარყოფის ღილაკებს!
               actionPanel.innerHTML = `
                 <div class="btn-group-row">
                   <button class="fb-btn-success" onclick="acceptFriendRequest('${request.id}', '${targetUserId}')">
