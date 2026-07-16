@@ -228,6 +228,85 @@
       padding: 20px;
       font-size: 14px;
     }
+
+    /* =======================================================
+       პროფილის რედაქტირების გვერდის სტილები (Edit Profile Page)
+       ======================================================= */
+    .edit-profile-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 12px 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .edit-header {
+      font-size: 18px;
+      font-weight: bold;
+      color: #050505;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e4e6eb;
+      padding-bottom: 10px;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .input-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #65676b;
+    }
+    .input-group input, .input-group select, .input-group textarea {
+      padding: 10px 12px;
+      border: 1px solid #cbd0d8;
+      border-radius: 6px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s;
+      background: #fdfdfd;
+    }
+    .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+      border-color: #1877f2;
+    }
+    .input-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .edit-buttons-wrapper {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-save {
+      flex: 1;
+      background-color: #1877f2;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-save:hover {
+      background-color: #1565c0;
+    }
+    .btn-cancel {
+      flex: 1;
+      background-color: #e4e6eb;
+      color: #050505;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-cancel:hover {
+      background-color: #d8dadf;
+    }
   </style>
 </head>
 <body>
@@ -575,6 +654,8 @@
         document.getElementById('profile-screen').style.display = 'block';
       } else if (screenName === 'connections') {
         document.getElementById('connections-screen').style.display = 'block';
+      } else if (screenName === 'edit-profile') {
+        document.getElementById('edit-profile-screen').style.display = 'block';
       }
       
       if (currentUser) {
@@ -599,6 +680,7 @@
       supabase.auth.getUser().then(function(res) {
         if (res.data && res.data.user) {
           currentUser = res.data.user;
+          activeViewingProfileId = currentUser.id; // ჩატვირთვისას აქტიურია ჩემი პროფილი
           
           supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
             var finalName = currentUser.email;
