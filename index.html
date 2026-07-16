@@ -307,6 +307,45 @@
     .btn-cancel:hover {
       background-color: #d8dadf;
     }
+
+    /* ჰეადერის ახალი იკონების სტილები მთავარ გვერდზე */
+    .header-icon-btn {
+      background: #e4e6eb;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .header-icon-btn:hover {
+      background: #d8dadf;
+    }
+    .header-icon-svg {
+      width: 20px;
+      height: 20px;
+      fill: #050505;
+    }
+    .header-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #e41e3f;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 50%;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
   </style>
 </head>
 <body>
@@ -346,17 +385,27 @@
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
-
-      <div>
-      <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
-          <svg class="nav-icon-svg" viewBox="0 0 24 24">
-            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
-          </svg>
-          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
-        </button>
-      </div>
       
       <div class="header-right">
+        <button class="header-icon-btn" onclick="toggleRequestsDropdown(event)">
+          <svg class="header-icon-svg" viewBox="0 0 24 24">
+            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
+          </svg>
+          <div class="header-badge" id="requests-badge" style="display: none;">0</div>
+        </button>
+
+        <button class="header-icon-btn" onclick="alert('მესენჯერი მალე დაემატება!')">
+          <svg class="header-icon-svg" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
+          </svg>
+        </button>
+
+        <button class="header-icon-btn" onclick="alert('ახალი შეტყობინებები არ არის')">
+          <svg class="header-icon-svg" viewBox="0 0 24 24">
+            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+          </svg>
+        </button>
+
         <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
       </div>
     </div>
@@ -403,7 +452,7 @@
           <svg class="nav-icon-svg" viewBox="0 0 24 24">
             <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
           </svg>
-          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
+          <div class="notification-badge" id="requests-badge-profile" style="display: none;">0</div>
         </button>
       </div>
     </div>
@@ -1747,6 +1796,28 @@
             }
           } else {
             loadPosts();
+          }
+        });
+    }
+
+    // ბეიჯის განახლება შემოსული მოთხოვნების რაოდენობის მიხედვით ორივე ნავბარში
+    function checkPendingRequestsCount() {
+      if (!currentUser) return;
+      supabase.from('friend_requests')
+        .select('id')
+        .eq('receiver_id', currentUser.id)
+        .eq('status', 'pending')
+        .then(function(res) {
+          var badgeHome = document.getElementById('requests-badge');
+          var badgeProfile = document.getElementById('requests-badge-profile');
+          var count = (res.data && res.data.length > 0) ? res.data.length : 0;
+          
+          if (count > 0) {
+            if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
+            if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
+          } else {
+            if (badgeHome) badgeHome.style.display = 'none';
+            if (badgeProfile) badgeProfile.style.display = 'none';
           }
         });
     }
