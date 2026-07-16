@@ -486,6 +486,7 @@
     var currentUser = null;
     var userProfile = null;
     var cachedProfiles = {}; // ყველა მომხმარებლის პროფილის ქეში
+    var activeViewingProfileId = null; // ამჟამად გახსნილი პროფილის ID
 
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -638,9 +639,8 @@
             loadIncomingFriendRequests();
           }
           // რეალურ დროში სტატისტიკის და მინი-ქსელის განახლება
-          if (currentUser) {
-            var activeProfileId = document.getElementById('profile-logout-section').style.display === 'block' ? currentUser.id : userProfile.id;
-            updateRealtimeStats(activeProfileId);
+          if (currentUser && activeViewingProfileId) {
+            updateRealtimeStats(activeViewingProfileId);
           }
         })
         .subscribe();
@@ -812,9 +812,11 @@
 
     /* =======================================================
        რეალურ დროში გამომწერების და გამოწერილების რაოდენობის დათვლა
-       და მინი-პრევიუ ქსელის (Grid) ჩატვირთვა
+       და მინი-პრევიუ ქსელის (Grid) ჩატვირთვა შესაბამისი მომხმარებლისთვის
        ======================================================= */
     function updateRealtimeStats(userId) {
+      if (!userId) return;
+
       // 1. დავითვალოთ გამომწერები (მომხმარებლები, რომლებმაც გამომიგზავნეს და დადასტურდა)
       supabase.from('friend_requests')
         .select('sender_id')
@@ -825,7 +827,7 @@
           document.getElementById('stat-followers-count').innerText = followersCount;
           document.getElementById('mini-friends-count').innerText = followersCount + " გამომწერი";
 
-          // ჩავტვირთოთ მინი პრევიუ ქსელი (მაქსიმუმ 6 მეგობარი)
+          // ჩავტვირთოთ მინი პრევიუ ქსელი
           loadMiniFriendsGrid(followersRes.data || []);
 
           // 2. დავითვალოთ გამოწერილები (მომხმარებლები, ვისაც მე გავუგზავნე და დადასტურდა)
@@ -850,7 +852,7 @@
         return;
       }
 
-      // მაქსიმუმ 6 მეგობარი ავარჩიოთ საჩვენებლად
+      // მაქსიმუმ 6 გამომწერი ავარჩიოთ საჩვენებლად
       var previewUsers = connections.slice(0, 6);
       var userIds = previewUsers.map(function(c) { return c.sender_id; });
 
@@ -894,7 +896,7 @@
     function openConnectionsScreen(type) {
       activeConnectionsType = type;
       // თუ ჩემს პროფილზე ვართ, ჩემი ID ავიღოთ, წინააღმდეგ შემთხვევაში - შესაბამისი მომხმარებლის
-      activeConnectionsUserId = document.getElementById('profile-logout-section').style.display === 'block' ? currentUser.id : userProfile.id;
+      activeConnectionsUserId = activeViewingProfileId || currentUser.id;
       
       document.getElementById('connections-title').innerText = type === 'followers' ? 'გამომწერები' : 'გამოწერილი';
       showScreen('connections');
@@ -907,7 +909,7 @@
       listWrapper.innerHTML = `<div class="connections-empty">იტვირთება...</div>`;
 
       if (activeConnectionsType === 'followers') {
-        // გამომწერების წამოღება (receiver_id ვარ მე)
+        // გამომწერების წამოღება (receiver_id არის პროფილის პატრონი)
         supabase.from('friend_requests')
           .select('id, sender_id')
           .eq('receiver_id', activeConnectionsUserId)
@@ -916,7 +918,7 @@
             handleConnectionsResult(res, 'sender_id', listWrapper, countLabel);
           });
       } else {
-        // გამოწერილების წამოღება (sender_id ვარ მე)
+        // გამოწერილების წამოღება (sender_id არის პროფილის პატრონი)
         supabase.from('friend_requests')
           .select('id, receiver_id')
           .eq('sender_id', activeConnectionsUserId)
@@ -1000,6 +1002,7 @@
 
     function showMyProfile() {
       if (!currentUser) return;
+      activeViewingProfileId = currentUser.id; // ვნიშნავთ, რომ ვუყურებთ საკუთარ პროფილს
       
       supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
         if (profileRes.data) {
@@ -1042,6 +1045,7 @@
         showMyProfile();
         return;
       }
+      activeViewingProfileId = userId; // ვნიშნავთ, რომ ვუყურებთ სხვის პროფილს
 
       supabase.from('profiles').select('*').eq('id', userId).single().then(function(res) {
         if (res.error || !res.data) {
