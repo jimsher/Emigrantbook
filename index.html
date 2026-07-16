@@ -552,6 +552,7 @@
       width: 100%;
       gap: 8px;
       margin-top: 16px;
+      align-items: center;
     }
     .btn-add-story {
       flex: 1;
@@ -585,6 +586,7 @@
     }
     .btn-more-options {
       width: 40px;
+      height: 38px;
       background-color: #e4e6eb;
       color: #050505;
       border: none;
@@ -592,6 +594,9 @@
       font-weight: bold;
       cursor: pointer;
       font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* დეტალების სექცია */
@@ -1087,10 +1092,11 @@
         document.getElementById('avatar-camera-btn').style.display = "none";
         document.getElementById('cover-camera-btn').style.display = "none";
 
+        // სხვისი პროფილის მოქმედების ღილაკები - ზუსტად როგორც ატვირთულ სურათზეა (ერთი-ერთში განლაგებით)
         document.getElementById('profile-action-panel').innerHTML = `
-          <button class="btn-add-story">👤 მეგობრობის გაგზავნა</button>
-          <button class="btn-edit-profile" style="background-color:#1877f2; color:white;">💬 მესიჯის გაგზავნა</button>
-          <button class="btn-more-options">•••</button>
+          <button class="btn-add-story" style="background-color: #1877f2; color: #ffffff;">👤 მეგობრები</button>
+          <button class="btn-edit-profile" style="background-color: #e4e6eb; color: #050505;">💬 მესიჯი</button>
+          <button class="btn-more-options" style="background-color: #e4e6eb; color: #050505;">•••</button>
         `;
 
         document.getElementById('profile-logout-section').style.display = "none";
@@ -1560,6 +1566,15 @@
             loadPosts();
           }
         });
+    }
+
+    // მეგობრობის სტატუსის მართვა ან მოქმედებები
+    function sendFriendRequest() {
+      alert("მეგობრობის მოთხოვნა გაგზავნილია!");
+    }
+
+    function sendMessage() {
+      alert("მესინჯერი იხსნება...");
     }
 
     function logout() {
