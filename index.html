@@ -114,7 +114,6 @@
       display: none;
     }
     
-    /* განახლებული ნავბარი იკონებისთვის */
     .header {
       background-color: #ffffff;
       height: 56px;
@@ -135,7 +134,7 @@
       cursor: pointer;
     }
     
-    /* ნავბარის იკონების ბლოკი */
+    /* პროფილის ნავბარის იკონების ბლოკი */
     .nav-icons-center {
       display: flex;
       align-items: center;
@@ -164,7 +163,7 @@
       fill: currentColor;
     }
     
-    /* წითელი ბეიჯი შეტყობინებებისთვის */
+    /* წითელი ბეიჯი პროფილის ნავბარისთვის */
     .notification-badge {
       position: absolute;
       top: -2px;
@@ -183,7 +182,7 @@
       border: 2px solid white;
     }
 
-    /* შეტყობინებების ჩამოსაშლელი Dropdown */
+    /* შეტყობინებების ჩამოსაშლელი Dropdown პროფილზე */
     .requests-dropdown {
       position: absolute;
       top: 52px;
@@ -912,31 +911,8 @@
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
-      
-      <div class="nav-icons-center">
-        <button class="nav-icon-btn active" onclick="showScreen('home')">
-          <svg class="nav-icon-svg" viewBox="0 0 24 24">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-          </svg>
-        </button>
-        
-        <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
-          <svg class="nav-icon-svg" viewBox="0 0 24 24">
-            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
-          </svg>
-          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
-        </button>
-      </div>
-
       <div class="header-right">
         <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
-      </div>
-    </div>
-
-    <div class="requests-dropdown" id="requests-dropdown">
-      <div class="dropdown-header">მეგობრობის მოთხოვნები</div>
-      <div id="dropdown-items-container">
-        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
 
@@ -964,6 +940,32 @@
   <div id="profile-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">← კედელზე დაბრუნება</div>
+      
+      <div class="nav-icons-center">
+        <button class="nav-icon-btn" onclick="showScreen('home')">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+        </button>
+        
+        <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
+          <svg class="nav-icon-svg" viewBox="0 0 24 24">
+            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
+          </svg>
+          <div class="notification-badge" id="requests-badge" style="display: none;">0</div>
+        </button>
+      </div>
+
+      <div class="header-right">
+        <div style="width: 40px; height: 40px;"></div>
+      </div>
+    </div>
+
+    <div class="requests-dropdown" id="requests-dropdown">
+      <div class="dropdown-header">მეგობრობის მოთხოვნები</div>
+      <div id="dropdown-items-container">
+        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
+      </div>
     </div>
     
     <div class="feed-container">
@@ -1124,7 +1126,7 @@
       alert("კავშირის შეცდომა: " + e.message);
     }
 
-    // შეტყობინებების მენიუს ჩამოშლა და დამალვა
+    // შეტყობინებების მენიუს ჩამოშლა და დამალვა პროფილის გვერდზე
     function toggleRequestsDropdown(event) {
       event.stopPropagation();
       var dropdown = document.getElementById('requests-dropdown');
@@ -1159,14 +1161,18 @@
       document.getElementById('profile-screen').style.display = 'none';
       document.getElementById('edit-profile-screen').style.display = 'none';
 
+      // მენიუს დახურვა გვერდის გადართვისას
+      var dropdown = document.getElementById('requests-dropdown');
+      if (dropdown) dropdown.style.display = 'none';
+
       if (screenName === 'auth') {
         document.getElementById('auth-screen').style.display = 'flex';
       } else if (screenName === 'home') {
         document.getElementById('home-screen').style.display = 'block';
         loadPosts();
-        checkPendingRequestsCount(); // ვამოწმებთ შემოსულ მოთხოვნებს ბეიჯისთვის
       } else if (screenName === 'profile') {
         document.getElementById('profile-screen').style.display = 'block';
+        checkPendingRequestsCount(); // ვამოწმებთ შემოსულ მოთხოვნებს ბეიჯისთვის პროფილის გახსნისას
       } else if (screenName === 'edit-profile') {
         document.getElementById('edit-profile-screen').style.display = 'block';
       }
