@@ -1629,53 +1629,44 @@
     }
 
     function likePost(postId, currentLikes, isTiktokView) {
-    var hasLiked = likedPosts.includes(postId);
-    
-    // UI განახლება (მყისიერი)
-    var newLikes = hasLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-    
-    // ლოკალური მასივის განახლება
-    if (hasLiked) {
+      var hasLiked = likedPosts.includes(postId);
+      var newLikes = currentLikes;
+
+      if (hasLiked) {
+        newLikes = currentLikes > 0 ? currentLikes - 1 : 0;
         likedPosts = likedPosts.filter(function(id) { return id !== postId; });
-    } else {
+      } else {
+        newLikes = currentLikes + 1;
         likedPosts.push(postId);
-    }
-    localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
+      }
 
-    // განაახლე UI ვიზუალურად
-    updateLikeUI(postId, newLikes, !hasLiked, isTiktokView);
+      localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
 
-    // ბაზაში გაგზავნა
-    supabase.from('posts')
+      if (isTiktokView) {
+        var heartSvg = document.getElementById('tiktok-heart-' + postId);
+        var likeSpan = document.getElementById('tiktok-like-count-' + postId);
+        if (likeSpan) likeSpan.innerText = newLikes;
+        if (heartSvg) {
+          if (!hasLiked) heartSvg.classList.add('heart-liked');
+          else heartSvg.classList.remove('heart-liked');
+        }
+      } else {
+        var standardBtn = document.getElementById('like-btn-standard-' + postId);
+        var standardLabel = document.getElementById('post-likes-count-label-' + postId);
+        if (standardLabel) standardLabel.innerText = "👍 " + newLikes + " ლაიქი";
+        if (standardBtn) {
+          if (!hasLiked) standardBtn.classList.add('btn-liked');
+          else standardBtn.classList.remove('btn-liked');
+        }
+      }
+
+      supabase.from('posts')
         .update({ likes_count: newLikes })
         .eq('id', postId)
         .then(function(res) {
-            if (res.error) {
-                console.error("ბაზაში შეცდომაა:", res.error);
-                // შეცდომის შემთხვევაში დააბრუნე ძველი მნიშვნელობა
-                alert("ლაიქის დაფიქსირება ვერ მოხერხდა.");
-            }
+          if (res.error) console.error("ბაზაში ლაიქის სინქრონიზაციის შეცდომა", res.error);
         });
-}
-
-// დამხმარე ფუნქცია UI-სთვის
-function updateLikeUI(postId, count, isLiked, isTiktokView) {
-    if (isTiktokView) {
-        var heartSvg = document.getElementById('tiktok-heart-' + postId);
-        var likeSpan = document.getElementById('tiktok-like-count-' + postId);
-        if (likeSpan) likeSpan.innerText = count;
-        if (heartSvg) {
-            isLiked ? heartSvg.classList.add('heart-liked') : heartSvg.classList.remove('heart-liked');
-        }
-    } else {
-        var standardBtn = document.getElementById('like-btn-standard-' + postId);
-        var standardLabel = document.getElementById('post-likes-count-label-' + postId);
-        if (standardLabel) standardLabel.innerText = "♥️ " + count + " ლაიქი";
-        if (standardBtn) {
-            isLiked ? standardBtn.classList.add('btn-liked') : standardBtn.classList.remove('btn-liked');
-        }
     }
-}
 
     function logout() {
       supabase.auth.signOut().then(function() {
