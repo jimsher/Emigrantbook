@@ -596,7 +596,7 @@
       <button class="create-story-settings-btn">⚙️</button>
     </div>
 
-    <!-- ზედა ფილების ბლოკი -->
+    <!-- ზედა ფილების ბლოკი - მუშაა: ააქტიურებს გალერეას -->
     <div class="create-story-tiles">
       <div class="story-tile-btn" onclick="triggerStoryUpload()">
         <div class="story-tile-icon">🎵</div>
@@ -618,7 +618,7 @@
       <button class="gallery-multi-btn" onclick="triggerStoryUpload()">რამდენიმეს მონიშვნა</button>
     </div>
 
-    <!-- იმიტირებული გალერეის ქსელი რეალური ატვირთვის ფუნქციით -->
+    <!-- იმიტირებული გალერეის ქსელი - ნებისმიერ ბარათზე დაჭერა ხსნის რეალურ გალერეას -->
     <div class="gallery-placeholder-grid">
       <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300');" onclick="triggerStoryUpload()"></div>
       <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300');" onclick="triggerStoryUpload()"></div>
@@ -628,7 +628,7 @@
       <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1472214222541-d510753a8707?w=300');" onclick="triggerStoryUpload()"></div>
     </div>
 
-    <!-- მცურავი კამერის ღილაკი -->
+    <!-- მცურავი კამერის ღილაკი - ააქტიურებს გალერეას -->
     <button class="floating-camera-btn" onclick="triggerStoryUpload()">📷</button>
   </div>
 
@@ -979,14 +979,9 @@
       container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
     }
 
-    /* =======================================================
-       რეალურ დროში გამომწერების და გამოწერილების რაოდენობის დათვლა
-       და მინი-პრევიუ ქსელის (Grid) ჩატვირთვა შესაბამისი მომხმარებლისთვის
-       ======================================================= */
     function updateRealtimeStats(userId) {
       if (!userId) return;
 
-      // 1. დავითვალოთ გამომწერები (მომხმარებლები, რომლებმაც გამომიგზავნეს და დადასტურდა)
       supabase.from('friend_requests')
         .select('sender_id')
         .eq('receiver_id', userId)
@@ -996,10 +991,8 @@
           document.getElementById('stat-followers-count').innerText = followersCount;
           document.getElementById('mini-friends-count').innerText = followersCount + " გამომწერი";
 
-          // ჩავტვირთოთ მინი პრევიუ ქსელი
           loadMiniFriendsGrid(followersRes.data || []);
 
-          // 2. დავითვალოთ გამოწერილები (მომხმარებლები, ვისაც მე გავუგზავნე და დადასტურდა)
           supabase.from('friend_requests')
             .select('receiver_id')
             .eq('sender_id', userId)
@@ -1011,7 +1004,6 @@
         });
     }
 
-    /* მინი-ქსელის (6 მეგობრის) ჩატვირთვა პროფილზე */
     function loadMiniFriendsGrid(connections) {
       var grid = document.getElementById('mini-friends-grid');
       if (!grid) return;
@@ -1021,7 +1013,6 @@
         return;
       }
 
-      // მაქსიმუმ 6 გამომწერი ავარჩიოთ საჩვენებლად
       var previewUsers = connections.slice(0, 6);
       var userIds = previewUsers.map(function(c) { return c.sender_id; });
 
@@ -1056,15 +1047,11 @@
       updateRealtimeStats(userId);
     }
 
-    /* =======================================================
-       გამომწერებისა და გამოწერილების ახალი გვერდის ლოგიკა
-       ======================================================= */
     var activeConnectionsUserId = null;
     var activeConnectionsType = 'followers';
 
     function openConnectionsScreen(type) {
       activeConnectionsType = type;
-      // თუ ჩემს პროფილზე ვართ, ჩემი ID ავიღოთ, წინააღმდეგ შემთხვევაში - შესაბამისი მომხმარებლის
       activeConnectionsUserId = activeViewingProfileId || currentUser.id;
       
       document.getElementById('connections-title').innerText = type === 'followers' ? 'გამომწერები' : 'გამოწერილი';
@@ -1078,7 +1065,6 @@
       listWrapper.innerHTML = `<div class="connections-empty">იტვირთება...</div>`;
 
       if (activeConnectionsType === 'followers') {
-        // გამომწერების წამოღება (receiver_id არის პროფილის პატრონი)
         supabase.from('friend_requests')
           .select('id, sender_id')
           .eq('receiver_id', activeConnectionsUserId)
@@ -1087,7 +1073,6 @@
             handleConnectionsResult(res, 'sender_id', listWrapper, countLabel);
           });
       } else {
-        // გამოწერილების წამოღება (sender_id არის პროფილის პატრონი)
         supabase.from('friend_requests')
           .select('id, receiver_id')
           .eq('sender_id', activeConnectionsUserId)
@@ -1136,7 +1121,6 @@
 
             var avatarContent = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
 
-            // მხოლოდ ჩემს პროფილზე ყოფნისას შეგვიძლია წაშლა (მეგობრობის გაუქმება)
             var showDeleteButton = activeConnectionsUserId === currentUser.id;
             var deleteBtnHtml = showDeleteButton ? 
               `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${conn.id}', event)">წაშლა</button>` : '';
@@ -1171,7 +1155,7 @@
 
     function showMyProfile() {
       if (!currentUser) return;
-      activeViewingProfileId = currentUser.id; // ვნიშნავთ, რომ ვუყურებთ საკუთარ პროფილს
+      activeViewingProfileId = currentUser.id;
       
       supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
         if (profileRes.data) {
@@ -1186,7 +1170,6 @@
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = currentUser.email;
 
-        // ბანერის სურათის დინამიკურად ასახვა (თუ ატვირთულია)
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
           if (coverUrl) {
@@ -1225,7 +1208,7 @@
         showMyProfile();
         return;
       }
-      activeViewingProfileId = userId; // ვნიშნავთ, რომ ვუყურებთ სხვის პროფილს
+      activeViewingProfileId = userId;
 
       supabase.from('profiles').select('*').eq('id', userId).single().then(function(res) {
         if (res.error || !res.data) {
@@ -1242,7 +1225,6 @@
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = "Imigrant";
 
-        // სხვისი ბანერის სურათის ასახვა
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
           if (coverUrl) {
@@ -1479,7 +1461,6 @@
 
       alert("მონაცემები ინახება...");
 
-      // 1. ჯერ ვანახლებთ პროფილს profiles ცხრილში
       supabase.from('profiles')
         .update(updateData)
         .eq('id', currentUser.id)
@@ -1487,7 +1468,6 @@
           if (res.error) {
             alert("შეცდომა შენახვისას: " + res.error.message);
           } else {
-            // 2. წარმატებული პროფილის განახლების შემდეგ, ვანახლებთ ავტორის სახელს მომხმარებლის ყველა პოსტში
             supabase.from('posts')
               .update({ author_name: fullName })
               .eq('user_id', currentUser.id)
@@ -1545,7 +1525,6 @@
       });
     }
 
-    // ახალი ფუნქციები პროფილის ბანერის ასატვირთად
     function triggerCoverUpload() {
       document.getElementById('cover-file-input').click();
     }
@@ -1908,7 +1887,7 @@
 
     /* ==================== FACEBOOK STORIES JS LOGIC ==================== */
     
-    // ახალი: სთორის შექმნის პანელის გამოჩენა/დამალვა
+    // სთორის შექმნის პანელის გამოჩენა/დამალვა
     function openCreateStoryPanel() {
       document.getElementById('create-story-modal').style.display = "flex";
     }
@@ -1917,7 +1896,7 @@
       document.getElementById('create-story-modal').style.display = "none";
     }
 
-    // ატვირთვის ღილაკის გამოძახება
+    // ატვირთვის ღილაკის გამოძახება (ხსნის რეალურ მობილურ გალერეას)
     function triggerStoryUpload() {
       document.getElementById('story-file-input').click();
     }
@@ -1943,7 +1922,6 @@
         var mediaPublicUrl = SUPABASE_URL + "/storage/v1/object/public/stories/" + fileName;
         var mediaType = file.type.startsWith('video') ? 'video' : 'image';
 
-        // ვინახავთ ცხრილში
         supabase.from('stories').insert([
           {
             user_id: currentUser.id,
@@ -1961,14 +1939,13 @@
       });
     }
 
-    // ბოლო 24 საათში ატვირთული სთორების ჩატვირთვა (მხოლოდ საკუთარი, მეგობრების და მეგობრების მეგობრების)
+    // ბოლო 24 საათში ატვირთული სთორების ჩატვირთვა
     function loadStories() {
       var listDiv = document.getElementById('friends-stories-list');
       if (!listDiv) return;
 
       listDiv.innerHTML = "";
 
-      // 1. პირველ რიგში, წამოვიღოთ ყველა დადასტურებული კავშირი (მეგობრობა), სადაც მე ვარ მონაწილე
       supabase.from('friend_requests')
         .select('*')
         .eq('status', 'accepted')
@@ -1985,7 +1962,6 @@
 
           var myFriendsArray = Array.from(myFriendsSet);
 
-          // 2. ახლა წამოვიღოთ ჩემი მეგობრების მეგობრები (Friends of Friends)
           if (myFriendsArray.length > 0) {
             supabase.from('friend_requests')
               .select('*')
@@ -1994,12 +1970,10 @@
               .then(function(fofRes) {
                 
                 var allowedUsersSet = new Set();
-                allowedUsersSet.add(currentUser.id); // საკუთარი ID
+                allowedUsersSet.add(currentUser.id);
                 
-                // მეგობრები
                 myFriendsArray.forEach(function(fId) { allowedUsersSet.add(fId); });
 
-                // მეგობრების მეგობრები
                 if (fofRes.data) {
                   fofRes.data.forEach(function(req) {
                     allowedUsersSet.add(req.sender_id);
@@ -2011,13 +1985,11 @@
                 fetchStoriesForUsers(allowedUsersArray, listDiv);
               });
           } else {
-            // თუ მეგობრები საერთოდ არ მყავს, მხოლოდ ჩემი სთორები გამოვაჩინოთ
             fetchStoriesForUsers([currentUser.id], listDiv);
           }
         });
     }
 
-    // დამხმარე ფუნქცია კონკრეტული იუზერების სთორების წამოსაღებად
     function fetchStoriesForUsers(userIdsList, listDiv) {
       var oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -2081,9 +2053,8 @@
         });
     }
 
-    // სთორის სრულ ეკრანზე ჩვენება
     function openStoryViewer(story, username, avatarUrl) {
-      currentViewingStoryObj = story; // გლობალური ობიექტის მინიჭება რეაქციებისთვის
+      currentViewingStoryObj = story;
       var modal = document.getElementById('story-viewer-modal');
       var userSpan = document.getElementById('sv-username');
       var avatarDiv = document.getElementById('sv-avatar');
@@ -2109,7 +2080,6 @@
       modal.style.display = "flex";
     }
 
-    // სთორის რეაქციის (ლაიქის) გაგზავნა
     function reactToStory(emoji) {
       if (!currentViewingStoryObj) return;
       var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
@@ -2124,14 +2094,12 @@
         });
     }
 
-    // სთორის კომენტარზე Enter ღილაკის დამჭერი
     function handleStoryCommentKeyPress(event) {
       if (event.key === 'Enter') {
         submitStoryComment();
       }
     }
 
-    // სთორის კომენტარის გაგზავნა
     function submitStoryComment() {
       var input = document.getElementById('story-comment-field');
       var text = input.value.trim();
@@ -2141,11 +2109,10 @@
       input.value = "";
     }
 
-    // სთორის დახურვა
     function closeStoryViewer() {
       var modal = document.getElementById('story-viewer-modal');
       var mediaContainer = document.getElementById('sv-media-container');
-      mediaContainer.innerHTML = ""; // ვასუფთავებთ ვიდეოს გაჩერებისთვის
+      mediaContainer.innerHTML = "";
       modal.style.display = "none";
       currentViewingStoryObj = null;
     }
