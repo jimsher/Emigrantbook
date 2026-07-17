@@ -393,7 +393,7 @@
       overflow: hidden;
       width: 100%;
     }
-    .post-header, .post-content, .post-stats, .post-actions, .comment-box-area {
+    .post-header, .post-content, .post-stats, .post-actions, .comment-box-area, .post-comments-list {
       padding-left: 15px;
       padding-right: 15px;
     }
@@ -531,6 +531,53 @@
     .action-btn:hover { background: #222222; color: #ffffff; }
     .action-btn.btn-liked {
       color: #fe2c55 !important;
+    }
+
+    .post-comments-list {
+      max-height: 250px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .comment-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      background: #1c1c1c;
+      padding: 8px 12px;
+      border-radius: 14px;
+      width: fit-content;
+      max-width: 85%;
+    }
+    .comment-item-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #dcae36;
+      color: #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 11px;
+      overflow: hidden;
+    }
+    .comment-item-content {
+      display: flex;
+      flex-direction: column;
+    }
+    .comment-item-author {
+      font-size: 12px;
+      font-weight: bold;
+      color: #dcae36;
+      margin-bottom: 2px;
+    }
+    .comment-item-text {
+      font-size: 13px;
+      color: #e4e6eb;
+      word-break: break-word;
     }
 
     .comment-box-area {
@@ -1899,6 +1946,39 @@
       }
     }
 
+    function loadCommentsForPost(postId) {
+      var lists = document.querySelectorAll(`.post-comments-list[data-post-id="${postId}"]`);
+      lists.forEach(function(el) { el.innerHTML = ""; });
+
+      supabase.from('comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true })
+        .then(function(res) {
+          if (res.error || !res.data) return;
+          
+          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
+          countLabels.forEach(function(lbl) { lbl.innerText = res.data.length + " კომენტარი"; });
+
+          res.data.forEach(function(comment) {
+            lists.forEach(function(listEl) {
+              var initial = comment.author_name ? comment.author_name.charAt(0).toUpperCase() : "?";
+              var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : initial;
+              
+              listEl.innerHTML += `
+                <div class="comment-item">
+                  <div class="comment-item-avatar">${avatarHtml}</div>
+                  <div class="comment-item-content">
+                    <span class="comment-item-author">${comment.author_name}</span>
+                    <span class="comment-item-text">${comment.content}</span>
+                  </div>
+                </div>
+              `;
+            });
+          });
+        });
+    }
+
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
       profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>';
@@ -1934,6 +2014,7 @@
 
             posts.forEach(function(post) {
               profileWall.innerHTML += createPostCardHtml(post);
+              loadCommentsForPost(post.id);
             });
 
             observeVideos();
@@ -2185,6 +2266,7 @@
 
           posts.forEach(function(post) {
             postsWall.innerHTML += createPostCardHtml(post);
+            loadCommentsForPost(post.id);
           });
 
           observeVideos();
@@ -2335,6 +2417,7 @@
             </div>
             <div class="post-content">${post.content || ""}</div>
             ${mediaHtml}
+            <div class="post-comments-list" data-post-id="${post.id}"></div>
             <div class="comment-box-area">
               <div class="comment-box-avatar" onclick="viewUserProfile('${currentUser.id}')">${myCommentAvatar}</div>
               <div class="comment-input-container">
@@ -2364,12 +2447,14 @@
           
           <div class="post-stats">
             <span class="post-likes-count-label" data-post-id="${post.id}">👍 ${post.likes_count || 0} ლაიქი</span>
-            <span>0 კომენტარი</span>
+            <span class="comment-count-label" data-post-id="${post.id}">0 კომენტარი</span>
           </div>
           <div class="post-actions">
             <button class="action-btn like-btn-standard ${likedClass}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">👍 მოწონება</button>
             <button class="action-btn" onclick="focusCommentBox('${post.id}')">💬 კომენტარი</button>
           </div>
+
+          <div class="post-comments-list" data-post-id="${post.id}"></div>
 
           <div class="comment-box-area">
             <div class="comment-box-avatar" onclick="viewUserProfile('${currentUser.id}')">${myCommentAvatar}</div>
@@ -2405,8 +2490,25 @@
       var text = field.value.trim();
       if (!text) return;
 
-      alert("კომენტარი შენახულია! ტექსტი: " + text);
-      field.value = "";
+      var authorName = userProfile ? userProfile.full_name : currentUser.email;
+      var avatarUrl = userProfile ? userProfile.avatar_url : null;
+
+      supabase.from('comments').insert([
+        {
+          post_id: postId,
+          user_id: currentUser.id,
+          author_name: authorName,
+          content: text,
+          avatar_url: avatarUrl
+        }
+      ]).then(function(res) {
+        if (res.error) {
+          alert("კომენტარის შენახვის შეცდომა: " + res.error.message);
+        } else {
+          field.value = "";
+          loadCommentsForPost(postId);
+        }
+      });
     }
 
     function createPost() {
