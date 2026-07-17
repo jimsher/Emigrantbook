@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
   <title>Emigrantbook</title>
-  <link rel="stylesheet" href="supabase1.css">
+  <link rel="stylesheet" href="supabase.css">
   <script>
     // შეცდომის დამჭერი
     window.onerror = function(message, source, lineno, colno, error) {
@@ -161,6 +161,9 @@
       top: 0;
       z-index: 100;
     }
+    .profile-header-fix {
+      justify-content: space-between !important;
+    }
     .logo-text {
       font-size: 22px;
       font-weight: bold;
@@ -171,6 +174,12 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+    .nav-icons-center {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
     .header-icon-btn, .nav-icon-btn {
       background: #222222;
@@ -371,9 +380,14 @@
     .post-card {
       background: #141414;
       border-radius: 12px;
-      padding: 15px;
+      padding: 15px 0; /* გვერდითა დაშორება ნულდება, რათა მედია კიდეებზე დაჯდეს */
       margin-bottom: 20px;
       border: 1px solid #222222;
+      overflow: hidden;
+    }
+    .post-header, .post-content, .post-stats, .post-actions, .comment-box-area {
+      padding-left: 15px;
+      padding-right: 15px;
     }
     .post-header {
       display: flex;
@@ -414,10 +428,11 @@
     }
     .post-media {
       width: 100%;
-      border-radius: 8px;
+      border-radius: 0; /* ჩარჩოს მომრგვალების წაშლა კიდეებისთვის */
       margin-bottom: 12px;
       max-height: 450px;
       object-fit: cover;
+      display: block;
     }
     .post-stats {
       display: flex;
@@ -612,10 +627,10 @@
     .req-btn-confirm { background: #dcae36; color: #111111; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
     .req-btn-delete { background: #222222; color: #e4e6eb; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
-    /* კოლაჟის სტილები */
-    .collage-container { margin-bottom: 12px; border-radius: 8px; overflow: hidden; }
-    .collage-grid { display: grid; gap: 4px; background: #0b0b0b; }
-    .collage-item { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* კოლაჟის სტილები - ბოლომდე გაშლა ხაზებისა და ჩარჩოს გარეშე */
+    .collage-container { margin-bottom: 12px; border-radius: 0; overflow: hidden; width: 100%; }
+    .collage-grid { display: grid; gap: 4px; background: #0b0b0b; width: 100%; }
+    .collage-item { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 0; }
     .collage-1 { grid-template-columns: 1fr; }
     .collage-2 { grid-template-columns: 1fr 1fr; height: 300px; }
     .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1.5fr 1fr; height: 360px; }
@@ -843,7 +858,7 @@
   </div>
     
   <div id="profile-screen">
-    <div class="header">
+    <div class="header profile-header-fix">
       <div class="nav-icons-center">
         <button class="nav-icon-btn active" onclick="showScreen('home')">
           <svg class="nav-icon-svg" viewBox="0 0 24 24">
