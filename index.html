@@ -436,12 +436,12 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-         
+          
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
       border-radius: 0 !important;
-      margin: 0 0 12px 0 !important;
+      margin: 0 0 0 0 !important;
       max-height: none !important;
       object-fit: cover;
       display: block;
@@ -501,43 +501,87 @@
       text-shadow: 0px 1px 4px rgba(0, 0, 0, 0.9);
     }
 
+    /* ზუსტი ფეისბუქის სტატისტიკის განლაგება */
     .post-stats {
       display: flex;
       justify-content: space-between;
-      color: #aaaaaa;
-      font-size: 13px;
+      align-items: center;
+      color: #90949c;
+      font-size: 14px;
+      padding-top: 10px;
       padding-bottom: 10px;
-      border-bottom: 1px solid #222222;
-      margin-bottom: 10px;
+      background: #141414;
+    }
+    .fb-stats-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .fb-reaction-icons {
+      display: flex;
+      align-items: center;
+    }
+    .fb-icon-svg-badge {
+      width: 18px;
+      height: 18px;
+      position: relative;
+      z-index: 2;
+    }
+    .fb-icon-svg-badge.badge-heart {
+      margin-left: -4px;
+      z-index: 1;
+    }
+    .fb-likes-counter {
+      color: #aaaaaa;
+      font-size: 14px;
+      margin-left: 3px;
     }
     .comment-count-label {
       cursor: pointer;
+      color: #aaaaaa;
     }
     .comment-count-label:hover {
       text-decoration: underline;
-      color: #ffffff;
     }
+
+    /* ზუსტი ფეისბუქის მოქმედების ღილაკები */
     .post-actions {
       display: flex;
-      gap: 5px;
-      margin-bottom: 12px;
+      border-top: 1px solid #262626;
+      padding: 4px 6px;
+      background: #141414;
     }
     .action-btn {
       flex: 1;
       background: none;
       border: none;
-      padding: 8px;
-      color: #aaaaaa;
-      font-weight: bold;
-      border-radius: 4px;
+      padding: 8px 4px;
+      color: #b0b3b8;
+      font-weight: 600;
       cursor: pointer;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
       -webkit-user-select: none;
       user-select: none;
     }
-    .action-btn:hover { background: #222222; color: #ffffff; }
+    .action-btn:hover { 
+      background: #242526; 
+      border-radius: 4px;
+    }
+    .action-btn-svg {
+      width: 20px;
+      height: 20px;
+      fill: #b0b3b8;
+    }
     .action-btn.btn-liked {
-      color: #fe2c55 !important;
+      color: #1877f2 !important;
+    }
+    .action-btn.btn-liked .action-btn-svg {
+      fill: #1877f2 !important;
     }
 
     /* ახალი Bottom Sheet კომენტარების მოდალი */
@@ -771,7 +815,7 @@
       user-select: none;
     }
     .profile-stats-block {
-      display: flex gap: 20px; padding-bottom: 10px;
+      display: flex; gap: 20px; padding-bottom: 10px;
     }
     .stat-item {
       display: flex; flex-direction: column; align-items: center; cursor: pointer;
@@ -873,7 +917,7 @@
     .req-btn-confirm { background: #dcae36; color: #111111; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
     .req-btn-delete { background: #222222; color: #e4e6eb; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
 
-    .collage-container { margin-bottom: 12px; border-radius: 0 !important; overflow: hidden; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
+    .collage-container { margin-bottom: 0px; border-radius: 0 !important; overflow: hidden; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
     .collage-grid { display: grid; gap: 4px; background: #0b0b0b; width: 100% !important; }
     .collage-item { width: 100% !important; height: 100% !important; object-fit: cover; display: block; border-radius: 0 !important; }
     .collage-1 { grid-template-columns: 1fr; }
@@ -1308,7 +1352,7 @@
     </div>
   </div>
 
-  <!-- ახალი ქვემოდან ამომავალი კომენტარების მოდალი (შავი ფონით) -->
+  <!-- ახალი ქვემოდან ამომავალი კომენტარების მოდალი -->
   <div id="comments-sheet-modal" class="comments-modal-overlay" onclick="closeCommentsModal()">
     <div class="comments-modal-content" onclick="event.stopPropagation()">
       <div class="comments-modal-drag"></div>
@@ -1318,9 +1362,7 @@
         </div>
         <button class="comments-modal-close" onclick="closeCommentsModal()">×</button>
       </div>
-      <div class="comments-modal-body" id="modal-comments-container">
-        <!-- კომენტარები ჩაიხატება აქ -->
-      </div>
+      <div class="comments-modal-body" id="modal-comments-container"></div>
       <div class="comments-modal-footer">
         <div class="modal-input-holder">
           <input type="text" id="modal-comment-input-field" placeholder="დაწერეთ კომენტარი...">
@@ -1330,16 +1372,14 @@
     </div>
   </div>
 
-  <!-- ლაიკერების სიის პატარა მოდალი -->
+  <!-- ლაიკერების სიის მოდალი -->
   <div id="likers-list-modal" class="likers-modal-overlay" onclick="closeLikersModal()">
     <div class="likers-modal-content" onclick="event.stopPropagation()">
       <div class="likers-modal-header">
         <span style="font-weight: bold; font-size: 16px;">მომწონებლები</span>
         <button class="comments-modal-close" onclick="closeLikersModal()">×</button>
       </div>
-      <div class="likers-modal-body" id="likers-list-container">
-        <!-- ადამიანები ვინც დაალაიქა -->
-      </div>
+      <div class="likers-modal-body" id="likers-list-container"></div>
     </div>
   </div>
 
@@ -1352,7 +1392,7 @@
     var cachedProfiles = {};
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
-    var activePostForComments = null; // რომელი პოსტის კომენტარებია გახსნილი
+    var activePostForComments = null;
 
     var likedPosts = JSON.parse(localStorage.getItem('liked_posts_list')) || [];
 
@@ -1851,7 +1891,6 @@
       }
     }
 
-    // პოსტის კომენტარების რაოდენობის განახლება კედელზე
     function renderCommentsCountOnly(post) {
       supabase.from('post_comments')
         .select('id', { count: 'exact' })
@@ -1863,7 +1902,6 @@
         });
     }
 
-    // ახალი ფუნქცია: ქვემოდან ამომავალ მოდალში კომენტარების ჩახატვა (ფეისბუქის სტილში)
     function openCommentsModal(postId, totalLikes) {
       activePostForComments = postId;
       document.getElementById('modal-total-likes').innerText = totalLikes;
@@ -1872,7 +1910,6 @@
       
       document.getElementById('comments-sheet-modal').style.display = "flex";
 
-      // მივაბათ გაგზავნის მოვლენები მოდალის ღილაკებს
       document.getElementById('modal-comment-submit-btn').onclick = function() { submitCommentFromModal(postId); };
       document.getElementById('modal-comment-input-field').onkeypress = function(e) {
         if (e.key === 'Enter') submitCommentFromModal(postId);
@@ -1951,7 +1988,6 @@
         } else {
           input.value = "";
           loadCommentsIntoModal(postId);
-          // კედელზეც განვაახლოთ რაოდენობა
           renderCommentsCountOnly({ id: postId });
         }
       });
@@ -1962,14 +1998,12 @@
       activePostForComments = null;
     }
 
-    // ახალი ფუნქცია: ლაიკერების სიის გახსნა ბაზიდან რეალური წაკითხვით
     function openLikersListModal() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
       container.innerHTML = `<div style="text-align: center; color: #aaaaaa;">იტვირთება...</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
-      // რადგან ლაიკები ლოკალურად ინახება, იუზერების საჩვენებლად მეგობრების ან არსებული პროფილების ბაზიდან წამოვიღებთ იმიტაციას, რადგან ცალკე likes ცხრილი არ გვაქვს
       supabase.from('profiles')
         .select('id, full_name, avatar_url')
         .limit(5)
@@ -2665,12 +2699,40 @@
           ${mediaHtml}
           
           <div class="post-stats">
-            <span class="post-likes-count-label" data-post-id="${post.id}">👍 ${currentLikesNum} ლაიქი</span>
+            <div class="fb-stats-left" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
+              <div class="fb-reaction-icons">
+                <!-- HD ლურჯი ლაიქის იქონა ბეჯი -->
+                <svg class="fb-icon-svg-badge" viewBox="0 0 36 36">
+                  <circle fill="#1877F2" cx="18" cy="18" r="18"/>
+                  <path fill="#FFFFFF" d="M14 23h-3v-7h3v7zm10.5-6.5c0-.83-.67-1.5-1.5-1.5h-4.3l.6-2.9.1-.4c0-.3-.1-.5-.3-.7l-.7-.7-4.4 4.4c-.2.2-.3.5-.3.8V21c0 .83.67 1.5 1.5 1.5h6.5c.6 0 1.1-.4 1.3-.9l2.1-5c.1-.2.1-.4.1-.6v-1.5z"/>
+                </svg>
+                <!-- HD წითელი გულის იქონა ბეჯი -->
+                <svg class="fb-icon-svg-badge id-icon-heart" viewBox="0 0 36 36" style="margin-left: -5px; z-index:1;">
+                  <circle fill="#F33E58" cx="18" cy="18" r="18"/>
+                  <path fill="#FFFFFF" d="M18 26.3s-7.5-4.4-7.5-9.3c0-2.3 1.7-4 3.9-4 1.5 0 2.8.9 3.6 2.2.8-1.3 2.1-2.2 3.6-2.2 2.2 0 3.9 1.7 3.9 4 0 4.9-7.5 9.3-7.5 9.3z"/>
+                </svg>
+              </div>
+              <span class="post-likes-count-label" data-post-id="${post.id}">${currentLikesNum}</span>
+            </div>
             <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">0 კომენტარი</span>
           </div>
+
           <div class="post-actions">
-            <button class="action-btn like-btn-standard ${likedClass}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">👍 მოწონება</button>
-            <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">💬 კომენტარი</button>
+            <!-- ფეისბუქის იდენტური HD მოწონების ღილაკი -->
+            <button class="action-btn like-btn-standard ${likedClass}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">
+              <svg class="action-btn-svg" viewBox="0 0 24 24">
+                <path d="M5 21h-2v-9h2v9zm16.5-8.5c0-.83-.67-1.5-1.5-1.5h-5.71l.86-4.14.03-.32c0-.41-.17-.79-.44-1.06l-1.06-1.06-6.12 6.13c-.33.33-.56.77-.56 1.25v8.5c0 .83.67 1.5 1.5 1.5h8.5c.67 0 1.25-.41 1.48-.99l2.84-6.63c.08-.2.13-.42.13-.64v-1.5z"/>
+              </svg>
+              მოწონება
+            </button>
+            
+            <!-- ფეისბუქის იდენტური HD კომენტარის ღილაკი -->
+            <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
+              <svg class="action-btn-svg" viewBox="0 0 24 24">
+                <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+              </svg>
+              კომენტარი
+            </button>
           </div>
         </div>
       `;
@@ -2766,7 +2828,7 @@
 
       var currentLikes = 0;
       if (labels.length > 0) {
-        currentLikes = parseInt(labels[0].innerText.replace(/[^0-9]/g, '')) || 0;
+        currentLikes = parseInt(labels[0].innerText) || 0;
       } else if (tiktokSpans.length > 0) {
         currentLikes = parseInt(tiktokSpans[0].innerText) || 0;
       }
@@ -2774,7 +2836,7 @@
       var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
 
       labels.forEach(function(label) {
-        label.innerText = "👍 " + newLikes + " ლაიქი";
+        label.innerText = newLikes;
       });
       buttons.forEach(function(btn) {
         if (!hasLiked) btn.classList.add('btn-liked');
@@ -2784,12 +2846,12 @@
       tiktokSpans.forEach(function(span) {
         span.innerText = newLikes;
       });
+      circleHearts = document.querySelectorAll(`.tiktok-heart[data-post-id="${postId}"]`);
       tiktokHearts.forEach(function(heart) {
         if (!hasLiked) heart.classList.add('heart-liked');
         else heart.classList.remove('heart-liked');
       });
 
-      // თუ მოდალი ღიაა, იქაც განვაახლოთ ზედა ლაიქების რაოდენობა
       if (activePostForComments === postId) {
         document.getElementById('modal-total-likes').innerText = newLikes;
       }
