@@ -2540,45 +2540,56 @@
       });
     }
 
-    function likePost(postId, currentLikes, isTiktokView) {
-      var hasLiked = likedPosts.includes(postId);
-      var newLikes = currentLikes;
+    async function likePost(postId, currentLikes, isTiktokView) {
+    if (!currentUser) return; // თუ მომხმარებელი შესული არ არის
 
-      if (hasLiked) {
-        newLikes = currentLikes > 0 ? currentLikes - 1 : 0;
-        likedPosts = likedPosts.filter(function(id) { return id !== postId; });
-      } else {
-        newLikes = currentLikes + 1;
+    var hasLiked = likedPosts.includes(postId);
+    var newLikes = hasLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+
+    // 1. UI-ს მყისიერი განახლება (Optimistic UI)
+    updateLikeUI(postId, newLikes, !hasLiked, isTiktokView);
+
+    // 2. ბაზის სინქრონიზაცია
+    if (hasLiked) {
+        // ლაიქის წაშლა
+        await supabase.from('post_likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', currentUser.id);
+            
+        likedPosts = likedPosts.filter(id => id !== postId);
+    } else {
+        // ლაიქის დამატება
+        await supabase.from('post_likes')
+            .insert({ post_id: postId, user_id: currentUser.id });
+            
         likedPosts.push(postId);
-      }
+    }
 
-      localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
+    // 3. განახლება Posts ცხრილში (ლაიქების საერთო რაოდენობა)
+    await supabase.from('posts').update({ likes_count: newLikes }).eq('id', postId);
+    
+    localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
+}
 
-      if (isTiktokView) {
+// ცალკე ფუნქცია UI-სთვის, რომ კოდი არ განმეორდეს
+function updateLikeUI(postId, count, isLiked, isTiktokView) {
+    if (isTiktokView) {
         var heartSvg = document.getElementById('tiktok-heart-' + postId);
         var likeSpan = document.getElementById('tiktok-like-count-' + postId);
-        if (likeSpan) likeSpan.innerText = newLikes;
+        if (likeSpan) likeSpan.innerText = count;
         if (heartSvg) {
-          if (!hasLiked) heartSvg.classList.add('heart-liked');
-          else heartSvg.classList.remove('heart-liked');
+            isLiked ? heartSvg.classList.add('heart-liked') : heartSvg.classList.remove('heart-liked');
         }
-      } else {
+    } else {
         var standardBtn = document.getElementById('like-btn-standard-' + postId);
         var standardLabel = document.getElementById('post-likes-count-label-' + postId);
-        if (standardLabel) standardLabel.innerText = "♥️ " + newLikes + " ლაიქი";
+        if (standardLabel) standardLabel.innerText = "👍 " + count + " ლაიქი";
         if (standardBtn) {
-          if (!hasLiked) standardBtn.classList.add('btn-liked');
-          else standardBtn.classList.remove('btn-liked');
+            isLiked ? standardBtn.classList.add('btn-liked') : standardBtn.classList.remove('btn-liked');
         }
-      }
-
-      supabase.from('posts')
-        .update({ likes_count: newLikes })
-        .eq('id', postId)
-        .then(function(res) {
-          if (res.error) console.error("ბაზაში ლაიქის სინქრონიზაციის შეცდომა", res.error);
-        });
     }
+}
 
     function logout() {
       supabase.auth.signOut().then(function() {
