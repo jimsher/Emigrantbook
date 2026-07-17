@@ -893,14 +893,40 @@
     }
 
     /* მენიუს ახალი სტილები */
-    .menu-panel {
-      position: fixed; top: 0; right: -70%; width: 70%; height: 100%;
-      background: #141414; z-index: 1000; transition: 0.3s;
-      border-left: 1px solid #222; padding: 20px;
-    }
-    .menu-panel.active { right: 0; }
-    .hamburger-btn { cursor: pointer; padding: 10px; }
-    .hamburger-btn span { display: block; width: 25px; height: 3px; background: white; margin: 5px 0; }
+    /* ჰამბურგერ ღილაკის სტილი */
+.hamburger-menu {
+    cursor: pointer;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+.hamburger-menu span {
+    display: block;
+    width: 24px;
+    height: 3px;
+    background: #e4e6eb;
+    border-radius: 2px;
+}
+
+/* ტიკტოკის სტილის მენიუს პანელი */
+.side-drawer {
+    position: fixed;
+    top: 0;
+    right: -70%; /* თავიდან გარეთაა */
+    width: 70%;
+    height: 100%;
+    background: #141414;
+    z-index: 1000;
+    transition: right 0.3s ease;
+    border-left: 1px solid #222;
+    padding: 20px;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+}
+.side-drawer.open {
+    right: 0; /* დაჭერისას შემოდის */
+}
     /* მენიუს მენიუ აქ მთავრდება */
   </style>
 </head>
@@ -1024,14 +1050,21 @@
           <div class="notification-badge" id="requests-badge-profile" style="display: none;">0</div>
         </button>
       </div>
-    </div>
 
-    <div class="requests-dropdown" id="requests-dropdown-profile" style="display: none;">
-      <div class="dropdown-header">მეგობრობის მოთხოვნები</div>
-      <div id="dropdown-items-container-profile">
-        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
+      <!-- დამატებული ჰამბურგერ ღილაკი -->
+      <div class="hamburger-menu" onclick="toggleSideMenu()">
+        <span></span><span></span><span></span>
       </div>
     </div>
+
+    <!-- ტიკტოკის სტილის პანელი (ბოლოში) -->
+    <div id="side-drawer" class="side-drawer">
+        <h3 style="color: #dcae36; margin-bottom: 20px;">მენიუ</h3>
+        <button class="logout-btn-large" onclick="logout()">გასვლა</button>
+    </div>
+
+    
+    <!-- (შენი დანარჩენი კოდი აქვე რჩება) -->
     
     <div class="feed-container">
       <div class="facebook-profile-container">
@@ -2770,7 +2803,19 @@
       modal.style.display = "none";
       currentViewingStoryObj = null;
     }
-    
+
+    function toggleSideMenu() {
+    document.getElementById('side-drawer').classList.toggle('open');
+}
+
+// პანელის დახურვა ეკრანზე ნებისმიერ ადგილას დაჭერით
+document.addEventListener('click', function(event) {
+    var menu = document.getElementById('side-drawer');
+    var hamburger = document.querySelector('.hamburger-menu');
+    if (!menu.contains(event.target) && !hamburger.contains(event.target)) {
+        menu.classList.remove('open');
+    }
+});
   </script>
 </body>
 </html>
