@@ -436,7 +436,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-       
+         
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -983,7 +983,7 @@
       </div>
     </div>
   </div>
-     
+       
   <div id="profile-screen">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
@@ -2234,13 +2234,13 @@
             <div class="video-container-rel">
               <video class="post-media" src="${url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
               <div class="tiktok-side-panel">
-                <div class="tiktok-action-item" onclick="likePost('${postId}', ${likesCount}, true)">
+                <div class="tiktok-action-item" onclick="likePost('${postId}', true)">
                   <div class="tiktok-icon-circle">
-                    <svg class="${activeHeartClass}" id="tiktok-heart-${postId}" viewBox="0 0 24 24">
+                    <svg class="tiktok-heart ${activeHeartClass}" data-post-id="${postId}" viewBox="0 0 24 24">
                       <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
                   </div>
-                  <span id="tiktok-like-count-${postId}">${likesCount}</span>
+                  <span class="tiktok-like-count" data-post-id="${postId}">${likesCount}</span>
                 </div>
                 <div class="tiktok-action-item" onclick="focusCommentBox('${postId}')">
                   <div class="tiktok-icon-circle">
@@ -2363,11 +2363,11 @@
           ${mediaHtml}
           
           <div class="post-stats">
-            <span id="post-likes-count-label-${post.id}">👍 ${post.likes_count || 0} ლაიქი</span>
+            <span class="post-likes-count-label" data-post-id="${post.id}">👍 ${post.likes_count || 0} ლაიქი</span>
             <span>0 კომენტარი</span>
           </div>
           <div class="post-actions">
-            <button class="action-btn ${likedClass}" id="like-btn-standard-${post.id}" onclick="likePost('${post.id}', ${post.likes_count || 0}, false)">👍 მოწონება</button>
+            <button class="action-btn like-btn-standard ${likedClass}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">👍 მოწონება</button>
             <button class="action-btn" onclick="focusCommentBox('${post.id}')">💬 კომენტარი</button>
           </div>
 
@@ -2481,37 +2481,46 @@
       });
     }
 
-    function likePost(postId, currentLikes, isTiktokView) {
+    function likePost(postId, isTiktokView) {
       var hasLiked = likedPosts.includes(postId);
-      var newLikes = currentLikes;
-
+      
       if (hasLiked) {
-        newLikes = currentLikes > 0 ? currentLikes - 1 : 0;
         likedPosts = likedPosts.filter(function(id) { return id !== postId; });
       } else {
-        newLikes = currentLikes + 1;
         likedPosts.push(postId);
       }
 
       localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
 
-      if (isTiktokView) {
-        var heartSvg = document.getElementById('tiktok-heart-' + postId);
-        var likeSpan = document.getElementById('tiktok-like-count-' + postId);
-        if (likeSpan) likeSpan.innerText = newLikes;
-        if (heartSvg) {
-          if (!hasLiked) heartSvg.classList.add('heart-liked');
-          else heartSvg.classList.remove('heart-liked');
-        }
-      } else {
-        var standardBtn = document.getElementById('like-btn-standard-' + postId);
-        var standardLabel = document.getElementById('post-likes-count-label-' + postId);
-        if (standardLabel) standardLabel.innerText = "👍 " + newLikes + " ლაიქი";
-        if (standardBtn) {
-          if (!hasLiked) standardBtn.classList.add('btn-liked');
-          else standardBtn.classList.remove('btn-liked');
-        }
+      var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+      var buttons = document.querySelectorAll(`.like-btn-standard[data-post-id="${postId}"]`);
+      var tiktokHearts = document.querySelectorAll(`.tiktok-heart[data-post-id="${postId}"]`);
+      var tiktokSpans = document.querySelectorAll(`.tiktok-like-count[data-post-id="${postId}"]`);
+
+      var currentLikes = 0;
+      if (labels.length > 0) {
+        currentLikes = parseInt(labels[0].innerText.replace(/[^0-9]/g, '')) || 0;
+      } else if (tiktokSpans.length > 0) {
+        currentLikes = parseInt(tiktokSpans[0].innerText) || 0;
       }
+
+      var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
+
+      labels.forEach(function(label) {
+        label.innerText = "👍 " + newLikes + " ლაიქი";
+      });
+      buttons.forEach(function(btn) {
+        if (!hasLiked) btn.classList.add('btn-liked');
+        else btn.classList.remove('btn-liked');
+      });
+
+      tiktokSpans.forEach(function(span) {
+        span.innerText = newLikes;
+      });
+      tiktokHearts.forEach(function(heart) {
+        if (!hasLiked) heart.classList.add('heart-liked');
+        else heart.classList.remove('heart-liked');
+      });
 
       supabase.from('posts')
         .update({ likes_count: newLikes })
