@@ -330,20 +330,7 @@
   
     <div class="feed-container">
       
-      <!-- ==================== STORIES SECTION (FACEBOOK STYLES) ==================== -->
-      <div class="stories-wrapper">
-        <!-- ჩემი სთორის შექმნის ბარათი -->
-        <div class="story-card create-story-card" onclick="triggerStoryUpload()">
-          <div class="story-image-bg" id="my-story-bg-avatar"></div>
-          <div class="create-story-btn-wrapper">
-            <div class="create-story-plus">+</div>
-            <span>სიუჟეტის შექმნა</span>
-          </div>
-        </div>
-        <!-- აქ ჩაიყრება მეგობრების ატვირთული სთორები -->
-        <div id="friends-stories-list" style="display: flex; gap: 8px;"></div>
-      </div>
-
+      <!-- პოსტის დაწერის ველი (ახლა პირველია) -->
       <div class="create-post-card">
         <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
         
@@ -357,6 +344,20 @@
         </div>
 
         <div class="selected-file-info" id="selected-file-name"></div>
+      </div>
+
+      <!-- ==================== STORIES SECTION (FACEBOOK STYLES) - ახლა პოსტის ველის დაბლაა ==================== -->
+      <div class="stories-wrapper">
+        <!-- ჩემი სთორის შექმნის ბარათი -->
+        <div class="story-card create-story-card" onclick="triggerStoryUpload()">
+          <div class="story-image-bg" id="my-story-bg-avatar"></div>
+          <div class="create-story-btn-wrapper">
+            <div class="create-story-plus">+</div>
+            <span>სიუჟეტის შექმნა</span>
+          </div>
+        </div>
+        <!-- აქ ჩაიყრება მეგობრების ატვირთული სთორები -->
+        <div id="friends-stories-list" style="display: flex; gap: 8px;"></div>
       </div>
 
       <div id="posts-wall">
@@ -1874,32 +1875,82 @@
       });
     }
 
-    // ბოლო 24 საათში ატვირთული სთორების ჩატვირთვა
+    // ბოლო 24 საათში ატვირთული სთორების ჩატვირთვა (მხოლოდ საკუთარი, მეგობრების და მეგობრების მეგობრების)
     function loadStories() {
       var listDiv = document.getElementById('friends-stories-list');
       if (!listDiv) return;
 
       listDiv.innerHTML = "";
 
-      // ფილტრი: მხოლოდ ბოლო 24 საათის სთორები
+      // 1. პირველ რიგში, წამოვიღოთ ყველა დადასტურებული კავშირი (მეგობრობა), სადაც მე ვარ მონაწილე
+      supabase.from('friend_requests')
+        .select('*')
+        .eq('status', 'accepted')
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+        .then(function(friendsRes) {
+          
+          var myFriendsSet = new Set();
+          if (friendsRes.data) {
+            friendsRes.data.forEach(function(req) {
+              if (req.sender_id !== currentUser.id) myFriendsSet.add(req.sender_id);
+              if (req.receiver_id !== currentUser.id) myFriendsSet.add(req.receiver_id);
+            });
+          }
+
+          var myFriendsArray = Array.from(myFriendsSet);
+
+          // 2. ახლა წამოვიღოთ ჩემი მეგობრების მეგობრები (Friends of Friends)
+          if (myFriendsArray.length > 0) {
+            supabase.from('friend_requests')
+              .select('*')
+              .eq('status', 'accepted')
+              .or(`sender_id.in.(${myFriendsArray.join(',')}),receiver_id.in.(${myFriendsArray.join(',')})`)
+              .then(function(fofRes) {
+                
+                var allowedUsersSet = new Set();
+                allowedUsersSet.add(currentUser.id); // საკუთარი ID
+                
+                // მეგობრები
+                myFriendsArray.forEach(function(fId) { allowedUsersSet.add(fId); });
+
+                // მეგობრების მეგობრები
+                if (fofRes.data) {
+                  fofRes.data.forEach(function(req) {
+                    allowedUsersSet.add(req.sender_id);
+                    allowedUsersSet.add(req.receiver_id);
+                  });
+                }
+
+                var allowedUsersArray = Array.from(allowedUsersSet);
+                fetchStoriesForUsers(allowedUsersArray, listDiv);
+              });
+          } else {
+            // თუ მეგობრები საერთოდ არ მყავს, მხოლოდ ჩემი სთორები გამოვაჩინოთ
+            fetchStoriesForUsers([currentUser.id], listDiv);
+          }
+        });
+    }
+
+    // დამხმარე ფუნქცია კონკრეტული იუზერების სთორების წამოსაღებად
+    function fetchStoriesForUsers(userIdsList, listDiv) {
       var oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
       supabase.from('stories')
         .select('*')
         .gt('created_at', oneDayAgo)
+        .in('user_id', userIdsList)
         .order('created_at', { ascending: false })
         .then(function(res) {
           if (res.error || !res.data || res.data.length === 0) {
-            return; // თუ არცერთი სთორი არ არის, სიას ვტოვებთ ცარიელს
+            return;
           }
 
           var stories = res.data;
-          var userIds = stories.map(function(s) { return s.user_id; });
+          var storyAuthors = stories.map(function(s) { return s.user_id; });
 
-          // წამოვიღოთ ავტორების პროფილები
           supabase.from('profiles')
             .select('id, full_name, avatar_url')
-            .in('id', userIds)
+            .in('id', storyAuthors)
             .then(function(profilesRes) {
               var profilesMap = {};
               if (profilesRes.data) {
@@ -1936,7 +1987,6 @@
                 listDiv.appendChild(card);
               });
 
-              // ჩართოს ვიდეო პრევიუები სთორებში
               var previewVideos = document.querySelectorAll('.story-card-video-preview');
               previewVideos.forEach(function(v) {
                 v.play().catch(function() {});
