@@ -51,6 +51,74 @@
       color: #1e3c72;
       margin-bottom: 10px;
     }
+
+    /* ==================== მხოლოდ სთორის კომენტარების და ლაიქების საჭირო CSS ==================== */
+    .story-viewer-footer {
+      padding: 12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.9) 80%, rgba(0,0,0,0));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 12;
+    }
+    .story-stats-row {
+      display: flex;
+      justify-content: space-between;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      padding: 0 4px;
+    }
+    .story-reactions-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px;
+      border-radius: 20px;
+    }
+    .story-react-btn {
+      font-size: 20px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .story-react-btn:hover {
+      transform: scale(1.3);
+    }
+    .story-input-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .story-comment-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 10px 16px;
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+    .story-comment-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .story-send-btn {
+      background: #1877f2;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -340,7 +408,7 @@
     </div>
   </div>
 
-  <!-- სთორის სრულ ეკრანზე სანახავი მოდალი -->
+  <!-- სთორის სრულ ეკრანზე სანახავი მოდალი (ჩაშენებული კომენტარებითა და ლაიქებით) -->
   <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
     <div class="story-viewer-content" onclick="event.stopPropagation()">
       <div class="story-viewer-header">
@@ -351,6 +419,28 @@
         <button class="story-close-btn" onclick="closeStoryViewer()">×</button>
       </div>
       <div class="story-viewer-media" id="sv-media-container"></div>
+
+      <!-- ფეისბუქის იდენტური რეაქციებისა და შეტყობინების ველი -->
+      <div class="story-viewer-footer">
+        <div class="story-stats-row">
+          <span id="story-likes-label">👍 0 ლაიქი</span>
+          <span>სიუჟეტი</span>
+        </div>
+        
+        <div class="story-reactions-bar">
+          <span class="story-react-btn" onclick="reactToStory('👍')">👍</span>
+          <span class="story-react-btn" onclick="reactToStory('❤️')">❤️</span>
+          <span class="story-react-btn" onclick="reactToStory('😂')">😂</span>
+          <span class="story-react-btn" onclick="reactToStory('😮')">😮</span>
+          <span class="story-react-btn" onclick="reactToStory('😢')">😢</span>
+        </div>
+
+        <div class="story-input-container">
+          <input type="text" id="story-comment-field" class="story-comment-input" placeholder="გაუგზავნე შეტყობინება..." onkeypress="handleStoryCommentKeyPress(event)">
+          <button class="story-send-btn" onclick="submitStoryComment()">➔</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -362,6 +452,7 @@
     var userProfile = null;
     var cachedProfiles = {}; // ყველა მომხმარებლის პროფილის ქეში
     var activeViewingProfileId = null; // ამჟამად გახსნილი პროფილის ID
+    var currentViewingStoryObj = null; // გახსნილი სთორის ობიექტი
 
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -1794,6 +1885,7 @@
 
     // სთორის სრულ ეკრანზე ჩვენება
     function openStoryViewer(story, username, avatarUrl) {
+      currentViewingStoryObj = story; // გლობალური ობიექტის მინიჭება რეაქციებისთვის
       var modal = document.getElementById('story-viewer-modal');
       var userSpan = document.getElementById('sv-username');
       var avatarDiv = document.getElementById('sv-avatar');
@@ -1815,7 +1907,40 @@
         mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
       }
 
+      document.getElementById('story-likes-label').innerText = `👍 ${story.likes_count || 0} ლაიქი`;
       modal.style.display = "flex";
+    }
+
+    // სთორის რეაქციის (ლაიქის) გაგზავნა
+    function reactToStory(emoji) {
+      if (!currentViewingStoryObj) return;
+      var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
+      
+      supabase.from('stories')
+        .update({ likes_count: newLikes })
+        .eq('id', currentViewingStoryObj.id)
+        .then(function() {
+          currentViewingStoryObj.likes_count = newLikes;
+          document.getElementById('story-likes-label').innerText = `👍 ${newLikes} ლაიქი`;
+          alert("რეაქცია გაიგზავნა: " + emoji);
+        });
+    }
+
+    // სთორის კომენტარზე Enter ღილაკის დამჭერი
+    function handleStoryCommentKeyPress(event) {
+      if (event.key === 'Enter') {
+        submitStoryComment();
+      }
+    }
+
+    // სთორის კომენტარის გაგზავნა
+    function submitStoryComment() {
+      var input = document.getElementById('story-comment-field');
+      var text = input.value.trim();
+      if (!text) return;
+
+      alert("პასუხი სიუჟეტზე გაიგზავნა: " + text);
+      input.value = "";
     }
 
     // სთორის დახურვა
@@ -1824,6 +1949,7 @@
       var mediaContainer = document.getElementById('sv-media-container');
       mediaContainer.innerHTML = ""; // ვასუფთავებთ ვიდეოს გაჩერებისთვის
       modal.style.display = "none";
+      currentViewingStoryObj = null;
     }
   </script>
 </body>
