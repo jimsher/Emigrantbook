@@ -686,7 +686,7 @@
       user-select: none;
     }
     .profile-stats-block {
-      display: flex; gap: 20px; padding-bottom: 10px;
+      display: flex gap: 20px; padding-bottom: 10px;
     }
     .stat-item {
       display: flex; flex-direction: column; align-items: center; cursor: pointer;
@@ -1064,7 +1064,7 @@
         <div class="profile-info-wrapper">
           <div class="avatar-stats-row">
             <div class="profile-avatar-holder">
-              <div class="profile-fb-avatar" id="profile-big-avatar">?</div>
+              <div class="profile-big-avatar" id="profile-big-avatar">?</div>
               <button class="avatar-camera-btn" id="avatar-camera-btn" onclick="triggerAvatarUpload()">📷</button>
             </div>
             <div class="profile-stats-block">
@@ -1225,7 +1225,7 @@
 
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
-    var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx"; 
+    var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
     var supabase;
     var currentUser = null;
     var userProfile = null;
@@ -1233,7 +1233,6 @@
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
 
-    // ლოკალურად შენახული დალაიქებული პოსტების მასივი
     var likedPosts = JSON.parse(localStorage.getItem('liked_posts_list')) || [];
 
     var videoObserver = new IntersectionObserver(function(entries) {
@@ -1731,6 +1730,55 @@
       }
     }
 
+    // უსაფრთხო ჩატვირთვა - ჯერ ამოწმებს 'post_comments'-ს, მერე 'comments'-ს
+    function renderCommentsForPost(post) {
+      var lists = document.querySelectorAll(`.post-comments-list[data-post-id="${post.id}"]`);
+      lists.forEach(function(el) { el.innerHTML = ""; });
+
+      // ვცდილობთ წავიკითხოთ ჯერ post_comments-დან
+      supabase.from('post_comments')
+        .select('*')
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true })
+        .then(function(res) {
+          if (res.error) {
+            // თუ არ არსებობს, გადადის ალტერნატიულ comments-ზე
+            supabase.from('comments')
+              .select('*')
+              .eq('post_id', post.id)
+              .order('created_at', { ascending: true })
+              .then(function(altRes) {
+                if (!altRes.error) drawCommentsMarkup(altRes.data || [], lists, post.id);
+              });
+          } else {
+            drawCommentsMarkup(res.data || [], lists, post.id);
+          }
+        });
+    }
+
+    function drawCommentsMarkup(comments, lists, postId) {
+      var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
+      countLabels.forEach(function(lbl) { lbl.innerText = comments.length + " კომენტარი"; });
+
+      comments.forEach(function(comment) {
+        lists.forEach(function(listEl) {
+          var name = comment.author_name || comment.full_name || "მომხმარებელი";
+          var initial = name.charAt(0).toUpperCase();
+          var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : initial;
+          
+          listEl.innerHTML += `
+            <div class="comment-item">
+              <div class="comment-item-avatar">${avatarHtml}</div>
+              <div class="comment-item-content">
+                <span class="comment-item-author">${name}</span>
+                <span class="comment-item-text">${comment.content || ""}</span>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+
     function showMyProfile() {
       if (!currentUser) return;
       activeViewingProfileId = currentUser.id;
@@ -1946,39 +1994,6 @@
       }
     }
 
-    function loadCommentsForPost(postId) {
-      var lists = document.querySelectorAll(`.post-comments-list[data-post-id="${postId}"]`);
-      lists.forEach(function(el) { el.innerHTML = ""; });
-
-      supabase.from('comments')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true })
-        .then(function(res) {
-          if (res.error || !res.data) return;
-          
-          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
-          countLabels.forEach(function(lbl) { lbl.innerText = res.data.length + " კომენტარი"; });
-
-          res.data.forEach(function(comment) {
-            lists.forEach(function(listEl) {
-              var initial = comment.author_name ? comment.author_name.charAt(0).toUpperCase() : "?";
-              var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : initial;
-              
-              listEl.innerHTML += `
-                <div class="comment-item">
-                  <div class="comment-item-avatar">${avatarHtml}</div>
-                  <div class="comment-item-content">
-                    <span class="comment-item-author">${comment.author_name}</span>
-                    <span class="comment-item-text">${comment.content}</span>
-                  </div>
-                </div>
-              `;
-            });
-          });
-        });
-    }
-
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
       profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>';
@@ -2014,7 +2029,7 @@
 
             posts.forEach(function(post) {
               profileWall.innerHTML += createPostCardHtml(post);
-              loadCommentsForPost(post.id);
+              renderCommentsForPost(post);
             });
 
             observeVideos();
@@ -2266,7 +2281,7 @@
 
           posts.forEach(function(post) {
             postsWall.innerHTML += createPostCardHtml(post);
-            loadCommentsForPost(post.id);
+            renderCommentsForPost(post);
           });
 
           observeVideos();
@@ -2485,6 +2500,7 @@
       }
     }
 
+    // ულტრა-უსაფრთხო ჩაწერა - ავტომატურად პოულობს სწორ ცხრილსა და ობიექტს
     function submitComment(postId) {
       var field = document.getElementById('comment-field-' + postId);
       var text = field.value.trim();
@@ -2493,22 +2509,40 @@
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
       var avatarUrl = userProfile ? userProfile.avatar_url : null;
 
-      supabase.from('comments').insert([
-        {
-          post_id: postId,
-          user_id: currentUser.id,
-          author_name: authorName,
-          content: text,
-          avatar_url: avatarUrl
-        }
-      ]).then(function(res) {
+      // ვქმნით მოქნილ ობიექტს, სადაც შეცდომის გამომწვევი სვეტები დაზღვეულია
+      var commentPayload = {
+        post_id: postId,
+        user_id: currentUser.id,
+        content: text
+      };
+
+      // ჯერ ვცდილობთ ჩავწეროთ 'post_comments' ცხრილში
+      supabase.from('post_comments').insert([{ ...commentPayload, author_name: authorName, avatar_url: avatarUrl }]).then(function(res) {
         if (res.error) {
-          alert("კომენტარის შენახვის შეცდომა: " + res.error.message);
+          // თუ არ გამოვიდა, ვცდილობთ ალტერნატიულ 'comments' ცხრილში
+          supabase.from('comments').insert([{ ...commentPayload, author_name: authorName, avatar_url: avatarUrl }]).then(function(altRes) {
+            if (altRes.error) {
+              // თუ 'author_name' სვეტის გამო იჭედება, ვგზავნით მის გარეშე
+              supabase.from('comments').insert([commentPayload]).then(function(finalRes) {
+                if (finalRes.error) {
+                  alert("შეცდომა: " + finalRes.error.message);
+                } else {
+                  finishCommentSubmit(field, postId);
+                }
+              });
+            } else {
+              finishCommentSubmit(field, postId);
+            }
+          });
         } else {
-          field.value = "";
-          loadCommentsForPost(postId);
+          finishCommentSubmit(field, postId);
         }
       });
+    }
+
+    function finishCommentSubmit(field, postId) {
+      field.value = "";
+      renderCommentsForPost({ id: postId });
     }
 
     function createPost() {
