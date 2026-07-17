@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
   <title>Emigrantbook</title>
-  <link rel="stylesheet" href="supabase1.css">
+  <link rel="stylesheet" href="supabase.css">
   <script>
     window.onerror = function(message, source, lineno, colno, error) {
       alert("აპლიკაციის შეცდომა!: " + message + "\nხაზი: " + lineno);
@@ -457,6 +457,7 @@
       max-height: none !important;
       object-fit: cover;
       display: block;
+      cursor: pointer;
     }
 
     /* ზუსტი TikTok-ის ნაირი განლაგება ვიდეოზე */
@@ -466,14 +467,14 @@
     }
     .tiktok-side-panel {
       position: absolute;
-      right: 12px;
-      bottom: 40px;
+      right: 14px;
+      bottom: 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
       z-index: 10;
-      background: transparent; /* მოშორდა მახინჯი ბარი */
+      background: transparent;
       padding: 0;
     }
     .tiktok-action-item {
@@ -482,9 +483,9 @@
       align-items: center;
       cursor: pointer;
       color: #ffffff;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
-      gap: 4px;
+      gap: 5px;
       transition: transform 0.1s;
       -webkit-user-select: none;
       user-select: none;
@@ -493,16 +494,23 @@
       transform: scale(0.9);
     }
     .tiktok-icon-circle {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px; /* ზომა გაიზარდა უკეთესი ხილვადობისთვის */
-      filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.8)); /* ჩრდილი მკაფიო გამოჩენისთვის */
+      filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.8));
+    }
+    .tiktok-icon-circle svg {
+      width: 28px;
+      height: 28px;
+      fill: #ffffff;
+    }
+    .tiktok-icon-circle svg.heart-liked {
+      fill: #fe2c55 !important;
     }
     .tiktok-action-item span {
-      text-shadow: 0px 1px 4px rgba(0, 0, 0, 0.9);
+      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8);
     }
 
     .post-stats {
@@ -2189,6 +2197,14 @@
       });
     }
 
+    function toggleVideoPlay(videoEl) {
+      if (videoEl.paused) {
+        videoEl.play().catch(function() {});
+      } else {
+        videoEl.pause();
+      }
+    }
+
     function buildCollageHtml(urlsString, postId, likesCount) {
       if (!urlsString) return "";
       
@@ -2202,25 +2218,33 @@
       if (urls.length === 1) {
         var url = urls[0];
         if (url.includes('.mp4') || url.includes('video')) {
-          // TikTok სტილის ვერტიკალური მენიუს სტრუქტურა მარჯვნივ
+          // სუფთა TikTok სტრუქტურა SVG იკონებით
           return `
             <div class="video-container-rel">
-              <video class="post-media" src="${url}" controls playsinline loop></video>
+              <video class="post-media" src="${url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
               <div class="tiktok-side-panel">
                 <div class="tiktok-action-item" onclick="likePost('${postId}', ${likesCount})">
-                  <div class="tiktok-icon-circle">❤️</div>
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                  </div>
                   <span>${likesCount}</span>
                 </div>
                 <div class="tiktok-action-item" onclick="simulateTiktokComment('${postId}')">
-                  <div class="tiktok-icon-circle">💬</div>
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                  </div>
                   <span>169</span>
                 </div>
                 <div class="tiktok-action-item" onclick="alert('ვიდეო შენახულია სანიშნეებში!')">
-                  <div class="tiktok-icon-circle">🔖</div>
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                  </div>
                   <span>1857</span>
                 </div>
                 <div class="tiktok-action-item" onclick="navigator.clipboard.writeText(window.location.href); alert('ბმული კოპირებულია გაზიარებისთვის!');">
-                  <div class="tiktok-icon-circle">🔗</div>
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+                  </div>
                   <span>341</span>
                 </div>
               </div>
