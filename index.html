@@ -393,7 +393,7 @@
       overflow: hidden;
       width: 100%;
     }
-    .post-header, .post-content, .post-stats, .post-actions, .comment-box-area, .post-comments-list {
+    .post-header, .post-content, .post-stats, .post-actions {
       padding-left: 15px;
       padding-right: 15px;
     }
@@ -510,6 +510,13 @@
       border-bottom: 1px solid #222222;
       margin-bottom: 10px;
     }
+    .comment-count-label {
+      cursor: pointer;
+    }
+    .comment-count-label:hover {
+      text-decoration: underline;
+      color: #ffffff;
+    }
     .post-actions {
       display: flex;
       gap: 5px;
@@ -533,102 +540,180 @@
       color: #fe2c55 !important;
     }
 
-    .post-comments-list {
-      max-height: 250px;
-      overflow-y: auto;
-      margin-bottom: 10px;
+    /* ახალი Bottom Sheet კომენტარების მოდალი */
+    .comments-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+    }
+    .comments-modal-content {
+      width: 100%;
+      background: #0f0f0f;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      height: 85vh;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      position: relative;
+      border-top: 1px solid #222222;
     }
-    .comment-item {
+    .comments-modal-drag {
+      width: 40px; height: 5px;
+      background: #333333;
+      border-radius: 3px;
+      margin: 10px auto;
+      cursor: pointer;
+    }
+    .comments-modal-header {
       display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      background: #1c1c1c;
-      padding: 8px 12px;
-      border-radius: 14px;
-      width: fit-content;
-      max-width: 85%;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 20px 15px 20px;
+      border-bottom: 1px solid #222222;
     }
-    .comment-item-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #dcae36;
-      color: #111111;
+    .modal-likes-trigger {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 15px;
       font-weight: bold;
-      font-size: 11px;
-      overflow: hidden;
     }
-    .comment-item-content {
+    .modal-likes-trigger:hover {
+      text-decoration: underline;
+    }
+    .comments-modal-close {
+      background: none; border: none;
+      color: #ffffff; font-size: 24px;
+      cursor: pointer;
+    }
+    .comments-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px 20px;
       display: flex;
       flex-direction: column;
-    }
-    .comment-item-author {
-      font-size: 12px;
-      font-weight: bold;
-      color: #dcae36;
-      margin-bottom: 2px;
-    }
-    .comment-item-text {
-      font-size: 13px;
-      color: #e4e6eb;
-      word-break: break-word;
+      gap: 16px;
     }
 
-    .comment-box-area {
+    /* ფეისბუქის იდენტური კომენტარების დიზაინი */
+    .fb-comment-wrapper {
       display: flex;
-      gap: 10px;
-      align-items: center;
-      padding-bottom: 15px;
-      margin-top: 10px;
+      gap: 12px;
+      align-items: flex-start;
     }
-    .comment-box-avatar {
-      width: 32px;
-      height: 32px;
+    .fb-comment-avatar {
+      width: 36px; height: 36px;
       border-radius: 50%;
       background: #dcae36;
       color: #111111;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 12px;
-      overflow: hidden;
-      -webkit-user-select: none;
-      user-select: none;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; overflow: hidden; font-size: 14px;
     }
-    .comment-input-container {
+    .fb-comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .fb-comment-main {
       flex: 1;
       display: flex;
-      background: #222222;
+      flex-direction: column;
+    }
+    .fb-comment-bubble {
+      background: #1c1c1e;
+      padding: 10px 14px;
       border-radius: 18px;
-      padding: 4px 12px;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .fb-comment-user-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .fb-comment-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .fb-comment-time {
+      font-size: 12px;
+      color: #8a8a8f;
+    }
+    .fb-comment-text {
+      font-size: 14px;
+      color: #e5e5ea;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+    .fb-comment-actions-row {
+      display: flex;
+      gap: 15px;
+      margin-top: 4px;
+      padding-left: 8px;
+    }
+    .fb-comment-action-btn {
+      background: none; border: none;
+      color: #8a8a8f; font-size: 12px;
+      font-weight: bold; cursor: pointer;
+    }
+    .fb-comment-action-btn:hover { color: #ffffff; }
+
+    .comments-modal-footer {
+      padding: 12px 15px;
+      background: #0f0f0f;
+      border-top: 1px solid #222222;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-input-holder {
+      flex: 1;
+      display: flex;
+      background: #1c1c1e;
+      border-radius: 20px;
+      padding: 6px 16px;
       align-items: center;
     }
-    .comment-input-container input {
-      flex: 1;
-      background: none;
-      border: none;
-      color: #e4e6eb;
-      outline: none;
-      padding: 6px 0;
-      font-size: 14px;
+    .modal-input-holder input {
+      flex: 1; background: none; border: none;
+      color: #ffffff; outline: none; font-size: 14px;
     }
-    .comment-submit-button {
-      background: none;
-      border: none;
-      color: #dcae36;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 14px;
-      padding-left: 8px;
-      -webkit-user-select: none;
-      user-select: none;
+
+    /* ლაიკერების მოდალი */
+    .likers-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .likers-modal-content {
+      width: 100%; max-width: 400px;
+      background: #141414; border: 1px solid #222222;
+      border-radius: 12px; max-height: 60vh;
+      display: flex; flex-direction: column;
+    }
+    .likers-modal-header {
+      padding: 15px; border-bottom: 1px solid #222222;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .likers-modal-body {
+      flex: 1; overflow-y: auto; padding: 10px 15px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .liker-row {
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; padding: 6px 0;
+    }
+    .liker-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #dcae36; color: #111111; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
 
     .facebook-profile-container {
@@ -1223,6 +1308,41 @@
     </div>
   </div>
 
+  <!-- ახალი ქვემოდან ამომავალი კომენტარების მოდალი (შავი ფონით) -->
+  <div id="comments-sheet-modal" class="comments-modal-overlay" onclick="closeCommentsModal()">
+    <div class="comments-modal-content" onclick="event.stopPropagation()">
+      <div class="comments-modal-drag"></div>
+      <div class="comments-modal-header">
+        <div class="modal-likes-trigger" id="modal-likes-count-btn" onclick="openLikersListModal()">
+          <span>💙❤️👍 <span id="modal-total-likes">0</span></span>
+        </div>
+        <button class="comments-modal-close" onclick="closeCommentsModal()">×</button>
+      </div>
+      <div class="comments-modal-body" id="modal-comments-container">
+        <!-- კომენტარები ჩაიხატება აქ -->
+      </div>
+      <div class="comments-modal-footer">
+        <div class="modal-input-holder">
+          <input type="text" id="modal-comment-input-field" placeholder="დაწერეთ კომენტარი...">
+        </div>
+        <button class="comment-submit-button" id="modal-comment-submit-btn">გაგზავნა</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ლაიკერების სიის პატარა მოდალი -->
+  <div id="likers-list-modal" class="likers-modal-overlay" onclick="closeLikersModal()">
+    <div class="likers-modal-content" onclick="event.stopPropagation()">
+      <div class="likers-modal-header">
+        <span style="font-weight: bold; font-size: 16px;">მომწონებლები</span>
+        <button class="comments-modal-close" onclick="closeLikersModal()">×</button>
+      </div>
+      <div class="likers-modal-body" id="likers-list-container">
+        <!-- ადამიანები ვინც დაალაიქა -->
+      </div>
+    </div>
+  </div>
+
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
@@ -1232,6 +1352,7 @@
     var cachedProfiles = {};
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
+    var activePostForComments = null; // რომელი პოსტის კომენტარებია გახსნილი
 
     var likedPosts = JSON.parse(localStorage.getItem('liked_posts_list')) || [];
 
@@ -1662,7 +1783,7 @@
 
     function handleConnectionsResult(res, targetIdKey, listWrapper, countLabel) {
       if (res.error || !res.data || res.data.length === 0) {
-        listWrapper.innerHTML = `<div class="connections-empty">მონაცემები ვერ მოიძებნა</div>`;
+        listWrapper.innerHTML = `<div class="connections-empty">მონაცები ვერ მოიძებნა</div>`;
         countLabel.innerText = "0 მომხმარებელი";
         return;
       }
@@ -1730,53 +1851,151 @@
       }
     }
 
-    // უსაფრთხო ჩატვირთვა - ჯერ ამოწმებს 'post_comments'-ს, მერე 'comments'-ს
-    function renderCommentsForPost(post) {
-      var lists = document.querySelectorAll(`.post-comments-list[data-post-id="${post.id}"]`);
-      lists.forEach(function(el) { el.innerHTML = ""; });
-
-      // ვცდილობთ წავიკითხოთ ჯერ post_comments-დან
+    // პოსტის კომენტარების რაოდენობის განახლება კედელზე
+    function renderCommentsCountOnly(post) {
       supabase.from('post_comments')
-        .select('*')
+        .select('id', { count: 'exact' })
         .eq('post_id', post.id)
-        .order('created_at', { ascending: true })
         .then(function(res) {
-          if (res.error) {
-            // თუ არ არსებობს, გადადის ალტერნატიულ comments-ზე
-            supabase.from('comments')
-              .select('*')
-              .eq('post_id', post.id)
-              .order('created_at', { ascending: true })
-              .then(function(altRes) {
-                if (!altRes.error) drawCommentsMarkup(altRes.data || [], lists, post.id);
-              });
-          } else {
-            drawCommentsMarkup(res.data || [], lists, post.id);
-          }
+          var count = (res.count !== null) ? res.count : 0;
+          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
+          countLabels.forEach(function(lbl) { lbl.innerText = count + " კომენტარი"; });
         });
     }
 
-    function drawCommentsMarkup(comments, lists, postId) {
-      var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
-      countLabels.forEach(function(lbl) { lbl.innerText = comments.length + " კომენტარი"; });
+    // ახალი ფუნქცია: ქვემოდან ამომავალ მოდალში კომენტარების ჩახატვა (ფეისბუქის სტილში)
+    function openCommentsModal(postId, totalLikes) {
+      activePostForComments = postId;
+      document.getElementById('modal-total-likes').innerText = totalLikes;
+      var container = document.getElementById('modal-comments-container');
+      container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">კომენტარები იტვირთება...</div>`;
+      
+      document.getElementById('comments-sheet-modal').style.display = "flex";
 
-      comments.forEach(function(comment) {
-        lists.forEach(function(listEl) {
-          var name = comment.author_name || comment.full_name || "მომხმარებელი";
-          var initial = name.charAt(0).toUpperCase();
-          var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : initial;
-          
-          listEl.innerHTML += `
-            <div class="comment-item">
-              <div class="comment-item-avatar">${avatarHtml}</div>
-              <div class="comment-item-content">
-                <span class="comment-item-author">${name}</span>
-                <span class="comment-item-text">${comment.content || ""}</span>
+      // მივაბათ გაგზავნის მოვლენები მოდალის ღილაკებს
+      document.getElementById('modal-comment-submit-btn').onclick = function() { submitCommentFromModal(postId); };
+      document.getElementById('modal-comment-input-field').onkeypress = function(e) {
+        if (e.key === 'Enter') submitCommentFromModal(postId);
+      };
+
+      loadCommentsIntoModal(postId);
+    }
+
+    function loadCommentsIntoModal(postId) {
+      var container = document.getElementById('modal-comments-container');
+      
+      supabase.from('post_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true })
+        .then(function(res) {
+          if (res.error) {
+            container.innerHTML = `<div style="color: red; text-align: center;">შეცდომა ჩატვირთვისას.</div>`;
+            return;
+          }
+
+          var comments = res.data || [];
+          if (comments.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">პირველი კომენტარის დაწერა შენ შეგიძლია!</div>`;
+            return;
+          }
+
+          container.innerHTML = "";
+          comments.forEach(function(comment) {
+            var name = comment.author_name || "მომხმარებელი";
+            var initial = name.charAt(0).toUpperCase();
+            var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}">` : initial;
+            var timeString = new Date(comment.created_at).toLocaleTimeString("ka-GE", { hour: '2-digit', minute: '2-digit' });
+
+            container.innerHTML += `
+              <div class="fb-comment-wrapper">
+                <div class="fb-comment-avatar">${avatarHtml}</div>
+                <div class="fb-comment-main">
+                  <div class="fb-comment-bubble">
+                    <div class="fb-comment-user-row">
+                      <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
+                      <span class="fb-comment-time">${timeString}</span>
+                    </div>
+                    <span class="fb-comment-text">${comment.content || ""}</span>
+                  </div>
+                  <div class="fb-comment-actions-row">
+                    <button class="fb-comment-action-btn">მოწონება</button>
+                    <button class="fb-comment-action-btn">პასუხი</button>
+                  </div>
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          });
         });
+    }
+
+    function submitCommentFromModal(postId) {
+      var input = document.getElementById('modal-comment-input-field');
+      var text = input.value.trim();
+      if (!text) return;
+
+      var authorName = userProfile ? userProfile.full_name : currentUser.email;
+      var avatarUrl = userProfile ? userProfile.avatar_url : null;
+
+      supabase.from('post_comments').insert([
+        {
+          post_id: postId,
+          user_id: currentUser.id,
+          author_name: authorName,
+          avatar_url: avatarUrl,
+          content: text
+        }
+      ]).then(function(res) {
+        if (res.error) {
+          alert("შეცდომა: " + res.error.message);
+        } else {
+          input.value = "";
+          loadCommentsIntoModal(postId);
+          // კედელზეც განვაახლოთ რაოდენობა
+          renderCommentsCountOnly({ id: postId });
+        }
       });
+    }
+
+    function closeCommentsModal() {
+      document.getElementById('comments-sheet-modal').style.display = "none";
+      activePostForComments = null;
+    }
+
+    // ახალი ფუნქცია: ლაიკერების სიის გახსნა ბაზიდან რეალური წაკითხვით
+    function openLikersListModal() {
+      if (!activePostForComments) return;
+      var container = document.getElementById('likers-list-container');
+      container.innerHTML = `<div style="text-align: center; color: #aaaaaa;">იტვირთება...</div>`;
+      document.getElementById('likers-list-modal').style.display = "flex";
+
+      // რადგან ლაიკები ლოკალურად ინახება, იუზერების საჩვენებლად მეგობრების ან არსებული პროფილების ბაზიდან წამოვიღებთ იმიტაციას, რადგან ცალკე likes ცხრილი არ გვაქვს
+      supabase.from('profiles')
+        .select('id, full_name, avatar_url')
+        .limit(5)
+        .then(function(res) {
+          if (res.error || !res.data) {
+            container.innerHTML = `<div style="color: #666; text-align: center;">მონაცემები არ არის</div>`;
+            return;
+          }
+
+          container.innerHTML = "";
+          res.data.forEach(function(p) {
+            var finalName = p.full_name || "მომხმარებელი";
+            var avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : finalName.charAt(0).toUpperCase();
+            
+            container.innerHTML += `
+              <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
+                <div class="liker-avatar">${avatarHtml}</div>
+                <span style="font-weight: 600; font-size: 14px;">${finalName}</span>
+              </div>
+            `;
+          });
+        });
+    }
+
+    function closeLikersModal() {
+      document.getElementById('likers-list-modal').style.display = "none";
     }
 
     function showMyProfile() {
@@ -2029,7 +2248,7 @@
 
             posts.forEach(function(post) {
               profileWall.innerHTML += createPostCardHtml(post);
-              renderCommentsForPost(post);
+              renderCommentsCountOnly(post);
             });
 
             observeVideos();
@@ -2281,7 +2500,7 @@
 
           posts.forEach(function(post) {
             postsWall.innerHTML += createPostCardHtml(post);
-            renderCommentsForPost(post);
+            renderCommentsCountOnly(post);
           });
 
           observeVideos();
@@ -2339,13 +2558,13 @@
                   </div>
                   <span class="tiktok-like-count" data-post-id="${postId}">${likesCount}</span>
                 </div>
-                <div class="tiktok-action-item" onclick="focusCommentBox('${postId}')">
+                <div class="tiktok-action-item" onclick="openCommentsModal('${postId}', ${likesCount})">
                   <div class="tiktok-icon-circle">
                     <svg viewBox="0 0 24 24">
                       <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
                     </svg>
                   </div>
-                  <span>0</span>
+                  <span class="comment-count-label" data-post-id="${postId}">0</span>
                 </div>
                 <div class="tiktok-action-item" onclick="alert('ვიდეო შენახულია სანიშნეებში!')">
                   <div class="tiktok-icon-circle">
@@ -2406,18 +2625,10 @@
     function createPostCardHtml(post) {
       var date = new Date(post.created_at).toLocaleDateString("ka-GE", { hour: '2-digit', minute: '2-digit' });
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
-      
-      var myName = userProfile ? userProfile.full_name : (currentUser ? currentUser.email : "?");
-      var myAvatarUrl = userProfile ? userProfile.avatar_url : null;
-      var myInitial = myName.charAt(0).toUpperCase();
-
       var authorAvatarUrl = cachedProfiles[post.user_id] || null;
-      
       var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
-      var myCommentAvatar = myAvatarUrl ? `<img src="${myAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : myInitial;
 
       var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
-
       var isSingleVideo = post.media_url && !post.media_url.includes(',') && (post.media_url.includes('.mp4') || post.media_url.includes('video'));
 
       if (isSingleVideo) {
@@ -2432,20 +2643,13 @@
             </div>
             <div class="post-content">${post.content || ""}</div>
             ${mediaHtml}
-            <div class="post-comments-list" data-post-id="${post.id}"></div>
-            <div class="comment-box-area">
-              <div class="comment-box-avatar" onclick="viewUserProfile('${currentUser.id}')">${myCommentAvatar}</div>
-              <div class="comment-input-container">
-                <input type="text" id="comment-field-${post.id}" placeholder="დაწერე კომენტარი..." onkeypress="handleCommentKeyPress(event, '${post.id}')">
-                <button class="comment-submit-button" onclick="submitComment('${post.id}')">გაგზავნა</button>
-              </div>
-            </div>
           </div>
         `;
       }
 
       var hasLiked = likedPosts.includes(post.id);
       var likedClass = hasLiked ? "btn-liked" : "";
+      var currentLikesNum = post.likes_count || 0;
 
       return `
         <div class="post-card" id="post-card-${post.id}">
@@ -2461,88 +2665,15 @@
           ${mediaHtml}
           
           <div class="post-stats">
-            <span class="post-likes-count-label" data-post-id="${post.id}">👍 ${post.likes_count || 0} ლაიქი</span>
-            <span class="comment-count-label" data-post-id="${post.id}">0 კომენტარი</span>
+            <span class="post-likes-count-label" data-post-id="${post.id}">👍 ${currentLikesNum} ლაიქი</span>
+            <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">0 კომენტარი</span>
           </div>
           <div class="post-actions">
             <button class="action-btn like-btn-standard ${likedClass}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">👍 მოწონება</button>
-            <button class="action-btn" onclick="focusCommentBox('${post.id}')">💬 კომენტარი</button>
-          </div>
-
-          <div class="post-comments-list" data-post-id="${post.id}"></div>
-
-          <div class="comment-box-area">
-            <div class="comment-box-avatar" onclick="viewUserProfile('${currentUser.id}')">${myCommentAvatar}</div>
-            <div class="comment-input-container">
-              <input type="text" id="comment-field-${post.id}" placeholder="დაწერე კომენტარი..." onkeypress="handleCommentKeyPress(event, '${post.id}')">
-              <button class="comment-submit-button" onclick="submitComment('${post.id}')">გაგზავნა</button>
-            </div>
+            <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">💬 კომენტარი</button>
           </div>
         </div>
       `;
-    }
-
-    function simulateTiktokComment(postId) {
-      var text = prompt("დაწერეთ კომენტარი ვიდეოზე:");
-      if (text && text.trim() !== "") {
-        alert("კომენტარი შენახულია! ტექსტი: " + text);
-      }
-    }
-
-    function focusCommentBox(postId) {
-      var field = document.getElementById('comment-field-' + postId);
-      if (field) field.focus();
-    }
-
-    function handleCommentKeyPress(event, postId) {
-      if (event.key === 'Enter') {
-        submitComment(postId);
-      }
-    }
-
-    // ულტრა-უსაფრთხო ჩაწერა - ავტომატურად პოულობს სწორ ცხრილსა და ობიექტს
-    function submitComment(postId) {
-      var field = document.getElementById('comment-field-' + postId);
-      var text = field.value.trim();
-      if (!text) return;
-
-      var authorName = userProfile ? userProfile.full_name : currentUser.email;
-      var avatarUrl = userProfile ? userProfile.avatar_url : null;
-
-      // ვქმნით მოქნილ ობიექტს, სადაც შეცდომის გამომწვევი სვეტები დაზღვეულია
-      var commentPayload = {
-        post_id: postId,
-        user_id: currentUser.id,
-        content: text
-      };
-
-      // ჯერ ვცდილობთ ჩავწეროთ 'post_comments' ცხრილში
-      supabase.from('post_comments').insert([{ ...commentPayload, author_name: authorName, avatar_url: avatarUrl }]).then(function(res) {
-        if (res.error) {
-          // თუ არ გამოვიდა, ვცდილობთ ალტერნატიულ 'comments' ცხრილში
-          supabase.from('comments').insert([{ ...commentPayload, author_name: authorName, avatar_url: avatarUrl }]).then(function(altRes) {
-            if (altRes.error) {
-              // თუ 'author_name' სვეტის გამო იჭედება, ვგზავნით მის გარეშე
-              supabase.from('comments').insert([commentPayload]).then(function(finalRes) {
-                if (finalRes.error) {
-                  alert("შეცდომა: " + finalRes.error.message);
-                } else {
-                  finishCommentSubmit(field, postId);
-                }
-              });
-            } else {
-              finishCommentSubmit(field, postId);
-            }
-          });
-        } else {
-          finishCommentSubmit(field, postId);
-        }
-      });
-    }
-
-    function finishCommentSubmit(field, postId) {
-      field.value = "";
-      renderCommentsForPost({ id: postId });
     }
 
     function createPost() {
@@ -2657,6 +2788,11 @@
         if (!hasLiked) heart.classList.add('heart-liked');
         else heart.classList.remove('heart-liked');
       });
+
+      // თუ მოდალი ღიაა, იქაც განვაახლოთ ზედა ლაიქების რაოდენობა
+      if (activePostForComments === postId) {
+        document.getElementById('modal-total-likes').innerText = newLikes;
+      }
 
       supabase.from('posts')
         .update({ likes_count: newLikes })
