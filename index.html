@@ -119,6 +119,150 @@
       cursor: pointer;
       font-weight: bold;
     }
+
+    /* ==================== ფეისბუქის იდენტური სთორის შექმნის პანელის CSS ==================== */
+    .create-story-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000000;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      color: white;
+      animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .create-story-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #222;
+    }
+    .create-story-close {
+      font-size: 28px;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .create-story-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .create-story-settings-btn {
+      font-size: 22px;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .create-story-tiles {
+      display: flex;
+      gap: 12px;
+      padding: 20px 15px;
+      overflow-x: auto;
+    }
+    .story-tile-btn {
+      flex: 0 0 100px;
+      height: 120px;
+      background: #1c1e21;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid #333;
+      cursor: pointer;
+    }
+    .story-tile-icon {
+      font-size: 24px;
+      background: #2a2f35;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-tile-label {
+      font-size: 13px;
+      color: #e4e6eb;
+    }
+    .gallery-section-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+    }
+    .gallery-title-select {
+      font-size: 16px;
+      font-weight: bold;
+      background: none;
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .gallery-multi-btn {
+      background: #242526;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .gallery-placeholder-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      padding: 0 2px;
+      overflow-y: auto;
+    }
+    .gallery-grid-box {
+      background: #18191a;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+    }
+    .gallery-grid-box:hover {
+      opacity: 0.8;
+    }
+    .floating-camera-btn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #1877f2;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      border: none;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -214,7 +358,7 @@
       <!-- ==================== STORIES SECTION (FACEBOOK STYLES) - ახლა პოსტის ველის დაბლაა ==================== -->
       <div class="stories-wrapper">
         <!-- ჩემი სთორის შექმნის ბარათი -->
-        <div class="story-card create-story-card" onclick="triggerStoryUpload()">
+        <div class="story-card create-story-card" onclick="openCreateStoryPanel()">
           <div class="story-image-bg" id="my-story-bg-avatar"></div>
           <div class="create-story-btn-wrapper">
             <div class="create-story-plus">+</div>
@@ -442,6 +586,50 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- ==================== ახალი: ფეისბუქის იდენტური სთორის შექმნის მენიუ (დაბლიდან ამოსასვლელი) ==================== -->
+  <div id="create-story-modal" class="create-story-modal-overlay" style="display: none;">
+    <div class="create-story-header">
+      <button class="create-story-close" onclick="closeCreateStoryPanel()">×</button>
+      <div class="create-story-title">შექმენით სიუჟეტი</div>
+      <button class="create-story-settings-btn">⚙️</button>
+    </div>
+
+    <!-- ზედა ფილების ბლოკი -->
+    <div class="create-story-tiles">
+      <div class="story-tile-btn" onclick="triggerStoryUpload()">
+        <div class="story-tile-icon">🎵</div>
+        <div class="story-tile-label">მუსიკა</div>
+      </div>
+      <div class="story-tile-btn" onclick="triggerStoryUpload()">
+        <div class="story-tile-icon">Aa</div>
+        <div class="story-tile-label">ტექსტი</div>
+      </div>
+      <div class="story-tile-btn" onclick="triggerStoryUpload()">
+        <div class="story-tile-icon">📱</div>
+        <div class="story-tile-label">კოლაჟი</div>
+      </div>
+    </div>
+
+    <!-- გალერეის სათაური -->
+    <div class="gallery-section-title-row">
+      <button class="gallery-title-select">გალერეა ▾</button>
+      <button class="gallery-multi-btn" onclick="triggerStoryUpload()">რამდენიმეს მონიშვნა</button>
+    </div>
+
+    <!-- იმიტირებული გალერეის ქსელი რეალური ატვირთვის ფუნქციით -->
+    <div class="gallery-placeholder-grid">
+      <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300');" onclick="triggerStoryUpload()"></div>
+      <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=300');" onclick="triggerStoryUpload()"></div>
+      <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1501854140801-50d01698950b?w=300');" onclick="triggerStoryUpload()"></div>
+      <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300');" onclick="triggerStoryUpload()"></div>
+      <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=300');" onclick="triggerStoryUpload()"></div>
+      <div class="gallery-grid-box" style="background-image: url('https://images.unsplash.com/photo-1472214222541-d510753a8707?w=300');" onclick="triggerStoryUpload()"></div>
+    </div>
+
+    <!-- მცურავი კამერის ღილაკი -->
+    <button class="floating-camera-btn" onclick="triggerStoryUpload()">📷</button>
   </div>
 
   <script>
@@ -1012,7 +1200,7 @@
         document.getElementById('cover-camera-btn').style.display = "flex";
 
         document.getElementById('profile-action-panel').innerHTML = `
-          <button class="fb-btn-primary">
+          <button class="fb-btn-primary" onclick="openCreateStoryPanel()">
             <svg class="fb-btn-icon" viewBox="0 0 20 20"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
             ისტორიაში დამატება
           </button>
@@ -1720,6 +1908,15 @@
 
     /* ==================== FACEBOOK STORIES JS LOGIC ==================== */
     
+    // ახალი: სთორის შექმნის პანელის გამოჩენა/დამალვა
+    function openCreateStoryPanel() {
+      document.getElementById('create-story-modal').style.display = "flex";
+    }
+
+    function closeCreateStoryPanel() {
+      document.getElementById('create-story-modal').style.display = "none";
+    }
+
     // ატვირთვის ღილაკის გამოძახება
     function triggerStoryUpload() {
       document.getElementById('story-file-input').click();
@@ -1734,6 +1931,7 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_story_" + Date.now() + "." + fileExt;
 
+      closeCreateStoryPanel(); // ვმალავთ პანელს ატვირთვის დაწყებისთანავე
       alert("სიუჟეტი იტვირთება...");
 
       supabase.storage.from('stories').upload(fileName, file).then(function(storageRes) {
