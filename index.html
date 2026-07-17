@@ -1634,9 +1634,11 @@ console.log("დალაიქებული პოსტები:", likedPos
 
     function likePost(postId, currentLikes, isTiktokView) {
     var hasLiked = likedPosts.includes(postId);
+    
+    // UI განახლება (მყისიერი)
     var newLikes = hasLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-
-    // 1. ლოკალური მასივის განახლება
+    
+    // ლოკალური მასივის განახლება
     if (hasLiked) {
         likedPosts = likedPosts.filter(function(id) { return id !== postId; });
     } else {
@@ -1644,33 +1646,39 @@ console.log("დალაიქებული პოსტები:", likedPos
     }
     localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
 
-    // 2. UI-ს განახლება (შენი ორიგინალი სტილით)
-    if (isTiktokView) {
-        var heartSvg = document.getElementById('tiktok-heart-' + postId);
-        var likeSpan = document.getElementById('tiktok-like-count-' + postId);
-        if (likeSpan) likeSpan.innerText = newLikes;
-        if (heartSvg) {
-            !hasLiked ? heartSvg.classList.add('heart-liked') : heartSvg.classList.remove('heart-liked');
-        }
-    } else {
-        var standardBtn = document.getElementById('like-btn-standard-' + postId);
-        var standardLabel = document.getElementById('post-likes-count-label-' + postId);
-        if (standardLabel) standardLabel.innerText = "👍 " + newLikes + " ლაიქი";
-        if (standardBtn) {
-            !hasLiked ? standardBtn.classList.add('btn-liked') : standardBtn.classList.remove('btn-liked');
-        }
-    }
+    // განაახლე UI ვიზუალურად
+    updateLikeUI(postId, newLikes, !hasLiked, isTiktokView);
 
-    // 3. სუპაბეისის სინქრონიზაცია (ორიგინალი სტილით)
+    // ბაზაში გაგზავნა
     supabase.from('posts')
         .update({ likes_count: newLikes })
         .eq('id', postId)
         .then(function(res) {
             if (res.error) {
-                console.error("შეცდომა:", res.error);
-                // თუ შეცდომაა, დაუბრუნე ძველი მნიშვნელობა UI-ს
+                console.error("ბაზაში შეცდომაა:", res.error);
+                // შეცდომის შემთხვევაში დააბრუნე ძველი მნიშვნელობა
+                alert("ლაიქის დაფიქსირება ვერ მოხერხდა.");
             }
         });
+}
+
+// დამხმარე ფუნქცია UI-სთვის
+function updateLikeUI(postId, count, isLiked, isTiktokView) {
+    if (isTiktokView) {
+        var heartSvg = document.getElementById('tiktok-heart-' + postId);
+        var likeSpan = document.getElementById('tiktok-like-count-' + postId);
+        if (likeSpan) likeSpan.innerText = count;
+        if (heartSvg) {
+            isLiked ? heartSvg.classList.add('heart-liked') : heartSvg.classList.remove('heart-liked');
+        }
+    } else {
+        var standardBtn = document.getElementById('like-btn-standard-' + postId);
+        var standardLabel = document.getElementById('post-likes-count-label-' + postId);
+        if (standardLabel) standardLabel.innerText = "♥️ " + count + " ლაიქი";
+        if (standardBtn) {
+            isLiked ? standardBtn.classList.add('btn-liked') : standardBtn.classList.remove('btn-liked');
+        }
+    }
 }
 
     function logout() {
