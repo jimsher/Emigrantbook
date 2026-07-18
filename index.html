@@ -348,17 +348,6 @@
       position: absolute;
       left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
     }
-    .file-upload-badge {
-      background: #dcae36;
-      color: #111111;
-      border: none;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-weight: bold;
-      cursor: pointer;
-      -webkit-user-select: none;
-      user-select: none;
-    }
     .publish-btn {
       background: #dcae36;
       color: #111111;
@@ -377,6 +366,62 @@
       margin-top: 8px;
       font-size: 13px;
       color: #dcae36;
+    }
+
+    /* ფეისბუქის სტილის ახალი პოსტის შექმნის ზოლი პროფილისთვის */
+    .fb-profile-create-post-bar {
+      background: #141414;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #222222;
+      border-top: 1px solid #222222;
+      width: 100%;
+    }
+    .fb-bar-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #dcae36;
+      color: #111111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .fb-bar-input-field {
+      flex: 1;
+      background: #222222;
+      border: 1px solid #2d2d2d;
+      border-radius: 20px;
+      padding: 10px 16px;
+      color: #e4e6eb;
+      font-size: 14px;
+      outline: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    .fb-bar-input-field:hover {
+      background: #2a2a2a;
+    }
+    .fb-bar-photo-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      flex-shrink: 0;
+    }
+    .fb-bar-photo-icon {
+      width: 24px;
+      height: 24px;
+      fill: #45bd62; /* მწვანე ფერის ფოტოს იკონკა */
     }
 
     .stories-wrapper {
@@ -454,7 +499,6 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
       z-index: 2;
     }
-    .story-username-label img { width: 100%; height: 100%; object-fit: cover; }
     .story-card-video-preview { width: 100%; height: 100%; object-fit: cover; }
 
     .post-card {
@@ -509,7 +553,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                 
+                                   
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -654,7 +698,6 @@
       fill: #1877f2 !important;
     }
 
-    /* Facebook-ის იდენტური რეაქციების პანელი */
     .fb-reactions-panel {
       position: absolute;
       bottom: 45px;
@@ -808,7 +851,6 @@
     .fb-comment-action-btn:hover { color: #ffffff; }
     .fb-comment-action-btn.comment-liked { color: #1877f2 !important; }
 
-    /* შიდა პასუხების (Replies) დიზაინი */
     .fb-replies-container {
       margin-left: 48px;
       display: flex;
@@ -890,7 +932,6 @@
       cursor: pointer; padding: 8px 0;
     }
     
-    /* ავატარის კონტეინერი ბეიჯის სწორი პოზიციონირებისთვის */
     .liker-avatar-container {
       position: relative;
       width: 40px; height: 40px;
@@ -900,7 +941,6 @@
       background: #dcae36; color: #111111; font-weight: bold;
       display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
-    /* ფეისბუქის იდენტური რეაქციის სმაილის ბეიჯი ავატარის კუთხეში */
     .liker-reaction-badge {
       position: absolute;
       bottom: -2px;
@@ -1329,7 +1369,6 @@
           <div class="notification-badge" id="requests-badge-profile" style="display: none;">0</div>
         </button>
         
-        <!-- 3 ხაზიანი ბურგერ მენიუს ღილაკი ჰეადერში -->
         <button class="burger-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)">
           <div class="burger-line"></div>
           <div class="burger-line"></div>
@@ -1338,7 +1377,6 @@
       </div>
     </div>
 
-    <!-- სლაიდ მენიუ (ვერტიკალურად, ნახევარ ეკრანზე) -->
     <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
     <div class="side-menu-content" id="side-menu-content">
       <button class="side-menu-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
@@ -1404,18 +1442,27 @@
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
 
+        <!-- ფოტოზე ასახული ფეისბუქის იდენტური ჰორიზონტალური პოსტის შესაქმნელი ზოლი პროფილში -->
+        <div class="fb-profile-create-post-bar" id="profile-create-post-bar-section">
+          <div class="fb-bar-avatar" id="fb-bar-avatar-element">?</div>
+          <input type="text" class="fb-bar-input-field" placeholder="საკუთარ აზრებს ხომ არ გაგვიზიარებდით?" readonly onclick="openProfilePostModal()">
+          <button class="fb-bar-photo-btn" onclick="triggerProfilePostPhoto()">
+            <svg class="fb-bar-photo-icon" viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/>
+            </svg>
+          </button>
+        </div>
+
         <div class="profile-tabs">
           <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">პოსტები</button>
           <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">ფოტოები</button>
           <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">ვიდეოები</button>
         </div>
 
-        <!-- პოსტების კედელი -->
         <div id="profile-posts-wall">
           <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
         </div>
 
-        <!-- ფოტოების კოლაჟის კედელი -->
         <div id="profile-photos-wall" style="display: none;">
           <div style="text-align: center; padding: 20px; color: #aaaaaa;">ფოტოები იტვირთება...</div>
         </div>
@@ -1532,7 +1579,6 @@
       </div>
       <div class="comments-modal-body" id="modal-comments-container"></div>
       
-      <!-- აქტიური Reply მინი პანელი -->
       <div id="reply-active-bar" class="reply-input-active-bar">
         <span id="reply-active-text">პასუხი მომხმარებელს...</span>
         <span style="cursor:pointer;color:#ff4d4f;font-weight:bold;" onclick="cancelReplyMode()">გაუქმება</span>
@@ -1602,7 +1648,6 @@
       });
     }
 
-    /* ბურგერ მენიუს ტოგლის ახალი ფუნქცია */
     function toggleSideMenu(event) {
       if(event) event.stopPropagation();
       var menu = document.getElementById('side-menu-content');
@@ -1651,7 +1696,6 @@
       if (dropdownProfile) dropdownProfile.style.display = 'none';
       document.querySelectorAll('.fb-reactions-panel').forEach(function(p) { p.style.display = 'none'; });
       
-      // ეკრანზე სხვაგან დაჭერისას ბურგერ მენიუს დახურვა
       var menu = document.getElementById('side-menu-content');
       var overlay = document.getElementById('side-menu-overlay');
       if(menu && menu.classList.contains('open')) {
@@ -1732,6 +1776,7 @@
              
             renderAvatar('header-avatar-btn', avatarUrl, finalName);
             renderAvatar('profile-big-avatar', avatarUrl, finalName);
+            renderAvatar('fb-bar-avatar-element', avatarUrl, finalName);
              
             var myStoryBg = document.getElementById('my-story-bg-avatar');
             if (myStoryBg) {
@@ -1756,6 +1801,25 @@
           showScreen('auth');
         }
       });
+    }
+
+    /* პროფილის პოსტის შექმნის დამხმარე ახალი ლოგიკა */
+    function openProfilePostModal() {
+      showScreen('home');
+      var txtArea = document.getElementById('post-text-input');
+      if (txtArea) {
+        txtArea.placeholder = "საკუთარ აზრებს ხომ არ გაგვიზიარებდით?";
+        txtArea.focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function triggerProfilePostPhoto() {
+      showScreen('home');
+      var fileInput = document.getElementById('post-media-file');
+      if (fileInput) {
+        fileInput.click();
+      }
     }
 
     function subscribeToPostsRealtime() {
@@ -2338,7 +2402,6 @@
       cancelReplyMode();
     }
 
-    /* განახლებული მომწონებლების სიის ფუნქცია სმაილების ასახვით */
     function openLikersListModal() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
@@ -2380,12 +2443,10 @@
             var finalName = p.full_name || "მომხმარებელი";
             var avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : finalName.charAt(0).toUpperCase();
             
-            // განვსაზღვროთ რა რეაქცია მისცა ამ მომხმარებელმა (საკუთარი თუ რენდომ მეგობრის)
             var userReaction = "👍"; 
             if (p.id === (currentUser ? currentUser.id : null)) {
               userReaction = postReactionMap[targetPostId] || "👍";
             } else {
-              // მეგობრებისთვის შემთხვევითობის პრინციპით ვანიჭებთ ლამაზ რეაქციებს, როგორც ფოტოზეა
               var randSeed = p.id.charCodeAt(0) % 4;
               if (randSeed === 1) userReaction = "❤️";
               else if (randSeed === 2) userReaction = "🥰";
@@ -2423,8 +2484,12 @@
         var coverUrl = userProfile ? userProfile.cover_url : null;
         
         renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        renderAvatar('fb-bar-avatar-element', avatarUrl, finalName);
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = currentUser.email;
+
+        // საკუთარ პროფილზე გამოვაჩინოთ პოსტის ზოლი, სხვისაზე დავმალოთ
+        document.getElementById('profile-create-post-bar-section').style.display = "flex";
 
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
@@ -2441,7 +2506,7 @@
         document.getElementById('profile-action-panel').innerHTML = `
           <button class="fb-btn-primary" onclick="triggerStoryUpload()">
             <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
-            ისლამი
+            ისტორია
           </button>
           <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
             <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
@@ -2456,7 +2521,7 @@
         document.getElementById('profile-burger-btn').style.display = "flex";
         
         renderProfileDetails(userProfile || {});
-        switchProfileTab('posts'); // თავიდან ყოველთვის პოსტები გამოჩნდეს
+        switchProfileTab('posts'); 
         showScreen('profile');
       });
     }
@@ -2484,6 +2549,9 @@
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = "Imigrant";
 
+        // სხვის პროფილზე ვმალავთ პოსტის შექმნის ზოლს
+        document.getElementById('profile-create-post-bar-section').style.display = "none";
+
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
           if (coverUrl) {
@@ -2495,25 +2563,21 @@
 
         document.getElementById('avatar-camera-btn').style.display = "none";
         document.getElementById('cover-camera-btn').style.display = "none";
-        
         document.getElementById('profile-burger-btn').style.display = "none";
 
         renderProfileDetails(selectedUser);
-        switchProfileTab('posts'); // თავიდან ყოველთვის პოსტები გამოჩნდეს
+        switchProfileTab('posts'); 
         showScreen('profile');
 
         updateFriendshipButtons(userId);
       });
     }
 
-    /* პროფილის ტაბების მართვისა და ფოტოების კოლაჟის გააქტიურების ახალი ფუნქცია */
     function switchProfileTab(tabName) {
-      // მოვაშოროთ active კლასი ყველა ტაბის ღილაკს
       document.getElementById('tab-btn-posts').classList.remove('active');
       document.getElementById('tab-btn-photos').classList.remove('active');
       document.getElementById('tab-btn-videos').classList.remove('active');
 
-      // დავმალოთ ორივე კედელი
       document.getElementById('profile-posts-wall').style.display = 'none';
       document.getElementById('profile-photos-wall').style.display = 'none';
 
@@ -2530,11 +2594,10 @@
       } else if (tabName === 'videos') {
         document.getElementById('tab-btn-videos').classList.add('active');
         document.getElementById('profile-posts-wall').style.display = 'block';
-        loadUserPosts(targetUserId); // ვიდეოების გაფილტვრა მოხდება საჭიროებისამებრ
+        loadUserPosts(targetUserId); 
       }
     }
 
-    /* მომხმარებლის ყველა პოსტიდან ფოტოების ამოღება და ფოტოკოლაჟის აგება */
     function loadUserPhotos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
       photosWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">ფოტოები იტვირთება...</div>';
@@ -2552,13 +2615,11 @@
           var posts = res.data || [];
           var allPhotoUrls = [];
 
-          // გამოვყოთ მხოლოდ ფოტო მედია ფაილები
           posts.forEach(function(post) {
             if (post.media_url) {
               var urls = post.media_url.split(',');
               urls.forEach(function(url) {
                 var cleanUrl = url.trim();
-                // გამოვრიცხოთ ვიდეოები, რადგან ეს ფოტოების ჩანართია
                 if (!cleanUrl.includes('.mp4') && !cleanUrl.includes('video')) {
                   allPhotoUrls.push(cleanUrl);
                 }
@@ -2571,10 +2632,7 @@
             return;
           }
 
-          // ვაქცევთ ერთიან სტრინგად მძიმეებით გამოყოფილს და გადავცემთ შენს buildCollageHtml-ს
           var joinedUrls = allPhotoUrls.join(',');
-          
-          // ვაშენებთ სუფთა, ერთიან კოლაჟს იდენტური დიზაინით
           var collageHtml = buildCollageHtml(joinedUrls, "photo_tab_view", 0);
           
           photosWall.innerHTML = `
@@ -2709,7 +2767,6 @@
 
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
-      // მხოლოდ მაშინ გამოვაჩინოთ იტვირთება, თუ ეს ტაბია აქტიური
       if(document.getElementById('tab-btn-posts').classList.contains('active')) {
          profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>';
       }
@@ -3370,6 +3427,10 @@
           document.getElementById('post-media-file').value = "";
           document.getElementById('selected-file-name').style.display = "none";
           loadPosts();
+          // თუ პროფილზე ვართ, პროფილის კედელიც განახლდეს
+          if (document.getElementById('profile-screen').style.display === 'block') {
+            loadUserPosts(currentUser.id);
+          }
         }
       });
     }
