@@ -238,6 +238,67 @@
       user-select: none;
     }
 
+    /* ბურგერ მენიუს ახალი სტილები */
+    .burger-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 5px;
+      z-index: 110;
+    }
+    .burger-line {
+      width: 25px;
+      height: 3px;
+      background-color: #e4e6eb;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .side-menu-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 400;
+      display: none;
+    }
+    .side-menu-content {
+      position: fixed;
+      top: 0; right: -50%; width: 50%; height: 100%;
+      background: #141414;
+      border-left: 1px solid #222222;
+      z-index: 401;
+      display: flex;
+      flex-direction: column;
+      padding: 80px 20px 20px 20px;
+      transition: right 0.3s ease;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 480px) {
+      .side-menu-content { right: -70%; width: 70%; }
+    }
+    .side-menu-content.open {
+      right: 0 !important;
+    }
+    .side-menu-logout-btn {
+      width: 100%;
+      padding: 12px;
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      margin-top: auto;
+      transition: background 0.2s;
+    }
+    .side-menu-logout-btn:hover {
+      background: #d93d40;
+    }
+
     .feed-container {
       max-width: 680px;
       margin: 0 auto;
@@ -448,7 +509,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                     
+                         
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -996,8 +1057,6 @@
     .tab-button { flex: 1; background: none; border: none; padding: 12px; color: #aaaaaa; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
     .tab-button.active { color: #dcae36; border-bottom: 3px solid #dcae36; }
 
-    .logout-btn-large { width: calc(100% - 40px); margin: 20px; padding: 12px; background: #ff4d4f; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
-
     .requests-dropdown {
       position: absolute; right: 20px; top: 60px; width: 320px; background: #141414; border: 1px solid #222222; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: none; flex-direction: column; z-index: 105;
     }
@@ -1269,7 +1328,20 @@
           </svg>
           <div class="notification-badge" id="requests-badge-profile" style="display: none;">0</div>
         </button>
+        
+        <!-- 3 ხაზიანი ბურგერ მენიუს ღილაკი ჰეადერში -->
+        <button class="burger-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)">
+          <div class="burger-line"></div>
+          <div class="burger-line"></div>
+          <div class="burger-line"></div>
+        </button>
       </div>
+    </div>
+
+    <!-- სლაიდ მენიუ (ვერტიკალურად, ნახევარ ეკრანზე) -->
+    <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
+    <div class="side-menu-content" id="side-menu-content">
+      <button class="side-menu-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
     </div>
 
     <div class="requests-dropdown" id="requests-dropdown-profile" style="display: none;">
@@ -1340,10 +1412,6 @@
 
         <div id="profile-posts-wall">
           <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
-        </div>
-
-        <div class="profile-logout-section" id="profile-logout-section">
-          <button class="logout-btn-large" onclick="logout()">სისტემიდან გამოსვლა</button>
         </div>
       </div>
     </div>
@@ -1528,6 +1596,21 @@
       });
     }
 
+    /* ბურგერ მენიუს ტოგლის ახალი ფუნქცია */
+    function toggleSideMenu(event) {
+      if(event) event.stopPropagation();
+      var menu = document.getElementById('side-menu-content');
+      var overlay = document.getElementById('side-menu-overlay');
+      
+      if(menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        overlay.style.display = 'none';
+      } else {
+        menu.classList.add('open');
+        overlay.style.display = 'block';
+      }
+    }
+
     try {
       if (window.supabase && window.supabase.createClient) {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1561,6 +1644,14 @@
       if (dropdownHome) dropdownHome.style.display = 'none';
       if (dropdownProfile) dropdownProfile.style.display = 'none';
       document.querySelectorAll('.fb-reactions-panel').forEach(function(p) { p.style.display = 'none'; });
+      
+      // ეკრანზე სხვაგან დაჭერისას ბურგერ მენიუს დახურვა
+      var menu = document.getElementById('side-menu-content');
+      var overlay = document.getElementById('side-menu-overlay');
+      if(menu && menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        if(overlay) overlay.style.display = 'none';
+      }
     });
 
     function showSelectedFileName() {
@@ -2353,7 +2444,12 @@
           <button class="btn-more-options">•••</button>
         `;
 
-        document.getElementById('profile-logout-section').style.display = "block";
+        // ბურგერ მენიუს გამო კუთხის "სისტემიდან გასვლა" ღილაკის დამალვა
+        var oldLogoutSection = document.getElementById('profile-logout-section');
+        if (oldLogoutSection) oldLogoutSection.style.display = "none";
+        
+        // თუმცა ბურგერის გამოჩენა მხოლოდ საკუთარ პროფილზე გვინდა
+        document.getElementById('profile-burger-btn').style.display = "flex";
         
         renderProfileDetails(userProfile || {});
         loadUserPosts(currentUser.id);
@@ -2395,7 +2491,9 @@
 
         document.getElementById('avatar-camera-btn').style.display = "none";
         document.getElementById('cover-camera-btn').style.display = "none";
-        document.getElementById('profile-logout-section').style.display = "none";
+        
+        // სხვის პროფილზე ბურგერ მენიუს დამალვა
+        document.getElementById('profile-burger-btn').style.display = "none";
 
         renderProfileDetails(selectedUser);
         loadUserPosts(userId);
