@@ -1116,7 +1116,6 @@
       cursor: pointer;
     }
 
-    /* სიახლე: ვერტიკალური 3-სვეტიანი ვიდეო ბადის დიზაინი ფოტოს მიხედვით */
     .video-grid-full {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1150,7 +1149,6 @@
       z-index: 2;
     }
 
-    /* სიახლე: ულტრა-სრულეკრანიანი ტიკტოკ მოდალი სქროლვით */
     .tiktok-fullscreen-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -1455,9 +1453,13 @@
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
        
       <div class="header-right">
+        <!-- მეგობრობის ნოთიფიკაციების ახალი HD Facebook სტილის იკონი -->
         <button class="header-icon-btn" onclick="toggleRequestsDropdown(event)">
-          <svg class="header-icon-svg" viewBox="0 0 24 24">
-            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
+          <svg class="header-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
           <div class="header-badge" id="requests-badge" style="display: none;">0</div>
         </button>
@@ -1468,10 +1470,12 @@
           </svg>
         </button>
 
-        <button class="header-icon-btn" onclick="alert('ახალი შეტყობინებები არ არის')">
+        <!-- მთავარი რეალურ დროში ნოთიფიკაციების ზარის იკონი -->
+        <button class="header-icon-btn" onclick="openRealtimeNotifications()">
           <svg class="header-icon-svg" viewBox="0 0 24 24">
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
           </svg>
+          <div class="header-badge" id="main-notifications-badge" style="display: none; background: #ff4d4f;">0</div>
         </button>
 
         <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
@@ -1524,8 +1528,12 @@
           </svg>
         </button>
         <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
-          <svg class="nav-icon-svg" viewBox="0 0 24 24">
-            <path d="M16 11c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C5.64 5.36 4 7.92 4 11v5l-2 2v1h16v-1l-2-2v-5zm-6 11c1.1 0 2-.9 2-2H8c0 1.1.9 2 2 2z"/>
+          <!-- პროფილის გვერდზეც ჩანაცვლებული HD იკონი -->
+          <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
           <div class="notification-badge" id="requests-badge-profile" style="display: none;">0</div>
         </button>
@@ -1804,7 +1812,6 @@
     </div>
   </div>
 
-  <!-- სიახლე: ტიკტოკ სრულეკრანიანი ვიდეო თეატრის კონტეინერი -->
   <div id="tiktok-video-modal" class="tiktok-fullscreen-overlay">
     <button class="tiktok-fullscreen-close" onclick="closeTiktokVideoModal()">✕</button>
     <div id="tiktok-slides-wrapper"></div>
@@ -1828,8 +1835,10 @@
     var touchStartX = 0;
     var touchEndX = 0;
 
-    // გლობალური მასივები ვიდეოების მართვისთვის
     var activeTiktokVideosList = [];
+    
+    // ნოთიფიკაციების მასივი
+    var realtimeNotificationsList = [];
 
     var ALL_REACTIONS = [
       { emoji: "👍", label: "ლაიქი", color: "#1877f2" },
@@ -2014,11 +2023,79 @@
             checkPendingRequestsCount();
             subscribeToFriendRequests();
             subscribeToPostsRealtime(); 
+            subscribeToGlobalNotifications();
           });
         } else {
           showScreen('auth');
         }
       });
+    }
+
+    // რეალურ დროში ნოთიფიკაციების სრული გამოწერა
+    function subscribeToGlobalNotifications() {
+      supabase.channel('global-notifications')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, function(payload) {
+          if (!currentUser) return;
+          
+          var newPost = payload.new;
+          var oldPost = payload.old;
+          
+          if (payload.eventType === 'INSERT') {
+            if (newPost.user_id !== currentUser.id) {
+              var type = "ახალი პოსტი";
+              if (newPost.media_url) {
+                if (newPost.media_url.includes('.mp4') || newPost.media_url.includes('video')) {
+                  type = "ახალი ვიდეო";
+                } else {
+                  type = "ახალი სურათი";
+                }
+              }
+              realtimeNotificationsList.unshift({
+                text: `${newPost.author_name}-მა გამოაქვეყნა ${type}!`,
+                time: new Date()
+              });
+              updateMainNotificationBadge();
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            if (newPost.likes_count > (oldPost ? (oldPost.likes_count || 0) : 0)) {
+              if (newPost.user_id === currentUser.id) {
+                realtimeNotificationsList.unshift({
+                  text: `ვიღაცამ დაალაიქა შენი პოსტი!`,
+                  time: new Date()
+                });
+                updateMainNotificationBadge();
+              }
+            }
+          }
+        })
+        .subscribe();
+    }
+
+    function updateMainNotificationBadge() {
+      var badge = document.getElementById('main-notifications-badge');
+      if (badge) {
+        var count = realtimeNotificationsList.length;
+        if (count > 0) {
+          badge.innerText = count;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+
+    function openRealtimeNotifications() {
+      if (realtimeNotificationsList.length === 0) {
+        alert("ახალი შეტყობინებები არ არის");
+        return;
+      }
+      var msg = "🔔 რეალური დროის სიახლეები:\n\n";
+      realtimeNotificationsList.forEach(function(n, i) {
+        msg += (i + 1) + ") " + n.text + "\n";
+      });
+      alert(msg);
+      realtimeNotificationsList = [];
+      updateMainNotificationBadge();
     }
 
     function subscribeToPostsRealtime() {
@@ -2846,7 +2923,6 @@
         });
     }
 
-    /* სიახლე: ვიდეოების 3-სვეტიანი ბადის ჩატვირთვა (Reels სტილში) */
     function loadUserVideos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
       photosWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">ვიდეოები იტვირთება...</div>';
@@ -2879,7 +2955,7 @@
 
           var gridHtml = '<div class="video-grid-full">';
           activeTiktokVideosList.forEach(function(post, index) {
-            var viewsFake = (post.likes_count || 0) * 3 + (index * 7) + 12; // ფოტოსავით ხედვების რიცხვი
+            var viewsFake = (post.likes_count || 0) * 3 + (index * 7) + 12;
             gridHtml += `
               <div class="video-grid-card" onclick="openTiktokVideoModal(${index})">
                 <video class="video-grid-thumbnail" src="${post.media_url}" preload="metadata" muted></video>
@@ -2895,7 +2971,6 @@
         });
     }
 
-    /* სიახლე: ტიკტოკ სტილის სრულეკრანიანი მოდალის გახსნა და გენერაცია */
     function openTiktokVideoModal(startIndex) {
       var modal = document.getElementById('tiktok-video-modal');
       var wrapper = document.getElementById('tiktok-slides-wrapper');
@@ -2946,14 +3021,11 @@
 
       modal.style.display = "block";
       
-      // გადავიყვანოთ არჩეულ ვიდეოზე
       var targetScrollY = startIndex * window.innerHeight;
       modal.scrollTop = targetScrollY;
 
-      // ივენთი ავტო-ფლეისთვის სქროლვისას
       modal.onscroll = handleTiktokScrollAutoPlay;
       
-      // ჩავრთოთ პირველი ვიდეო
       setTimeout(handleTiktokScrollAutoPlay, 100);
     }
 
@@ -3646,7 +3718,6 @@
       var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
       var isSingleVideo = post.media_url && !post.media_url.includes(',') && (post.media_url.includes('.mp4') || post.media_url.includes('video'));
 
-      // ინდივიდუალური წაშლის ღილაკი მხოლოდ პოსტის ავტორისთვის
       var deleteButtonHtml = "";
       if (currentUser && post.user_id === currentUser.id) {
         deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">🗑️ წაშლა</button>`;
