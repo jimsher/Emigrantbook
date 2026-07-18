@@ -501,7 +501,6 @@
       text-shadow: 0px 1px 4px rgba(0, 0, 0, 0.9);
     }
 
-    /* ზუსტი ფეისბუქის სტატისტიკის განლაგება */
     .post-stats {
       display: flex;
       justify-content: space-between;
@@ -520,16 +519,10 @@
     .fb-reaction-icons {
       display: flex;
       align-items: center;
+      gap: 2px;
     }
     .fb-icon-svg-badge {
-      width: 18px;
-      height: 18px;
-      position: relative;
-      z-index: 2;
-    }
-    .fb-icon-svg-badge.badge-heart {
-      margin-left: -4px;
-      z-index: 1;
+      font-size: 16px;
     }
     .fb-likes-counter {
       color: #aaaaaa;
@@ -544,12 +537,12 @@
       text-decoration: underline;
     }
 
-    /* ზუსტი ფეისბუქის მოქმედების ღილაკები */
     .post-actions {
       display: flex;
       border-top: 1px solid #262626;
       padding: 4px 6px;
       background: #141414;
+      position: relative;
     }
     .action-btn {
       flex: 1;
@@ -584,7 +577,34 @@
       fill: #1877f2 !important;
     }
 
-    /* ახალი Bottom Sheet კომენტარების მოდალი */
+    /* Facebook-ის იდენტური რეაქციების პანელი */
+    .fb-reactions-panel {
+      position: absolute;
+      bottom: 45px;
+      left: 10px;
+      background: #242526;
+      border: 1px solid #3e4042;
+      border-radius: 30px;
+      padding: 4px 8px;
+      display: none;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 1000;
+      animation: fbBounce 0.2s ease-out;
+    }
+    @keyframes fbBounce {
+      0% { transform: translateY(10px) scale(0.8); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .fb-reaction-item {
+      font-size: 26px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .fb-reaction-item:hover {
+      transform: scale(1.35) translateY(-5px);
+    }
+
     .comments-modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -643,11 +663,17 @@
       gap: 16px;
     }
 
-    /* ფეისბუქის იდენტური კომენტარების დიზაინი */
     .fb-comment-wrapper {
       display: flex;
       gap: 12px;
       align-items: flex-start;
+      flex-direction: column;
+    }
+    .fb-comment-card {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      width: 100%;
     }
     .fb-comment-avatar {
       width: 36px; height: 36px;
@@ -703,29 +729,61 @@
       font-weight: bold; cursor: pointer;
     }
     .fb-comment-action-btn:hover { color: #ffffff; }
+    .fb-comment-action-btn.comment-liked { color: #1877f2 !important; }
+
+    /* შიდა პასუხების (Replies) დიზაინი */
+    .fb-replies-container {
+      margin-left: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: calc(100% - 48px);
+      margin-top: 8px;
+    }
+    .reply-input-active-bar {
+      background: #1a1a1a;
+      padding: 6px 12px;
+      display: none;
+      justify-content: space-between;
+      font-size: 13px;
+      border-top: 1px solid #282828;
+    }
 
     .comments-modal-footer {
       padding: 12px 15px;
       background: #0f0f0f;
       border-top: 1px solid #222222;
       display: flex;
+      flex-direction: column;
+    }
+    .modal-footer-input-row {
+      display: flex;
       align-items: center;
       gap: 10px;
+      width: 100%;
     }
     .modal-input-holder {
       flex: 1;
       display: flex;
       background: #1c1c1e;
       border-radius: 20px;
-      padding: 6px 16px;
+      padding: 8px 16px;
       align-items: center;
     }
     .modal-input-holder input {
       flex: 1; background: none; border: none;
       color: #ffffff; outline: none; font-size: 14px;
     }
+    .comment-submit-button {
+      background: #dcae36;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: #111111;
+      cursor: pointer;
+    }
 
-    /* ლაიკერების მოდალი */
     .likers-modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -1159,7 +1217,7 @@
       </div>
     </div>
   </div>
-       
+        
   <div id="profile-screen">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
@@ -1352,27 +1410,34 @@
     </div>
   </div>
 
-  <!-- ახალი ქვემოდან ამომავალი კომენტარების მოდალი -->
   <div id="comments-sheet-modal" class="comments-modal-overlay" onclick="closeCommentsModal()">
     <div class="comments-modal-content" onclick="event.stopPropagation()">
       <div class="comments-modal-drag"></div>
       <div class="comments-modal-header">
         <div class="modal-likes-trigger" id="modal-likes-count-btn" onclick="openLikersListModal()">
-          <span>💙❤️👍 <span id="modal-total-likes">0</span></span>
+          <span id="modal-reactions-display">💙❤️👍 <span id="modal-total-likes">0</span></span>
         </div>
         <button class="comments-modal-close" onclick="closeCommentsModal()">×</button>
       </div>
       <div class="comments-modal-body" id="modal-comments-container"></div>
+      
+      <!-- აქტიური Reply მინი პანელი -->
+      <div id="reply-active-bar" class="reply-input-active-bar">
+        <span id="reply-active-text">პასუხი მომხმარებელს...</span>
+        <span style="cursor:pointer;color:#ff4d4f;font-weight:bold;" onclick="cancelReplyMode()">გაუქმება</span>
+      </div>
+
       <div class="comments-modal-footer">
-        <div class="modal-input-holder">
-          <input type="text" id="modal-comment-input-field" placeholder="დაწერეთ კომენტარი...">
+        <div class="modal-footer-input-row">
+          <div class="modal-input-holder">
+            <input type="text" id="modal-comment-input-field" placeholder="დაწერეთ კომენტარი...">
+          </div>
+          <button class="comment-submit-button" id="modal-comment-submit-btn">გაგზავნა</button>
         </div>
-        <button class="comment-submit-button" id="modal-comment-submit-btn">გაგზავნა</button>
       </div>
     </div>
   </div>
 
-  <!-- ლაიკერების სიის მოდალი -->
   <div id="likers-list-modal" class="likers-modal-overlay" onclick="closeLikersModal()">
     <div class="likers-modal-content" onclick="event.stopPropagation()">
       <div class="likers-modal-header">
@@ -1393,8 +1458,23 @@
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
     var activePostForComments = null;
+    var activeCommentReplyId = null; // ინახავს იმ კომენტარის ID-ის, ვისაც ვპასუხობთ
+
+    // 8 სახეობის რეაქციები
+    var ALL_REACTIONS = [
+      { emoji: "👍", label: "ლაიქი", color: "#1877f2" },
+      { emoji: "❤️", label: "გული", color: "#f33e58" },
+      { emoji: "🥰", label: "მხარდაჭერა", color: "#f5c33b" },
+      { emoji: "😂", label: "სიცილი", color: "#f5c33b" },
+      { emoji: "😮", label: "გაოცება", color: "#f5c33b" },
+      { emoji: "😢", label: "სევდა", color: "#f5c33b" },
+      { emoji: "😭", label: "ცრემლი", color: "#f5c33b" },
+      { emoji: "😡", label: "გაბრაზება", color: "#e9662c" }
+    ];
 
     var likedPosts = JSON.parse(localStorage.getItem('liked_posts_list')) || [];
+    // ინახავს თუ რომელი პოსტზე რა რეაქცია დასვა მომხმარებელმა
+    var postReactionMap = JSON.parse(localStorage.getItem('post_reaction_map')) || {};
 
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -1445,6 +1525,8 @@
       var dropdownProfile = document.getElementById('requests-dropdown-profile');
       if (dropdownHome) dropdownHome.style.display = 'none';
       if (dropdownProfile) dropdownProfile.style.display = 'none';
+      // რეაქციების ფანჯრების დახურვა ეკრანზე დაკლიკებისას
+      document.querySelectorAll('.fb-reactions-panel').forEach(function(p) { p.style.display = 'none'; });
     });
 
     function showSelectedFileName() {
@@ -1904,7 +1986,12 @@
 
     function openCommentsModal(postId, totalLikes) {
       activePostForComments = postId;
-      document.getElementById('modal-total-likes').innerText = totalLikes;
+      cancelReplyMode();
+      
+      // მოდალში განვასხვავოთ მიმდინარე პოსტის აქტიური სმაილი
+      var activeEmoji = postReactionMap[postId] || "👍";
+      document.getElementById('modal-reactions-display').innerHTML = `${activeEmoji} <span id="modal-total-likes">${totalLikes}</span>`;
+
       var container = document.getElementById('modal-comments-container');
       container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">კომენტარები იტვირთება...</div>`;
       
@@ -1916,6 +2003,22 @@
       };
 
       loadCommentsIntoModal(postId);
+    }
+
+    // პასუხის გაცემის რეჟიმის ჩართვა (შიდა კომენტარი)
+    function setReplyMode(commentId, authorName) {
+      activeCommentReplyId = commentId;
+      var bar = document.getElementById('reply-active-bar');
+      var txt = document.getElementById('reply-active-text');
+      txt.innerText = "პასუხი მომხმარებელს: " + authorName;
+      bar.style.display = "flex";
+      document.getElementById('modal-comment-input-field').focus();
+    }
+
+    function cancelReplyMode() {
+      activeCommentReplyId = null;
+      var bar = document.getElementById('reply-active-bar');
+      if(bar) bar.style.display = "none";
     }
 
     function loadCommentsIntoModal(postId) {
@@ -1931,38 +2034,102 @@
             return;
           }
 
-          var comments = res.data || [];
-          if (comments.length === 0) {
+          var allItems = res.data || [];
+          
+          // დავაჯგუფოთ ძირითადი კომენტარები და პასუხები (parent_id მიხედვით)
+          var mainComments = allItems.filter(function(c) { return !c.parent_id; });
+          var replies = allItems.filter(function(c) { return c.parent_id; });
+
+          if (mainComments.length === 0) {
             container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">პირველი კომენტარის დაწერა შენ შეგიძლია!</div>`;
             return;
           }
 
           container.innerHTML = "";
-          comments.forEach(function(comment) {
+          mainComments.forEach(function(comment) {
             var name = comment.author_name || "მომხმარებელი";
             var initial = name.charAt(0).toUpperCase();
             var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}">` : initial;
             var timeString = new Date(comment.created_at).toLocaleTimeString("ka-GE", { hour: '2-digit', minute: '2-digit' });
 
-            container.innerHTML += `
-              <div class="fb-comment-wrapper">
-                <div class="fb-comment-avatar">${avatarHtml}</div>
-                <div class="fb-comment-main">
-                  <div class="fb-comment-bubble">
-                    <div class="fb-comment-user-row">
-                      <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
-                      <span class="fb-comment-time">${timeString}</span>
+            // ლაიკების ლოკალური მდგომარეობა კომენტარებისთვის
+            var cLikes = comment.likes_count || 0;
+            var hasLikedComment = JSON.parse(localStorage.getItem('liked_comment_' + comment.id)) ? "comment-liked" : "";
+
+            var commentHtml = `
+              <div class="fb-comment-wrapper" id="comment-block-${comment.id}">
+                <div class="fb-comment-card">
+                  <div class="fb-comment-avatar">${avatarHtml}</div>
+                  <div class="fb-comment-main">
+                    <div class="fb-comment-bubble">
+                      <div class="fb-comment-user-row">
+                        <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
+                        <span class="fb-comment-time">${timeString}</span>
+                      </div>
+                      <span class="fb-comment-text">${comment.content || ""}</span>
                     </div>
-                    <span class="fb-comment-text">${comment.content || ""}</span>
-                  </div>
-                  <div class="fb-comment-actions-row">
-                    <button class="fb-comment-action-btn">მოწონება</button>
-                    <button class="fb-comment-action-btn">პასუხი</button>
+                    <div class="fb-comment-actions-row">
+                      <button class="fb-comment-action-btn ${hasLikedComment}" onclick="likeComment('${comment.id}', ${cLikes})">👍 მოწონება (${cLikes})</button>
+                      <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')">↩️ პასუხი</button>
+                    </div>
                   </div>
                 </div>
+                
+                <!-- შიდა პასუხების კონტეინერი -->
+                <div class="fb-replies-container" id="replies-to-${comment.id}"></div>
               </div>
             `;
+
+            container.innerHTML += commentHtml;
           });
+
+          // შიდა პასუხების ჩაშენება
+          replies.forEach(function(reply) {
+            var replyTargetContainer = document.getElementById(`replies-to-${reply.parent_id}`);
+            if (replyTargetContainer) {
+              var rName = reply.author_name || "მომხმარებელი";
+              var rInitial = rName.charAt(0).toUpperCase();
+              var rAvatarHtml = reply.avatar_url ? `<img src="${reply.avatar_url}">` : rInitial;
+              var rTimeString = new Date(reply.created_at).toLocaleTimeString("ka-GE", { hour: '2-digit', minute: '2-digit' });
+              
+              var rLikes = reply.likes_count || 0;
+              var hasLikedReply = JSON.parse(localStorage.getItem('liked_comment_' + reply.id)) ? "comment-liked" : "";
+
+              replyTargetContainer.innerHTML += `
+                <div class="fb-comment-card" style="margin-top: 6px;">
+                  <div class="fb-comment-avatar" style="width:28px; height:28px; font-size:12px;">${rAvatarHtml}</div>
+                  <div class="fb-comment-main">
+                    <div class="fb-comment-bubble" style="padding: 6px 10px;">
+                      <div class="fb-comment-user-row">
+                        <span class="fb-comment-name" style="font-size:13px;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
+                        <span class="fb-comment-time" style="font-size:11px;">${rTimeString}</span>
+                      </div>
+                      <span class="fb-comment-text" style="font-size:13px;">${reply.content || ""}</span>
+                    </div>
+                    <div class="fb-comment-actions-row">
+                      <button class="fb-comment-action-btn ${hasLikedReply}" style="font-size:11px;" onclick="likeComment('${reply.id}', ${rLikes})">👍 მოწონება (${rLikes})</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }
+          });
+        });
+    }
+
+    // კომენტარების და შიდა კომენტარების ლაიკის ფუნქცია
+    function likeComment(commentId, currentLikes) {
+      var key = 'liked_comment_' + commentId;
+      var hasLiked = JSON.parse(localStorage.getItem(key)) || false;
+      var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
+      
+      localStorage.setItem(key, !hasLiked);
+
+      supabase.from('post_comments')
+        .update({ likes_count: newLikes })
+        .eq('id', commentId)
+        .then(function(res) {
+          loadCommentsIntoModal(activePostForComments);
         });
     }
 
@@ -1974,19 +2141,25 @@
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
       var avatarUrl = userProfile ? userProfile.avatar_url : null;
 
-      supabase.from('post_comments').insert([
-        {
-          post_id: postId,
-          user_id: currentUser.id,
-          author_name: authorName,
-          avatar_url: avatarUrl,
-          content: text
-        }
-      ]).then(function(res) {
+      var insertObj = {
+        post_id: postId,
+        user_id: currentUser.id,
+        author_name: authorName,
+        avatar_url: avatarUrl,
+        content: text
+      };
+
+      // თუ შიდა კომენტარია (Reply), გადავცემთ parent_id-ს
+      if (activeCommentReplyId) {
+        insertObj.parent_id = activeCommentReplyId;
+      }
+
+      supabase.from('post_comments').insert([insertObj]).then(function(res) {
         if (res.error) {
           alert("შეცდომა: " + res.error.message);
         } else {
           input.value = "";
+          cancelReplyMode();
           loadCommentsIntoModal(postId);
           renderCommentsCountOnly({ id: postId });
         }
@@ -1996,6 +2169,7 @@
     function closeCommentsModal() {
       document.getElementById('comments-sheet-modal').style.display = "none";
       activePostForComments = null;
+      cancelReplyMode();
     }
 
     function openLikersListModal() {
@@ -2009,7 +2183,7 @@
         .limit(5)
         .then(function(res) {
           if (res.error || !res.data) {
-            container.innerHTML = `<div style="color: #666; text-align: center;">მონაცემები არ არის</div>`;
+            container.innerHTML = `<div style="color: #66px; text-align: center;">მონაცემები არ არის</div>`;
             return;
           }
 
@@ -2283,6 +2457,7 @@
             posts.forEach(function(post) {
               profileWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
+              initLongPressReactions(post.id);
             });
 
             observeVideos();
@@ -2535,6 +2710,7 @@
           posts.forEach(function(post) {
             postsWall.innerHTML += createPostCardHtml(post);
             renderCommentsCountOnly(post);
+            initLongPressReactions(post.id);
           });
 
           observeVideos();
@@ -2682,8 +2858,18 @@
       }
 
       var hasLiked = likedPosts.includes(post.id);
-      var likedClass = hasLiked ? "btn-liked" : "";
       var currentLikesNum = post.likes_count || 0;
+      
+      // აქტიური რეაქციის გამოტანა
+      var userActiveEmoji = postReactionMap[post.id] || "👍";
+      var likedClass = hasLiked ? "btn-liked" : "";
+
+      // 8 რეაქციის ასარჩევი HTML ბლოკი
+      var reactionsPanelHtml = `<div class="fb-reactions-panel" id="reactions-panel-${post.id}">`;
+      ALL_REACTIONS.forEach(function(r) {
+        reactionsPanelHtml += `<span class="fb-reaction-item" title="${r.label}" onclick="applyReaction('${post.id}', '${r.emoji}')">${r.emoji}</span>`;
+      });
+      reactionsPanelHtml += `</div>`;
 
       return `
         <div class="post-card" id="post-card-${post.id}">
@@ -2700,33 +2886,23 @@
           
           <div class="post-stats">
             <div class="fb-stats-left" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
-              <div class="fb-reaction-icons">
-                <!-- HD ლურჯი ლაიქის იქონა ბეჯი -->
-                <svg class="fb-icon-svg-badge" viewBox="0 0 36 36">
-                  <circle fill="#1877F2" cx="18" cy="18" r="18"/>
-                  <path fill="#FFFFFF" d="M14 23h-3v-7h3v7zm10.5-6.5c0-.83-.67-1.5-1.5-1.5h-4.3l.6-2.9.1-.4c0-.3-.1-.5-.3-.7l-.7-.7-4.4 4.4c-.2.2-.3.5-.3.8V21c0 .83.67 1.5 1.5 1.5h6.5c.6 0 1.1-.4 1.3-.9l2.1-5c.1-.2.1-.4.1-.6v-1.5z"/>
-                </svg>
-                <!-- HD წითელი გულის იქონა ბეჯი -->
-                <svg class="fb-icon-svg-badge id-icon-heart" viewBox="0 0 36 36" style="margin-left: -5px; z-index:1;">
-                  <circle fill="#F33E58" cx="18" cy="18" r="18"/>
-                  <path fill="#FFFFFF" d="M18 26.3s-7.5-4.4-7.5-9.3c0-2.3 1.7-4 3.9-4 1.5 0 2.8.9 3.6 2.2.8-1.3 2.1-2.2 3.6-2.2 2.2 0 3.9 1.7 3.9 4 0 4.9-7.5 9.3-7.5 9.3z"/>
-                </svg>
+              <div class="fb-reaction-icons" id="stats-icons-${post.id}">
+                <span class="fb-icon-svg-badge">${userActiveEmoji}</span>
               </div>
               <span class="post-likes-count-label" data-post-id="${post.id}">${currentLikesNum}</span>
             </div>
             <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">0 კომენტარი</span>
           </div>
 
-          <div class="post-actions">
-            <!-- ფეისბუქის იდენტური HD მოწონების ღილაკი -->
-            <button class="action-btn like-btn-standard ${likedClass}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">
-              <svg class="action-btn-svg" viewBox="0 0 24 24">
-                <path d="M5 21h-2v-9h2v9zm16.5-8.5c0-.83-.67-1.5-1.5-1.5h-5.71l.86-4.14.03-.32c0-.41-.17-.79-.44-1.06l-1.06-1.06-6.12 6.13c-.33.33-.56.77-.56 1.25v8.5c0 .83.67 1.5 1.5 1.5h8.5c.67 0 1.25-.41 1.48-.99l2.84-6.63c.08-.2.13-.42.13-.64v-1.5z"/>
-              </svg>
-              მოწონება
+          <div class="post-actions" id="actions-row-${post.id}">
+            
+            ${reactionsPanelHtml}
+
+            <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">
+              <span id="like-btn-emoji-icon-${post.id}">${hasLiked ? userActiveEmoji : "👍"}</span>
+              <span id="like-btn-text-label-${post.id}">მოწონება</span>
             </button>
             
-            <!-- ფეისბუქის იდენტური HD კომენტარის ღილაკი -->
             <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
               <svg class="action-btn-svg" viewBox="0 0 24 24">
                 <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
@@ -2736,6 +2912,83 @@
           </div>
         </div>
       `;
+    }
+
+    // Long Press და Hover მოვლენების ინიციალიზაცია 8 რეაქციის ასამუშავებლად
+    function initLongPressReactions(postId) {
+      setTimeout(function() {
+        var btn = document.getElementById(`like-btn-main-${postId}`);
+        var panel = document.getElementById(`reactions-panel-${postId}`);
+        if (!btn || !panel) return;
+
+        var pressTimer;
+
+        var startPress = function(e) {
+          pressTimer = setTimeout(function() {
+            // ყველა სხვა გახსნილი პანელის დახურვა
+            document.querySelectorAll('.fb-reactions-panel').forEach(function(p) { p.style.display = 'none'; });
+            panel.style.display = 'flex';
+          }, 600); // 600ms დიდი ხნით დაჭერა
+        };
+
+        var endPress = function() {
+          clearTimeout(pressTimer);
+        };
+
+        // Touch მოწყობილობები
+        btn.addEventListener('touchstart', startPress, { passive: true });
+        btn.addEventListener('touchend', endPress);
+        
+        // Desktop მაუსის Hover ეფექტი Facebook-ის მსგავსად
+        btn.addEventListener('mouseenter', function() {
+          pressTimer = setTimeout(function() {
+            panel.style.display = 'flex';
+          }, 400);
+        });
+        
+        panel.addEventListener('mouseleave', function() {
+          panel.style.display = 'none';
+        });
+
+      }, 100);
+    }
+
+    // კონკრეტული სმაილი რეაქციის არჩევა
+    function applyReaction(postId, emoji) {
+      var panel = document.getElementById(`reactions-panel-${postId}`);
+      if (panel) panel.style.display = 'none';
+
+      var hasAlreadyLiked = likedPosts.includes(postId);
+      postReactionMap[postId] = emoji;
+      localStorage.setItem('post_reaction_map', JSON.stringify(postReactionMap));
+
+      if (!hasAlreadyLiked) {
+        likedPosts.push(postId);
+        localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
+      }
+
+      // ვიზუალის განახლება კედელზე
+      var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+      var currentLikes = 0;
+      if (labels.length > 0) currentLikes = parseInt(labels[0].innerText) || 0;
+      
+      var newLikes = hasAlreadyLiked ? currentLikes : currentLikes + 1;
+
+      labels.forEach(function(l) { l.innerText = newLikes; });
+
+      var mainBtn = document.getElementById(`like-btn-main-${postId}`);
+      if (mainBtn) mainBtn.classList.add('btn-liked');
+
+      var emojiIcon = document.getElementById(`like-btn-emoji-icon-${postId}`);
+      if (emojiIcon) emojiIcon.innerText = emoji + " ";
+
+      var statsIcons = document.getElementById(`stats-icons-${postId}`);
+      if (statsIcons) statsIcons.innerHTML = `<span class="fb-icon-svg-badge">${emoji}</span>`;
+
+      // Supabase-ში გაგზავნა
+      supabase.from('posts').update({ likes_count: newLikes }).eq('id', postId).then(function() {
+        console.log("Reaction saved to Supabase: " + emoji);
+      });
     }
 
     function createPost() {
@@ -2815,11 +3068,14 @@
       
       if (hasLiked) {
         likedPosts = likedPosts.filter(function(id) { return id !== postId; });
+        delete postReactionMap[postId];
       } else {
         likedPosts.push(postId);
+        postReactionMap[postId] = "👍"; // ნაგულისხმევი
       }
 
       localStorage.setItem('liked_posts_list', JSON.stringify(likedPosts));
+      localStorage.setItem('post_reaction_map', JSON.stringify(postReactionMap));
 
       var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
       var buttons = document.querySelectorAll(`.like-btn-standard[data-post-id="${postId}"]`);
@@ -2835,25 +3091,33 @@
 
       var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
 
-      labels.forEach(function(label) {
-        label.innerText = newLikes;
-      });
+      labels.forEach(function(label) { label.innerText = newLikes; });
+      
       buttons.forEach(function(btn) {
-        if (!hasLiked) btn.classList.add('btn-liked');
-        else btn.classList.remove('btn-liked');
+        var iconSpan = document.getElementById(`like-btn-emoji-icon-${postId}`);
+        if (!hasLiked) {
+          btn.classList.add('btn-liked');
+          if(iconSpan) iconSpan.innerText = "👍";
+        } else {
+          btn.classList.remove('btn-liked');
+          if(iconSpan) iconSpan.innerText = "👍";
+        }
       });
 
-      tiktokSpans.forEach(function(span) {
-        span.innerText = newLikes;
-      });
-      circleHearts = document.querySelectorAll(`.tiktok-heart[data-post-id="${postId}"]`);
+      var statsIcons = document.getElementById(`stats-icons-${postId}`);
+      if (statsIcons) {
+        statsIcons.innerHTML = `<span class="fb-icon-svg-badge">${!hasLiked ? "👍" : "👍"}</span>`;
+      }
+
+      tiktokSpans.forEach(function(span) { span.innerText = newLikes; });
       tiktokHearts.forEach(function(heart) {
         if (!hasLiked) heart.classList.add('heart-liked');
         else heart.classList.remove('heart-liked');
       });
 
       if (activePostForComments === postId) {
-        document.getElementById('modal-total-likes').innerText = newLikes;
+        var currentEmoji = postReactionMap[postId] || "👍";
+        document.getElementById('modal-reactions-display').innerHTML = `${currentEmoji} <span id="modal-total-likes">${newLikes}</span>`;
       }
 
       supabase.from('posts')
