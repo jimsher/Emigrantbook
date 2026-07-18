@@ -508,7 +508,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                   
+                                        
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1195,6 +1195,95 @@
       user-select: none;
     }
 
+    /* ახალი: Facebook-ის მსგავსი ულტრა სრულეკრანიანი მოდალი ფოტო გალერეისთვის */
+    .gallery-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #000000;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+    }
+    .gallery-top-nav {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+      z-index: 2010;
+    }
+    .gallery-close-x {
+      font-size: 32px; color: #ffffff; background: none; border: none; cursor: pointer;
+    }
+    .gallery-counter-label {
+      color: #ffffff; font-size: 16px; font-weight: bold;
+    }
+    .gallery-top-icons {
+      display: flex; gap: 15px; color: #ffffff; font-size: 22px; cursor: pointer;
+    }
+    .gallery-main-view {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+    }
+    .gallery-slider-img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+    }
+    .gallery-bottom-info-panel {
+      width: 100%;
+      background: linear-gradient(to top, rgba(0,0,0,0.95) 85%, rgba(0,0,0,0));
+      padding: 16px 16px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2010;
+    }
+    .gallery-author-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .gallery-author-avatar {
+      width: 38px; height: 38px; border-radius: 50%; background: #dcae36;
+      display: flex; align-items: center; justify-content: center; font-weight: bold; color: #111;
+      overflow: hidden;
+    }
+    .gallery-author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-author-meta {
+      display: flex; flex-direction: column;
+    }
+    .gallery-author-name {
+      font-size: 15px; font-weight: bold; color: #ffffff;
+    }
+    .gallery-time-stamp {
+      font-size: 11px; color: #b0b3b8; display: flex; align-items: center; gap: 4px;
+    }
+    .gallery-post-caption {
+      font-size: 14px; color: #e4e6eb; line-height: 1.4; max-height: 80px; overflow-y: auto;
+    }
+    .gallery-reactions-summary {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #2f3031; padding-bottom: 8px; font-size: 13px; color: #b0b3b8;
+    }
+    .gallery-actions-buttons-row {
+      display: flex; justify-content: space-between; width: 100%;
+    }
+    .gallery-act-btn {
+      flex: 1; background: none; border: none; padding: 6px;
+      color: #b0b3b8; font-size: 14px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .gallery-act-btn.liked-active {
+      color: #1877f2 !important;
+    }
+
     @media (max-width: 680px) {
       .feed-container {
         padding: 0 !important;
@@ -1565,6 +1654,56 @@
     </div>
   </div>
 
+  <!-- ახალი: სრულეკრანიანი ფოტო-თეატრის კონტეინერი -->
+  <div id="custom-gallery-modal" class="gallery-overlay" onclick="closeFullGalleryModal()">
+    <div class="gallery-top-nav" onclick="event.stopPropagation()">
+      <button class="gallery-close-x" onclick="closeFullGalleryModal()">×</button>
+      <span class="gallery-counter-label" id="gallery-photo-counter">1 of 1</span>
+      <div class="gallery-top-icons">
+        <span onclick="alert('მონიშვნა მალე დაემატება!')">🏷️</span>
+        <span onclick="alert('ლოკაცია ხელმიუწვდომელია')">📍</span>
+        <span onclick="alert('დამატებითი პარამეტრები')">⋮</span>
+      </div>
+    </div>
+    
+    <div class="gallery-main-view" id="gallery-swipe-zone" onclick="closeFullGalleryModal()">
+      <img id="gallery-fullscreen-img" class="gallery-slider-img" src="" alt="Fullscreen view" onclick="event.stopPropagation()">
+    </div>
+
+    <div class="gallery-bottom-info-panel" onclick="event.stopPropagation()">
+      <div class="gallery-author-row">
+        <div class="gallery-author-avatar" id="gallery-user-avatar-placeholder">?</div>
+        <div class="gallery-author-meta">
+          <span class="gallery-author-name" id="gallery-post-author-name">Gabo JI</span>
+          <span class="gallery-time-stamp"><span id="gallery-post-time-label">27 ივლ, 06:41</span> · 🌐</span>
+        </div>
+      </div>
+      
+      <div class="gallery-post-caption" id="gallery-post-content-text">
+        ფოტოს აღწერა...
+      </div>
+      
+      <div class="gallery-reactions-summary">
+        <div id="gallery-likes-trigger-area" style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+          <span>😥👍❤️ <span id="gallery-total-likes-counter">0</span></span>
+        </div>
+        <span id="gallery-comments-counter-label" style="cursor:pointer;">0 კომენტარი</span>
+      </div>
+      
+      <div class="gallery-actions-buttons-row">
+        <button class="gallery-act-btn" id="gallery-like-main-action-btn">
+          <span>👍</span> მოწონება
+        </button>
+        <button class="gallery-act-btn" id="gallery-comment-main-action-btn">
+          <span>💬</span> კომენტარები
+        </button>
+        <button class="gallery-act-btn" onclick="alert('ბმული კოპირებულია!')">
+          <span>↩️</span> გაზიარება
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
@@ -1576,6 +1715,13 @@
     var currentViewingStoryObj = null;
     var activePostForComments = null;
     var activeCommentReplyId = null; 
+
+    // გალერეის სლაიდერის გლობალური ინდექსები
+    var galleryPhotoUrls = [];
+    var galleryCurrentIndex = 0;
+    var galleryPostsReference = [];
+    var touchStartX = 0;
+    var touchEndX = 0;
 
     var ALL_REACTIONS = [
       { emoji: "👍", label: "ლაიქი", color: "#1877f2" },
@@ -1725,7 +1871,6 @@
           currentUser = res.data.user;
           activeViewingProfileId = currentUser.id;
           
-          // ინდივიდუალური ლაიქების ლოკალური მასივების ინიციალიზაცია კონკრეტული მომხმარებლისთვის
           likedPosts = JSON.parse(localStorage.getItem(currentUser.id + '_liked_posts_list')) || [];
           postReactionMap = JSON.parse(localStorage.getItem(currentUser.id + '_post_reaction_map')) || {};
            
@@ -2170,10 +2315,11 @@
       cancelReplyMode();
       
       var activeEmoji = postReactionMap[postId] || "👍";
-      document.getElementById('modal-reactions-display').innerHTML = `${activeEmoji} <span id="modal-total-likes">${totalLikes}</span>`;
+      var containerDisplay = document.getElementById('modal-reactions-display');
+      if (containerDisplay) containerDisplay.innerHTML = `${activeEmoji} <span id="modal-total-likes">${totalLikes}</span>`;
 
       var container = document.getElementById('modal-comments-container');
-      container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">კომენტარები იტვირთება...</div>`;
+      if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">კომენტარები იტვირთება...</div>`;
       
       document.getElementById('comments-sheet-modal').style.display = "flex";
 
@@ -2202,6 +2348,7 @@
 
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
+      if (!postId) return;
       
       supabase.from('post_comments')
         .select('*')
@@ -2335,6 +2482,15 @@
           cancelReplyMode();
           loadCommentsIntoModal(postId);
           renderCommentsCountOnly({ id: postId });
+          
+          // თუ გალერეაში ვართ, დინამიურად განვაახლოთ კომენტარების რაოდენობა
+          if(document.getElementById('custom-gallery-modal').style.display === "flex") {
+            setTimeout(function() {
+              supabase.from('post_comments').select('id', { count: 'exact' }).eq('post_id', postId).then(function(cRes) {
+                document.getElementById('gallery-comments-counter-label').innerText = (cRes.count || 0) + " კომენტარი";
+              });
+            }, 300);
+          }
         }
       });
     }
@@ -2535,6 +2691,7 @@
       }
     }
 
+    // განახლებული ფუნქცია: ტვირთავს ფოტოებს და აკავშირებს Facebook სტილის სრულეკრანიან სლაიდერთან
     function loadUserPhotos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
       photosWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">ფოტოები იტვირთება...</div>';
@@ -2550,38 +2707,149 @@
           }
 
           var posts = res.data || [];
-          var allPhotoUrls = [];
+          galleryPhotoUrls = [];
+          galleryPostsReference = [];
 
           posts.forEach(function(post) {
             if (post.media_url) {
               var urls = post.media_url.split(',');
               urls.forEach(function(url) {
                 var cleanUrl = url.trim();
-                if (!cleanUrl.includes('.mp4') && !cleanUrl.includes('video')) {
-                  allPhotoUrls.push(cleanUrl);
+                if (!cleanUrl.includes('.mp4') && !cleanUrl.includes('video') && cleanUrl.length > 5) {
+                  galleryPhotoUrls.push(cleanUrl);
+                  galleryPostsReference.push(post);
                 }
               });
             }
           });
 
-          if (allPhotoUrls.length === 0) {
+          if (galleryPhotoUrls.length === 0) {
             photosWall.innerHTML = '<div style="text-align: center; padding: 40px; color: #aaaaaa;">მომხმარებელს ფოტოები არ აქვს ატვირთული.</div>';
             return;
           }
 
-          // ვაშენებთ სრულ, დაუჭრელ და შეუზღუდავ ფოტო-ბადეს სქროლვის მხარდაჭერით
           var collageHtml = '<div class="photo-grid-full">';
-          allPhotoUrls.forEach(function(url) {
-            collageHtml += `<img class="collage-item" src="${url}" alt="Media" onclick="activePostForComments=null; openCommentsModal('', 0); document.getElementById('modal-comments-container').innerHTML='<img src=${url} style=\'width:100%;object-fit:contain;\'>';">`;
+          galleryPhotoUrls.forEach(function(url, index) {
+            collageHtml += `<img class="collage-item" src="${url}" alt="Media" onclick="openFullGalleryModal(${index})">`;
           });
           collageHtml += '</div>';
           
-          photosWall.innerHTML = `
-            <div style="padding: 10px 0;">
-              ${collageHtml}
-            </div>
-          `;
+          photosWall.innerHTML = `<div style="padding: 10px 0;">${collageHtml}</div>`;
         });
+    }
+
+    /* ახალი ფუნქციონალი: Facebook სტილის სრულეკრანიანი ფოტო-მედია თეატრი */
+    function openFullGalleryModal(index) {
+      galleryCurrentIndex = index;
+      var modal = document.getElementById('custom-gallery-modal');
+      modal.style.display = "flex";
+      
+      updateGalleryViewData();
+      initGallerySwipeEvents();
+    }
+
+    function updateGalleryViewData() {
+      if(galleryPhotoUrls.length === 0) return;
+      
+      var currentUrl = galleryPhotoUrls[galleryCurrentIndex];
+      var currentPost = galleryPostsReference[galleryCurrentIndex];
+      
+      // სურათის შეცვლა
+      document.getElementById('gallery-fullscreen-img').src = currentUrl;
+      
+      // ქაუნთერის განახლება
+      document.getElementById('gallery-photo-counter').innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
+      
+      // პოსტის მეტამონაცემების ასახვა (ავტორი, დრო, ტექსტი)
+      document.getElementById('gallery-post-author-name').innerText = currentPost.author_name || "Emigrantbook User";
+      document.getElementById('gallery-post-content-text').innerText = currentPost.content || "ფოტოს აღწერა არ არის მითითებული.";
+      
+      var postDate = new Date(currentPost.created_at).toLocaleDateString("ka-GE", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      document.getElementById('gallery-post-time-label').innerText = postDate;
+      
+      // პროფილის ავატარის ჩასმა ქვედა პანელში
+      var authorAvatarUrl = cachedProfiles[currentPost.user_id] || null;
+      var avatarPlaceholder = document.getElementById('gallery-user-avatar-placeholder');
+      if (authorAvatarUrl) {
+        avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+      } else {
+        avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
+      }
+
+      // ლაიქებისა და კომენტარების რაოდენობა
+      var totalLikes = currentPost.likes_count || 0;
+      document.getElementById('gallery-total-likes-counter').innerText = totalLikes;
+      
+      // კომენტარების რაოდენობის დინამიური ამოღება
+      supabase.from('post_comments').select('id', { count: 'exact' }).eq('post_id', currentPost.id).then(function(cRes) {
+        document.getElementById('gallery-comments-counter-label').innerText = (cRes.count || 0) + " კომენტარი";
+      });
+
+      // Like ღილაკის აქტიური სტატუსი
+      var likeBtn = document.getElementById('gallery-like-main-action-btn');
+      var hasLiked = likedPosts.includes(currentPost.id);
+      if (hasLiked) {
+        likeBtn.classList.add('liked-active');
+      } else {
+        likeBtn.classList.remove('liked-active');
+      }
+
+      // ფუნქციონალების მიბმა ქვედა ღილაკებზე
+      likeBtn.onclick = function() {
+        likePost(currentPost.id, false);
+        setTimeout(updateGalleryViewData, 200);
+      };
+
+      document.getElementById('gallery-comment-main-action-btn').onclick = function() {
+        openCommentsModal(currentPost.id, currentPost.likes_count || 0);
+      };
+      
+      document.getElementById('gallery-likes-trigger-area').onclick = function() {
+        activePostForComments = currentPost.id;
+        openLikersListModal();
+      };
+    }
+
+    // Swipe (ხელის გადასმის) ივენთების ინიციალიზაცია
+    function initGallerySwipeEvents() {
+      var zone = document.getElementById('gallery-swipe-zone');
+      
+      zone.ontouchstart = function(e) {
+        touchStartX = e.changedTouches[0].screenX;
+      };
+      
+      zone.ontouchend = function(e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleGallerySwipeGesture();
+      };
+    }
+
+    function handleGallerySwipeGesture() {
+      var minSwipeDistance = 45; // მინიმალური პიქსელების რაოდენობა გადასასმელად
+      
+      if (touchStartX - touchEndX > minSwipeDistance) {
+        // Swipe მარცხნივ -> შემდეგი ფოტო
+        if (galleryCurrentIndex < galleryPhotoUrls.length - 1) {
+          galleryCurrentIndex++;
+          updateGalleryViewData();
+        } else {
+          console.log("ბოლო ფოტოა");
+        }
+      }
+      
+      if (touchEndX - touchStartX > minSwipeDistance) {
+        // Swipe მარჯვნივ -> წინა ფოტო
+        if (galleryCurrentIndex > 0) {
+          galleryCurrentIndex--;
+          updateGalleryViewData();
+        } else {
+          console.log("პირველი ფოტოა");
+        }
+      }
+    }
+
+    function closeFullGalleryModal() {
+      document.getElementById('custom-gallery-modal').style.display = "none";
     }
 
     function updateFriendshipButtons(targetUserId) {
@@ -3256,7 +3524,6 @@
       var hasAlreadyLiked = likedPosts.includes(postId);
       postReactionMap[postId] = emoji;
       
-      // მივაბათ მიმდინარე ავტორიზებული მომხმარებლის ID-ს
       localStorage.setItem(currentUser.id + '_post_reaction_map', JSON.stringify(postReactionMap));
 
       if (!hasAlreadyLiked) {
@@ -3385,7 +3652,6 @@
         postReactionMap[postId] = "👍"; 
       }
 
-      // მივაბათ მიმდინარე ავტორიზებული მომხმარებლის ID-ს
       localStorage.setItem(currentUser.id + '_liked_posts_list', JSON.stringify(likedPosts));
       localStorage.setItem(currentUser.id + '_post_reaction_map', JSON.stringify(postReactionMap));
 
