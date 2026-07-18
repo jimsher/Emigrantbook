@@ -393,6 +393,7 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
       z-index: 2;
     }
+    .story-username-label img { width: 100%; height: 100%; object-fit: cover; }
     .story-card-video-preview { width: 100%; height: 100%; object-fit: cover; }
 
     .post-card {
@@ -447,7 +448,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-              
+                     
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -3098,7 +3099,7 @@
       if (!displayedEmojis.includes("❤️") && newLikes > 1) displayedEmojis.push("❤️");
       if (!displayedEmojis.includes("😂") && newLikes > 2) displayedEmojis.push("😂");
       while (displayedEmojis.length < 3 && newLikes > displayedEmojis.length - 1) {
-        var fallback = ["👍", "❤️", "😂", "😮", "🥰"][displayedEmojis.length % 5];
+        var fallback = ["👍", "❤️", "😂", "😮", "🥰"][newLikes % 5];
         if (!displayedEmojis.includes(fallback)) displayedEmojis.push(fallback);
         else break;
       }
@@ -3250,7 +3251,7 @@
         statsIcons.innerHTML = iconsHtml;
       }
 
-      var.likesLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+      var likesLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
       tiktokSpans.forEach(function(span) { span.innerText = newLikes; });
       tiktokHearts.forEach(function(heart) {
         if (!hasLiked) heart.classList.add('heart-liked');
@@ -3442,7 +3443,7 @@
       if (avatarUrl) {
         avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
       } else {
-        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
       }
 
       mediaContainer.innerHTML = "";
