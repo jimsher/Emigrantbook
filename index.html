@@ -287,6 +287,17 @@
       position: absolute;
       left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
     }
+    .file-upload-badge {
+      background: #dcae36;
+      color: #111111;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
     .publish-btn {
       background: #dcae36;
       color: #111111;
@@ -436,7 +447,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-          
+              
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -813,13 +824,34 @@
       display: flex; flex-direction: column; gap: 12px;
     }
     .liker-row {
-      display: flex; align-items: center; gap: 12px;
-      cursor: pointer; padding: 6px 0;
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; padding: 8px 0;
+    }
+    
+    /* ავატარის კონტეინერი ბეიჯის სწორი პოზიციონირებისთვის */
+    .liker-avatar-container {
+      position: relative;
+      width: 40px; height: 40px;
     }
     .liker-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
+      width: 100%; height: 100%; border-radius: 50%;
       background: #dcae36; color: #111111; font-weight: bold;
       display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    /* ფეისბუქის იდენტური რეაქციის სმაილის ბეიჯი ავატარის კუთხეში */
+    .liker-reaction-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -4px;
+      background: #1c1c1e;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
 
     .facebook-profile-container {
@@ -2208,6 +2240,7 @@
       cancelReplyMode();
     }
 
+    /* განახლებული მომწონებლების სიის ფუნქცია სმაილების ასახვით */
     function openLikersListModal() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
@@ -2233,7 +2266,7 @@
           res.data.forEach(function(p) {
             if (p.id !== (currentUser ? currentUser.id : null)) {
               var combinedSeed = targetPostId.charCodeAt(0) + p.id.charCodeAt(0);
-              if (combinedSeed % 3 === 0 && filteredLikers.length < 8) {
+              if (combinedSeed % 3 === 0 && filteredLikers.length < 12) {
                 filteredLikers.push(p);
               }
             }
@@ -2249,10 +2282,25 @@
             var finalName = p.full_name || "მომხმარებელი";
             var avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : finalName.charAt(0).toUpperCase();
             
+            // განვსაზღვროთ რა რეაქცია მისცა ამ მომხმარებელმა (საკუთარი თუ რენდომ მეგობრის)
+            var userReaction = "👍"; 
+            if (p.id === (currentUser ? currentUser.id : null)) {
+              userReaction = postReactionMap[targetPostId] || "👍";
+            } else {
+              // მეგობრებისთვის შემთხვევითობის პრინციპით ვანიჭებთ ლამაზ რეაქციებს, როგორც ფოტოზეა
+              var randSeed = p.id.charCodeAt(0) % 4;
+              if (randSeed === 1) userReaction = "❤️";
+              else if (randSeed === 2) userReaction = "🥰";
+              else userReaction = "👍";
+            }
+            
             container.innerHTML += `
               <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
-                <div class="liker-avatar">${avatarHtml}</div>
-                <span style="font-weight: 600; font-size: 14px;">${finalName}</span>
+                <div class="liker-avatar-container">
+                  <div class="liker-avatar">${avatarHtml}</div>
+                  <div class="liker-reaction-badge">${userReaction}</div>
+                </div>
+                <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
               </div>
             `;
           });
@@ -3202,6 +3250,7 @@
         statsIcons.innerHTML = iconsHtml;
       }
 
+      var.likesLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
       tiktokSpans.forEach(function(span) { span.innerText = newLikes; });
       tiktokHearts.forEach(function(heart) {
         if (!hasLiked) heart.classList.add('heart-liked');
