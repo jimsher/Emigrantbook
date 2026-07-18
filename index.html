@@ -1419,7 +1419,7 @@
       <div class="comments-modal-drag"></div>
       <div class="comments-modal-header">
         <div class="modal-likes-trigger" id="modal-likes-count-btn" onclick="openLikersListModal()">
-          <span id="modal-reactions-display">💙❤️👍 <span id="modal-total-likes">0</span></span>
+          <span id="modal-reactions-display">👍❤️😂 <span id="modal-total-likes">0</span></span>
         </div>
         <button class="comments-modal-close" onclick="closeCommentsModal()">×</button>
       </div>
@@ -1623,11 +1623,58 @@
              
             checkPendingRequestsCount();
             subscribeToFriendRequests();
+            subscribeToPostsRealtime(); // ჩავრთოთ პოსტების რეალთაიმი ლაიკებისთვის
           });
         } else {
           showScreen('auth');
         }
       });
+    }
+
+    // პოსტების რეალურ დროში მოსმენის ფუნქცია (ლაიკების მყისიერი ასახვა)
+    function subscribeToPostsRealtime() {
+      supabase.channel('posts-realtime')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, function(payload) {
+          var updatedPost = payload.new;
+          
+          // რეალურ დროში ციფრის განახლება
+          var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${updatedPost.id}"]`);
+          countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
+
+          var tiktokSpans = document.querySelectorAll(`.tiktok-like-count[data-post-id="${updatedPost.id}"]`);
+          tiktokSpans.forEach(function(s) { s.innerText = updatedPost.likes_count || 0; });
+
+          // რეალურ დროში სმაილების რაოდენობრივი განახლება
+          var statsIcons = document.getElementById(`stats-icons-${updatedPost.id}`);
+          if (statsIcons) {
+            var currentLikesNum = updatedPost.likes_count || 0;
+            var userActiveEmoji = postReactionMap[updatedPost.id] || "👍";
+            
+            var displayedEmojis = [userActiveEmoji];
+            if (!displayedEmojis.includes("❤️") && currentLikesNum > 1) displayedEmojis.push("❤️");
+            if (!displayedEmojis.includes("😂") && currentLikesNum > 2) displayedEmojis.push("😂");
+            while (displayedEmojis.length < 3 && currentLikesNum > displayedEmojis.length - 1) {
+              var fallback = ["👍", "❤️", "😂", "😮", "🥰"][displayedEmojis.length % 5];
+              if (!displayedEmojis.includes(fallback)) displayedEmojis.push(fallback);
+              else break;
+            }
+            
+            var iconsHtml = "";
+            // ვტოვებთ მხოლოდ იმდენ სმაილს რამდენიც რეალური რაოდენობაა (მაქსიმუმ 3)
+            var sliceLength = Math.min(currentLikesNum, displayedEmojis.length);
+            for(var k=0; k<sliceLength; k++) {
+              iconsHtml += `<span class="fb-icon-svg-badge">${displayedEmojis[k]}</span>`;
+            }
+            statsIcons.innerHTML = iconsHtml;
+          }
+
+          if (activePostForComments === updatedPost.id) {
+            var currentEmoji = postReactionMap[updatedPost.id] || "👍";
+            var modalTotal = document.getElementById('modal-total-likes');
+            if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
+          }
+        })
+        .subscribe();
     }
 
     function subscribeToFriendRequests() {
@@ -1992,7 +2039,6 @@
       activePostForComments = postId;
       cancelReplyMode();
       
-      // მოდალში განვასხვავოთ მიმდინარე პოსტის აქტიური სმაილი
       var activeEmoji = postReactionMap[postId] || "👍";
       document.getElementById('modal-reactions-display').innerHTML = `${activeEmoji} <span id="modal-total-likes">${totalLikes}</span>`;
 
@@ -2137,6 +2183,11 @@
         });
     }
 
+    function updateProfileStats(userId, postsCount) {
+      document.getElementById('stat-posts-count').innerText = postsCount;
+      updateRealtimeStats(userId);
+    }
+
     function submitCommentFromModal(postId) {
       var input = document.getElementById('modal-comment-input-field');
       var text = input.value.trim();
@@ -2153,7 +2204,6 @@
         content: text
       };
 
-      // თუ შიდა კომენტარია (Reply), გადავცემთ parent_id-ს
       if (activeCommentReplyId) {
         insertObj.parent_id = activeCommentReplyId;
       }
@@ -2182,7 +2232,6 @@
       container.innerHTML = `<div style="text-align: center; color: #aaaaaa;">იტვირთება...</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
-      // მოგვაქვს ყველა მომხმარებლის პროფილი რეალური მოწონებების დასადგენად
       supabase.from('profiles')
         .select('id, full_name, avatar_url')
         .then(function(res) {
@@ -2194,17 +2243,13 @@
           var targetPostId = activePostForComments;
           var filteredLikers = [];
 
-          // თუ მიმდინარე მომხმარებელმა დაალაიქა, ვამატებთ სიაში
           if (likedPosts.includes(targetPostId) && currentUser) {
             var currentLikerObj = res.data.find(function(p) { return p.id === currentUser.id; });
             if (currentLikerObj) filteredLikers.push(currentLikerObj);
           }
 
-          // იმიტაცია სხვა მომხმარებლების მოწონების დასადგენად (რადგან მოწონებები posts ცხრილში ინახება მხოლოდ რიცხვად)
-          // რათა თითოეულ პოსტს ჰქონდეს ინდივიდუალური და განსხვავებული სია
           res.data.forEach(function(p) {
             if (p.id !== (currentUser ? currentUser.id : null)) {
-              // მარტივი ჰეშირება პოსტის ID-ის და პროფილის ID-ის მიხედვით რეალური მრავალფეროვნების მისაღებად
               var combinedSeed = targetPostId.charCodeAt(0) + p.id.charCodeAt(0);
               if (combinedSeed % 3 === 0 && filteredLikers.length < 8) {
                 filteredLikers.push(p);
@@ -2890,26 +2935,25 @@
       var hasLiked = likedPosts.includes(post.id);
       var currentLikesNum = post.likes_count || 0;
       
-      // აქტიური რეაქციის გამოტანა
       var userActiveEmoji = postReactionMap[post.id] || "👍";
       var likedClass = hasLiked ? "btn-liked" : "";
 
-      // გენერირდება მინიმუმ 3 პოპულარული სმაილი, რათა სხვადასხვა რეაქციები ერთად ჩანდეს
+      // რაოდენობრივად განსხვავებული სმაილების გენერირება (მაქსიმუმ 3)
       var displayedEmojis = [userActiveEmoji];
       if (!displayedEmojis.includes("❤️") && currentLikesNum > 1) displayedEmojis.push("❤️");
       if (!displayedEmojis.includes("😂") && currentLikesNum > 2) displayedEmojis.push("😂");
-      while (displayedEmojis.length < 3 && currentLikesNum > 0) {
-        var fallback = ["👍", "❤️", "😂", "😮"][displayedEmojis.length % 4];
+      while (displayedEmojis.length < 3 && currentLikesNum > displayedEmojis.length - 1) {
+        var fallback = ["👍", "❤️", "😂", "😮", "🥰"][displayedEmojis.length % 5];
         if (!displayedEmojis.includes(fallback)) displayedEmojis.push(fallback);
         else break;
       }
       
       var statsIconsHtml = "";
-      displayedEmojis.forEach(function(em) {
-        statsIconsHtml += `<span class="fb-icon-svg-badge">${em}</span>`;
-      });
+      var sliceLength = Math.min(currentLikesNum, displayedEmojis.length);
+      for(var k=0; k<sliceLength; k++) {
+        statsIconsHtml += `<span class="fb-icon-svg-badge">${displayedEmojis[k]}</span>`;
+      }
 
-      // 8 რეაქციის ასარჩევი HTML ბლოკი
       var reactionsPanelHtml = `<div class="fb-reactions-panel" id="reactions-panel-${post.id}">`;
       ALL_REACTIONS.forEach(function(r) {
         reactionsPanelHtml += `<span class="fb-reaction-item" title="${r.label}" onclick="applyReaction('${post.id}', '${r.emoji}')">${r.emoji}</span>`;
@@ -2959,7 +3003,6 @@
       `;
     }
 
-    // Long Press და Hover მოვლენების ინიციალიზაცია 8 რეაქციის ასამუშავებლად
     function initLongPressReactions(postId) {
       setTimeout(function() {
         var btn = document.getElementById(`like-btn-main-${postId}`);
@@ -3022,12 +3065,11 @@
       var emojiIcon = document.getElementById(`like-btn-emoji-icon-${postId}`);
       if (emojiIcon) emojiIcon.innerText = emoji + " ";
 
-      // განახლებული მინიმუმ 3 სმაილის ლოგიკა დინამიური ასახვისთვის
       var displayedEmojis = [emoji];
       if (!displayedEmojis.includes("❤️") && newLikes > 1) displayedEmojis.push("❤️");
       if (!displayedEmojis.includes("😂") && newLikes > 2) displayedEmojis.push("😂");
-      while (displayedEmojis.length < 3) {
-        var fallback = ["👍", "❤️", "😂", "😮"][displayedEmojis.length % 4];
+      while (displayedEmojis.length < 3 && newLikes > displayedEmojis.length - 1) {
+        var fallback = ["👍", "❤️", "😂", "😮", "🥰"][displayedEmojis.length % 5];
         if (!displayedEmojis.includes(fallback)) displayedEmojis.push(fallback);
         else break;
       }
@@ -3035,7 +3077,10 @@
       var statsIcons = document.getElementById(`stats-icons-${postId}`);
       if (statsIcons) {
         var iconsHtml = "";
-        displayedEmojis.forEach(function(em) { iconsHtml += `<span class="fb-icon-svg-badge">${em}</span>`; });
+        var sliceLength = Math.min(newLikes, displayedEmojis.length);
+        for(var k=0; k<sliceLength; k++) {
+          iconsHtml += `<span class="fb-icon-svg-badge">${displayedEmojis[k]}</span>`;
+        }
         statsIcons.innerHTML = iconsHtml;
       }
 
@@ -3159,7 +3204,21 @@
 
       var statsIcons = document.getElementById(`stats-icons-${postId}`);
       if (statsIcons) {
-        statsIcons.innerHTML = `<span class="fb-icon-svg-badge">👍</span>`;
+        var userActiveEmoji = postReactionMap[postId] || "👍";
+        var displayedEmojis = [userActiveEmoji];
+        if (!displayedEmojis.includes("❤️") && newLikes > 1) displayedEmojis.push("❤️");
+        if (!displayedEmojis.includes("😂") && newLikes > 2) displayedEmojis.push("😂");
+        while (displayedEmojis.length < 3 && newLikes > displayedEmojis.length - 1) {
+          var fallback = ["👍", "❤️", "😂", "😮", "🥰"][displayedEmojis.length % 5];
+          if (!displayedEmojis.includes(fallback)) displayedEmojis.push(fallback);
+          else break;
+        }
+        var iconsHtml = "";
+        var sliceLen = Math.min(newLikes, displayedEmojis.length);
+        for(var k=0; k<sliceLen; k++) {
+          iconsHtml += `<span class="fb-icon-svg-badge">${displayedEmojis[k]}</span>`;
+        }
+        statsIcons.innerHTML = iconsHtml;
       }
 
       tiktokSpans.forEach(function(span) { span.innerText = newLikes; });
