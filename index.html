@@ -509,7 +509,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                         
+                                 
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1405,13 +1405,19 @@
         </div>
 
         <div class="profile-tabs">
-          <button class="tab-button active">პოსტები</button>
-          <button class="tab-button">ფოტოები</button>
-          <button class="tab-button">ვიდეოები</button>
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">პოსტები</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">ფოტოები</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">ვიდეოები</button>
         </div>
 
+        <!-- პოსტების კედელი -->
         <div id="profile-posts-wall">
           <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
+        </div>
+
+        <!-- ფოტოების კოლაჟის კედელი -->
+        <div id="profile-photos-wall" style="display: none;">
+          <div style="text-align: center; padding: 20px; color: #aaaaaa;">ფოტოები იტვირთება...</div>
         </div>
       </div>
     </div>
@@ -2435,7 +2441,7 @@
         document.getElementById('profile-action-panel').innerHTML = `
           <button class="fb-btn-primary" onclick="triggerStoryUpload()">
             <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
-            ისტორია
+            ისლამი
           </button>
           <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
             <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
@@ -2444,15 +2450,13 @@
           <button class="btn-more-options">•••</button>
         `;
 
-        // ბურგერ მენიუს გამო კუთხის "სისტემიდან გასვლა" ღილაკის დამალვა
         var oldLogoutSection = document.getElementById('profile-logout-section');
         if (oldLogoutSection) oldLogoutSection.style.display = "none";
         
-        // თუმცა ბურგერის გამოჩენა მხოლოდ საკუთარ პროფილზე გვინდა
         document.getElementById('profile-burger-btn').style.display = "flex";
         
         renderProfileDetails(userProfile || {});
-        loadUserPosts(currentUser.id);
+        switchProfileTab('posts'); // თავიდან ყოველთვის პოსტები გამოჩნდეს
         showScreen('profile');
       });
     }
@@ -2492,15 +2496,93 @@
         document.getElementById('avatar-camera-btn').style.display = "none";
         document.getElementById('cover-camera-btn').style.display = "none";
         
-        // სხვის პროფილზე ბურგერ მენიუს დამალვა
         document.getElementById('profile-burger-btn').style.display = "none";
 
         renderProfileDetails(selectedUser);
-        loadUserPosts(userId);
+        switchProfileTab('posts'); // თავიდან ყოველთვის პოსტები გამოჩნდეს
         showScreen('profile');
 
         updateFriendshipButtons(userId);
       });
+    }
+
+    /* პროფილის ტაბების მართვისა და ფოტოების კოლაჟის გააქტიურების ახალი ფუნქცია */
+    function switchProfileTab(tabName) {
+      // მოვაშოროთ active კლასი ყველა ტაბის ღილაკს
+      document.getElementById('tab-btn-posts').classList.remove('active');
+      document.getElementById('tab-btn-photos').classList.remove('active');
+      document.getElementById('tab-btn-videos').classList.remove('active');
+
+      // დავმალოთ ორივე კედელი
+      document.getElementById('profile-posts-wall').style.display = 'none';
+      document.getElementById('profile-photos-wall').style.display = 'none';
+
+      var targetUserId = activeViewingProfileId || currentUser.id;
+
+      if (tabName === 'posts') {
+        document.getElementById('tab-btn-posts').classList.add('active');
+        document.getElementById('profile-posts-wall').style.display = 'block';
+        loadUserPosts(targetUserId);
+      } else if (tabName === 'photos') {
+        document.getElementById('tab-btn-photos').classList.add('active');
+        document.getElementById('profile-photos-wall').style.display = 'block';
+        loadUserPhotos(targetUserId);
+      } else if (tabName === 'videos') {
+        document.getElementById('tab-btn-videos').classList.add('active');
+        document.getElementById('profile-posts-wall').style.display = 'block';
+        loadUserPosts(targetUserId); // ვიდეოების გაფილტვრა მოხდება საჭიროებისამებრ
+      }
+    }
+
+    /* მომხმარებლის ყველა პოსტიდან ფოტოების ამოღება და ფოტოკოლაჟის აგება */
+    function loadUserPhotos(userId) {
+      var photosWall = document.getElementById('profile-photos-wall');
+      photosWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">ფოტოები იტვირთება...</div>';
+
+      supabase.from('posts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .then(function(res) {
+          if (res.error) {
+            photosWall.innerHTML = '<div style="color:red; text-align:center;">ფოტოები ვერ ჩაიტვირთა: ' + res.error.message + '</div>';
+            return;
+          }
+
+          var posts = res.data || [];
+          var allPhotoUrls = [];
+
+          // გამოვყოთ მხოლოდ ფოტო მედია ფაილები
+          posts.forEach(function(post) {
+            if (post.media_url) {
+              var urls = post.media_url.split(',');
+              urls.forEach(function(url) {
+                var cleanUrl = url.trim();
+                // გამოვრიცხოთ ვიდეოები, რადგან ეს ფოტოების ჩანართია
+                if (!cleanUrl.includes('.mp4') && !cleanUrl.includes('video')) {
+                  allPhotoUrls.push(cleanUrl);
+                }
+              });
+            }
+          });
+
+          if (allPhotoUrls.length === 0) {
+            photosWall.innerHTML = '<div style="text-align: center; padding: 40px; color: #aaaaaa;">მომხმარებელს ფოტოები არ აქვს ატვირთული.</div>';
+            return;
+          }
+
+          // ვაქცევთ ერთიან სტრინგად მძიმეებით გამოყოფილს და გადავცემთ შენს buildCollageHtml-ს
+          var joinedUrls = allPhotoUrls.join(',');
+          
+          // ვაშენებთ სუფთა, ერთიან კოლაჟს იდენტური დიზაინით
+          var collageHtml = buildCollageHtml(joinedUrls, "photo_tab_view", 0);
+          
+          photosWall.innerHTML = `
+            <div style="padding: 10px 0;">
+              ${collageHtml}
+            </div>
+          `;
+        });
     }
 
     function updateFriendshipButtons(targetUserId) {
@@ -2627,7 +2709,10 @@
 
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
-      profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>';
+      // მხოლოდ მაშინ გამოვაჩინოთ იტვირთება, თუ ეს ტაბია აქტიური
+      if(document.getElementById('tab-btn-posts').classList.contains('active')) {
+         profileWall.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>';
+      }
 
       supabase.from('posts')
         .select('*')
