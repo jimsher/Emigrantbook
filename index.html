@@ -238,7 +238,6 @@
       user-select: none;
     }
 
-    /* ბურგერ მენიუს ახალი სტილები */
     .burger-btn {
       background: none;
       border: none;
@@ -368,7 +367,6 @@
       color: #dcae36;
     }
 
-    /* ფეისბუქის სტილის ახალი პოსტის შექმნის ზოლი პროფილისთვის */
     .fb-profile-create-post-bar {
       background: #141414;
       padding: 12px 16px;
@@ -421,7 +419,7 @@
     .fb-bar-photo-icon {
       width: 24px;
       height: 24px;
-      fill: #45bd62; /* მწვანე ფერის ფოტოს იკონკა */
+      fill: #45bd62;
     }
 
     .stories-wrapper {
@@ -1289,7 +1287,7 @@
     </div>
   </div>
 
-  <div id="home-screen">
+  <div id="home-screen" style="display: none;">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
        
@@ -1354,7 +1352,7 @@
     </div>
   </div>
         
-  <div id="profile-screen">
+  <div id="profile-screen" style="display: none;">
     <div class="header profile-header-fix">
       <div class="nav-icons-center">
         <button type="button" class="nav-icon-btn active" onclick="showScreen('home')">
@@ -1442,7 +1440,6 @@
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
 
-        <!-- ფოტოზე ასახული ფეისბუქის იდენტური ჰორიზონტალური პოსტის შესაქმნელი ზოლი პროფილში -->
         <div class="fb-profile-create-post-bar" id="profile-create-post-bar-section">
           <div class="fb-bar-avatar" id="fb-bar-avatar-element">?</div>
           <input type="text" class="fb-bar-input-field" placeholder="საკუთარ აზრებს ხომ არ გაგვიზიარებდით?" readonly onclick="openProfilePostModal(event)">
@@ -1470,7 +1467,7 @@
     </div>
   </div>
 
-  <div id="edit-profile-screen">
+  <div id="edit-profile-screen" style="display: none;">
     <div class="header">
       <div class="logo-text" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
     </div>
@@ -1520,7 +1517,7 @@
     </div>
   </div>
 
-  <div id="connections-screen">
+  <div id="connections-screen" style="display: none;">
     <div class="header">
       <div class="logo-text" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
     </div>
@@ -1616,6 +1613,7 @@
     var currentViewingStoryObj = null;
     var activePostForComments = null;
     var activeCommentReplyId = null; 
+    var selectedUser = null;
 
     var ALL_REACTIONS = [
       { emoji: "👍", label: "ლაიქი", color: "#1877f2" },
@@ -1803,7 +1801,6 @@
       });
     }
 
-    /* პროფილის პოსტის შექმნის დამხმარე ლოგიკის კორექტირება გვერდის აფრენის თავიდან ასაცილებლად */
     function openProfilePostModal(event) {
       if (event) {
         event.preventDefault();
@@ -1864,7 +1861,6 @@
           }
 
           if (activePostForComments === updatedPost.id) {
-            var currentEmoji = postReactionMap[updatedPost.id] || "👍";
             var modalTotal = document.getElementById('modal-total-likes');
             if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
           }
@@ -2226,7 +2222,7 @@
         .then(function(res) {
           var count = (res.count !== null) ? res.count : 0;
           var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
-          countLabels.forEach(function(lbl) { lbl.innerText = count; });
+          countLabels.forEach(function(lbl) { lbl.innerText = count + " კომენტარი"; });
         });
     }
 
@@ -2496,7 +2492,6 @@
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = currentUser.email;
 
-        // საკუთარ პროფილზე გამოვაჩინოთ პოსტის ზოლი, სხვისაზე დავმალოთ
         document.getElementById('profile-create-post-bar-section').style.display = "flex";
 
         var banner = document.getElementById('profile-cover-banner');
@@ -2522,9 +2517,6 @@
           </button>
           <button type="button" class="btn-more-options">•••</button>
         `;
-
-        var oldLogoutSection = document.getElementById('profile-logout-section');
-        if (oldLogoutSection) oldLogoutSection.style.display = "none";
         
         document.getElementById('profile-burger-btn').style.display = "flex";
         
@@ -2557,7 +2549,6 @@
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = "Imigrant";
 
-        // სხვის პროფილზე ვმალავთ პოსტის შექმნის ზოლს
         document.getElementById('profile-create-post-bar-section').style.display = "none";
 
         var banner = document.getElementById('profile-cover-banner');
@@ -2671,7 +2662,7 @@
               <button type="button" class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">
                 დამატება
               </button>
-              <button type="button" class="fb-btn-secondary" onclick="sendMessage()">
+              <button type="button" class="fb-btn-secondary" onclick="alert('მესენჯერი მალე დაემატება!')">
                 მესინჯერი
               </button>
               <button type="button" class="btn-more-options">•••</button>
@@ -2682,7 +2673,7 @@
                 <button type="button" class="fb-btn-secondary" onclick="cancelFriendRequest('${request.id}', '${targetUserId}')" style="background-color: #333333;">
                   გაუქმება
                 </button>
-                <button type="button" class="fb-btn-secondary" onclick="sendMessage()">
+                <button type="button" class="fb-btn-secondary" onclick="alert('მესენჯერი მალე დაემატება!')">
                   მესინჯერი
                 </button>
                 <button type="button" class="btn-more-options">•••</button>
@@ -2705,7 +2696,7 @@
               <button type="button" class="fb-btn-success" onclick="deleteFriendship('${request.id}', '${targetUserId}')">
                 👥 წაშლა
               </button>
-              <button type="button" class="fb-btn-secondary" onclick="sendMessage()">
+              <button type="button" class="fb-btn-secondary" onclick="alert('მესენჯერი მალე დაემატება!')">
                 მესინჯერი
               </button>
               <button type="button" class="btn-more-options">•••</button>
@@ -2849,7 +2840,7 @@
 
       var updateData = {
         full_name: fullName,
-        age: age,
+        age: age ? parseInt(age) : null,
         job_title: job,
         current_city: city,
         country: country,
@@ -2889,12 +2880,12 @@
     }
 
     function triggerAvatarUpload(event) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-  document.getElementById('avatar-file-input').click();
-}
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      document.getElementById('avatar-file-input').click();
+    }
 
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
@@ -3099,7 +3090,7 @@
         });
       } else {
         navigator.clipboard.writeText(url || window.location.href);
-        alert('თქვენს ბრაუზერს არ აქვს Share API მხარდაჭერა. ბმული კოპირებულია გაზიარებისთვის!');
+        alert('ბმული კოპირებულია გაზიარებისთვის!');
       }
     }
 
@@ -3443,7 +3434,6 @@
           document.getElementById('post-media-file').value = "";
           document.getElementById('selected-file-name').style.display = "none";
           loadPosts();
-          // თუ პროფილზე ვართ, პროფილის კედელიც განახლდეს
           if (document.getElementById('profile-screen').style.display === 'block') {
             loadUserPosts(currentUser.id);
           }
@@ -3511,7 +3501,6 @@
         statsIcons.innerHTML = iconsHtml;
       }
 
-      var likesLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
       tiktokSpans.forEach(function(span) { span.innerText = newLikes; });
       tiktokHearts.forEach(function(heart) {
         if (!hasLiked) heart.classList.add('heart-liked');
@@ -3703,7 +3692,7 @@
       if (avatarUrl) {
         avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
       } else {
-        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold; align-items:center; justify-content:center; height:100%; width:100%;">${username.charAt(0).toUpperCase()}</div>`;
       }
 
       mediaContainer.innerHTML = "";
