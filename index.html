@@ -434,7 +434,7 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 3px solid #1877f2;
+      border: 3px solid #dcae36;
       background: #222222;
       overflow: hidden;
       display: flex;
@@ -527,7 +527,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                            
+                                             
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1957,7 +1957,7 @@
         comment: "Комментарий", reply: "Ответить", replyTo: "Ответ пользователю: ",
         likers: "Лайкнувшие", delete: "🗑️ Удалить", stories: "Истории",
         msgPlaceholder: "Отправить сообщение...", addFriend: "Добавить",
-        messenger: "Мессенджер", edit: "Редактировать", cancelReq: "Отмена запроса",
+        messenger: "Messenger", edit: "Редактировать", cancelReq: "Отмена запроса",
         accept: "Принять", reject: "Отклонить", removeFriend: "👥 Удалить",
         share: "Поделиться", commentsCount: "комментариев", noPhotos: "Нет загруженных фотографий.",
         noVideos: "Нет доступных видео.", descPlaceholder: "Описание отсутствует.",
@@ -2058,6 +2058,14 @@
       if(btnTabPhotos) btnTabPhotos.innerText = t.tabPhotos;
       var btnTabVideos = document.getElementById('tab-btn-videos');
       if(btnTabVideos) btnTabVideos.innerText = t.tabVideos;
+
+      // პროფილზე პოსტის, გამომწერის და გამოწერილის თარგმანის ფიქსი
+      var lblStatPost = document.getElementById('lbl-stat-post');
+      if(lblStatPost) lblStatPost.innerText = t.postUnit;
+      var lblStatFollowers = document.getElementById('lbl-stat-followers');
+      if(lblStatFollowers) lblStatFollowers.innerText = lang === 'ka' ? "გამომწერი" : (lang === 'en' ? "follower" : (lang === 'ru' ? "подписчик" : (lang === 'fr' ? "abonné" : "Abonnent")));
+      var lblStatFollowing = document.getElementById('lbl-stat-following');
+      if(lblStatFollowing) lblStatFollowing.innerText = t.followingTitle;
 
       var bProfile = document.getElementById('lbl-back-to-profile');
       if(bProfile) bProfile.innerText = t.backToProfile;
@@ -2175,7 +2183,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-           
+             
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -3223,12 +3231,13 @@
 
           var gridHtml = '<div class="video-grid-full">';
           activeTiktokVideosList.forEach(function(post, index) {
-            var viewsFake = (post.likes_count || 0) * 3 + (index * 7) + 12;
+            // რეალური დროის ზუსტი მნახველის ფიქსი
+            var realViews = post.views_count || 0;
             gridHtml += `
               <div class="video-grid-card" onclick="openTiktokVideoModal(${index})">
                 <video class="video-grid-thumbnail" src="${post.media_url}" preload="metadata" muted></video>
                 <div class="video-grid-views">
-                  <span>👁️ ${viewsFake}</span>
+                  <span>👁️ ${realViews}</span>
                 </div>
               </div>
             `;
@@ -4198,13 +4207,13 @@
         .in('user_id', userIdsList)
         .order('created_at', { ascending: false })
         .then(function(res) {
-          // პროფილის გვერდზე აქტიური სთორის მქონე იუზერის ჩარჩოს განახლება
+          // პროფილის მთავარ ავატარზე სთორის ოქროსფერი ჩარჩოს ფიქსი
           var profileAvatar = document.getElementById('profile-big-avatar');
           if (profileAvatar) {
             var targetId = activeViewingProfileId || (currentUser ? currentUser.id : null);
             var hasActiveStory = res.data && res.data.some(function(s) { return s.user_id === targetId; });
             if (hasActiveStory) {
-              profileAvatar.style.border = "4px solid #1877f2";
+              profileAvatar.style.border = "4px solid #dcae36";
             } else {
               profileAvatar.style.border = "4px solid #141414";
             }
