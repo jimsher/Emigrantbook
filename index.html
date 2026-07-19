@@ -621,8 +621,8 @@
       justify-content: center;
       overflow: hidden;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      /* 4 წამიანი უწყვეტი პლავნად სვლის ანიმაცია */
-      animation: avatarSmoothRiseScroll 4s linear forwards;
+      /* 6 წამიანი უფრო ნელი და პლავნად სვლის ანიმაცია */
+      animation: avatarSmoothRiseScroll 6s linear forwards;
     }
     .tiktok-floating-avatar-item img {
       width: 100%;
@@ -1661,7 +1661,7 @@
           </div>
 
           <div class="profile-action-column" id="profile-action-panel">
-            <div style="text-align: center; padding: 10px; color:#aaaaaa;">იტვირთება მოქმედებები...</div>
+            <div style="text-align: center; padding: 10px; color:#aaaaaa;">იტვირთება მომოქმედებები...</div>
           </div>
         </div>
 
@@ -1857,7 +1857,7 @@
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        ဖოტოს აღწერა...
+        ფოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
@@ -2205,6 +2205,14 @@
           if (activePostForComments === updatedPost.id) {
             var modalTotal = document.getElementById('modal-total-likes');
             if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
+          }
+
+          // ლაიქების განახლებისას რეალურ დროში გადავტვირთოთ მცურავი ავატარები
+          if(document.getElementById(`floating-container-feed-${updatedPost.id}`)) {
+            startFloatingAvatarsAnimation(updatedPost.id, `floating-container-feed-${updatedPost.id}`);
+          }
+          if(document.getElementById(`floating-container-tiktok-${updatedPost.id}`)) {
+            startFloatingAvatarsAnimation(updatedPost.id, `floating-container-tiktok-${updatedPost.id}`);
           }
         })
         .subscribe();
@@ -3681,67 +3689,82 @@
       }
     }
 
-    // მცურავი ავატარების ახალი კინეტიკური ანიმაციის ფუნქცია (Endless Smooth Loop)
+    // მცურავი ავატარების აბსოლუტურად ინდივიდუალური ანიმაცია კონკრეტული ვიდეოს მიხედვით
     function startFloatingAvatarsAnimation(postId, containerId) {
       var container = document.getElementById(containerId);
       if(!container) return;
 
       if(activeFloatingIntervals[postId]) {
         clearInterval(activeFloatingIntervals[postId]);
+        container.innerHTML = "";
       }
 
-      supabase.from('profiles').select('id, full_name, avatar_url').then(function(res) {
-        if(res.error || !res.data) return;
-
-        var likersList = [];
-        if (likedPosts.includes(postId) && currentUser) {
-          var me = res.data.find(function(p) { return p.id === currentUser.id; });
-          if(me) likersList.push(me);
-        }
-
-        res.data.forEach(function(p) {
-          if(p.id !== (currentUser ? currentUser.id : null)) {
-            var combinedSeed = postId.charCodeAt(0) + p.id.charCodeAt(0);
-            if(combinedSeed % 3 === 0 && likersList.length < 15) {
-              likersList.push(p);
-            }
-          }
-        });
-
-        if(likersList.length === 0) return;
-
-        var index = 0;
+      // ამოწმებს, აქვს თუ არა ლაიქი ამ კონკრეტულ ვიდეოს
+      supabase.from('posts').select('likes_count').eq('id', postId).single().then(function(postCheck) {
+        var totalLikes = (postCheck.data && postCheck.data.likes_count) ? postCheck.data.likes_count : 0;
         
-        function spawn() {
-          if (document.getElementById(containerId) === null) {
-            clearInterval(activeFloatingIntervals[postId]);
-            return;
-          }
-          
-          var person = likersList[index];
-          var name = person.full_name || "User";
-          var avatarContent = person.avatar_url ? `<img src="${person.avatar_url}">` : name.charAt(0).toUpperCase();
-          
-          var bubble = document.createElement('div');
-          bubble.className = "tiktok-floating-avatar-item";
-          bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
-          
-          container.appendChild(bubble);
-          
-          // CSS ანიმაციის დასრულებისთანავე (4 წამში) ელემენტი ავტომატურად იშლება DOM-იდან
-          setTimeout(function() {
-            if(bubble && bubble.parentNode) {
-              bubble.remove();
-            }
-          }, 4000);
-          
-          index = (index + 1) % likersList.length;
+        // თუ ვიდეოს საერთოდ არ აქვს ლაიქი, არცერთი ავატარი არ გამოვაჩინოთ
+        if (totalLikes <= 0) {
+          return;
         }
 
-        // პირველივე ავატარის მყისიერი გაშვება
-        spawn();
-        // ყოველ 1.2 წამში პლავნად იქმნება ახალი ელემენტი და მიდის ზევით
-        activeFloatingIntervals[postId] = setInterval(spawn, 1200);
+        supabase.from('profiles').select('id, full_name, avatar_url').then(function(res) {
+          if(res.error || !res.data) return;
+
+          var likersList = [];
+          
+          // თუ მიმდინარე მომხმარებელს დაალაიქებული აქვს ეს პოსტი, ჩავსვათ სიაში
+          if (likedPosts.includes(postId) && currentUser) {
+            var me = res.data.find(function(p) { return p.id === currentUser.id; });
+            if(me) likersList.push(me);
+          }
+
+          // გენერირდება ინდივიდუალური სიები კონკრეტული ვიდეოს უნიკალური ID-ს მიხედვით
+          res.data.forEach(function(p) {
+            if(p.id !== (currentUser ? currentUser.id : null)) {
+              var combinedSeed = postId.charCodeAt(0) + p.id.charCodeAt(0);
+              // ლაიქების რაოდენობის შესაბამისად ვფილტრავთ რეალურ ადამიანებს
+              if(combinedSeed % 3 === 0 && likersList.length < totalLikes) {
+                likersList.push(p);
+              }
+            }
+          });
+
+          // თუ სია ცარიელია ან ლაიქი არ არის, არ ვუშვებთ ინტერვალს
+          if(likersList.length === 0) return;
+
+          var index = 0;
+          
+          function spawn() {
+            if (document.getElementById(containerId) === null) {
+              clearInterval(activeFloatingIntervals[postId]);
+              return;
+            }
+            
+            var person = likersList[index];
+            var name = person.full_name || "User";
+            var avatarContent = person.avatar_url ? `<img src="${person.avatar_url}">` : name.charAt(0).toUpperCase();
+            
+            var bubble = document.createElement('div');
+            bubble.className = "tiktok-floating-avatar-item";
+            bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
+            
+            container.appendChild(bubble);
+            
+            // 6 წამიანი ანიმაციის მერე იშლება DOM-იდან
+            setTimeout(function() {
+              if(bubble && bubble.parentNode) {
+                bubble.remove();
+              }
+            }, 6000);
+            
+            index = (index + 1) % likersList.length;
+          }
+
+          spawn();
+          // ინტერვალის დაყოვნება გაიზარდა 1900ms-მდე, რათა მანძილი ავატარებს შორის შემცირდეს
+          activeFloatingIntervals[postId] = setInterval(spawn, 1900);
+        });
       });
     }
 
@@ -3761,7 +3784,6 @@
           var hasLiked = likedPosts.includes(postId);
           var activeHeartClass = hasLiked ? "heart-liked" : "";
           
-          // ავატარების ანიმაციის გაშვება პოსტების კედელზე ჩატვირთვისას
           setTimeout(function() {
             startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
           }, 200);
@@ -4060,6 +4082,13 @@
         statsIcons.innerHTML = iconsHtml;
       }
 
+      // მცურავი ავატარების გადატვირთვა
+      setTimeout(function() {
+        if(document.getElementById(`floating-container-feed-${postId}`)) {
+          startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
+        }
+      }, 300);
+
       supabase.from('posts').update({ likes_count: newLikes }).eq('id', postId).then(function() {
         console.log("Reaction saved to Supabase: " + emoji);
       });
@@ -4206,7 +4235,7 @@
         document.getElementById('modal-reactions-display').innerHTML = `${currentEmoji} <span id="modal-total-likes">${newLikes}</span>`;
       }
 
-      // ლაიქის დაჭერისას ან მოხსნისას მცურავი ანიმაციის თავიდან გადატვირთვა
+      // ლაიქის დაჭერისას ან მოხსნისას მცურავი ანიმაციის მყისიერი და უსაფრთხო გადატვირთვა
       setTimeout(function() {
         if(document.getElementById(`floating-container-feed-${postId}`)) {
           startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
@@ -4214,7 +4243,7 @@
         if(document.getElementById(`floating-container-tiktok-${postId}`)) {
           startFloatingAvatarsAnimation(postId, `floating-container-tiktok-${postId}`);
         }
-      }, 500);
+      }, 300);
 
       supabase.from('posts')
         .update({ likes_count: newLikes })
