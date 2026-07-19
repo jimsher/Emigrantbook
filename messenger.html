@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Emigrant Messenger</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -13,7 +14,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      background-color: #000000;
+      background-color: #0b0b0b;
       color: #ffffff;
       height: 100vh;
       display: flex;
@@ -25,7 +26,7 @@
       width: 100%;
       max-width: 480px;
       height: 100vh;
-      background-color: #000000;
+      background-color: #0b0b0b;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -50,6 +51,7 @@
       font-size: 30px;
       font-weight: 800;
       letter-spacing: -0.5px;
+      color: #dcae36;
     }
     .header-actions {
       display: flex;
@@ -69,7 +71,7 @@
     .header-btn svg {
       width: 22px;
       height: 22px;
-      fill: #ffffff;
+      fill: #dcae36;
     }
 
     /* საძიებო ზოლი */
@@ -125,7 +127,7 @@
       margin-bottom: 6px;
     }
     .story-avatar-wrapper.active-story {
-      border: 2px solid #0084ff;
+      border: 2px solid #dcae36;
       border-radius: 50%;
       padding: 2px;
     }
@@ -140,7 +142,8 @@
       position: absolute;
       bottom: 0;
       right: 0;
-      background: #1a1a1a;
+      background: #dcae36;
+      color: #111111;
       width: 20px;
       height: 20px;
       border-radius: 50%;
@@ -186,7 +189,7 @@
       transition: background 0.2s;
     }
     .chat-row-item:active {
-      background: #121212;
+      background: #1a1a1a;
     }
     .chat-row-avatar-holder {
       position: relative;
@@ -238,7 +241,7 @@
     .unread-dot {
       width: 8px;
       height: 8px;
-      background-color: #0084ff;
+      background-color: #dcae36;
       border-radius: 50%;
       flex-shrink: 0;
     }
@@ -250,8 +253,8 @@
       left: 0;
       right: 0;
       height: 70px;
-      background: #000000;
-      border-top: 1px solid #1a1a1a;
+      background: #141414;
+      border-top: 1px solid #222222;
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -269,7 +272,7 @@
       position: relative;
     }
     .nav-tab.active {
-      color: #0084ff;
+      color: #dcae36;
     }
     .nav-tab svg {
       width: 24px;
@@ -292,7 +295,7 @@
       padding: 1px 5px;
     }
 
-    /* Meta AI მცურავი ორნამენტის ღილაკი (როგორც ფოტოზეა) */
+    /* Meta AI მცურავი ორნამენტის ღილაკი */
     .meta-ai-float-btn {
       position: fixed;
       bottom: 85px;
@@ -300,7 +303,7 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #a255ff, #0084ff);
+      background: radial-gradient(circle at 30% 30%, #dcae36, #a17a18);
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
       display: flex;
       align-items: center;
@@ -313,18 +316,18 @@
        2. შიდა ჩატის ეკრანი (CHAT THREAD SCREEN)
     ------------------------------------------------------- */
     #thread-screen {
-      display: none; /* თავიდან დამალულია */
+      display: none;
       flex-direction: column;
       height: 100%;
-      background-color: #000000;
+      background-color: #0b0b0b;
     }
     .thread-header {
       padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #121212;
-      background: #000;
+      border-bottom: 1px solid #222222;
+      background: #141414;
     }
     .thread-header-left {
       display: flex;
@@ -335,14 +338,14 @@
     .back-btn {
       background: none;
       border: none;
-      color: #0084ff;
+      color: #dcae36;
       cursor: pointer;
       padding: 4px;
     }
     .back-btn svg {
       width: 24px;
       height: 24px;
-      fill: #0084ff;
+      fill: #dcae36;
     }
     .thread-header-avatar-wrapper {
       position: relative;
@@ -376,7 +379,7 @@
     .thread-header-actions svg {
       width: 22px;
       height: 22px;
-      fill: #0084ff;
+      fill: #dcae36;
       cursor: pointer;
     }
 
@@ -390,7 +393,7 @@
       gap: 8px;
     }
     
-    /* პროფილის დიდი ბარათი ჩატის დასაწყისში (როგორც მე-2 ფოტოზეა) */
+    /* პროფილის დიდი ბარათი ჩატის დასაწყისში */
     .chat-start-profile {
       display: flex;
       flex-direction: column;
@@ -434,7 +437,7 @@
       margin-bottom: 10px;
     }
     .encryption-notice a {
-      color: #0084ff;
+      color: #dcae36;
       text-decoration: none;
     }
     .chat-date-separator {
@@ -479,15 +482,17 @@
       border-bottom-left-radius: 4px;
     }
     .outgoing .msg-bubble {
-      background-color: #0084ff;
-      color: #ffffff;
+      background-color: #dcae36;
+      color: #111111;
       border-bottom-right-radius: 4px;
+      font-weight: 500;
     }
 
     /* ქვედა ინფუთის პანელი */
     .thread-footer {
       padding: 8px 12px;
-      background: #000000;
+      background: #141414;
+      border-top: 1px solid #222222;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -500,7 +505,7 @@
     .footer-left-actions svg {
       width: 22px;
       height: 22px;
-      fill: #0084ff;
+      fill: #dcae36;
       cursor: pointer;
     }
     .input-wrapper {
@@ -526,7 +531,7 @@
     .input-wrapper svg {
       width: 22px;
       height: 22px;
-      fill: #0084ff;
+      fill: #dcae36;
       cursor: pointer;
     }
     .like-action-btn {
@@ -540,7 +545,7 @@
     .like-action-btn svg {
       width: 24px;
       height: 24px;
-      fill: #0084ff;
+      fill: #dcae36;
     }
   </style>
 </head>
@@ -550,175 +555,95 @@
 
     <!-- ================= 1. მთავარი ჩატების ეკრანი ================= -->
     <div id="chats-screen">
-      <!-- ჰედერი -->
       <div class="chats-header">
         <h1>Chats</h1>
         <div class="header-actions">
-          <button class="header-btn" onclick="alert('ახალი ჩატის დაწყება')">
+          <button class="header-btn" onclick="alert('ახალი ჯგუფის შექმნა')">
             <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- საძიებო ზოლი -->
       <div class="search-container">
         <div class="search-box">
           <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          <input type="text" placeholder="Ask Meta AI or Search">
+          <input type="text" placeholder="Search chats...">
         </div>
       </div>
 
-      <!-- სიუჟეტების ზოლი -->
-      <div class="stories-row">
-        <div class="story-item">
-          <div class="story-avatar-wrapper">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="Me">
-            <div class="create-story-plus">+</div>
-          </div>
-          <span class="story-name">Create story</span>
-        </div>
-        <div class="story-item" onclick="openChat('თეო თეო', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100')">
-          <div class="story-avatar-wrapper active-story">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" alt="User">
-            <div class="active-badge"></div>
-          </div>
-          <span class="story-name">Todu</span>
-        </div>
-        <div class="story-item" onclick="openChat('Xatuna', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100')">
-          <div class="story-avatar-wrapper active-story">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100" alt="User">
-            <div class="active-badge"></div>
-          </div>
-          <span class="story-name">Xatuna</span>
-        </div>
-        <div class="story-item">
-          <div class="story-avatar-wrapper active-story">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" alt="User">
-            <div class="active-badge"></div>
-          </div>
-          <span class="story-name">Luiza</span>
-        </div>
+      <div class="stories-row" id="active-stories-target">
+        <!-- დინამიური აქტიური მომხმარებლები -->
       </div>
 
-      <!-- ჩატების სია -->
       <div class="chats-scroll-area" id="chats-list-target">
-        <!-- დინამიურად შეივსება, ქვემოთ ნიმუშია ფოტოს მიხედვით -->
-        <div class="chat-row-item unread" onclick="openChat('თეო თეო', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')">
-          <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150">
-            <div class="active-badge"></div>
-          </div>
-          <div class="chat-row-details">
-            <span class="chat-row-name">თეო თეო</span>
-            <div class="chat-row-meta">
-              <span class="chat-row-last-msg">mec tyeshi viyavi mesmis sheni</span>
-              <span class="chat-row-time">Thu</span>
-              <div class="unread-dot"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="chat-row-item" onclick="openChat('Maia Mamagulashvili', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150')">
-          <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150">
-          </div>
-          <div class="chat-row-details">
-            <span class="chat-row-name">Maia Mamagulashvili</span>
-            <div class="chat-row-meta">
-              <span class="chat-row-last-msg">You sent a photo.</span>
-              <span class="chat-row-time">Thu</span>
-            </div>
-          </div>
-        </div>
+        <div style="text-align: center; padding: 20px; color: #aaaaaa;">ჩატები იტვირთება...</div>
       </div>
 
-      <!-- Meta AI მცურავი ორნამენტის ღილაკი -->
-      <div class="meta-ai-float-btn" onclick="alert('Meta AI')">
+      <div class="meta-ai-float-btn" onclick="alert('Emigrant AI ასისტენტი მალე დაემატება!')">
         <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
       </div>
 
-      <!-- ქვედა მენიუ -->
       <div class="footer-nav">
         <button class="nav-tab active">
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-          <div class="nav-badge">5</div>
           <span class="nav-tab-label">Chats</span>
-        </button>
-        <button class="nav-tab" onclick="alert('Stories tab')">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.53c-.26-.81-1-1.4-1.9-1.4h-1v-3c0-.55-.45-1-1-1h-6v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
-          <span class="nav-tab-label">Stories</span>
-        </button>
-        <button class="nav-tab" onclick="alert('Notifications tab')">
-          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-          <span class="nav-tab-label">Notifications</span>
         </button>
         <button class="nav-tab" onclick="window.location.href='index.html';">
           <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-          <span class="nav-tab-label">Menu</span>
+          <span class="nav-tab-label">Feed</span>
         </button>
       </div>
     </div>
 
     <!-- ================= 2. შიდა ჩატის ეკრანი ================= -->
     <div id="thread-screen">
-      <!-- ჩატის ჰედერი -->
       <div class="thread-header">
         <div class="thread-header-left" onclick="closeChat()">
           <button class="back-btn">
             <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
           </button>
-          <div class="thread-header-avatar-wrapper">
+          <div class="thread-header-avatar-wrapper" id="active-thread-avatar-holder">
             <img class="thread-header-avatar" id="active-thread-avatar" src="">
           </div>
           <div class="thread-user-info">
             <span class="thread-user-name" id="active-thread-name">მომხმარებელი</span>
-            <span class="thread-user-status" id="active-thread-status">Active 1 hour ago</span>
+            <span class="thread-user-status" id="active-thread-status">Online</span>
           </div>
         </div>
         <div class="thread-header-actions">
-          <svg viewBox="0 0 24 24" onclick="alert('ხმოვანი ზარი')"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('ვიდეო ზარი')"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('ინფორმაცია')"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="alert('ზარები ინტეგრირდება მომდევნო ეტაპზე')"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
         </div>
       </div>
 
-      <!-- შეტყობინებების კონტეინერი -->
       <div class="messages-container" id="messages-target">
-        <!-- პროფილის დიდი ბარათი (მე-2 ფოტოს იდენტური) -->
         <div class="chat-start-profile">
           <img class="chat-start-avatar" id="chat-start-big-avatar" src="">
           <span class="chat-start-name" id="chat-start-big-name">მომხმარებელი</span>
-          <span class="chat-start-sub">You're friends on Facebook</span>
-          <button class="view-profile-btn" onclick="alert('პროფილის ნახვა')">View profile</button>
+          <span class="chat-start-sub">Connected on Emigrantbook</span>
+          <button class="view-profile-btn" id="view-profile-action-btn">View Profile</button>
           
           <div class="encryption-notice">
-            🔒 Messages and calls are secured with end-to-end encryption. Only people in this chat can read, listen to, or share them. <a href="#">Learn more</a>
+            🔒 Messages and calls are secured with live backend synchronization. Only people in this chat can read them.
           </div>
         </div>
 
-        <div class="chat-date-separator" id="chat-date-lbl">JUL 12 AT 5:22 PM</div>
+        <div class="chat-date-separator" id="chat-date-lbl">TODAY</div>
 
-        <!-- მიმოწერა -->
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;">
-          <!-- აქ ჩაიყრება მიმოწერა -->
+          <!-- შეტყობინებები რეალურ დროში -->
         </div>
       </div>
 
-      <!-- ქვედა ინფუთის პანელი -->
       <div class="thread-footer">
         <div class="footer-left-actions">
-          <svg viewBox="0 0 24 24" onclick="alert('დამატებითი ფუნქციები')"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('კამერა')"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 2.14c.04-.37.06-.74.06-1.14 0-4.42-3.58-8-8-8s-8 3.58-8 8c0 .4.02.77.06 1.14L3 14v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-6l-1.06-1.86zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('გალერეა')"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('ხმის ჩაწერა')"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="alert('ფოტოების ატვირთვა ჩატში მალე ჩაირთვება')"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
         </div>
 
         <div class="input-wrapper">
-          <input type="text" id="message-input-field" placeholder="Message" onkeypress="handleKeyPress(event)">
-          <svg viewBox="0 0 24 24" onclick="alert('სმაილები')"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 10 10 10-4.48 10-10S17.51 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          <input type="text" id="message-input-field" placeholder="Message..." onkeypress="handleKeyPress(event)">
         </div>
 
-        <button class="like-action-btn" id="send-action-btn" onclick="sendLikeOrMessage()">
+        <button class="like-action-btn" id="send-action-btn" onclick="sendMessage()">
           <svg viewBox="0 0 24 24" id="btn-icon-svg"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
         </button>
       </div>
@@ -727,127 +652,271 @@
   </div>
 
   <script>
-    var currentActiveChatUser = "";
-    var currentActiveChatAvatar = "";
+    var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
+    var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
+    var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    var currentUser = null;
+    var activeChatRoomId = null;
+    var activeTargetUserId = null;
+    var activeTargetUserObj = null;
+    var realtimeChannel = null;
 
-    // ჩატის გახსნა დინამიური მონაცემებით
-    function openChat(username, avatarUrl) {
-      currentActiveChatUser = username;
-      currentActiveChatAvatar = avatarUrl;
-
-      document.getElementById('chats-screen').style.display = 'none';
-      document.getElementById('thread-screen').style.display = 'flex';
-
-      document.getElementById('active-thread-name').innerText = username;
-      document.getElementById('active-thread-avatar').src = avatarUrl;
-      document.getElementById('chat-start-big-name').innerText = username;
-      document.getElementById('chat-start-big-avatar').src = avatarUrl;
-
-      var msgBlock = document.getElementById('dynamic-messages-block');
-      
-      // ფოტოზე არსებული რეალური დიალოგის სიმულაცია შესაბამისი ავატარით
-      if(username === 'თეო თეო') {
-        document.getElementById('active-thread-status').innerText = "Active 1 hour ago";
-        document.getElementById('chat-date-lbl').innerText = "THU AT 7:35 PM";
-        msgBlock.innerHTML = `
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">dgesac vilotave😂😂😂</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">კაი დროისა ანწ</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">ლოლლო</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">ლოთოო</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">gviani arasdrosa</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">shen rashvebi aba dzma</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">შენ რა გენაღვლება</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">ქალაქელი ხარ</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">xoo</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">მე 9 სოფელუ უნდა გავიარო შენამდე რომ მოვაღწიო</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">mec tyeshi viyavi mesmis sheni</div>
-          </div>
-        `;
+    // სესიის შემოწმება
+    supabase.auth.getUser().then(function(res) {
+      if (res.data && res.data.user) {
+        currentUser = res.data.user;
+        loadChatsList();
+        checkUrlParams();
       } else {
-        document.getElementById('active-thread-status').innerText = "Active 30 mins ago";
-        document.getElementById('chat-date-lbl').innerText = "JUL 12 AT 5:22 PM";
-        msgBlock.innerHTML = `
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">გამარჯობა, როგორ ხარ?</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">კარგად, შენ როგორ ხარ? ემიგრანტბუქზე დარეგისტრირდი?</div>
-          </div>
-        `;
+        alert("გთხოვთ გაიაროთ ავტორიზაცია მთავარ გვერდზე.");
+        window.location.href = "index.html";
       }
-      
-      // ავტომატური სქროლი შეტყობინებების ბოლოში
-      var container = document.getElementById('messages-container');
-      setTimeout(function() {
-        document.getElementById('messages-target').scrollTop = document.getElementById('messages-target').scrollHeight;
-      }, 50);
+    });
 
-      // ღილაკის აიკონის მართვა ტექსტის მიხედვით
-      var input = document.getElementById('message-input-field');
-      var btnIcon = document.getElementById('btn-icon-svg');
-      
-      // თავიდან (ცარიელზე) ვაჩვენოთ გაგზავნის ისარი, ან შეგვიძლია ლაიქის ხელი ჩავსვათ
-      btnIcon.innerHTML = `<path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>`; 
+    // პარამეტრების შემოწმება (?user=ID) პირდაპირი გადამისამართებისთვის
+    function checkUrlParams() {
+      var urlParams = new URLSearchParams(window.location.search);
+      var targetUser = urlParams.get('user');
+      if (targetUser) {
+        startOrOpenChat(targetUser);
+      }
     }
 
-    // ჩატის დახურვა და მთავარზე დაბრუნება
+    // ჩატების სიის ჩატვირთვა (მეგობრები / გამომწერები)
+    function loadChatsList() {
+      var target = document.getElementById('chats-list-target');
+      var storiesTarget = document.getElementById('active-stories-target');
+      
+      supabase.from('friend_requests')
+        .select('*')
+        .eq('status', 'accepted')
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+        .then(function(res) {
+          if (res.error || !res.data || res.data.length === 0) {
+            target.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">ჩატები ცარიელია. დაიმატეთ მეგობრები კედლიდან.</div>`;
+            return;
+          }
+
+          var connectedUserIds = res.data.map(function(r) {
+            return r.sender_id === currentUser.id ? r.receiver_id : r.sender_id;
+          });
+
+          supabase.from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', connectedUserIds)
+            .then(function(pRes) {
+              if (pRes.error || !pRes.data) return;
+
+              target.innerHTML = "";
+              storiesTarget.innerHTML = "";
+
+              pRes.data.forEach(function(profile) {
+                var name = profile.full_name || "User";
+                var avatar = profile.avatar_url || "";
+                var initial = name.charAt(0).toUpperCase();
+                var imgHtml = avatar ? `<img class="chat-row-avatar" src="${avatar}">` : `<div class="chat-row-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%;">${initial}</div>`;
+                var storyImgHtml = avatar ? `<img class="story-avatar" src="${avatar}">` : `<div class="story-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%; line-height:60px;">${initial}</div>`;
+
+                // ჰორიზონტალური აქტიური ბარი
+                storiesTarget.innerHTML += `
+                  <div class="story-item" onclick="startOrOpenChat('${profile.id}')">
+                    <div class="story-avatar-wrapper active-story">
+                      ${storyImgHtml}
+                      <div class="active-badge"></div>
+                    </div>
+                    <span class="story-name">${name.split(' ')[0]}</span>
+                  </div>
+                `;
+
+                // ვერტიკალური ჩატის რიგი
+                target.innerHTML += `
+                  <div class="chat-row-item" id="chat-row-${profile.id}" onclick="startOrOpenChat('${profile.id}')">
+                    <div class="chat-row-avatar-holder">
+                      ${imgHtml}
+                    </div>
+                    <div class="chat-row-details">
+                      <span class="chat-row-name">${name}</span>
+                      <div class="chat-row-meta">
+                        <span class="chat-row-last-msg" id="last-msg-${profile.id}">დააჭირეთ მიმოწერის დასაწყებად</span>
+                        <span class="chat-row-time">Live</span>
+                      </div>
+                    </div>
+                  </div>
+                `;
+                
+                fetchLastMessagePreview(profile.id);
+              });
+            });
+        });
+    }
+
+    function fetchLastMessagePreview(targetId) {
+      var roomCombination1 = currentUser.id + "_" + targetId;
+      var roomCombination2 = targetId + "_" + currentUser.id;
+
+      supabase.from('messages')
+        .select('content')
+        .or(`room_id.eq.${roomCombination1},room_id.eq.${roomCombination2}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .then(function(res) {
+          if(res.data && res.data.length > 0) {
+            var el = document.getElementById(`last-msg-${targetId}`);
+            if(el) el.innerText = res.data[0].content;
+          }
+        });
+    }
+
+    // ჩატის ოთახის იდენტიფიცირება/შექმნა და გახსნა
+    function startOrOpenChat(targetUserId) {
+      activeTargetUserId = targetUserId;
+      
+      supabase.from('profiles').select('*').eq('id', targetUserId).single().then(function(res) {
+        if(res.error || !res.data) return;
+        activeTargetUserObj = res.data;
+
+        var name = activeTargetUserObj.full_name || "User";
+        var avatar = activeTargetUserObj.avatar_url || "";
+        var initial = name.charAt(0).toUpperCase();
+
+        document.getElementById('chats-screen').style.display = 'none';
+        document.getElementById('thread-screen').style.display = 'flex';
+
+        document.getElementById('active-thread-name').innerText = name;
+        document.getElementById('chat-start-big-name').innerText = name;
+        
+        var avatarEl = document.getElementById('active-thread-avatar');
+        var bigAvatarEl = document.getElementById('chat-start-big-avatar');
+        
+        if(avatar) {
+          avatarEl.src = avatar;
+          bigAvatarEl.src = avatar;
+        } else {
+          avatarEl.style.display = "none";
+          bigAvatarEl.style.backgroundColor = "#dcae36";
+          bigAvatarEl.innerHTML = initial; // უავატარო მომხმარებლისთვის
+        }
+
+        document.getElementById('view-profile-action-btn').onclick = function() {
+          window.location.href = "index.html"; // მთავარზე დაბრუნება, იქიდან გაეხსნება პროფილი
+        };
+
+        // ოთახის უნიკალური ID კომბინაცია ორივე მომხმარებლის ID-თ
+        var room1 = currentUser.id + "_" + targetUserId;
+        var room2 = targetUserId + "_" + currentUser.id;
+
+        // ვამოწმებთ რომელი კომბინაციით არსებობს შეტყობინებები
+        supabase.from('messages')
+          .select('room_id')
+          .or(`room_id.eq.${room1},room_id.eq.${room2}`)
+          .limit(1)
+          .then(function(roomCheck) {
+            if(roomCheck.data && roomCheck.data.length > 0) {
+              activeChatRoomId = roomCheck.data[0].room_id;
+            } else {
+              activeChatRoomId = room1; // თუ ახალია, ვირჩევთ სტანდარტულს
+            }
+            
+            loadMessagesLog();
+            listenToRealtimeMessages();
+          });
+      });
+    }
+
+    // შეტყობინებების ისტორიის წამოღება
+    function loadMessagesLog() {
+      var block = document.getElementById('dynamic-messages-block');
+      block.innerHTML = "";
+
+      supabase.from('messages')
+        .select('*')
+        .eq('room_id', activeChatRoomId)
+        .order('created_at', { ascending: true })
+        .then(function(res) {
+          if(res.data) {
+            res.data.forEach(function(msg) {
+              appendMessageBubble(msg);
+            });
+            scrollThreadToBottom();
+          }
+        });
+    }
+
+    // ბუშტის დამატება კონტეინერში
+    function appendMessageBubble(msg) {
+      var block = document.getElementById('dynamic-messages-block');
+      var isOutgoing = msg.sender_id === currentUser.id;
+      var row = document.createElement('div');
+      row.className = isOutgoing ? "message-row outgoing" : "message-row incoming";
+
+      if(!isOutgoing) {
+        var avatarUrl = activeTargetUserObj.avatar_url;
+        var avatarContent = avatarUrl ? `<img class="msg-bubble-avatar" src="${avatarUrl}">` : `<div class="msg-bubble-avatar" style="background:#dcae36; color:#111; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:bold;">${activeTargetUserObj.full_name.charAt(0)}</div>`;
+        row.innerHTML = `${avatarContent}<div class="msg-bubble">${msg.content}</div>`;
+      } else {
+        row.innerHTML = `<div class="msg-bubble">${msg.content}</div>`;
+      }
+
+      block.appendChild(row);
+    }
+
+    // შეტყობინების გაგზავნა ბაზაში
+    function sendMessage() {
+      var input = document.getElementById('message-input-field');
+      var text = input.value.trim();
+      if (!text || !activeChatRoomId) return;
+
+      var newMsgObj = {
+        room_id: activeChatRoomId,
+        sender_id: currentUser.id,
+        receiver_id: activeTargetUserId,
+        content: text
+      };
+
+      input.value = "";
+
+      supabase.from('messages').insert([newMsgObj]).then(function(res) {
+        if(res.error) {
+          alert("გაგზავნის შეცდომა: " + res.error.message);
+        }
+      });
+    }
+
+    // რეალურ დროში სინქრონიზაცია Supabase Realtime-ით
+    function listenToRealtimeMessages() {
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+
+      realtimeChannel = supabase.channel(`room_${activeChatRoomId}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${activeChatRoomId}` }, function(payload) {
+          appendMessageBubble(payload.new);
+          scrollThreadToBottom();
+        })
+        .subscribe();
+    }
+
+    function scrollThreadToBottom() {
+      setTimeout(function() {
+        var target = document.getElementById('messages-target');
+        target.scrollTop = target.scrollHeight;
+      }, 40);
+    }
+
     function closeChat() {
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
       document.getElementById('thread-screen').style.display = 'none';
       document.getElementById('chats-screen').style.display = 'flex';
+      loadChatsList();
     }
 
     function handleKeyPress(event) {
       if (event.key === 'Enter') {
-        sendLikeOrMessage();
+        sendMessage();
       }
-    }
-
-    // შეტყობინების დინამიური გაგზავნა ეკრანზე
-    function sendLikeOrMessage() {
-      var input = document.getElementById('message-input-field');
-      var text = input.value.trim();
-      if (!text) return;
-
-      var msgBlock = document.getElementById('dynamic-messages-block');
-      
-      var newMsg = document.createElement('div');
-      newMsg.className = "message-row outgoing";
-      newMsg.innerHTML = `<div class="msg-bubble">${text}</div>`;
-      
-      msgBlock.appendChild(newMsg);
-      input.value = "";
-
-      // სქროლი ბოლოში
-      setTimeout(function() {
-        document.getElementById('messages-target').scrollTop = document.getElementById('messages-target').scrollHeight;
-      }, 30);
     }
   </script>
 </body>
