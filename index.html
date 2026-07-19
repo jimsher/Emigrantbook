@@ -542,6 +542,7 @@
     .video-container-rel {
       position: relative;
       width: 100%;
+      background: #000;
     }
     .tiktok-side-panel {
       position: absolute;
@@ -595,7 +596,7 @@
     .tiktok-floating-avatars-container {
       position: absolute;
       left: 12px;
-      bottom: 80px;
+      bottom: 100px;
       width: 50px;
       height: 240px;
       display: flex;
@@ -1232,10 +1233,16 @@
       bottom: 20px; left: 15px; right: 80px;
       z-index: 3050;
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+      background: linear-gradient(transparent, rgba(0,0,0,0.4));
+      padding: 10px;
+      border-radius: 8px;
     }
     .tiktok-info-author {
-      font-weight: bold; font-size: 16px; margin-bottom: 5px;
+      font-weight: bold; font-size: 16px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;
+    }
+    .tiktok-info-time {
+      font-size: 12px; color: #d1d1d6; font-weight: normal;
     }
     .tiktok-info-caption {
       font-size: 14px; line-height: 1.3; max-height: 60px; overflow: hidden;
@@ -2059,7 +2066,6 @@
       var btnTabVideos = document.getElementById('tab-btn-videos');
       if(btnTabVideos) btnTabVideos.innerText = t.tabVideos;
 
-      // პროფილზე პოსტის, გამომწერის და გამოწერილის თარგმანის ფიქსი
       var lblStatPost = document.getElementById('lbl-stat-post');
       if(lblStatPost) lblStatPost.innerText = t.postUnit;
       var lblStatFollowers = document.getElementById('lbl-stat-followers');
@@ -2176,7 +2182,7 @@
         alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა.");
       }
     } catch (e) {
-      alert("კავშირის შეცდომა: " + e.message);
+      alert("კავშირის შე შეცდომა: " + e.message);
     }
 
     function toggleRequestsDropdown(event) {
@@ -2393,7 +2399,7 @@
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, function(payload) {
           var updatedPost = payload.new;
           
-          var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${updatedPost.id}"]`);
+          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${updatedPost.id}"]`);
           countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
 
           var tiktokSpans = document.querySelectorAll(`.tiktok-like-count[data-post-id="${updatedPost.id}"]`);
@@ -2428,6 +2434,7 @@
           var isHome = document.getElementById('home-screen').style.display === 'block';
           var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
           if (dropdown && dropdown.style.display === 'flex') {
+            dropdown.style.display = 'flex';
             loadIncomingFriendRequests();
           }
           if (currentUser && activeViewingProfileId) {
@@ -2824,7 +2831,7 @@
         .order('created_at', { ascending: true })
         .then(function(res) {
           if (res.error) {
-            container.innerHTML = `<div style="color: red; text-align: center;">Error.</div>`;
+            container.innerHTML = `<div style="node-style: red; text-align: center;">Error.</div>`;
             return;
           }
 
@@ -3034,9 +3041,7 @@
       var t = TRANSLATIONS[currentLang];
       
       supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
-        if (profileRes.data) {
-          userProfile = profileRes.data;
-        }
+        if (profileRes.data) userProfile = profileRes.data;
 
         var finalName = userProfile ? userProfile.full_name : currentUser.email;
         var avatarUrl = userProfile ? userProfile.avatar_url : null;
@@ -3134,7 +3139,6 @@
       document.getElementById('profile-photos-wall').style.display = 'none';
 
       var targetUserId = activeViewingProfileId || currentUser.id;
-      var t = TRANSLATIONS[currentLang];
 
       if (tabName === 'posts') {
         document.getElementById('tab-btn-posts').classList.add('active');
@@ -3231,7 +3235,6 @@
 
           var gridHtml = '<div class="video-grid-full">';
           activeTiktokVideosList.forEach(function(post, index) {
-            // რეალური დროის ზუსტი მნახველის ფიქსი
             var realViews = post.views_count || 0;
             gridHtml += `
               <div class="video-grid-card" onclick="openTiktokVideoModal(${index})">
@@ -3258,6 +3261,11 @@
         var hasLiked = likedPosts.includes(post.id);
         var activeHeartClass = hasLiked ? "heart-liked" : "";
         
+        var date = new Date(post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' });
+        var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+        var authorAvatarUrl = cachedProfiles[post.user_id] || null;
+        var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
+
         var slide = document.createElement('div');
         slide.className = "tiktok-slide-item";
         slide.innerHTML = `
@@ -3266,6 +3274,10 @@
           <div class="tiktok-floating-avatars-container" id="floating-container-tiktok-${post.id}"></div>
 
           <div class="tiktok-side-panel" style="bottom: 80px; right: 15px;">
+            <div class="post-avatar" onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}'); event.stopPropagation();" style="margin-bottom: 10px; border: 2px solid #ffffff;">
+              ${avatarContent}
+            </div>
+
             <div class="tiktok-action-item" onclick="likePost('${post.id}', true); event.stopPropagation();">
               <div class="tiktok-icon-circle">
                 <svg class="tiktok-heart ${activeHeartClass}" data-post-id="${post.id}" viewBox="0 0 24 24">
@@ -3291,7 +3303,10 @@
           </div>
 
           <div class="tiktok-overlay-bottom-info">
-            <div class="tiktok-info-author">@${post.author_name || "user"}</div>
+            <div class="tiktok-info-author">
+              <span>@${post.author_name || "user"}</span>
+              <span class="tiktok-info-time">${date}</span>
+            </div>
             <div class="tiktok-info-caption">${post.content || ""}</div>
           </div>
         `;
@@ -3343,6 +3358,10 @@
       });
 
       modal.style.display = "none";
+      var targetUserId = activeViewingProfileId || currentUser.id;
+      if (document.getElementById('profile-screen').style.display === 'block' && document.getElementById('tab-btn-videos').classList.contains('active')) {
+         loadUserVideos(targetUserId);
+      }
     }
 
     function openFullGalleryModal(index) {
@@ -3734,7 +3753,7 @@
 
         var posts = res.data;
         if (posts.length === 0) {
-          postsWall.innerHTML = `<div class="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+          postsWall.innerHTML = `<div class="node-style: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
           return;
         }
 
@@ -3832,7 +3851,6 @@
 
     function buildCollageHtml(urlsString, postId, likesCount) {
       if (!urlsString) return "";
-      var t = TRANSLATIONS[currentLang];
       
       var urls = [];
       if (urlsString.includes(",")) {
@@ -3950,20 +3968,47 @@
       }
 
       if (isSingleVideo) {
+        var hasLikedVideo = likedPosts.includes(post.id);
+        var activeHeartClassVideo = hasLikedVideo ? "heart-liked" : "";
+
         return `
           <div class="post-card" id="post-card-${post.id}">
-            <div class="post-header">
-              <div class="post-header-left">
-                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
-                <div class="post-author-info">
-                  <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
-                  <span class="post-time">${date}</span>
+            <div class="video-container-rel">
+              <video class="post-media" src="${post.media_url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
+              <div class="tiktok-floating-avatars-container" id="floating-container-feed-${post.id}"></div>
+              
+              <div class="tiktok-side-panel" style="bottom: 25px; right: 8px;">
+                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')" style="margin-bottom: 10px; border: 2px solid #ffffff;">
+                  ${avatarContent}
                 </div>
+                <div class="tiktok-action-item" onclick="likePost('${post.id}', false)">
+                  <div class="tiktok-icon-circle">
+                    <svg class="tiktok-heart ${activeHeartClassVideo}" data-post-id="${post.id}" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </div>
+                  <span class="tiktok-like-count" data-post-id="${post.id}">${post.likes_count || 0}</span>
+                </div>
+                <div class="tiktok-action-item" onclick="openCommentsModal('${post.id}', ${post.likes_count || 0})">
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                  </div>
+                  <span class="comment-count-label" data-post-id="${post.id}">0</span>
+                </div>
+                ${deleteButtonHtml ? `
+                <div class="tiktok-action-item" onclick="deletePost('${post.id}')">
+                  <div class="tiktok-icon-circle" style="color:#ff4d4f; font-size:20px;">🗑️</div>
+                </div>` : ''}
               </div>
-              ${deleteButtonHtml}
+
+              <div class="tiktok-overlay-bottom-info">
+                <div class="tiktok-info-author">
+                  <span onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
+                  <span class="tiktok-info-time">${date}</span>
+                </div>
+                <div class="tiktok-info-caption">${post.content || ""}</div>
+              </div>
             </div>
-            <div class="post-content">${post.content || ""}</div>
-            ${mediaHtml}
           </div>
         `;
       }
@@ -4207,7 +4252,6 @@
         .in('user_id', userIdsList)
         .order('created_at', { ascending: false })
         .then(function(res) {
-          // პროფილის მთავარ ავატარზე სთორის ოქროსფერი ჩარჩოს ფიქსი
           var profileAvatar = document.getElementById('profile-big-avatar');
           if (profileAvatar) {
             var targetId = activeViewingProfileId || (currentUser ? currentUser.id : null);
