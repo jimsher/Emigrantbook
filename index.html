@@ -527,7 +527,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                             
+                                                 
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1896,12 +1896,12 @@
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
-    // დამხმარე ფუნქცია მესენჯერთან დასაკავშირებლად (404-ის აღმოსაფხვრელად)
+    // განახლებული ფუნქცია მესენჯერთან დასაკავშირებლად (მოხსნილია 404 და დამატებულია სწორი ლოკალური ფაილის გახსნა პარამეტრით)
     function redirectToMessenger(targetUserId) {
       if (!targetUserId) {
-        window.open("https://emigrantbook.com/messages", "_blank");
+        window.location.href = "messenger.html";
       } else {
-        window.open("https://emigrantbook.com/messages?user=" + targetUserId, "_blank");
+        window.location.href = "messenger.html?user=" + encodeURIComponent(targetUserId);
       }
     }
 
@@ -1979,7 +1979,7 @@
         noReqs: "Нет новых запросов", friendReqTitle: "Запросы в друзья",
         commentPlaceholder: "Написать комментарий...", send: "Отправить", like: "Нравится",
         comment: "Комментарий", reply: "Ответить", replyTo: "Ответ пользователю: ",
-        likers: "Лайкнувшие", delete: "🗑️ Удалить", stories: "Истории",
+        likers: "Лайкнувшие", delete: "🗑️ Пост", stories: "Истории",
         msgPlaceholder: "Отправить сообщение...", addFriend: "Добавить",
         messenger: "Messenger", edit: "Редактировать", cancelReq: "Отмена запроса",
         accept: "Принять", reject: "Отклонить", removeFriend: "👥 Удалить",
@@ -2206,7 +2206,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-                 
+                   
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -3339,7 +3339,6 @@
           </div>
 
           <div class="tiktok-overlay-bottom-info">
-            <div class="tiktok-overlay-bottom-info">
             <div class="tiktok-info-author">
               <span onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}');">@${post.author_name || "user"}</span>
               <span class="tiktok-info-time">${date}</span>
@@ -3498,6 +3497,7 @@
       document.getElementById('custom-gallery-modal').style.display = "none";
     }
 
+    // განახლებული ფუნქცია - სადაც სხვა მომხმარებლის პროფილზე იტვირთება მესინჯერის დინამიური ღილაკი სწორი ლოგიკით
     function updateFriendshipButtons(targetUserId) {
       var actionPanel = document.getElementById('profile-action-panel');
       var t = TRANSLATIONS[currentLang];
