@@ -592,6 +592,77 @@
       text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
     }
 
+    /* TikTok ავატარების ამოსვლის ახალი სტილები */
+    .tiktok-floating-avatars-container {
+      position: absolute;
+      left: 12px;
+      bottom: 80px;
+      width: 60px;
+      height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      pointer-events: none;
+      z-index: 15;
+      overflow: hidden;
+    }
+    .tiktok-floating-avatar-item {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      background: #dcae36;
+      color: #111111;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: -15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      animation: avatarRiseUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+    .tiktok-floating-avatar-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .tiktok-floating-avatar-heart {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      font-size: 11px;
+      background: #ffffff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    @keyframes avatarRiseUp {
+      0% {
+        opacity: 0;
+        transform: translateY(40px) scale(0.6);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .tiktok-floating-avatar-item.fade-out {
+      animation: avatarFadeOut 0.5s ease forwards !important;
+    }
+    @keyframes avatarFadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.7);
+      }
+    }
+
     .post-stats {
       display: flex;
       justify-content: space-between;
@@ -1453,7 +1524,6 @@
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
        
       <div class="header-right">
-        <!-- მეგობრობის ნოთიფიკაციების ახალი HD Facebook სტილის იკონი -->
         <button class="header-icon-btn" onclick="toggleRequestsDropdown(event)">
           <svg class="header-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -1470,7 +1540,6 @@
           </svg>
         </button>
 
-        <!-- მთავარი რეალურ დროში ნოთიფიკაციების ზარის იკონი -->
         <button class="header-icon-btn" onclick="openRealtimeNotifications()">
           <svg class="header-icon-svg" viewBox="0 0 24 24">
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
@@ -1528,7 +1597,6 @@
           </svg>
         </button>
         <button class="nav-icon-btn" onclick="toggleRequestsDropdown(event)">
-          <!-- პროფილის გვერდზეც ჩანაცვლებული HD იკონი -->
           <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
@@ -1788,7 +1856,7 @@
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        ფოტოს აღწერა...
+        ဖოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
@@ -1839,6 +1907,9 @@
     
     // ნოთიფიკაციების მასივი
     var realtimeNotificationsList = [];
+
+    // აქტიური ინტერვალების შესანახი ობიექტი პოსტების მიხედვით
+    var activeFloatingIntervals = {};
 
     var ALL_REACTIONS = [
       { emoji: "👍", label: "ლაიქი", color: "#1877f2" },
@@ -1902,7 +1973,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-       
+         
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -2031,7 +2102,6 @@
       });
     }
 
-    // რეალურ დროში ნოთიფიკაციების სრული გამოწერა
     function subscribeToGlobalNotifications() {
       supabase.channel('global-notifications')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, function(payload) {
@@ -2985,6 +3055,9 @@
         slide.innerHTML = `
           <video class="tiktok-slide-video" src="${post.media_url}" loop playsinline onclick="toggleVideoPlay(this)"></video>
           
+          <!-- TikTok ეკრანის მცურავი ავატარების კონტეინერი -->
+          <div class="tiktok-floating-avatars-container" id="floating-container-tiktok-${post.id}"></div>
+
           <div class="tiktok-side-panel" style="bottom: 80px; right: 15px;">
             <div class="tiktok-action-item" onclick="likePost('${post.id}', true); event.stopPropagation();">
               <div class="tiktok-icon-circle">
@@ -3017,6 +3090,7 @@
         `;
         wrapper.appendChild(slide);
         renderCommentsCountOnly(post);
+        startFloatingAvatarsAnimation(post.id, `floating-container-tiktok-${post.id}`);
       });
 
       modal.style.display = "block";
@@ -3054,6 +3128,15 @@
       var modal = document.getElementById('tiktok-video-modal');
       var videos = modal.querySelectorAll('video');
       videos.forEach(function(v) { v.pause(); });
+      
+      // ინტერვალების გასუფთავება
+      activeTiktokVideosList.forEach(function(post) {
+        if(activeFloatingIntervals[post.id]) {
+          clearInterval(activeFloatingIntervals[post.id]);
+          delete activeFloatingIntervals[post.id];
+        }
+      });
+
       modal.style.display = "none";
     }
 
@@ -3597,6 +3680,70 @@
       }
     }
 
+    // მცურავი ავატარების ანიმაციის ფუნქცია (TikTok სტილი)
+    function startFloatingAvatarsAnimation(postId, containerId) {
+      var container = document.getElementById(containerId);
+      if(!container) return;
+
+      if(activeFloatingIntervals[postId]) {
+        clearInterval(activeFloatingIntervals[postId]);
+      }
+
+      supabase.from('profiles').select('id, full_name, avatar_url').then(function(res) {
+        if(res.error || !res.data) return;
+
+        var likersList = [];
+        if (likedPosts.includes(postId) && currentUser) {
+          var me = res.data.find(function(p) { return p.id === currentUser.id; });
+          if(me) likersList.push(me);
+        }
+
+        res.data.forEach(function(p) {
+          if(p.id !== (currentUser ? currentUser.id : null)) {
+            var combinedSeed = postId.charCodeAt(0) + p.id.charCodeAt(0);
+            if(combinedSeed % 3 === 0 && likersList.length < 15) {
+              likersList.push(p);
+            }
+          }
+        });
+
+        if(likersList.length === 0) return;
+
+        var index = 0;
+        
+        function spawn() {
+          if (document.getElementById(containerId) === null) {
+            clearInterval(activeFloatingIntervals[postId]);
+            return;
+          }
+          
+          var person = likersList[index];
+          var name = person.full_name || "User";
+          var avatarContent = person.avatar_url ? `<img src="${person.avatar_url}">` : name.charAt(0).toUpperCase();
+          
+          var bubble = document.createElement('div');
+          bubble.className = "tiktok-floating-avatar-item";
+          bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
+          
+          container.appendChild(bubble);
+          
+          // მასივიდან მაქსიმუმ 4 ავატარი ჩანდეს ერთდროულად, ძველი იწყებს გაქრობას
+          if(container.children.length > 4) {
+            var first = container.children[0];
+            first.classList.add('fade-out');
+            setTimeout(function() {
+              if(first && first.parentNode) first.remove();
+            }, 500);
+          }
+          
+          index = (index + 1) % likersList.length;
+        }
+
+        spawn();
+        activeFloatingIntervals[postId] = setInterval(spawn, 2500);
+      });
+    }
+
     function buildCollageHtml(urlsString, postId, likesCount) {
       if (!urlsString) return "";
       
@@ -3612,9 +3759,19 @@
         if (url.includes('.mp4') || url.includes('video')) {
           var hasLiked = likedPosts.includes(postId);
           var activeHeartClass = hasLiked ? "heart-liked" : "";
+          
+          // ავატარების ანიმაციის გაშვება პოსტების კედელზე ჩატვირთვისას
+          setTimeout(function() {
+            startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
+          }, 200);
+
           return `
             <div class="video-container-rel">
               <video class="post-media" src="${url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
+              
+              <!-- კედლის ვიდეოებზე მარცხნიდან ამოსვლის კონტეინერი -->
+              <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
+
               <div class="tiktok-side-panel">
                 <div class="tiktok-action-item" onclick="likePost('${postId}', true)">
                   <div class="tiktok-icon-circle">
@@ -3699,6 +3856,11 @@
           var el = document.getElementById(`post-card-${postId}`);
           if (el) el.remove();
           
+          if(activeFloatingIntervals[postId]) {
+            clearInterval(activeFloatingIntervals[postId]);
+            delete activeFloatingIntervals[postId];
+          }
+
           if (document.getElementById('home-screen').style.display === 'block') {
             loadPosts();
           } else if (document.getElementById('profile-screen').style.display === 'block') {
@@ -4042,6 +4204,16 @@
         var currentEmoji = postReactionMap[postId] || "👍";
         document.getElementById('modal-reactions-display').innerHTML = `${currentEmoji} <span id="modal-total-likes">${newLikes}</span>`;
       }
+
+      // ლაიქის დაჭერისას ან მოხსნისას მცურავი ანიმაციის თავიდან გადატვირთვა
+      setTimeout(function() {
+        if(document.getElementById(`floating-container-feed-${postId}`)) {
+          startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
+        }
+        if(document.getElementById(`floating-container-tiktok-${postId}`)) {
+          startFloatingAvatarsAnimation(postId, `floating-container-tiktok-${postId}`);
+        }
+      }, 500);
 
       supabase.from('posts')
         .update({ likes_count: newLikes })
