@@ -1896,7 +1896,7 @@
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
-    // დამხმარე ფუნქცია მესენჯერთან დასაკავშირებლად
+    // დამხმარე ფუნქცია მესენჯერთან დასაკავშირებლად (404-ის აღმოსაფხვრელად)
     function redirectToMessenger(targetUserId) {
       if (!targetUserId) {
         window.open("https://emigrantbook.com/messages", "_blank");
@@ -2206,7 +2206,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-               
+                 
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -3339,6 +3339,7 @@
           </div>
 
           <div class="tiktok-overlay-bottom-info">
+            <div class="tiktok-overlay-bottom-info">
             <div class="tiktok-info-author">
               <span onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}');">@${post.author_name || "user"}</span>
               <span class="tiktok-info-time">${date}</span>
@@ -4014,7 +4015,7 @@
               <div class="tiktok-floating-avatars-container" id="floating-container-feed-${post.id}"></div>
               
               <div class="tiktok-side-panel" style="bottom: 25px; right: 8px;">
-                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')" style="margin-bottom: 10px; border: 2px solid #ffffff;">
+                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">
                   ${avatarContent}
                 </div>
                 <div class="tiktok-action-item" onclick="likePost('${post.id}', false)">
@@ -4209,7 +4210,7 @@
         if(document.getElementById(`floating-container-tiktok-${postId}`)) startFloatingAvatarsAnimation(postId, `floating-container-tiktok-${postId}`);
       }, 300);
 
-      supabase.from('posts').update({ likes_count: newLikes }).eq('id', postId).then(function(res) {});
+      supabase.from('posts').update({ likes_count: newLikes }).eq('id', postId).then(function() {});
     }
 
     function logout() {
