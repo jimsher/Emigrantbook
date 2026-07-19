@@ -592,25 +592,25 @@
       text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
     }
 
-    /* TikTok ავატარების ამოსვლის ახალი სტილები */
+    /* TikTok ავატარების უწყვეტი და პლავნად მცურავი ახალი სტილები */
     .tiktok-floating-avatars-container {
       position: absolute;
       left: 12px;
       bottom: 80px;
-      width: 60px;
-      height: 220px;
+      width: 50px;
+      height: 240px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
       pointer-events: none;
       z-index: 15;
-      overflow: hidden;
     }
     .tiktok-floating-avatar-item {
-      position: relative;
-      width: 40px;
-      height: 40px;
+      position: absolute;
+      bottom: 0;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       border: 2px solid #ffffff;
       background: #dcae36;
@@ -620,9 +620,9 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      margin-bottom: -15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      animation: avatarRiseUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      /* 4 წამიანი უწყვეტი პლავნად სვლის ანიმაცია */
+      animation: avatarSmoothRiseScroll 4s linear forwards;
     }
     .tiktok-floating-avatar-item img {
       width: 100%;
@@ -643,23 +643,24 @@
       justify-content: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
-    @keyframes avatarRiseUp {
+    
+    /* ახალი ტალღოვანი კინეტიკური ანიმაცია: პლავნად ჩნდება ქვევით, მიდის ზევით, პლავნადვე ქრება */
+    @keyframes avatarSmoothRiseScroll {
       0% {
         opacity: 0;
-        transform: translateY(40px) scale(0.6);
+        transform: translateY(20px) scale(0.6);
+      }
+      15% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1);
+      }
+      80% {
+        opacity: 1;
+        transform: translateY(-180px) scale(1);
       }
       100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-    .tiktok-floating-avatar-item.fade-out {
-      animation: avatarFadeOut 0.5s ease forwards !important;
-    }
-    @keyframes avatarFadeOut {
-      to {
         opacity: 0;
-        transform: translateY(-30px) scale(0.7);
+        transform: translateY(-230px) scale(0.7);
       }
     }
 
@@ -1973,7 +1974,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-         
+           
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -3680,7 +3681,7 @@
       }
     }
 
-    // მცურავი ავატარების ანიმაციის ფუნქცია (TikTok სტილი)
+    // მცურავი ავატარების ახალი კინეტიკური ანიმაციის ფუნქცია (Endless Smooth Loop)
     function startFloatingAvatarsAnimation(postId, containerId) {
       var container = document.getElementById(containerId);
       if(!container) return;
@@ -3727,20 +3728,20 @@
           
           container.appendChild(bubble);
           
-          // მასივიდან მაქსიმუმ 4 ავატარი ჩანდეს ერთდროულად, ძველი იწყებს გაქრობას
-          if(container.children.length > 4) {
-            var first = container.children[0];
-            first.classList.add('fade-out');
-            setTimeout(function() {
-              if(first && first.parentNode) first.remove();
-            }, 500);
-          }
+          // CSS ანიმაციის დასრულებისთანავე (4 წამში) ელემენტი ავტომატურად იშლება DOM-იდან
+          setTimeout(function() {
+            if(bubble && bubble.parentNode) {
+              bubble.remove();
+            }
+          }, 4000);
           
           index = (index + 1) % likersList.length;
         }
 
+        // პირველივე ავატარის მყისიერი გაშვება
         spawn();
-        activeFloatingIntervals[postId] = setInterval(spawn, 2500);
+        // ყოველ 1.2 წამში პლავნად იქმნება ახალი ელემენტი და მიდის ზევით
+        activeFloatingIntervals[postId] = setInterval(spawn, 1200);
       });
     }
 
@@ -4070,7 +4071,7 @@
       var publishBtn = document.getElementById('publish-submit-btn');
 
       if (!text && fileInput.files.length === 0) {
-        alert("შეავსეთ პოსტის ტექსტი ან აირჩიეთ ფაილი!");
+        alert("შეავისეთ პოსტის ტექსტი ან აირჩიეთ ფაილი!");
         return;
       }
 
