@@ -19,6 +19,7 @@
       height: 100vh;
       display: flex;
       justify-content: center;
+      overflow: hidden;
     }
 
     /* მობილურის ეკრანის კონტეინერი */
@@ -40,12 +41,14 @@
       display: flex;
       flex-direction: column;
       height: 100%;
+      overflow: hidden;
     }
     .chats-header {
       padding: 15px 16px 10px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
     .chats-header h1 {
       font-size: 30px;
@@ -77,6 +80,7 @@
     /* საძიებო ზოლი */
     .search-container {
       padding: 5px 16px 12px 16px;
+      flex-shrink: 0;
     }
     .search-box {
       background: #1c1c1e;
@@ -109,6 +113,7 @@
       gap: 16px;
       overflow-x: auto;
       padding: 5px 16px 15px 16px;
+      flex-shrink: 0;
     }
     .stories-row::-webkit-scrollbar {
       display: none;
@@ -138,22 +143,6 @@
       background: #222222;
       object-fit: cover;
     }
-    .create-story-plus {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      background: #dcae36;
-      color: #111111;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid #000;
-      font-size: 14px;
-      font-weight: bold;
-    }
     .active-badge {
       position: absolute;
       bottom: 2px;
@@ -178,7 +167,7 @@
     .chats-scroll-area {
       flex: 1;
       overflow-y: auto;
-      padding-bottom: 80px;
+      padding-bottom: 20px;
     }
     .chat-row-item {
       display: flex;
@@ -239,25 +228,26 @@
       color: #8e8e93;
     }
     .unread-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #dcae36;
+      width: 10px;
+      height: 10px;
+      background-color: #ff3b30;
       border-radius: 50%;
       flex-shrink: 0;
+      display: none;
+    }
+    .chat-row-item.unread .unread-dot {
+      display: block;
     }
 
     /* ქვედა მენიუ */
     .footer-nav {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
       height: 70px;
       background: #141414;
       border-top: 1px solid #222222;
       display: flex;
       justify-content: space-around;
       align-items: center;
+      flex-shrink: 0;
       z-index: 100;
     }
     .nav-tab {
@@ -283,10 +273,22 @@
       font-size: 11px;
       font-weight: 500;
     }
+    .nav-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ff3b30;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 10px;
+      padding: 1px 6px;
+      display: none;
+    }
 
     /* Meta AI მცურავი ორნამენტის ღილაკი */
     .meta-ai-float-btn {
-      position: fixed;
+      position: absolute;
       bottom: 85px;
       right: 20px;
       width: 50px;
@@ -309,6 +311,7 @@
       flex-direction: column;
       height: 100%;
       background-color: #0b0b0b;
+      overflow: hidden;
     }
     .thread-header {
       padding: 10px 12px;
@@ -317,6 +320,7 @@
       justify-content: space-between;
       border-bottom: 1px solid #222222;
       background: #141414;
+      flex-shrink: 0;
     }
     .thread-header-left {
       display: flex;
@@ -372,7 +376,7 @@
       cursor: pointer;
     }
 
-    /* შეტყობინებების ველი */
+    /* შეტყობინებების ველი - მხოლოდ ეს უნდა სქროლავდეს */
     .messages-container {
       flex: 1;
       overflow-y: auto;
@@ -485,6 +489,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-shrink: 0;
     }
     .footer-left-actions {
       display: flex;
@@ -573,6 +578,7 @@
       <div class="footer-nav">
         <button class="nav-tab active">
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <div class="nav-badge" id="global-unread-badge">0</div>
           <span class="nav-tab-label">Chats</span>
         </button>
         <button class="nav-tab" onclick="window.location.href='index.html';">
@@ -646,6 +652,8 @@
     var activeTargetUserId = null;
     var activeTargetUserObj = null;
     var realtimeChannel = null;
+    var globalChannel = null;
+    var unreadChatsMap = {}; // ინახავს თითოეული მომხმარებლისგან მოსულ უნახავ მესიჯებს
 
     // სესიის შემოწმება
     supabase.auth.getUser().then(function(res) {
@@ -653,13 +661,13 @@
         currentUser = res.data.user;
         loadChatsList();
         checkUrlParams();
+        listenToGlobalMessages(); // ჩავრთოთ გლობალური ნოთიფიკაციების მსმენელი
       } else {
         alert("გთხოვთ გაიაროთ ავტორიზაცია მთავარ გვერდზე.");
         window.location.href = "index.html";
       }
     });
 
-    // პარამეტრების შემოწმება (?user=ID)
     function checkUrlParams() {
       var urlParams = new URLSearchParams(window.location.search);
       var targetUser = urlParams.get('user');
@@ -713,8 +721,11 @@
                   </div>
                 `;
 
+                // შემოწმება, არის თუ არა ეს ჩატი უნახავი
+                var isUnreadClass = unreadChatsMap[profile.id] ? "unread" : "";
+
                 target.innerHTML += `
-                  <div class="chat-row-item" id="chat-row-${profile.id}" onclick="startOrOpenChat('${profile.id}')">
+                  <div class="chat-row-item ${isUnreadClass}" id="chat-row-${profile.id}" onclick="startOrOpenChat('${profile.id}')">
                     <div class="chat-row-avatar-holder">
                       ${imgHtml}
                     </div>
@@ -723,6 +734,7 @@
                       <div class="chat-row-meta">
                         <span class="chat-row-last-msg" id="last-msg-${profile.id}">დააჭირეთ მიმოწერის დასაწყებად</span>
                         <span class="chat-row-time">Live</span>
+                        <div class="unread-dot"></div>
                       </div>
                     </div>
                   </div>
@@ -730,6 +742,7 @@
                 
                 fetchLastMessagePreview(profile.id);
               });
+              updateGlobalBadgeCount();
             });
         });
     }
@@ -751,9 +764,55 @@
         });
     }
 
+    // გლობალური ნოთიფიკაციების მოსმენა (როცა ჩატში არ ვართ შესული)
+    function listenToGlobalMessages() {
+      if (globalChannel) return;
+
+      globalChannel = supabase.channel('global_messages')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${currentUser.id}` }, function(payload) {
+          var senderId = payload.new.sender_id;
+          
+          // თუ ამ მომენტში მასთან ჩატი არ გვაქვს გახსნილი, ავანთოთ ბეჯი
+          if (senderId !== activeTargetUserId) {
+            unreadChatsMap[senderId] = true;
+            
+            // ვიზუალური განახლება რეალურ დროში სიაში
+            var row = document.getElementById(`chat-row-${senderId}`);
+            if (row) {
+              row.classList.add('unread');
+            }
+            var msgPreview = document.getElementById(`last-msg-${senderId}`);
+            if (msgPreview) {
+              msgPreview.innerText = payload.new.message;
+            }
+            updateGlobalBadgeCount();
+          }
+        })
+        .subscribe();
+    }
+
+    // ჰედერის / მენიუს წითელი ციფრის განახლება
+    function updateGlobalBadgeCount() {
+      var totalUnread = Object.keys(unreadChatsMap).length;
+      var badge = document.getElementById('global-unread-badge');
+      if (totalUnread > 0) {
+        badge.innerText = totalUnread;
+        badge.style.display = "block";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
     // ჩატის გახსნა
     function startOrOpenChat(targetUserId) {
       activeTargetUserId = targetUserId;
+      
+      // როგორც კი ჩატს ვხსნით, ამ იუზერის ნოთიფიკაცია იშლება
+      delete unreadChatsMap[targetUserId];
+      updateGlobalBadgeCount();
+      
+      var row = document.getElementById(`chat-row-${targetUserId}`);
+      if (row) row.classList.remove('unread');
       
       supabase.from('profiles').select('*').eq('id', targetUserId).single().then(function(res) {
         if(res.error || !res.data) return;
@@ -866,7 +925,7 @@
       });
     }
 
-    // Realtime სინქრონიზაცია
+    // ჩატის შიდა Realtime სინქრონიზაცია
     function listenToRealtimeMessages() {
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
@@ -891,6 +950,7 @@
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
       }
+      activeTargetUserId = null;
       document.getElementById('thread-screen').style.display = 'none';
       document.getElementById('chats-screen').style.display = 'flex';
       loadChatsList();
