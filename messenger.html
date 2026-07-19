@@ -606,7 +606,7 @@
           </div>
         </div>
         <div class="thread-header-actions">
-          <svg viewBox="0 0 24 24" onclick="alert('ზარები ინტეგრირდება მომდევნო ეტაპზე')"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="alert('ზარები ინტეგრირდება მომდენო ეტაპზე')"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
         </div>
       </div>
 
@@ -703,65 +703,71 @@
             .then(function(pRes) {
               if (pRes.error || !pRes.data) return;
 
-              target.innerHTML = "";
-              storiesTarget.innerHTML = "";
+              // წამოვიღოთ ბოლო შეტყობინებები სორტირებისთვის
+              supabase.from('messages')
+                .select('sender_id, receiver_id, message, created_at')
+                .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+                .order('created_at', { ascending: false })
+                .then(function(mRes) {
+                  var lastMessagesMap = {};
+                  if (mRes.data) {
+                    mRes.data.forEach(function(m) {
+                      var partnerId = m.sender_id === currentUser.id ? m.receiver_id : m.sender_id;
+                      if (!lastMessagesMap[partnerId]) {
+                        lastMessagesMap[partnerId] = m;
+                      }
+                    });
+                  }
 
-              pRes.data.forEach(function(profile) {
-                var name = profile.full_name || "User";
-                var avatar = profile.avatar_url || "";
-                var initial = name.charAt(0).toUpperCase();
-                var imgHtml = avatar ? `<img class="chat-row-avatar" src="${avatar}">` : `<div class="chat-row-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%;">${initial}</div>`;
-                var storyImgHtml = avatar ? `<img class="story-avatar" src="${avatar}">` : `<div class="story-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%; line-height:60px;">${initial}</div>`;
+                  // დავასორტიროთ მომხმარებლები ბოლო მესიჯის დროის მიხედვით
+                  var sortedProfiles = pRes.data.sort(function(a, b) {
+                    var timeA = lastMessagesMap[a.id] ? new Date(lastMessagesMap[a.id].created_at).getTime() : 0;
+                    var timeB = lastMessagesMap[b.id] ? new Date(lastMessagesMap[b.id].created_at).getTime() : 0;
+                    return timeB - timeA;
+                  });
 
-                storiesTarget.innerHTML += `
-                  <div class="story-item" onclick="startOrOpenChat('${profile.id}')">
-                    <div class="story-avatar-wrapper active-story">
-                      ${storyImgHtml}
-                      <div class="active-badge"></div>
-                    </div>
-                    <span class="story-name">${name.split(' ')[0]}</span>
-                  </div>
-                `;
+                  target.innerHTML = "";
+                  storiesTarget.innerHTML = "";
 
-                var isUnreadClass = unreadChatsMap[profile.id] ? "unread" : "";
+                  sortedProfiles.forEach(function(profile) {
+                    var name = profile.full_name || "User";
+                    var avatar = profile.avatar_url || "";
+                    var initial = name.charAt(0).toUpperCase();
+                    var imgHtml = avatar ? `<img class="chat-row-avatar" src="${avatar}">` : `<div class="chat-row-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%;">${initial}</div>`;
+                    var storyImgHtml = avatar ? `<img class="story-avatar" src="${avatar}">` : `<div class="story-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%; line-height:60px;">${initial}</div>`;
 
-                target.innerHTML += `
-                  <div class="chat-row-item ${isUnreadClass}" id="chat-row-${profile.id}" onclick="startOrOpenChat('${profile.id}')">
-                    <div class="chat-row-avatar-holder">
-                      ${imgHtml}
-                    </div>
-                    <div class="chat-row-details">
-                      <span class="chat-row-name">${name}</span>
-                      <div class="chat-row-meta">
-                        <span class="chat-row-last-msg" id="last-msg-${profile.id}">დააჭირეთ მიმოწერის დასაწყებად</span>
-                        <span class="chat-row-time">Live</span>
-                        <div class="unread-dot"></div>
+                    storiesTarget.innerHTML += `
+                      <div class="story-item" onclick="startOrOpenChat('${profile.id}')">
+                        <div class="story-avatar-wrapper active-story">
+                          ${storyImgHtml}
+                          <div class="active-badge"></div>
+                        </div>
+                        <span class="story-name">${name.split(' ')[0]}</span>
                       </div>
-                    </div>
-                  </div>
-                `;
-                
-                fetchLastMessagePreview(profile.id);
-              });
-              updateGlobalBadgeCount();
+                    `;
+
+                    var isUnreadClass = unreadChatsMap[profile.id] ? "unread" : "";
+                    var lastMsgText = lastMessagesMap[profile.id] ? lastMessagesMap[profile.id].message : "დააჭირეთ მიმოწერის დასაწყებად";
+
+                    target.innerHTML += `
+                      <div class="chat-row-item ${isUnreadClass}" id="chat-row-${profile.id}" onclick="startOrOpenChat('${profile.id}')">
+                        <div class="chat-row-avatar-holder">
+                          ${imgHtml}
+                        </div>
+                        <div class="chat-row-details">
+                          <span class="chat-row-name">${name}</span>
+                          <div class="chat-row-meta">
+                            <span class="chat-row-last-msg" id="last-msg-${profile.id}">${lastMsgText}</span>
+                            <span class="chat-row-time">Live</span>
+                            <div class="unread-dot"></div>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  });
+                  updateGlobalBadgeCount();
+                });
             });
-        });
-    }
-
-    function fetchLastMessagePreview(targetId) {
-      var roomCombination1 = currentUser.id + "_" + targetId;
-      var roomCombination2 = targetId + "_" + currentUser.id;
-
-      supabase.from('messages')
-        .select('message')
-        .or(`room_id.eq.${roomCombination1},room_id.eq.${roomCombination2}`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .then(function(res) {
-          if(res.data && res.data.length > 0) {
-            var el = document.getElementById(`last-msg-${targetId}`);
-            if(el) el.innerText = res.data[0].message;
-          }
         });
     }
 
@@ -778,10 +784,16 @@
             var row = document.getElementById(`chat-row-${senderId}`);
             if (row) {
               row.classList.add('unread');
-            }
-            var msgPreview = document.getElementById(`last-msg-${senderId}`);
-            if (msgPreview) {
-              msgPreview.innerText = payload.new.message;
+              var msgPreview = document.getElementById(`last-msg-${senderId}`);
+              if (msgPreview) {
+                msgPreview.innerText = payload.new.message;
+              }
+              // გადავიყვანოთ რეალურ დროში სიის სულ თავში (პირველი)
+              var parentContainer = document.getElementById('chats-list-target');
+              parentContainer.prepend(row);
+            } else {
+              // თუ იუზერი სიაში არ ფიგურირებს, გადავტვირთოთ სია სწორი წყობისთვის
+              loadChatsList();
             }
             updateGlobalBadgeCount();
           }
