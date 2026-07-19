@@ -527,7 +527,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                             
+                                            
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -619,7 +619,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      overflow: visible; /* გულის ხაზს გარეთ გამოსასვლელად */
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       animation: avatarSmoothRiseScroll 6s linear forwards;
     }
@@ -627,20 +627,22 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      border-radius: 50%;
     }
     .tiktok-floating-avatar-heart {
       position: absolute;
-      bottom: -2px;
-      right: -2px;
+      bottom: -4px; /* უფრო დაბლა გადატანა */
+      right: -4px; /* უფრო გვერდზე გადატანა ნახევრად ხაზს გარეთ */
       font-size: 11px;
       background: #ffffff;
       border-radius: 50%;
-      width: 16px;
-      height: 16px;
+      width: 18px; /* ოდნავ გაზრდილი ზომა სილამაზისთვის */
+      height: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      z-index: 5;
     }
     
     @keyframes avatarSmoothRiseScroll {
@@ -2777,7 +2779,7 @@
           var count = (res.count !== null) ? res.count : 0;
           var t = TRANSLATIONS[currentLang];
           var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
-          countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; });
+          countLabels.forEach(function(lbl) { lbl.innerText = count; }); // მხოლოდ ციფრი ვიდეოს პანელისთვის
         });
     }
 
@@ -2956,7 +2958,21 @@
           input.value = "";
           cancelReplyMode();
           loadCommentsIntoModal(postId);
-          renderCommentsCountOnly({ id: postId });
+          
+          // პოსტებისთვის კომენტარების რაოდენობის განახლება (ტექსტი + ციფრი)
+          supabase.from('post_comments').select('id', { count: 'exact' }).eq('post_id', postId).then(function(resCount) {
+            var count = (resCount.count !== null) ? resCount.count : 0;
+            var t = TRANSLATIONS[currentLang];
+            var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
+            countLabels.forEach(function(lbl) {
+              // თუ ვიდეოს გვერდითა პანელია, დავუტოვოთ მარტო ციფრი, წინააღმდეგ შემთხვევაში ჩვეულებრივი
+              if(lbl.closest('.tiktok-side-panel')) {
+                lbl.innerText = count;
+              } else {
+                lbl.innerText = count + " " + t.commentsCount;
+              }
+            });
+          });
           
           if(document.getElementById('custom-gallery-modal').style.display === "flex") {
             setTimeout(function() {
@@ -3292,6 +3308,13 @@
                 <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
               </div>
               <span class="comment-count-label" data-post-id="${post.id}">0</span>
+            </div>
+
+            <div class="tiktok-action-item" onclick="alert('Saved')">
+              <div class="tiktok-icon-circle">
+                <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+              </div>
+              <span>0</span>
             </div>
 
             <div class="tiktok-action-item" onclick="shareVideoNative('${post.media_url}'); event.stopPropagation();">
@@ -3995,10 +4018,18 @@
                   </div>
                   <span class="comment-count-label" data-post-id="${post.id}">0</span>
                 </div>
-                ${deleteButtonHtml ? `
-                <div class="tiktok-action-item" onclick="deletePost('${post.id}')">
-                  <div class="tiktok-icon-circle" style="color:#ff4d4f; font-size:20px;">🗑️</div>
-                </div>` : ''}
+                <div class="tiktok-action-item" onclick="alert('Saved')">
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                  </div>
+                  <span>0</span>
+                </div>
+                <div class="tiktok-action-item" onclick="shareVideoNative('${post.media_url}')">
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+                  </div>
+                  <span>0</span>
+                </div>
               </div>
 
               <div class="tiktok-overlay-bottom-info">
@@ -4355,7 +4386,7 @@
       if (event.key === 'Enter') submitStoryComment();
     }
 
-    function submitStoryComment() {
+    function updateStoryComment() {
       var input = document.getElementById('story-comment-field');
       var text = input.value.trim();
       if (!text) return;
