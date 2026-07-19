@@ -40,7 +40,8 @@
     #chats-screen {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 100vh;
+      max-height: 100vh;
       overflow: hidden;
     }
     .chats-header {
@@ -309,7 +310,8 @@
     #thread-screen {
       display: none;
       flex-direction: column;
-      height: 100%;
+      height: 100vh;
+      max-height: 100vh;
       background-color: #0b0b0b;
       overflow: hidden;
     }
@@ -376,7 +378,7 @@
       cursor: pointer;
     }
 
-    /* შეტყობინებების ველი - მხოლოდ ეს უნდა სქროლავდეს */
+    /* შეტყობინებების ველი */
     .messages-container {
       flex: 1;
       overflow-y: auto;
@@ -653,7 +655,7 @@
     var activeTargetUserObj = null;
     var realtimeChannel = null;
     var globalChannel = null;
-    var unreadChatsMap = {}; // ინახავს თითოეული მომხმარებლისგან მოსულ უნახავ მესიჯებს
+    var unreadChatsMap = {}; 
 
     // სესიის შემოწმება
     supabase.auth.getUser().then(function(res) {
@@ -661,7 +663,7 @@
         currentUser = res.data.user;
         loadChatsList();
         checkUrlParams();
-        listenToGlobalMessages(); // ჩავრთოთ გლობალური ნოთიფიკაციების მსმენელი
+        listenToGlobalMessages(); 
       } else {
         alert("გთხოვთ გაიაროთ ავტორიზაცია მთავარ გვერდზე.");
         window.location.href = "index.html";
@@ -721,7 +723,6 @@
                   </div>
                 `;
 
-                // შემოწმება, არის თუ არა ეს ჩატი უნახავი
                 var isUnreadClass = unreadChatsMap[profile.id] ? "unread" : "";
 
                 target.innerHTML += `
@@ -764,7 +765,6 @@
         });
     }
 
-    // გლობალური ნოთიფიკაციების მოსმენა (როცა ჩატში არ ვართ შესული)
     function listenToGlobalMessages() {
       if (globalChannel) return;
 
@@ -772,11 +772,9 @@
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${currentUser.id}` }, function(payload) {
           var senderId = payload.new.sender_id;
           
-          // თუ ამ მომენტში მასთან ჩატი არ გვაქვს გახსნილი, ავანთოთ ბეჯი
           if (senderId !== activeTargetUserId) {
             unreadChatsMap[senderId] = true;
             
-            // ვიზუალური განახლება რეალურ დროში სიაში
             var row = document.getElementById(`chat-row-${senderId}`);
             if (row) {
               row.classList.add('unread');
@@ -791,7 +789,6 @@
         .subscribe();
     }
 
-    // ჰედერის / მენიუს წითელი ციფრის განახლება
     function updateGlobalBadgeCount() {
       var totalUnread = Object.keys(unreadChatsMap).length;
       var badge = document.getElementById('global-unread-badge');
@@ -803,11 +800,9 @@
       }
     }
 
-    // ჩატის გახსნა
     function startOrOpenChat(targetUserId) {
       activeTargetUserId = targetUserId;
       
-      // როგორც კი ჩატს ვხსნით, ამ იუზერის ნოთიფიკაცია იშლება
       delete unreadChatsMap[targetUserId];
       updateGlobalBadgeCount();
       
@@ -866,7 +861,6 @@
       });
     }
 
-    // ისტორიის წამოღება
     function loadMessagesLog() {
       var block = document.getElementById('dynamic-messages-block');
       block.innerHTML = "";
@@ -885,7 +879,6 @@
         });
     }
 
-    // ბუშტის დამატება
     function appendMessageBubble(msg) {
       var block = document.getElementById('dynamic-messages-block');
       var isOutgoing = msg.sender_id === currentUser.id;
@@ -903,7 +896,6 @@
       block.appendChild(row);
     }
 
-    // გაგზავნა
     function sendMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
@@ -925,7 +917,6 @@
       });
     }
 
-    // ჩატის შიდა Realtime სინქრონიზაცია
     function listenToRealtimeMessages() {
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
