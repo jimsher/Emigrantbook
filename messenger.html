@@ -283,17 +283,6 @@
       font-size: 11px;
       font-weight: 500;
     }
-    .nav-badge {
-      position: absolute;
-      top: -4px;
-      right: 2px;
-      background: #ff3b30;
-      color: #ffffff;
-      font-size: 11px;
-      font-weight: bold;
-      border-radius: 10px;
-      padding: 1px 5px;
-    }
 
     /* Meta AI მცურავი ორნამენტის ღილაკი */
     .meta-ai-float-btn {
@@ -571,9 +560,7 @@
         </div>
       </div>
 
-      <div class="stories-row" id="active-stories-target">
-        <!-- დინამიური აქტიური მომხმარებლები -->
-      </div>
+      <div class="stories-row" id="active-stories-target"></div>
 
       <div class="chats-scroll-area" id="chats-list-target">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">ჩატები იტვირთება...</div>
@@ -629,9 +616,7 @@
 
         <div class="chat-date-separator" id="chat-date-lbl">TODAY</div>
 
-        <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;">
-          <!-- შეტყობინებები რეალურ დროში -->
-        </div>
+        <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
 
       <div class="thread-footer">
@@ -674,7 +659,7 @@
       }
     });
 
-    // პარამეტრების შემოწმება (?user=ID) პირდაპირი გადამისამართებისთვის
+    // პარამეტრების შემოწმება (?user=ID)
     function checkUrlParams() {
       var urlParams = new URLSearchParams(window.location.search);
       var targetUser = urlParams.get('user');
@@ -683,7 +668,7 @@
       }
     }
 
-    // ჩატების სიის ჩატვირთვა (მეგობრები / გამომწერები)
+    // ჩატების სიის ჩატვირთვა
     function loadChatsList() {
       var target = document.getElementById('chats-list-target');
       var storiesTarget = document.getElementById('active-stories-target');
@@ -718,7 +703,6 @@
                 var imgHtml = avatar ? `<img class="chat-row-avatar" src="${avatar}">` : `<div class="chat-row-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%;">${initial}</div>`;
                 var storyImgHtml = avatar ? `<img class="story-avatar" src="${avatar}">` : `<div class="story-avatar" style="background:#dcae36; color:#111; display:flex; align-items:center; justify-content:center; font-weight:bold; height:100%; line-height:60px;">${initial}</div>`;
 
-                // ჰორიზონტალური აქტიური ბარი
                 storiesTarget.innerHTML += `
                   <div class="story-item" onclick="startOrOpenChat('${profile.id}')">
                     <div class="story-avatar-wrapper active-story">
@@ -729,7 +713,6 @@
                   </div>
                 `;
 
-                // ვერტიკალური ჩატის რიგი
                 target.innerHTML += `
                   <div class="chat-row-item" id="chat-row-${profile.id}" onclick="startOrOpenChat('${profile.id}')">
                     <div class="chat-row-avatar-holder">
@@ -756,19 +739,19 @@
       var roomCombination2 = targetId + "_" + currentUser.id;
 
       supabase.from('messages')
-        .select('content')
+        .select('message')
         .or(`room_id.eq.${roomCombination1},room_id.eq.${roomCombination2}`)
         .order('created_at', { ascending: false })
         .limit(1)
         .then(function(res) {
           if(res.data && res.data.length > 0) {
             var el = document.getElementById(`last-msg-${targetId}`);
-            if(el) el.innerText = res.data[0].content;
+            if(el) el.innerText = res.data[0].message;
           }
         });
     }
 
-    // ჩატის ოთახის იდენტიფიცირება/შექმნა და გახსნა
+    // ჩატის გახსნა
     function startOrOpenChat(targetUserId) {
       activeTargetUserId = targetUserId;
       
@@ -792,21 +775,21 @@
         if(avatar) {
           avatarEl.src = avatar;
           bigAvatarEl.src = avatar;
+          avatarEl.style.display = "block";
         } else {
           avatarEl.style.display = "none";
+          bigAvatarEl.removeAttribute('src');
           bigAvatarEl.style.backgroundColor = "#dcae36";
-          bigAvatarEl.innerHTML = initial; // უავატარო მომხმარებლისთვის
+          bigAvatarEl.innerHTML = initial;
         }
 
         document.getElementById('view-profile-action-btn').onclick = function() {
-          window.location.href = "index.html"; // მთავარზე დაბრუნება, იქიდან გაეხსნება პროფილი
+          window.location.href = "index.html";
         };
 
-        // ოთახის უნიკალური ID კომბინაცია ორივე მომხმარებლის ID-თ
         var room1 = currentUser.id + "_" + targetUserId;
         var room2 = targetUserId + "_" + currentUser.id;
 
-        // ვამოწმებთ რომელი კომბინაციით არსებობს შეტყობინებები
         supabase.from('messages')
           .select('room_id')
           .or(`room_id.eq.${room1},room_id.eq.${room2}`)
@@ -815,7 +798,7 @@
             if(roomCheck.data && roomCheck.data.length > 0) {
               activeChatRoomId = roomCheck.data[0].room_id;
             } else {
-              activeChatRoomId = room1; // თუ ახალია, ვირჩევთ სტანდარტულს
+              activeChatRoomId = room1;
             }
             
             loadMessagesLog();
@@ -824,7 +807,7 @@
       });
     }
 
-    // შეტყობინებების ისტორიის წამოღება
+    // ისტორიის წამოღება
     function loadMessagesLog() {
       var block = document.getElementById('dynamic-messages-block');
       block.innerHTML = "";
@@ -843,7 +826,7 @@
         });
     }
 
-    // ბუშტის დამატება კონტეინერში
+    // ბუშტის დამატება
     function appendMessageBubble(msg) {
       var block = document.getElementById('dynamic-messages-block');
       var isOutgoing = msg.sender_id === currentUser.id;
@@ -853,15 +836,15 @@
       if(!isOutgoing) {
         var avatarUrl = activeTargetUserObj.avatar_url;
         var avatarContent = avatarUrl ? `<img class="msg-bubble-avatar" src="${avatarUrl}">` : `<div class="msg-bubble-avatar" style="background:#dcae36; color:#111; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:bold;">${activeTargetUserObj.full_name.charAt(0)}</div>`;
-        row.innerHTML = `${avatarContent}<div class="msg-bubble">${msg.content}</div>`;
+        row.innerHTML = `${avatarContent}<div class="msg-bubble">${msg.message}</div>`;
       } else {
-        row.innerHTML = `<div class="msg-bubble">${msg.content}</div>`;
+        row.innerHTML = `<div class="msg-bubble">${msg.message}</div>`;
       }
 
       block.appendChild(row);
     }
 
-    // შეტყობინების გაგზავნა ბაზაში
+    // გაგზავნა
     function sendMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
@@ -871,7 +854,7 @@
         room_id: activeChatRoomId,
         sender_id: currentUser.id,
         receiver_id: activeTargetUserId,
-        content: text
+        message: text
       };
 
       input.value = "";
@@ -883,7 +866,7 @@
       });
     }
 
-    // რეალურ დროში სინქრონიზაცია Supabase Realtime-ით
+    // Realtime სინქრონიზაცია
     function listenToRealtimeMessages() {
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
