@@ -434,7 +434,7 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 3px solid #1877f2;
+      border: 3px solid #dcae36;
       background: #222222;
       overflow: hidden;
       display: flex;
@@ -527,7 +527,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                            
+                                             
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -542,6 +542,7 @@
     .video-container-rel {
       position: relative;
       width: 100%;
+      background: #000;
     }
     .tiktok-side-panel {
       position: absolute;
@@ -595,7 +596,7 @@
     .tiktok-floating-avatars-container {
       position: absolute;
       left: 12px;
-      bottom: 80px;
+      bottom: 100px;
       width: 50px;
       height: 240px;
       display: flex;
@@ -618,7 +619,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      overflow: visible; 
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       animation: avatarSmoothRiseScroll 6s linear forwards;
     }
@@ -626,20 +627,22 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      border-radius: 50%;
     }
     .tiktok-floating-avatar-heart {
       position: absolute;
-      bottom: -2px;
-      right: -2px;
+      bottom: -4px; 
+      right: -4px; 
       font-size: 11px;
       background: #ffffff;
       border-radius: 50%;
-      width: 16px;
-      height: 16px;
+      width: 18px; 
+      height: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      z-index: 5;
     }
     
     @keyframes avatarSmoothRiseScroll {
@@ -1232,10 +1235,16 @@
       bottom: 20px; left: 15px; right: 80px;
       z-index: 3050;
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+      background: linear-gradient(transparent, rgba(0,0,0,0.4));
+      padding: 10px;
+      border-radius: 8px;
     }
     .tiktok-info-author {
-      font-weight: bold; font-size: 16px; margin-bottom: 5px;
+      font-weight: bold; font-size: 16px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;
+    }
+    .tiktok-info-time {
+      font-size: 12px; color: #d1d1d6; font-weight: normal;
     }
     .tiktok-info-caption {
       font-size: 14px; line-height: 1.3; max-height: 60px; overflow: hidden;
@@ -1417,6 +1426,9 @@
     .gallery-actions-buttons-row {
       display: flex; justify-content: space-between; width: 100%;
     }
+    .gallery-actions-buttons-row {
+      display: flex; justify-content: space-between; width: 100%;
+    }
     .gallery-act-btn {
       flex: 1; background: none; border: none; padding: 6px;
       color: #b0b3b8; font-size: 14px; font-weight: 600; cursor: pointer;
@@ -1506,10 +1518,11 @@
           <div class="header-badge" id="requests-badge" style="display: none;">0</div>
         </button>
 
-        <button class="header-icon-btn" onclick="alert('მესენჯერი მალე დაემატება!')">
+        <button class="header-icon-btn" onclick="window.location.href='messenger.html'">
           <svg class="header-icon-svg" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
           </svg>
+          <div class="header-badge" id="messenger-badge" style="display: none; background: #ff4d4f;">0</div>
         </button>
 
         <button class="header-icon-btn" onclick="openRealtimeNotifications()">
@@ -1834,7 +1847,7 @@
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        ဖოტოს აღწერა...
+        ფოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
@@ -1886,6 +1899,21 @@
     var realtimeNotificationsList = [];
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+
+    // დამხმარე ფუნქცია მესენჯერთან დასაკავშირებლად (404-ის აღმოსაფხვრელად)
+    function redirectToMessenger(targetUserId) {
+      if (!targetUserId) {
+        window.open("https://emigrantbook.com/messages", "_blank");
+      } else {
+        window.open("https://emigrantbook.com/messages?user=" + targetUserId, "_blank");
+      }
+    }
+
+    // ძველი დამხმარე ფუნქციის ჩანაცვლება
+    function sendMessage() {
+      var targetId = activeViewingProfileId || (currentUser ? currentUser.id : null);
+      redirectToMessenger(targetId);
+    }
 
     var TRANSLATIONS = {
       ka: {
@@ -1957,7 +1985,7 @@
         comment: "Комментарий", reply: "Ответить", replyTo: "Ответ пользователю: ",
         likers: "Лайкнувшие", delete: "🗑️ Удалить", stories: "Истории",
         msgPlaceholder: "Отправить сообщение...", addFriend: "Добавить",
-        messenger: "Мессенджер", edit: "Редактировать", cancelReq: "Отмена запроса",
+        messenger: "Messenger", edit: "Редактировать", cancelReq: "Отмена запроса",
         accept: "Принять", reject: "Отклонить", removeFriend: "👥 Удалить",
         share: "Поделиться", commentsCount: "комментариев", noPhotos: "Нет загруженных фотографий.",
         noVideos: "Нет доступных видео.", descPlaceholder: "Описание отсутствует.",
@@ -2058,6 +2086,13 @@
       if(btnTabPhotos) btnTabPhotos.innerText = t.tabPhotos;
       var btnTabVideos = document.getElementById('tab-btn-videos');
       if(btnTabVideos) btnTabVideos.innerText = t.tabVideos;
+
+      var lblStatPost = document.getElementById('lbl-stat-post');
+      if(lblStatPost) lblStatPost.innerText = t.postUnit;
+      var lblStatFollowers = document.getElementById('lbl-stat-followers');
+      if(lblStatFollowers) lblStatFollowers.innerText = lang === 'ka' ? "გამომწერი" : (lang === 'en' ? "follower" : (lang === 'ru' ? "подписчик" : (lang === 'fr' ? "abonné" : "Abonnent")));
+      var lblStatFollowing = document.getElementById('lbl-stat-following');
+      if(lblStatFollowing) lblStatFollowing.innerText = t.followingTitle;
 
       var bProfile = document.getElementById('lbl-back-to-profile');
       if(bProfile) bProfile.innerText = t.backToProfile;
@@ -2168,14 +2203,14 @@
         alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა.");
       }
     } catch (e) {
-      alert("კავშირის შეცდომა: " + e.message);
+      alert("კავშირის შე შეცდომა: " + e.message);
     }
 
     function toggleRequestsDropdown(event) {
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-           
+                   
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -2240,6 +2275,7 @@
        
       if (currentUser) {
         checkPendingRequestsCount();
+        checkUnreadMessagesCount();
       }
       applyLanguageDOM();
     }
@@ -2300,15 +2336,48 @@
             showScreen('home');
              
             checkPendingRequestsCount();
+            checkUnreadMessagesCount();
             subscribeToFriendRequests();
             subscribeToPostsRealtime(); 
             subscribeToGlobalNotifications();
+            subscribeToMessagesRealtime();
           });
         } else {
           applyLanguageDOM();
           showScreen('auth');
         }
       });
+    }
+
+    function subscribeToMessagesRealtime() {
+      if (!currentUser) return;
+      supabase.channel('messages-badge-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function(payload) {
+          if (payload.new && payload.new.receiver_id === currentUser.id) {
+            checkUnreadMessagesCount();
+          }
+        })
+        .subscribe();
+    }
+
+    function checkUnreadMessagesCount() {
+      if (!currentUser) return;
+      supabase.from('messages')
+        .select('id')
+        .eq('receiver_id', currentUser.id)
+        .eq('is_read', false)
+        .then(function(res) {
+          var badge = document.getElementById('messenger-badge');
+          if (badge) {
+            var count = (res.data && res.data.length > 0) ? res.data.length : 0;
+            if (count > 0) {
+              badge.innerText = count;
+              badge.style.display = 'flex';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        });
     }
 
     function subscribeToGlobalNotifications() {
@@ -2385,7 +2454,7 @@
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, function(payload) {
           var updatedPost = payload.new;
           
-          var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${updatedPost.id}"]`);
+          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${updatedPost.id}"]`);
           countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
 
           var tiktokSpans = document.querySelectorAll(`.tiktok-like-count[data-post-id="${updatedPost.id}"]`);
@@ -2420,6 +2489,7 @@
           var isHome = document.getElementById('home-screen').style.display === 'block';
           var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
           if (dropdown && dropdown.style.display === 'flex') {
+            dropdown.style.display = 'flex';
             loadIncomingFriendRequests();
           }
           if (currentUser && activeViewingProfileId) {
@@ -2439,7 +2509,7 @@
           var badgeHome = document.getElementById('requests-badge');
           var badgeProfile = document.getElementById('requests-badge-profile');
           var count = (res.data && res.data.length > 0) ? res.data.length : 0;
-           
+            
           if (count > 0) {
             if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
             if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
@@ -2762,7 +2832,7 @@
           var count = (res.count !== null) ? res.count : 0;
           var t = TRANSLATIONS[currentLang];
           var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
-          countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; });
+          countLabels.forEach(function(lbl) { lbl.innerText = count; }); 
         });
     }
 
@@ -2816,7 +2886,7 @@
         .order('created_at', { ascending: true })
         .then(function(res) {
           if (res.error) {
-            container.innerHTML = `<div style="color: red; text-align: center;">Error.</div>`;
+            container.innerHTML = `<div style="node-style: red; text-align: center;">Error.</div>`;
             return;
           }
 
@@ -2941,7 +3011,19 @@
           input.value = "";
           cancelReplyMode();
           loadCommentsIntoModal(postId);
-          renderCommentsCountOnly({ id: postId });
+          
+          supabase.from('post_comments').select('id', { count: 'exact' }).eq('post_id', postId).then(function(resCount) {
+            var count = (resCount.count !== null) ? resCount.count : 0;
+            var t = TRANSLATIONS[currentLang];
+            var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
+            countLabels.forEach(function(lbl) {
+              if(lbl.closest('.tiktok-side-panel')) {
+                lbl.innerText = count;
+              } else {
+                lbl.innerText = count + " " + t.commentsCount;
+              }
+            });
+          });
           
           if(document.getElementById('custom-gallery-modal').style.display === "flex") {
             setTimeout(function() {
@@ -2965,7 +3047,7 @@
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
       var t = TRANSLATIONS[currentLang];
-      container.innerHTML = `<div style="text-align: center; color: #aaaaaa;">${t.loading}</div>`;
+      container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
       supabase.from('profiles')
@@ -3026,9 +3108,7 @@
       var t = TRANSLATIONS[currentLang];
       
       supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
-        if (profileRes.data) {
-          userProfile = profileRes.data;
-        }
+        if (profileRes.data) userProfile = profileRes.data;
 
         var finalName = userProfile ? userProfile.full_name : currentUser.email;
         var avatarUrl = userProfile ? userProfile.avatar_url : null;
@@ -3126,7 +3206,6 @@
       document.getElementById('profile-photos-wall').style.display = 'none';
 
       var targetUserId = activeViewingProfileId || currentUser.id;
-      var t = TRANSLATIONS[currentLang];
 
       if (tabName === 'posts') {
         document.getElementById('tab-btn-posts').classList.add('active');
@@ -3223,12 +3302,12 @@
 
           var gridHtml = '<div class="video-grid-full">';
           activeTiktokVideosList.forEach(function(post, index) {
-            var viewsFake = (post.likes_count || 0) * 3 + (index * 7) + 12;
+            var realViews = post.views_count || 0;
             gridHtml += `
               <div class="video-grid-card" onclick="openTiktokVideoModal(${index})">
                 <video class="video-grid-thumbnail" src="${post.media_url}" preload="metadata" muted></video>
                 <div class="video-grid-views">
-                  <span>👁️ ${viewsFake}</span>
+                  <span>👁️ ${realViews}</span>
                 </div>
               </div>
             `;
@@ -3249,6 +3328,11 @@
         var hasLiked = likedPosts.includes(post.id);
         var activeHeartClass = hasLiked ? "heart-liked" : "";
         
+        var date = new Date(post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' });
+        var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+        var authorAvatarUrl = cachedProfiles[post.user_id] || null;
+        var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
+
         var slide = document.createElement('div');
         slide.className = "tiktok-slide-item";
         slide.innerHTML = `
@@ -3257,6 +3341,10 @@
           <div class="tiktok-floating-avatars-container" id="floating-container-tiktok-${post.id}"></div>
 
           <div class="tiktok-side-panel" style="bottom: 80px; right: 15px;">
+            <div class="post-avatar" onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}'); event.stopPropagation();" style="margin-bottom: 10px; border: 2px solid #ffffff;">
+              ${avatarContent}
+            </div>
+
             <div class="tiktok-action-item" onclick="likePost('${post.id}', true); event.stopPropagation();">
               <div class="tiktok-icon-circle">
                 <svg class="tiktok-heart ${activeHeartClass}" data-post-id="${post.id}" viewBox="0 0 24 24">
@@ -3273,6 +3361,13 @@
               <span class="comment-count-label" data-post-id="${post.id}">0</span>
             </div>
 
+            <div class="tiktok-action-item" onclick="alert('Saved')">
+              <div class="tiktok-icon-circle">
+                <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+              </div>
+              <span>0</span>
+            </div>
+
             <div class="tiktok-action-item" onclick="shareVideoNative('${post.media_url}'); event.stopPropagation();">
               <div class="tiktok-icon-circle">
                 <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
@@ -3282,7 +3377,10 @@
           </div>
 
           <div class="tiktok-overlay-bottom-info">
-            <div class="tiktok-info-author">@${post.author_name || "user"}</div>
+            <div class="tiktok-info-author">
+              <span onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}');">@${post.author_name || "user"}</span>
+              <span class="tiktok-info-time">${date}</span>
+            </div>
             <div class="tiktok-info-caption">${post.content || ""}</div>
           </div>
         `;
@@ -3334,6 +3432,10 @@
       });
 
       modal.style.display = "none";
+      var targetUserId = activeViewingProfileId || currentUser.id;
+      if (document.getElementById('profile-screen').style.display === 'block' && document.getElementById('tab-btn-videos').classList.contains('active')) {
+         loadUserVideos(targetUserId);
+      }
     }
 
     function openFullGalleryModal(index) {
@@ -3449,14 +3551,14 @@
           if (!request) {
             actionPanel.innerHTML = `
               <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
-              <button class="fb-btn-secondary" onclick="sendMessage()">${t.messenger}</button>
+              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
               <button class="btn-more-options">•••</button>
             `;
           } else if (request.status === 'pending') {
             if (request.sender_id === currentUser.id) {
               actionPanel.innerHTML = `
                 <button class="fb-btn-secondary" onclick="cancelFriendRequest('${request.id}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
-                <button class="fb-btn-secondary" onclick="sendMessage()">${t.messenger}</button>
+                <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
                 <button class="btn-more-options">•••</button>
               `;
             } else {
@@ -3471,7 +3573,7 @@
           } else if (request.status === 'accepted') {
             actionPanel.innerHTML = `
               <button class="fb-btn-success" onclick="deleteFriendship('${request.id}', '${targetUserId}')">${t.removeFriend}</button>
-              <button class="fb-btn-secondary" onclick="sendMessage()">${t.messenger}</button>
+              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
               <button class="btn-more-options">•••</button>
             `;
           }
@@ -3725,7 +3827,7 @@
 
         var posts = res.data;
         if (posts.length === 0) {
-          postsWall.innerHTML = `<div class="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+          postsWall.innerHTML = `<div class="node-style: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
           return;
         }
 
@@ -3823,7 +3925,6 @@
 
     function buildCollageHtml(urlsString, postId, likesCount) {
       if (!urlsString) return "";
-      var t = TRANSLATIONS[currentLang];
       
       var urls = [];
       if (urlsString.includes(",")) {
@@ -3941,20 +4042,55 @@
       }
 
       if (isSingleVideo) {
+        var hasLikedVideo = likedPosts.includes(post.id);
+        var activeHeartClassVideo = hasLikedVideo ? "heart-liked" : "";
+
         return `
           <div class="post-card" id="post-card-${post.id}">
-            <div class="post-header">
-              <div class="post-header-left">
-                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
-                <div class="post-author-info">
-                  <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
-                  <span class="post-time">${date}</span>
+            <div class="video-container-rel">
+              <video class="post-media" src="${post.media_url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
+              <div class="tiktok-floating-avatars-container" id="floating-container-feed-${post.id}"></div>
+              
+              <div class="tiktok-side-panel" style="bottom: 25px; right: 8px;">
+                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">
+                  ${avatarContent}
+                </div>
+                <div class="tiktok-action-item" onclick="likePost('${post.id}', false)">
+                  <div class="tiktok-icon-circle">
+                    <svg class="tiktok-heart ${activeHeartClassVideo}" data-post-id="${post.id}" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </div>
+                  <span class="tiktok-like-count" data-post-id="${post.id}">${post.likes_count || 0}</span>
+                </div>
+                <div class="tiktok-action-item" onclick="openCommentsModal('${post.id}', ${post.likes_count || 0})">
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                  </div>
+                  <span class="comment-count-label" data-post-id="${post.id}">0</span>
+                </div>
+                <div class="tiktok-action-item" onclick="alert('Saved')">
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                  </div>
+                  <span>0</span>
+                </div>
+                <div class="tiktok-action-item" onclick="shareVideoNative('${post.media_url}')">
+                  <div class="tiktok-icon-circle">
+                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+                  </div>
+                  <span>0</span>
                 </div>
               </div>
-              ${deleteButtonHtml}
+
+              <div class="tiktok-overlay-bottom-info">
+                <div class="tiktok-info-author">
+                  <span onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
+                  <span class="tiktok-info-time">${date}</span>
+                </div>
+                <div class="tiktok-info-caption">${post.content || ""}</div>
+              </div>
             </div>
-            <div class="post-content">${post.content || ""}</div>
-            ${mediaHtml}
           </div>
         `;
       }
@@ -4198,13 +4334,12 @@
         .in('user_id', userIdsList)
         .order('created_at', { ascending: false })
         .then(function(res) {
-          // პროფილის გვერდზე აქტიური სთორის მქონე იუზერის ჩარჩოს განახლება
           var profileAvatar = document.getElementById('profile-big-avatar');
           if (profileAvatar) {
             var targetId = activeViewingProfileId || (currentUser ? currentUser.id : null);
             var hasActiveStory = res.data && res.data.some(function(s) { return s.user_id === targetId; });
             if (hasActiveStory) {
-              profileAvatar.style.border = "4px solid #1877f2";
+              profileAvatar.style.border = "4px solid #dcae36";
             } else {
               profileAvatar.style.border = "4px solid #141414";
             }
@@ -4302,7 +4437,7 @@
       if (event.key === 'Enter') submitStoryComment();
     }
 
-    function submitStoryComment() {
+    function updateStoryComment() {
       var input = document.getElementById('story-comment-field');
       var text = input.value.trim();
       if (!text) return;
