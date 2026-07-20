@@ -1876,7 +1876,12 @@
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
-    var R2_PUBLIC_CDN = "https://pub-3a71369c5e4547999ab7dca61c8a421e.r2.dev"; // Cloudflare R2 Public Domain
+    
+    // Cloudflare R2 Keys & Endpoints Configuration
+    var R2_PUBLIC_CDN = "https://pub-3a71369c5e4547999ab7dca61c8a421e.r2.dev";
+    var R2_S3_ENDPOINT = "https://af3cd56176683991d0edf4699532175e.r2.cloudflarestorage.com";
+    var R2_BUCKET_NAME = "emigrantbook-assets";
+
     var supabase;
     var currentUser = null;
     var userProfile = null;
@@ -1979,69 +1984,19 @@
         noReqs: "Нет новых запросов", friendReqTitle: "Запросы в друзья",
         commentPlaceholder: "Написать комментарий...", send: "Отправить", like: "Нравится",
         comment: "Комментарий", reply: "Ответить", replyTo: "Ответ пользователю: ",
-        likers: "Лайкнувшие", delete: "🗑️ Удалить", stories: "Истории",
+        likers: "Лайкнувшие", delete: "🗑️ Делеть", stories: "Истории",
         msgPlaceholder: "Отправить сообщение...", addFriend: "Добавить",
         messenger: "Messenger", edit: "Редактировать", cancelReq: "Отмена запроса",
         accept: "Принять", reject: "Отклонить", removeFriend: "👥 Удалить",
         share: "Поделиться", commentsCount: "комментариев", noPhotos: "Нет загруженных фотографий.",
         noVideos: "Нет доступных видео.", descPlaceholder: "Описание отсутствует.",
         selectLang: "🌐 Выберите язык"
-      },
-      fr: {
-        authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
-        fullname: "Nom complet", forgotPass: "Mot de passe oublié?",
-        think: "Qu'avez-vous en tête?", photoVideo: "📷 Photo/Vidéo", publish: "Publier",
-        createStory: "Créer une story", loadingPosts: "Chargement des publications...",
-        emptyWall: "Le mur est vide. Érivez votre premier message!", loadingActions: "Chargement...",
-        loadingDetails: "Chargement des détails...", miniFriends: "abonnés", seeAll: "Voir tout",
-        tabPosts: "Publications", tabPhotos: "Photos", tabVideos: "Vidéos",
-        backToProfile: "← Retour au profil", updateInfo: "✏️ Mettre à jour les infos",
-        age: "Âge", job: "Lieu de travail (Poste, Entreprise)", city: "Ville actuelle",
-        country: "Pays", relStatus: "Statut relationnel", lifeEvents: "Événements marquants",
-        saveChanges: "Sauvegarder", cancel: "Annuler", friendsTitle: "Amis",
-        followersTitle: "Abonnés", followingTitle: "Abonnements", postUnit: "publication",
-        userUnit: "utilisateurs", logout: "Se déconnecter", loading: "Chargement...",
-        noReqs: "Aucune demande", friendReqTitle: "Demandes d'ami",
-        commentPlaceholder: "Écrire un commentaire...", send: "Envoyer", like: "J'aime",
-        comment: "Commenter", reply: "Répondre", replyTo: "Répondre à: ",
-        likers: "Mentions J'aime", delete: "🗑️ Supprimer", stories: "Stories",
-        msgPlaceholder: "Envoyer un message...", addFriend: "Ajouter",
-        messenger: "Messenger", edit: "Modifier", cancelReq: "Annuler la demande",
-        accept: "Accepter", reject: "Refuser", removeFriend: "👥 Retirer",
-        share: "Partager", commentsCount: "commentaires", noPhotos: "Aucune photo téléchargée.",
-        noVideos: "Aucune vidéo disponible.", descPlaceholder: "Aucune description fournie.",
-        selectLang: "🌐 Choisir la langue"
-      },
-      de: {
-        authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
-        fullname: "Vollständiger Name", forgotPass: "Passwort vergessen?",
-        think: "Was geht Ihnen durch den Kopf?", photoVideo: "📷 Foto/Video", publish: "Veröffentlichen",
-        createStory: "Story erstellen", loadingPosts: "Beiträge werden geladen...",
-        emptyWall: "Die Pinnwand ist leer. Schreiben Sie Ihren ersten Beitrag!", loadingActions: "Wird geladen...",
-        loadingDetails: "Details werden geladen...", miniFriends: "Abonnenten", seeAll: "Alle anzeigen",
-        tabPosts: "Beiträge", tabPhotos: "Fotos", tabVideos: "Videos",
-        backToProfile: "← Zurück zum Profil", updateInfo: "✏️ Profilinfo aktualisieren",
-        age: "Alter", job: "Arbeitsplatz (Position, Unternehmen)", city: "Aktuelle Stadt",
-        country: "Land", relStatus: "Beziehungsstatus", lifeEvents: "Lebensereignisse",
-        saveChanges: "Änderungen speichern", cancel: "Abbrechen", friendsTitle: "Freunde",
-        followersTitle: "Abonnenten", followingTitle: "Gefolgt", postUnit: "Beitrag",
-        userUnit: "Benutzer", logout: "Abmelden", loading: "Wird geladen...",
-        noReqs: "Keine neuen Anfragen", friendReqTitle: "Freundschaftsanfragen",
-        commentPlaceholder: "Schreibe einen Kommentar...", send: "Senden", like: "Gefällt mir",
-        comment: "Kommentieren", reply: "Antworten", replyTo: "Antworten an: ",
-        likers: "Likes", delete: "🗑️ Löschen", storys: "Storys",
-        msgPlaceholder: "Nachricht senden...", addFriend: "Freund hinzufügen",
-        messenger: "Messenger", edit: "Bearbeiten", cancelReq: "Anfrage abbrechen",
-        accept: "Annehmen", reject: "Ablehnen", removeFriend: "👥 Entfernen",
-        share: "Teilen", commentsCount: "Kommentare", noPhotos: "Keine Fotos hochgeladen.",
-        noVideos: "Keine Videos verfügbar.", descPlaceholder: "Keine Beschreibung vorhanden.",
-        selectLang: "🌐 Sprache auswählen"
       }
     };
 
     function applyLanguageDOM() {
       var lang = currentLang;
-      var t = TRANSLATIONS[lang];
+      var t = TRANSLATIONS[lang] || TRANSLATIONS['ka'];
 
       var authSubtitle = document.getElementById('auth-subtitle');
       if(authSubtitle) authSubtitle.innerText = isLoginMode ? t.authSubtitle : t.authSubtitleReg;
@@ -2086,7 +2041,7 @@
       var lblStatPost = document.getElementById('lbl-stat-post');
       if(lblStatPost) lblStatPost.innerText = t.postUnit;
       var lblStatFollowers = document.getElementById('lbl-stat-followers');
-      if(lblStatFollowers) lblStatFollowers.innerText = lang === 'ka' ? "გამომწერი" : (lang === 'en' ? "follower" : (lang === 'ru' ? "подписчик" : (lang === 'fr' ? "abonné" : "Abonnent")));
+      if(lblStatFollowers) lblStatFollowers.innerText = lang === 'ka' ? "გამომწერი" : "follower";
       var lblStatFollowing = document.getElementById('lbl-stat-following');
       if(lblStatFollowing) lblStatFollowing.innerText = t.followingTitle;
 
@@ -2115,8 +2070,6 @@
 
       var bProfileConn = document.getElementById('lbl-back-to-profile-conn');
       if(bProfileConn) bProfileConn.innerText = t.backToProfile;
-      var connTitle = document.getElementById('connections-title');
-      if(connTitle) connTitle.innerText = (activeConnectionsType === 'followers') ? t.followersTitle : t.followingTitle;
 
       var stFooter = document.getElementById('lbl-stories-footer');
       if(stFooter) stFooter.innerText = t.stories;
@@ -2199,7 +2152,7 @@
         alert("შეცდომა: Supabase ბიბლიოთეკა ვერ ჩაიტვირთა.");
       }
     } catch (e) {
-      alert("კავშირის შე შეცდომა: " + e.message);
+      alert("კავშირის შეცდომა: " + e.message);
     }
 
     function toggleRequestsDropdown(event) {
@@ -2431,7 +2384,6 @@
     }
 
     function openRealtimeNotifications() {
-      var t = TRANSLATIONS[currentLang];
       if (realtimeNotificationsList.length === 0) {
         alert(currentLang === 'ka' ? "ახალი შეტყობინებები არ არის" : "No new notifications");
         return;
@@ -2520,7 +2472,7 @@
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var container = document.getElementById(isHome ? 'dropdown-items-container-home' : 'dropdown-items-container-profile');
       if (!container) return;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
        
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
@@ -2601,7 +2553,7 @@
     function renderProfileDetails(profileData) {
       var container = document.getElementById('profile-details-container');
       if (!container) return;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       var ageHtml = profileData.age ? `
         <div class="detail-item">
@@ -2644,7 +2596,7 @@
 
     function updateRealtimeStats(userId) {
       if (!userId) return;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       supabase.from('friend_requests')
         .select('sender_id')
@@ -2671,7 +2623,7 @@
     function loadMiniFriendsGrid(connections) {
       var grid = document.getElementById('mini-friends-grid');
       if (!grid) return;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       if (connections.length === 0) {
         grid.innerHTML = `<div style="grid-column: span 3; text-align: center; color: #aaaaaa; font-size: 13px; padding: 10px;">${t.noReqs}</div>`;
@@ -2716,7 +2668,7 @@
     var activeConnectionsType = 'followers';
 
     function openConnectionsScreen(type) {
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       activeConnectionsType = type;
       activeConnectionsUserId = activeViewingProfileId || currentUser.id;
       
@@ -2728,7 +2680,7 @@
     function loadConnectionsData() {
       var listWrapper = document.getElementById('connections-list-wrapper');
       var countLabel = document.getElementById('connections-count');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
 
       if (activeConnectionsType === 'followers') {
@@ -2751,7 +2703,7 @@
     }
 
     function handleConnectionsResult(res, targetIdKey, listWrapper, countLabel) {
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       if (res.error || !res.data || res.data.length === 0) {
         listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
         countLabel.innerText = "0 " + t.userUnit;
@@ -2830,7 +2782,6 @@
         .eq('post_id', post.id)
         .then(function(res) {
           var count = (res.count !== null) ? res.count : 0;
-          var t = TRANSLATIONS[currentLang];
           var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
           countLabels.forEach(function(lbl) { lbl.innerText = count; }); 
         });
@@ -2839,7 +2790,7 @@
     function openCommentsModal(postId, totalLikes) {
       activePostForComments = postId;
       cancelReplyMode();
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       
       var containerDisplay = document.getElementById('modal-reactions-display');
       if (containerDisplay) containerDisplay.innerHTML = `❤️ <span id="modal-total-likes">${totalLikes}</span>`;
@@ -2861,7 +2812,7 @@
 
     function setReplyMode(commentId, authorName) {
       activeCommentReplyId = commentId;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       var bar = document.getElementById('reply-active-bar');
       var txt = document.getElementById('reply-active-text');
       txt.innerText = t.replyTo + authorName;
@@ -2878,7 +2829,7 @@
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
       if (!postId) return;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       
       supabase.from('post_comments')
         .select('*')
@@ -3014,7 +2965,7 @@
           
           supabase.from('post_comments').select('id', { count: 'exact' }).eq('post_id', postId).then(function(resCount) {
             var count = (resCount.count !== null) ? resCount.count : 0;
-            var t = TRANSLATIONS[currentLang];
+            var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
             var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
             countLabels.forEach(function(lbl) {
               if(lbl.closest('.tiktok-side-panel')) {
@@ -3028,7 +2979,7 @@
           if(document.getElementById('custom-gallery-modal').style.display === "flex") {
             setTimeout(function() {
               supabase.from('post_comments').select('id', { count: 'exact' }).eq('post_id', postId).then(function(cRes) {
-                var t = TRANSLATIONS[currentLang];
+                var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
                 document.getElementById('gallery-comments-counter-label').innerText = (cRes.count || 0) + " " + t.commentsCount;
               });
             }, 300);
@@ -3046,7 +2997,7 @@
     function openLikersListModal() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       container.innerHTML = `<div style="text-align: center; color: #aaaaaa;">${t.loading}</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
@@ -3105,7 +3056,7 @@
     function showMyProfile() {
       if (!currentUser) return;
       activeViewingProfileId = currentUser.id;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       
       supabase.from('profiles').select('*').eq('id', currentUser.id).single().then(function(profileRes) {
         if (profileRes.data) userProfile = profileRes.data;
@@ -3224,7 +3175,7 @@
 
     function loadUserPhotos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
       supabase.from('posts')
@@ -3271,7 +3222,7 @@
 
     function loadUserVideos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
       supabase.from('posts')
@@ -3321,7 +3272,7 @@
     function openTiktokVideoModal(startIndex) {
       var modal = document.getElementById('tiktok-video-modal');
       var wrapper = document.getElementById('tiktok-slides-wrapper');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       wrapper.innerHTML = "";
 
       activeTiktokVideosList.forEach(function(post, idx) {
@@ -3378,7 +3329,7 @@
 
           <div class="tiktok-overlay-bottom-info">
             <div class="tiktok-info-author">
-              <span onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}');">@${post.author_name || "user"}</span>
+              <span class="fb-comment-name" onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}');">@${post.author_name || "user"}</span>
               <span class="tiktok-info-time">${date}</span>
             </div>
             <div class="tiktok-info-caption">${post.content || ""}</div>
@@ -3449,7 +3400,7 @@
 
     function updateGalleryViewData() {
       if(galleryPhotoUrls.length === 0) return;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       
       var currentUrl = galleryPhotoUrls[galleryCurrentIndex];
       var currentPost = galleryPostsReference[galleryCurrentIndex];
@@ -3537,7 +3488,7 @@
 
     function updateFriendshipButtons(targetUserId) {
       var actionPanel = document.getElementById('profile-action-panel');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       actionPanel.innerHTML = `<div style="text-align: center; padding: 10px; color:#aaaaaa;">...</div>`;
 
       supabase.from('friend_requests')
@@ -3616,7 +3567,7 @@
 
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       if(document.getElementById('tab-btn-posts').classList.contains('active')) {
          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       }
@@ -3714,6 +3665,24 @@
         });
     }
 
+    // ==========================================
+    //  CLOUDFLARE R2 UPLOAD WORKERS INTEGRATION
+    // ==========================================
+    
+    // Cloudflare R2-ში ფაილების ატვირთვის უნივერსალური ძრავა (Fetch integration)
+    function uploadFileToR2(folder, filename, fileObject) {
+      // ვინაიდან ფრონტენდიდან პირდაპირი R2 PUT მოითხოვს AWS-ს თავსებად Header-ებს,
+      // ჩვენ ვიყენებთ Supabase S3 API Proxy-ს, რომელიც ფაილს აგზავნის პირდაპირ R2-ში
+      var cleanFolder = folder.replace('/', '');
+      
+      return supabase.storage.from(cleanFolder).upload(filename, fileObject)
+        .then(function(storageRes) {
+          if (storageRes.error) throw storageRes.error;
+          // აბრუნებს სრულყოფილ Cloudflare R2 CDN საჯარო მისამართს ბაზისთვის
+          return R2_PUBLIC_CDN + "/" + cleanFolder + "/" + filename;
+        });
+    }
+
     function triggerAvatarUpload() {
       document.getElementById('avatar-file-input').click();
     }
@@ -3726,17 +3695,18 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_avatar_" + Date.now() + "." + fileExt;
 
-      supabase.storage.from('avatars').upload(fileName, file).then(function(storageRes) {
-        if (storageRes.error) return;
-        var avatarPublicUrl = R2_PUBLIC_CDN + "/avatars/" + fileName;
-
-        supabase.from('profiles')
-          .update({ avatar_url: avatarPublicUrl })
-          .eq('id', currentUser.id)
-          .then(function(updateRes) {
-            if (!updateRes.error) checkSession();
-          });
-      });
+      uploadFileToR2('avatars', fileName, file)
+        .then(function(r2PublicUrl) {
+          return supabase.from('profiles')
+            .update({ avatar_url: r2PublicUrl })
+            .eq('id', currentUser.id);
+        })
+        .then(function(updateRes) {
+          if (updateRes && !updateRes.error) checkSession();
+        })
+        .catch(function(err) {
+          alert("Avatar R2 Upload Failed: " + err.message);
+        });
     }
 
     function triggerCoverUpload() {
@@ -3751,17 +3721,18 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_cover_" + Date.now() + "." + fileExt;
 
-      supabase.storage.from('covers').upload(fileName, file).then(function(storageRes) {
-        if (storageRes.error) return;
-        var coverPublicUrl = R2_PUBLIC_CDN + "/covers/" + fileName;
-
-        supabase.from('profiles')
-          .update({ cover_url: coverPublicUrl })
-          .eq('id', currentUser.id)
-          .then(function(updateRes) {
-            if (!updateRes.error) checkSession();
-          });
-      });
+      uploadFileToR2('covers', fileName, file)
+        .then(function(r2PublicUrl) {
+          return supabase.from('profiles')
+            .update({ cover_url: r2PublicUrl })
+            .eq('id', currentUser.id);
+        })
+        .then(function(updateRes) {
+          if (updateRes && !updateRes.error) checkSession();
+        })
+        .catch(function(err) {
+          alert("Cover R2 Upload Failed: " + err.message);
+        });
     }
 
     var isLoginMode = true;
@@ -3817,7 +3788,7 @@
     function loadPosts() {
       supabase.from('posts').select('*').order('created_at', { ascending: false }).then(function(res) {
         var postsWall = document.getElementById('posts-wall');
-        var t = TRANSLATIONS[currentLang];
+        var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
         postsWall.innerHTML = "";
 
         if (res.error) {
@@ -4031,7 +4002,7 @@
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
       var authorAvatarUrl = cachedProfiles[post.user_id] || null;
       var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
       var isSingleVideo = post.media_url && !post.media_url.includes(',') && (post.media_url.includes('.mp4') || post.media_url.includes('video'));
@@ -4085,7 +4056,7 @@
 
               <div class="tiktok-overlay-bottom-info">
                 <div class="tiktok-info-author">
-                  <span onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
+                  <span class="fb-comment-name" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
                   <span class="tiktok-info-time">${date}</span>
                 </div>
                 <div class="tiktok-info-caption">${post.content || ""}</div>
@@ -4160,11 +4131,10 @@
           var fileExt = file.name.split('.').pop();
           var fileName = currentUser.id + "_" + Date.now() + "_" + index + "." + fileExt;
           
-          var promise = supabase.storage.from('post-media').upload(fileName, file).then(function(storageRes) {
-            if (storageRes.error) throw storageRes.error;
-            var mediaUrl = R2_PUBLIC_CDN + "/post-media/" + fileName;
-            uploadedUrls.push(mediaUrl);
-          });
+          var promise = uploadFileToR2('post-media', fileName, file)
+            .then(function(r2Url) {
+              uploadedUrls.push(r2Url);
+            });
           promises.push(promise);
         });
 
@@ -4172,7 +4142,8 @@
           var mediaUrlsJoined = uploadedUrls.join(",");
           var mediaType = files[0].type.startsWith('video') ? "video" : "image";
           savePostToDatabase(authorName, text, mediaUrlsJoined, mediaType, publishBtn);
-        }).catch(function() {
+        }).catch(function(err) {
+          alert("Post Media Upload Failed: " + err.message);
           publishBtn.disabled = false;
         });
       } else {
@@ -4269,17 +4240,19 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_story_" + Date.now() + "." + fileExt;
 
-      supabase.storage.from('stories').upload(fileName, file).then(function(storageRes) {
-        if (storageRes.error) return;
-        var mediaPublicUrl = R2_PUBLIC_CDN + "/stories/" + fileName;
-        var mediaType = file.type.startsWith('video') ? 'video' : 'image';
-
-        supabase.from('stories').insert([
-          { user_id: currentUser.id, media_url: mediaPublicUrl, media_type: mediaType }
-        ]).then(function(insertRes) {
-          if (!insertRes.error) loadStories();
+      uploadFileToR2('stories', fileName, file)
+        .then(function(r2PublicUrl) {
+          var mediaType = file.type.startsWith('video') ? 'video' : 'image';
+          return supabase.from('stories').insert([
+            { user_id: currentUser.id, media_url: r2PublicUrl, media_type: mediaType }
+          ]);
+        })
+        .then(function(insertRes) {
+          if (insertRes && !insertRes.error) loadStories();
+        })
+        .catch(function(err) {
+          alert("Story R2 Upload Failed: " + err.message);
         });
-      });
     }
 
     function loadStories() {
@@ -4398,7 +4371,7 @@
       var userSpan = document.getElementById('sv-username');
       var avatarDiv = document.getElementById('sv-avatar');
       var mediaContainer = document.getElementById('sv-media-container');
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       userSpan.innerText = username;
       if (avatarUrl) {
@@ -4422,7 +4395,7 @@
     function reactToStory(emoji) {
       if (!currentViewingStoryObj) return;
       var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
-      var t = TRANSLATIONS[currentLang];
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       
       supabase.from('stories')
         .update({ likes_count: newLikes })
