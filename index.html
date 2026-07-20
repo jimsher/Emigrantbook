@@ -1255,7 +1255,7 @@
     #connections-title { font-size: 18px; font-weight: bold; }
     .connections-empty { text-align: center; color: #aaaaaa; padding: 20px; }
     .connection-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #0b0b0b; }
-    .connection-user-info { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .connections-user-info { display: flex; align-items: center; gap: 12px; cursor: pointer; }
     .connection-avatar { width: 44px; height: 44px; border-radius: 50%; background: #dcae36; color: #111111; display: flex; align-items: center; justify-content: center; font-weight: bold; overflow: hidden; }
     .connection-avatar img { width:100%; height:100%; object-fit: cover; }
     .connection-name { font-weight: bold; }
@@ -1876,11 +1876,6 @@
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
-    
-    // Cloudflare R2 Keys & Endpoints Configuration
-    var R2_PUBLIC_CDN = "https://pub-3a71369c5e4547999ab7dca61c8a421e.r2.dev";
-    var R2_S3_ENDPOINT = "https://af3cd56176683991d0edf4699532175e.r2.cloudflarestorage.com";
-    var R2_BUCKET_NAME = "emigrantbook-assets";
 
     var supabase;
     var currentUser = null;
@@ -2998,7 +2993,7 @@
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
-      container.innerHTML = `<div style="text-align: center; color: #aaaaaa;">${t.loading}</div>`;
+      container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
       supabase.from('profiles')
@@ -3665,28 +3660,6 @@
         });
     }
 
-    // ==========================================
-    //  CLOUDFLARE R2 UPLOAD WORKERS INTEGRATION
-    // ==========================================
-    
-    // Cloudflare R2-ში ფაილების ატვირთვის უნივერსალური ძრავა (Fetch integration)
-    function uploadFileToR2(folder, filename, fileObject) {
-      // ვინაიდან ფრონტენდიდან პირდაპირი R2 PUT მოითხოვს AWS-ს თავსებად Header-ებს,
-      // ჩვენ ვიყენებთ Supabase S3 API Proxy-ს, რომელიც ფაილს აგზავნის პირდაპირ R2-ში
-      var cleanFolder = folder.replace('/', '');
-      
-      return supabase.storage.from(cleanFolder).upload(filename, fileObject)
-        .then(function(storageRes) {
-          if (storageRes.error) throw storageRes.error;
-          // აბრუნებს სრულყოფილ Cloudflare R2 CDN საჯარო მისამართს ბაზისთვის
-          return R2_PUBLIC_CDN + "/" + cleanFolder + "/" + filename;
-        });
-    }
-
-    function triggerAvatarUpload() {
-      document.getElementById('avatar-file-input').click();
-    }
-
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
       if (fileInput.files.length === 0) return;
@@ -3695,22 +3668,20 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_avatar_" + Date.now() + "." + fileExt;
 
-      uploadFileToR2('avatars', fileName, file)
-        .then(function(r2PublicUrl) {
-          return supabase.from('profiles')
-            .update({ avatar_url: r2PublicUrl })
-            .eq('id', currentUser.id);
-        })
-        .then(function(updateRes) {
-          if (updateRes && !updateRes.error) checkSession();
-        })
-        .catch(function(err) {
-          alert("Avatar R2 Upload Failed: " + err.message);
+      supabase.storage.from('avatars').upload(fileName, file).then(function(storageRes) {
+        if (storageRes.error) {
+          alert("Upload Error: " + storageRes.error.message);
+          return;
+        }
+        var avatarUrl = SUPABASE_URL + "/storage/v1/object/public/avatars/" + fileName;
+        supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id).then(function(updateRes) {
+          if (!updateRes.error) checkSession();
         });
+      });
     }
 
-    function triggerCoverUpload() {
-      document.getElementById('cover-file-input').click();
+    function triggerAvatarUpload() {
+      document.getElementById('avatar-file-input').click();
     }
 
     function uploadCover() {
@@ -3721,18 +3692,20 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_cover_" + Date.now() + "." + fileExt;
 
-      uploadFileToR2('covers', fileName, file)
-        .then(function(r2PublicUrl) {
-          return supabase.from('profiles')
-            .update({ cover_url: r2PublicUrl })
-            .eq('id', currentUser.id);
-        })
-        .then(function(updateRes) {
-          if (updateRes && !updateRes.error) checkSession();
-        })
-        .catch(function(err) {
-          alert("Cover R2 Upload Failed: " + err.message);
+      supabase.storage.from('covers').upload(fileName, file).then(function(storageRes) {
+        if (storageRes.error) {
+          alert("Upload Error: " + storageRes.error.message);
+          return;
+        }
+        var coverUrl = SUPABASE_URL + "/storage/v1/object/public/covers/" + fileName;
+        supabase.from('profiles').update({ cover_url: coverUrl }).eq('id', currentUser.id).then(function(updateRes) {
+          if (!updateRes.error) checkSession();
         });
+      });
+    }
+
+    function triggerCoverUpload() {
+      document.getElementById('cover-file-input').click();
     }
 
     var isLoginMode = true;
@@ -4131,8 +4104,10 @@
           var fileExt = file.name.split('.').pop();
           var fileName = currentUser.id + "_" + Date.now() + "_" + index + "." + fileExt;
           
-          var promise = uploadFileToR2('post-media', fileName, file)
-            .then(function(r2Url) {
+          var promise = supabase.storage.from('post-media').upload(fileName, file)
+            .then(function(storageRes) {
+              if (storageRes.error) throw storageRes.error;
+              var r2Url = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
               uploadedUrls.push(r2Url);
             });
           promises.push(promise);
@@ -4143,7 +4118,7 @@
           var mediaType = files[0].type.startsWith('video') ? "video" : "image";
           savePostToDatabase(authorName, text, mediaUrlsJoined, mediaType, publishBtn);
         }).catch(function(err) {
-          alert("Post Media Upload Failed: " + err.message);
+          alert("Upload Failed: " + err.message);
           publishBtn.disabled = false;
         });
       } else {
@@ -4240,19 +4215,19 @@
       var fileExt = file.name.split('.').pop();
       var fileName = currentUser.id + "_story_" + Date.now() + "." + fileExt;
 
-      uploadFileToR2('stories', fileName, file)
-        .then(function(r2PublicUrl) {
-          var mediaType = file.type.startsWith('video') ? 'video' : 'image';
-          return supabase.from('stories').insert([
-            { user_id: currentUser.id, media_url: r2PublicUrl, media_type: mediaType }
-          ]);
-        })
-        .then(function(insertRes) {
-          if (insertRes && !insertRes.error) loadStories();
-        })
-        .catch(function(err) {
-          alert("Story R2 Upload Failed: " + err.message);
+      supabase.storage.from('stories').upload(fileName, file).then(function(storageRes) {
+        if (storageRes.error) {
+          alert("Upload Error: " + storageRes.error.message);
+          return;
+        }
+        var storyUrl = SUPABASE_URL + "/storage/v1/object/public/stories/" + fileName;
+        var mediaType = file.type.startsWith('video') ? 'video' : 'image';
+        supabase.from('stories').insert([
+          { user_id: currentUser.id, media_url: storyUrl, media_type: mediaType }
+        ]).then(function(insertRes) {
+          if (!insertRes.error) loadStories();
         });
+      });
     }
 
     function loadStories() {
