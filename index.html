@@ -531,7 +531,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                             
+                                               
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1469,7 +1469,7 @@
 
   <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
   <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="uploadCover()">
-  <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="uploadStory()">
+  <input type="file" id="story-file-input" accept="image/*" style="display: none;" onchange="uploadStory()">
 
   <div id="auth-screen">
     <div class="auth-container">
@@ -1549,8 +1549,8 @@
         <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
         <div class="create-post-actions">
           <div class="file-upload-wrapper">
-            <div class="file-upload-btn" id="lbl-photo-video">📷 ფოტო/ვიდეო</div>
-            <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
+            <div class="file-upload-btn" id="lbl-photo-video">📷 ფოტო</div>
+            <input type="file" id="post-media-file" accept="image/*" multiple onchange="showSelectedFileName()">
           </div>
           <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">გამოქვეყნება</button>
         </div>
@@ -1895,6 +1895,9 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+    // ImgBB API Configuration
+    const IMGBB_API_KEY = "20b1ff9fe9c8896477a6bf04c86bcc67";
+
     var currentUser = null;
     var userProfile = null;
     var cachedProfiles = {};
@@ -1932,7 +1935,7 @@
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
         fullname: "სახელი და გვარი", forgotPass: "დაგავიწყდათ პაროლი?",
-        think: "რაზე ფიქრობთ?", photoVideo: "📷 ფოტო/ვიდეო", publish: "გამოქვეყნება",
+        think: "რაზე ფიქრობთ?", photoVideo: "📷 ფოტო", publish: "გამოქვეყნება",
         createStory: "სიუჟეტის შექმნა", loadingPosts: "პოსტები იტვირთება...",
         emptyWall: "კედელი ცარიელია. დაწერე პირველი პოსტი!", loadingActions: "იტვირთება მომოქმედებები...",
         loadingDetails: "დეტალები იტვირთება...", miniFriends: "გამომწერი", seeAll: "ყველას ნახვა",
@@ -1957,7 +1960,7 @@
       en: {
         authSubtitle: "Log in to your profile", authSubtitleReg: "Create a new account",
         fullname: "Full Name", forgotPass: "Forgot password?",
-        think: "What's on your mind?", photoVideo: "📷 Photo/Video", publish: "Publish",
+        think: "What's on your mind?", photoVideo: "📷 Photo", publish: "Publish",
         createStory: "Create Story", loadingPosts: "Loading posts...",
         emptyWall: "The wall is empty. Write your first post!", loadingActions: "Loading actions...",
         loadingDetails: "Loading details...", miniFriends: "followers", seeAll: "See all",
@@ -1982,7 +1985,7 @@
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
         fullname: "Имя и фамилия", forgotPass: "Забыли пароль?",
-        think: "О чем вы думаете?", photoVideo: "📷 Фото/Видео", publish: "Опубликовать",
+        think: "О чем вы думаете?", photoVideo: "📷 Фото", publish: "Опубликовать",
         createStory: "Создать историю", loadingPosts: "Загрузка постов...",
         emptyWall: "Стена пуста. Напишите свой первый пост!", loadingActions: "Загрузка действий...",
         loadingDetails: "Загрузка деталей...", miniFriends: "подписчиков", seeAll: "Посмотреть все",
@@ -2007,7 +2010,7 @@
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
         fullname: "Nom complet", forgotPass: "Mot de passe oublié?",
-        think: "Qu'avez-vous en tête?", photoVideo: "📷 Photo/Vidéo", publish: "Publier",
+        think: "Qu'avez-vous en tête?", photoVideo: "📷 Photo", publish: "Publier",
         createStory: "Créer une story", loadingPosts: "Chargement des publications...",
         emptyWall: "Le mur est vide. Érivez votre premier message!", loadingActions: "Chargement...",
         loadingDetails: "Chargement des détails...", miniFriends: "abonnés", seeAll: "Voir tout",
@@ -2032,7 +2035,7 @@
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
         fullname: "Vollständiger Name", forgotPass: "Passwort vergessen?",
-        think: "Was geht Ihnen durch den Kopf?", photoVideo: "📷 Foto/Video", publish: "Veröffentlichen",
+        think: "Was geht Ihnen durch den Kopf?", photoVideo: "📷 Foto", publish: "Veröffentlichen",
         createStory: "Story erstellen", loadingPosts: "Beiträge werden geladen...",
         emptyWall: "Die Pinnwand ist leer. Schreiben Sie Ihren ersten Beitrag!", loadingActions: "Wird geladen...",
         loadingDetails: "Details werden geladen...", miniFriends: "Abonnenten", seeAll: "Alle anzeigen",
@@ -2390,11 +2393,7 @@
               if (newPost.user_id !== currentUser.uid) {
                 var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
                 if (newPost.media_url) {
-                  if (newPost.media_url.includes('.mp4') || newPost.media_url.includes('video')) {
-                    type = currentLang === 'ka' ? "ახალი ვიდეო" : "new video";
-                  } else {
-                    type = currentLang === 'ka' ? "ახალი სურათი" : "new photo";
-                  }
+                  type = currentLang === 'ka' ? "ახალი სურათი" : "new photo";
                 }
                 var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
                 realtimeNotificationsList.unshift({
@@ -2445,9 +2444,6 @@
             var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
             countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
 
-            var tiktokSpans = document.querySelectorAll(`.tiktok-like-count[data-post-id="${postId}"]`);
-            tiktokSpans.forEach(function(s) { s.innerText = updatedPost.likes_count || 0; });
-
             var statsIcons = document.getElementById(`stats-icons-${postId}`);
             if (statsIcons) {
               var currentLikesNum = updatedPost.likes_count || 0;
@@ -2462,9 +2458,6 @@
 
             if(document.getElementById(`floating-container-feed-${postId}`)) {
               startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-            }
-            if(document.getElementById(`floating-container-tiktok-${postId}`)) {
-              startFloatingAvatarsAnimation(postId, `floating-container-tiktok-${postId}`);
             }
           }
         });
@@ -2971,11 +2964,7 @@
           var t = TRANSLATIONS[currentLang];
           var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
           countLabels.forEach(function(lbl) {
-            if(lbl.closest('.tiktok-side-panel')) {
-              lbl.innerText = count;
-            } else {
-              lbl.innerText = count + " " + t.commentsCount;
-            }
+            lbl.innerText = count + " " + t.commentsCount;
           });
         });
         
@@ -3169,7 +3158,7 @@
       } else if (tabName === 'videos') {
         document.getElementById('tab-btn-videos').classList.add('active');
         document.getElementById('profile-photos-wall').style.display = 'block';
-        loadUserVideos(targetUserId); 
+        photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">ვიდეოები ხელმიუწვდომელია (ImgBB მხარს უჭერს მხოლოდ სურათებს)</div>`;
       }
     }
 
@@ -3194,7 +3183,7 @@
               var urls = post.media_url.split(',');
               urls.forEach(function(url) {
                 var cleanUrl = url.trim();
-                if (!cleanUrl.includes('.mp4') && !cleanUrl.includes('video') && cleanUrl.length > 5) {
+                if (cleanUrl.length > 5) {
                   galleryPhotoUrls.push(cleanUrl);
                   galleryPostsReference.push(post);
                 }
@@ -3215,172 +3204,6 @@
           
           photosWall.innerHTML = `<div style="padding: 10px 0;">${collageHtml}</div>`;
         });
-    }
-
-    function loadUserVideos(userId) {
-      var photosWall = document.getElementById('profile-photos-wall');
-      var t = TRANSLATIONS[currentLang];
-      photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
-
-      db.collection('posts')
-        .where('user_id', '==', userId)
-        .orderBy('created_at', 'desc')
-        .get()
-        .then(function(snapshot) {
-          var posts = [];
-          snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
-
-          activeTiktokVideosList = [];
-
-          posts.forEach(function(p) {
-            if (p.media_url && !p.media_url.includes(',')) {
-              if (p.media_url.includes('.mp4') || p.media_url.includes('video')) {
-                activeTiktokVideosList.push(p);
-              }
-            }
-          });
-
-          if(activeTiktokVideosList.length === 0) {
-            photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noVideos}</div>`;
-            return;
-          }
-
-          var gridHtml = '<div class="video-grid-full">';
-          activeTiktokVideosList.forEach(function(post, index) {
-            var realViews = post.views_count || 0;
-            gridHtml += `
-              <div class="video-grid-card" onclick="openTiktokVideoModal(${index})">
-                <video class="video-grid-thumbnail" src="${post.media_url}" preload="metadata" muted></video>
-                <div class="video-grid-views">
-                  <span>👁️ ${realViews}</span>
-                </div>
-              </div>
-            `;
-          });
-          gridHtml += '</div>';
-
-          photosWall.innerHTML = `<div style="padding: 10px 0;">${gridHtml}</div>`;
-        });
-    }
-
-    function openTiktokVideoModal(startIndex) {
-      var modal = document.getElementById('tiktok-video-modal');
-      var wrapper = document.getElementById('tiktok-slides-wrapper');
-      var t = TRANSLATIONS[currentLang];
-      wrapper.innerHTML = "";
-
-      activeTiktokVideosList.forEach(function(post, idx) {
-        var hasLiked = likedPosts.includes(post.id);
-        var activeHeartClass = hasLiked ? "heart-liked" : "";
-        
-        var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
-        var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
-        var authorAvatarUrl = cachedProfiles[post.user_id] || null;
-        var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
-
-        var slide = document.createElement('div');
-        slide.className = "tiktok-slide-item";
-        slide.innerHTML = `
-          <video class="tiktok-slide-video" src="${post.media_url}" loop playsinline onclick="toggleVideoPlay(this)"></video>
-          
-          <div class="tiktok-floating-avatars-container" id="floating-container-tiktok-${post.id}"></div>
-
-          <div class="tiktok-side-panel" style="bottom: 80px; right: 15px;">
-            <div class="post-avatar" onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}'); event.stopPropagation();" style="margin-bottom: 10px; border: 2px solid #ffffff;">
-              ${avatarContent}
-            </div>
-
-            <div class="tiktok-action-item" onclick="likePost('${post.id}', true); event.stopPropagation();">
-              <div class="tiktok-icon-circle">
-                <svg class="tiktok-heart ${activeHeartClass}" data-post-id="${post.id}" viewBox="0 0 24 24">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <span class="tiktok-like-count" data-post-id="${post.id}">${post.likes_count || 0}</span>
-            </div>
-            
-            <div class="tiktok-action-item" onclick="openCommentsModal('${post.id}', ${post.likes_count || 0}); event.stopPropagation();">
-              <div class="tiktok-icon-circle">
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-              </div>
-              <span class="comment-count-label" data-post-id="${post.id}">0</span>
-            </div>
-
-            <div class="tiktok-action-item" onclick="alert('Saved')">
-              <div class="tiktok-icon-circle">
-                <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-              </div>
-              <span>0</span>
-            </div>
-
-            <div class="tiktok-action-item" onclick="shareVideoNative('${post.media_url}'); event.stopPropagation();">
-              <div class="tiktok-icon-circle">
-                <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
-              </div>
-              <span>${t.share}</span>
-            </div>
-          </div>
-
-          <div class="tiktok-overlay-bottom-info">
-            <div class="tiktok-info-author">
-              <span onclick="closeTiktokVideoModal(); viewUserProfile('${post.user_id}');">@${post.author_name || "user"}</span>
-              <span class="tiktok-info-time">${date}</span>
-            </div>
-            <div class="tiktok-info-caption">${post.content || ""}</div>
-          </div>
-        `;
-        wrapper.appendChild(slide);
-        renderCommentsCountOnly(post);
-        startFloatingAvatarsAnimation(post.id, `floating-container-tiktok-${post.id}`);
-      });
-
-      modal.style.display = "block";
-      
-      var targetScrollY = startIndex * window.innerHeight;
-      modal.scrollTop = targetScrollY;
-
-      modal.onscroll = handleTiktokScrollAutoPlay;
-      setTimeout(handleTiktokScrollAutoPlay, 100);
-    }
-
-    function handleTiktokScrollAutoPlay() {
-      var modal = document.getElementById('tiktok-video-modal');
-      var slides = document.querySelectorAll('.tiktok-slide-item');
-      var scrollTop = modal.scrollTop;
-      var height = window.innerHeight;
-      
-      var currentIdx = Math.round(scrollTop / height);
-
-      slides.forEach(function(slide, idx) {
-        var video = slide.querySelector('.tiktok-slide-video');
-        if(video) {
-          if(idx === currentIdx) {
-            video.play().catch(function(){});
-          } else {
-            video.pause();
-            video.currentTime = 0;
-          }
-        }
-      });
-    }
-
-    function closeTiktokVideoModal() {
-      var modal = document.getElementById('tiktok-video-modal');
-      var videos = modal.querySelectorAll('video');
-      videos.forEach(function(v) { v.pause(); });
-      
-      activeTiktokVideosList.forEach(function(post) {
-        if(activeFloatingIntervals[post.id]) {
-          clearInterval(activeFloatingIntervals[post.id]);
-          delete activeFloatingIntervals[post.id];
-        }
-      });
-
-      modal.style.display = "none";
-      var targetUserId = activeViewingProfileId || currentUser.uid;
-      if (document.getElementById('profile-screen').style.display === 'block' && document.getElementById('tab-btn-videos').classList.contains('active')) {
-         loadUserVideos(targetUserId);
-      }
     }
 
     function openFullGalleryModal(index) {
@@ -3604,8 +3427,6 @@
               profileWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
             });
-
-            observeVideos();
           });
         });
     }
@@ -3671,23 +3492,39 @@
       document.getElementById('avatar-file-input').click();
     }
 
+    // Generic function to upload images directly to ImgBB
+    function uploadImageToImgBB(file, callback) {
+      let formData = new FormData();
+      formData.append("image", file);
+
+      fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(result => {
+        if(result.success) {
+          callback(result.data.url);
+        } else {
+          alert("ImgBB ატვირთვის შეცდომა: " + result.error.message);
+        }
+      })
+      .catch(error => {
+        alert("ქსელის შეცდომა ImgBB-სთან დაკავშირებისას.");
+      });
+    }
+
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
       if (fileInput.files.length === 0) return;
-
       var file = fileInput.files[0];
-      var fileExt = file.name.split('.').pop();
-      var fileName = currentUser.uid + "_avatar_" + Date.now() + "." + fileExt;
-      var storageRef = storage.ref('avatars/' + fileName);
 
-      storageRef.put(file).then(function(snapshot) {
-        return snapshot.ref.getDownloadURL();
-      }).then(function(downloadURL) {
+      uploadImageToImgBB(file, function(downloadURL) {
         db.collection('profiles').doc(currentUser.uid)
           .update({ avatar_url: downloadURL })
           .then(function() {
             auth.currentUser.reload().then(function() {
-              checkSession();
+              showMyProfile();
             });
           });
       });
@@ -3700,19 +3537,13 @@
     function uploadCover() {
       var fileInput = document.getElementById('cover-file-input');
       if (fileInput.files.length === 0) return;
-
       var file = fileInput.files[0];
-      var fileExt = file.name.split('.').pop();
-      var fileName = currentUser.uid + "_cover_" + Date.now() + "." + fileExt;
-      var storageRef = storage.ref('covers/' + fileName);
 
-      storageRef.put(file).then(function(snapshot) {
-        return snapshot.ref.getDownloadURL();
-      }).then(function(downloadURL) {
+      uploadImageToImgBB(file, function(downloadURL) {
         db.collection('profiles').doc(currentUser.uid)
           .update({ cover_url: downloadURL })
           .then(function() {
-            checkSession();
+            showMyProfile();
           });
       });
     }
@@ -3791,26 +3622,8 @@
               postsWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
             });
-
-            observeVideos();
           });
         });
-    }
-
-    function toggleVideoPlay(videoEl) {
-      if (videoEl.paused) {
-        videoEl.play().catch(function() {});
-      } else {
-        videoEl.pause();
-      }
-    }
-
-    function shareVideoNative(url) {
-      if (navigator.share) {
-        navigator.share({ title: 'Emigrantbook', text: 'Video', url: url || window.location.href }).catch(function(){});
-      } else {
-        navigator.clipboard.writeText(url || window.location.href);
-      }
     }
 
     function startFloatingAvatarsAnimation(postId, containerId) {
@@ -3866,6 +3679,7 @@
             index = (index + 1) % likersList.length;
           }
 
+          document.getElementById(containerId).innerHTML = "";
           spawn();
           activeFloatingIntervals[postId] = setInterval(spawn, 1900);
         });
@@ -3884,51 +3698,7 @@
 
       if (urls.length === 1) {
         var url = urls[0];
-        if (url.includes('.mp4') || url.includes('video')) {
-          var hasLiked = likedPosts.includes(postId);
-          var activeHeartClass = hasLiked ? "heart-liked" : "";
-          
-          setTimeout(function() {
-            startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-          }, 200);
-
-          return `
-            <div class="video-container-rel">
-              <video class="post-media" src="${url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
-              <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
-              <div class="tiktok-side-panel">
-                <div class="tiktok-action-item" onclick="likePost('${postId}', true)">
-                  <div class="tiktok-icon-circle">
-                    <svg class="tiktok-heart ${activeHeartClass}" data-post-id="${postId}" viewBox="0 0 24 24">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                  </div>
-                  <span class="tiktok-like-count" data-post-id="${postId}">${likesCount}</span>
-                </div>
-                <div class="tiktok-action-item" onclick="openCommentsModal('${postId}', ${likesCount})">
-                  <div class="tiktok-icon-circle">
-                    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-                  </div>
-                  <span class="comment-count-label" data-post-id="${postId}">0</span>
-                </div>
-                <div class="tiktok-action-item" onclick="alert('Saved')">
-                  <div class="tiktok-icon-circle">
-                    <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-                  </div>
-                  <span>0</span>
-                </div>
-                <div class="tiktok-action-item" onclick="shareVideoNative('${url}')">
-                  <div class="tiktok-icon-circle">
-                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
-                  </div>
-                  <span>0</span>
-                </div>
-              </div>
-            </div>
-          `;
-        } else {
-          return '<img class="post-media" src="' + url + '" alt="Media">';
-        }
+        return '<img class="post-media" src="' + url + '" alt="Media">';
       }
 
       var total = urls.length;
@@ -3938,25 +3708,16 @@
       var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
       for (var i = 0; i < showLimit; i++) {
         var url = urls[i];
-        var isVideo = url.includes('.mp4') || url.includes('video');
         var isLastCell = (i === showLimit - 1);
         var moreCount = total - showLimit;
 
         if (isLastCell && moreCount > 0) {
           html += '<div class="collage-overlay">';
-          if (isVideo) {
-            html += '<video class="collage-item" src="' + url + '" controls></video>';
-          } else {
-            html += '<img class="collage-item" src="' + url + '">';
-          }
+          html += '<img class="collage-item" src="' + url + '">';
           html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
           html += '</div>';
         } else {
-          if (isVideo) {
-            html += '<video class="collage-item" src="' + url + '" controls></video>';
-          } else {
-            html += '<img class="collage-item" src="' + url + '">';
-          }
+          html += '<img class="collage-item" src="' + url + '">';
         }
       }
       html += '</div></div>';
@@ -3983,65 +3744,10 @@
       var t = TRANSLATIONS[currentLang];
 
       var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
-      var isSingleVideo = post.media_url && !post.media_url.includes(',') && (post.media_url.includes('.mp4') || post.media_url.includes('video'));
 
       var deleteButtonHtml = "";
       if (currentUser && post.user_id === currentUser.uid) {
         deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">${t.delete}</button>`;
-      }
-
-      if (isSingleVideo) {
-        var hasLikedVideo = likedPosts.includes(post.id);
-        var activeHeartClassVideo = hasLikedVideo ? "heart-liked" : "";
-
-        return `
-          <div class="post-card" id="post-card-${post.id}">
-            <div class="video-container-rel">
-              <video class="post-media" src="${post.media_url}" playsinline loop onclick="toggleVideoPlay(this)"></video>
-              <div class="tiktok-floating-avatars-container" id="floating-container-feed-${post.id}"></div>
-              
-              <div class="tiktok-side-panel" style="bottom: 25px; right: 8px;">
-                <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">
-                  ${avatarContent}
-                </div>
-                <div class="tiktok-action-item" onclick="likePost('${post.id}', false)">
-                  <div class="tiktok-icon-circle">
-                    <svg class="tiktok-heart ${activeHeartClassVideo}" data-post-id="${post.id}" viewBox="0 0 24 24">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                  </div>
-                  <span class="tiktok-like-count" data-post-id="${post.id}">${post.likes_count || 0}</span>
-                </div>
-                <div class="tiktok-action-item" onclick="openCommentsModal('${post.id}', ${post.likes_count || 0})">
-                  <div class="tiktok-icon-circle">
-                    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-                  </div>
-                  <span class="comment-count-label" data-post-id="${post.id}">0</span>
-                </div>
-                <div class="tiktok-action-item" onclick="alert('Saved')">
-                  <div class="tiktok-icon-circle">
-                    <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
-                  </div>
-                  <span>0</span>
-                </div>
-                <div class="tiktok-action-item" onclick="shareVideoNative('${post.media_url}')">
-                  <div class="tiktok-icon-circle">
-                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
-                  </div>
-                  <span>0</span>
-                </div>
-              </div>
-
-              <div class="tiktok-overlay-bottom-info">
-                <div class="tiktok-info-author">
-                  <span onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
-                  <span class="tiktok-info-time">${date}</span>
-                </div>
-                <div class="tiktok-info-caption">${post.content || ""}</div>
-              </div>
-            </div>
-          </div>
-        `;
       }
 
       var hasLiked = likedPosts.includes(post.id);
@@ -4105,23 +3811,19 @@
         var uploadedUrls = [];
         var promises = [];
 
-        files.forEach(function(file, index) {
-          var fileExt = file.name.split('.').pop();
-          var fileName = currentUser.uid + "_" + Date.now() + "_" + index + "." + fileExt;
-          var storageRef = storage.ref('posts/' + fileName);
-          
-          var promise = storageRef.put(file).then(function(snapshot) {
-            return snapshot.ref.getDownloadURL();
-          }).then(function(downloadURL) {
-            uploadedUrls.push(downloadURL);
+        files.forEach(function(file) {
+          let p = new Promise(function(resolve, reject) {
+            uploadImageToImgBB(file, function(url) {
+              uploadedUrls.push(url);
+              resolve();
+            });
           });
-          promises.push(promise);
+          promises.push(p);
         });
 
         Promise.all(promises).then(function() {
           var mediaUrlsJoined = uploadedUrls.join(",");
-          var mediaType = files[0].type.startsWith('video') ? "video" : "image";
-          savePostToDatabase(authorName, text, mediaUrlsJoined, mediaType, publishBtn);
+          savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
         }).catch(function() {
           publishBtn.disabled = false;
         });
@@ -4168,12 +3870,9 @@
 
       var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
       var buttons = document.querySelectorAll(`.like-btn-standard[data-post-id="${postId}"]`);
-      var tiktokHearts = document.querySelectorAll(`.tiktok-heart[data-post-id="${postId}"]`);
-      var tiktokSpans = document.querySelectorAll(`.tiktok-like-count[data-post-id="${postId}"]`);
 
       var currentLikes = 0;
       if (labels.length > 0) { currentLikes = parseInt(labels[0].innerText) || 0; }
-      else if (tiktokSpans.length > 0) { currentLikes = parseInt(tiktokSpans[0].innerText) || 0; }
 
       var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
       labels.forEach(function(label) { label.innerText = newLikes; });
@@ -4189,20 +3888,9 @@
         statsIcons.innerHTML = iconsHtml;
       }
 
-      tiktokSpans.forEach(function(span) { span.innerText = newLikes; });
-      tiktokHearts.forEach(function(heart) {
-        if (!hasLiked) heart.classList.add('heart-liked');
-        else heart.classList.remove('heart-liked');
-      });
-
       if (activePostForComments === postId) {
         document.getElementById('modal-reactions-display').innerHTML = `❤️ <span id="modal-total-likes">${newLikes}</span>`;
       }
-
-      setTimeout(function() {
-        if(document.getElementById(`floating-container-feed-${postId}`)) startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-        if(document.getElementById(`floating-container-tiktok-${postId}`)) startFloatingAvatarsAnimation(postId, `floating-container-tiktok-${postId}`);
-      }, 300);
 
       db.collection('posts').doc(postId).update({ likes_count: newLikes }).catch(function(){});
     }
@@ -4221,25 +3909,18 @@
     function uploadStory() {
       var fileInput = document.getElementById('story-file-input');
       if (fileInput.files.length === 0) return;
-
       var file = fileInput.files[0];
-      var fileExt = file.name.split('.').pop();
-      var fileName = currentUser.uid + "_story_" + Date.now() + "." + fileExt;
-      var storageRef = storage.ref('stories/' + fileName);
 
-      storageRef.put(file).then(function(snapshot) {
-        return snapshot.ref.getDownloadURL();
-      }).then(function(downloadURL) {
-        var mediaType = file.type.startsWith('video') ? 'video' : 'image';
-        return db.collection('stories').add({
+      uploadImageToImgBB(file, function(downloadURL) {
+        db.collection('stories').add({
           user_id: currentUser.uid,
           media_url: downloadURL,
-          media_type: mediaType,
+          media_type: "image",
           likes_count: 0,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          loadStories();
         });
-      }).then(function() {
-        loadStories();
       });
     }
 
@@ -4309,13 +3990,7 @@
               var initial = authorName.charAt(0).toUpperCase();
 
               var avatarHtml = authorAvatar ? `<img src="${authorAvatar}" alt="Avatar">` : initial;
-              var backgroundHtml = "";
-
-              if (story.media_type === 'video') {
-                backgroundHtml = `<video class="story-card-video-preview" src="${story.media_url}" muted loop playsinline></video>`;
-              } else {
-                backgroundHtml = `<div style="width:100%; height:100%; background-image: url('${story.media_url}'); background-size: cover; background-position: center;"></div>`;
-              }
+              var backgroundHtml = `<div style="width:100%; height:100%; background-image: url('${story.media_url}'); background-size: cover; background-position: center;"></div>`;
 
               var card = document.createElement('div');
               card.className = "story-card friend-story-card";
@@ -4328,9 +4003,6 @@
               `;
               listDiv.appendChild(card);
             });
-
-            var previewVideos = document.querySelectorAll('.story-card-video-preview');
-            previewVideos.forEach(function(v) { v.play().catch(function() {}); });
           });
         });
     }
@@ -4350,12 +4022,7 @@
         avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
       }
 
-      mediaContainer.innerHTML = "";
-      if (story.media_type === 'video') {
-        mediaContainer.innerHTML = `<video src="${story.media_url}" controls autoplay style="width:100%; height:100%; object-fit:contain;"></video>`;
-      } else {
-        mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
-      }
+      mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
 
       document.getElementById('story-likes-label').innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
       document.getElementById('story-comment-field').placeholder = t.msgPlaceholder;
