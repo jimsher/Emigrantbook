@@ -527,7 +527,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                                 
+                                             
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1426,6 +1426,9 @@
     .gallery-actions-buttons-row {
       display: flex; justify-content: space-between; width: 100%;
     }
+    .gallery-actions-buttons-row {
+      display: flex; justify-content: space-between; width: 100%;
+    }
     .gallery-act-btn {
       flex: 1; background: none; border: none; padding: 6px;
       color: #b0b3b8; font-size: 14px; font-weight: 600; cursor: pointer;
@@ -1519,6 +1522,7 @@
           <svg class="header-icon-svg" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/>
           </svg>
+          <div class="header-badge" id="messenger-badge" style="display: none; background: #ff4d4f;">0</div>
         </button>
 
         <button class="header-icon-btn" onclick="openRealtimeNotifications()">
@@ -1843,7 +1847,7 @@
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        ဖოტოს აღწერა...
+        ფოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
@@ -1896,12 +1900,12 @@
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
-    // განახლებული ფუნქცია მესენჯერთან დასაკავშირებლად (მოხსნილია 404 და დამატებულია სწორი ლოკალური ფაილის გახსნა პარამეტრით)
+    // დამხმარე ფუნქცია მესენჯერთან დასაკავშირებლად (404-ის აღმოსაფხვრელად)
     function redirectToMessenger(targetUserId) {
       if (!targetUserId) {
-        window.location.href = "messenger.html";
+        window.open("https://emigrantbook.com/messages", "_blank");
       } else {
-        window.location.href = "messenger.html?user=" + encodeURIComponent(targetUserId);
+        window.open("https://emigrantbook.com/messages?user=" + targetUserId, "_blank");
       }
     }
 
@@ -1979,7 +1983,7 @@
         noReqs: "Нет новых запросов", friendReqTitle: "Запросы в друзья",
         commentPlaceholder: "Написать комментарий...", send: "Отправить", like: "Нравится",
         comment: "Комментарий", reply: "Ответить", replyTo: "Ответ пользователю: ",
-        likers: "Лайкнувшие", delete: "🗑️ Пост", stories: "Истории",
+        likers: "Лайкнувшие", delete: "🗑️ Удалить", stories: "Истории",
         msgPlaceholder: "Отправить сообщение...", addFriend: "Добавить",
         messenger: "Messenger", edit: "Редактировать", cancelReq: "Отмена запроса",
         accept: "Принять", reject: "Отклонить", removeFriend: "👥 Удалить",
@@ -2271,6 +2275,7 @@
        
       if (currentUser) {
         checkPendingRequestsCount();
+        checkUnreadMessagesCount();
       }
       applyLanguageDOM();
     }
@@ -2331,15 +2336,48 @@
             showScreen('home');
              
             checkPendingRequestsCount();
+            checkUnreadMessagesCount();
             subscribeToFriendRequests();
             subscribeToPostsRealtime(); 
             subscribeToGlobalNotifications();
+            subscribeToMessagesRealtime();
           });
         } else {
           applyLanguageDOM();
           showScreen('auth');
         }
       });
+    }
+
+    function subscribeToMessagesRealtime() {
+      if (!currentUser) return;
+      supabase.channel('messages-badge-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function(payload) {
+          if (payload.new && payload.new.receiver_id === currentUser.id) {
+            checkUnreadMessagesCount();
+          }
+        })
+        .subscribe();
+    }
+
+    function checkUnreadMessagesCount() {
+      if (!currentUser) return;
+      supabase.from('messages')
+        .select('id')
+        .eq('receiver_id', currentUser.id)
+        .eq('is_read', false)
+        .then(function(res) {
+          var badge = document.getElementById('messenger-badge');
+          if (badge) {
+            var count = (res.data && res.data.length > 0) ? res.data.length : 0;
+            if (count > 0) {
+              badge.innerText = count;
+              badge.style.display = 'flex';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        });
     }
 
     function subscribeToGlobalNotifications() {
@@ -3497,7 +3535,6 @@
       document.getElementById('custom-gallery-modal').style.display = "none";
     }
 
-    // განახლებული ფუნქცია - სადაც სხვა მომხმარებლის პროფილზე იტვირთება მესინჯერის დინამიური ღილაკი სწორი ლოგიკით
     function updateFriendshipButtons(targetUserId) {
       var actionPanel = document.getElementById('profile-action-panel');
       var t = TRANSLATIONS[currentLang];
