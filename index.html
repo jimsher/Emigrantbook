@@ -531,7 +531,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                               
+                                                
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1848,7 +1848,7 @@
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        ფოტოს აღწერა...
+        ဖოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
@@ -2049,7 +2049,7 @@
         noReqs: "Keine neuen Anfragen", friendReqTitle: "Freundschaftsanfragen",
         commentPlaceholder: "Schreibe einen Kommentar...", send: "Senden", like: "Gefällt mir",
         comment: "Kommentieren", reply: "Antworten", replyTo: "Antworten an: ",
-        likers: "Likes", delete: "🗑️ Löschen", storys: "Storys",
+        likers: "Likes", delete: "🗑️ Löschen", stories: "Storys",
         msgPlaceholder: "Nachricht senden...", addFriend: "Freund hinzufügen",
         messenger: "Messenger", edit: "Bearbeiten", cancelReq: "Anfrage abbrechen",
         accept: "Annehmen", reject: "Ablehnen", removeFriend: "👥 Entfernen",
@@ -2268,7 +2268,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-                   
+                     
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -2783,7 +2783,7 @@
           var count = snapshot.size;
           var t = TRANSLATIONS[currentLang];
           var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
-          countLabels.forEach(function(lbl) { lbl.innerText = count; }); 
+          countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; }); 
         });
     }
 
@@ -3158,7 +3158,7 @@
       } else if (tabName === 'videos') {
         document.getElementById('tab-btn-videos').classList.add('active');
         document.getElementById('profile-photos-wall').style.display = 'block';
-        photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">ვიდეოები ხელმიუწვდომელია (ImgBB მხარს უჭერს მხოლოდ სურათებს)</div>`;
+        document.getElementById('profile-photos-wall').innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">ვიდეოები ხელმიუწვდომელია (ImgBB მხარს უჭერს მხოლოდ სურათებს)</div>`;
       }
     }
 
@@ -3428,6 +3428,9 @@
               renderCommentsCountOnly(post);
             });
           });
+        }).catch(function(error) {
+          console.error("Firestore Index Error or query failure: ", error);
+          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">შეცდომა პოსტების ჩატვირთვისას. თუ ეს პირველი გაშვებაა, გახსენით Console ლინკზე დასაჭერად და ინდექსის შესაქმნელად.</div>`;
         });
     }
 
@@ -4004,6 +4007,8 @@
               listDiv.appendChild(card);
             });
           });
+        }).catch(function(error) {
+          console.error("Error loading stories: ", error);
         });
     }
 
