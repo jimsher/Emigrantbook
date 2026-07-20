@@ -527,7 +527,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                             
+                                                 
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1403,7 +1403,7 @@
     }
     .gallery-author-avatar {
       width: 38px; height: 38px; border-radius: 50%; background: #dcae36;
-      display: flex; align-items: center; justify-content: center; font-weight: bold; color: #111;
+      display: flex; align-items: center; justify-content: center; font-weight: bold; color: #11;
       overflow: hidden;
     }
     .gallery-author-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -1422,9 +1422,6 @@
     .gallery-reactions-summary {
       display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid #2f3031; padding-bottom: 8px; font-size: 13px; color: #b0b3b8;
-    }
-    .gallery-actions-buttons-row {
-      display: flex; justify-content: space-between; width: 100%;
     }
     .gallery-actions-buttons-row {
       display: flex; justify-content: space-between; width: 100%;
@@ -1879,6 +1876,7 @@
   <script>
     var SUPABASE_URL = "https://mohkxmwphwywkqkoairj.supabase.co"; 
     var SUPABASE_ANON_KEY = "sb_publishable_YSbnMz9ZTafeFUCVp7vR7g_-cnNVKzx";
+    var R2_PUBLIC_CDN = "https://pub-3a71369c5e4547999ab7dca61c8a421e.r2.dev"; // Cloudflare R2 Public Domain
     var supabase;
     var currentUser = null;
     var userProfile = null;
@@ -1900,7 +1898,6 @@
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
-    // დამხმარე ფუნქცია მესენჯერთან დასაკავშირებლად (404-ის აღმოსაფხვრელად)
     function redirectToMessenger(targetUserId) {
       if (!targetUserId) {
         window.open("https://emigrantbook.com/messages", "_blank");
@@ -1909,7 +1906,6 @@
       }
     }
 
-    // ძველი დამხმარე ფუნქციის ჩანაცვლება
     function sendMessage() {
       var targetId = activeViewingProfileId || (currentUser ? currentUser.id : null);
       redirectToMessenger(targetId);
@@ -2824,6 +2820,10 @@
       }
     }
 
+    function handleSideMenuToggle(e) {
+      toggleSideMenu(e);
+    }
+
     function renderCommentsCountOnly(post) {
       supabase.from('post_comments')
         .select('id', { count: 'exact' })
@@ -3487,7 +3487,7 @@
 
       likeBtn.onclick = function() {
         likePost(currentPost.id, false);
-        制造Delay = setTimeout(updateGalleryViewData, 200);
+        var makeDelay = setTimeout(updateGalleryViewData, 200);
       };
 
       document.getElementById('gallery-comment-main-action-btn').onclick = function() {
@@ -3728,7 +3728,7 @@
 
       supabase.storage.from('avatars').upload(fileName, file).then(function(storageRes) {
         if (storageRes.error) return;
-        var avatarPublicUrl = SUPABASE_URL + "/storage/v1/object/public/avatars/" + fileName;
+        var avatarPublicUrl = R2_PUBLIC_CDN + "/avatars/" + fileName;
 
         supabase.from('profiles')
           .update({ avatar_url: avatarPublicUrl })
@@ -3753,7 +3753,7 @@
 
       supabase.storage.from('covers').upload(fileName, file).then(function(storageRes) {
         if (storageRes.error) return;
-        var coverPublicUrl = SUPABASE_URL + "/storage/v1/object/public/covers/" + fileName;
+        var coverPublicUrl = R2_PUBLIC_CDN + "/covers/" + fileName;
 
         supabase.from('profiles')
           .update({ cover_url: coverPublicUrl })
@@ -4162,7 +4162,7 @@
           
           var promise = supabase.storage.from('post-media').upload(fileName, file).then(function(storageRes) {
             if (storageRes.error) throw storageRes.error;
-            var mediaUrl = SUPABASE_URL + "/storage/v1/object/public/post-media/" + fileName;
+            var mediaUrl = R2_PUBLIC_CDN + "/post-media/" + fileName;
             uploadedUrls.push(mediaUrl);
           });
           promises.push(promise);
@@ -4271,7 +4271,7 @@
 
       supabase.storage.from('stories').upload(fileName, file).then(function(storageRes) {
         if (storageRes.error) return;
-        var mediaPublicUrl = SUPABASE_URL + "/storage/v1/object/public/stories/" + fileName;
+        var mediaPublicUrl = R2_PUBLIC_CDN + "/stories/" + fileName;
         var mediaType = file.type.startsWith('video') ? 'video' : 'image';
 
         supabase.from('stories').insert([
@@ -4437,7 +4437,7 @@
       if (event.key === 'Enter') submitStoryComment();
     }
 
-    function updateStoryComment() {
+    function submitStoryComment() {
       var input = document.getElementById('story-comment-field');
       var text = input.value.trim();
       if (!text) return;
