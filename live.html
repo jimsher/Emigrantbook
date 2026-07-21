@@ -154,6 +154,310 @@
         50% { transform: scale(1.1); opacity: 1; }
         100% { transform: scale(1); opacity: 1; }
     }
+
+
+        /* ახალი სტილი ლაივის */
+        /* ============================================================
+   🎥 LIVE VIDEO FIXES (კვადრატული ფორმატი & გვერდიგვერდ) 
+   ============================================================ */
+
+/* მთავარი კონტეინერი, სადაც ვიდეოებია (ეკრანის ზედა ნაწილი) */
+/* ციმციმის ანიმაცია */
+@keyframes livePulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0)); }
+}
+
+/* კლასი, რომელიც ჩაირთვება ლაივის დროს */
+.live-nav-button.is-live svg {
+    animation: livePulse 1.5s infinite;
+}
+
+.live-nav-button.is-live svg path {
+    stroke: #ff4d4d; /* წითელი ხაზები */
+}
+
+.live-nav-button.is-live svg text {
+    fill: #ff4d4d; /* წითელი ტექსტი */
+}
+
+
+
+
+
+
+
+/* მთავარი კონტეინერი, სადაც ვიდეოები ზის */
+#live-video-container {
+    display: flex;
+    flex-direction: row; /* ჰორიზონტალურად გვერდიგვერდ */
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    width: 100%;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+/* ჰოსტის ვიდეოს ყუთი */
+#host-video-wrapper {
+    position: relative;
+    height: 100%;
+    transition: all 0.4s ease;
+    flex-shrink: 0; /* რომ არ შეიკუმშოს არასწორად */
+}
+
+/* სტუმრის ვიდეოს ყუთი */
+#guest-video-box {
+    position: relative;
+    height: 100%;
+    background: #000;
+    transition: all 0.4s ease;
+    flex-shrink: 0; /* რომ არ შეიკუმშოს არასწორად */
+    border-left: 1px solid #d4af37; /* აი ეს ყვითელი გამყოფი ზოლი */
+}
+
+/* როცა სტუმარი ერთდება (Split Mode) */
+#live-video-container.split-mode #host-video-wrapper {
+    width: 50% !important; /* ზუსტად ნახევარი */
+}
+
+#live-video-container.split-mode #guest-video-box {
+    width: 50% !important; /* ზუსტად მეორე ნახევარი */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* TikTok Style Live Interface for Emigrantbook */
+
+/* მთავარი კონტეინერი */
+#liveUI {
+    background: #000 !important;
+}
+
+/* ვიდეოს განლაგება - სრული ეკრანი */
+#live-video-container {
+    background: #000 !important;
+}
+
+#remote-live-video, #guest-remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* ავსებს ეკრანს TikTok-ივით */
+}
+
+/* ზედა პანელი - ჰოსტის ინფო */
+.live-top-header {
+    position: absolute;
+    top: 25px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1010;
+}
+
+.host-info-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 12px 4px 4px;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    border: 0.5px solid rgba(255, 255, 255, 0.2);
+}
+
+#liveHostAva {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid #d4af37; /* ოქროსფერი */
+}
+
+#followHostBtn {
+    background: #fe2c55 !important; /* TikTok-ის წითელი */
+    color: white !important;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ჩატის ზონა - TikTok-ის სტილის gradient fade */
+#liveChatBox {
+    position: absolute;
+    bottom: 90px;
+    left: 15px;
+    width: 75%;
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 1005;
+    /* დაბლა მუქი, მაღლა ქრება */
+    mask-image: linear-gradient(to top, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, black 70%, transparent 100%);
+}
+
+/* კომენტარის სტილი */
+.live-comment-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 10px;
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    width: fit-content;
+    margin-bottom: 4px;
+}
+
+/* მარჯვენა მოქმედების ღილაკები */
+.side-actions-bar {
+    position: absolute;
+    right: 15px;
+    bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    z-index: 1010;
+}
+
+.live-action-btn i {
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+    transition: transform 0.1s;
+}
+
+.live-action-btn:active i {
+    transform: scale(0.8);
+}
+
+/* ქვედა ინპუტის ზონა */
+.live-bottom-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    padding: 0 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    z-index: 1010;
+}
+
+#liveMsgInp {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 25px;
+    padding: 12px 20px;
+    color: white !important;
+    backdrop-filter: blur(15px);
+}
+
+#liveMsgInp::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+
+
+
+
+
+
+
+/* საჩუქრები ლაივში სტილი */
+.gift-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.gift-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.gift-card:active {
+    transform: scale(0.92);
+}
+
+.gift-img-container {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.gift-img-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    /* TikTok-ის ეფექტი ფოტოებზე */
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+}
+
+.gift-name {
+    font-size: 11px;
+    color: #fff;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.gift-price {
+    font-size: 10px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* Scrollbar-ის გასუფთავება */
+#giftGrid::-webkit-scrollbar {
+    width: 0px;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
     </style>
 </head>
 <body>
