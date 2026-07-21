@@ -3172,7 +3172,9 @@ div[style*="overflow-x:auto"] {
 <!-- Firebase SDK-ების იმპორტი -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -3186,7 +3188,11 @@ div[style*="overflow-x:auto"] {
   };
 
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  
+  // ვინახავთ გლობალურად, რომ სხვა ფაილებმაც (script.js, live.js და ა.შ.) იმუშაონ
+  window.auth = getAuth(app);
+  window.db = getDatabase(app);
+  window.storage = getStorage(app);
 </script>
 
 <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
