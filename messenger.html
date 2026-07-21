@@ -241,7 +241,7 @@
     }
     .chat-row-last-msg {
       font-size: 14px;
-      color: #8e8e93; /* წაკითხული შეტყობინების ჩვეულებრივი ნაცრისფერი */
+      color: #8e8e93;
       font-weight: 400;
       white-space: nowrap;
       overflow: hidden;
@@ -252,7 +252,7 @@
     /* წაუკითხავი ჩატის სტილები */
     .chat-row-item.unread .chat-row-last-msg {
       color: #ffffff;
-      font-weight: 700; /* წაუკითხავის მუქი თეთრი ტექსტი */
+      font-weight: 700;
     }
     .chat-row-item.unread .chat-row-name {
       font-weight: 700;
@@ -723,6 +723,7 @@
       getDocs, 
       onSnapshot, 
       query, 
+      where,
       orderBy, 
       limit,
       serverTimestamp 
@@ -752,6 +753,7 @@
       getDocs,
       onSnapshot,
       query,
+      where,
       orderBy,
       limit,
       serverTimestamp
@@ -784,7 +786,7 @@
 
     function extractPhotoUrl(uData) {
       if (!uData) return "";
-      let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.userImg || uData.userPhoto || uData.cover;
+      let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.avatar_url || uData.userImg || uData.userPhoto || uData.cover;
       if (photoCandidate && typeof photoCandidate === 'string' && photoCandidate.trim() !== '') return photoCandidate;
 
       for (let key in uData) {
@@ -801,7 +803,7 @@
 
     function extractName(uData, uid) {
       if (!uData) return "User_" + uid.substring(0, 5);
-      let displayName = uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
+      let displayName = uData.full_name || uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
       if (!displayName && uData.lastName) displayName = uData.lastName;
 
       if (!displayName) {
@@ -829,78 +831,87 @@
       return `${hours}:${minutes}`;
     }
 
+    // 1. იღებს მხოლოდ იმ მომხმარებლების ID-ებს, რომლებიც არიან დადასტურებული მეგობრები (status == 'accepted')
     function fetchFirestoreChatList() {
       const listTarget = document.getElementById('chats-list-target');
       if (!window.auth || !window.auth.currentUser) return;
       const currentUid = window.auth.currentUser.uid;
-      const { collection, onSnapshot } = window.fs;
+      const { collection, query, where, onSnapshot } = window.fs;
 
-      const profilesRef = collection(window.db, 'profiles');
-      
-      onSnapshot(profilesRef, (snapshot) => {
+      const reqsRef = collection(window.db, 'friend_requests');
+      const qAccepted = query(reqsRef, where('status', '==', 'accepted'));
+
+      onSnapshot(qAccepted, (snapshot) => {
         if (!snapshot || snapshot.empty) {
-          fetchUsersCollection(listTarget, currentUid);
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები არ არის.</p>";
           return;
         }
 
-        let rawUsers = [];
+        let friendIdsSet = new Set();
         snapshot.forEach(docSnap => {
-          const uid = docSnap.id;
-          if (uid === currentUid) return;
-
-          const uData = docSnap.data();
-          rawUsers.push({
-            uid: uid,
-            name: extractName(uData, uid),
-            photo: extractPhotoUrl(uData),
-            presence: uData.status || uData.presence || 'offline'
-          });
+          let req = docSnap.data();
+          if (req.sender_id === currentUid) {
+            friendIdsSet.add(req.receiver_id);
+          } else if (req.receiver_id === currentUid) {
+            friendIdsSet.add(req.sender_id);
+          }
         });
 
-        attachLastMessagesAndRender(rawUsers, currentUid, listTarget);
+        let friendIds = Array.from(friendIdsSet);
+        if (friendIds.length === 0) {
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მეგობრები არ გყავთ.</p>";
+          return;
+        }
+
+        loadFriendsProfiles(friendIds, currentUid, listTarget);
       }, (err) => {
-        console.error("Profiles fetch error, falling back to users:", err);
-        fetchUsersCollection(listTarget, currentUid);
+        console.error("Friend requests fetch error:", err);
+        listTarget.innerHTML = "<p style='padding:20px; color:#ff4d4f; text-align:center;'>შეცდომა მეგობრების ჩატვირთვისას.</p>";
       });
     }
 
-    function fetchUsersCollection(listTarget, currentUid) {
-      const { collection, onSnapshot } = window.fs;
-      const usersRef = collection(window.db, 'users');
+    // 2. იღებს მეგობრების პროფილებს
+    function loadFriendsProfiles(friendIds, currentUid, listTarget) {
+      const { doc, getDoc } = window.fs;
+      let friendsProfiles = [];
+      let promises = [];
 
-      onSnapshot(usersRef, (snapshot) => {
-        if (!snapshot || snapshot.empty) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მომხმარებლები არ მოიძებნა.</p>";
-          return;
-        }
-
-        let rawUsers = [];
-        snapshot.forEach(docSnap => {
-          const uid = docSnap.id;
-          if (uid === currentUid) return;
-
-          const uData = docSnap.data();
-          rawUsers.push({
-            uid: uid,
-            name: extractName(uData, uid),
-            photo: extractPhotoUrl(uData),
-            presence: uData.status || uData.presence || 'offline'
-          });
+      friendIds.forEach(fId => {
+        let p = getDoc(doc(window.db, 'profiles', fId)).then(docSnap => {
+          if (docSnap.exists()) {
+            let uData = docSnap.data();
+            friendsProfiles.push({
+              uid: fId,
+              name: extractName(uData, fId),
+              photo: extractPhotoUrl(uData),
+              presence: uData.status || uData.presence || 'offline'
+            });
+          }
         });
+        promises.push(p);
+      });
 
-        attachLastMessagesAndRender(rawUsers, currentUid, listTarget);
+      Promise.all(promises).then(() => {
+        attachLastMessagesAndRender(friendsProfiles, currentUid, listTarget);
       });
     }
 
+    // 3. ამოწმებს შეტყობინებებს და ფილტრავს მხოლოდ იმ მეგობრებს, ვისთანაც რეალურად არსებობს მიმოწერა
     function attachLastMessagesAndRender(users, currentUid, listTarget) {
       const { collection, query, orderBy, limit, onSnapshot } = window.fs;
 
       activeChatUnsubscribes.forEach(unsub => unsub());
       activeChatUnsubscribes = [];
 
-      let processedUsers = [...users];
+      let activeChatUsersMap = {};
+      let pendingCheckCount = users.length;
 
-      users.forEach((user, index) => {
+      if (users.length === 0) {
+        listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები არ არის.</p>";
+        return;
+      }
+
+      users.forEach((user) => {
         const chatId = getChatId(currentUid, user.uid);
         const msgsRef = collection(window.db, 'chats', chatId, 'messages');
         const q = query(msgsRef, orderBy('createdAt', 'desc'), limit(1));
@@ -914,18 +925,20 @@
               msgText = "You: " + msgText;
             }
 
-            processedUsers[index].lastMsg = msgText;
-            processedUsers[index].lastTimeRaw = lastMsgDoc.createdAt;
-            processedUsers[index].lastTimeFormatted = formatTime(lastMsgDoc.createdAt);
-            processedUsers[index].isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read !== true);
+            activeChatUsersMap[user.uid] = {
+              ...user,
+              lastMsg: msgText,
+              lastTimeRaw: lastMsgDoc.createdAt,
+              lastTimeFormatted: formatTime(lastMsgDoc.createdAt),
+              isUnread: (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read !== true)
+            };
           } else {
-            processedUsers[index].lastMsg = "Tap to chat";
-            processedUsers[index].lastTimeRaw = null;
-            processedUsers[index].lastTimeFormatted = "";
-            processedUsers[index].isUnread = false;
+            // თუ შეტყობინებები არ არის, ამ მომხმარებელს არ ვამატებთ ჩატების აქტიურ სიაში
+            delete activeChatUsersMap[user.uid];
           }
 
-          renderChatList(processedUsers, listTarget);
+          let activeUsersList = Object.values(activeChatUsersMap);
+          renderChatList(activeUsersList, listTarget);
         });
 
         activeChatUnsubscribes.push(unsub);
@@ -934,7 +947,7 @@
 
     function renderChatList(usersList, listTarget) {
       if (usersList.length === 0) {
-        listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა მომხმარებლები არ არიან.</p>";
+        listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>აქტიური ჩატები არ არის.</p>";
         return;
       }
 
