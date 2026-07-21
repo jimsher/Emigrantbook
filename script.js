@@ -1,10 +1,12 @@
-const firebaseConfig = { 
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-  authDomain: "emigrantbook.firebaseapp.com", 
-  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-  projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", 
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
+const firebaseConfig = {
+    apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+    authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+    databaseURL: "https://emigrantbook-4b7bd-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "emigrantbook-4b7bd",
+    storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+    messagingSenderId: "109907338554",
+    appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+    measurementId: "G-MRPP7G4H30"
 };
 
 let audioCtx, audioSource, audioDest;
