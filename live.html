@@ -276,25 +276,30 @@
         bottom: 80px;
         left: 15px;
         width: 75%;
-        max-height: 280px;
+        height: 250px;
+        max-height: 250px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        z-index: 1005;
-        pointer-events: auto;
+        justify-content: flex-end;
+        gap: 6px;
+        z-index: 10000 !important;
+        pointer-events: auto !important;
     }
 
     .live-comment-item {
-        background: rgba(0, 0, 0, 0.5);
+        background: rgba(0, 0, 0, 0.6) !important;
         padding: 6px 12px;
-        border-radius: 15px;
-        color: white;
+        border-radius: 12px;
+        color: #ffffff !important;
         font-size: 13px;
         width: fit-content;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
         word-break: break-word;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .side-actions-bar {
@@ -420,14 +425,14 @@
             </svg>
         </div>
 
-        <!-- ბურგერ მენიუს/მთავარი ღილაკი -->
-        <a href="#" class="menu-item" onclick="startLiveFunc()" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px;">
+        <!-- ბურგერ მენიუს ღილაკი - პირდაპირ რთავს ლაივს შუალედური გვერდის გარეშე -->
+        <div class="menu-item" onclick="startLiveFunc()" style="display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px; cursor: pointer;">
             <div class="live-btn-custom" style="display: flex; align-items: center; gap: 10px;">
                 <div class="live-status-dot" style="width: 10px; height: 10px; background: #fe2c55; border-radius: 50%;"></div>
                 <span data-key="live" style="font-weight: bold;">ლაივი</span>
             </div>
             <i class="fas fa-chevron-right" style="color: #888; font-size: 14px; margin-left: 10px;"></i>
-        </a>
+        </div>
     </div>
 
     <!-- მცურავი LIVE ღილაკი -->
@@ -508,6 +513,7 @@
             </div>
         </div>
 
+        <!-- ჩატის კონტეინერი -->
         <div id="liveChatBox"></div>
 
         <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 100;">
@@ -820,7 +826,7 @@
             } catch (e) { console.log(e); }
         };
 
-        // გასწორებული ჩატის ფუნქცია (კომენტარების გარანტირებული გამოჩენით)
+        // გასწორებული ჩატის მოსმენის ფუნქცია
         function listenToLiveChat(channel) {
             const chatBox = document.getElementById('liveChatBox');
             if(!chatBox) return;
@@ -834,7 +840,13 @@
                         if (msg && msg.name) {
                             const div = document.createElement('div');
                             div.className = "live-comment-item";
-                            div.innerHTML = `<img src="${msg.photo || 'https://via.placeholder.com/150'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:6px;"><b style="color:#d4af37; font-size:11px; margin-right:5px;">${msg.name}:</b><span>${msg.text}</span>`;
+                            div.innerHTML = `
+                                <img src="${msg.photo || 'https://via.placeholder.com/150'}" style="width:22px; height:22px; border-radius:50%; object-fit:cover;">
+                                <div>
+                                    <b style="color:#d4af37; font-size:11px; margin-right:4px;">${msg.name}:</b>
+                                    <span style="color:white; font-size:13px;">${msg.text}</span>
+                                </div>
+                            `;
                             chatBox.appendChild(div);
                         }
                     });
