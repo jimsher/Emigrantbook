@@ -626,71 +626,92 @@
             }
         }
 
-        // ==========================================
-        // 3. ჩატების სიის გახსნა (Open Messenger & Chat List)
-        // ==========================================
-        function openMessenger() {
-            stopMainFeedVideos();
-            const ui = document.getElementById('messengerUI');
-            if ('setAppBadge' in navigator) {
-                navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
+        function stopMainFeedVideos() {
+            if (typeof window.stopFeedVideos === 'function') {
+                window.stopFeedVideos();
             }
+        }
+
+        // ==========================================
+        // 3. ჩატების სიის გახსნა (Open Messenger & Chat List) - FIXED FOR FIREBASE V10
+        // ==========================================
+        async function openMessenger() {
+            const ui = document.getElementById('messengerUI');
             if (ui) {
                 ui.style.display = 'flex';
                 ui.style.flexDirection = 'column';
                 ui.style.backgroundColor = '#000';
             }
 
+            stopMainFeedVideos();
+            if ('setAppBadge' in navigator) {
+                navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
+            }
+
             const list = document.getElementById('chatList');
             if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
-            if (!auth.currentUser) return;
 
-            db.ref(`users/${auth.currentUser.uid}/following`).once('value', async snap => {
-                if (!list) return;
+            if (!window.auth || !window.auth.currentUser) {
+                if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
+                return;
+            }
+
+            const currentUid = window.auth.currentUser.uid;
+            const { ref, get } = window.fbDb;
+
+            try {
+                const followingRef = ref(window.db, `users/${currentUid}/following`);
+                const snap = await get(followingRef);
                 const followers = snap.val();
-                if(!followers) { 
-                    list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
+
+                if (!followers) { 
+                    if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
                     return; 
                 }
 
                 let chatArray = [];
                 const promises = Object.entries(followers).map(async ([uid, data]) => {
-                    const chatId = getChatId(auth.currentUser.uid, uid);
-                    const mSnap = await db.ref(`messages/${chatId}`).limitToLast(1).once('value');
+                    const chatId = getChatId(currentUid, uid);
+                    const msgRef = ref(window.db, `messages/${chatId}`);
+                    const mSnap = await get(msgRef);
                     let lastTs = 0;
                     if (mSnap.exists()) {
                         const msgs = mSnap.val();
-                        lastTs = Object.values(msgs)[0].ts;
+                        const msgsList = Object.values(msgs);
+                        lastTs = msgsList[msgsList.length - 1].ts || 0;
                     }
                     chatArray.push({ uid, data, lastTs });
                 });
 
                 await Promise.all(promises);
                 chatArray.sort((a, b) => b.lastTs - a.lastTs);
-                list.innerHTML = "";
+                if (list) list.innerHTML = "";
 
                 chatArray.forEach(({ uid, data }) => {
-                    const chatId = getChatId(auth.currentUser.uid, uid);
+                    const chatId = getChatId(currentUid, uid);
                     const item = document.createElement('div');
                     item.className = 'chat-list-item';
                     item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
                     
                     item.onclick = () => {
-                        db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).set(Date.now());
+                        const readRef = ref(window.db, `users/${currentUid}/last_read/${chatId}`);
+                        window.fbDb.set(readRef, Date.now());
                         document.getElementById('messengerUI').style.display = 'none';
                         startChat(uid, data.name, data.photo);
                     };
                     
-                    db.ref(`users/${auth.currentUser.uid}/last_read/${chatId}`).once('value', readSnap => {
+                    const lastReadRef = ref(window.db, `users/${currentUid}/last_read/${chatId}`);
+                    get(lastReadRef).then(readSnap => {
                         const lastRead = readSnap.val() || 0;
-                        db.ref(`messages/${chatId}`).limitToLast(1).once('value', mSnap => {
+                        const msgRef = ref(window.db, `messages/${chatId}`);
+                        get(msgRef).then(mSnap => {
                             let lastMsg = "Tap to chat";
                             let msgTimeFormatted = "";
                             let isUnread = false;
 
-                            if(mSnap.exists()) {
-                                const msgs = mSnap.val();
-                                const msgData = Object.values(msgs)[0];
+                            if (mSnap.exists()) {
+                                const msgs = Object.values(mSnap.val());
+                                const msgData = msgs[msgs.length - 1];
                                 lastMsg = msgData.text || "📷 Media/Voice";
                                 const ts = msgData.ts;
                                 const msgDate = new Date(ts);
@@ -700,12 +721,13 @@
                                 } else {
                                     msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                                 }
-                                if (msgData.senderId !== auth.currentUser.uid && ts > lastRead) {
+                                if (msgData.senderId !== currentUid && ts > lastRead) {
                                     isUnread = true;
                                 }
                             }
 
-                            db.ref(`users/${uid}/presence`).once('value', presenceSnap => {
+                            const presenceRef = ref(window.db, `users/${uid}/presence`);
+                            get(presenceRef).then(presenceSnap => {
                                 const isOnline = presenceSnap.val() === 'online';
                                 item.innerHTML = `
                                     <div style="position:relative; flex-shrink:0;">
@@ -714,7 +736,7 @@
                                         <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
                                     </div>
                                     <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
-                                        <b style="color:white; font-size:16px; margin-bottom:2px;">${data.name}</b>
+                                        <b style="color:white; font-size:16px; margin-bottom:2px;">${data.name || 'User'}</b>
                                         <div style="display:flex; align-items:center; gap:5px;">
                                             <span style="color:${isUnread ? 'white' : '#888'}; font-weight:${isUnread ? 'bold' : 'normal'}; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${lastMsg}</span>
                                             <span style="color:#888; font-size:12px;"> · ${msgTimeFormatted}</span>
@@ -725,45 +747,53 @@
                             });
                         });
                     });
-                    list.appendChild(item);
+                    if (list) list.appendChild(item);
                 });
-            });
+            } catch (err) {
+                console.error("Messenger Error:", err);
+                if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>შეცდომა ჩატების ჩატვირთვისას.</p>";
+            }
         }
 
         // ==========================================
         // 4. კონკრეტულ მომხმარებელთან ჩატის დაწყება და დახურვა
         // ==========================================
-        function startChat(uid, name, photo) {
+        async function startChat(uid, name, photo) {
             stopMainFeedVideos();
             if(typeof setAppBadge === 'function') setAppBadge(0);
             
             window.currentChatId = uid;
             currentChatId = uid; 
 
-            document.getElementById('socialListsUI').style.display = 'none';
+            const socialLists = document.getElementById('socialListsUI');
+            if (socialLists) socialLists.style.display = 'none';
+
             document.getElementById('individualChat').style.display = 'flex';
-            document.getElementById('chatTargetName').innerText = name;
-            document.getElementById('chatTargetAva').src = photo;
+            document.getElementById('chatTargetName').innerText = name || 'User';
+            document.getElementById('chatTargetAva').src = photo || 'token-avatar.png';
 
-            const myUid = auth.currentUser.uid;
+            const myUid = window.auth.currentUser.uid;
             const chatId = getChatId(myUid, uid);
+            const { ref, get, onValue } = window.fbDb;
 
-            db.ref(`messages/${chatId}`).orderByChild('seen').equalTo(false).once('value', snap => {
+            const msgsRef = ref(window.db, `messages/${chatId}`);
+            const snap = await get(msgsRef);
+            if (snap.exists()) {
                 const updates = {};
                 snap.forEach(child => {
                     const m = child.val();
-                    if (m.senderId !== myUid) {
-                        updates[`${child.key}/seen`] = true;
+                    if (m.senderId !== myUid && !m.seen) {
+                        updates[`messages/${chatId}/${child.key}/seen`] = true;
                     }
                 });
                 if (Object.keys(updates).length > 0) {
-                    db.ref(`messages/${chatId}`).update(updates);
+                    window.fbDb.set(ref(window.db), updates);
                 }
-            });
+            }
 
             const statusEl = document.getElementById('chatTargetStatus');
             if (statusEl) {
-                db.ref(`users/${uid}/presence`).on('value', snap => {
+                onValue(ref(window.db, `users/${uid}/presence`), snap => {
                     const presence = snap.val();
                     if (presence === 'online') {
                         statusEl.innerText = 'საიტზეა';
@@ -780,7 +810,10 @@
         }
 
         function closeChat() {
-            if (currentChatId) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
+            if (currentChatId && window.auth && window.auth.currentUser) {
+                const { ref, remove } = window.fbDb;
+                remove(ref(window.db, `typing/${getChatId(window.auth.currentUser.uid, currentChatId)}/${window.auth.currentUser.uid}`));
+            }
             document.getElementById('individualChat').style.display = 'none';
             currentChatId = null;
         }
@@ -788,92 +821,97 @@
         // ==========================================
         // 5. შეტყობინებების ჩატვირთვა
         // ==========================================
-        function loadMessages(targetUid) {
-            const myUid = auth.currentUser.uid;
+        async function loadMessages(targetUid) {
+            const myUid = window.auth.currentUser.uid;
             const chatId = getChatId(myUid, targetUid);
             const box = document.getElementById('chatMessages');
+            const { ref, get, onValue } = window.fbDb;
 
-            db.ref(`users/${targetUid}`).once('value', targetSnap => {
-                const tData = targetSnap.val();
-                const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
+            const targetSnap = await get(ref(window.db, `users/${targetUid}`));
+            const tData = targetSnap.val();
+            const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
 
-                db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
-                    const deletedMsgs = deletedSnap.val() || {};
+            onValue(ref(window.db, `users/${myUid}/deleted_messages/${chatId}`), deletedSnap => {
+                const deletedMsgs = deletedSnap.val() || {};
 
-                    db.ref(`messages/${chatId}`).limitToLast(currentChatLimit).on('value', snap => {
-                        box.innerHTML = "";
-                        let lastTs = 0;
-                        let messagesArray = [];
-                        
-                        snap.forEach(child => {
-                            if (!deletedMsgs[child.key]) {
-                                messagesArray.push({ id: child.key, val: child.val() });
-                            }
-                        });
-
-                        messagesArray.forEach((item, index) => {
-                            const msgId = item.id;
-                            const msg = item.val;
-                            const type = msg.senderId === myUid ? 'sent' : 'received';
-                            const isMine = type === 'sent';
-                            
-                            if (msg.ts - lastTs > 3600000) {
-                                const d = new Date(msg.ts);
-                                const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                                let h = d.getHours();
-                                let ampm = h >= 12 ? 'PM' : 'AM';
-                                h = h % 12 || 12;
-                                let m = d.getMinutes().toString().padStart(2, '0');
-                                box.innerHTML += `<div style="text-align:center; color:var(--gold, #d4af37); font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase; width:100%;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
-                            }
-                            lastTs = msg.ts;
-
-                            const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
-                            const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
-                            const isImg = msg.image ? true : false;
-
-                            let content = "";
-                            if (isImg) {
-                                content = `<img src="${msg.image}" style="max-width:170px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
-                            } else if (msg.audio) {
-                                content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                            } else {
-                                content = msg.text || "";
-                            }
-                            
-                            const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
-                                `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
-                                `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
-
-                            box.innerHTML += `
-                            <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
-                                 oncontextmenu="event.preventDefault(); window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-                                <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
-                                    ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
-                                    <div class="msg-bubble msg-${type}" style="
-                                        display: inline-block; 
-                                        min-width: 20px; 
-                                        max-width: 100%; 
-                                        width: fit-content; 
-                                        cursor: pointer; 
-                                        word-wrap: break-word;
-                                        text-align: left;
-                                        ${dynamicBubbleStyle}
-                                    ">
-                                        <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
-                                    </div>
-                                </div>
-                                ${isMine && msg.seen && index === messagesArray.length - 1 ? 
-                                    `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
-                                        <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
-                                    </div>` : ''}
-                            </div>`;
-                        });
-
-                        if (currentChatLimit === 20) {
-                            box.scrollTop = box.scrollHeight;
+                onValue(ref(window.db, `messages/${chatId}`), snap => {
+                    box.innerHTML = "";
+                    let lastTs = 0;
+                    let messagesArray = [];
+                    
+                    snap.forEach(child => {
+                        if (!deletedMsgs[child.key]) {
+                            messagesArray.push({ id: child.key, val: child.val() });
                         }
                     });
+
+                    // ლიმიტის გამოყენება ბოლო შეტყობინებებზე
+                    if (messagesArray.length > currentChatLimit) {
+                        messagesArray = messagesArray.slice(messagesArray.length - currentChatLimit);
+                    }
+
+                    messagesArray.forEach((item, index) => {
+                        const msgId = item.id;
+                        const msg = item.val;
+                        const type = msg.senderId === myUid ? 'sent' : 'received';
+                        const isMine = type === 'sent';
+                        
+                        if (msg.ts - lastTs > 3600000) {
+                            const d = new Date(msg.ts);
+                            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                            let h = d.getHours();
+                            let ampm = h >= 12 ? 'PM' : 'AM';
+                            h = h % 12 || 12;
+                            let m = d.getMinutes().toString().padStart(2, '0');
+                            box.innerHTML += `<div style="text-align:center; color:var(--gold, #d4af37); font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase; width:100%;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
+                        }
+                        lastTs = msg.ts;
+
+                        const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
+                        const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
+                        const isImg = msg.image ? true : false;
+
+                        let content = "";
+                        if (isImg) {
+                            content = `<img src="${msg.image}" style="max-width:170px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
+                        } else if (msg.audio) {
+                            content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
+                        } else {
+                            content = msg.text || "";
+                        }
+                        
+                        const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
+                            `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
+                            `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
+
+                        box.innerHTML += `
+                        <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
+                             oncontextmenu="event.preventDefault(); if(typeof window.deleteMessage === 'function') window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
+                            <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
+                                ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
+                                <div class="msg-bubble msg-${type}" style="
+                                    display: inline-block; 
+                                    min-width: 20px; 
+                                    max-width: 100%; 
+                                    width: fit-content; 
+                                    cursor: pointer; 
+                                    word-wrap: break-word;
+                                    text-align: left;
+                                    ${dynamicBubbleStyle}
+                                ">
+                                    <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
+                                </div>
+                            </div>
+                            ${isMine && msg.seen && index === messagesArray.length - 1 ? 
+                                `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
+                                    <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
+                                </div>` : ''}
+                        </div>`;
+                    });
+
+                    if (currentChatLimit === 20) {
+                        box.scrollTop = box.scrollHeight;
+                    }
                 });
             });
 
@@ -892,45 +930,46 @@
         // ==========================================
         // 6. შეტყობინების გაგზავნა (ტექსტი, ფოტო, ხმოვანი)
         // ==========================================
-        function sendMessage() {
-            if (!canAfford(0.2)) return;
+        async function sendMessage() {
+            if (typeof canAfford === 'function' && !canAfford(0.2)) return;
             const inp = document.getElementById('messageInp');
-            const myUid = auth.currentUser.uid;
+            const myUid = window.auth.currentUser.uid;
             let msgText = inp.value.trim();
 
             if (!msgText) msgText = "👍";
             if (!currentChatId) return;
             const chatId = getChatId(myUid, currentChatId);
+            const { ref, get, push, remove } = window.fbDb;
 
-            db.ref(`users/${currentChatId}/following/${myUid}`).once('value', snapshot => {
-                const heFollowsMe = snapshot.exists();
-                const targetPath = heFollowsMe ? `messages/${chatId}` : `message_requests/${currentChatId}/${myUid}`;
+            const followRef = ref(window.db, `users/${currentChatId}/following/${myUid}`);
+            const snapshot = await get(followRef);
+            const heFollowsMe = snapshot.exists();
+            const targetPath = heFollowsMe ? `messages/${chatId}` : `message_requests/${currentChatId}/${myUid}`;
 
-                db.ref(targetPath).push({
-                    senderId: myUid,
-                    text: msgText,
-                    ts: Date.now(),
-                    seen: false
-                });
-
-                if (typeof sendPushToUser === "function") {
-                    sendPushToUser(currentChatId, myName, msgText);
-                }
-
-                db.ref(`typing/${chatId}/${myUid}`).remove();
-                spendAkho(0.2, 'Message');
-                inp.value = ""; 
-
-                if (typeof handleTyping === "function") {
-                    handleTyping();
-                }
+            await push(ref(window.db, targetPath), {
+                senderId: myUid,
+                text: msgText,
+                ts: Date.now(),
+                seen: false
             });
+
+            if (typeof sendPushToUser === "function") {
+                sendPushToUser(currentChatId, window.myName || 'User', msgText);
+            }
+
+            remove(ref(window.db, `typing/${chatId}/${myUid}`));
+            if (typeof spendAkho === 'function') spendAkho(0.2, 'Message');
+            inp.value = ""; 
+
+            if (typeof handleTyping === "function") {
+                handleTyping();
+            }
         }
 
         async function uploadChatImage(input) {
             if (!input.files || !input.files[0] || !currentChatId) return;
             const file = input.files[0];
-            const myUid = auth.currentUser.uid;
+            const myUid = window.auth.currentUser.uid;
             const chatId = getChatId(myUid, currentChatId);
 
             try {
@@ -939,7 +978,8 @@
                 const snapshot = await storageRef.put(file);
                 const downloadURL = await snapshot.ref.getDownloadURL();
 
-                db.ref(`messages/${chatId}`).push({
+                const { ref, push } = window.fbDb;
+                await push(ref(window.db, `messages/${chatId}`), {
                     senderId: myUid,
                     image: downloadURL,
                     ts: Date.now(),
@@ -947,7 +987,7 @@
                 });
 
                 if (typeof sendPushToUser === "function") {
-                    sendPushToUser(currentChatId, myName, "📷 Photo");
+                    sendPushToUser(currentChatId, window.myName || 'User', "📷 Photo");
                 }
                 input.value = ""; 
             } catch (error) {
@@ -979,9 +1019,9 @@
         async function sendVoiceMessage(blob) {
             const targetId = window.currentChatId; 
             if (!targetId) return alert("ჯერ აირჩიეთ ჩატი!");
-            if (!canAfford(0.5)) return; 
+            if (typeof canAfford === 'function' && !canAfford(0.5)) return; 
 
-            const myUid = auth.currentUser.uid;
+            const myUid = window.auth.currentUser.uid;
             const chatId = getChatId(myUid, targetId);
             const fileName = `voice_${Date.now()}.mp3`;
 
@@ -991,17 +1031,17 @@
                 const downloadURL = await snapshot.ref.getDownloadURL();
 
                 if (downloadURL) {
-                    db.ref(`messages/${chatId}`).push({ 
+                    const { ref, push } = window.fbDb;
+                    await push(ref(window.db, `messages/${chatId}`), { 
                         senderId: myUid, 
                         audio: downloadURL, 
                         ts: Date.now(),
                         seen: false
-                    }).then(() => {
-                        spendAkho(0.5, 'Voice Message');
                     });
+                    if (typeof spendAkho === 'function') spendAkho(0.5, 'Voice Message');
 
                     if (typeof sendPushToUser === "function") {
-                        sendPushToUser(targetId, myName, "🎤 Voice Message");
+                        sendPushToUser(targetId, window.myName || 'User', "🎤 Voice Message");
                     }
                 }
             } catch (err) { 
@@ -1013,13 +1053,15 @@
         // 7. Typing Indicator (ბეჭდვის ლოგიკა)
         // ==========================================
         function handleTyping() {
-            if (!currentChatId) return;
-            const chatId = getChatId(auth.currentUser.uid, currentChatId);
-            db.ref(`typing/${chatId}/${auth.currentUser.uid}`).set(true);
+            if (!currentChatId || !window.auth.currentUser) return;
+            const chatId = getChatId(window.auth.currentUser.uid, currentChatId);
+            const { ref, set, remove } = window.fbDb;
+
+            set(ref(window.db, `typing/${chatId}/${window.auth.currentUser.uid}`), true);
             
             if (typingTimeout) clearTimeout(typingTimeout);
             typingTimeout = setTimeout(() => {
-                db.ref(`typing/${chatId}/${auth.currentUser.uid}`).remove();
+                remove(ref(window.db, `typing/${chatId}/${window.auth.currentUser.uid}`));
             }, 3000);
 
             const inp = document.getElementById('messageInp');
@@ -1035,14 +1077,18 @@
         }
 
         function listenToTyping(targetUid) {
-            const chatId = getChatId(auth.currentUser.uid, targetUid);
-            db.ref(`typing/${chatId}/${targetUid}`).on('value', snap => {
+            if (!window.auth.currentUser) return;
+            const chatId = getChatId(window.auth.currentUser.uid, targetUid);
+            const { ref, onValue } = window.fbDb;
+
+            onValue(ref(window.db, `typing/${chatId}/${targetUid}`), snap => {
                 const indicator = document.getElementById('typingIndicator');
                 if (snap.exists()) {
-                    indicator.style.display = 'flex';
-                    document.getElementById('typingSound').play().catch(e => {});
+                    if (indicator) indicator.style.display = 'flex';
+                    const sound = document.getElementById('typingSound');
+                    if (sound) sound.play().catch(e => {});
                 } else {
-                    indicator.style.display = 'none';
+                    if (indicator) indicator.style.display = 'none';
                 }
             });
         }
@@ -1051,20 +1097,26 @@
         // 8. გლობალური შეტყობინებების მოსმენა და Push / Badges
         // ==========================================
         function listenToGlobalMessages() {
-            const myUid = auth.currentUser.uid;
-            db.ref('messages').on('child_added', snap => {
-                if (!snap.key.includes(myUid)) return;
+            if (!window.auth || !window.auth.currentUser) return;
+            const myUid = window.auth.currentUser.uid;
+            const { ref, onValue, get } = window.fbDb;
 
-                snap.ref.limitToLast(1).on('child_added', mSnap => {
-                    const msg = mSnap.val();
-                    if (!msg || msg.senderId === myUid) return;
-                    if (Date.now() - msg.ts > 10000) return;
-                    if (currentChatId && getChatId(myUid, currentChatId) === snap.key) return;
+            onValue(ref(window.db, 'messages'), snap => {
+                const allChats = snap.val();
+                if (!allChats) return;
 
-                    db.ref(`users/${msg.senderId}`).once('value', uSnap => {
+                Object.keys(allChats).forEach(async chatId => {
+                    if (chatId.includes(myUid)) {
+                        const msgs = Object.values(allChats[chatId]);
+                        const msg = msgs[msgs.length - 1];
+                        if (!msg || msg.senderId === myUid) return;
+                        if (Date.now() - msg.ts > 10000) return;
+                        if (currentChatId && getChatId(myUid, currentChatId) === chatId) return;
+
+                        const uSnap = await get(ref(window.db, `users/${msg.senderId}`));
                         const u = uSnap.val();
                         if (!u) return;
-                        
+
                         const senderName = u.name || "მომხმარებელი";
                         const messageText = msg.text || "📷 Voice/Media";
                         const sound = document.getElementById('msgSound');
@@ -1074,24 +1126,31 @@
                         }
                         setAppBadge(1);
                         showLocalNotification("ახალი მესიჯი: " + senderName, messageText);
-                        showGlobalPush(senderName, u.photo, messageText);
-                    });
+                        showGlobalPush(senderName, u.photo || 'token-avatar.png', messageText);
+                    }
                 });
             });
         }
 
         function showGlobalPush(name, photo, text) {
             const push = document.getElementById('globalPush');
-            document.getElementById('pushName').innerText = name;
-            document.getElementById('pushAva').src = photo;
-            document.getElementById('pushTxt').innerText = text.substring(0, 40) + (text.length > 40 ? '...' : '');
+            if (!push) return;
+            const nameEl = document.getElementById('pushName');
+            const avaEl = document.getElementById('pushAva');
+            const txtEl = document.getElementById('pushTxt');
+
+            if (nameEl) nameEl.innerText = name;
+            if (avaEl) avaEl.src = photo;
+            if (txtEl) txtEl.innerText = text.substring(0, 40) + (text.length > 40 ? '...' : '');
+
             push.classList.add('show');
-            document.getElementById('msgSound').play().catch(e => {});
+            const sound = document.getElementById('msgSound');
+            if (sound) sound.play().catch(e => {});
             setTimeout(() => push.classList.remove('show'), 4000);
         }
 
         function showLocalNotification(title, body) {
-            if (Notification.permission === 'granted') {
+            if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
                 navigator.serviceWorker.ready.then(registration => {
                     registration.showNotification(title, {
                         body: body,
@@ -1108,7 +1167,8 @@
         }
 
         function sendPushToUser(targetUid, senderName, text) {
-            db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
+            const { ref, get } = window.fbDb;
+            get(ref(window.db, `users/${targetUid}/fcmToken`)).then(snap => {
                 const token = snap.val();
                 if (token) {
                     fetch('https://fcm.googleapis.com/fcm/send', {
@@ -1138,14 +1198,16 @@
         }
 
         function startGlobalUnreadCounter() {
-            const myUid = auth.currentUser.uid;
+            if (!window.auth || !window.auth.currentUser) return;
+            const myUid = window.auth.currentUser.uid;
             const chatBadge = document.getElementById('chatCountBadge');
+            const { ref, onValue, get } = window.fbDb;
 
-            db.ref(`users/${myUid}/last_read`).on('value', readSnap => {
+            onValue(ref(window.db, `users/${myUid}/last_read`), readSnap => {
                 const lastReadData = readSnap.val() || {};
                 let totalUnread = 0;
 
-                db.ref('messages').once('value', snap => {
+                get(ref(window.db, 'messages')).then(snap => {
                     const allChats = snap.val();
                     if (!allChats) return;
 
@@ -1177,14 +1239,15 @@
         // 9. ჩატის მოთხოვნები (Message Requests)
         // ==========================================
         function monitorMessageRequests() {
-            const myId = auth.currentUser ? auth.currentUser.uid : null;
+            const myId = window.auth && window.auth.currentUser ? window.auth.currentUser.uid : null;
             if (!myId) return;
+            const { ref, onValue } = window.fbDb;
 
-            db.ref(`message_requests/${myId}`).on('value', snapshot => {
+            onValue(ref(window.db, `message_requests/${myId}`), snapshot => {
                 const badge = document.getElementById('msgReqBadge');
                 if (badge) {
                     if (snapshot.exists()) {
-                        badge.innerText = snapshot.numChildren();
+                        badge.innerText = snapshot.size || Object.keys(snapshot.val()).length;
                         badge.style.display = 'flex';
                     } else {
                         badge.style.display = 'none';
@@ -1194,12 +1257,15 @@
         }
 
         function openMessageRequests() {
-            const myId = auth.currentUser.uid;
+            if (!window.auth || !window.auth.currentUser) return;
+            const myId = window.auth.currentUser.uid;
             const list = document.getElementById('msgReqList');
             document.getElementById('messageRequestsUI').style.display = 'flex';
             list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">იტვირთება...</div>';
 
-            db.ref(`message_requests/${myId}`).on('value', snapshot => {
+            const { ref, onValue, get } = window.fbDb;
+
+            onValue(ref(window.db, `message_requests/${myId}`), snapshot => {
                 list.innerHTML = '';
                 if (!snapshot.exists()) {
                     list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ახალი მოთხოვნები არ არის.</div>';
@@ -1212,7 +1278,7 @@
                     const messageKeys = Object.keys(messages);
                     const lastMsg = messages[messageKeys[messageKeys.length - 1]];
 
-                    db.ref(`users/${senderId}`).once('value', userSnap => {
+                    get(ref(window.db, `users/${senderId}`)).then(userSnap => {
                         const user = userSnap.val() || {};
                         const item = document.createElement('div');
                         item.style = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px;";
@@ -1229,32 +1295,33 @@
             });
         }
 
-        function acceptMsgReq(senderId) {
-            const myId = auth.currentUser.uid;
+        async function acceptMsgReq(senderId) {
+            const myId = window.auth.currentUser.uid;
             const chatId = getChatId(myId, senderId);
+            const { ref, get, set, update, remove } = window.fbDb;
 
-            db.ref(`message_requests/${myId}/${senderId}`).once('value', snap => {
-                if (snap.exists()) {
-                    const messages = snap.val();
-                    db.ref(`users/${senderId}`).once('value', uSnap => {
-                        const senderData = uSnap.val() || {};
-                        db.ref(`users/${myId}/following/${senderId}`).set({
-                            name: senderData.name || "User",
-                            photo: senderData.photo || ""
-                        });
-                        db.ref(`users/${senderId}/following/${myId}`).set({
-                            name: myName,
-                            photo: myPhoto
-                        });
+            const snap = await get(ref(window.db, `message_requests/${myId}/${senderId}`));
+            if (snap.exists()) {
+                const messages = snap.val();
+                const uSnap = await get(ref(window.db, `users/${senderId}`));
+                const senderData = uSnap.val() || {};
 
-                        db.ref(`messages/${chatId}`).update(messages).then(() => {
-                            db.ref(`message_requests/${myId}/${senderId}`).remove();
-                            closeMessageRequests();
-                            startChat(senderId, senderData.name || "User", senderData.photo || "");
-                        });
-                    });
-                }
-            });
+                await set(ref(window.db, `users/${myId}/following/${senderId}`), {
+                    name: senderData.name || "User",
+                    photo: senderData.photo || ""
+                });
+
+                await set(ref(window.db, `users/${senderId}/following/${myId}`), {
+                    name: window.myName || 'User',
+                    photo: window.myPhoto || ''
+                });
+
+                await update(ref(window.db, `messages/${chatId}`), messages);
+                await remove(ref(window.db, `message_requests/${myId}/${senderId}`));
+
+                closeMessageRequests();
+                startChat(senderId, senderData.name || "User", senderData.photo || "");
+            }
         }
 
         function closeMessageRequests() {
@@ -1265,6 +1332,8 @@
         // 10. Waveform (ხმოვანი შეტყობინების დიზაინი/ვიზუალი)
         // ==========================================
         function initWaveforms() {
+            if (typeof WaveSurfer === 'undefined') return;
+
             document.querySelectorAll('.waveform-container').forEach(container => {
                 const msgId = container.id.split('-')[1];
                 if (waveSurfers[msgId]) return;
@@ -1304,7 +1373,7 @@
 
             if (ws.isPlaying()) {
                 ws.pause();
-                icon.className = 'fas fa-play';
+                if (icon) icon.className = 'fas fa-play';
             } else {
                 Object.keys(waveSurfers).forEach(id => {
                     if (waveSurfers[id].isPlaying()) {
@@ -1314,9 +1383,20 @@
                     }
                 });
                 ws.play();
-                icon.className = 'fas fa-pause';
+                if (icon) icon.className = 'fas fa-pause';
             }
         }
+
+        // ავტომატური ინიციალიზაცია ჩატვირთვისას
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (window.auth && window.auth.currentUser) {
+                    monitorMessageRequests();
+                    startGlobalUnreadCounter();
+                    listenToGlobalMessages();
+                }
+            }, 1000);
+        });
     </script>
 
 </body>
