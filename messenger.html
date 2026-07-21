@@ -580,7 +580,7 @@
         </div>
       </div>
 
-      <!-- ჩატების სია (დინამიური REALTIME FIRESTORE) -->
+      <!-- ჩატების სია (დინამიური REALTIME FIRESTORE - PROFILES) -->
       <div class="chats-scroll-area" id="chats-list-target">
         <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
       </div>
@@ -751,41 +751,39 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // 1. FIRESTORE-დან ჩატების სიის რეალურ დროში წამოღება
+    // 1. FIRESTORE-დან PROFILES კოლექციის რეალურ დროში წამოღება
     function fetchFirestoreChatList() {
       const listTarget = document.getElementById('chats-list-target');
       if (!window.auth || !window.auth.currentUser) return;
       const currentUid = window.auth.currentUser.uid;
       const { collection, onSnapshot } = window.fs;
 
-      // ვუსმენთ 'users' კოლექციას Firestore-ში
-      const usersRef = collection(window.db, 'users');
+      // წამოვიღოთ 'profiles' კოლექცია
+      const profilesRef = collection(window.db, 'profiles');
       
-      onSnapshot(usersRef, (snapshot) => {
+      onSnapshot(profilesRef, (snapshot) => {
         if (!snapshot || snapshot.empty) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მომხმარებლები არ არიან.</p>";
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>პროფილები არ მოიძებნა.</p>";
           return;
         }
 
         let usersList = [];
         snapshot.forEach(docSnap => {
           const uid = docSnap.id;
-          // სურვილისამებრ: თუ გინდა საკუთარ თავსაც ხედავდე ბაზაში, ქვედა ხაზი წაშალე
-          if (uid === currentUid) return;
+          if (uid === currentUid) return; // საკუთარ თავს ვტოვებთ სიიდან
 
           const uData = docSnap.data();
           usersList.push({
             uid: uid,
-            name: uData.name || uData.username || uData.displayName || 'User',
-            photo: uData.photo || uData.photoURL || uData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+            name: uData.name || uData.username || uData.displayName || uData.first_name || 'მომხმარებელი',
+            photo: uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
             presence: uData.status || uData.presence || 'offline',
-            lastMsg: uData.lastMsg || "Tap to chat",
-            lastTs: uData.lastTs || 0
+            lastMsg: uData.lastMsg || "Tap to chat"
           });
         });
 
         if (usersList.length === 0) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა მომხმარებლები არ მოიძებნა.</p>";
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა პროფილები არ არის.</p>";
           return;
         }
 
@@ -818,12 +816,12 @@
           listTarget.appendChild(item);
         });
       }, (err) => {
-        console.error("Firestore Error:", err);
-        listTarget.innerHTML = `<p style='padding:20px; color:#ff3b30; text-align:center;'>შეცდომა ბაზასთან: ${err.message}</p>`;
+        console.error("Firestore Profiles Error:", err);
+        listTarget.innerHTML = `<p style='padding:20px; color:#ff3b30; text-align:center;'>შეცდომა: ${err.message}</p>`;
       });
     }
 
-    // 2. ჩატის გახსნა დინამიურად
+    // 2. ჩატის გახსნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
       currentActiveChatUser = username;
@@ -842,9 +840,9 @@
       const currentUid = window.auth.currentUser.uid;
       const chatId = getChatId(currentUid, targetUid);
 
-      // სამიზნე მომხმარებლის სტატუსის მოსმენა Firestore-ში
+      // სამიზნე პროფილის ონლაინ სტატუსის მოსმენა 'profiles'-იდან
       const { doc, onSnapshot } = window.fs;
-      onSnapshot(doc(window.db, 'users', targetUid), (docSnap) => {
+      onSnapshot(doc(window.db, 'profiles', targetUid), (docSnap) => {
         const statusEl = document.getElementById('active-thread-status');
         if (docSnap.exists() && (docSnap.data().status === 'online' || docSnap.data().presence === 'online')) {
           statusEl.innerText = "Online";
@@ -867,7 +865,6 @@
 
       if (unsubscribeMessages) unsubscribeMessages();
 
-      // Firestore sub-collection: chats/{chatId}/messages
       const msgsQuery = query(
         collection(window.db, 'chats', chatId, 'messages'),
         orderBy('createdAt', 'asc')
@@ -906,7 +903,7 @@
           if (target) target.scrollTop = target.scrollHeight;
         }, 50);
       }, (err) => {
-        console.error("Messages error:", err);
+        console.error("Messages Error:", err);
       });
     }
 
