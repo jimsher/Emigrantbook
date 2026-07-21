@@ -1,1425 +1,864 @@
 <!DOCTYPE html>
 <html lang="ka">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EmigrantBook | Messenger & Video Calls</title>
-    
-    <!-- Font Awesome აიქონების ბიბლიოთეკა -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- თქვენი საიტის ძირითადი სტილები -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="chatvirtva.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>EmigrantBook | Messenger</title>
 
-    <style>
-        /* --- IMPACT Messenger & Chat: Meta Design Styles --- */
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="chatvirtva.css">
 
-        :root {
-            --gold: #d4af37;
-            --green: #4ade80;
-            --red: #ff4d4d;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow-x: hidden;
-        }
+    /* მობილურის ეკრანის კონტეინერი */
+    .messenger-wrapper {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      background-color: #000000;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
 
-        /* 1. მთავარი მესინჯერის კონტეინერი */
-        #messengerUI {
-            background: #000 !important;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2000000;
-            display: none; /* JS გამოაჩენს */
-            flex-direction: column;
-            color: white;
-        }
+    /* ----------------------------------------------------
+       1. მთავარი ჩატების სიის ეკრანი (CHATS SCREEN)
+    ------------------------------------------------------- */
+    #chats-screen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+    .chats-header {
+      padding: 15px 16px 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chats-header h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .header-btn {
+      background: #1a1a1a;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+    }
 
-        /* მესენჯერის ჰედერი */
-        .impact-messenger-header {
-            padding: 12px 16px;
-            background: #000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1a1a1a;
-        }
+    /* საძიებო ზოლი */
+    .search-container {
+      padding: 5px 16px 12px 16px;
+    }
+    .search-box {
+      background: #1c1c1e;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-box i {
+      color: #8e8e93;
+      font-size: 16px;
+    }
+    .search-box input {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 16px;
+      width: 100%;
+      outline: none;
+    }
+    .search-box input::placeholder {
+      color: #8e8e93;
+    }
 
-        .impact-messenger-header h2 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-        }
+    /* აქტიური სიუჟეტების ზოლი */
+    .stories-row {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 5px 16px 15px 16px;
+    }
+    .stories-row::-webkit-scrollbar {
+      display: none;
+    }
+    .story-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 65px;
+      cursor: pointer;
+    }
+    .story-avatar-wrapper {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      margin-bottom: 6px;
+    }
+    .story-avatar-wrapper.active-story {
+      border: 2px solid #0084ff;
+      border-radius: 50%;
+      padding: 2px;
+    }
+    .story-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #222222;
+      object-fit: cover;
+    }
+    .create-story-plus {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #1a1a1a;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #000;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .active-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: #31a24c;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #000000;
+    }
+    .story-name {
+      font-size: 12px;
+      color: #8e8e93;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
 
-        /* ჩატების სია */
-        #chatList {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-            background: #000;
-        }
+    /* ჩატების სია */
+    .chats-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 80px;
+    }
+    .chat-row-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .chat-row-item:active {
+      background: #121212;
+    }
+    .chat-row-avatar-holder {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+    }
+    .chat-row-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #222;
+    }
+    .chat-row-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .chat-row-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #ffffff;
+    }
+    .chat-row-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .chat-row-last-msg {
+      font-size: 14px;
+      color: #8e8e93;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .chat-row-item.unread .chat-row-last-msg {
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .chat-row-time {
+      font-size: 13px;
+      color: #8e8e93;
+    }
+    .unread-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #0084ff;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
 
-        /* თითოეული ჩატის ბლოკი */
-        .chat-list-item {
-            display: flex !important;
-            align-items: center;
-            gap: 15px;
-            padding: 12px 20px !important;
-            background: #000 !important;
-            border: none !important;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+    /* ქვედა მენიუ */
+    .footer-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: #000000;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
+    .nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: #8e8e93;
+      cursor: pointer;
+      position: relative;
+    }
+    .nav-tab.active {
+      color: #0084ff;
+    }
+    .nav-tab i {
+      font-size: 22px;
+    }
+    .nav-tab-label {
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .nav-badge {
+      position: absolute;
+      top: -4px;
+      right: 2px;
+      background: #ff3b30;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 10px;
+      padding: 1px 5px;
+    }
 
-        .chat-list-item:hover {
-            background: #111 !important;
-        }
+    /* Meta AI მცურავი ღილაკი */
+    .meta-ai-float-btn {
+      position: fixed;
+      bottom: 85px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #a255ff, #0084ff);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 99;
+    }
 
-        /* ავატარის კონტეინერი (სტატუსისთვის) */
-        .ava-container {
-            position: relative;
-            flex-shrink: 0;
-        }
+    /* ----------------------------------------------------
+       2. შიდა ჩატის ეკრანი (CHAT THREAD SCREEN)
+    ------------------------------------------------------- */
+    #thread-screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      background-color: #000000;
+      width: 100%;
+    }
+    .thread-header {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #121212;
+      background: #000;
+    }
+    .thread-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .back-btn {
+      background: none;
+      border: none;
+      color: #0084ff;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 20px;
+    }
+    .thread-header-avatar-wrapper {
+      position: relative;
+      width: 36px;
+      height: 36px;
+    }
+    .thread-header-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .thread-user-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .thread-user-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .thread-user-status {
+      font-size: 12px;
+      color: #8e8e93;
+    }
+    .thread-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding-right: 4px;
+    }
+    .thread-header-actions i {
+      font-size: 18px;
+      color: #0084ff;
+      cursor: pointer;
+    }
 
-        .chat-list-ava {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: none;
-        }
+    /* შეტყობინებების ველი */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-        /* ონლაინ სტატუსის მწვანე წერტილი */
-        .status-dot-online {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 14px;
-            height: 14px;
-            background: #4ade80;
-            border-radius: 50%;
-            border: 2px solid #000;
-            display: none;
-        }
+    /* პროფილის ბარათი ჩატის დასაწყისში */
+    .chat-start-profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 0 20px 0;
+      text-align: center;
+    }
+    .chat-start-avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 12px;
+    }
+    .chat-start-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .chat-start-sub {
+      font-size: 14px;
+      color: #8e8e93;
+      margin-bottom: 15px;
+    }
+    .view-profile-btn {
+      background: #1c1c1e;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 18px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .encryption-notice {
+      font-size: 12px;
+      color: #8e8e93;
+      max-width: 280px;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+    .encryption-notice a {
+      color: #0084ff;
+      text-decoration: none;
+    }
+    .chat-date-separator {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8e8e93;
+      text-transform: uppercase;
+      margin: 10px 0;
+      text-align: center;
+    }
 
-        /* ტექსტური ინფორმაცია (ცენტრში) */
-        .chat-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+    /* შეტყობინების ბუშტები */
+    .message-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      max-width: 85%;
+    }
+    .message-row.incoming {
+      align-self: flex-start;
+    }
+    .message-row.outgoing {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+    .msg-bubble-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .msg-bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .incoming .msg-bubble {
+      background-color: #242526;
+      color: #ffffff;
+      border-bottom-left-radius: 4px;
+    }
+    .outgoing .msg-bubble {
+      background-color: #0084ff;
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
 
-        .chat-user-name {
-            color: white;
-            font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-last-msg-box {
-            color: #888;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .unread-msg {
-            color: white !important;
-            font-weight: bold !important;
-        }
-
-        .unread-badge {
-            position: absolute;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            background: #ff4d4d;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 11px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid black;
-            font-weight: bold;
-        }
-
-        /* 2. ინდივიდუალური ჩატის ფანჯარა და მესიჯები */
-        #individualChat {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 2000005;
-            flex-direction: column;
-        }
-
-        #chatMessages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            overflow-anchor: auto !important;
-            will-change: transform;
-        }
-
-        .msg-bubble {
-            display: flex;
-            flex-direction: column;
-            max-width: 75%;
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            border-radius: 15px;
-            word-wrap: break-word;
-        }
-
-        .msg-content img {
-            max-width: 170px;
-            height: auto;
-            border-radius: 12px;
-            display: block;
-            cursor: pointer;
-        }
-
-        /* 3. ვიდეო ზარის სტილები */
-        #videoCallUI {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 999999;
-            display: none;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-
-        .call-header-zone {
-            width: 100%;
-            padding: 40px 20px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-            z-index: 10;
-        }
-
-        #callerAva, .call-top-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--gold);
-            margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .call-header-zone h2 {
-            color: #fff;
-            margin: 0;
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .call-status-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .call-control-panel {
-            width: calc(100% - 40px);
-            max-width: 450px;
-            background: rgba(30, 30, 30, 0.65);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 24px;
-            padding: 16px 10px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: 30px;
-            z-index: 10;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
-
-        .panel-btn-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            flex: 1;
-        }
-
-        .panel-round-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 18px;
-            transition: all 0.2s ease;
-        }
-
-        .panel-btn-wrapper:hover .panel-round-btn {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .panel-btn-wrapper.end-call-wrapper .panel-round-btn {
-            background: #ff3b30;
-            border: none;
-        }
-
-        .panel-btn-wrapper.end-call-wrapper:hover .panel-round-btn {
-            background: #e02e24;
-        }
-
-        .panel-btn-label {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        #remote-video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        #local-video {
-            position: absolute;
-            width: 110px;
-            height: 150px;
-            bottom: 110px;
-            right: 20px;
-            border-radius: 16px;
-            border: 2px solid var(--gold);
-            overflow: hidden;
-            z-index: 5;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
-
-        @keyframes pulse-text {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-    </style>
+    /* ქვედა ინფუთის პანელი */
+    .thread-footer {
+      padding: 8px 12px;
+      background: #000000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-left-actions {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .footer-left-actions i {
+      font-size: 20px;
+      color: #0084ff;
+      cursor: pointer;
+    }
+    .input-wrapper {
+      flex: 1;
+      background: #1c1c1e;
+      border-radius: 20px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-wrapper input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 15px;
+      outline: none;
+    }
+    .input-wrapper input::placeholder {
+      color: #8e8e93;
+    }
+    .input-wrapper i {
+      font-size: 20px;
+      color: #0084ff;
+      cursor: pointer;
+    }
+    .like-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0084ff;
+      font-size: 22px;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- ==================== 1. ინდივიდუალური ჩატის ფანჯარა ==================== -->
-    <div id="individualChat" style="display: none; background: #000;">
-        <div class="chat-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #1a1a1a; background: #000; position: sticky; top: 0; z-index: 100;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <i class="fas fa-arrow-left" onclick="closeChat()" style="cursor:pointer; color:#0084ff; font-size:20px;"></i>
-                
-                <img id="chatTargetAva" src="" style="width:40px; height:40px; border-radius:50%; object-fit: cover;">
-                
-                <div style="display: flex; flex-direction: column;">
-                    <b id="chatTargetName" style="color:white; font-size:16px; line-height: 1.2;">Name</b>
-                    <span id="chatTargetStatus" style="font-size: 11px; color: #888;">...</span>
-                </div>
-            </div>
+  <div class="messenger-wrapper">
 
-            <div style="display:flex; gap:20px; align-items:center;">
-                <i class="fas fa-phone-alt" onclick="requestAudioCall()" style="cursor:pointer; color:#0084ff; font-size:18px;"></i>
-                <i class="fas fa-video" onclick="requestVideoCall()" style="cursor:pointer; color:#0084ff; font-size:18px;"></i>
-                <i class="fas fa-info-circle" onclick="openChatThemePanel()" style="cursor:pointer; color:#0084ff; font-size:18px;"></i>
-            </div>
+    <!-- ================= 1. მთავარი ჩატების ეკრანი ================= -->
+    <div id="chats-screen">
+      <div class="chats-header">
+        <h1>Chats</h1>
+        <div class="header-actions">
+          <button class="header-btn" onclick="openMessageRequests()">
+            <i class="fas fa-user-clock"></i>
+          </button>
         </div>
+      </div>
 
-        <!-- მესიჯების ისტორიის ზონა -->
-        <div id="chatMessages" class="chat-messages"></div>
-
-        <!-- წერის ინდიკატორი -->
-        <div id="typingIndicator" class="typing-indicator" style="display:none; margin-left: 15px; margin-bottom: 5px;">
-            <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      <!-- საძიებო ზოლი -->
+      <div class="search-container">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Ask Meta AI or Search">
         </div>
+      </div>
 
-        <!-- ტექსტის/მედიის გაგზავნის პანელი -->
-        <div class="chat-input-area" style="padding: 10px; display:flex; align-items:center; gap:10px; background: #000; border-top: 1px solid #1a1a1a; width: 100%; box-sizing: border-box;">
-            
-            <div style="display: flex; gap: 15px; align-items: center; color: #0084ff; font-size: 20px; flex-shrink: 0;">
-                <i class="fas fa-plus-circle" style="cursor:pointer;"></i>
-                <i class="fas fa-camera" style="cursor:pointer;" onclick="openUploadModal()"></i>
-                <i class="fas fa-image" style="cursor:pointer;" onclick="document.getElementById('chatImageInput').click()"></i>
-                
-                <div id="voiceBtn" onclick="toggleVoiceRecord()" style="cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                    <i class="fas fa-microphone" id="micIcon"></i>
-                </div>
-            </div>
-
-            <div style="flex: 1; background: #1a1a1a; border-radius: 20px; display: flex; align-items: center; padding: 2px 12px; min-width: 0;">
-                <input type="text" id="messageInp" 
-                       class="chat-input" 
-                       placeholder="Message..." 
-                       oninput="handleTyping()" 
-                       style="width: 100%; background: transparent; border: none; color: white; padding: 8px; outline: none; margin-bottom: 0; font-size: 15px;">
-                <i class="far fa-smile" style="color: #0084ff; font-size: 20px; cursor: pointer; flex-shrink: 0;"></i>
-            </div>
-
-            <button class="chat-send-btn" onclick="sendMessage()" style="background: transparent; border: none; padding: 0; display: flex; align-items: center; justify-content: center; color: #0084ff; flex-shrink: 0;">
-                <i class="fas fa-thumbs-up" id="sendBtnIcon" style="font-size: 24px;"></i>
-            </button>
-            <input type="file" id="chatImageInput" accept="image/*" style="display:none;" onchange="uploadChatImage(this)">
+      <!-- სიუჟეტების ზოლი -->
+      <div class="stories-row">
+        <div class="story-item">
+          <div class="story-avatar-wrapper">
+            <img class="story-avatar" src="https://emigrantbook.com/logo.png" alt="Me">
+            <div class="create-story-plus">+</div>
+          </div>
+          <span class="story-name">Create story</span>
         </div>
+      </div>
+
+      <!-- ჩატების დინამიური სია -->
+      <div class="chats-scroll-area" id="chatList">
+        <p style='padding:20px; color:gray; text-align:center;'>Loading Chats...</p>
+      </div>
+
+      <!-- Meta AI მცურავი ღილაკი -->
+      <div class="meta-ai-float-btn" onclick="alert('Meta AI')">
+        <i class="fas fa-robot"></i>
+      </div>
+
+      <!-- ქვედა მენიუ -->
+      <div class="footer-nav">
+        <button class="nav-tab active">
+          <i class="fas fa-comment"></i>
+          <div class="nav-badge" id="chatCountBadge" style="display:none;">0</div>
+          <span class="nav-tab-label">Chats</span>
+        </button>
+        <button class="nav-tab" onclick="alert('Stories tab')">
+          <i class="fas fa-circle-notch"></i>
+          <span class="nav-tab-label">Stories</span>
+        </button>
+        <button class="nav-tab" onclick="alert('Notifications tab')">
+          <i class="fas fa-bell"></i>
+          <span class="nav-tab-label">Notifications</span>
+        </button>
+        <button class="nav-tab" onclick="window.location.href='index.html';">
+          <i class="fas fa-bars"></i>
+          <span class="nav-tab-label">Menu</span>
+        </button>
+      </div>
     </div>
 
-
-    <!-- ==================== 2. შემოსული ვიდეო ზარის მოდალი ==================== -->
-    <div id="incomingCallModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:1000000; align-items:center; justify-content:center; flex-direction:column; font-family:sans-serif;">
-        <div style="background:#1a1a1a; width:280px; padding:40px 20px; border-radius:30px; border:1px solid var(--gold); text-align:center; box-shadow:0 0 30px rgba(212,175,55,0.3);">
-            <img id="callerAva" src="" style="width:100px; height:100px; border-radius:50%; border:3px solid var(--gold); margin-bottom:20px; object-fit:cover;">
-            <h2 id="callerNameDisplay" style="color:white; margin:0 0 10px 0; font-size:20px;">Levani...</h2>
-            <p style="color:var(--gold); font-size:14px; margin-bottom:30px; letter-spacing:1px; animation: pulse-text 1.5s infinite;">ვიდეო ზარი შემოდის...</p>
-            
-            <div style="display:flex; justify-content:space-around; width:100%;">
-                <div onclick="declineCall()" style="width:60px; height:60px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:24px;">
-                    <i class="fas fa-phone-slash"></i>
-                </div>
-                <div onclick="acceptCall()" style="width:60px; height:60px; background:#4ade80; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer; font-size:24px; box-shadow:0 0 15px rgba(74,222,128,0.5);">
-                    <i class="fas fa-video"></i>
-                </div>
-            </div>
+    <!-- ================= 2. შიდა ჩატის ეკრანი ================= -->
+    <div id="thread-screen">
+      <div class="thread-header">
+        <div class="thread-header-left" onclick="closeChat()">
+          <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+          <div class="thread-header-avatar-wrapper">
+            <img class="thread-header-avatar" id="chatTargetAva" src="">
+          </div>
+          <div class="thread-user-info">
+            <span class="thread-user-name" id="chatTargetName">User</span>
+            <span class="thread-user-status" id="chatTargetStatus">...</span>
+          </div>
         </div>
+        <div class="thread-header-actions">
+          <i class="fas fa-phone-alt" onclick="requestAudioCall()"></i>
+          <i class="fas fa-video" onclick="requestVideoCall()"></i>
+          <i class="fas fa-info-circle" onclick="openChatThemePanel()"></i>
+        </div>
+      </div>
+
+      <!-- შეტყობინებების კონტეინერი -->
+      <div class="messages-container" id="chatMessages">
+        <div class="chat-start-profile">
+          <img class="chat-start-avatar" id="chatStartBigAva" src="">
+          <span class="chat-start-name" id="chatStartBigName">User</span>
+          <span class="chat-start-sub">EmigrantBook User</span>
+          <button class="view-profile-btn">View profile</button>
+          <div class="encryption-notice">
+            🔒 Messages and calls are secured with end-to-end encryption.
+          </div>
+        </div>
+
+        <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- წერის ინდიკატორი -->
+      <div id="typingIndicator" class="typing-indicator" style="display:none; margin-left:15px; margin-bottom:5px;">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+
+      <!-- ქვედა ინფუთის პანელი -->
+      <div class="thread-footer">
+        <div class="footer-left-actions">
+          <i class="fas fa-plus-circle"></i>
+          <i class="fas fa-camera" onclick="openUploadModal()"></i>
+          <i class="fas fa-image" onclick="document.getElementById('chatImageInput').click()"></i>
+          <i class="fas fa-microphone" id="micIcon" onclick="toggleVoiceRecord()"></i>
+        </div>
+
+        <div class="input-wrapper">
+          <input type="text" id="messageInp" placeholder="Message..." oninput="handleTyping()" onkeypress="if(event.key==='Enter') sendMessage()">
+          <i class="far fa-smile"></i>
+        </div>
+
+        <button class="like-action-btn" onclick="sendMessage()">
+          <i class="fas fa-paper-plane" id="sendBtnIcon"></i>
+        </button>
+        <input type="file" id="chatImageInput" accept="image/*" style="display:none;" onchange="uploadChatImage(this)">
+      </div>
     </div>
 
+  </div>
 
-    <!-- ==================== 3. მთავარი მესინჯერის კონტეინერი (ჩატების სია) ==================== -->
-    <div id="messengerUI" style="display:none;">
-        <div class="impact-messenger-header" style="padding:12px 16px; background:#000; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <h2 style="margin:0; font-size:20px; font-weight:700; color:white;">messenger</h2> 
-            </div>
+  <!-- FIREBASE & MODULES -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, get, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-            <div id="messengerRequestsBtn" onclick="openMessageRequests()" style="position: relative; cursor: pointer; margin-left: auto; margin-right: 15px; display: flex; align-items: center;">
-                <i class="fas fa-user-clock" style="color: #888; font-size: 20px;"></i>
-                <span id="msgReqBadge" style="display: none; position: absolute; top: -5px; right: -8px; background: #fe2c55; color: white; min-width: 16px; height: 16px; border-radius: 50%; font-size: 10px; font-weight: bold; align-items: center; justify-content: center; border: 2px solid #000; padding: 0 2px;">0</span>
-            </div>
-            
-            <div style="display:flex; gap:16px; align-items:center;">
-                <i class="fas fa-edit" style="font-size:18px; color:white; cursor:pointer;"></i>
-                <img src="https://emigrantbook.com/logo.png" id="messengerCloseLogo" onclick="document.getElementById('messengerUI').style.display='none'" alt="Impact" style="width:30px; height:30px; border-radius:50%; cursor:pointer;">
-            </div>
-        </div>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-        <!-- ძებნის ველი ჩატებისთვის -->
-        <div style="padding: 10px 15px;">
-            <div style="background: #1c1c1c; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-search" style="color: #888; font-size: 14px;"></i>
-                <input type="text" placeholder="Search" style="background: transparent; border: none; color: white; outline: none; font-size: 15px; width: 100%;">
-            </div>
-        </div>
+    const app = initializeApp(firebaseConfig);
+    window.auth = getAuth(app);
+    window.db = getDatabase(app);
+    window.fbDb = { ref, set, push, onValue, get, remove, runTransaction };
 
-        <!-- ჩატების დინამიური სია -->
-        <div id="chatList"></div>
-    </div>
+    onAuthStateChanged(window.auth, (user) => {
+      if (user) {
+        if (typeof fetchAndRenderChatList === 'function') fetchAndRenderChatList();
+        if (typeof monitorMessageRequests === 'function') monitorMessageRequests();
+        if (typeof startGlobalUnreadCounter === 'function') startGlobalUnreadCounter();
+        if (typeof listenToGlobalMessages === 'function') listenToGlobalMessages();
+      }
+    });
+  </script>
 
+  <script src="script.js"></script>
+  <script src="chatvirtva.js"></script>
+  <script src="videocall.js"></script>
 
-    <!-- ==================== 4. შეტყობინებების მოთხოვნები (Requests) ==================== -->
-    <div id="messageRequestsUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:2000001; flex-direction:column;">
-        <div class="impact-messenger-header" style="padding:12px 16px; background:#000; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a;">
-            <i class="fas fa-arrow-left" onclick="closeMessageRequests()" style="cursor:pointer; color:#0084ff; font-size:20px;"></i>
-            <h2 style="color:white; font-size:18px; margin:0;">Requests</h2>
-            <div style="width:20px;"></div>
-        </div>
-        <div id="msgReqList" style="flex:1; overflow-y:auto; padding:10px 0;"></div>
-    </div>
+  <script>
+    let currentChatId = null;
+    let typingTimeout = null;
 
+    function getChatId(u1, u2) {
+      return u1 < u2 ? `${u1}_${u2}` : `${u2}_${u1}`;
+    }
 
-    <!-- ==================== 5. ვიდეო ზარის ინტერფეისი (Video Call UI) ==================== -->
-    <div id="videoCallUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999999; flex-direction:column; align-items:center; justify-content:space-between; font-family:sans-serif; overflow:hidden;">
-        
-        <div id="remote-video" style="width:100%; height:100%; background:#111; position:absolute; top:0; left:0; z-index:1;">
-            <div id="remote-label" style="position:absolute; top:25px; left:25px; color:white; background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:20px; font-size:12px; z-index:30; font-weight:500; border:1px solid rgba(255,255,255,0.1);">Waiting for partner...</div>
-            
-            <div style="position:absolute; top:60px; width:100%; text-align:center; z-index:25; display:flex; flex-direction:column; align-items:center; background:linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); padding-bottom:30px;">
-                <div id="calling-user-avatar" style="width:90px; height:90px; border-radius:50%; border:2px solid #d4af37; margin:0 auto 15px; display:none; background-size:cover; background-position:center; box-shadow:0 4px 15px rgba(0,0,0,0.5);"></div>
-                <h2 id="remote-name-display" style="color:white; font-size:24px; margin:0; font-weight:600; text-shadow:0 2px 10px rgba(0,0,0,0.8); letter-spacing:0.5px;">Calling...</h2>
-                <p style="color:rgba(255,255,255,0.6); font-size:14px; margin-top:5px; font-weight:500;">Messenger Video Call</p>
-            </div>
-        </div>
+    async function fetchAndRenderChatList() {
+      const list = document.getElementById('chatList');
+      if (!window.auth || !window.auth.currentUser) return;
+      const currentUid = window.auth.currentUser.uid;
+      const { ref, get } = window.fbDb;
 
-        <div id="group-video-container" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; grid-template-columns:1fr; grid-template-rows:1fr; gap:10px; padding:10px; box-sizing:border-box; z-index:2; background:#111;"></div>
+      try {
+        const followingRef = ref(window.db, `users/${currentUid}/following`);
+        const snap = await get(followingRef);
+        const followers = snap.val();
 
-        <div id="local-video" style="width:120px; height:180px; background:#222; position:absolute; bottom:140px; right:20px; border-radius:15px; border:2px solid var(--gold); overflow:hidden; z-index:100; box-shadow: 0 10px 25px rgba(0,0,0,0.6);"></div>
+        if (!followers) {
+          list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
+          return;
+        }
 
-        <div onclick="minimizeVideoCall()" style="position:absolute; top:25px; right:25px; color:white; cursor:pointer; background:rgba(255,255,255,0.15); padding:12px; border-radius:50%; z-index:130; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); width:20px; height:20px; display:flex; align-items:center; justify-content:center;">
-            <i class="fas fa-expand-alt"></i>
-        </div>
-
-        <!-- ზარის მართვის პანელი -->
-        <div style="position:absolute; bottom:30px; width:calc(100% - 40px); max-width:480px; background:rgba(20, 20, 20, 0.7); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(212, 175, 55, 0.25); border-radius:24px; padding:14px 8px; display:flex; justify-content:space-around; align-items:center; z-index:120; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
-            
-            <div onclick="toggleCam()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-                <div id="camBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
-                    <i class="fas fa-video" style="font-size:16px;"></i>
-                </div>
-                <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Video</span>
-            </div>
-
-            <div onclick="toggleMic()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-                <div id="micBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
-                    <i class="fas fa-microphone" style="font-size:16px;"></i>
-                </div>
-                <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Audio</span>
-            </div>
-
-            <div onclick="openInviteFriendsModal()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-                <div id="addBtn" style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#d4af37; transition:all 0.2s; border:1px solid rgba(212,175,55,0.2);">
-                    <i class="fas fa-user-plus" style="font-size:16px;"></i>
-                </div>
-                <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Add Person</span>
-            </div>
-
-            <div style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-                <div style="width:48px; height:48px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; transition:all 0.2s; border:1px solid rgba(255,255,255,0.05);">
-                    <i class="fas fa-gamepad" style="font-size:16px;"></i>
-                </div>
-                <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">Focus</span>
-            </div>
-
-            <div onclick="endVideoCall()" style="display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; flex:1;">
-                <div style="width:54px; height:54px; background:#ff4d4d; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; transition:all 0.2s; box-shadow:0 4px 15px rgba(255,77,77,0.4);">
-                    <i class="fas fa-phone-slash" style="transform: rotate(135deg);"></i>
-                </div>
-                <span style="color:rgba(255,255,255,0.7); font-size:11px; font-weight:500;">End Call</span>
-            </div>
-
-        </div>
-    </div>
-
-
-    <!-- ==================== 6. ზარში მეგობრების დამატების მოდალი ==================== -->
-    <div id="inviteFriendsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999999; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;">
-        <div style="width:100%; max-width:380px; background:rgba(30, 30, 30, 0.85); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:24px; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.5); color:white;">
-            
-            <i class="fas fa-times" onclick="document.getElementById('inviteFriendsModal').style.display='none'" style="position:absolute; top:20px; right:20px; font-size:18px; color:rgba(255,255,255,0.5); cursor:pointer;"></i>
-            
-            <h3 style="font-size:18px; margin:0 0 15px; font-weight:600; color:#d4af37; display:flex; align-items:center; gap:8px;"><i class="fas fa-users"></i> Add to Group Call</h3>
-            
-            <div id="friendsListContainer" style="max-height:280px; overflow-y:auto; margin-top:10px; padding-right:5px; display:flex; flex-direction:column; gap:12px;">
-                <p id="friendsLoadingText" style="color:rgba(255,255,255,0.5); text-align:center; font-size:14px; margin:20px 0;">Loading friends list...</p>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- ==================== 7. დასრულებული ზარის შედეგის ეკრანი ==================== -->
-    <div id="callEndedUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999999; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; color:white; padding:20px; text-align:center;">
-        <i class="fas fa-times" onclick="document.getElementById('callEndedUI').style.display='none'" style="position:absolute; top:25px; right:25px; font-size:22px; color:rgba(255,255,255,0.6); cursor:pointer; padding:5px;"></i>
-        <div id="endedCallAvatar" style="width:110px; height:110px; border-radius:50%; border:2px solid #d4af37; background-size:cover; background-position:center; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
-        <h2 style="font-size:24px; margin:0 0 5px; font-weight:600;">Call ended</h2>
-        <p style="color:rgba(255,255,255,0.5); font-size:15px; margin:0 0 50px;">Messenger Video Call</p>
-        <h3 style="font-size:18px; margin:0 0 30px; font-weight:500; color:rgba(255,255,255,0.9);">How was the quality of your call?</h3>
-        <div style="display:flex; gap:50px; margin-bottom:60px;">
-            <div onclick="document.getElementById('callEndedUI').style.display='none'" style="display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;">
-                <div style="width:65px; height:65px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; color:white; transition:0.2s;"><i class="fas fa-thumbs-up"></i></div>
-                <span style="font-size:14px; color:rgba(255,255,255,0.7); font-weight:500;">Good</span>
-            </div>
-            <div onclick="document.getElementById('callEndedUI').style.display='none'" style="display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer;">
-                <div style="width:65px; height:65px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; color:white; transition:0.2s;"><i class="fas fa-thumbs-down"></i></div>
-                <span style="font-size:14px; color:rgba(255,255,255,0.7); font-weight:500;">Not good</span>
-            </div>
-        </div>
-        <p style="font-size:11px; color:rgba(255,255,255,0.3); max-width:300px; line-height:1.5;">We may use your data for personalization, innovation, research and other purposes described in our <span style="color:#0084ff; cursor:pointer; text-decoration:underline;">Privacy Policy</span>.</p>
-    </div>
-
-    <!-- ==================== FIREBASE & SKRIPT-ების მიბმა ==================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, push, onValue, get, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        // Firebase კონფიგურაცია
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        // Firebase-ის ინიციალიზაცია
-        const app = initializeApp(firebaseConfig);
-        window.auth = getAuth(app);
-        window.db = getDatabase(app);
-        window.fbDb = { ref, set, push, onValue, get, remove, runTransaction };
-
-        // ავტორიზაციის მდგომარეობის მოსმენა Гლობალურად
-        onAuthStateChanged(window.auth, (user) => {
-            if (user) {
-                if (typeof monitorMessageRequests === 'function') monitorMessageRequests();
-                if (typeof startGlobalUnreadCounter === 'function') startGlobalUnreadCounter();
-                if (typeof listenToGlobalMessages === 'function') listenToGlobalMessages();
-            }
+        let chatArray = [];
+        const promises = Object.entries(followers).map(async ([uid, data]) => {
+          const chatId = getChatId(currentUid, uid);
+          const msgRef = ref(window.db, `messages/${chatId}`);
+          const mSnap = await get(msgRef);
+          let lastTs = 0;
+          if (mSnap.exists()) {
+            const msgs = mSnap.val();
+            const msgsList = Object.values(msgs);
+            lastTs = msgsList[msgsList.length - 1].ts || 0;
+          }
+          chatArray.push({ uid, data, lastTs });
         });
-    </script>
 
-    <!-- პროექტის მთავარი JS ფაილების ჩატვირთვა -->
-    <script src="script.js"></script>
-    <script src="chatvirtva.js"></script>
-    <script src="videocall.js"></script>
+        await Promise.all(promises);
+        chatArray.sort((a, b) => b.lastTs - a.lastTs);
+        list.innerHTML = "";
 
-    <!-- ==================== მესინჯერის მთავარი ლოგიკა ==================== -->
-    <script>
-        // ==========================================
-        // 1. მესინჯერის გლობალური ცვლადები
-        // ==========================================
-        let currentChatId = null;
-        let typingTimeout = null;
-        let currentChatLimit = 20;
-        let mediaRecorder;
-        let audioChunks = [];
-        let waveSurfers = {};
+        chatArray.forEach(({ uid, data }) => {
+          const chatId = getChatId(currentUid, uid);
+          const item = document.createElement('div');
+          item.className = 'chat-row-item';
+          
+          item.onclick = () => {
+            startChat(uid, data.name, data.photo);
+          };
 
-        // ==========================================
-        // 2. დამხმარე ფუნქციები (Chat ID & Formatting)
-        // ==========================================
-        function getChatId(u1, u2) {
-            return u1 < u2 ? `${u1}_${u2}` : `${u2}_${u1}`;
-        }
+          const lastReadRef = ref(window.db, `users/${currentUid}/last_read/${chatId}`);
+          get(lastReadRef).then(readSnap => {
+            const lastRead = readSnap.val() || 0;
+            const msgRef = ref(window.db, `messages/${chatId}`);
+            get(msgRef).then(mSnap => {
+              let lastMsg = "Tap to chat";
+              let msgTimeFormatted = "";
+              let isUnread = false;
 
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        function setAppBadge(count) {
-            if ('setAppBadge' in navigator) {
-                if (count > 0) {
-                    navigator.setAppBadge(count).catch(e => {});
-                } else {
-                    navigator.clearAppBadge().catch(e => {});
+              if (mSnap.exists()) {
+                const msgs = Object.values(mSnap.val());
+                const msgData = msgs[msgs.length - 1];
+                lastMsg = msgData.text || "📷 Media/Voice";
+                const ts = msgData.ts;
+                const msgDate = new Date(ts);
+                msgTimeFormatted = msgDate.getHours() + ":" + (msgDate.getMinutes() < 10 ? '0' : '') + msgDate.getMinutes();
+                if (msgData.senderId !== currentUid && ts > lastRead) {
+                  isUnread = true;
                 }
-            }
-        }
+              }
 
-        function stopMainFeedVideos() {
-            if (typeof window.stopFeedVideos === 'function') {
-                window.stopFeedVideos();
-            }
-        }
-
-        // ==========================================
-        // 3. ჩატების სიის გახსნა (Open Messenger & Chat List) - FIXED
-        // ==========================================
-        async function openMessenger() {
-            const ui = document.getElementById('messengerUI');
-            if (ui) {
-                ui.style.display = 'flex';
-                ui.style.flexDirection = 'column';
-                ui.style.backgroundColor = '#000';
-            }
-
-            stopMainFeedVideos();
-            if ('setAppBadge' in navigator) {
-                navigator.setAppBadge(0).catch(err => console.log("Badge error:", err));
-            }
-
-            const list = document.getElementById('chatList');
-            if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
-
-            // დაველოდოთ ავტორიზაციას თუ ჯერ არ არის ჩატვირთული
-            if (!window.auth || !window.auth.currentUser) {
-                if (window.auth) {
-                    const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
-                    onAuthStateChanged(window.auth, (user) => {
-                        if (user) {
-                            fetchAndRenderChatList();
-                        } else {
-                            if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
-                        }
-                    });
-                } else {
-                    if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
-                }
-                return;
-            }
-
-            fetchAndRenderChatList();
-        }
-
-        async function fetchAndRenderChatList() {
-            const list = document.getElementById('chatList');
-            if (!window.auth || !window.auth.currentUser) return;
-            const currentUid = window.auth.currentUser.uid;
-            const { ref, get } = window.fbDb;
-
-            try {
-                const followingRef = ref(window.db, `users/${currentUid}/following`);
-                const snap = await get(followingRef);
-                const followers = snap.val();
-
-                if (!followers) { 
-                    if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>No active chats yet.</p>";
-                    return; 
-                }
-
-                let chatArray = [];
-                const promises = Object.entries(followers).map(async ([uid, data]) => {
-                    const chatId = getChatId(currentUid, uid);
-                    const msgRef = ref(window.db, `messages/${chatId}`);
-                    const mSnap = await get(msgRef);
-                    let lastTs = 0;
-                    if (mSnap.exists()) {
-                        const msgs = mSnap.val();
-                        const msgsList = Object.values(msgs);
-                        lastTs = msgsList[msgsList.length - 1].ts || 0;
-                    }
-                    chatArray.push({ uid, data, lastTs });
-                });
-
-                await Promise.all(promises);
-                chatArray.sort((a, b) => b.lastTs - a.lastTs);
-                if (list) list.innerHTML = "";
-
-                chatArray.forEach(({ uid, data }) => {
-                    const chatId = getChatId(currentUid, uid);
-                    const item = document.createElement('div');
-                    item.className = 'chat-list-item';
-                    item.style = "border:none; background:#000; padding:12px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; position:relative;";
-                    
-                    item.onclick = () => {
-                        const readRef = ref(window.db, `users/${currentUid}/last_read/${chatId}`);
-                        window.fbDb.set(readRef, Date.now());
-                        document.getElementById('messengerUI').style.display = 'none';
-                        startChat(uid, data.name, data.photo);
-                    };
-                    
-                    const lastReadRef = ref(window.db, `users/${currentUid}/last_read/${chatId}`);
-                    get(lastReadRef).then(readSnap => {
-                        const lastRead = readSnap.val() || 0;
-                        const msgRef = ref(window.db, `messages/${chatId}`);
-                        get(msgRef).then(mSnap => {
-                            let lastMsg = "Tap to chat";
-                            let msgTimeFormatted = "";
-                            let isUnread = false;
-
-                            if (mSnap.exists()) {
-                                const msgs = Object.values(mSnap.val());
-                                const msgData = msgs[msgs.length - 1];
-                                lastMsg = msgData.text || "📷 Media/Voice";
-                                const ts = msgData.ts;
-                                const msgDate = new Date(ts);
-                                const now = new Date();
-                                if (msgDate.toDateString() === now.toDateString()) {
-                                    msgTimeFormatted = msgDate.getHours() + ":" + (msgDate.getMinutes() < 10 ? '0' : '') + msgDate.getMinutes();
-                                } else {
-                                    msgTimeFormatted = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                }
-                                if (msgData.senderId !== currentUid && ts > lastRead) {
-                                    isUnread = true;
-                                }
-                            }
-
-                            const presenceRef = ref(window.db, `users/${uid}/presence`);
-                            get(presenceRef).then(presenceSnap => {
-                                const isOnline = presenceSnap.val() === 'online';
-                                item.innerHTML = `
-                                    <div style="position:relative; flex-shrink:0;">
-                                        <img src="${data.photo || 'token-avatar.png'}" style="width:56px; height:56px; border-radius:50%; object-fit:cover;">
-                                        <div style="position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#4ade80; border-radius:50%; border:3px solid #000; display:${isOnline ? 'block' : 'none'};"></div>
-                                        <div id="badge-${uid}" style="position:absolute; top:-2px; right:-2px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:10px; display:${isUnread ? 'flex' : 'none'}; align-items:center; justify-content:center; border:2px solid black; font-weight:bold;">!</div>
-                                    </div>
-                                    <div style="display:flex; flex-direction:column; overflow:hidden; flex:1; margin-left:5px;">
-                                        <b style="color:white; font-size:16px; margin-bottom:2px;">${data.name || 'User'}</b>
-                                        <div style="display:flex; align-items:center; gap:5px;">
-                                            <span style="color:${isUnread ? 'white' : '#888'}; font-weight:${isUnread ? 'bold' : 'normal'}; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${lastMsg}</span>
-                                            <span style="color:#888; font-size:12px;"> · ${msgTimeFormatted}</span>
-                                        </div>
-                                    </div>
-                                    <div style="width:12px; height:12px; background:#0084ff; border-radius:50%; display:${isUnread ? 'block' : 'none'}; margin-right:5px;"></div>
-                                `;
-                            });
-                        });
-                    });
-                    if (list) list.appendChild(item);
-                });
-            } catch (err) {
-                console.error("Messenger Error:", err);
-                if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>შეცდომა ჩატების ჩატვირთვისას.</p>";
-            }
-        }
-
-        // ==========================================
-        // 4. კონკრეტულ მომხმარებელთან ჩატის დაწყება და დახურვა
-        // ==========================================
-        async function startChat(uid, name, photo) {
-            stopMainFeedVideos();
-            if(typeof setAppBadge === 'function') setAppBadge(0);
-            
-            window.currentChatId = uid;
-            currentChatId = uid; 
-
-            const socialLists = document.getElementById('socialListsUI');
-            if (socialLists) socialLists.style.display = 'none';
-
-            document.getElementById('individualChat').style.display = 'flex';
-            document.getElementById('chatTargetName').innerText = name || 'User';
-            document.getElementById('chatTargetAva').src = photo || 'token-avatar.png';
-
-            const myUid = window.auth.currentUser.uid;
-            const chatId = getChatId(myUid, uid);
-            const { ref, get, onValue } = window.fbDb;
-
-            const msgsRef = ref(window.db, `messages/${chatId}`);
-            const snap = await get(msgsRef);
-            if (snap.exists()) {
-                const updates = {};
-                snap.forEach(child => {
-                    const m = child.val();
-                    if (m.senderId !== myUid && !m.seen) {
-                        updates[`messages/${chatId}/${child.key}/seen`] = true;
-                    }
-                });
-                if (Object.keys(updates).length > 0) {
-                    window.fbDb.set(ref(window.db), updates);
-                }
-            }
-
-            const statusEl = document.getElementById('chatTargetStatus');
-            if (statusEl) {
-                onValue(ref(window.db, `users/${uid}/presence`), snap => {
-                    const presence = snap.val();
-                    if (presence === 'online') {
-                        statusEl.innerText = 'საიტზეა';
-                        statusEl.style.color = '#4ade80';
-                    } else {
-                        const timeAgo = (typeof formatTimeShort === 'function') ? formatTimeShort(presence) : '';
-                        statusEl.innerText = timeAgo ? timeAgo + '   ago' : 'offline';
-                        statusEl.style.color = '#888';
-                    }
-                });
-            }
-            loadMessages(uid);
-            listenToTyping(uid);
-        }
-
-        function closeChat() {
-            if (currentChatId && window.auth && window.auth.currentUser) {
-                const { ref, remove } = window.fbDb;
-                remove(ref(window.db, `typing/${getChatId(window.auth.currentUser.uid, currentChatId)}/${window.auth.currentUser.uid}`));
-            }
-            document.getElementById('individualChat').style.display = 'none';
-            currentChatId = null;
-        }
-
-        // ==========================================
-        // 5. შეტყობინებების ჩატვირთვა
-        // ==========================================
-        async function loadMessages(targetUid) {
-            const myUid = window.auth.currentUser.uid;
-            const chatId = getChatId(myUid, targetUid);
-            const box = document.getElementById('chatMessages');
-            const { ref, get, onValue } = window.fbDb;
-
-            const targetSnap = await get(ref(window.db, `users/${targetUid}`));
-            const tData = targetSnap.val();
-            const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
-
-            onValue(ref(window.db, `users/${myUid}/deleted_messages/${chatId}`), deletedSnap => {
-                const deletedMsgs = deletedSnap.val() || {};
-
-                onValue(ref(window.db, `messages/${chatId}`), snap => {
-                    box.innerHTML = "";
-                    let lastTs = 0;
-                    let messagesArray = [];
-                    
-                    snap.forEach(child => {
-                        if (!deletedMsgs[child.key]) {
-                            messagesArray.push({ id: child.key, val: child.val() });
-                        }
-                    });
-
-                    if (messagesArray.length > currentChatLimit) {
-                        messagesArray = messagesArray.slice(messagesArray.length - currentChatLimit);
-                    }
-
-                    messagesArray.forEach((item, index) => {
-                        const msgId = item.id;
-                        const msg = item.val;
-                        const type = msg.senderId === myUid ? 'sent' : 'received';
-                        const isMine = type === 'sent';
-                        
-                        if (msg.ts - lastTs > 3600000) {
-                            const d = new Date(msg.ts);
-                            const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-                            let h = d.getHours();
-                            let ampm = h >= 12 ? 'PM' : 'AM';
-                            h = h % 12 || 12;
-                            let m = d.getMinutes().toString().padStart(2, '0');
-                            box.innerHTML += `<div style="text-align:center; color:var(--gold, #d4af37); font-size:10px; margin:15px 0 5px; font-weight:bold; text-transform:uppercase; width:100%;">${days[d.getDay()]} AT ${h}:${m} ${ampm}</div>`;
-                        }
-                        lastTs = msg.ts;
-
-                        const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|\s)+$/g;
-                        const isOnlyEmoji = msg.text && emojiRegex.test(msg.text.trim()) && msg.text.trim().length <= 10;
-                        const isImg = msg.image ? true : false;
-
-                        let content = "";
-                        if (isImg) {
-                            content = `<img src="${msg.image}" style="max-width:170px; height:auto; border-radius:12px; cursor:pointer;" onclick="window.open('${msg.image}', '_blank')">`;
-                        } else if (msg.audio) {
-                            content = `<audio src="${msg.audio}" controls style="width:200px; height:35px; display:block; outline:none;"></audio>`;
-                        } else {
-                            content = msg.text || "";
-                        }
-                        
-                        const dynamicBubbleStyle = (isOnlyEmoji || isImg || msg.audio) ? 
-                            `background: transparent; border: none; padding: 0; font-size: ${isOnlyEmoji ? '35px' : '15px'};` : 
-                            `background: ${isMine ? 'var(--gold, #d4af37)' : '#222'}; color: ${isMine ? 'black' : 'white'}; border: ${isMine ? 'none' : '1px solid #333'}; padding: 8px 14px; border-radius: ${isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px'};`;
-
-                        box.innerHTML += `
-                        <div style="display: flex; flex-direction: column; margin-bottom: 4px; width: 100%; align-items: ${isMine ? 'flex-end' : 'flex-start'};" 
-                             oncontextmenu="event.preventDefault(); if(typeof window.deleteMessage === 'function') window.deleteMessage('${chatId}', '${msgId}', '${msg.senderId}')">
-                            <div style="display: flex; align-items: flex-end; gap: 8px; max-width: 85%; flex-direction: ${isMine ? 'row-reverse' : 'row'};">
-                                ${!isMine ? `<img src="${tPhoto}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid var(--gold, #d4af37); flex-shrink:0;">` : ''}
-                                <div class="msg-bubble msg-${type}" style="
-                                    display: inline-block; 
-                                    min-width: 20px; 
-                                    max-width: 100%; 
-                                    width: fit-content; 
-                                    cursor: pointer; 
-                                    word-wrap: break-word;
-                                    text-align: left;
-                                    ${dynamicBubbleStyle}
-                                ">
-                                    <div class="msg-content" style="${isOnlyEmoji ? '' : 'font-size: 15px; font-weight: ' + (isMine ? '500' : 'normal') + '; line-height: 1.4;'}">${content}</div>
-                                </div>
-                            </div>
-                            ${isMine && msg.seen && index === messagesArray.length - 1 ? 
-                                `<div style="width: 100%; display: flex; justify-content: flex-end; margin-top: 2px; margin-right: 2px;">
-                                    <img src="${tPhoto}" style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold, #d4af37); object-fit:cover; opacity: 0.9;">
-                                </div>` : ''}
-                        </div>`;
-                    });
-
-                    if (currentChatLimit === 20) {
-                        box.scrollTop = box.scrollHeight;
-                    }
-                });
+              item.innerHTML = `
+                <div class="chat-row-avatar-holder">
+                  <img class="chat-row-avatar" src="${data.photo || 'token-avatar.png'}">
+                  <div class="active-badge"></div>
+                </div>
+                <div class="chat-row-details">
+                  <span class="chat-row-name">${data.name || 'User'}</span>
+                  <div class="chat-row-meta">
+                    <span class="chat-row-last-msg">${lastMsg}</span>
+                    <span class="chat-row-time">${msgTimeFormatted}</span>
+                    ${isUnread ? '<div class="unread-dot"></div>' : ''}
+                  </div>
+                </div>`;
             });
-
-            box.onscroll = function() {
-                if (box.scrollTop === 0) {
-                    const oldScrollHeight = box.scrollHeight;
-                    currentChatLimit += 20;
-                    loadMessages(targetUid);
-                    setTimeout(() => {
-                        box.scrollTop = box.scrollHeight - oldScrollHeight;
-                    }, 100);
-                }
-            };
-        }
-
-        // ==========================================
-        // 6. შეტყობინების გაგზავნა (ტექსტი, ფოტო, ხმოვანი)
-        // ==========================================
-        async function sendMessage() {
-            if (typeof canAfford === 'function' && !canAfford(0.2)) return;
-            const inp = document.getElementById('messageInp');
-            const myUid = window.auth.currentUser.uid;
-            let msgText = inp.value.trim();
-
-            if (!msgText) msgText = "👍";
-            if (!currentChatId) return;
-            const chatId = getChatId(myUid, currentChatId);
-            const { ref, get, push, remove } = window.fbDb;
-
-            const followRef = ref(window.db, `users/${currentChatId}/following/${myUid}`);
-            const snapshot = await get(followRef);
-            const heFollowsMe = snapshot.exists();
-            const targetPath = heFollowsMe ? `messages/${chatId}` : `message_requests/${currentChatId}/${myUid}`;
-
-            await push(ref(window.db, targetPath), {
-                senderId: myUid,
-                text: msgText,
-                ts: Date.now(),
-                seen: false
-            });
-
-            if (typeof sendPushToUser === "function") {
-                sendPushToUser(currentChatId, window.myName || 'User', msgText);
-            }
-
-            remove(ref(window.db, `typing/${chatId}/${myUid}`));
-            if (typeof spendAkho === 'function') spendAkho(0.2, 'Message');
-            inp.value = ""; 
-
-            if (typeof handleTyping === "function") {
-                handleTyping();
-            }
-        }
-
-        async function uploadChatImage(input) {
-            if (!input.files || !input.files[0] || !currentChatId) return;
-            const file = input.files[0];
-            const myUid = window.auth.currentUser.uid;
-            const chatId = getChatId(myUid, currentChatId);
-
-            try {
-                const filePath = `chat_images/${chatId}/${Date.now()}_${file.name}`;
-                const storageRef = firebase.storage().ref(filePath);
-                const snapshot = await storageRef.put(file);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-
-                const { ref, push } = window.fbDb;
-                await push(ref(window.db, `messages/${chatId}`), {
-                    senderId: myUid,
-                    image: downloadURL,
-                    ts: Date.now(),
-                    seen: false
-                });
-
-                if (typeof sendPushToUser === "function") {
-                    sendPushToUser(currentChatId, window.myName || 'User', "📷 Photo");
-                }
-                input.value = ""; 
-            } catch (error) {
-                alert("ვერ მოხერხდა ფოტოს გაგზავნა.");
-            }
-        }
-
-        async function toggleVoiceRecord() {
-            const micIcon = document.getElementById('micIcon');
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                    sendVoiceMessage(audioBlob);
-                };
-                mediaRecorder.start();
-                micIcon.classList.replace('fa-microphone', 'fa-stop-circle');
-                micIcon.style.color = "var(--red)";
-            } else {
-                mediaRecorder.stop();
-                micIcon.classList.replace('fa-stop-circle', 'fa-microphone');
-                micIcon.style.color = "var(--gold)";
-            }
-        }
-
-        async function sendVoiceMessage(blob) {
-            const targetId = window.currentChatId; 
-            if (!targetId) return alert("ჯერ აირჩიეთ ჩატი!");
-            if (typeof canAfford === 'function' && !canAfford(0.5)) return; 
-
-            const myUid = window.auth.currentUser.uid;
-            const chatId = getChatId(myUid, targetId);
-            const fileName = `voice_${Date.now()}.mp3`;
-
-            try {
-                const storageRef = firebase.storage().ref(`chat_audio/${chatId}/${fileName}`);
-                const snapshot = await storageRef.put(blob);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-
-                if (downloadURL) {
-                    const { ref, push } = window.fbDb;
-                    await push(ref(window.db, `messages/${chatId}`), { 
-                        senderId: myUid, 
-                        audio: downloadURL, 
-                        ts: Date.now(),
-                        seen: false
-                    });
-                    if (typeof spendAkho === 'function') spendAkho(0.5, 'Voice Message');
-
-                    if (typeof sendPushToUser === "function") {
-                        sendPushToUser(targetId, window.myName || 'User', "🎤 Voice Message");
-                    }
-                }
-            } catch (err) { 
-                alert("ატვირთვის შეცდომა"); 
-            }
-        }
-
-        // ==========================================
-        // 7. Typing Indicator (ბეჭდვის ლოგიკა)
-        // ==========================================
-        function handleTyping() {
-            if (!currentChatId || !window.auth.currentUser) return;
-            const chatId = getChatId(window.auth.currentUser.uid, currentChatId);
-            const { ref, set, remove } = window.fbDb;
-
-            set(ref(window.db, `typing/${chatId}/${window.auth.currentUser.uid}`), true);
-            
-            if (typingTimeout) clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                remove(ref(window.db, `typing/${chatId}/${window.auth.currentUser.uid}`));
-            }, 3000);
-
-            const inp = document.getElementById('messageInp');
-            const sendIcon = document.getElementById('sendBtnIcon'); 
-            
-            if (inp && sendIcon) {
-                if (inp.value.trim().length > 0) {
-                    sendIcon.className = 'fas fa-paper-plane';
-                } else {
-                    sendIcon.className = 'fas fa-thumbs-up';
-                }
-            }
-        }
-
-        function listenToTyping(targetUid) {
-            if (!window.auth.currentUser) return;
-            const chatId = getChatId(window.auth.currentUser.uid, targetUid);
-            const { ref, onValue } = window.fbDb;
-
-            onValue(ref(window.db, `typing/${chatId}/${targetUid}`), snap => {
-                const indicator = document.getElementById('typingIndicator');
-                if (snap.exists()) {
-                    if (indicator) indicator.style.display = 'flex';
-                    const sound = document.getElementById('typingSound');
-                    if (sound) sound.play().catch(e => {});
-                } else {
-                    if (indicator) indicator.style.display = 'none';
-                }
-            });
-        }
-
-        // ==========================================
-        // 8. გლობალური შეტყობინებების მოსმენა და Push / Badges
-        // ==========================================
-        function listenToGlobalMessages() {
-            if (!window.auth || !window.auth.currentUser) return;
-            const myUid = window.auth.currentUser.uid;
-            const { ref, onValue, get } = window.fbDb;
-
-            onValue(ref(window.db, 'messages'), snap => {
-                const allChats = snap.val();
-                if (!allChats) return;
-
-                Object.keys(allChats).forEach(async chatId => {
-                    if (chatId.includes(myUid)) {
-                        const msgs = Object.values(allChats[chatId]);
-                        const msg = msgs[msgs.length - 1];
-                        if (!msg || msg.senderId === myUid) return;
-                        if (Date.now() - msg.ts > 10000) return;
-                        if (currentChatId && getChatId(myUid, currentChatId) === chatId) return;
-
-                        const uSnap = await get(ref(window.db, `users/${msg.senderId}`));
-                        const u = uSnap.val();
-                        if (!u) return;
-
-                        const senderName = u.name || "მომხმარებელი";
-                        const messageText = msg.text || "📷 Voice/Media";
-                        const sound = document.getElementById('msgSound');
-                        if (sound) {
-                            sound.currentTime = 0;
-                            sound.play().catch(e => console.log("ხმის დაკვრა დაიბლოკა."));
-                        }
-                        setAppBadge(1);
-                        showLocalNotification("ახალი მესიჯი: " + senderName, messageText);
-                        showGlobalPush(senderName, u.photo || 'token-avatar.png', messageText);
-                    }
-                });
-            });
-        }
-
-        function showGlobalPush(name, photo, text) {
-            const push = document.getElementById('globalPush');
-            if (!push) return;
-            const nameEl = document.getElementById('pushName');
-            const avaEl = document.getElementById('pushAva');
-            const txtEl = document.getElementById('pushTxt');
-
-            if (nameEl) nameEl.innerText = name;
-            if (avaEl) avaEl.src = photo;
-            if (txtEl) txtEl.innerText = text.substring(0, 40) + (text.length > 40 ? '...' : '');
-
-            push.classList.add('show');
-            const sound = document.getElementById('msgSound');
-            if (sound) sound.play().catch(e => {});
-            setTimeout(() => push.classList.remove('show'), 4000);
-        }
-
-        function showLocalNotification(title, body) {
-            if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(title, {
-                        body: body,
-                        icon: 'logo.png',
-                        vibrate: [200, 100, 200],
-                        badge: 'logo.png',
-                        tag: 'msg-group',
-                        renotify: true
-                    });
-                    const sound = document.getElementById('msgSound');
-                    if (sound) sound.play().catch(e => {});
-                });
-            }
-        }
-
-        function sendPushToUser(targetUid, senderName, text) {
-            const { ref, get } = window.fbDb;
-            get(ref(window.db, `users/${targetUid}/fcmToken`)).then(snap => {
-                const token = snap.val();
-                if (token) {
-                    fetch('https://fcm.googleapis.com/fcm/send', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
-                        },
-                        body: JSON.stringify({
-                            to: token,
-                            notification: {
-                                title: senderName,
-                                body: text,
-                                icon: "logo.png",
-                                click_action: "https://emigrantbook.com",
-                                sound: "default",
-                                badge: "1"
-                            },
-                            data: { url: "https://emigrantbook.com" },
-                            priority: "high"
-                        })
-                    })
-                    .then(res => console.log("Push status:", res.status))
-                    .catch(e => console.log("Push error:", e));
-                }
-            });
-        }
-
-        function startGlobalUnreadCounter() {
-            if (!window.auth || !window.auth.currentUser) return;
-            const myUid = window.auth.currentUser.uid;
-            const chatBadge = document.getElementById('chatCountBadge');
-            const { ref, onValue, get } = window.fbDb;
-
-            onValue(ref(window.db, `users/${myUid}/last_read`), readSnap => {
-                const lastReadData = readSnap.val() || {};
-                let totalUnread = 0;
-
-                get(ref(window.db, 'messages')).then(snap => {
-                    const allChats = snap.val();
-                    if (!allChats) return;
-
-                    Object.keys(allChats).forEach(chatId => {
-                        if (chatId.includes(myUid)) {
-                            const lastRead = lastReadData[chatId] || 0;
-                            const msgs = Object.values(allChats[chatId]);
-                            const lastMsg = msgs[msgs.length - 1];
-
-                            if (lastMsg.senderId !== myUid && lastMsg.ts > lastRead) {
-                                totalUnread++;
-                            }
-                        }
-                    });
-
-                    if (chatBadge) {
-                        if (totalUnread > 0) {
-                            chatBadge.innerText = totalUnread;
-                            chatBadge.style.display = 'flex';
-                        } else {
-                            chatBadge.style.display = 'none';
-                        }
-                    }
-                });
-            });
-        }
-
-        // ==========================================
-        // 9. ჩატის მოთხოვნები (Message Requests)
-        // ==========================================
-        function monitorMessageRequests() {
-            const myId = window.auth && window.auth.currentUser ? window.auth.currentUser.uid : null;
-            if (!myId) return;
-            const { ref, onValue } = window.fbDb;
-
-            onValue(ref(window.db, `message_requests/${myId}`), snapshot => {
-                const badge = document.getElementById('msgReqBadge');
-                if (badge) {
-                    if (snapshot.exists()) {
-                        badge.innerText = snapshot.size || Object.keys(snapshot.val()).length;
-                        badge.style.display = 'flex';
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
-            });
-        }
-
-        function openMessageRequests() {
-            if (!window.auth || !window.auth.currentUser) return;
-            const myId = window.auth.currentUser.uid;
-            const list = document.getElementById('msgReqList');
-            document.getElementById('messageRequestsUI').style.display = 'flex';
-            list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">იტვირთება...</div>';
-
-            const { ref, onValue, get } = window.fbDb;
-
-            onValue(ref(window.db, `message_requests/${myId}`), snapshot => {
-                list.innerHTML = '';
-                if (!snapshot.exists()) {
-                    list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ახალი მოთხოვნები არ არის.</div>';
-                    return;
-                }
-
-                snapshot.forEach(child => {
-                    const senderId = child.key;
-                    const messages = child.val();
-                    const messageKeys = Object.keys(messages);
-                    const lastMsg = messages[messageKeys[messageKeys.length - 1]];
-
-                    get(ref(window.db, `users/${senderId}`)).then(userSnap => {
-                        const user = userSnap.val() || {};
-                        const item = document.createElement('div');
-                        item.style = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px;";
-                        item.innerHTML = `
-                            <img src="${user.photo || 'token-avatar.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
-                            <div style="flex:1;">
-                                <div style="color:white; font-weight:bold;">${user.name || 'User'}</div>
-                                <div style="color:#888; font-size:12px;">${lastMsg.text || '📷 Media'}</div>
-                            </div>
-                            <button onclick="acceptMsgReq('${senderId}')" style="background:var(--gold); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">Accept</button>`;
-                        list.appendChild(item);
-                    });
-                });
-            });
-        }
-
-        async function acceptMsgReq(senderId) {
-            const myId = window.auth.currentUser.uid;
-            const chatId = getChatId(myId, senderId);
-            const { ref, get, set, update, remove } = window.fbDb;
-
-            const snap = await get(ref(window.db, `message_requests/${myId}/${senderId}`));
-            if (snap.exists()) {
-                const messages = snap.val();
-                const uSnap = await get(ref(window.db, `users/${senderId}`));
-                const senderData = uSnap.val() || {};
-
-                await set(ref(window.db, `users/${myId}/following/${senderId}`), {
-                    name: senderData.name || "User",
-                    photo: senderData.photo || ""
-                });
-
-                await set(ref(window.db, `users/${senderId}/following/${myId}`), {
-                    name: window.myName || 'User',
-                    photo: window.myPhoto || ''
-                });
-
-                await update(ref(window.db, `messages/${chatId}`), messages);
-                await remove(ref(window.db, `message_requests/${myId}/${senderId}`));
-
-                closeMessageRequests();
-                startChat(senderId, senderData.name || "User", senderData.photo || "");
-            }
-        }
-
-        function closeMessageRequests() {
-            document.getElementById('messageRequestsUI').style.display = 'none';
-        }
-
-        // ==========================================
-        // 10. Waveform (ხმოვანი შეტყობინების დიზაინი/ვიზუალი)
-        // ==========================================
-        function initWaveforms() {
-            if (typeof WaveSurfer === 'undefined') return;
-
-            document.querySelectorAll('.waveform-container').forEach(container => {
-                const msgId = container.id.split('-')[1];
-                if (waveSurfers[msgId]) return;
-
-                const audioUrl = container.getAttribute('data-url');
-                const isSent = container.closest('.msg-sent'); 
-
-                const ws = WaveSurfer.create({
-                    container: `#${container.id}`,
-                    waveColor: isSent ? 'rgba(0, 0, 0, 0.2)' : 'rgba(212, 175, 55, 0.3)',
-                    progressColor: isSent ? 'black' : '#d4af37',
-                    barWidth: 2,
-                    barGap: 2,
-                    barRadius: 10,
-                    height: 30,
-                    url: audioUrl,
-                });
-
-                waveSurfers[msgId] = ws;
-
-                ws.on('ready', () => {
-                    const durationEl = document.getElementById(`duration-${msgId}`);
-                    if (durationEl) durationEl.innerText = formatTime(ws.getDuration());
-                });
-
-                ws.on('finish', () => {
-                    const icon = document.getElementById(`icon-${msgId}`);
-                    if (icon) icon.className = 'fas fa-play';
-                });
-            });
-        }
-
-        function playPauseAudio(msgId) {
-            const ws = waveSurfers[msgId];
-            const icon = document.getElementById(`icon-${msgId}`);
-            if (!ws) return;
-
-            if (ws.isPlaying()) {
-                ws.pause();
-                if (icon) icon.className = 'fas fa-play';
-            } else {
-                Object.keys(waveSurfers).forEach(id => {
-                    if (waveSurfers[id].isPlaying()) {
-                        waveSurfers[id].pause();
-                        const otherIcon = document.getElementById(`icon-${id}`);
-                        if (otherIcon) otherIcon.className = 'fas fa-play';
-                    }
-                });
-                ws.play();
-                if (icon) icon.className = 'fas fa-pause';
-            }
-        }
-
-        // ავტომატური ინიციალიზაცია ჩატვირთვისას
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof openMessenger === 'function') {
-                openMessenger();
-            }
+          });
+          list.appendChild(item);
         });
-    </script>
+      } catch (err) {
+        list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>შეცდომა ჩატვირთვისას.</p>";
+      }
+    }
 
+    function startChat(uid, name, photo) {
+      currentChatId = uid;
+      window.currentChatId = uid;
+
+      document.getElementById('chats-screen').style.display = 'none';
+      document.getElementById('thread-screen').style.display = 'flex';
+
+      document.getElementById('chatTargetName').innerText = name || 'User';
+      document.getElementById('chatTargetAva').src = photo || 'token-avatar.png';
+      document.getElementById('chatStartBigName').innerText = name || 'User';
+      document.getElementById('chatStartBigAva').src = photo || 'token-avatar.png';
+
+      loadMessages(uid);
+    }
+
+    function closeChat() {
+      document.getElementById('thread-screen').style.display = 'none';
+      document.getElementById('chats-screen').style.display = 'flex';
+      currentChatId = null;
+    }
+
+    async function loadMessages(targetUid) {
+      const myUid = window.auth.currentUser.uid;
+      const chatId = getChatId(myUid, targetUid);
+      const msgBlock = document.getElementById('dynamic-messages-block');
+      const { ref, onValue } = window.fbDb;
+
+      onValue(ref(window.db, `messages/${chatId}`), snap => {
+        msgBlock.innerHTML = "";
+        if (!snap.exists()) return;
+
+        snap.forEach(child => {
+          const msg = child.val();
+          const isMine = msg.senderId === myUid;
+          const msgRow = document.createElement('div');
+          msgRow.className = `message-row ${isMine ? 'outgoing' : 'incoming'}`;
+          
+          let content = msg.text || (msg.image ? `<img src="${msg.image}" style="max-width:150px; border-radius:10px;">` : "🎤 Voice");
+
+          msgRow.innerHTML = `<div class="msg-bubble">${content}</div>`;
+          msgBlock.appendChild(msgRow);
+        });
+
+        const target = document.getElementById('chatMessages');
+        target.scrollTop = target.scrollHeight;
+      });
+    }
+
+    async function sendMessage() {
+      const inp = document.getElementById('messageInp');
+      const text = inp.value.trim();
+      if (!text || !currentChatId) return;
+
+      const myUid = window.auth.currentUser.uid;
+      const chatId = getChatId(myUid, currentChatId);
+      const { ref, push } = window.fbDb;
+
+      await push(ref(window.db, `messages/${chatId}`), {
+        senderId: myUid,
+        text: text,
+        ts: Date.now()
+      });
+
+      inp.value = "";
+    }
+  </script>
 </body>
 </html>
