@@ -361,18 +361,48 @@
       padding: 15px;
       margin-bottom: 20px;
       box-shadow: 0 4px 15px rgba(220, 174, 54, 0.15);
+      position: relative;
+    }
+    .menu-balance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
     }
     .menu-balance-title {
       font-size: 12px;
       color: #aaaaaa;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 5px;
+    }
+    .balance-info-icon {
+      background: rgba(220, 174, 54, 0.15);
+      border: 1px solid #dcae36;
+      color: #dcae36;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .balance-info-icon:hover {
+      background: #dcae36;
+      color: #111;
     }
     .menu-balance-amount {
       font-size: 22px;
       font-weight: 800;
       color: #dcae36;
+      margin-bottom: 5px;
+    }
+    .menu-balance-rate {
+      font-size: 11px;
+      color: #888888;
       margin-bottom: 10px;
     }
     .menu-balance-btn {
@@ -389,6 +419,84 @@
     }
     .menu-balance-btn:hover {
       background: #c2982e;
+    }
+
+    /* ---- AKHO INFO MODAL STYLES ---- */
+    .akho-info-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 5000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+    .akho-info-modal {
+      background: #181818;
+      border: 1px solid #dcae36;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      position: relative;
+      animation: modalFadeIn 0.3s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .akho-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #282828;
+      padding-bottom: 12px;
+      margin-bottom: 15px;
+    }
+    .akho-info-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #dcae36;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .akho-info-close {
+      background: none;
+      border: none;
+      color: #aaaaaa;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .akho-info-close:hover {
+      color: #ffffff;
+    }
+    .akho-info-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #e4e6eb;
+    }
+    .akho-info-box {
+      background: #222222;
+      border-left: 3px solid #dcae36;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-weight: bold;
+      color: #fff;
+    }
+    .akho-feature-list {
+      list-style: none;
+      margin-top: 10px;
+    }
+    .akho-feature-list li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
     }
 
     .side-menu-logout-btn {
@@ -1765,8 +1873,12 @@
       
       <!-- BUBBLE/BURGER BALANCE DISPLAY -->
       <div class="menu-balance-card">
-        <div class="menu-balance-title" id="lbl-balance-title">💳 შიდა ბალანსი</div>
-        <div class="menu-balance-amount" id="user-menu-balance-val">0.00 ₾</div>
+        <div class="menu-balance-header">
+          <div class="menu-balance-title" id="lbl-balance-title">💳 შიდა ბალანსი</div>
+          <div class="balance-info-icon" onclick="openAkhoInfoModal(event)" title="რა არის აკნო?">ℹ️</div>
+        </div>
+        <div class="menu-balance-amount" id="user-menu-balance-val">0.00 akho</div>
+        <div class="menu-balance-rate">20 akho = 1 €</div>
         <button class="menu-balance-btn" onclick="alert('ბალანსის შევსება მალე დაემატება!')" id="lbl-topup-btn">+ შევსება</button>
       </div>
 
@@ -1923,6 +2035,32 @@
         <div class="connections-list" id="connections-list-wrapper">
           <div class="connections-empty" id="lbl-conn-loading">იტვირთება...</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AKHO INFO MODAL -->
+  <div id="akho-info-modal" class="akho-info-overlay" onclick="closeAkhoInfoModal()">
+    <div class="akho-info-modal" onclick="event.stopPropagation()">
+      <div class="akho-info-header">
+        <div class="akho-info-title">
+          <span>💳 რა არის აკნო (akho)?</span>
+        </div>
+        <button class="akho-info-close" onclick="closeAkhoInfoModal()">✕</button>
+      </div>
+      <div class="akho-info-body">
+        <p><strong>აკნო (akho)</strong> წარმოადგენს <strong>Emigrantbook</strong>-ის შიდა ციფრულ ვალუტას, რომლის შეძენაც მომხმარებელს შეუძლია რეალური თანხით.</p>
+        
+        <div class="akho-info-box">
+          💎 ოფიციალური კურსი: 20 akho = 1 €
+        </div>
+
+        <p><strong>რისთვის გამოიყენება აკნო?</strong></p>
+        <ul class="akho-feature-list">
+          <li>🛒 <strong>შოპინგი:</strong> მალე საიტზე დაემატება ონლაინ მაღაზია, სადაც აკნოს ბალანსით შეძლებთ სხვადასხვა პროდუქციისა და სერვისების ყიდვას.</li>
+          <li>🎁 <strong>ავტომატური დასაჩუქრება:</strong> საიტზე მაღალი აქტივობისთვის მომხმარებლები ავტომატურად შეირჩევიან და დასაჩუქრდებიან აკნოებით.</li>
+          <li>🎉 <strong>გათამაშებები:</strong> მონაწილეობა მიიღეთ ექსკლუზიურ გათამაშებებსა და კონკურსებში.</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -2096,6 +2234,15 @@
     var realtimeNotificationsList = [];
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+
+    function openAkhoInfoModal(event) {
+      if(event) event.stopPropagation();
+      document.getElementById('akho-info-modal').style.display = 'flex';
+    }
+
+    function closeAkhoInfoModal() {
+      document.getElementById('akho-info-modal').style.display = 'none';
+    }
 
     function redirectToMessenger(targetUserId) {
       if (!targetUserId) {
@@ -2414,7 +2561,7 @@
           var data = doc.data();
           var bal = data.balance !== undefined ? parseFloat(data.balance).toFixed(2) : "0.00";
           var el = document.getElementById('user-menu-balance-val');
-          if(el) el.innerText = bal + " ₾";
+          if(el) el.innerText = bal + " akho";
         }
       });
     }
