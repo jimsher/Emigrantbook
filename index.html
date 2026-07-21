@@ -55,21 +55,11 @@
     }
 
     @keyframes logoHeartbeat {
-      0% {
-        transform: scale(1);
-      }
-      14% {
-        transform: scale(1.15);
-      }
-      28% {
-        transform: scale(1);
-      }
-      42% {
-        transform: scale(1.15);
-      }
-      70% {
-        transform: scale(1);
-      }
+      0% { transform: scale(1); }
+      14% { transform: scale(1.15); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.15); }
+      70% { transform: scale(1); }
     }
 
     #app-preloader.fade-out {
@@ -79,11 +69,13 @@
 
     #auth-screen {
       background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       padding: 20px;
+      position: relative;
     }
     .auth-container {
       background: #181818;
@@ -94,33 +86,64 @@
       max-width: 400px;
       text-align: center;
       border: 1px solid #282828;
+      margin-bottom: 20px;
     }
     .logo-container {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 15px auto;
       background: #000000;
-      border-radius: 10px;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 25px rgba(220, 174, 54, 0.25);
       border: 1px solid rgba(220, 174, 54, 0.3);
+      overflow: hidden;
+      padding: 10px;
     }
     .logo-img-text {
-      font-size: 42px;
-      font-weight: serif;
-      color: #dcae36;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     .logo {
-      font-size: 46px;
+      font-size: 32px;
       font-weight: 900;
       color: #dcae36;
       text-transform: uppercase;
       letter-spacing: 2px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
+      animation: glowTextAnimation 2.5s infinite alternate ease-in-out;
     }
+
+    /* მოციმციმე / მინიათური Glow ანიმაცია Emigrantbook ტექსტისთვის */
+    @keyframes glowTextAnimation {
+      0% {
+        color: #dcae36;
+        text-shadow: 0 0 5px rgba(220, 174, 54, 0.2), 0 0 10px rgba(220, 174, 54, 0.2);
+        transform: scale(1);
+      }
+      50% {
+        color: #fff0a8;
+        text-shadow: 0 0 15px rgba(220, 174, 54, 0.8), 0 0 25px rgba(220, 174, 54, 0.6), 0 0 35px rgba(220, 174, 54, 0.4);
+        transform: scale(1.02);
+      }
+      100% {
+        color: #dcae36;
+        text-shadow: 0 0 5px rgba(220, 174, 54, 0.2), 0 0 10px rgba(220, 174, 54, 0.2);
+        transform: scale(1);
+      }
+    }
+
+    .auth-footer {
+      color: #666666;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+
     .subtitle {
       color: #aaaaaa;
       margin-bottom: 20px;
@@ -1569,9 +1592,9 @@
   <div id="auth-screen">
     <div class="auth-container">
       <div class="logo-container">
-        <div class="logo-img-text">E</div>
+        <img src="logo.png" alt="Emigrantbook Logo" class="logo-img-text">
       </div>
-      <div class="logo">Emigrant</div>
+      <div class="logo">Emigrantbook</div>
       <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
 
       <div class="input-group" id="name-group" style="display: none;">
@@ -1596,6 +1619,11 @@
       <div class="toggle-text">
         <span id="toggle-link" onclick="toggleAuthMode()">Create Account</span>
       </div>
+    </div>
+    
+    <!-- FOOTER WITH ALL RIGHTS RESERVED -->
+    <div class="auth-footer" id="lbl-auth-footer">
+      © 2026 Emigrantbook. ყველა უფლება დაცულია.
     </div>
   </div>
 
@@ -2061,7 +2089,8 @@
         accept: "მიღება", reject: "უარყოფა", removeFriend: "👥 წაშლა",
         share: "გაზიარება", commentsCount: "კომენტარი", noPhotos: "მომხმარებელს ფოტოები არ აქვს ატვირთული.",
         noVideos: "მომხმარებელს ვიდეოები არ აქვს.", descPlaceholder: "ფოტოს აღწერა არ არის მითითებული.",
-        selectLang: "🌐 ენის არჩევა / Language"
+        selectLang: "🌐 ენის არჩევა / Language",
+        authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია."
       },
       en: {
         authSubtitle: "Log in to your profile", authSubtitleReg: "Create a new account",
@@ -2086,7 +2115,8 @@
         accept: "Accept", reject: "Reject", removeFriend: "👥 Remove",
         share: "Share", commentsCount: "comments", noPhotos: "No photos uploaded.",
         noVideos: "No videos available.", descPlaceholder: "No description provided.",
-        selectLang: "🌐 Select Language"
+        selectLang: "🌐 Select Language",
+        authFooter: "© 2026 Emigrantbook. All rights reserved."
       },
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
@@ -2111,7 +2141,8 @@
         accept: "Принять", reject: "Отклонить", removeFriend: "👥 Удалить",
         share: "Поделиться", commentsCount: "комментариев", noPhotos: "Нет загруженных фотографий.",
         noVideos: "Нет доступных видео.", descPlaceholder: "Описание отсутствует.",
-        selectLang: "🌐 Выберите язык"
+        selectLang: "🌐 Выберите язык",
+        authFooter: "© 2026 Emigrantbook. Все права защищены."
       },
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
@@ -2136,7 +2167,8 @@
         accept: "Accepter", reject: "Refuser", removeFriend: "👥 Retirer",
         share: "Partager", commentsCount: "commentaires", noPhotos: "Aucune photo téléchargée.",
         noVideos: "Aucune vidéo disponible.", descPlaceholder: "Aucune description fournie.",
-        selectLang: "🌐 Choisir la langue"
+        selectLang: "🌐 Choisir la langue",
+        authFooter: "© 2026 Emigrantbook. Tous droits réservés."
       },
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
@@ -2161,7 +2193,8 @@
         accept: "Annehmen", reject: "Ablehnen", removeFriend: "👥 Entfernen",
         share: "Teilen", commentsCount: "Kommentare", noPhotos: "Keine Fotos hochgeladen.",
         noVideos: "Keine Videos verfügbar.", descPlaceholder: "Keine Beschreibung vorhanden.",
-        selectLang: "🌐 Sprache auswählen"
+        selectLang: "🌐 Sprache auswählen",
+        authFooter: "© 2026 Emigrantbook. Alle Rechte vorbehalten."
       }
     };
 
@@ -2179,6 +2212,9 @@
       if(forgotPassBtn) forgotPassBtn.innerText = t.forgotPass;
       var toggleLink = document.getElementById('toggle-link');
       if(toggleLink) toggleLink.innerText = isLoginMode ? "Create Account" : (lang === 'ka' ? "უკვე გაქვთ ანგარიში? შესვლა" : "Already have an account? Login");
+      
+      var authFooter = document.getElementById('lbl-auth-footer');
+      if(authFooter) authFooter.innerText = t.authFooter;
 
       var postInput = document.getElementById('post-text-input');
       if(postInput) postInput.placeholder = t.think;
