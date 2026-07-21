@@ -580,7 +580,7 @@
         </div>
       </div>
 
-      <!-- ჩატების სია (დინამიური REALTIME FIRESTORE - PROFILES) -->
+      <!-- ჩატების სია -->
       <div class="chats-scroll-area" id="chats-list-target">
         <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
       </div>
@@ -772,18 +772,24 @@
           if (uid === currentUid) return; // საკუთარ თავს ვტოვებთ სიიდან
 
           const uData = docSnap.data();
+          
+          // CONSOLE LOG - რომ დავინახოთ ზუსტად რა ველები აქვს შენს ბაზას:
+          console.log("Profile Data for UID:", uid, uData);
 
-          // სახელის დინამიური ამოცნობა ყველა შესაძლო ველიდან
-          let displayName = uData.name || uData.username || uData.displayName;
-          if (!displayName && (uData.first_name || uData.last_name)) {
-            displayName = `${uData.first_name || ''} ${uData.last_name || ''}`.trim();
+          // სახელის დინამიური წამოღება
+          let displayName = uData.name || uData.username || uData.displayName || uData.fullName || uData.first_name;
+          if (!displayName && uData.lastName) {
+            displayName = uData.lastName;
           }
-          if (!displayName) displayName = uData.email || 'მომხმარებელი';
+          if (!displayName) {
+            displayName = uData.email ? uData.email.split('@')[0] : 'User_' + uid.substring(0, 5);
+          }
 
-          // ფოტოს დინამიური ამოცნობა ყველა შესაძლო ველიდან
-          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic;
+          // ფოტოს დინამიური წამოღება
+          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl;
           if (!displayPhoto) {
-            displayPhoto = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+            // თუ ფოტო საერთოდ არ აქვს, SVG ლოგოს ავატარს დავუსვამთ
+            displayPhoto = 'https://emigrantbook.com/logo.png';
           }
 
           usersList.push({
@@ -814,7 +820,7 @@
 
           item.innerHTML = `
             <div class="chat-row-avatar-holder">
-              <img class="chat-row-avatar" src="${chat.photo}" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';">
+              <img class="chat-row-avatar" src="${chat.photo}" onerror="this.src='https://emigrantbook.com/logo.png';">
               <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
             </div>
             <div class="chat-row-details">
@@ -902,7 +908,7 @@
             msgRow.innerHTML = `<div class="msg-bubble">${content}</div>`;
           } else {
             msgRow.innerHTML = `
-              <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';">
+              <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://emigrantbook.com/logo.png';">
               <div class="msg-bubble">${content}</div>
             `;
           }
