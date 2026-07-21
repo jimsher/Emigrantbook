@@ -9,6 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
 
+    <!-- Firebase Compat SDKs (ავტორიზაციისა და პროფილებისთვის) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <!-- ========================================== -->
     <!-- 1. ლაივის სტილები (CSS)                     -->
     <!-- ========================================== -->
@@ -155,335 +160,270 @@
         100% { transform: scale(1); opacity: 1; }
     }
 
-
-        /* ახალი სტილი ლაივის */
-        /* ============================================================
-   🎥 LIVE VIDEO FIXES (კვადრატული ფორმატი & გვერდიგვერდ) 
-   ============================================================ */
-
-/* მთავარი კონტეინერი, სადაც ვიდეოებია (ეკრანის ზედა ნაწილი) */
-/* ციმციმის ანიმაცია */
-@keyframes livePulse {
-    0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0)); }
-    50% { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8)); }
-    100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0)); }
-}
-
-/* კლასი, რომელიც ჩაირთვება ლაივის დროს */
-.live-nav-button.is-live svg {
-    animation: livePulse 1.5s infinite;
-}
-
-.live-nav-button.is-live svg path {
-    stroke: #ff4d4d; /* წითელი ხაზები */
-}
-
-.live-nav-button.is-live svg text {
-    fill: #ff4d4d; /* წითელი ტექსტი */
-}
-
-
-
-
-
-
-
-/* მთავარი კონტეინერი, სადაც ვიდეოები ზის */
-#live-video-container {
-    display: flex;
-    flex-direction: row; /* ჰორიზონტალურად გვერდიგვერდ */
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    width: 100%;
-    overflow: hidden;
-    transition: all 0.4s ease;
-}
-
-/* ჰოსტის ვიდეოს ყუთი */
-#host-video-wrapper {
-    position: relative;
-    height: 100%;
-    transition: all 0.4s ease;
-    flex-shrink: 0; /* რომ არ შეიკუმშოს არასწორად */
-}
-
-/* სტუმრის ვიდეოს ყუთი */
-#guest-video-box {
-    position: relative;
-    height: 100%;
-    background: #000;
-    transition: all 0.4s ease;
-    flex-shrink: 0; /* რომ არ შეიკუმშოს არასწორად */
-    border-left: 1px solid #d4af37; /* აი ეს ყვითელი გამყოფი ზოლი */
-}
-
-/* როცა სტუმარი ერთდება (Split Mode) */
-#live-video-container.split-mode #host-video-wrapper {
-    width: 50% !important; /* ზუსტად ნახევარი */
-}
-
-#live-video-container.split-mode #guest-video-box {
-    width: 50% !important; /* ზუსტად მეორე ნახევარი */
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* TikTok Style Live Interface for Emigrantbook */
-
-/* მთავარი კონტეინერი */
-#liveUI {
-    background: #000 !important;
-}
-
-/* ვიდეოს განლაგება - სრული ეკრანი */
-#live-video-container {
-    background: #000 !important;
-}
-
-#remote-live-video, #guest-remote-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* ავსებს ეკრანს TikTok-ივით */
-}
-
-/* ზედა პანელი - ჰოსტის ინფო */
-.live-top-header {
-    position: absolute;
-    top: 25px;
-    left: 15px;
-    right: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1010;
-}
-
-.host-info-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 4px 12px 4px 4px;
-    border-radius: 30px;
-    backdrop-filter: blur(10px);
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
-}
-
-#liveHostAva {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1.5px solid #d4af37; /* ოქროსფერი */
-}
-
-#followHostBtn {
-    background: #fe2c55 !important; /* TikTok-ის წითელი */
-    color: white !important;
-    border: none;
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* ჩატის ზონა - TikTok-ის სტილის gradient fade */
-#liveChatBox {
-    position: absolute;
-    bottom: 90px;
-    left: 15px;
-    width: 75%;
-    max-height: 260px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    z-index: 1005;
-    /* დაბლა მუქი, მაღლა ქრება */
-    mask-image: linear-gradient(to top, black 70%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to top, black 70%, transparent 100%);
-}
-
-/* კომენტარის სტილი */
-.live-comment-item {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 4px 10px;
-    border-radius: 12px;
-    color: white;
-    font-size: 14px;
-    width: fit-content;
-    margin-bottom: 4px;
-}
-
-/* მარჯვენა მოქმედების ღილაკები */
-.side-actions-bar {
-    position: absolute;
-    right: 15px;
-    bottom: 100px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
-    z-index: 1010;
-}
-
-.live-action-btn i {
-    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
-    transition: transform 0.1s;
-}
-
-.live-action-btn:active i {
-    transform: scale(0.8);
-}
-
-/* ქვედა ინპუტის ზონა */
-.live-bottom-bar {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    width: 100%;
-    padding: 0 15px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    z-index: 1010;
-}
-
-#liveMsgInp {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 25px;
-    padding: 12px 20px;
-    color: white !important;
-    backdrop-filter: blur(15px);
-}
-
-#liveMsgInp::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-
-
-
-
-
-
-
-/* საჩუქრები ლაივში სტილი */
-.gift-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 10px 0;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-}
-
-.gift-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 215, 0, 0.2);
-}
-
-.gift-card:active {
-    transform: scale(0.92);
-}
-
-.gift-img-container {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 5px;
-}
-
-.gift-img-container img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    /* TikTok-ის ეფექტი ფოტოებზე */
-    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
-}
-
-.gift-name {
-    font-size: 11px;
-    color: #fff;
-    margin-bottom: 2px;
-    font-weight: 500;
-}
-
-.gift-price {
-    font-size: 10px;
-    color: #888;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-}
-
-/* Scrollbar-ის გასუფთავება */
-#giftGrid::-webkit-scrollbar {
-    width: 0px;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
+    @keyframes livePulse {
+        0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0)); }
+        50% { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8)); }
+        100% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0)); }
+    }
+
+    .live-nav-button.is-live svg {
+        animation: livePulse 1.5s infinite;
+    }
+
+    .live-nav-button.is-live svg path {
+        stroke: #ff4d4d;
+    }
+
+    .live-nav-button.is-live svg text {
+        fill: #ff4d4d;
+    }
+
+    /* მთავარი კონტეინერი, სადაც ვიდეოები ზის */
+    #live-video-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        width: 100%;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+    /* ჰოსტის ვიდეოს ყუთი */
+    #host-video-wrapper {
+        position: relative;
+        height: 100%;
+        transition: all 0.4s ease;
+        flex-shrink: 0;
+    }
+
+    /* სტუმრის ვიდეოს ყუთი */
+    #guest-video-box {
+        position: relative;
+        height: 100%;
+        background: #000;
+        transition: all 0.4s ease;
+        flex-shrink: 0;
+        border-left: 1px solid #d4af37;
+    }
+
+    /* როცა სტუმარი ერთდება (Split Mode) */
+    #live-video-container.split-mode #host-video-wrapper {
+        width: 50% !important;
+    }
+
+    #live-video-container.split-mode #guest-video-box {
+        width: 50% !important;
+    }
+
+    /* TikTok Style Live Interface for Emigrantbook */
+    #liveUI {
+        background: #000 !important;
+    }
+
+    #live-video-container {
+        background: #000 !important;
+    }
+
+    #remote-live-video, #guest-remote-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .live-top-header {
+        position: absolute;
+        top: 25px;
+        left: 15px;
+        right: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1010;
+    }
+
+    .host-info-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 4px 12px 4px 4px;
+        border-radius: 30px;
+        backdrop-filter: blur(10px);
+        border: 0.5px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #liveHostAva {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1.5px solid #d4af37;
+    }
+
+    #followHostBtn {
+        background: #fe2c55 !important;
+        color: white !important;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #liveChatBox {
+        position: absolute;
+        bottom: 90px;
+        left: 15px;
+        width: 75%;
+        max-height: 260px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 1005;
+        mask-image: linear-gradient(to top, black 70%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to top, black 70%, transparent 100%);
+    }
+
+    .live-comment-item {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px 10px;
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        width: fit-content;
+        margin-bottom: 4px;
+    }
+
+    .side-actions-bar {
+        position: absolute;
+        right: 15px;
+        bottom: 100px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+        z-index: 1010;
+    }
+
+    .live-action-btn i {
+        filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+        transition: transform 0.1s;
+    }
+
+    .live-action-btn:active i {
+        transform: scale(0.8);
+    }
+
+    .live-bottom-bar {
+        position: absolute;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        padding: 0 15px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        z-index: 1010;
+    }
+
+    #liveMsgInp {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 25px;
+        padding: 12px 20px;
+        color: white !important;
+        backdrop-filter: blur(15px);
+    }
+
+    #liveMsgInp::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .gift-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px 0;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .gift-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .gift-card:active {
+        transform: scale(0.92);
+    }
+
+    .gift-img-container {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 5px;
+    }
+
+    .gift-img-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+    }
+
+    .gift-name {
+        font-size: 11px;
+        color: #fff;
+        margin-bottom: 2px;
+        font-weight: 500;
+    }
+
+    .gift-price {
+        font-size: 10px;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    #giftGrid::-webkit-scrollbar {
+        width: 0px;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
     </style>
 </head>
-<body>
+<body style="background-color: #0b0b0b; margin: 0; color: white;">
 
     <!-- ========================================== -->
     <!-- 2. ლაივის ღილაკები და მენიუს ნაწილები        -->
     <!-- ========================================== -->
 
     <!-- ნავბარის LIVE ღილაკი -->
-    <div class="live-nav-button" onclick="openActiveLivesModal()">
-        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 7L21 13" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M33 7L27 13" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4 14H44V40C44 41.1046 43.1046 42 42 42H6C4.89543 42 4 41.1046 4 40V14Z" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
-            <text x="24" y="32" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif" font-weight="900" style="letter-spacing: 0.5px;">LIVE</text>
-        </svg>
-    </div>
-
-    <!-- ბურგერ მენიუს ლაივის ღილაკი -->
-    <a href="#" class="menu-item" onclick="startLiveFunc()" style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="live-btn-custom" style="display: flex; align-items: center; gap: 10px;">
-            <div class="live-status-dot"></div>
-            <span data-key="live">ლაივი</span>
+    <div style="padding: 10px; display: flex; align-items: center; gap: 10px;">
+        <div class="live-nav-button" onclick="openActiveLivesModal()">
+            <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 7L21 13" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M33 7L27 13" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 14H44V40C44 41.1046 43.1046 42 42 42H6C4.89543 42 4 41.1046 4 40V14Z" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
+                <text x="24" y="32" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif" font-weight="900" style="letter-spacing: 0.5px;">LIVE</text>
+            </svg>
         </div>
-        <i class="fas fa-chevron-right" style="color: #444; font-size: 14px;"></i>
-    </a>
+
+        <button onclick="startLiveFunc()" style="background: #fe2c55; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;">
+            🔴 ლაივის დაწყება
+        </button>
+    </div>
 
     <!-- მცურავი LIVE ღილაკი -->
     <div id="liveFloatingBtn" onclick="openActiveLivesModal()" style="display:none; position:fixed; right:20px; top:100px; z-index:9999; cursor:pointer; text-align:center;">
@@ -497,19 +437,7 @@
     <!-- 3. ლაივის მოდალური ფანჯრები და ინტერფეისი  -->
     <!-- ========================================== -->
 
-    <!-- აქტიური ლაივების მოდალი 1 -->
-    <div id="activeLivesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:100000; align-items:center; justify-content:center;">
-        <div style="background:#1a1a1a; width:85%; max-width:400px; border-radius:20px; border:1px solid var(--gold, #d4af37); padding:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <b style="color:var(--gold, #d4af37); letter-spacing:1px;">აქტიური ლაივები</b>
-                <i class="fas fa-times" onclick="closeActiveLivesModal()" style="color:gray; cursor:pointer; font-size:20px;"></i>
-            </div>
-            <div id="modalLivesList" style="display:flex; flex-direction:column; gap:15px; max-height:400px; overflow-y:auto;">
-            </div>
-        </div>
-    </div>
-
-    <!-- აქტიური ლაივების მოდალი 2 -->
+    <!-- აქტიური ლაივების მოდალი -->
     <div id="active_lives_modal" class="live-modal">
         <div class="live-modal-content">
             <div class="live-modal-header">
@@ -529,11 +457,11 @@
                 <div id="remote-live-video" style="width:100%; height:100%; object-fit: cover;"></div>
             </div>
 
-            <div id="guest-video-box" style="display:none; width: 0%; height: 100%; position: relative; background: #000; border-left: 2px solid var(--gold, #d4af37); transition: all 0.4s ease;">
+            <div id="guest-video-box" style="display:none; width: 0%; height: 100%; position: relative; background: #000; border-left: 2px solid #d4af37; transition: all 0.4s ease;">
                 <div id="guest-remote-video" style="width:100%; height:100%; object-fit: cover;"></div>
                 <img id="guest-static-photo" src="" style="display:none; width:100%; height:100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 2;">
                 <div id="guest-cam-controls" style="position: absolute; bottom: 10px; left: 10px; z-index: 3; display: none;">
-                    <button onclick="toggleGuestCamera()" style="background: rgba(0,0,0,0.5); border: 1px solid var(--gold, #d4af37); color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">
+                    <button onclick="toggleGuestCamera()" style="background: rgba(0,0,0,0.5); border: 1px solid #d4af37; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">
                         <i id="camIcon" class="fas fa-video"></i>
                     </button>
                 </div>
@@ -561,7 +489,7 @@
                 <button id="liveFollowBtn" 
                  onclick="followHost()" 
                   style="background:#fe2c55; border:none; border-radius:20px; padding:6px 14px; color:white; font-size:12px; font-weight:bold; cursor:pointer; display: none; align-items: center; gap: 4px;">
-                  <i class="fas fa-plus" style="font-size: 10px;"></i> Подписаться
+                  <i class="fas fa-plus" style="font-size: 10px;"></i> გამოიწერე
                 </button>
             </div>
 
@@ -578,7 +506,7 @@
         <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:75%; max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; z-index: 50; pointer-events:auto;"></div>
 
         <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 100;">
-            <div style="flex: 1.5; display: flex; align-items: center; background: rgba(0,0,0,0.6) !important; border-radius: 25px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
+            <div style="flex: 1.5; display: flex; align-items: center; background: rgba(0,0,0,0.6) !important; border-radius: 25px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.3);">
                 <input type="text" id="liveMsgInp" onkeypress="if(event.key==='Enter') sendLiveComment()" style="width:100%; background:transparent !important; border:none !important; padding:10px 0; color:white; outline:none; font-size:14px;" placeholder="თქვი რამე...">
             </div>
 
@@ -586,7 +514,7 @@
                 <div onclick="sendLiveComment()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white;">
                     <i class="fas fa-paper-plane" style="font-size: 16px;"></i>
                 </div>
-                <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:none; background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:flex; background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; align-items:center; justify-content:center; cursor:pointer;">
                     <i class="fas fa-user-friends" style="color:#00f2ea; font-size:18px;"></i>
                 </div>
                 <div onclick="sendLiveHeart()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
@@ -594,9 +522,6 @@
                 </div>
                 <div onclick="toggleGiftPanel()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                     <i class="fas fa-gift" style="color:#ff2d55; font-size:20px;"></i>
-                </div>
-                <div onclick="shareLive()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
-                    <i class="fas fa-share" style="font-size:18px;"></i>
                 </div>
             </div>
         </div>
@@ -607,16 +532,12 @@
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px 15px;">
                 <div style="display: flex; align-items: center; gap: 5px;">
                     <i class="fas fa-coins" style="color: #ffd700;"></i>
-                    <span id="userBalance" style="font-weight: 600; font-size: 15px;">1,250</span>
-                    <i class="fas fa-chevron-right" style="font-size: 10px; color: #888;"></i>
+                    <span id="userBalance" style="font-weight: 600; font-size: 15px;">0</span> akho
                 </div>
-                <div style="font-weight: bold; font-size: 14px; color: #eee;">Gifts</div>
+                <div style="font-weight: bold; font-size: 14px; color: #eee;">საჩუქრები</div>
                 <div onclick="toggleGiftPanel()" style="color: #888; font-size: 18px; cursor: pointer;"><i class="fas fa-times"></i></div>
             </div>
             <div id="giftGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; height: 280px; overflow-y: auto;">
-            </div>
-            <div style="display: flex; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05);">
-                <button id="sendGiftBtn" style="background: #fe2c55; color: white; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s;">Send</button>
             </div>
         </div>
 
@@ -628,18 +549,56 @@
             </div>
             <div id="viewerListContent" style="padding: 10px; overflow-y: auto; height: calc(100% - 60px);"></div>
         </div>
-
-        <!-- ანიმაციების შრე -->
-        <div id="fullScreenGiftOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5000; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-        </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- 4. JS LOGIC (FIREBASE V9 MODULE IMPORT)    -->
+    <!-- 4. JS LOGIC (FIREBASE V9 & INITIALIZATION) -->
     <!-- ========================================== -->
     <script type="module">
-        import { ref, set, get, update, remove, onValue, push, runTransaction, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, update, remove, onValue, push, runTransaction, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // FIREBASE CONFIGURE FOR EMIGRANTBOOK
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+            authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+            databaseURL: "https://emigrantbook-4b7bd-default-rtdb.firebaseio.com",
+            projectId: "emigrantbook-4b7bd",
+            storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+            messagingSenderId: "109907338554",
+            appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        window.auth = auth;
+        window.db = db;
+
+        // User Auth state observer & Profil fetch
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                firebase.firestore().collection('profiles').doc(user.uid).get().then(doc => {
+                    if(doc.exists) {
+                        const pData = doc.data();
+                        window.myName = pData.full_name || user.email;
+                        window.myPhoto = pData.avatar_url || "";
+                        
+                        const balEl = document.getElementById('userBalance');
+                        if(balEl) balEl.innerText = pData.balance !== undefined ? pData.balance : 0;
+                    } else {
+                        window.myName = user.email;
+                        window.myPhoto = "";
+                    }
+                });
+            } else {
+                console.log("მომხმარებელი არ არის ავტორიზებული");
+            }
+        });
+
         // გლობალური ცვლადები
         let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
         let liveTracks = { video: null, audio: null };
@@ -650,38 +609,32 @@
         // საჩუქრების ბიბლიოთეკა
         const liveGiftsLibrary = [
             { 
-                id: "rose", 
-                name: "Rose", 
+                id: "kiss", 
+                name: "Kocna", 
                 price: 1, 
-                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif", 
-                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif"
             },
             { 
-                id: "rose", 
-                name: "Rose", 
+                id: "hearts", 
+                name: "Feirverki", 
                 price: 2, 
-                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
-                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif"
             },
             { 
-                id: "rose", 
-                name: "Rose", 
+                id: "eagle", 
+                name: "Arwivi", 
                 price: 5, 
-                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/arwivi.gif",
-                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/arwivi.gif"
             },
             { 
-                id: "rose", 
-                name: "Rose", 
+                id: "hands", 
+                name: "Xelebi", 
                 price: 20, 
-                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Xelebi.gif",
-                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Xelebi.gif"
             }
         ];
 
-        // ფუნქციების გლობალურად გახსნა Window-ზე (HTML onclick-ებისთვის)
         window.startLiveFunc = function() { 
-            if (typeof toggleSideMenu === "function") toggleSideMenu(false); 
             window.startLive(); 
         };
 
@@ -689,7 +642,10 @@
             const appId = "258897e8fb5f4dd089b761eca6568b24"; 
             const token = null; 
             
-            if(!window.auth || !window.auth.currentUser) return;
+            if(!window.auth || !window.auth.currentUser) {
+                alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+                return;
+            }
 
             currentLiveChannel = "live_" + window.auth.currentUser.uid; 
             currentHostUid = window.auth.currentUser.uid;
@@ -697,7 +653,7 @@
 
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveHostName').innerText = window.myName || "Host";
-            document.getElementById('liveHostAva').src = window.myPhoto || "default-avatar.png";
+            document.getElementById('liveHostAva').src = window.myPhoto || "https://via.placeholder.com/150";
 
             try {
                 await liveClient.leave(); 
@@ -749,7 +705,7 @@
                 listenForRequests(currentLiveChannel);
                 listenForGuestStatus(currentLiveChannel);
                 listenToGifts(currentLiveChannel);
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Agora Error:", e); }
         };
 
         window.loadActiveLives = function() {
@@ -769,7 +725,7 @@
                     if (live && live.host) {
                         const liveCard = `
                         <div class="live-item" onclick="joinLive('${live.channel}')">
-                            <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px; object-fit:cover;">
+                            <img src="${live.hostPhoto || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px; object-fit:cover;">
                             <strong>${live.host}</strong>
                         </div>`;
                         activeLivesContainer.innerHTML += liveCard;
@@ -788,7 +744,7 @@
 
             const guestDiv = document.getElementById("guest-remote-video");
             if (guestDiv) guestDiv.innerHTML = "";
-            if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
+            closeActiveLivesModal();
 
             get(ref(window.db, `lives_active/${channelName}`)).then(snap => {
                 const liveData = snap.val();
@@ -797,7 +753,7 @@
                     window.currentLiveHostUid = currentHostUid;
                     
                     document.getElementById('liveHostName').innerText = liveData.host;
-                    document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
+                    document.getElementById('liveHostAva').src = liveData.hostPhoto || 'https://via.placeholder.com/150';
 
                     if (window.auth && window.auth.currentUser) {
                         get(ref(window.db, `followers/${currentHostUid}/${window.auth.currentUser.uid}`)).then(followSnap => {
@@ -870,7 +826,7 @@
                         if (msg && msg.name) {
                             const div = document.createElement('div');
                             div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
-                            div.innerHTML = `<img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"><div style="color:white; font-size:13px;"><b style="color:var(--gold, #d4af37); font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
+                            div.innerHTML = `<img src="${msg.photo || 'https://via.placeholder.com/150'}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"><div style="color:white; font-size:13px;"><b style="color:#d4af37; font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
                             chatBox.appendChild(div);
                         }
                     });
@@ -885,7 +841,7 @@
 
             push(ref(window.db, `live_chats/${currentLiveChannel}`), {
                 name: window.myName || "User",
-                photo: window.myPhoto || "default-avatar.png",
+                photo: window.myPhoto || "https://via.placeholder.com/150",
                 text: inp.value,
                 ts: Date.now()
             });
@@ -974,7 +930,7 @@
                         <img src="${gift.img}" alt="${gift.name}" style="width: 50px; height: 50px; object-fit: contain;">
                     </div>
                     <div class="gift-name" style="font-size: 12px; margin-top: 5px;">${gift.name}</div>
-                    <div class="gift-price" style="font-size: 11px; color: #ffd700;"><i class="fas fa-coins"></i> ${gift.price}</div>
+                    <div class="gift-price" style="font-size: 11px; color: #ffd700;"><i class="fas fa-coins"></i> ${gift.price} akho</div>
                 `;
                 grid.appendChild(card);
             });
@@ -1078,7 +1034,7 @@
         function updateViewerCount(channel, action) {
             if (!window.auth || !window.auth.currentUser) return;
             const vRef = ref(window.db, `lives_meta/${channel}/viewers/${window.auth.currentUser.uid}`);
-            action === 'join' ? set(vRef, { name: window.myName || "User", photo: window.myPhoto || "default-avatar.png" }) : remove(vRef);
+            action === 'join' ? set(vRef, { name: window.myName || "User", photo: window.myPhoto || "https://via.placeholder.com/150" }) : remove(vRef);
         }
 
         window.toggleViewerList = function(show) {
@@ -1105,7 +1061,7 @@
                     if (v && v.name) {
                         const row = document.createElement('div');
                         row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
-                        row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
+                        row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div>`;
                         container.appendChild(row);
                     }
                 });
@@ -1117,7 +1073,7 @@
             const liveData = { 
                 channel: channelName, 
                 host: hostNickname, 
-                hostPhoto: window.myPhoto || "default-avatar.png", 
+                hostPhoto: window.myPhoto || "https://via.placeholder.com/150", 
                 startTime: Date.now(), 
                 status: "online", 
                 uid: window.auth.currentUser.uid 
@@ -1139,8 +1095,6 @@
         window.closeActiveLivesModal = function() {
             const modal = document.getElementById('active_lives_modal');
             if(modal) modal.style.display = 'none';
-            const modal1 = document.getElementById('activeLivesModal');
-            if(modal1) modal1.style.display = 'none';
         };
 
         window.sendJoinRequest = function() {
@@ -1148,7 +1102,7 @@
             set(ref(window.db, `live_requests/${currentLiveChannel}`), { 
                 uid: window.auth.currentUser.uid, 
                 name: window.myName || "User", 
-                photo: window.myPhoto || "default-avatar.png", 
+                photo: window.myPhoto || "https://via.placeholder.com/150", 
                 status: 'pending', 
                 ts: Date.now() 
             }).then(() => {
@@ -1182,7 +1136,7 @@
                 if(camIcon) camIcon.className = "fas fa-video-slash";
                 set(ref(window.db, `lives_active/${currentLiveChannel}/guest_status`), {
                     showPhoto: true,
-                    photoUrl: window.myPhoto || "default-avatar.png"
+                    photoUrl: window.myPhoto || "https://via.placeholder.com/150"
                 });
             } else {
                 await liveTracks.video.setEnabled(true);
@@ -1236,27 +1190,25 @@
 
             if (!hostUid || user.uid === hostUid) return;
 
-            const userBalanceRef = ref(window.db, `users/${user.uid}/akho`); 
+            const userDocRef = firebase.firestore().collection('profiles').doc(user.uid);
 
-            get(userBalanceRef).then(async (snap) => {
-                let currentBalance = snap.val() || 0;
+            userDocRef.get().then(async (doc) => {
+                if(!doc.exists) return;
+                let currentBalance = doc.data().balance || 0;
                 if (currentBalance < price) { alert(`ბალანსი არ გყოფნით!`); return; }
 
-                await set(userBalanceRef, currentBalance - price);
-
-                runTransaction(ref(window.db, `users/${hostUid}/gift_balance`), c => (c || 0) + price);
+                await userDocRef.update({ balance: currentBalance - price });
 
                 push(ref(window.db, `received_gifts/${hostUid}`), {
                     giftUrl: giftImg,
                     price: price,
                     fromName: window.myName || "User",
-                    fromPhoto: window.myPhoto || "default-avatar.png",
+                    fromPhoto: window.myPhoto || "https://via.placeholder.com/150",
                     timestamp: Date.now()
                 });
 
                 const giftData = {
                     giftImage: giftImg,
-                    giftSound: liveGiftsLibrary.find(g => g.img === giftImg)?.sound || "",
                     ts: Date.now()
                 };
 
@@ -1282,12 +1234,6 @@
             const container = document.getElementById('liveUI');
             if (!container) return;
 
-            if (gift.giftSound) {
-                const audio = new Audio(gift.giftSound);
-                audio.volume = 0.5;
-                audio.play().catch(e => console.log("Audio play error:", e));
-            }
-
             const animDiv = document.createElement('div');
             animDiv.style = `
                 position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -1306,7 +1252,6 @@
             }, 4000);
         }
 
-        // გვერდის ჩატვირთვისას ლაივების სტატუსის მოსმენა
         window.addEventListener('DOMContentLoaded', () => {
             listenForActiveLivesStatus();
         });
