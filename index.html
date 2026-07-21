@@ -117,7 +117,6 @@
       animation: glowTextAnimation 2.5s infinite alternate ease-in-out;
     }
 
-    /* მოციმციმე / მინიათური Glow ანიმაცია Emigrantbook ტექსტისთვის */
     @keyframes glowTextAnimation {
       0% {
         color: #dcae36;
@@ -348,11 +347,50 @@
       box-shadow: -5px 0 15px rgba(0,0,0,0.5);
     }
     @media (max-width: 480px) {
-      .side-menu-content { right: -70%; width: 70%; }
+      .side-menu-content { right: -75%; width: 75%; }
     }
     .side-menu-content.open {
       right: 0 !important;
     }
+
+    /* ---- BALANCES CARD STYLES ---- */
+    .menu-balance-card {
+      background: linear-gradient(135deg, #222 0%, #151515 100%);
+      border: 1px solid #dcae36;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(220, 174, 54, 0.15);
+    }
+    .menu-balance-title {
+      font-size: 12px;
+      color: #aaaaaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+    .menu-balance-amount {
+      font-size: 22px;
+      font-weight: 800;
+      color: #dcae36;
+      margin-bottom: 10px;
+    }
+    .menu-balance-btn {
+      background: #dcae36;
+      color: #111;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+    .menu-balance-btn:hover {
+      background: #c2982e;
+    }
+
     .side-menu-logout-btn {
       width: 100%;
       padding: 12px;
@@ -1262,7 +1300,6 @@
       align-items: center; 
       justify-content: center; 
     }
-    /* ---- FIXED COLLAGE CSS ENDS HERE ---- */
 
     .photo-grid-full {
       display: grid;
@@ -1725,6 +1762,14 @@
 
     <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
     <div class="side-menu-content" id="side-menu-content">
+      
+      <!-- BUBBLE/BURGER BALANCE DISPLAY -->
+      <div class="menu-balance-card">
+        <div class="menu-balance-title" id="lbl-balance-title">💳 შიდა ბალანსი</div>
+        <div class="menu-balance-amount" id="user-menu-balance-val">0.00 ₾</div>
+        <button class="menu-balance-btn" onclick="alert('ბალანსის შევსება მალე დაემატება!')" id="lbl-topup-btn">+ შევსება</button>
+      </div>
+
       <div class="input-group" style="padding: 0 10px; margin-bottom: 20px;">
         <label style="color: #dcae36; font-weight: bold;" id="lbl-select-lang">🌐 ენის არჩევა / Language</label>
         <select id="site-language-select" onchange="changeSiteLanguage(this.value)" style="margin-top: 5px; background: #222222; border: 1px solid #dcae36;">
@@ -2090,6 +2135,7 @@
         share: "გაზიარება", commentsCount: "კომენტარი", noPhotos: "მომხმარებელს ფოტოები არ აქვს ატვირთული.",
         noVideos: "მომხმარებელს ვიდეოები არ აქვს.", descPlaceholder: "ფოტოს აღწერა არ არის მითითებული.",
         selectLang: "🌐 ენის არჩევა / Language",
+        balanceTitle: "💳 შიდა ბალანსი", topUp: "+ შევსება",
         authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია."
       },
       en: {
@@ -2116,6 +2162,7 @@
         share: "Share", commentsCount: "comments", noPhotos: "No photos uploaded.",
         noVideos: "No videos available.", descPlaceholder: "No description provided.",
         selectLang: "🌐 Select Language",
+        balanceTitle: "💳 Internal Balance", topUp: "+ Top Up",
         authFooter: "© 2026 Emigrantbook. All rights reserved."
       },
       ru: {
@@ -2142,6 +2189,7 @@
         share: "Поделиться", commentsCount: "комментариев", noPhotos: "Нет загруженных фотографий.",
         noVideos: "Нет доступных видео.", descPlaceholder: "Описание отсутствует.",
         selectLang: "🌐 Выберите язык",
+        balanceTitle: "💳 Внутренний баланс", topUp: "+ Пополнить",
         authFooter: "© 2026 Emigrantbook. Все права защищены."
       },
       fr: {
@@ -2168,6 +2216,7 @@
         share: "Partager", commentsCount: "commentaires", noPhotos: "Aucune photo téléchargée.",
         noVideos: "Aucune vidéo disponible.", descPlaceholder: "Aucune description fournie.",
         selectLang: "🌐 Choisir la langue",
+        balanceTitle: "💳 Solde Interne", topUp: "+ Recharger",
         authFooter: "© 2026 Emigrantbook. Tous droits réservés."
       },
       de: {
@@ -2194,6 +2243,7 @@
         share: "Teilen", commentsCount: "Kommentare", noPhotos: "Keine Fotos hochgeladen.",
         noVideos: "Keine Videos verfügbar.", descPlaceholder: "Keine Beschreibung vorhanden.",
         selectLang: "🌐 Sprache auswählen",
+        balanceTitle: "💳 Guthaben", topUp: "+ Aufladen",
         authFooter: "© 2026 Emigrantbook. Alle Rechte vorbehalten."
       }
     };
@@ -2233,6 +2283,11 @@
       if(logoutBtn) logoutBtn.innerText = t.logout;
       var drTitleProfile = document.getElementById('dr-title-profile');
       if(drTitleProfile) drTitleProfile.innerText = t.friendReqTitle;
+
+      var balTitle = document.getElementById('lbl-balance-title');
+      if(balTitle) balTitle.innerText = t.balanceTitle;
+      var topUpBtn = document.getElementById('lbl-topup-btn');
+      if(topUpBtn) topUpBtn.innerText = t.topUp;
 
       var folTitle = document.getElementById('lbl-followers-title');
       if(folTitle) folTitle.innerText = t.followersTitle;
@@ -2346,9 +2401,22 @@
         menu.classList.remove('open');
         overlay.style.display = 'none';
       } else {
+        updateUserBalanceDisplay(); // Refresh balance on open
         menu.classList.add('open');
         overlay.style.display = 'block';
       }
+    }
+
+    function updateUserBalanceDisplay() {
+      if(!currentUser) return;
+      db.collection('profiles').doc(currentUser.uid).get().then(function(doc) {
+        if(doc.exists) {
+          var data = doc.data();
+          var bal = data.balance !== undefined ? parseFloat(data.balance).toFixed(2) : "0.00";
+          var el = document.getElementById('user-menu-balance-val');
+          if(el) el.innerText = bal + " ₾";
+        }
+      });
     }
 
     // Initialize session check for Firebase Auth
@@ -2376,6 +2444,7 @@
             
           renderAvatar('header-avatar-btn', avatarUrl, finalName);
           renderAvatar('profile-big-avatar', avatarUrl, finalName);
+          updateUserBalanceDisplay();
             
           var myStoryBg = document.getElementById('my-story-bg-avatar');
           if (myStoryBg) {
@@ -2970,6 +3039,7 @@
       if(bar) bar.style.display = "none";
     }
 
+    // FIXED: Removed orderBy from Firestore Query to prevent index errors
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
       if (!postId) return;
@@ -2977,17 +3047,23 @@
       
       db.collection('post_comments')
         .where('post_id', '==', postId)
-        .orderBy('created_at', 'asc')
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
-            container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">...</div>`;
+            container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">კომენტარები არ არის. დაწერეთ პირველი!</div>`;
             return;
           }
 
           var allItems = [];
           snapshot.forEach(function(doc) {
             allItems.push(Object.assign({ id: doc.id }, doc.data()));
+          });
+
+          // Sort in memory (JavaScript) by created_at safely
+          allItems.sort(function(a, b) {
+            var timeA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
+            var timeB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
+            return timeA - timeB;
           });
           
           var mainComments = allItems.filter(function(c) { return !c.parent_id; });
@@ -3059,6 +3135,9 @@
               `;
             }
           });
+        }).catch(function(error) {
+          console.error("Comments error:", error);
+          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას.</div>`;
         });
     }
 
@@ -3731,6 +3810,7 @@
           return db.collection('profiles').doc(user.uid).set({
             full_name: fullname,
             language: currentLang,
+            balance: 0, // Default zero balance
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
         }).then(function() {
