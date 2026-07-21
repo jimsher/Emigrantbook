@@ -229,7 +229,7 @@
       min-width: 0;
     }
     .chat-row-name {
-      font-weight: 600;
+      font-weight: 500;
       font-size: 16px;
       color: #ffffff;
     }
@@ -241,19 +241,21 @@
     }
     .chat-row-last-msg {
       font-size: 14px;
-      color: #8e8e93;
+      color: #8e8e93; /* წაკითხული შეტყობინების ჩვეულებრივი ნაცრისფერი */
+      font-weight: 400;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       flex: 1;
     }
+    
     /* წაუკითხავი ჩატის სტილები */
     .chat-row-item.unread .chat-row-last-msg {
       color: #ffffff;
-      font-weight: 700;
+      font-weight: 700; /* წაუკითხავის მუქი თეთრი ტექსტი */
     }
     .chat-row-item.unread .chat-row-name {
-      font-weight: 800;
+      font-weight: 700;
     }
     .chat-row-time {
       font-size: 13px;
@@ -718,6 +720,7 @@
       doc, 
       addDoc, 
       setDoc, 
+      updateDoc,
       getDoc, 
       getDocs, 
       onSnapshot, 
@@ -746,6 +749,7 @@
       doc,
       addDoc,
       setDoc,
+      updateDoc,
       getDoc,
       getDocs,
       onSnapshot,
@@ -890,7 +894,6 @@
       });
     }
 
-    // რეალური ბოლო შეტყობინებების მოსმენა Firestore-დან
     function attachLastMessagesAndRender(users, currentUid, listTarget) {
       const { collection, query, orderBy, limit, onSnapshot } = window.fs;
 
@@ -937,14 +940,12 @@
         return;
       }
 
-      // სორტირება: ბოლო მოწერილები უპირატესია (სიის სათავეში გადადის)
       usersList.sort((a, b) => {
         let tA = a.lastTimeRaw ? (a.lastTimeRaw.seconds || 0) : 0;
         let tB = b.lastTimeRaw ? (b.lastTimeRaw.seconds || 0) : 0;
         return tB - tA;
       });
 
-      // წაუკითხავი შეტყობინებების ჯამის თვლა ნავბარის ბეიჯისთვის
       let unreadTotal = usersList.filter(u => u.isUnread).length;
       const navBadge = document.getElementById('chat-count-badge');
       if (navBadge) {
@@ -1020,14 +1021,37 @@
         }
       });
 
+      // ჩატის გახსნისას წაუკითხავი შეტყობინებების მონიშვნა წაკითხულად
+      markMessagesAsRead(chatId, targetUid);
       listenToFirestoreMessages(chatId, finalAvatar);
+    }
+
+    async function markMessagesAsRead(chatId, senderUid) {
+      if (!window.auth || !window.auth.currentUser) return;
+      const { collection, getDocs, doc, updateDoc } = window.fs;
+      
+      try {
+        const msgsRef = collection(window.db, 'chats', chatId, 'messages');
+        const querySnap = await getDocs(msgsRef);
+        
+        querySnap.forEach(async (docSnap) => {
+          const data = docSnap.data();
+          if (data.senderId === senderUid && data.read !== true) {
+            await updateDoc(doc(window.db, 'chats', chatId, 'messages', docSnap.id), {
+              read: true
+            });
+          }
+        });
+      } catch (err) {
+        console.error("Error marking messages as read:", err);
+      }
     }
 
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
       if (!window.auth || !window.auth.currentUser) return;
       const myUid = window.auth.currentUser.uid;
-      const { collection, query, orderBy, onSnapshot, doc, setDoc } = window.fs;
+      const { collection, query, orderBy, onSnapshot } = window.fs;
 
       if (unsubscribeMessages) unsubscribeMessages();
 
@@ -1043,11 +1067,6 @@
         snapshot.forEach(docSnap => {
           const msg = docSnap.data();
           const isMine = msg.senderId === myUid;
-
-          // ჩატის გახსნისას ავტომატურად მონიშნოს წაკითხულად
-          if (!isMine && msg.read !== true) {
-            setDoc(doc(window.db, 'chats', chatId, 'messages', docSnap.id), { read: true }, { merge: true });
-          }
 
           const msgRow = document.createElement('div');
           msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
