@@ -537,8 +537,9 @@
       max-width: 100% !important;
       border-radius: 0 !important;
       margin: 0 0 0 0 !important;
-      max-height: none !important;
-      object-fit: cover;
+      max-height: 500px !important;
+      object-fit: contain !important;
+      background: #000000;
       display: block;
       cursor: pointer;
     }
@@ -1135,21 +1136,64 @@
     .req-btn-confirm { background: #dcae36; color: #111111; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
     .req-btn-delete { background: #222222; color: #e4e6eb; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
 
-    .collage-container { margin-bottom: 0px; border-radius: 0 !important; overflow: hidden; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
-    .collage-grid { display: grid; gap: 4px; background: #0b0b0b; width: 100% !important; }
-    .collage-item { width: 100% !important; height: 100% !important; object-fit: cover; display: block; border-radius: 0 !important; }
+    /* ---- FIXED COLLAGE CSS STARTS HERE ---- */
+    .collage-container { 
+      margin-bottom: 0px; 
+      border-radius: 0 !important; 
+      overflow: hidden; 
+      width: 100% !important; 
+      margin-left: 0 !important; 
+      margin-right: 0 !important; 
+    }
+    .collage-grid { 
+      display: grid; 
+      gap: 3px; 
+      background: #0b0b0b; 
+      width: 100% !important; 
+    }
+    .collage-item { 
+      width: 100% !important; 
+      height: 100% !important; 
+      object-fit: cover !important; 
+      display: block; 
+      border-radius: 0 !important; 
+    }
     .collage-1 { grid-template-columns: 1fr; }
-    .collage-2 { grid-template-columns: 1fr 1fr; height: 300px; }
-    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1.5fr 1fr; height: 360px; }
-    .collage-3 .collage-item:nth-child(1) { grid-row: span 2; }
-    .collage-4 { grid-template-columns: repeat(2, 1fr); height: 360px; }
-    .collage-5 { grid-template-columns: repeat(6, 1fr); height: 360px; }
-    .collage-5 .collage-item:nth-child(1) { grid-column: span 3; grid-row: span 2; }
-    .collage-5 .collage-item:nth-child(2) { grid-column: span 3; grid-row: span 2; }
-    .collage-5 .collage-item:nth-child(n+3) { grid-column: span 2; }
-    .collage-6 { grid-template-columns: repeat(3, 1fr); height: 360px; }
-    .collage-overlay { position: relative; height: 100%; }
-    .collage-overlay-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .collage-1 .collage-item { max-height: 500px; object-fit: contain !important; background: #000; }
+    
+    .collage-2 { grid-template-columns: 1fr 1fr; }
+    .collage-2 .collage-item { aspect-ratio: 1 / 1; }
+
+    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(2, 1fr); }
+    .collage-3 .collage-item:nth-child(1) { grid-row: span 2; aspect-ratio: 1 / 2; }
+    .collage-3 .collage-item:nth-child(2),
+    .collage-3 .collage-item:nth-child(3) { aspect-ratio: 1 / 1; }
+
+    .collage-4 { grid-template-columns: repeat(2, 1fr); }
+    .collage-4 .collage-item { aspect-ratio: 1 / 1; }
+
+    .collage-5 { grid-template-columns: repeat(6, 1fr); }
+    .collage-5 .collage-item:nth-child(1) { grid-column: span 3; aspect-ratio: 1 / 1; }
+    .collage-5 .collage-item:nth-child(2) { grid-column: span 3; aspect-ratio: 1 / 1; }
+    .collage-5 .collage-item:nth-child(n+3) { grid-column: span 2; aspect-ratio: 1 / 1; }
+
+    .collage-6 { grid-template-columns: repeat(3, 1fr); }
+    .collage-6 .collage-item { aspect-ratio: 1 / 1; }
+
+    .collage-overlay { position: relative; width: 100%; height: 100%; }
+    .collage-overlay-text { 
+      position: absolute; 
+      top: 0; left: 0; 
+      width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.6); 
+      color: white; 
+      font-size: 24px; 
+      font-weight: bold; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+    /* ---- FIXED COLLAGE CSS ENDS HERE ---- */
 
     .photo-grid-full {
       display: grid;
@@ -1507,7 +1551,7 @@
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
-       
+        
       <div class="header-right">
         <button class="header-icon-btn" onclick="toggleRequestsDropdown(event)">
           <svg class="header-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1543,7 +1587,7 @@
         <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
-   
+    
     <div class="feed-container">
       <div class="create-post-card">
         <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
@@ -1649,7 +1693,7 @@
               </div>
             </div>
           </div>
-           
+            
           <div class="profile-user-headline">
             <div class="profile-fb-name" id="profile-user-name">იტვირთება...</div>
             <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
@@ -1848,7 +1892,7 @@
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        ဖოტოს აღწერა...
+        ფოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
@@ -2217,7 +2261,7 @@
         
         likedPosts = JSON.parse(localStorage.getItem(user.uid + '_liked_posts_list')) || [];
         postReactionMap = JSON.parse(localStorage.getItem(user.uid + '_post_reaction_map')) || {};
-         
+          
         db.collection('profiles').doc(user.uid).get().then(function(doc) {
           var finalName = user.email;
           var avatarUrl = null;
@@ -2231,10 +2275,10 @@
               localStorage.setItem('emigrantbook_lang', currentLang);
             }
           }
-           
+            
           renderAvatar('header-avatar-btn', avatarUrl, finalName);
           renderAvatar('profile-big-avatar', avatarUrl, finalName);
-           
+            
           var myStoryBg = document.getElementById('my-story-bg-avatar');
           if (myStoryBg) {
             if (avatarUrl) {
@@ -2250,7 +2294,7 @@
 
           applyLanguageDOM();
           showScreen('home');
-           
+            
           checkPendingRequestsCount();
           checkUnreadMessagesCount();
           subscribeToFriendRequests();
@@ -2268,7 +2312,7 @@
       event.stopPropagation();
       var isHome = document.getElementById('home-screen').style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-                     
+                      
       document.getElementById('requests-dropdown-home').style.display = 'none';
       document.getElementById('requests-dropdown-profile').style.display = 'none';
 
@@ -2330,7 +2374,7 @@
       } else if (screenName === 'edit-profile') {
         document.getElementById('edit-profile-screen').style.display = 'block';
       }
-       
+        
       if (currentUser) {
         checkPendingRequestsCount();
         checkUnreadMessagesCount();
@@ -2341,7 +2385,7 @@
     function renderAvatar(elementId, avatarUrl, name) {
       var el = document.getElementById(elementId);
       if (!el) return;
-       
+        
       if (avatarUrl) {
         el.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`;
       } else {
@@ -2509,7 +2553,7 @@
       var container = document.getElementById(isHome ? 'dropdown-items-container-home' : 'dropdown-items-container-profile');
       if (!container) return;
       var t = TRANSLATIONS[currentLang];
-       
+        
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
       db.collection('friend_requests')
