@@ -148,8 +148,6 @@
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        mask-image: linear-gradient(to top, black 60%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
         overflow: hidden;
         z-index: 100;
     }
@@ -272,29 +270,31 @@
         cursor: pointer;
     }
 
+    /* ჩატის ყუთის გასწორებული სტილი */
     #liveChatBox {
         position: absolute;
-        bottom: 90px;
+        bottom: 80px;
         left: 15px;
         width: 75%;
-        max-height: 260px;
+        max-height: 280px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         z-index: 1005;
-        mask-image: linear-gradient(to top, black 70%, transparent 100%);
-        -webkit-mask-image: linear-gradient(to top, black 70%, transparent 100%);
+        pointer-events: auto;
     }
 
     .live-comment-item {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 4px 10px;
-        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 6px 12px;
+        border-radius: 15px;
         color: white;
-        font-size: 14px;
+        font-size: 13px;
         width: fit-content;
         margin-bottom: 4px;
+        word-break: break-word;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
     .side-actions-bar {
@@ -420,9 +420,14 @@
             </svg>
         </div>
 
-        <button onclick="startLiveFunc()" style="background: #fe2c55; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;">
-            🔴 ლაივის დაწყება
-        </button>
+        <!-- ბურგერ მენიუს/მთავარი ღილაკი -->
+        <a href="#" class="menu-item" onclick="startLiveFunc()" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px;">
+            <div class="live-btn-custom" style="display: flex; align-items: center; gap: 10px;">
+                <div class="live-status-dot" style="width: 10px; height: 10px; background: #fe2c55; border-radius: 50%;"></div>
+                <span data-key="live" style="font-weight: bold;">ლაივი</span>
+            </div>
+            <i class="fas fa-chevron-right" style="color: #888; font-size: 14px; margin-left: 10px;"></i>
+        </a>
     </div>
 
     <!-- მცურავი LIVE ღილაკი -->
@@ -503,7 +508,7 @@
             </div>
         </div>
 
-        <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:75%; max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; z-index: 50; pointer-events:auto;"></div>
+        <div id="liveChatBox"></div>
 
         <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 100;">
             <div style="flex: 1.5; display: flex; align-items: center; background: rgba(0,0,0,0.6) !important; border-radius: 25px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.3);">
@@ -634,7 +639,9 @@
             }
         ];
 
+        // პირდაპირ ლაივში შესვლა ბურგერ მენიუდან
         window.startLiveFunc = function() { 
+            if (typeof toggleSideMenu === "function") toggleSideMenu(false); 
             window.startLive(); 
         };
 
@@ -813,6 +820,7 @@
             } catch (e) { console.log(e); }
         };
 
+        // გასწორებული ჩატის ფუნქცია (კომენტარების გარანტირებული გამოჩენით)
         function listenToLiveChat(channel) {
             const chatBox = document.getElementById('liveChatBox');
             if(!chatBox) return;
@@ -825,8 +833,8 @@
                     Object.values(data).forEach(msg => {
                         if (msg && msg.name) {
                             const div = document.createElement('div');
-                            div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
-                            div.innerHTML = `<img src="${msg.photo || 'https://via.placeholder.com/150'}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"><div style="color:white; font-size:13px;"><b style="color:#d4af37; font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
+                            div.className = "live-comment-item";
+                            div.innerHTML = `<img src="${msg.photo || 'https://via.placeholder.com/150'}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:6px;"><b style="color:#d4af37; font-size:11px; margin-right:5px;">${msg.name}:</b><span>${msg.text}</span>`;
                             chatBox.appendChild(div);
                         }
                     });
@@ -842,7 +850,7 @@
             push(ref(window.db, `live_chats/${currentLiveChannel}`), {
                 name: window.myName || "User",
                 photo: window.myPhoto || "https://via.placeholder.com/150",
-                text: inp.value,
+                text: inp.value.trim(),
                 ts: Date.now()
             });
 
