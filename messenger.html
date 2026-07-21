@@ -18,6 +18,7 @@
       height: 100vh;
       display: flex;
       justify-content: center;
+      overflow: hidden; /* მთლიანი ეკრანის სქროლის ბლოკირება */
     }
 
     /* მობილურის ეკრანის კონტეინერი */
@@ -39,7 +40,18 @@
       display: flex;
       flex-direction: column;
       height: 100%;
+      position: relative;
     }
+
+    /* ფიქსირებული ზედა ბლოკი (ჰედერი, ძებნა, სთორები) */
+    .chats-top-fixed {
+      position: sticky;
+      top: 0;
+      background-color: #000000;
+      z-index: 50;
+      border-bottom: 1px solid #121212;
+    }
+
     .chats-header {
       padding: 15px 16px 10px 16px;
       display: flex;
@@ -171,11 +183,11 @@
       width: 100%;
     }
 
-    /* ჩატების სია */
+    /* ჩატების სია - მხოლოდ ეს ნაწილი ისქროლება */
     .chats-scroll-area {
       flex: 1;
       overflow-y: auto;
-      padding-bottom: 80px;
+      padding-bottom: 80px; /* ქვედა ნავბარის ადგილი */
     }
     .chat-row-item {
       display: flex;
@@ -243,7 +255,7 @@
       flex-shrink: 0;
     }
 
-    /* ქვედა მენიუ */
+    /* ფიქსირებული ქვედა ნავბარი */
     .footer-nav {
       position: absolute;
       bottom: 0;
@@ -314,10 +326,11 @@
        2. შიდა ჩატის ეკრანი (CHAT THREAD SCREEN)
     ------------------------------------------------------- */
     #thread-screen {
-      display: none; /* თავიდან დამალულია */
+      display: none;
       flex-direction: column;
       height: 100%;
       background-color: #000000;
+      position: relative;
     }
     .thread-header {
       padding: 10px 12px;
@@ -325,7 +338,10 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #121212;
-      background: #000;
+      background: #000000;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
     .thread-header-left {
       display: flex;
@@ -485,13 +501,17 @@
       border-bottom-right-radius: 4px;
     }
 
-    /* ქვედა ინფუთის პანელი */
+    /* ქვედა ინფუთის ფიქსირებული პანელი */
     .thread-footer {
       padding: 8px 12px;
       background: #000000;
       display: flex;
       align-items: center;
       gap: 12px;
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      border-top: 1px solid #121212;
     }
     .footer-left-actions {
       display: flex;
@@ -551,36 +571,39 @@
 
     <!-- ================= 1. მთავარი ჩატების ეკრანი ================= -->
     <div id="chats-screen">
-      <!-- ჰედერი -->
-      <div class="chats-header">
-        <h1>Chats</h1>
-        <div class="header-actions">
-          <button class="header-btn" onclick="alert('ახალი ჩატის დაწყება')">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- საძიებო ზოლი -->
-      <div class="search-container">
-        <div class="search-box">
-          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          <input type="text" placeholder="Ask Meta AI or Search">
-        </div>
-      </div>
-
-      <!-- სიუჟეტების ზოლი -->
-      <div class="stories-row">
-        <div class="story-item">
-          <div class="story-avatar-wrapper">
-            <img class="story-avatar" src="https://emigrantbook.com/logo.png" alt="Me">
-            <div class="create-story-plus">+</div>
+      <!-- ფიქსირებული ზედა სექცია -->
+      <div class="chats-top-fixed">
+        <!-- ჰედერი -->
+        <div class="chats-header">
+          <h1>Chats</h1>
+          <div class="header-actions">
+            <button class="header-btn" onclick="alert('ახალი ჩატის დაწყება')">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </button>
           </div>
-          <span class="story-name">Create story</span>
+        </div>
+
+        <!-- საძიებო ზოლი -->
+        <div class="search-container">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" placeholder="Ask Meta AI or Search">
+          </div>
+        </div>
+
+        <!-- სიუჟეტების ზოლი -->
+        <div class="stories-row">
+          <div class="story-item">
+            <div class="story-avatar-wrapper">
+              <img class="story-avatar" src="https://emigrantbook.com/logo.png" alt="Me">
+              <div class="create-story-plus">+</div>
+            </div>
+            <span class="story-name">Create story</span>
+          </div>
         </div>
       </div>
 
-      <!-- ჩატების სია -->
+      <!-- ჩატების სია (მხოლოდ ეს ნაწილი ისქროლება) -->
       <div class="chats-scroll-area" id="chats-list-target">
         <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
       </div>
@@ -590,7 +613,7 @@
         <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
       </div>
 
-      <!-- ქვედა მენიუ -->
+      <!-- ქვედა ფიქსირებული მენიუ -->
       <div class="footer-nav">
         <button class="nav-tab active">
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -755,13 +778,11 @@
     function extractPhotoUrl(uData) {
       if (!uData) return "";
       
-      // ჯერ ვამოწმებთ სტანდარტულ ველებს
       let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.userImg || uData.userPhoto || uData.cover;
       if (photoCandidate && typeof photoCandidate === 'string' && photoCandidate.trim() !== '') {
         return photoCandidate;
       }
 
-      // თუ სტანდარტულში ვერ იპოვა, ვეძებთ ნებისმიერ ველს, სადაც URL წერია
       for (let key in uData) {
         let val = uData[key];
         if (typeof val === 'string' && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image'))) {
@@ -829,7 +850,7 @@
             uid: uid,
             name: displayName,
             photo: displayPhoto,
-            rawPhoto: displayPhoto, // ინახავს რეალურ ბმულს
+            rawPhoto: displayPhoto,
             presence: uData.status || uData.presence || 'offline',
             lastMsg: uData.lastMsg || "Tap to chat"
           });
@@ -842,7 +863,6 @@
       });
     }
 
-    // სათადარიგო ფუნქცია 'users' კოლექციისთვის
     function fetchUsersCollection(listTarget, currentUid) {
       const { collection, onSnapshot } = window.fs;
       const usersRef = collection(window.db, 'users');
@@ -876,7 +896,6 @@
       });
     }
 
-    // სიის ეკრანზე ასახვა
     function renderChatList(usersList, listTarget) {
       if (usersList.length === 0) {
         listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა მომხმარებლები არ არიან.</p>";
@@ -894,8 +913,6 @@
         };
 
         const isOnline = chat.presence === 'online';
-        
-        // თუ ბაზაში ფოტო საერთოდ არ მოიძებნა, გამოვიყენებთ ინიციალების ავატარს (პირველი ასოს გამოსახულებას)
         const imgSrc = chat.photo ? chat.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}&background=0D8ABC&color=fff&size=128`;
 
         item.innerHTML = `
@@ -916,7 +933,6 @@
       });
     }
 
-    // 2. ჩატის გახსნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
       currentActiveChatUser = username;
@@ -952,7 +968,6 @@
       listenToFirestoreMessages(chatId, finalAvatar);
     }
 
-    // 3. FIRESTORE-ის შეტყობინებების მოსმენა რეალურ დროში
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
       if (!window.auth || !window.auth.currentUser) return;
@@ -1003,7 +1018,6 @@
       });
     }
 
-    // 4. ჩატის დახურვა
     function closeChat() {
       if (unsubscribeMessages) unsubscribeMessages();
       document.getElementById('thread-screen').style.display = 'none';
@@ -1017,7 +1031,6 @@
       }
     }
 
-    // 5. შეტყობინების გაგზავნა FIRESTORE-ში
     async function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
