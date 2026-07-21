@@ -580,9 +580,9 @@
         </div>
       </div>
 
-      <!-- ჩატების სია (დინამიური Realtime) -->
+      <!-- ჩატების სია (დინამიური REALTIME) -->
       <div class="chats-scroll-area" id="chats-list-target">
-        <p style="padding: 20px; color: #8e8e93; text-align: center;">იტვირთება...</p>
+        <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
       </div>
 
       <!-- Meta AI მცურავი ორნამენტის ღილაკი -->
@@ -625,7 +625,7 @@
           </div>
           <div class="thread-user-info">
             <span class="thread-user-name" id="active-thread-name">მომხმარებელი</span>
-            <span class="thread-user-status" id="active-thread-status">Offline</span>
+            <span class="thread-user-status" id="active-thread-status">...</span>
           </div>
         </div>
         <div class="thread-header-actions">
@@ -653,7 +653,7 @@
 
         <!-- მიმოწერა -->
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;">
-          <!-- აქ ჩაიყრება მიმოწერა ბაზიდან -->
+          <!-- აქ ჩაიყრება მიმოწერა -->
         </div>
       </div>
 
@@ -667,7 +667,7 @@
         </div>
 
         <div class="input-wrapper">
-          <input type="text" id="message-input-field" placeholder="Message" oninput="handleTypingInput()" onkeypress="handleKeyPress(event)">
+          <input type="text" id="message-input-field" placeholder="Message" onkeypress="handleKeyPress(event)">
           <svg viewBox="0 0 24 24" onclick="alert('სმაილები')"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 10 10 10-4.48 10-10S17.51 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
         </div>
 
@@ -685,16 +685,16 @@
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getDatabase, ref, set, push, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+    // Firebase-ის კონფიგურაცია
     const firebaseConfig = {
-      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
-      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
-      projectId: "emigrantbook-4b7bd",
-      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
-      messagingSenderId: "109907338554",
-      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
-      measurementId: "G-MRPP7G4H30"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
-
 
     const app = initializeApp(firebaseConfig);
     window.auth = getAuth(app);
@@ -711,22 +711,21 @@
     });
   </script>
 
-  <!-- პროექტის გლობალური ფაილები -->
+  <!-- პროექტის ძირითადი ფაილები (თუ არსებობს) -->
   <script src="script.js"></script>
   <script src="chatvirtva.js"></script>
 
-  <!-- REALTIME LOGIC -->
+  <!-- REALTIME CHAT SCRIPT -->
   <script>
     var currentActiveChatUid = null;
     var currentActiveChatUser = "";
     var currentActiveChatAvatar = "";
-    var typingTimeout = null;
 
     function getChatId(u1, u2) {
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // 1. ჩატების სიის რეალურ დროში წამოღება
+    // 1. ჩატების სიის რეალურ დროში წამოღება Firebase-დან
     async function fetchRealtimeChatList() {
       const listTarget = document.getElementById('chats-list-target');
       if (!window.auth || !window.auth.currentUser) return;
@@ -738,7 +737,7 @@
       onValue(followingRef, async (snap) => {
         const followers = snap.val();
         if (!followers) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები ვერ მოიძებნა.</p>";
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>აქტიური ჩატები არ არის.</p>";
           return;
         }
 
@@ -769,7 +768,7 @@
           chatArray.push({ uid, data, lastTs, lastMsg, isUnread });
         }
 
-        // სორტირება ბოლო მესიჯის დროის მიხედვით
+        // სორტირება ბოლო მესიჯის თარიღით
         chatArray.sort((a, b) => b.lastTs - a.lastTs);
         listTarget.innerHTML = "";
 
@@ -789,7 +788,7 @@
           }
 
           item.onclick = function() {
-            openChatRealtime(chat.uid, chat.data.name || 'მომხმარებელი', chat.data.photo || 'token-avatar.png');
+            openChat(chat.data.name || 'User', chat.data.photo || 'token-avatar.png', chat.uid);
           };
 
           item.innerHTML = `
@@ -809,7 +808,7 @@
 
           listTarget.appendChild(item);
 
-          // ონლაინ სტატუსის მოსმენა
+          // ონლაინ სტატუსი
           onValue(ref(window.db, 'users/' + chat.uid + '/presence'), pSnap => {
             const isOnline = pSnap.val() === 'online';
             const badge = document.getElementById('online-badge-' + chat.uid);
@@ -819,9 +818,9 @@
       });
     }
 
-    // 2. ჩატის გახსნა რეალურ ბაზაზე
-    function openChatRealtime(uid, username, avatarUrl) {
-      currentActiveChatUid = uid;
+    // 2. ჩატის გახსნა დინამიურად
+    function openChat(username, avatarUrl, targetUid) {
+      currentActiveChatUid = targetUid;
       currentActiveChatUser = username;
       currentActiveChatAvatar = avatarUrl;
 
@@ -833,15 +832,16 @@
       document.getElementById('chat-start-big-name').innerText = username;
       document.getElementById('chat-start-big-avatar').src = avatarUrl;
 
-      const currentUid = window.auth.currentUser.uid;
-      const chatId = getChatId(currentUid, uid);
+      if (!targetUid || !window.auth || !window.auth.currentUser) return;
 
-      // წაკითხულად მონიშვნა
+      const currentUid = window.auth.currentUser.uid;
+      const chatId = getChatId(currentUid, targetUid);
+
       const { ref, set, onValue } = window.fbDb;
       set(ref(window.db, 'users/' + currentUid + '/last_read/' + chatId), Date.now());
 
       // სტატუსის მოსმენა
-      onValue(ref(window.db, 'users/' + uid + '/presence'), snap => {
+      onValue(ref(window.db, 'users/' + targetUid + '/presence'), snap => {
         const statusEl = document.getElementById('active-thread-status');
         if (snap.val() === 'online') {
           statusEl.innerText = "Online";
@@ -889,7 +889,6 @@
           msgBlock.appendChild(msgRow);
         });
 
-        // ავტომატური სქროლი ბოლოში
         setTimeout(function() {
           const target = document.getElementById('messages-target');
           if (target) target.scrollTop = target.scrollHeight;
@@ -910,11 +909,7 @@
       }
     }
 
-    function handleTypingInput() {
-      // წერის ინდიკატორის ლოგიკა ბაზაში
-    }
-
-    // 5. შეტყობინების გაგზავნა Firebase Realtime Database-ში
+    // 5. შეტყობინების გაგზავნა
     async function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
