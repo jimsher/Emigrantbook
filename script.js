@@ -4368,6 +4368,4 @@ function closeMessageRequests() {
     document.getElementById('messageRequestsUI').style.display = 'none';
 }
 
-auth.onAuthStateChanged(user => {
-    if (user) monitorMessageRequests();
-});
+
