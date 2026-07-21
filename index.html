@@ -31,6 +31,52 @@
       color: #e4e6eb;
     }
 
+    /* ---- PRELOADER STYLES ---- */
+    #app-preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #0b0b0b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .preloader-logo {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      animation: logoHeartbeat 1.3s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+      filter: drop-shadow(0 0 20px rgba(220, 174, 54, 0.4));
+    }
+
+    @keyframes logoHeartbeat {
+      0% {
+        transform: scale(1);
+      }
+      14% {
+        transform: scale(1.15);
+      }
+      28% {
+        transform: scale(1);
+      }
+      42% {
+        transform: scale(1.15);
+      }
+      70% {
+        transform: scale(1);
+      }
+    }
+
+    #app-preloader.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
     #auth-screen {
       background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
       height: 100vh;
@@ -1511,6 +1557,11 @@
 </head>
 <body>
 
+  <!-- PRELOADER WITH PULSING LOGO -->
+  <div id="app-preloader">
+    <img src="logo.png" alt="Emigrantbook Logo" class="preloader-logo">
+  </div>
+
   <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
   <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="uploadCover()">
   <input type="file" id="story-file-input" accept="image/*" style="display: none;" onchange="uploadStory()">
@@ -1939,6 +1990,17 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+    // Preloader Dismissal Logic
+    function hidePreloader() {
+      var preloader = document.getElementById('app-preloader');
+      if (preloader && !preloader.classList.contains('fade-out')) {
+        preloader.classList.add('fade-out');
+        setTimeout(function() {
+          preloader.style.display = 'none';
+        }, 500);
+      }
+    }
+
     // ImgBB API Configuration
     const IMGBB_API_KEY = "20b1ff9fe9c8896477a6bf04c86bcc67";
 
@@ -2301,10 +2363,12 @@
           subscribeToPostsRealtime(); 
           subscribeToGlobalNotifications();
           subscribeToMessagesRealtime();
+          hidePreloader();
         });
       } else {
         applyLanguageDOM();
         showScreen('auth');
+        hidePreloader();
       }
     });
 
