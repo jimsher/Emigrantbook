@@ -751,6 +751,56 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
+    // დამხმარე ფუნქცია: დოკუმენტიდან ფოტოს ბმულის დინამიური ამოღება
+    function extractPhotoUrl(uData) {
+      if (!uData) return "";
+      
+      // ჯერ ვამოწმებთ სტანდარტულ ველებს
+      let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.userImg || uData.userPhoto || uData.cover;
+      if (photoCandidate && typeof photoCandidate === 'string' && photoCandidate.trim() !== '') {
+        return photoCandidate;
+      }
+
+      // თუ სტანდარტულში ვერ იპოვა, ვეძებთ ნებისმიერ ველს, სადაც URL წერია
+      for (let key in uData) {
+        let val = uData[key];
+        if (typeof val === 'string' && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image'))) {
+          let lowerKey = key.toLowerCase();
+          if (lowerKey.includes('photo') || lowerKey.includes('avatar') || lowerKey.includes('img') || lowerKey.includes('pic') || lowerKey.includes('image') || lowerKey.includes('profile') || lowerKey.includes('cover') || lowerKey.includes('url')) {
+            return val;
+          }
+        }
+      }
+      return "";
+    }
+
+    // დამხმარე ფუნქცია: დოკუმენტიდან სახელის დინამიური ამოღება
+    function extractName(uData, uid) {
+      if (!uData) return "User_" + uid.substring(0, 5);
+
+      let displayName = uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
+      if (!displayName && uData.lastName) displayName = uData.lastName;
+
+      if (!displayName) {
+        for (let key in uData) {
+          let val = uData[key];
+          if (typeof val === 'string' && val.trim() !== '' && !val.startsWith('http') && !val.startsWith('data:image')) {
+            let lowerKey = key.toLowerCase();
+            if (lowerKey.includes('name') || lowerKey.includes('user') || lowerKey.includes('nick')) {
+              displayName = val;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!displayName && uData.email) {
+        displayName = uData.email.split('@')[0];
+      }
+
+      return displayName || ("User_" + uid.substring(0, 5));
+    }
+
     // 1. FIRESTORE-დან PROFILES / USERS კოლექციის წამოღება
     function fetchFirestoreChatList() {
       const listTarget = document.getElementById('chats-list-target');
@@ -758,12 +808,10 @@
       const currentUid = window.auth.currentUser.uid;
       const { collection, onSnapshot } = window.fs;
 
-      // ჯერ ვამოწმებთ 'profiles' კოლექციას
       const profilesRef = collection(window.db, 'profiles');
       
       onSnapshot(profilesRef, (snapshot) => {
         if (!snapshot || snapshot.empty) {
-          // თუ 'profiles' ცარიელია, გადავდივართ 'users' კოლექციაზე
           fetchUsersCollection(listTarget, currentUid);
           return;
         }
@@ -774,28 +822,14 @@
           if (uid === currentUid) return;
 
           const uData = docSnap.data();
-
-          // ვეძებთ ნებისმიერ არსებულ ველს, სადაც შეიძლება ეწეროს სახელი
-          let displayName = "";
-          for (let key in uData) {
-            if (typeof uData[key] === 'string' && uData[key].trim() !== '' && !uData[key].startsWith('http')) {
-              if (key.toLowerCase().includes('name') || key.toLowerCase().includes('user') || key.toLowerCase().includes('nick')) {
-                displayName = uData[key];
-                break;
-              }
-            }
-          }
-
-          if (!displayName) {
-            displayName = uData.name || uData.username || uData.displayName || uData.first_name || uData.email || ("User_" + uid.substring(0, 5));
-          }
-
-          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || 'https://emigrantbook.com/logo.png';
+          let displayName = extractName(uData, uid);
+          let displayPhoto = extractPhotoUrl(uData);
 
           usersList.push({
             uid: uid,
             name: displayName,
             photo: displayPhoto,
+            rawPhoto: displayPhoto, // ინახავს რეალურ ბმულს
             presence: uData.status || uData.presence || 'offline',
             lastMsg: uData.lastMsg || "Tap to chat"
           });
@@ -825,13 +859,14 @@
           if (uid === currentUid) return;
 
           const uData = docSnap.data();
-          let displayName = uData.name || uData.username || uData.displayName || uData.first_name || uData.email || ("User_" + uid.substring(0, 5));
-          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || 'https://emigrantbook.com/logo.png';
+          let displayName = extractName(uData, uid);
+          let displayPhoto = extractPhotoUrl(uData);
 
           usersList.push({
             uid: uid,
             name: displayName,
             photo: displayPhoto,
+            rawPhoto: displayPhoto,
             presence: uData.status || uData.presence || 'offline',
             lastMsg: uData.lastMsg || "Tap to chat"
           });
@@ -859,10 +894,13 @@
         };
 
         const isOnline = chat.presence === 'online';
+        
+        // თუ ბაზაში ფოტო საერთოდ არ მოიძებნა, გამოვიყენებთ ინიციალების ავატარს (პირველი ასოს გამოსახულებას)
+        const imgSrc = chat.photo ? chat.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}&background=0D8ABC&color=fff&size=128`;
 
         item.innerHTML = `
           <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="${chat.photo}" onerror="this.src='https://emigrantbook.com/logo.png';">
+            <img class="chat-row-avatar" src="${imgSrc}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}&background=0D8ABC&color=fff&size=128';">
             <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
           </div>
           <div class="chat-row-details">
@@ -882,15 +920,17 @@
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
       currentActiveChatUser = username;
-      currentActiveChatAvatar = avatarUrl;
+
+      const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0D8ABC&color=fff&size=128`;
+      currentActiveChatAvatar = finalAvatar;
 
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'flex';
 
       document.getElementById('active-thread-name').innerText = username;
-      document.getElementById('active-thread-avatar').src = avatarUrl;
+      document.getElementById('active-thread-avatar').src = finalAvatar;
       document.getElementById('chat-start-big-name').innerText = username;
-      document.getElementById('chat-start-big-avatar').src = avatarUrl;
+      document.getElementById('chat-start-big-avatar').src = finalAvatar;
 
       if (!targetUid || !window.auth || !window.auth.currentUser) return;
 
@@ -909,7 +949,7 @@
         }
       });
 
-      listenToFirestoreMessages(chatId, avatarUrl);
+      listenToFirestoreMessages(chatId, finalAvatar);
     }
 
     // 3. FIRESTORE-ის შეტყობინებების მოსმენა რეალურ დროში
@@ -946,7 +986,7 @@
             msgRow.innerHTML = `<div class="msg-bubble">${content}</div>`;
           } else {
             msgRow.innerHTML = `
-              <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://emigrantbook.com/logo.png';">
+              <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=128';">
               <div class="msg-bubble">${content}</div>
             `;
           }
