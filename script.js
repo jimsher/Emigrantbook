@@ -1,7 +1,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
     authDomain: "emigrantbook-4b7bd.firebaseapp.com",
-    databaseURL: "https://emigrantbook-4b7bd-default-rtdb.europe-west1.firebasedatabase.app",
+    databaseURL: "https://emigrantbook-4b7bd-default-rtdb.europe-west1.firebasedatabase.app/",
     projectId: "emigrantbook-4b7bd",
     storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
     messagingSenderId: "109907338554",
