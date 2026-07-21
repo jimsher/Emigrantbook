@@ -353,6 +353,32 @@
       right: 0 !important;
     }
 
+    /* ---- LIVE STREAM BUTTON STYLES ---- */
+    .menu-live-btn {
+      background: linear-gradient(135deg, #ff4d4f 0%, #c0392b 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+      transition: transform 0.2s, background 0.2s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .menu-live-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #ff6b6b 0%, #d63031 100%);
+    }
+
     /* ---- BALANCES CARD STYLES ---- */
     .menu-balance-card {
       background: linear-gradient(135deg, #222 0%, #151515 100%);
@@ -1871,6 +1897,11 @@
     <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
     <div class="side-menu-content" id="side-menu-content">
       
+      <!-- LIVE STREAM BUTTON -->
+      <button class="menu-live-btn" onclick="window.location.href='live.html'">
+        🔴 <span id="lbl-live-btn">LIVE პირდაპირი ეთერი</span>
+      </button>
+
       <!-- BUBBLE/BURGER BALANCE DISPLAY -->
       <div class="menu-balance-card">
         <div class="menu-balance-header">
@@ -2283,6 +2314,7 @@
         noVideos: "მომხმარებელს ვიდეოები არ აქვს.", descPlaceholder: "ფოტოს აღწერა არ არის მითითებული.",
         selectLang: "🌐 ენის არჩევა / Language",
         balanceTitle: "💳 შიდა ბალანსი", topUp: "+ შევსება",
+        liveBtn: "LIVE პირდაპირი ეთერი",
         authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია."
       },
       en: {
@@ -2310,6 +2342,7 @@
         noVideos: "No videos available.", descPlaceholder: "No description provided.",
         selectLang: "🌐 Select Language",
         balanceTitle: "💳 Internal Balance", topUp: "+ Top Up",
+        liveBtn: "LIVE Stream",
         authFooter: "© 2026 Emigrantbook. All rights reserved."
       },
       ru: {
@@ -2337,6 +2370,7 @@
         noVideos: "Нет доступных видео.", descPlaceholder: "Описание отсутствует.",
         selectLang: "🌐 Выберите язык",
         balanceTitle: "💳 Внутренний баланс", topUp: "+ Пополнить",
+        liveBtn: "Прямой эфир LIVE",
         authFooter: "© 2026 Emigrantbook. Все права защищены."
       },
       fr: {
@@ -2364,6 +2398,7 @@
         noVideos: "Aucune vidéo disponible.", descPlaceholder: "Aucune description fournie.",
         selectLang: "🌐 Choisir la langue",
         balanceTitle: "💳 Solde Interne", topUp: "+ Recharger",
+        liveBtn: "Direct LIVE",
         authFooter: "© 2026 Emigrantbook. Tous droits réservés."
       },
       de: {
@@ -2391,6 +2426,7 @@
         noVideos: "Keine Videos verfügbar.", descPlaceholder: "Keine Beschreibung vorhanden.",
         selectLang: "🌐 Sprache auswählen",
         balanceTitle: "💳 Guthaben", topUp: "+ Aufladen",
+        liveBtn: "LIVE-Stream",
         authFooter: "© 2026 Emigrantbook. Alle Rechte vorbehalten."
       }
     };
@@ -2430,6 +2466,9 @@
       if(logoutBtn) logoutBtn.innerText = t.logout;
       var drTitleProfile = document.getElementById('dr-title-profile');
       if(drTitleProfile) drTitleProfile.innerText = t.friendReqTitle;
+
+      var liveBtnLbl = document.getElementById('lbl-live-btn');
+      if(liveBtnLbl) liveBtnLbl.innerText = t.liveBtn;
 
       var balTitle = document.getElementById('lbl-balance-title');
       if(balTitle) balTitle.innerText = t.balanceTitle;
