@@ -4107,23 +4107,24 @@ async function loadMusicFromDB() {
     const list = document.getElementById('music-list');
     if (!list) return;
     try {
-        const querySnapshot = await db.collection("musics").get();
-        if (querySnapshot.empty) return;
-        list.innerHTML = "";
-        querySnapshot.forEach(async (doc) => {
-            const s = doc.data();
-            const realTime = await getDuration(s.url);
-            const row = document.createElement('div');
-            row.className = "music-item-row";
-            row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
-            row.innerHTML = `
-                <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
-                <div style="flex:1;">
-                    <div style="font-weight:500; color:white;">${s.name || s.title}</div>
-                    <div style="color:#888; font-size:12px;">${s.artist || 'Artist'} · ${realTime}</div>
-                </div>`;
-            row.onclick = () => pickSong(s.url, s.name || s.title);
-            list.appendChild(row);
+        db.ref("musics").once('value', async snap => {
+            const data = snap.val();
+            if (!data) return;
+            list.innerHTML = "";
+            for (const [id, s] of Object.entries(data)) {
+                const realTime = await getDuration(s.url);
+                const row = document.createElement('div');
+                row.className = "music-item-row";
+                row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
+                row.innerHTML = `
+                    <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
+                    <div style="flex:1;">
+                        <div style="font-weight:500; color:white;">${s.name || s.title}</div>
+                        <div style="color:#888; font-size:12px;">${s.artist || 'Artist'} · ${realTime}</div>
+                    </div>`;
+                row.onclick = () => pickSong(s.url, s.name || s.title);
+                list.appendChild(row);
+            }
         });
     } catch (e) {}
 }
