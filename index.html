@@ -1,54 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <title>EmigrantBook | Token Impact</title>
- <link rel="stylesheet" href="style.css">
- <link rel="stylesheet" href="shopping.css">
- <link rel="stylesheet" href="live.css">
- <link rel="stylesheet" href="chatvirtva.css">
- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EmigrantBook | Token Impact</title>
+    
+    <!-- CSS ფაილები -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="shopping.css">
+    <link rel="stylesheet" href="live.css">
+    <link rel="stylesheet" href="chatvirtva.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
- <link rel="manifest" href="manifest.json?v=2">
- 
- <meta name="theme-color" content="#000000">
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="manifest.json?v=2">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Impact">
 
- <meta name="mobile-web-app-capable" content="yes">
- <meta name="apple-mobile-web-app-capable" content="yes">
- <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <meta name="apple-mobile-web-app-title" content="Impact">
+    <!-- External SDKs -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
 
- <script src="https://js.stripe.com/v3/"></script>
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
- <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
- <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+    <!-- EmailJS Integration -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("oZOT_SZC1MfIZnil8");
+       })();
+    </script>
 
- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
- <script type="text/javascript">
-   (function(){
-      emailjs.init("oZOT_SZC1MfIZnil8");
-   })();
- </script>
+    <!-- OneSignal Push Notifications -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "5043bc1e-ed37-49f3-987c-b51c1b130a4b",
+        });
+      });
+    </script>
 
- <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
- <script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "5043bc1e-ed37-49f3-987c-b51c1b130a4b",
-    });
-  });
- </script>
+    <script>
+    function saveUserToken(tokenId) {
+        alert("მივიღე ID: " + tokenId);
+    }
+    </script>
 
- <script>
- function saveUserToken(tokenId) {
-    alert("მივიღე ID: " + tokenId);
- }
- </script>
-
- <style>
+    <style>
 /* ვიდეო ზარის დიზაინი */
 #videoCallUI {
     position: fixed;
@@ -1467,15 +1471,10 @@ div[style*="overflow-x:auto"] {
     background-color: #27ae60;
     text-decoration: none;
 }
- </style>
+    </style>
 </head>
 
 <body>
-<!-- Firebase SDKs (Realtime DB & Auth) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
 <div id="liveFloatingBtn" onclick="openActiveLivesModal()" style="display:none; position:fixed; right:20px; top:100px; z-index:9999; cursor:pointer; text-align:center;">
     <div style="width:60px; height:60px; border-radius:50%; border:3px solid #ff4d4d; padding:2px; background:#000; box-shadow: 0 0 15px rgba(255,77,77,0.5); animation: pulse-live 1.5s infinite;">
@@ -1587,8 +1586,13 @@ div[style*="overflow-x:auto"] {
 
 <div id="main-feed"></div>
 
-<!-- JavaScript ლოგიკა -->
-<script>
+<!-- თანამედროვე Firebase v10+ (Modular / ES6 Import) -->
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, set, query, limitToLast, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
   const firebaseConfig = { 
     apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
     authDomain: "emigrantbook.firebaseapp.com", 
@@ -1598,13 +1602,11 @@ div[style*="overflow-x:auto"] {
     appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
   };
 
-  if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-  }
-
-  const db = firebase.database();
-  const auth = firebase.auth();
-  const storage = firebase.storage(); 
+  // Firebase ინიციალიზაცია
+  const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const storage = getStorage(app);
   const stripe = Stripe('pk_live_51TCrgOK0YcbjyHRbMu9SzwKtqhsqx4FQC6ZJpta54mxfTIuwWVxmLjwh3TZ9TnK8YAtQp7hk4VU65XD45ZBQSt2Z00SXSc5ir9');
 
   let myName = "User";
@@ -1612,10 +1614,12 @@ div[style*="overflow-x:auto"] {
   let myAkho = 0;
   let currentChatId = null;
 
-  auth.onAuthStateChanged(user => {
+  // აუტენტიფიკაციის მოსმენა
+  onAuthStateChanged(auth, user => {
     if (user) {
       document.getElementById('authUI').style.display = 'none';
-      db.ref('users/' + user.uid).on('value', snap => {
+      const userRef = ref(db, 'users/' + user.uid);
+      onValue(userRef, snap => {
           const d = snap.val();
           if(d) {
               myName = d.name || "User";
@@ -1631,7 +1635,8 @@ div[style*="overflow-x:auto"] {
     }
   });
 
-  function toggleAuthBox(type) {
+  // გლობალური ფუნქციები (window ობიექტზე მიბმა HTML-იდან გამოსაძახებლად)
+  window.toggleAuthBox = function(type) {
       if (type === 'reg') {
           document.getElementById('loginBox').style.display = 'none';
           document.getElementById('regBox').style.display = 'block';
@@ -1639,17 +1644,17 @@ div[style*="overflow-x:auto"] {
           document.getElementById('loginBox').style.display = 'block';
           document.getElementById('regBox').style.display = 'none';
       }
-  }
+  };
 
-  function handleAuth(type) {
+  window.handleAuth = function(type) {
       if (type === 'reg') {
           const email = document.getElementById('rEmail').value.trim();
           const pass = document.getElementById('rPass').value.trim();
           const fName = document.getElementById('rFirstName').value.trim();
           const lName = document.getElementById('rLastName').value.trim();
           
-          auth.createUserWithEmailAndPassword(email, pass).then(u => {
-              db.ref('users/' + u.user.uid).set({ 
+          createUserWithEmailAndPassword(auth, email, pass).then(u => {
+              set(ref(db, 'users/' + u.user.uid), { 
                   name: fName + " " + lName, 
                   akho: 50.00, 
                   photo: "", 
@@ -1660,13 +1665,14 @@ div[style*="overflow-x:auto"] {
       } else {
           const email = document.getElementById('uEmail').value.trim();
           const pass = document.getElementById('uPass').value.trim();
-          auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
+          signInWithEmailAndPassword(auth, email, pass).catch(err => alert(err.message));
       }
-  }
+  };
 
-  function renderTokenFeed() {
+  window.renderTokenFeed = function() {
       const feed = document.getElementById('main-feed');
-      db.ref('posts').limitToLast(15).once('value', snap => {
+      const postsQuery = query(ref(db, 'posts'), limitToLast(15));
+      get(postsQuery).then(snap => {
           const data = snap.val();
           if(!data) return;
           feed.innerHTML = "";
@@ -1687,7 +1693,7 @@ div[style*="overflow-x:auto"] {
               feed.appendChild(card);
           });
       });
-  }
+  };
 </script>
 </body>
 </html>
