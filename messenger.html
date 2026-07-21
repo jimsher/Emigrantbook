@@ -580,7 +580,7 @@
         </div>
       </div>
 
-      <!-- ჩატების სია -->
+      <!-- ჩატების სია (დინამიური REALTIME FIRESTORE) -->
       <div class="chats-scroll-area" id="chats-list-target">
         <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
       </div>
@@ -625,7 +625,7 @@
           </div>
           <div class="thread-user-info">
             <span class="thread-user-name" id="active-thread-name">მომხმარებელი</span>
-            <span class="thread-user-status" id="active-thread-status">Active 1 hour ago</span>
+            <span class="thread-user-status" id="active-thread-status">...</span>
           </div>
         </div>
         <div class="thread-header-actions">
@@ -727,7 +727,12 @@
     };
 
     onAuthStateChanged(window.auth, (user) => {
-      fetchFirestoreChatList();
+      if (user) {
+        fetchFirestoreChatList();
+      } else {
+        const target = document.getElementById('chats-list-target');
+        if (target) target.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
+      }
     });
   </script>
 
@@ -742,133 +747,84 @@
     var currentActiveChatAvatar = "";
     var unsubscribeMessages = null;
 
-    // სატესტო დეფოლტ ჩატები იმ შემთხვევისთვის, თუ Firestore ბაზა ჯერ ცარიელია
-    const defaultChats = [
-      {
-        uid: 'user_theo',
-        name: 'თეო თეო',
-        photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-        lastMsg: 'mec tyeshi viyavi mesmis sheni',
-        timeStr: 'Thu',
-        unread: true,
-        presence: 'online',
-        messages: [
-          { sender: 'them', text: 'dgesac vilotave😂😂😂' },
-          { sender: 'me', text: 'კაი დროისა ანწ' },
-          { sender: 'me', text: 'ლოლლო' },
-          { sender: 'me', text: 'ლოთოო' },
-          { sender: 'them', text: 'gviani arasdrosa' },
-          { sender: 'them', text: 'shen rashvebi aba dzma' },
-          { sender: 'me', text: 'შენ რა გენაღვლება' },
-          { sender: 'me', text: 'ქალაქელი ხარ' },
-          { sender: 'them', text: 'xoo' },
-          { sender: 'me', text: 'მე 9 სოფელუ უნდა გავიარო შენამდე რომ მოვაღწიო' },
-          { sender: 'them', text: 'mec tyeshi viyavi mesmis sheni' }
-        ]
-      },
-      {
-        uid: 'user_maia',
-        name: 'Maia Mamagulashvili',
-        photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
-        lastMsg: 'You sent a photo.',
-        timeStr: 'Thu',
-        unread: false,
-        presence: 'offline',
-        messages: [
-          { sender: 'them', text: 'გამარჯობა, როგორ ხარ?' },
-          { sender: 'me', text: 'კარგად, შენ როგორ ხარ? ემიგრანტბუქზე დარეგისტრირდი?' }
-        ]
-      }
-    ];
-
     function getChatId(u1, u2) {
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // 1. ჩატების სიის ჩატვირთვა
+    // 1. FIRESTORE-დან ჩატების სიის რეალურ დროში წამოღება
     function fetchFirestoreChatList() {
       const listTarget = document.getElementById('chats-list-target');
-      if (!window.auth || !window.db) {
-        renderDefaultChats();
-        return;
-      }
-
-      const currentUid = window.auth.currentUser ? window.auth.currentUser.uid : 'my_uid';
+      if (!window.auth || !window.auth.currentUser) return;
+      const currentUid = window.auth.currentUser.uid;
       const { collection, onSnapshot } = window.fs;
 
+      // ვუსმენთ 'users' კოლექციას Firestore-ში
       const usersRef = collection(window.db, 'users');
       
       onSnapshot(usersRef, (snapshot) => {
-        let usersList = [];
-        
-        if (snapshot && !snapshot.empty) {
-          snapshot.forEach(docSnap => {
-            const uid = docSnap.id;
-            if (uid === currentUid) return;
-
-            const uData = docSnap.data();
-            usersList.push({
-              uid: uid,
-              name: uData.name || uData.username || uData.displayName || 'User',
-              photo: uData.photo || uData.photoURL || uData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
-              presence: uData.status || uData.presence || 'offline',
-              lastMsg: uData.lastMsg || "Tap to chat",
-              unread: false
-            });
-          });
+        if (!snapshot || snapshot.empty) {
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მომხმარებლები არ არიან.</p>";
+          return;
         }
+
+        let usersList = [];
+        snapshot.forEach(docSnap => {
+          const uid = docSnap.id;
+          // სურვილისამებრ: თუ გინდა საკუთარ თავსაც ხედავდე ბაზაში, ქვედა ხაზი წაშალე
+          if (uid === currentUid) return;
+
+          const uData = docSnap.data();
+          usersList.push({
+            uid: uid,
+            name: uData.name || uData.username || uData.displayName || 'User',
+            photo: uData.photo || uData.photoURL || uData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+            presence: uData.status || uData.presence || 'offline',
+            lastMsg: uData.lastMsg || "Tap to chat",
+            lastTs: uData.lastTs || 0
+          });
+        });
 
         if (usersList.length === 0) {
-          renderDefaultChats();
-        } else {
-          renderChatListHTML(usersList);
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა მომხმარებლები არ მოიძებნა.</p>";
+          return;
         }
-      }, (err) => {
-        console.warn("Firestore access fallback to default view:", err);
-        renderDefaultChats();
-      });
-    }
 
-    // დეფოლტ ჩატების გამოჩენა ეკრანზე
-    function renderDefaultChats() {
-      renderChatListHTML(defaultChats);
-    }
+        listTarget.innerHTML = "";
 
-    function renderChatListHTML(chatArray) {
-      const listTarget = document.getElementById('chats-list-target');
-      listTarget.innerHTML = "";
+        usersList.forEach(chat => {
+          const item = document.createElement('div');
+          item.className = 'chat-row-item';
+          
+          item.onclick = function() {
+            openChat(chat.name, chat.photo, chat.uid);
+          };
 
-      chatArray.forEach(chat => {
-        const item = document.createElement('div');
-        item.className = 'chat-row-item' + (chat.unread ? ' unread' : '');
-        
-        item.onclick = function() {
-          openChat(chat.name, chat.photo, chat.uid, chat.messages);
-        };
+          const isOnline = chat.presence === 'online';
 
-        const isOnline = chat.presence === 'online';
-
-        item.innerHTML = `
-          <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="${chat.photo}">
-            <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
-          </div>
-          <div class="chat-row-details">
-            <span class="chat-row-name">${chat.name}</span>
-            <div class="chat-row-meta">
-              <span class="chat-row-last-msg">${chat.lastMsg}</span>
-              <span class="chat-row-time">${chat.timeStr || ''}</span>
-              ${chat.unread ? '<div class="unread-dot"></div>' : ''}
+          item.innerHTML = `
+            <div class="chat-row-avatar-holder">
+              <img class="chat-row-avatar" src="${chat.photo}">
+              <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
             </div>
-          </div>
-        `;
+            <div class="chat-row-details">
+              <span class="chat-row-name">${chat.name}</span>
+              <div class="chat-row-meta">
+                <span class="chat-row-last-msg">${chat.lastMsg}</span>
+                <span class="chat-row-time"></span>
+              </div>
+            </div>
+          `;
 
-        listTarget.appendChild(item);
+          listTarget.appendChild(item);
+        });
+      }, (err) => {
+        console.error("Firestore Error:", err);
+        listTarget.innerHTML = `<p style='padding:20px; color:#ff3b30; text-align:center;'>შეცდომა ბაზასთან: ${err.message}</p>`;
       });
     }
 
-    // 2. ჩატის გახსნა
-    function openChat(username, avatarUrl, targetUid, preloadedMsgs) {
+    // 2. ჩატის გახსნა დინამიურად
+    function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
       currentActiveChatUser = username;
       currentActiveChatAvatar = avatarUrl;
@@ -881,58 +837,45 @@
       document.getElementById('chat-start-big-name').innerText = username;
       document.getElementById('chat-start-big-avatar').src = avatarUrl;
 
-      const msgBlock = document.getElementById('dynamic-messages-block');
-      msgBlock.innerHTML = "";
+      if (!targetUid || !window.auth || !window.auth.currentUser) return;
 
-      // თუ დეფოლტ ჩატია, ჩავსვათ წინასწარ გამზადებული დიალოგი
-      if (preloadedMsgs && preloadedMsgs.length > 0) {
-        preloadedMsgs.forEach(m => {
-          const isMine = m.sender === 'me';
-          const msgRow = document.createElement('div');
-          msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
+      const currentUid = window.auth.currentUser.uid;
+      const chatId = getChatId(currentUid, targetUid);
 
-          if (isMine) {
-            msgRow.innerHTML = `<div class="msg-bubble">${m.text}</div>`;
-          } else {
-            msgRow.innerHTML = `
-              <img class="msg-bubble-avatar" src="${avatarUrl}">
-              <div class="msg-bubble">${m.text}</div>
-            `;
-          }
-          msgBlock.appendChild(msgRow);
-        });
+      // სამიზნე მომხმარებლის სტატუსის მოსმენა Firestore-ში
+      const { doc, onSnapshot } = window.fs;
+      onSnapshot(doc(window.db, 'users', targetUid), (docSnap) => {
+        const statusEl = document.getElementById('active-thread-status');
+        if (docSnap.exists() && (docSnap.data().status === 'online' || docSnap.data().presence === 'online')) {
+          statusEl.innerText = "Online";
+          statusEl.style.color = "#31a24c";
+        } else {
+          statusEl.innerText = "Offline";
+          statusEl.style.color = "#8e8e93";
+        }
+      });
 
-        setTimeout(function() {
-          const target = document.getElementById('messages-target');
-          if (target) target.scrollTop = target.scrollHeight;
-        }, 50);
-      }
-
-      // თუ რეალური მომხმარებელია Firestore-ში
-      if (window.auth && window.auth.currentUser && window.db) {
-        const currentUid = window.auth.currentUser.uid;
-        const chatId = getChatId(currentUid, targetUid);
-        listenToFirestoreMessages(chatId, avatarUrl);
-      }
+      listenToFirestoreMessages(chatId, avatarUrl);
     }
 
     // 3. FIRESTORE-ის შეტყობინებების მოსმენა რეალურ დროში
     function listenToFirestoreMessages(chatId, targetAvatar) {
+      const msgBlock = document.getElementById('dynamic-messages-block');
       if (!window.auth || !window.auth.currentUser) return;
       const myUid = window.auth.currentUser.uid;
       const { collection, query, orderBy, onSnapshot } = window.fs;
 
       if (unsubscribeMessages) unsubscribeMessages();
 
+      // Firestore sub-collection: chats/{chatId}/messages
       const msgsQuery = query(
         collection(window.db, 'chats', chatId, 'messages'),
         orderBy('createdAt', 'asc')
       );
 
       unsubscribeMessages = onSnapshot(msgsQuery, (snapshot) => {
-        if (!snapshot || snapshot.empty) return;
-        const msgBlock = document.getElementById('dynamic-messages-block');
         msgBlock.innerHTML = "";
+        if (!snapshot || snapshot.empty) return;
 
         snapshot.forEach(docSnap => {
           const msg = docSnap.data();
@@ -963,7 +906,7 @@
           if (target) target.scrollTop = target.scrollHeight;
         }, 50);
       }, (err) => {
-        console.warn("Messages listener note:", err);
+        console.error("Messages error:", err);
       });
     }
 
@@ -981,40 +924,26 @@
       }
     }
 
-    // 5. შეტყობინების გაგზავნა (ეკრანზეც ასახავს და Firestore-შიც ინახავს)
+    // 5. შეტყობინების გაგზავნა FIRESTORE-ში
     async function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
-      if (!text) return;
+      if (!text || !currentActiveChatUid || !window.auth.currentUser) return;
 
-      var msgBlock = document.getElementById('dynamic-messages-block');
-      var newMsg = document.createElement('div');
-      newMsg.className = "message-row outgoing";
-      newMsg.innerHTML = `<div class="msg-bubble">${text}</div>`;
-      msgBlock.appendChild(newMsg);
+      const myUid = window.auth.currentUser.uid;
+      const chatId = getChatId(myUid, currentActiveChatUid);
+      const { collection, addDoc, serverTimestamp } = window.fs;
 
       input.value = "";
 
-      setTimeout(function() {
-        const target = document.getElementById('messages-target');
-        if (target) target.scrollTop = target.scrollHeight;
-      }, 30);
-
-      // თუ ბაზასთან კავშირი გაქვს, შეინახოს Firestore-შიც
-      if (currentActiveChatUid && window.auth && window.auth.currentUser && window.db) {
-        const myUid = window.auth.currentUser.uid;
-        const chatId = getChatId(myUid, currentActiveChatUid);
-        const { collection, addDoc, serverTimestamp } = window.fs;
-
-        try {
-          await addDoc(collection(window.db, 'chats', chatId, 'messages'), {
-            senderId: myUid,
-            text: text,
-            createdAt: serverTimestamp()
-          });
-        } catch (err) {
-          console.warn("Realtime sync note:", err);
-        }
+      try {
+        await addDoc(collection(window.db, 'chats', chatId, 'messages'), {
+          senderId: myUid,
+          text: text,
+          createdAt: serverTimestamp()
+        });
+      } catch (err) {
+        console.error("Message send error:", err);
       }
     }
   </script>
