@@ -703,7 +703,7 @@
 
     onAuthStateChanged(window.auth, (user) => {
       if (user) {
-        if (typeof fetchRealtimeChatList === 'function') fetchRealtimeChatList();
+        fetchRealtimeChatList();
       } else {
         const target = document.getElementById('chats-list-target');
         if (target) target.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
@@ -711,7 +711,7 @@
     });
   </script>
 
-  <!-- პროექტის ძირითადი ფაილები (თუ არსებობს) -->
+  <!-- პროექტის ძირითადი ფაილები -->
   <script src="script.js"></script>
   <script src="chatvirtva.js"></script>
 
@@ -725,94 +725,101 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // 1. ჩატების სიის რეალურ დროში წამოღება Firebase-დან
-    async function fetchRealtimeChatList() {
+    // 1. ჩატების სიის რეალურ დროში წამოღება
+    function fetchRealtimeChatList() {
       const listTarget = document.getElementById('chats-list-target');
       if (!window.auth || !window.auth.currentUser) return;
       const currentUid = window.auth.currentUser.uid;
-      const { ref, onValue, get } = window.fbDb;
+      const { ref, onValue } = window.fbDb;
 
-      const followingRef = ref(window.db, 'users/' + currentUid + '/following');
-      
-      onValue(followingRef, async (snap) => {
-        const followers = snap.val();
-        if (!followers) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>აქტიური ჩატები არ არის.</p>";
+      // ვუსმენთ ყველა მომხმარებელს რეალურ დროში
+      const usersRef = ref(window.db, 'users');
+      onValue(usersRef, (usersSnap) => {
+        const users = usersSnap.val();
+        if (!users) {
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მომხმარებლები არ არიან.</p>";
           return;
         }
 
-        let chatArray = [];
-        const entries = Object.entries(followers);
+        // ვუსმენთ მესიჯების კვანძს
+        const messagesRef = ref(window.db, 'messages');
+        onValue(messagesRef, (msgsSnap) => {
+          const allMessages = msgsSnap.val() || {};
+          let chatArray = [];
 
-        for (let [uid, data] of entries) {
-          const chatId = getChatId(currentUid, uid);
-          const msgRef = ref(window.db, 'messages/' + chatId);
-          const mSnap = await get(msgRef);
-          let lastTs = 0;
-          let lastMsg = "Tap to chat";
-          let isUnread = false;
+          Object.keys(users).forEach(uid => {
+            if (uid === currentUid) return; // საკუთარ თავს არ ვამატებთ ჩატებში
 
-          if (mSnap.exists()) {
-            const msgs = Object.values(mSnap.val());
-            const msgData = msgs[msgs.length - 1];
-            lastMsg = msgData.text || (msgData.image ? "📷 Photo" : "🎤 Voice");
-            lastTs = msgData.ts || 0;
+            const userData = users[uid];
+            const chatId = getChatId(currentUid, uid);
+            const chatMsgsObj = allMessages[chatId] || {};
+            const msgsList = Object.values(chatMsgsObj);
 
-            const readSnap = await get(ref(window.db, 'users/' + currentUid + '/last_read/' + chatId));
-            const lastRead = readSnap.val() || 0;
-            if (msgData.senderId !== currentUid && lastTs > lastRead) {
-              isUnread = true;
+            let lastTs = 0;
+            let lastMsg = "Tap to chat";
+
+            if (msgsList.length > 0) {
+              const lastMsgData = msgsList[msgsList.length - 1];
+              lastMsg = lastMsgData.text || (lastMsgData.image ? "📷 Photo" : "🎤 Voice");
+              lastTs = lastMsgData.ts || 0;
             }
+
+            chatArray.push({
+              uid: uid,
+              name: userData.name || userData.username || 'User',
+              photo: userData.photo || userData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+              presence: userData.presence || 'offline',
+              lastTs: lastTs,
+              lastMsg: lastMsg
+            });
+          });
+
+          // სორტირება ბოლო მესიჯის მიხედვით
+          chatArray.sort((a, b) => b.lastTs - a.lastTs);
+
+          if (chatArray.length === 0) {
+            listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები ცარიელია.</p>";
+            return;
           }
 
-          chatArray.push({ uid, data, lastTs, lastMsg, isUnread });
-        }
+          listTarget.innerHTML = "";
 
-        // სორტირება ბოლო მესიჯის თარიღით
-        chatArray.sort((a, b) => b.lastTs - a.lastTs);
-        listTarget.innerHTML = "";
-
-        chatArray.forEach(chat => {
-          const item = document.createElement('div');
-          item.className = 'chat-row-item' + (chat.isUnread ? ' unread' : '');
-          
-          let timeStr = "";
-          if (chat.lastTs > 0) {
-            const d = new Date(chat.lastTs);
-            const now = new Date();
-            if (d.toDateString() === now.toDateString()) {
-              timeStr = d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
-            } else {
-              timeStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+          chatArray.forEach(chat => {
+            const item = document.createElement('div');
+            item.className = 'chat-row-item';
+            
+            let timeStr = "";
+            if (chat.lastTs > 0) {
+              const d = new Date(chat.lastTs);
+              const now = new Date();
+              if (d.toDateString() === now.toDateString()) {
+                timeStr = d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+              } else {
+                timeStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+              }
             }
-          }
 
-          item.onclick = function() {
-            openChat(chat.data.name || 'User', chat.data.photo || 'token-avatar.png', chat.uid);
-          };
+            item.onclick = function() {
+              openChat(chat.name, chat.photo, chat.uid);
+            };
 
-          item.innerHTML = `
-            <div class="chat-row-avatar-holder">
-              <img class="chat-row-avatar" src="${chat.data.photo || 'token-avatar.png'}">
-              <div class="active-badge" id="online-badge-${chat.uid}" style="display:none;"></div>
-            </div>
-            <div class="chat-row-details">
-              <span class="chat-row-name">${chat.data.name || 'User'}</span>
-              <div class="chat-row-meta">
-                <span class="chat-row-last-msg">${chat.lastMsg}</span>
-                <span class="chat-row-time">${timeStr}</span>
-                ${chat.isUnread ? '<div class="unread-dot"></div>' : ''}
+            const isOnline = chat.presence === 'online';
+
+            item.innerHTML = `
+              <div class="chat-row-avatar-holder">
+                <img class="chat-row-avatar" src="${chat.photo}">
+                <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
               </div>
-            </div>
-          `;
+              <div class="chat-row-details">
+                <span class="chat-row-name">${chat.name}</span>
+                <div class="chat-row-meta">
+                  <span class="chat-row-last-msg">${chat.lastMsg}</span>
+                  <span class="chat-row-time">${timeStr}</span>
+                </div>
+              </div>
+            `;
 
-          listTarget.appendChild(item);
-
-          // ონლაინ სტატუსი
-          onValue(ref(window.db, 'users/' + chat.uid + '/presence'), pSnap => {
-            const isOnline = pSnap.val() === 'online';
-            const badge = document.getElementById('online-badge-' + chat.uid);
-            if (badge) badge.style.display = isOnline ? 'block' : 'none';
+            listTarget.appendChild(item);
           });
         });
       });
@@ -858,6 +865,7 @@
     // 3. შეტყობინებების მოსმენა რეალურ დროში
     function listenToRealtimeMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
+      if (!window.auth || !window.auth.currentUser) return;
       const myUid = window.auth.currentUser.uid;
       const { ref, onValue } = window.fbDb;
 
