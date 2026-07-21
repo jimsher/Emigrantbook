@@ -1,501 +1,1011 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ka">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impact Delivery - Emigrantbook</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Emigrantbook - LIVE Feature</title>
 
+    <!-- FontAwesome და Agora SDK -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
 
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
-
-
-
-    
+    <!-- ========================================== -->
+    <!-- 1. ლაივის სტილები (CSS)                     -->
+    <!-- ========================================== -->
     <style>
-        :root { --gold: #d4af37; --dark-bg: #0a0a0a; --card-bg: rgba(255,255,255,0.05); --text: #fff; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--dark-bg); color: var(--text); overflow-x: hidden; }
+    /* 1. მთავარი ანიმაცია ავატარის გარშემო */
+    .is-live-now {
+        box-shadow: 0 0 0 2px #000, 0 0 0 4px #fe2c55 !important;
+        animation: tiktok-pulse 1.5s infinite ease-in-out !important;
+        position: relative;
+        z-index: 10;
+    }
 
-        /* მთავარი გვერდი */
-        .header { position: sticky; top: 0; background: #0a0a0a; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; z-index: 100; }
-        .cart-btn { position: relative; font-size: 24px; color: var(--gold); cursor: pointer; }
-        #cartCount { position: absolute; top: -5px; right: -8px; background: red; font-size: 10px; padding: 2px 6px; border-radius: 50%; color: white; }
+    /* 2. LIVE წარწერა, რომელიც ავატარის ქვევით ჩნდება */
+    .is-live-now::after {
+        content: "LIVE" !important;
+        position: absolute !important;
+        bottom: -6px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        background: #fe2c55 !important;
+        color: #fff !important;
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+        border-radius: 3px !important;
+        font-weight: bold !important;
+        border: 1px solid #000 !important;
+        z-index: 100 !important;
+        line-height: 1 !important;
+    }
 
-        .categories { display: flex; overflow-x: auto; padding: 15px; gap: 10px; }
-        .cat-item { padding: 8px 18px; background: var(--card-bg); border-radius: 20px; border: 1px solid #333; white-space: nowrap; font-size: 13px; cursor: pointer; }
-        .cat-item.active { background: var(--gold); color: #000; font-weight: bold; }
+    /* 3. ციმციმის ეფექტი (პულსაცია) */
+    @keyframes tiktok-pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(254, 44, 85, 0.7), 0 0 0 2px #000;
+        }
+        70% {
+            box-shadow: 0 0 0 8px rgba(254, 44, 85, 0), 0 0 0 2px #000;
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(254, 44, 85, 0), 0 0 0 2px #000;
+        }
+    }
 
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
-        .product-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid #222; transition: 0.3s; }
-        .product-img { width: 100%; height: 130px; object-fit: cover; cursor: pointer; }
-        .product-info { padding: 12px; }
+    .live-modal {
+        display: none; /* თავიდან დამალულია */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        backdrop-filter: blur(5px);
+    }
 
-        /* სრულეკრანიანი გვერდები */
-        .page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark-bg); z-index: 1000; display: none; overflow-y: auto; }
-        .hero-img { width: 100%; height: 250px; object-fit: cover; }
-        .content { padding: 20px; padding-bottom: 100px; }
-        
-        .section-title { color: var(--gold); margin: 20px 0 10px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-        .row { background: #151515; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid #222; }
-        
-        input[type="text"], input[type="tel"] { width: 100%; padding: 15px; background: #151515; border: 1px solid #222; border-radius: 12px; color: white; margin-bottom: 10px; outline: none; }
-        input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; accent-color: var(--gold); }
+    .live-modal-content {
+        background-color: #1a1a1a;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #333;
+        width: 80%;
+        max-width: 400px;
+        border-radius: 15px;
+        color: white;
+    }
 
-        .footer { position: fixed; bottom: 0; width: 100%; background: rgba(10,10,10,0.95); padding: 15px 20px; display: flex; gap: 15px; border-top: 1px solid #222; box-sizing: border-box; }
-        .qty-box { display: flex; align-items: center; background: #222; border-radius: 10px; padding: 5px 15px; }
-        .main-btn { flex: 1; background: var(--gold); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+    .live-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
 
+    .close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+    }
 
+    .live-list-container {
+        max-height: 300px;
+        overflow-y: auto;
+    }
 
+    /* ლაივის "ბარათი" სიაში */
+    .live-item {
+        background: rgba(255,255,255,0.1);
+        padding: 12px;
+        margin-bottom: 8px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+    }
 
-        /* Tracking Styles */
-.track-container {
-    padding: 20px 0;
-    position: relative;
-}
+    /* ლაივის ნიშანი მთავარ გვერდზე */
+    .live-nav-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        width: 48px;
+        height: 48px;
+        transition: transform 0.1s;
+        -webkit-tap-highlight-color: transparent;
+    }
 
-.track-item {
-    display: flex;
-    gap: 20px;
-    padding-bottom: 30px;
-    position: relative;
-}
+    .live-nav-button:active {
+        transform: scale(0.9);
+    }
 
-/* ხაზი წერტილებს შორის */
-.track-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 9px;
-    top: 20px;
-    width: 2px;
-    height: calc(100% - 20px);
-    background: #333;
-}
+    @keyframes pulse-live {
+        0% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4); }
+        70% { border-color: #ff0000; box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+        100% { border-color: #ff4d4d; box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+    }
 
-.track-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #333;
-    z-index: 2;
-    margin-top: 5px;
-}
+    /* კონტეინერი, სადაც ანიმაციები ხდება */
+    .live-activity-overlay {
+        position: absolute;
+        bottom: 110px;
+        left: 15px;
+        width: 250px;
+        height: 220px;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        mask-image: linear-gradient(to top, black 60%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to top, black 60%, transparent 100%);
+        overflow: hidden;
+        z-index: 100;
+    }
 
-.track-item.active .track-dot {
-    background: var(--gold);
-    box-shadow: 0 0 10px var(--gold);
-}
-
-.track-item.active .track-text b { color: var(--gold); }
-
-.track-text p {
-    font-size: 12px;
-    color: gray;
-    margin-top: 3px;
-}
+    @keyframes giftPopIn {
+        0% { transform: scale(0.2); opacity: 0; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
     </style>
 </head>
 <body>
 
-    <div id="mainView">
-        <div class="header">
-            <i class="fas fa-chevron-left" onclick="history.back()"></i>
-            <h2>Impact Delivery</h2>
-            <div class="cart-btn" onclick="showCart()">
-                <i class="fas fa-shopping-basket"></i>
-                <span id="cartCount">0</span>
+    <!-- ========================================== -->
+    <!-- 2. ლაივის ღილაკები და მენიუს ნაწილები        -->
+    <!-- ========================================== -->
+
+    <!-- ნავბარის LIVE ღილაკი -->
+    <div class="live-nav-button" onclick="openActiveLivesModal()">
+        <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 7L21 13" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M33 7L27 13" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 14H44V40C44 41.1046 43.1046 42 42 42H6C4.89543 42 4 41.1046 4 40V14Z" stroke="white" stroke-width="4.5" stroke-linejoin="round"/>
+            <text x="24" y="32" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif" font-weight="900" style="letter-spacing: 0.5px;">LIVE</text>
+        </svg>
+    </div>
+
+    <!-- ბურგერ მენიუს ლაივის ღილაკი -->
+    <a href="#" class="menu-item" onclick="startLiveFunc()" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="live-btn-custom" style="display: flex; align-items: center; gap: 10px;">
+            <div class="live-status-dot"></div>
+            <span data-key="live">ლაივი</span>
+        </div>
+        <i class="fas fa-chevron-right" style="color: #444; font-size: 14px;"></i>
+    </a>
+
+    <!-- მცურავი LIVE ღილაკი -->
+    <div id="liveFloatingBtn" onclick="openActiveLivesModal()" style="display:none; position:fixed; right:20px; top:100px; z-index:9999; cursor:pointer; text-align:center;">
+        <div style="width:60px; height:60px; border-radius:50%; border:3px solid #ff4d4d; padding:2px; background:#000; box-shadow: 0 0 15px rgba(255,77,77,0.5); animation: pulse-live 1.5s infinite;">
+            <img id="lastLiveAva" src="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+        </div>
+        <div style="background:#ff4d4d; color:white; font-size:10px; font-weight:900; padding:2px 8px; border-radius:10px; margin-top:-10px; position:relative; border:2px solid #000;">LIVE</div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. ლაივის მოდალური ფანჯრები და ინტერფეისი  -->
+    <!-- ========================================== -->
+
+    <!-- აქტიური ლაივების მოდალი 1 -->
+    <div id="activeLivesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:100000; align-items:center; justify-content:center;">
+        <div style="background:#1a1a1a; width:85%; max-width:400px; border-radius:20px; border:1px solid var(--gold, #d4af37); padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <b style="color:var(--gold, #d4af37); letter-spacing:1px;">აქტიური ლაივები</b>
+                <i class="fas fa-times" onclick="closeActiveLivesModal()" style="color:gray; cursor:pointer; font-size:20px;"></i>
             </div>
-        </div>
-        <div class="categories" id="catList">
-    <div class="cat-item active" onclick="filterMenu('all', this)">ყველა</div>
-    <div class="cat-item" onclick="showOrderHistory()" style="border-color: var(--gold); color: var(--gold);">
-    <i class="fas fa-history"></i> ისტორია
-    </div>       
-    <div class="cat-item" onclick="filterMenu('ხინკალი', this)">ხინკალი</div>
-    <div class="cat-item" onclick="filterMenu('ხაჭაპური', this)">ხაჭაპური</div>
-    <div class="cat-item" onclick="filterMenu('მწვადი', this)">მწვადი</div>
-    <div class="cat-item" onclick="filterMenu('სასმელი', this)">სასმელი</div>
-    
-    
-</div>
-
-<div class="menu-grid" id="menuGrid"></div>
-
-    <div id="productPage" class="page">
-        <div class="header">
-            <i class="fas fa-arrow-left" onclick="closePage('productPage')"></i>
-            <h2 id="pTitle">დეტალები</h2>
-            <div></div>
-        </div>
-        <img src="" id="pImg" class="hero-img">
-        <div class="content">
-            <h1 id="pName"></h1>
-            <p id="pDesc" style="color:gray; margin-bottom:20px;"></p>
-            
-            <div class="section-title">დაამატეთ ინგრედიენტები</div>
-            <div id="extrasBox"></div>
-
-            <div class="section-title">გადახდის მეთოდი</div>
-            <label class="row"><span>AKHO ბალანსი</span><input type="radio" name="pay" value="akho" checked></label>
-            <label class="row"><span>ბარათით (Online)</span><input type="radio" name="pay" value="card"></label>
-            <label class="row"><span>კურიერთან</span><input type="radio" name="pay" value="cash"></label>
-        </div>
-        <div class="footer">
-            <div class="qty-box">
-                <button onclick="updateQty(-1)" style="background:none; border:none; color:white; font-size:20px;">-</button>
-                <span id="qty" style="margin:0 15px; font-weight:bold;">1</span>
-                <button onclick="updateQty(1)" style="background:none; border:none; color:white; font-size:20px;">+</button>
+            <div id="modalLivesList" style="display:flex; flex-direction:column; gap:15px; max-height:400px; overflow-y:auto;">
             </div>
-            <button class="main-btn" onclick="addToCart()">კალათაში დამატება</button>
         </div>
     </div>
 
-    <div id="cartPage" class="page">
-        <div class="header">
-            <i class="fas fa-arrow-left" onclick="closePage('cartPage')"></i>
-            <h2>შეკვეთის გაფორმება</h2>
-            <div></div>
-        </div>
-        <div class="content">
-            <div class="section-title">არჩეული პროდუქტები</div>
-            <div id="cartItems"></div>
-            <h3 id="totalSum" style="text-align:right; color:var(--gold); margin:20px 0;"></h3>
-
-            <div class="section-title">მიწოდების მონაცემები</div>
-            <input type="text" id="userName" placeholder="სახელი და გვარი*">
-            <input type="text" id="userCity" placeholder="ქალაქი*">
-            <input type="text" id="userAddr" placeholder="მისამართი (ქუჩა, კორპუსი, ბინა)*">
-            <input type="tel" id="userPhone" placeholder="ტელეფონის ნომერი*">
-        </div>
-        <div class="footer">
-            <button class="main-btn" style="width:100%" onclick="submitOrder()">შეკვეთის დადასტურება 🚀</button>
-        </div>
-    </div>
-
-
-   <div id="trackPage" class="page">
-    <div class="header">
-        <i class="fas fa-arrow-left" onclick="closePage('trackPage')"></i>
-        <h2>შეკვეთის სტატუსი</h2>
-        <div></div>
-    </div>
-    <div class="content">
-        <div class="track-container">
-            <div class="track-item active">
-                <div class="track-dot"></div>
-                <div class="track-text">
-                    <b>შეკვეთა მიღებულია</b>
-                    <p>თქვენი შეკვეთა დამუშავების პროცესშია</p>
-                </div>
+    <!-- აქტიური ლაივების მოდალი 2 -->
+    <div id="active_lives_modal" class="live-modal">
+        <div class="live-modal-content">
+            <div class="live-modal-header">
+                <span>აქტიური ლაივები</span>
+                <button onclick="closeActiveLivesModal()" class="close-btn">&times;</button>
             </div>
-            <div class="track-item" id="step2">
-                <div class="track-dot"></div>
-                <div class="track-text">
-                    <b>მზადდება</b>
-                    <p>ჩვენი მზარეული ამზადებს თქვენს კერძს</p>
-                </div>
-            </div>
-            <div class="track-item" id="step3">
-                <div class="track-dot"></div>
-                <div class="track-text">
-                    <b>გზაშია</b>
-                    <p>კურიერი თქვენი მიმართულებით წამოვიდა</p>
-                </div>
-            </div>
-            <div class="track-item" id="step4">
-                <div class="track-dot"></div>
-                <div class="track-text">
-                    <b>მოვიდა</b>
-                    <p>გემრიელად მიირთვით!</p>
-                </div>
+            <div id="activeLivesList" class="live-list-container">
             </div>
         </div>
-
-        <div class="section-title">შეკვეთის დეტალები</div>
-        <div id="trackDetails" class="row" style="display:block;">
-            </div>
     </div>
-    <div class="footer">
-        <button class="main-btn" style="width:100%" onclick="closePage('trackPage')">მთავარზე დაბრუნება</button>
-    </div>
-</div>
 
-
-<div id="historyPage" class="page">
-    <div class="header">
-        <i class="fas fa-arrow-left" onclick="closePage('historyPage')"></i>
-        <h2>შეკვეთების ისტორია</h2>
-        <div></div>
-    </div>
-    <div class="content" id="historyItems">
-        </div>
-    <div class="footer">
-        <button class="main-btn" style="width:100%" onclick="closePage('historyPage')">დახურვა</button>
-    </div>
-</div>
-    
-
-    <script>
-// Firebase-ის კონფიგურაცია (შენი მონაცემები ჩასვი აქ
-const firebaseConfig = { 
-  apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk", 
-  authDomain: "emigrantbook.firebaseapp.com", 
-  databaseURL: "https://emigrantbook-default-rtdb.europe-west1.firebasedatabase.app", 
-  projectId: "emigrantbook", 
-  storageBucket: "emigrantbook.firebasestorage.app", 
-  appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f" 
-};
-
-// ინიციალიზაცია
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-// გლობალური ცვლადები
-const db = firebase.database();
-const auth = firebase.auth();
-const storage = firebase.storage();
-
-
-
+    <!-- მთავარი ლაივის ინტერფეისი (FULL LIVE UI) -->
+    <div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column; font-family: sans-serif; overflow: hidden;">
         
-        const products = [
-            { id: 1, cat: 'ბურგერი', name: 'პატარა ბურგერი', price: 1.5, desc: 'ყველი, სტეიკი, პომიდორი, კეჩუპი, მაიონეზი', img: 'https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/patara burgeri.jpg', extras: [{n:'არაჟანი', p:1}, {n:'წიწაკა', p:0}] },
-            { id: 2, cat: 'ხაჭაპური', name: 'აჭარული ხაჭაპური', price: 15.0, desc: 'ყველი, ცომი, კვერცხი, კარაქი', img: 'https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/acharuli xachapuri.jpg', extras: [{n:'ორმაგი ყველი', p:3}] },
-            { id: 3, cat: 'ხაჭაპური', name: 'მეგრული ხაჭაპური', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/megruli xachapuri.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 4, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 5, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 6, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 7, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 8, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 9, cat: 'მწვადი', name: 'ღორის მწვადი', price: 18.0, desc: 'კახური მწვადი საფერავში', img: 'https://img.freepik.com/free-photo/grilled-meat-skewers-with-onion-greens_140725-3344.jpg', extras: [{n:'ტყემალი', p:1}] },
-            { id: 10, cat: 'ჩებურეკი', name: 'ჩებურეკი', price: 40.50, desc: 'ჩებურეკი საშვალო ზომის', img: 'https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/chebureki.jpg', extras: [{n:'კოკაკოლა 350.გ', p:10},  {n:'კოკაკოლა 500.გ', p:18}] }
+        <div id="live-video-container" style="width:100%; height:100%; background:#111; position:absolute; top:0; left:0; overflow: hidden; display: flex; flex-direction: row; align-items: center; justify-content: center; z-index: 1;">
+            <div id="host-video-wrapper" style="width: 100%; height: 100%; position: relative; background: #000; transition: all 0.4s ease;">
+                <div id="remote-live-video" style="width:100%; height:100%; object-fit: cover;"></div>
+            </div>
+
+            <div id="guest-video-box" style="display:none; width: 0%; height: 100%; position: relative; background: #000; border-left: 2px solid var(--gold, #d4af37); transition: all 0.4s ease;">
+                <div id="guest-remote-video" style="width:100%; height:100%; object-fit: cover;"></div>
+                <img id="guest-static-photo" src="" style="display:none; width:100%; height:100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 2;">
+                <div id="guest-cam-controls" style="position: absolute; bottom: 10px; left: 10px; z-index: 3; display: none;">
+                    <button onclick="toggleGuestCamera()" style="background: rgba(0,0,0,0.5); border: 1px solid var(--gold, #d4af37); color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">
+                        <i id="camIcon" class="fas fa-video"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="guestRequestPanel" style="display:none; position:absolute; top:85px; left:15px; background:rgba(0,0,0,0.85); padding:10px; border-radius:12px; border:1px solid #3498db; z-index:1001; color:white; backdrop-filter: blur(10px);">
+            <small id="reqUserName" style="font-weight: bold; color: #3498db;"></small> <span style="font-size: 11px;">-ს უნდა ჩართვა</span>
+            <div style="margin-top:5px; display:flex; gap:5px;">
+                <button onclick="acceptGuest()" style="background:#2ecc71; border:none; border-radius:5px; padding:4px 10px; color:white; font-size:11px; cursor:pointer; font-weight: bold;">ჩართვა</button>
+                <button onclick="rejectGuest()" style="background:#e74c3c; border:none; border-radius:5px; padding:4px 10px; color:white; font-size:11px; cursor:pointer; font-weight: bold;">X</button>
+            </div>
+        </div>
+
+        <div style="position:absolute; top:15px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:center; z-index: 100;">
+            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.4); padding:3px 12px 3px 3px; border-radius:30px; border: 0.5px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                <img id="liveHostAva" src="" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff; object-fit: cover;">
+                <div style="margin: 0 10px; line-height: 1.2;">
+                    <b id="liveHostName" style="color:white; font-size:13px; display:block; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Host</b>
+                    <div style="display: flex; align-items: center; gap: 3px; color:#fff; font-size:11px; opacity: 0.9;">
+                        <i class="fas fa-heart" style="font-size: 10px;"></i> 
+                        <span id="liveLikeCount">0</span>
+                    </div>
+                </div>
+                <button id="liveFollowBtn" 
+                 onclick="followHost()" 
+                  style="background:#fe2c55; border:none; border-radius:20px; padding:6px 14px; color:white; font-size:12px; font-weight:bold; cursor:pointer; display: none; align-items: center; gap: 4px;">
+                  <i class="fas fa-plus" style="font-size: 10px;"></i> Подписаться
+                </button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div id="viewerAvatars" style="display:flex; align-items:center; position: relative;"></div>
+                <div onclick="toggleViewerList(true)" style="background:rgba(0,0,0,0.4); padding:4px 12px; border-radius:15px; color:white; font-size:13px; font-weight:bold; border: 0.5px solid rgba(255,255,255,0.1); cursor: pointer;">
+                    <span id="vCount">0</span>
+                </div>
+                <div style="color:white; font-size:18px; opacity:0.8; margin: 0 5px;"><i class="fas fa-chevron-down"></i></div>
+                <div onclick="endLive()" style="color:white; font-size:28px; cursor:pointer; font-weight: 300;">&times;</div>
+            </div>
+        </div>
+
+        <div id="liveChatBox" style="position:absolute; bottom:80px; left:15px; width:75%; max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; z-index: 50; pointer-events:auto;"></div>
+
+        <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 100;">
+            <div style="flex: 1.5; display: flex; align-items: center; background: rgba(0,0,0,0.6) !important; border-radius: 25px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: none !important; -webkit-backdrop-filter: none !important;">
+                <input type="text" id="liveMsgInp" onkeypress="if(event.key==='Enter') sendLiveComment()" style="width:100%; background:transparent !important; border:none !important; padding:10px 0; color:white; outline:none; font-size:14px;" placeholder="თქვი რამე...">
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div onclick="sendLiveComment()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white;">
+                    <i class="fas fa-paper-plane" style="font-size: 16px;"></i>
+                </div>
+                <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:none; background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <i class="fas fa-user-friends" style="color:#00f2ea; font-size:18px;"></i>
+                </div>
+                <div onclick="sendLiveHeart()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <i class="fas fa-heart" style="color:#ff2d55; font-size:20px;"></i>
+                </div>
+                <div onclick="toggleGiftPanel()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <i class="fas fa-gift" style="color:#ff2d55; font-size:20px;"></i>
+                </div>
+                <div onclick="shareLive()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; cursor:pointer;">
+                    <i class="fas fa-share" style="font-size:18px;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- საჩუქრების პანელი ლაივში -->
+        <div id="giftPanel" style="display:none; position:fixed; bottom:0; left:0; width:100%; height: 420px; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px 20px 0 0; z-index: 2000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; animation: slideUp 0.3s ease-out;">
+            <div onclick="toggleGiftPanel()" style="width: 40px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; margin: 12px auto; cursor: pointer;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px 15px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <i class="fas fa-coins" style="color: #ffd700;"></i>
+                    <span id="userBalance" style="font-weight: 600; font-size: 15px;">1,250</span>
+                    <i class="fas fa-chevron-right" style="font-size: 10px; color: #888;"></i>
+                </div>
+                <div style="font-weight: bold; font-size: 14px; color: #eee;">Gifts</div>
+                <div onclick="toggleGiftPanel()" style="color: #888; font-size: 18px; cursor: pointer;"><i class="fas fa-times"></i></div>
+            </div>
+            <div id="giftGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; height: 280px; overflow-y: auto;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <button id="sendGiftBtn" style="background: #fe2c55; color: white; border: none; padding: 10px 25px; border-radius: 25px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s;">Send</button>
+            </div>
+        </div>
+
+        <!-- მაყურებლების სია -->
+        <div id="viewerListModal" style="display:none; position:absolute; bottom:-100%; left:0; width:100%; height:60%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(255,255,255,0.1); border-radius:20px 20px 0 0; z-index:200000; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); backdrop-filter: blur(20px);">
+            <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <b style="color:white; font-size:16px;">მაყურებელი (<span id="vCountFull">0</span>)</b>
+                <div onclick="toggleViewerList(false)" style="color:white; font-size:24px; cursor:pointer;">&times;</div>
+            </div>
+            <div id="viewerListContent" style="padding: 10px; overflow-y: auto; height: calc(100% - 60px);"></div>
+        </div>
+
+        <!-- ანიმაციების შრე -->
+        <div id="fullScreenGiftOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5000; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 4. JS LOGIC (FIREBASE V9 MODULE IMPORT)    -->
+    <!-- ========================================== -->
+    <script type="module">
+        import { ref, set, get, update, remove, onValue, push, runTransaction, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        
+        // გლობალური ცვლადები
+        let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+        let liveTracks = { video: null, audio: null };
+        let currentLiveChannel = null;
+        let currentHostUid = null;
+        let guestCamEnabled = true;
+
+        // საჩუქრების ბიბლიოთეკა
+        const liveGiftsLibrary = [
+            { 
+                id: "rose", 
+                name: "Rose", 
+                price: 1, 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif", 
+                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+            },
+            { 
+                id: "rose", 
+                name: "Rose", 
+                price: 2, 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/gulis-feirverki.gif",
+                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+            },
+            { 
+                id: "rose", 
+                name: "Rose", 
+                price: 5, 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/arwivi.gif",
+                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+            },
+            { 
+                id: "rose", 
+                name: "Rose", 
+                price: 20, 
+                img: "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Xelebi.gif",
+                sound: "https://github.com/jimsher/Emigrantbook/blob/main/u_edtmwfwu7c-pop-331049.mp3" 
+            }
         ];
 
-        let cart = [];
-        let curProd = null;
-        let curQty = 1;
+        // ფუნქციების გლობალურად გახსნა Window-ზე (HTML onclick-ებისთვის)
+        window.startLiveFunc = function() { 
+            if (typeof toggleSideMenu === "function") toggleSideMenu(false); 
+            window.startLive(); 
+        };
 
-        function init() {
-            const grid = document.getElementById('menuGrid');
-            grid.innerHTML = products.map(p => `
-                <div class="product-card">
-                    <img src="${p.img}" class="product-img" onclick="openProduct(${p.id})">
-                    <div class="product-info">
-                        <div style="font-weight:bold;">${p.name}</div>
-                        <div style="color:var(--gold); margin-top:5px;">${p.price.toFixed(2)} AKHO</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function openProduct(id) {
-            curProd = products.find(p => p.id === id);
-            curQty = 1;
-            document.getElementById('pName').innerText = curProd.name;
-            document.getElementById('pDesc').innerText = curProd.desc;
-            document.getElementById('pImg').src = curProd.img;
-            document.getElementById('qty').innerText = curQty;
+        window.startLive = async function() {
+            const appId = "258897e8fb5f4dd089b761eca6568b24"; 
+            const token = null; 
             
-            const exBox = document.getElementById('extrasBox');
-            exBox.innerHTML = curProd.extras.map(e => `
-                <label class="row"><span>${e.n} (+${e.p} AKHO)</span><input type="checkbox" class="ex-in" data-n="${e.n}" data-p="${e.p}"></label>
-            `).join('');
-            
-            document.getElementById('productPage').style.display = 'block';
-        }
+            if(!window.auth || !window.auth.currentUser) return;
 
-        function updateQty(v) { curQty = Math.max(1, curQty + v); document.getElementById('qty').innerText = curQty; }
-        function closePage(id) { document.getElementById(id).style.display = 'none'; }
+            currentLiveChannel = "live_" + window.auth.currentUser.uid; 
+            currentHostUid = window.auth.currentUser.uid;
+            window.currentLiveHostUid = window.auth.currentUser.uid;
 
-        function addToCart() {
-            const ex = [];
-            document.querySelectorAll('.ex-in:checked').forEach(i => ex.push({n: i.dataset.n, p: parseFloat(i.dataset.p)}));
-            const pay = document.querySelector('input[name="pay"]:checked').value;
-            const total = (curProd.price + ex.reduce((a,b)=>a+b.p, 0)) * curQty;
-            
-            cart.push({ name: curProd.name, qty: curQty, extras: ex, pay, total });
-            document.getElementById('cartCount').innerText = cart.length;
-            closePage('productPage');
-        }
+            document.getElementById('liveUI').style.display = 'flex';
+            document.getElementById('liveHostName').innerText = window.myName || "Host";
+            document.getElementById('liveHostAva').src = window.myPhoto || "default-avatar.png";
 
-        function showCart() {
-            const box = document.getElementById('cartItems');
-            if(cart.length === 0) { box.innerHTML = '<p style="text-align:center;">კალათა ცარიელია</p>'; }
-            else {
-                box.innerHTML = cart.map(i => `
-                    <div class="row">
-                        <div><b>${i.name} (x${i.qty})</b><br><small>${i.pay}</small></div>
-                        <div style="color:var(--gold);">${i.total.toFixed(2)} AKHO</div>
-                    </div>
-                `).join('');
-            }
-            const sum = cart.reduce((a,b)=>a+b.total, 0);
-            document.getElementById('totalSum').innerText = "ჯამი: " + sum.toFixed(2) + " AKHO";
-            document.getElementById('cartPage').style.display = 'block';
-        }
+            try {
+                await liveClient.leave(); 
+                await liveClient.setClientRole("host");
+                await new Promise(resolve => setTimeout(resolve, 500)); 
+                await liveClient.join(appId, currentLiveChannel, token, window.auth.currentUser.uid);
 
+                registerLiveInDatabase(currentLiveChannel, window.myName || "Host");
 
-        
+                liveClient.on("user-published", async (user, mediaType) => {
+                    await liveClient.subscribe(user, mediaType);
+                    if (mediaType === "video") {
+                        window.currentGuest = user;
+                        updateLiveLayout(true);
+                        if (liveTracks.video) liveTracks.video.play("remote-live-video");
+                        user.videoTrack.play("guest-remote-video");
+                    }
+                    if (mediaType === "audio") {
+                        user.audioTrack.play();
+                    }
+                });
 
-         function submitOrder() {
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("ავტორიზაცია საჭიროა!");
+                liveClient.on("user-left", (user) => {
+                    if (window.currentGuest && user.uid === window.currentGuest.uid) {
+                        window.currentGuest = null;
+                        updateLiveLayout(false);
+                        
+                        if (currentLiveChannel) {
+                            remove(ref(window.db, `lives_active/${currentLiveChannel}/guest_status`));
+                            remove(ref(window.db, `live_requests/${currentLiveChannel}`));
+                        }
+                        const guestDiv = document.getElementById("guest-remote-video");
+                        if (guestDiv) guestDiv.innerHTML = "";
+                        if (liveTracks.video) liveTracks.video.play("remote-live-video");
+                    }
+                });
 
-    const name = document.getElementById('userName').value;
-    const city = document.getElementById('userCity').value;
-    const addr = document.getElementById('userAddr').value;
-    const phone = document.getElementById('userPhone').value;
-    const payMethod = document.querySelector('input[name="pay"]:checked').value;
+                liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+                liveTracks.video = await AgoraRTC.createCameraVideoTrack();
+                liveTracks.video.play("remote-live-video");
 
-    if(!name || !phone || !addr || !city) return alert("შეავსეთ ყველა ველი!");
-    if(cart.length === 0) return alert("კალათა ცარიელია!");
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
-    const totalCost = cart.reduce((a, b) => a + b.total, 0);
-    const orderId = Date.now();
+                listenToLiveChat(currentLiveChannel);
+                updateViewerCount(currentLiveChannel, 'join');
+                listenToViewers(currentLiveChannel);
+                listenToLikes(currentLiveChannel);
+                listenForRequests(currentLiveChannel);
+                listenForGuestStatus(currentLiveChannel);
+                listenToGifts(currentLiveChannel);
+            } catch (e) { console.error(e); }
+        };
 
-    // შეკვეთის ობიექტი
-    const orderData = {
-        orderId: orderId,
-        uid: user.uid,
-        customer: { name, city, addr, phone },
-        items: cart,
-        total: totalCost,
-        payment: payMethod,
-        status: "pending",
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    };
+        window.loadActiveLives = function() {
+            const activeLivesContainer = document.getElementById('activeLivesList'); 
+            if(!activeLivesContainer) return;
 
-    // 🚀 1. ჯერ ვცდილობთ შეკვეთის ჩაწერას
-    db.ref('delivery_orders/' + orderId).set(orderData)
-    .then(() => {
-        // ✅ თუ შეკვეთა ჩაიწერა, მხოლოდ მერე მივხედავთ ფულს
-        if (payMethod === 'akho') {
-            const userRef = db.ref(`users/${user.uid}/akho`);
-            
-            userRef.transaction((currentBalance) => {
-                if (currentBalance === null) return 0;
-                if (currentBalance < totalCost) return; // ჩაიშლება ტრანზაქცია
-                return currentBalance - totalCost;
-            }, (error, committed) => {
-                if (!committed) {
-                    // ❌ თუ ფული არ ეყო, შეკვეთას ვაუქმებთ ბაზიდან
-                    db.ref('delivery_orders/' + orderId).remove();
-                    alert("ბალანსზე არ გაქვთ საკმარისი AKHO! ❌");
-                } else {
-                    // 🎉 ყველაფერი წარმატებით დასრულდა
-                    finishOrderProcess(orderId, totalCost);
+            activeLivesContainer.innerHTML = "<p style='color:white; text-align:center;'>ლაივების ძებნა...</p>";
+
+            onValue(ref(window.db, 'lives_active'), (snapshot) => {
+                activeLivesContainer.innerHTML = ""; 
+                if (!snapshot.exists()) {
+                    activeLivesContainer.innerHTML = "<p style='color:gray; text-align:center;'>ამჟამად აქტიური ლაივები არ არის.</p>";
+                    return;
+                }
+                snapshot.forEach((childSnapshot) => {
+                    const live = childSnapshot.val();
+                    if (live && live.host) {
+                        const liveCard = `
+                        <div class="live-item" onclick="joinLive('${live.channel}')">
+                            <img src="${live.hostPhoto || 'default-avatar.png'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px; object-fit:cover;">
+                            <strong>${live.host}</strong>
+                        </div>`;
+                        activeLivesContainer.innerHTML += liveCard;
+                    }
+                });
+            });
+        };
+
+        window.joinLive = async function(channelName) {
+            const appId = "258897e8fb5f4dd089b761eca6568b24"; 
+            const token = null; 
+            currentLiveChannel = channelName;
+
+            document.getElementById('liveUI').style.display = 'flex';
+            updateLiveLayout(false);
+
+            const guestDiv = document.getElementById("guest-remote-video");
+            if (guestDiv) guestDiv.innerHTML = "";
+            if(document.getElementById('activeLivesModal')) document.getElementById('activeLivesModal').style.display = 'none';
+
+            get(ref(window.db, `lives_active/${channelName}`)).then(snap => {
+                const liveData = snap.val();
+                if(liveData) {
+                    currentHostUid = liveData.uid || liveData.hostId;
+                    window.currentLiveHostUid = currentHostUid;
+                    
+                    document.getElementById('liveHostName').innerText = liveData.host;
+                    document.getElementById('liveHostAva').src = liveData.hostPhoto || 'default-avatar.png';
+
+                    if (window.auth && window.auth.currentUser) {
+                        get(ref(window.db, `followers/${currentHostUid}/${window.auth.currentUser.uid}`)).then(followSnap => {
+                            const followBtn = document.getElementById('liveFollowBtn'); 
+                            if (followBtn) {
+                                if (followSnap.exists() || currentHostUid === window.auth.currentUser.uid) {
+                                    followBtn.style.display = 'none'; 
+                                } else {
+                                    followBtn.style.display = 'flex'; 
+                                }
+                            }
+                        });
+                    }
                 }
             });
-        } else {
-            // თუ ქეშითაა, პირდაპირ ვასრულებთ
-            finishOrderProcess(orderId, totalCost);
+
+            try {
+                await liveClient.leave(); 
+                await liveClient.setClientRole("audience"); 
+                await liveClient.join(appId, channelName, token, window.auth.currentUser.uid);
+
+                updateViewerCount(channelName, 'join');
+                listenToViewers(channelName);
+                listenToLikes(channelName);
+                listenForResponse(channelName);
+                listenToLiveChat(channelName);
+                listenForGuestStatus(channelName);
+                listenToGifts(channelName);
+
+                liveClient.on("user-published", async (user, mediaType) => {
+                    await liveClient.subscribe(user, mediaType);
+                    if (mediaType === "video") {
+                        if (user.uid == currentHostUid) {
+                            user.videoTrack.play("remote-live-video");
+                        } else {
+                            updateLiveLayout(true);
+                            user.videoTrack.play("guest-remote-video");
+                            
+                            const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
+                            if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
+                        }
+                    }
+                    if (mediaType === "audio") user.audioTrack.play();
+                });
+
+                liveClient.on("user-left", (user) => {
+                    if (user.uid != currentHostUid) {
+                        updateLiveLayout(false);
+                        const guestBox = document.getElementById("guest-remote-video");
+                        if (guestBox) guestBox.innerHTML = "";
+                        const hostUser = liveClient.remoteUsers.find(u => u.uid == currentHostUid);
+                        if (hostUser && hostUser.videoTrack) hostUser.videoTrack.play("remote-live-video");
+                    } else {
+                        window.endLive();
+                    }
+                });
+            } catch (e) { console.log(e); }
+        };
+
+        function listenToLiveChat(channel) {
+            const chatBox = document.getElementById('liveChatBox');
+            if(!chatBox) return;
+
+            off(ref(window.db, `live_chats/${channel}`)); 
+            onValue(ref(window.db, `live_chats/${channel}`), snap => {
+                chatBox.innerHTML = "";
+                const data = snap.val();
+                if(data) {
+                    Object.values(data).forEach(msg => {
+                        if (msg && msg.name) {
+                            const div = document.createElement('div');
+                            div.style = "display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; background:rgba(0,0,0,0.4); padding:6px 12px; border-radius:15px; width:fit-content;";
+                            div.innerHTML = `<img src="${msg.photo}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"><div style="color:white; font-size:13px;"><b style="color:var(--gold, #d4af37); font-size:11px; display:block;">${msg.name}</b>${msg.text}</div>`;
+                            chatBox.appendChild(div);
+                        }
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            });
         }
-    })
-    .catch(err => {
-        console.error(err);
-        alert("შეკვეთის შენახვა ვერ მოხერხდა. შეამოწმეთ ინტერნეტი ან ბაზის წესები!");
-    });
-}
 
-// ცალკე ფუნქცია პროცესის დასასრულებლად (ვიზუალური მხარე)
-function finishOrderProcess(orderId, total) {
-    document.getElementById('trackDetails').innerHTML = `
-        <div style="padding:10px; border:1px solid var(--gold); border-radius:10px;">
-            <b style="color:var(--gold);">შეკვეთა #${orderId} მიღებულია!</b>
-            <p>ჯამი: ${total.toFixed(2)} AKHO</p>
-        </div>
-    `;
-    closePage('cartPage');
-    document.getElementById('trackPage').style.display = 'block';
-    listenToOrderStatus(orderId);
-    cart = [];
-    document.getElementById('cartCount').innerText = 0;
-}
+        window.sendLiveComment = function() {
+            const inp = document.getElementById('liveMsgInp');
+            if(!inp || !inp.value.trim() || !currentLiveChannel) return;
 
-        
-        window.onload = init;
+            push(ref(window.db, `live_chats/${currentLiveChannel}`), {
+                name: window.myName || "User",
+                photo: window.myPhoto || "default-avatar.png",
+                text: inp.value,
+                ts: Date.now()
+            });
 
+            inp.value = "";
+        };
 
-
-
-
-
-      function showOrderHistory() {
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("ისტორიის სანახავად გაიარეთ ავტორიზაცია!");
-
-    const historyBox = document.getElementById('historyItems');
-    historyBox.innerHTML = '<p style="text-align:center; color:gray; margin-top:20px;">იტვირთება...</p>';
-    document.getElementById('historyPage').style.display = 'block';
-
-    // 🚀 ვეძებთ ბაზაში შეკვეთებს, სადაც uid ემთხვევა იუზერისას
-    db.ref('delivery_orders').orderByChild('uid').equalTo(user.uid).once('value', snap => {
-        if (!snap.exists()) {
-            historyBox.innerHTML = '<p style="text-align:center; color:gray; margin-top:20px;">შეკვეთები არ მოიძებნა</p>';
-            return;
+        function updateLiveLayout(isSplit) {
+            const container = document.getElementById('live-video-container');
+            const guestBox = document.getElementById('guest-video-box');
+            if (!container) return;
+            if (isSplit) {
+                container.classList.add('split-mode');
+                container.style.top = "15%";
+                container.style.height = "40vh";
+                if(guestBox) guestBox.style.display = "block";
+            } else {
+                container.classList.remove('split-mode');
+                container.style.top = "0";
+                container.style.height = "100vh";
+                if(guestBox) guestBox.style.display = "none";
+            }
         }
 
-        let ordersHtml = '';
-        const orders = [];
-        
-        // მონაცემების მასივში გადატანა, რომ დროის მიხედვით დავალაგოთ (ახალი თავში)
-        snap.forEach(child => {
-            orders.push({ id: child.key, ...child.val() });
+        window.endLive = async function() {
+            if (currentLiveChannel) {
+                if (window.auth && window.auth.currentUser && window.auth.currentUser.uid === currentHostUid) {
+                    remove(ref(window.db, `live_chats/${currentLiveChannel}`));
+                    remove(ref(window.db, `lives_meta/${currentLiveChannel}`));
+                    remove(ref(window.db, `live_requests/${currentLiveChannel}`));
+                    remove(ref(window.db, `lives_active/${currentLiveChannel}`));
+                    remove(ref(window.db, `live_gifts/${currentLiveChannel}`));
+                }
+
+                updateViewerCount(currentLiveChannel, 'leave');
+                const chatBox = document.getElementById('liveChatBox');
+                if (chatBox) chatBox.innerHTML = "";
+
+                const controls = document.getElementById('guest-cam-controls');
+                if(controls) controls.style.display = 'none';
+                const guestImg = document.getElementById('guest-static-photo');
+                if(guestImg) guestImg.style.display = 'none';
+            }
+
+            if (liveTracks.video) { liveTracks.video.stop(); liveTracks.video.close(); liveTracks.video = null; }
+            if (liveTracks.audio) { liveTracks.audio.stop(); liveTracks.audio.close(); liveTracks.audio = null; }
+
+            await liveClient.leave();
+            document.getElementById('liveUI').style.display = 'none';
+            currentLiveChannel = null;
+            currentHostUid = null;
+        };
+
+        window.sendLiveHeart = function() {
+            if(!currentLiveChannel) return;
+            animateHeart();
+            runTransaction(ref(window.db, `lives_meta/${currentLiveChannel}/likes`), (c) => (c || 0) + 1);
+        };
+
+        function animateHeart() {
+            const container = document.getElementById('live-video-container');
+            if(!container) return;
+
+            const heart = document.createElement('i');
+            heart.className = "fas fa-heart";
+            heart.style = `position:absolute; right:20px; bottom:100px; color:hsl(${Math.random()*360},100%,70%); font-size:24px; transition:all 1.5s ease-out; z-index:100; pointer-events:none;`;
+            container.appendChild(heart);
+
+            setTimeout(() => { heart.style.bottom = "400px"; heart.style.opacity = "0"; }, 50);
+            setTimeout(() => heart.remove(), 1500);
+        }
+
+        function renderLiveGifts() {
+            const grid = document.getElementById('giftGrid');
+            if (!grid) return;
+            grid.innerHTML = ""; 
+
+            liveGiftsLibrary.forEach(gift => {
+                const card = document.createElement('div');
+                card.className = "gift-card";
+                card.style = "background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center; cursor: pointer;";
+                card.onclick = () => window.sendGift(gift.name, gift.img, gift.price);
+
+                card.innerHTML = `
+                    <div class="gift-img-container">
+                        <img src="${gift.img}" alt="${gift.name}" style="width: 50px; height: 50px; object-fit: contain;">
+                    </div>
+                    <div class="gift-name" style="font-size: 12px; margin-top: 5px;">${gift.name}</div>
+                    <div class="gift-price" style="font-size: 11px; color: #ffd700;"><i class="fas fa-coins"></i> ${gift.price}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.toggleGiftPanel = function() { 
+            const p = document.getElementById('giftPanel'); 
+            if(p) {
+                if (p.style.display === 'none' || p.style.display === '') {
+                    p.style.display = 'block';
+                    renderLiveGifts();
+                } else {
+                    p.style.display = 'none';
+                }
+            }
+        };
+
+        function listenToViewers(channel) {
+            onValue(ref(window.db, `lives_meta/${channel}/viewers`), snap => {
+                const viewers = snap.val() || {};
+                const count = Object.keys(viewers).length;
+                const countEl = document.getElementById('vCount');
+                if(countEl) countEl.innerText = count;
+
+                const avDiv = document.getElementById('viewerAvatars');
+                if(avDiv) {
+                    avDiv.innerHTML = "";
+                    Object.values(viewers).slice(-1).forEach(v => {
+                        if (v && v.photo) {
+                            avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
+                        }
+                    });
+                }
+            });
+        }
+
+        function listenToLikes(channel) {
+            onValue(ref(window.db, `lives_meta/${channel}/likes`), snap => {
+                const el = document.getElementById('liveLikeCount');
+                if(el) el.innerText = snap.val() || 0;
+            });
+        }
+
+        function listenForRequests(channel) {
+            onValue(ref(window.db, `live_requests/${channel}`), snap => {
+                const req = snap.val();
+                const panel = document.getElementById('guestRequestPanel');
+                const nameEl = document.getElementById('reqUserName');
+
+                if(req && req.status === 'pending') {
+                    if (panel && nameEl) {
+                        nameEl.innerText = req.name;
+                        panel.style.display = 'block';
+                    }
+                } else {
+                    if (panel) panel.style.display = 'none';
+                }
+            });
+        }
+
+        window.acceptGuest = function() {
+            if (!currentLiveChannel) return;
+            update(ref(window.db, `live_requests/${currentLiveChannel}`), { status: 'accepted' }).then(() => {
+                document.getElementById('guestRequestPanel').style.display = 'none';
+            });
+        };
+
+        window.rejectGuest = function() {
+            if (!currentLiveChannel) return;
+            remove(ref(window.db, `live_requests/${currentLiveChannel}`)).then(() => {
+                document.getElementById('guestRequestPanel').style.display = 'none';
+            });
+        };
+
+        function listenForResponse(channel) {
+            onValue(ref(window.db, `live_requests/${channel}`), snap => {
+                const req = snap.val();
+                if(req && window.auth && window.auth.currentUser && req.uid === window.auth.currentUser.uid && req.status === 'accepted') {
+                    startGuestStreaming();
+                    remove(ref(window.db, `live_requests/${channel}`));
+                }
+            });
+        }
+
+        async function startGuestStreaming() {
+            try {
+                await liveClient.setClientRole("host");
+                liveTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+                liveTracks.video = await AgoraRTC.createCameraVideoTrack();
+
+                updateLiveLayout(true);
+                liveTracks.video.play("guest-remote-video");
+
+                await liveClient.publish([liveTracks.audio, liveTracks.video]);
+
+                const controls = document.getElementById('guest-cam-controls');
+                if(controls) controls.style.display = 'block';
+            } catch (e) { console.log(e); }
+        }
+
+        function updateViewerCount(channel, action) {
+            if (!window.auth || !window.auth.currentUser) return;
+            const vRef = ref(window.db, `lives_meta/${channel}/viewers/${window.auth.currentUser.uid}`);
+            action === 'join' ? set(vRef, { name: window.myName || "User", photo: window.myPhoto || "default-avatar.png" }) : remove(vRef);
+        }
+
+        window.toggleViewerList = function(show) {
+            const modal = document.getElementById('viewerListModal');
+            if (show) {
+                modal.style.display = 'block';
+                setTimeout(() => { modal.style.bottom = '0'; }, 10);
+                renderFullViewerList();
+            } else {
+                modal.style.bottom = '-100%';
+                setTimeout(() => { modal.style.display = 'none'; }, 400);
+            }
+        };
+
+        function renderFullViewerList() {
+            if (!currentLiveChannel) return;
+            onValue(ref(window.db, `lives_meta/${currentLiveChannel}/viewers`), snap => {
+                const viewers = snap.val() || {};
+                const container = document.getElementById('viewerListContent');
+                if (!container) return;
+
+                container.innerHTML = "";
+                Object.entries(viewers).forEach(([uid, v]) => {
+                    if (v && v.name) {
+                        const row = document.createElement('div');
+                        row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
+                        row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div><button onclick="viewUserProfile('${uid}')" style="background:rgba(255,255,255,0.1); border:none; color:white; padding:5px 12px; border-radius:8px; font-size:12px;">Профиль</button>`;
+                        container.appendChild(row);
+                    }
+                });
+            });
+        }
+
+        function registerLiveInDatabase(channelName, hostNickname) {
+            const liveRef = ref(window.db, `lives_active/${channelName}`);
+            const liveData = { 
+                channel: channelName, 
+                host: hostNickname, 
+                hostPhoto: window.myPhoto || "default-avatar.png", 
+                startTime: Date.now(), 
+                status: "online", 
+                uid: window.auth.currentUser.uid 
+            };
+
+            set(liveRef, liveData);
+
+            if (channelName === "live_" + window.auth.currentUser.uid) {
+                onDisconnect(liveRef).remove();
+            }
+        }
+
+        window.openActiveLivesModal = function() {
+            const modal = document.getElementById('active_lives_modal');
+            if(modal) modal.style.display = 'block';
+            window.loadActiveLives();
+        };
+
+        window.closeActiveLivesModal = function() {
+            const modal = document.getElementById('active_lives_modal');
+            if(modal) modal.style.display = 'none';
+            const modal1 = document.getElementById('activeLivesModal');
+            if(modal1) modal1.style.display = 'none';
+        };
+
+        window.sendJoinRequest = function() {
+            if (!currentLiveChannel || !window.auth || !window.auth.currentUser) return;
+            set(ref(window.db, `live_requests/${currentLiveChannel}`), { 
+                uid: window.auth.currentUser.uid, 
+                name: window.myName || "User", 
+                photo: window.myPhoto || "default-avatar.png", 
+                status: 'pending', 
+                ts: Date.now() 
+            }).then(() => {
+                alert("მოთხოვნა გაიგზავნა!");
+            });
+        };
+
+        window.followHost = function() {
+            if (!currentLiveChannel || !window.auth || !window.auth.currentUser) return;
+            get(ref(window.db, `lives_active/${currentLiveChannel}`)).then(snap => {
+                const liveData = snap.val();
+                if (liveData) {
+                    const hostId = liveData.uid;
+                    set(ref(window.db, `followers/${hostId}/${window.auth.currentUser.uid}`), true).then(() => {
+                        set(ref(window.db, `following/${window.auth.currentUser.uid}/${hostId}`), true);
+                        const btn = document.getElementById('liveFollowBtn');
+                        if(btn) btn.style.display = 'none';
+                        alert("წარმატებით გამოიწერეთ!");
+                    });
+                }
+            });
+        };
+
+        window.toggleGuestCamera = async function() {
+            if (!liveTracks.video) return; 
+            const camIcon = document.getElementById('camIcon');
+
+            if (guestCamEnabled) {
+                await liveTracks.video.setEnabled(false);
+                guestCamEnabled = false;
+                if(camIcon) camIcon.className = "fas fa-video-slash";
+                set(ref(window.db, `lives_active/${currentLiveChannel}/guest_status`), {
+                    showPhoto: true,
+                    photoUrl: window.myPhoto || "default-avatar.png"
+                });
+            } else {
+                await liveTracks.video.setEnabled(true);
+                guestCamEnabled = true;
+                if(camIcon) camIcon.className = "fas fa-video";
+                set(ref(window.db, `lives_active/${currentLiveChannel}/guest_status`), {
+                    showPhoto: false
+                });
+            }
+        };
+
+        function listenForGuestStatus(channel) {
+            onValue(ref(window.db, `lives_active/${channel}/guest_status`), snap => {
+                const status = snap.val();
+                const guestImg = document.getElementById('guest-static-photo');
+                const guestVid = document.getElementById('guest-remote-video');
+
+                if (status && status.showPhoto) {
+                    if (guestImg) {
+                        guestImg.src = status.photoUrl;
+                        guestImg.style.display = 'block';
+                    }
+                    if (guestVid) guestVid.style.opacity = '0';
+                } else {
+                    if (guestImg) guestImg.style.display = 'none';
+                    if (guestVid) guestVid.style.opacity = '1';
+                }
+            });
+        }
+
+        function listenForActiveLivesStatus() {
+            const liveBtn = document.querySelector('.live-nav-button');
+            if (!liveBtn) return;
+
+            onValue(ref(window.db, 'lives_active'), (snapshot) => {
+                if (snapshot.exists() && snapshot.numChildren() > 0) {
+                    let hasReal = false;
+                    snapshot.forEach(c => { if(c.val().host) hasReal = true; });
+                    hasReal ? liveBtn.classList.add('is-live-now') : liveBtn.classList.remove('is-live-now');
+                } else {
+                    liveBtn.classList.remove('is-live-now');
+                }
+            });
+        }
+
+        window.sendGift = async function(giftName, giftImg, price) {
+            if (!currentLiveChannel || !window.auth || !window.auth.currentUser) return;
+
+            const user = window.auth.currentUser;
+            const hostUid = window.currentLiveHostUid;
+
+            if (!hostUid || user.uid === hostUid) return;
+
+            const userBalanceRef = ref(window.db, `users/${user.uid}/akho`); 
+
+            get(userBalanceRef).then(async (snap) => {
+                let currentBalance = snap.val() || 0;
+                if (currentBalance < price) { alert(`ბალანსი არ გყოფნით!`); return; }
+
+                await set(userBalanceRef, currentBalance - price);
+
+                runTransaction(ref(window.db, `users/${hostUid}/gift_balance`), c => (c || 0) + price);
+
+                push(ref(window.db, `received_gifts/${hostUid}`), {
+                    giftUrl: giftImg,
+                    price: price,
+                    fromName: window.myName || "User",
+                    fromPhoto: window.myPhoto || "default-avatar.png",
+                    timestamp: Date.now()
+                });
+
+                const giftData = {
+                    giftImage: giftImg,
+                    giftSound: liveGiftsLibrary.find(g => g.img === giftImg)?.sound || "",
+                    ts: Date.now()
+                };
+
+                push(ref(window.db, `live_gifts/${currentLiveChannel}`), giftData);
+
+                if (typeof window.toggleGiftPanel === "function") window.toggleGiftPanel();
+            }).catch(e => console.error(e));
+        };
+
+        function listenToGifts(channel) {
+            onValue(ref(window.db, `live_gifts/${channel}`), (snap) => {
+                const gifts = snap.val();
+                if(gifts) {
+                    const lastGift = Object.values(gifts).pop();
+                    if (lastGift && (Date.now() - lastGift.ts < 10000)) {
+                        showMainGiftAnimation(lastGift);
+                    }
+                }
+            });
+        }
+
+        function showMainGiftAnimation(gift) {
+            const container = document.getElementById('liveUI');
+            if (!container) return;
+
+            if (gift.giftSound) {
+                const audio = new Audio(gift.giftSound);
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log("Audio play error:", e));
+            }
+
+            const animDiv = document.createElement('div');
+            animDiv.style = `
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                z-index: 10000; pointer-events: none;
+            `;
+            
+            animDiv.innerHTML = `
+                <img src="${gift.giftImage}" style="width: 220px; height: 220px; object-fit: contain; animation: giftPopIn 0.6s ease-out; filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));">
+            `;
+            container.appendChild(animDiv);
+
+            setTimeout(() => {
+                animDiv.style.opacity = '0';
+                animDiv.style.transition = 'opacity 1s';
+                setTimeout(() => animDiv.remove(), 1000);
+            }, 4000);
+        }
+
+        // გვერდის ჩატვირთვისას ლაივების სტატუსის მოსმენა
+        window.addEventListener('DOMContentLoaded', () => {
+            listenForActiveLivesStatus();
         });
-        orders.reverse(); // უახლესი შეკვეთები ზემოთ
-
-        ordersHtml = orders.map(o => `
-            <div class="row" style="display:block; padding:15px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <b style="color:var(--gold);">#${o.orderId}</b>
-                    <span style="font-size:12px; color:gray;">${new Date(o.timestamp).toLocaleDateString()}</span>
-                </div>
-                <div style="font-size:14px; margin-bottom:10px;">
-                    ${o.items.map(i => `• ${i.name} (x${i.qty})`).join('<br>')}
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #222; pt-10; margin-top:10px; padding-top:10px;">
-                    <span style="color:${o.status === 'delivered' ? 'limegreen' : 'orange'}; font-size:13px; font-weight:bold;">
-                        ${getStatusText(o.status)}
-                    </span>
-                    <b style="color:var(--gold);">${o.total.toFixed(2)} AKHO</b>
-                </div>
-                ${o.status !== 'delivered' ? `
-                    <button onclick="reTrackOrder('${o.orderId}')" style="width:100%; margin-top:10px; background:transparent; border:1px solid var(--gold); color:var(--gold); padding:5px; border-radius:8px; font-size:12px;">
-                        თრექინგის ნახვა
-                    </button>
-                ` : ''}
-            </div>
-        `).join('');
-
-        historyBox.innerHTML = ordersHtml;
-    });
-}
-
-// სტატუსის ტექსტურად გადაქცევა
-function getStatusText(status) {
-    const statuses = {
-        'pending': 'მუშავდება...',
-        'preparing': 'მზადდება 👨‍🍳',
-        'on_way': 'გზაშია 🚚',
-        'delivered': 'ჩაბარდა ✅'
-    };
-    return statuses[status] || status;
-}
-
-// ძველი შეკვეთის თრექინგზე დაბრუნება
-function reTrackOrder(id) {
-    closePage('historyPage');
-    document.getElementById('trackPage').style.display = 'block';
-    // ისევ ვრთავთ მოსმენას ამ ID-ზე
-    listenToOrderStatus(id);
-}  
     </script>
 </body>
 </html>
