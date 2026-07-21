@@ -7,8 +7,7 @@ const firebaseConfig = {
     messagingSenderId: "109907338554",
     appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
     measurementId: "G-MRPP7G4H30"
-  };
-
+};
 
 let audioCtx, audioSource, audioDest;
 
@@ -110,7 +109,7 @@ function finishOnboarding() {
 }
 
 auth.onAuthStateChanged(user => {
-  applyLanguage();
+  if (typeof applyLanguage === "function") applyLanguage();
   if (user) {
     setTimeout(() => {
         askInitialPermissions(); 
@@ -160,10 +159,10 @@ auth.onAuthStateChanged(user => {
 
     updatePresence();
     listenToGlobalMessages();
-    startNotificationListener();
-    checkDailyBonus();
+    if (typeof startNotificationListener === "function") startNotificationListener();
+    if (typeof checkDailyBonus === "function") checkDailyBonus();
     startGlobalUnreadCounter();
-    listenForIncomingCalls(user);
+    if (typeof listenForIncomingCalls === "function") listenForIncomingCalls(user);
     startWallNotificationListener();
     
     setTimeout(function() {
@@ -181,7 +180,7 @@ auth.onAuthStateChanged(user => {
                     .then((token) => {
                         if (token) {
                             db.ref('users/' + user.uid + '/fcmToken').set(token);
-                            showTestNotification(); 
+                            if (typeof showTestNotification === "function") showTestNotification(); 
                             localStorage.setItem(tokenKey, 'true'); 
                         }
                     })
@@ -202,11 +201,14 @@ auth.onAuthStateChanged(user => {
             const modal = document.getElementById('incomingCallModal');
             modal.style.display = 'flex';
         } else {
-            document.getElementById('incomingCallModal').style.display = 'none';
+            const modal = document.getElementById('incomingCallModal');
+            if (modal) modal.style.display = 'none';
         }
     });
 
-    document.getElementById('authUI').style.display = 'none';
+    const authUI = document.getElementById('authUI');
+    if (authUI) authUI.style.display = 'none';
+
     db.ref('users/' + user.uid).on('value', snap => {
         const d = snap.val();
         if(d) {
@@ -218,11 +220,18 @@ auth.onAuthStateChanged(user => {
             myName = d.name || "User";
             myPhoto = d.photo || "token-avatar.png";
             myAkho = d.akho || 0;
-            document.getElementById('userAkho').innerText = myAkho.toFixed(2);
-            document.getElementById('realCash').innerText = (myAkho / 10).toFixed(2);
-            document.getElementById('bottomNavAva').src = myPhoto;
-            if(!d.hasSeenRules) document.getElementById('onboardingUI').style.display = 'flex';
-            if(d.role === 'admin') { document.getElementById('adminMenuBtn').style.display = 'flex'; }
+            const akhoEl = document.getElementById('userAkho');
+            if(akhoEl) akhoEl.innerText = myAkho.toFixed(2);
+            const cashEl = document.getElementById('realCash');
+            if(cashEl) cashEl.innerText = (myAkho / 10).toFixed(2);
+            const navAva = document.getElementById('bottomNavAva');
+            if(navAva) navAva.src = myPhoto;
+            
+            const obUI = document.getElementById('onboardingUI');
+            if(!d.hasSeenRules && obUI) obUI.style.display = 'flex';
+            
+            const admBtn = document.getElementById('adminMenuBtn');
+            if(d.role === 'admin' && admBtn) { admBtn.style.display = 'flex'; }
           
             updateCashoutUI();
             loadActivityLog();
@@ -232,7 +241,8 @@ auth.onAuthStateChanged(user => {
     loadDiscoveryUsers();
     listenToRequests();
   } else {
-    document.getElementById('authUI').style.display = 'flex';
+    const authUI = document.getElementById('authUI');
+    if (authUI) authUI.style.display = 'flex';
     document.getElementById('main-feed').innerHTML = "";
   }
 });
@@ -257,13 +267,15 @@ function declineCall() {
 function updateCashoutUI() {
     const status = document.getElementById('cashoutStatus');
     const form = document.getElementById('cashoutForm');
+    if (!status || !form) return;
+    const cLang = typeof currentLang !== 'undefined' ? currentLang : 'ka';
     if (myAkho >= 500) {
-        status.innerText = currentLang === 'ka' ? "გატანა ხელმისაწვდომია!" : "Cashout available!";
+        status.innerText = cLang === 'ka' ? "გატანა ხელმისაწვდომია!" : "Cashout available!";
         status.style.color = "var(--green)";
         form.style.display = "block";
     } else {
         const diff = 500 - myAkho;
-        status.innerText = currentLang === 'ka' ? `გაკლიათ ${(diff/10).toFixed(2)} € გატანამდე` : `${(diff/10).toFixed(2)} € left until cashout`;
+        status.innerText = cLang === 'ka' ? `გაკლიათ ${(diff/10).toFixed(2)} € გატანამდე` : `${(diff/10).toFixed(2)} € left until cashout`;
         status.style.color = "var(--red)";
         form.style.display = "none";
     }
@@ -272,6 +284,7 @@ function updateCashoutUI() {
 function submitWithdraw() {
     const iban = document.getElementById('ibanInput').value;
     if(!iban || iban.length < 10) return alert("IBAN / PayPal Error");
+    const cLang = typeof currentLang !== 'undefined' ? currentLang : 'ka';
     
     if(confirm(`Confirm ${(myAkho/10).toFixed(2)} €?`)) {
         const reqRef = db.ref('withdrawal_requests').push();
@@ -286,7 +299,7 @@ function submitWithdraw() {
         }).then(() => {
             db.ref(`users/${auth.currentUser.uid}`).update({ akho: 0 });
             addToLog('Cashout Request', -myAkho);
-            alert(currentLang === 'ka' ? "მოთხოვნა გაგზავნილია!" : "Request sent!");
+            alert(cLang === 'ka' ? "მოთხოვნა გაგზავნილია!" : "Request sent!");
             document.getElementById('walletUI').style.display = 'none';
         });
     }
@@ -296,7 +309,7 @@ function openAdminUI() {
     toggleSideMenu(false);
     document.getElementById('adminUI').style.display = 'flex';
     loadAdminRequests();
-    renderAdminOrders();
+    if (typeof renderAdminOrders === "function") renderAdminOrders();
 }
 
 function adminSearchUsers(q) {
@@ -305,6 +318,7 @@ function adminSearchUsers(q) {
     db.ref('users').once('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
+        if (!data) return;
         Object.entries(data).forEach(([uid, u]) => {
             if(u.name && u.name.toLowerCase().includes(q.toLowerCase())) {
                 const div = document.createElement('div');
@@ -404,8 +418,9 @@ function initStripePayment(url) {
 }
 
 function canAfford(cost) {
+    const cLang = typeof currentLang !== 'undefined' ? currentLang : 'ka';
     if (myAkho >= cost) return true;
-    alert(currentLang === 'ka' ? "შეავსეთ ბალანსი!" : "Top up your balance!");
+    alert(cLang === 'ka' ? "შეავსეთ ბალანსი!" : "Top up your balance!");
     openWalletUI();
     return false;
 }
@@ -426,6 +441,7 @@ function earnAkho(targetUid, amount, reason = 'Impact Reward') {
 }
 
 function addToLog(type, amt) {
+    if (!auth.currentUser) return;
     db.ref(`activity_logs/${auth.currentUser.uid}`).push({
         type: type,
         amt: amt,
@@ -435,7 +451,8 @@ function addToLog(type, amt) {
 
 function loadActivityLog() {
     const box = document.getElementById('logContent');
-    db.ref(`activity_logs/${auth.currentUser.uid}`).limitToLast(15).on('value', snap => {
+    if (!box || !auth.currentUser) return;
+    db.ref(`activity_logs/${auth.currentUser.uid}`).limitToLast(15).once('value', snap => {
         box.innerHTML = "";
         const data = snap.val();
         if(!data) { box.innerHTML = "<p style='color:gray; font-size:12px;'>ისტორია ცარიელია</p>"; return; }
@@ -477,6 +494,7 @@ function openComments(postId, postOwnerId) {
 
 function loadComments(postId, isGallery = false) {
     const list = document.getElementById('commList');
+    if(!list || !auth.currentUser) return;
     const myUid = auth.currentUser.uid;
     const postOwnerId = window.currentPostOwnerId;
 
@@ -485,7 +503,6 @@ function loadComments(postId, isGallery = false) {
 
     const commentPath = isGallery ? `gallery_comments/${postId}` : `comments/${postId}`;
 
-    // 🚀 ოპტიმიზაცია: .on-ის ნაცვლად .once, რომ კომენტარის დაწერამ გვერდი არ გაჭედოს
     db.ref(commentPath).once('value', snap => {
         list.innerHTML = "";
         const data = snap.val();
@@ -618,7 +635,6 @@ function openMessenger() {
     if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
     if (!auth.currentUser) return;
 
-    // 🚀 ოპტიმიზაცია: მესინჯერის ჩატების ერთჯერადი სწრაფი წაკითხვა
     db.ref(`users/${auth.currentUser.uid}/following`).once('value', async snap => {
         if (!list) return;
         const followers = snap.val();
@@ -760,10 +776,10 @@ function loadMessages(targetUid) {
         const tData = targetSnap.val();
         const tPhoto = (tData && tData.photo) ? tData.photo : 'token-avatar.png';
 
-        db.ref(`users/${myUid}/deleted_messages/${chatId}`).on('value', deletedSnap => {
+        db.ref(`users/${myUid}/deleted_messages/${chatId}`).once('value', deletedSnap => {
             const deletedMsgs = deletedSnap.val() || {};
 
-            db.ref(`messages/${chatId}`).limitToLast(currentChatLimit).on('value', snap => {
+            db.ref(`messages/${chatId}`).limitToLast(currentChatLimit).once('value', snap => {
                 box.innerHTML = "";
                 let lastTs = 0;
                 let messagesArray = [];
@@ -853,7 +869,7 @@ function loadMessages(targetUid) {
 }
 
 function closeChat() {
-    if (currentChatId) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
+    if (currentChatId && auth.currentUser) db.ref(`typing/${getChatId(auth.currentUser.uid, currentChatId)}/${auth.currentUser.uid}`).remove();
     document.getElementById('individualChat').style.display = 'none';
     currentChatId = null;
 }
@@ -863,7 +879,7 @@ function getChatId(u1, u2) {
 }
 
 function handleTyping() {
-    if (!currentChatId) return;
+    if (!currentChatId || !auth.currentUser) return;
     const chatId = getChatId(auth.currentUser.uid, currentChatId);
     db.ref(`typing/${chatId}/${auth.currentUser.uid}`).set(true);
     
@@ -885,12 +901,15 @@ function handleTyping() {
 }
 
 function listenToTyping(targetUid) {
+    if(!auth.currentUser) return;
     const chatId = getChatId(auth.currentUser.uid, targetUid);
     db.ref(`typing/${chatId}/${targetUid}`).on('value', snap => {
         const indicator = document.getElementById('typingIndicator');
+        if(!indicator) return;
         if (snap.exists()) {
             indicator.style.display = 'flex';
-            document.getElementById('typingSound').play().catch(e => {});
+            const audio = document.getElementById('typingSound');
+            if(audio) audio.play().catch(e => {});
         } else {
             indicator.style.display = 'none';
         }
@@ -898,6 +917,7 @@ function listenToTyping(targetUid) {
 }
 
 function listenToGlobalMessages() {
+    if(!auth.currentUser) return;
     const myUid = auth.currentUser.uid;
     db.ref('messages').on('child_added', snap => {
         if (!snap.key.includes(myUid)) return;
@@ -929,11 +949,13 @@ function listenToGlobalMessages() {
 
 function showGlobalPush(name, photo, text) {
     const push = document.getElementById('globalPush');
+    if(!push) return;
     document.getElementById('pushName').innerText = name;
     document.getElementById('pushAva').src = photo;
     document.getElementById('pushTxt').innerText = text.substring(0, 40) + (text.length > 40 ? '...' : '');
     push.classList.add('show');
-    document.getElementById('msgSound').play().catch(e => {});
+    const sound = document.getElementById('msgSound');
+    if(sound) sound.play().catch(e => {});
     setTimeout(() => push.classList.remove('show'), 4000);
 }
 
@@ -988,9 +1010,10 @@ function loadDiscoveryUsers() {
         const users = snap.val();
         if (!users) return;
         const grid = document.getElementById('discoverGrid');
+        if(!grid) return;
         grid.innerHTML = "";
         Object.entries(users).forEach(([uid, user]) => {
-            if (uid === auth.currentUser.uid) return;
+            if (auth.currentUser && uid === auth.currentUser.uid) return;
             const card = `
             <div class="user-card" onclick="openProfile('${uid}')">
                 <div class="card-inner">
@@ -1009,12 +1032,13 @@ function openSettings() {
     stopMainFeedVideos();
     const ui = document.getElementById('settingsUI');
     ui.style.display = 'flex';
-    const privacy = currentUserData.privacy || 'public';
-    document.getElementById(`priv${privacy.charAt(0).toUpperCase() + privacy.slice(1)}`).checked = true;
+    const privacy = (currentUserData && currentUserData.privacy) ? currentUserData.privacy : 'public';
+    const rad = document.getElementById(`priv${privacy.charAt(0).toUpperCase() + privacy.slice(1)}`);
+    if(rad) rad.checked = true;
 }
 
 function updatePrivacy(val) {
-    db.ref(`users/${auth.currentUser.uid}`).update({ privacy: val });
+    if(auth.currentUser) db.ref(`users/${auth.currentUser.uid}`).update({ privacy: val });
 }
 
 function openProfile(uid) {
@@ -1042,13 +1066,13 @@ function openProfile(uid) {
     document.querySelectorAll('.p-nav-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById('infoBtn').classList.add('active');
 
-    if(uid !== auth.currentUser.uid) {
+    if(auth.currentUser && uid !== auth.currentUser.uid) {
         db.ref(`profile_views/${uid}/${auth.currentUser.uid}`).set({
             uid: auth.currentUser.uid, name: myName, photo: myPhoto, ts: Date.now()
         });
     }
  
-    db.ref('users/' + uid).on('value', async snap => {
+    db.ref('users/' + uid).once('value', async snap => {
         const user = snap.val();
         if(!user) return;
         const dot = document.getElementById('profStatusDot');
@@ -1088,21 +1112,21 @@ function openProfile(uid) {
         const controls = document.getElementById('profControls');
         controls.innerHTML = "";
         document.querySelector('.profile-nav').style.display = 'flex';
-        document.getElementById('feetStats').style.display = (uid === auth.currentUser.uid) ? 'block' : 'none';
+        document.getElementById('feetStats').style.display = (auth.currentUser && uid === auth.currentUser.uid) ? 'block' : 'none';
         document.getElementById('profTabs').style.display = 'flex';
         document.getElementById('infoBtn').onclick = () => showDetailedInfo(uid);
 
         const euroBtn = document.getElementById('euroBalanceBtn');
         if (euroBtn) {
-            euroBtn.style.display = (uid === auth.currentUser.uid) ? 'inline-flex' : 'none';
+            euroBtn.style.display = (auth.currentUser && uid === auth.currentUser.uid) ? 'inline-flex' : 'none';
         }
 
         const editNameBtn = document.getElementById('editNameBtn');
         if (editNameBtn) {
-            editNameBtn.style.display = (uid === auth.currentUser.uid) ? 'flex' : 'none';
+            editNameBtn.style.display = (auth.currentUser && uid === auth.currentUser.uid) ? 'flex' : 'none';
         }
        
-        if(uid === auth.currentUser.uid) {
+        if(auth.currentUser && uid === auth.currentUser.uid) {
             controls.innerHTML = `<button class="profile-btn btn-gold" onclick="document.getElementById('avaInp').click()" data-key="edit">Edit</button>`;
             if (galleryUploadContainer) {
                 galleryUploadContainer.style.marginTop = "0";
@@ -1114,10 +1138,10 @@ function openProfile(uid) {
                 </button>`;
             
             loadUserVideos(uid);
-            applyLanguage();
+            if(typeof applyLanguage === "function") applyLanguage();
         } else {
-            const isFollowing = user.followers && user.followers[auth.currentUser.uid];
-            const isFriend = user.following && user.following[auth.currentUser.uid] && isFollowing;
+            const isFollowing = user.followers && auth.currentUser && user.followers[auth.currentUser.uid];
+            const isFriend = user.following && auth.currentUser && user.following[auth.currentUser.uid] && isFollowing;
             let canView = false;
             if(!user.privacy || user.privacy === 'public') canView = true;
             if(user.privacy === 'friends' && isFriend) canView = true;
@@ -1151,7 +1175,7 @@ function openProfile(uid) {
                 document.getElementById('profTabs').style.display = 'none';
                 controls.innerHTML = `<button class="profile-btn btn-gold" onclick="followUser('${uid}', '${user.name}', '${user.photo}')" data-key="follow">Follow</button>`;
             }
-            applyLanguage();
+            if(typeof applyLanguage === "function") applyLanguage();
         }
     });
 }
@@ -1169,11 +1193,12 @@ function showProfileVisitors() {
         const myFollowingSnap = await db.ref(`users/${auth.currentUser.uid}/following`).once('value');
         const myFollowing = myFollowingSnap.val() || {};
         list.innerHTML = "";
+        const trLang = (typeof translations !== 'undefined' && typeof currentLang !== 'undefined') ? translations[currentLang] : {following_btn: 'Following', follow: 'Follow'};
         Object.values(data).reverse().forEach(v => {
             const isFollowing = myFollowing[v.uid];
             const followBtn = isFollowing ? 
-            `<button class="profile-btn btn-outline" style="padding: 5px 12px; font-size: 11px;">${translations[currentLang].following_btn}</button>` :
-            `<button class="profile-btn btn-gold" style="padding: 5px 12px; font-size: 11px;" onclick="followFromVisitors('${v.uid}', '${v.name}', '${v.photo}')">${translations[currentLang].follow}</button>`;
+            `<button class="profile-btn btn-outline" style="padding: 5px 12px; font-size: 11px;">${trLang.following_btn}</button>` :
+            `<button class="profile-btn btn-gold" style="padding: 5px 12px; font-size: 11px;" onclick="followFromVisitors('${v.uid}', '${v.name}', '${v.photo}')">${trLang.follow}</button>`;
             list.innerHTML += `
             <div class="visitor-row">
             <div class="visitor-info" onclick="openProfile('${v.uid}'); document.getElementById('visitorsUI').style.display='none'">
@@ -1191,11 +1216,11 @@ function openEditor() {
     stopMainFeedVideos();
     const ui = document.getElementById('editProfileUI');
     ui.style.display = 'flex';
-    document.getElementById('editName').value = currentUserData.name || "";
-    document.getElementById('editCity').value = currentUserData.city || "";
-    document.getElementById('editAge').value = currentUserData.age || "";
-    document.getElementById('editRelation').value = currentUserData.relation || "Single";
-    document.getElementById('editPhone').value = currentUserData.phone || "";
+    document.getElementById('editName').value = (currentUserData && currentUserData.name) || "";
+    document.getElementById('editCity').value = (currentUserData && currentUserData.city) || "";
+    document.getElementById('editAge').value = (currentUserData && currentUserData.age) || "";
+    document.getElementById('editRelation').value = (currentUserData && currentUserData.relation) || "Single";
+    document.getElementById('editPhone').value = (currentUserData && currentUserData.phone) || "";
 }
 
 function saveProfileChanges() {
@@ -1217,15 +1242,16 @@ function showDetailedInfo(uid) {
     const content = document.getElementById('infoContent');
     panel.style.display = 'flex';
     content.innerHTML = "Loading...";
+    const trLang = (typeof translations !== 'undefined' && typeof currentLang !== 'undefined') ? translations[currentLang] : {full_name:'Name', location:'Location', age:'Age', relation:'Relation', phone:'Phone'};
     db.ref('users/' + uid).once('value', snap => {
         const u = snap.val();
         if(!u) return;
         content.innerHTML = `
-        <div class="info-row"><i class="fas fa-user"></i><div><span class="info-val-label">${translations[currentLang].full_name}</span><span class="info-val-text">${u.name || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-map-marker-alt"></i><div><span class="info-val-label">${translations[currentLang].location}</span><span class="info-val-text">${u.city || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-birthday-cake"></i><div><span class="info-val-label">${translations[currentLang].age}</span><span class="info-val-text">${u.age || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-heart"></i><div><span class="info-val-label">${translations[currentLang].relation}</span><span class="info-val-text">${u.relation || '-'}</span></div></div>
-        <div class="info-row"><i class="fas fa-phone"></i><div><span class="info-val-label">${translations[currentLang].phone}</span><span class="info-val-text">${u.phone || '-'}</span></div></div>`;
+        <div class="info-row"><i class="fas fa-user"></i><div><span class="info-val-label">${trLang.full_name}</span><span class="info-val-text">${u.name || '-'}</span></div></div>
+        <div class="info-row"><i class="fas fa-map-marker-alt"></i><div><span class="info-val-label">${trLang.location}</span><span class="info-val-text">${u.city || '-'}</span></div></div>
+        <div class="info-row"><i class="fas fa-birthday-cake"></i><div><span class="info-val-label">${trLang.age}</span><span class="info-val-text">${u.age || '-'}</span></div></div>
+        <div class="info-row"><i class="fas fa-heart"></i><div><span class="info-val-label">${trLang.relation}</span><span class="info-val-text">${u.relation || '-'}</span></div></div>
+        <div class="info-row"><i class="fas fa-phone"></i><div><span class="info-val-label">${trLang.phone}</span><span class="info-val-text">${u.phone || '-'}</span></div></div>`;
     });
 }
 
@@ -1254,11 +1280,13 @@ function unfollowUser(targetUid) {
 }
 
 function listenToRequests() {
+    if(!auth.currentUser) return;
     const myUid = auth.currentUser.uid;
     db.ref(`notifications/${myUid}`).on('value', snap => {
         const data = snap.val();
         const count = data ? Object.keys(data).length : 0;
         const badge = document.getElementById('reqCount');
+        if(!badge) return;
         if(count > 0) { badge.innerText = count; badge.style.display = 'block'; }
         else { badge.style.display = 'none'; }
     });
@@ -1283,16 +1311,14 @@ function deleteNotification(id) {
     db.ref(`notifications/${auth.currentUser.uid}/${id}`).remove().then(() => openRequestsUI());
 }
 
-// 🚀 ოპტიმიზირებული პროფილის ვიდეოების ფუნქცია
 function loadUserVideos(uid) {
     const grid = document.getElementById('profGrid');
-    
-    // `.once` და `orderByChild` მთელი ბაზის ტვირთვის ასარიდებლად
     db.ref('posts').orderByChild('authorId').equalTo(uid).once('value', snap => {
         grid.innerHTML = ""; 
         const posts = snap.val();
         if(!posts) {
-            document.getElementById('statVidsCount').innerText = 0;
+            const vCount = document.getElementById('statVidsCount');
+            if(vCount) vCount.innerText = 0;
             return;
         }
 
@@ -1310,7 +1336,8 @@ function loadUserVideos(uid) {
             }
         });
 
-        document.getElementById('statVidsCount').innerText = vCount;
+        const vCountEl = document.getElementById('statVidsCount');
+        if(vCountEl) vCountEl.innerText = vCount;
 
         let currentlyShown = 0;
 
@@ -1326,11 +1353,11 @@ function loadUserVideos(uid) {
                 item.className = 'grid-item';
                 item.innerHTML = `
                     <video src="${video.url}#t=0.1" 
-                               muted 
-                               playsinline 
-                               preload="metadata" 
-                               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-                               style="object-fit: cover; width:100%; height:100%; background: #000;">
+                           muted 
+                           playsinline 
+                           preload="metadata" 
+                           poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                           style="object-fit: cover; width:100%; height:100%; background: #000;">
                         </video>
                         <div class="video-views-label">
                             <i class="fas fa-play"></i> ${formattedViews}
@@ -1399,7 +1426,6 @@ function playFullVideo(url, postId, currentIndex) {
     if (postId) {
         db.ref(`posts/${postId}/views`).transaction(c => (c || 0) + 1);
 
-        // 🚀 შეცვლილია .once-ზე, რომ სრულად გახსნამ არ ტვირთოს ტელეფონი
         db.ref(`posts/${postId}`).once('value', snap => {
             const data = snap.val();
             if (!data) return;
@@ -1422,14 +1448,14 @@ function playFullVideo(url, postId, currentIndex) {
 
             const lElem = document.getElementById('fullLikeCount');
             const lIcon = document.getElementById('fullLikeIcon');
-            const myUid = auth.currentUser.uid;
+            const myUid = auth.currentUser ? auth.currentUser.uid : null;
             const likesKeys = data.likedBy ? Object.keys(data.likedBy) : [];
             
             if (lElem) lElem.innerText = likesKeys.length;
-            if (lIcon) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
+            if (lIcon && myUid) lIcon.style.color = likesKeys.includes(myUid) ? '#ff4d4d' : 'white';
 
             const sIcon = document.getElementById('fullSaveIcon');
-            if (sIcon) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
+            if (sIcon && myUid) sIcon.style.color = (data.savedBy && data.savedBy[myUid]) ? 'var(--gold)' : 'white';
 
             const giftBtn = document.querySelector('#fullVideoOverlay .side-action-item[onclick*="openGiftPanel"]');
             if (giftBtn) {
@@ -1437,8 +1463,8 @@ function playFullVideo(url, postId, currentIndex) {
             }
           
             const moreBtn = document.querySelector('#fullVideoOverlay .more-btn'); 
-            if (moreBtn) {
-                if (data.authorId === auth.currentUser.uid) {
+            if (moreBtn && myUid) {
+                if (data.authorId === myUid) {
                     moreBtn.style.display = 'flex'; 
                     moreBtn.onclick = () => toggleMoreMenu(window.currentFullVideoId);
                 } else {
@@ -1579,7 +1605,7 @@ async function handleAuth(type) {
                 presence: Date.now() 
             }).then(() => {
                 if(typeof addToLog === "function") addToLog('Welcome Bonus', 50.00);
-                showCustomAlert("მოგესალმებით", "რეგისტრაცია წარმატებულია!");
+                if(typeof showCustomAlert === "function") showCustomAlert("მოგესალმებით", "რეგისტრაცია წარმატებულია!");
             });
         }).catch(err => {
             let msg = "რეგისტრაცია ვერ მოხერხდა";
@@ -1594,7 +1620,7 @@ async function handleAuth(type) {
         if (!email || !pass) return showAuthError("შეიყვანეთ მეილი და პაროლი");
 
         auth.signInWithEmailAndPassword(email, pass).then(u => {
-            showCustomAlert("მოგესალმებით", "წარმატებით შეხვედით სისტემაში!");
+            if(typeof showCustomAlert === "function") showCustomAlert("მოგესალმებით", "წარმატებით შეხვედით სისტემაში!");
         }).catch(err => {
             let msg = "ავტორიზაცია ვერ მოხერხდა";
             if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
@@ -1728,12 +1754,41 @@ function formatPostDate(ts) {
     return `${month}-${day}`;
 }
 
+// 🚀 ოპტიმიზირებული IntersectionObserver (გლობალური ეგზემპლარი)
+const feedVideoObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const video = entry.target.querySelector('video');
+        if (!video) return;
+
+        const postId = entry.target.id.replace('card-', '');
+
+        if (entry.isIntersecting) {
+            video.style.opacity = "1";
+            video.play().catch(e => {}); 
+            video.muted = false;
+
+            if (postId && postId !== "") {
+                db.ref(`posts/${postId}/views`).transaction(currentViews => {
+                    return (currentViews || 0) + 1;
+                });
+            }
+        } else {
+            video.pause();
+            video.muted = true;
+            video.style.opacity = "0.5";
+            video.preload = "metadata";
+        }
+    });
+}, { threshold: 0.5 });
+
 function renderTokenFeed() {
-    if (document.getElementById('liveUI').style.display === 'flex') return;
+    const liveUI = document.getElementById('liveUI');
+    if (liveUI && liveUI.style.display === 'flex') return;
     if (isFeedLoading) return;
     
     isFeedLoading = true;
     const feed = document.getElementById('main-feed');
+    if(!feed) return;
 
     let query = db.ref('posts').orderByChild('timestamp');
     if (lastVisibleTimestamp) {
@@ -1772,12 +1827,13 @@ function renderTokenFeed() {
             const shareCount = post.shares || 0;
             const saveCount = post.saves || 0;
             
+            const myUid = auth.currentUser ? auth.currentUser.uid : null;
+            const isLikedByMe = myUid && post.likedBy && post.likedBy[myUid];
+            const isSavedByMe = myUid && post.savedBy && post.savedBy[myUid];      
+            
             const card = document.createElement('div');
             card.className = 'video-card';
             card.id = `card-${id}`;
-            
-            const isLikedByMe = post.likedBy && post.likedBy[auth.currentUser.uid];
-            const isSavedByMe = post.savedBy && post.savedBy[auth.currentUser.uid];      
             
             card.innerHTML = `
 <video src="${videoUrl}" 
@@ -1819,10 +1875,10 @@ onclick="togglePlayPause(this)">
                         <i class="fas fa-gift" style="color: #ff4d4d;"></i>
                         <span>Gift</span>
                     </div>
-                  ${post.authorId === auth.currentUser.uid ? `
-                   <div class="action-item" onclick="deleteMyVideo('${id}', '${post.media[0].url}')" style="margin-top: 5px;">
-                   <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
-                   <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
+                  ${myUid && post.authorId === myUid ? `
+                    <div class="action-item" onclick="deleteMyVideo('${id}')" style="margin-top: 5px;">
+                    <i class="fas fa-trash-alt" style="color: #ff4d4d; font-size: 20px;"></i>
+                    <span style="color: #ff4d4d; font-size: 10px;">DEL</span>
                   </div>
                   ` : ''}
                 </div>
@@ -1838,43 +1894,8 @@ onclick="togglePlayPause(this)">
                </div>`;
             
             feed.appendChild(card);
+            feedVideoObserver.observe(card); // 🚀 ერთჯერადი გლობალური ობზერვერი
             cleanupOldVideos();
-
-            function startLikeCycle() {
-                if (post.authorId !== auth.currentUser.uid) return;
-                const activityContainer = document.getElementById(`live-activity-${id}`);
-                if (!activityContainer) return;
-                const currentPostLikes = post.likedBy ? Object.values(post.likedBy) : [];
-                if (currentPostLikes.length === 0 || document.visibilityState !== 'visible') {
-                    setTimeout(startLikeCycle, 5000);
-                    return;
-                }
-                let index = 0;
-                function spawnNext() {
-                    const container = document.getElementById(`live-activity-${id}`);
-                    if (!container) return;
-                    if (index < currentPostLikes.length) {
-                        const person = currentPostLikes[index];
-                        const avaBox = document.createElement('div');
-                        avaBox.className = 'floating-avatar-box';
-                        avaBox.style.position = 'absolute'; avaBox.style.bottom = '0px'; avaBox.style.left = '0px';
-                        avaBox.innerHTML = `
-                            <div style="position:relative; width:48px; height:48px;">
-                                <img src="${person.photo || 'token-avatar.png' + person.name}" 
-                                     style="width:48px; height:48px; border-radius:50%; border:2px solid var(--gold); object-fit:cover;">
-                                <i class="fas fa-heart" style="position:absolute; bottom:0px; right:0px; color:#ff4d4d; font-size:16px;"></i>
-                            </div>`;
-                        container.appendChild(avaBox);
-                        setTimeout(() => { if(avaBox.parentNode) avaBox.remove(); }, 8000);
-                        index++;
-                        setTimeout(spawnNext, 1500);
-                    } else {
-                        setTimeout(startLikeCycle, 10000);
-                    }
-                }
-                spawnNext();
-            }
-            startLikeCycle();
 
             db.ref(`comments/${id}`).once('value', cSnap => {
                 const count = cSnap.val() ? Object.keys(cSnap.val()).length : 0;
@@ -1901,37 +1922,33 @@ onclick="togglePlayPause(this)">
                 
                 if(lSnap.exists() && wrapper) {
                     wrapper.classList.add('is-live-now');
-                    if(ava) ava.onclick = () => joinLive(liveChannelName);
+                    if(ava && typeof joinLive === 'function') ava.onclick = () => joinLive(liveChannelName);
                 } else if(wrapper) {
                     wrapper.classList.remove('is-live-now');
                     if(ava) ava.onclick = () => openProfile(post.authorId);
                 }
             });
         });
-        setupAutoPlay();
     });
-
-    feed.onscroll = function() {
-        if (feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 800) {
-            renderTokenFeed();
-        }
-    };
 }
 
-let feedLimit = 15;
+// 🚀 Debounced Infinite Scroll Listener
+let scrollTimeout = null;
 window.addEventListener('scroll', function() {
-    const feed = document.getElementById('main-feed');
-    if (!feed || isFeedLoading) return;
+    if (scrollTimeout) return;
+    scrollTimeout = setTimeout(() => {
+        scrollTimeout = null;
+        const feed = document.getElementById('main-feed');
+        if (!feed || isFeedLoading) return;
 
-    const scrollHeight = document.documentElement.scrollHeight;
-    const scrollTop = document.documentElement.scrollTop || window.pageYOffset;
-    const clientHeight = document.documentElement.clientHeight;
+        const scrollHeight = document.documentElement.scrollHeight;
+        const scrollTop = document.documentElement.scrollTop || window.pageYOffset;
+        const clientHeight = document.documentElement.clientHeight;
 
-    if (scrollTop + clientHeight >= scrollHeight - 800) {
-        console.log("ბოლოში ვართ, ვამატებთ ვიდეოებს...");
-        feedLimit += 15; 
-        renderTokenFeed();
-    }
+        if (scrollTop + clientHeight >= scrollHeight - 800) {
+            renderTokenFeed();
+        }
+    }, 200);
 }, { passive: true });
 
 async function deleteMyVideo(postId) {
@@ -1977,73 +1994,29 @@ async function deleteMyVideo(postId) {
     }
 }
 
-function setupAutoPlay() {
-    if (document.getElementById('messengerUI').style.display === 'flex') return;
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const video = entry.target.querySelector('video');
-            if (!video) return;
-
-            const postId = entry.target.id.replace('card-', '');
-
-            if (entry.isIntersecting) {
-                video.style.opacity = "1";
-                video.play().catch(e => {}); 
-                video.muted = false;
-
-                if (postId && postId !== "") {
-                    db.ref(`posts/${postId}/views`).transaction(currentViews => {
-                        return (currentViews || 0) + 1;
-                    });
-                }
-            } else {
-                video.pause();
-                video.muted = true;
-                video.style.opacity = "0.5";
-                video.preload = "metadata";
-            }
-        });
-    }, { threshold: 0.5 });
-
-    document.querySelectorAll('.video-card').forEach(card => observer.observe(card));
-}
-
 window.openGiftPanel = function(postId, authorId) {
     if (document.getElementById('dynamicGiftPanel')) document.getElementById('dynamicGiftPanel').remove();
     const panel = document.createElement('div');
     panel.id = "dynamicGiftPanel";
     panel.style = "position:fixed; bottom:0; left:0; width:100%; background:rgba(10,10,10,0.98); border-top:2px solid #d4af37; border-radius:20px 20px 0 0; padding:25px 20px; z-index:200005; backdrop-filter:blur(15px); color:white; font-family:sans-serif;";
     
-    const gift1 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif";
-    const gift2 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif";
-    const gift3 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif";
-    const gift4 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yvavili.gif";
-    const gift5 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Egvipte.gif";
-    const gift6 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Guli.gif";
-    const gift7 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Saati.gif";
-    const gift8 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Sunduk.png";
-    const gift9 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Gogo3.png";
-    const gift10 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Romeo.gif";
-    const gift11 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Gofo2.png";
-    const gift12 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Namcxvari.gif";
-    const gift13 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin1.gif";
-    const gift14 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin2.gif";
-    const gift15 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/aladin3.gif";
-    const gift16 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa1.gif";
-    const gift17 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa2.gif";
-    const gift18 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa3.gif";
-    const gift19 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa4.gif";
-    const gift20 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/princesa5.gif";
-    const gift21 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/iebi1.gif";
-    const gift22 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/guli1.gif";
-    const gift23 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/torti1.gif";
-    const gift24 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/kocna1.gif";
-    const gift25 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali1.png";
-    const gift26 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/qali2.png";
-    const gift27 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/spilo.png";
-    const gift28 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/mikvarxar1.gif";
-    const gift29 = "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/tagvi.png";
+    const gifts = [
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Begemot.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yava1.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Yvavili.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Egvipte.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Guli.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Saati.gif",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Sunduk.png",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Gogo3.png",
+        "https://cdn.jsdelivr.net/gh/jimsher/Emigrantbook@main/Romeo.gif"
+    ];
+
+    let giftItemsHTML = gifts.map((g, index) => {
+        const cost = (index + 1) * 5;
+        return `<div onclick="window.processGift('${authorId}', ${cost}, '${g}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${g}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">${cost} AKHO</div></div>`;
+    }).join('');
 
     panel.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -2051,35 +2024,7 @@ window.openGiftPanel = function(postId, authorId) {
             <i class="fas fa-times" onclick="document.getElementById('dynamicGiftPanel').remove()" style="cursor:pointer; font-size:20px; color:gray;"></i>
         </div>
         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; max-height:400px; overflow-y:auto;">
-            <div onclick="window.processGift('${authorId}', 5, '${gift1}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift1}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">5 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 10, '${gift2}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift2}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">10 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 15, '${gift3}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift3}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">15 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 20, '${gift4}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift4}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">20 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 25, '${gift5}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift5}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">25 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 50, '${gift6}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift6}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">50 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 80, '${gift7}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift7}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">80 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 100, '${gift8}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift8}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">100 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift9}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift9}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift10}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift10}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift11}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift11}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift12}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift12}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift13}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift13}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift14}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift14}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift15}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift15}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift16}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift16}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift17}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift17}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>     
-            <div onclick="window.processGift('${authorId}', 150, '${gift18}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift18}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift19}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift19}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift20}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift20}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift21}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift21}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift22}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift22}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift23}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift23}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift24}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift24}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift25}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift25}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift26}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift26}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift27}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift27}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift28}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift28}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
-            <div onclick="window.processGift('${authorId}', 150, '${gift29}')" style="background:rgba(255,255,255,0.05); padding:10px 5px; border-radius:15px; text-align:center; cursor:pointer; border:1px solid #333;"><img src="${gift29}" style="width:60px; height:60px; object-fit:contain;"><div style="color:#d4af37; font-weight:bold; font-size:12px;">150 AKHO</div></div>
+            ${giftItemsHTML}
         </div>`;
     document.body.appendChild(panel);
 };
@@ -2128,21 +2073,6 @@ window.processGift = function(targetUid, cost, giftUrl) {
             </div>`;
         document.body.appendChild(animWrapper);
 
-        if (!document.getElementById('giftEnhancedStyles')) {
-            const style = document.createElement('style');
-            style.id = 'giftEnhancedStyles';
-            style.innerHTML = `
-                .gift-image-container { position: relative; display: inline-block; margin-bottom: 20px; }
-                .golden-gift-img { filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.8)); animation: giftPulse 2.5s infinite alternate; }
-                .golden-glow-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, rgba(255,215,0,0) 70%); border-radius: 50%; filter: blur(15px); z-index: 1; animation: glowPulse 2.5s infinite alternate; }
-                @keyframes giftPulse { 0% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6)); transform: scale(1); } 100% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)); transform: scale(1.03); } }
-                @keyframes glowPulse { 0% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } }
-                @keyframes giftStep1Anim { 0% { transform: scale(0); opacity: 0; } 15% { transform: scale(1.2); opacity: 1; } 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.3) translateY(-80px); opacity: 0; } }
-                @keyframes giftStep2Anim { 0% { transform: scale(0.6); opacity: 0; } 4% { transform: scale(1.05); opacity: 1; } 8% { transform: scale(1); opacity: 1; } 96% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8) translateY(-120px); opacity: 0; } }
-            `;
-            document.head.appendChild(style);
-        }
-
         setTimeout(() => {
             const s1 = document.getElementById('giftStep1');
             const s2 = document.getElementById('giftStep2');
@@ -2165,8 +2095,9 @@ window.transferToMainBalance = function(amount) {
 
     alert("AKHO გადაიტანილა და კოლექცია გასუფთავდა! ✅");
 
-    if(document.getElementById('giftWalletModal')) {
-        document.getElementById('giftWalletModal').remove();
+    const modal = document.getElementById('giftWalletModal');
+    if(modal) {
+        modal.remove();
     } else {
         const modals = document.querySelectorAll('div[style*="z-index: 2000020"]');
         modals.forEach(m => m.remove());
@@ -2220,7 +2151,7 @@ function showGiftsCollection(uid) {
             <div style="display: flex; gap: 8px; justify-content: center;">
                 <button id="transferBtn" style="flex: 1; padding: 12px 5px; background: #d4af37; border: none; border-radius: 10px; color: black; font-weight: bold; font-size: 10px; cursor: pointer;">ბალანსზე</button>
                 <button id="buyEuroBtn" style="flex: 1; padding: 12px 5px; background: #00a2ff; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 10px; cursor: pointer;">ევრო</button>
-                <button onclick="window.sendToFriendFromGift()" style="flex: 1; padding: 12px 5px; background: #e0e0e0; border: none; border-radius: 10px; color: #333; font-weight: bold; font-size: 10px; cursor: pointer;">მეგობარს</button>
+                <button onclick="if(typeof sendToFriendFromGift==='function')sendToFriendFromGift()" style="flex: 1; padding: 12px 5px; background: #e0e0e0; border: none; border-radius: 10px; color: #333; font-weight: bold; font-size: 10px; cursor: pointer;">მეგობარს</button>
             </div>
         </div>
 
@@ -2322,6 +2253,7 @@ window.showFinancialWallet = function() {
 
 window.showEuroHistory = function() {
     const user = firebase.auth().currentUser;
+    if(!user) return;
     const historyModal = document.createElement('div');
     historyModal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:#121212; z-index:2000040; display:flex; flex-direction:column; color:white; font-family:sans-serif;";
     
@@ -2336,8 +2268,9 @@ window.showEuroHistory = function() {
         </div>`;
     document.body.appendChild(historyModal);
 
-    db.ref(`euro_history/${user.uid}`).orderByChild('timestamp').on('value', snap => {
+    db.ref(`euro_history/${user.uid}`).orderByChild('timestamp').once('value', snap => {
         const list = document.getElementById('euroHistoryList');
+        if(!list) return;
         list.innerHTML = "";
         const data = snap.val();
         
@@ -2428,11 +2361,12 @@ window.showRechargeAKHO = function() {
     document.body.appendChild(modal);
 
     const user = firebase.auth().currentUser;
-    db.ref(`users/${user.uid}/akho`).on('value', snap => {
-        if(document.getElementById('currentCoinBalance')) {
-            document.getElementById('currentCoinBalance').innerText = snap.val() || 0;
-        }
-    });
+    if(user) {
+        db.ref(`users/${user.uid}/akho`).on('value', snap => {
+            const el = document.getElementById('currentCoinBalance');
+            if(el) el.innerText = snap.val() || 0;
+        });
+    }
 };
 
 let selectedAkhoAmount = 0;
@@ -2454,7 +2388,7 @@ window.confirmPurchase = function() {
 
 function openWithdrawHistory() {
     document.getElementById('withdrawHistoryUI').style.display = 'flex';
-    if(typeof stopMainFeedVideos === "function") stopMainFeedVideos();
+    stopMainFeedVideos();
     if(typeof loadMyWithdrawalHistory === "function") loadMyWithdrawalHistory();
 }
 
@@ -2508,17 +2442,6 @@ function toggleSavePost(postId) {
     });
 }
 
-function shareVideo(postId, url) {
-    if (navigator.share) {
-        navigator.share({ url: url }).then(() => {
-            db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-        });
-    } else {
-        alert("Link: " + url);
-        db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-    }
-}
- 
 function openCommunityWall() {
     stopMainFeedVideos(); 
     document.getElementById('communityWallUI').style.display = 'flex';
@@ -2596,7 +2519,6 @@ async function submitWallPost() {
     }
 }
 
-// 🚀 ოპტიმიზირებული კედლის პოსტები (წაკითხვა .once-ით, რომ რეალურ დროში არ გაჭედოს)
 function loadCommunityPosts() {
     const box = document.getElementById('communityPostsList');
     if (!box) return;
@@ -2635,7 +2557,7 @@ function loadCommunityPosts() {
                     </div>
                 </div>
                 ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB; line-height:1.4;">${post.text}</p>` : ''}
-                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px; cursor:pointer;" onclick="previewImage('${post.image}')">` : ''}
+                ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px; cursor:pointer;" onclick="if(typeof previewImage==='function')previewImage('${post.image}')">` : ''}
                 <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
                     <div onclick="window.toggleWallLike('${id}', '${post.authorId}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                         <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
@@ -2759,71 +2681,9 @@ async function sendVoiceMessage(blob) {
     }
 }       
 
-let waveSurfers = {}; 
-
-function initWaveforms() {
-    document.querySelectorAll('.waveform-container').forEach(container => {
-        const msgId = container.id.split('-')[1];
-        if (waveSurfers[msgId]) return;
-
-        const audioUrl = container.getAttribute('data-url');
-        const isSent = container.closest('.msg-sent'); 
-
-        const ws = WaveSurfer.create({
-            container: `#${container.id}`,
-            waveColor: isSent ? 'rgba(0, 0, 0, 0.2)' : 'rgba(212, 175, 55, 0.3)',
-            progressColor: isSent ? 'black' : '#d4af37',
-            barWidth: 2,
-            barGap: 2,
-            barRadius: 10,
-            height: 30,
-            url: audioUrl,
-        });
-
-        waveSurfers[msgId] = ws;
-
-        ws.on('ready', () => {
-            const durationEl = document.getElementById(`duration-${msgId}`);
-            if (durationEl) durationEl.innerText = formatTime(ws.getDuration());
-        });
-
-        ws.on('finish', () => {
-            const icon = document.getElementById(`icon-${msgId}`);
-            if (icon) icon.className = 'fas fa-play';
-        });
-    });
-}
-
-function playPauseAudio(msgId) {
-    const ws = waveSurfers[msgId];
-    const icon = document.getElementById(`icon-${msgId}`);
-    if (!ws) return;
-
-    if (ws.isPlaying()) {
-        ws.pause();
-        icon.className = 'fas fa-play';
-    } else {
-        Object.keys(waveSurfers).forEach(id => {
-            if (waveSurfers[id].isPlaying()) {
-                waveSurfers[id].pause();
-                const otherIcon = document.getElementById(`icon-${id}`);
-                if (otherIcon) otherIcon.className = 'fas fa-play';
-            }
-        });
-        ws.play();
-        icon.className = 'fas fa-pause';
-    }
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
 function toggleMoreMenu(postId) {
     const panel = document.getElementById('more-menu-panel');
-    panel.classList.toggle('active');
+    if(panel) panel.classList.toggle('active');
     if (postId) window.currentSelectedPost = postId;
 }
 
@@ -2832,8 +2692,9 @@ function downloadVideo(postId) {
     toggleMoreMenu();
 }
 
-// 🚀 ოპტიმიზირებული Unread Counter: უყურებს მხოლოდ კონკრეტულ იუზერს და არა მთელ ბაზას
+// 🚀 ოპტიმიზირებული Global Unread Counter
 function startGlobalUnreadCounter() {
+    if(!auth.currentUser) return;
     const myUid = auth.currentUser.uid;
     const chatBadge = document.getElementById('chatCountBadge');
 
@@ -2841,7 +2702,6 @@ function startGlobalUnreadCounter() {
         const lastReadData = readSnap.val() || {};
         let totalUnread = 0;
 
-        // მხოლოდ ამ იუზერის ჩატებს ვამოწმებთ სათითაოდ
         db.ref('messages').once('value', snap => {
             const allChats = snap.val();
             if (!allChats) return;
@@ -2852,7 +2712,7 @@ function startGlobalUnreadCounter() {
                     const msgs = Object.values(allChats[chatId]);
                     const lastMsg = msgs[msgs.length - 1];
 
-                    if (lastMsg.senderId !== myUid && lastMsg.ts > lastRead) {
+                    if (lastMsg && lastMsg.senderId !== myUid && lastMsg.ts > lastRead) {
                         totalUnread++;
                     }
                 }
@@ -2946,100 +2806,6 @@ function loadMySavedPosts() {
     });
 }
 
-let videoStream = null;
-
-async function openUploadModal() {
-   stopMainFeedVideos();
-   const modal = document.getElementById('uploadModal');
-   if (modal) {
-        modal.style.display = 'flex';
-        const video = document.getElementById('cameraStream');
-        const placeholder = document.getElementById('placeholderText');
-
-        try {
-            if (window.videoStream) {
-                window.videoStream.getTracks().forEach(track => track.stop());
-            }
-
-            window.videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    facingMode: "user",
-                    width: { ideal: 1280 },  
-                    height: { ideal: 720 }, 
-                    frameRate: { max: 30 },  
-                    aspectRatio: 9/16
-                 },
-                 audio: {
-                    echoCancellation: { ideal: false }, 
-                    noiseSuppression: { ideal: false },  
-                    autoGainControl: { ideal: false },   
-                    sampleRate: 48000, 
-                    sampleSize: 16,
-                    channelCount: 1,      
-                    latency: 0          
-                 } 
-            });
-            
-            if (video) {
-                video.srcObject = window.videoStream;
-                video.setAttribute('playsinline', '');
-                video.setAttribute('autoplay', '');
-                video.muted = true; 
-                video.style.transform = "scaleX(-1)"; 
-                video.style.display = 'block';
-                video.play().catch(e => console.log("ავტომატური გაშვების შეცდომა:", e));
-                if (placeholder) placeholder.style.display = 'none';
-            }
-        } catch (err) {
-            alert("კამერა ვერ ჩაირთო. შეამოწმეთ ნებართვები პარამეტრებში.");
-        }
-    }
-}
-
-async function startLiveCamera() {
-    const video = document.getElementById('cameraStream');
-    const placeholder = document.getElementById('placeholderText');
-    const recordInner = document.getElementById('recordInner');
-
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-    }
-
-    try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }, 
-            audio: true 
-        });
-        
-        if (video) {
-            video.srcObject = videoStream;
-            video.setAttribute('autoplay', '');
-            video.setAttribute('muted', '');
-            video.setAttribute('playsinline', '');
-            video.muted = true; 
-            video.style.transform = "scaleX(-1)";
-            video.play();
-            video.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-            if (recordInner) {
-                recordInner.style.background = '#00ff00';
-                recordInner.style.boxShadow = '0 0 15px #00ff00';
-            }
-        }
-    } catch (err) {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-                videoStream = stream;
-                video.srcObject = stream;
-                video.style.transform = "scaleX(-1)";
-                video.play();
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            })
-            .catch(e => alert("კამერა ვერ ჩაირთო: " + e.message));
-    }
-}
-
 function closeUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) modal.style.display = 'none';
@@ -3047,13 +2813,10 @@ function closeUploadModal() {
 }
 
 function stopCamera() {
-    const activeStream = window.videoStream || videoStream;
+    const activeStream = window.videoStream;
     if (activeStream) {
-        activeStream.getTracks().forEach(track => {
-            track.stop(); 
-        });
+        activeStream.getTracks().forEach(track => track.stop());
         window.videoStream = null;
-        if (typeof videoStream !== 'undefined') videoStream = null;
     }
 
     const video = document.getElementById('cameraStream');
@@ -3077,390 +2840,12 @@ function stopCamera() {
     }
 }
 
-var globalMediaRecorder = null;
-var globalChunks = [];
-var currentFacingMode = "user"; 
-var timerInterval = null;
-var seconds = 0;
-const RECORDING_LIMIT = 60;
-
-function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    seconds = 0;
-    const minElem = document.getElementById('timerMinutes');
-    const secElem = document.getElementById('timerSeconds');
-    const timerElement = document.getElementById('recordingTimer');
-
-    if (timerElement) timerElement.style.display = 'flex';
-    
-    timerInterval = setInterval(() => {
-        seconds++;
-        let mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        let secs = (seconds % 60).toString().padStart(2, '0');
-        
-        if (minElem) minElem.innerText = mins;
-        if (secElem) secElem.innerText = secs;
-
-        if (seconds >= RECORDING_LIMIT) {
-            stopTimer();
-            if (globalMediaRecorder) {
-                globalMediaRecorder.stop();
-            }
-            const btnInner = document.getElementById('recordInner');
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-            alert("ჩაწერის ლიმიტი (60 წამი) ამოიწურა.");
-        }
-    }, 1000);
-}
-
-function stopTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+function killVideo() {
+    const v = document.getElementById('fullVideoTag');
+    if (v) v.pause();
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'none';
     }
-    const timerElement = document.getElementById('recordingTimer');
-    if (timerElement) timerElement.style.display = 'none';
-}
-
-async function switchCamera() {
-    const video = document.getElementById('cameraStream');
-    if (window.videoStream) {
-        window.videoStream.getTracks().forEach(track => track.stop());
-    }
-    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                facingMode: currentFacingMode,
-                width: { ideal: 1280 }, 
-                height: { ideal: 720 } 
-            },
-            audio: true
-        });
-
-        window.videoStream = stream;
-        if (video) {
-            video.srcObject = stream;
-            video.onloadedmetadata = () => {
-                video.play();
-                video.style.transform = (currentFacingMode === "user") ? "scaleX(-1)" : "scaleX(1)";
-            };
-        }
-    } catch (err) {
-        alert("კამერის გადართვა ვერ მოხერხდა.");
-        currentFacingMode = "user"; 
-    }
-}
-
-let countdownTime = 0;
-let isCounting = false;
-
-function toggleTimerMenu() {
-    const menu = document.getElementById('timerDropdown');
-    if (menu) menu.style.display = (menu.style.display === "none") ? "flex" : "none";
-}
-
-function setCountdown(seconds, element) {
-    countdownTime = seconds;
-    const opts = element.parentElement.querySelectorAll('div');
-    opts.forEach(opt => opt.style.color = 'white');
-    element.style.color = '#ff4d4d';
-    document.getElementById('timerDropdown').style.display = "none";
-}
-
-async function toggleRecording() {
-    const btnInner = document.getElementById('recordInner');
-    const videoInput = document.getElementById('videoInput');
-    const video = document.getElementById('cameraStream');
-    const deleteBtn = document.getElementById('deleteLastClipBtn');
-
-    if (deleteBtn) deleteBtn.style.display = 'flex';
-  
-    const isActuallyRecording = typeof globalMediaRecorder !== 'undefined' && globalMediaRecorder && globalMediaRecorder.state === "recording";
-
-    if (countdownTime > 0 && !isActuallyRecording && !isCounting) {
-        isCounting = true;
-        const display = document.getElementById('countdownDisplay');
-        let timeLeft = countdownTime;
-
-        if (display) {
-            display.style.display = "block";
-            display.innerText = timeLeft;
-        }
-
-        let timerInterval = setInterval(() => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                if (display) display.innerText = timeLeft;
-            } else {
-                clearInterval(timerInterval);
-                if (display) display.style.display = "none";
-                isCounting = false;
-                const currentSetting = countdownTime;
-                countdownTime = 0; 
-                toggleRecording(); 
-                countdownTime = currentSetting;
-            }
-        }, 1000);
-        return; 
-    }
-
-    try {
-        if (typeof globalMediaRecorder === 'undefined' || !globalMediaRecorder || globalMediaRecorder.state === "inactive") {
-            if (!window.videoStream) return;
-
-            let audioStreamToUse;
-            if (currentBackgroundMusic && currentBackgroundMusic.src) {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    audioSource = audioCtx.createMediaElementSource(currentBackgroundMusic);
-                    audioDest = audioCtx.createMediaStreamDestination();
-                    audioSource.connect(audioDest);
-                    audioSource.connect(audioCtx.destination);
-                }
-                audioStreamToUse = audioDest.stream;
-            } else {
-                audioStreamToUse = window.videoStream;
-            }
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = video.videoWidth || 720;
-            canvas.height = video.videoHeight || 1280;
-            const currentFilter = getComputedStyle(video).filter;
-
-            function drawFrame() {
-                if (globalMediaRecorder && globalMediaRecorder.state === "recording") {
-                    ctx.filter = currentFilter;
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    requestAnimationFrame(drawFrame);
-                }
-            }
-
-            const filteredStream = canvas.captureStream(30); 
-            const finalStream = new MediaStream();
-
-            filteredStream.getVideoTracks().forEach(track => finalStream.addTrack(track));
-            audioStreamToUse.getAudioTracks().forEach(track => finalStream.addTrack(track));
-
-            globalChunks = [];
-            const options = {
-                mimeType: 'video/webm;codecs=vp8',
-                videoBitsPerSecond: 1200000,
-                audioBitsPerSecond: 128000
-            };
-
-            if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                options.mimeType = 'video/mp4';
-            }
-
-            globalMediaRecorder = new MediaRecorder(finalStream, options);
-            globalMediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) globalChunks.push(e.data);
-            };
-
-            globalMediaRecorder.onstop = () => {
-                if (typeof stopTimer === "function") stopTimer();
-                const blob = new Blob(globalChunks, { type: 'video/mp4' });
-                const file = new File([blob], "recorded_video.mp4", { type: "video/mp4" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                videoInput.files = dataTransfer.files;
-
-                video.srcObject = null;
-                video.src = URL.createObjectURL(blob);
-                video.style.transform = "scaleX(1)";
-                video.muted = false; 
-                video.play();
-
-                if (currentBackgroundMusic) currentBackgroundMusic.pause();
-                if (typeof handleVideoSelect === "function") handleVideoSelect(videoInput);
-            };
-
-            if (currentBackgroundMusic && currentBackgroundMusic.src) {
-                currentBackgroundMusic.currentTime = 0;
-                currentBackgroundMusic.play();
-            }
-
-            globalMediaRecorder.start();
-            drawFrame(); 
-            if (typeof startTimer === "function") startTimer();
-            if (btnInner) {
-                btnInner.style.borderRadius = "8px";
-                btnInner.style.background = "#ff0000";
-            }
-        } else {
-            globalMediaRecorder.stop();
-            if (btnInner) {
-                btnInner.style.borderRadius = "50%";
-                btnInner.style.background = "#ff4d4d";
-            }
-        }
-    } catch (err) {
-        console.error("Recording error:", err);
-    }
-}
-
-function handleForgotPassword() {
-    const emailInput = document.getElementById('uEmail');
-    const emailValue = emailInput.value.trim();
-
-    if (!emailValue) {
-        alert("გთხოვთ, ჯერ ჩაწეროთ მეილი Email / ელფოსტა ველში!");
-        emailInput.focus();
-        return;
-    }
-
-    auth.sendPasswordResetEmail(emailValue)
-        .then(() => {
-            alert("პაროლის აღდგენის ინსტრუქცია გამოგზავნილია თქვენს მეილზე: " + emailValue);
-        })
-        .catch((error) => {
-            if (error.code === 'auth/user-not-found') {
-                alert("ამ მეილით მომხმარებელი ვერ მოიძებნა.");
-            } else if (error.code === 'auth/invalid-email') {
-                alert("მეილის ფორმატი არასწორია.");
-            } else {
-                alert("შეცდომა: " + error.message);
-            }
-        });
-}
-
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    console.log("აპლიკაციის დაინსტალირება შესაძლებელია! ✅");
-});
-
-function installApp() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('მომხმარებელმა დააინსტალირა აპლიკაცია');
-            }
-            deferredPrompt = null;
-        });
-    }
-}
-
-function showLocalNotification(title, body) {
-    if (Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(title, {
-                body: body,
-                icon: 'logo.png',
-                vibrate: [200, 100, 200],
-                badge: 'logo.png',
-                tag: 'msg-group',
-                renotify: true
-            });
-            const sound = document.getElementById('msgSound');
-            if (sound) sound.play().catch(e => {});
-        });
-    }
-}
-
-function setAppBadge(count) {
-    if ('setAppBadge' in navigator) {
-        if (count > 0) {
-            navigator.setAppBadge(count).catch(e => {});
-        } else {
-            navigator.clearAppBadge().catch(e => {});
-        }
-    }
-}
-
-function sendPushToUser(targetUid, senderName, text) {
-    db.ref(`users/${targetUid}/fcmToken`).once('value', snap => {
-        const token = snap.val();
-        if (token) {
-            fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'key=AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk' 
-                },
-                body: JSON.stringify({
-                    to: token,
-                    notification: {
-                        title: senderName,
-                        body: text,
-                        icon: "logo.png",
-                        click_action: "https://emigrantbook.com",
-                        sound: "default",
-                        badge: "1"
-                    },
-                    data: { url: "https://emigrantbook.com" },
-                    priority: "high"
-                })
-            })
-            .then(res => console.log("Push status:", res.status))
-            .catch(e => console.log("Push error:", e));
-        }
-    });
-}
-
-if ('setAppBadge' in navigator) {
-    navigator.setAppBadge(7).catch(() => {});
-}
-
-function saveMessagingToken(user) {
-    const messaging = firebase.messaging();
-    console.log("ნაბიჯი 1: ვიწყებთ...");
-
-    messaging.requestPermission()
-        .then(function() {
-            return messaging.getToken({
-                vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk'
-            });
-        })
-        .then(function(token) {
-            if (token) {
-                return db.ref('users/' + user.uid).update({ 
-                    fcmToken: token,
-                    messagingStatus: "active" 
-                });
-            }
-        })
-        .then(function() {
-            console.log("ნაბიჯი 4: ბაზაში ჩაიწერა! ✅");
-        })
-        .catch(function(err) {
-            console.error("კრიტიკული შეცდომა:", err);
-        });
-}
-
-function handleLikeFromFull() {
-    const postId = window.currentFullVideoId;
-    if (!postId) return;
-
-    const myUid = auth.currentUser.uid;
-    const likeRef = db.ref(`posts/${postId}/likedBy/${myUid}`);
-
-    likeRef.once('value', snap => {
-        if (snap.exists()) {
-            likeRef.remove();
-        } else {
-            likeRef.set({ 
-                type: '❤️', 
-                photo: myPhoto, 
-                name: myName 
-            });
-            db.ref(`posts/${postId}`).once('value', pSnap => {
-                const post = pSnap.val();
-                if (post && post.authorId !== myUid) {
-                    earnAkho(post.authorId, 2.00, 'Impact (Like from Full)');
-                }
-            });
-        }
-        setTimeout(() => playFullVideo(document.getElementById('fullVideoTag').src, postId, window.currentVideoIndex), 300);
-    });
 }
 
 function closeFullVideo() {
@@ -3480,108 +2865,11 @@ function closeFullVideo() {
     }
 }
 
-function openCommentsFromFull() {
-    if (!window.currentFullVideoId) return;
-
-    const commUI = document.getElementById('commentsUI');
-    const overlay = document.getElementById('fullVideoOverlay');
-    const vid = document.getElementById('fullVideoTag');
-    const sideMenu = document.querySelector('#fullVideoOverlay .video-side-menu');
-
-    if (commUI && overlay) {
-        overlay.appendChild(commUI);
-        commUI.style.display = "flex";
-        commUI.style.zIndex = "9999999";
-
-        overlay.classList.add('hide-menu-now');
-        if (sideMenu) {
-            sideMenu.style.opacity = "0";
-            sideMenu.style.pointerEvents = "none";
-        }
-        if (vid) vid.pause();
-
-        const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
-        if (closeBtn) {
-            closeBtn.onclick = function() {
-                commUI.style.display = 'none';
-                if (vid) vid.play();
-                overlay.classList.remove('hide-menu-now');
-                if (sideMenu) {
-                    sideMenu.style.opacity = "1";
-                    sideMenu.style.visibility = "visible";
-                    sideMenu.style.pointerEvents = "auto";
-                }
-            };
-        }
-        openComments(window.currentFullVideoId);
-    }
-}
-
-function saveVideoFromFull() {
-    const postId = window.currentFullVideoId;
-    if (!postId) return;
-
-    const myUid = auth.currentUser.uid;
-    const saveRef = db.ref(`posts/${postId}/savedBy/${myUid}`);
-
-    saveRef.once('value', snap => {
-        if (snap.exists()) {
-            saveRef.remove();
-            document.getElementById('fullSaveIcon').style.color = 'white';
-        } else {
-            saveRef.set(true);
-            document.getElementById('fullSaveIcon').style.color = 'var(--gold)';
-        }
-    });
-}
-
-function shareVideoFromFull() {
-    if (!window.currentFullVideoId) return;
-    const shareUrl = window.location.origin + "?v=" + window.currentFullVideoId;
-    if (navigator.share) {
-        navigator.share({
-            title: 'EmigrantBook Video',
-            url: shareUrl
-        }).catch(err => console.log(err));
-    } else {
-        navigator.clipboard.writeText(shareUrl);
-        alert("ბმული კოპირებულია!");
-    }
-}
-
-window.handleLikeFromFull = handleLikeFromFull;
-window.openCommentsFromFull = openCommentsFromFull;
-window.saveVideoFromFull = saveVideoFromFull;
-window.shareVideoFromFull = shareVideoFromFull;
-
-function closeVideoComments() {
-    document.getElementById('commentsUI').style.display = 'none';
-    const overlay = document.getElementById('fullVideoOverlay');
-    const vid = document.getElementById('fullVideoTag');
-    if (overlay && overlay.style.display === 'block') {
-        overlay.style.opacity = "1";
-        if (vid) vid.play();
-    }
-}
-
-function fixCloseBtn() {
-    const commUI = document.getElementById('commentsUI');
-    const closeBtn = commUI.querySelector('span[onclick*="commentsUI"]');
-    if (closeBtn) {
-        closeBtn.onclick = closeVideoComments;
-    }
-}
-
-async function askInitialPermissions() {
+function askInitialPermissions() {
     if (localStorage.getItem('initial_permissions_asked')) return;
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-        stream.getTracks().forEach(track => track.stop());
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(() => {}, () => {});
-        }
         if ("Notification" in window) {
-            await Notification.requestPermission();
+            Notification.requestPermission();
         }
         localStorage.setItem('initial_permissions_asked', 'true');
     } catch (err) {
@@ -3589,243 +2877,8 @@ async function askInitialPermissions() {
     }
 }
 
-window.addEventListener('load', () => {
-    if ('Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                navigator.serviceWorker.ready.then(reg => {
-                    const messaging = firebase.messaging();
-                    messaging.getToken({
-                        vapidKey: 'BFi5rCCEsQ3sY5VzBTf6PXD5T_1JmLFI2oICpIBG8FoW5T_DxtxVdvTSFu0SjbZdSirYkYoyg4PIMotPD2YyFWk',
-                        serviceWorkerRegistration: reg
-                    }).then(token => {
-                        console.log("ტოკენი აღებულია", token);
-                    });
-                });
-            }
-        });
-    }
-});
-
-emailjs.init("oZOT_SZC1MfIZnil8");
-
-async function sendRealInvoice() {
-    const btn = document.getElementById('send_inv_btn');
-    const name = document.getElementById('inv_customer_name').value;
-    const email = document.getElementById('inv_customer_email').value;
-    const desc = document.getElementById('inv_product_desc').value;
-    const amount = document.getElementById('inv_amount').value;
-    const date = new Date().toLocaleDateString('ka-GE');
-    const inv_no = "EB-" + Math.floor(1000 + Math.random() * 9000);
-
-    if(!name || !email || !amount) {
-        alert("გთხოვთ, შეავსოთ სახელი, მეილი და თანხა!");
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> იგზავნება...';
-
-    const templateParams = {
-        to_name: name,
-        to_email: email,
-        order_id: inv_no,
-        order_date: date,
-        product_description: desc || "შენაძენი",
-        total_price: amount + " €",
-        reply_to: "support@emigrantbook.com"
-    };
-
-    try {
-        await emailjs.send('service_hjiqge4', 'template_50xhnnm', templateParams);
-        alert("✅ ინვოისი წარმატებით გაეგზავნა: " + name);
-        
-        if(typeof db !== 'undefined') {
-            db.ref('sent_invoices').push({
-                customer: name,
-                email: email,
-                amount: amount,
-                date: date,
-                invoice_no: inv_no,
-                status: "Sent"
-            });
-        }
-        document.getElementById('inv_product_desc').value = "";
-        document.getElementById('inv_amount').value = "";
-    } catch (error) {
-        alert("შეცდომა გაგზავნისას");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> ინვოისის გაგზავნა';
-    }
-}
-
-function loadInvoiceHistory() {
-    const tableBody = document.getElementById('invoice_history_body');
-    db.ref('sent_invoices').orderByChild('timestamp').once('value', (snapshot) => {
-        tableBody.innerHTML = "";
-        let invoices = [];
-        snapshot.forEach((childSnapshot) => {
-            invoices.unshift(childSnapshot.val());
-        });
-
-        if (invoices.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999;">ისტორია ცარიელია</td></tr>';
-            return;
-        }
-
-        invoices.forEach((data) => {
-            const row = document.createElement('tr');
-            row.style.borderBottom = "1px solid #eee";
-            row.innerHTML = `
-                <td style="padding: 15px; color: #aaa;">${data.date}</td>
-                <td style="padding: 15px; font-weight: bold; color: white;">${data.customer}</td>
-                <td style="padding: 15px; color: var(--gold); font-family: monospace;">${data.invoice_no || '---'}</td>
-                <td style="padding: 15px; text-align: right; font-weight: bold; color: #4ade80;">${data.amount} €</td>
-                <td style="padding: 15px; text-align: center;">
-                    <span style="background: rgba(74, 222, 128, 0.1); color: #4ade80; padding: 4px 10px; border-radius: 6px; font-size: 10px; border: 1px solid rgba(74, 222, 128, 0.2);">
-                        SENT
-                    </span>
-                </td>`;
-            tableBody.appendChild(row);
-        });
-    });
-}
-loadInvoiceHistory();
-
-async function uploadChatImage(input) {
-    if (!input.files || !input.files[0] || !currentChatId) return;
-    const file = input.files[0];
-    const myUid = auth.currentUser.uid;
-    const chatId = getChatId(myUid, currentChatId);
-
-    try {
-        const filePath = `chat_images/${chatId}/${Date.now()}_${file.name}`;
-        const storageRef = firebase.storage().ref(filePath);
-        const snapshot = await storageRef.put(file);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-
-        db.ref(`messages/${chatId}`).push({
-            senderId: myUid,
-            image: downloadURL,
-            ts: Date.now(),
-            seen: false
-        });
-
-        if (typeof sendPushToUser === "function") {
-            sendPushToUser(currentChatId, myName, "📷 Photo");
-        }
-        input.value = ""; 
-    } catch (error) {
-        alert("ვერ მოხერხდა ფოტოს გაგზავნა.");
-    }
-}
-
-function showGiftAnimation(amount) {
-    const container = document.getElementById('giftAnimationContainer');
-    const amountSpan = document.getElementById('giftAmount');
-    amountSpan.innerText = amount;
-    container.style.display = 'block';
-    
-    const wrapper = container.querySelector('.gift-box-wrapper');
-    wrapper.classList.remove('animate-gift');
-    void wrapper.offsetWidth;
-    wrapper.classList.add('animate-gift');
-
-    setTimeout(() => {
-        container.style.display = 'none';
-    }, 30000);
-}
-
-const videoObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        const video = entry.target;
-        if (!entry.isIntersecting) {
-            video.pause();
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = 'none';
-            }
-        }
-    });
-}, { threshold: 0.1 });
-
-const mainVid = document.getElementById('fullVideoTag');
-if (mainVid) {
-    videoObserver.observe(mainVid);
-}
-
-function killVideo() {
-    const v = document.getElementById('fullVideoTag');
-    if (v) v.pause();
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'none';
-    }
-}
-
-function checkNewVisitors(myUid) {
-    const feet = document.getElementById('feetStats');
-    const ava = document.getElementById('visitorAvaNav');
-    if (!feet || !ava) return;
-
-    db.ref(`profile_views/${myUid}`).orderByChild('ts').limitToLast(1).once('value', snap => {
-        const data = snap.val();
-        if (!data) {
-            feet.style.display = 'block';
-            return;
-        }
-
-        const visitorData = Object.values(data)[0];
-        const lastSeenTs = localStorage.getItem('last_seen_visitor_ts') || 0;
-
-        if (visitorData.ts > lastSeenTs) {
-            feet.style.display = 'none';
-            ava.src = visitorData.photo || "token-avatar.png";
-            ava.style.display = 'block';
-        } else {
-            feet.style.display = 'block';
-            ava.style.display = 'none';
-        }
-    });
-}
-
-window.openShare = function(postId, url) {
-    const siteLink = `https://emigrantbook.com/?v=${postId}`;
-    if (navigator.share) {
-        navigator.share({
-            title: 'Emigrantbook',
-            text: 'ნახე ეს ვიდეო Emigrantbook-ზე!',
-            url: siteLink
-        }).then(() => {
-            db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-        }).catch(() => {});
-    } else {
-        const dummy = document.createElement("input");
-        document.body.appendChild(dummy);
-        dummy.value = siteLink;
-        dummy.select();
-        document.execCommand("copy");
-        document.body.removeChild(dummy);
-        alert("ბმული დაკოპირებულია! ✅");
-        db.ref(`posts/${postId}/shares`).transaction(c => (c || 0) + 1);
-    }
-};
-window.shareVideo = window.openShare;
-
-window.addEventListener('resize', () => {
-    const messenger = document.getElementById('messengerUI');
-    if (messenger && messenger.style.display === 'flex') {
-        stopMainFeedVideos();
-    }
-});
-
-document.addEventListener('focusin', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        stopMainFeedVideos();
-    }
-});
-
-let newWallPostsCount = 0;
 function startWallNotificationListener() {
+    if(!auth.currentUser) return;
     const myUid = auth.currentUser.uid;
     let isInitialLoad = true;
 
@@ -3836,460 +2889,15 @@ function startWallNotificationListener() {
         }
         const post = snap.val();
         if (post && post.authorId !== myUid) {
-            newWallPostsCount++;
-            const badge = document.getElementById('newPostsBadge');
+            let badge = document.getElementById('newPostsBadge');
             if (badge) {
-                badge.innerText = newWallPostsCount;
+                let currentVal = parseInt(badge.innerText) || 0;
+                badge.innerText = currentVal + 1;
                 badge.style.display = 'inline-block';
             }
         }
     });
 }
-
-window.toggleWallTag = function(postId) {
-    const user = auth.currentUser;
-    if (!user) return alert("გთხოვთ გაიაროთ ავტორიზაცია!");
-    const myUid = user.uid;
-    const tagRef = db.ref('community_posts/' + postId + '/taggedBy/' + myUid);
-
-    tagRef.once('value').then(snap => {
-        const btnElement = event.currentTarget.querySelector('i');
-        const textElement = event.currentTarget.querySelector('span');
-
-        if (snap.exists()) {
-            tagRef.remove();
-            if (btnElement) {
-                btnElement.className = "far fa-user-tag";
-                btnElement.style.color = "#888";
-            }
-            if (textElement) textElement.innerText = "მონიშვნა";
-        } else {
-            tagRef.set(true);
-            if (btnElement) {
-                btnElement.className = "fas fa-user-tag";
-                btnElement.style.color = "var(--gold)";
-            }
-            if (textElement) textElement.innerText = "მონიშნულია";
-        }
-    });
-};
-
-window.loadMyTaggedWallPosts = function(targetUid) {
-    let box = document.getElementById('userTaggedPostsList');
-    const profGrid = document.getElementById('profGrid');
-    
-    if (!box) {
-        box = document.createElement('div');
-        box.id = 'userTaggedPostsList';
-        box.style.display = 'flex';
-        box.style.flexDirection = 'column';
-        box.style.gap = '15px';
-        box.style.padding = '10px';
-        if (profGrid && profGrid.parentNode) {
-            profGrid.parentNode.insertBefore(box, profGrid.nextSibling);
-        } else {
-            document.body.appendChild(box);
-        }
-    }
-    
-    box.style.display = 'flex';
-    box.innerHTML = "<p style='color:var(--gold); text-align:center; padding:20px;'>იტვირთება...</p>";
-
-    const user = auth.currentUser;
-    if (!user) {
-        box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>გთხაღო გაიაროთ ავტორიზაცია</p>";
-        return;
-    }
-
-    const uidToLoad = targetUid ? targetUid : user.uid;
-    const myUid = user.uid;
-
-    db.ref('community_posts').once('value', snap => {
-        box.innerHTML = ""; 
-        const data = snap.val();
-        if (!data) {
-            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ბაზაში პოსტები არ არის</p>";
-            return;
-        }
-
-        let count = 0;
-        Object.keys(data).reverse().forEach(id => {
-            const post = data[id];
-            if (post.taggedBy && post.taggedBy[uidToLoad]) {
-                count++;
-                const isLiked = (post.likes && post.likes[myUid]);
-                const likeCount = post.likes ? Object.keys(post.likes).length : 0;
-                const postTime = post.timestamp ? formatTimeShort(post.timestamp) : "";
-                
-                const card = document.createElement('div');
-                card.className = "post-card";
-                card.innerHTML = `
-                    <div class="post-header" style="display:flex; align-items:center; margin-bottom:10px; cursor:pointer;" onclick="openProfile('${post.authorId}')">
-                        <img src="${post.authorPhoto || 'https://ui-avatars.com/api/?name='+post.authorName}" style="width:35px; height:35px; border-radius:50%; border:1px solid var(--gold); object-fit:cover; margin-right:10px;">
-                        <div style="display:flex; flex-direction:column;">
-                            <b style="color:white; font-size:14px;">${post.authorName}</b>
-                            <span style="color:#888; font-size:10px;">${postTime}</span>
-                        </div>
-                    </div>
-                    ${post.text ? `<p style="font-size:15px; margin:10px 0; color:#E4E6EB;">${post.text}</p>` : ''}
-                    ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:10px; margin-bottom:10px;">` : ''}
-                    <div style="display:flex; gap:25px; color:var(--gold); border-top:1px solid #333; padding-top:10px; margin-top:5px;">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <i class="${isLiked ? 'fas' : 'far'} fa-heart" style="${isLiked ? 'color:#ff4d4d;' : ''}"></i>
-                            <span style="font-size:14px; font-weight:bold;">${likeCount}</span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <i class="fas fa-user-tag" style="color:var(--gold);"></i>
-                            <span style="font-size:14px; font-weight:bold;">მონიშნულია</span>
-                        </div>
-                    </div>`;
-                box.appendChild(card);
-            }
-        });
-
-        if (count === 0) {
-            box.innerHTML = "<p style='color:gray; text-align:center; padding:20px;'>ამ მომხმარებელს მონიშნული პოსტები არ აქვს</p>";
-        }
-    });
-};
-
-let faceMesh;
-async function setupBeautyFilter() {
-    if(typeof FaceMesh !== 'undefined') {
-        faceMesh = new FaceMesh({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-        }});
-        faceMesh.setOptions({
-            maxNumFaces: 1,
-            refineLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-        faceMesh.onResults(onBeautyResults);
-    }
-}
-
-function onBeautyResults(results) {
-    if (!results.multiFaceLandmarks) return;
-    if(typeof applySkinSmoothing === 'function') applySkinSmoothing(results);
-}
-setupBeautyFilter();
-
-let isBeautyOn = false;
-function toggleBeautyMode() {
-    isBeautyOn = !isBeautyOn;
-    const video = document.getElementById('cameraStream');
-    const icon = document.getElementById('beautyIcon');
-    
-    if (isBeautyOn) {
-        video.style.filter = "contrast(1.1) brightness(1.1) saturate(1.1) blur(0.5px)";
-        if(icon) icon.style.color = "#ff4d4d";
-    } else {
-        video.style.filter = "none";
-        if(icon) icon.style.color = "white";
-    }
-}
-
-function toggleFiltersMenu() {
-    const menu = document.getElementById('filtersDropdown');
-    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
-}
-
-function applyVideoFilter(filterValue) {
-    const video = document.getElementById('cameraStream');
-    const canvas = document.getElementById('beautyCanvas');
-    video.style.filter = filterValue;
-    if (canvas) canvas.style.filter = filterValue;
-    document.getElementById('filtersDropdown').style.display = "none";
-}
-
-let currentSpeed = 1.0;
-function toggleSpeedMenu() {
-    const menu = document.getElementById('speedDropdown');
-    menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "flex" : "none";
-}
-
-function setVideoSpeed(speed, element) {
-    currentSpeed = speed;
-    const options = element.parentElement.querySelectorAll('div');
-    options.forEach(opt => opt.style.color = 'white');
-    element.style.color = '#ff4d4d';
-    document.getElementById('speedDropdown').style.display = "none";
-}
-
-function showDeleteConfirm() {
-    document.getElementById('deleteConfirmModal').style.display = 'flex';
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteConfirmModal').style.display = 'none';
-}
-
-function confirmDeleteClip() {
-    if (typeof recordedChunks !== 'undefined' && recordedChunks.length > 0) {
-        recordedChunks.pop();
-        if (recordedChunks.length === 0) {
-            document.getElementById('deleteLastClipBtn').style.display = 'none';
-        }
-    }
-    closeDeleteModal();
-}
-
-let currentBackgroundMusic = null; 
-
-function openMusicPicker() {
-    const modal = document.getElementById('music-picker-modal');
-    if (modal) {
-        modal.classList.add('show');
-        renderSongs(); 
-    }
-}
-
-function closeMusicPicker() {
-    const modal = document.getElementById('music-picker-modal');
-    if (modal) modal.classList.remove('show');
-}
-
-function pickSong(url, title) {
-    const label = document.getElementById('selected-music-name');
-    if (label) label.innerText = "იტვირთება...";
-
-    if (currentBackgroundMusic) {
-        currentBackgroundMusic.pause();
-        currentBackgroundMusic.src = "";
-    }
-
-    currentBackgroundMusic = new Audio();
-    const encodedUrl = encodeURI(url);
-    currentBackgroundMusic.src = encodedUrl;
-    currentBackgroundMusic.preload = "auto";
-
-    currentBackgroundMusic.oncanplaythrough = function() {
-        currentBackgroundMusic.play();
-        if (label) label.innerText = title;
-        closeMusicPicker();
-    };
-
-    currentBackgroundMusic.onerror = function() {
-        currentBackgroundMusic.src = url; 
-        currentBackgroundMusic.play().catch(e => {});
-    };
-    currentBackgroundMusic.load();
-}
-
-async function renderSongs() {
-    const list = document.getElementById('music-list');
-    if (!list) return;
-    list.innerHTML = "<p style='color:white; padding:15px;'>იტვირთება მუსიკები...</p>";
-
-    try {
-        const storageRef = firebase.storage().ref('musics'); 
-        const result = await storageRef.listAll();
-        
-        if (result.items.length === 0) {
-            list.innerHTML = "<p style='color:white; padding:15px;'>საქაღალდე 'musics' ცარიელია.</p>";
-            return;
-        }
-
-        const promises = result.items.map(async (itemRef) => {
-            const url = await itemRef.getDownloadURL();
-            const realTime = await getDuration(url);
-            const fileName = itemRef.name.replace('.mp3', '').replace(/_/g, ' ');
-            return { url, name: fileName, duration: realTime };
-        });
-
-        const songsData = await Promise.all(promises);
-        list.innerHTML = songsData.map(s => `
-            <div class="music-item-row" onclick="pickSong('${s.url}', '${s.name}')" style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;">
-                <div style="width:50px; height:50px; border-radius:4px; margin-right:15px; background:#333; display:flex; align-items:center; justify-content:center; font-size:20px;">🎵</div>
-                <div style="flex:1;">
-                    <div style="font-weight:500; color:white; font-size:15px;">${s.name}</div>
-                    <div style="color:#888; font-size:13px;">Storage · ${s.duration}</div>
-                </div>
-            </div>`).join('');
-    } catch (error) {
-        loadMusicFromDB();
-    }
-}
-
-async function loadMusicFromDB() {
-    const list = document.getElementById('music-list');
-    if (!list) return;
-    try {
-        const querySnapshot = await db.collection("musics").get();
-        if (querySnapshot.empty) return;
-        list.innerHTML = "";
-        querySnapshot.forEach(async (doc) => {
-            const s = doc.data();
-            const realTime = await getDuration(s.url);
-            const row = document.createElement('div');
-            row.className = "music-item-row";
-            row.style = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer;";
-            row.innerHTML = `
-                <img src="${s.img || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; border-radius:4px; margin-right:15px; object-fit:cover;">
-                <div style="flex:1;">
-                    <div style="font-weight:500; color:white;">${s.name || s.title}</div>
-                    <div style="color:#888; font-size:12px;">${s.artist || 'Artist'} · ${realTime}</div>
-                </div>`;
-            row.onclick = () => pickSong(s.url, s.name || s.title);
-            list.appendChild(row);
-        });
-    } catch (e) {}
-}
-
-function sendOneSignalPush(senderName, messageText) {
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic os_v2_app_kbb3yhxnng5e7hgd4wuobweyknbzktcg4te7imyu2hiuledkzu64dd2jv4luedx327x73gpwpauts6pc3fz325vdncsoyxc136j3oa'
-        },
-        body: JSON.stringify({
-            app_id: "5043bc1e-ed37-49f3-987c-b51c1b130a4b", 
-            included_segments: ["All"], 
-            headings: { "en": senderName, "ka": senderName },
-            contents: { "en": messageText, "ka": messageText },
-            android_accent_color: "FF0000",
-            priority: 10,
-            url: "https://emigrantbook.com"
-        })
-    };
-    fetch('https://onesignal.com/api/v1/notifications', options).catch(() => {});
-}
-
-function openPromoteUI() {
-    const menu = document.getElementById('more-menu-panel');
-    if (menu) menu.classList.remove('active'); 
-    document.getElementById('promoteUI').style.display = 'flex';
-    selectedEbVideoId = null;
-    window.selectedEbPrice = 0;
-    const btn = document.getElementById('ebPayBtn');
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
-    document.getElementById('ebTotal').innerText = "0,00 $";
-
-    const grid = document.getElementById('promoteVideoGrid');
-    grid.innerHTML = "";
-    
-    db.ref('posts').orderByChild('authorId').equalTo(auth.currentUser.uid).once('value', snap => {
-        const posts = snap.val();
-        if (posts) {
-            Object.entries(posts).reverse().forEach(([id, post]) => {
-                const video = post.media ? post.media.find(m => m.type === 'video') : null;
-                if (video) {
-                    grid.innerHTML += `
-                    <div onclick="selectEbVideo('${id}')" id="vid-${id}" style="min-width:100px; height:130px; background:#1a1a1a; border-radius:8px; overflow:hidden; border:2px solid transparent; position:relative; flex-shrink:0;">
-                        <video src="${video.url}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;"></video>
-                        <div style="position:absolute; bottom:5px; left:5px; font-size:10px;"><i class="fas fa-play"></i> ${post.views || 0}</div>
-                    </div>`;
-                }
-            });
-        }
-    });
-}
-
-let selectedEbVideoId = null;
-function selectEbVideo(id) {
-    selectedEbVideoId = id;
-    document.querySelectorAll('#promoteVideoGrid div').forEach(el => el.style.borderColor = "transparent");
-    const target = document.getElementById('vid-' + id);
-    if(target) target.style.borderColor = "#fe2c55";
-    checkEbReady();
-}
-
-function selectEbPack(el, price) {
-    document.querySelectorAll('.eb-pack').forEach(p => {
-        p.style.background = "#1a1a1a";
-        p.style.borderColor = "#333";
-    });
-    el.style.background = "#261014";
-    el.style.borderColor = "#fe2c55";
-    document.getElementById('ebTotal').innerText = price.toFixed(2).replace('.', ',') + " $";
-    window.selectedEbPrice = price;
-    checkEbReady();
-}
-
-function checkEbReady() {
-    if (selectedEbVideoId && window.selectedEbPrice) {
-        const btn = document.getElementById('ebPayBtn');
-        btn.disabled = false;
-        btn.style.opacity = "1";
-    }
-}
-
-function startPayment() {
-    if (!selectedEbVideoId || !window.selectedEbPrice) return;
-    const user = auth.currentUser;
-    const akhoPrice = Math.ceil(window.selectedEbPrice * 10); 
-
-    db.ref(`users/${user.uid}`).once('value', snap => {
-        const u = snap.val();
-        const currentBalance = u.akho || 0;
-
-        if (currentBalance < akhoPrice) {
-            alert("ბალანსი არ გყოფნით!");
-            return;
-        }
-
-        db.ref(`users/${user.uid}/akho`).set(currentBalance - akhoPrice);
-        const now = Date.now();
-        const expireDate = now + (24 * 60 * 60 * 1000);
-        
-        db.ref(`posts/${selectedEbVideoId}`).update({
-            isPromoted: true,
-            promoteExpires: expireDate,
-            promoteWeight: window.selectedEbPrice,
-            timestamp: now 
-        }).then(() => {
-            alert("ვიდეო დაწინაურდა და ამოვარდა სათავეში! 🚀");
-            closePromoteUI();
-            location.reload(); 
-        });
-    });
-}
-
-function closePromoteUI() {
-    document.getElementById('promoteUI').style.display = 'none';
-}
-
-(function() {
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const btn = document.getElementById('installAppBtn');
-        if (btn) btn.style.setProperty('display', 'flex', 'important');
-    });
-
-    document.addEventListener('click', async (e) => {
-        if (e.target && (e.target.id === 'installAppBtn' || e.target.closest('#installAppBtn'))) {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                const btn = document.getElementById('installAppBtn');
-                if (btn) btn.style.setProperty('display', 'none', 'important');
-            }
-        }
-    });
-})();
-
-(function() {
-    const isIos = () => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod/.test(userAgent);
-    };
-    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
-
-    if (isIos() && !isInStandaloneMode()) {
-        const iosModal = document.getElementById('pwa-ios-instruction');
-        if (iosModal) {
-            setTimeout(() => {
-                iosModal.style.display = 'block';
-            }, 3000);
-        }
-    }
-})();
 
 function monitorMessageRequests() {
     const myId = auth.currentUser ? auth.currentUser.uid : null;
@@ -4307,77 +2915,3 @@ function monitorMessageRequests() {
         }
     });
 }
-
-function openMessageRequests() {
-    const myId = auth.currentUser.uid;
-    const list = document.getElementById('msgReqList');
-    document.getElementById('messageRequestsUI').style.display = 'flex';
-    list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">იტვირთება...</div>';
-
-    db.ref(`message_requests/${myId}`).on('value', snapshot => {
-        list.innerHTML = '';
-        if (!snapshot.exists()) {
-            list.innerHTML = '<div style="text-align:center; color:gray; padding:20px;">ახალი მოთხოვნები არ არის.</div>';
-            return;
-        }
-
-        snapshot.forEach(child => {
-            const senderId = child.key;
-            const messages = child.val();
-            const messageKeys = Object.keys(messages);
-            const lastMsg = messages[messageKeys[messageKeys.length - 1]];
-
-            db.ref(`users/${senderId}`).once('value', userSnap => {
-                const user = userSnap.val() || {};
-                const item = document.createElement('div');
-                item.style = "display:flex; align-items:center; padding:15px; border-bottom:1px solid #1a1a1a; gap:12px;";
-                item.innerHTML = `
-                    <img src="${user.photo || 'token-avatar.png'}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
-                    <div style="flex:1;">
-                        <div style="color:white; font-weight:bold;">${user.name || 'User'}</div>
-                        <div style="color:#888; font-size:12px;">${lastMsg.text || '📷 Media'}</div>
-                    </div>
-                    <button onclick="acceptMsgReq('${senderId}')" style="background:var(--gold); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">Accept</button>`;
-                list.appendChild(item);
-            });
-        });
-    });
-}
-
-function acceptMsgReq(senderId) {
-    const myId = auth.currentUser.uid;
-    const chatId = getChatId(myId, senderId);
-
-    db.ref(`message_requests/${myId}/${senderId}`).once('value', snap => {
-        if (snap.exists()) {
-            const messages = snap.val();
-            db.ref(`users/${senderId}`).once('value', uSnap => {
-                const senderData = uSnap.val() || {};
-                db.ref(`users/${myId}/following/${senderId}`).set({
-                    name: senderData.name || "User",
-                    photo: senderData.photo || ""
-                });
-                db.ref(`users/${senderId}/following/${myId}`).set({
-                    name: myName,
-                    photo: myPhoto
-                });
-
-                db.ref(`messages/${chatId}`).update(messages).then(() => {
-                    db.ref(`message_requests/${myId}/${senderId}`).remove();
-                    closeMessageRequests();
-                    startChat(senderId, senderData.name || "User", senderData.photo || "");
-                });
-            });
-        }
-    });
-}
-
-
-
-    function closeMessageRequests() {
-    document.getElementById('messageRequestsUI').style.display = 'none';
-}
-
-auth.onAuthStateChanged(user => {
-    if (user) monitorMessageRequests();
-});
