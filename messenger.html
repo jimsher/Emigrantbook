@@ -758,7 +758,6 @@
       const currentUid = window.auth.currentUser.uid;
       const { collection, onSnapshot } = window.fs;
 
-      // წამოვიღოთ 'profiles' კოლექცია
       const profilesRef = collection(window.db, 'profiles');
       
       onSnapshot(profilesRef, (snapshot) => {
@@ -773,10 +772,24 @@
           if (uid === currentUid) return; // საკუთარ თავს ვტოვებთ სიიდან
 
           const uData = docSnap.data();
+
+          // სახელის დინამიური ამოცნობა ყველა შესაძლო ველიდან
+          let displayName = uData.name || uData.username || uData.displayName;
+          if (!displayName && (uData.first_name || uData.last_name)) {
+            displayName = `${uData.first_name || ''} ${uData.last_name || ''}`.trim();
+          }
+          if (!displayName) displayName = uData.email || 'მომხმარებელი';
+
+          // ფოტოს დინამიური ამოცნობა ყველა შესაძლო ველიდან
+          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic;
+          if (!displayPhoto) {
+            displayPhoto = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';
+          }
+
           usersList.push({
             uid: uid,
-            name: uData.name || uData.username || uData.displayName || uData.first_name || 'მომხმარებელი',
-            photo: uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100',
+            name: displayName,
+            photo: displayPhoto,
             presence: uData.status || uData.presence || 'offline',
             lastMsg: uData.lastMsg || "Tap to chat"
           });
@@ -801,7 +814,7 @@
 
           item.innerHTML = `
             <div class="chat-row-avatar-holder">
-              <img class="chat-row-avatar" src="${chat.photo}">
+              <img class="chat-row-avatar" src="${chat.photo}" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';">
               <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
             </div>
             <div class="chat-row-details">
@@ -840,7 +853,6 @@
       const currentUid = window.auth.currentUser.uid;
       const chatId = getChatId(currentUid, targetUid);
 
-      // სამიზნე პროფილის ონლაინ სტატუსის მოსმენა 'profiles'-იდან
       const { doc, onSnapshot } = window.fs;
       onSnapshot(doc(window.db, 'profiles', targetUid), (docSnap) => {
         const statusEl = document.getElementById('active-thread-status');
@@ -890,7 +902,7 @@
             msgRow.innerHTML = `<div class="msg-bubble">${content}</div>`;
           } else {
             msgRow.innerHTML = `
-              <img class="msg-bubble-avatar" src="${targetAvatar}">
+              <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100';">
               <div class="msg-bubble">${content}</div>
             `;
           }
