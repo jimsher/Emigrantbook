@@ -624,7 +624,7 @@
             <img class="thread-header-avatar" id="active-thread-avatar" src="">
           </div>
           <div class="thread-user-info">
-            <span class="thread-user-name" id="active-thread-name">მომხმარებელი</span>
+            <span class="thread-user-name" id="active-thread-name"></span>
             <span class="thread-user-status" id="active-thread-status">...</span>
           </div>
         </div>
@@ -640,7 +640,7 @@
         <!-- პროფილის დიდი ბარათი -->
         <div class="chat-start-profile">
           <img class="chat-start-avatar" id="chat-start-big-avatar" src="">
-          <span class="chat-start-name" id="chat-start-big-name">მომხმარებელი</span>
+          <span class="chat-start-name" id="chat-start-big-name"></span>
           <span class="chat-start-sub">You're friends on EmigrantBook</span>
           <button class="view-profile-btn" onclick="alert('პროფილის ნახვა')">View profile</button>
           
@@ -772,25 +772,10 @@
           if (uid === currentUid) return; // საკუთარ თავს ვტოვებთ სიიდან
 
           const uData = docSnap.data();
-          
-          // CONSOLE LOG - რომ დავინახოთ ზუსტად რა ველები აქვს შენს ბაზას:
-          console.log("Profile Data for UID:", uid, uData);
 
-          // სახელის დინამიური წამოღება
-          let displayName = uData.name || uData.username || uData.displayName || uData.fullName || uData.first_name;
-          if (!displayName && uData.lastName) {
-            displayName = uData.lastName;
-          }
-          if (!displayName) {
-            displayName = uData.email ? uData.email.split('@')[0] : 'User_' + uid.substring(0, 5);
-          }
-
-          // ფოტოს დინამიური წამოღება
-          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl;
-          if (!displayPhoto) {
-            // თუ ფოტო საერთოდ არ აქვს, SVG ლოგოს ავატარს დავუსვამთ
-            displayPhoto = 'https://emigrantbook.com/logo.png';
-          }
+          // მხოლოდ Firestore-ის რეალური მონაცემების ამოღება
+          let displayName = uData.name || uData.username || uData.displayName || uData.fullName || uData.first_name || uData.lastName || uData.email || '';
+          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || 'https://emigrantbook.com/logo.png';
 
           usersList.push({
             uid: uid,
