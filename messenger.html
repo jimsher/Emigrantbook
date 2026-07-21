@@ -751,30 +751,45 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // 1. FIRESTORE-დან PROFILES კოლექციის რეალურ დროში წამოღება
+    // 1. FIRESTORE-დან PROFILES / USERS კოლექციის წამოღება
     function fetchFirestoreChatList() {
       const listTarget = document.getElementById('chats-list-target');
       if (!window.auth || !window.auth.currentUser) return;
       const currentUid = window.auth.currentUser.uid;
       const { collection, onSnapshot } = window.fs;
 
+      // ჯერ ვამოწმებთ 'profiles' კოლექციას
       const profilesRef = collection(window.db, 'profiles');
       
       onSnapshot(profilesRef, (snapshot) => {
         if (!snapshot || snapshot.empty) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>პროფილები არ მოიძებნა.</p>";
+          // თუ 'profiles' ცარიელია, გადავდივართ 'users' კოლექციაზე
+          fetchUsersCollection(listTarget, currentUid);
           return;
         }
 
         let usersList = [];
         snapshot.forEach(docSnap => {
           const uid = docSnap.id;
-          if (uid === currentUid) return; // საკუთარ თავს ვტოვებთ სიიდან
+          if (uid === currentUid) return;
 
           const uData = docSnap.data();
 
-          // მხოლოდ Firestore-ის რეალური მონაცემების ამოღება
-          let displayName = uData.name || uData.username || uData.displayName || uData.fullName || uData.first_name || uData.lastName || uData.email || '';
+          // ვეძებთ ნებისმიერ არსებულ ველს, სადაც შეიძლება ეწეროს სახელი
+          let displayName = "";
+          for (let key in uData) {
+            if (typeof uData[key] === 'string' && uData[key].trim() !== '' && !uData[key].startsWith('http')) {
+              if (key.toLowerCase().includes('name') || key.toLowerCase().includes('user') || key.toLowerCase().includes('nick')) {
+                displayName = uData[key];
+                break;
+              }
+            }
+          }
+
+          if (!displayName) {
+            displayName = uData.name || uData.username || uData.displayName || uData.first_name || uData.email || ("User_" + uid.substring(0, 5));
+          }
+
           let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || 'https://emigrantbook.com/logo.png';
 
           usersList.push({
@@ -786,42 +801,80 @@
           });
         });
 
-        if (usersList.length === 0) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა პროფილები არ არის.</p>";
+        renderChatList(usersList, listTarget);
+      }, (err) => {
+        console.error("Profiles fetch error, falling back to users:", err);
+        fetchUsersCollection(listTarget, currentUid);
+      });
+    }
+
+    // სათადარიგო ფუნქცია 'users' კოლექციისთვის
+    function fetchUsersCollection(listTarget, currentUid) {
+      const { collection, onSnapshot } = window.fs;
+      const usersRef = collection(window.db, 'users');
+
+      onSnapshot(usersRef, (snapshot) => {
+        if (!snapshot || snapshot.empty) {
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მომხმარებლები არ მოიძებნა.</p>";
           return;
         }
 
-        listTarget.innerHTML = "";
+        let usersList = [];
+        snapshot.forEach(docSnap => {
+          const uid = docSnap.id;
+          if (uid === currentUid) return;
 
-        usersList.forEach(chat => {
-          const item = document.createElement('div');
-          item.className = 'chat-row-item';
-          
-          item.onclick = function() {
-            openChat(chat.name, chat.photo, chat.uid);
-          };
+          const uData = docSnap.data();
+          let displayName = uData.name || uData.username || uData.displayName || uData.first_name || uData.email || ("User_" + uid.substring(0, 5));
+          let displayPhoto = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || 'https://emigrantbook.com/logo.png';
 
-          const isOnline = chat.presence === 'online';
-
-          item.innerHTML = `
-            <div class="chat-row-avatar-holder">
-              <img class="chat-row-avatar" src="${chat.photo}" onerror="this.src='https://emigrantbook.com/logo.png';">
-              <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
-            </div>
-            <div class="chat-row-details">
-              <span class="chat-row-name">${chat.name}</span>
-              <div class="chat-row-meta">
-                <span class="chat-row-last-msg">${chat.lastMsg}</span>
-                <span class="chat-row-time"></span>
-              </div>
-            </div>
-          `;
-
-          listTarget.appendChild(item);
+          usersList.push({
+            uid: uid,
+            name: displayName,
+            photo: displayPhoto,
+            presence: uData.status || uData.presence || 'offline',
+            lastMsg: uData.lastMsg || "Tap to chat"
+          });
         });
-      }, (err) => {
-        console.error("Firestore Profiles Error:", err);
-        listTarget.innerHTML = `<p style='padding:20px; color:#ff3b30; text-align:center;'>შეცდომა: ${err.message}</p>`;
+
+        renderChatList(usersList, listTarget);
+      });
+    }
+
+    // სიის ეკრანზე ასახვა
+    function renderChatList(usersList, listTarget) {
+      if (usersList.length === 0) {
+        listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>სხვა მომხმარებლები არ არიან.</p>";
+        return;
+      }
+
+      listTarget.innerHTML = "";
+
+      usersList.forEach(chat => {
+        const item = document.createElement('div');
+        item.className = 'chat-row-item';
+        
+        item.onclick = function() {
+          openChat(chat.name, chat.photo, chat.uid);
+        };
+
+        const isOnline = chat.presence === 'online';
+
+        item.innerHTML = `
+          <div class="chat-row-avatar-holder">
+            <img class="chat-row-avatar" src="${chat.photo}" onerror="this.src='https://emigrantbook.com/logo.png';">
+            <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
+          </div>
+          <div class="chat-row-details">
+            <span class="chat-row-name">${chat.name}</span>
+            <div class="chat-row-meta">
+              <span class="chat-row-last-msg">${chat.lastMsg}</span>
+              <span class="chat-row-time"></span>
+            </div>
+          </div>
+        `;
+
+        listTarget.appendChild(item);
       });
     }
 
