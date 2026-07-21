@@ -290,9 +290,10 @@
       font-weight: bold;
       border-radius: 10px;
       padding: 1px 5px;
+      display: none;
     }
 
-    /* Meta AI მცურავი ორნამენტის ღილაკი (როგორც ფოტოზეა) */
+    /* Meta AI მცურავი ორნამენტის ღილაკი */
     .meta-ai-float-btn {
       position: fixed;
       bottom: 85px;
@@ -390,7 +391,7 @@
       gap: 8px;
     }
     
-    /* პროფილის დიდი ბარათი ჩატის დასაწყისში (როგორც მე-2 ფოტოზეა) */
+    /* პროფილის დიდი ბარათი ჩატის დასაწყისში */
     .chat-start-profile {
       display: flex;
       flex-direction: column;
@@ -572,64 +573,16 @@
       <div class="stories-row">
         <div class="story-item">
           <div class="story-avatar-wrapper">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100" alt="Me">
+            <img class="story-avatar" src="https://emigrantbook.com/logo.png" alt="Me">
             <div class="create-story-plus">+</div>
           </div>
           <span class="story-name">Create story</span>
         </div>
-        <div class="story-item" onclick="openChat('თეო თეო', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100')">
-          <div class="story-avatar-wrapper active-story">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" alt="User">
-            <div class="active-badge"></div>
-          </div>
-          <span class="story-name">Todu</span>
-        </div>
-        <div class="story-item" onclick="openChat('Xatuna', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100')">
-          <div class="story-avatar-wrapper active-story">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100" alt="User">
-            <div class="active-badge"></div>
-          </div>
-          <span class="story-name">Xatuna</span>
-        </div>
-        <div class="story-item">
-          <div class="story-avatar-wrapper active-story">
-            <img class="story-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" alt="User">
-            <div class="active-badge"></div>
-          </div>
-          <span class="story-name">Luiza</span>
-        </div>
       </div>
 
-      <!-- ჩატების სია -->
+      <!-- ჩატების სია (დინამიური Realtime) -->
       <div class="chats-scroll-area" id="chats-list-target">
-        <!-- დინამიურად შეივსება, ქვემოთ ნიმუშია ფოტოს მიხედვით -->
-        <div class="chat-row-item unread" onclick="openChat('თეო თეო', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')">
-          <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150">
-            <div class="active-badge"></div>
-          </div>
-          <div class="chat-row-details">
-            <span class="chat-row-name">თეო თეო</span>
-            <div class="chat-row-meta">
-              <span class="chat-row-last-msg">mec tyeshi viyavi mesmis sheni</span>
-              <span class="chat-row-time">Thu</span>
-              <div class="unread-dot"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="chat-row-item" onclick="openChat('Maia Mamagulashvili', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150')">
-          <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150">
-          </div>
-          <div class="chat-row-details">
-            <span class="chat-row-name">Maia Mamagulashvili</span>
-            <div class="chat-row-meta">
-              <span class="chat-row-last-msg">You sent a photo.</span>
-              <span class="chat-row-time">Thu</span>
-            </div>
-          </div>
-        </div>
+        <p style="padding: 20px; color: #8e8e93; text-align: center;">იტვირთება...</p>
       </div>
 
       <!-- Meta AI მცურავი ორნამენტის ღილაკი -->
@@ -641,7 +594,7 @@
       <div class="footer-nav">
         <button class="nav-tab active">
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-          <div class="nav-badge">5</div>
+          <div class="nav-badge" id="chat-count-badge">0</div>
           <span class="nav-tab-label">Chats</span>
         </button>
         <button class="nav-tab" onclick="alert('Stories tab')">
@@ -672,23 +625,23 @@
           </div>
           <div class="thread-user-info">
             <span class="thread-user-name" id="active-thread-name">მომხმარებელი</span>
-            <span class="thread-user-status" id="active-thread-status">Active 1 hour ago</span>
+            <span class="thread-user-status" id="active-thread-status">Offline</span>
           </div>
         </div>
         <div class="thread-header-actions">
-          <svg viewBox="0 0 24 24" onclick="alert('ხმოვანი ზარი')"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('ვიდეო ზარი')"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="if(typeof requestAudioCall === 'function') requestAudioCall(); else alert('ხმოვანი ზარი');"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="if(typeof requestVideoCall === 'function') requestVideoCall(); else alert('ვიდეო ზარი');"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
           <svg viewBox="0 0 24 24" onclick="alert('ინფორმაცია')"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
         </div>
       </div>
 
       <!-- შეტყობინებების კონტეინერი -->
       <div class="messages-container" id="messages-target">
-        <!-- პროფილის დიდი ბარათი (მე-2 ფოტოს იდენტური) -->
+        <!-- პროფილის დიდი ბარათი -->
         <div class="chat-start-profile">
           <img class="chat-start-avatar" id="chat-start-big-avatar" src="">
           <span class="chat-start-name" id="chat-start-big-name">მომხმარებელი</span>
-          <span class="chat-start-sub">You're friends on Facebook</span>
+          <span class="chat-start-sub">You're friends on EmigrantBook</span>
           <button class="view-profile-btn" onclick="alert('პროფილის ნახვა')">View profile</button>
           
           <div class="encryption-notice">
@@ -696,11 +649,11 @@
           </div>
         </div>
 
-        <div class="chat-date-separator" id="chat-date-lbl">JUL 12 AT 5:22 PM</div>
+        <div class="chat-date-separator" id="chat-date-lbl">TODAY</div>
 
         <!-- მიმოწერა -->
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;">
-          <!-- აქ ჩაიყრება მიმოწერა -->
+          <!-- აქ ჩაიყრება მიმოწერა ბაზიდან -->
         </div>
       </div>
 
@@ -714,7 +667,7 @@
         </div>
 
         <div class="input-wrapper">
-          <input type="text" id="message-input-field" placeholder="Message" onkeypress="handleKeyPress(event)">
+          <input type="text" id="message-input-field" placeholder="Message" oninput="handleTypingInput()" onkeypress="handleKeyPress(event)">
           <svg viewBox="0 0 24 24" onclick="alert('სმაილები')"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 10 10 10-4.48 10-10S17.51 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
         </div>
 
@@ -726,12 +679,148 @@
 
   </div>
 
+  <!-- FIREBASE MODULES -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    window.auth = getAuth(app);
+    window.db = getDatabase(app);
+    window.fbDb = { ref, set, push, onValue, get, remove };
+
+    onAuthStateChanged(window.auth, (user) => {
+      if (user) {
+        if (typeof fetchRealtimeChatList === 'function') fetchRealtimeChatList();
+      } else {
+        const target = document.getElementById('chats-list-target');
+        if (target) target.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
+      }
+    });
+  </script>
+
+  <!-- პროექტის გლობალური ფაილები -->
+  <script src="script.js"></script>
+  <script src="chatvirtva.js"></script>
+
+  <!-- REALTIME LOGIC -->
   <script>
+    var currentActiveChatUid = null;
     var currentActiveChatUser = "";
     var currentActiveChatAvatar = "";
+    var typingTimeout = null;
 
-    // ჩატის გახსნა დინამიური მონაცემებით
-    function openChat(username, avatarUrl) {
+    function getChatId(u1, u2) {
+      return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
+    }
+
+    // 1. ჩატების სიის რეალურ დროში წამოღება
+    async function fetchRealtimeChatList() {
+      const listTarget = document.getElementById('chats-list-target');
+      if (!window.auth || !window.auth.currentUser) return;
+      const currentUid = window.auth.currentUser.uid;
+      const { ref, onValue, get } = window.fbDb;
+
+      const followingRef = ref(window.db, 'users/' + currentUid + '/following');
+      
+      onValue(followingRef, async (snap) => {
+        const followers = snap.val();
+        if (!followers) {
+          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები ვერ მოიძებნა.</p>";
+          return;
+        }
+
+        let chatArray = [];
+        const entries = Object.entries(followers);
+
+        for (let [uid, data] of entries) {
+          const chatId = getChatId(currentUid, uid);
+          const msgRef = ref(window.db, 'messages/' + chatId);
+          const mSnap = await get(msgRef);
+          let lastTs = 0;
+          let lastMsg = "Tap to chat";
+          let isUnread = false;
+
+          if (mSnap.exists()) {
+            const msgs = Object.values(mSnap.val());
+            const msgData = msgs[msgs.length - 1];
+            lastMsg = msgData.text || (msgData.image ? "📷 Photo" : "🎤 Voice");
+            lastTs = msgData.ts || 0;
+
+            const readSnap = await get(ref(window.db, 'users/' + currentUid + '/last_read/' + chatId));
+            const lastRead = readSnap.val() || 0;
+            if (msgData.senderId !== currentUid && lastTs > lastRead) {
+              isUnread = true;
+            }
+          }
+
+          chatArray.push({ uid, data, lastTs, lastMsg, isUnread });
+        }
+
+        // სორტირება ბოლო მესიჯის დროის მიხედვით
+        chatArray.sort((a, b) => b.lastTs - a.lastTs);
+        listTarget.innerHTML = "";
+
+        chatArray.forEach(chat => {
+          const item = document.createElement('div');
+          item.className = 'chat-row-item' + (chat.isUnread ? ' unread' : '');
+          
+          let timeStr = "";
+          if (chat.lastTs > 0) {
+            const d = new Date(chat.lastTs);
+            const now = new Date();
+            if (d.toDateString() === now.toDateString()) {
+              timeStr = d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+            } else {
+              timeStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+            }
+          }
+
+          item.onclick = function() {
+            openChatRealtime(chat.uid, chat.data.name || 'მომხმარებელი', chat.data.photo || 'token-avatar.png');
+          };
+
+          item.innerHTML = `
+            <div class="chat-row-avatar-holder">
+              <img class="chat-row-avatar" src="${chat.data.photo || 'token-avatar.png'}">
+              <div class="active-badge" id="online-badge-${chat.uid}" style="display:none;"></div>
+            </div>
+            <div class="chat-row-details">
+              <span class="chat-row-name">${chat.data.name || 'User'}</span>
+              <div class="chat-row-meta">
+                <span class="chat-row-last-msg">${chat.lastMsg}</span>
+                <span class="chat-row-time">${timeStr}</span>
+                ${chat.isUnread ? '<div class="unread-dot"></div>' : ''}
+              </div>
+            </div>
+          `;
+
+          listTarget.appendChild(item);
+
+          // ონლაინ სტატუსის მოსმენა
+          onValue(ref(window.db, 'users/' + chat.uid + '/presence'), pSnap => {
+            const isOnline = pSnap.val() === 'online';
+            const badge = document.getElementById('online-badge-' + chat.uid);
+            if (badge) badge.style.display = isOnline ? 'block' : 'none';
+          });
+        });
+      });
+    }
+
+    // 2. ჩატის გახსნა რეალურ ბაზაზე
+    function openChatRealtime(uid, username, avatarUrl) {
+      currentActiveChatUid = uid;
       currentActiveChatUser = username;
       currentActiveChatAvatar = avatarUrl;
 
@@ -743,84 +832,75 @@
       document.getElementById('chat-start-big-name').innerText = username;
       document.getElementById('chat-start-big-avatar').src = avatarUrl;
 
-      var msgBlock = document.getElementById('dynamic-messages-block');
-      
-      // ფოტოზე არსებული რეალური დიალოგის სიმულაცია შესაბამისი ავატარით
-      if(username === 'თეო თეო') {
-        document.getElementById('active-thread-status').innerText = "Active 1 hour ago";
-        document.getElementById('chat-date-lbl').innerText = "THU AT 7:35 PM";
-        msgBlock.innerHTML = `
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">dgesac vilotave😂😂😂</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">კაი დროისა ანწ</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">ლოლლო</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">ლოთოო</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">gviani arasdrosa</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">shen rashvebi aba dzma</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">შენ რა გენაღვლება</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">ქალაქელი ხარ</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">xoo</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">მე 9 სოფელუ უნდა გავიარო შენამდე რომ მოვაღწიო</div>
-          </div>
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">mec tyeshi viyavi mesmis sheni</div>
-          </div>
-        `;
-      } else {
-        document.getElementById('active-thread-status').innerText = "Active 30 mins ago";
-        document.getElementById('chat-date-lbl').innerText = "JUL 12 AT 5:22 PM";
-        msgBlock.innerHTML = `
-          <div class="message-row incoming">
-            <img class="msg-bubble-avatar" src="${avatarUrl}">
-            <div class="msg-bubble">გამარჯობა, როგორ ხარ?</div>
-          </div>
-          <div class="message-row outgoing">
-            <div class="msg-bubble">კარგად, შენ როგორ ხარ? ემიგრანტბუქზე დარეგისტრირდი?</div>
-          </div>
-        `;
-      }
-      
-      // ავტომატური სქროლი შეტყობინებების ბოლოში
-      var container = document.getElementById('messages-container');
-      setTimeout(function() {
-        document.getElementById('messages-target').scrollTop = document.getElementById('messages-target').scrollHeight;
-      }, 50);
+      const currentUid = window.auth.currentUser.uid;
+      const chatId = getChatId(currentUid, uid);
 
-      // ღილაკის აიკონის მართვა ტექსტის მიხედვით
-      var input = document.getElementById('message-input-field');
-      var btnIcon = document.getElementById('btn-icon-svg');
-      
-      // თავიდან (ცარიელზე) ვაჩვენოთ გაგზავნის ისარი, ან შეგვიძლია ლაიქის ხელი ჩავსვათ
-      btnIcon.innerHTML = `<path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>`; 
+      // წაკითხულად მონიშვნა
+      const { ref, set, onValue } = window.fbDb;
+      set(ref(window.db, 'users/' + currentUid + '/last_read/' + chatId), Date.now());
+
+      // სტატუსის მოსმენა
+      onValue(ref(window.db, 'users/' + uid + '/presence'), snap => {
+        const statusEl = document.getElementById('active-thread-status');
+        if (snap.val() === 'online') {
+          statusEl.innerText = "Online";
+          statusEl.style.color = "#31a24c";
+        } else {
+          statusEl.innerText = "Offline";
+          statusEl.style.color = "#8e8e93";
+        }
+      });
+
+      listenToRealtimeMessages(chatId, avatarUrl);
     }
 
-    // ჩატის დახურვა და მთავარზე დაბრუნება
+    // 3. შეტყობინებების მოსმენა რეალურ დროში
+    function listenToRealtimeMessages(chatId, targetAvatar) {
+      const msgBlock = document.getElementById('dynamic-messages-block');
+      const myUid = window.auth.currentUser.uid;
+      const { ref, onValue } = window.fbDb;
+
+      onValue(ref(window.db, 'messages/' + chatId), snap => {
+        msgBlock.innerHTML = "";
+        if (!snap.exists()) return;
+
+        snap.forEach(child => {
+          const msg = child.val();
+          const isMine = msg.senderId === myUid;
+
+          const msgRow = document.createElement('div');
+          msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
+
+          let content = msg.text || "";
+          if (msg.image) {
+            content = `<img src="${msg.image}" style="max-width:180px; border-radius:12px; display:block;">`;
+          }
+
+          if (isMine) {
+            msgRow.innerHTML = `<div class="msg-bubble">${content}</div>`;
+          } else {
+            msgRow.innerHTML = `
+              <img class="msg-bubble-avatar" src="${targetAvatar}">
+              <div class="msg-bubble">${content}</div>
+            `;
+          }
+
+          msgBlock.appendChild(msgRow);
+        });
+
+        // ავტომატური სქროლი ბოლოში
+        setTimeout(function() {
+          const target = document.getElementById('messages-target');
+          if (target) target.scrollTop = target.scrollHeight;
+        }, 50);
+      });
+    }
+
+    // 4. ჩატის დახურვა
     function closeChat() {
       document.getElementById('thread-screen').style.display = 'none';
       document.getElementById('chats-screen').style.display = 'flex';
+      currentActiveChatUid = null;
     }
 
     function handleKeyPress(event) {
@@ -829,25 +909,27 @@
       }
     }
 
-    // შეტყობინების დინამიური გაგზავნა ეკრანზე
-    function sendLikeOrMessage() {
+    function handleTypingInput() {
+      // წერის ინდიკატორის ლოგიკა ბაზაში
+    }
+
+    // 5. შეტყობინების გაგზავნა Firebase Realtime Database-ში
+    async function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
-      if (!text) return;
+      if (!text || !currentActiveChatUid || !window.auth.currentUser) return;
 
-      var msgBlock = document.getElementById('dynamic-messages-block');
-      
-      var newMsg = document.createElement('div');
-      newMsg.className = "message-row outgoing";
-      newMsg.innerHTML = `<div class="msg-bubble">${text}</div>`;
-      
-      msgBlock.appendChild(newMsg);
+      const myUid = window.auth.currentUser.uid;
+      const chatId = getChatId(myUid, currentActiveChatUid);
+      const { ref, push } = window.fbDb;
+
+      await push(ref(window.db, 'messages/' + chatId), {
+        senderId: myUid,
+        text: text,
+        ts: Date.now()
+      });
+
       input.value = "";
-
-      // სქროლი ბოლოში
-      setTimeout(function() {
-        document.getElementById('messages-target').scrollTop = document.getElementById('messages-target').scrollHeight;
-      }, 30);
     }
   </script>
 </body>
