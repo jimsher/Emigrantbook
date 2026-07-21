@@ -3165,11 +3165,41 @@ div[style*="overflow-x:auto"] {
 <audio id="msgSound" src="notify.mp3" preload="auto"></audio>
 
 <!-- Firebase SDK-ების იმპორტი -->
+<!-- Firebase v10+ (Modular SDK) იმპორტი -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-  import { getDatabase, ref, set, get, update, remove, onValue, push } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+  import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signOut 
+  } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { 
+    getDatabase, 
+    ref, 
+    set, 
+    get, 
+    update, 
+    remove, 
+    onValue, 
+    push, 
+    orderByChild, 
+    equalTo, 
+    limitToLast, 
+    endAt, 
+    runTransaction,
+    onDisconnect,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+  import { 
+    getStorage, 
+    ref as sRef, 
+    uploadBytes, 
+    uploadBytesResumable,
+    getDownloadURL, 
+    deleteObject 
+  } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -3184,43 +3214,15 @@ div[style*="overflow-x:auto"] {
 
   const app = initializeApp(firebaseConfig);
   
-  // ვინახავთ გლობალურად, რომ სხვა ფაილებმაც (script.js, live.js და ა.შ.) იმუშაონ
+  // გლობალური ინსტანციები
   window.auth = getAuth(app);
   window.db = getDatabase(app);
   window.storage = getStorage(app);
-</script>
 
-<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.11.0.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
-
-<script src="languages.js"></script>
-
-<script src="script.js"></script>
-
-<script src="shopping.js"></script>
-<script src="liderbord.js"></script>
-<script src="play.js"></script>
-<script src="live.js"></script>
-<script src="chatvirtva.js"></script>
-<script src="fotogaleria.js"></script>
-<script src="videocall.js"></script>
-
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
-                // წარმატებით დარეგისტრირდა
-                console.log('ServiceWorker registered with scope: ', registration.scope);
-            }, function(err) {
-                // რეგისტრაცია ჩაიშალა
-                console.log('ServiceWorker registration failed: ', err);
-            });
-        });
-    }
+  // Firebase-ის ფუნქციების გლობალურად გატანა სკრიპტებისთვის
+  window.fbDb = { ref, set, get, update, remove, onValue, push, orderByChild, equalTo, limitToLast, endAt, runTransaction, onDisconnect, serverTimestamp };
+  window.fbAuth = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
+  window.fbStorage = { sRef, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject };
 </script>
 
  
