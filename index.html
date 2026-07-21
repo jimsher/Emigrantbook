@@ -3736,14 +3736,14 @@
           if (!request) {
             actionPanel.innerHTML = `
               <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
-              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+              <button class="fb-btn-secondary" onclick="sendMessage()">${t.messenger}</button>
               <button class="btn-more-options">•••</button>
             `;
           } else if (request.status === 'pending') {
             if (request.sender_id === currentUser.uid) {
               actionPanel.innerHTML = `
                 <button class="fb-btn-secondary" onclick="cancelFriendRequest('${requestId}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
-                <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+                <button class="fb-btn-secondary" onclick="sendMessage()">${t.messenger}</button>
                 <button class="btn-more-options">•••</button>
               `;
             } else {
@@ -3758,7 +3758,7 @@
           } else if (request.status === 'accepted') {
             actionPanel.innerHTML = `
               <button class="fb-btn-success" onclick="deleteFriendship('${requestId}', '${targetUserId}')">${t.removeFriend}</button>
-              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+              <button class="fb-btn-secondary" onclick="sendMessage()">${t.messenger}</button>
               <button class="btn-more-options">•••</button>
             `;
           }
