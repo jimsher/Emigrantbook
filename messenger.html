@@ -565,7 +565,7 @@
     <!-- ==================== FIREBASE & SKRIPT-ების მიბმა ==================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, push, onValue, get, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // Firebase კონფიგურაცია
@@ -584,6 +584,15 @@
         window.auth = getAuth(app);
         window.db = getDatabase(app);
         window.fbDb = { ref, set, push, onValue, get, remove, runTransaction };
+
+        // ავტორიზაციის მდგომარეობის მოსმენა Гლობალურად
+        onAuthStateChanged(window.auth, (user) => {
+            if (user) {
+                if (typeof monitorMessageRequests === 'function') monitorMessageRequests();
+                if (typeof startGlobalUnreadCounter === 'function') startGlobalUnreadCounter();
+                if (typeof listenToGlobalMessages === 'function') listenToGlobalMessages();
+            }
+        });
     </script>
 
     <!-- პროექტის მთავარი JS ფაილების ჩატვირთვა -->
@@ -633,7 +642,7 @@
         }
 
         // ==========================================
-        // 3. ჩატების სიის გახსნა (Open Messenger & Chat List) - FIXED FOR FIREBASE V10
+        // 3. ჩატების სიის გახსნა (Open Messenger & Chat List) - FIXED
         // ==========================================
         async function openMessenger() {
             const ui = document.getElementById('messengerUI');
@@ -651,11 +660,29 @@
             const list = document.getElementById('chatList');
             if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>Loading Impact Chats...</p>";
 
+            // დაველოდოთ ავტორიზაციას თუ ჯერ არ არის ჩატვირთული
             if (!window.auth || !window.auth.currentUser) {
-                if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
+                if (window.auth) {
+                    const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+                    onAuthStateChanged(window.auth, (user) => {
+                        if (user) {
+                            fetchAndRenderChatList();
+                        } else {
+                            if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
+                        }
+                    });
+                } else {
+                    if (list) list.innerHTML = "<p style='padding:20px; color:gray; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
+                }
                 return;
             }
 
+            fetchAndRenderChatList();
+        }
+
+        async function fetchAndRenderChatList() {
+            const list = document.getElementById('chatList');
+            if (!window.auth || !window.auth.currentUser) return;
             const currentUid = window.auth.currentUser.uid;
             const { ref, get } = window.fbDb;
 
@@ -845,7 +872,6 @@
                         }
                     });
 
-                    // ლიმიტის გამოყენება ბოლო შეტყობინებებზე
                     if (messagesArray.length > currentChatLimit) {
                         messagesArray = messagesArray.slice(messagesArray.length - currentChatLimit);
                     }
@@ -1389,13 +1415,9 @@
 
         // ავტომატური ინიციალიზაცია ჩატვირთვისას
         window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                if (window.auth && window.auth.currentUser) {
-                    monitorMessageRequests();
-                    startGlobalUnreadCounter();
-                    listenToGlobalMessages();
-                }
-            }, 1000);
+            if (typeof openMessenger === 'function') {
+                openMessenger();
+            }
         });
     </script>
 
