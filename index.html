@@ -2130,11 +2130,11 @@
 
         <div class="profile-friends-preview-box">
           <div class="friends-preview-header">
-            <div class="friends-preview-title-area">
-              <span class="friends-preview-title" id="lbl-followers-title">გამომწერები</span>
-              <span class="friends-preview-count" id="mini-friends-count">0 გამომწერი</span>
+            <div class="friends-preview-title-area" onclick="openConnectionsScreen('all')" style="cursor: pointer;">
+              <span class="friends-preview-title" id="lbl-followers-title">მეგობრები / გამომწერები</span>
+              <span class="friends-preview-count" id="mini-friends-count">0 მომხმარებელი</span>
             </div>
-            <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('followers')">ყველას ნახვა</button>
+            <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('all')">ყველას ნახვა</button>
           </div>
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
@@ -2214,7 +2214,7 @@
       <div class="connections-container">
         <div class="connections-header">
           <span id="connections-title">მეგობრები</span>
-          <span style="font-size: 14px; color: #222222;" id="connections-count">0 მომხმარებელი</span>
+          <span style="font-size: 14px; color: #aaaaaa;" id="connections-count">0 მომხმარებელი</span>
         </div>
         <div class="connections-list" id="connections-list-wrapper">
           <div class="connections-empty" id="lbl-conn-loading">იტვირთება...</div>
@@ -2455,7 +2455,7 @@
         backToProfile: "← პროფილზე დაბრუნება", updateInfo: "✏️ პროფილის ინფორმაციის განახლება",
         age: "ასაკი", job: "სამუშაო ადგილი (პოზიცია, კომპანია)", city: "ამჟამინდელი ქალაქი",
         country: "ქვეყანა", relStatus: "ურთიერთობის სტატუსი", lifeEvents: "ცხოვრებისეული მოვლენები (Life Events)",
-        saveChanges: "ცვლილებების შენახვა", cancel: "გაუქმება", friendsTitle: "მეგობრები",
+        saveChanges: "ცვლილებების შენახვა", cancel: "გაუქმება", friendsTitle: "მეგობრები / გამომწერები",
         followersTitle: "გამომწერები", followingTitle: "გამოწერილი", postUnit: "პოსტი",
         userUnit: "მომხმარებელი", logout: "სისტემიდან გამოსვლა", loading: "იტვირთება...",
         noReqs: "ახალი მოთხოვნები არ არის", friendReqTitle: "მეგობრობის მოთხოვნები",
@@ -2483,7 +2483,7 @@
         backToProfile: "← Back to Profile", updateInfo: "✏️ Update Profile Info",
         age: "Age", job: "Workplace (Position, Company)", city: "Current City",
         country: "Country", relStatus: "Relationship Status", lifeEvents: "Life Events",
-        saveChanges: "Save Changes", cancel: "Cancel", friendsTitle: "Friends",
+        saveChanges: "Save Changes", cancel: "Cancel", friendsTitle: "Friends / Followers",
         followersTitle: "Followers", followingTitle: "Following", postUnit: "post",
         userUnit: "users", logout: "Log Out", loading: "Loading...",
         noReqs: "No new requests", friendReqTitle: "Friend Requests",
@@ -2511,7 +2511,7 @@
         backToProfile: "← Вернуться в профиль", updateInfo: "✏️ Обновить информацию",
         age: "Возраст", job: "Место работы (Должность, Компания)", city: "Текущий город",
         country: "Страна", relStatus: "Семейное положение", lifeEvents: "Жизненные события",
-        saveChanges: "Сохранить изменения", cancel: "Отмена", friendsTitle: "Друзья",
+        saveChanges: "Сохранить изменения", cancel: "Отмена", friendsTitle: "Друзья / Подписчики",
         followersTitle: "Подписчики", followingTitle: "Подписки", postUnit: "пост",
         userUnit: "пользователей", logout: "Выйти из системы", loading: "Загрузка...",
         noReqs: "Нет новых запросов", friendReqTitle: "Запросы в друзья",
@@ -2539,7 +2539,7 @@
         backToProfile: "← Retour au profil", updateInfo: "✏️ Mettre à jour les infos",
         age: "Âge", job: "Lieu de travail (Poste, Entreprise)", city: "Ville actuelle",
         country: "Pays", relStatus: "Statut relationnel", lifeEvents: "Événements marquants",
-        saveChanges: "Sauvegarder", cancel: "Annuler", friendsTitle: "Amis",
+        saveChanges: "Sauvegarder", cancel: "Annuler", friendsTitle: "Amis / Abonnés",
         followersTitle: "Abonnés", followingTitle: "Abonnements", postUnit: "publication",
         userUnit: "utilisateurs", logout: "Se déconnecter", loading: "Chargement...",
         noReqs: "Aucune demande", friendReqTitle: "Demandes d'ami",
@@ -2567,7 +2567,7 @@
         backToProfile: "← Zurück zum Profil", updateInfo: "✏️ Profilinfo aktualisieren",
         age: "Alter", job: "Arbeitsplatz (Position, Unternehmen)", city: "Aktuelle Stadt",
         country: "Land", relStatus: "Beziehungsstatus", lifeEvents: "Lebensereignisse",
-        saveChanges: "Änderungen speichern", cancel: "Abbrechen", friendsTitle: "Freunde",
+        saveChanges: "Änderungen speichern", cancel: "Abbrechen", friendsTitle: "Freunde / Abonnenten",
         followersTitle: "Abonnenten", followingTitle: "Gefolgt", postUnit: "Beitrag",
         userUnit: "Benutzer", logout: "Abmelden", loading: "Wird geladen...",
         noReqs: "Keine neuen Anfragen", friendReqTitle: "Freundschaftsanfragen",
@@ -2626,7 +2626,7 @@
       if(liveBtnLbl) liveBtnLbl.innerText = t.liveBtn;
 
       var folTitle = document.getElementById('lbl-followers-title');
-      if(folTitle) folTitle.innerText = t.followersTitle;
+      if(folTitle) folTitle.innerText = t.friendsTitle;
       var seeAllBtn = document.getElementById('lbl-see-all');
       if(seeAllBtn) seeAllBtn.innerText = t.seeAll;
       var btnTabPosts = document.getElementById('tab-btn-posts');
@@ -2669,7 +2669,7 @@
       var bProfileConn = document.getElementById('lbl-back-to-profile-conn');
       if(bProfileConn) bProfileConn.innerText = t.backToProfile;
       var connTitle = document.getElementById('connections-title');
-      if(connTitle) connTitle.innerText = (activeConnectionsType === 'followers') ? t.followersTitle : t.followingTitle;
+      if(connTitle) connTitle.innerText = (activeConnectionsType === 'all') ? t.friendsTitle : ((activeConnectionsType === 'followers') ? t.followersTitle : t.followingTitle);
 
       var stFooter = document.getElementById('lbl-stories-footer');
       if(stFooter) stFooter.innerText = t.stories;
@@ -3230,7 +3230,6 @@
         .then(function(followersSnap) {
           var followersCount = followersSnap.size;
           document.getElementById('stat-followers-count').innerText = followersCount;
-          document.getElementById('mini-friends-count').innerText = followersCount + " " + t.miniFriends;
 
           loadMiniFriendsGrid(followersSnap.docs);
 
@@ -3299,7 +3298,7 @@
       activeConnectionsType = type;
       activeConnectionsUserId = activeViewingProfileId || currentUser.uid;
       
-      document.getElementById('connections-title').innerText = type === 'followers' ? t.followersTitle : t.followingTitle;
+      document.getElementById('connections-title').innerText = (type === 'all') ? t.friendsTitle : ((type === 'followers') ? t.followersTitle : t.followingTitle);
       showScreen('connections');
       loadConnectionsData();
     }
@@ -3318,7 +3317,7 @@
           .then(function(snapshot) {
             handleConnectionsResult(snapshot, 'sender_id', listWrapper, countLabel);
           });
-      } else {
+      } else if (activeConnectionsType === 'following') {
         db.collection('friend_requests')
           .where('sender_id', '==', activeConnectionsUserId)
           .where('status', '==', 'accepted')
@@ -3326,6 +3325,72 @@
           .then(function(snapshot) {
             handleConnectionsResult(snapshot, 'receiver_id', listWrapper, countLabel);
           });
+      } else if (activeConnectionsType === 'all') {
+        // Fetch BOTH Followers (incoming) AND Following (outgoing) together
+        Promise.all([
+          db.collection('friend_requests').where('receiver_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get(),
+          db.collection('friend_requests').where('sender_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get()
+        ]).then(function(results) {
+          var followersSnap = results[0];
+          var followingSnap = results[1];
+          
+          var combinedMap = new Map(); // Store unique connections to avoid duplicates
+          
+          followersSnap.forEach(function(docSnap) {
+            var conn = docSnap.data();
+            combinedMap.set(conn.sender_id, { docId: docSnap.id, targetUserId: conn.sender_id });
+          });
+          
+          followingSnap.forEach(function(docSnap) {
+            var conn = docSnap.data();
+            if (!combinedMap.has(conn.receiver_id)) {
+              combinedMap.set(conn.receiver_id, { docId: docSnap.id, targetUserId: conn.receiver_id });
+            }
+          });
+
+          if (combinedMap.size === 0) {
+            listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
+            countLabel.innerText = "0 " + t.userUnit;
+            return;
+          }
+
+          countLabel.innerText = combinedMap.size + " " + t.userUnit;
+          listWrapper.innerHTML = "";
+
+          combinedMap.forEach(function(item) {
+            var requestId = item.docId;
+            var targetUserId = item.targetUserId;
+
+            db.collection('profiles').doc(targetUserId).get().then(function(profileDoc) {
+              if (!profileDoc.exists) return;
+              var profile = profileDoc.data();
+
+              var finalName = profile.full_name || "User";
+              var avatarUrl = profile.avatar_url;
+              var isOnline = profile.is_online === true;
+              var initial = finalName.charAt(0).toUpperCase();
+
+              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+              var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+              var showDeleteButton = activeConnectionsUserId === currentUser.uid;
+              var deleteBtnHtml = showDeleteButton ? 
+                `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
+
+              listWrapper.innerHTML += `
+                <div class="connection-row">
+                  <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
+                    <div class="connection-avatar">${avatarContent}</div>
+                    <span class="connection-name">${finalName}</span>
+                  </div>
+                  ${deleteBtnHtml}
+                </div>
+              `;
+            });
+          });
+        }).catch(function(error) {
+          console.error("Error loading combined connections:", error);
+          listWrapper.innerHTML = `<div class="connections-empty">შეცდომა ჩატვირთვისას</div>`;
+        });
       }
     }
 
