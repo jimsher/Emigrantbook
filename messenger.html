@@ -763,11 +763,9 @@
       if (user) {
         fetchFirestoreChatList();
         
-        // **დამატებულია:** ვამოწმებთ არის თუ არა URL-ში გადმოცემული მეგობრის ID (?user=...)
         const urlParams = new URLSearchParams(window.location.search);
         const targetUserId = urlParams.get('user');
         if (targetUserId) {
-          // მივქაჩოთ მეგობრის სახელი და ფოტო Firestore-იდან და ავტომატურად გავხსნათ ჩატი
           getDoc(doc(window.db, 'profiles', targetUserId)).then(docSnap => {
             if (docSnap.exists()) {
               let uData = docSnap.data();
@@ -795,6 +793,7 @@
     var currentActiveChatAvatar = "";
     var unsubscribeMessages = null;
     var activeChatUnsubscribes = [];
+    var presenceUnsubscribes = []; // დამატებულია რეალურ დროში სტატუსების მოსასმენად
 
     function getChatId(u1, u2) {
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
@@ -886,29 +885,35 @@
       });
     }
 
-    // 2. იღებს მეგობრების პროფილებს
+    // 2. იღებს მეგობრების პროფილებს და უსმენს მათ სტატუსებს რეალურ დროში (Realtime Presence)
     function loadFriendsProfiles(friendIds, currentUid, listTarget) {
-      const { doc, getDoc } = window.fs;
-      let friendsProfiles = [];
-      let promises = [];
+      const { doc, onSnapshot } = window.fs;
+
+      // გავასუფთავოთ ძველი სტატუსის მოსმენები
+      presenceUnsubscribes.forEach(unsub => unsub());
+      presenceUnsubscribes = [];
+
+      let friendsProfilesMap = {};
 
       friendIds.forEach(fId => {
-        let p = getDoc(doc(window.db, 'profiles', fId)).then(docSnap => {
+        const unsub = onSnapshot(doc(window.db, 'profiles', fId), (docSnap) => {
           if (docSnap.exists()) {
             let uData = docSnap.data();
-            friendsProfiles.push({
+            friendsProfilesMap[fId] = {
               uid: fId,
               name: extractName(uData, fId),
               photo: extractPhotoUrl(uData),
               presence: uData.status || uData.presence || 'offline'
-            });
+            };
+          } else {
+            delete friendsProfilesMap[fId];
           }
-        });
-        promises.push(p);
-      });
 
-      Promise.all(promises).then(() => {
-        attachLastMessagesAndRender(friendsProfiles, currentUid, listTarget);
+          let friendsProfiles = Object.values(friendsProfilesMap);
+          attachLastMessagesAndRender(friendsProfiles, currentUid, listTarget);
+        });
+
+        presenceUnsubscribes.push(unsub);
       });
     }
 
@@ -948,7 +953,6 @@
               isUnread: (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read !== true)
             };
           } else {
-            // თუ შეტყობინებები არ არის, ამ მომხმარებელს არ ვამატებთ ჩატების აქტიურ სიაში
             delete activeChatUsersMap[user.uid];
           }
 
