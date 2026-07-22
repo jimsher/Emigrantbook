@@ -124,38 +124,31 @@
       justify-content: center;
     }
 
-    /* Top Arrow Pointer */
+    /* Top Arrow Pointer - 12 საათის მიმართულება, დაბლა მიმართული */
     .wheel-pointer {
       position: absolute;
-      top: -15px;
+      top: -18px;
       left: 50%;
       transform: translateX(-50%);
-      width: 36px;
-      height: 44px;
-      z-index: 50;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.8));
-    }
-
-    .wheel-pointer::before {
-      content: '';
-      position: absolute;
       width: 0;
       height: 0;
       border-left: 18px solid transparent;
       border-right: 18px solid transparent;
-      border-top: 32px solid #ff4d4f;
+      border-top: 36px solid #dcae36;
+      z-index: 50;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.9));
     }
 
     .wheel-pointer::after {
       content: '';
       position: absolute;
-      top: 2px;
+      top: -34px;
       left: -12px;
       width: 0;
       height: 0;
       border-left: 12px solid transparent;
       border-right: 12px solid transparent;
-      border-top: 22px solid #ffffff;
+      border-top: 24px solid #ff4d4f;
     }
 
     /* Canvas Wheel */
@@ -222,6 +215,33 @@
 
     .active-users-counter strong {
       color: #dcae36;
+    }
+
+    /* Test Buttons Panel */
+    .test-controls {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 380px;
+      margin-top: 5px;
+    }
+
+    .test-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(220, 174, 54, 0.4);
+      background: rgba(220, 174, 54, 0.15);
+      color: #ffd700;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .test-btn:hover {
+      background: #dcae36;
+      color: #111;
     }
 
     /* Winner Modal Pop-up */
@@ -342,6 +362,12 @@
     <div class="active-users-counter">
       👥 ბორბალზე მონაწილეობს: <strong id="participants-count">0/4</strong> აქტიური წევრი
     </div>
+
+    <!-- სატესტო ღილაკები -->
+    <div class="test-controls">
+      <button class="test-btn" onclick="runTestSpin(0)">🧪 ტესტი: მოგება (50 akho)</button>
+      <button class="test-btn" onclick="runTestSpin('try_again')">🧪 ტესტი: კიდევ სცადეთ</button>
+    </div>
   </div>
 
   <!-- Winner Modal -->
@@ -385,17 +411,34 @@
     let timerInterval = null;
 
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
-    const TRY_AGAIN_COLOR = '#c0392b'; // წითელი ფერი "კიდევ სცადეთ" სექტორისთვის
+    const TRY_AGAIN_COLOR = '#c0392b';
 
-    // 1. Firestore-დან Realtime მონაცემების მოსმენა
+    // სატესტო მონაცემები (თუ ბაზა ცარიელია)
+    function setFallbackParticipants() {
+      participants = [
+        { id: 'test1', name: 'გიორგი დ.', avatar: null, isTryAgain: false },
+        { id: 'test2', name: 'მარიამ კ.', avatar: null, isTryAgain: false },
+        { id: 'try_again', name: 'კიდევ სცადეთ ❌', avatar: null, isTryAgain: true }
+      ];
+      document.getElementById('participants-count').innerText = "2/4";
+      drawWheel();
+      startIdleRotation();
+    }
+
     function subscribeToLiveLottery() {
       db.collection('lottery_state').doc('current').onSnapshot(docSnap => {
-        if (!docSnap.exists) return;
+        if (!docSnap.exists) {
+          setFallbackParticipants();
+          return;
+        }
         let data = docSnap.data();
-
         let users = data.participants || [];
-        
-        // ვაწყობთ სექტორებს: მაქსიმუმ 4 კაცი + 1 "კიდევ სცადეთ"
+
+        if (users.length === 0) {
+          setFallbackParticipants();
+          return;
+        }
+
         participants = users.slice(0, 4).map(u => ({
           id: u.uid || u.id,
           name: u.name || u.full_name || "User",
@@ -403,7 +446,6 @@
           isTryAgain: false
         }));
 
-        // ყოველთვის ემატება "კიდევ სცადეთ" სექტორი
         participants.push({
           id: 'try_again',
           name: 'კიდევ სცადეთ ❌',
@@ -412,30 +454,29 @@
         });
 
         document.getElementById('participants-count').innerText = `${users.length}/4`;
-
         preloadAvatars();
 
-        // სტატუსების მართვა
         if (data.status === 'waiting') {
           start10MinTimer(data.timer_start);
         } else if (data.status === 'spinning' && !isSpinning) {
           if (timerInterval) clearInterval(timerInterval);
-          statusBox.innerText = "⚡ გათამაშება მიმდინარეობს! (1 წთ)...";
-          trigger1MinuteSpin(data.winning_index);
+          statusBox.innerText = "⚡ გათამაშება მიმდინარეობს...";
+          triggerSpin(data.winning_index, 60000);
         } else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
           statusBox.innerText = "🏆 გათამაშება დასრულდა!";
         }
+      }, err => {
+        console.log("Firestore error, using test fallback:", err);
+        setFallbackParticipants();
       });
     }
 
-    // 10-წუთიანი ტაიმერის ათვლა
     function start10MinTimer(startTimestamp) {
       if (!startTimestamp) {
         statusBox.innerText = `🔍 შეგროვებულია ${participants.length - 1}/4 მონაწილე...`;
         return;
       }
-
       if (timerInterval) clearInterval(timerInterval);
 
       const startTime = startTimestamp.toDate ? startTimestamp.toDate().getTime() : new Date(startTimestamp).getTime();
@@ -443,8 +484,7 @@
 
       timerInterval = setInterval(() => {
         const now = new Date().getTime();
-        const elapsed = now - startTime;
-        const remaining = tenMinutes - elapsed;
+        const remaining = tenMinutes - (now - startTime);
 
         if (remaining <= 0) {
           clearInterval(timerInterval);
@@ -463,14 +503,8 @@
           let img = new Image();
           img.crossOrigin = "anonymous";
           img.src = p.avatar;
-          img.onload = () => {
-            loadedImages[p.id] = img;
-            drawWheel();
-          };
-          img.onerror = () => {
-            loadedImages[p.id] = null;
-            drawWheel();
-          };
+          img.onload = () => { loadedImages[p.id] = img; drawWheel(); };
+          img.onerror = () => { loadedImages[p.id] = null; drawWheel(); };
         }
       });
       drawWheel();
@@ -549,7 +583,6 @@
       }
     }
 
-    // ნელი ტრიალი (მოლოდინის რეჟიმი)
     function startIdleRotation() {
       if (isSpinning) return;
       currentAngle += idleRotationSpeed;
@@ -557,24 +590,19 @@
       animationReq = requestAnimationFrame(startIdleRotation);
     }
 
-    // ზუსტად 1-წუთიანი (60-წამიანი) ჩქარი ტრიალი
-    function trigger1MinuteSpin(winningIndex) {
+    // ტრიალის მთავარი ფუნქცია
+    function triggerSpin(targetIdx, customDuration = 5000) {
       if (isSpinning || participants.length === 0) return;
       
       isSpinning = true;
       cancelAnimationFrame(animationReq);
 
-      const targetIdx = (winningIndex !== undefined && winningIndex < participants.length) 
-        ? winningIndex 
-        : Math.floor(Math.random() * participants.length);
-
       const sliceAngle = (2 * Math.PI) / participants.length;
-      const extraRounds = 40; // ბევრი წრე 1 წუთისთვის
+      const extraRounds = customDuration > 10000 ? 30 : 6;
       const targetSliceOffset = (1.5 * Math.PI) - (targetIdx * sliceAngle + sliceAngle / 2);
       const targetAngle = currentAngle + (extraRounds * 2 * Math.PI) + targetSliceOffset;
 
       let start = null;
-      const duration = 60000; // ზუსტად 1 წუთი (60,000 მლ)
 
       function easeOutQuad(t) {
         return t * (2 - t);
@@ -582,11 +610,11 @@
 
       function animateSpin(timestamp) {
         if (!start) start = timestamp;
-        let progress = (timestamp - start) / duration;
+        let progress = (timestamp - start) / customDuration;
 
         if (progress < 1) {
           let easeProgress = easeOutQuad(progress);
-          currentAngle = currentAngle + (targetAngle - currentAngle) * (easeProgress * 0.015);
+          currentAngle = currentAngle + (targetAngle - currentAngle) * (easeProgress * 0.02);
           drawWheel();
           requestAnimationFrame(animateSpin);
         } else {
@@ -599,6 +627,22 @@
       requestAnimationFrame(animateSpin);
     }
 
+    // სატესტო გაშვების ფუნქცია (დაჩქარებული ტესტირებისთვის)
+    function runTestSpin(targetType) {
+      if (isSpinning) return;
+      statusBox.innerText = "⚡ მიმდინარეობს სატესტო ტრიალი...";
+
+      let targetIdx = 0;
+      if (targetType === 'try_again') {
+        targetIdx = participants.findIndex(p => p.isTryAgain);
+        if (targetIdx === -1) targetIdx = participants.length - 1;
+      } else {
+        targetIdx = 0; // პირველი მომხმარებელი
+      }
+
+      triggerSpin(targetIdx, 4000); // სატესტოდ 4 წამში გაჩერდება
+    }
+
     function announceWinner(winner) {
       const modal = document.getElementById('winnerModal');
       const titleHolder = document.getElementById('winnerModalTitle');
@@ -608,7 +652,7 @@
 
       if (winner.isTryAgain) {
         titleHolder.innerText = "❌ ვერ გამოვლინდა";
-        nameHolder.innerText = "ისარი გაჩერდა: კიდევ სცადეთ!";
+        nameHolder.innerText = "ისარი გაჩერდა: კიდევ сცადეთ!";
         avatarHolder.innerHTML = `<div style="width:100%; height:100%; background:#c0392b; color:#fff; font-size:50px; display:flex; align-items:center; justify-content:center;">❌</div>`;
         prizeTag.innerText = "🎰 პრიზი 50 akho ინახება!";
         statusBox.innerText = "❌ ამჯერად გამარჯვებული ვერ გამოვლინდა";
@@ -636,7 +680,7 @@
       startIdleRotation();
     }
 
-    // ჩართვა
+    // ინიციალიზაცია
     subscribeToLiveLottery();
   </script>
 </body>
