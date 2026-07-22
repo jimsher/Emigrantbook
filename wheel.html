@@ -1,1 +1,603 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Emigrantbook - Live გათამაშება</title>
+  
+  <!-- Firebase App & Services CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #1a1a1f 0%, #08080a 100%);
+      color: #ffffff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Top Navigation Header */
+    .header-bar {
+      width: 100%;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(18, 18, 20, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(220, 174, 54, 0.2);
+      z-index: 100;
+    }
+
+    .back-btn {
+      background: rgba(220, 174, 54, 0.15);
+      border: 1px solid #dcae36;
+      color: #dcae36;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: #dcae36;
+      color: #111;
+      box-shadow: 0 0 15px rgba(220, 174, 54, 0.5);
+    }
+
+    .live-badge {
+      background: #ff4d4f;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 12px rgba(255, 77, 79, 0.6);
+      animation: pulseLive 1.5s infinite;
+    }
+
+    @keyframes pulseLive {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #dcae36;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 10px rgba(220, 174, 54, 0.3);
+    }
+
+    /* Wheel Container Area */
+    .wheel-main-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+      max-width: 550px;
+    }
+
+    /* Glowing Outer Ring */
+    .wheel-outer-glow {
+      position: relative;
+      width: 90vw;
+      height: 90vw;
+      max-width: 420px;
+      max-height: 420px;
+      border-radius: 50%;
+      padding: 10px;
+      background: radial-gradient(circle, #2a2518 0%, #111 100%);
+      border: 4px solid #dcae36;
+      box-shadow: 0 0 35px rgba(220, 174, 54, 0.4), inset 0 0 20px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Top Arrow Pointer */
+    .wheel-pointer {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 44px;
+      z-index: 50;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.8));
+    }
+
+    .wheel-pointer::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 32px solid #ff4d4f;
+    }
+
+    .wheel-pointer::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: -12px;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 22px solid #ffffff;
+    }
+
+    /* Canvas Wheel */
+    #wheelCanvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    /* Wheel Center Cap */
+    .wheel-center-cap {
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffd700 0%, #b8860b 100%);
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 20px rgba(220, 174, 54, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .wheel-center-cap img {
+      width: 45px;
+      height: 45px;
+      object-fit: contain;
+    }
+
+    /* Controls Bar */
+    .control-panel {
+      width: 100%;
+      padding: 20px;
+      background: rgba(18, 18, 20, 0.9);
+      border-top: 1px solid rgba(220, 174, 54, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .spin-btn {
+      width: 100%;
+      max-width: 380px;
+      padding: 16px;
+      background: linear-gradient(135deg, #dcae36 0%, #b8860b 100%);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(220, 174, 54, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-transform: uppercase;
+    }
+
+    .spin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(220, 174, 54, 0.6);
+    }
+
+    .spin-btn:disabled {
+      background: #444;
+      color: #888;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .active-users-counter {
+      font-size: 13px;
+      color: #aaaaaa;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .active-users-counter strong {
+      color: #dcae36;
+    }
+
+    /* Winner Modal Pop-up */
+    .winner-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .winner-modal-card {
+      background: #18181c;
+      border: 2px solid #dcae36;
+      border-radius: 20px;
+      padding: 30px 20px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(220, 174, 54, 0.5);
+      position: relative;
+      animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalPop {
+      0% { opacity: 0; transform: scale(0.5); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .winner-avatar-frame {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 15px auto;
+      border-radius: 50%;
+      border: 4px solid #dcae36;
+      box-shadow: 0 0 25px rgba(220, 174, 54, 0.6);
+      overflow: hidden;
+      background: #222;
+    }
+
+    .winner-avatar-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .winner-title {
+      color: #dcae36;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .winner-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 15px;
+    }
+
+    .winner-prize-tag {
+      background: rgba(220, 174, 54, 0.2);
+      border: 1px solid #dcae36;
+      color: #ffd700;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .close-modal-btn {
+      background: #dcae36;
+      color: #111;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="header-bar">
+    <button class="back-btn" onclick="window.location.href='index.html'">
+      ← უკან
+    </button>
+    <div class="header-title">Emigrant Wheel</div>
+    <div class="live-badge">
+      <span>🔴</span> LIVE
+    </div>
+  </div>
+
+  <!-- Main Stage -->
+  <div class="wheel-main-stage">
+    <div class="wheel-pointer"></div>
+    <div class="wheel-outer-glow">
+      <canvas id="wheelCanvas" width="800" height="800"></canvas>
+      <div class="wheel-center-cap">
+        <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/50?text=EB'">
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="control-panel">
+    <div class="active-users-counter">
+      👥 ბორბალზე მონაწილეობს: <strong id="participants-count">0</strong> აქტიური წევრი
+    </div>
+    <button class="spin-btn" id="spinBtn" onclick="startSpinning()">
+      🎰 დატრიალება (SPIN)
+    </button>
+  </div>
+
+  <!-- Winner Modal -->
+  <div class="winner-modal-overlay" id="winnerModal">
+    <div class="winner-modal-card">
+      <div class="winner-avatar-frame" id="winnerAvatarHolder"></div>
+      <div class="winner-title">🎉 გილოცავთ! 🎉</div>
+      <div class="winner-name" id="winnerNameDisplay">მომხმარებელი</div>
+      <div class="winner-prize-tag">🎁 მოიგო: 50 akho ბალანსი</div>
+      <button class="close-modal-btn" onclick="closeWinnerModal()">დახურვა</button>
+    </div>
+  </div>
+
+  <script>
+    // Firebase Config (მთავარი პროექტის იდენტური)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const db = firebase.firestore();
+
+    // Variables & Constants
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const spinBtn = document.getElementById('spinBtn');
+    
+    let participants = [];
+    let loadedImages = {};
+    let currentAngle = 0;
+    let isSpinning = false;
+    let idleRotationSpeed = 0.003; // ნელი ტრიალი გათამაშების დაწყებამდე
+    let animationReq = null;
+
+    // Slices Color Palette
+    const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
+
+    // Load Participants from Firestore
+    function loadParticipants() {
+      db.collection('profiles').limit(12).get().then(snapshot => {
+        participants = [];
+        snapshot.forEach(doc => {
+          let data = doc.data();
+          let name = data.full_name || "User";
+          let avatar = data.avatar_url || null;
+          participants.push({ id: doc.id, name: name, avatar: avatar });
+        });
+
+        // თუ მომხმარებლები ცოტაა, დემო მონაცემებით შევავსოთ ბორბლის შესავსებად
+        if (participants.length < 4) {
+          participants.push({ id: '1', name: 'გიორგი ბ.', avatar: null });
+          participants.push({ id: '2', name: 'ნიკა კ.', avatar: null });
+          participants.push({ id: '3', name: 'ანა მ.', avatar: null });
+          participants.push({ id: '4', name: 'სოფო თ.', avatar: null });
+        }
+
+        document.getElementById('participants-count').innerText = participants.length;
+        preloadAvatars();
+      });
+    }
+
+    // Preload Avatar Images onto Canvas
+    function preloadAvatars() {
+      let loadedCount = 0;
+      participants.forEach((p, idx) => {
+        if (p.avatar) {
+          let img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = p.avatar;
+          img.onload = () => {
+            loadedImages[p.id] = img;
+            drawWheel();
+          };
+          img.onerror = () => {
+            loadedImages[p.id] = null;
+            drawWheel();
+          };
+        } else {
+          loadedImages[p.id] = null;
+        }
+      });
+      drawWheel();
+      startIdleRotation();
+    }
+
+    // Draw Wheel Canvas
+    function drawWheel() {
+      const numSlices = participants.length;
+      if (numSlices === 0) return;
+
+      const sliceAngle = (2 * Math.PI) / numSlices;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = canvas.width / 2 - 10;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < numSlices; i++) {
+        const startAngle = currentAngle + i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        // Draw Sector Slice
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = sliceColors[i % sliceColors.length];
+        ctx.fill();
+        ctx.strokeStyle = '#dcae36';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Draw User Content (Avatar & Name)
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + sliceAngle / 2);
+
+        // Draw Avatar Image
+        const p = participants[i];
+        const img = loadedImages[p.id];
+        const avatarSize = 50;
+        const avatarDist = radius * 0.68;
+
+        ctx.beginPath();
+        ctx.arc(avatarDist, 0, avatarSize / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+
+        if (img) {
+          ctx.drawImage(img, avatarDist - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
+        } else {
+          ctx.fillStyle = '#dcae36';
+          ctx.fillRect(avatarDist - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
+          ctx.fillStyle = '#111';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(p.name.charAt(0).toUpperCase(), avatarDist, 0);
+        }
+        ctx.restore();
+
+        // Draw User Name Text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px -apple-system, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(p.name, radius * 0.48, 6);
+        ctx.restore();
+      }
+    }
+
+    // Idle Rotation Loop
+    function startIdleRotation() {
+      if (isSpinning) return;
+      currentAngle += idleRotationSpeed;
+      drawWheel();
+      animationReq = requestAnimationFrame(startIdleRotation);
+    }
+
+    // Start Live Winner Spin
+    function startSpinning() {
+      if (isSpinning || participants.length === 0) return;
+      
+      isSpinning = true;
+      spinBtn.disabled = true;
+      cancelAnimationFrame(animationReq);
+
+      // Random target index
+      const winningIndex = Math.floor(Math.random() * participants.length);
+      const sliceAngle = (2 * Math.PI) / participants.length;
+
+      // Calculate total spin rotations (5 full rotations + offset)
+      const extraRounds = 5 + Math.floor(Math.random() * 3);
+      // Top Arrow is at 270 deg (1.5 * PI)
+      const targetSliceOffset = (1.5 * Math.PI) - (winningIndex * sliceAngle + sliceAngle / 2);
+      const targetAngle = currentAngle + (extraRounds * 2 * Math.PI) + targetSliceOffset;
+
+      let start = null;
+      const duration = 5500; // 5.5 Seconds duration
+
+      function easeOutCubic(t) {
+        return (--t) * t * t + 1;
+      }
+
+      function animateSpin(timestamp) {
+        if (!start) start = timestamp;
+        let progress = (timestamp - start) / duration;
+
+        if (progress < 1) {
+          let easeProgress = easeOutCubic(progress);
+          currentAngle = currentAngle + (targetAngle - currentAngle) * (easeProgress * 0.08);
+          drawWheel();
+          requestAnimationFrame(animateSpin);
+        } else {
+          currentAngle = targetAngle;
+          drawWheel();
+          announceWinner(participants[winningIndex]);
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    // Announce Winner Pop-up
+    function announceWinner(winner) {
+      const modal = document.getElementById('winnerModal');
+      const nameHolder = document.getElementById('winnerNameDisplay');
+      const avatarHolder = document.getElementById('winnerAvatarHolder');
+
+      nameHolder.innerText = winner.name;
+      
+      if (winner.avatar) {
+        avatarHolder.innerHTML = `<img src="${winner.avatar}" alt="Winner">`;
+      } else {
+        avatarHolder.innerHTML = `<div style="width:100%; height:100%; background:#dcae36; color:#111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center;">${winner.name.charAt(0).toUpperCase()}</div>`;
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeWinnerModal() {
+      document.getElementById('winnerModal').style.display = 'none';
+      isSpinning = false;
+      spinBtn.disabled = false;
+      startIdleRotation();
+    }
+
+    // Initial Launch
+    loadParticipants();
+  </script>
+</body>
+</html>
