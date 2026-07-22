@@ -25,8 +25,38 @@
       color: #e4e6eb;
     }
 
-    /* ---- PRELOADER STYLES ---- */
-              
+    /* ---- ONLINE GREEN DOT STYLES ---- */
+    .avatar-online-wrapper {
+      position: relative;
+      display: inline-block;
+      line-height: 0;
+    }
+
+    .online-indicator-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      background-color: #31a24c;
+      border: 2px solid #0b0b0b;
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(49, 162, 76, 0.8);
+      animation: onlinePulse 2s infinite ease-in-out;
+      z-index: 5;
+    }
+
+    @keyframes onlinePulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(49, 162, 76, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 6px rgba(49, 162, 76, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(49, 162, 76, 0);
+      }
+    }
   </style>
 </head>
 <body>
@@ -622,6 +652,26 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+    // Helper to generate inline avatar HTML with optional green online dot
+    function getAvatarWithOnlineBadge(avatarUrl, name, targetUserId, customStyle) {
+      var isOwnProfile = (currentUser && targetUserId === currentUser.uid);
+      var initial = name ? name.charAt(0).toUpperCase() : "?";
+      var styleAttr = customStyle ? `style="${customStyle}"` : "";
+      
+      var innerAvatarHtml = avatarUrl 
+        ? `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` 
+        : initial;
+
+      if (isOwnProfile || !targetUserId) {
+        return `<div class="avatar-online-wrapper" ${styleAttr}>${innerAvatarHtml}</div>`;
+      } else {
+        return `<div class="avatar-online-wrapper" ${styleAttr}>
+                  ${innerAvatarHtml}
+                  <span class="online-indicator-dot"></span>
+                </div>`;
+      }
+    }
+
     // Preloader Dismissal Logic
     function hidePreloader() {
       var preloader = document.getElementById('app-preloader');
@@ -1050,8 +1100,8 @@
             }
           }
             
-          renderAvatar('header-avatar-btn', avatarUrl, finalName);
-          renderAvatar('profile-big-avatar', avatarUrl, finalName);
+          renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
+          renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
             
           var myStoryBg = document.getElementById('my-story-bg-avatar');
           if (myStoryBg) {
@@ -1159,17 +1209,10 @@
       applyLanguageDOM();
     }
 
-    function renderAvatar(elementId, avatarUrl, name) {
+    function renderAvatar(elementId, avatarUrl, name, targetUserId) {
       var el = document.getElementById(elementId);
       if (!el) return;
-        
-      if (avatarUrl) {
-        el.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">`;
-      } else {
-        var firstLetter = name ? name.charAt(0).toUpperCase() : "?";
-        el.innerHTML = "";
-        el.innerText = firstLetter;
-      }
+      el.innerHTML = getAvatarWithOnlineBadge(avatarUrl, name, targetUserId, "width:100%; height:100%;");
     }
 
     function subscribeToMessagesRealtime() {
@@ -1351,9 +1394,8 @@
             db.collection('profiles').doc(req.sender_id).get().then(function(profileDoc) {
               var senderName = profileDoc.exists ? (profileDoc.data().full_name || "User") : "User";
               var senderAvatar = profileDoc.exists ? profileDoc.data().avatar_url : null;
-              var initial = senderName.charAt(0).toUpperCase();
 
-              var avatarContent = senderAvatar ? `<img src="${senderAvatar}" alt="Avatar">` : initial;
+              var avatarContent = getAvatarWithOnlineBadge(senderAvatar, senderName, req.sender_id, "width:40px; height:40px;");
 
               container.innerHTML += `
                 <div class="request-item">
@@ -1483,9 +1525,8 @@
           var profile = profileDoc.data();
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
-          var initial = finalName.charAt(0).toUpperCase();
 
-          var avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
+          var avatarHtml = getAvatarWithOnlineBadge(avatarUrl, finalName, targetId, "width:100%; height:100%;");
 
           grid.innerHTML += `
             <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
@@ -1564,9 +1605,8 @@
 
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
-          var initial = finalName.charAt(0).toUpperCase();
 
-          var avatarContent = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
+          var avatarContent = getAvatarWithOnlineBadge(avatarUrl, finalName, targetUserId, "width:40px; height:40px;");
           var showDeleteButton = activeConnectionsUserId === currentUser.uid;
           var deleteBtnHtml = showDeleteButton ? 
             `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
@@ -1684,8 +1724,7 @@
           container.innerHTML = "";
           mainComments.forEach(function(comment) {
             var name = comment.author_name || "User";
-            var initial = name.charAt(0).toUpperCase();
-            var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}">` : initial;
+            var avatarHtml = getAvatarWithOnlineBadge(comment.avatar_url, name, comment.user_id, "width:36px; height:36px;");
             
             var timeObj = comment.created_at ? (comment.created_at.toDate ? comment.created_at.toDate() : new Date(comment.created_at)) : new Date();
             var timeString = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1723,8 +1762,7 @@
             var replyTargetContainer = document.getElementById(`replies-to-${reply.parent_id}`);
             if (replyTargetContainer) {
               var rName = reply.author_name || "User";
-              var rInitial = rName.charAt(0).toUpperCase();
-              var rAvatarHtml = reply.avatar_url ? `<img src="${reply.avatar_url}">` : rInitial;
+              var rAvatarHtml = getAvatarWithOnlineBadge(reply.avatar_url, rName, reply.user_id, "width:28px; height:28px;");
               
               var rTimeObj = reply.created_at ? (reply.created_at.toDate ? reply.created_at.toDate() : new Date(reply.created_at)) : new Date();
               var rTimeString = rTimeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1867,12 +1905,12 @@
         container.innerHTML = "";
         filteredLikers.forEach(function(p) {
           var finalName = p.full_name || "User";
-          var avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : finalName.charAt(0).toUpperCase();
+          var avatarHtml = getAvatarWithOnlineBadge(p.avatar_url, finalName, p.id, "width:40px; height:40px;");
           
           container.innerHTML += `
             <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
               <div class="liker-avatar-container">
-                <div class="liker-avatar">${avatarHtml}</div>
+                <div class="liker-avatar" style="position:relative;">${avatarHtml}</div>
                 <div class="liker-reaction-badge">❤️</div>
               </div>
               <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
@@ -1898,7 +1936,7 @@
         var avatarUrl = userProfile ? userProfile.avatar_url : null;
         var coverUrl = userProfile ? userProfile.cover_url : null;
         
-        renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        renderAvatar('profile-big-avatar', avatarUrl, finalName, currentUser.uid);
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = currentUser.email;
 
@@ -1953,7 +1991,7 @@
         var avatarUrl = selectedUser.avatar_url;
         var coverUrl = selectedUser.cover_url;
 
-        renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = "Imigrant";
 
@@ -2073,11 +2111,7 @@
       
       var authorAvatarUrl = cachedProfiles[currentPost.user_id] || null;
       var avatarPlaceholder = document.getElementById('gallery-user-avatar-placeholder');
-      if (authorAvatarUrl) {
-        avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
-      } else {
-        avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
-      }
+      avatarPlaceholder.innerHTML = getAvatarWithOnlineBadge(authorAvatarUrl, currentPost.author_name, currentPost.user_id, "width:100%; height:100%;");
 
       var totalLikes = currentPost.likes_count || 0;
       document.getElementById('gallery-total-likes-counter').innerText = totalLikes;
@@ -2337,28 +2371,28 @@
     }
 
     function uploadImageToImgBB(file, callback) {
-  let formData = new FormData();
-  formData.append("image", file);
+      let formData = new FormData();
+      formData.append("image", file);
 
-  fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
-    method: "POST",
-    body: formData
-  })
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(result) {
-    if (result && result.success) {
-      callback(result.data.url);
-    } else {
-      alert("ImgBB ატვირთვის შეცდომა: " + (result.error ? result.error.message : "უცნობი შეცდომა"));
+      fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+        method: "POST",
+        body: formData
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(result) {
+        if (result && result.success) {
+          callback(result.data.url);
+        } else {
+          alert("ImgBB ატვირთვის შეცდომა: " + (result.error ? result.error.message : "უცნობი შეცდომა"));
+        }
+      })
+      .catch(function(error) {
+        console.error("ImgBB Upload Error:", error);
+        alert("ქსელის შეცდომა ImgBB-სთან დაკავშირებისას.");
+      });
     }
-  })
-  .catch(function(error) {
-    console.error("ImgBB Upload Error:", error);
-    alert("ქსელის შეცდომა ImgBB-სთან დაკავშირებისას.");
-  });
-}
 
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
@@ -2515,7 +2549,7 @@
             }
             var person = likersList[index];
             var name = person.full_name || "User";
-            var avatarContent = person.avatar_url ? `<img src="${person.avatar_url}">` : name.charAt(0).toUpperCase();
+            var avatarContent = getAvatarWithOnlineBadge(person.avatar_url, name, person.id, "width:24px; height:24px;");
             
             var bubble = document.createElement('div');
             bubble.className = "tiktok-floating-avatar-item";
@@ -2585,9 +2619,8 @@
 
     function createPostCardHtml(post) {
       var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
-      var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
       var authorAvatarUrl = cachedProfiles[post.user_id] || null;
-      var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
+      var avatarContent = getAvatarWithOnlineBadge(authorAvatarUrl, post.author_name, post.user_id, "width:40px; height:40px;");
       var t = TRANSLATIONS[currentLang];
 
       var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
@@ -2834,9 +2867,8 @@
               var author = profilesMap[story.user_id];
               var authorName = author ? author.full_name : "User";
               var authorAvatar = author ? author.avatar_url : null;
-              var initial = authorName.charAt(0).toUpperCase();
 
-              var avatarHtml = authorAvatar ? `<img src="${authorAvatar}" alt="Avatar">` : initial;
+              var avatarHtml = getAvatarWithOnlineBadge(authorAvatar, authorName, story.user_id, "width:32px; height:32px;");
               var backgroundHtml = `<div style="width:100%; height:100%; background-image: url('${story.media_url}'); background-size: cover; background-position: center;"></div>`;
 
               var card = document.createElement('div');
@@ -2844,7 +2876,7 @@
               card.onclick = function() { openStoryViewer(story, authorName, authorAvatar); };
 
               card.innerHTML = `
-                <div class="story-badge-avatar">${avatarHtml}</div>
+                <div class="story-badge-avatar" style="position:relative;">${avatarHtml}</div>
                 ${backgroundHtml}
                 <span class="story-username-label">${authorName}</span>
               `;
@@ -2865,11 +2897,7 @@
       var t = TRANSLATIONS[currentLang];
 
       userSpan.innerText = username;
-      if (avatarUrl) {
-        avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
-      } else {
-        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
-      }
+      avatarDiv.innerHTML = getAvatarWithOnlineBadge(avatarUrl, username, story.user_id, "width:36px; height:36px;");
 
       mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
 
