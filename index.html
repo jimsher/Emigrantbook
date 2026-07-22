@@ -25,6 +25,45 @@
       color: #e4e6eb;
     }
 
+    /* ---- ONLINE STATUS PULSING DOT STYLES ---- */
+    .avatar-has-online {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .online-status-dot-sm {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 12px;
+      height: 12px;
+      background-color: #31a24c;
+      border: 2px solid #141414;
+      border-radius: 50%;
+      z-index: 5;
+      animation: onlinePulse 2s infinite;
+    }
+    .online-status-dot {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      width: 18px;
+      height: 18px;
+      background-color: #31a24c;
+      border: 3px solid #141414;
+      border-radius: 50%;
+      z-index: 5;
+      animation: onlinePulse 2s infinite;
+    }
+    @keyframes onlinePulse {
+      0% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(49, 162, 76, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0); }
+    }
+
     /* ---- PRELOADER STYLES ---- */
     #app-preloader {
       position: fixed;
@@ -1322,14 +1361,31 @@
     .detail-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; }
     .detail-item .icon { font-size: 18px; width: 24px; }
 
+    /* ---- STRICTLY 3 FRIENDS IN ONE ROW AND EQUAL SIZE ---- */
     .profile-friends-preview-box { padding: 0 20px 20px 20px; }
     .friends-preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .friends-preview-title { font-weight: bold; font-size: 18px; }
     .friends-preview-count { font-size: 14px; color: #aaaaaa; display: block; }
     .friends-see-all-btn { background: none; border: none; color: #dcae36; cursor: pointer; font-size: 14px; -webkit-user-select: none; user-select: none;}
-    .friends-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .friends-preview-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 10px; 
+    }
     .friend-grid-item { cursor: pointer; }
-    .friend-grid-avatar-holder { background: #222222; aspect-ratio: 1; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; margin-bottom: 4px; }
+    .friend-grid-avatar-holder { 
+      background: #222222; 
+      aspect-ratio: 1 / 1; 
+      border-radius: 8px; 
+      overflow: hidden; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 24px; 
+      font-weight: bold; 
+      margin-bottom: 4px; 
+      position: relative;
+    }
     .friend-grid-avatar-holder img { width:100%; height:100%; object-fit: cover; }
     .friend-grid-name { font-size: 13px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1721,9 +1777,6 @@
         border-right: none !important;
       }
     }
-    
-    
-    
   </style>
 </head>
 <body>
@@ -2749,8 +2802,8 @@
             }
           }
             
-          renderAvatar('header-avatar-btn', avatarUrl, finalName);
-          renderAvatar('profile-big-avatar', avatarUrl, finalName);
+          renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
+          renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
             
           var myStoryBg = document.getElementById('my-story-bg-avatar');
           if (myStoryBg) {
@@ -2858,11 +2911,12 @@
       applyLanguageDOM();
     }
 
+    /* ---- REALTIME ONLINE STATUS PULSE RENDER ---- */
     function renderAvatar(elementId, avatarUrl, name, userId = null) {
       var el = document.getElementById(elementId);
       if (!el) return;
       
-      var isOnline = userId ? (cachedOnlineStates[userId] !== false) : false;
+      var isOnline = userId ? (cachedOnlineStates[userId] === true) : false;
       var dotHtml = (userId && isOnline) ? `<div class="online-status-dot-sm"></div>` : ``;
 
       if (avatarUrl) {
@@ -3062,7 +3116,7 @@
             db.collection('profiles').doc(req.sender_id).get().then(function(profileDoc) {
               var senderName = profileDoc.exists ? (profileDoc.data().full_name || "User") : "User";
               var senderAvatar = profileDoc.exists ? profileDoc.data().avatar_url : null;
-              var isOnline = profileDoc.exists ? (profileDoc.data().is_online !== false) : false;
+              var isOnline = profileDoc.exists ? (profileDoc.data().is_online === true) : false;
               var initial = senderName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3174,6 +3228,7 @@
         });
     }
 
+    /* ---- STRICTLY 3 FRIENDS PREVIEW IN PROFILE ---- */
     function loadMiniFriendsGrid(followerDocs) {
       var grid = document.getElementById('mini-friends-grid');
       if (!grid) return;
@@ -3184,7 +3239,8 @@
         return;
       }
 
-      var previewDocs = followerDocs.slice(0, 6);
+      // STRICTLY MAX 3 FRIENDS LISTED HERE
+      var previewDocs = followerDocs.slice(0, 3);
       grid.innerHTML = "";
       
       previewDocs.forEach(function(docSnap) {
@@ -3196,7 +3252,7 @@
           var profile = profileDoc.data();
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
-          var isOnline = profile.is_online !== false;
+          var isOnline = profile.is_online === true;
           var initial = finalName.charAt(0).toUpperCase();
 
           var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3279,7 +3335,7 @@
 
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
-          var isOnline = profile.is_online !== false;
+          var isOnline = profile.is_online === true;
           var initial = finalName.charAt(0).toUpperCase();
 
           var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3402,7 +3458,7 @@
           mainComments.forEach(function(comment) {
             var name = comment.author_name || "User";
             var initial = name.charAt(0).toUpperCase();
-            var isOnline = cachedOnlineStates[comment.user_id] !== false;
+            var isOnline = cachedOnlineStates[comment.user_id] === true;
             var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
             var avatarHtml = comment.avatar_url ? `<div class="avatar-has-online"><img src="${comment.avatar_url}">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
             
@@ -3443,7 +3499,7 @@
             if (replyTargetContainer) {
               var rName = reply.author_name || "User";
               var rInitial = rName.charAt(0).toUpperCase();
-              var rIsOnline = cachedOnlineStates[reply.user_id] !== false;
+              var rIsOnline = cachedOnlineStates[reply.user_id] === true;
               var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
               var rAvatarHtml = reply.avatar_url ? `<div class="avatar-has-online"><img src="${reply.avatar_url}">${rDotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${rInitial}${rDotHtml}</div>`;
               
@@ -3588,7 +3644,7 @@
         container.innerHTML = "";
         filteredLikers.forEach(function(p) {
           var finalName = p.full_name || "User";
-          var isOnline = p.is_online !== false;
+          var isOnline = p.is_online === true;
           var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
           var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
           
@@ -3625,7 +3681,7 @@
         var avatarUrl = userProfile ? userProfile.avatar_url : null;
         var coverUrl = userProfile ? userProfile.cover_url : null;
         
-        renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        renderAvatar('profile-big-avatar', avatarUrl, finalName, currentUser.uid);
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = currentUser.email;
 
@@ -3680,13 +3736,13 @@
         var avatarUrl = selectedUser.avatar_url;
         var coverUrl = selectedUser.cover_url;
 
-        // Show online status dot on foreign profiles (გასწორებული ხაზზე)
+        // Show online status dot on foreign profiles
         var onlineBadge = document.getElementById('profile-online-badge');
         if (onlineBadge) {
-          onlineBadge.style.display = (selectedUser.is_online !== false) ? "block" : "none";
+          onlineBadge.style.display = (selectedUser.is_online === true) ? "block" : "none";
         }
 
-        renderAvatar('profile-big-avatar', avatarUrl, finalName);
+        renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
         document.getElementById('profile-user-name').innerText = finalName;
         document.getElementById('profile-user-subtitle').innerText = "Imigrant";
 
@@ -3996,7 +4052,7 @@
             cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
               cachedProfiles[pDoc.id] = pDoc.data().avatar_url;
-              cachedOnlineStates[pDoc.id] = pDoc.data().is_online !== false;
+              cachedOnlineStates[pDoc.id] = pDoc.data().is_online === true;
             });
 
             posts.forEach(function(post) {
@@ -4200,7 +4256,7 @@
             cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
               cachedProfiles[pDoc.id] = pDoc.data().avatar_url;
-              cachedOnlineStates[pDoc.id] = pDoc.data().is_online !== false;
+              cachedOnlineStates[pDoc.id] = pDoc.data().is_online === true;
             });
 
             posts.forEach(function(post) {
@@ -4253,7 +4309,7 @@
             }
             var person = likersList[index];
             var name = person.full_name || "User";
-            var isOnline = person.is_online !== false;
+            var isOnline = person.is_online === true;
             var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
             var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
             
@@ -4327,7 +4383,7 @@
       var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
       var authorAvatarUrl = cachedProfiles[post.user_id] || null;
-      var isOnline = cachedOnlineStates[post.user_id] !== false;
+      var isOnline = cachedOnlineStates[post.user_id] === true;
       var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
       var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
@@ -4577,7 +4633,7 @@
               var author = profilesMap[story.user_id];
               var authorName = author ? author.full_name : "User";
               var authorAvatar = author ? author.avatar_url : null;
-              var isOnline = author ? (author.is_online !== false) : false;
+              var isOnline = author ? (author.is_online === true) : false;
               var initial = authorName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
