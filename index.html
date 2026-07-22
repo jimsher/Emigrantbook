@@ -4031,25 +4031,28 @@
     }
 
     function uploadImageToImgBB(file, callback) {
-      let formData = new FormData();
-      formData.append("image", file);
+  let formData = new FormData();
+  formData.append("image", file);
 
-      fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-        method: "POST",
-        body: formData
-      })
-      .then(response => response.json())
-      .then(result => {
-        if(result.success) {
-          callback(result.data.url);
-        } else {
-          alert("ImgBB ატვირთვის შეცდომა: " + result.error.message);
-        }
-      })
-      .catch(error => {
-        alert("ქსელის შეცდომა ImgBB-სთან დაკავშირებისას.");
-      });
+  fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+    method: "POST",
+    body: formData
+  })
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(result) {
+    if (result && result.success) {
+      callback(result.data.url);
+    } else {
+      alert("ImgBB ატვირთვის შეცდომა: " + (result.error ? result.error.message : "უცნობი შეცდომა"));
     }
+  })
+  .catch(function(error) {
+    console.error("ImgBB Upload Error:", error);
+    alert("ქსელის შეცდომა ImgBB-სთან დაკავშირებისას.");
+  });
+}
 
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
