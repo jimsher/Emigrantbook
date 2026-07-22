@@ -40,7 +40,7 @@
     }
 
     /* ----------------------------------------------------
-       1. მთავარი ჩატების სიის ეკრანი (CHATS SCREEN)
+        1. მთავარი ჩატების სიის ეკრანი (CHATS SCREEN)
     ------------------------------------------------------- */
     #chats-screen {
       display: flex;
@@ -338,7 +338,7 @@
     }
 
     /* ----------------------------------------------------
-       2. შიდა ჩატის ეკრანი (CHAT THREAD SCREEN)
+        2. შიდა ჩატის ეკრანი (CHAT THREAD SCREEN)
     ------------------------------------------------------- */
     #thread-screen {
       display: none;
@@ -762,6 +762,22 @@
     onAuthStateChanged(window.auth, (user) => {
       if (user) {
         fetchFirestoreChatList();
+        
+        // **დამატებულია:** ვამოწმებთ არის თუ არა URL-ში გადმოცემული მეგობრის ID (?user=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUserId = urlParams.get('user');
+        if (targetUserId) {
+          // მივქაჩოთ მეგობრის სახელი და ფოტო Firestore-იდან და ავტომატურად გავხსნათ ჩატი
+          getDoc(doc(window.db, 'profiles', targetUserId)).then(docSnap => {
+            if (docSnap.exists()) {
+              let uData = docSnap.data();
+              let name = extractName(uData, targetUserId);
+              let photo = extractPhotoUrl(uData);
+              openChat(name, photo, targetUserId);
+            }
+          }).catch(err => console.error("Auto open chat error:", err));
+        }
+
       } else {
         const target = document.getElementById('chats-list-target');
         if (target) target.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
@@ -904,7 +920,6 @@
       activeChatUnsubscribes = [];
 
       let activeChatUsersMap = {};
-      let pendingCheckCount = users.length;
 
       if (users.length === 0) {
         listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები არ არის.</p>";
