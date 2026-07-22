@@ -1,22 +1,48 @@
-* {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      touch-action: manipulation;
-    }
-    body {
+/* ---- PRELOADER STYLES ---- */
+    #app-preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       background-color: #0b0b0b;
-      color: #e4e6eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .preloader-logo {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      animation: logoHeartbeat 1.3s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+      filter: drop-shadow(0 0 20px rgba(220, 174, 54, 0.4));
+    }
+
+    @keyframes logoHeartbeat {
+      0% { transform: scale(1); }
+      14% { transform: scale(1.15); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.15); }
+      70% { transform: scale(1); }
+    }
+
+    #app-preloader.fade-out {
+      opacity: 0;
+      visibility: hidden;
     }
 
     #auth-screen {
       background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       padding: 20px;
+      position: relative;
     }
     .auth-container {
       background: #181818;
@@ -27,33 +53,63 @@
       max-width: 400px;
       text-align: center;
       border: 1px solid #282828;
+      margin-bottom: 20px;
     }
     .logo-container {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 15px auto;
       background: #000000;
-      border-radius: 10px;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 25px rgba(220, 174, 54, 0.25);
       border: 1px solid rgba(220, 174, 54, 0.3);
+      overflow: hidden;
+      padding: 10px;
     }
     .logo-img-text {
-      font-size: 42px;
-      font-weight: serif;
-      color: #dcae36;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
     .logo {
-      font-size: 46px;
+      font-size: 32px;
       font-weight: 900;
       color: #dcae36;
       text-transform: uppercase;
       letter-spacing: 2px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
+      animation: glowTextAnimation 2.5s infinite alternate ease-in-out;
     }
+
+    @keyframes glowTextAnimation {
+      0% {
+        color: #dcae36;
+        text-shadow: 0 0 5px rgba(220, 174, 54, 0.2), 0 0 10px rgba(220, 174, 54, 0.2);
+        transform: scale(1);
+      }
+      50% {
+        color: #fff0a8;
+        text-shadow: 0 0 15px rgba(220, 174, 54, 0.8), 0 0 25px rgba(220, 174, 54, 0.6), 0 0 35px rgba(220, 174, 54, 0.4);
+        transform: scale(1.02);
+      }
+      100% {
+        color: #dcae36;
+        text-shadow: 0 0 5px rgba(220, 174, 54, 0.2), 0 0 10px rgba(220, 174, 54, 0.2);
+        transform: scale(1);
+      }
+    }
+
+    .auth-footer {
+      color: #666666;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+    }
+
     .subtitle {
       color: #aaaaaa;
       margin-bottom: 20px;
@@ -126,7 +182,7 @@
       color: #ffffff;
     }
     .error-msg {
-      color: #ff4d4d;
+      color: #ff4d4f;
       margin-bottom: 10px;
       font-size: 14px;
       display: none;
@@ -221,6 +277,219 @@
       user-select: none;
     }
 
+    .burger-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 5px;
+      z-index: 110;
+    }
+    .burger-line {
+      width: 25px;
+      height: 3px;
+      background-color: #e4e6eb;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .side-menu-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 400;
+      display: none;
+    }
+    .side-menu-content {
+      position: fixed;
+      top: 0; right: -80%; width: 80%; max-width: 340px; height: 100%;
+      background: #121212;
+      border-left: 1px solid #222222;
+      z-index: 401;
+      display: flex;
+      flex-direction: column;
+      padding: 60px 0 20px 0;
+      transition: right 0.3s ease;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+      overflow-y: auto;
+    }
+    .side-menu-content.open {
+      right: 0 !important;
+    }
+
+    /* ---- TIKTOK STYLE MENU ITEMS ---- */
+    .menu-section-title {
+      font-size: 13px;
+      color: #777;
+      padding: 15px 20px 8px 20px;
+      font-weight: 600;
+    }
+
+    .menu-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .menu-item-row:hover {
+      background: #1e1e1e;
+    }
+    .menu-item-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .menu-item-icon {
+      font-size: 20px;
+      width: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e4e6eb;
+    }
+    .menu-item-arrow {
+      color: #666;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .menu-divider {
+      height: 1px;
+      background: #222222;
+      margin: 8px 0;
+    }
+
+    /* ---- LIVE STREAM BUTTON STYLES ---- */
+    .menu-live-btn {
+      background: linear-gradient(135deg, #ff4d4f 0%, #c0392b 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      width: calc(100% - 40px);
+      margin: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+      transition: transform 0.2s, background 0.2s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .menu-live-btn:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #ff6b6b 0%, #d63031 100%);
+    }
+
+    /* ---- AKHO INFO MODAL STYLES ---- */
+    .akho-info-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 5000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+    .akho-info-modal {
+      background: #181818;
+      border: 1px solid #dcae36;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      position: relative;
+      animation: modalFadeIn 0.3s ease;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .akho-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #282828;
+      padding-bottom: 12px;
+      margin-bottom: 15px;
+    }
+    .akho-info-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #dcae36;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .akho-info-close {
+      background: none;
+      border: none;
+      color: #aaaaaa;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .akho-info-close:hover {
+      color: #ffffff;
+    }
+    .akho-info-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #e4e6eb;
+    }
+    .akho-info-box {
+      background: #222222;
+      border-left: 3px solid #dcae36;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 12px 0;
+      font-weight: bold;
+      color: #fff;
+    }
+    .akho-feature-list {
+      list-style: none;
+      margin-top: 10px;
+    }
+    .akho-feature-list li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .side-menu-logout-btn {
+      width: calc(100% - 40px);
+      padding: 12px;
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      margin: 20px 20px 10px 20px;
+      transition: background 0.2s;
+    }
+    .side-menu-logout-btn:hover {
+      background: #d93d40;
+    }
+
     .feed-container {
       max-width: 680px;
       margin: 0 auto;
@@ -270,7 +539,7 @@
       position: absolute;
       left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
     }
-    .publish-btn {
+    .file-upload-badge {
       background: #dcae36;
       color: #111111;
       border: none;
@@ -281,20 +550,19 @@
       -webkit-user-select: none;
       user-select: none;
     }
-    .publish-btn:hover {
-      background: #c2982e;
-    }
-    .room-btn-styled {
-      background: none;
-      border: 1px solid #2c4c7c;
-      padding: 8px 16px;
+    .create-post-card .publish-btn {
+      background: #dcae36;
+      color: #111111;
+      border: none;
+      padding: 8px 20px;
       border-radius: 20px;
-      color: #3885ff;
       font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
       -webkit-user-select: none;
       user-select: none;
+    }
+    .create-post-card .publish-btn:hover {
+      background: #c2982e;
     }
     .selected-file-info {
       margin-top: 8px;
@@ -377,6 +645,7 @@
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
       z-index: 2;
     }
+    .story-username-label img { width: 100%; height: 100%; object-fit: cover; }
     .story-card-video-preview { width: 100%; height: 100%; object-fit: cover; }
 
     .post-card {
@@ -388,15 +657,20 @@
       overflow: hidden;
       width: 100%;
     }
-    .post-header, .post-content, .post-stats, .post-actions, .comment-box-area {
+    .post-header, .post-content, .post-stats, .post-actions {
       padding-left: 15px;
       padding-right: 15px;
     }
     .post-header {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: space-between;
       margin-bottom: 12px;
+    }
+    .post-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .post-avatar {
       width: 40px;
@@ -426,36 +700,51 @@
       font-size: 12px;
       color: #aaaaaa;
     }
+    .post-delete-btn {
+      background: none;
+      border: none;
+      color: #ff4d4f;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .post-delete-btn:hover {
+      background: rgba(255, 77, 79, 0.1);
+    }
     .post-content {
       font-size: 15px;
       margin-bottom: 12px;
       line-height: 1.4;
     }
-     
+                                                
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
       border-radius: 0 !important;
-      margin: 0 0 12px 0 !important;
-      max-height: none !important;
-      object-fit: cover;
+      margin: 0 0 0 0 !important;
+      max-height: 500px !important;
+      object-fit: contain !important;
+      background: #000000;
       display: block;
       cursor: pointer;
     }
 
-    /* ზუსტი TikTok-ის ნაირი განლაგება ვიდეოზე */
     .video-container-rel {
       position: relative;
       width: 100%;
+      background: #000;
     }
     .tiktok-side-panel {
       position: absolute;
-      right: 14px;
-      bottom: 30px;
+      right: 8px;
+      bottom: 25px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 15px;
       z-index: 10;
       background: transparent;
       padding: 0;
@@ -466,9 +755,7 @@
       align-items: center;
       cursor: pointer;
       color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      gap: 5px;
+      gap: 2px;
       transition: transform 0.1s;
       -webkit-user-select: none;
       user-select: none;
@@ -477,16 +764,16 @@
       transform: scale(0.9);
     }
     .tiktok-icon-circle {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.9));
+      filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.8));
     }
     .tiktok-icon-circle svg {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       fill: #ffffff;
       transition: fill 0.2s, transform 0.1s;
     }
@@ -494,90 +781,391 @@
       fill: #fe2c55 !important;
     }
     .tiktok-action-item span {
-      text-shadow: 0px 1px 4px rgba(0, 0, 0, 0.9);
+      font-size: 12px;
+      font-weight: 600;
+      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    .tiktok-floating-avatars-container {
+      position: absolute;
+      left: 12px;
+      bottom: 100px;
+      width: 50px;
+      height: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      pointer-events: none;
+      z-index: 15;
+    }
+    .tiktok-floating-avatar-item {
+      position: absolute;
+      bottom: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      background: #dcae36;
+      color: #111111;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      animation: avatarSmoothRiseScroll 6s linear forwards;
+    }
+    .tiktok-floating-avatar-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .tiktok-floating-avatar-heart {
+      position: absolute;
+      bottom: -4px; 
+      right: -4px; 
+      font-size: 11px;
+      background: #ffffff;
+      border-radius: 50%;
+      width: 18px; 
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      z-index: 5;
+    }
+    
+    @keyframes avatarSmoothRiseScroll {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.6);
+      }
+      15% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1);
+      }
+      80% {
+        opacity: 1;
+        transform: translateY(-180px) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-230px) scale(0.7);
+      }
     }
 
     .post-stats {
       display: flex;
       justify-content: space-between;
-      color: #aaaaaa;
-      font-size: 13px;
+      align-items: center;
+      color: #90949c;
+      font-size: 14px;
+      padding-top: 10px;
       padding-bottom: 10px;
-      border-bottom: 1px solid #222222;
-      margin-bottom: 10px;
+      background: #141414;
     }
+    .fb-stats-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .fb-reaction-icons {
+      display: flex;
+      align-items: center;
+      gap: -4px;
+    }
+    .fb-icon-svg-badge {
+      font-size: 16px;
+      background: #1c1c1e;
+      border-radius: 50%;
+      padding: 1px;
+    }
+    .fb-likes-counter {
+      color: #aaaaaa;
+      font-size: 14px;
+      margin-left: 3px;
+    }
+    .comment-count-label {
+      cursor: pointer;
+      color: #aaaaaa;
+    }
+    .comment-count-label:hover {
+      text-decoration: underline;
+    }
+
     .post-actions {
       display: flex;
-      gap: 5px;
-      margin-bottom: 12px;
+      border-top: 1px solid #262626;
+      padding: 4px 6px;
+      background: #141414;
+      position: relative;
     }
     .action-btn {
       flex: 1;
       background: none;
       border: none;
-      padding: 8px;
-      color: #aaaaaa;
-      font-weight: bold;
-      border-radius: 4px;
+      padding: 8px 4px;
+      color: #b0b3b8;
+      font-weight: 600;
       cursor: pointer;
       font-size: 14px;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-    .action-btn:hover { background: #222222; color: #ffffff; }
-    .action-btn.btn-liked {
-      color: #fe2c55 !important;
-    }
-
-    .comment-box-area {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding-bottom: 15px;
-      margin-top: 10px;
-    }
-    .comment-box-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #dcae36;
-      color: #111111;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
-      font-size: 12px;
-      overflow: hidden;
+      gap: 8px;
+      transition: background 0.2s;
       -webkit-user-select: none;
       user-select: none;
     }
-    .comment-input-container {
+    .action-btn:hover { 
+      background: #242526; 
+      border-radius: 4px;
+    }
+    .action-btn-svg {
+      width: 20px;
+      height: 20px;
+      fill: #b0b3b8;
+    }
+    .action-btn.btn-liked {
+      color: #f33e58 !important;
+    }
+    .action-btn.btn-liked .action-btn-svg {
+      fill: #f33e58 !important;
+    }
+
+    .comments-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 4000;
+      display: none;
+      align-items: flex-end;
+    }
+    .comments-modal-content {
+      width: 100%;
+      background: #0f0f0f;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border-top: 1px solid #222222;
+    }
+    .comments-modal-drag {
+      width: 40px; height: 5px;
+      background: #333333;
+      border-radius: 3px;
+      margin: 10px auto;
+      cursor: pointer;
+    }
+    .comments-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 20px 15px 20px;
+      border-bottom: 1px solid #222222;
+    }
+    .modal-likes-trigger {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    .modal-likes-trigger:hover {
+      text-decoration: underline;
+    }
+    .comments-modal-close {
+      background: none; border: none;
+      color: #ffffff; font-size: 24px;
+      cursor: pointer;
+    }
+    .comments-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .fb-comment-wrapper {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .fb-comment-card {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .fb-comment-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #dcae36;
+      color: #111111;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: bold; overflow: hidden; font-size: 14px;
+    }
+    .fb-comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .fb-comment-main {
       flex: 1;
       display: flex;
-      background: #222222;
+      flex-direction: column;
+    }
+    .fb-comment-bubble {
+      background: #1c1c1e;
+      padding: 10px 14px;
       border-radius: 18px;
-      padding: 4px 12px;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .fb-comment-user-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .fb-comment-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .fb-comment-time {
+      font-size: 12px;
+      color: #8a8a8f;
+    }
+    .fb-comment-text {
+      font-size: 14px;
+      color: #e5e5ea;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+    .fb-comment-actions-row {
+      display: flex;
+      gap: 15px;
+      margin-top: 4px;
+      padding-left: 8px;
+    }
+    .fb-comment-action-btn {
+      background: none; border: none;
+      color: #8a8a8f; font-size: 12px;
+      font-weight: bold; cursor: pointer;
+    }
+    .fb-comment-action-btn:hover { color: #ffffff; }
+    .fb-comment-action-btn.comment-liked { color: #1877f2 !important; }
+
+    .fb-replies-container {
+      margin-left: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: calc(100% - 48px);
+      margin-top: 8px;
+    }
+    .reply-input-active-bar {
+      background: #1a1a1a;
+      padding: 6px 12px;
+      display: none;
+      justify-content: space-between;
+      font-size: 13px;
+      border-top: 1px solid #282828;
+    }
+
+    .comments-modal-footer {
+      padding: 12px 15px;
+      background: #0f0f0f;
+      border-top: 1px solid #222222;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-footer-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .modal-input-holder {
+      flex: 1;
+      display: flex;
+      background: #1c1c1e;
+      border-radius: 20px;
+      padding: 8px 16px;
       align-items: center;
     }
-    .comment-input-container input {
-      flex: 1;
-      background: none;
-      border: none;
-      color: #e4e6eb;
-      outline: none;
-      padding: 6px 0;
-      font-size: 14px;
+    .modal-input-holder input {
+      flex: 1; background: none; border: none;
+      color: #ffffff; outline: none; font-size: 14px;
     }
     .comment-submit-button {
-      background: none;
+      background: #dcae36;
       border: none;
-      color: #dcae36;
+      padding: 8px 14px;
+      border-radius: 20px;
       font-weight: bold;
+      color: #111111;
       cursor: pointer;
-      font-size: 14px;
-      padding-left: 8px;
-      -webkit-user-select: none;
-      user-select: none;
+    }
+
+    .likers-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 4100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .likers-modal-content {
+      width: 100%; max-width: 400px;
+      background: #141414; border: 1px solid #222222;
+      border-radius: 12px; max-height: 60vh;
+      display: flex; flex-direction: column;
+    }
+    .likers-modal-header {
+      padding: 15px; border-bottom: 1px solid #222222;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .likers-modal-body {
+      flex: 1; overflow-y: auto; padding: 10px 15px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .liker-row {
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer; padding: 8px 0;
+    }
+    
+    .liker-avatar-container {
+      position: relative;
+      width: 40px; height: 40px;
+    }
+    .liker-avatar {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: #dcae36; color: #111111; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .liker-reaction-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -4px;
+      background: #1c1c1e;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
     }
 
     .facebook-profile-container {
@@ -617,15 +1205,16 @@
       position: relative;
       width: 120px; height: 120px;
     }
-    .profile-fb-avatar {
+    .profile-fb-avatar, .profile-big-avatar {
       width: 120px; height: 120px;
       border-radius: 50%;
       background: #dcae36;
       border: 4px solid #141414;
       color: #111111; display: flex; align-items: center; justify-content: center;
       font-size: 40px; font-weight: bold; overflow: hidden;
+      transition: border 0.3s ease;
     }
-    .profile-fb-avatar img { width:100%; height:100%; object-fit: cover; }
+    .profile-fb-avatar img, .profile-big-avatar img { width:100%; height:100%; object-fit: cover; }
     .avatar-camera-btn {
       position: absolute; bottom: 0; right: 0;
       background: #222222; border: none; width: 32px; height: 32px; border-radius: 50%;
@@ -721,8 +1310,6 @@
     .tab-button { flex: 1; background: none; border: none; padding: 12px; color: #aaaaaa; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
     .tab-button.active { color: #dcae36; border-bottom: 3px solid #dcae36; }
 
-    .logout-btn-large { width: calc(100% - 40px); margin: 20px; padding: 12px; background: #ff4d4f; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
-
     .requests-dropdown {
       position: absolute; right: 20px; top: 60px; width: 320px; background: #141414; border: 1px solid #222222; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: none; flex-direction: column; z-index: 105;
     }
@@ -737,21 +1324,166 @@
     .req-btn-confirm { background: #dcae36; color: #111111; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
     .req-btn-delete { background: #222222; color: #e4e6eb; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
 
-    .collage-container { margin-bottom: 12px; border-radius: 0 !important; overflow: hidden; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
-    .collage-grid { display: grid; gap: 4px; background: #0b0b0b; width: 100% !important; }
-    .collage-item { width: 100% !important; height: 100% !important; object-fit: cover; display: block; border-radius: 0 !important; }
+    /* ---- FIXED COLLAGE CSS STARTS HERE ---- */
+    .collage-container { 
+      margin-bottom: 0px; 
+      border-radius: 0 !important; 
+      overflow: hidden; 
+      width: 100% !important; 
+      margin-left: 0 !important; 
+      margin-right: 0 !important; 
+    }
+    .collage-grid { 
+      display: grid; 
+      gap: 3px; 
+      background: #0b0b0b; 
+      width: 100% !important; 
+    }
+    .collage-item { 
+      width: 100% !important; 
+      height: 100% !important; 
+      object-fit: cover !important; 
+      display: block; 
+      border-radius: 0 !important; 
+    }
     .collage-1 { grid-template-columns: 1fr; }
-    .collage-2 { grid-template-columns: 1fr 1fr; height: 300px; }
-    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: 1.5fr 1fr; height: 360px; }
-    .collage-3 .collage-item:nth-child(1) { grid-row: span 2; }
-    .collage-4 { grid-template-columns: repeat(2, 1fr); height: 360px; }
-    .collage-5 { grid-template-columns: repeat(6, 1fr); height: 360px; }
-    .collage-5 .collage-item:nth-child(1) { grid-column: span 3; grid-row: span 2; }
-    .collage-5 .collage-item:nth-child(2) { grid-column: span 3; grid-row: span 2; }
-    .collage-5 .collage-item:nth-child(n+3) { grid-column: span 2; }
-    .collage-6 { grid-template-columns: repeat(3, 1fr); height: 360px; }
-    .collage-overlay { position: relative; height: 100%; }
-    .collage-overlay-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .collage-1 .collage-item { max-height: 500px; object-fit: contain !important; background: #000; }
+    
+    .collage-2 { grid-template-columns: 1fr 1fr; }
+    .collage-2 .collage-item { aspect-ratio: 1 / 1; }
+
+    .collage-3 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(2, 1fr); }
+    .collage-3 .collage-item:nth-child(1) { grid-row: span 2; aspect-ratio: 1 / 2; }
+    .collage-3 .collage-item:nth-child(2),
+    .collage-3 .collage-item:nth-child(3) { aspect-ratio: 1 / 1; }
+
+    .collage-4 { grid-template-columns: repeat(2, 1fr); }
+    .collage-4 .collage-item { aspect-ratio: 1 / 1; }
+
+    .collage-5 { grid-template-columns: repeat(6, 1fr); }
+    .collage-5 .collage-item:nth-child(1) { grid-column: span 3; aspect-ratio: 1 / 1; }
+    .collage-5 .collage-item:nth-child(2) { grid-column: span 3; aspect-ratio: 1 / 1; }
+    .collage-5 .collage-item:nth-child(n+3) { grid-column: span 2; aspect-ratio: 1 / 1; }
+
+    .collage-6 { grid-template-columns: repeat(3, 1fr); }
+    .collage-6 .collage-item { aspect-ratio: 1 / 1; }
+
+    .collage-overlay { position: relative; width: 100%; height: 100%; }
+    .collage-overlay-text { 
+      position: absolute; 
+      top: 0; left: 0; 
+      width: 100%; height: 100%; 
+      background: rgba(0,0,0,0.6); 
+      color: white; 
+      font-size: 24px; 
+      font-weight: bold; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+
+    .photo-grid-full {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      background: #0b0b0b;
+      width: 100%;
+    }
+    .photo-grid-full .collage-item {
+      aspect-ratio: 1 / 1;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .video-grid-full {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      background: #0b0b0b;
+      width: 100%;
+    }
+    .video-grid-card {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      background: #141414;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .video-grid-thumbnail {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .video-grid-views {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .tiktok-fullscreen-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #000000;
+      z-index: 3000;
+      display: none;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tiktok-fullscreen-close {
+      position: fixed;
+      top: 15px; left: 15px;
+      font-size: 30px; color: #ffffff;
+      background: rgba(0,0,0,0.5); border: none;
+      width: 45px; height: 45px; border-radius: 50%;
+      cursor: pointer; z-index: 3100;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tiktok-slide-item {
+      width: 100vw;
+      height: 100vh;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+      background: #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tiktok-slide-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .tiktok-overlay-bottom-info {
+      position: absolute;
+      bottom: 20px; left: 15px; right: 80px;
+      z-index: 3050;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+      background: linear-gradient(transparent, rgba(0,0,0,0.4));
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .tiktok-info-author {
+      font-weight: bold; font-size: 16px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;
+    }
+    .tiktok-info-time {
+      font-size: 12px; color: #d1d1d6; font-weight: normal;
+    }
+    .tiktok-info-caption {
+      font-size: 14px; line-height: 1.3; max-height: 60px; overflow: hidden;
+    }
 
     .connections-container { background: #141414; border-radius: 12px; border: 1px solid #222222; padding: 15px; }
     .connections-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid #222222; margin-bottom: 12px; }
@@ -850,6 +1582,94 @@
       user-select: none;
     }
 
+    .gallery-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #000000;
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+    }
+    .gallery-top-nav {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 60px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0));
+      z-index: 2010;
+    }
+    .gallery-close-x {
+      font-size: 32px; color: #ffffff; background: none; border: none; cursor: pointer;
+    }
+    .gallery-counter-label {
+      color: #ffffff; font-size: 16px; font-weight: bold;
+    }
+    .gallery-top-icons {
+      display: flex; gap: 15px; color: #ffffff; font-size: 22px; cursor: pointer;
+    }
+    .gallery-main-view {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      width: 100%;
+    }
+    .gallery-slider-img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      transition: transform 0.2s ease;
+    }
+    .gallery-bottom-info-panel {
+      width: 100%;
+      background: linear-gradient(to top, rgba(0,0,0,0.95) 85%, rgba(0,0,0,0));
+      padding: 16px 16px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2010;
+    }
+    .gallery-author-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .gallery-author-avatar {
+      width: 38px; height: 38px; border-radius: 50%; background: #dcae36;
+      display: flex; align-items: center; justify-content: center; font-weight: bold; color: #111;
+      overflow: hidden;
+    }
+    .gallery-author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-author-meta {
+      display: flex; flex-direction: column;
+    }
+    .gallery-author-name {
+      font-size: 15px; font-weight: bold; color: #ffffff;
+    }
+    .gallery-time-stamp {
+      font-size: 11px; color: #b0b3b8; display: flex; align-items: center; gap: 4px;
+    }
+    .gallery-post-caption {
+      font-size: 14px; color: #e4e6eb; line-height: 1.4; max-height: 80px; overflow-y: auto;
+    }
+    .gallery-reactions-summary {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #2f3031; padding-bottom: 8px; font-size: 13px; color: #b0b3b8;
+    }
+    .gallery-actions-buttons-row {
+      display: flex; justify-content: space-between; width: 100%;
+    }
+    .gallery-act-btn {
+      flex: 1; background: none; border: none; padding: 6px;
+      color: #b0b3b8; font-size: 14px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .gallery-act-btn.liked-active {
+      color: #f33e58 !important;
+    }
+
     @media (max-width: 680px) {
       .feed-container {
         padding: 0 !important;
@@ -874,40 +1694,3 @@
         border-right: none !important;
       }
     }
-
-    /* მენიუს ახალი სტილები */
-    /* ჰამბურგერ ღილაკის სტილი */
-.hamburger-menu {
-    cursor: pointer;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-}
-.hamburger-menu span {
-    display: block;
-    width: 24px;
-    height: 3px;
-    background: #e4e6eb;
-    border-radius: 2px;
-}
-
-/* ტიკტოკის სტილის მენიუს პანელი */
-.side-drawer {
-    position: fixed;
-    top: 0;
-    right: -70%; /* თავიდან გარეთაა */
-    width: 70%;
-    height: 100%;
-    background: #141414;
-    z-index: 1000;
-    transition: right 0.3s ease;
-    border-left: 1px solid #222;
-    padding: 20px;
-    box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-}
-.side-drawer.open {
-    right: 0; /* დაჭერისას შემოდის */
-}
-    /* მენიუს მენიუ აქ მთავრდება */
