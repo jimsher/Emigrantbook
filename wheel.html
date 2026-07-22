@@ -199,34 +199,17 @@
       z-index: 100;
     }
 
-    .spin-btn {
+    .status-info-box {
+      font-size: 15px;
+      color: #dcae36;
+      font-weight: bold;
+      text-align: center;
+      background: rgba(220, 174, 54, 0.1);
+      border: 1px solid rgba(220, 174, 54, 0.3);
+      padding: 10px 20px;
+      border-radius: 12px;
       width: 100%;
       max-width: 380px;
-      padding: 16px;
-      background: linear-gradient(135deg, #dcae36 0%, #b8860b 100%);
-      color: #0d0d0d;
-      border: none;
-      border-radius: 14px;
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(220, 174, 54, 0.4);
-      transition: transform 0.2s, box-shadow 0.2s;
-      text-transform: uppercase;
-    }
-
-    .spin-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(220, 174, 54, 0.6);
-    }
-
-    .spin-btn:disabled {
-      background: #444;
-      color: #888;
-      box-shadow: none;
-      cursor: not-allowed;
-      transform: none;
     }
 
     .active-users-counter {
@@ -353,12 +336,12 @@
 
   <!-- Control Panel -->
   <div class="control-panel">
+    <div class="status-info-box" id="statusBox">
+      🤖 სისტემა ავტომატურად მართავს გათამაშებას
+    </div>
     <div class="active-users-counter">
       👥 ბორბალზე მონაწილეობს: <strong id="participants-count">0</strong> აქტიური წევრი
     </div>
-    <button class="spin-btn" id="spinBtn" onclick="startSpinning()">
-      🎰 დატრიალება (SPIN)
-    </button>
   </div>
 
   <!-- Winner Modal -->
@@ -389,49 +372,74 @@
 
     const db = firebase.firestore();
 
-    // Variables & Constants
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
-    const spinBtn = document.getElementById('spinBtn');
+    const statusBox = document.getElementById('statusBox');
     
     let participants = [];
     let loadedImages = {};
     let currentAngle = 0;
     let isSpinning = false;
-    let idleRotationSpeed = 0.003; // ნელი ტრიალი გათამაშების დაწყებამდე
+    let idleRotationSpeed = 0.003;
     let animationReq = null;
 
-    // Slices Color Palette
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
 
-    // Load Participants from Firestore
+    // მხოლოდ იმ მომხმარებლების წამოღება, რომლებიც არიან აქტიურები
     function loadParticipants() {
-      db.collection('profiles').limit(12).get().then(snapshot => {
-        participants = [];
-        snapshot.forEach(doc => {
-          let data = doc.data();
-          let name = data.full_name || "User";
-          let avatar = data.avatar_url || null;
-          participants.push({ id: doc.id, name: name, avatar: avatar });
+      db.collection('profiles')
+        .where('is_active', '==', true)
+        .limit(12)
+        .get()
+        .then(snapshot => {
+          participants = [];
+          snapshot.forEach(doc => {
+            let data = doc.data();
+            let name = data.full_name || data.name || "User";
+            let avatar = data.avatar_url || data.photo || null;
+            participants.push({ id: doc.id, name: name, avatar: avatar });
+          });
+
+          document.getElementById('participants-count').innerText = participants.length;
+
+          if (participants.length < 2) {
+            statusBox.innerText = "⏳ ველოდებით აქტიურ მომხმარებლებს...";
+            drawEmptyWheel();
+            return;
+          }
+
+          preloadAvatars();
+        })
+        .catch(err => {
+          console.error("Error loading active participants:", err);
+          // Fallback: თუ is_active ველები ჯერ არ არის შევსებული, წამოვიღოთ ჩვეულებრივი პროფილებიდან
+          db.collection('profiles').limit(8).get().then(snapshot => {
+            participants = [];
+            snapshot.forEach(doc => {
+              let data = doc.data();
+              let name = data.full_name || data.name || "User";
+              let avatar = data.avatar_url || data.photo || null;
+              participants.push({ id: doc.id, name: name, avatar: avatar });
+            });
+            document.getElementById('participants-count').innerText = participants.length;
+            preloadAvatars();
+          });
         });
-
-        // თუ მომხმარებლები ცოტაა, დემო მონაცემებით შევავსოთ ბორბლის შესავსებად
-        if (participants.length < 4) {
-          participants.push({ id: '1', name: 'გიორგი ბ.', avatar: null });
-          participants.push({ id: '2', name: 'ნიკა კ.', avatar: null });
-          participants.push({ id: '3', name: 'ანა მ.', avatar: null });
-          participants.push({ id: '4', name: 'სოფო თ.', avatar: null });
-        }
-
-        document.getElementById('participants-count').innerText = participants.length;
-        preloadAvatars();
-      });
     }
 
-    // Preload Avatar Images onto Canvas
+    function drawEmptyWheel() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2 - 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e1e24';
+      ctx.fill();
+      ctx.strokeStyle = '#dcae36';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
     function preloadAvatars() {
-      let loadedCount = 0;
-      participants.forEach((p, idx) => {
+      participants.forEach((p) => {
         if (p.avatar) {
           let img = new Image();
           img.crossOrigin = "anonymous";
@@ -450,9 +458,9 @@
       });
       drawWheel();
       startIdleRotation();
+      checkAutoSpinTrigger();
     }
 
-    // Draw Wheel Canvas
     function drawWheel() {
       const numSlices = participants.length;
       if (numSlices === 0) return;
@@ -468,7 +476,6 @@
         const startAngle = currentAngle + i * sliceAngle;
         const endAngle = startAngle + sliceAngle;
 
-        // Draw Sector Slice
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
@@ -479,12 +486,10 @@
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Draw User Content (Avatar & Name)
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + sliceAngle / 2);
 
-        // Draw Avatar Image
         const p = participants[i];
         const img = loadedImages[p.id];
         const avatarSize = 50;
@@ -508,7 +513,6 @@
         }
         ctx.restore();
 
-        // Draw User Name Text
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + sliceAngle / 2);
@@ -520,7 +524,6 @@
       }
     }
 
-    // Idle Rotation Loop
     function startIdleRotation() {
       if (isSpinning) return;
       currentAngle += idleRotationSpeed;
@@ -528,26 +531,36 @@
       animationReq = requestAnimationFrame(startIdleRotation);
     }
 
-    // Start Live Winner Spin
-    function startSpinning() {
+    // სისტემის მიერ ავტომატური გათამაშების დაწყება
+    function checkAutoSpinTrigger() {
+      db.collection('lottery_state').doc('current').onSnapshot(docSnap => {
+        if (docSnap.exists) {
+          let data = docSnap.data();
+          if (data.status === 'spinning' && !isSpinning) {
+            statusBox.innerText = "⚡ გათამაშება მიმდინარეობს...";
+            triggerAutomaticSpin(data.winning_index);
+          }
+        }
+      });
+    }
+
+    function triggerAutomaticSpin(winningIndex) {
       if (isSpinning || participants.length === 0) return;
       
       isSpinning = true;
-      spinBtn.disabled = true;
       cancelAnimationFrame(animationReq);
 
-      // Random target index
-      const winningIndex = Math.floor(Math.random() * participants.length);
-      const sliceAngle = (2 * Math.PI) / participants.length;
+      const targetIdx = (winningIndex !== undefined && winningIndex < participants.length) 
+        ? winningIndex 
+        : Math.floor(Math.random() * participants.length);
 
-      // Calculate total spin rotations (5 full rotations + offset)
-      const extraRounds = 5 + Math.floor(Math.random() * 3);
-      // Top Arrow is at 270 deg (1.5 * PI)
-      const targetSliceOffset = (1.5 * Math.PI) - (winningIndex * sliceAngle + sliceAngle / 2);
+      const sliceAngle = (2 * Math.PI) / participants.length;
+      const extraRounds = 6;
+      const targetSliceOffset = (1.5 * Math.PI) - (targetIdx * sliceAngle + sliceAngle / 2);
       const targetAngle = currentAngle + (extraRounds * 2 * Math.PI) + targetSliceOffset;
 
       let start = null;
-      const duration = 5500; // 5.5 Seconds duration
+      const duration = 6000;
 
       function easeOutCubic(t) {
         return (--t) * t * t + 1;
@@ -565,14 +578,13 @@
         } else {
           currentAngle = targetAngle;
           drawWheel();
-          announceWinner(participants[winningIndex]);
+          announceWinner(participants[targetIdx]);
         }
       }
 
       requestAnimationFrame(animateSpin);
     }
 
-    // Announce Winner Pop-up
     function announceWinner(winner) {
       const modal = document.getElementById('winnerModal');
       const nameHolder = document.getElementById('winnerNameDisplay');
@@ -587,16 +599,16 @@
       }
 
       modal.style.display = 'flex';
+      statusBox.innerText = "🎉 გამარჯვებული გამოვლენილია!";
     }
 
     function closeWinnerModal() {
       document.getElementById('winnerModal').style.display = 'none';
       isSpinning = false;
-      spinBtn.disabled = false;
+      statusBox.innerText = "🤖 სისტემა ავტომატურად მართავს გათამაშებას";
       startIdleRotation();
     }
 
-    // Initial Launch
     loadParticipants();
   </script>
 </body>
