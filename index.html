@@ -1946,7 +1946,7 @@
 
       <!-- LIVE WHEEL LOTTERY BUTTON IN BURGER MENU -->
       <button class="menu-live-btn" style="background: linear-gradient(135deg, #dcae36 0%, #b8860b 100%); color: #111;" onclick="window.location.href='wheel.html'">
-       <span>LIVE გათამაშება</span>
+        <span>LIVE გათამაშება</span>
       </button>
 
       <div class="input-group" style="padding: 0 10px; margin-bottom: 20px;">
@@ -1968,7 +1968,7 @@
         <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
-       
+        
     <div class="feed-container">
       <div class="facebook-profile-container">
         <div class="profile-cover-wrapper" id="profile-cover-banner">
@@ -3312,7 +3312,7 @@
       if(bar) bar.style.display = "none";
     }
 
-    // FIXED: Removed orderBy from Firestore Query to prevent index errors
+    // FIXED: Correct memory sorting for comments & safer timestamp resolution
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
       if (!postId) return;
@@ -3332,10 +3332,16 @@
             allItems.push(Object.assign({ id: doc.id }, doc.data()));
           });
 
-          // Sort in memory (JavaScript) by created_at safely
+          // Sort in memory by created_at safely
           allItems.sort(function(a, b) {
-            var timeA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
-            var timeB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
+            var timeA = 0;
+            if (a.created_at) {
+              timeA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
+            }
+            var timeB = 0;
+            if (b.created_at) {
+              timeB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
+            }
             return timeA - timeB;
           });
           
@@ -3347,7 +3353,9 @@
             var name = comment.author_name || "User";
             var initial = name.charAt(0).toUpperCase();
             var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}">` : initial;
-            var timeString = comment.created_at ? new Date(comment.created_at.toDate ? comment.created_at.toDate() : comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+            
+            var timeObj = comment.created_at ? (comment.created_at.toDate ? comment.created_at.toDate() : new Date(comment.created_at)) : new Date();
+            var timeString = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             var cLikes = comment.likes_count || 0;
             var hasLikedComment = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + comment.id)) ? "comment-liked" : "";
@@ -3384,7 +3392,9 @@
               var rName = reply.author_name || "User";
               var rInitial = rName.charAt(0).toUpperCase();
               var rAvatarHtml = reply.avatar_url ? `<img src="${reply.avatar_url}">` : rInitial;
-              var rTimeString = reply.created_at ? new Date(reply.created_at.toDate ? reply.created_at.toDate() : reply.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+              
+              var rTimeObj = reply.created_at ? (reply.created_at.toDate ? reply.created_at.toDate() : new Date(reply.created_at)) : new Date();
+              var rTimeString = rTimeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               
               var rLikes = reply.likes_count || 0;
               var hasLikedReply = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + reply.id)) ? "comment-liked" : "";
