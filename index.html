@@ -30,12 +30,36 @@
       position: relative;
       display: inline-block;
     }
+    
+    /* პროფილის დიდ ავატარზე - ზუსტად ჩარჩოს ხაზზე დასმული */
     .online-status-dot {
       position: absolute;
-      bottom: -2px;
-      right: -2px;
-      width: 16px;
-      height: 16px;
+      bottom: 12px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
+      background-color: #31a24c;
+      border: 3.5px solid #141414;
+      border-radius: 50%;
+      z-index: 10;
+      box-shadow: 0 0 8px rgba(49, 162, 76, 0.6);
+    }
+
+    /* პატარა ავატარების კონტეინერი */
+    .avatar-has-online {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* პატარა ავატარების მწვანე ციმციმა (Facebook style) */
+    .online-status-dot-sm {
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 11px;
+      height: 11px;
       background-color: #31a24c;
       border: 2px solid #0b0b0b;
       border-radius: 50%;
@@ -85,6 +109,7 @@
       cursor: pointer;
     }
     .friend-grid-avatar-holder {
+      position: relative;
       width: 100%;
       aspect-ratio: 1 / 1;
       border-radius: 8px;
@@ -570,7 +595,7 @@
         <ul class="akho-feature-list">
           <li>🛒 <strong>შოპინგი:</strong> მალე საიტზე დაემატება ონლაინ მაღაზია, სადაც აკნოს ბალანსით შეძლებთ სხვადასხვა პროდუქციისა და სერვისების ყიდვას.</li>
           <li>🎁 <strong>ავტომატური დასაჩუქრება:</strong> საიტზე მაღალი აქტივობისთვის მომხმარებლები ავტომატურად შეირჩევიან და დასაჩუქრდებიან აკნოებით.</li>
-          <li>🎉 <strong>გათამაშებები:</strong> მონაწილეობა მიიღეთ ექსკლუზიურ გათამაშებებსა და კონკურსებში.</li>
+          <li>🎉 <strong>გათამაშებები:</strong> მონაწილეობა მიიღეთ ექსკლუზიურ გათამაშებებსა და კონკურსებსა.</li>
         </ul>
       </div>
     </div>
@@ -729,6 +754,7 @@
     var currentUser = null;
     var userProfile = null;
     var cachedProfiles = {};
+    var cachedOnlineStates = {}; // ინახავს მომხმარებელთა ონლაინ სტატუსს
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
     var activePostForComments = null;
@@ -1249,16 +1275,28 @@
       applyLanguageDOM();
     }
 
-    function renderAvatar(elementId, avatarUrl, name) {
+    function renderAvatar(elementId, avatarUrl, name, userId = null) {
       var el = document.getElementById(elementId);
       if (!el) return;
-        
+      
+      var isOnline = userId ? (cachedOnlineStates[userId] !== false) : false;
+      var dotHtml = (userId && isOnline) ? `<div class="online-status-dot-sm"></div>` : ``;
+
       if (avatarUrl) {
-        el.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        el.innerHTML = `
+          <div class="avatar-has-online">
+            <img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+            ${dotHtml}
+          </div>
+        `;
       } else {
         var firstLetter = name ? name.charAt(0).toUpperCase() : "?";
-        el.innerHTML = "";
-        el.innerText = firstLetter;
+        el.innerHTML = `
+          <div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center; height:100%; width:100%;">
+            ${firstLetter}
+            ${dotHtml}
+          </div>
+        `;
       }
     }
 
@@ -1441,9 +1479,11 @@
             db.collection('profiles').doc(req.sender_id).get().then(function(profileDoc) {
               var senderName = profileDoc.exists ? (profileDoc.data().full_name || "User") : "User";
               var senderAvatar = profileDoc.exists ? profileDoc.data().avatar_url : null;
+              var isOnline = profileDoc.exists ? (profileDoc.data().is_online !== false) : false;
               var initial = senderName.charAt(0).toUpperCase();
 
-              var avatarContent = senderAvatar ? `<img src="${senderAvatar}" alt="Avatar">` : initial;
+              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+              var avatarContent = senderAvatar ? `<div class="avatar-has-online"><img src="${senderAvatar}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
 
               container.innerHTML += `
                 <div class="request-item">
@@ -1573,9 +1613,11 @@
           var profile = profileDoc.data();
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
+          var isOnline = profile.is_online !== false;
           var initial = finalName.charAt(0).toUpperCase();
 
-          var avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
 
           grid.innerHTML += `
             <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
@@ -1654,9 +1696,11 @@
 
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
+          var isOnline = profile.is_online !== false;
           var initial = finalName.charAt(0).toUpperCase();
 
-          var avatarContent = avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : initial;
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
           var showDeleteButton = activeConnectionsUserId === currentUser.uid;
           var deleteBtnHtml = showDeleteButton ? 
             `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
@@ -1775,7 +1819,9 @@
           mainComments.forEach(function(comment) {
             var name = comment.author_name || "User";
             var initial = name.charAt(0).toUpperCase();
-            var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}">` : initial;
+            var isOnline = cachedOnlineStates[comment.user_id] !== false;
+            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+            var avatarHtml = comment.avatar_url ? `<div class="avatar-has-online"><img src="${comment.avatar_url}">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
             
             var timeObj = comment.created_at ? (comment.created_at.toDate ? comment.created_at.toDate() : new Date(comment.created_at)) : new Date();
             var timeString = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1814,7 +1860,9 @@
             if (replyTargetContainer) {
               var rName = reply.author_name || "User";
               var rInitial = rName.charAt(0).toUpperCase();
-              var rAvatarHtml = reply.avatar_url ? `<img src="${reply.avatar_url}">` : rInitial;
+              var rIsOnline = cachedOnlineStates[reply.user_id] !== false;
+              var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+              var rAvatarHtml = reply.avatar_url ? `<div class="avatar-has-online"><img src="${reply.avatar_url}">${rDotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${rInitial}${rDotHtml}</div>`;
               
               var rTimeObj = reply.created_at ? (reply.created_at.toDate ? reply.created_at.toDate() : new Date(reply.created_at)) : new Date();
               var rTimeString = rTimeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1957,7 +2005,9 @@
         container.innerHTML = "";
         filteredLikers.forEach(function(p) {
           var finalName = p.full_name || "User";
-          var avatarHtml = p.avatar_url ? `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">` : finalName.charAt(0).toUpperCase();
+          var isOnline = p.is_online !== false;
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
           
           container.innerHTML += `
             <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
@@ -2047,7 +2097,7 @@
         var avatarUrl = selectedUser.avatar_url;
         var coverUrl = selectedUser.cover_url;
 
-        // Show online status dot on foreign profiles
+        // Show online status dot on foreign profiles (გასწორებული ხაზზე)
         var onlineBadge = document.getElementById('profile-online-badge');
         if (onlineBadge) {
           onlineBadge.style.display = (selectedUser.is_online !== false) ? "block" : "none";
@@ -2360,8 +2410,10 @@
           
           db.collection('profiles').get().then(function(profilesSnap) {
             cachedProfiles = {};
+            cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
               cachedProfiles[pDoc.id] = pDoc.data().avatar_url;
+              cachedOnlineStates[pDoc.id] = pDoc.data().is_online !== false;
             });
 
             posts.forEach(function(post) {
@@ -2531,6 +2583,7 @@
             full_name: fullname,
             language: currentLang,
             balance: 0,
+            is_online: true,
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
         }).then(function() {
@@ -2561,8 +2614,10 @@
 
           db.collection('profiles').get().then(function(profilesSnap) {
             cachedProfiles = {};
+            cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
               cachedProfiles[pDoc.id] = pDoc.data().avatar_url;
+              cachedOnlineStates[pDoc.id] = pDoc.data().is_online !== false;
             });
 
             posts.forEach(function(post) {
@@ -2615,7 +2670,9 @@
             }
             var person = likersList[index];
             var name = person.full_name || "User";
-            var avatarContent = person.avatar_url ? `<img src="${person.avatar_url}">` : name.charAt(0).toUpperCase();
+            var isOnline = person.is_online !== false;
+            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+            var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
             
             var bubble = document.createElement('div');
             bubble.className = "tiktok-floating-avatar-item";
@@ -2687,7 +2744,10 @@
       var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
       var authorAvatarUrl = cachedProfiles[post.user_id] || null;
-      var avatarContent = authorAvatarUrl ? `<img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">` : initial;
+      var isOnline = cachedOnlineStates[post.user_id] !== false;
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+
+      var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
       var t = TRANSLATIONS[currentLang];
 
       var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
@@ -2934,9 +2994,11 @@
               var author = profilesMap[story.user_id];
               var authorName = author ? author.full_name : "User";
               var authorAvatar = author ? author.avatar_url : null;
+              var isOnline = author ? (author.is_online !== false) : false;
               var initial = authorName.charAt(0).toUpperCase();
 
-              var avatarHtml = authorAvatar ? `<img src="${authorAvatar}" alt="Avatar">` : initial;
+              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+              var avatarHtml = authorAvatar ? `<div class="avatar-has-online"><img src="${authorAvatar}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
               var backgroundHtml = `<div style="width:100%; height:100%; background-image: url('${story.media_url}'); background-size: cover; background-position: center;"></div>`;
 
               var card = document.createElement('div');
