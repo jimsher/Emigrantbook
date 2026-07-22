@@ -1843,6 +1843,12 @@
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
         
       <div class="header-right">
+        <!-- AKHO BALANCE BADGE IN HEADER -->
+        <div onclick="openAkhoInfoModal(event)" style="cursor: pointer; background: #222; border: 1px solid #dcae36; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: bold; color: #dcae36;">
+          <span>💳</span>
+          <span id="header-akho-balance">0 akho</span>
+        </div>
+
         <button class="header-icon-btn" onclick="toggleRequestsDropdown(event)">
           <svg class="header-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -1987,7 +1993,7 @@
       <button class="menu-item-row" onclick="window.location.href='balance.html'">
         <div class="menu-item-left">
           <span class="menu-item-icon">👛</span>
-          <span>ბალანსი</span>
+          <span>ბალანსი (<span id="menu-akho-balance-text">0 akho</span>)</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
@@ -2586,6 +2592,14 @@
       }
     };
 
+    function updateAkhoBalanceDisplay(balance) {
+      var bal = (balance !== undefined && balance !== null) ? balance : 0;
+      var hBal = document.getElementById('header-akho-balance');
+      var mBal = document.getElementById('menu-akho-balance-text');
+      if (hBal) hBal.innerText = bal + " akho";
+      if (mBal) mBal.innerText = bal + " akho";
+    }
+
     function applyLanguageDOM() {
       var lang = currentLang;
       var t = TRANSLATIONS[lang];
@@ -2801,7 +2815,7 @@
         likedPosts = JSON.parse(localStorage.getItem(user.uid + '_liked_posts_list')) || [];
         postReactionMap = JSON.parse(localStorage.getItem(user.uid + '_post_reaction_map')) || {};
           
-        db.collection('profiles').doc(user.uid).get().then(function(doc) {
+        db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
           var finalName = user.email;
           var avatarUrl = null;
           if (doc.exists) {
@@ -2809,6 +2823,8 @@
             finalName = userProfile.full_name || user.email;
             avatarUrl = userProfile.avatar_url || null;
             
+            updateAkhoBalanceDisplay(userProfile.balance);
+
             if(userProfile.language) {
               currentLang = userProfile.language;
               localStorage.setItem('emigrantbook_lang', currentLang);
