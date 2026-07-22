@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
   <title>Emigrantbook</title>
   <link rel="stylesheet" href="supabase1.css">
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      alert("აპლიკაციის შეცდომა!: " + message + "\nხაზი: " + lineno);
+      return false;
+    };
+  </script>
 
   <!-- Firebase App & Services CDN -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -1856,37 +1862,6 @@
         <div id="friends-stories-list" style="display: flex; gap: 8px;"></div>
       </div>
 
-      <!-- LIVE LOTTERY CARD ON FEED (STORIES-ის ქვემოთ) -->
-      <div id="live-lottery-post-card" style="display: none; background: linear-gradient(135deg, #1e1e24 0%, #111115 100%); border: 2px solid #dcae36; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 0 25px rgba(220, 174, 54, 0.3);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="background: #ff4d4f; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 10px;">🔴 LIVE</span>
-            <span style="color: #dcae36; font-weight: 800; font-size: 15px; letter-spacing: 0.5px;">აკნოს ოფიციალური გათამაშება</span>
-          </div>
-          <span style="font-size: 12px; color: #aaaaaa;" id="lottery-live-timer">მიმდინარეობს...</span>
-        </div>
-
-        <div style="position: relative; width: 100%; background: #08080a; border-radius: 10px; overflow: hidden; border: 1px solid rgba(220, 174, 54, 0.2); padding: 20px; text-align: center;">
-          <div style="font-size: 14px; color: #e4e6eb; margin-bottom: 10px;" id="lottery-live-status">
-            🎰 სისტემა ავლენს ყველაზე აქტიურ მომხმარებელს!
-          </div>
-          
-          <div onclick="window.location.href='wheel.html'" style="cursor: pointer; background: radial-gradient(circle, #2a2518 0%, #111 100%); border: 2px solid #dcae36; border-radius: 50%; width: 130px; height: 130px; margin: 10px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(220, 174, 54, 0.4);">
-            <span style="font-size: 32px;">🎰</span>
-            <span style="font-size: 11px; color: #dcae36; font-weight: bold; margin-top: 4px;">უყურე LIVE-ში</span>
-          </div>
-
-          <div id="lottery-post-winner-box" style="display: none; margin-top: 10px; background: rgba(220, 174, 54, 0.15); border: 1px solid #dcae36; padding: 10px; border-radius: 8px;">
-            <div style="font-weight: bold; color: #ffd700; font-size: 16px;" id="lottery-post-winner-name">🎉 გამარჯვებული: -</div>
-            <div style="font-size: 12px; color: #aaa; margin-top: 2px;">საჩუქარი: 50 akho ბალანსზე!</div>
-          </div>
-        </div>
-
-        <button onclick="window.location.href='wheel.html'" style="width: 100%; margin-top: 12px; background: #dcae36; color: #111; border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
-          👁️ გათამაშების გვერდზე გადასვლა
-        </button>
-      </div>
-
       <div id="posts-wall">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
       </div>
@@ -1938,11 +1913,6 @@
         <button class="menu-balance-btn" onclick="alert('ბალანსის შევსება მალე დაემატება!')" id="lbl-topup-btn">+ შევსება</button>
       </div>
 
-      <!-- LIVE WHEEL LOTTERY BUTTON IN BURGER MENU -->
-      <button class="menu-live-btn" style="background: linear-gradient(135deg, #dcae36 0%, #b8860b 100%); color: #111;" onclick="window.location.href='wheel.html'">
-        <span>LIVE გათამაშება</span>
-      </button>
-
       <div class="input-group" style="padding: 0 10px; margin-bottom: 20px;">
         <label style="color: #dcae36; font-weight: bold;" id="lbl-select-lang">🌐 ენის არჩევა / Language</label>
         <select id="site-language-select" onchange="changeSiteLanguage(this.value)" style="margin-top: 5px; background: #222222; border: 1px solid #dcae36;">
@@ -1962,7 +1932,7 @@
         <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
-        
+       
     <div class="feed-container">
       <div class="facebook-profile-container">
         <div class="profile-cover-wrapper" id="profile-cover-banner">
@@ -2635,56 +2605,6 @@
       });
     }
 
-    // REALTIME LIVE LOTTERY POST CONTROLLER
-    function subscribeToLiveLotteryPost() {
-      db.collection('lottery_state').doc('current').onSnapshot(function(docSnap) {
-        var card = document.getElementById('live-lottery-post-card');
-        var statusText = document.getElementById('lottery-live-status');
-        var winnerBox = document.getElementById('lottery-post-winner-box');
-        var winnerName = document.getElementById('lottery-post-winner-name');
-        var timerLbl = document.getElementById('lottery-live-timer');
-
-        if (!card) return;
-
-        if (docSnap.exists) {
-          var data = docSnap.data();
-
-          if (data.status === 'active' || data.status === 'spinning') {
-            card.style.display = 'block';
-            winnerBox.style.display = 'none';
-            statusText.innerText = '🎰 სისტემა ავლენს ყველაზე აქტიურ მომხმარებელს!';
-            timerLbl.innerText = 'LIVE ეთერში';
-          } else if (data.status === 'finished' && data.finished_at) {
-            var finishedTime = data.finished_at.toDate ? data.finished_at.toDate().getTime() : new Date(data.finished_at).getTime();
-            var currentTime = new Date().getTime();
-            var diffMinutes = (currentTime - finishedTime) / (1000 * 60);
-
-            if (diffMinutes < 5) {
-              card.style.display = 'block';
-              statusText.innerText = '🏆 გათამაშება დასრულდა!';
-              winnerName.innerText = '🎉 გამარჯვებული: ' + (data.winner_name || 'მომხმარებელი');
-              winnerBox.style.display = 'block';
-
-              var remainingSecs = Math.max(0, Math.floor((5 * 60 * 1000 - (currentTime - finishedTime)) / 1000));
-              var m = Math.floor(remainingSecs / 60);
-              var s = remainingSecs % 60;
-              timerLbl.innerText = `ქრება: ${m}:${s < 10 ? '0' : ''}${s}`;
-
-              setTimeout(function() {
-                subscribeToLiveLotteryPost();
-              }, 1000);
-            } else {
-              card.style.display = 'none';
-            }
-          } else {
-            card.style.display = 'none';
-          }
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    }
-
     // Initialize session check for Firebase Auth
     auth.onAuthStateChanged(function(user) {
       if (user) {
@@ -2700,7 +2620,7 @@
           if (doc.exists) {
             userProfile = doc.data();
             finalName = userProfile.full_name || user.email;
-            avatarUrl = userProfile.avatar_url || null;
+            avatarUrl = userProfile.avatar_url;
             
             if(userProfile.language) {
               currentLang = userProfile.language;
@@ -2734,7 +2654,6 @@
           subscribeToPostsRealtime(); 
           subscribeToGlobalNotifications();
           subscribeToMessagesRealtime();
-          subscribeToLiveLotteryPost();
           hidePreloader();
         });
       } else {
@@ -3306,6 +3225,7 @@
       if(bar) bar.style.display = "none";
     }
 
+    // FIXED: Removed orderBy from Firestore Query to prevent index errors
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
       if (!postId) return;
@@ -3325,15 +3245,10 @@
             allItems.push(Object.assign({ id: doc.id }, doc.data()));
           });
 
+          // Sort in memory (JavaScript) by created_at safely
           allItems.sort(function(a, b) {
-            var timeA = 0;
-            if (a.created_at) {
-              timeA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
-            }
-            var timeB = 0;
-            if (b.created_at) {
-              timeB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
-            }
+            var timeA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
+            var timeB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
             return timeA - timeB;
           });
           
@@ -3345,9 +3260,7 @@
             var name = comment.author_name || "User";
             var initial = name.charAt(0).toUpperCase();
             var avatarHtml = comment.avatar_url ? `<img src="${comment.avatar_url}">` : initial;
-            
-            var timeObj = comment.created_at ? (comment.created_at.toDate ? comment.created_at.toDate() : new Date(comment.created_at)) : new Date();
-            var timeString = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            var timeString = comment.created_at ? new Date(comment.created_at.toDate ? comment.created_at.toDate() : comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
 
             var cLikes = comment.likes_count || 0;
             var hasLikedComment = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + comment.id)) ? "comment-liked" : "";
@@ -3384,9 +3297,7 @@
               var rName = reply.author_name || "User";
               var rInitial = rName.charAt(0).toUpperCase();
               var rAvatarHtml = reply.avatar_url ? `<img src="${reply.avatar_url}">` : rInitial;
-              
-              var rTimeObj = reply.created_at ? (reply.created_at.toDate ? reply.created_at.toDate() : new Date(reply.created_at)) : new Date();
-              var rTimeString = rTimeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              var rTimeString = reply.created_at ? new Date(reply.created_at.toDate ? reply.created_at.toDate() : reply.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
               
               var rLikes = reply.likes_count || 0;
               var hasLikedReply = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + reply.id)) ? "comment-liked" : "";
@@ -3412,7 +3323,7 @@
           });
         }).catch(function(error) {
           console.error("Comments error:", error);
-          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას: ${error.message}</div>`;
+          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას.</div>`;
         });
     }
 
@@ -3430,14 +3341,13 @@
         });
     }
 
-    // SAFE FIX FOR SUBMITTING COMMENTS WITHOUT UNDEFINED VALUE ERRORS
     function submitCommentFromModal(postId) {
       var input = document.getElementById('modal-comment-input-field');
       var text = input.value.trim();
       if (!text) return;
 
-      var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
-      var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
+      var authorName = userProfile ? userProfile.full_name : currentUser.email;
+      var avatarUrl = userProfile ? userProfile.avatar_url : null;
 
       var insertObj = {
         post_id: postId,
@@ -3475,8 +3385,6 @@
             });
           }, 300);
         }
-      }).catch(function(err) {
-        alert("კომენტარის გაგზავნის შეცდომა: " + err.message);
       });
     }
 
@@ -3996,6 +3904,7 @@
       document.getElementById('avatar-file-input').click();
     }
 
+    // Generic function to upload images directly to ImgBB
     function uploadImageToImgBB(file, callback) {
       let formData = new FormData();
       formData.append("image", file);
@@ -4087,7 +3996,7 @@
           return db.collection('profiles').doc(user.uid).set({
             full_name: fullname,
             language: currentLang,
-            balance: 0,
+            balance: 0, // Default zero balance
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
         }).then(function() {
@@ -4339,10 +4248,10 @@
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
       db.collection('posts').add({
         user_id: currentUser.uid,
-        author_name: authorName || "User",
-        content: text || "",
-        media_url: mediaUrl || null,
-        media_type: mediaType || null,
+        author_name: authorName,
+        content: text,
+        media_url: mediaUrl,
+        media_type: mediaType,
         likes_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
