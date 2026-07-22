@@ -5,12 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
   <title>Emigrantbook</title>
   <link rel="stylesheet" href="supabase1.css">
-  <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      alert("აპლიკაციის შეცდომა!: " + message + "\nხაზი: " + lineno);
-      return false;
-    };
-  </script>
 
   <!-- Firebase App & Services CDN -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -2706,7 +2700,7 @@
           if (doc.exists) {
             userProfile = doc.data();
             finalName = userProfile.full_name || user.email;
-            avatarUrl = userProfile.avatar_url;
+            avatarUrl = userProfile.avatar_url || null;
             
             if(userProfile.language) {
               currentLang = userProfile.language;
@@ -3312,7 +3306,6 @@
       if(bar) bar.style.display = "none";
     }
 
-    // FIXED: Correct memory sorting for comments & safer timestamp resolution
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
       if (!postId) return;
@@ -3332,7 +3325,6 @@
             allItems.push(Object.assign({ id: doc.id }, doc.data()));
           });
 
-          // Sort in memory by created_at safely
           allItems.sort(function(a, b) {
             var timeA = 0;
             if (a.created_at) {
@@ -3420,7 +3412,7 @@
           });
         }).catch(function(error) {
           console.error("Comments error:", error);
-          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას.</div>`;
+          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას: ${error.message}</div>`;
         });
     }
 
@@ -3438,13 +3430,14 @@
         });
     }
 
+    // SAFE FIX FOR SUBMITTING COMMENTS WITHOUT UNDEFINED VALUE ERRORS
     function submitCommentFromModal(postId) {
       var input = document.getElementById('modal-comment-input-field');
       var text = input.value.trim();
       if (!text) return;
 
-      var authorName = userProfile ? userProfile.full_name : currentUser.email;
-      var avatarUrl = userProfile ? userProfile.avatar_url : null;
+      var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
+      var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
 
       var insertObj = {
         post_id: postId,
@@ -3482,6 +3475,8 @@
             });
           }, 300);
         }
+      }).catch(function(err) {
+        alert("კომენტარის გაგზავნის შეცდომა: " + err.message);
       });
     }
 
@@ -4001,7 +3996,6 @@
       document.getElementById('avatar-file-input').click();
     }
 
-    // Generic function to upload images directly to ImgBB
     function uploadImageToImgBB(file, callback) {
       let formData = new FormData();
       formData.append("image", file);
@@ -4093,7 +4087,7 @@
           return db.collection('profiles').doc(user.uid).set({
             full_name: fullname,
             language: currentLang,
-            balance: 0, // Default zero balance
+            balance: 0,
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
         }).then(function() {
@@ -4345,10 +4339,10 @@
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
       db.collection('posts').add({
         user_id: currentUser.uid,
-        author_name: authorName,
-        content: text,
-        media_url: mediaUrl,
-        media_type: mediaType,
+        author_name: authorName || "User",
+        content: text || "",
+        media_url: mediaUrl || null,
+        media_type: mediaType || null,
         likes_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
