@@ -793,7 +793,8 @@
     var currentActiveChatAvatar = "";
     var unsubscribeMessages = null;
     var activeChatUnsubscribes = [];
-    var presenceUnsubscribes = []; // დამატებულია რეალურ დროში სტატუსების მოსასმენად
+    var presenceUnsubscribes = [];
+    var threadProfileUnsubscribe = null; // შიდა ჩატის პროფილის მოსასმენად
 
     function getChatId(u1, u2) {
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
@@ -844,6 +845,31 @@
       let hours = date.getHours().toString().padStart(2, '0');
       let minutes = date.getMinutes().toString().padStart(2, '0');
       return `${hours}:${minutes}`;
+    }
+
+    // ბოლოს აქტიურობის ფორმატირება (Active now / Active 5m ago / Active 2h ago და ა.შ.)
+    function formatLastSeen(lastSeen) {
+      if (!lastSeen) return "Offline";
+      let date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+      let now = new Date();
+      let diffInSeconds = Math.floor((now - date) / 1000);
+
+      if (diffInSeconds < 60) {
+        return "Active now";
+      }
+
+      let diffInMinutes = Math.floor(diffInSeconds / 60);
+      if (diffInMinutes < 60) {
+        return `Active ${diffInMinutes}m ago`;
+      }
+
+      let diffInHours = Math.floor(diffInMinutes / 60);
+      if (diffInHours < 24) {
+        return `Active ${diffInHours}h ago`;
+      }
+
+      let diffInDays = Math.floor(diffInHours / 24);
+      return `Active ${diffInDays}d ago`;
     }
 
     // 1. იღებს მხოლოდ იმ მომხმარებლების ID-ებს, რომლებიც არიან დადასტურებული მეგობრები (status == 'accepted')
@@ -1040,11 +1066,24 @@
       const chatId = getChatId(currentUid, targetUid);
 
       const { doc, onSnapshot } = window.fs;
-      onSnapshot(doc(window.db, 'profiles', targetUid), (docSnap) => {
+
+      if (threadProfileUnsubscribe) threadProfileUnsubscribe();
+
+      // უსმენს სამიზნე მომხმარებლის ონლაინ/ოფლაინ სტატუსსა და ბოლოს აქტიურობის დროს
+      threadProfileUnsubscribe = onSnapshot(doc(window.db, 'profiles', targetUid), (docSnap) => {
         const statusEl = document.getElementById('active-thread-status');
-        if (docSnap.exists() && (docSnap.data().status === 'online' || docSnap.data().presence === 'online')) {
-          statusEl.innerText = "Online";
-          statusEl.style.color = "#31a24c";
+        if (docSnap.exists()) {
+          let uData = docSnap.data();
+          let userStatus = uData.status || uData.presence;
+          let lastSeen = uData.lastSeen || uData.last_seen;
+
+          if (userStatus === 'online') {
+            statusEl.innerText = "Active now";
+            statusEl.style.color = "#31a24c";
+          } else {
+            statusEl.innerText = formatLastSeen(lastSeen);
+            statusEl.style.color = "#8e8e93";
+          }
         } else {
           statusEl.innerText = "Offline";
           statusEl.style.color = "#8e8e93";
@@ -1128,6 +1167,7 @@
 
     function closeChat() {
       if (unsubscribeMessages) unsubscribeMessages();
+      if (threadProfileUnsubscribe) threadProfileUnsubscribe();
       document.getElementById('thread-screen').style.display = 'none';
       document.getElementById('chats-screen').style.display = 'flex';
       currentActiveChatUid = null;
