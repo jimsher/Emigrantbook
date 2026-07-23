@@ -330,7 +330,7 @@
   <!-- Control Panel -->
   <div class="control-panel">
     <div class="status-info-box" id="statusBox">
-      🕒 მომლოდინე რეჟიმი...
+      🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს
     </div>
     <div class="active-users-counter">
       👥 ბორბალზე მონაწილეობს: <strong id="participants-count">0</strong> აქტიური წევრი
@@ -389,10 +389,7 @@
 
         if (state.next_draw_at) {
           let nextDrawTime = state.next_draw_at.toDate ? state.next_draw_at.toDate().getTime() : new Date(state.next_draw_at).getTime();
-          if (now < nextDrawTime) {
-            console.log("⏳ მომდევნო გათამაშებამდე დარჩენილია დრო.");
-            return; 
-          }
+          if (now < nextDrawTime) return; 
         }
 
         db.collection('lottery_participants').doc(userId).set({
@@ -402,11 +399,16 @@
           joined_at: firebase.firestore.FieldValue.serverTimestamp(),
           status: 'active'
         }, { merge: true }).then(() => {
-          db.collection('lottery_state').doc('current').set({
-            status: 'waiting',
-            timer_start: firebase.firestore.FieldValue.serverTimestamp(),
-            started_by: userId
-          }, { merge: true });
+          
+          // 🔥 შესწორებული ლოგიკა: ტაიმერი ირთვება მხოლოდ ერთხელ!
+          // თუ უკვე ლოდინის რეჟიმში ვართ (ანუ 15 წუთი უკვე დაწყებულია), დროს აღარ ვანულებთ.
+          if (state.status !== 'waiting') {
+            db.collection('lottery_state').doc('current').set({
+              status: 'waiting',
+              timer_start: firebase.firestore.FieldValue.serverTimestamp(),
+              started_by: userId
+            }, { merge: true });
+          }
         });
       });
     }
@@ -417,21 +419,28 @@
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
         });
+
+        document.getElementById('participants-count').innerText = rawUsers.length;
+
+        if (rawUsers.length === 0) {
+          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
+          if (timerInterval) clearInterval(timerInterval);
+        }
+
         updateWheelParticipants(rawUsers);
       });
 
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
-
         let data = docSnap.data();
         let now = Date.now();
+        let currentParticipants = parseInt(document.getElementById('participants-count').innerText) || 0;
 
         if (data.status === 'waiting') {
           start15MinTimer(data.timer_start);
         } 
         else if (data.status === 'spinning') {
           if (timerInterval) clearInterval(timerInterval);
-
           const SPIN_DURATION = 7000;
           let elapsed = 0;
           
@@ -455,16 +464,10 @@
         } 
         else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
-          statusBox.innerText = "🏆 გათამაშება დასრულდა!";
-        } 
-        
-        if (data.next_draw_at) {
-          let nextDrawTime = data.next_draw_at.toDate ? data.next_draw_at.toDate().getTime() : new Date(data.next_draw_at).getTime();
-          if (now < nextDrawTime) {
-            let remainingMs = nextDrawTime - now;
-            let hours = Math.floor(remainingMs / (1000 * 60 * 60));
-            let mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-            statusBox.innerText = `⏳ გათამაშება დასრულებულია. შემდეგი: ${hours}სთ და ${mins}წთ-ში`;
+          if (currentParticipants > 0) {
+            statusBox.innerText = "🏆 გათამაშება დასრულდა!";
+          } else {
+            statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
           }
         }
       });
@@ -499,7 +502,6 @@
 
       participants = processedUsers;
 
-      // ვამატებთ "კიდევ სცადეთ"-ს მხოლოდ იმ შემთხვევაში, თუ ვინმე რეალური მონაწილე არის
       if (participants.length > 0) {
         participants.push({
           id: 'try_again',
@@ -509,25 +511,11 @@
         });
       }
 
-      document.getElementById('participants-count').innerText = `${rawUsers.length}`;
-      
-      // თუ 0 მომხმარებელია, ტექსტიც შესაბამისია
-      if (rawUsers.length === 0) {
-        statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-        if (timerInterval) clearInterval(timerInterval);
-      }
-
       preloadAvatars();
     }
 
     function start15MinTimer(startTimestamp) {
-      // თუ არავინაა დამატებული, ტაიმერი არ გვჭირდება
-      if (participants.length === 0) return;
-
-      if (!startTimestamp) {
-        statusBox.innerText = `🔍 შეგროვებულია ${participants.length > 0 ? participants.length - 1 : 0} მონაწილე...`;
-        return;
-      }
+      if (!startTimestamp) return;
       if (timerInterval) clearInterval(timerInterval);
 
       const startTime = startTimestamp.toDate ? startTimestamp.toDate().getTime() : new Date(startTimestamp).getTime();
@@ -537,6 +525,14 @@
         const now = new Date().getTime();
         const remaining = fifteenMinutes - (now - startTime);
 
+        let activeCount = document.getElementById('participants-count').innerText;
+
+        if (activeCount === "0") {
+          clearInterval(timerInterval);
+          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
+          return;
+        }
+
         if (remaining <= 0) {
           clearInterval(timerInterval);
           statusBox.innerText = "⏰ 15 წუთი ამოიწურა! იწყება გათამაშება...";
@@ -544,7 +540,7 @@
         } else {
           const mins = Math.floor(remaining / (1000 * 60));
           const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-          statusBox.innerText = `⏳ თამაში დაიწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${participants.length > 0 ? participants.length - 1 : 0} წევრი)`;
+          statusBox.innerText = `⏳ თამაში დაიწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${activeCount} წევრი)`;
         }
       }, 1000);
     }
@@ -581,7 +577,6 @@
       if (!isSpinning && !animationReq) startIdleRotation();
     }
 
-    // HD 1200x1200px Canvas
     function drawWheel() {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
@@ -589,41 +584,23 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // თუ მონაწილეები არ არიან (ბორბალი ცარიელია)
       if (participants.length === 0) {
-        const emptySlices = 8;
-        const sliceAngle = (2 * Math.PI) / emptySlices;
-        
-        for (let i = 0; i < emptySlices; i++) {
-          const startAngle = currentAngle + i * sliceAngle;
-          const endAngle = startAngle + sliceAngle;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#111115';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(220, 174, 54, 0.4)';
+        ctx.lineWidth = 5;
+        ctx.stroke();
 
-          ctx.beginPath();
-          ctx.moveTo(centerX, centerY);
-          ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-          ctx.closePath();
-          
-          ctx.fillStyle = i % 2 === 0 ? '#1a1a20' : '#111115';
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(220, 174, 54, 0.15)'; // მკრთალი ხაზები
-          ctx.lineWidth = 4;
-          ctx.stroke();
-
-          // პატარა წერტილები ან დიზაინი ცარიელ სექტორებში
-          ctx.save();
-          ctx.translate(centerX, centerY);
-          ctx.rotate(startAngle + sliceAngle / 2);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-          ctx.font = 'bold 30px sans-serif';
-          ctx.textAlign = 'right';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('...', radius * 0.7, 0);
-          ctx.restore();
-        }
-        return; // აქ წყდება ხატვა თუ ცარიელია
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('ბორბალი ცარიელია', centerX, centerY + 80);
+        return; 
       }
 
-      // აქედან გრძელდება სტანდარტული ხატვა თუ არიან მონაწილეები
       const numSlices = participants.length;
       const sliceAngle = (2 * Math.PI) / numSlices;
 
@@ -804,7 +781,6 @@
       isSpinning = false;
       statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
       
-      // როცა ვხურავთ, ბორბალი უკვე გასუფთავებულია ბაზაში და თავისით გახდება "ცარიელი"
       if (!animationReq) startIdleRotation();
     }
 
