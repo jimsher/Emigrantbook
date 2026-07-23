@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Emigrantbook - Live გათამაშება</title>
   
-  <!-- Firebase App & Services CDN -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -31,7 +30,6 @@
       justify-content: space-between;
     }
 
-    /* Top Navigation Header */
     .header-bar {
       width: 100%;
       padding: 15px 20px;
@@ -95,7 +93,6 @@
       text-shadow: 0 0 10px rgba(220, 174, 54, 0.3);
     }
 
-    /* Wheel Container Area */
     .wheel-main-stage {
       flex: 1;
       display: flex;
@@ -107,7 +104,6 @@
       max-width: 550px;
     }
 
-    /* Glowing Outer Ring */
     .wheel-outer-glow {
       position: relative;
       width: 90vw;
@@ -124,7 +120,6 @@
       justify-content: center;
     }
 
-    /* HD Arrow Pointer - 12 საათის პოზიციაზე, დაბლა მიმართული */
     .wheel-pointer {
       position: absolute;
       top: -22px;
@@ -151,14 +146,12 @@
       border-top: 26px solid #ff4d4f;
     }
 
-    /* Canvas Wheel (HD Display) */
     #wheelCanvas {
       width: 100%;
       height: 100%;
       border-radius: 50%;
     }
 
-    /* Wheel Center Cap */
     .wheel-center-cap {
       position: absolute;
       width: 75px;
@@ -179,7 +172,6 @@
       object-fit: contain;
     }
 
-    /* Controls Bar */
     .control-panel {
       width: 100%;
       padding: 20px;
@@ -217,7 +209,6 @@
       color: #dcae36;
     }
 
-    /* Winner Modal Pop-up */
     .winner-modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -305,7 +296,6 @@
 </head>
 <body>
 
-  <!-- Top Bar -->
   <div class="header-bar">
     <button class="back-btn" onclick="window.location.href='index.html'">
       ← უკან
@@ -316,7 +306,6 @@
     </div>
   </div>
 
-  <!-- Main Stage -->
   <div class="wheel-main-stage">
     <div class="wheel-pointer"></div>
     <div class="wheel-outer-glow">
@@ -327,7 +316,6 @@
     </div>
   </div>
 
-  <!-- Control Panel -->
   <div class="control-panel">
     <div class="status-info-box" id="statusBox">
       🔍 ველოდებით მონაწილეებს...
@@ -337,7 +325,6 @@
     </div>
   </div>
 
-  <!-- Winner Modal -->
   <div class="winner-modal-overlay" id="winnerModal">
     <div class="winner-modal-card">
       <div class="winner-avatar-frame" id="winnerAvatarHolder"></div>
@@ -349,7 +336,6 @@
   </div>
 
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -380,7 +366,6 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // ავტორიზებული მომხმარებლის ავტომატური რეგისტრაცია გათამაშებაში
     auth.onAuthStateChanged(user => {
       if (user) {
         registerUserToLottery(user);
@@ -408,6 +393,7 @@
           status: 'active'
         }, { merge: true });
 
+        // 🚀 პირველივე იუზერის შესვლისას ირთვება LIVE პოსტი მთავარ გვერდზე!
         var updateLiveState = db.collection('lottery_state').doc('current').set({
           status: 'active',
           last_updated: firebase.firestore.FieldValue.serverTimestamp()
@@ -419,9 +405,8 @@
       });
     }
 
-    // 1. Realtime სინქრონიზაცია ბაზასთან
     function subscribeToLiveLottery() {
-      // მოსმენა lottery_participants კოლექციიდან
+      // 1. მონაწილეების მოსმენა
       db.collection('lottery_participants').where('status', '==', 'active').limit(4).onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
@@ -430,12 +415,12 @@
 
         updateWheelParticipants(rawUsers);
 
-        // 🚀 ავტომატური ტრიალი: როდესაც 4 მონაწილე შეივსება!
+        // 🚀 როცა შეივსება 4 კაცი -> ავტომატურად იწყება ტრიალი!
         if (rawUsers.length >= 4 && !isSpinning) {
           db.collection('lottery_state').doc('current').get().then(docSnap => {
             let state = docSnap.exists ? docSnap.data() : {};
             if (state.status === 'active') {
-              let totalSlices = rawUsers.length + 1; // +1 კიდევ სცადეთ
+              let totalSlices = rawUsers.length + 1;
               let winningIndex = Math.floor(Math.random() * totalSlices);
 
               db.collection('lottery_state').doc('current').set({
@@ -448,7 +433,7 @@
         }
       });
 
-      // მოსმენა lottery_state კოლექციიდან
+      // 2. სტატუსის მოსმენა
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
         let data = docSnap.data();
@@ -458,7 +443,7 @@
           triggerFastSpin(data.winning_index);
         } else if (data.status === 'finished') {
           statusBox.innerText = "🏆 გათამაშება დასრულდა!";
-        } else if (data.status === 'reset' || data.status === 'active') {
+        } else if (data.status === 'active') {
           if (!isSpinning) {
             statusBox.innerText = `🔍 ველოდებით მონაწილეებს (${participants.length > 0 ? participants.length - 1 : 0}/4)...`;
           }
@@ -495,7 +480,6 @@
 
       participants = processedUsers;
 
-      // ვამატებთ "კიდევ სცადეთ" სექტორს
       participants.push({
         id: 'try_again',
         name: 'კიდევ სცადეთ ❌',
@@ -521,7 +505,6 @@
       if (!isSpinning) startIdleRotation();
     }
 
-    // HD Canvas-ის დახატვა
     function drawWheel() {
       const numSlices = participants.length;
       if (numSlices === 0) return;
@@ -569,7 +552,7 @@
           ctx.fill();
 
           ctx.beginPath();
-          ctx.arc(avatarDist, 0, avatarSize / 2, 0, Math.PI * 2);
+          ctx.arc(avatarDist, 0, avatarSize / 2);
           ctx.closePath();
           ctx.clip();
 
@@ -609,7 +592,6 @@
       animationReq = requestAnimationFrame(startIdleRotation);
     }
 
-    // ზუსტი და გამართული ტრიალის ფუნქცია (10 წამიანი ეფექტური ტრიალი)
     function triggerFastSpin(winningIndex) {
       if (isSpinning || participants.length === 0) return;
       
@@ -623,14 +605,13 @@
       const numSlices = participants.length;
       const sliceAngle = (2 * Math.PI) / numSlices;
       
-      // 12 საათის პოზიციაზე გასაჩერებლად (-90 გრადუსი / -PI/2)
-      const extraRounds = 10; 
+      const extraRounds = 8; 
       const startPos = currentAngle;
       const targetSliceCenter = targetIdx * sliceAngle + sliceAngle / 2;
       const finalAngle = startPos + (extraRounds * 2 * Math.PI) + ( (1.5 * Math.PI) - targetSliceCenter - (startPos % (2 * Math.PI)) );
 
       let startTime = null;
-      const duration = 10000; // 10 წამი ტრიალი
+      const duration = 7000; // 7 წამიანი ტრიალი
 
       function easeOutCubic(t) {
         return 1 - Math.pow(1 - t, 3);
@@ -684,49 +665,23 @@
 
       modal.style.display = 'flex';
 
-      // ბაზაში დაფიქსირება
+      // 🚀 ბაზაში ვინახავთ გამარჯვებულს და ჩაწერის დროს (finished_at)
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
         winner_name: winner.name,
+        winner_avatar: winner.avatar || null,
+        is_try_again: winner.isTryAgain || false,
         finished_at: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
 
-    // 🧹 ფანჯრის დახურვისას მონაწილეების სრული გასუფთავება და რესეტი!
-    async function closeWinnerModal() {
+    function closeWinnerModal() {
       document.getElementById('winnerModal').style.display = 'none';
-      statusBox.innerText = "🧹 იწმინდება მონაცემები...";
-
-      try {
-        // 1. ვშლით ყველა ძველ მონაწილეს ბაზიდან
-        let snapshot = await db.collection('lottery_participants').get();
-        let batch = db.batch();
-        snapshot.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-
-        // 2. ვაახლებთ გათამაშების სტატუსს 'reset'-ზე
-        await db.collection('lottery_state').doc('current').set({
-          status: 'reset',
-          reset_at: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        // 3. ლოკალური მასივის გასუფთავება
-        participants = [];
-        document.getElementById('participants-count').innerText = "0/4";
-        drawWheel();
-
-      } catch (err) {
-        console.error("❌ გასუფთავების შეცდომა:", err);
-      }
-
       isSpinning = false;
       statusBox.innerText = "🔍 ველოდებით ახალ გათამაშებას...";
       startIdleRotation();
     }
 
-    // ჩართვა
     subscribeToLiveLottery();
   </script>
 </body>
