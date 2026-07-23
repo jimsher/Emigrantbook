@@ -365,6 +365,7 @@
     }
 
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
     const canvas = document.getElementById('wheelCanvas');
     const ctx = canvas.getContext('2d');
@@ -381,57 +382,56 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // 1. Realtime სინქრონიზაცია ბაზასთან
-    function subscribeToLiveLottery() {
-      db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
-        if (!docSnap.exists) {
-          statusBox.innerText = "🔍 გათამაშება ჯერ არ არის აქტიური";
-          document.getElementById('participants-count').innerText = "0/4";
-          return;
+    // ავტორიზებული მომხმარებლის ავტომატური რეგისტრაცია გათამაშებაში
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        registerUserToLottery(user);
+      }
+    });
+
+    function registerUserToLottery(user) {
+      db.collection('profiles').doc(user.uid).get().then(docSnap => {
+        let name = user.email;
+        let avatar = null;
+        if (docSnap.exists) {
+          let pData = docSnap.data();
+          name = pData.full_name || user.email;
+          avatar = pData.avatar_url || null;
         }
+
+        return db.collection('lottery_participants').doc(user.uid).set({
+          uid: user.uid,
+          name: name,
+          avatar: avatar,
+          joined_at: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }).catch(err => console.log("Lottery register error:", err));
+    }
+
+    // 1. Realtime სინქრონიზაცია ბაზასთან (ორმაგი შემოწმებით)
+    function subscribeToLiveLottery() {
+      // ა) Realtime მოსმენა lottery_participants კოლექციიდან
+      db.collection('lottery_participants').limit(4).onSnapshot(async snapshot => {
+        let rawUsers = [];
+        snapshot.forEach(doc => {
+          rawUsers.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (rawUsers.length > 0) {
+          updateWheelParticipants(rawUsers);
+        }
+      });
+
+      // ბ) Realtime მოსმენა lottery_state კოლექციიდან
+      db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
+        if (!docSnap.exists) return;
 
         let data = docSnap.data();
         let rawUsers = data.participants || [];
 
-        // რეალური მომხმარებლების მონაცემების გამდიდრება profiles კოლექციიდან
-        let processedUsers = await Promise.all(rawUsers.slice(0, 4).map(async (u) => {
-          let userId = u.uid || u.id;
-          let name = u.name || u.full_name;
-          let avatar = u.avatar || u.avatar_url;
-
-          if ((!name || !avatar) && userId) {
-            try {
-              let pDoc = await db.collection('profiles').doc(userId).get();
-              if (pDoc.exists) {
-                let pData = pDoc.data();
-                if (!name) name = pData.full_name || pData.name || "მომხმარებელი";
-                if (!avatar) avatar = pData.avatar_url || pData.photo;
-              }
-            } catch(e) {
-              console.log("Profile fetch error:", e);
-            }
-          }
-
-          return {
-            id: userId,
-            name: name || "მომხმარებელი",
-            avatar: avatar || null,
-            isTryAgain: false
-          };
-        }));
-
-        participants = processedUsers;
-
-        // ყოველთვის ვამატებთ "კიდევ სცადეთ" სექტორს
-        participants.push({
-          id: 'try_again',
-          name: 'კიდევ სცადეთ ❌',
-          avatar: null,
-          isTryAgain: true
-        });
-
-        document.getElementById('participants-count').innerText = `${rawUsers.length}/4`;
-        preloadAvatars();
+        if (rawUsers.length > 0) {
+          updateWheelParticipants(rawUsers);
+        }
 
         if (data.status === 'waiting') {
           start10MinTimer(data.timer_start);
@@ -444,6 +444,47 @@
           statusBox.innerText = "🏆 გათამაშება დასრულდა!";
         }
       });
+    }
+
+    async function updateWheelParticipants(rawUsers) {
+      let processedUsers = await Promise.all(rawUsers.slice(0, 4).map(async (u) => {
+        let userId = u.uid || u.id;
+        let name = u.name || u.full_name;
+        let avatar = u.avatar || u.avatar_url;
+
+        if ((!name || !avatar) && userId) {
+          try {
+            let pDoc = await db.collection('profiles').doc(userId).get();
+            if (pDoc.exists) {
+              let pData = pDoc.data();
+              if (!name) name = pData.full_name || pData.name || "მომხმარებელი";
+              if (!avatar) avatar = pData.avatar_url || pData.photo;
+            }
+          } catch(e) {
+            console.log("Profile fetch error:", e);
+          }
+        }
+
+        return {
+          id: userId,
+          name: name || "მომხმარებელი",
+          avatar: avatar || null,
+          isTryAgain: false
+        };
+      }));
+
+      participants = processedUsers;
+
+      // ყოველთვის ვამატებთ "კიდევ სცადეთ" სექტორს
+      participants.push({
+        id: 'try_again',
+        name: 'კიდევ სცადეთ ❌',
+        avatar: null,
+        isTryAgain: true
+      });
+
+      document.getElementById('participants-count').innerText = `${rawUsers.length}/4`;
+      preloadAvatars();
     }
 
     function start10MinTimer(startTimestamp) {
