@@ -2742,55 +2742,58 @@
       }
     }
 
-    // REALTIME LIVE LOTTERY POST CONTROLLER
-    function subscribeToLiveLotteryPost() {
-      db.collection('lottery_state').doc('current').onSnapshot(function(docSnap) {
-        var card = document.getElementById('live-lottery-post-card');
-        var statusText = document.getElementById('lottery-live-status');
-        var winnerBox = document.getElementById('lottery-post-winner-box');
-        var winnerName = document.getElementById('lottery-post-winner-name');
-        var timerLbl = document.getElementById('lottery-live-timer');
+    // Firestore-ის რეალურ დროში მოსმენა
+function subscribeToLiveLotteryPost() {
+  db.collection('lottery_state').doc('current').onSnapshot(function(docSnap) {
+    var card = document.getElementById('live-lottery-post-card');
+    var statusText = document.getElementById('lottery-live-status');
+    var winnerBox = document.getElementById('lottery-post-winner-box');
+    var winnerName = document.getElementById('lottery-post-winner-name');
+    var timerLbl = document.getElementById('lottery-live-timer');
 
-        if (!card) return;
+    if (!card) return;
 
-        if (docSnap.exists) {
-          var data = docSnap.data();
+    if (docSnap.exists) {
+      var data = docSnap.data();
 
-          if (data.status === 'active' || data.status === 'spinning') {
-            card.style.display = 'block';
-            winnerBox.style.display = 'none';
-            statusText.innerText = '🎰 სისტემა ავლენს ყველაზე აქტიურ მომხმარებელს!';
-            timerLbl.innerText = 'LIVE ეთერში';
-          } else if (data.status === 'finished' && data.finished_at) {
-            var finishedTime = data.finished_at.toDate ? data.finished_at.toDate().getTime() : new Date(data.finished_at).getTime();
-            var currentTime = new Date().getTime();
-            var diffMinutes = (currentTime - finishedTime) / (1000 * 60);
+      // თუ ბორბალზე პირველივე იუზერი გამოჩნდა და სტატუსი აქტიურია
+      if (data.status === 'active' || data.status === 'spinning') {
+        card.style.display = 'block';
+        winnerBox.style.display = 'none';
+        statusText.innerText = '🎰 სისტემა ავლენს ყველაზე აქტიურ მომხმარებელს!';
+        timerLbl.innerText = 'LIVE ეთერში';
+      } 
+      // თუ დასრულდა - 5 წუთი ინახავს გამარჯვებულის ბარათს Feed-ზე
+      else if (data.status === 'finished' && data.finished_at) {
+        var finishedTime = data.finished_at.toDate ? data.finished_at.toDate().getTime() : new Date(data.finished_at).getTime();
+        var currentTime = new Date().getTime();
+        var diffMinutes = (currentTime - finishedTime) / (1000 * 60);
 
-            if (diffMinutes < 5) {
-              card.style.display = 'block';
-              statusText.innerText = '🏆 გათამაშება დასრულდა!';
-              winnerName.innerText = '🎉 გამარჯვებული: ' + (data.winner_name || 'მომხმარებელი');
-              winnerBox.style.display = 'block';
+        if (diffMinutes < 5) {
+          card.style.display = 'block';
+          statusText.innerText = '🏆 გათამაშება დასრულდა!';
+          winnerName.innerText = '🎉 გამარჯვებული: ' + (data.winner_name || 'მომხმარებელი');
+          winnerBox.style.display = 'block';
 
-              var remainingSecs = Math.max(0, Math.floor((5 * 60 * 1000 - (currentTime - finishedTime)) / 1000));
-              var m = Math.floor(remainingSecs / 60);
-              var s = remainingSecs % 60;
-              timerLbl.innerText = `ქრება: ${m}:${s < 10 ? '0' : ''}${s}`;
+          var remainingSecs = Math.max(0, Math.floor((5 * 60 * 1000 - (currentTime - finishedTime)) / 1000));
+          var m = Math.floor(remainingSecs / 60);
+          var s = remainingSecs % 60;
+          timerLbl.innerText = `ქრება: ${m}:${s < 10 ? '0' : ''}${s}`;
 
-              setTimeout(function() {
-                subscribeToLiveLotteryPost();
-              }, 1000);
-            } else {
-              card.style.display = 'none';
-            }
-          } else {
-            card.style.display = 'none';
-          }
+          setTimeout(function() {
+            subscribeToLiveLotteryPost();
+          }, 1000);
         } else {
           card.style.display = 'none';
         }
-      });
+      } else {
+        card.style.display = 'none';
+      }
+    } else {
+      card.style.display = 'none';
     }
+  });
+}
 
     // Initialize session check for Firebase Auth
     auth.onAuthStateChanged(function(user) {
