@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Emigrantbook - Live გათამაშება</title>
   
+  <!-- Firebase App & Services CDN -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -30,6 +31,7 @@
       justify-content: space-between;
     }
 
+    /* Top Navigation Header */
     .header-bar {
       width: 100%;
       padding: 15px 20px;
@@ -93,6 +95,7 @@
       text-shadow: 0 0 10px rgba(220, 174, 54, 0.3);
     }
 
+    /* Wheel Container Area */
     .wheel-main-stage {
       flex: 1;
       display: flex;
@@ -104,6 +107,7 @@
       max-width: 550px;
     }
 
+    /* Glowing Outer Ring */
     .wheel-outer-glow {
       position: relative;
       width: 90vw;
@@ -120,6 +124,7 @@
       justify-content: center;
     }
 
+    /* HD Arrow Pointer - 12 საათის პოზიციაზე, დაბლა მიმართული */
     .wheel-pointer {
       position: absolute;
       top: -22px;
@@ -146,12 +151,14 @@
       border-top: 26px solid #ff4d4f;
     }
 
+    /* Canvas Wheel (HD Display) */
     #wheelCanvas {
       width: 100%;
       height: 100%;
       border-radius: 50%;
     }
 
+    /* Wheel Center Cap */
     .wheel-center-cap {
       position: absolute;
       width: 75px;
@@ -172,6 +179,7 @@
       object-fit: contain;
     }
 
+    /* Controls Bar */
     .control-panel {
       width: 100%;
       padding: 20px;
@@ -209,6 +217,7 @@
       color: #dcae36;
     }
 
+    /* Winner Modal Pop-up */
     .winner-modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -296,6 +305,7 @@
 </head>
 <body>
 
+  <!-- Top Bar -->
   <div class="header-bar">
     <button class="back-btn" onclick="window.location.href='index.html'">
       ← უკან
@@ -306,9 +316,11 @@
     </div>
   </div>
 
+  <!-- Main Stage -->
   <div class="wheel-main-stage">
     <div class="wheel-pointer"></div>
     <div class="wheel-outer-glow">
+      <!-- 1200x1200px HD resolution for crisp vector drawing -->
       <canvas id="wheelCanvas" width="1200" height="1200"></canvas>
       <div class="wheel-center-cap">
         <img src="logo.png" alt="Logo" onerror="this.src='https://via.placeholder.com/50?text=EB'">
@@ -316,6 +328,7 @@
     </div>
   </div>
 
+  <!-- Control Panel -->
   <div class="control-panel">
     <div class="status-info-box" id="statusBox">
       🔍 ველოდებით მონაწილეებს...
@@ -325,6 +338,7 @@
     </div>
   </div>
 
+  <!-- Winner Modal -->
   <div class="winner-modal-overlay" id="winnerModal">
     <div class="winner-modal-card">
       <div class="winner-avatar-frame" id="winnerAvatarHolder"></div>
@@ -336,6 +350,7 @@
   </div>
 
   <script>
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -362,10 +377,12 @@
     let isSpinning = false;
     let idleRotationSpeed = 0.003;
     let animationReq = null;
+    let timerInterval = null;
 
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
+    // ავტორიზებული მომხმარებლის ავტომატური რეგისტრაცია გათამაშებაში
     auth.onAuthStateChanged(user => {
       if (user) {
         registerUserToLottery(user);
@@ -373,7 +390,10 @@
     });
 
     function registerUserToLottery(user) {
-      if (!user) return;
+      if (!user) {
+        console.error("მომხმარებელი ავტორიზებული არ არის!");
+        return;
+      }
 
       db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
         var userName = user.email;
@@ -393,33 +413,40 @@
           status: 'active'
         }, { merge: true });
 
-        // 🚀 პირველივე იუზერის შესვლისას ირთვება LIVE პოსტი მთავარ გვერდზე!
         var updateLiveState = db.collection('lottery_state').doc('current').set({
           status: 'active',
           last_updated: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         return Promise.all([addParticipant, updateLiveState]);
-      }).catch(function(error) {
+      })
+      .then(function() {
+        console.log("✅ მომხმარებელი დაემატა და მთავარ გვერდზე Live Post ჩაირთო!");
+      })
+      .catch(function(error) {
         console.error("❌ შეცდომა გათამაშებაში დამატებისას:", error);
       });
     }
 
+    // 1. Realtime სინქრონიზაცია ბაზასთან (ორმაგი შემოწმებით + ავტომატური ტრიალის გაშვებით)
     function subscribeToLiveLottery() {
-      // 1. მონაწილეების მოსმენა
+      // ა) Realtime მოსმენა lottery_participants კოლექციიდან
       db.collection('lottery_participants').where('status', '==', 'active').limit(4).onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
         });
 
-        updateWheelParticipants(rawUsers);
+        if (rawUsers.length > 0) {
+          updateWheelParticipants(rawUsers);
+        }
 
-        // 🚀 როცა შეივსება 4 კაცი -> ავტომატურად იწყება ტრიალი!
+        // 🚀 ავტომატური ტრიალი: როდესაც 4 მონაწილე შეივსება!
         if (rawUsers.length >= 4 && !isSpinning) {
           db.collection('lottery_state').doc('current').get().then(docSnap => {
             let state = docSnap.exists ? docSnap.data() : {};
-            if (state.status === 'active') {
+            if (state.status !== 'spinning' && state.status !== 'finished') {
+              // ირჩევა შემთხვევითი გამარჯვებული (4 მონაწილე + 1 "კიდევ სცადეთ" სექტორი = 5 სექტორი)
               let totalSlices = rawUsers.length + 1;
               let winningIndex = Math.floor(Math.random() * totalSlices);
 
@@ -433,27 +460,31 @@
         }
       });
 
-      // 2. სტატუსის მოსმენა
+      // ბ) Realtime მოსმენა lottery_state კოლექციიდან
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
-        let data = docSnap.data();
 
-        if (data.status === 'spinning' && !isSpinning) {
-          statusBox.innerText = "⚡ გათამაშება მიმდინარეობს...";
-          triggerFastSpin(data.winning_index);
+        let data = docSnap.data();
+        let rawUsers = data.participants || [];
+
+        if (rawUsers.length > 0) {
+          updateWheelParticipants(rawUsers);
+        }
+
+        if (data.status === 'waiting') {
+          start10MinTimer(data.timer_start);
+        } else if (data.status === 'spinning' && !isSpinning) {
+          if (timerInterval) clearInterval(timerInterval);
+          statusBox.innerText = "⚡ გათამაშება მიმდინარეობს (1 წთ)...";
+          trigger1MinuteSpin(data.winning_index);
         } else if (data.status === 'finished') {
+          if (timerInterval) clearInterval(timerInterval);
           statusBox.innerText = "🏆 გათამაშება დასრულდა!";
-        } else if (data.status === 'active') {
-          if (!isSpinning) {
-            statusBox.innerText = `🔍 ველოდებით მონაწილეებს (${participants.length > 0 ? participants.length - 1 : 0}/4)...`;
-          }
         }
       });
     }
 
     async function updateWheelParticipants(rawUsers) {
-      if (isSpinning) return;
-
       let processedUsers = await Promise.all(rawUsers.slice(0, 4).map(async (u) => {
         let userId = u.uid || u.user_id || u.id;
         let name = u.name || u.full_name;
@@ -467,7 +498,9 @@
               if (!name) name = pData.full_name || pData.name || "მომხმარებელი";
               if (!avatar) avatar = pData.avatar_url || pData.photo;
             }
-          } catch(e) {}
+          } catch(e) {
+            console.log("Profile fetch error:", e);
+          }
         }
 
         return {
@@ -480,6 +513,7 @@
 
       participants = processedUsers;
 
+      // ყოველთვის ვამატებთ "კიდევ სცადეთ" სექტორს
       participants.push({
         id: 'try_again',
         name: 'კიდევ სცადეთ ❌',
@@ -489,6 +523,31 @@
 
       document.getElementById('participants-count').innerText = `${rawUsers.length}/4`;
       preloadAvatars();
+    }
+
+    function start10MinTimer(startTimestamp) {
+      if (!startTimestamp) {
+        statusBox.innerText = `🔍 შეგროვებულია ${participants.length - 1}/4 მონაწილე...`;
+        return;
+      }
+      if (timerInterval) clearInterval(timerInterval);
+
+      const startTime = startTimestamp.toDate ? startTimestamp.toDate().getTime() : new Date(startTimestamp).getTime();
+      const tenMinutes = 10 * 60 * 1000;
+
+      timerInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const remaining = tenMinutes - (now - startTime);
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          statusBox.innerText = "⏰ 10 წუთი ამოიწურა! იწყება გათამაშება...";
+        } else {
+          const mins = Math.floor(remaining / (1000 * 60));
+          const secs = Math.floor((remaining % (1000 * 60)) / 1000);
+          statusBox.innerText = `⏳ იწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${participants.length - 1}/4 წევრი)`;
+        }
+      }, 1000);
     }
 
     function preloadAvatars() {
@@ -505,6 +564,7 @@
       if (!isSpinning) startIdleRotation();
     }
 
+    // HD 1200x1200px Canvas-ის დახატვა
     function drawWheel() {
       const numSlices = participants.length;
       if (numSlices === 0) return;
@@ -521,6 +581,7 @@
         const endAngle = startAngle + sliceAngle;
         const p = participants[i];
 
+        // სექტორის ფონი
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
@@ -536,6 +597,7 @@
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + sliceAngle / 2);
 
+        // HD ავატარი / ემოჯი
         const avatarSize = 85;
         const avatarDist = radius * 0.68;
 
@@ -546,13 +608,14 @@
           ctx.textBaseline = 'middle';
           ctx.fillText('❌', avatarDist, 0);
         } else {
+          // ავატარის ოქროსფერი რგოლი (HD Border)
           ctx.beginPath();
           ctx.arc(avatarDist, 0, avatarSize / 2 + 3, 0, Math.PI * 2);
           ctx.fillStyle = '#dcae36';
           ctx.fill();
 
           ctx.beginPath();
-          ctx.arc(avatarDist, 0, avatarSize / 2);
+          ctx.arc(avatarDist, 0, avatarSize / 2, 0, Math.PI * 2);
           ctx.closePath();
           ctx.clip();
 
@@ -571,6 +634,7 @@
         }
         ctx.restore();
 
+        // HD მსხვილი სახელი
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + sliceAngle / 2);
@@ -592,7 +656,8 @@
       animationReq = requestAnimationFrame(startIdleRotation);
     }
 
-    function triggerFastSpin(winningIndex) {
+    // 60-წამიანი ჩქარი ტრიალი
+    function trigger1MinuteSpin(winningIndex) {
       if (isSpinning || participants.length === 0) return;
       
       isSpinning = true;
@@ -602,33 +667,30 @@
         ? winningIndex 
         : Math.floor(Math.random() * participants.length);
 
-      const numSlices = participants.length;
-      const sliceAngle = (2 * Math.PI) / numSlices;
-      
-      const extraRounds = 8; 
-      const startPos = currentAngle;
-      const targetSliceCenter = targetIdx * sliceAngle + sliceAngle / 2;
-      const finalAngle = startPos + (extraRounds * 2 * Math.PI) + ( (1.5 * Math.PI) - targetSliceCenter - (startPos % (2 * Math.PI)) );
+      const sliceAngle = (2 * Math.PI) / participants.length;
+      const extraRounds = 45;
+      const targetSliceOffset = (1.5 * Math.PI) - (targetIdx * sliceAngle + sliceAngle / 2);
+      const targetAngle = currentAngle + (extraRounds * 2 * Math.PI) + targetSliceOffset;
 
-      let startTime = null;
-      const duration = 7000; // 7 წამიანი ტრიალი
+      let start = null;
+      const duration = 60000; // ზუსტად 1 წუთი
 
-      function easeOutCubic(t) {
-        return 1 - Math.pow(1 - t, 3);
+      function easeOutQuad(t) {
+        return t * (2 - t);
       }
 
       function animateSpin(timestamp) {
-        if (!startTime) startTime = timestamp;
-        let elapsed = timestamp - startTime;
-        let progress = Math.min(elapsed / duration, 1);
-
-        let easeProgress = easeOutCubic(progress);
-        currentAngle = startPos + (finalAngle - startPos) * easeProgress;
-        drawWheel();
+        if (!start) start = timestamp;
+        let progress = (timestamp - start) / duration;
 
         if (progress < 1) {
+          let easeProgress = easeOutQuad(progress);
+          currentAngle = currentAngle + (targetAngle - currentAngle) * (easeProgress * 0.015);
+          drawWheel();
           requestAnimationFrame(animateSpin);
         } else {
+          currentAngle = targetAngle;
+          drawWheel();
           announceWinner(participants[targetIdx]);
         }
       }
@@ -665,12 +727,10 @@
 
       modal.style.display = 'flex';
 
-      // 🚀 ბაზაში ვინახავთ გამარჯვებულს და ჩაწერის დროს (finished_at)
+      // ბაზაში გათამაშების დასრულების დაფიქსირება
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
         winner_name: winner.name,
-        winner_avatar: winner.avatar || null,
-        is_try_again: winner.isTryAgain || false,
         finished_at: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
@@ -682,6 +742,7 @@
       startIdleRotation();
     }
 
+    // ჩართვა
     subscribeToLiveLottery();
   </script>
 </body>
