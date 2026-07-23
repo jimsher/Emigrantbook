@@ -389,24 +389,48 @@
       }
     });
 
+    
     function registerUserToLottery(user) {
-      db.collection('profiles').doc(user.uid).get().then(docSnap => {
-        let name = user.email;
-        let avatar = null;
-        if (docSnap.exists) {
-          let pData = docSnap.data();
-          name = pData.full_name || user.email;
-          avatar = pData.avatar_url || null;
-        }
+  if (!user) {
+    console.error("მომხმარებელი ავტორიზებული არ არის!");
+    return;
+  }
 
-        return db.collection('lottery_participants').doc(user.uid).set({
-          uid: user.uid,
-          name: name,
-          avatar: avatar,
-          joined_at: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-      }).catch(err => console.log("Lottery register error:", err));
+  // 1. ამოვიღოთ მომხმარებლის მონაცემები პროფილიდან
+  db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
+    var userName = user.email;
+    var userAvatar = null;
+
+    if (docSnap.exists) {
+      var pData = docSnap.data();
+      userName = pData.full_name || user.email;
+      userAvatar = pData.avatar_url || null;
     }
+
+    // 2. ჩავწეროთ გათამაშების მონაწილეთა კოლექციაში
+    var addParticipant = db.collection('lottery_participants').doc(user.uid).set({
+      user_id: user.uid,
+      full_name: userName,
+      avatar_url: userAvatar,
+      joined_at: firebase.firestore.FieldValue.serverTimestamp(),
+      status: 'active'
+    }, { merge: true });
+
+    // 3. 🚀 განვაახლოთ lottery_state/current, რომ მთავარ გვერდზე Live Post გამოჩნდეს!
+    var updateLiveState = db.collection('lottery_state').doc('current').set({
+      status: 'active',
+      last_updated: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    return Promise.all([addParticipant, updateLiveState]);
+  })
+  .then(function() {
+    console.log("✅ მომხმარებელი დაემატა და მთავარ გვერდზე Live Post ჩაირთო!");
+  })
+  .catch(function(error) {
+    console.error("❌ შეცდომა გათამაშებაში დამატებისას:", error);
+  });
+}
 
     // 1. Realtime სინქრონიზაცია ბაზასთან (ორმაგი შემოწმებით)
     function subscribeToLiveLottery() {
