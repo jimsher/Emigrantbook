@@ -411,6 +411,13 @@
     }
 
     function subscribeToLiveLottery() {
+      // 💡 ავტომატური შემოწმება: თუ current დოკუმენტი საერთოდ არ არსებობს, თავიდან ვქმნით
+      db.collection('lottery_state').doc('current').get().then(docSnap => {
+        if (!docSnap.exists) {
+          db.collection('lottery_state').doc('current').set({ status: 'idle' });
+        }
+      });
+
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
@@ -764,7 +771,6 @@
         next_draw_at: nextDraw
       }, { merge: true });
 
-      // 🔥 სრული გაწმენდა: ძველი მონაწილეების ფიზიკურად წაშლა ბაზიდან
       participants.forEach(p => {
         if(p.id !== 'try_again') {
           db.collection('lottery_participants').doc(p.id).delete().catch(err => console.log("Error deleting:", err));
