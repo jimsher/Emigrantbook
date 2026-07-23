@@ -380,7 +380,7 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // 💡 ფუნქცია: აქტივობის შესრულებისას იუზერის გათამაშებაში დამატება
+    // 💡 ფუნქცია: აქტივობის შესრულებისას იუზერის გათამაშებაში ავტომატურად დამატება
     function addQualifiedUserToLottery(userId, userName, userAvatar) {
       if (!userId) return;
 
@@ -393,11 +393,11 @@
           let nextDrawTime = state.next_draw_at.toDate ? state.next_draw_at.toDate().getTime() : new Date(state.next_draw_at).getTime();
           if (now < nextDrawTime) {
             console.log("⏳ მომდევნო გათამაშებამდე დარჩენილია დრო. მონაწილე არ დაემატება.");
-            return; // პაუზის დროს არ ვამატებთ
+            return; 
           }
         }
 
-        // ვამატებთ მონაწილეს
+        // ავტომატურად ვამატებთ ან ვაახლებთ მონაწილეს lottery_participants კოლექციაში
         db.collection('lottery_participants').doc(userId).set({
           user_id: userId,
           full_name: userName || "მომხმარებელი",
@@ -406,8 +406,6 @@
           status: 'active'
         }, { merge: true }).then(() => {
           
-          // ვაახლებთ სტატუსს. ტაიმერი (timer_start) განახლდება ყოველ ახალ მონაწილეზე!
-          // ეს უზრუნველყოფს იმას, რომ გათამაშება დაიწყება მხოლოდ 15-წუთიანი უმოქმედობის შემდეგ.
           db.collection('lottery_state').doc('current').set({
             status: 'waiting',
             timer_start: firebase.firestore.FieldValue.serverTimestamp(),
@@ -419,6 +417,22 @@
 
     // 1. Realtime სინქრონიზაცია
     function subscribeToLiveLottery() {
+      // 🚀 ავტომატური გამოძახება: როგორც კი იუზერი შემოვა ამ გვერდზე და ავტორიზებულია, ავტომატურად ემატება ბაზაში!
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          db.collection('profiles').doc(user.uid).get().then(doc => {
+            let pData = doc.exists ? doc.data() : {};
+            addQualifiedUserToLottery(
+              user.uid, 
+              pData.full_name || pData.name || user.displayName || "მომხმარებელი", 
+              pData.avatar_url || pData.photo || user.photoURL
+            );
+          }).catch(() => {
+            addQualifiedUserToLottery(user.uid, user.displayName || "მომხმარებელი", user.photoURL);
+          });
+        }
+      });
+
       // ა) მონაწილეების მოსმენა
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
@@ -546,7 +560,6 @@
           clearInterval(timerInterval);
           statusBox.innerText = "⏰ 15 წუთი ამოიწურა! იწყება გათამაშება...";
           
-          // ავტომატურად იწყება ტრიალი ბაზაში
           triggerSpinInDatabase();
         } else {
           const mins = Math.floor(remaining / (1000 * 60));
@@ -766,12 +779,10 @@
         next_draw_at: nextDraw // პაუზა 24 საათით
       }, { merge: true });
 
-      // 🧹 ვასუფთავებთ ბორბალს: ყველა აქტიურ მონაწილეს სტატუსი ეცვლება 'played'-ით
+      // 🧹 ვასუფთავებთ ბორბალს და ვშლით ძველ მონაწილეებს ბაზიდან
       participants.forEach(p => {
         if(p.id !== 'try_again') {
-          db.collection('lottery_participants').doc(p.id).update({ 
-            status: 'played' 
-          }).catch(err => console.log("Error updating status:", err));
+          db.collection('lottery_participants').doc(p.id).delete().catch(err => console.log("Error deleting participant:", err));
         }
       });
     }
