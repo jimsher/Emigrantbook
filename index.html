@@ -2419,6 +2419,57 @@
     var realtimeNotificationsList = [];
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+    var presenceInterval = null;
+
+    /* ---- REALTIME PRESENCE SYSTEM (ONLINE/OFFLINE LOGIC) ---- */
+    function initUserPresence(userId) {
+      if (!userId) return;
+
+      // 1. ყოველ 30 წამში ერთხელ ვანახლებთ last_seen-ს
+      updateUserPresence(userId, true);
+      if (presenceInterval) clearInterval(presenceInterval);
+      presenceInterval = setInterval(function() {
+        updateUserPresence(userId, true);
+      }, 30000);
+
+      // 2. როცა ჩანართი იმალება / გადაირთვება ან იხურება
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden') {
+          updateUserPresence(userId, false);
+        } else {
+          updateUserPresence(userId, true);
+        }
+      });
+
+      // 3. როცა ბრაუზერის ჩანართს საერთოდ ხურავს
+      window.addEventListener('beforeunload', function() {
+        updateUserPresence(userId, false);
+      });
+    }
+
+    function updateUserPresence(userId, isOnline) {
+      if (!userId) return;
+      db.collection('profiles').doc(userId).update({
+        is_online: isOnline,
+        last_seen: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(err) {
+        console.error("Presence update error:", err);
+      });
+    }
+
+    // დამხმარე ფუნქცია - ითვლის არის თუ არა მომხმარებელი რეალურად ონლაინ
+    function isUserOnline(profileData) {
+      if (!profileData) return false;
+      if (profileData.is_online !== true) return false;
+      if (!profileData.last_seen) return false;
+
+      var lastSeenDate = profileData.last_seen.toDate ? profileData.last_seen.toDate() : new Date(profileData.last_seen);
+      var now = new Date();
+      var diffMinutes = (now - lastSeenDate) / (1000 * 60);
+
+      // თუ ბოლო აქტივობიდან 2 წუთზე მეტია გასული, არ ითვლება ონლაინად
+      return diffMinutes < 2;
+    }
 
     function openAkhoInfoModal(event) {
       if(event) event.stopPropagation();
@@ -2800,6 +2851,9 @@
       if (user) {
         currentUser = user;
         activeViewingProfileId = user.uid;
+
+        // 🚀 Online/Presence მექანიზმის ინიციალიზაცია
+        initUserPresence(user.uid);
         
         likedPosts = JSON.parse(localStorage.getItem(user.uid + '_liked_posts_list')) || [];
         postReactionMap = JSON.parse(localStorage.getItem(user.uid + '_post_reaction_map')) || {};
@@ -3133,9 +3187,10 @@
             var reqId = docSnap.id;
             
             db.collection('profiles').doc(req.sender_id).get().then(function(profileDoc) {
-              var senderName = profileDoc.exists ? (profileDoc.data().full_name || "User") : "User";
-              var senderAvatar = profileDoc.exists ? profileDoc.data().avatar_url : null;
-              var isOnline = profileDoc.exists ? (profileDoc.data().is_online === true) : false;
+              var pData = profileDoc.exists ? profileDoc.data() : {};
+              var senderName = pData.full_name || "User";
+              var senderAvatar = pData.avatar_url || null;
+              var isOnline = isUserOnline(pData);
               var initial = senderName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3257,7 +3312,6 @@
         return;
       }
 
-      // STRICTLY MAX 3 FRIENDS LISTED HERE
       var previewDocs = followerDocs.slice(0, 3);
       grid.innerHTML = "";
       
@@ -3270,7 +3324,7 @@
           var profile = profileDoc.data();
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
-          var isOnline = profile.is_online === true;
+          var isOnline = isUserOnline(profile);
           var initial = finalName.charAt(0).toUpperCase();
 
           var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3329,7 +3383,6 @@
             handleConnectionsResult(snapshot, 'receiver_id', listWrapper, countLabel);
           });
       } else if (activeConnectionsType === 'all') {
-        // Fetch BOTH Followers (incoming) AND Following (outgoing) together
         Promise.all([
           db.collection('friend_requests').where('receiver_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get(),
           db.collection('friend_requests').where('sender_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get()
@@ -3337,7 +3390,7 @@
           var followersSnap = results[0];
           var followingSnap = results[1];
           
-          var combinedMap = new Map(); // Store unique connections to avoid duplicates
+          var combinedMap = new Map();
           
           followersSnap.forEach(function(docSnap) {
             var conn = docSnap.data();
@@ -3370,7 +3423,7 @@
 
               var finalName = profile.full_name || "User";
               var avatarUrl = profile.avatar_url;
-              var isOnline = profile.is_online === true;
+              var isOnline = isUserOnline(profile);
               var initial = finalName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3419,7 +3472,7 @@
 
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
-          var isOnline = profile.is_online === true;
+          var isOnline = isUserOnline(profile);
           var initial = finalName.charAt(0).toUpperCase();
 
           var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
@@ -3728,7 +3781,7 @@
         container.innerHTML = "";
         filteredLikers.forEach(function(p) {
           var finalName = p.full_name || "User";
-          var isOnline = p.is_online === true;
+          var isOnline = isUserOnline(p);
           var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
           var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
           
@@ -3820,10 +3873,10 @@
         var avatarUrl = selectedUser.avatar_url;
         var coverUrl = selectedUser.cover_url;
 
-        // Show online status dot on foreign profiles
+        // Show online status dot on foreign profiles ONLY if really online
         var onlineBadge = document.getElementById('profile-online-badge');
         if (onlineBadge) {
-          onlineBadge.style.display = (selectedUser.is_online === true) ? "block" : "none";
+          onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
         }
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
@@ -4135,8 +4188,9 @@
             cachedProfiles = {};
             cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
-              cachedProfiles[pDoc.id] = pDoc.data().avatar_url;
-              cachedOnlineStates[pDoc.id] = pDoc.data().is_online === true;
+              var pData = pDoc.data();
+              cachedProfiles[pDoc.id] = pData.avatar_url;
+              cachedOnlineStates[pDoc.id] = isUserOnline(pData);
             });
 
             posts.forEach(function(post) {
@@ -4307,6 +4361,7 @@
             language: currentLang,
             balance: 0,
             is_online: true,
+            last_seen: firebase.firestore.FieldValue.serverTimestamp(),
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
         }).then(function() {
@@ -4339,8 +4394,9 @@
             cachedProfiles = {};
             cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
-              cachedProfiles[pDoc.id] = pDoc.data().avatar_url;
-              cachedOnlineStates[pDoc.id] = pDoc.data().is_online === true;
+              var pData = pDoc.data();
+              cachedProfiles[pDoc.id] = pData.avatar_url;
+              cachedOnlineStates[pDoc.id] = isUserOnline(pData);
             });
 
             posts.forEach(function(post) {
@@ -4393,7 +4449,7 @@
             }
             var person = likersList[index];
             var name = person.full_name || "User";
-            var isOnline = person.is_online === true;
+            var isOnline = isUserOnline(person);
             var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
             var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
             
@@ -4626,6 +4682,9 @@
     }
 
     function logout() {
+      if (currentUser) {
+        updateUserPresence(currentUser.uid, false);
+      }
       auth.signOut().then(function() {
         localStorage.removeItem('emigrantbook_lang');
         location.reload();
@@ -4717,7 +4776,7 @@
               var author = profilesMap[story.user_id];
               var authorName = author ? author.full_name : "User";
               var authorAvatar = author ? author.avatar_url : null;
-              var isOnline = author ? (author.is_online === true) : false;
+              var isOnline = isUserOnline(author);
               var initial = authorName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
