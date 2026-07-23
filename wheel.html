@@ -380,7 +380,6 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // 💡 ფუნქცია, რომელიც ავტომატურად ამატებს მონაწილეს ბაზაში (lottery_participants)
     function addQualifiedUserToLottery(userId, userName, userAvatar) {
       if (!userId) return;
 
@@ -412,7 +411,6 @@
     }
 
     function subscribeToLiveLottery() {
-      // ავტომატური დამატება გვერდზე შემოსვლისას
       auth.onAuthStateChanged(user => {
         if (user) {
           db.collection('profiles').doc(user.uid).get().then(doc => {
@@ -428,7 +426,6 @@
         }
       });
 
-      // ა) მონაწილეების მოსმენა
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
@@ -438,7 +435,6 @@
         updateWheelParticipants(rawUsers);
       });
 
-      // ბ) სტატუსის მოსმენა
       db.collection('lottery_state').doc('current').onSnapshot(docSnap => {
         if (!docSnap.exists) return;
 
@@ -506,7 +502,6 @@
         };
       });
 
-      // ყოველთვის ვამატებთ "კიდევ სცადეთ" სექტორს
       processedUsers.push({
         id: 'try_again',
         name: 'კიდევ სცადეთ ❌',
@@ -551,7 +546,7 @@
         let state = docSnap.exists ? docSnap.data() : {};
         if (state.status === 'waiting') {
           let totalSlices = participants.length;
-          if (totalSlices <= 1) return; // თუ მხოლოდ 'try_again'-ია, არ ტრიალებს
+          if (totalSlices <= 1) return;
 
           let winningIndex = Math.floor(Math.random() * totalSlices);
 
@@ -568,15 +563,14 @@
       participants.forEach((p) => {
         if (p.avatar && !loadedImages[p.id]) {
           let img = new Image();
-          img.crossOrigin = "anonymous";
-          img.src = p.avatar;
-          img.onload = () => { loadedImages[p.id] = img; drawWheel(); };
+          // CORS-ის პრობლემის თავიდან ასაცილებლად:
           img.onerror = () => { loadedImages[p.id] = null; drawWheel(); };
+          img.onload = () => { loadedImages[p.id] = img; drawWheel(); };
+          img.src = p.avatar;
         }
       });
       drawWheel();
       
-      // უზრუნველყოფს, რომ ბორბალმა მუდმივად ნელა იტრიალოს!
       if (!isSpinning && !animationReq) {
         startIdleRotation();
       }
@@ -599,6 +593,7 @@
         const endAngle = startAngle + sliceAngle;
         const p = participants[i];
 
+        // სექტორის დახატვა
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, startAngle, endAngle);
@@ -610,55 +605,58 @@
         ctx.lineWidth = 5;
         ctx.stroke();
 
+        // ელემენტების (ავატარი და ტექსტი) დახატვა
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + sliceAngle / 2);
 
-        const avatarSize = 85;
-        const avatarDist = radius * 0.68;
+        const avatarSize = 90;
+        const avatarDist = radius * 0.70;
+        const textDist = radius * 0.38;
 
         if (p.isTryAgain) {
           ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 50px sans-serif';
+          ctx.font = 'bold 55px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText('❌', avatarDist, 0);
         } else {
+          const img = loadedImages[p.id];
+          
+          ctx.save();
           ctx.beginPath();
           ctx.arc(avatarDist, 0, avatarSize / 2 + 3, 0, Math.PI * 2);
           ctx.fillStyle = '#dcae36';
           ctx.fill();
 
           ctx.beginPath();
-          ctx.arc(avatarDist, 0, avatarSize / 2);
+          ctx.arc(avatarDist, 0, avatarSize / 2, 0, Math.PI * 2);
           ctx.closePath();
           ctx.clip();
 
-          const img = loadedImages[p.id];
           if (img) {
             ctx.drawImage(img, avatarDist - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
           } else {
             ctx.fillStyle = '#1c1c1e';
             ctx.fillRect(avatarDist - avatarSize / 2, -avatarSize / 2, avatarSize, avatarSize);
             ctx.fillStyle = '#dcae36';
-            ctx.font = 'bold 36px sans-serif';
+            ctx.font = 'bold 38px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(p.name ? p.name.charAt(0).toUpperCase() : 'U', avatarDist, 2);
           }
+          ctx.restore();
         }
-        ctx.restore();
 
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(startAngle + sliceAngle / 2);
-        
+        // სახელის დაწერა ბორბალზე
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
         ctx.shadowBlur = 8;
-        ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(p.name, radius * 0.45, 8);
+        ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.name, textDist, 0);
+
         ctx.restore();
       }
     }
@@ -751,7 +749,6 @@
       let nextDraw = new Date();
       nextDraw.setHours(nextDraw.getHours() + 24);
 
-      // 🚀 ბაზაში ინახება მოგებული და `winner_id`, რომ მთავარი გვერდის ბანერმა ეგრევე დაინახოს!
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
         winner_id: winner.id || null,
@@ -762,7 +759,6 @@
         next_draw_at: nextDraw
       }, { merge: true });
 
-      // ბორბლის გასუფთავება
       participants.forEach(p => {
         if(p.id !== 'try_again') {
           db.collection('lottery_participants').doc(p.id).delete().catch(err => console.log("Error deleting participant:", err));
