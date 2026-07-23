@@ -764,11 +764,12 @@
         next_draw_at: nextDraw
       }, { merge: true });
 
+      // 🔥 სრული გასუფთავება: ძველი მონაწილეების ფიზიკურად წაშლა ბაზიდან!
       participants.forEach(p => {
         if(p.id !== 'try_again') {
-          db.collection('lottery_participants').doc(p.id).update({ 
-            status: 'played' 
-          }).catch(err => console.log("Error updating status:", err));
+          db.collection('lottery_participants').doc(p.id).delete().then(() => {
+            console.log(`მონაწილე ${p.id} წაიშალა ბაზიდან.`);
+          }).catch(err => console.log("შეცდომა წაშლისას:", err));
         }
       });
     }
