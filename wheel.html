@@ -380,7 +380,7 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // 💡 ფუნქცია: აქტივობის შესრულებისას იუზერის გათამაშებაში ავტომატურად დამატება
+    // 💡 ფუნქცია, რომელიც ავტომატურად ამატებს მონაწილეს ბაზაში (lottery_participants) როცა საიტზე აქტივობას ასრულებს
     function addQualifiedUserToLottery(userId, userName, userAvatar) {
       if (!userId) return;
 
@@ -388,16 +388,11 @@
         let state = docSnap.exists ? docSnap.data() : {};
         let now = Date.now();
 
-        // შემოწმება: ხომ არ ვართ 24-საათიან პაუზაში?
         if (state.next_draw_at) {
           let nextDrawTime = state.next_draw_at.toDate ? state.next_draw_at.toDate().getTime() : new Date(state.next_draw_at).getTime();
-          if (now < nextDrawTime) {
-            console.log("⏳ მომდევნო გათამაშებამდე დარჩენილია დრო. მონაწილე არ დაემატება.");
-            return; 
-          }
+          if (now < nextDrawTime) return; 
         }
 
-        // ავტომატურად ვამატებთ ან ვაახლებთ მონაწილეს lottery_participants კოლექციაში
         db.collection('lottery_participants').doc(userId).set({
           user_id: userId,
           full_name: userName || "მომხმარებელი",
@@ -405,35 +400,18 @@
           joined_at: firebase.firestore.FieldValue.serverTimestamp(),
           status: 'active'
         }, { merge: true }).then(() => {
-          
-          db.collection('lottery_state').doc('current').set({
-            status: 'waiting',
-            timer_start: firebase.firestore.FieldValue.serverTimestamp(),
-            started_by: userId
-          }, { merge: true });
+          if (!state.timer_start || state.status !== 'waiting') {
+            db.collection('lottery_state').doc('current').set({
+              status: 'waiting',
+              timer_start: firebase.firestore.FieldValue.serverTimestamp(),
+              started_by: userId
+            }, { merge: true });
+          }
         });
       });
     }
 
-    // 1. Realtime სინქრონიზაცია
     function subscribeToLiveLottery() {
-      // 🚀 ავტომატური გამოძახება: როგორც კი იუზერი შემოვა ამ გვერდზე და ავტორიზებულია, ავტომატურად ემატება ბაზაში!
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          db.collection('profiles').doc(user.uid).get().then(doc => {
-            let pData = doc.exists ? doc.data() : {};
-            addQualifiedUserToLottery(
-              user.uid, 
-              pData.full_name || pData.name || user.displayName || "მომხმარებელი", 
-              pData.avatar_url || pData.photo || user.photoURL
-            );
-          }).catch(() => {
-            addQualifiedUserToLottery(user.uid, user.displayName || "მომხმარებელი", user.photoURL);
-          });
-        }
-      });
-
-      // ა) მონაწილეების მოსმენა
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
@@ -443,23 +421,19 @@
         updateWheelParticipants(rawUsers);
       });
 
-      // ბ) სტატუსის მოსმენა
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
 
         let data = docSnap.data();
         let now = Date.now();
 
-        // 1. 15-წუთიანი ლოდინის რეჟიმი
         if (data.status === 'waiting') {
           start15MinTimer(data.timer_start);
         } 
-        
-        // 2. ტრიალის რეჟიმი
         else if (data.status === 'spinning') {
           if (timerInterval) clearInterval(timerInterval);
 
-          const SPIN_DURATION = 7000; // 7 წამიანი ტრიალი
+          const SPIN_DURATION = 7000;
           let elapsed = 0;
           
           if (data.started_at) {
@@ -480,14 +454,11 @@
             triggerFastSpin(data.winning_index, SPIN_DURATION - elapsed);
           }
         } 
-        
-        // 3. დასრულებული რეჟიმი
         else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
           statusBox.innerText = "🏆 გათამაშება დასრულდა!";
         } 
         
-        // 4. 24-საათიანი პაუზა (მოლოდინი)
         if (data.next_draw_at) {
           let nextDrawTime = data.next_draw_at.toDate ? data.next_draw_at.toDate().getTime() : new Date(data.next_draw_at).getTime();
           if (now < nextDrawTime) {
@@ -529,7 +500,6 @@
 
       participants = processedUsers;
 
-      // ვამატებთ "კიდევ სცადეთ" სექტორს
       participants.push({
         id: 'try_again',
         name: 'კიდევ სცადეთ ❌',
@@ -541,7 +511,6 @@
       preloadAvatars();
     }
 
-    // 15-წუთიანი ტაიმერი
     function start15MinTimer(startTimestamp) {
       if (!startTimestamp) {
         statusBox.innerText = `🔍 შეგროვებულია ${participants.length > 0 ? participants.length - 1 : 0} მონაწილე...`;
@@ -559,7 +528,6 @@
         if (remaining <= 0) {
           clearInterval(timerInterval);
           statusBox.innerText = "⏰ 15 წუთი ამოიწურა! იწყება გათამაშება...";
-          
           triggerSpinInDatabase();
         } else {
           const mins = Math.floor(remaining / (1000 * 60));
@@ -569,7 +537,6 @@
       }, 1000);
     }
 
-    // ტრიალის ინიცირება ბაზაში
     function triggerSpinInDatabase() {
       db.collection('lottery_state').doc('current').get().then(docSnap => {
         let state = docSnap.exists ? docSnap.data() : {};
@@ -602,7 +569,6 @@
       if (!isSpinning) startIdleRotation();
     }
 
-    // HD 1200x1200px Canvas-ის დახატვა
     function drawWheel() {
       const numSlices = participants.length;
       if (numSlices === 0) return;
@@ -765,21 +731,18 @@
 
       modal.style.display = 'flex';
 
-      // ვამატებთ 24 საათიან პაუზას მიმდინარე დროიდან
       let nextDraw = new Date();
       nextDraw.setHours(nextDraw.getHours() + 24);
 
-      // 🚀 ბაზაში ვინახავთ გამარჯვებულს და 24სთ პაუზას
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
         winner_name: winner.name,
         winner_avatar: winner.avatar || null,
         is_try_again: winner.isTryAgain || false,
         finished_at: firebase.firestore.FieldValue.serverTimestamp(),
-        next_draw_at: nextDraw // პაუზა 24 საათით
+        next_draw_at: nextDraw
       }, { merge: true });
 
-      // 🧹 ვასუფთავებთ ბორბალს და ვშლით ძველ მონაწილეებს ბაზიდან
       participants.forEach(p => {
         if(p.id !== 'try_again') {
           db.collection('lottery_participants').doc(p.id).delete().catch(err => console.log("Error deleting participant:", err));
