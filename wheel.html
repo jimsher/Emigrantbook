@@ -124,7 +124,7 @@
       justify-content: center;
     }
 
-    /* HD Arrow Pointer */
+    /* HD Arrow Pointer - 12 საათის პოზიციაზე */
     .wheel-pointer {
       position: absolute;
       top: -22px;
@@ -151,7 +151,7 @@
       border-top: 26px solid #ff4d4f;
     }
 
-    /* Canvas Wheel */
+    /* Canvas Wheel (HD Display) */
     #wheelCanvas {
       width: 100%;
       height: 100%;
@@ -330,7 +330,7 @@
   <!-- Control Panel -->
   <div class="control-panel">
     <div class="status-info-box" id="statusBox">
-      🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს
+      🔍 ველოდებით მონაწილეებს...
     </div>
     <div class="active-users-counter">
       👥 ბორბალზე მონაწილეობს: <strong id="participants-count">0</strong> აქტიური წევრი
@@ -380,6 +380,7 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
+    // 💡 ფუნქცია: აქტივობის შესრულებისას იუზერის გათამაშებაში დამატება
     function addQualifiedUserToLottery(userId, userName, userAvatar) {
       if (!userId) return;
 
@@ -387,11 +388,16 @@
         let state = docSnap.exists ? docSnap.data() : {};
         let now = Date.now();
 
+        // შემოწმება: ხომ არ ვართ 24-საათიან პაუზაში?
         if (state.next_draw_at) {
           let nextDrawTime = state.next_draw_at.toDate ? state.next_draw_at.toDate().getTime() : new Date(state.next_draw_at).getTime();
-          if (now < nextDrawTime) return; 
+          if (now < nextDrawTime) {
+            console.log("⏳ მომდევნო გათამაშებამდე დარჩენილია დრო. მონაწილე არ დაემატება.");
+            return; // პაუზის დროს არ ვამატებთ
+          }
         }
 
+        // ვამატებთ მონაწილეს
         db.collection('lottery_participants').doc(userId).set({
           user_id: userId,
           full_name: userName || "მომხმარებელი",
@@ -399,53 +405,47 @@
           joined_at: firebase.firestore.FieldValue.serverTimestamp(),
           status: 'active'
         }, { merge: true }).then(() => {
-          if (state.status !== 'waiting') {
-            db.collection('lottery_state').doc('current').set({
-              status: 'waiting',
-              timer_start: firebase.firestore.FieldValue.serverTimestamp(),
-              started_by: userId
-            }, { merge: true });
-          }
+          
+          // ვაახლებთ სტატუსს. ტაიმერი (timer_start) განახლდება ყოველ ახალ მონაწილეზე!
+          // ეს უზრუნველყოფს იმას, რომ გათამაშება დაიწყება მხოლოდ 15-წუთიანი უმოქმედობის შემდეგ.
+          db.collection('lottery_state').doc('current').set({
+            status: 'waiting',
+            timer_start: firebase.firestore.FieldValue.serverTimestamp(),
+            started_by: userId
+          }, { merge: true });
         });
       });
     }
 
+    // 1. Realtime სინქრონიზაცია
     function subscribeToLiveLottery() {
-      // 💡 ავტომატური შემოწმება: თუ current დოკუმენტი საერთოდ არ არსებობს, თავიდან ვქმნით
-      db.collection('lottery_state').doc('current').get().then(docSnap => {
-        if (!docSnap.exists) {
-          db.collection('lottery_state').doc('current').set({ status: 'idle' });
-        }
-      });
-
+      // ა) მონაწილეების მოსმენა
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
         });
 
-        document.getElementById('participants-count').innerText = rawUsers.length;
-
-        if (rawUsers.length === 0) {
-          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-          if (timerInterval) clearInterval(timerInterval);
-        }
-
         updateWheelParticipants(rawUsers);
       });
 
+      // ბ) სტატუსის მოსმენა
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
+
         let data = docSnap.data();
         let now = Date.now();
-        let currentParticipants = parseInt(document.getElementById('participants-count').innerText) || 0;
 
+        // 1. 15-წუთიანი ლოდინის რეჟიმი
         if (data.status === 'waiting') {
           start15MinTimer(data.timer_start);
         } 
+        
+        // 2. ტრიალის რეჟიმი
         else if (data.status === 'spinning') {
           if (timerInterval) clearInterval(timerInterval);
-          const SPIN_DURATION = 7000;
+
+          const SPIN_DURATION = 7000; // 7 წამიანი ტრიალი
           let elapsed = 0;
           
           if (data.started_at) {
@@ -466,12 +466,21 @@
             triggerFastSpin(data.winning_index, SPIN_DURATION - elapsed);
           }
         } 
+        
+        // 3. დასრულებული რეჟიმი
         else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
-          if (currentParticipants > 0) {
-            statusBox.innerText = "🏆 გათამაშება დასრულდა!";
-          } else {
-            statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
+          statusBox.innerText = "🏆 გათამაშება დასრულდა!";
+        } 
+        
+        // 4. 24-საათიანი პაუზა (მოლოდინი)
+        if (data.next_draw_at) {
+          let nextDrawTime = data.next_draw_at.toDate ? data.next_draw_at.toDate().getTime() : new Date(data.next_draw_at).getTime();
+          if (now < nextDrawTime) {
+            let remainingMs = nextDrawTime - now;
+            let hours = Math.floor(remainingMs / (1000 * 60 * 60));
+            let mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+            statusBox.innerText = `⏳ მომდევნო გათამაშება დაიწყება ${hours}სთ და ${mins}წთ-ში`;
           }
         }
       });
@@ -506,20 +515,24 @@
 
       participants = processedUsers;
 
-      if (participants.length > 0) {
-        participants.push({
-          id: 'try_again',
-          name: 'კიდევ სცადეთ ❌',
-          avatar: null,
-          isTryAgain: true
-        });
-      }
+      // ვამატებთ "კიდევ სცადეთ" სექტორს
+      participants.push({
+        id: 'try_again',
+        name: 'კიდევ სცადეთ ❌',
+        avatar: null,
+        isTryAgain: true
+      });
 
+      document.getElementById('participants-count').innerText = `${rawUsers.length}`;
       preloadAvatars();
     }
 
+    // 15-წუთიანი ტაიმერი
     function start15MinTimer(startTimestamp) {
-      if (!startTimestamp) return;
+      if (!startTimestamp) {
+        statusBox.innerText = `🔍 შეგროვებულია ${participants.length > 0 ? participants.length - 1 : 0} მონაწილე...`;
+        return;
+      }
       if (timerInterval) clearInterval(timerInterval);
 
       const startTime = startTimestamp.toDate ? startTimestamp.toDate().getTime() : new Date(startTimestamp).getTime();
@@ -529,26 +542,21 @@
         const now = new Date().getTime();
         const remaining = fifteenMinutes - (now - startTime);
 
-        let activeCount = document.getElementById('participants-count').innerText;
-
-        if (activeCount === "0") {
-          clearInterval(timerInterval);
-          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-          return;
-        }
-
         if (remaining <= 0) {
           clearInterval(timerInterval);
           statusBox.innerText = "⏰ 15 წუთი ამოიწურა! იწყება გათამაშება...";
+          
+          // ავტომატურად იწყება ტრიალი ბაზაში
           triggerSpinInDatabase();
         } else {
           const mins = Math.floor(remaining / (1000 * 60));
           const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-          statusBox.innerText = `⏳ თამაში დაიწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${activeCount} წევრი)`;
+          statusBox.innerText = `⏳ გათამაშება იწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${participants.length > 0 ? participants.length - 1 : 0} წევრი)`;
         }
       }, 1000);
     }
 
+    // ტრიალის ინიცირება ბაზაში
     function triggerSpinInDatabase() {
       db.collection('lottery_state').doc('current').get().then(docSnap => {
         let state = docSnap.exists ? docSnap.data() : {};
@@ -578,35 +586,20 @@
         }
       });
       drawWheel();
-      if (!isSpinning && !animationReq) startIdleRotation();
+      if (!isSpinning) startIdleRotation();
     }
 
+    // HD 1200x1200px Canvas-ის დახატვა
     function drawWheel() {
+      const numSlices = participants.length;
+      if (numSlices === 0) return;
+
+      const sliceAngle = (2 * Math.PI) / numSlices;
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = canvas.width / 2 - 20;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (participants.length === 0) {
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = '#111115';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(220, 174, 54, 0.4)';
-        ctx.lineWidth = 5;
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.font = 'bold 26px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('ბორბალი ცარიელია', centerX, centerY + 80);
-        return; 
-      }
-
-      const numSlices = participants.length;
-      const sliceAngle = (2 * Math.PI) / numSlices;
 
       for (let i = 0; i < numSlices; i++) {
         const startAngle = currentAngle + i * sliceAngle;
@@ -759,21 +752,26 @@
 
       modal.style.display = 'flex';
 
+      // ვამატებთ 24 საათიან პაუზას მიმდინარე დროიდან
       let nextDraw = new Date();
       nextDraw.setHours(nextDraw.getHours() + 24);
 
+      // 🚀 ბაზაში ვინახავთ გამარჯვებულს და 24სთ პაუზას
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
         winner_name: winner.name,
         winner_avatar: winner.avatar || null,
         is_try_again: winner.isTryAgain || false,
         finished_at: firebase.firestore.FieldValue.serverTimestamp(),
-        next_draw_at: nextDraw
+        next_draw_at: nextDraw // პაუზა 24 საათით
       }, { merge: true });
 
+      // 🧹 ვასუფთავებთ ბორბალს: ყველა აქტიურ მონაწილეს სტატუსი ეცვლება 'played'-ით
       participants.forEach(p => {
         if(p.id !== 'try_again') {
-          db.collection('lottery_participants').doc(p.id).delete().catch(err => console.log("Error deleting:", err));
+          db.collection('lottery_participants').doc(p.id).update({ 
+            status: 'played' 
+          }).catch(err => console.log("Error updating status:", err));
         }
       });
     }
@@ -781,9 +779,8 @@
     function closeWinnerModal() {
       document.getElementById('winnerModal').style.display = 'none';
       isSpinning = false;
-      statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-      
-      if (!animationReq) startIdleRotation();
+      statusBox.innerText = "🔍 ველოდებით ახალ გათამაშებას...";
+      startIdleRotation();
     }
 
     subscribeToLiveLottery();
