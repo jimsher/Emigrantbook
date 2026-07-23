@@ -373,7 +373,7 @@
     let loadedImages = {};
     let currentAngle = 0;
     let isSpinning = false;
-    let idleRotationSpeed = 0.003;
+    let idleRotationSpeed = 0.005;
     let animationReq = null;
     let timerInterval = null;
 
@@ -412,7 +412,7 @@
     }
 
     function subscribeToLiveLottery() {
-      // 🚀 ავტომატური დამატება: როგორც კი იუზერი შემოვა გვერდზე და ავტორიზებულია, ავტომატურად ემატება ბორბალზე
+      // ავტომატური დამატება გვერდზე შემოსვლისას
       auth.onAuthStateChanged(user => {
         if (user) {
           db.collection('profiles').doc(user.uid).get().then(doc => {
@@ -429,7 +429,7 @@
       });
 
       // ა) მონაწილეების მოსმენა
-      db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
+      db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
@@ -439,7 +439,7 @@
       });
 
       // ბ) სტატუსის მოსმენა
-      db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
+      db.collection('lottery_state').doc('current').onSnapshot(docSnap => {
         if (!docSnap.exists) return;
 
         let data = docSnap.data();
@@ -462,6 +462,7 @@
           if (elapsed >= SPIN_DURATION) {
             if (!isSpinning && data.winner_name) {
               announceWinner({
+                id: data.winner_id,
                 name: data.winner_name,
                 avatar: data.winner_avatar,
                 isTryAgain: data.is_try_again
@@ -489,49 +490,39 @@
       });
     }
 
-    async function updateWheelParticipants(rawUsers) {
+    function updateWheelParticipants(rawUsers) {
       if (isSpinning) return;
 
-      let processedUsers = await Promise.all(rawUsers.map(async (u) => {
-        let userId = u.uid || u.user_id || u.id;
-        let name = u.name || u.full_name;
-        let avatar = u.avatar || u.avatar_url;
-
-        if ((!name || !avatar) && userId) {
-          try {
-            let pDoc = await db.collection('profiles').doc(userId).get();
-            if (pDoc.exists) {
-              let pData = pDoc.data();
-              if (!name) name = pData.full_name || pData.name || "მომხმარებელი";
-              if (!avatar) avatar = pData.avatar_url || pData.photo;
-            }
-          } catch(e) {}
-        }
+      let processedUsers = rawUsers.map(u => {
+        let userId = u.user_id || u.uid || u.id;
+        let name = u.full_name || u.name || "მომხმარებელი";
+        let avatar = u.avatar_url || u.avatar || u.photo || null;
 
         return {
           id: userId,
-          name: name || "მომხმარებელი",
-          avatar: avatar || null,
+          name: name,
+          avatar: avatar,
           isTryAgain: false
         };
-      }));
+      });
 
-      participants = processedUsers;
-
-      participants.push({
+      // ყოველთვის ვამატებთ "კიდევ სცადეთ" სექტორს
+      processedUsers.push({
         id: 'try_again',
         name: 'კიდევ სცადეთ ❌',
         avatar: null,
         isTryAgain: true
       });
 
-      document.getElementById('participants-count').innerText = `${rawUsers.length}`;
+      participants = processedUsers;
+      document.getElementById('participants-count').innerText = rawUsers.length;
+
       preloadAvatars();
     }
 
     function start15MinTimer(startTimestamp) {
       if (!startTimestamp) {
-        statusBox.innerText = `🔍 შეგროვებულია ${participants.length > 0 ? participants.length - 1 : 0} მონაწილე...`;
+        statusBox.innerText = `🔍 შეგროვებულია ${participants.length > 1 ? participants.length - 1 : 0} მონაწილე...`;
         return;
       }
       if (timerInterval) clearInterval(timerInterval);
@@ -550,7 +541,7 @@
         } else {
           const mins = Math.floor(remaining / (1000 * 60));
           const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-          statusBox.innerText = `⏳ გათამაშება იწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${participants.length > 0 ? participants.length - 1 : 0} წევრი)`;
+          statusBox.innerText = `⏳ გათამაშება იწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${participants.length > 1 ? participants.length - 1 : 0} წევრი)`;
         }
       }, 1000);
     }
@@ -560,7 +551,7 @@
         let state = docSnap.exists ? docSnap.data() : {};
         if (state.status === 'waiting') {
           let totalSlices = participants.length;
-          if (totalSlices === 0) return;
+          if (totalSlices <= 1) return; // თუ მხოლოდ 'try_again'-ია, არ ტრიალებს
 
           let winningIndex = Math.floor(Math.random() * totalSlices);
 
@@ -584,22 +575,24 @@
         }
       });
       drawWheel();
-      if (!isSpinning && !animationReq) startIdleRotation();
+      
+      // უზრუნველყოფს, რომ ბორბალმა მუდმივად ნელა იტრიალოს!
+      if (!isSpinning && !animationReq) {
+        startIdleRotation();
+      }
     }
 
     function drawWheel() {
       const numSlices = participants.length;
-      if (numSlices === 0) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        return;
-      }
-
-      const sliceAngle = (2 * Math.PI) / numSlices;
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const radius = canvas.width / 2 - 20;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (numSlices === 0) return;
+
+      const sliceAngle = (2 * Math.PI) / numSlices;
 
       for (let i = 0; i < numSlices; i++) {
         const startAngle = currentAngle + i * sliceAngle;
@@ -681,7 +674,10 @@
       if (isSpinning || participants.length === 0) return;
       
       isSpinning = true;
-      if (animationReq) cancelAnimationFrame(animationReq);
+      if (animationReq) {
+        cancelAnimationFrame(animationReq);
+        animationReq = null;
+      }
 
       const targetIdx = (winningIndex !== undefined && winningIndex < participants.length) 
         ? winningIndex 
@@ -755,8 +751,10 @@
       let nextDraw = new Date();
       nextDraw.setHours(nextDraw.getHours() + 24);
 
+      // 🚀 ბაზაში ინახება მოგებული და `winner_id`, რომ მთავარი გვერდის ბანერმა ეგრევე დაინახოს!
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
+        winner_id: winner.id || null,
         winner_name: winner.name,
         winner_avatar: winner.avatar || null,
         is_try_again: winner.isTryAgain || false,
@@ -764,6 +762,7 @@
         next_draw_at: nextDraw
       }, { merge: true });
 
+      // ბორბლის გასუფთავება
       participants.forEach(p => {
         if(p.id !== 'try_again') {
           db.collection('lottery_participants').doc(p.id).delete().catch(err => console.log("Error deleting participant:", err));
