@@ -399,29 +399,27 @@
           joined_at: firebase.firestore.FieldValue.serverTimestamp(),
           status: 'active'
         }, { merge: true }).then(() => {
-          
-          // 🔥 შესწორებული ლოგიკა: ტაიმერი ირთვება მხოლოდ ერთხელ!
-          // თუ უკვე ლოდინის რეჟიმში ვართ (ანუ 15 წუთი უკვე დაწყებულია), დროს აღარ ვანულებთ.
-          if (state.status !== 'waiting') {
-            db.collection('lottery_state').doc('current').set({
-              status: 'waiting',
-              timer_start: firebase.firestore.FieldValue.serverTimestamp(),
-              started_by: userId
-            }, { merge: true });
-          }
+          db.collection('lottery_state').doc('current').set({
+            status: 'waiting',
+            timer_start: firebase.firestore.FieldValue.serverTimestamp(),
+            started_by: userId
+          }, { merge: true });
         });
       });
     }
 
     function subscribeToLiveLottery() {
+      // 1. ვუსმენთ იუზერებს და მყისიერად ვაახლებთ HTML-ს!
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
         });
 
+        // 🔥 მყისიერი განახლება ეკრანზე
         document.getElementById('participants-count').innerText = rawUsers.length;
 
+        // თუ არავინაა, ეგრევე ვაბრუნებთ მომლოდინე რეჟიმს
         if (rawUsers.length === 0) {
           statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
           if (timerInterval) clearInterval(timerInterval);
@@ -430,6 +428,7 @@
         updateWheelParticipants(rawUsers);
       });
 
+      // 2. ვუსმენთ სტატუსს
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
         let data = docSnap.data();
@@ -464,6 +463,7 @@
         } 
         else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
+          // თუ บაზაში 0 ადამიანია, ძველი "დასრულდა" არ უნდა დაიწეროს
           if (currentParticipants > 0) {
             statusBox.innerText = "🏆 გათამაშება დასრულდა!";
           } else {
@@ -525,6 +525,7 @@
         const now = new Date().getTime();
         const remaining = fifteenMinutes - (now - startTime);
 
+        // 🔥 რეალურ დროში ვკითხულობთ HTML-დან მიმდინარე აქტიურ ხალხს!
         let activeCount = document.getElementById('participants-count').innerText;
 
         if (activeCount === "0") {
@@ -584,6 +585,7 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // სუფთა ცარიელი ბორბალი (უშნო ხაზების გარეშე)
       if (participants.length === 0) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
