@@ -389,53 +389,49 @@
       }
     });
 
-    
     function registerUserToLottery(user) {
-  if (!user) {
-    console.error("მომხმარებელი ავტორიზებული არ არის!");
-    return;
-  }
+      if (!user) {
+        console.error("მომხმარებელი ავტორიზებული არ არის!");
+        return;
+      }
 
-  // 1. ამოვიღოთ მომხმარებლის მონაცემები პროფილიდან
-  db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
-    var userName = user.email;
-    var userAvatar = null;
+      db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
+        var userName = user.email;
+        var userAvatar = null;
 
-    if (docSnap.exists) {
-      var pData = docSnap.data();
-      userName = pData.full_name || user.email;
-      userAvatar = pData.avatar_url || null;
+        if (docSnap.exists) {
+          var pData = docSnap.data();
+          userName = pData.full_name || user.email;
+          userAvatar = pData.avatar_url || null;
+        }
+
+        var addParticipant = db.collection('lottery_participants').doc(user.uid).set({
+          user_id: user.uid,
+          full_name: userName,
+          avatar_url: userAvatar,
+          joined_at: firebase.firestore.FieldValue.serverTimestamp(),
+          status: 'active'
+        }, { merge: true });
+
+        var updateLiveState = db.collection('lottery_state').doc('current').set({
+          status: 'active',
+          last_updated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        return Promise.all([addParticipant, updateLiveState]);
+      })
+      .then(function() {
+        console.log("✅ მომხმარებელი დაემატა და მთავარ გვერდზე Live Post ჩაირთო!");
+      })
+      .catch(function(error) {
+        console.error("❌ შეცდომა გათამაშებაში დამატებისას:", error);
+      });
     }
 
-    // 2. ჩავწეროთ გათამაშების მონაწილეთა კოლექციაში
-    var addParticipant = db.collection('lottery_participants').doc(user.uid).set({
-      user_id: user.uid,
-      full_name: userName,
-      avatar_url: userAvatar,
-      joined_at: firebase.firestore.FieldValue.serverTimestamp(),
-      status: 'active'
-    }, { merge: true });
-
-    // 3. 🚀 განვაახლოთ lottery_state/current, რომ მთავარ გვერდზე Live Post გამოჩნდეს!
-    var updateLiveState = db.collection('lottery_state').doc('current').set({
-      status: 'active',
-      last_updated: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    return Promise.all([addParticipant, updateLiveState]);
-  })
-  .then(function() {
-    console.log("✅ მომხმარებელი დაემატა და მთავარ გვერდზე Live Post ჩაირთო!");
-  })
-  .catch(function(error) {
-    console.error("❌ შეცდომა გათამაშებაში დამატებისას:", error);
-  });
-}
-
-    // 1. Realtime სინქრონიზაცია ბაზასთან (ორმაგი შემოწმებით)
+    // 1. Realtime სინქრონიზაცია ბაზასთან (ორმაგი შემოწმებით + ავტომატური ტრიალის გაშვებით)
     function subscribeToLiveLottery() {
       // ა) Realtime მოსმენა lottery_participants კოლექციიდან
-      db.collection('lottery_participants').limit(4).onSnapshot(async snapshot => {
+      db.collection('lottery_participants').where('status', '==', 'active').limit(4).onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
@@ -443,6 +439,24 @@
 
         if (rawUsers.length > 0) {
           updateWheelParticipants(rawUsers);
+        }
+
+        // 🚀 ავტომატური ტრიალი: როდესაც 4 მონაწილე შეივსება!
+        if (rawUsers.length >= 4 && !isSpinning) {
+          db.collection('lottery_state').doc('current').get().then(docSnap => {
+            let state = docSnap.exists ? docSnap.data() : {};
+            if (state.status !== 'spinning' && state.status !== 'finished') {
+              // ირჩევა შემთხვევითი გამარჯვებული (4 მონაწილე + 1 "კიდევ სცადეთ" სექტორი = 5 სექტორი)
+              let totalSlices = rawUsers.length + 1;
+              let winningIndex = Math.floor(Math.random() * totalSlices);
+
+              db.collection('lottery_state').doc('current').set({
+                status: 'spinning',
+                winning_index: winningIndex,
+                started_at: firebase.firestore.FieldValue.serverTimestamp()
+              }, { merge: true });
+            }
+          });
         }
       });
 
@@ -472,7 +486,7 @@
 
     async function updateWheelParticipants(rawUsers) {
       let processedUsers = await Promise.all(rawUsers.slice(0, 4).map(async (u) => {
-        let userId = u.uid || u.id;
+        let userId = u.uid || u.user_id || u.id;
         let name = u.name || u.full_name;
         let avatar = u.avatar || u.avatar_url;
 
@@ -712,6 +726,13 @@
       }
 
       modal.style.display = 'flex';
+
+      // ბაზაში გათამაშების დასრულების დაფიქსირება
+      db.collection('lottery_state').doc('current').set({
+        status: 'finished',
+        winner_name: winner.name,
+        finished_at: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
     }
 
     function closeWinnerModal() {
