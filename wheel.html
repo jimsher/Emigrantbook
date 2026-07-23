@@ -382,13 +382,7 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // ავტორიზებული მომხმარებლის ავტომატური რეგისტრაცია გათამაშებაში
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        registerUserToLottery(user);
-      }
-    });
-
+    // 💡 ფუნქცია მომხმარებლის გათამაშებაში დასამატებლად
     function registerUserToLottery(user) {
       if (!user) {
         console.error("მომხმარებელი ავტორიზებული არ არის!");
@@ -421,7 +415,7 @@
         return Promise.all([addParticipant, updateLiveState]);
       })
       .then(function() {
-        console.log("✅ მომხმარებელი დაემატა და მთავარ გვერდზე Live Post ჩაირთო!");
+        console.log("✅ მომხმარებელი დაემატა გათამაშებაში!");
       })
       .catch(function(error) {
         console.error("❌ შეცდომა გათამაშებაში დამატებისას:", error);
@@ -445,7 +439,7 @@
         if (rawUsers.length >= 4 && !isSpinning) {
           db.collection('lottery_state').doc('current').get().then(docSnap => {
             let state = docSnap.exists ? docSnap.data() : {};
-            if (state.status !== 'spinning' && state.status !== 'finished') {
+            if (state.status === 'active') {
               let totalSlices = rawUsers.length + 1; // 4 მონაწილე + 1 "კიდევ სცადეთ"
               let winningIndex = Math.floor(Math.random() * totalSlices);
 
@@ -467,10 +461,31 @@
 
         if (data.status === 'waiting') {
           start10MinTimer(data.timer_start);
-        } else if (data.status === 'spinning' && !isSpinning) {
+        } else if (data.status === 'spinning') {
           if (timerInterval) clearInterval(timerInterval);
-          statusBox.innerText = "⚡ გათამაშება მიმდინარეობს...";
-          triggerFastSpin(data.winning_index);
+
+          // 🛑 გადამოწმება: ტრიალის დრო ხომ არ გასულია?
+          const SPIN_DURATION = 7000; // 7 წამი
+          let elapsed = 0;
+          
+          if (data.started_at) {
+            let startTime = data.started_at.toDate ? data.started_at.toDate().getTime() : new Date(data.started_at).getTime();
+            elapsed = Date.now() - startTime;
+          }
+
+          if (elapsed >= SPIN_DURATION) {
+            // თუ ტრიალის დრო გასულია, თავიდან არ ვატრიალებთ
+            if (!isSpinning && data.winner_name) {
+              announceWinner({
+                name: data.winner_name,
+                avatar: data.winner_avatar,
+                isTryAgain: data.is_try_again
+              });
+            }
+          } else if (!isSpinning) {
+            statusBox.innerText = "⚡ გათამაშება მიმდინარეობს...";
+            triggerFastSpin(data.winning_index, SPIN_DURATION - elapsed);
+          }
         } else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
           statusBox.innerText = "🏆 გათამაშება დასრულდა!";
@@ -656,8 +671,8 @@
       animationReq = requestAnimationFrame(startIdleRotation);
     }
 
-    // ზუსტი ტრიალი
-    function triggerFastSpin(winningIndex) {
+    // ზუსტი ტრიალი დარჩენილი დროის მიხედვით
+    function triggerFastSpin(winningIndex, remainingDuration = 7000) {
       if (isSpinning || participants.length === 0) return;
       
       isSpinning = true;
@@ -676,7 +691,7 @@
       const finalAngle = startPos + (extraRounds * 2 * Math.PI) + ( (1.5 * Math.PI) - targetSliceCenter - (startPos % (2 * Math.PI)) );
 
       let startTime = null;
-      const duration = 7000; // 7 წამიანი ეფექტური ტრიალი
+      const duration = Math.max(remainingDuration, 1000);
 
       function easeOutCubic(t) {
         return 1 - Math.pow(1 - t, 3);
@@ -708,6 +723,8 @@
       const avatarHolder = document.getElementById('winnerAvatarHolder');
       const prizeTag = document.getElementById('winnerPrizeTag');
 
+      if (!winner) return;
+
       if (winner.isTryAgain) {
         titleHolder.innerText = "❌ ვერ გამოვლინდა";
         nameHolder.innerText = "ისარი გაჩერდა: კიდევ სცადეთ!";
@@ -721,7 +738,7 @@
         if (winner.avatar) {
           avatarHolder.innerHTML = `<img src="${winner.avatar}" alt="Winner">`;
         } else {
-          avatarHolder.innerHTML = `<div style="width:100%; height:100%; background:#dcae36; color:#111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center;">${winner.name.charAt(0).toUpperCase()}</div>`;
+          avatarHolder.innerHTML = `<div style="width:100%; height:100%; background:#dcae36; color:#111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center;">${winner.name ? winner.name.charAt(0).toUpperCase() : 'U'}</div>`;
         }
 
         prizeTag.innerText = "🎁 მოიგო: 50 akho ბალანსი";
@@ -730,7 +747,7 @@
 
       modal.style.display = 'flex';
 
-      // 🚀 ბაზაში ვინახავთ გამარჯვებულს და ჩაწერის დროს (finished_at)
+      // 🚀 ბაზაში ვინახავთ გამარჯვებულს
       db.collection('lottery_state').doc('current').set({
         status: 'finished',
         winner_name: winner.name,
