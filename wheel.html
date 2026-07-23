@@ -380,7 +380,7 @@
     const sliceColors = ['#1e1e24', '#2a2415', '#141418', '#382e14', '#1b1b22', '#221d10'];
     const TRY_AGAIN_COLOR = '#b92c2c';
 
-    // 💡 ფუნქცია, რომელიც ავტომატურად ამატებს მონაწილეს ბაზაში (lottery_participants) როცა საიტზე აქტივობას ასრულებს
+    // 💡 ფუნქცია, რომელიც ავტომატურად ამატებს მონაწილეს ბაზაში (lottery_participants)
     function addQualifiedUserToLottery(userId, userName, userAvatar) {
       if (!userId) return;
 
@@ -412,6 +412,23 @@
     }
 
     function subscribeToLiveLottery() {
+      // 🚀 ავტომატური დამატება: როგორც კი იუზერი შემოვა გვერდზე და ავტორიზებულია, ავტომატურად ემატება ბორბალზე
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          db.collection('profiles').doc(user.uid).get().then(doc => {
+            let pData = doc.exists ? doc.data() : {};
+            addQualifiedUserToLottery(
+              user.uid, 
+              pData.full_name || pData.name || user.displayName || "მომხმარებელი", 
+              pData.avatar_url || pData.photo || user.photoURL
+            );
+          }).catch(() => {
+            addQualifiedUserToLottery(user.uid, user.displayName || "მომხმარებელი", user.photoURL);
+          });
+        }
+      });
+
+      // ა) მონაწილეების მოსმენა
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
@@ -421,6 +438,7 @@
         updateWheelParticipants(rawUsers);
       });
 
+      // ბ) სტატუსის მოსმენა
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
 
@@ -566,12 +584,15 @@
         }
       });
       drawWheel();
-      if (!isSpinning) startIdleRotation();
+      if (!isSpinning && !animationReq) startIdleRotation();
     }
 
     function drawWheel() {
       const numSlices = participants.length;
-      if (numSlices === 0) return;
+      if (numSlices === 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
 
       const sliceAngle = (2 * Math.PI) / numSlices;
       const centerX = canvas.width / 2;
@@ -660,7 +681,7 @@
       if (isSpinning || participants.length === 0) return;
       
       isSpinning = true;
-      cancelAnimationFrame(animationReq);
+      if (animationReq) cancelAnimationFrame(animationReq);
 
       const targetIdx = (winningIndex !== undefined && winningIndex < participants.length) 
         ? winningIndex 
