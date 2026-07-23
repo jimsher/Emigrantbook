@@ -389,7 +389,9 @@
 
         if (state.next_draw_at) {
           let nextDrawTime = state.next_draw_at.toDate ? state.next_draw_at.toDate().getTime() : new Date(state.next_draw_at).getTime();
-          if (now < nextDrawTime) return; 
+          if (now < nextDrawTime) {
+            return; 
+          }
         }
 
         db.collection('lottery_participants').doc(userId).set({
@@ -409,31 +411,25 @@
     }
 
     function subscribeToLiveLottery() {
-      // 1. ვუსმენთ იუზერებს და მყისიერად ვაახლებთ HTML-ს!
       db.collection('lottery_participants').where('status', '==', 'active').onSnapshot(async snapshot => {
         let rawUsers = [];
         snapshot.forEach(doc => {
           rawUsers.push({ id: doc.id, ...doc.data() });
         });
-
-        // 🔥 მყისიერი განახლება ეკრანზე
-        document.getElementById('participants-count').innerText = rawUsers.length;
-
-        // თუ არავინაა, ეგრევე ვაბრუნებთ მომლოდინე რეჟიმს
-        if (rawUsers.length === 0) {
-          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-          if (timerInterval) clearInterval(timerInterval);
-        }
-
         updateWheelParticipants(rawUsers);
       });
 
-      // 2. ვუსმენთ სტატუსს
       db.collection('lottery_state').doc('current').onSnapshot(async docSnap => {
         if (!docSnap.exists) return;
         let data = docSnap.data();
         let now = Date.now();
-        let currentParticipants = parseInt(document.getElementById('participants-count').innerText) || 0;
+
+        // ❗️ მთავარი შესწორება: თუ ბორბალი ცარიელია, ძალით ვწერთ მომლოდინე რეჟიმს
+        if (participants.length === 0) {
+          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
+          if (timerInterval) clearInterval(timerInterval);
+          return;
+        }
 
         if (data.status === 'waiting') {
           start15MinTimer(data.timer_start);
@@ -463,13 +459,8 @@
         } 
         else if (data.status === 'finished') {
           if (timerInterval) clearInterval(timerInterval);
-          // თუ บაზაში 0 ადამიანია, ძველი "დასრულდა" არ უნდა დაიწეროს
-          if (currentParticipants > 0) {
-            statusBox.innerText = "🏆 გათამაშება დასრულდა!";
-          } else {
-            statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-          }
-        }
+          statusBox.innerText = "🏆 გათამაშება დასრულდა!";
+        } 
       });
     }
 
@@ -511,11 +502,24 @@
         });
       }
 
+      document.getElementById('participants-count').innerText = `${rawUsers.length}`;
+      
+      // ❗️ მყისიერი განახლება ტექსტის, როცა ბაზა სუფთავდება 0-მდე
+      if (rawUsers.length === 0) {
+        statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
+        if (timerInterval) clearInterval(timerInterval);
+      }
+
       preloadAvatars();
     }
 
     function start15MinTimer(startTimestamp) {
-      if (!startTimestamp) return;
+      if (participants.length === 0) return;
+
+      if (!startTimestamp) {
+        statusBox.innerText = `🔍 შეგროვებულია ${participants.length > 0 ? participants.length - 1 : 0} მონაწილე...`;
+        return;
+      }
       if (timerInterval) clearInterval(timerInterval);
 
       const startTime = startTimestamp.toDate ? startTimestamp.toDate().getTime() : new Date(startTimestamp).getTime();
@@ -525,15 +529,6 @@
         const now = new Date().getTime();
         const remaining = fifteenMinutes - (now - startTime);
 
-        // 🔥 რეალურ დროში ვკითხულობთ HTML-დან მიმდინარე აქტიურ ხალხს!
-        let activeCount = document.getElementById('participants-count').innerText;
-
-        if (activeCount === "0") {
-          clearInterval(timerInterval);
-          statusBox.innerText = "🕒 მომლოდინე რეჟიმი... ველოდებით მონაწილეებს";
-          return;
-        }
-
         if (remaining <= 0) {
           clearInterval(timerInterval);
           statusBox.innerText = "⏰ 15 წუთი ამოიწურა! იწყება გათამაშება...";
@@ -541,7 +536,7 @@
         } else {
           const mins = Math.floor(remaining / (1000 * 60));
           const secs = Math.floor((remaining % (1000 * 60)) / 1000);
-          statusBox.innerText = `⏳ თამაში დაიწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${activeCount} წევრი)`;
+          statusBox.innerText = `⏳ თამაში დაიწყება: ${mins}:${secs < 10 ? '0' : ''}${secs} (${participants.length > 0 ? participants.length - 1 : 0} წევრი)`;
         }
       }, 1000);
     }
@@ -585,13 +580,13 @@
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // სუფთა ცარიელი ბორბალი (უშნო ხაზების გარეშე)
+      // ❗️ სუფთა, ერთიანი ცარიელი ბორბალი (ყოველგვარი უშნო ხაზების გარეშე)
       if (participants.length === 0) {
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = '#111115';
+        ctx.fillStyle = '#111115'; // სუფთა მუქი ფონი
         ctx.fill();
-        ctx.strokeStyle = 'rgba(220, 174, 54, 0.4)';
+        ctx.strokeStyle = 'rgba(220, 174, 54, 0.4)'; // ოქროსფერი კანტი
         ctx.lineWidth = 5;
         ctx.stroke();
 
