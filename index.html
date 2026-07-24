@@ -170,6 +170,70 @@
       }
     }
 
+    /* PWA INSTALL CARD STYLING */
+    .pwa-install-card {
+      background: #181818;
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid rgba(220, 174, 54, 0.35);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .pwa-install-card:hover {
+      border-color: #dcae36;
+      box-shadow: 0 0 20px rgba(220, 174, 54, 0.3);
+      transform: translateY(-2px);
+    }
+    .pwa-install-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pwa-install-icon {
+      width: 42px;
+      height: 42px;
+      background: #000;
+      border-radius: 10px;
+      padding: 5px;
+      border: 1px solid rgba(220, 174, 54, 0.4);
+      object-fit: contain;
+    }
+    .pwa-install-info {
+      text-align: left;
+    }
+    .pwa-install-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .pwa-install-sub {
+      font-size: 11px;
+      color: #aaaaaa;
+      margin-top: 2px;
+    }
+    .pwa-install-action-btn {
+      background: #dcae36;
+      color: #111111;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
     .auth-footer {
       color: #666666;
       font-size: 13px;
@@ -1825,6 +1889,20 @@
       </div>
     </div>
     
+    <!-- PWA INSTALL APP BUTTON -->
+    <div class="pwa-install-card" id="pwa-install-card" onclick="installPWA()">
+      <div class="pwa-install-left">
+        <img src="logo.png" alt="Emigrantbook Logo" class="pwa-install-icon">
+        <div class="pwa-install-info">
+          <div class="pwa-install-title" id="lbl-pwa-title">დააინსტალირე აპლიკაცია</div>
+          <div class="pwa-install-sub" id="lbl-pwa-sub">სწრაფი წვდომა ტელეფონიდან</div>
+        </div>
+      </div>
+      <button class="pwa-install-action-btn">
+        <span>📲</span> <span id="lbl-pwa-btn-text">ინსტალაცია</span>
+      </button>
+    </div>
+
     <div class="auth-footer" id="lbl-auth-footer">
       © 2026 Emigrantbook. ყველა უფლება დაცულია.
     </div>
@@ -1894,7 +1972,7 @@
         <div id="friends-stories-list" style="display: flex; gap: 8px;"></div>
       </div>
 
-      <!-- LOTTERY COMPACT TIMER BANNER (კომპაქტური ბანერი ათვლით) -->
+      <!-- LOTTERY COMPACT TIMER BANNER -->
       <div id="live-lottery-post-card" style="display: block; background: #141414; border: 1px solid #dcae36; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 15px rgba(220, 174, 54, 0.2);">
         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
           <span id="lottery-post-badge" style="background: #dcae36; color: #111; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">⏳ ათვლა</span>
@@ -2363,6 +2441,31 @@
       });
     }
 
+    /* PWA INSTALL EVENT LISTENER */
+    var deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      var card = document.getElementById('pwa-install-card');
+      if (card) card.style.display = 'flex';
+    });
+
+    function installPWA() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the PWA install prompt');
+          }
+          deferredPrompt = null;
+        });
+      } else {
+        alert(currentLang === 'ka' 
+          ? 'აპლიკაციის დასაყენებლად ტელეფონში:\n\n• iOS (Safari): დააჭირეთ გაზიარების ღილაკს (Share) -> აირჩიეთ "Add to Home Screen" (ეკრანზე დამატება).\n\n• Android (Chrome): დააჭირეთ ბრაუზერის 3 წერტილს -> აირჩიეთ "Install app" ან "Add to Home Screen".'
+          : 'To install app on your phone:\n\n• iOS (Safari): Tap Share -> "Add to Home Screen".\n\n• Android (Chrome): Tap 3 dots -> "Install app" or "Add to Home Screen".');
+      }
+    }
+
     function hidePreloader() {
       var preloader = document.getElementById('app-preloader');
       if (preloader && !preloader.classList.contains('fade-out')) {
@@ -2518,6 +2621,7 @@
         selectLang: "🌐 ენის არჩევა / Language",
         balanceTitle: "💳 შიდა ბალანსი", topUp: "+ შევსება",
         liveBtn: "LIVE პირდაპირი ეთერი",
+        pwaTitle: "დააინსტალირე აპლიკაცია", pwaSub: "სწრაფი წვდომა ტელეფონიდან", pwaBtn: "ინსტალაცია",
         authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია."
       },
       en: {
@@ -2546,6 +2650,7 @@
         selectLang: "🌐 Select Language",
         balanceTitle: "💳 Internal Balance", topUp: "+ Top Up",
         liveBtn: "LIVE Stream",
+        pwaTitle: "Install Application", pwaSub: "Quick access on mobile", pwaBtn: "Install",
         authFooter: "© 2026 Emigrantbook. All rights reserved."
       },
       ru: {
@@ -2574,6 +2679,7 @@
         selectLang: "🌐 Выберите язык",
         balanceTitle: "💳 Внутренний баланс", topUp: "+ Пополнить",
         liveBtn: "Прямой эфир LIVE",
+        pwaTitle: "Установить приложение", pwaSub: "Быстрый доступ с телефона", pwaBtn: "Установить",
         authFooter: "© 2026 Emigrantbook. Все права защищены."
       },
       fr: {
@@ -2602,6 +2708,7 @@
         selectLang: "🌐 Choisir la langue",
         balanceTitle: "💳 Solde Interne", topUp: "+ Recharger",
         liveBtn: "Direct LIVE",
+        pwaTitle: "Installer l'application", pwaSub: "Accès rapide sur mobile", pwaBtn: "Installer",
         authFooter: "© 2026 Emigrantbook. Tous droits réservés."
       },
       de: {
@@ -2630,6 +2737,7 @@
         selectLang: "🌐 Sprache auswählen",
         balanceTitle: "💳 Guthaben", topUp: "+ Aufladen",
         liveBtn: "LIVE-Stream",
+        pwaTitle: "App installieren", pwaSub: "Schneller Zugriff auf dem Handy", pwaBtn: "Installieren",
         authFooter: "© 2026 Emigrantbook. Alle Rechte vorbehalten."
       }
     };
@@ -2649,6 +2757,13 @@
       var toggleLink = document.getElementById('toggle-link');
       if(toggleLink) toggleLink.innerText = isLoginMode ? "Create Account" : (lang === 'ka' ? "უკვე გაქვთ ანგარიში? შესვლა" : "Already have an account? Login");
       
+      var pwaTitle = document.getElementById('lbl-pwa-title');
+      if(pwaTitle) pwaTitle.innerText = t.pwaTitle;
+      var pwaSub = document.getElementById('lbl-pwa-sub');
+      if(pwaSub) pwaSub.innerText = t.pwaSub;
+      var pwaBtnText = document.getElementById('lbl-pwa-btn-text');
+      if(pwaBtnText) pwaBtnText.innerText = t.pwaBtn;
+
       var authFooter = document.getElementById('lbl-auth-footer');
       if(authFooter) authFooter.innerText = t.authFooter;
 
@@ -5066,75 +5181,4 @@
               card.className = "story-card friend-story-card";
               card.onclick = function() { openStoryViewer(story, authorName, authorAvatar); };
 
-              card.innerHTML = `
-                <div class="story-badge-avatar">${avatarHtml}</div>
-                ${backgroundHtml}
-                <span class="story-username-label">${authorName}</span>
-              `;
-              listDiv.appendChild(card);
-            });
-          });
-        }).catch(function(error) {
-          console.error("Error loading stories: ", error);
-        });
-    }
-
-    function openStoryViewer(story, username, avatarUrl) {
-      currentViewingStoryObj = story;
-      var modal = document.getElementById('story-viewer-modal');
-      var userSpan = document.getElementById('sv-username');
-      var avatarDiv = document.getElementById('sv-avatar');
-      var mediaContainer = document.getElementById('sv-media-container');
-      var t = TRANSLATIONS[currentLang];
-
-      userSpan.innerText = username;
-      if (avatarUrl) {
-        avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
-      } else {
-        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
-      }
-
-      if (story.media_type === 'video') {
-        mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
-      } else {
-        mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
-      }
-
-      document.getElementById('story-likes-label').innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
-      document.getElementById('story-comment-field').placeholder = t.msgPlaceholder;
-      modal.style.display = "flex";
-    }
-
-    function reactToStory(emoji) {
-      if (!currentViewingStoryObj) return;
-      var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
-      var t = TRANSLATIONS[currentLang];
-      
-      db.collection('stories').doc(currentViewingStoryObj.id)
-        .update({ likes_count: newLikes })
-        .then(function() {
-          currentViewingStoryObj.likes_count = newLikes;
-          document.getElementById('story-likes-label').innerText = `❤️ ${newLikes} ${t.like}`;
-        });
-    }
-
-    function handleStoryCommentKeyPress(event) {
-      if (event.key === 'Enter') submitStoryComment();
-    }
-
-    function submitStoryComment() {
-      var input = document.getElementById('story-comment-field');
-      var text = input.value.trim();
-      if (!text) return;
-      input.value = "";
-    }
-
-    function closeStoryViewer() {
-      var modal = document.getElementById('story-viewer-modal');
-      document.getElementById('sv-media-container').innerHTML = "";
-      modal.style.display = "none";
-      currentViewingStoryObj = null;
-    }
-  </script>
-</body>
-</html>
+              card.innerHTML =Sorry, something went wrong. Please try your request again.
