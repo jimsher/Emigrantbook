@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
   
   <style>
     * {
@@ -2437,6 +2438,40 @@
     var presenceInterval = null;
     var messengerUnsubscribeGroup = []; // მესინჯერის ნოთიფიკაციების მოსასმენად
 
+    // ---- FIREBASE PUSH NOTIFICATION PERMISSION & TOKEN ----
+    function requestNotificationPermission() {
+      if (!currentUser) return;
+      if (!('Notification' in window)) return;
+
+      try {
+        const messaging = firebase.messaging();
+
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            console.log('Notification permission granted.');
+
+            messaging.getToken().then((currentToken) => {
+              if (currentToken) {
+                db.collection('profiles').doc(currentUser.uid).update({
+                  fcm_token: currentToken
+                }).then(() => {
+                  console.log('FCM Token saved to profile successfully!');
+                });
+              } else {
+                console.log('No registration token available.');
+              }
+            }).catch((err) => {
+              console.error('An error occurred while retrieving token: ', err);
+            });
+          } else {
+            console.log('Unable to get permission to notify.');
+          }
+        });
+      } catch (e) {
+        console.warn("Messaging setup skipped or failed: ", e);
+      }
+    }
+
     /* ---- REALTIME PRESENCE SYSTEM (ONLINE/OFFLINE LOGIC) ---- */
     function initUserPresence(userId) {
       if (!userId) return;
@@ -2870,6 +2905,9 @@
 
         // 🚀 Online/Presence მექანიზმის ინიციალიზაცია
         initUserPresence(user.uid);
+
+        // 🔔 Push Notification Permission & FCM Token
+        requestNotificationPermission();
         
         likedPosts = JSON.parse(localStorage.getItem(user.uid + '_liked_posts_list')) || [];
         postReactionMap = JSON.parse(localStorage.getItem(user.uid + '_post_reaction_map')) || {};
