@@ -1,19 +1,25 @@
-// ვერსიის შეცვლით (v1 -> v2) ვაიძულებთ ბრაუზერს ახალი მანიფესტის წაკითხვას
-const CACHE_NAME = 'impact-cache-v2';
+// ქეშის ვერსია - ვცვლით v3-ზე, რომ ბრაუზერმა ძველი ქეში წაშალოს
+const CACHE_NAME = 'emigrantbook-cache-v3';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/logo.png'
+    '/logo.png',
+    '/supabase1.css'
 ];
 
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
+// განახლებული Firebase კონფიგურაცია (emigrantbook-4b7bd)
 firebase.initializeApp({
-    apiKey: "AIzaSyDA1MD_juyLU26Nytxn7kzEcBkpVhS3rbk",
-    projectId: "emigrantbook",
-    appId: "1:138873748174:web:2d4422cdd62cd7e594ee9f"
+    apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+    authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+    projectId: "emigrantbook-4b7bd",
+    storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+    messagingSenderId: "109907338554",
+    appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+    measurementId: "G-MRPP7G4H30"
 });
 
 const messaging = firebase.messaging();
@@ -26,13 +32,13 @@ messaging.onBackgroundMessage(function(payload) {
         self.setAppBadge(1).catch(e => {});
     }
 
-    const notificationTitle = payload.notification ? payload.notification.title : 'Impact';
+    const notificationTitle = payload.notification ? payload.notification.title : 'Emigrantbook';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
         icon: '/logo.png',
         badge: '/logo.png',
         vibrate: [200, 100, 200],
-        tag: 'impact-msg', 
+        tag: 'emigrantbook-msg', 
         renotify: true,
         data: { 
             url: (payload.data && payload.data.url) ? payload.data.url : '/' 
@@ -52,11 +58,11 @@ self.addEventListener('push', function(event) {
         try {
             data = event.data.json();
         } catch (e) {
-            data = { title: 'Impact', body: event.data.text() };
+            data = { title: 'Emigrantbook', body: event.data.text() };
         }
     }
 
-    const title = data.title || (data.notification ? data.notification.title : 'Impact');
+    const title = data.title || (data.notification ? data.notification.title : 'Emigrantbook');
     const options = {
         body: data.body || (data.notification ? data.notification.body : ''),
         icon: '/logo.png',
@@ -99,7 +105,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// 5. გააქტიურება და ძველი ქეშის წაშლა (ეს წაშლის ძველ მანიფესტს)
+// 5. გააქტიურება და ძველი ქეშის წაშლა (წაშლის Impact-ის ძველ ქეშს)
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
