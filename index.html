@@ -2439,38 +2439,45 @@
     var messengerUnsubscribeGroup = []; // მესინჯერის ნოთიფიკაციების მოსასმენად
 
     // ---- FIREBASE PUSH NOTIFICATION PERMISSION & TOKEN ----
-    function requestNotificationPermission() {
-      if (!currentUser) return;
-      if (!('Notification' in window)) return;
+function requestNotificationPermission() {
+  if (!currentUser) return;
+  if (!('Notification' in window)) return;
 
-      try {
-        const messaging = firebase.messaging();
+  try {
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
 
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            console.log('Notification permission granted.');
+        // ჩავამატეთ Service Worker-ის რეგისტრაცია
+        navigator.serviceWorker.register('firebase-messaging-sw.js').then((registration) => {
+          const messaging = firebase.messaging();
 
-            messaging.getToken().then((currentToken) => {
-              if (currentToken) {
-                db.collection('profiles').doc(currentUser.uid).update({
-                  fcm_token: currentToken
-                }).then(() => {
-                  console.log('FCM Token saved to profile successfully!');
-                });
-              } else {
-                console.log('No registration token available.');
-              }
-            }).catch((err) => {
-              console.error('An error occurred while retrieving token: ', err);
-            });
-          } else {
-            console.log('Unable to get permission to notify.');
-          }
+          // getToken-ს გადავეცით დარეგისტრირებული registration
+          messaging.getToken({ serviceWorkerRegistration: registration }).then((currentToken) => {
+            if (currentToken) {
+              db.collection('profiles').doc(currentUser.uid).update({
+                fcm_token: currentToken
+              }).then(() => {
+                console.log('FCM Token saved to profile successfully!');
+              });
+            } else {
+              console.log('No registration token available.');
+            }
+          }).catch((err) => {
+            console.error('An error occurred while retrieving token: ', err);
+          });
+        }).catch((swErr) => {
+          console.error('Service Worker registration failed: ', swErr);
         });
-      } catch (e) {
-        console.warn("Messaging setup skipped or failed: ", e);
+
+      } else {
+        console.log('Unable to get permission to notify.');
       }
-    }
+    });
+  } catch (e) {
+    console.warn("Messaging setup skipped or failed: ", e);
+  }
+}
 
     /* ---- REALTIME PRESENCE SYSTEM (ONLINE/OFFLINE LOGIC) ---- */
     function initUserPresence(userId) {
