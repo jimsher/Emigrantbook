@@ -5181,4 +5181,75 @@
               card.className = "story-card friend-story-card";
               card.onclick = function() { openStoryViewer(story, authorName, authorAvatar); };
 
-              card.innerHTML =Sorry, something went wrong. Please try your request again.
+              card.innerHTML = `
+                <div class="story-badge-avatar">${avatarHtml}</div>
+                ${backgroundHtml}
+                <span class="story-username-label">${authorName}</span>
+              `;
+              listDiv.appendChild(card);
+            });
+          });
+        }).catch(function(error) {
+          console.error("Error loading stories: ", error);
+        });
+    }
+
+    function openStoryViewer(story, username, avatarUrl) {
+      currentViewingStoryObj = story;
+      var modal = document.getElementById('story-viewer-modal');
+      var userSpan = document.getElementById('sv-username');
+      var avatarDiv = document.getElementById('sv-avatar');
+      var mediaContainer = document.getElementById('sv-media-container');
+      var t = TRANSLATIONS[currentLang];
+
+      userSpan.innerText = username;
+      if (avatarUrl) {
+        avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+      } else {
+        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+      }
+
+      if (story.media_type === 'video') {
+        mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
+      } else {
+        mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+      }
+
+      document.getElementById('story-likes-label').innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
+      document.getElementById('story-comment-field').placeholder = t.msgPlaceholder;
+      modal.style.display = "flex";
+    }
+
+    function reactToStory(emoji) {
+      if (!currentViewingStoryObj) return;
+      var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
+      var t = TRANSLATIONS[currentLang];
+      
+      db.collection('stories').doc(currentViewingStoryObj.id)
+        .update({ likes_count: newLikes })
+        .then(function() {
+          currentViewingStoryObj.likes_count = newLikes;
+          document.getElementById('story-likes-label').innerText = `❤️ ${newLikes} ${t.like}`;
+        });
+    }
+
+    function handleStoryCommentKeyPress(event) {
+      if (event.key === 'Enter') submitStoryComment();
+    }
+
+    function submitStoryComment() {
+      var input = document.getElementById('story-comment-field');
+      var text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+    }
+
+    function closeStoryViewer() {
+      var modal = document.getElementById('story-viewer-modal');
+      document.getElementById('sv-media-container').innerHTML = "";
+      modal.style.display = "none";
+      currentViewingStoryObj = null;
+    }
+  </script>
+</body>
+</html>
