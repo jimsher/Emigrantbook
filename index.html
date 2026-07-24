@@ -1380,9 +1380,8 @@
       grid-template-columns: repeat(3, 1fr); 
       gap: 10px; 
       width: 100%;
-      align-items: start;
     }
-    .friend-grid-item { cursor: pointer; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .friend-grid-item { cursor: pointer; width: 100%; }
     .friend-grid-avatar-holder { 
       background: #222222; 
       width: 100%;
@@ -1396,24 +1395,9 @@
       font-weight: bold; 
       margin-bottom: 4px; 
       position: relative;
-      flex-shrink: 0;
     }
     .friend-grid-avatar-holder img { width:100%; height:100%; object-fit: cover; border-radius: 8px; }
-    .friend-grid-name { 
-      font-size: 12px; 
-      font-weight: 600; 
-      text-align: center; 
-      white-space: normal; 
-      word-break: break-word; 
-      line-height: 1.2; 
-      display: -webkit-box; 
-      -webkit-line-clamp: 2; 
-      -webkit-box-orient: vertical; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
-      width: 100%;
-      margin-top: 2px;
-    }
+    .friend-grid-name { font-size: 13px; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .profile-tabs { display: flex; border-top: 1px solid #222222; border-bottom: 1px solid #222222; }
     .tab-button { flex: 1; background: none; border: none; padding: 12px; color: #aaaaaa; font-weight: bold; cursor: pointer; -webkit-user-select: none; user-select: none;}
@@ -1825,7 +1809,7 @@
       <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
 
       <div class="input-group" id="name-group" style="display: none;">
-        <label id="lbl-fullname">სახელი და გვარი</label>
+        <label id="lbl-fullname">სახელი<br>გვარი</label>
         <input type="text" id="fullname" placeholder="სახელი და გვარი">
       </div>
 
@@ -2180,7 +2164,7 @@
       <div class="edit-profile-card">
         <div class="edit-header" id="lbl-edit-header">✏️ პროფილის ინფორმაციის განახლება</div>
         <div class="input-group">
-          <label id="lbl-edit-fullname">სახელი და გვარი</label>
+          <label id="lbl-edit-fullname">სახელი<br>გვარი</label>
           <input type="text" id="edit-fullname" placeholder="გიორგი ბერიძე">
         </div>
         <div class="input-group">
@@ -2514,7 +2498,7 @@
     var TRANSLATIONS = {
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
-        fullname: "სახელი და გვარი", forgotPass: "დაგავიწყდათ პაროლი?",
+        fullname: "სახელი<br>გვარი", forgotPass: "დაგავიწყდათ პაროლი?",
         think: "რაზე ფიქრობთ?", photoVideo: "📷 ფოტო", publish: "გამოქვეყნება",
         createStory: "სიუჟეტის შექმნა", loadingPosts: "პოსტები იტვირთება...",
         emptyWall: "კედელი ცარიელია. დაწერე პირველი პოსტი!", loadingActions: "იტვირთება მომოქმედებები...",
@@ -2542,7 +2526,7 @@
       },
       en: {
         authSubtitle: "Log in to your profile", authSubtitleReg: "Create a new account",
-        fullname: "Full Name", forgotPass: "Forgot password?",
+        fullname: "First Name<br>Last Name", forgotPass: "Forgot password?",
         think: "What's on your mind?", photoVideo: "📷 Photo", publish: "Publish",
         createStory: "Create Story", loadingPosts: "Loading posts...",
         emptyWall: "The wall is empty. Write your first post!", loadingActions: "Loading actions...",
@@ -2570,7 +2554,7 @@
       },
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
-        fullname: "Имя и фамилия", forgotPass: "Забыли пароль?",
+        fullname: "Имя<br>Фамилия", forgotPass: "Забыли пароль?",
         think: "О чем вы думаете?", photoVideo: "📷 Фото", publish: "Опубликовать",
         createStory: "Создать историю", loadingPosts: "Загрузка постов...",
         emptyWall: "Стена пуста. Напишите свой первый пост!", loadingActions: "Загрузка действий...",
@@ -2598,7 +2582,7 @@
       },
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
-        fullname: "Nom complet", forgotPass: "Mot de passe oublié?",
+        fullname: "Prénom<br>Nom", forgotPass: "Mot de passe oublié?",
         think: "Qu'avez-vous en tête?", photoVideo: "📷 Photo", publish: "Publier",
         createStory: "Créer une story", loadingPosts: "Chargement des publications...",
         emptyWall: "Le mur est vide. Érivez votre premier message!", loadingActions: "Chargement...",
@@ -2626,7 +2610,7 @@
       },
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
-        fullname: "Vollständiger Name", forgotPass: "Passwort vergessen?",
+        fullname: "Vorname<br>Nachname", forgotPass: "Passwort vergessen?",
         think: "Was geht Ihnen durch den Kopf?", photoVideo: "📷 Foto", publish: "Veröffentlichen",
         createStory: "Story erstellen", loadingPosts: "Beiträge werden geladen...",
         emptyWall: "Die Pinnwand ist leer. Schreiben Sie Ihren ersten Beitrag!", loadingActions: "Wird geladen...",
@@ -2661,7 +2645,7 @@
       var authSubtitle = document.getElementById('auth-subtitle');
       if(authSubtitle) authSubtitle.innerText = isLoginMode ? t.authSubtitle : t.authSubtitleReg;
       var lblFullname = document.getElementById('lbl-fullname');
-      if(lblFullname) lblFullname.innerText = t.fullname;
+      if(lblFullname) lblFullname.innerHTML = t.fullname;
       var authBtn = document.getElementById('auth-btn');
       if(authBtn) authBtn.innerText = isLoginMode ? "Login" : "Register";
       var forgotPassBtn = document.getElementById('forgot-pass-btn');
@@ -2716,7 +2700,7 @@
       var eHeader = document.getElementById('lbl-edit-header');
       if(eHeader) eHeader.innerText = t.updateInfo;
       var eFn = document.getElementById('lbl-edit-fullname');
-      if(eFn) eFn.innerText = t.fullname;
+      if(eFn) eFn.innerHTML = t.fullname;
       var eAge = document.getElementById('lbl-edit-age');
       if(eAge) eAge.innerText = t.age;
       var eJob = document.getElementById('lbl-edit-job');
