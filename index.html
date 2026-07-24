@@ -2420,6 +2420,7 @@
     var activeFloatingIntervals = {};
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
     var presenceInterval = null;
+    var messengerUnsubscribeGroup = []; // მესინჯერის ნოთიფიკაციების მოსასმენად
 
     /* ---- REALTIME PRESENCE SYSTEM (ONLINE/OFFLINE LOGIC) ---- */
     function initUserPresence(userId) {
@@ -2892,7 +2893,6 @@
           showScreen('home');
             
           checkPendingRequestsCount();
-          checkUnreadMessagesCount();
           subscribeToFriendRequests();
           subscribeToPostsRealtime(); 
           subscribeToGlobalNotifications();
@@ -2976,7 +2976,6 @@
         
       if (currentUser) {
         checkPendingRequestsCount();
-        checkUnreadMessagesCount();
       }
       applyLanguageDOM();
     }
@@ -3007,36 +3006,68 @@
       }
     }
 
+    /* ---- ⚡ REALTIME MESSENGER NOTIFICATION BADGE LOGIC ⚡ ---- */
     function subscribeToMessagesRealtime() {
       if (!currentUser) return;
-      db.collection('messages')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('is_read', '==', false)
-        .onSnapshot(function(snapshot) {
-          checkUnreadMessagesCount();
-        });
-    }
 
-    function checkUnreadMessagesCount() {
-      if (!currentUser) return;
-      db.collection('messages')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('is_read', '==', false)
-        .get()
-        .then(function(snapshot) {
-          var badge = document.getElementById('messenger-badge');
-          if (badge) {
-            var count = snapshot.size;
-            if (count > 0) {
-              badge.innerText = count;
-              badge.style.display = 'flex';
-            } else {
-              badge.style.display = 'none';
-            }
+      // გავასუფთავოთ ძველი მოსმენები
+      messengerUnsubscribeGroup.forEach(unsub => unsub());
+      messengerUnsubscribeGroup = [];
+
+      db.collection('friend_requests')
+        .where('status', '==', 'accepted')
+        .onSnapshot(function(snapshot) {
+          let friendIds = [];
+          snapshot.forEach(docSnap => {
+            let req = docSnap.data();
+            if (req.sender_id === currentUser.uid) friendIds.push(req.receiver_id);
+            else if (req.receiver_id === currentUser.uid) friendIds.push(req.sender_id);
+          });
+
+          // თუ მეგობრები არ ჰყავს, წავშალოთ ნოთიფიკაცია
+          if (friendIds.length === 0) {
+            var badge = document.getElementById('messenger-badge');
+            if (badge) badge.style.display = 'none';
+            return;
           }
-        })
-        .catch(function(err) {
-          console.error("Unread messages check error:", err);
+
+          let unreadChatsMap = {};
+
+          friendIds.forEach(fId => {
+            let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
+            
+            let unsub = db.collection('chats').doc(chatId).collection('messages')
+              .where('read', '==', false)
+              .onSnapshot(function(msgsSnap) {
+                let unreadCountFromFriend = 0;
+                msgsSnap.forEach(msgDoc => {
+                  if (msgDoc.data().senderId !== currentUser.uid) {
+                    unreadCountFromFriend++;
+                  }
+                });
+
+                if (unreadCountFromFriend > 0) {
+                  unreadChatsMap[fId] = true;
+                } else {
+                  delete unreadChatsMap[fId];
+                }
+
+                let totalUnreadChats = Object.keys(unreadChatsMap).length;
+                var badge = document.getElementById('messenger-badge');
+                if (badge) {
+                  if (totalUnreadChats > 0) {
+                    badge.innerText = totalUnreadChats;
+                    badge.style.display = 'flex';
+                  } else {
+                    badge.style.display = 'none';
+                  }
+                }
+              }, function(err) {
+                console.error("Messages listener error:", err);
+              });
+
+            messengerUnsubscribeGroup.push(unsub);
+          });
         });
     }
 
