@@ -1800,7 +1800,7 @@
 
   <input type="file" id="avatar-file-input" accept="image/*" style="display: none;" onchange="uploadAvatar()">
   <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="uploadCover()">
-  <input type="file" id="story-file-input" accept="image/*" style="display: none;" onchange="uploadStory()">
+  <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="uploadStory()">
 
   <div id="auth-screen">
     <div class="auth-container">
@@ -1885,8 +1885,8 @@
         <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
         <div class="create-post-actions">
           <div class="file-upload-wrapper">
-            <div class="file-upload-btn" id="lbl-photo-video">📷 ფოტო</div>
-            <input type="file" id="post-media-file" accept="image/*" multiple onchange="showSelectedFileName()">
+            <div class="file-upload-btn" id="lbl-photo-video">📷 ფოტო / 🎥 ვიდეო</div>
+            <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           </div>
           <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">გამოქვეყნება</button>
         </div>
@@ -2387,7 +2387,6 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-
     // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
@@ -2515,7 +2514,7 @@
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
         fullname: "სახელი<br>გვარი", forgotPass: "დაგავიწყდათ პაროლი?",
-        think: "რაზე ფიქრობთ?", photoVideo: "📷 ფოტო", publish: "გამოქვეყნება",
+        think: "რაზე ფიქრობთ?", photoVideo: "📷 ფოტო / 🎥 ვიდეო", publish: "გამოქვეყნება",
         createStory: "სიუჟეტის შექმნა", loadingPosts: "პოსტები იტვირთება...",
         emptyWall: "კედელი ცარიელია. დაწერე პირველი პოსტი!", loadingActions: "იტვირთება მომოქმედებები...",
         loadingDetails: "დეტალები იტვირთება...", miniFriends: "გამომწერი", seeAll: "ყველას ნახვა",
@@ -2543,7 +2542,7 @@
       en: {
         authSubtitle: "Log in to your profile", authSubtitleReg: "Create a new account",
         fullname: "First Name<br>Last Name", forgotPass: "Forgot password?",
-        think: "What's on your mind?", photoVideo: "📷 Photo", publish: "Publish",
+        think: "What's on your mind?", photoVideo: "📷 Photo / 🎥 Video", publish: "Publish",
         createStory: "Create Story", loadingPosts: "Loading posts...",
         emptyWall: "The wall is empty. Write your first post!", loadingActions: "Loading actions...",
         loadingDetails: "Loading details...", miniFriends: "followers", seeAll: "See all",
@@ -2571,7 +2570,7 @@
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
         fullname: "Имя<br>Фамилия", forgotPass: "Забыли пароль?",
-        think: "О чем вы думаете?", photoVideo: "📷 Фото", publish: "Опубликовать",
+        think: "О чем вы думаете?", photoVideo: "📷 Фото / 🎥 Видео", publish: "Опубликовать",
         createStory: "Создать историю", loadingPosts: "Загрузка постов...",
         emptyWall: "Стена пуста. Напишите свой первый пост!", loadingActions: "Загрузка действий...",
         loadingDetails: "Загрузка деталей...", miniFriends: "подписчиков", seeAll: "Посмотреть все",
@@ -2599,7 +2598,7 @@
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
         fullname: "Prénom<br>Nom", forgotPass: "Mot de passe oublié?",
-        think: "Qu'avez-vous en tête?", photoVideo: "📷 Photo", publish: "Publier",
+        think: "Qu'avez-vous en tête?", photoVideo: "📷 Photo / 🎥 Vidéo", publish: "Publier",
         createStory: "Créer une story", loadingPosts: "Chargement des publications...",
         emptyWall: "Le mur est vide. Érivez votre premier message!", loadingActions: "Chargement...",
         loadingDetails: "Chargement des détails...", miniFriends: "abonnés", seeAll: "Voir tout",
@@ -2627,7 +2626,7 @@
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
         fullname: "Vorname<br>Nachname", forgotPass: "Passwort vergessen?",
-        think: "Was geht Ihnen durch den Kopf?", photoVideo: "📷 Foto", publish: "Veröffentlichen",
+        think: "Was geht Ihnen durch den Kopf?", photoVideo: "📷 Foto / 🎥 Video", publish: "Veröffentlichen",
         createStory: "Story erstellen", loadingPosts: "Beiträge werden geladen...",
         emptyWall: "Die Pinnwand ist leer. Schreiben Sie Ihren ersten Beitrag!", loadingActions: "Wird geladen...",
         loadingDetails: "Details werden geladen...", miniFriends: "Abonnenten", seeAll: "Alle anzeigen",
@@ -3099,7 +3098,7 @@
               if (newPost.user_id !== currentUser.uid) {
                 var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
                 if (newPost.media_url) {
-                  type = currentLang === 'ka' ? "ახალი სურათი" : "new photo";
+                  type = (newPost.media_type === 'video' ? (currentLang === 'ka' ? "ახალი ვიდეო" : "new video") : (currentLang === 'ka' ? "ახალი სურათი" : "new photo"));
                 }
                 var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
                 realtimeNotificationsList.unshift({
@@ -3972,7 +3971,7 @@
       } else if (tabName === 'videos') {
         document.getElementById('tab-btn-videos').classList.add('active');
         document.getElementById('profile-photos-wall').style.display = 'block';
-        document.getElementById('profile-photos-wall').innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">ვიდეოები ხელმიუწვდომელია (ImgBB მხარს უჭერს მხოლოდ სურათებს)</div>`;
+        loadUserVideos(targetUserId);
       }
     }
 
@@ -3993,7 +3992,7 @@
           galleryPostsReference = [];
 
           posts.forEach(function(post) {
-            if (post.media_url) {
+            if (post.media_url && post.media_type !== 'video') {
               var urls = post.media_url.split(',');
               urls.forEach(function(url) {
                 var cleanUrl = url.trim();
@@ -4018,6 +4017,147 @@
           
           photosWall.innerHTML = `<div style="padding: 10px 0;">${collageHtml}</div>`;
         });
+    }
+
+    function loadUserVideos(userId) {
+      var photosWall = document.getElementById('profile-photos-wall');
+      var t = TRANSLATIONS[currentLang];
+      photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
+
+      db.collection('posts')
+        .where('user_id', '==', userId)
+        .where('media_type', '==', 'video')
+        .orderBy('created_at', 'desc')
+        .get()
+        .then(function(snapshot) {
+          if (snapshot.empty) {
+            photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noVideos}</div>`;
+            return;
+          }
+
+          activeTiktokVideosList = [];
+          var gridHtml = '<div class="video-grid-full">';
+
+          snapshot.forEach(function(doc) {
+            var vPost = Object.assign({ id: doc.id }, doc.data());
+            activeTiktokVideosList.push(vPost);
+            var idx = activeTiktokVideosList.length - 1;
+
+            gridHtml += `
+              <div class="video-grid-card" onclick="openTiktokVideoModal(${idx})">
+                <video class="video-grid-thumbnail" src="${vPost.media_url}#t=0.5" preload="metadata" muted></video>
+                <div class="video-grid-views">
+                  <span>▶</span>
+                  <span>${vPost.likes_count || 0}</span>
+                </div>
+              </div>
+            `;
+          });
+
+          gridHtml += '</div>';
+          photosWall.innerHTML = `<div style="padding: 10px 0;">${gridHtml}</div>`;
+        }).catch(function(err) {
+          console.error("Videos load error:", err);
+          photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noVideos}</div>`;
+        });
+    }
+
+    function openTiktokVideoModal(startIndex) {
+      var modal = document.getElementById('tiktok-video-modal');
+      var wrapper = document.getElementById('tiktok-slides-wrapper');
+      var t = TRANSLATIONS[currentLang];
+      
+      wrapper.innerHTML = "";
+      modal.style.display = "block";
+
+      activeTiktokVideosList.forEach(function(vid, idx) {
+        var hasLiked = likedPosts.includes(vid.id);
+        var likedClass = hasLiked ? "heart-liked" : "";
+
+        var slide = document.createElement('div');
+        slide.className = "tiktok-slide-item";
+        slide.innerHTML = `
+          <div class="video-container-rel" style="width:100%; height:100%;">
+            <video class="tiktok-slide-video" src="${vid.media_url}" loop playsinline onclick="toggleVideoPlay(this)"></video>
+            
+            <div class="tiktok-floating-avatars-container" id="floating-container-tiktok-${vid.id}"></div>
+
+            <div class="tiktok-side-panel">
+              <div class="tiktok-action-item" onclick="likePost('${vid.id}', true)">
+                <div class="tiktok-icon-circle">
+                  <svg class="${likedClass}" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                </div>
+                <span class="post-likes-count-label" data-post-id="${vid.id}">${vid.likes_count || 0}</span>
+              </div>
+
+              <div class="tiktok-action-item" onclick="openCommentsModal('${vid.id}', ${vid.likes_count || 0})">
+                <div class="tiktok-icon-circle">
+                  <svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                </div>
+                <span class="comment-count-label" data-post-id="${vid.id}">0</span>
+              </div>
+
+              <div class="tiktok-action-item" onclick="alert('ბმული კოპირებულია!')">
+                <div class="tiktok-icon-circle">
+                  <svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
+                </div>
+                <span>${t.share}</span>
+              </div>
+            </div>
+
+            <div class="tiktok-overlay-bottom-info">
+              <div class="tiktok-info-author" onclick="closeTiktokVideoModal(); viewUserProfile('${vid.user_id}');">
+                @${vid.author_name}
+              </div>
+              <div class="tiktok-info-caption">${vid.content || ""}</div>
+            </div>
+          </div>
+        `;
+        wrapper.appendChild(slide);
+        renderCommentsCountOnly(vid);
+        startFloatingAvatarsAnimation(vid.id, `floating-container-tiktok-${vid.id}`);
+      });
+
+      var slides = wrapper.querySelectorAll('.tiktok-slide-item');
+      if (slides[startIndex]) {
+        slides[startIndex].scrollIntoView();
+        var vidElem = slides[startIndex].querySelector('video');
+        if (vidElem) vidElem.play().catch(function(){});
+      }
+
+      setupTiktokScrollObserver();
+    }
+
+    function toggleVideoPlay(videoElem) {
+      if (videoElem.paused) {
+        videoElem.play();
+      } else {
+        videoElem.pause();
+      }
+    }
+
+    function setupTiktokScrollObserver() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          var video = entry.target.querySelector('video');
+          if (video) {
+            if (entry.isIntersecting) {
+              video.play().catch(function(){});
+            } else {
+              video.pause();
+            }
+          }
+        });
+      }, { threshold: 0.6 });
+
+      document.querySelectorAll('.tiktok-slide-item').forEach(function(item) {
+        observer.observe(item);
+      });
+    }
+
+    function closeTiktokVideoModal() {
+      document.querySelectorAll('.tiktok-slide-video').forEach(function(v) { v.pause(); });
+      document.getElementById('tiktok-video-modal').style.display = "none";
     }
 
     function openFullGalleryModal(index) {
@@ -4244,6 +4384,7 @@
               profileWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
             });
+            observeVideos();
           });
         }).catch(function(error) {
           console.error("Firestore Index Error or query failure: ", error);
@@ -4312,7 +4453,37 @@
       document.getElementById('avatar-file-input').click();
     }
 
+    // FIREBASE STORAGE MEDIA UPLOADER (FOR IMAGES & VIDEOS)
+    function uploadMediaToFirebase(file, folder, callback) {
+      if (!currentUser) return;
+      var storageRef = storage.ref();
+      var fileRef = storageRef.child(folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name);
+
+      var uploadTask = fileRef.put(file);
+
+      uploadTask.on('state_changed', 
+        function(snapshot) {
+          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+        }, 
+        function(error) {
+          console.error("Firebase Storage Upload Error:", error);
+          alert("ატვირთვის შეცდომა: " + error.message);
+        }, 
+        function() {
+          uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+            callback(downloadURL);
+          });
+        }
+      );
+    }
+
     function uploadImageToImgBB(file, callback) {
+      if (file.type.startsWith('video/')) {
+        uploadMediaToFirebase(file, 'videos', callback);
+        return;
+      }
+
       let formData = new FormData();
       formData.append("image", file);
 
@@ -4327,12 +4498,12 @@
         if (result && result.success) {
           callback(result.data.url);
         } else {
-          alert("ImgBB ატვირთვის შეცდომა: " + (result.error ? result.error.message : "უცნობი შეცდომა"));
+          uploadMediaToFirebase(file, 'images', callback);
         }
       })
       .catch(function(error) {
-        console.error("ImgBB Upload Error:", error);
-        alert("ქსელის შეცდომა ImgBB-სთან დაკავშირებისას.");
+        console.error("ImgBB Upload Error, falling back to Firebase:", error);
+        uploadMediaToFirebase(file, 'images', callback);
       });
     }
 
@@ -4450,6 +4621,7 @@
               postsWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
             });
+            observeVideos();
           });
         });
     }
@@ -4516,9 +4688,17 @@
       });
     }
 
-    function buildCollageHtml(urlsString, postId, likesCount) {
+    function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
       if (!urlsString) return "";
       
+      if (mediaType === 'video') {
+        return `
+          <div class="video-container-rel">
+            <video class="post-media" src="${urlsString}" controls preload="metadata" playsinline></video>
+          </div>
+        `;
+      }
+
       var urls = [];
       if (urlsString.includes(",")) {
         urls = urlsString.split(",");
@@ -4576,7 +4756,7 @@
       var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
       var t = TRANSLATIONS[currentLang];
 
-      var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0);
+      var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0, post.media_type);
 
       var deleteButtonHtml = "";
       if (currentUser && post.user_id === currentUser.uid) {
@@ -4641,25 +4821,33 @@
 
       if (fileInput.files.length > 0) {
         var files = Array.from(fileInput.files).slice(0, 6);
-        var uploadedUrls = [];
-        var promises = [];
+        var isVideo = files[0].type.startsWith('video/');
 
-        files.forEach(function(file) {
-          let p = new Promise(function(resolve, reject) {
-            uploadImageToImgBB(file, function(url) {
-              uploadedUrls.push(url);
-              resolve();
-            });
+        if (isVideo) {
+          uploadMediaToFirebase(files[0], 'videos', function(videoUrl) {
+            savePostToDatabase(authorName, text, videoUrl, "video", publishBtn);
           });
-          promises.push(p);
-        });
+        } else {
+          var uploadedUrls = [];
+          var promises = [];
 
-        Promise.all(promises).then(function() {
-          var mediaUrlsJoined = uploadedUrls.join(",");
-          savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
-        }).catch(function() {
-          publishBtn.disabled = false;
-        });
+          files.forEach(function(file) {
+            let p = new Promise(function(resolve, reject) {
+              uploadImageToImgBB(file, function(url) {
+                uploadedUrls.push(url);
+                resolve();
+              });
+            });
+            promises.push(p);
+          });
+
+          Promise.all(promises).then(function() {
+            var mediaUrlsJoined = uploadedUrls.join(",");
+            savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
+          }).catch(function() {
+            publishBtn.disabled = false;
+          });
+        }
       } else {
         savePostToDatabase(authorName, text, null, null, publishBtn);
       }
@@ -4746,18 +4934,25 @@
       var fileInput = document.getElementById('story-file-input');
       if (fileInput.files.length === 0) return;
       var file = fileInput.files[0];
+      var isVideo = file.type.startsWith('video/');
 
-      uploadImageToImgBB(file, function(downloadURL) {
+      var saveStoryFn = function(downloadURL) {
         db.collection('stories').add({
           user_id: currentUser.uid,
           media_url: downloadURL,
-          media_type: "image",
+          media_type: isVideo ? "video" : "image",
           likes_count: 0,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         }).then(function() {
           loadStories();
         });
-      });
+      };
+
+      if (isVideo) {
+        uploadMediaToFirebase(file, 'stories', saveStoryFn);
+      } else {
+        uploadImageToImgBB(file, saveStoryFn);
+      }
     }
 
     function loadStories() {
@@ -4828,7 +5023,10 @@
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
               var avatarHtml = authorAvatar ? `<div class="avatar-has-online"><img src="${authorAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-              var backgroundHtml = `<div style="width:100%; height:100%; background-image: url('${story.media_url}'); background-size: cover; background-position: center;"></div>`;
+              
+              var backgroundHtml = story.media_type === 'video' ? 
+                `<video class="story-card-video-preview" src="${story.media_url}#t=0.5" preload="metadata" muted></video>` : 
+                `<div style="width:100%; height:100%; background-image: url('${story.media_url}'); background-size: cover; background-position: center;"></div>`;
 
               var card = document.createElement('div');
               card.className = "story-card friend-story-card";
@@ -4862,7 +5060,11 @@
         avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
       }
 
-      mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+      if (story.media_type === 'video') {
+        mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
+      } else {
+        mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+      }
 
       document.getElementById('story-likes-label').innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
       document.getElementById('story-comment-field').placeholder = t.msgPlaceholder;
