@@ -2387,6 +2387,20 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registered successfully with scope: ', registration.scope);
+          })
+          .catch(function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+
     // Preloader Dismissal Logic
     function hidePreloader() {
       var preloader = document.getElementById('app-preloader');
