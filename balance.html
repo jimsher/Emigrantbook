@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ბალანსი - Emigrantbook</title>
+  <link rel="stylesheet" href="supabase1.css">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase Compat Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0d0d11;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Gradient (TikTok style background effect) */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 10% 10%, rgba(20, 80, 70, 0.25) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 10%, rgba(120, 20, 50, 0.25) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    .balance-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    .back-btn, .settings-btn {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+    }
+
+    .header-title-container {
+      text-align: center;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: #2ed573;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .header-subtitle svg {
+      width: 13px;
+      height: 13px;
+      fill: #2ed573;
+    }
+
+    /* Main Balance Section */
+    .balance-display-section {
+      text-align: center;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    .balance-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #aaaaaa;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .balance-amount-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .balance-amount {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .balance-arrow {
+      font-size: 20px;
+      color: #888;
+    }
+
+    /* Coin/Akho Pill Badge Button */
+    .akho-pill-card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 10px 0;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .akho-pill-card:active {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .akho-pill-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .akho-icon-badge {
+      width: 24px;
+      height: 24px;
+      background: #dcae36;
+      border-radius: 50%;
+      color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 13px;
+      box-shadow: 0 0 8px rgba(220, 174, 54, 0.4);
+    }
+
+    .akho-pill-right {
+      color: #aaaaaa;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Transactions Bar */
+    .section-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+    }
+
+    .section-card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .section-card-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #888888;
+      font-size: 14px;
+    }
+
+    /* Services Grid (Услуги) */
+    .services-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .service-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      min-height: 115px;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .service-card:active {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .service-icon-box {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .service-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #dddddd;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-gradient"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="balance-header">
+      <button class="back-btn" onclick="window.location.href='index.html'">‹</button>
+      <div class="header-title-container">
+        <div class="header-title" id="lbl-balance-title">ბალანსი</div>
+        <div class="header-subtitle">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm-2 16l-4-4 1.41-1.41L10 15.17l6.59-6.59L18 10l-8 8z"/>
+          </svg>
+          <span id="lbl-protected">დაცულია</span>
+        </div>
+      </div>
+      <button class="settings-btn" onclick="alert('პარამეტრები')">⚙️</button>
+    </div>
+
+    <!-- Main Balance Display -->
+    <div class="balance-display-section">
+      <div class="balance-label-row">
+        <span id="lbl-expected-sum">სავარაუდო თანხა</span>
+        <span style="font-weight: bold; color: #fff;">AKHO</span>
+        <span>👁️</span>
+      </div>
+      <div class="balance-amount-row" onclick="openAkhoInfo()">
+        <span class="balance-amount" id="main-balance-val">0.00</span>
+        <span class="balance-arrow">›</span>
+      </div>
+    </div>
+
+    <!-- Akho Coins Badge (Приобрести Монеты) -->
+    <div class="akho-pill-card" onclick="topUpAkho()">
+      <div class="akho-pill-left">
+        <div class="akho-icon-badge">A</div>
+        <span>აკჰო: <strong id="akho-coins-val">0</strong></span>
+      </div>
+      <div class="akho-pill-right">
+        <span id="lbl-topup-btn">შევსება</span>
+        <span>➔</span>
+      </div>
+    </div>
+
+    <!-- Transactions Section -->
+    <div class="section-card" onclick="alert('ტრანზაქციების ისტორია მალე დაემატება!')">
+      <div class="section-card-title" id="lbl-transactions">ტრანზაქციები</div>
+      <div class="section-card-right">
+        <span id="lbl-last-purchase">ყიდვა: 0 AKHO</span>
+        <span>›</span>
+      </div>
+    </div>
+
+    <!-- Services Grid (Услуги) -->
+    <div>
+      <div class="services-title" id="lbl-services">სერვისები</div>
+      <div class="services-grid">
+        <div class="service-card" onclick="alert('პირდაპირი ეთერის საჩუქრები')">
+          <div class="service-icon-box">💰</div>
+          <div class="service-label" id="lbl-live-rewards">ეთერის ჯილდოები</div>
+        </div>
+
+        <div class="service-card" onclick="alert('მონეტიზაციის ცენტრი')">
+          <div class="service-icon-box">📊</div>
+          <div class="service-label" id="lbl-monetization">მონეტიზაცია</div>
+        </div>
+
+        <div class="service-card" onclick="alert('გამოწერების მართვა')">
+          <div class="service-icon-box">📅</div>
+          <div class="service-label" id="lbl-subscriptions">გამოწერების მართვა</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+
+    var TRANSLATIONS = {
+      ka: {
+        title: "ბალანსი",
+        protected: "დაცულია",
+        expectedSum: "მოსალოდნელი თანხა",
+        topup: "შევსება",
+        transactions: "ტრანზაქციები",
+        lastPurchase: "აკჰოს შეძენა",
+        services: "სერვისები",
+        liveRewards: "პირდაპირი ეთერის ჯილდოები",
+        monetization: "მონეტიზაცია",
+        subscriptions: "გამოწერების მართვა"
+      },
+      en: {
+        title: "Balance",
+        protected: "Protected",
+        expectedSum: "Estimated amount",
+        topup: "Get Coins",
+        transactions: "Transactions",
+        lastPurchase: "Purchase Coins",
+        services: "Services",
+        liveRewards: "LIVE Rewards",
+        monetization: "Monetization",
+        subscriptions: "Subscriptions"
+      },
+      ru: {
+        title: "Баланс",
+        protected: "Защищено",
+        expectedSum: "Ожидаемая сумма",
+        topup: "Приобрести Монеты",
+        transactions: "Транзакции",
+        lastPurchase: "Покупка Монет",
+        services: "Услуги",
+        liveRewards: "Награды из прямых...",
+        monetization: "Монетизация",
+        subscriptions: "Управление суперподп..."
+      }
+    };
+
+    function applyTranslations() {
+      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+      document.getElementById('lbl-balance-title').innerText = lang.title;
+      document.getElementById('lbl-protected').innerText = lang.protected;
+      document.getElementById('lbl-expected-sum').innerText = lang.expectedSum;
+      document.getElementById('lbl-topup-btn').innerText = lang.topup;
+      document.getElementById('lbl-transactions').innerText = lang.transactions;
+      document.getElementById('lbl-last-purchase').innerText = lang.lastPurchase;
+      document.getElementById('lbl-services').innerText = lang.services;
+      document.getElementById('lbl-live-rewards').innerText = lang.liveRewards;
+      document.getElementById('lbl-monetization').innerText = lang.monetization;
+      document.getElementById('lbl-subscriptions').innerText = lang.subscriptions;
+    }
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
+          if (doc.exists) {
+            var data = doc.data();
+            var balance = data.balance || 0;
+            document.getElementById('main-balance-val').innerText = parseFloat(balance).toFixed(2);
+            document.getElementById('akho-coins-val').innerText = Math.floor(balance);
+            
+            if (data.language) {
+              currentLang = data.language;
+              applyTranslations();
+            }
+          }
+        });
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    function topUpAkho() {
+      alert("ბალანსის შევსების სისტემა მალე გააქტიურდება!");
+    }
+
+    function openAkhoInfo() {
+      alert("აკჰო (AKHO) წარმოადგენს Emigrantbook-ის შიდა ციფრულ ვალუტას.");
+    }
+
+    applyTranslations();
+  </script>
+</body>
+</html>
