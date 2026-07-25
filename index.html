@@ -2093,7 +2093,7 @@
 
       <button class="menu-item-row" onclick="window.location.href='balance.html'">
         <div class="menu-item-left">
-          <span class="menu-item-icon">💳</span>
+          <span class="menu-item-icon">👛</span>
           <span>ბალანსი</span>
         </div>
         <span class="menu-item-arrow">›</span>
@@ -3235,9 +3235,6 @@
         initUserPresence(user.uid);
         requestNotificationPermission();
         
-        likedPosts = JSON.parse(localStorage.getItem(user.uid + '_liked_posts_list')) || [];
-        postReactionMap = JSON.parse(localStorage.getItem(user.uid + '_post_reaction_map')) || {};
-          
         db.collection('profiles').doc(user.uid).get().then(function(doc) {
           var finalName = user.email;
           var avatarUrl = null;
@@ -3510,7 +3507,7 @@
             var updatedPost = change.doc.data();
             var postId = change.doc.id;
             
-            var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
+            var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
             countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
 
             var statsIcons = document.getElementById(`stats-icons-${postId}`);
@@ -4149,7 +4146,6 @@
       cancelReplyMode();
     }
 
-    /* ---- 💡 FIXED REAL LIKERS LIST MODAL LOGIC ---- */
     function openLikersListModal() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
@@ -4157,61 +4153,34 @@
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
-      var targetPostId = activePostForComments;
-
-      db.collection('posts').doc(targetPostId).get().then(function(postDoc) {
-        if (!postDoc.exists) {
-          container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">პოსტი ვერ მოიძებნა</div>`;
-          return;
-        }
-
-        var postData = postDoc.data();
-        var likedBy = postData.liked_by || [];
-        
-        if (likedBy.length === 0) {
+      db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
+        if (snapshot.empty) {
           container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">ჯერ არავის მოუწონებია</div>`;
           return;
         }
 
         container.innerHTML = "";
-        var promises = likedBy.map(function(uid) {
-          return db.collection('profiles').doc(uid).get().then(function(pDoc) {
-            if (pDoc.exists) {
-              return Object.assign({ id: pDoc.id }, pDoc.data());
-            }
-            return null;
-          });
-        });
-
-        Promise.all(promises).then(function(likers) {
-          var validLikers = likers.filter(function(l) { return l !== null; });
-
-          if (validLikers.length === 0) {
-            container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">ჯერ არავის მოუწონებია</div>`;
-            return;
-          }
-
-          container.innerHTML = "";
-          validLikers.forEach(function(p) {
-            var finalName = p.full_name || "User";
-            var isOnline = isUserOnline(p);
-            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-            var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
-
-            container.innerHTML += `
-              <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
-                <div class="liker-avatar-container">
-                  <div class="liker-avatar">${avatarHtml}</div>
-                  <div class="liker-reaction-badge">❤️</div>
-                </div>
-                <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
+        snapshot.forEach(function(doc) {
+          var p = doc.data();
+          var likerId = doc.id;
+          var finalName = p.full_name || "User";
+          var isOnline = isUserOnline(p);
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
+          
+          container.innerHTML += `
+            <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${likerId}');">
+              <div class="liker-avatar-container">
+                <div class="liker-avatar">${avatarHtml}</div>
+                <div class="liker-reaction-badge">❤️</div>
               </div>
-            `;
-          });
+              <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
+            </div>
+          `;
         });
       }).catch(function(err) {
-        console.error("Error fetching post likes:", err);
-        container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">შეცდომა მომწონებლების ჩატვირთვისას</div>`;
+        console.error("Likers load error:", err);
+        container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">შეცდომა ჩატვირთვისას</div>`;
       });
     }
 
@@ -4811,6 +4780,7 @@
             posts.forEach(function(post) {
               profileWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
+              checkMyLikeState(post.id);
             });
             observeVideos();
           });
@@ -5045,10 +5015,22 @@
             posts.forEach(function(post) {
               postsWall.innerHTML += createPostCardHtml(post);
               renderCommentsCountOnly(post);
+              checkMyLikeState(post.id);
             });
             observeVideos();
           });
         });
+    }
+
+    function checkMyLikeState(postId) {
+      if (!currentUser) return;
+      db.collection('posts').doc(postId).collection('post_likes').doc(currentUser.uid).get().then(function(doc) {
+        if (doc.exists) {
+          if (!likedPosts.includes(postId)) likedPosts.push(postId);
+          var buttons = document.querySelectorAll(`.like-btn-standard[data-post-id="${postId}"]`);
+          buttons.forEach(function(btn) { btn.classList.add('btn-liked'); });
+        }
+      });
     }
 
     function startFloatingAvatarsAnimation(postId, containerId) {
@@ -5060,56 +5042,40 @@
         container.innerHTML = "";
       }
 
-      db.collection('posts').doc(postId).get().then(function(postDoc) {
-        var totalLikes = (postDoc.exists && postDoc.data().likes_count) ? postDoc.data().likes_count : 0;
-        if (totalLikes <= 0) return;
+      db.collection('posts').doc(postId).collection('post_likes').get().then(function(snapshot) {
+        if(snapshot.empty) return;
 
-        db.collection('profiles').get().then(function(snapshot) {
-          if(snapshot.empty) return;
-
-          var likersList = [];
-          if (likedPosts.includes(postId) && currentUser) {
-            snapshot.forEach(function(doc) {
-              if (doc.id === currentUser.uid) likersList.push(Object.assign({ id: doc.id }, doc.data()));
-            });
-          }
-
-          snapshot.forEach(function(doc) {
-            if(doc.id !== (currentUser ? currentUser.uid : null)) {
-              var combinedSeed = postId.charCodeAt(0) + doc.id.charCodeAt(0);
-              if(combinedSeed % 3 === 0 && likersList.length < totalLikes) {
-                likersList.push(Object.assign({ id: doc.id }, doc.data()));
-              }
-            }
-          });
-
-          if(likersList.length === 0) return;
-          var index = 0;
-          
-          function spawn() {
-            if (document.getElementById(containerId) === null) {
-              clearInterval(activeFloatingIntervals[postId]);
-              return;
-            }
-            var person = likersList[index];
-            var name = person.full_name || "User";
-            var isOnline = isUserOnline(person);
-            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-            var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
-            
-            var bubble = document.createElement('div');
-            bubble.className = "tiktok-floating-avatar-item";
-            bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
-            
-            container.appendChild(bubble);
-            setTimeout(function() { if(bubble && bubble.parentNode) bubble.remove(); }, 6000);
-            index = (index + 1) % likersList.length;
-          }
-
-          document.getElementById(containerId).innerHTML = "";
-          spawn();
-          activeFloatingIntervals[postId] = setInterval(spawn, 1900);
+        var likersList = [];
+        snapshot.forEach(function(doc) {
+          likersList.push(Object.assign({ id: doc.id }, doc.data()));
         });
+
+        if(likersList.length === 0) return;
+        var index = 0;
+        
+        function spawn() {
+          if (document.getElementById(containerId) === null) {
+            clearInterval(activeFloatingIntervals[postId]);
+            return;
+          }
+          var person = likersList[index];
+          var name = person.full_name || "User";
+          var isOnline = isUserOnline(person);
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
+          
+          var bubble = document.createElement('div');
+          bubble.className = "tiktok-floating-avatar-item";
+          bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
+          
+          container.appendChild(bubble);
+          setTimeout(function() { if(bubble && bubble.parentNode) bubble.remove(); }, 6000);
+          index = (index + 1) % likersList.length;
+        }
+
+        document.getElementById(containerId).innerHTML = "";
+        spawn();
+        activeFloatingIntervals[postId] = setInterval(spawn, 1900);
       });
     }
 
@@ -5301,44 +5267,64 @@
     }
 
     function likePost(postId, isTiktokView) {
-      var hasLiked = likedPosts.includes(postId);
-      
-      if (hasLiked) {
-        likedPosts = likedPosts.filter(function(id) { return id !== postId; });
-        delete postReactionMap[postId];
-      } else {
-        likedPosts.push(postId);
-        postReactionMap[postId] = "❤️"; 
-      }
+      if (!currentUser) return;
+      var postRef = db.collection('posts').doc(postId);
+      var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
 
-      localStorage.setItem(currentUser.uid + '_liked_posts_list', JSON.stringify(likedPosts));
-      localStorage.setItem(currentUser.uid + '_post_reaction_map', JSON.stringify(postReactionMap));
+      likeRef.get().then(function(doc) {
+        if (doc.exists) {
+          // Unlike
+          likeRef.delete().then(function() {
+            updatePostLikesCount(postId, -1);
+            likedPosts = likedPosts.filter(id => id !== postId);
+            toggleLikeUI(postId, false);
+          });
+        } else {
+          // Like
+          var authorName = userProfile ? userProfile.full_name : currentUser.email;
+          var avatarUrl = userProfile ? userProfile.avatar_url : null;
+          
+          likeRef.set({
+            user_id: currentUser.uid,
+            full_name: authorName,
+            avatar_url: avatarUrl,
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(function() {
+            updatePostLikesCount(postId, 1);
+            if (!likedPosts.includes(postId)) likedPosts.push(postId);
+            toggleLikeUI(postId, true);
+          });
+        }
+      });
+    }
 
-      var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+    function updatePostLikesCount(postId, change) {
+      var postRef = db.collection('posts').doc(postId);
+      postRef.collection('post_likes').get().then(function(snapshot) {
+        var realCount = snapshot.size;
+        postRef.update({ likes_count: realCount });
+        
+        var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+        labels.forEach(function(label) { label.innerText = realCount; });
+
+        var statsIcons = document.getElementById(`stats-icons-${postId}`);
+        if (statsIcons) {
+          statsIcons.innerHTML = realCount > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
+        }
+
+        if (activePostForComments === postId) {
+          var modalTotal = document.getElementById('modal-total-likes');
+          if (modalTotal) modalTotal.innerText = realCount;
+        }
+      });
+    }
+
+    function toggleLikeUI(postId, isLiked) {
       var buttons = document.querySelectorAll(`.like-btn-standard[data-post-id="${postId}"]`);
-
-      var currentLikes = 0;
-      if (labels.length > 0) { currentLikes = parseInt(labels[0].innerText) || 0; }
-
-      var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
-      labels.forEach(function(label) { label.innerText = newLikes; });
-      
       buttons.forEach(function(btn) {
-        if (!hasLiked) btn.classList.add('btn-liked');
+        if (isLiked) btn.classList.add('btn-liked');
         else btn.classList.remove('btn-liked');
       });
-
-      var statsIcons = document.getElementById(`stats-icons-${postId}`);
-      if (statsIcons) {
-        var iconsHtml = newLikes > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-        statsIcons.innerHTML = iconsHtml;
-      }
-
-      if (activePostForComments === postId) {
-        document.getElementById('modal-reactions-display').innerHTML = `❤️ <span id="modal-total-likes">${newLikes}</span>`;
-      }
-
-      db.collection('posts').doc(postId).update({ likes_count: newLikes }).catch(function(){});
     }
 
     function logout() {
@@ -5380,7 +5366,7 @@
       }
     }
 
-    function loadStories() {
+       function loadStories() {
       var listDiv = document.getElementById('friends-stories-list');
       if (!listDiv) return;
       listDiv.innerHTML = "";
@@ -5528,4 +5514,4 @@
     }
   </script>
 </body>
-</html>
+</html>         
