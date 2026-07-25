@@ -4987,30 +4987,73 @@
     }
 
     function loadPosts() {
-      db.collection('posts')
-        .orderBy('created_at', 'desc')
-        .get()
-        .then(function(snapshot) {
-          var postsWall = document.getElementById('posts-wall');
-          var t = TRANSLATIONS[currentLang];
-          postsWall.innerHTML = "";
+      if (!currentUser) return;
 
-          if (snapshot.empty) {
-            postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-            return;
-          }
+      Promise.all([
+        db.collection('friend_requests').where('status', '==', 'accepted').get(),
+        db.collection('profiles').get()
+      ]).then(function(results) {
+        var friendReqSnap = results[0];
+        var profilesSnap = results[1];
 
-          var posts = [];
-          snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
+        // 1. მეგობრების სია
+        var myFriendsSet = new Set();
+        friendReqSnap.forEach(function(docSnap) {
+          var req = docSnap.data();
+          if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
+          if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
+        });
 
-          db.collection('profiles').get().then(function(profilesSnap) {
-            cachedProfiles = {};
-            cachedOnlineStates = {};
-            profilesSnap.forEach(function(pDoc) {
-              var pData = pDoc.data();
-              cachedProfiles[pDoc.id] = pData.avatar_url;
-              cachedOnlineStates[pDoc.id] = isUserOnline(pData);
+        // 2. პროფილების/კონფიდენციალურობის ქეში
+        cachedProfiles = {};
+        cachedOnlineStates = {};
+        var userPrivacyMap = {};
+
+        profilesSnap.forEach(function(pDoc) {
+          var pData = pDoc.data();
+          cachedProfiles[pDoc.id] = pData.avatar_url;
+          cachedOnlineStates[pDoc.id] = isUserOnline(pData);
+          userPrivacyMap[pDoc.id] = pData.privacy_setting || 'public';
+        });
+
+        // 3. პოსტების წამოღება და ფილტრაცია
+        db.collection('posts')
+          .orderBy('created_at', 'desc')
+          .get()
+          .then(function(snapshot) {
+            var postsWall = document.getElementById('posts-wall');
+            var t = TRANSLATIONS[currentLang];
+            postsWall.innerHTML = "";
+
+            if (snapshot.empty) {
+              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+              return;
+            }
+
+            var posts = [];
+            snapshot.forEach(function(doc) {
+              var postData = Object.assign({ id: doc.id }, doc.data());
+              var authorId = postData.user_id;
+              var privacy = userPrivacyMap[authorId] || 'public';
+
+              var isMyOwnPost = (authorId === currentUser.uid);
+              var isFriend = myFriendsSet.has(authorId);
+
+              // ფილტრაციის წესები:
+              if (isMyOwnPost) {
+                posts.push(postData); // ჩემი პოსტი ყოველთვის ჩანს ჩემთან
+              } else if (privacy === 'public') {
+                posts.push(postData); // საჯარო პოსტი ჩანს ყველასთან
+              } else if (privacy === 'friends' && isFriend) {
+                posts.push(postData); // მეგობრების პოსტი ჩანს მხოლოდ მეგობრებთან
+              }
+              // private ან friends (თუ მეგობარი არაა) არ ემატება მთავარ გვერდზე
             });
+
+            if (posts.length === 0) {
+              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+              return;
+            }
 
             posts.forEach(function(post) {
               postsWall.innerHTML += createPostCardHtml(post);
@@ -5019,7 +5062,9 @@
             });
             observeVideos();
           });
-        });
+      }).catch(function(err) {
+        console.error("Error loading posts with privacy filter:", err);
+      });
     }
 
     function checkMyLikeState(postId) {
@@ -5283,7 +5328,6 @@
           });
         } else {
           // Like
-          // უზრუნველყოფთ, რომ undefined არასოდეს წავიდეს ბაზაში
           var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
           var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
 
@@ -5308,7 +5352,6 @@
     function updatePostLikesCount(postId, change) {
       var postRef = db.collection('posts').doc(postId);
 
-      // 1. მყისიერი (Local UI) განახლება, რომ მომხმარებელმა ეგრევე დაინახოს ცვლილება
       if (typeof change === 'number') {
         var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
         labels.forEach(function(label) {
@@ -5318,7 +5361,6 @@
         });
       }
 
-      // 2. ბაზიდან ზუსტი რაოდენობის გადამოწმება და სინქრონიზაცია
       postRef.collection('post_likes').get().then(function(snapshot) {
         var realCount = snapshot.size;
         postRef.update({ likes_count: realCount }).catch(function(e){ console.error("Update likes count error:", e); });
@@ -5387,7 +5429,7 @@
       }
     }
 
-       function loadStories() {
+    function loadStories() {
       var listDiv = document.getElementById('friends-stories-list');
       if (!listDiv) return;
       listDiv.innerHTML = "";
