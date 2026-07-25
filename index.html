@@ -5266,7 +5266,7 @@
       });
     }
 
-    function likePost(postId, isTiktokView) {
+     function likePost(postId, isTiktokView) {
       if (!currentUser) return;
       var postRef = db.collection('posts').doc(postId);
       var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
@@ -5278,12 +5278,15 @@
             updatePostLikesCount(postId, -1);
             likedPosts = likedPosts.filter(id => id !== postId);
             toggleLikeUI(postId, false);
+          }).catch(function(err) {
+            console.error("Unlike error:", err);
           });
         } else {
           // Like
-          var authorName = userProfile ? userProfile.full_name : currentUser.email;
-          var avatarUrl = userProfile ? userProfile.avatar_url : null;
-          
+          // უზრუნველყოფთ, რომ undefined არასოდეს წავიდეს ბაზაში
+          var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
+          var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
+
           likeRef.set({
             user_id: currentUser.uid,
             full_name: authorName,
@@ -5293,17 +5296,33 @@
             updatePostLikesCount(postId, 1);
             if (!likedPosts.includes(postId)) likedPosts.push(postId);
             toggleLikeUI(postId, true);
+          }).catch(function(err) {
+            console.error("Like set error:", err);
           });
         }
+      }).catch(function(err) {
+        console.error("Like check error:", err);
       });
     }
 
     function updatePostLikesCount(postId, change) {
       var postRef = db.collection('posts').doc(postId);
+
+      // 1. მყისიერი (Local UI) განახლება, რომ მომხმარებელმა ეგრევე დაინახოს ცვლილება
+      if (typeof change === 'number') {
+        var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+        labels.forEach(function(label) {
+          var currentVal = parseInt(label.innerText) || 0;
+          var newVal = currentVal + change;
+          label.innerText = newVal < 0 ? 0 : newVal;
+        });
+      }
+
+      // 2. ბაზიდან ზუსტი რაოდენობის გადამოწმება და სინქრონიზაცია
       postRef.collection('post_likes').get().then(function(snapshot) {
         var realCount = snapshot.size;
-        postRef.update({ likes_count: realCount });
-        
+        postRef.update({ likes_count: realCount }).catch(function(e){ console.error("Update likes count error:", e); });
+
         var labels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
         labels.forEach(function(label) { label.innerText = realCount; });
 
@@ -5312,10 +5331,12 @@
           statsIcons.innerHTML = realCount > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
         }
 
-        if (activePostForComments === postId) {
+        if (typeof activePostForComments !== 'undefined' && activePostForComments === postId) {
           var modalTotal = document.getElementById('modal-total-likes');
           if (modalTotal) modalTotal.innerText = realCount;
         }
+      }).catch(function(err) {
+        console.error("Get likes count error:", err);
       });
     }
 
