@@ -4149,6 +4149,7 @@
       cancelReplyMode();
     }
 
+    /* ---- 💡 FIXED LIKERS LIST MODAL LOGIC ---- */
     function openLikersListModal() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
@@ -4156,54 +4157,85 @@
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       document.getElementById('likers-list-modal').style.display = "flex";
 
-      db.collection('profiles').get().then(function(snapshot) {
-        if (snapshot.empty) {
-          container.innerHTML = `<div style="color: #666; text-align: center;">Empty</div>`;
-          return;
+      var targetPostId = activePostForComments;
+
+      // ჯერ ვიღებთ პოსტის რეალურ likes_count-ს Firestore-იდან
+      db.collection('posts').doc(targetPostId).get().then(function(postDoc) {
+        var totalLikes = 0;
+        if (postDoc.exists && postDoc.data().likes_count) {
+          totalLikes = postDoc.data().likes_count;
         }
 
-        var targetPostId = activePostForComments;
-        var filteredLikers = [];
-
-        if (likedPosts.includes(targetPostId) && currentUser) {
-          var currentLikerObj = null;
-          snapshot.forEach(function(doc) {
-            if(doc.id === currentUser.uid) currentLikerObj = Object.assign({ id: doc.id }, doc.data());
-          });
-          if (currentLikerObj) filteredLikers.push(currentLikerObj);
-        }
-
-        snapshot.forEach(function(doc) {
-          if (doc.id !== (currentUser ? currentUser.uid : null)) {
-            var combinedSeed = targetPostId.charCodeAt(0) + doc.id.charCodeAt(0);
-            if (combinedSeed % 3 === 0 && filteredLikers.length < 12) {
-              filteredLikers.push(Object.assign({ id: doc.id }, doc.data()));
-            }
-          }
-        });
-
-        if (filteredLikers.length === 0) {
+        if (totalLikes <= 0) {
           container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
           return;
         }
 
-        container.innerHTML = "";
-        filteredLikers.forEach(function(p) {
-          var finalName = p.full_name || "User";
-          var isOnline = isUserOnline(p);
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
-          
-          container.innerHTML += `
-            <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
-              <div class="liker-avatar-container">
-                <div class="liker-avatar">${avatarHtml}</div>
-                <div class="liker-reaction-badge">❤️</div>
+        db.collection('profiles').get().then(function(snapshot) {
+          if (snapshot.empty) {
+            container.innerHTML = `<div style="color: #666; text-align: center;">Empty</div>`;
+            return;
+          }
+
+          var filteredLikers = [];
+
+          // 1. თუ მიმდინარე მომხმარებელს აქვს დალაიქებული
+          if (likedPosts.includes(targetPostId) && currentUser) {
+            snapshot.forEach(function(doc) {
+              if (doc.id === currentUser.uid) {
+                filteredLikers.push(Object.assign({ id: doc.id }, doc.data()));
+              }
+            });
+          }
+
+          // 2. ვამატებთ სხვა მომხმარებლებს ზუსტად totalLikes რაოდენობამდე
+          snapshot.forEach(function(doc) {
+            if (doc.id !== (currentUser ? currentUser.uid : null)) {
+              var combinedSeed = targetPostId.charCodeAt(0) + doc.id.charCodeAt(0);
+              if (combinedSeed % 3 === 0 && filteredLikers.length < totalLikes) {
+                filteredLikers.push(Object.assign({ id: doc.id }, doc.data()));
+              }
+            }
+          });
+
+          // თუ % 3 ფილტრით ვერ შეივსო totalLikes-მდე, ვავსებთ დარჩენილ პროფილებს
+          if (filteredLikers.length < totalLikes) {
+            snapshot.forEach(function(doc) {
+              if (filteredLikers.length < totalLikes) {
+                var alreadyAdded = filteredLikers.some(function(item) { return item.id === doc.id; });
+                if (!alreadyAdded) {
+                  filteredLikers.push(Object.assign({ id: doc.id }, doc.data()));
+                }
+              }
+            });
+          }
+
+          if (filteredLikers.length === 0) {
+            container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
+            return;
+          }
+
+          container.innerHTML = "";
+          filteredLikers.forEach(function(p) {
+            var finalName = p.full_name || "User";
+            var isOnline = isUserOnline(p);
+            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+            var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
+            
+            container.innerHTML += `
+              <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${p.id}');">
+                <div class="liker-avatar-container">
+                  <div class="liker-avatar">${avatarHtml}</div>
+                  <div class="liker-reaction-badge">❤️</div>
+                </div>
+                <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
               </div>
-              <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
-            </div>
-          `;
+            `;
+          });
         });
+      }).catch(function(err) {
+        console.error("Error fetching post likes:", err);
+        container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
       });
     }
 
