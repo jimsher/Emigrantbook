@@ -170,7 +170,6 @@
       }
     }
 
-    /* PWA INSTALL CARD STYLING */
     .pwa-install-card {
       background: #181818;
       padding: 14px 18px;
@@ -1653,6 +1652,62 @@
     .btn-save { background: #dcae36; color: #111111; }
     .btn-cancel { background: #222222; color: #e4e6eb; }
 
+    /* PRIVACY SETTINGS STYLES */
+    .privacy-section-card {
+      background: #141414;
+      border-radius: 12px;
+      border: 1px solid #222222;
+      padding: 20px;
+    }
+    .privacy-option-item {
+      background: #1c1c1e;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #282828;
+      margin-top: 15px;
+    }
+    .privacy-option-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #dcae36;
+      margin-bottom: 6px;
+    }
+    .privacy-option-desc {
+      font-size: 13px;
+      color: #aaaaaa;
+      line-height: 1.4;
+      margin-bottom: 15px;
+    }
+    .privacy-radio-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .privacy-radio-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #242426;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid #333333;
+      transition: all 0.2s;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .privacy-radio-item:hover {
+      border-color: #dcae36;
+      background: #2a2a2c;
+    }
+    .privacy-radio-item input[type="radio"] {
+      accent-color: #dcae36;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
     .story-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 500; display: flex; justify-content: center; align-items: center; }
     .story-viewer-content { width: 100%; max-width: 420px; height: 100vh; max-height: 740px; background: black; position: relative; display: flex; flex-direction: column; }
     @media(max-width: 480px) { .story-viewer-content { max-height: 100vh; } }
@@ -1839,7 +1894,7 @@
         padding-left: 10px !important;
         padding-right: 10px !important;
       }
-      .facebook-profile-container, .connections-container, .edit-profile-card {
+      .facebook-profile-container, .connections-container, .edit-profile-card, .privacy-section-card {
         border-radius: 0 !important;
         border-left: none !important;
         border-right: none !important;
@@ -2102,10 +2157,10 @@
 
       <div class="menu-divider"></div>
 
-      <button class="menu-item-row">
+      <button class="menu-item-row" onclick="showPrivacySettings()">
         <div class="menu-item-left">
           <span class="menu-item-icon">⚙️</span>
-          <span>პარამეტრები და კონფიდენციალურობა</span>
+          <span id="lbl-privacy-menu-btn">პარამეტრები და კონფიდენციალურობა</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
@@ -2169,6 +2224,13 @@
           <div class="profile-action-column" id="profile-action-panel">
             <div style="text-align: center; padding: 10px; color:#aaaaaa;">იტვირთება მომოქმედებები...</div>
           </div>
+        </div>
+
+        <!-- LOCKED PROFILE BANNER (FOR NON-FRIENDS / PRIVATE) -->
+        <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
+          <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+          <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">ეს პროფილი დახურულია</div>
+          <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა.</div>
         </div>
 
         <div class="profile-details-box" id="profile-details-container">
@@ -2248,6 +2310,43 @@
         <div class="edit-buttons-wrapper">
           <button class="btn btn-save" id="lbl-save-changes" onclick="saveProfileChanges()">ცვლილებების შენახვა</button>
           <button class="btn btn-cancel" id="lbl-cancel-changes" onclick="showScreen('profile')">გაუქმება</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRIVACY SETTINGS SCREEN -->
+  <div id="privacy-screen" style="display: none;">
+    <div class="header">
+      <div class="logo-text" id="lbl-back-to-profile-privacy" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
+    </div>
+    <div class="feed-container">
+      <div class="privacy-section-card">
+        <div class="edit-header" id="lbl-privacy-header">⚙️ პარამეტრები და კონფიდენციალურობა</div>
+        
+        <div class="privacy-option-item">
+          <div class="privacy-option-title" id="lbl-privacy-opt-title">🔒 პროფილის კონფიდენციალურობა</div>
+          <div class="privacy-option-desc" id="lbl-privacy-opt-desc">აირჩიეთ ვინ შეძლებს თქვენი პროფილის, პოსტების, ფოტოებისა და ვიდეოების ნახვას:</div>
+          
+          <div class="privacy-radio-list">
+            <label class="privacy-radio-item">
+              <input type="radio" name="privacy_setting" value="public" checked>
+              <span id="lbl-opt-public">🌐 ყველასთვის (საჯარო)</span>
+            </label>
+            <label class="privacy-radio-item">
+              <input type="radio" name="privacy_setting" value="friends">
+              <span id="lbl-opt-friends">👥 მხოლოდ მეგობრებისთვის</span>
+            </label>
+            <label class="privacy-radio-item">
+              <input type="radio" name="privacy_setting" value="private">
+              <span id="lbl-opt-private">🔒 მხოლოდ ჩემთვის (დახურული)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="edit-buttons-wrapper" style="margin-top: 25px;">
+          <button class="btn btn-save" id="lbl-save-privacy" onclick="savePrivacySettings()">შენახვა</button>
+          <button class="btn btn-cancel" id="lbl-cancel-privacy" onclick="showScreen('profile')">გაუქმება</button>
         </div>
       </div>
     </div>
@@ -2622,7 +2721,16 @@
         balanceTitle: "💳 შიდა ბალანსი", topUp: "+ შევსება",
         liveBtn: "LIVE პირდაპირი ეთერი",
         pwaTitle: "დააინსტალირე აპლიკაცია", pwaSub: "სწრაფი წვდომა ტელეფონიდან", pwaBtn: "ინსტალაცია",
-        authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია."
+        authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია.",
+        privacyHeader: "⚙️ პარამეტრები და კონფიდენციალურობა",
+        privacyOptTitle: "🔒 პროფილის კონფიდენციალურობა",
+        privacyOptDesc: "აირჩიეთ ვინ შეძლებს თქვენი პროფილის, პოსტების, ფოტოებისა და ვიდეოების ნახვას:",
+        optPublic: "🌐 ყველასთვის (საჯარო)",
+        optFriends: "👥 მხოლოდ მეგობრებისთვის",
+        optPrivate: "🔒 მხოლოდ ჩემთვის (დახურული)",
+        lockedProfileTitle: "ეს პროფილი დახურულია",
+        lockedProfileSub: "მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა.",
+        privacyMenuBtn: "პარამეტრები და კონფიდენციალურობა"
       },
       en: {
         authSubtitle: "Log in to your profile", authSubtitleReg: "Create a new account",
@@ -2651,7 +2759,16 @@
         balanceTitle: "💳 Internal Balance", topUp: "+ Top Up",
         liveBtn: "LIVE Stream",
         pwaTitle: "Install Application", pwaSub: "Quick access on mobile", pwaBtn: "Install",
-        authFooter: "© 2026 Emigrantbook. All rights reserved."
+        authFooter: "© 2026 Emigrantbook. All rights reserved.",
+        privacyHeader: "⚙️ Settings & Privacy",
+        privacyOptTitle: "🔒 Profile Privacy",
+        privacyOptDesc: "Choose who can see your profile, posts, photos, and videos:",
+        optPublic: "🌐 Everyone (Public)",
+        optFriends: "👥 Friends Only",
+        optPrivate: "🔒 Only Me (Private)",
+        lockedProfileTitle: "This profile is private",
+        lockedProfileSub: "Only friends can see this user's posts, photos, and videos.",
+        privacyMenuBtn: "Settings & Privacy"
       },
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
@@ -2680,7 +2797,16 @@
         balanceTitle: "💳 Внутренний баланс", topUp: "+ Пополнить",
         liveBtn: "Прямой эфир LIVE",
         pwaTitle: "Установить приложение", pwaSub: "Быстрый доступ с телефона", pwaBtn: "Установить",
-        authFooter: "© 2026 Emigrantbook. Все права защищены."
+        authFooter: "© 2026 Emigrantbook. Все права защищены.",
+        privacyHeader: "⚙️ Настройки и конфиденциальность",
+        privacyOptTitle: "🔒 Конфиденциальность профиля",
+        privacyOptDesc: "Выберите, кто может видеть ваш профиль, публикации, фото и видео:",
+        optPublic: "🌐 Для всех (Публичный)",
+        optFriends: "👥 Только для друзей",
+        optPrivate: "🔒 Только я (Закрытый)",
+        lockedProfileTitle: "Этот профиль закрыт",
+        lockedProfileSub: "Только друзья могут видеть публикации, фото и видео этого пользователя.",
+        privacyMenuBtn: "Настройки и конфиденциальность"
       },
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
@@ -2709,7 +2835,16 @@
         balanceTitle: "💳 Solde Interne", topUp: "+ Recharger",
         liveBtn: "Direct LIVE",
         pwaTitle: "Installer l'application", pwaSub: "Accès rapide sur mobile", pwaBtn: "Installer",
-        authFooter: "© 2026 Emigrantbook. Tous droits réservés."
+        authFooter: "© 2026 Emigrantbook. Tous droits réservés.",
+        privacyHeader: "⚙️ Paramètres et confidentialité",
+        privacyOptTitle: "🔒 Confidentialité du profil",
+        privacyOptDesc: "Choisissez qui peut voir votre profil, vos publications, photos et vidéos :",
+        optPublic: "🌐 Tout le monde (Public)",
+        optFriends: "👥 Amis uniquement",
+        optPrivate: "🔒 Moi uniquement (Privé)",
+        lockedProfileTitle: "Ce profil est privé",
+        lockedProfileSub: "Seuls les amis peuvent voir les publications, photos et vidéos de cet utilisateur.",
+        privacyMenuBtn: "Paramètres et confidentialité"
       },
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
@@ -2738,7 +2873,16 @@
         balanceTitle: "💳 Guthaben", topUp: "+ Aufladen",
         liveBtn: "LIVE-Stream",
         pwaTitle: "App installieren", pwaSub: "Schneller Zugriff auf dem Handy", pwaBtn: "Installieren",
-        authFooter: "© 2026 Emigrantbook. Alle Rechte vorbehalten."
+        authFooter: "© 2026 Emigrantbook. Alle Rechte vorbehalten.",
+        privacyHeader: "⚙️ Einstellungen & Datenschutz",
+        privacyOptTitle: "🔒 Profil-Datenschutz",
+        privacyOptDesc: "Wählen Sie, wer Ihr Profil, Ihre Beiträge, Fotos und Videos sehen kann:",
+        optPublic: "🌐 Jeder (Öffentlich)",
+        optFriends: "👥 Nur Freunde",
+        optPrivate: "🔒 Nur ich (Privat)",
+        lockedProfileTitle: "Dieses Profil ist privat",
+        lockedProfileSub: "Nur Freunde können die Beiträge, Fotos und Videos dieses Benutzers sehen.",
+        privacyMenuBtn: "Einstellungen & Datenschutz"
       }
     };
 
@@ -2846,6 +2990,31 @@
       var gShare = document.getElementById('lbl-gallery-share');
       if(gShare) gShare.innerText = t.share;
 
+      var bProfilePrivacy = document.getElementById('lbl-back-to-profile-privacy');
+      if (bProfilePrivacy) bProfilePrivacy.innerText = t.backToProfile;
+      var privacyHeader = document.getElementById('lbl-privacy-header');
+      if (privacyHeader) privacyHeader.innerText = t.privacyHeader;
+      var privacyOptTitle = document.getElementById('lbl-privacy-opt-title');
+      if (privacyOptTitle) privacyOptTitle.innerText = t.privacyOptTitle;
+      var privacyOptDesc = document.getElementById('lbl-privacy-opt-desc');
+      if (privacyOptDesc) privacyOptDesc.innerText = t.privacyOptDesc;
+      var optPublic = document.getElementById('lbl-opt-public');
+      if (optPublic) optPublic.innerText = t.optPublic;
+      var optFriends = document.getElementById('lbl-opt-friends');
+      if (optFriends) optFriends.innerText = t.optFriends;
+      var optPrivate = document.getElementById('lbl-opt-private');
+      if (optPrivate) optPrivate.innerText = t.optPrivate;
+      var savePrivacyBtn = document.getElementById('lbl-save-privacy');
+      if (savePrivacyBtn) savePrivacyBtn.innerText = t.saveChanges;
+      var cancelPrivacyBtn = document.getElementById('lbl-cancel-privacy');
+      if (cancelPrivacyBtn) cancelPrivacyBtn.innerText = t.cancel;
+      var privacyMenuBtn = document.getElementById('lbl-privacy-menu-btn');
+      if (privacyMenuBtn) privacyMenuBtn.innerText = t.privacyMenuBtn;
+      var lockedTitle = document.getElementById('lbl-locked-title');
+      if (lockedTitle) lockedTitle.innerText = t.lockedProfileTitle;
+      var lockedSub = document.getElementById('lbl-locked-sub');
+      if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
+
       document.getElementById('site-language-select').value = lang;
     }
 
@@ -2898,6 +3067,43 @@
         menu.classList.add('open');
         overlay.style.display = 'block';
       }
+    }
+
+    /* PRIVACY SETTINGS NAVIGATION & ACTIONS */
+    function showPrivacySettings() {
+      if (!currentUser) return;
+      var currentPrivacy = (userProfile && userProfile.privacy_setting) ? userProfile.privacy_setting : 'public';
+      
+      var radios = document.getElementsByName('privacy_setting');
+      for (var i = 0; i < radios.length; i++) {
+        if (radios[i].value === currentPrivacy) {
+          radios[i].checked = true;
+        }
+      }
+      showScreen('privacy');
+    }
+
+    function savePrivacySettings() {
+      if (!currentUser) return;
+      var selectedPrivacy = 'public';
+      var radios = document.getElementsByName('privacy_setting');
+      for (var i = 0; i < radios.length; i++) {
+        if (radios[i].checked) {
+          selectedPrivacy = radios[i].value;
+          break;
+        }
+      }
+
+      db.collection('profiles').doc(currentUser.uid).update({
+        privacy_setting: selectedPrivacy,
+        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        if (userProfile) userProfile.privacy_setting = selectedPrivacy;
+        alert(currentLang === 'ka' ? "კონფიდენციალურობის პარამეტრები შენახულია!" : "Privacy settings saved!");
+        showMyProfile();
+      }).catch(function(error) {
+        alert("შეცდომა: " + error.message);
+      });
     }
 
     /* ---- 🎰 COMPACT TIMER BANNER LOGIC ---- */
@@ -3128,6 +3334,7 @@
       document.getElementById('profile-screen').style.display = 'none';
       document.getElementById('edit-profile-screen').style.display = 'none';
       document.getElementById('connections-screen').style.display = 'none';
+      document.getElementById('privacy-screen').style.display = 'none';
 
       var dropdownHome = document.getElementById('requests-dropdown-home');
       var dropdownProfile = document.getElementById('requests-dropdown-profile');
@@ -3146,6 +3353,8 @@
         document.getElementById('connections-screen').style.display = 'block';
       } else if (screenName === 'edit-profile') {
         document.getElementById('edit-profile-screen').style.display = 'block';
+      } else if (screenName === 'privacy') {
+        document.getElementById('privacy-screen').style.display = 'block';
       }
         
       if (currentUser) {
@@ -4010,6 +4219,16 @@
       var onlineBadge = document.getElementById('profile-online-badge');
       if (onlineBadge) onlineBadge.style.display = "none";
 
+      var lockMsgEl = document.getElementById('private-profile-lock-msg');
+      if (lockMsgEl) lockMsgEl.style.display = 'none';
+
+      var detailsBox = document.getElementById('profile-details-container');
+      var friendsPreview = document.querySelector('.profile-friends-preview-box');
+      var tabsEl = document.querySelector('.profile-tabs');
+      if (detailsBox) detailsBox.style.display = 'block';
+      if (friendsPreview) friendsPreview.style.display = 'block';
+      if (tabsEl) tabsEl.style.display = 'flex';
+
       db.collection('profiles').doc(currentUser.uid).get().then(function(doc) {
         if (doc.exists) userProfile = doc.data();
 
@@ -4094,11 +4313,60 @@
         document.getElementById('cover-camera-btn').style.display = "none";
         document.getElementById('profile-burger-btn').style.display = "none";
 
-        renderProfileDetails(selectedUser);
-        switchProfileTab('posts');
-        showScreen('profile');
+        // FRIENDSHIP & PRIVACY CHECK
+        db.collection('friend_requests').get().then(function(snapshot) {
+          var isFriend = false;
+          snapshot.forEach(function(rDoc) {
+            var data = rDoc.data();
+            var isPair = (data.sender_id === currentUser.uid && data.receiver_id === userId) ||
+                         (data.sender_id === userId && data.receiver_id === currentUser.uid);
+            if (isPair && data.status === 'accepted') {
+              isFriend = true;
+            }
+          });
 
-        updateFriendshipButtons(userId);
+          var privacySetting = selectedUser.privacy_setting || 'public';
+          var isLocked = false;
+          if (privacySetting === 'friends' && !isFriend) {
+            isLocked = true;
+          } else if (privacySetting === 'private') {
+            isLocked = true;
+          }
+
+          var lockMsgEl = document.getElementById('private-profile-lock-msg');
+          var detailsBox = document.getElementById('profile-details-container');
+          var friendsPreview = document.querySelector('.profile-friends-preview-box');
+          var tabsEl = document.querySelector('.profile-tabs');
+          var postsWall = document.getElementById('profile-posts-wall');
+          var photosWall = document.getElementById('profile-photos-wall');
+
+          if (isLocked) {
+            if (detailsBox) detailsBox.style.display = 'none';
+            if (friendsPreview) friendsPreview.style.display = 'none';
+            if (tabsEl) tabsEl.style.display = 'none';
+            if (postsWall) postsWall.style.display = 'none';
+            if (photosWall) photosWall.style.display = 'none';
+            if (lockMsgEl) {
+              lockMsgEl.style.display = 'block';
+              var t = TRANSLATIONS[currentLang];
+              lockMsgEl.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+                <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "ეს პროფილი დახურულია"}</div>
+                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">${t.lockedProfileSub || "მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა."}</div>
+              `;
+            }
+          } else {
+            if (lockMsgEl) lockMsgEl.style.display = 'none';
+            if (detailsBox) detailsBox.style.display = 'block';
+            if (friendsPreview) friendsPreview.style.display = 'block';
+            if (tabsEl) tabsEl.style.display = 'flex';
+            renderProfileDetails(selectedUser);
+            switchProfileTab('posts');
+          }
+
+          showScreen('profile');
+          updateFriendshipButtons(userId);
+        });
       });
     }
 
