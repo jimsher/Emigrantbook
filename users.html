@@ -64,6 +64,7 @@
       font-weight: bold;
     }
     .header-icon-btn:hover { background: #333333; }
+    .header-icon-svg { width: 20px; height: 20px; fill: #e4e6eb; }
 
     /* BURGER MENU STYLES */
     .burger-btn {
@@ -206,13 +207,6 @@
       flex: 1;
       min-width: 0;
     }
-    .user-card-left:hover .user-fullname {
-      text-decoration: underline;
-      color: #dcae36;
-    }
-    .user-card-left:hover .user-avatar-holder {
-      opacity: 0.85;
-    }
     
     /* AVATAR & ONLINE PULSE */
     .user-avatar-holder {
@@ -228,7 +222,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.2s;
     }
     .user-avatar-holder img {
       width: 100%;
@@ -267,7 +260,9 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      transition: color 0.2s;
+    }
+    .user-fullname:hover {
+      text-decoration: underline;
     }
     .user-last-seen {
       font-size: 12px;
@@ -449,7 +444,7 @@
 
     var currentUser = null;
     var allUsersData = [];
-    var friendRequestsMap = {}; 
+    var friendRequestsMap = {}; // Maps targetUserId -> { reqId, status, sender_id }
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
     var TRANSLATIONS = {
@@ -662,9 +657,9 @@
       renderUsersList();
     }
 
-    // REDIRECT TO MAIN INDEX PAGE WITH PROFILE PARAMETER
+    // GO TO USER PROFILE
     function goToUserProfile(userId) {
-      window.location.href = `index.html?profile=${userId}`;
+      window.location.href = `profile.html?id=${userId}`;
     }
 
     // FRIEND ACTIONS
