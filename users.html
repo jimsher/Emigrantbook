@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>მომხმარებლები - Emigrantbook</title>
+  <link rel="stylesheet" href="supabase1.css">
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    body {
+      background-color: #0b0b0b;
+      color: #e4e6eb;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .header {
+      background: #141414;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222222;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo-text {
+      font-size: 22px;
+      font-weight: bold;
+      color: #dcae36;
+      cursor: pointer;
+      user-select: none;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon-btn {
+      background: #222222;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #e4e6eb;
+      font-weight: bold;
+    }
+    .header-icon-btn:hover { background: #333333; }
+    .header-icon-svg { width: 20px; height: 20px; fill: #e4e6eb; }
+
+    /* BURGER MENU STYLES */
+    .burger-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 5px;
+      z-index: 110;
+    }
+    .burger-line {
+      width: 25px;
+      height: 3px;
+      background-color: #e4e6eb;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .side-menu-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 400;
+      display: none;
+    }
+    .side-menu-content {
+      position: fixed;
+      top: 0; right: -80%; width: 80%; max-width: 340px; height: 100%;
+      background: #121212;
+      border-left: 1px solid #222222;
+      z-index: 401;
+      display: flex;
+      flex-direction: column;
+      padding: 60px 0 20px 0;
+      transition: right 0.3s ease;
+      box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+      overflow-y: auto;
+    }
+    .side-menu-content.open { right: 0 !important; }
+    .menu-section-title {
+      font-size: 13px;
+      color: #777;
+      padding: 15px 20px 8px 20px;
+      font-weight: 600;
+    }
+    .menu-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .menu-item-row:hover { background: #1e1e1e; }
+    .menu-item-left { display: flex; align-items: center; gap: 14px; }
+    .menu-item-icon { font-size: 20px; width: 24px; display: flex; justify-content: center; }
+    .menu-item-arrow { color: #666; font-weight: bold; }
+    .menu-divider { height: 1px; background: #222222; margin: 8px 0; }
+    .side-menu-logout-btn {
+      width: calc(100% - 40px);
+      padding: 12px;
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 20px 20px 10px 20px;
+    }
+
+    /* CONTAINER & SEARCH */
+    .users-container {
+      max-width: 680px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    .page-title-card {
+      background: #141414;
+      border-radius: 12px;
+      padding: 18px 20px;
+      border: 1px solid #222222;
+      margin-bottom: 15px;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #dcae36;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .search-input-box {
+      width: 100%;
+      padding: 12px 16px;
+      background: #222222;
+      border: 1px solid #333333;
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input-box:focus {
+      border-color: #dcae36;
+    }
+
+    /* USER CARD LAYOUT */
+    .users-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .user-card {
+      background: #141414;
+      border: 1px solid #222222;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: background 0.2s;
+    }
+    .user-card:hover {
+      background: #181818;
+    }
+    .user-card-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 0;
+    }
+    
+    /* AVATAR & ONLINE PULSE */
+    .user-avatar-holder {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      min-width: 52px;
+      border-radius: 50%;
+      background: #dcae36;
+      color: #111111;
+      font-weight: bold;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .user-avatar-holder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .online-status-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 14px;
+      height: 14px;
+      background-color: #31a24c;
+      border: 2px solid #141414;
+      border-radius: 50%;
+      z-index: 10;
+      animation: onlinePulse 2s infinite;
+      pointer-events: none;
+    }
+    @keyframes onlinePulse {
+      0% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(49, 162, 76, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0); }
+    }
+
+    .user-info-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .user-fullname {
+      font-size: 15px;
+      font-weight: bold;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-fullname:hover {
+      text-decoration: underline;
+    }
+    .user-last-seen {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-top: 3px;
+    }
+    .user-last-seen.online {
+      color: #31a24c;
+      font-weight: 600;
+    }
+
+    /* RIGHT ACTION BUTTONS */
+    .user-card-right {
+      display: flex;
+      align-items: center;
+    }
+    .fb-btn-primary {
+      background: #dcae36;
+      color: #111111;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .fb-btn-primary:hover { background: #c2982e; }
+    
+    .fb-btn-secondary {
+      background: #222222;
+      color: #e4e6eb;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .fb-btn-secondary:hover { background: #333333; }
+
+    .fb-btn-danger {
+      background: #ff4d4f;
+      color: #ffffff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .fb-btn-danger:hover { background: #d93d40; }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaaaaa;
+      padding: 30px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 680px) {
+      .users-container { padding: 0 !important; margin: 0 !important; }
+      .page-title-card { border-radius: 0; border-left: none; border-right: none; }
+      .user-card { border-radius: 0; border-left: none; border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-text" onclick="window.location.href='index.html'">Emigrantbook</div>
+    
+    <div class="header-right">
+      <button class="header-icon-btn" onclick="window.location.href='messenger.html'">💬</button>
+      <button class="burger-btn" onclick="toggleSideMenu(event)">
+        <div class="burger-line"></div>
+        <div class="burger-line"></div>
+        <div class="burger-line"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- BURGER SIDEBAR MENU -->
+  <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
+  <div class="side-menu-content" id="side-menu-content">
+    
+    <div style="padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
+      <label style="color: #dcae36; font-weight: bold; font-size: 13px;">🌐 ენის არჩევა / Language</label>
+      <select id="site-language-select" onchange="changeSiteLanguage(this.value)" style="margin-top: 8px; width: 100%; padding: 10px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; outline: none;">
+        <option value="ka">Georgian (ქართული)</option>
+        <option value="en">English</option>
+        <option value="ru">Russian (Русский)</option>
+        <option value="fr">French (Français)</option>
+        <option value="de">German (Deutsch)</option>
+      </select>
+    </div>
+
+    <div class="menu-section-title">ნავიგაცია</div>
+
+    <button class="menu-item-row" onclick="window.location.href='index.html'">
+      <div class="menu-item-left">
+        <span class="menu-item-icon">🏠</span>
+        <span>მთავარი გვერდი</span>
+      </div>
+      <span class="menu-item-arrow">›</span>
+    </button>
+
+    <button class="menu-item-row" onclick="window.location.href='users.html'">
+      <div class="menu-item-left">
+        <span class="menu-item-icon">👥</span>
+        <span style="color: #dcae36;">საიტის მომხმარებლები</span>
+      </div>
+      <span class="menu-item-arrow">›</span>
+    </button>
+
+    <button class="menu-item-row" onclick="window.location.href='balance.html'">
+      <div class="menu-item-left">
+        <span class="menu-item-icon">👛</span>
+        <span>ბალანსი</span>
+      </div>
+      <span class="menu-item-arrow">›</span>
+    </button>
+
+    <div class="menu-divider"></div>
+
+    <div class="menu-section-title">ინსტრუმენტები შემოქმედებისა და ბიზნესისთვის</div>
+
+    <button class="menu-item-row">
+      <div class="menu-item-left">
+        <span class="menu-item-icon">💡</span>
+        <span>ძიების სტატისტიკა ავტორებისთვის</span>
+      </div>
+      <span class="menu-item-arrow">›</span>
+    </button>
+
+    <button class="side-menu-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
+  </div>
+
+  <!-- MAIN USERS PAGE CONTENT -->
+  <div class="users-container">
+    
+    <div class="page-title-card">
+      <div class="page-title">
+        <span>👥</span>
+        <span id="lbl-page-title">საიტის მომხმარებლები</span>
+      </div>
+      <input type="text" id="user-search-input" class="search-input-box" placeholder="ძებნა სახელით ან გვარით..." oninput="filterUsers()">
+    </div>
+
+    <div class="users-list" id="users-list-wrapper">
+      <div class="empty-msg" id="lbl-loading">მომხმარებლები იტვირთება...</div>
+    </div>
+
+  </div>
+
+  <script>
+    // FIREBASE INITIALIZATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    var currentUser = null;
+    var allUsersData = [];
+    var friendRequestsMap = {}; // Maps targetUserId -> { reqId, status, sender_id }
+    var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+
+    var TRANSLATIONS = {
+      ka: {
+        pageTitle: "საიტის მომხმარებლები",
+        searchPlaceholder: "ძებნა სახელით ან გვარით...",
+        loading: "მომხმარებლები იტვირთება...",
+        empty: "მომხმარებლები ვერ მოიძებნა",
+        addFriend: "დამეგობრება",
+        cancelReq: "გაუქმება",
+        acceptReq: "მიღება",
+        unfriend: "წაშლა",
+        onlineNow: "● აქტიურია ახლა",
+        lastSeen: "ბოლოს იყო: ",
+        justNow: "ახლახანს"
+      },
+      en: {
+        pageTitle: "Site Users",
+        searchPlaceholder: "Search by name...",
+        loading: "Loading users...",
+        empty: "No users found",
+        addFriend: "Add Friend",
+        cancelReq: "Cancel",
+        acceptReq: "Accept",
+        unfriend: "Unfriend",
+        onlineNow: "● Active now",
+        lastSeen: "Last seen: ",
+        justNow: "Just now"
+      }
+    };
+
+    function applyLanguage() {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
+      document.getElementById('lbl-page-title').innerText = t.pageTitle;
+      document.getElementById('user-search-input').placeholder = t.searchPlaceholder;
+      document.getElementById('site-language-select').value = currentLang;
+    }
+
+    function changeSiteLanguage(newLang) {
+      currentLang = newLang;
+      localStorage.setItem('emigrantbook_lang', newLang);
+      applyLanguage();
+      renderUsersList();
+    }
+
+    function toggleSideMenu(event) {
+      if(event) event.stopPropagation();
+      var menu = document.getElementById('side-menu-content');
+      var overlay = document.getElementById('side-menu-overlay');
+      if(menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        overlay.style.display = 'none';
+      } else {
+        menu.classList.add('open');
+        overlay.style.display = 'block';
+      }
+    }
+
+    function isUserOnline(profileData) {
+      if (!profileData || profileData.is_online !== true || !profileData.last_seen) return false;
+      var lastSeenDate = profileData.last_seen.toDate ? profileData.last_seen.toDate() : new Date(profileData.last_seen);
+      var diffMinutes = (new Date() - lastSeenDate) / (1000 * 60);
+      return diffMinutes < 2;
+    }
+
+    function formatLastSeenTime(profileData) {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
+      if (isUserOnline(profileData)) {
+        return `<span class="user-last-seen online">${t.onlineNow}</span>`;
+      }
+      if (!profileData.last_seen) {
+        return `<span class="user-last-seen">${t.lastSeen} -</span>`;
+      }
+
+      var date = profileData.last_seen.toDate ? profileData.last_seen.toDate() : new Date(profileData.last_seen);
+      var now = new Date();
+      var diffSecs = Math.floor((now - date) / 1000);
+      var diffMins = Math.floor(diffSecs / 60);
+      var diffHours = Math.floor(diffMins / 60);
+      var diffDays = Math.floor(diffHours / 24);
+
+      var timeStr = "";
+      if (diffMins < 1) {
+        timeStr = t.justNow;
+      } else if (diffMins < 60) {
+        timeStr = diffMins + " წთ-ის წინ";
+      } else if (diffHours < 24) {
+        timeStr = diffHours + " სთ-ის წინ";
+      } else if (diffDays < 7) {
+        timeStr = diffDays + " დღის წინ";
+      } else {
+        timeStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+
+      return `<span class="user-last-seen">${t.lastSeen} ${timeStr}</span>`;
+    }
+
+    // AUTH LISTENER
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        applyLanguage();
+        subscribeRealtimeUsers();
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // SUBSCRIBE REALTIME DATA
+    function subscribeRealtimeUsers() {
+      // 1. Listen to Friend Requests
+      db.collection('friend_requests').onSnapshot(function(requestsSnap) {
+        friendRequestsMap = {};
+        requestsSnap.forEach(function(doc) {
+          var req = doc.data();
+          if (req.sender_id === currentUser.uid) {
+            friendRequestsMap[req.receiver_id] = { reqId: doc.id, status: req.status, isSender: true };
+          } else if (req.receiver_id === currentUser.uid) {
+            friendRequestsMap[req.sender_id] = { reqId: doc.id, status: req.status, isSender: false };
+          }
+        });
+
+        // 2. Fetch Profiles Realtime
+        db.collection('profiles').onSnapshot(function(profilesSnap) {
+          allUsersData = [];
+          profilesSnap.forEach(function(doc) {
+            if (doc.id !== currentUser.uid) { // Exclude current logged in user
+              allUsersData.push(Object.assign({ id: doc.id }, doc.data()));
+            }
+          });
+
+          renderUsersList();
+        });
+      });
+    }
+
+    function renderUsersList() {
+      var wrapper = document.getElementById('users-list-wrapper');
+      var filterText = document.getElementById('user-search-input').value.trim().toLowerCase();
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
+
+      var filtered = allUsersData.filter(function(u) {
+        var name = (u.full_name || "").toLowerCase();
+        return name.includes(filterText);
+      });
+
+      if (filtered.length === 0) {
+        wrapper.innerHTML = `<div class="empty-msg">${t.empty}</div>`;
+        return;
+      }
+
+      wrapper.innerHTML = "";
+
+      filtered.forEach(function(user) {
+        var fullName = user.full_name || "User";
+        var avatarUrl = user.avatar_url;
+        var initial = fullName.charAt(0).toUpperCase();
+
+        var onlineState = isUserOnline(user);
+        var onlineDotHtml = onlineState ? `<div class="online-status-dot"></div>` : ``;
+
+        var avatarContent = avatarUrl 
+          ? `<img src="${avatarUrl}" alt="Avatar">${onlineDotHtml}` 
+          : `<span>${initial}</span>${onlineDotHtml}`;
+
+        // FRIEND ACTION BUTTON STATE
+        var reqInfo = friendRequestsMap[user.id];
+        var btnHtml = "";
+
+        if (!reqInfo) {
+          // NOT FRIENDS -> ADD FRIEND
+          btnHtml = `<button class="fb-btn-primary" onclick="sendFriendRequest('${user.id}')">${t.addFriend}</button>`;
+        } else if (reqInfo.status === 'pending') {
+          if (reqInfo.isSender) {
+            // PENDING SENT -> CANCEL
+            btnHtml = `<button class="fb-btn-secondary" onclick="cancelFriendRequest('${reqInfo.reqId}')">${t.cancelReq}</button>`;
+          } else {
+            // PENDING RECEIVED -> ACCEPT
+            btnHtml = `<button class="fb-btn-primary" onclick="acceptFriendRequest('${reqInfo.reqId}')">${t.acceptReq}</button>`;
+          }
+        } else if (reqInfo.status === 'accepted') {
+          // ALREADY FRIENDS -> UNFRIEND / REMOVE
+          btnHtml = `<button class="fb-btn-danger" onclick="deleteFriendship('${reqInfo.reqId}')">${t.unfriend}</button>`;
+        }
+
+        var lastSeenHtml = formatLastSeenTime(user);
+
+        var cardHtml = `
+          <div class="user-card">
+            <div class="user-card-left" onclick="goToUserProfile('${user.id}')">
+              <div class="user-avatar-holder">
+                ${avatarContent}
+              </div>
+              <div class="user-info-text">
+                <span class="user-fullname">${fullName}</span>
+                ${lastSeenHtml}
+              </div>
+            </div>
+            <div class="user-card-right">
+              ${btnHtml}
+            </div>
+          </div>
+        `;
+
+        wrapper.innerHTML += cardHtml;
+      });
+    }
+
+    function filterUsers() {
+      renderUsersList();
+    }
+
+    function goToUserProfile(userId) {
+      window.location.href = `index.html?profile=${userId}`;
+    }
+
+    // FRIEND ACTIONS
+    function sendFriendRequest(targetUserId) {
+      db.collection('friend_requests').add({
+        sender_id: currentUser.uid,
+        receiver_id: targetUserId,
+        status: 'pending',
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    function cancelFriendRequest(reqId) {
+      db.collection('friend_requests').doc(reqId).delete();
+    }
+
+    function acceptFriendRequest(reqId) {
+      db.collection('friend_requests').doc(reqId).update({ status: 'accepted' });
+    }
+
+    function deleteFriendship(reqId) {
+      var msg = currentLang === 'ka' ? "ნამდვილად გსურთ მეგობრობის გაუქმება?" : "Are you sure you want to unfriend?";
+      if (confirm(msg)) {
+        db.collection('friend_requests').doc(reqId).delete();
+      }
+    }
+
+    function logout() {
+      auth.signOut().then(function() {
+        window.location.href = "index.html";
+      });
+    }
+  </script>
+</body>
+</html>
