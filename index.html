@@ -2028,20 +2028,18 @@
       </div>
 
       <!-- LOTTERY COMPACT TIMER BANNER -->
-      <div id="live-lottery-post-card" style="display: block; background: #141414; border: 1px solid #dcae36; border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 15px rgba(220, 174, 54, 0.2);">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;">
-          <span id="lottery-post-badge" style="background: #dcae36; color: #111; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">⏳ ათვლა</span>
-          <span style="color: #dcae36; font-weight: bold; font-size: 14px;">მომდევნო გათამაშება</span>
-        </div>
-
-        <div id="lottery-live-status" style="font-size: 18px; font-weight: bold; color: #ffffff; letter-spacing: 0.5px;">
-          00:00:00
-        </div>
-
-        <div id="lottery-post-winner-box" style="display: none; margin-top: 6px; font-size: 13px; color: #ffd700; font-weight: bold;">
-          <span id="lottery-post-winner-name">🎉 გამარჯვებული: -</span>
-        </div>
-      </div>
+      <!-- საიტის მომხმარებლების ღილაკი რეალური რაოდენობის მაჩვენებლით -->
+<div class="user-list-banner-card" onclick="window.location.href='users.html'" style="background: #141414; border: 1px solid #222222; border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; cursor: pointer; transition: background 0.2s;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <span style="font-size: 22px;">👥</span>
+    <span style="color: #ffffff; font-size: 15px; font-weight: 600;">საიტის მომხმარებლები</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <!-- მარცხნივ/გვერდით რაოდენობის მაჩვენებელი -->
+    <span id="total-users-badge" style="background: #dcae36; color: #111111; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 28px; text-align: center;">0</span>
+    <span style="color: #666666; font-weight: bold; font-size: 18px;">›</span>
+  </div>
+</div>
 
       <div id="posts-wall">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
@@ -3288,6 +3286,7 @@
           subscribeToGlobalNotifications();
           subscribeToMessagesRealtime();
           subscribeToLiveLotteryPost();
+          subscribeTotalUsersCount();
           
           hidePreloader();
         });
@@ -3563,6 +3562,17 @@
           }
         });
     }
+
+    // ბაზიდან მომხმარებლების რეალური რაოდენობის წამოღება და ავტომატური განახლება
+function subscribeTotalUsersCount() {
+  db.collection('profiles').onSnapshot(function(snapshot) {
+    var totalCount = snapshot.size; // ითვლის დარეგისტრირებულების სრულ რაოდენობას
+    var badgeEl = document.getElementById('total-users-badge');
+    if (badgeEl) {
+      badgeEl.innerText = totalCount;
+    }
+  });
+}
 
     function checkPendingRequestsCount() {
       if (!currentUser) return;
