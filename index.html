@@ -2511,7 +2511,7 @@
   </div>
 
   <script>
-    const firebaseConfig = {
+   const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
       projectId: "emigrantbook-4b7bd",
@@ -3013,7 +3013,8 @@
       var lockedSub = document.getElementById('lbl-locked-sub');
       if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
 
-      document.getElementById('site-language-select').value = lang;
+      var langSelect = document.getElementById('site-language-select');
+      if(langSelect) langSelect.value = lang;
     }
 
     function changeSiteLanguage(newLang) {
@@ -3067,7 +3068,6 @@
       }
     }
 
-    /* PRIVACY SETTINGS NAVIGATION & ACTIONS */
     function showPrivacySettings() {
       if (!currentUser) return;
       var currentPrivacy = (userProfile && userProfile.privacy_setting) ? userProfile.privacy_setting : 'public';
@@ -3104,7 +3104,6 @@
       });
     }
 
-    /* ---- 🎰 COMPACT TIMER BANNER LOGIC ---- */
     function subscribeToLiveLotteryPost() {
       var card = document.getElementById('live-lottery-post-card');
       if (!card) return;
@@ -3230,10 +3229,8 @@
         currentUser = user;
         activeViewingProfileId = user.uid;
 
-        // ამოწმებს users.html-იდან ხომ არ გადმოვედით პროფილის სანახავად
         var targetUserId = sessionStorage.getItem('target_view_user_id');
 
-        // მყისიერად ვმალავთ auth ეკრანს, რომ თვალში არ აციმციმდეს
         if (targetUserId) {
           showScreen('profile');
         } else {
@@ -3296,7 +3293,6 @@
         hidePreloader();
       }
     });
-        
 
     function toggleRequestsDropdown(event) {
       event.stopPropagation();
@@ -3405,7 +3401,7 @@
       messengerUnsubscribeGroup.forEach(unsub => unsub());
       messengerUnsubscribeGroup = [];
 
-      db.collection('friend_requests')
+      var unsub = db.collection('friend_requests')
         .where('status', '==', 'accepted')
         .onSnapshot(function(snapshot) {
           let friendIds = [];
@@ -3426,7 +3422,7 @@
           friendIds.forEach(fId => {
             let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
             
-            let unsub = db.collection('chats').doc(chatId).collection('messages')
+            let msgUnsub = db.collection('chats').doc(chatId).collection('messages')
               .where('read', '==', false)
               .onSnapshot(function(msgsSnap) {
                 let unreadCountFromFriend = 0;
@@ -3456,9 +3452,10 @@
                 console.error("Messages listener error:", err);
               });
 
-            messengerUnsubscribeGroup.push(unsub);
+            messengerUnsubscribeGroup.push(msgUnsub);
           });
         });
+        messengerUnsubscribeGroup.push(unsub);
     }
 
     function subscribeToGlobalNotifications() {
@@ -3515,7 +3512,7 @@
     }
 
     function subscribeToPostsRealtime() {
-      db.collection('posts').onSnapshot(function(snapshot) {
+      db.collection('posts').limit(20).onSnapshot(function(snapshot) {
         snapshot.docChanges().forEach(function(change) {
           if (change.type === 'MODIFIED') {
             var updatedPost = change.doc.data();
@@ -3534,10 +3531,6 @@
             if (activePostForComments === postId) {
               var modalTotal = document.getElementById('modal-total-likes');
               if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
-            }
-
-            if(document.getElementById(`floating-container-feed-${postId}`)) {
-              startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
             }
           }
         });
@@ -3563,16 +3556,18 @@
         });
     }
 
-    // ბაზიდან მომხმარებლების რეალური რაოდენობის წამოღება და ავტომატური განახლება
-function subscribeTotalUsersCount() {
-  db.collection('profiles').onSnapshot(function(snapshot) {
-    var totalCount = snapshot.size; // ითვლის დარეგისტრირებულების სრულ რაოდენობას
-    var badgeEl = document.getElementById('total-users-badge');
-    if (badgeEl) {
-      badgeEl.innerText = totalCount;
+    /* გასწორებული მომხმარებლების თვლა - 100% უსაფრთხო სინტაქსით */
+    function subscribeTotalUsersCount() {
+      db.collection('profiles').get().then(function(snap) {
+        var totalCount = snap.size;
+        var badgeEl = document.getElementById('total-users-badge');
+        if (badgeEl) {
+          badgeEl.innerText = totalCount;
+        }
+      }).catch(function(err){
+        console.error("Count error:", err);
+      });
     }
-  });
-}
 
     function checkPendingRequestsCount() {
       if (!currentUser) return;
@@ -4315,7 +4310,6 @@ function subscribeTotalUsersCount() {
         document.getElementById('cover-camera-btn').style.display = "none";
         document.getElementById('profile-burger-btn').style.display = "none";
 
-        // FRIENDSHIP & PRIVACY CHECK
         db.collection('friend_requests').get().then(function(snapshot) {
           var isFriend = false;
           snapshot.forEach(function(rDoc) {
@@ -4405,6 +4399,7 @@ function subscribeTotalUsersCount() {
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
+        .limit(30)
         .get()
         .then(function(snapshot) {
           var posts = [];
@@ -4450,6 +4445,7 @@ function subscribeTotalUsersCount() {
         .where('user_id', '==', userId)
         .where('media_type', '==', 'video')
         .orderBy('created_at', 'desc')
+        .limit(20)
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
@@ -4779,6 +4775,7 @@ function subscribeTotalUsersCount() {
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
+        .limit(20)
         .get()
         .then(function(snapshot) {
           var posts = [];
@@ -4793,7 +4790,7 @@ function subscribeTotalUsersCount() {
 
           profileWall.innerHTML = "";
           
-          db.collection('profiles').get().then(function(profilesSnap) {
+          db.collection('profiles').limit(50).get().then(function(profilesSnap) {
             cachedProfiles = {};
             cachedOnlineStates = {};
             profilesSnap.forEach(function(pDoc) {
@@ -5016,12 +5013,11 @@ function subscribeTotalUsersCount() {
 
       Promise.all([
         db.collection('friend_requests').where('status', '==', 'accepted').get(),
-        db.collection('profiles').get()
+        db.collection('profiles').limit(50).get()
       ]).then(function(results) {
         var friendReqSnap = results[0];
         var profilesSnap = results[1];
 
-        // 1. მეგობრების სია
         var myFriendsSet = new Set();
         friendReqSnap.forEach(function(docSnap) {
           var req = docSnap.data();
@@ -5029,7 +5025,6 @@ function subscribeTotalUsersCount() {
           if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
         });
 
-        // 2. პროფილების/კონფიდენციალურობის ქეში
         cachedProfiles = {};
         cachedOnlineStates = {};
         var userPrivacyMap = {};
@@ -5041,9 +5036,9 @@ function subscribeTotalUsersCount() {
           userPrivacyMap[pDoc.id] = pData.privacy_setting || 'public';
         });
 
-        // 3. პოსტების წამოღება და ფილტრაცია
         db.collection('posts')
           .orderBy('created_at', 'desc')
+          .limit(20)
           .get()
           .then(function(snapshot) {
             var postsWall = document.getElementById('posts-wall');
@@ -5064,15 +5059,13 @@ function subscribeTotalUsersCount() {
               var isMyOwnPost = (authorId === currentUser.uid);
               var isFriend = myFriendsSet.has(authorId);
 
-              // ფილტრაციის წესები:
               if (isMyOwnPost) {
-                posts.push(postData); // ჩემი პოსტი ყოველთვის ჩანს ჩემთან
+                posts.push(postData);
               } else if (privacy === 'public') {
-                posts.push(postData); // საჯარო პოსტი ჩანს ყველასთან
+                posts.push(postData);
               } else if (privacy === 'friends' && isFriend) {
-                posts.push(postData); // მეგობრების პოსტი ჩანს მხოლოდ მეგობრებთან
+                posts.push(postData);
               }
-              // private ან friends (თუ მეგობარი არაა) არ ემატება მთავარ გვერდზე
             });
 
             if (posts.length === 0) {
@@ -5112,7 +5105,7 @@ function subscribeTotalUsersCount() {
         container.innerHTML = "";
       }
 
-      db.collection('posts').doc(postId).collection('post_likes').get().then(function(snapshot) {
+      db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
         if(snapshot.empty) return;
 
         var likersList = [];
@@ -5124,7 +5117,8 @@ function subscribeTotalUsersCount() {
         var index = 0;
         
         function spawn() {
-          if (document.getElementById(containerId) === null) {
+          var targetElem = document.getElementById(containerId);
+          if (!targetElem) {
             clearInterval(activeFloatingIntervals[postId]);
             return;
           }
@@ -5138,14 +5132,14 @@ function subscribeTotalUsersCount() {
           bubble.className = "tiktok-floating-avatar-item";
           bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
           
-          container.appendChild(bubble);
+          targetElem.appendChild(bubble);
           setTimeout(function() { if(bubble && bubble.parentNode) bubble.remove(); }, 6000);
           index = (index + 1) % likersList.length;
         }
 
-        document.getElementById(containerId).innerHTML = "";
+        container.innerHTML = "";
         spawn();
-        activeFloatingIntervals[postId] = setInterval(spawn, 1900);
+        activeFloatingIntervals[postId] = setInterval(spawn, 3000);
       });
     }
 
@@ -5336,14 +5330,13 @@ function subscribeTotalUsersCount() {
       });
     }
 
-     function likePost(postId, isTiktokView) {
+    function likePost(postId, isTiktokView) {
       if (!currentUser) return;
       var postRef = db.collection('posts').doc(postId);
       var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
 
       likeRef.get().then(function(doc) {
         if (doc.exists) {
-          // Unlike
           likeRef.delete().then(function() {
             updatePostLikesCount(postId, -1);
             likedPosts = likedPosts.filter(id => id !== postId);
@@ -5352,7 +5345,6 @@ function subscribeTotalUsersCount() {
             console.error("Unlike error:", err);
           });
         } else {
-          // Like
           var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
           var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
 
@@ -5486,6 +5478,7 @@ function subscribeTotalUsersCount() {
 
       db.collection('stories')
         .where('created_at', '>=', oneDayAgo)
+        .limit(20)
         .get()
         .then(function(snapshot) {
           var stories = [];
@@ -5509,7 +5502,7 @@ function subscribeTotalUsersCount() {
 
           if (stories.length === 0) return;
 
-          db.collection('profiles').get().then(function(profilesSnap) {
+          db.collection('profiles').limit(50).get().then(function(profilesSnap) {
             var profilesMap = {};
             profilesSnap.forEach(function(pDoc) { profilesMap[pDoc.id] = pDoc.data(); });
 
@@ -5599,7 +5592,7 @@ function subscribeTotalUsersCount() {
       document.getElementById('sv-media-container').innerHTML = "";
       modal.style.display = "none";
       currentViewingStoryObj = null;
-    }
+    }                                                       if(menu.classList.contains('open')) {
   </script>
 </body>
 </html>         
