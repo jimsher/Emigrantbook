@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Emigrant Messenger</title>
   
-  <!-- Firebase Compat & Module Scripts -->
+  <!-- Firebase Compat Scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -308,6 +308,23 @@
       flex-shrink: 0;
       margin-left: 6px;
       box-shadow: 0 0 8px rgba(46, 213, 115, 0.6);
+    }
+
+    /* Meta AI მცურავი ღილაკი */
+    .meta-ai-float-btn {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #2ed573, #0084ff);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 99;
     }
 
     /* ქვედა ნავბარი */
@@ -730,6 +747,10 @@
         <p style="padding:20px; color:#8e8e93; text-align:center;" id="lbl-loading">იტვირთება...</p>
       </div>
 
+      <div class="meta-ai-float-btn" onclick="alert('Meta AI')">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      </div>
+
       <!-- FOOTER NAV -->
       <div class="footer-nav">
         <button class="nav-tab active">
@@ -923,20 +944,50 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
+    // ორიგინალი, ძლიერი ფოტოს ამოღების ლოგიკა (რომელიც ყველა ველს ამოწმებს)
     function extractPhotoUrl(uData) {
       if (!uData) return "";
-      return uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || "";
+      let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.avatar_url || uData.userImg || uData.userPhoto || uData.cover;
+      if (photoCandidate && typeof photoCandidate === 'string' && photoCandidate.trim() !== '') return photoCandidate;
+
+      for (let key in uData) {
+        let val = uData[key];
+        if (typeof val === 'string' && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image'))) {
+          let lowerKey = key.toLowerCase();
+          if (lowerKey.includes('photo') || lowerKey.includes('avatar') || lowerKey.includes('img') || lowerKey.includes('pic') || lowerKey.includes('image') || lowerKey.includes('profile') || lowerKey.includes('cover') || lowerKey.includes('url')) {
+            return val;
+          }
+        }
+      }
+      return "";
     }
 
+    // ორიგინალი სახელის ამოღების ლოგიკა
     function extractName(uData, uid) {
       if (!uData) return "User_" + uid.substring(0, 5);
-      return uData.full_name || uData.name || uData.username || uData.displayName || ("User_" + uid.substring(0, 5));
+      let displayName = uData.full_name || uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
+      if (!displayName && uData.lastName) displayName = uData.lastName;
+
+      if (!displayName) {
+        for (let key in uData) {
+          let val = uData[key];
+          if (typeof val === 'string' && val.trim() !== '' && !val.startsWith('http') && !val.startsWith('data:image')) {
+            let lowerKey = key.toLowerCase();
+            if (lowerKey.includes('name') || lowerKey.includes('user') || lowerKey.includes('nick')) {
+              displayName = val;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!displayName && uData.email) displayName = uData.email.split('@')[0];
+      return displayName || ("User_" + uid.substring(0, 5));
     }
 
     // Auth State Listener & Realtime Language Listener
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        // პროფილის ცვლილებების (მათ შორის ენის) მოსმენა რეალურ დროში
         db.collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
           if (docSnap.exists) {
             var data = docSnap.data();
@@ -1030,13 +1081,13 @@
               }
 
               const isOnline = user.presence === 'online';
-              const imgSrc = user.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff`;
+              const imgSrc = user.photo ? user.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff`;
 
               existingRow.onclick = function() { openChat(user.name, user.photo, user.uid); };
 
               existingRow.innerHTML = `
                 <div class="chat-row-avatar-holder">
-                  <img class="chat-row-avatar" src="${imgSrc}">
+                  <img class="chat-row-avatar" src="${imgSrc}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff';">
                   <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
                 </div>
                 <div class="chat-row-details">
@@ -1055,7 +1106,7 @@
     // 2. ჩატის გახსნა და მიმოწერა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
-      const finalAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
+      const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
 
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'flex';
@@ -1106,7 +1157,7 @@
               msgRow.innerHTML = `<div class="msg-bubble">${msg.text}</div>`;
             } else {
               msgRow.innerHTML = `
-                <img class="msg-bubble-avatar" src="${targetAvatar}">
+                <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
                 <div class="msg-bubble">${msg.text}</div>
               `;
             }
@@ -1178,7 +1229,6 @@
         .orderBy('createdAt', 'desc')
         .onSnapshot(snapshot => {
           const storiesRow = document.getElementById('stories-target-row');
-          // დავტოვოთ მხოლოდ პირველი ღილაკი "სტორის დამატება"
           const firstItem = storiesRow.firstElementChild;
           storiesRow.innerHTML = "";
           storiesRow.appendChild(firstItem);
@@ -1198,7 +1248,7 @@
 
                 storyDiv.innerHTML = `
                   <div class="story-avatar-wrapper has-story">
-                    <img class="story-avatar" src="${photo}">
+                    <img class="story-avatar" src="${photo}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff';">
                   </div>
                   <span class="story-name">${name}</span>
                 `;
