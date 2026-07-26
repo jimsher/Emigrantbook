@@ -305,7 +305,7 @@
     var previousSavedTime = 0;
     var timeTrackerTimer = null;
 
-    // 1. გლობალური სესიის დაწყების დრო (ინახება სანამ ბრაუზერის ტაბს არ დახურავს)
+    // 1. გლობალური სესიის დაწყების დრო
     if (!sessionStorage.getItem('eb_session_start_time')) {
       sessionStorage.setItem('eb_session_start_time', Date.now().toString());
     }
@@ -466,7 +466,7 @@
 
     // REALTIME LISTENERS
     function initRealtimeActivity(uid) {
-      // 1. ბაზიდან წინა გატარებული დროის ჩატვირთვა
+      // 1. profiles კოლექციიდან total_time_spent-ის ჩატვირთვა
       db.collection('profiles').doc(uid).get().then(function(docSnap) {
         if (docSnap.exists) {
           var pData = docSnap.data();
@@ -479,63 +479,48 @@
         }
       });
 
-      // 2. დაწერილი კომენტარების რაოდენობა რეალურ დროში
+      // 2. post_comments კოლექცია (user_id == uid)
       db.collection('post_comments')
         .where('user_id', '==', uid)
         .onSnapshot(function(snap) {
           document.getElementById('stat-comments-count').innerText = snap.size;
-        }, function(err) {
-          db.collection('post_comments').where('userId', '==', uid).onSnapshot(function(snap) {
-            document.getElementById('stat-comments-count').innerText = snap.size;
-          });
-        });
+        }, function(e){ console.warn("Comments error:", e); });
 
-      // 3. ატვირთული სთორების რაოდენობა რეალურ დროში
+      // 3. stories კოლექცია (user_id == uid)
       db.collection('stories')
         .where('user_id', '==', uid)
         .onSnapshot(function(snap) {
           document.getElementById('stat-stories-count').innerText = snap.size;
-        }, function(err) {
-          db.collection('stories').where('userId', '==', uid).onSnapshot(function(snap) {
-            document.getElementById('stat-stories-count').innerText = snap.size;
-          });
-        });
+        }, function(e){ console.warn("Stories error:", e); });
 
-      // 4. გამოქვეყნებული პოსტების რაოდენობა რეალურ დროში
+      // 4. posts კოლექცია (user_id == uid)
       db.collection('posts')
         .where('user_id', '==', uid)
         .onSnapshot(function(snap) {
           document.getElementById('stat-posts-count').innerText = snap.size;
+        }, function(e){ console.warn("Posts error:", e); });
+
+      // 5. posts-ის შიდა likes ქვეკოლექციის თვლა
+      // ა) პირველი გზა: collectionGroup('likes') სადაც user_id == uid
+      db.collectionGroup('likes')
+        .where('user_id', '==', uid)
+        .onSnapshot(function(snap) {
+          document.getElementById('stat-likes-count').innerText = snap.size;
         }, function(err) {
-          db.collection('posts').where('userId', '==', uid).onSnapshot(function(snap) {
-            document.getElementById('stat-posts-count').innerText = snap.size;
+          // ბ) თუ ინდექსი არ არის შექმნილი, ვამოწმებთ posts-ის შიგნით არსებულ 'liked_by' / 'likes' მასივს
+          db.collection('posts').onSnapshot(function(postsSnap) {
+            var totalLikesCount = 0;
+            postsSnap.forEach(function(postDoc) {
+              var pData = postDoc.data();
+              if (pData.liked_by && Array.isArray(pData.liked_by) && pData.liked_by.includes(uid)) {
+                totalLikesCount++;
+              } else if (pData.likes && Array.isArray(pData.likes) && pData.likes.includes(uid)) {
+                totalLikesCount++;
+              }
+            });
+            document.getElementById('stat-likes-count').innerText = totalLikesCount;
           });
         });
-
-      // 5. მოწონებული პოსტების რაოდენობა რეალურ დროში (უზრუნველყოფილია შეცდომის დამუშავებით)
-      var fetchLikes = function() {
-        // პირველი მცდელობა: post_likes კოლექციის ჯგუფი
-        db.collectionGroup('post_likes')
-          .where('user_id', '==', uid)
-          .onSnapshot(function(snap) {
-            document.getElementById('stat-likes-count').innerText = snap.size;
-          }, function(err) {
-            // თუ collectionGroup-ზე ინდექსია საჭირო, გადადის პირდაპირ 'likes' კოლექციაზე
-            db.collection('likes')
-              .where('user_id', '==', uid)
-              .onSnapshot(function(snap) {
-                document.getElementById('stat-likes-count').innerText = snap.size;
-              }, function(err2) {
-                db.collection('likes')
-                  .where('userId', '==', uid)
-                  .onSnapshot(function(snap) {
-                    document.getElementById('stat-likes-count').innerText = snap.size;
-                  });
-              });
-          });
-      };
-
-      fetchLikes();
     }
   </script>
 </body>
