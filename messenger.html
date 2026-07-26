@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Emigrant Messenger</title>
+  
+  <!-- Firebase Compat & Module Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -13,7 +20,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     html, body {
-      background-color: #000000;
+      background-color: #0d0d11;
       color: #ffffff;
       height: 100%;
       height: 100dvh;
@@ -24,6 +31,20 @@
     body {
       display: flex;
       justify-content: center;
+      position: relative;
+    }
+
+    /* Ambient EmigrantBook Theme Background Gradient */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 10% 10%, rgba(20, 80, 70, 0.25) 0%, transparent 40%),
+                  radial-gradient(circle at 90% 10%, rgba(120, 20, 50, 0.25) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* მობილურის ეკრანის კონტეინერი */
@@ -32,11 +53,15 @@
       max-width: 480px;
       height: 100%;
       height: 100dvh;
-      background-color: #000000;
+      background-color: rgba(13, 13, 17, 0.85);
+      backdrop-filter: blur(20px);
       display: flex;
       flex-direction: column;
       position: relative;
       overflow: hidden;
+      z-index: 1;
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     /* ----------------------------------------------------
@@ -52,12 +77,12 @@
       overflow: hidden;
     }
 
-    /* ფიქსირებული ზედა ბლოკი */
     .chats-top-fixed {
       flex-shrink: 0;
-      background-color: #000000;
+      background: rgba(13, 13, 17, 0.9);
+      backdrop-filter: blur(12px);
       z-index: 50;
-      border-bottom: 1px solid #121212;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .chats-header {
@@ -67,17 +92,20 @@
       align-items: center;
     }
     .chats-header h1 {
-      font-size: 30px;
+      font-size: 26px;
       font-weight: 800;
       letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #2ed573 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     .header-actions {
       display: flex;
       gap: 12px;
     }
     .header-btn {
-      background: #1a1a1a;
-      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -85,10 +113,14 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      transition: background 0.2s;
+    }
+    .header-btn:active {
+      background: rgba(255, 255, 255, 0.18);
     }
     .header-btn svg {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       fill: #ffffff;
     }
 
@@ -97,12 +129,13 @@
       padding: 5px 16px 12px 16px;
     }
     .search-box {
-      background: #1c1c1e;
-      border-radius: 12px;
-      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
     .search-box svg {
       width: 18px;
@@ -113,7 +146,7 @@
       background: none;
       border: none;
       color: #ffffff;
-      font-size: 16px;
+      font-size: 15px;
       width: 100%;
       outline: none;
     }
@@ -121,10 +154,10 @@
       color: #8e8e93;
     }
 
-    /* აქტიური სიუჟეტების ზოლი */
+    /* აქტიური სიუჟეტების ზოლი (STORIES) */
     .stories-row {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       overflow-x: auto;
       padding: 5px 16px 15px 16px;
     }
@@ -135,55 +168,60 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 65px;
+      min-width: 68px;
       cursor: pointer;
     }
     .story-avatar-wrapper {
       position: relative;
-      width: 60px;
-      height: 60px;
-      margin-bottom: 6px;
-    }
-    .story-avatar-wrapper.active-story {
-      border: 2px solid #0084ff;
+      width: 62px;
+      height: 62px;
       border-radius: 50%;
       padding: 2px;
+      margin-bottom: 6px;
+    }
+    .story-avatar-wrapper.has-story {
+      background: linear-gradient(135deg, #2ed573, #0084ff, #ff4757);
+    }
+    .story-avatar-wrapper.no-story {
+      background: rgba(255, 255, 255, 0.1);
     }
     .story-avatar {
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: #222222;
+      background: #111;
       object-fit: cover;
+      border: 2px solid #0d0d11;
     }
     .create-story-plus {
       position: absolute;
-      bottom: 0;
-      right: 0;
-      background: #1a1a1a;
-      width: 20px;
-      height: 20px;
+      bottom: 2px;
+      right: 2px;
+      background: #2ed573;
+      color: #000;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid #000;
-      font-size: 14px;
+      border: 2px solid #0d0d11;
+      font-size: 15px;
       font-weight: bold;
     }
     .active-badge {
       position: absolute;
       bottom: 2px;
       right: 2px;
-      background: #31a24c;
+      background: #2ed573;
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      border: 2px solid #000000;
+      border: 2px solid #0d0d11;
     }
     .story-name {
       font-size: 12px;
-      color: #8e8e93;
+      color: #aaaaaa;
       text-align: center;
       white-space: nowrap;
       overflow: hidden;
@@ -193,7 +231,7 @@
 
     /* ჩატების სია */
     .chats-scroll-area {
-      height: calc(100% - 180px);
+      height: calc(100% - 210px);
       overflow-y: auto;
       padding-bottom: 80px;
     }
@@ -204,14 +242,15 @@
       gap: 14px;
       cursor: pointer;
       transition: background 0.2s;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     }
     .chat-row-item:active {
-      background: #121212;
+      background: rgba(255, 255, 255, 0.05);
     }
     .chat-row-avatar-holder {
       position: relative;
-      width: 56px;
-      height: 56px;
+      width: 54px;
+      height: 54px;
       flex-shrink: 0;
     }
     .chat-row-avatar {
@@ -220,6 +259,7 @@
       border-radius: 50%;
       object-fit: cover;
       background: #222;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .chat-row-details {
       flex: 1;
@@ -229,7 +269,7 @@
       min-width: 0;
     }
     .chat-row-name {
-      font-weight: 500;
+      font-weight: 600;
       font-size: 16px;
       color: #ffffff;
     }
@@ -241,7 +281,7 @@
     }
     .chat-row-last-msg {
       font-size: 14px;
-      color: #8e8e93;
+      color: #888888;
       font-weight: 400;
       white-space: nowrap;
       overflow: hidden;
@@ -249,7 +289,6 @@
       flex: 1;
     }
     
-    /* წაუკითხავი ჩატის სტილები */
     .chat-row-item.unread .chat-row-last-msg {
       color: #ffffff;
       font-weight: 700;
@@ -258,16 +297,17 @@
       font-weight: 700;
     }
     .chat-row-time {
-      font-size: 13px;
-      color: #8e8e93;
+      font-size: 12px;
+      color: #777777;
     }
     .unread-dot {
       width: 10px;
       height: 10px;
-      background-color: #0084ff;
+      background-color: #2ed573;
       border-radius: 50%;
       flex-shrink: 0;
       margin-left: 6px;
+      box-shadow: 0 0 8px rgba(46, 213, 115, 0.6);
     }
 
     /* ქვედა ნავბარი */
@@ -277,8 +317,9 @@
       left: 0;
       right: 0;
       height: 65px;
-      background: #000000;
-      border-top: 1px solid #1a1a1a;
+      background: rgba(13, 13, 17, 0.95);
+      backdrop-filter: blur(15px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -291,50 +332,33 @@
       gap: 4px;
       background: none;
       border: none;
-      color: #8e8e93;
+      color: #777777;
       cursor: pointer;
       position: relative;
     }
     .nav-tab.active {
-      color: #0084ff;
+      color: #2ed573;
     }
     .nav-tab svg {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       fill: currentColor;
     }
     .nav-tab-label {
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
     }
     .nav-badge {
       position: absolute;
       top: -4px;
       right: 2px;
-      background: #ff3b30;
+      background: #ff4757;
       color: #ffffff;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
       border-radius: 10px;
-      padding: 1px 5px;
+      padding: 2px 6px;
       display: none;
-    }
-
-    /* Meta AI მცურავი ორნამენტის ღილაკი */
-    .meta-ai-float-btn {
-      position: absolute;
-      bottom: 80px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #a255ff, #0084ff);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 99;
     }
 
     /* ----------------------------------------------------
@@ -346,17 +370,18 @@
       height: 100%;
       height: 100dvh;
       width: 100%;
-      background-color: #000000;
+      background-color: #0d0d11;
       position: relative;
       overflow: hidden;
     }
     .thread-header {
-      padding: 10px 12px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #121212;
-      background: #000000;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(13, 13, 17, 0.9);
+      backdrop-filter: blur(12px);
       flex-shrink: 0;
       z-index: 50;
       height: 60px;
@@ -370,48 +395,50 @@
     .back-btn {
       background: none;
       border: none;
-      color: #0084ff;
+      color: #2ed573;
       cursor: pointer;
       padding: 4px;
+      display: flex;
+      align-items: center;
     }
     .back-btn svg {
       width: 24px;
       height: 24px;
-      fill: #0084ff;
+      fill: #2ed573;
     }
     .thread-header-avatar-wrapper {
       position: relative;
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
     }
     .thread-header-avatar {
       width: 100%;
       height: 100%;
       border-radius: 50%;
       object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .thread-user-info {
       display: flex;
       flex-direction: column;
     }
     .thread-user-name {
-      font-weight: 600;
-      font-size: 16px;
+      font-weight: 700;
+      font-size: 15px;
     }
     .thread-user-status {
-      font-size: 12px;
+      font-size: 11px;
       color: #8e8e93;
     }
     .thread-header-actions {
       display: flex;
       align-items: center;
-      gap: 18px;
-      padding-right: 4px;
+      gap: 16px;
     }
     .thread-header-actions svg {
       width: 22px;
       height: 22px;
-      fill: #0084ff;
+      fill: #2ed573;
       cursor: pointer;
     }
 
@@ -423,60 +450,56 @@
       padding-bottom: 20px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
     
-    /* პროფილის დიდი ბარათი ჩატის დასაწყისში */
     .chat-start-profile {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 0 20px 0;
+      padding: 20px 0;
       text-align: center;
     }
     .chat-start-avatar {
-      width: 96px;
-      height: 96px;
+      width: 86px;
+      height: 86px;
       border-radius: 50%;
       object-fit: cover;
       margin-bottom: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
     }
     .chat-start-name {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       margin-bottom: 4px;
     }
     .chat-start-sub {
-      font-size: 14px;
+      font-size: 13px;
       color: #8e8e93;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
     .view-profile-btn {
-      background: #1c1c1e;
+      background: rgba(255, 255, 255, 0.08);
       color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 8px 18px;
+      border-radius: 20px;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .encryption-notice {
-      font-size: 12px;
-      color: #8e8e93;
+      font-size: 11px;
+      color: #777777;
       max-width: 280px;
       line-height: 1.4;
       margin-bottom: 10px;
     }
-    .encryption-notice a {
-      color: #0084ff;
-      text-decoration: none;
-    }
     .chat-date-separator {
       font-size: 11px;
       font-weight: 600;
-      color: #8e8e93;
+      color: #666666;
       text-transform: uppercase;
       margin: 10px 0;
       text-align: center;
@@ -487,7 +510,7 @@
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      max-width: 85%;
+      max-width: 82%;
     }
     .message-row.incoming {
       align-self: flex-start;
@@ -505,18 +528,19 @@
     .msg-bubble {
       padding: 10px 14px;
       border-radius: 18px;
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.4;
       word-break: break-word;
     }
     .incoming .msg-bubble {
-      background-color: #242526;
+      background-color: rgba(255, 255, 255, 0.08);
       color: #ffffff;
       border-bottom-left-radius: 4px;
     }
     .outgoing .msg-bubble {
-      background-color: #0084ff;
-      color: #ffffff;
+      background: linear-gradient(135deg, #10ac84, #2ed573);
+      color: #000000;
+      font-weight: 500;
       border-bottom-right-radius: 4px;
     }
 
@@ -528,29 +552,31 @@
       right: 0;
       height: 60px;
       padding: 8px 12px;
-      background: #000000;
+      background: rgba(13, 13, 17, 0.95);
+      backdrop-filter: blur(15px);
       display: flex;
       align-items: center;
-      gap: 12px;
-      border-top: 1px solid #121212;
+      gap: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       z-index: 100;
     }
     .footer-left-actions {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
     }
     .footer-left-actions svg {
       width: 22px;
       height: 22px;
-      fill: #0084ff;
+      fill: #2ed573;
       cursor: pointer;
     }
     .input-wrapper {
       flex: 1;
-      background: #1c1c1e;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
-      padding: 8px 12px;
+      padding: 8px 14px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -560,34 +586,110 @@
       background: none;
       border: none;
       color: #ffffff;
-      font-size: 15px;
+      font-size: 14px;
       outline: none;
     }
     .input-wrapper input::placeholder {
       color: #8e8e93;
     }
-    .input-wrapper svg {
-      width: 22px;
-      height: 22px;
-      fill: #0084ff;
-      cursor: pointer;
-    }
     .like-action-btn {
-      background: none;
+      background: #2ed573;
       border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
     }
     .like-action-btn svg {
-      width: 24px;
-      height: 24px;
-      fill: #0084ff;
+      width: 20px;
+      height: 20px;
+      fill: #000000;
+    }
+
+    /* ----------------------------------------------------
+        3. STORY FULLSCREEN VIEWER MODAL
+    ------------------------------------------------------- */
+    #story-viewer-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000000;
+      z-index: 1000;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .story-progress-bar-container {
+      display: flex;
+      gap: 4px;
+      padding: 10px 12px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+    }
+    .story-progress-bar {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.3);
+      flex: 1;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .story-progress-fill {
+      height: 100%;
+      background: #ffffff;
+      width: 0%;
+    }
+    .story-viewer-header {
+      position: absolute;
+      top: 20px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .story-author-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .story-author-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+    .story-author-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+    }
+    .story-close-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .story-image-content {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
   </style>
 </head>
 <body>
+
+  <div class="bg-gradient"></div>
 
   <div class="messenger-wrapper">
 
@@ -595,7 +697,7 @@
     <div id="chats-screen">
       <div class="chats-top-fixed">
         <div class="chats-header">
-          <h1>Chats</h1>
+          <h1 id="lbl-chats-title">ჩატები</h1>
           <div class="header-actions">
             <button class="header-btn" onclick="alert('ახალი ჩატის დაწყება')">
               <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
@@ -606,46 +708,46 @@
         <div class="search-container">
           <div class="search-box">
             <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <input type="text" placeholder="Ask Meta AI or Search">
+            <input type="text" id="input-search-placeholder" placeholder="ძებნა...">
           </div>
         </div>
 
-        <div class="stories-row">
-          <div class="story-item">
-            <div class="story-avatar-wrapper">
-              <img class="story-avatar" src="https://emigrantbook.com/logo.png" alt="Me">
+        <!-- STORIES ROW -->
+        <div class="stories-row" id="stories-target-row">
+          <div class="story-item" onclick="triggerStoryUpload()">
+            <div class="story-avatar-wrapper no-story">
+              <img class="story-avatar" id="my-story-avatar" src="https://emigrantbook.com/logo.png" alt="Me">
               <div class="create-story-plus">+</div>
             </div>
-            <span class="story-name">Create story</span>
+            <span class="story-name" id="lbl-create-story">სტორის დამატება</span>
           </div>
+          <!-- დინამიურად ჩაიტვირთება მეგობრების სტორები -->
         </div>
+        <input type="file" id="story-file-input" accept="image/*" style="display:none;" onchange="uploadStoryFile(event)">
       </div>
 
       <div class="chats-scroll-area" id="chats-list-target">
-        <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
+        <p style="padding:20px; color:#8e8e93; text-align:center;" id="lbl-loading">იტვირთება...</p>
       </div>
 
-      <div class="meta-ai-float-btn" onclick="alert('Meta AI')">
-        <svg viewBox="0 0 24 24" style="width:24px;height:24px;fill:#fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-      </div>
-
+      <!-- FOOTER NAV -->
       <div class="footer-nav">
         <button class="nav-tab active">
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
           <div class="nav-badge" id="chat-count-badge">0</div>
-          <span class="nav-tab-label">Chats</span>
+          <span class="nav-tab-label" id="lbl-nav-chats">ჩატები</span>
         </button>
         <button class="nav-tab" onclick="alert('Stories tab')">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.53c-.26-.81-1-1.4-1.9-1.4h-1v-3c0-.55-.45-1-1-1h-6v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
-          <span class="nav-tab-label">Stories</span>
+          <span class="nav-tab-label" id="lbl-nav-stories">სტორიები</span>
         </button>
         <button class="nav-tab" onclick="alert('Notifications tab')">
           <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-          <span class="nav-tab-label">Notifications</span>
+          <span class="nav-tab-label" id="lbl-nav-notifs">შეტყობინებები</span>
         </button>
         <button class="nav-tab" onclick="window.location.href='index.html';">
           <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-          <span class="nav-tab-label">Menu</span>
+          <span class="nav-tab-label" id="lbl-nav-menu">მენიუ</span>
         </button>
       </div>
     </div>
@@ -666,9 +768,8 @@
           </div>
         </div>
         <div class="thread-header-actions">
-          <svg viewBox="0 0 24 24" onclick="if(typeof requestAudioCall === 'function') requestAudioCall(); else alert('ხმოვანი ზარი');"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="if(typeof requestVideoCall === 'function') requestVideoCall(); else alert('ვიდეო ზარი');"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('ინფორმაცია')"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="alert('ხმოვანი ზარი')"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.68.25-1.02-0.36-1.11-.55-2.3-.55-3.53C8.58 3.45 7.57 2.44 6.34 2.44H3.09c-1.22 0-2.24 1.02-2.24 2.24 0 10.89 8.87 19.76 19.76 19.76 1.22 0 2.24-1.02 2.24-2.24v-3.31c.01-1.22-.99-2.23-2.22-2.23z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="alert('ვიდეო ზარი')"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
         </div>
       </div>
 
@@ -676,15 +777,15 @@
         <div class="chat-start-profile">
           <img class="chat-start-avatar" id="chat-start-big-avatar" src="">
           <span class="chat-start-name" id="chat-start-big-name"></span>
-          <span class="chat-start-sub">You're friends on EmigrantBook</span>
-          <button class="view-profile-btn" onclick="alert('პროფილის ნახვა')">View profile</button>
+          <span class="chat-start-sub" id="lbl-friends-sub">მეგობრები EmigrantBook-ზე</span>
+          <button class="view-profile-btn" onclick="alert('პროფილის ნახვა')" id="lbl-view-profile">პროფილის ნახვა</button>
           
-          <div class="encryption-notice">
-            🔒 Messages and calls are secured with end-to-end encryption. Only people in this chat can read, listen to, or share them. <a href="#">Learn more</a>
+          <div class="encryption-notice" id="lbl-encryption">
+            🔒 შეტყობინებები დაცულია ბოლოდან ბოლომდე შიფრაციით.
           </div>
         </div>
 
-        <div class="chat-date-separator" id="chat-date-lbl">TODAY</div>
+        <div class="chat-date-separator" id="chat-date-lbl">დღეს</div>
 
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
@@ -692,43 +793,39 @@
       <div class="thread-footer">
         <div class="footer-left-actions">
           <svg viewBox="0 0 24 24" onclick="alert('გალერეა')"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          <svg viewBox="0 0 24 24" onclick="alert('ხმის ჩაწერა')"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
         </div>
 
         <div class="input-wrapper">
-          <input type="text" id="message-input-field" placeholder="Message" onkeypress="handleKeyPress(event)">
-          <svg viewBox="0 0 24 24" onclick="alert('სმაილები')"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 10 10 10-4.48 10-10S17.51 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+          <input type="text" id="message-input-field" placeholder="შეტყობინება..." onkeypress="handleKeyPress(event)">
         </div>
 
         <button class="like-action-btn" id="send-action-btn" onclick="sendLikeOrMessage()">
-          <svg viewBox="0 0 24 24" id="btn-icon-svg"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
     </div>
 
   </div>
 
-  <!-- FIREBASE FIRESTORE MODULES -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      doc, 
-      addDoc, 
-      setDoc, 
-      updateDoc,
-      getDoc, 
-      getDocs, 
-      onSnapshot, 
-      query, 
-      where,
-      orderBy, 
-      limit,
-      serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  <!-- FULLSCREEN STORY VIEWER MODAL -->
+  <div id="story-viewer-modal">
+    <div class="story-progress-bar-container">
+      <div class="story-progress-bar">
+        <div class="story-progress-fill" id="story-progress-fill"></div>
+      </div>
+    </div>
+    <div class="story-viewer-header">
+      <div class="story-author-info">
+        <img id="story-viewer-avatar" class="story-author-avatar" src="">
+        <span id="story-viewer-name" class="story-author-name"></span>
+      </div>
+      <button class="story-close-btn" onclick="closeStoryViewer()">✕</button>
+    </div>
+    <img id="story-viewer-img" class="story-image-content" src="">
+  </div>
 
+  <!-- REALTIME TRANSLATION & FIRESTORE LOGIC -->
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -739,62 +836,88 @@
       measurementId: "G-MRPP7G4H30"
     };
 
-    const app = initializeApp(firebaseConfig);
-    window.auth = getAuth(app);
-    window.db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
-    window.fs = {
-      collection,
-      doc,
-      addDoc,
-      setDoc,
-      updateDoc,
-      getDoc,
-      getDocs,
-      onSnapshot,
-      query,
-      where,
-      orderBy,
-      limit,
-      serverTimestamp
+    // ენების ლექსიკონი
+    var TRANSLATIONS = {
+      ka: {
+        chats: "ჩატები",
+        search: "ძებნა...",
+        createStory: "სტორის დამატება",
+        loading: "იტვირთება...",
+        noChats: "ჩატები არ არის.",
+        navChats: "ჩატები",
+        navStories: "სტორიები",
+        navNotifs: "შეტყობინებები",
+        navMenu: "მენიუ",
+        friendsSub: "მეგობრები EmigrantBook-ზე",
+        viewProfile: "პროფილის ნახვა",
+        encryption: "🔒 შეტყობინებები დაცულია ბოლოდან ბოლომდე შიფრაციით.",
+        msgPlaceholder: "შეტყობინება...",
+        activeNow: "აქტიურია ახლა",
+        offline: "ოფლაინშია"
+      },
+      en: {
+        chats: "Chats",
+        search: "Search...",
+        createStory: "Add Story",
+        loading: "Loading...",
+        noChats: "No chats available.",
+        navChats: "Chats",
+        navStories: "Stories",
+        navNotifs: "Notifications",
+        navMenu: "Menu",
+        friendsSub: "Friends on EmigrantBook",
+        viewProfile: "View Profile",
+        encryption: "🔒 Messages and calls are end-to-end encrypted.",
+        msgPlaceholder: "Message...",
+        activeNow: "Active now",
+        offline: "Offline"
+      },
+      ru: {
+        chats: "Чаты",
+        search: "Поиск...",
+        createStory: "Создать историю",
+        loading: "Загрузка...",
+        noChats: "Нет чатов.",
+        navChats: "Чаты",
+        navStories: "Истории",
+        navNotifs: "Уведомления",
+        navMenu: "Меню",
+        friendsSub: "Друзья на EmigrantBook",
+        viewProfile: "Смотреть профиль",
+        encryption: "🔒 Сообщения защищены сквозным шифрованием.",
+        msgPlaceholder: "Сообщение...",
+        activeNow: "В сети",
+        offline: "Не в сети"
+      }
     };
 
-    onAuthStateChanged(window.auth, (user) => {
-      if (user) {
-        fetchFirestoreChatList();
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetUserId = urlParams.get('user');
-        if (targetUserId) {
-          getDoc(doc(window.db, 'profiles', targetUserId)).then(docSnap => {
-            if (docSnap.exists()) {
-              let uData = docSnap.data();
-              let name = extractName(uData, targetUserId);
-              let photo = extractPhotoUrl(uData);
-              openChat(name, photo, targetUserId);
-            }
-          }).catch(err => console.error("Auto open chat error:", err));
-        }
+    var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
-      } else {
-        const target = document.getElementById('chats-list-target');
-        if (target) target.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>გთხოვთ გაიაროთ ავტორიზაცია.</p>";
-      }
-    });
-  </script>
+    function applyTranslations() {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+      document.getElementById('lbl-chats-title').innerText = t.chats;
+      document.getElementById('input-search-placeholder').placeholder = t.search;
+      document.getElementById('lbl-create-story').innerText = t.createStory;
+      document.getElementById('lbl-loading').innerText = t.loading;
+      document.getElementById('lbl-nav-chats').innerText = t.navChats;
+      document.getElementById('lbl-nav-stories').innerText = t.navStories;
+      document.getElementById('lbl-nav-notifs').innerText = t.navNotifs;
+      document.getElementById('lbl-nav-menu').innerText = t.navMenu;
+      document.getElementById('lbl-friends-sub').innerText = t.friendsSub;
+      document.getElementById('lbl-view-profile').innerText = t.viewProfile;
+      document.getElementById('lbl-encryption').innerText = t.encryption;
+      document.getElementById('message-input-field').placeholder = t.msgPlaceholder;
+    }
 
-  <script src="script.js"></script>
-  <script src="chatvirtva.js"></script>
-
-  <!-- REALTIME FIRESTORE CHAT SCRIPT -->
-  <script>
     var currentActiveChatUid = null;
-    var currentActiveChatUser = "";
-    var currentActiveChatAvatar = "";
     var unsubscribeMessages = null;
-    var activeChatUnsubscribes = [];
-    var presenceUnsubscribes = [];
-    var threadProfileUnsubscribe = null; // შიდა ჩატის პროფილის მოსასმენად
+    var threadProfileUnsubscribe = null;
+    var storyTimer = null;
 
     function getChatId(u1, u2) {
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
@@ -802,255 +925,137 @@
 
     function extractPhotoUrl(uData) {
       if (!uData) return "";
-      let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.avatar_url || uData.userImg || uData.userPhoto || uData.cover;
-      if (photoCandidate && typeof photoCandidate === 'string' && photoCandidate.trim() !== '') return photoCandidate;
-
-      for (let key in uData) {
-        let val = uData[key];
-        if (typeof val === 'string' && (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('data:image'))) {
-          let lowerKey = key.toLowerCase();
-          if (lowerKey.includes('photo') || lowerKey.includes('avatar') || lowerKey.includes('img') || lowerKey.includes('pic') || lowerKey.includes('image') || lowerKey.includes('profile') || lowerKey.includes('cover') || lowerKey.includes('url')) {
-            return val;
-          }
-        }
-      }
-      return "";
+      return uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || "";
     }
 
     function extractName(uData, uid) {
       if (!uData) return "User_" + uid.substring(0, 5);
-      let displayName = uData.full_name || uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
-      if (!displayName && uData.lastName) displayName = uData.lastName;
+      return uData.full_name || uData.name || uData.username || uData.displayName || ("User_" + uid.substring(0, 5));
+    }
 
-      if (!displayName) {
-        for (let key in uData) {
-          let val = uData[key];
-          if (typeof val === 'string' && val.trim() !== '' && !val.startsWith('http') && !val.startsWith('data:image')) {
-            let lowerKey = key.toLowerCase();
-            if (lowerKey.includes('name') || lowerKey.includes('user') || lowerKey.includes('nick')) {
-              displayName = val;
-              break;
+    // Auth State Listener & Realtime Language Listener
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        // პროფილის ცვლილებების (მათ შორის ენის) მოსმენა რეალურ დროში
+        db.collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
+          if (docSnap.exists) {
+            var data = docSnap.data();
+            if (data.language) {
+              currentLang = data.language;
+              localStorage.setItem('emigrantbook_lang', currentLang);
+              applyTranslations();
             }
-          }
-        }
-      }
-
-      if (!displayName && uData.email) displayName = uData.email.split('@')[0];
-      return displayName || ("User_" + uid.substring(0, 5));
-    }
-
-    function formatTime(timestamp) {
-      if (!timestamp) return "";
-      let date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-      let hours = date.getHours().toString().padStart(2, '0');
-      let minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    }
-
-    // ბოლოს აქტიურობის ფორმატირება (Active now / Active 5m ago / Active 2h ago და ა.შ.)
-    function formatLastSeen(lastSeen) {
-      if (!lastSeen) return "Offline";
-      let date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
-      let now = new Date();
-      let diffInSeconds = Math.floor((now - date) / 1000);
-
-      if (diffInSeconds < 60) {
-        return "Active now";
-      }
-
-      let diffInMinutes = Math.floor(diffInSeconds / 60);
-      if (diffInMinutes < 60) {
-        return `Active ${diffInMinutes}m ago`;
-      }
-
-      let diffInHours = Math.floor(diffInMinutes / 60);
-      if (diffInHours < 24) {
-        return `Active ${diffInHours}h ago`;
-      }
-
-      let diffInDays = Math.floor(diffInHours / 24);
-      return `Active ${diffInDays}d ago`;
-    }
-
-    // 1. იღებს მხოლოდ იმ მომხმარებლების ID-ებს, რომლებიც არიან დადასტურებული მეგობრები (status == 'accepted')
-    function fetchFirestoreChatList() {
-      const listTarget = document.getElementById('chats-list-target');
-      if (!window.auth || !window.auth.currentUser) return;
-      const currentUid = window.auth.currentUser.uid;
-      const { collection, query, where, onSnapshot } = window.fs;
-
-      const reqsRef = collection(window.db, 'friend_requests');
-      const qAccepted = query(reqsRef, where('status', '==', 'accepted'));
-
-      onSnapshot(qAccepted, (snapshot) => {
-        if (!snapshot || snapshot.empty) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები არ არის.</p>";
-          return;
-        }
-
-        let friendIdsSet = new Set();
-        snapshot.forEach(docSnap => {
-          let req = docSnap.data();
-          if (req.sender_id === currentUid) {
-            friendIdsSet.add(req.receiver_id);
-          } else if (req.receiver_id === currentUid) {
-            friendIdsSet.add(req.sender_id);
+            let myPic = extractPhotoUrl(data);
+            if (myPic) document.getElementById('my-story-avatar').src = myPic;
           }
         });
 
-        let friendIds = Array.from(friendIdsSet);
-        if (friendIds.length === 0) {
-          listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>მეგობრები არ გყავთ.</p>";
-          return;
-        }
+        fetchFirestoreChatList(user.uid);
+        listenToStories();
+      } else {
+        window.location.href = "index.html";
+      }
+    });
 
-        loadFriendsProfiles(friendIds, currentUid, listTarget);
-      }, (err) => {
-        console.error("Friend requests fetch error:", err);
-        listTarget.innerHTML = "<p style='padding:20px; color:#ff4d4f; text-align:center;'>შეცდომა მეგობრების ჩატვირთვისას.</p>";
-      });
+    // 1. იღებს მეგობრების სიას და ბოლო შეტყობინებებს
+    function fetchFirestoreChatList(currentUid) {
+      const listTarget = document.getElementById('chats-list-target');
+      
+      db.collection('friend_requests')
+        .where('status', '==', 'accepted')
+        .onSnapshot(function(snapshot) {
+          if (!snapshot || snapshot.empty) {
+            var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+            listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
+            return;
+          }
+
+          let friendIdsSet = new Set();
+          snapshot.forEach(docSnap => {
+            let req = docSnap.data();
+            if (req.sender_id === currentUid) friendIdsSet.add(req.receiver_id);
+            else if (req.receiver_id === currentUid) friendIdsSet.add(req.sender_id);
+          });
+
+          let friendIds = Array.from(friendIdsSet);
+          loadFriendsProfiles(friendIds, currentUid, listTarget);
+        });
     }
 
-    // 2. იღებს მეგობრების პროფილებს და უსმენს მათ სტატუსებს რეალურ დროში (Realtime Presence)
     function loadFriendsProfiles(friendIds, currentUid, listTarget) {
-      const { doc, onSnapshot } = window.fs;
-
-      // გავასუფთავოთ ძველი სტატუსის მოსმენები
-      presenceUnsubscribes.forEach(unsub => unsub());
-      presenceUnsubscribes = [];
-
       let friendsProfilesMap = {};
 
       friendIds.forEach(fId => {
-        const unsub = onSnapshot(doc(window.db, 'profiles', fId), (docSnap) => {
-          if (docSnap.exists()) {
+        db.collection('profiles').doc(fId).onSnapshot(function(docSnap) {
+          if (docSnap.exists) {
             let uData = docSnap.data();
             friendsProfilesMap[fId] = {
               uid: fId,
               name: extractName(uData, fId),
               photo: extractPhotoUrl(uData),
-              presence: uData.status || uData.presence || 'offline'
+              presence: uData.status || 'offline'
             };
-          } else {
-            delete friendsProfilesMap[fId];
           }
-
-          let friendsProfiles = Object.values(friendsProfilesMap);
-          attachLastMessagesAndRender(friendsProfiles, currentUid, listTarget);
+          renderActiveChats(Object.values(friendsProfilesMap), currentUid, listTarget);
         });
-
-        presenceUnsubscribes.push(unsub);
       });
     }
 
-    // 3. ამოწმებს შეტყობინებებს და ფილტრავს მხოლოდ იმ მეგობრებს, ვისთანაც რეალურად არსებობს მიმოწერა
-    function attachLastMessagesAndRender(users, currentUid, listTarget) {
-      const { collection, query, orderBy, limit, onSnapshot } = window.fs;
-
-      activeChatUnsubscribes.forEach(unsub => unsub());
-      activeChatUnsubscribes = [];
-
-      let activeChatUsersMap = {};
+    function renderActiveChats(users, currentUid, listTarget) {
+      listTarget.innerHTML = "";
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       if (users.length === 0) {
-        listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>ჩატები არ არის.</p>";
+        listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
         return;
       }
 
-      users.forEach((user) => {
+      users.forEach(user => {
         const chatId = getChatId(currentUid, user.uid);
-        const msgsRef = collection(window.db, 'chats', chatId, 'messages');
-        const q = query(msgsRef, orderBy('createdAt', 'desc'), limit(1));
-
-        const unsub = onSnapshot(q, (snapshot) => {
-          if (!snapshot.empty) {
-            const lastMsgDoc = snapshot.docs[0].data();
-            let msgText = lastMsgDoc.text || (lastMsgDoc.image ? "📷 Photo" : "");
-            
-            if (lastMsgDoc.senderId === currentUid) {
-              msgText = "You: " + msgText;
-            }
-
-            activeChatUsersMap[user.uid] = {
-              ...user,
-              lastMsg: msgText,
-              lastTimeRaw: lastMsgDoc.createdAt,
-              lastTimeFormatted: formatTime(lastMsgDoc.createdAt),
-              isUnread: (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read !== true)
-            };
-          } else {
-            delete activeChatUsersMap[user.uid];
-          }
-
-          let activeUsersList = Object.values(activeChatUsersMap);
-          renderChatList(activeUsersList, listTarget);
-        });
-
-        activeChatUnsubscribes.push(unsub);
-      });
-    }
-
-    function renderChatList(usersList, listTarget) {
-      if (usersList.length === 0) {
-        listTarget.innerHTML = "<p style='padding:20px; color:#8e8e93; text-align:center;'>აქტიური ჩატები არ არის.</p>";
-        return;
-      }
-
-      usersList.sort((a, b) => {
-        let tA = a.lastTimeRaw ? (a.lastTimeRaw.seconds || 0) : 0;
-        let tB = b.lastTimeRaw ? (b.lastTimeRaw.seconds || 0) : 0;
-        return tB - tA;
-      });
-
-      let unreadTotal = usersList.filter(u => u.isUnread).length;
-      const navBadge = document.getElementById('chat-count-badge');
-      if (navBadge) {
-        if (unreadTotal > 0) {
-          navBadge.innerText = unreadTotal;
-          navBadge.style.display = 'block';
-        } else {
-          navBadge.style.display = 'none';
-        }
-      }
-
-      listTarget.innerHTML = "";
-
-      usersList.forEach(chat => {
-        const item = document.createElement('div');
-        item.className = 'chat-row-item' + (chat.isUnread ? ' unread' : '');
         
-        item.onclick = function() {
-          openChat(chat.name, chat.photo, chat.uid);
-        };
+        db.collection('chats').doc(chatId).collection('messages')
+          .orderBy('createdAt', 'desc').limit(1)
+          .onSnapshot(function(snapshot) {
+            if (!snapshot.empty) {
+              const lastMsgDoc = snapshot.docs[0].data();
+              let msgText = lastMsgDoc.text || "📷 Photo";
+              let timeStr = lastMsgDoc.createdAt ? new Date(lastMsgDoc.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
-        const isOnline = chat.presence === 'online';
-        const imgSrc = chat.photo ? chat.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}&background=0D8ABC&color=fff&size=128`;
+              let existingRow = document.getElementById('chat-row-' + user.uid);
+              if (!existingRow) {
+                existingRow = document.createElement('div');
+                existingRow.id = 'chat-row-' + user.uid;
+                existingRow.className = 'chat-row-item';
+                listTarget.appendChild(existingRow);
+              }
 
-        item.innerHTML = `
-          <div class="chat-row-avatar-holder">
-            <img class="chat-row-avatar" src="${imgSrc}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}&background=0D8ABC&color=fff&size=128';">
-            <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
-          </div>
-          <div class="chat-row-details">
-            <span class="chat-row-name">${chat.name}</span>
-            <div class="chat-row-meta">
-              <span class="chat-row-last-msg">${chat.lastMsg}</span>
-              <span class="chat-row-time">${chat.lastTimeFormatted || ''}</span>
-              ${chat.isUnread ? '<div class="unread-dot"></div>' : ''}
-            </div>
-          </div>
-        `;
+              const isOnline = user.presence === 'online';
+              const imgSrc = user.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff`;
 
-        listTarget.appendChild(item);
+              existingRow.onclick = function() { openChat(user.name, user.photo, user.uid); };
+
+              existingRow.innerHTML = `
+                <div class="chat-row-avatar-holder">
+                  <img class="chat-row-avatar" src="${imgSrc}">
+                  <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
+                </div>
+                <div class="chat-row-details">
+                  <span class="chat-row-name">${user.name}</span>
+                  <div class="chat-row-meta">
+                    <span class="chat-row-last-msg">${msgText}</span>
+                    <span class="chat-row-time">${timeStr}</span>
+                  </div>
+                </div>
+              `;
+            }
+          });
       });
     }
 
+    // 2. ჩატის გახსნა და მიმოწერა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
-      currentActiveChatUser = username;
-
-      const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0D8ABC&color=fff&size=128`;
-      currentActiveChatAvatar = finalAvatar;
+      const finalAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
 
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'flex';
@@ -1060,109 +1065,57 @@
       document.getElementById('chat-start-big-name').innerText = username;
       document.getElementById('chat-start-big-avatar').src = finalAvatar;
 
-      if (!targetUid || !window.auth || !window.auth.currentUser) return;
-
-      const currentUid = window.auth.currentUser.uid;
+      const currentUid = auth.currentUser.uid;
       const chatId = getChatId(currentUid, targetUid);
-
-      const { doc, onSnapshot } = window.fs;
 
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
 
-      // უსმენს სამიზნე მომხმარებლის ონლაინ/ოფლაინ სტატუსსა და ბოლოს აქტიურობის დროს
-      threadProfileUnsubscribe = onSnapshot(doc(window.db, 'profiles', targetUid), (docSnap) => {
+      threadProfileUnsubscribe = db.collection('profiles').doc(targetUid).onSnapshot(function(docSnap) {
         const statusEl = document.getElementById('active-thread-status');
-        if (docSnap.exists()) {
-          let uData = docSnap.data();
-          let userStatus = uData.status || uData.presence;
-          let lastSeen = uData.lastSeen || uData.last_seen;
-
-          if (userStatus === 'online') {
-            statusEl.innerText = "Active now";
-            statusEl.style.color = "#31a24c";
-          } else {
-            statusEl.innerText = formatLastSeen(lastSeen);
-            statusEl.style.color = "#8e8e93";
-          }
+        var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+        if (docSnap.exists && docSnap.data().status === 'online') {
+          statusEl.innerText = t.activeNow;
+          statusEl.style.color = "#2ed573";
         } else {
-          statusEl.innerText = "Offline";
+          statusEl.innerText = t.offline;
           statusEl.style.color = "#8e8e93";
         }
       });
 
-      markMessagesAsRead(chatId, targetUid);
       listenToFirestoreMessages(chatId, finalAvatar);
-    }
-
-    async function markMessagesAsRead(chatId, senderUid) {
-      if (!window.auth || !window.auth.currentUser) return;
-      const { collection, getDocs, doc, updateDoc } = window.fs;
-      
-      try {
-        const msgsRef = collection(window.db, 'chats', chatId, 'messages');
-        const querySnap = await getDocs(msgsRef);
-        
-        querySnap.forEach(async (docSnap) => {
-          const data = docSnap.data();
-          if (data.senderId === senderUid && data.read !== true) {
-            await updateDoc(doc(window.db, 'chats', chatId, 'messages', docSnap.id), {
-              read: true
-            });
-          }
-        });
-      } catch (err) {
-        console.error("Error marking messages as read:", err);
-      }
     }
 
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
-      if (!window.auth || !window.auth.currentUser) return;
-      const myUid = window.auth.currentUser.uid;
-      const { collection, query, orderBy, onSnapshot } = window.fs;
+      const myUid = auth.currentUser.uid;
 
       if (unsubscribeMessages) unsubscribeMessages();
 
-      const msgsQuery = query(
-        collection(window.db, 'chats', chatId, 'messages'),
-        orderBy('createdAt', 'asc')
-      );
+      unsubscribeMessages = db.collection('chats').doc(chatId).collection('messages')
+        .orderBy('createdAt', 'asc')
+        .onSnapshot(function(snapshot) {
+          msgBlock.innerHTML = "";
+          snapshot.forEach(docSnap => {
+            const msg = docSnap.data();
+            const isMine = msg.senderId === myUid;
 
-      unsubscribeMessages = onSnapshot(msgsQuery, (snapshot) => {
-        msgBlock.innerHTML = "";
-        if (!snapshot || snapshot.empty) return;
+            const msgRow = document.createElement('div');
+            msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
-        snapshot.forEach(docSnap => {
-          const msg = docSnap.data();
-          const isMine = msg.senderId === myUid;
+            if (isMine) {
+              msgRow.innerHTML = `<div class="msg-bubble">${msg.text}</div>`;
+            } else {
+              msgRow.innerHTML = `
+                <img class="msg-bubble-avatar" src="${targetAvatar}">
+                <div class="msg-bubble">${msg.text}</div>
+              `;
+            }
+            msgBlock.appendChild(msgRow);
+          });
 
-          const msgRow = document.createElement('div');
-          msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
-
-          let content = msg.text || "";
-          if (msg.image) {
-            content = `<img src="${msg.image}" style="max-width:180px; border-radius:12px; display:block;">`;
-          }
-
-          if (isMine) {
-            msgRow.innerHTML = `<div class="msg-bubble">${content}</div>`;
-          } else {
-            msgRow.innerHTML = `
-              <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=0D8ABC&color=fff&size=128';">
-              <div class="msg-bubble">${content}</div>
-            `;
-          }
-
-          msgBlock.appendChild(msgRow);
-        });
-
-        setTimeout(function() {
           const target = document.getElementById('messages-target');
           if (target) target.scrollTop = target.scrollHeight;
-        }, 50);
-      }, (err) => {
-        console.error("Messages Error:", err);
-      });
+        });
     }
 
     function closeChat() {
@@ -1174,33 +1127,116 @@
     }
 
     function handleKeyPress(event) {
-      if (event.key === 'Enter') {
-        sendLikeOrMessage();
-      }
+      if (event.key === 'Enter') sendLikeOrMessage();
     }
 
-    async function sendLikeOrMessage() {
+    function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
-      if (!text || !currentActiveChatUid || !window.auth.currentUser) return;
+      if (!text || !currentActiveChatUid || !auth.currentUser) return;
 
-      const myUid = window.auth.currentUser.uid;
+      const myUid = auth.currentUser.uid;
       const chatId = getChatId(myUid, currentActiveChatUid);
-      const { collection, addDoc, serverTimestamp } = window.fs;
 
       input.value = "";
 
-      try {
-        await addDoc(collection(window.db, 'chats', chatId, 'messages'), {
-          senderId: myUid,
-          text: text,
-          read: false,
-          createdAt: serverTimestamp()
-        });
-      } catch (err) {
-        console.error("Message send error:", err);
-      }
+      db.collection('chats').doc(chatId).collection('messages').add({
+        senderId: myUid,
+        text: text,
+        read: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
     }
+
+    // 3. STORIES - ატვირთვა და ნახვა
+    function triggerStoryUpload() {
+      document.getElementById('story-file-input').click();
+    }
+
+    function uploadStoryFile(event) {
+      const file = event.target.files[0];
+      if (!file || !auth.currentUser) return;
+
+      const user = auth.currentUser;
+      const fileRef = storage.ref(`stories/${user.uid}_${Date.now()}`);
+
+      fileRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          db.collection('stories').add({
+            uid: user.uid,
+            imageUrl: url,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            alert("სტორი წარმატებით აიტვირთა!");
+          });
+        });
+      });
+    }
+
+    function listenToStories() {
+      db.collection('stories')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          const storiesRow = document.getElementById('stories-target-row');
+          // დავტოვოთ მხოლოდ პირველი ღილაკი "სტორის დამატება"
+          const firstItem = storiesRow.firstElementChild;
+          storiesRow.innerHTML = "";
+          storiesRow.appendChild(firstItem);
+
+          snapshot.forEach(docSnap => {
+            let story = docSnap.data();
+            
+            db.collection('profiles').doc(story.uid).get().then(profileSnap => {
+              if (profileSnap.exists) {
+                let uData = profileSnap.data();
+                let name = extractName(uData, story.uid);
+                let photo = extractPhotoUrl(uData) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
+
+                let storyDiv = document.createElement('div');
+                storyDiv.className = 'story-item';
+                storyDiv.onclick = function() { openStoryViewer(name, photo, story.imageUrl); };
+
+                storyDiv.innerHTML = `
+                  <div class="story-avatar-wrapper has-story">
+                    <img class="story-avatar" src="${photo}">
+                  </div>
+                  <span class="story-name">${name}</span>
+                `;
+                storiesRow.appendChild(storyDiv);
+              }
+            });
+          });
+        });
+    }
+
+    function openStoryViewer(name, avatar, imageUrl) {
+      document.getElementById('story-viewer-name').innerText = name;
+      document.getElementById('story-viewer-avatar').src = avatar;
+      document.getElementById('story-viewer-img').src = imageUrl;
+      document.getElementById('story-viewer-modal').style.display = 'flex';
+
+      const fill = document.getElementById('story-progress-fill');
+      fill.style.width = '0%';
+      
+      let width = 0;
+      clearInterval(storyTimer);
+      storyTimer = setInterval(() => {
+        if (width >= 100) {
+          clearInterval(storyTimer);
+          closeStoryViewer();
+        } else {
+          width += 2;
+          fill.style.width = width + '%';
+        }
+      }, 100);
+    }
+
+    function closeStoryViewer() {
+      clearInterval(storyTimer);
+      document.getElementById('story-viewer-modal').style.display = 'none';
+    }
+
+    applyTranslations();
   </script>
 </body>
 </html>
