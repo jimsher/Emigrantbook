@@ -985,6 +985,25 @@
       return displayName || ("User_" + uid.substring(0, 5));
     }
 
+    // URL პარამეტრიდან მომხმარებლის ID-ს წაკითხვა და პირდაპირ ჩატის გახსნა
+    function checkUrlForDirectChat() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetUid = urlParams.get('uid') || urlParams.get('userId') || urlParams.get('user') || urlParams.get('chat');
+      
+      if (targetUid) {
+        db.collection('profiles').doc(targetUid).get().then(docSnap => {
+          if (docSnap.exists) {
+            let uData = docSnap.data();
+            let name = extractName(uData, targetUid);
+            let photo = extractPhotoUrl(uData);
+            openChat(name, photo, targetUid);
+          } else {
+            openChat("User_" + targetUid.substring(0, 5), "", targetUid);
+          }
+        });
+      }
+    }
+
     // Auth State Listener & Realtime Language Listener
     auth.onAuthStateChanged(function(user) {
       if (user) {
@@ -1003,6 +1022,9 @@
 
         fetchFirestoreChatList(user.uid);
         listenToStories();
+        
+        // შევამოწმოთ პირდაპირი ლინკით გადმოსვლა
+        checkUrlForDirectChat();
       } else {
         window.location.href = "index.html";
       }
@@ -1072,7 +1094,7 @@
               let msgText = lastMsgDoc.text || "📷 Photo";
               let timeStr = lastMsgDoc.createdAt ? new Date(lastMsgDoc.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
-              // წაუკითხავი შეტყობინების შემოწმება (თუ შეტყობინება სხვისგანაა და წაუკითხავია)
+              // წაუკითხავი შეტყობინების შემოწმება
               const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
 
               let existingRow = document.getElementById('chat-row-' + user.uid);
@@ -1082,7 +1104,6 @@
                 listTarget.appendChild(existingRow);
               }
 
-              // 'unread' კლასის მინიჭება ან ამოღება
               existingRow.className = 'chat-row-item' + (isUnread ? ' unread' : '');
 
               const isOnline = user.presence === 'online';
