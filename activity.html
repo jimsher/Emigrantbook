@@ -417,7 +417,6 @@
       if (user) {
         currentUser = user;
         
-        // ენის ჩატვირთვა პროფილიდან
         db.collection('profiles').doc(user.uid).get().then(function(doc) {
           if (doc.exists && doc.data().language) {
             currentLang = doc.data().language;
@@ -455,7 +454,6 @@
         totalTimeSeconds = calculateRealTimeSpent();
         updateTimeDisplay(totalTimeSeconds);
 
-        // ყოველ 10 წამში მონაცემთა ბაზაში დროის განახლება
         if (totalTimeSeconds > 0 && totalTimeSeconds % 10 === 0) {
           db.collection('profiles').doc(uid).update({
             total_time_spent: totalTimeSeconds
@@ -477,7 +475,7 @@
       });
       startLiveTimer(uid);
 
-      // 2. დაწერილი კომენტარების რაოდენობა (client-side matching - არ სჭირდება ინდექსი)
+      // 2. დაწერილი კომენტარების რაოდენობა
       db.collection('post_comments').onSnapshot(function(snap) {
         var count = 0;
         snap.forEach(function(doc) {
@@ -489,7 +487,7 @@
         document.getElementById('stat-comments-count').innerText = count;
       });
 
-      // 3. ატვირთული სთორების რაოდენობა (client-side matching)
+      // 3. ატვირთული სთორების რაოდენობა
       db.collection('stories').onSnapshot(function(snap) {
         var count = 0;
         snap.forEach(function(doc) {
@@ -501,7 +499,7 @@
         document.getElementById('stat-stories-count').innerText = count;
       });
 
-      // 4. გამოქვეყნებული პოსტების რაოდენობა (client-side matching)
+      // 4. გამოქვეყნებული პოსტების რაოდენობა
       db.collection('posts').onSnapshot(function(snap) {
         var count = 0;
         snap.forEach(function(doc) {
@@ -521,13 +519,11 @@
         postsSnap.forEach(function(postDoc) {
           var pData = postDoc.data();
           
-          // შემოწმება 1: პოსტის დოკუმენტშივე თუ არის liked_by / likes მასივი
           if (Array.isArray(pData.liked_by) && pData.liked_by.includes(uid)) {
             likesCount++;
           } else if (Array.isArray(pData.likes) && pData.likes.includes(uid)) {
             likesCount++;
           } else {
-            // შემოწმება 2: პოსტის შიდა likes ქვეკოლექციაში თუ არის დოკუმენტი ამ user-ის ID-ით
             var promise = postDoc.ref.collection('likes').doc(uid).get().then(function(lDoc) {
               if (lDoc.exists) {
                 likesCount++;
