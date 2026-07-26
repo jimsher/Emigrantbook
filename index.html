@@ -3235,6 +3235,7 @@
         initUserPresence(user.uid);
         requestNotificationPermission();
         
+        
         db.collection('profiles').doc(user.uid).get().then(function(doc) {
           var finalName = user.email;
           var avatarUrl = null;
@@ -3266,7 +3267,16 @@
           document.getElementById('profile-user-subtitle').innerText = user.email;
 
           applyLanguageDOM();
-          showScreen('home');
+          
+          // ---- ამოწმებს users.html-იდან გადმოვედით თუ არა პროფილის სანახავად ----
+          var targetUserId = sessionStorage.getItem('target_view_user_id');
+          if (targetUserId) {
+            sessionStorage.removeItem('target_view_user_id');
+            viewUserProfile(targetUserId);
+          } else {
+            showScreen('home');
+          }
+          // ---------------------------------------------------------------------
             
           checkPendingRequestsCount();
           subscribeToFriendRequests();
