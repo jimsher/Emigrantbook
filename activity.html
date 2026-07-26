@@ -464,7 +464,7 @@
       }, 1000);
     }
 
-    // REALTIME LISTENERS
+    // REALTIME LISTENERS FOR STATS
     function initRealtimeActivity(uid) {
       // 1. ბაზიდან წინა გატარებული დროის ჩატვირთვა
       db.collection('profiles').doc(uid).get().then(function(docSnap) {
@@ -472,44 +472,60 @@
           var pData = docSnap.data();
           var dbTime = pData.total_time_spent || 0;
           
-          // სესიის დაწყებამდე ბაზაში არსებული დრო
           previousSavedTime = dbTime;
-          
           totalTimeSeconds = calculateRealTimeSpent();
           updateTimeDisplay(totalTimeSeconds);
           startLiveTimer(uid);
         }
       });
 
-      // 2. დაწერილი კომენტარების რაოდენობა რეალურ დროში
-      db.collection('post_comments')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-comments-count').innerText = snap.size;
-        });
+      // 2. დაწერილი კომენტარების რაოდენობა რეალურ დროში (user_id ან userId)
+      var handleCommentsSnap = function(snap) {
+        document.getElementById('stat-comments-count').innerText = snap.size;
+      };
+      db.collection('post_comments').where('user_id', '==', uid).onSnapshot(handleCommentsSnap, function() {
+        db.collection('post_comments').where('userId', '==', uid).onSnapshot(handleCommentsSnap);
+      });
 
-      // 3. ატვირთული სთორების რაოდენობა რეალურ დროში
-      db.collection('stories')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-stories-count').innerText = snap.size;
-        });
+      // 3. ატვირთული სთორების/ვიდეოების რაოდენობა რეალურ დროში (user_id ან userId)
+      var handleStoriesSnap = function(snap) {
+        document.getElementById('stat-stories-count').innerText = snap.size;
+      };
+      db.collection('stories').where('user_id', '==', uid).onSnapshot(handleStoriesSnap, function() {
+        db.collection('stories').where('userId', '==', uid).onSnapshot(handleStoriesSnap);
+      });
 
-      // 4. გამოქვეყნებული პოსტების რაოდენობა რეალურ დროში
-      db.collection('posts')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-posts-count').innerText = snap.size;
+      // 4. გამოქვეყნებული პოსტების რაოდენობა რეალურ დროში (user_id, userId, authorId)
+      var handlePostsSnap = function(snap) {
+        document.getElementById('stat-posts-count').innerText = snap.size;
+      };
+      db.collection('posts').where('user_id', '==', uid).onSnapshot(handlePostsSnap, function() {
+        db.collection('posts').where('userId', '==', uid).onSnapshot(handlePostsSnap, function() {
+          db.collection('posts').where('authorId', '==', uid).onSnapshot(handlePostsSnap);
         });
+      });
 
-      // 5. მოწონებული პოსტების რაოდენობა რეალურ დროში
-      db.collectionGroup('post_likes')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
+      // 5. მოწონებული პოსტების (ლაიქების) რაოდენობა რეალურ დროში
+      var handleLikesSnap = function(snap) {
+        document.getElementById('stat-likes-count').innerText = snap.size;
+      };
+
+      // პირველი მცდელობა: post_likes collectionGroup (user_id)
+      db.collectionGroup('post_likes').where('user_id', '==', uid).onSnapshot(handleLikesSnap, function(err) {
+        // თუ collectionGroup-ზე ინდექსია საჭირო ან განსხვავებული სტრუქტურაა, გადადის ალტერნატიულ კოლექციებზე
+        db.collectionGroup('likes').where('user_id', '==', uid).onSnapshot(handleLikesSnap, function() {
+          db.collection('likes').where('user_id', '==', uid).onSnapshot(handleLikesSnap, function() {
+            db.collection('likes').where('userId', '==', uid).onSnapshot(handleLikesSnap);
+          });
+        });
+      });
+
+      // დამატებითი შემოწმება userId ვარიანტისთვის post_likes-ში
+      db.collectionGroup('post_likes').where('userId', '==', uid).onSnapshot(function(snap) {
+        if (!snap.empty) {
           document.getElementById('stat-likes-count').innerText = snap.size;
-        }, function(err) {
-          console.warn("Collection group query requires index or fallback:", err);
-        });
+        }
+      }, function(e){});
     }
   </script>
 </body>
