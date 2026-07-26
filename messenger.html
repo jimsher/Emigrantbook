@@ -944,7 +944,7 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // ორიგინალი, ძლიერი ფოტოს ამოღების ლოგიკა (რომელიც ყველა ველს ამოწმებს)
+    // ფოტოს ამოღების ლოგიკა
     function extractPhotoUrl(uData) {
       if (!uData) return "";
       let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.avatar_url || uData.userImg || uData.userPhoto || uData.cover;
@@ -962,7 +962,7 @@
       return "";
     }
 
-    // ორიგინალი სახელის ამოღების ლოგიკა
+    // სახელის ამოღების ლოგიკა
     function extractName(uData, uid) {
       if (!uData) return "User_" + uid.substring(0, 5);
       let displayName = uData.full_name || uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
@@ -1072,13 +1072,18 @@
               let msgText = lastMsgDoc.text || "📷 Photo";
               let timeStr = lastMsgDoc.createdAt ? new Date(lastMsgDoc.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
+              // წაუკითხავი შეტყობინების შემოწმება (თუ შეტყობინება სხვისგანაა და წაუკითხავია)
+              const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
+
               let existingRow = document.getElementById('chat-row-' + user.uid);
               if (!existingRow) {
                 existingRow = document.createElement('div');
                 existingRow.id = 'chat-row-' + user.uid;
-                existingRow.className = 'chat-row-item';
                 listTarget.appendChild(existingRow);
               }
+
+              // 'unread' კლასის მინიჭება ან ამოღება
+              existingRow.className = 'chat-row-item' + (isUnread ? ' unread' : '');
 
               const isOnline = user.presence === 'online';
               const imgSrc = user.photo ? user.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff`;
@@ -1095,6 +1100,7 @@
                   <div class="chat-row-meta">
                     <span class="chat-row-last-msg">${msgText}</span>
                     <span class="chat-row-time">${timeStr}</span>
+                    ${isUnread ? '<div class="unread-dot"></div>' : ''}
                   </div>
                 </div>
               `;
@@ -1103,7 +1109,7 @@
       });
     }
 
-    // 2. ჩატის გახსნა და მიმოწერა
+    // 2. ჩატის გახსნა, მიმოწერა და წაუკითხავების "წაკითხულად" მონიშვნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
       const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
@@ -1118,6 +1124,16 @@
 
       const currentUid = auth.currentUser.uid;
       const chatId = getChatId(currentUid, targetUid);
+
+      // წაუკითხავი შეტყობინებების წაკითხულად მონიშვნა (read: true)
+      db.collection('chats').doc(chatId).collection('messages')
+        .where('senderId', '==', targetUid)
+        .where('read', '==', false)
+        .get().then(snapshot => {
+          snapshot.forEach(docSnap => {
+            docSnap.ref.update({ read: true });
+          });
+        });
 
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
 
