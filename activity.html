@@ -1,1 +1,505 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>აქტივობის ცენტრი - Emigrantbook</title>
+  <link rel="stylesheet" href="supabase1.css">
+  <link rel="manifest" href="manifest.json">
 
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    body {
+      background-color: #0b0b0b;
+      color: #e4e6eb;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #141414;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222222;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: bold;
+      color: #dcae36;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .activity-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 20px 15px;
+    }
+
+    .activity-card {
+      background: #141414;
+      border: 1px solid #222222;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #dcae36;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: #aaaaaa;
+      margin-bottom: 20px;
+    }
+
+    /* Grid for Main Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .stat-box {
+      background: #1c1c1e;
+      border: 1px solid #282828;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .stat-box:hover {
+      border-color: #dcae36;
+      transform: translateY(-2px);
+    }
+    .stat-box .icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .stat-box .val {
+      font-size: 22px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+    .stat-box .lbl {
+      font-size: 12px;
+      color: #aaaaaa;
+      margin-top: 4px;
+    }
+
+    /* Live Time Box */
+    .time-tracker-box {
+      background: linear-gradient(135deg, #1c1c1e 0%, #121212 100%);
+      border: 1px solid #dcae36;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 25px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(220, 174, 54, 0.15);
+    }
+    .time-tracker-title {
+      font-size: 14px;
+      color: #dcae36;
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .time-display-grid {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+    .time-unit-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .time-unit-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      background: #252525;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #383838;
+      min-width: 50px;
+    }
+    .time-unit-label {
+      font-size: 11px;
+      color: #888888;
+      margin-top: 4px;
+    }
+
+    /* Section Divider & Titles */
+    .section-header {
+      font-size: 16px;
+      font-weight: bold;
+      color: #ffffff;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #222222;
+      padding-bottom: 8px;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #31a24c;
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(49, 162, 76, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(49, 162, 76, 0); }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .time-unit-num {
+        font-size: 20px;
+        min-width: 42px;
+        padding: 4px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <a href="index.html" class="logo-text" id="lbl-back-home">
+      ← Emigrantbook
+    </a>
+    <div style="font-weight: bold; color: #dcae36; font-size: 14px;" id="lbl-header-title">
+      🕒 აქტივობის ცენტრი
+    </div>
+  </div>
+
+  <div class="activity-container">
+    <div class="activity-card">
+      <div class="page-title">
+        <span>📊</span> <span id="lbl-main-title">შენი აქტივობა</span>
+      </div>
+      <div class="page-subtitle" id="lbl-main-sub">
+        თვალყური ადევნე შენს სტატისტიკას რეალურ დროში
+      </div>
+
+      <!-- LIVE TIME TRACKER -->
+      <div class="time-tracker-box">
+        <div class="time-tracker-title">
+          <span class="pulse-dot"></span>
+          <span id="lbl-time-title">საიტზე გატარებული სრული დრო</span>
+        </div>
+        <div class="time-display-grid">
+          <div class="time-unit-box">
+            <span class="time-unit-num" id="time-days">0</span>
+            <span class="time-unit-label" id="lbl-unit-days">დღე</span>
+          </div>
+          <div class="time-unit-box">
+            <span class="time-unit-num" id="time-hours">00</span>
+            <span class="time-unit-label" id="lbl-unit-hours">საათი</span>
+          </div>
+          <div class="time-unit-box">
+            <span class="time-unit-num" id="time-minutes">00</span>
+            <span class="time-unit-label" id="lbl-unit-minutes">წუთი</span>
+          </div>
+          <div class="time-unit-box">
+            <span class="time-unit-num" id="time-seconds">00</span>
+            <span class="time-unit-label" id="lbl-unit-seconds">წამი</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS GRID -->
+      <div class="section-header">
+        <span>⚡</span> <span id="lbl-stats-header">ინტერაქციების სტატისტიკა</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="icon">❤️</div>
+          <div class="val" id="stat-likes-count">0</div>
+          <div class="lbl" id="lbl-stat-likes">მოწონებული პოსტები</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="icon">💬</div>
+          <div class="val" id="stat-comments-count">0</div>
+          <div class="lbl" id="lbl-stat-comments">დაწერილი კომენტარები</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="icon">🎬</div>
+          <div class="val" id="stat-stories-count">0</div>
+          <div class="lbl" id="lbl-stat-stories">ატვირთული სთორები</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="icon">📝</div>
+          <div class="val" id="stat-posts-count">0</div>
+          <div class="lbl" id="lbl-stat-posts">გამოქვეყნებული პოსტები</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    var currentUser = null;
+    var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+    var totalTimeSeconds = 0;
+    var timeTrackerTimer = null;
+
+    // TRANSLATIONS
+    const TRANSLATIONS = {
+      ka: {
+        backHome: "← Emigrantbook",
+        headerTitle: "🕒 აქტივობის ცენტრი",
+        mainTitle: "შენი აქტივობა",
+        mainSub: "თვალყური ადევნე შენს სტატისტიკას რეალურ დროში",
+        timeTitle: "საიტზე გატარებული სრული დრო",
+        unitDays: "დღე",
+        unitHours: "საათი",
+        unitMinutes: "წუთი",
+        unitSeconds: "წამი",
+        statsHeader: "ინტერაქციების სტატისტიკა",
+        statLikes: "მოწონებული პოსტები",
+        statComments: "დაწერილი კომენტარები",
+        statStories: "ატვირთული სთორები",
+        statPosts: "გამოქვეყნებული პოსტები"
+      },
+      en: {
+        backHome: "← Emigrantbook",
+        headerTitle: "🕒 Activity Center",
+        mainTitle: "Your Activity",
+        mainSub: "Track your statistics in real time",
+        timeTitle: "Total Time Spent on Site",
+        unitDays: "Days",
+        unitHours: "Hours",
+        unitMinutes: "Mins",
+        unitSeconds: "Secs",
+        statsHeader: "Interaction Statistics",
+        statLikes: "Liked Posts",
+        statComments: "Comments Written",
+        statStories: "Stories Uploaded",
+        statPosts: "Posts Published"
+      },
+      ru: {
+        backHome: "← Emigrantbook",
+        headerTitle: "🕒 Центр активности",
+        mainTitle: "Ваша активность",
+        mainSub: "Отслеживайте свою статистику в реальном времени",
+        timeTitle: "Всего времени на сайте",
+        unitDays: "Дней",
+        unitHours: "Часов",
+        unitMinutes: "Мин",
+        unitSeconds: "Сек",
+        statsHeader: "Статистика взаимодействий",
+        statLikes: "Понравившиеся посты",
+        statComments: "Написано комментариев",
+        statStories: "Загружено историй",
+        statPosts: "Опубликовано постов"
+      },
+      fr: {
+        backHome: "← Emigrantbook",
+        headerTitle: "🕒 Centre d'activité",
+        mainTitle: "Votre activité",
+        mainSub: "Suivez vos statistiques en temps réel",
+        timeTitle: "Temps total passé sur le site",
+        unitDays: "Jours",
+        unitHours: "Heures",
+        unitMinutes: "Mins",
+        unitSeconds: "Secs",
+        statsHeader: "Statistiques d'interaction",
+        statLikes: "Publications aimées",
+        statComments: "Commentaires écrits",
+        statStories: "Stories ajoutées",
+        statPosts: "Publications publiées"
+      },
+      de: {
+        backHome: "← Emigrantbook",
+        headerTitle: "🕒 Aktivitätszentrum",
+        mainTitle: "Deine Aktivität",
+        mainSub: "Verfolge deine Statistiken in Echtzeit",
+        timeTitle: "Gesamtzeit auf der Website",
+        unitDays: "Tage",
+        unitHours: "Stunden",
+        unitMinutes: "Min",
+        unitSeconds: "Sek",
+        statsHeader: "Interaktionsstatistiken",
+        statLikes: "Gefällt-mir-Beiträge",
+        statComments: "Geschriebene Kommentare",
+        statStories: "Hochgeladene Storys",
+        statPosts: "Veröffentlichte Beiträge"
+      }
+    };
+
+    function applyLanguage() {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
+      document.getElementById('lbl-back-home').innerText = t.backHome;
+      document.getElementById('lbl-header-title').innerText = t.headerTitle;
+      document.getElementById('lbl-main-title').innerText = t.mainTitle;
+      document.getElementById('lbl-main-sub').innerText = t.mainSub;
+      document.getElementById('lbl-time-title').innerText = t.timeTitle;
+      document.getElementById('lbl-unit-days').innerText = t.unitDays;
+      document.getElementById('lbl-unit-hours').innerText = t.unitHours;
+      document.getElementById('lbl-unit-minutes').innerText = t.unitMinutes;
+      document.getElementById('lbl-unit-seconds').innerText = t.unitSeconds;
+      document.getElementById('lbl-stats-header').innerText = t.statsHeader;
+      document.getElementById('lbl-stat-likes').innerText = t.statLikes;
+      document.getElementById('lbl-stat-comments').innerText = t.statComments;
+      document.getElementById('lbl-stat-stories').innerText = t.statStories;
+      document.getElementById('lbl-stat-posts').innerText = t.statPosts;
+    }
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        
+        // ენის ჩატვირთვა პროფილიდან
+        db.collection('profiles').doc(user.uid).get().then(function(doc) {
+          if (doc.exists && doc.data().language) {
+            currentLang = doc.data().language;
+          }
+          applyLanguage();
+          initRealtimeActivity(user.uid);
+        });
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    // TIME FORMATTER & COUNTER
+    function updateTimeDisplay(sec) {
+      var days = Math.floor(sec / (3600 * 24));
+      var hours = Math.floor((sec % (3600 * 24)) / 3600);
+      var minutes = Math.floor((sec % 3600) / 60);
+      var seconds = Math.floor(sec % 60);
+
+      document.getElementById('time-days').innerText = days;
+      document.getElementById('time-hours').innerText = hours < 10 ? '0' + hours : hours;
+      document.getElementById('time-minutes').innerText = minutes < 10 ? '0' + minutes : minutes;
+      document.getElementById('time-seconds').innerText = seconds < 10 ? '0' + seconds : seconds;
+    }
+
+    function startLiveTimer(uid) {
+      if (timeTrackerTimer) clearInterval(timeTrackerTimer);
+      
+      timeTrackerTimer = setInterval(function() {
+        totalTimeSeconds++;
+        updateTimeDisplay(totalTimeSeconds);
+
+        // ყოველ 10 წამში მონაცემთა ბაზაში დროის შენახვა
+        if (totalTimeSeconds % 10 === 0) {
+          db.collection('profiles').doc(uid).update({
+            total_time_spent: totalTimeSeconds
+          }).catch(function(e){ console.error("Time sync error", e); });
+        }
+      }, 1000);
+    }
+
+    // REALTIME LISTENERS
+    function initRealtimeActivity(uid) {
+      // 1. დროის ჩატვირთვა და სტარტი
+      db.collection('profiles').doc(uid).onSnapshot(function(docSnap) {
+        if (docSnap.exists) {
+          var pData = docSnap.data();
+          var dbTime = pData.total_time_spent || 0;
+          
+          // თუ ბაზაში მეტი დროა ჩაწერილი, განვასახლებთ local-ს
+          if (dbTime > totalTimeSeconds) {
+            totalTimeSeconds = dbTime;
+            updateTimeDisplay(totalTimeSeconds);
+          }
+        }
+      });
+
+      startLiveTimer(uid);
+
+      // 2. დაწერილი კომენტარების რაოდენობა რეალურ დროში
+      db.collection('post_comments')
+        .where('user_id', '==', uid)
+        .onSnapshot(function(snap) {
+          document.getElementById('stat-comments-count').innerText = snap.size;
+        });
+
+      // 3. ატვირთული სთორების რაოდენობა რეალურ დროში
+      db.collection('stories')
+        .where('user_id', '==', uid)
+        .onSnapshot(function(snap) {
+          document.getElementById('stat-stories-count').innerText = snap.size;
+        });
+
+      // 4. გამოქვეყნებული პოსტების რაოდენობა რეალურ დროში
+      db.collection('posts')
+        .where('user_id', '==', uid)
+        .onSnapshot(function(snap) {
+          document.getElementById('stat-posts-count').innerText = snap.size;
+        });
+
+      // 5. მოწონებული პოსტების რაოდენობა რეალურ დროში (Collection Group Query)
+      db.collectionGroup('post_likes')
+        .where('user_id', '==', uid)
+        .onSnapshot(function(snap) {
+          document.getElementById('stat-likes-count').innerText = snap.size;
+        }, function(err) {
+          console.warn("Collection group query requires index or fallback:", err);
+        });
+    }
+  </script>
+</body>
+</html>
