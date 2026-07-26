@@ -464,63 +464,83 @@
       }, 1000);
     }
 
-    // REALTIME LISTENERS
+    // REALTIME LISTENERS FOR ALL STATS
     function initRealtimeActivity(uid) {
       // 1. profiles კოლექციიდან total_time_spent-ის ჩატვირთვა
-      db.collection('profiles').doc(uid).get().then(function(docSnap) {
+      db.collection('profiles').doc(uid).onSnapshot(function(docSnap) {
         if (docSnap.exists) {
           var pData = docSnap.data();
-          var dbTime = pData.total_time_spent || 0;
-          
-          previousSavedTime = dbTime;
+          previousSavedTime = pData.total_time_spent || 0;
           totalTimeSeconds = calculateRealTimeSpent();
           updateTimeDisplay(totalTimeSeconds);
-          startLiveTimer(uid);
         }
       });
+      startLiveTimer(uid);
 
-      // 2. post_comments კოლექცია (user_id == uid)
-      db.collection('post_comments')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-comments-count').innerText = snap.size;
-        }, function(e){ console.warn("Comments error:", e); });
-
-      // 3. stories კოლექცია (user_id == uid)
-      db.collection('stories')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-stories-count').innerText = snap.size;
-        }, function(e){ console.warn("Stories error:", e); });
-
-      // 4. posts კოლექცია (user_id == uid)
-      db.collection('posts')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-posts-count').innerText = snap.size;
-        }, function(e){ console.warn("Posts error:", e); });
-
-      // 5. posts-ის შიდა likes ქვეკოლექციის თვლა
-      // ა) პირველი გზა: collectionGroup('likes') სადაც user_id == uid
-      db.collectionGroup('likes')
-        .where('user_id', '==', uid)
-        .onSnapshot(function(snap) {
-          document.getElementById('stat-likes-count').innerText = snap.size;
-        }, function(err) {
-          // ბ) თუ ინდექსი არ არის შექმნილი, ვამოწმებთ posts-ის შიგნით არსებულ 'liked_by' / 'likes' მასივს
-          db.collection('posts').onSnapshot(function(postsSnap) {
-            var totalLikesCount = 0;
-            postsSnap.forEach(function(postDoc) {
-              var pData = postDoc.data();
-              if (pData.liked_by && Array.isArray(pData.liked_by) && pData.liked_by.includes(uid)) {
-                totalLikesCount++;
-              } else if (pData.likes && Array.isArray(pData.likes) && pData.likes.includes(uid)) {
-                totalLikesCount++;
-              }
-            });
-            document.getElementById('stat-likes-count').innerText = totalLikesCount;
-          });
+      // 2. დაწერილი კომენტარების რაოდენობა (client-side matching - არ სჭირდება ინდექსი)
+      db.collection('post_comments').onSnapshot(function(snap) {
+        var count = 0;
+        snap.forEach(function(doc) {
+          var d = doc.data();
+          if (d.user_id === uid || d.userId === uid || d.author_id === uid || d.authorId === uid) {
+            count++;
+          }
         });
+        document.getElementById('stat-comments-count').innerText = count;
+      });
+
+      // 3. ატვირთული სთორების რაოდენობა (client-side matching)
+      db.collection('stories').onSnapshot(function(snap) {
+        var count = 0;
+        snap.forEach(function(doc) {
+          var d = doc.data();
+          if (d.user_id === uid || d.userId === uid || d.author_id === uid || d.authorId === uid) {
+            count++;
+          }
+        });
+        document.getElementById('stat-stories-count').innerText = count;
+      });
+
+      // 4. გამოქვეყნებული პოსტების რაოდენობა (client-side matching)
+      db.collection('posts').onSnapshot(function(snap) {
+        var count = 0;
+        snap.forEach(function(doc) {
+          var d = doc.data();
+          if (d.user_id === uid || d.userId === uid || d.author_id === uid || d.authorId === uid) {
+            count++;
+          }
+        });
+        document.getElementById('stat-posts-count').innerText = count;
+      });
+
+      // 5. მოწონებული პოსტების (ლაიქების) რაოდენობა რეალურ დროში
+      db.collection('posts').onSnapshot(function(postsSnap) {
+        var likesCount = 0;
+        var subCollectionPromises = [];
+
+        postsSnap.forEach(function(postDoc) {
+          var pData = postDoc.data();
+          
+          // შემოწმება 1: პოსტის დოკუმენტშივე თუ არის liked_by / likes მასივი
+          if (Array.isArray(pData.liked_by) && pData.liked_by.includes(uid)) {
+            likesCount++;
+          } else if (Array.isArray(pData.likes) && pData.likes.includes(uid)) {
+            likesCount++;
+          } else {
+            // შემოწმება 2: პოსტის შიდა likes ქვეკოლექციაში თუ არის დოკუმენტი ამ user-ის ID-ით
+            var promise = postDoc.ref.collection('likes').doc(uid).get().then(function(lDoc) {
+              if (lDoc.exists) {
+                likesCount++;
+              }
+            }).catch(function(){});
+            subCollectionPromises.push(promise);
+          }
+        });
+
+        Promise.all(subCollectionPromises).then(function() {
+          document.getElementById('stat-likes-count').innerText = likesCount;
+        });
+      });
     }
   </script>
 </body>
