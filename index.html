@@ -3232,11 +3232,18 @@
         currentUser = user;
         activeViewingProfileId = user.uid;
 
-        initUserPresence(user.uid);
-        requestNotificationPermission();
-        
         // ამოწმებს users.html-იდან ხომ არ გადმოვედით პროფილის სანახავად
         var targetUserId = sessionStorage.getItem('target_view_user_id');
+
+        // მყისიერად ვმალავთ auth ეკრანს, რომ თვალში არ აციმციმდეს
+        if (targetUserId) {
+          showScreen('profile');
+        } else {
+          showScreen('home');
+        }
+
+        initUserPresence(user.uid);
+        requestNotificationPermission();
         
         db.collection('profiles').doc(user.uid).get().then(function(doc) {
           var finalName = user.email;
@@ -3273,8 +3280,6 @@
           if (targetUserId) {
             sessionStorage.removeItem('target_view_user_id');
             viewUserProfile(targetUserId);
-          } else {
-            showScreen('home');
           }
             
           checkPendingRequestsCount();
