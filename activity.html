@@ -302,15 +302,14 @@
     var currentUser = null;
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
     var totalTimeSeconds = 0;
-    var baseTimeSeconds = 0;
-    var sessionStartTime = null;
+    var previousSavedTime = 0;
     var timeTrackerTimer = null;
 
-    // სესიის დაწყების დროის დაფიქსირება (საიტზე შემოსვლისას)
-    if (!sessionStorage.getItem('eb_session_start')) {
-      sessionStorage.setItem('eb_session_start', Date.now().toString());
+    // 1. გლობალური სესიის დაწყების დრო (ინახება სანამ ბრაუზერის ტაბს არ დახურავს)
+    if (!sessionStorage.getItem('eb_session_start_time')) {
+      sessionStorage.setItem('eb_session_start_time', Date.now().toString());
     }
-    sessionStartTime = parseInt(sessionStorage.getItem('eb_session_start'));
+    var sessionStartTime = parseInt(sessionStorage.getItem('eb_session_start_time'));
 
     // TRANSLATIONS
     const TRANSLATIONS = {
@@ -444,26 +443,20 @@
       document.getElementById('time-seconds').innerText = seconds < 10 ? '0' + seconds : seconds;
     }
 
-    function calculateCurrentTotalTime() {
-      if (!sessionStartTime) {
-        sessionStartTime = parseInt(sessionStorage.getItem('eb_session_start') || Date.now());
-      }
-      var elapsedInSession = Math.floor((Date.now() - sessionStartTime) / 1000);
-      return baseTimeSeconds + elapsedInSession;
+    function calculateRealTimeSpent() {
+      var currentSessionElapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      return previousSavedTime + currentSessionElapsed;
     }
 
     function startLiveTimer(uid) {
       if (timeTrackerTimer) clearInterval(timeTrackerTimer);
       
       timeTrackerTimer = setInterval(function() {
-        totalTimeSeconds = calculateCurrentTotalTime();
+        totalTimeSeconds = calculateRealTimeSpent();
         updateTimeDisplay(totalTimeSeconds);
 
-        // ლოკალურ მეხსიერებაში შენახვა
-        localStorage.setItem('eb_total_time_' + uid, totalTimeSeconds);
-
-        // ყოველ 10 წამში მონაცემთა ბაზაში დროის შენახვა
-        if (totalTimeSeconds % 10 === 0) {
+        // ყოველ 10 წამში მონაცემთა ბაზაში დროის განახლება
+        if (totalTimeSeconds > 0 && totalTimeSeconds % 10 === 0) {
           db.collection('profiles').doc(uid).update({
             total_time_spent: totalTimeSeconds
           }).catch(function(e){ console.error("Time sync error", e); });
@@ -473,36 +466,18 @@
 
     // REALTIME LISTENERS
     function initRealtimeActivity(uid) {
-      var localCachedTime = parseInt(localStorage.getItem('eb_total_time_' + uid) || '0');
-
-      // 1. დროის ჩატვირთვა და სტარტი
-      db.collection('profiles').doc(uid).onSnapshot(function(docSnap) {
+      // 1. ბაზიდან წინა გატარებული დროის ჩატვირთვა
+      db.collection('profiles').doc(uid).get().then(function(docSnap) {
         if (docSnap.exists) {
           var pData = docSnap.data();
           var dbTime = pData.total_time_spent || 0;
-          var highestKnown = Math.max(dbTime, localCachedTime);
           
-          var elapsedInSession = Math.floor((Date.now() - sessionStartTime) / 1000);
+          // სესიის დაწყებამდე ბაზაში არსებული დრო
+          previousSavedTime = dbTime;
           
-          if (highestKnown > (baseTimeSeconds + elapsedInSession)) {
-            baseTimeSeconds = highestKnown - elapsedInSession;
-            if (baseTimeSeconds < 0) baseTimeSeconds = 0;
-          }
-          
-          totalTimeSeconds = calculateCurrentTotalTime();
+          totalTimeSeconds = calculateRealTimeSpent();
           updateTimeDisplay(totalTimeSeconds);
-        }
-      });
-
-      startLiveTimer(uid);
-
-      // გვერდიდან გასვლისას/დახურვისას ბოლო დროის შენახვა
-      window.addEventListener('beforeunload', function() {
-        if (currentUser && totalTimeSeconds > 0) {
-          localStorage.setItem('eb_total_time_' + uid, totalTimeSeconds);
-          db.collection('profiles').doc(uid).update({
-            total_time_spent: totalTimeSeconds
-          }).catch(function(e){});
+          startLiveTimer(uid);
         }
       });
 
@@ -527,7 +502,7 @@
           document.getElementById('stat-posts-count').innerText = snap.size;
         });
 
-      // 5. მოწონებული პოსტების რაოდენობა რეალურ დროში (Collection Group Query)
+      // 5. მოწონებული პოსტების რაოდენობა რეალურ დროში
       db.collectionGroup('post_likes')
         .where('user_id', '==', uid)
         .onSnapshot(function(snap) {
