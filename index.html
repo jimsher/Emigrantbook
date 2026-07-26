@@ -3235,6 +3235,8 @@
         initUserPresence(user.uid);
         requestNotificationPermission();
         
+        // ამოწმებს users.html-იდან ხომ არ გადმოვედით პროფილის სანახავად
+        var targetUserId = sessionStorage.getItem('target_view_user_id');
         
         db.collection('profiles').doc(user.uid).get().then(function(doc) {
           var finalName = user.email;
@@ -3268,15 +3270,12 @@
 
           applyLanguageDOM();
           
-          // ---- ამოწმებს users.html-იდან გადმოვედით თუ არა პროფილის სანახავად ----
-          var targetUserId = sessionStorage.getItem('target_view_user_id');
           if (targetUserId) {
             sessionStorage.removeItem('target_view_user_id');
             viewUserProfile(targetUserId);
           } else {
             showScreen('home');
           }
-          // ---------------------------------------------------------------------
             
           checkPendingRequestsCount();
           subscribeToFriendRequests();
@@ -3293,6 +3292,7 @@
         hidePreloader();
       }
     });
+        
 
     function toggleRequestsDropdown(event) {
       event.stopPropagation();
