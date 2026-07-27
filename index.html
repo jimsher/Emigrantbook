@@ -4776,9 +4776,11 @@ function subscribeTotalUsersCount() {
          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       }
 
+      // ✅ სწორია:
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
+        .limit(20) // წამოიღებს მხოლოდ ბოლო 20 პოსტს
         .get()
         .then(function(snapshot) {
           var posts = [];
