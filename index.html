@@ -2510,7 +2510,8 @@
     <div id="tiktok-slides-wrapper"></div>
   </div>
 
-  <script>          
+        
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -3111,7 +3112,7 @@
 
       card.style.display = 'block';
 
-      db.collection('lottery_state').doc('current').get().then(function(docSnap) {
+      db.collection('lottery_state').doc('current').onSnapshot(function(docSnap) {
         var statusText = document.getElementById('lottery-live-status');
         var winnerBox = document.getElementById('lottery-post-winner-box');
         var winnerName = document.getElementById('lottery-post-winner-name');
@@ -3169,8 +3170,8 @@
         } else {
           renderDefaultWaitingBanner();
         }
-      }).catch(function(err) {
-        console.error("Lottery state error:", err);
+      }, function(err) {
+        console.error("Lottery state listener error:", err);
         renderDefaultWaitingBanner();
       });
     }
@@ -3225,6 +3226,76 @@
       lotteryCountdownInterval = setInterval(updateCountdown, 1000);
     }
 
+    /* ---- 🟢 CORE FUNCTIONS DEFINITION BEFORE AUTH ---- */
+    function checkPendingRequestsCount() {
+      if (!currentUser) return;
+      db.collection('friend_requests')
+        .where('receiver_id', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .get()
+        .then(function(snapshot) {
+          var badgeHome = document.getElementById('requests-badge');
+          var badgeProfile = document.getElementById('requests-badge-profile');
+          var count = snapshot.size;
+            
+          if (count > 0) {
+            if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
+            if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
+          } else {
+            if (badgeHome) badgeHome.style.display = 'none';
+            if (badgeProfile) badgeProfile.style.display = 'none';
+          }
+        });
+    }
+
+    function subscribeTotalUsersCount() {
+      db.collection('profiles').count().get().then(function(snapshot) {
+        var totalCount = snapshot.data().count;
+        var badgeEl = document.getElementById('total-users-badge');
+        if (badgeEl) {
+          badgeEl.innerText = totalCount;
+        }
+      }).catch(function(err) {
+        console.error("Count error:", err);
+      });
+    }
+
+    function subscribeToPostsRealtime() {
+      db.collection('posts')
+        .orderBy('created_at', 'desc')
+        .limit(20)
+        .onSnapshot(function(snapshot) {
+          snapshot.docChanges().forEach(function(change) {
+            if (change.type === 'MODIFIED') {
+              var updatedPost = change.doc.data();
+              var postId = change.doc.id;
+              
+              var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+              countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
+
+              var statsIcons = document.getElementById(`stats-icons-${postId}`);
+              if (statsIcons) {
+                var currentLikesNum = updatedPost.likes_count || 0;
+                var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
+                statsIcons.innerHTML = iconsHtml;
+              }
+
+              if (activePostForComments === postId) {
+                var modalTotal = document.getElementById('modal-total-likes');
+                if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
+              }
+
+              if (document.getElementById(`floating-container-feed-${postId}`)) {
+                startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
+              }
+            }
+          });
+        }, function(err) {
+          console.error("Realtime posts error:", err);
+        });
+    }
+
+    /* ---- 🔐 AUTH STATE CHANGED ---- */
     auth.onAuthStateChanged(function(user) {
       if (user) {
         currentUser = user;
@@ -3279,10 +3350,9 @@
           }
             
           checkPendingRequestsCount();
-          checkUnreadMessagesCount();
-          subscribeToPostsRealtime();
           subscribeToLiveLotteryPost();
           subscribeTotalUsersCount();
+          subscribeToPostsRealtime();
           
           hidePreloader();
         });
@@ -3392,128 +3462,6 @@
           </div>
         `;
       }
-    }
-
-    // 🟢 უსაფრთხო მესინჯერის შემოწმება (.get()-ით 0 Realtime Listener)
-    function checkUnreadMessagesCount() {
-      if (!currentUser) return;
-
-      db.collection('friend_requests')
-        .where('status', '==', 'accepted')
-        .get()
-        .then(function(snapshot) {
-          let friendIds = [];
-          snapshot.forEach(docSnap => {
-            let req = docSnap.data();
-            if (req.sender_id === currentUser.uid) friendIds.push(req.receiver_id);
-            else if (req.receiver_id === currentUser.uid) friendIds.push(req.sender_id);
-          });
-
-          if (friendIds.length === 0) {
-            var badge = document.getElementById('messenger-badge');
-            if (badge) badge.style.display = 'none';
-            return;
-          }
-
-          let promises = friendIds.map(fId => {
-            let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
-            return db.collection('chats').doc(chatId).collection('messages')
-              .where('read', '==', false)
-              .limit(1)
-              .get();
-          });
-
-          Promise.all(promises).then(results => {
-            let unreadChatsCount = 0;
-            results.forEach(msgsSnap => {
-              msgsSnap.forEach(msgDoc => {
-                if (msgDoc.data().senderId !== currentUser.uid) {
-                  unreadChatsCount++;
-                }
-              });
-            });
-
-            var badge = document.getElementById('messenger-badge');
-            if (badge) {
-              if (unreadChatsCount > 0) {
-                badge.innerText = unreadChatsCount;
-                badge.style.display = 'flex';
-              } else {
-                badge.style.display = 'none';
-              }
-            }
-          });
-        });
-    }
-
-    // 🟢 უსაფრთხო პოსტების რეალთაიმი (მხოლოდ ბოლო 10 პოსტი)
-    function subscribeToPostsRealtime() {
-      db.collection('posts')
-        .orderBy('created_at', 'desc')
-        .limit(10)
-        .onSnapshot(function(snapshot) {
-          snapshot.docChanges().forEach(function(change) {
-            if (change.type === 'MODIFIED') {
-              var updatedPost = change.doc.data();
-              var postId = change.doc.id;
-              
-              var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-              countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
-
-              var statsIcons = document.getElementById(`stats-icons-${postId}`);
-              if (statsIcons) {
-                var currentLikesNum = updatedPost.likes_count || 0;
-                var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-                statsIcons.innerHTML = iconsHtml;
-              }
-
-              if (activePostForComments === postId) {
-                var modalTotal = document.getElementById('modal-total-likes');
-                if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
-              }
-
-              if(document.getElementById(`floating-container-feed-${postId}`)) {
-                startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-              }
-            }
-          });
-        }, function(err) {
-          console.error("Realtime posts error:", err);
-        });
-    }
-
-    // 🟢 ითვლის დარეგისტრირებულების სრულ რაოდენობას უსაფრთხოდ 1 Read-ით!
-    function subscribeTotalUsersCount() {
-      db.collection('profiles').count().get().then(function(snapshot) {
-        var totalCount = snapshot.data().count;
-        var badgeEl = document.getElementById('total-users-badge');
-        if (badgeEl) {
-          badgeEl.innerText = totalCount;
-        }
-      }).catch(function(err) {
-        console.error("Count error:", err);
-      });
-    }
-
-    function checkPendingRequestsCount() {
-      if (!currentUser) return;
-      db.collection('friend_requests')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('status', '==', 'pending')
-        .get()
-        .then(function(snapshot) {
-          var badgeHome = document.getElementById('requests-badge');
-          var badgeProfile = document.getElementById('requests-badge-profile');
-          var count = snapshot.size;
-            
-          if (count > 0) {
-            if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
-            if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
-          } else {
-            if (badgeHome) badgeHome.style.display = 'none';
-            if (badgeProfile) badgeProfile.style.display = 'none';
-          }
-        });
     }
 
     function loadIncomingFriendRequests() {
@@ -5514,7 +5462,7 @@
       document.getElementById('sv-media-container').innerHTML = "";
       modal.style.display = "none";
       currentViewingStoryObj = null;
-    } 
+    }            
   </script>
 </body>
 </html>         
