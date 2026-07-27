@@ -5108,50 +5108,55 @@ function subscribeTotalUsersCount() {
     }
 
     function startFloatingAvatarsAnimation(postId, containerId) {
-      var container = document.getElementById(containerId);
-      if(!container) return;
+  var container = document.getElementById(containerId);
+  if (!container) return;
 
-      if(activeFloatingIntervals[postId]) {
+  if (activeFloatingIntervals[postId]) {
+    clearInterval(activeFloatingIntervals[postId]);
+    container.innerHTML = "";
+  }
+
+  // 1. ბაზაში მოთხოვნა იგზავნება მხოლოდ ERTKHEL
+  db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
+    if (snapshot.empty) return;
+
+    var likersList = [];
+    snapshot.forEach(function(doc) {
+      likersList.push(Object.assign({ id: doc.id }, doc.data()));
+    });
+
+    if (likersList.length === 0) return;
+    var index = 0;
+    
+    function spawn() {
+      var targetElem = document.getElementById(containerId);
+      if (!targetElem) {
         clearInterval(activeFloatingIntervals[postId]);
-        container.innerHTML = "";
+        return;
       }
-
-      db.collection('posts').doc(postId).collection('post_likes').get().then(function(snapshot) {
-        if(snapshot.empty) return;
-
-        var likersList = [];
-        snapshot.forEach(function(doc) {
-          likersList.push(Object.assign({ id: doc.id }, doc.data()));
-        });
-
-        if(likersList.length === 0) return;
-        var index = 0;
-        
-        function spawn() {
-          if (document.getElementById(containerId) === null) {
-            clearInterval(activeFloatingIntervals[postId]);
-            return;
-          }
-          var person = likersList[index];
-          var name = person.full_name || "User";
-          var isOnline = isUserOnline(person);
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
-          
-          var bubble = document.createElement('div');
-          bubble.className = "tiktok-floating-avatar-item";
-          bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
-          
-          container.appendChild(bubble);
-          setTimeout(function() { if(bubble && bubble.parentNode) bubble.remove(); }, 6000);
-          index = (index + 1) % likersList.length;
-        }
-
-        document.getElementById(containerId).innerHTML = "";
-        spawn();
-        activeFloatingIntervals[postId] = setInterval(spawn, 1900);
-      });
+      
+      // იღებს მონაცემს უკვე ჩატვირთული likersList მასივიდან (ბაზას არ ეხება)
+      var person = likersList[index];
+      var name = person.full_name || "User";
+      var isOnline = isUserOnline(person);
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+      var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
+      
+      var bubble = document.createElement('div');
+      bubble.className = "tiktok-floating-avatar-item";
+      bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
+      
+      targetElem.appendChild(bubble);
+      setTimeout(function() { if (bubble && bubble.parentNode) bubble.remove(); }, 6000);
+      index = (index + 1) % likersList.length;
     }
+
+    container.innerHTML = "";
+    spawn();
+    // 2. ტაიმერი მხოლოდ ლოკალურ ფუნქციას ატრიალებს
+    activeFloatingIntervals[postId] = setInterval(spawn, 3000);
+  });
+}
 
     function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
       if (!urlsString) return "";
