@@ -2510,8 +2510,8 @@
     <div id="tiktok-slides-wrapper"></div>
   </div>
 
+  <script>    
         
-  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -2599,6 +2599,27 @@
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
 
+    /* HELPER: CACHE PROFILE LOAD */
+    function fetchUserProfileCached(userId, callback) {
+      if (cachedProfiles[userId] && cachedProfiles[userId].full_name !== undefined) {
+        callback(cachedProfiles[userId]);
+        return;
+      }
+      db.collection('profiles').doc(userId).get().then(function(docSnap) {
+        if (docSnap.exists) {
+          var data = docSnap.data();
+          cachedProfiles[userId] = data;
+          cachedOnlineStates[userId] = isUserOnline(data);
+          callback(data);
+        } else {
+          callback({});
+        }
+      }).catch(function(err) {
+        console.error("Profile fetch error:", err);
+        callback({});
+      });
+    }
+
     function requestNotificationPermission() {
       if (!currentUser) return;
       if (!('Notification' in window)) return;
@@ -2672,11 +2693,13 @@
 
     function openAkhoInfoModal(event) {
       if(event) event.stopPropagation();
-      document.getElementById('akho-info-modal').style.display = 'flex';
+      var modal = document.getElementById('akho-info-modal');
+      if (modal) modal.style.display = 'flex';
     }
 
     function closeAkhoInfoModal() {
-      document.getElementById('akho-info-modal').style.display = 'none';
+      var modal = document.getElementById('akho-info-modal');
+      if (modal) modal.style.display = 'none';
     }
 
     function redirectToMessenger(targetUserId) {
@@ -3014,7 +3037,8 @@
       var lockedSub = document.getElementById('lbl-locked-sub');
       if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
 
-      document.getElementById('site-language-select').value = lang;
+      var siteLangSelect = document.getElementById('site-language-select');
+      if (siteLangSelect) siteLangSelect.value = lang;
     }
 
     function changeSiteLanguage(newLang) {
@@ -3025,9 +3049,11 @@
       if (currentUser) {
         db.collection('profiles').doc(currentUser.uid).update({ language: newLang });
           
-        if (document.getElementById('home-screen').style.display === 'block') {
+        var homeScr = document.getElementById('home-screen');
+        var profScr = document.getElementById('profile-screen');
+        if (homeScr && homeScr.style.display === 'block') {
           loadPosts();
-        } else if (document.getElementById('profile-screen').style.display === 'block') {
+        } else if (profScr && profScr.style.display === 'block') {
           var targetUserId = activeViewingProfileId || currentUser.uid;
           loadUserPosts(targetUserId);
         }
@@ -3058,13 +3084,14 @@
       if(event) event.stopPropagation();
       var menu = document.getElementById('side-menu-content');
       var overlay = document.getElementById('side-menu-overlay');
+      if (!menu) return;
       
       if(menu.classList.contains('open')) {
         menu.classList.remove('open');
-        overlay.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
       } else {
         menu.classList.add('open');
-        overlay.style.display = 'block';
+        if (overlay) overlay.style.display = 'block';
       }
     }
 
@@ -3226,76 +3253,6 @@
       lotteryCountdownInterval = setInterval(updateCountdown, 1000);
     }
 
-    /* ---- 🟢 CORE FUNCTIONS DEFINITION BEFORE AUTH ---- */
-    function checkPendingRequestsCount() {
-      if (!currentUser) return;
-      db.collection('friend_requests')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('status', '==', 'pending')
-        .get()
-        .then(function(snapshot) {
-          var badgeHome = document.getElementById('requests-badge');
-          var badgeProfile = document.getElementById('requests-badge-profile');
-          var count = snapshot.size;
-            
-          if (count > 0) {
-            if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
-            if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
-          } else {
-            if (badgeHome) badgeHome.style.display = 'none';
-            if (badgeProfile) badgeProfile.style.display = 'none';
-          }
-        });
-    }
-
-    function subscribeTotalUsersCount() {
-      db.collection('profiles').count().get().then(function(snapshot) {
-        var totalCount = snapshot.data().count;
-        var badgeEl = document.getElementById('total-users-badge');
-        if (badgeEl) {
-          badgeEl.innerText = totalCount;
-        }
-      }).catch(function(err) {
-        console.error("Count error:", err);
-      });
-    }
-
-    function subscribeToPostsRealtime() {
-      db.collection('posts')
-        .orderBy('created_at', 'desc')
-        .limit(20)
-        .onSnapshot(function(snapshot) {
-          snapshot.docChanges().forEach(function(change) {
-            if (change.type === 'MODIFIED') {
-              var updatedPost = change.doc.data();
-              var postId = change.doc.id;
-              
-              var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-              countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
-
-              var statsIcons = document.getElementById(`stats-icons-${postId}`);
-              if (statsIcons) {
-                var currentLikesNum = updatedPost.likes_count || 0;
-                var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-                statsIcons.innerHTML = iconsHtml;
-              }
-
-              if (activePostForComments === postId) {
-                var modalTotal = document.getElementById('modal-total-likes');
-                if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
-              }
-
-              if (document.getElementById(`floating-container-feed-${postId}`)) {
-                startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-              }
-            }
-          });
-        }, function(err) {
-          console.error("Realtime posts error:", err);
-        });
-    }
-
-    /* ---- 🔐 AUTH STATE CHANGED ---- */
     auth.onAuthStateChanged(function(user) {
       if (user) {
         currentUser = user;
@@ -3317,6 +3274,8 @@
           var avatarUrl = null;
           if (doc.exists) {
             userProfile = doc.data();
+            cachedProfiles[user.uid] = userProfile;
+            cachedOnlineStates[user.uid] = true;
             finalName = userProfile.full_name || user.email;
             avatarUrl = userProfile.avatar_url || null;
             
@@ -3339,8 +3298,10 @@
             }
           }
 
-          document.getElementById('profile-user-name').innerText = finalName;
-          document.getElementById('profile-user-subtitle').innerText = user.email;
+          var pName = document.getElementById('profile-user-name');
+          var pSub = document.getElementById('profile-user-subtitle');
+          if (pName) pName.innerText = finalName;
+          if (pSub) pSub.innerText = user.email;
 
           applyLanguageDOM();
           
@@ -3350,9 +3311,12 @@
           }
             
           checkPendingRequestsCount();
+          subscribeToFriendRequests();
+          subscribeToPostsRealtime(); 
+          subscribeToGlobalNotifications();
+          subscribeToMessagesRealtime();
           subscribeToLiveLotteryPost();
           subscribeTotalUsersCount();
-          subscribeToPostsRealtime();
           
           hidePreloader();
         });
@@ -3364,18 +3328,23 @@
     });
 
     function toggleRequestsDropdown(event) {
-      event.stopPropagation();
-      var isHome = document.getElementById('home-screen').style.display === 'block';
+      if(event) event.stopPropagation();
+      var homeScr = document.getElementById('home-screen');
+      var isHome = homeScr && homeScr.style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-                      
-      document.getElementById('requests-dropdown-home').style.display = 'none';
-      document.getElementById('requests-dropdown-profile').style.display = 'none';
+      
+      var dropHome = document.getElementById('requests-dropdown-home');
+      var dropProf = document.getElementById('requests-dropdown-profile');
+      if (dropHome) dropHome.style.display = 'none';
+      if (dropProf) dropProf.style.display = 'none';
 
-      if (dropdown.style.display === 'flex') {
-        dropdown.style.display = 'none';
-      } else {
-        dropdown.style.display = 'flex';
-        loadIncomingFriendRequests(); 
+      if (dropdown) {
+        if (dropdown.style.display === 'flex') {
+          dropdown.style.display = 'none';
+        } else {
+          dropdown.style.display = 'flex';
+          loadIncomingFriendRequests(); 
+        }
       }
     }
 
@@ -3396,21 +3365,22 @@
     function showSelectedFileName() {
       var fileInput = document.getElementById('post-media-file');
       var nameDiv = document.getElementById('selected-file-name');
-      if (fileInput.files.length > 0) {
-        nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
-        nameDiv.style.display = "block";
-      } else {
-        nameDiv.style.display = "none";
+      if (fileInput && nameDiv) {
+        if (fileInput.files.length > 0) {
+          nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
+          nameDiv.style.display = "block";
+        } else {
+          nameDiv.style.display = "none";
+        }
       }
     }
 
     function showScreen(screenName) {
-      document.getElementById('auth-screen').style.display = 'none';
-      document.getElementById('home-screen').style.display = 'none';
-      document.getElementById('profile-screen').style.display = 'none';
-      document.getElementById('edit-profile-screen').style.display = 'none';
-      document.getElementById('connections-screen').style.display = 'none';
-      document.getElementById('privacy-screen').style.display = 'none';
+      var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen'];
+      screens.forEach(s => {
+        var el = document.getElementById(s);
+        if (el) el.style.display = 'none';
+      });
 
       var dropdownHome = document.getElementById('requests-dropdown-home');
       var dropdownProfile = document.getElementById('requests-dropdown-profile');
@@ -3418,19 +3388,25 @@
       if (dropdownProfile) dropdownProfile.style.display = 'none';
 
       if (screenName === 'auth') {
-        document.getElementById('auth-screen').style.display = 'flex';
+        var authEl = document.getElementById('auth-screen');
+        if (authEl) authEl.style.display = 'flex';
       } else if (screenName === 'home') {
-        document.getElementById('home-screen').style.display = 'block';
+        var homeEl = document.getElementById('home-screen');
+        if (homeEl) homeEl.style.display = 'block';
         loadPosts();
         loadStories();
       } else if (screenName === 'profile') {
-        document.getElementById('profile-screen').style.display = 'block';
+        var profEl = document.getElementById('profile-screen');
+        if (profEl) profEl.style.display = 'block';
       } else if (screenName === 'connections') {
-        document.getElementById('connections-screen').style.display = 'block';
+        var connEl = document.getElementById('connections-screen');
+        if (connEl) connEl.style.display = 'block';
       } else if (screenName === 'edit-profile') {
-        document.getElementById('edit-profile-screen').style.display = 'block';
+        var editEl = document.getElementById('edit-profile-screen');
+        if (editEl) editEl.style.display = 'block';
       } else if (screenName === 'privacy') {
-        document.getElementById('privacy-screen').style.display = 'block';
+        var privEl = document.getElementById('privacy-screen');
+        if (privEl) privEl.style.display = 'block';
       }
         
       if (currentUser) {
@@ -3464,8 +3440,204 @@
       }
     }
 
+    function subscribeToMessagesRealtime() {
+      if (!currentUser) return;
+
+      messengerUnsubscribeGroup.forEach(unsub => unsub());
+      messengerUnsubscribeGroup = [];
+
+      db.collection('friend_requests')
+        .where('status', '==', 'accepted')
+        .onSnapshot(function(snapshot) {
+          let friendIds = [];
+          snapshot.forEach(docSnap => {
+            let req = docSnap.data();
+            if (req.sender_id === currentUser.uid) friendIds.push(req.receiver_id);
+            else if (req.receiver_id === currentUser.uid) friendIds.push(req.sender_id);
+          });
+
+          if (friendIds.length === 0) {
+            var badge = document.getElementById('messenger-badge');
+            if (badge) badge.style.display = 'none';
+            return;
+          }
+
+          let unreadChatsMap = {};
+
+          friendIds.forEach(fId => {
+            let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
+            
+            let unsub = db.collection('chats').doc(chatId).collection('messages')
+              .where('read', '==', false)
+              .onSnapshot(function(msgsSnap) {
+                let unreadCountFromFriend = 0;
+                msgsSnap.forEach(msgDoc => {
+                  if (msgDoc.data().senderId !== currentUser.uid) {
+                    unreadCountFromFriend++;
+                  }
+                });
+
+                if (unreadCountFromFriend > 0) {
+                  unreadChatsMap[fId] = true;
+                } else {
+                  delete unreadChatsMap[fId];
+                }
+
+                let totalUnreadChats = Object.keys(unreadChatsMap).length;
+                var badge = document.getElementById('messenger-badge');
+                if (badge) {
+                  if (totalUnreadChats > 0) {
+                    badge.innerText = totalUnreadChats;
+                    badge.style.display = 'flex';
+                  } else {
+                    badge.style.display = 'none';
+                  }
+                }
+              }, function(err) {
+                console.error("Messages listener error:", err);
+              });
+
+            messengerUnsubscribeGroup.push(unsub);
+          });
+        });
+    }
+
+    function subscribeToGlobalNotifications() {
+      db.collection('posts')
+        .orderBy('created_at', 'desc')
+        .limit(5)
+        .onSnapshot(function(snapshot) {
+          if (!currentUser) return;
+          snapshot.docChanges().forEach(function(change) {
+            if (change.type === 'ADDED') {
+              var newPost = change.doc.data();
+              if (newPost.user_id !== currentUser.uid) {
+                var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
+                if (newPost.media_url) {
+                  type = (newPost.media_type === 'video' ? (currentLang === 'ka' ? "ახალი ვიდეო" : "new video") : (currentLang === 'ka' ? "ახალი სურათი" : "new photo"));
+                }
+                var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
+                realtimeNotificationsList.unshift({
+                  text: nText,
+                  time: new Date()
+                });
+                updateMainNotificationBadge();
+              }
+            }
+          });
+        });
+    }
+
+    function updateMainNotificationBadge() {
+      var badge = document.getElementById('main-notifications-badge');
+      if (badge) {
+        var count = realtimeNotificationsList.length;
+        if (count > 0) {
+          badge.innerText = count;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    }
+
+    function openRealtimeNotifications() {
+      if (realtimeNotificationsList.length === 0) {
+        alert(currentLang === 'ka' ? "ახალი შეტყობინებები არ არის" : "No new notifications");
+        return;
+      }
+      var msg = currentLang === 'ka' ? "🔔 რეალური დროის სიახლეები:\n\n" : "🔔 Realtime Notifications:\n\n";
+      realtimeNotificationsList.forEach(function(n, i) {
+        msg += (i + 1) + ") " + n.text + "\n";
+      });
+      alert(msg);
+      realtimeNotificationsList = [];
+      updateMainNotificationBadge();
+    }
+
+    function subscribeToPostsRealtime() {
+      db.collection('posts').onSnapshot(function(snapshot) {
+        snapshot.docChanges().forEach(function(change) {
+          if (change.type === 'MODIFIED') {
+            var updatedPost = change.doc.data();
+            var postId = change.doc.id;
+            
+            var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+            countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
+
+            var statsIcons = document.getElementById(`stats-icons-${postId}`);
+            if (statsIcons) {
+              var currentLikesNum = updatedPost.likes_count || 0;
+              var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
+              statsIcons.innerHTML = iconsHtml;
+            }
+
+            if (activePostForComments === postId) {
+              var modalTotal = document.getElementById('modal-total-likes');
+              if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
+            }
+
+            if(document.getElementById(`floating-container-feed-${postId}`)) {
+              startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
+            }
+          }
+        });
+      });
+    }
+
+    function subscribeToFriendRequests() {
+      if (!currentUser) return;
+      db.collection('friend_requests')
+        .where('receiver_id', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .onSnapshot(function(snapshot) {
+          checkPendingRequestsCount();
+          var homeScr = document.getElementById('home-screen');
+          var isHome = homeScr && homeScr.style.display === 'block';
+          var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
+          if (dropdown && dropdown.style.display === 'flex') {
+            loadIncomingFriendRequests();
+          }
+          if (currentUser && activeViewingProfileId) {
+            updateRealtimeStats(activeViewingProfileId);
+          }
+        });
+    }
+
+    function subscribeTotalUsersCount() {
+      db.collection('profiles').onSnapshot(function(snapshot) {
+        var totalCount = snapshot.size;
+        var badgeEl = document.getElementById('total-users-badge');
+        if (badgeEl) {
+          badgeEl.innerText = totalCount;
+        }
+      });
+    }
+
+    function checkPendingRequestsCount() {
+      if (!currentUser) return;
+      db.collection('friend_requests')
+        .where('receiver_id', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .get()
+        .then(function(snapshot) {
+          var badgeHome = document.getElementById('requests-badge');
+          var badgeProfile = document.getElementById('requests-badge-profile');
+          var count = snapshot.size;
+            
+          if (count > 0) {
+            if (badgeHome) { badgeHome.innerText = count; badgeHome.style.display = 'flex'; }
+            if (badgeProfile) { badgeProfile.innerText = count; badgeProfile.style.display = 'flex'; }
+          } else {
+            if (badgeHome) badgeHome.style.display = 'none';
+            if (badgeProfile) badgeProfile.style.display = 'none';
+          }
+        });
+    }
+
     function loadIncomingFriendRequests() {
-      var isHome = document.getElementById('home-screen').style.display === 'block';
+      var homeScr = document.getElementById('home-screen');
+      var isHome = homeScr && homeScr.style.display === 'block';
       var container = document.getElementById(isHome ? 'dropdown-items-container-home' : 'dropdown-items-container-profile');
       if (!container) return;
       var t = TRANSLATIONS[currentLang];
@@ -3487,8 +3659,7 @@
             var req = docSnap.data();
             var reqId = docSnap.id;
             
-            db.collection('profiles').doc(req.sender_id).get().then(function(profileDoc) {
-              var pData = profileDoc.exists ? profileDoc.data() : {};
+            fetchUserProfileCached(req.sender_id, function(pData) {
               var senderName = pData.full_name || "User";
               var senderAvatar = pData.avatar_url || null;
               var isOnline = isUserOnline(pData);
@@ -3515,7 +3686,7 @@
     }
 
     function acceptRequestFromNavbar(requestId, event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       db.collection('friend_requests').doc(requestId).update({ status: 'accepted' }).then(function() {
         checkPendingRequestsCount();
         loadIncomingFriendRequests();
@@ -3525,7 +3696,7 @@
     }
 
     function rejectRequestFromNavbar(requestId, event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       db.collection('friend_requests').doc(requestId).delete().then(function() {
         checkPendingRequestsCount();
         loadIncomingFriendRequests();
@@ -3580,7 +3751,6 @@
 
     function updateRealtimeStats(userId) {
       if (!userId) return;
-      var t = TRANSLATIONS[currentLang];
 
       db.collection('friend_requests')
         .where('receiver_id', '==', userId)
@@ -3588,7 +3758,8 @@
         .get()
         .then(function(followersSnap) {
           var followersCount = followersSnap.size;
-          document.getElementById('stat-followers-count').innerText = followersCount;
+          var statFol = document.getElementById('stat-followers-count');
+          if (statFol) statFol.innerText = followersCount;
 
           loadMiniFriendsGrid(followersSnap.docs);
 
@@ -3597,7 +3768,8 @@
             .where('status', '==', 'accepted')
             .get()
             .then(function(followingSnap) {
-              document.getElementById('stat-following-count').innerText = followingSnap.size;
+              var statFing = document.getElementById('stat-following-count');
+              if (statFing) statFing.innerText = followingSnap.size;
             });
         });
     }
@@ -3619,9 +3791,8 @@
         var conn = docSnap.data();
         var targetId = conn.sender_id;
 
-        db.collection('profiles').doc(targetId).get().then(function(profileDoc) {
-          if (!profileDoc.exists) return;
-          var profile = profileDoc.data();
+        fetchUserProfileCached(targetId, function(profile) {
+          if (!profile.full_name && !profile.avatar_url) return;
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
           var isOnline = isUserOnline(profile);
@@ -3643,7 +3814,8 @@
     }
 
     function updateProfileStats(userId, postsCount) {
-      document.getElementById('stat-posts-count').innerText = postsCount;
+      var statP = document.getElementById('stat-posts-count');
+      if (statP) statP.innerText = postsCount;
       updateRealtimeStats(userId);
     }
 
@@ -3655,7 +3827,8 @@
       activeConnectionsType = type;
       activeConnectionsUserId = activeViewingProfileId || currentUser.uid;
       
-      document.getElementById('connections-title').innerText = (type === 'all') ? t.friendsTitle : ((type === 'followers') ? t.followersTitle : t.followingTitle);
+      var connTitle = document.getElementById('connections-title');
+      if (connTitle) connTitle.innerText = (type === 'all') ? t.friendsTitle : ((type === 'followers') ? t.followersTitle : t.followingTitle);
       showScreen('connections');
       loadConnectionsData();
     }
@@ -3664,6 +3837,7 @@
       var listWrapper = document.getElementById('connections-list-wrapper');
       var countLabel = document.getElementById('connections-count');
       var t = TRANSLATIONS[currentLang];
+      if (!listWrapper || !countLabel) return;
       listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
 
       if (activeConnectionsType === 'followers') {
@@ -3717,10 +3891,7 @@
             var requestId = item.docId;
             var targetUserId = item.targetUserId;
 
-            db.collection('profiles').doc(targetUserId).get().then(function(profileDoc) {
-              if (!profileDoc.exists) return;
-              var profile = profileDoc.data();
-
+            fetchUserProfileCached(targetUserId, function(profile) {
               var finalName = profile.full_name || "User";
               var avatarUrl = profile.avatar_url;
               var isOnline = isUserOnline(profile);
@@ -3766,10 +3937,7 @@
         var requestId = docSnap.id;
         var targetUserId = conn[targetIdKey];
 
-        db.collection('profiles').doc(targetUserId).get().then(function(profileDoc) {
-          if (!profileDoc.exists) return;
-          var profile = profileDoc.data();
-
+        fetchUserProfileCached(targetUserId, function(profile) {
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
           var isOnline = isUserOnline(profile);
@@ -3795,7 +3963,7 @@
     }
 
     function deleteConnectionFromList(requestId, event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       if (confirm(currentLang === 'ka' ? "ნამდვილად გსურთ ამ კავშირის წაშლა?" : "Are you sure?")) {
         db.collection('friend_requests').doc(requestId).delete().then(function() {
           loadConnectionsData();
@@ -3829,14 +3997,22 @@
       var container = document.getElementById('modal-comments-container');
       if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">${t.loading}</div>`;
       
-      document.getElementById('comments-sheet-modal').style.display = "flex";
+      var sheetModal = document.getElementById('comments-sheet-modal');
+      if (sheetModal) sheetModal.style.display = "flex";
 
-      document.getElementById('modal-comment-submit-btn').onclick = function() { submitCommentFromModal(postId); };
-      document.getElementById('modal-comment-input-field').placeholder = t.commentPlaceholder;
-      document.getElementById('modal-comment-submit-btn').innerText = t.send;
-      document.getElementById('modal-comment-input-field').onkeypress = function(e) {
-        if (e.key === 'Enter') submitCommentFromModal(postId);
-      };
+      var submitBtn = document.getElementById('modal-comment-submit-btn');
+      var inputField = document.getElementById('modal-comment-input-field');
+
+      if (submitBtn) {
+        submitBtn.onclick = function() { submitCommentFromModal(postId); };
+        submitBtn.innerText = t.send;
+      }
+      if (inputField) {
+        inputField.placeholder = t.commentPlaceholder;
+        inputField.onkeypress = function(e) {
+          if (e.key === 'Enter') submitCommentFromModal(postId);
+        };
+      }
 
       loadCommentsIntoModal(postId);
     }
@@ -3846,9 +4022,10 @@
       var t = TRANSLATIONS[currentLang];
       var bar = document.getElementById('reply-active-bar');
       var txt = document.getElementById('reply-active-text');
-      txt.innerText = t.replyTo + authorName;
-      bar.style.display = "flex";
-      document.getElementById('modal-comment-input-field').focus();
+      if (txt) txt.innerText = t.replyTo + authorName;
+      if (bar) bar.style.display = "flex";
+      var inputField = document.getElementById('modal-comment-input-field');
+      if (inputField) inputField.focus();
     }
 
     function cancelReplyMode() {
@@ -3859,7 +4036,7 @@
 
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
-      if (!postId) return;
+      if (!postId || !container) return;
       var t = TRANSLATIONS[currentLang];
       
       db.collection('post_comments')
@@ -3987,6 +4164,7 @@
 
     function submitCommentFromModal(postId) {
       var input = document.getElementById('modal-comment-input-field');
+      if (!input) return;
       var text = input.value.trim();
       if (!text) return;
 
@@ -4021,11 +4199,13 @@
           });
         });
         
-        if(document.getElementById('custom-gallery-modal').style.display === "flex") {
+        var customGal = document.getElementById('custom-gallery-modal');
+        if(customGal && customGal.style.display === "flex") {
           setTimeout(function() {
             db.collection('post_comments').where('post_id', '==', postId).get().then(function(snapshot) {
               var t = TRANSLATIONS[currentLang];
-              document.getElementById('gallery-comments-counter-label').innerText = snapshot.size + " " + t.commentsCount;
+              var galLbl = document.getElementById('gallery-comments-counter-label');
+              if (galLbl) galLbl.innerText = snapshot.size + " " + t.commentsCount;
             });
           }, 300);
         }
@@ -4035,7 +4215,8 @@
     }
 
     function closeCommentsModal() {
-      document.getElementById('comments-sheet-modal').style.display = "none";
+      var sheetModal = document.getElementById('comments-sheet-modal');
+      if (sheetModal) sheetModal.style.display = "none";
       activePostForComments = null;
       cancelReplyMode();
     }
@@ -4044,8 +4225,10 @@
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
       var t = TRANSLATIONS[currentLang];
+      if (!container) return;
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
-      document.getElementById('likers-list-modal').style.display = "flex";
+      var likersModal = document.getElementById('likers-list-modal');
+      if (likersModal) likersModal.style.display = "flex";
 
       db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
         if (snapshot.empty) {
@@ -4079,7 +4262,8 @@
     }
 
     function closeLikersModal() {
-      document.getElementById('likers-list-modal').style.display = "none";
+      var likersModal = document.getElementById('likers-list-modal');
+      if (likersModal) likersModal.style.display = "none";
     }
 
     function showMyProfile() {
@@ -4108,8 +4292,10 @@
         var coverUrl = userProfile ? userProfile.cover_url : null;
         
         renderAvatar('profile-big-avatar', avatarUrl, finalName, currentUser.uid);
-        document.getElementById('profile-user-name').innerText = finalName;
-        document.getElementById('profile-user-subtitle').innerText = currentUser.email;
+        var pName = document.getElementById('profile-user-name');
+        var pSub = document.getElementById('profile-user-subtitle');
+        if (pName) pName.innerText = finalName;
+        if (pSub) pSub.innerText = currentUser.email;
 
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
@@ -4120,22 +4306,27 @@
           }
         }
 
-        document.getElementById('avatar-camera-btn').style.display = "flex";
-        document.getElementById('cover-camera-btn').style.display = "flex";
+        var avCam = document.getElementById('avatar-camera-btn');
+        var covCam = document.getElementById('cover-camera-btn');
+        var burgBtn = document.getElementById('profile-burger-btn');
+        if (avCam) avCam.style.display = "flex";
+        if (covCam) covCam.style.display = "flex";
+        if (burgBtn) burgBtn.style.display = "flex";
 
-        document.getElementById('profile-action-panel').innerHTML = `
-          <button class="fb-btn-primary" onclick="triggerStoryUpload()">
-            <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
-            ${t.stories}
-          </button>
-          <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
-            <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-            ${t.edit}
-          </button>
-          <button class="btn-more-options">•••</button>
-        `;
-        
-        document.getElementById('profile-burger-btn').style.display = "flex";
+        var actionPanel = document.getElementById('profile-action-panel');
+        if (actionPanel) {
+          actionPanel.innerHTML = `
+            <button class="fb-btn-primary" onclick="triggerStoryUpload()">
+              <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
+              ${t.stories}
+            </button>
+            <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
+              <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+              ${t.edit}
+            </button>
+            <button class="btn-more-options">•••</button>
+          `;
+        }
         
         renderProfileDetails(userProfile || {});
         switchProfileTab('posts');
@@ -4151,13 +4342,12 @@
       }
       activeViewingProfileId = userId;
 
-      db.collection('profiles').doc(userId).get().then(function(doc) {
-        if (!doc.exists) {
+      fetchUserProfileCached(userId, function(selectedUser) {
+        if (!selectedUser.full_name && !selectedUser.avatar_url) {
           alert("User not found");
           return;
         }
 
-        var selectedUser = doc.data();
         var finalName = selectedUser.full_name || "User";
         var avatarUrl = selectedUser.avatar_url;
         var coverUrl = selectedUser.cover_url;
@@ -4168,8 +4358,10 @@
         }
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
-        document.getElementById('profile-user-name').innerText = finalName;
-        document.getElementById('profile-user-subtitle').innerText = "Imigrant";
+        var pName = document.getElementById('profile-user-name');
+        var pSub = document.getElementById('profile-user-subtitle');
+        if (pName) pName.innerText = finalName;
+        if (pSub) pSub.innerText = "Imigrant";
 
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
@@ -4180,21 +4372,15 @@
           }
         }
 
-        document.getElementById('avatar-camera-btn').style.display = "none";
-        document.getElementById('cover-camera-btn').style.display = "none";
-        document.getElementById('profile-burger-btn').style.display = "none";
+        var avCam = document.getElementById('avatar-camera-btn');
+        var covCam = document.getElementById('cover-camera-btn');
+        var burgBtn = document.getElementById('profile-burger-btn');
+        if (avCam) avCam.style.display = "none";
+        if (covCam) covCam.style.display = "none";
+        if (burgBtn) burgBtn.style.display = "none";
 
-        db.collection('friend_requests').get().then(function(snapshot) {
-          var isFriend = false;
-          snapshot.forEach(function(rDoc) {
-            var data = rDoc.data();
-            var isPair = (data.sender_id === currentUser.uid && data.receiver_id === userId) ||
-                         (data.sender_id === userId && data.receiver_id === currentUser.uid);
-            if (isPair && data.status === 'accepted') {
-              isFriend = true;
-            }
-          });
-
+        // OPTIMIZED FRIENDSHIP CHECK (Only queries current pair)
+        checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
           var privacySetting = selectedUser.privacy_setting || 'public';
           var isLocked = false;
           if (privacySetting === 'friends' && !isFriend) {
@@ -4240,40 +4426,72 @@
       });
     }
 
-    function switchProfileTab(tabName) {
-      document.getElementById('tab-btn-posts').classList.remove('active');
-      document.getElementById('tab-btn-photos').classList.remove('active');
-      document.getElementById('tab-btn-videos').classList.remove('active');
+    /* Helper for checking friendship between 2 users efficiently */
+    function checkFriendshipPair(uid1, uid2, callback) {
+      db.collection('friend_requests')
+        .where('sender_id', '==', uid1)
+        .where('receiver_id', '==', uid2)
+        .limit(1)
+        .get()
+        .then(function(snap1) {
+          if (!snap1.empty && snap1.docs[0].data().status === 'accepted') {
+            callback(true);
+            return;
+          }
+          db.collection('friend_requests')
+            .where('sender_id', '==', uid2)
+            .where('receiver_id', '==', uid1)
+            .limit(1)
+            .get()
+            .then(function(snap2) {
+              if (!snap2.empty && snap2.docs[0].data().status === 'accepted') {
+                callback(true);
+              } else {
+                callback(false);
+              }
+            });
+        }).catch(function() { callback(false); });
+    }
 
-      document.getElementById('profile-posts-wall').style.display = 'none';
-      document.getElementById('profile-photos-wall').style.display = 'none';
+    function switchProfileTab(tabName) {
+      var btnPosts = document.getElementById('tab-btn-posts');
+      var btnPhotos = document.getElementById('tab-btn-photos');
+      var btnVideos = document.getElementById('tab-btn-videos');
+      if (btnPosts) btnPosts.classList.remove('active');
+      if (btnPhotos) btnPhotos.classList.remove('active');
+      if (btnVideos) btnVideos.classList.remove('active');
+
+      var postsWall = document.getElementById('profile-posts-wall');
+      var photosWall = document.getElementById('profile-photos-wall');
+      if (postsWall) postsWall.style.display = 'none';
+      if (photosWall) photosWall.style.display = 'none';
 
       var targetUserId = activeViewingProfileId || currentUser.uid;
 
       if (tabName === 'posts') {
-        document.getElementById('tab-btn-posts').classList.add('active');
-        document.getElementById('profile-posts-wall').style.display = 'block';
+        if (btnPosts) btnPosts.classList.add('active');
+        if (postsWall) postsWall.style.display = 'block';
         loadUserPosts(targetUserId);
       } else if (tabName === 'photos') {
-        document.getElementById('tab-btn-photos').classList.add('active');
-        document.getElementById('profile-photos-wall').style.display = 'block';
+        if (btnPhotos) btnPhotos.classList.add('active');
+        if (photosWall) photosWall.style.display = 'block';
         loadUserPhotos(targetUserId);
       } else if (tabName === 'videos') {
-        document.getElementById('tab-btn-videos').classList.add('active');
-        document.getElementById('profile-photos-wall').style.display = 'block';
+        if (btnVideos) btnVideos.classList.add('active');
+        if (photosWall) photosWall.style.display = 'block';
         loadUserVideos(targetUserId);
       }
     }
 
     function loadUserPhotos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
+      if (!photosWall) return;
       var t = TRANSLATIONS[currentLang];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
-        .limit(20)
         .get()
         .then(function(snapshot) {
           var posts = [];
@@ -4312,6 +4530,7 @@
 
     function loadUserVideos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
+      if (!photosWall) return;
       var t = TRANSLATIONS[currentLang];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
@@ -4319,7 +4538,6 @@
         .where('user_id', '==', userId)
         .where('media_type', '==', 'video')
         .orderBy('created_at', 'desc')
-        .limit(20)
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
@@ -4358,6 +4576,7 @@
       var modal = document.getElementById('tiktok-video-modal');
       var wrapper = document.getElementById('tiktok-slides-wrapper');
       var t = TRANSLATIONS[currentLang];
+      if (!modal || !wrapper) return;
       
       wrapper.innerHTML = "";
       modal.style.display = "block";
@@ -4421,6 +4640,7 @@
     }
 
     function toggleVideoPlay(videoElem) {
+      if (!videoElem) return;
       if (videoElem.paused) {
         videoElem.play();
       } else {
@@ -4449,13 +4669,14 @@
 
     function closeTiktokVideoModal() {
       document.querySelectorAll('.tiktok-slide-video').forEach(function(v) { v.pause(); });
-      document.getElementById('tiktok-video-modal').style.display = "none";
+      var modal = document.getElementById('tiktok-video-modal');
+      if (modal) modal.style.display = "none";
     }
 
     function openFullGalleryModal(index) {
       galleryCurrentIndex = index;
       var modal = document.getElementById('custom-gallery-modal');
-      modal.style.display = "flex";
+      if (modal) modal.style.display = "flex";
       
       updateGalleryViewData();
       initGallerySwipeEvents();
@@ -4468,54 +4689,73 @@
       var currentUrl = galleryPhotoUrls[galleryCurrentIndex];
       var currentPost = galleryPostsReference[galleryCurrentIndex];
       
-      document.getElementById('gallery-fullscreen-img').src = currentUrl;
-      document.getElementById('gallery-photo-counter').innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
-      document.getElementById('gallery-post-author-name').innerText = currentPost.author_name || "Emigrantbook User";
-      document.getElementById('gallery-post-content-text').innerText = currentPost.content || t.descPlaceholder;
+      var fullImg = document.getElementById('gallery-fullscreen-img');
+      var counter = document.getElementById('gallery-photo-counter');
+      var authorName = document.getElementById('gallery-post-author-name');
+      var contentTxt = document.getElementById('gallery-post-content-text');
+      var timeLbl = document.getElementById('gallery-post-time-label');
+
+      if (fullImg) fullImg.src = currentUrl;
+      if (counter) counter.innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
+      if (authorName) authorName.innerText = currentPost.author_name || "Emigrantbook User";
+      if (contentTxt) contentTxt.innerText = currentPost.content || t.descPlaceholder;
       
       var postDate = currentPost.created_at ? new Date(currentPost.created_at.toDate ? currentPost.created_at.toDate() : currentPost.created_at).toLocaleDateString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : "";
-      document.getElementById('gallery-post-time-label').innerText = postDate;
+      if (timeLbl) timeLbl.innerText = postDate;
       
-      var authorAvatarUrl = cachedProfiles[currentPost.user_id] || null;
+      var authorAvatarUrl = cachedProfiles[currentPost.user_id] ? cachedProfiles[currentPost.user_id].avatar_url : null;
       var avatarPlaceholder = document.getElementById('gallery-user-avatar-placeholder');
-      if (authorAvatarUrl) {
-        avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
-      } else {
-        avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
+      if (avatarPlaceholder) {
+        if (authorAvatarUrl) {
+          avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+        } else {
+          avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
+        }
       }
 
       var totalLikes = currentPost.likes_count || 0;
-      document.getElementById('gallery-total-likes-counter').innerText = totalLikes;
+      var likesCounter = document.getElementById('gallery-total-likes-counter');
+      if (likesCounter) likesCounter.innerText = totalLikes;
       
       db.collection('post_comments').where('post_id', '==', currentPost.id).get().then(function(snapshot) {
-        document.getElementById('gallery-comments-counter-label').innerText = snapshot.size + " " + t.commentsCount;
+        var commLbl = document.getElementById('gallery-comments-counter-label');
+        if (commLbl) commLbl.innerText = snapshot.size + " " + t.commentsCount;
       });
 
       var likeBtn = document.getElementById('gallery-like-main-action-btn');
       var hasLiked = likedPosts.includes(currentPost.id);
-      if (hasLiked) {
-        likeBtn.classList.add('liked-active');
-      } else {
-        likeBtn.classList.remove('liked-active');
+      if (likeBtn) {
+        if (hasLiked) {
+          likeBtn.classList.add('liked-active');
+        } else {
+          likeBtn.classList.remove('liked-active');
+        }
+
+        likeBtn.onclick = function() {
+          likePost(currentPost.id, false);
+          setTimeout(updateGalleryViewData, 200);
+        };
       }
 
-      likeBtn.onclick = function() {
-        likePost(currentPost.id, false);
-        setTimeout(updateGalleryViewData, 200);
-      };
-
-      document.getElementById('gallery-comment-main-action-btn').onclick = function() {
-        openCommentsModal(currentPost.id, currentPost.likes_count || 0);
-      };
+      var commBtn = document.getElementById('gallery-comment-main-action-btn');
+      if (commBtn) {
+        commBtn.onclick = function() {
+          openCommentsModal(currentPost.id, currentPost.likes_count || 0);
+        };
+      }
       
-      document.getElementById('gallery-likes-trigger-area').onclick = function() {
-        activePostForComments = currentPost.id;
-        openLikersListModal();
-      };
+      var likesTrig = document.getElementById('gallery-likes-trigger-area');
+      if (likesTrig) {
+        likesTrig.onclick = function() {
+          activePostForComments = currentPost.id;
+          openLikersListModal();
+        };
+      }
     }
 
     function initGallerySwipeEvents() {
       var zone = document.getElementById('gallery-swipe-zone');
+      if (!zone) return;
       
       zone.ontouchstart = function(e) {
         touchStartX = e.changedTouches[0].screenX;
@@ -4546,60 +4786,77 @@
     }
 
     function closeFullGalleryModal() {
-      document.getElementById('custom-gallery-modal').style.display = "none";
+      var modal = document.getElementById('custom-gallery-modal');
+      if (modal) modal.style.display = "none";
     }
 
     function updateFriendshipButtons(targetUserId) {
       var actionPanel = document.getElementById('profile-action-panel');
+      if (!actionPanel) return;
       var t = TRANSLATIONS[currentLang];
       actionPanel.innerHTML = `<div style="text-align: center; padding: 10px; color:#aaaaaa;">...</div>`;
 
+      // OPTIMIZED QUERY FOR SPECIFIC PAIR
       db.collection('friend_requests')
+        .where('sender_id', '==', currentUser.uid)
+        .where('receiver_id', '==', targetUserId)
+        .limit(1)
         .get()
-        .then(function(snapshot) {
+        .then(function(snap1) {
           var request = null;
           var requestId = null;
 
-          snapshot.forEach(function(doc) {
-            var data = doc.data();
-            var isUserPair = (data.sender_id === currentUser.uid && data.receiver_id === targetUserId) ||
-                             (data.sender_id === targetUserId && data.receiver_id === currentUser.uid);
-            if (isUserPair) {
-              request = data;
-              requestId = doc.id;
-            }
-          });
-
-          if (!request) {
-            actionPanel.innerHTML = `
-              <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
-              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-              <button class="btn-more-options">•••</button>
-            `;
-          } else if (request.status === 'pending') {
-            if (request.sender_id === currentUser.uid) {
-              actionPanel.innerHTML = `
-                <button class="fb-btn-secondary" onclick="cancelFriendRequest('${requestId}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
-                <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-                <button class="btn-more-options">•••</button>
-              `;
-            } else {
-              actionPanel.innerHTML = `
-                <div class="btn-group-row">
-                  <button class="fb-btn-success" onclick="acceptFriendRequest('${requestId}', '${targetUserId}')">${t.accept}</button>
-                  <button class="fb-btn-danger" onclick="rejectFriendRequest('${requestId}', '${targetUserId}')">${t.reject}</button>
-                </div>
-                <button class="btn-more-options">•••</button>
-              `;
-            }
-          } else if (request.status === 'accepted') {
-            actionPanel.innerHTML = `
-              <button class="fb-btn-success" onclick="deleteFriendship('${requestId}', '${targetUserId}')">${t.removeFriend}</button>
-              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-              <button class="btn-more-options">•••</button>
-            `;
+          if (!snap1.empty) {
+            request = snap1.docs[0].data();
+            requestId = snap1.docs[0].id;
+            renderFriendshipButtonsHTML(actionPanel, request, requestId, targetUserId, t);
+          } else {
+            db.collection('friend_requests')
+              .where('sender_id', '==', targetUserId)
+              .where('receiver_id', '==', currentUser.uid)
+              .limit(1)
+              .get()
+              .then(function(snap2) {
+                if (!snap2.empty) {
+                  request = snap2.docs[0].data();
+                  requestId = snap2.docs[0].id;
+                }
+                renderFriendshipButtonsHTML(actionPanel, request, requestId, targetUserId, t);
+              });
           }
         });
+    }
+
+    function renderFriendshipButtonsHTML(actionPanel, request, requestId, targetUserId, t) {
+      if (!request) {
+        actionPanel.innerHTML = `
+          <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
+          <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+          <button class="btn-more-options">•••</button>
+        `;
+      } else if (request.status === 'pending') {
+        if (request.sender_id === currentUser.uid) {
+          actionPanel.innerHTML = `
+            <button class="fb-btn-secondary" onclick="cancelFriendRequest('${requestId}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
+            <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+            <button class="btn-more-options">•••</button>
+          `;
+        } else {
+          actionPanel.innerHTML = `
+            <div class="btn-group-row">
+              <button class="fb-btn-success" onclick="acceptFriendRequest('${requestId}', '${targetUserId}')">${t.accept}</button>
+              <button class="fb-btn-danger" onclick="rejectFriendRequest('${requestId}', '${targetUserId}')">${t.reject}</button>
+            </div>
+            <button class="btn-more-options">•••</button>
+          `;
+        }
+      } else if (request.status === 'accepted') {
+        actionPanel.innerHTML = `
+          <button class="fb-btn-success" onclick="deleteFriendship('${requestId}', '${targetUserId}')">${t.removeFriend}</button>
+          <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+          <button class="btn-more-options">•••</button>
+        `;
+      }
     }
 
     function sendFriendRequest(targetUserId) {
@@ -4642,7 +4899,8 @@
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
       var t = TRANSLATIONS[currentLang];
-      if(document.getElementById('tab-btn-posts').classList.contains('active')) {
+      var btnPosts = document.getElementById('tab-btn-posts');
+      if(profileWall && btnPosts && btnPosts.classList.contains('active')) {
          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       }
 
@@ -4657,6 +4915,8 @@
           
           updateProfileStats(userId, posts.length);
 
+          if (!profileWall) return;
+
           if (posts.length === 0) {
             profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">Empty wall.</div>`;
             return;
@@ -4664,44 +4924,43 @@
 
           profileWall.innerHTML = "";
           
-          db.collection('profiles').get().then(function(profilesSnap) {
-            cachedProfiles = {};
-            cachedOnlineStates = {};
-            profilesSnap.forEach(function(pDoc) {
-              var pData = pDoc.data();
-              cachedProfiles[pDoc.id] = pData.avatar_url;
-              cachedOnlineStates[pDoc.id] = isUserOnline(pData);
-            });
-
-            posts.forEach(function(post) {
-              profileWall.innerHTML += createPostCardHtml(post);
-              renderCommentsCountOnly(post);
-              checkMyLikeState(post.id);
-            });
-            observeVideos();
+          posts.forEach(function(post) {
+            profileWall.innerHTML += createPostCardHtml(post);
+            renderCommentsCountOnly(post);
+            checkMyLikeState(post.id);
           });
+          observeVideos();
         }).catch(function(error) {
           console.error("Firestore Index Error or query failure: ", error);
-          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">შეცდომა პოსტების ჩატვირთვისას.</div>`;
+          if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">შეცდომა პოსტების ჩატვირთვისას.</div>`;
         });
     }
 
     function showEditProfileScreen() {
       if (!userProfile) return;
 
-      document.getElementById('edit-fullname').value = userProfile.full_name || "";
-      document.getElementById('edit-age').value = userProfile.age || "";
-      document.getElementById('edit-job').value = userProfile.job_title || "";
-      document.getElementById('edit-city').value = userProfile.current_city || "";
-      document.getElementById('edit-country').value = userProfile.country || "";
-      document.getElementById('edit-relationship').value = userProfile.relationship || "";
-      document.getElementById('edit-events').value = userProfile.life_events || "";
+      var fn = document.getElementById('edit-fullname');
+      var age = document.getElementById('edit-age');
+      var job = document.getElementById('edit-job');
+      var city = document.getElementById('edit-city');
+      var country = document.getElementById('edit-country');
+      var rel = document.getElementById('edit-relationship');
+      var ev = document.getElementById('edit-events');
+
+      if (fn) fn.value = userProfile.full_name || "";
+      if (age) age.value = userProfile.age || "";
+      if (job) job.value = userProfile.job_title || "";
+      if (city) city.value = userProfile.current_city || "";
+      if (country) country.value = userProfile.country || "";
+      if (rel) rel.value = userProfile.relationship || "";
+      if (ev) ev.value = userProfile.life_events || "";
 
       showScreen('edit-profile');
     }
 
     function saveProfileChanges() {
-      var fullName = document.getElementById('edit-fullname').value.trim();
+      var fnEl = document.getElementById('edit-fullname');
+      var fullName = fnEl ? fnEl.value.trim() : "";
       var age = document.getElementById('edit-age').value.trim();
       var job = document.getElementById('edit-job').value.trim();
       var city = document.getElementById('edit-city').value.trim();
@@ -4735,7 +4994,10 @@
             });
             batch.commit().then(function() {
               db.collection('profiles').doc(currentUser.uid).get().then(function(profileDoc) {
-                if (profileDoc.exists) userProfile = profileDoc.data();
+                if (profileDoc.exists) {
+                  userProfile = profileDoc.data();
+                  cachedProfiles[currentUser.uid] = userProfile;
+                }
                 showMyProfile();
               });
             });
@@ -4744,7 +5006,8 @@
     }
 
     function triggerAvatarUpload() {
-      document.getElementById('avatar-file-input').click();
+      var input = document.getElementById('avatar-file-input');
+      if (input) input.click();
     }
 
     function uploadMediaToFirebase(file, folder, callback) {
@@ -4802,13 +5065,15 @@
 
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
-      if (fileInput.files.length === 0) return;
+      if (!fileInput || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
 
       uploadImageToImgBB(file, function(downloadURL) {
         db.collection('profiles').doc(currentUser.uid)
           .update({ avatar_url: downloadURL })
           .then(function() {
+            if (userProfile) userProfile.avatar_url = downloadURL;
+            if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
             auth.currentUser.reload().then(function() {
               showMyProfile();
             });
@@ -4817,18 +5082,20 @@
     }
 
     function triggerCoverUpload() {
-      document.getElementById('cover-file-input').click();
+      var input = document.getElementById('cover-file-input');
+      if (input) input.click();
     }
 
     function uploadCover() {
       var fileInput = document.getElementById('cover-file-input');
-      if (fileInput.files.length === 0) return;
+      if (!fileInput || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
 
       uploadImageToImgBB(file, function(downloadURL) {
         db.collection('profiles').doc(currentUser.uid)
           .update({ cover_url: downloadURL })
           .then(function() {
+            if (userProfile) userProfile.cover_url = downloadURL;
             showMyProfile();
           });
       });
@@ -4838,30 +5105,38 @@
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       var nameGroup = document.getElementById('name-group');
-      document.getElementById('error-message').style.display = 'none';
-      nameGroup.style.display = isLoginMode ? 'none' : 'block';
+      var errDiv = document.getElementById('error-message');
+      if (errDiv) errDiv.style.display = 'none';
+      if (nameGroup) nameGroup.style.display = isLoginMode ? 'none' : 'block';
       applyLanguageDOM();
     }
 
     function handleAuth() {
-      var email = document.getElementById('email').value.trim();
-      var password = document.getElementById('password').value.trim();
-      var fullname = document.getElementById('fullname').value.trim();
+      var emailEl = document.getElementById('email');
+      var passEl = document.getElementById('password');
+      var nameEl = document.getElementById('fullname');
       var errorDiv = document.getElementById('error-message');
 
-      errorDiv.style.display = 'none';
+      var email = emailEl ? emailEl.value.trim() : "";
+      var password = passEl ? passEl.value.trim() : "";
+      var fullname = nameEl ? nameEl.value.trim() : "";
+
+      if (errorDiv) errorDiv.style.display = 'none';
 
       if (!email || !password || (!isLoginMode && !fullname)) {
-        errorDiv.innerText = "Fill all fields!";
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+          errorDiv.innerText = "Fill all fields!";
+          errorDiv.style.display = 'block';
+        }
         return;
       }
 
       if (isLoginMode) {
-        auth.signInWithEmailAndPassword(email, password).then(function(result) {
-        }).catch(function(error) {
-          errorDiv.innerText = error.message;
-          errorDiv.style.display = 'block';
+        auth.signInWithEmailAndPassword(email, password).catch(function(error) {
+          if (errorDiv) {
+            errorDiv.innerText = error.message;
+            errorDiv.style.display = 'block';
+          }
         });
       } else {
         auth.createUserWithEmailAndPassword(email, password).then(function(result) {
@@ -4874,10 +5149,11 @@
             last_seen: firebase.firestore.FieldValue.serverTimestamp(),
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
-        }).then(function() {
         }).catch(function(error) {
-          errorDiv.innerText = error.message;
-          errorDiv.style.display = 'block';
+          if (errorDiv) {
+            errorDiv.innerText = error.message;
+            errorDiv.style.display = 'block';
+          }
         });
       }
     }
@@ -4885,74 +5161,61 @@
     function loadPosts() {
       if (!currentUser) return;
 
-      Promise.all([
-        db.collection('friend_requests').where('status', '==', 'accepted').get(),
-        db.collection('profiles').limit(100).get()
-      ]).then(function(results) {
-        var friendReqSnap = results[0];
-        var profilesSnap = results[1];
-
-        var myFriendsSet = new Set();
-        friendReqSnap.forEach(function(docSnap) {
-          var req = docSnap.data();
-          if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
-          if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
-        });
-
-        cachedProfiles = {};
-        cachedOnlineStates = {};
-        var userPrivacyMap = {};
-
-        profilesSnap.forEach(function(pDoc) {
-          var pData = pDoc.data();
-          cachedProfiles[pDoc.id] = pData.avatar_url;
-          cachedOnlineStates[pDoc.id] = isUserOnline(pData);
-          userPrivacyMap[pDoc.id] = pData.privacy_setting || 'public';
-        });
-
-        db.collection('posts')
-          .orderBy('created_at', 'desc')
-          .limit(30)
-          .get()
-          .then(function(snapshot) {
-            var postsWall = document.getElementById('posts-wall');
-            var t = TRANSLATIONS[currentLang];
-            postsWall.innerHTML = "";
-
-            if (snapshot.empty) {
-              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-              return;
-            }
-
-            var posts = [];
-            snapshot.forEach(function(doc) {
-              var postData = Object.assign({ id: doc.id }, doc.data());
-              var authorId = postData.user_id;
-              var privacy = userPrivacyMap[authorId] || 'public';
-
-              var isMyOwnPost = (authorId === currentUser.uid);
-              var isFriend = myFriendsSet.has(authorId);
-
-              if (isMyOwnPost || privacy === 'public' || (privacy === 'friends' && isFriend)) {
-                posts.push(postData);
-              }
-            });
-
-            if (posts.length === 0) {
-              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-              return;
-            }
-
-            posts.forEach(function(post) {
-              postsWall.innerHTML += createPostCardHtml(post);
-              renderCommentsCountOnly(post);
-              checkMyLikeState(post.id);
-            });
-            observeVideos();
+      db.collection('friend_requests')
+        .where('status', '==', 'accepted')
+        .get()
+        .then(function(friendReqSnap) {
+          var myFriendsSet = new Set();
+          friendReqSnap.forEach(function(docSnap) {
+            var req = docSnap.data();
+            if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
+            if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
           });
-      }).catch(function(err) {
-        console.error("Error loading posts with privacy filter:", err);
-      });
+
+          db.collection('posts')
+            .orderBy('created_at', 'desc')
+            .limit(30)
+            .get()
+            .then(function(snapshot) {
+              var postsWall = document.getElementById('posts-wall');
+              var t = TRANSLATIONS[currentLang];
+              if (!postsWall) return;
+              postsWall.innerHTML = "";
+
+              if (snapshot.empty) {
+                postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+                return;
+              }
+
+              var posts = [];
+              snapshot.forEach(function(doc) {
+                posts.push(Object.assign({ id: doc.id }, doc.data()));
+              });
+
+              // Process each post with cached or requested profiles
+              posts.forEach(function(postData) {
+                var authorId = postData.user_id;
+
+                fetchUserProfileCached(authorId, function(pData) {
+                  var privacy = pData.privacy_setting || 'public';
+                  var isMyOwnPost = (authorId === currentUser.uid);
+                  var isFriend = myFriendsSet.has(authorId);
+
+                  var shouldShow = isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend);
+
+                  if (shouldShow) {
+                    postsWall.innerHTML += createPostCardHtml(postData);
+                    renderCommentsCountOnly(postData);
+                    checkMyLikeState(postData.id);
+                  }
+                });
+              });
+
+              observeVideos();
+            });
+        }).catch(function(err) {
+          console.error("Error loading posts with privacy filter:", err);
+        });
     }
 
     function checkMyLikeState(postId) {
@@ -4966,12 +5229,14 @@
       });
     }
 
+    /* Memory Leaks Prevented Floating Avatars */
     function startFloatingAvatarsAnimation(postId, containerId) {
       var container = document.getElementById(containerId);
       if (!container) return;
 
       if (activeFloatingIntervals[postId]) {
         clearInterval(activeFloatingIntervals[postId]);
+        delete activeFloatingIntervals[postId];
         container.innerHTML = "";
       }
 
@@ -4989,7 +5254,10 @@
         function spawn() {
           var targetElem = document.getElementById(containerId);
           if (!targetElem) {
-            clearInterval(activeFloatingIntervals[postId]);
+            if (activeFloatingIntervals[postId]) {
+              clearInterval(activeFloatingIntervals[postId]);
+              delete activeFloatingIntervals[postId];
+            }
             return;
           }
           
@@ -5066,7 +5334,10 @@
       db.collection('posts').doc(postId).delete().then(function() {
         var el = document.getElementById(`post-card-${postId}`);
         if (el) el.remove();
-        if(activeFloatingIntervals[postId]) clearInterval(activeFloatingIntervals[postId]);
+        if(activeFloatingIntervals[postId]) {
+          clearInterval(activeFloatingIntervals[postId]);
+          delete activeFloatingIntervals[postId];
+        }
       }).catch(function(error) {
         alert("Error: " + error.message);
       });
@@ -5075,7 +5346,7 @@
     function createPostCardHtml(post) {
       var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
-      var authorAvatarUrl = cachedProfiles[post.user_id] || null;
+      var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
       var isOnline = cachedOnlineStates[post.user_id] === true;
       var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
@@ -5135,17 +5406,20 @@
     }
 
     function createPost() {
-      var text = document.getElementById('post-text-input').value.trim();
+      var txtEl = document.getElementById('post-text-input');
       var fileInput = document.getElementById('post-media-file');
       var publishBtn = document.getElementById('publish-submit-btn');
 
+      var text = txtEl ? txtEl.value.trim() : "";
       if (!text && fileInput.files.length === 0) return;
 
-      publishBtn.disabled = true;
-      publishBtn.innerText = "...";
+      if (publishBtn) {
+        publishBtn.disabled = true;
+        publishBtn.innerText = "...";
+      }
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
 
-      if (fileInput.files.length > 0) {
+      if (fileInput && fileInput.files.length > 0) {
         var files = Array.from(fileInput.files).slice(0, 6);
         var isVideo = files[0].type.startsWith('video/');
 
@@ -5171,7 +5445,7 @@
             var mediaUrlsJoined = uploadedUrls.join(",");
             savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
           }).catch(function() {
-            publishBtn.disabled = false;
+            if (publishBtn) publishBtn.disabled = false;
           });
         }
       } else {
@@ -5189,14 +5463,17 @@
         likes_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
-        publishBtn.disabled = false;
+        if (publishBtn) publishBtn.disabled = false;
         applyLanguageDOM();
-        document.getElementById('post-text-input').value = "";
-        document.getElementById('post-media-file').value = "";
-        document.getElementById('selected-file-name').style.display = "none";
+        var txtInput = document.getElementById('post-text-input');
+        var mediaInput = document.getElementById('post-media-file');
+        var nameDiv = document.getElementById('selected-file-name');
+        if (txtInput) txtInput.value = "";
+        if (mediaInput) mediaInput.value = "";
+        if (nameDiv) nameDiv.style.display = "none";
         loadPosts();
       }).catch(function(error) {
-        publishBtn.disabled = false;
+        if (publishBtn) publishBtn.disabled = false;
         alert("Error: " + error.message);
       });
     }
@@ -5289,12 +5566,13 @@
     }
 
     function triggerStoryUpload() {
-      document.getElementById('story-file-input').click();
+      var input = document.getElementById('story-file-input');
+      if (input) input.click();
     }
 
     function uploadStory() {
       var fileInput = document.getElementById('story-file-input');
-      if (fileInput.files.length === 0) return;
+      if (!fileInput || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
       var isVideo = file.type.startsWith('video/');
 
@@ -5372,16 +5650,12 @@
 
           if (stories.length === 0) return;
 
-          db.collection('profiles').get().then(function(profilesSnap) {
-            var profilesMap = {};
-            profilesSnap.forEach(function(pDoc) { profilesMap[pDoc.id] = pDoc.data(); });
-
-            stories.forEach(function(story) {
-              var author = profilesMap[story.user_id];
+          stories.forEach(function(story) {
+            fetchUserProfileCached(story.user_id, function(author) {
               var authorName = author ? author.full_name : "User";
               var authorAvatar = author ? author.avatar_url : null;
               var isOnline = isUserOnline(author);
-              var initial = authorName.charAt(0).toUpperCase();
+              var initial = authorName ? authorName.charAt(0).toUpperCase() : "?";
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
               var avatarHtml = authorAvatar ? `<div class="avatar-has-online"><img src="${authorAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
@@ -5415,22 +5689,28 @@
       var mediaContainer = document.getElementById('sv-media-container');
       var t = TRANSLATIONS[currentLang];
 
-      userSpan.innerText = username;
-      if (avatarUrl) {
-        avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
-      } else {
-        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+      if (userSpan) userSpan.innerText = username;
+      if (avatarDiv) {
+        if (avatarUrl) {
+          avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+        } else {
+          avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+        }
       }
 
-      if (story.media_type === 'video') {
-        mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
-      } else {
-        mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+      if (mediaContainer) {
+        if (story.media_type === 'video') {
+          mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
+        } else {
+          mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+        }
       }
 
-      document.getElementById('story-likes-label').innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
-      document.getElementById('story-comment-field').placeholder = t.msgPlaceholder;
-      modal.style.display = "flex";
+      var likesLbl = document.getElementById('story-likes-label');
+      var commField = document.getElementById('story-comment-field');
+      if (likesLbl) likesLbl.innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
+      if (commField) commField.placeholder = t.msgPlaceholder;
+      if (modal) modal.style.display = "flex";
     }
 
     function reactToStory(emoji) {
@@ -5442,7 +5722,8 @@
         .update({ likes_count: newLikes })
         .then(function() {
           currentViewingStoryObj.likes_count = newLikes;
-          document.getElementById('story-likes-label').innerText = `❤️ ${newLikes} ${t.like}`;
+          var likesLbl = document.getElementById('story-likes-label');
+          if (likesLbl) likesLbl.innerText = `❤️ ${newLikes} ${t.like}`;
         });
     }
 
@@ -5452,6 +5733,7 @@
 
     function submitStoryComment() {
       var input = document.getElementById('story-comment-field');
+      if (!input) return;
       var text = input.value.trim();
       if (!text) return;
       input.value = "";
@@ -5459,10 +5741,13 @@
 
     function closeStoryViewer() {
       var modal = document.getElementById('story-viewer-modal');
-      document.getElementById('sv-media-container').innerHTML = "";
-      modal.style.display = "none";
+      var mediaContainer = document.getElementById('sv-media-container');
+      if (mediaContainer) mediaContainer.innerHTML = "";
+      if (modal) modal.style.display = "none";
       currentViewingStoryObj = null;
-    }            
+    }
+                                             (data.sender_id === targetUserId && data.receiver_id === currentUser.uid);
+      
   </script>
 </body>
 </html>         
