@@ -3555,69 +3555,7 @@
       updateMainNotificationBadge();
     }
 
-    function subscribeToPostsRealtime() {
-      db.collection('posts').onSnapshot(function(snapshot) {
-        snapshot.docChanges().forEach(function(change) {
-          if (change.type === 'MODIFIED') {
-            var updatedPost = change.doc.data();
-            var postId = change.doc.id;
-            
-            var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-            countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
-
-            var statsIcons = document.getElementById(`stats-icons-${postId}`);
-            if (statsIcons) {
-              var currentLikesNum = updatedPost.likes_count || 0;
-              var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-              statsIcons.innerHTML = iconsHtml;
-            }
-
-            if (activePostForComments === postId) {
-              var modalTotal = document.getElementById('modal-total-likes');
-              if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
-            }
-
-            if(document.getElementById(`floating-container-feed-${postId}`)) {
-              startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-            }
-          }
-        });
-      });
-    }
-
-    function subscribeToFriendRequests() {
-      if (!currentUser) return;
-      db.collection('friend_requests')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('status', '==', 'pending')
-        .onSnapshot(function(snapshot) {
-          checkPendingRequestsCount();
-          var homeScr = document.getElementById('home-screen');
-          var isHome = homeScr && homeScr.style.display === 'block';
-          var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-          if (dropdown && dropdown.style.display === 'flex') {
-            loadIncomingFriendRequests();
-          }
-          if (currentUser && activeViewingProfileId) {
-            updateRealtimeStats(activeViewingProfileId);
-          }
-        });
-    }
-
-    // 1. მომხმარებლების რაოდენობის უსაფრთხო დაზოგვა (მხოლოდ 1 read!)
-function subscribeTotalUsersCount() {
-  db.collection('profiles').count().get().then(function(snapshot) {
-    var totalCount = snapshot.data().count;
-    var badgeEl = document.getElementById('total-users-badge');
-    if (badgeEl) {
-      badgeEl.innerText = totalCount;
-    }
-  }).catch(function(err) {
-    console.error("Count error:", err);
-  });
-}
-
-// 2. პოსტების რეალთაიმის შეზღუდვა (მხოლოდ ბოლო 20 პოსტი)
+    // 2. პოსტების რეალთაიმის შეზღუდვა (მხოლოდ ბოლო 20 პოსტი)
 function subscribeToPostsRealtime() {
   db.collection('posts')
     .orderBy('created_at', 'desc')
@@ -3649,6 +3587,38 @@ function subscribeToPostsRealtime() {
         }
       });
     });
+}
+
+    function subscribeToFriendRequests() {
+      if (!currentUser) return;
+      db.collection('friend_requests')
+        .where('receiver_id', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .onSnapshot(function(snapshot) {
+          checkPendingRequestsCount();
+          var homeScr = document.getElementById('home-screen');
+          var isHome = homeScr && homeScr.style.display === 'block';
+          var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
+          if (dropdown && dropdown.style.display === 'flex') {
+            loadIncomingFriendRequests();
+          }
+          if (currentUser && activeViewingProfileId) {
+            updateRealtimeStats(activeViewingProfileId);
+          }
+        });
+    }
+
+    // 1. მომხმარებლების რაოდენობის უსაფრთხო დაზოგვა (მხოლოდ 1 read!)
+function subscribeTotalUsersCount() {
+  db.collection('profiles').count().get().then(function(snapshot) {
+    var totalCount = snapshot.data().count;
+    var badgeEl = document.getElementById('total-users-badge');
+    if (badgeEl) {
+      badgeEl.innerText = totalCount;
+    }
+  }).catch(function(err) {
+    console.error("Count error:", err);
+  });
 }
 
     function checkPendingRequestsCount() {
