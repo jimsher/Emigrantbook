@@ -5042,8 +5042,10 @@ function subscribeTotalUsersCount() {
         });
 
         // 3. პოსტების წამოღება და ფილტრაცია
+        // ✅ სწორია:
         db.collection('posts')
           .orderBy('created_at', 'desc')
+          .limit(20) // წამოიღებს მხოლოდ ბოლო 20 პოსტს
           .get()
           .then(function(snapshot) {
             var postsWall = document.getElementById('posts-wall');
