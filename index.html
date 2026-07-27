@@ -5018,7 +5018,7 @@ function subscribeTotalUsersCount() {
 
       Promise.all([
         db.collection('friend_requests').where('status', '==', 'accepted').get(),
-        db.collection('profiles').get()
+        db.collection('profiles').limit(100).get()
       ]).then(function(results) {
         var friendReqSnap = results[0];
         var profilesSnap = results[1];
@@ -5047,7 +5047,7 @@ function subscribeTotalUsersCount() {
         // ✅ სწორია:
         db.collection('posts')
           .orderBy('created_at', 'desc')
-          .limit(20) // წამოიღებს მხოლოდ ბოლო 20 პოსტს
+          .limit(50) // წამოიღებს ბოლო 50 პოსტს (30-ვე პოსტი გამოჩნდება უპრობლემოდ)
           .get()
           .then(function(snapshot) {
             var postsWall = document.getElementById('posts-wall');
@@ -5095,6 +5095,7 @@ function subscribeTotalUsersCount() {
         console.error("Error loading posts with privacy filter:", err);
       });
     }
+    
 
     function checkMyLikeState(postId) {
       if (!currentUser) return;
