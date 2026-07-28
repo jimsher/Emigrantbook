@@ -3279,30 +3279,22 @@
     initUserPresence(user.uid);
     requestNotificationPermission();
 
-    // --- IP მისამართისა და ქვეყნის ავტომატური განახლება ბაზაში ---
+    // --- რეალური IP-ის და ქვეყნის დაფიქსირება ---
     fetch('https://ipapi.co/json/')
       .then(function(res) { return res.json(); })
       .then(function(ipData) {
         if (ipData && ipData.ip) {
-          db.collection('profiles').doc(user.uid).update({
+          db.collection('profiles').doc(user.uid).set({
             user_ip: ipData.ip,
-            country: ipData.country_name || 'უცნობი',
+            real_country: ipData.country_name || ipData.country_code || 'უცნობი',
             last_seen: firebase.firestore.FieldValue.serverTimestamp()
-          }).catch(function(err) {
-            // თუ დოკუმენტი ჯერ არ არსებობს, შევქმნათ
-            db.collection('profiles').doc(user.uid).set({
-              user_ip: ipData.ip,
-              country: ipData.country_name || 'უცნობი',
-              email: user.email,
-              last_seen: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-          });
+          }, { merge: true });
         }
       })
       .catch(function(err) {
-        console.warn("IP-ის დადგენა ვერ მოხერხდა, საიტი აგრძელებს მუშაობას:", err);
+        console.warn("IP-ის დადგენის შეცდომა:", err);
       });
-    // -------------------------------------------------------------
+    // ---------------------------------------------
 
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
       var finalName = user.email;
