@@ -3279,30 +3279,31 @@
     initUserPresence(user.uid);
     requestNotificationPermission();
 
-    // --- რეალური IP-ის, ქვეყნისა და ქალაქის (მისამართის) დაფიქსირება ---
+    // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (მხოლოდ IP-ის გეოლოკაციით) ---
     fetch('https://ipapi.co/json/')
       .then(function(res) { return res.json(); })
       .then(function(ipData) {
         if (ipData && ipData.ip) {
-          var cityName = ipData.city || '';
-          var countryName = ipData.country_name || ipData.country_code || 'უცნობი';
+          var realCity = ipData.city || 'უცნობი ქალაქი';
+          var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
+          var realRegion = ipData.region || '';
           
-          // თუ ქალაქიც ცნობილია, შევაერთოთ: "Tbilisi, Georgia"
-          var fullLocation = cityName ? (cityName + ', ' + countryName) : countryName;
+          // ქალაქი + რეგიონი + ქვეყანა
+          var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
 
           db.collection('profiles').doc(user.uid).set({
             user_ip: ipData.ip,
-            real_country: countryName,
-            real_city: cityName || 'უცნობი',
-            real_address: fullLocation,
+            real_ip_country: realCountry,
+            real_ip_city: realCity,
+            real_ip_address: exactAddress, // მხოლოდ IP-ით დადგენილი ზუსტი მისამართი
             last_seen: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
         }
       })
       .catch(function(err) {
-        console.warn("IP-ის და მისამართის დადგენის შეცდომა:", err);
+        console.warn("IP Geolocation შეცდომა:", err);
       });
-    // -------------------------------------------------------------------
+    // ---------------------------------------------------------------------
 
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
       var finalName = user.email;
