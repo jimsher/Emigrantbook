@@ -325,63 +325,65 @@
     });
 
     function loadUsersData() {
-      db.collection('profiles').onSnapshot(function(snapshot) {
-        var tableBody = document.getElementById('admin-user-table-body');
-        if (!tableBody) return;
+  db.collection('profiles').onSnapshot(function(snapshot) {
+    var tableBody = document.getElementById('admin-user-table-body');
+    if (!tableBody) return;
 
-        if (snapshot.empty) {
-          tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
-          return;
-        }
-
-        document.getElementById('stat-total-users').innerText = snapshot.size;
-
-        var countrySet = new Set();
-        tableBody.innerHTML = "";
-
-        snapshot.forEach(function(doc) {
-          var data = doc.data();
-          var name = data.full_name || "მომხმარებელი";
-          var email = data.email || "-";
-          var ip = data.user_ip || data.ip || "127.0.0.1";
-          var country = data.country || data.registration_country || "უცნობი";
-          var avatar = data.avatar_url;
-
-          if (country && country !== "უცნობი") countrySet.add(country);
-
-          var regDate = "-";
-          if (data.created_at) {
-            var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
-            regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          } else if (data.updated_at) {
-            var d = data.updated_at.toDate ? data.updated_at.toDate() : new Date(data.updated_at);
-            regDate = d.toLocaleDateString('ka-GE');
-          }
-
-          var initial = name.charAt(0).toUpperCase();
-          var avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : initial;
-
-          var row = `
-            <tr>
-              <td>
-                <div class="user-cell">
-                  <div class="user-avatar-mini">${avatarHtml}</div>
-                  <span style="font-weight: 600;">${name}</span>
-                </div>
-              </td>
-              <td style="color: #aaaaaa;">${email}</td>
-              <td><span class="ip-code">${ip}</span></td>
-              <td><span class="country-badge">🌍 ${country}</span></td>
-              <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
-            </tr>
-          `;
-
-          tableBody.innerHTML += row;
-        });
-
-        document.getElementById('stat-total-countries').innerText = countrySet.size;
-      });
+    if (snapshot.empty) {
+      tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
+      return;
     }
+
+    document.getElementById('stat-total-users').innerText = snapshot.size;
+
+    var countrySet = new Set();
+    tableBody.innerHTML = "";
+
+    snapshot.forEach(function(doc) {
+      var data = doc.data();
+      var name = data.full_name || "მომხმარებელი";
+      var email = data.email || "-";
+      
+      // ვიღებთ რეალურ IP-ს და რეალურ ქვეყანას (და არა ხელით მითითებულს)
+      var ip = data.user_ip || data.ip || "არ ფიქსირდება";
+      var country = data.real_country || "უცნობი";
+      var avatar = data.avatar_url;
+
+      if (country && country !== "უცნობი") countrySet.add(country);
+
+      var regDate = "-";
+      if (data.created_at) {
+        var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
+        regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      } else if (data.updated_at) {
+        var d = data.updated_at.toDate ? data.updated_at.toDate() : new Date(data.updated_at);
+        regDate = d.toLocaleDateString('ka-GE');
+      }
+
+      var initial = name.charAt(0).toUpperCase();
+      var avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : initial;
+
+      var row = `
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar-mini">${avatarHtml}</div>
+              <span style="font-weight: 600;">${name}</span>
+            </div>
+          </td>
+          <td style="color: #aaaaaa;">${email}</td>
+          <td><span class="ip-code">${ip}</span></td>
+          <td><span class="country-badge">🌍 ${country}</span></td>
+          <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
+        </tr>
+      `;
+
+      tableBody.innerHTML += row;
+    });
+
+    document.getElementById('stat-total-countries').innerText = countrySet.size;
+  });
+}
   </script>
 </body>
 </html>
