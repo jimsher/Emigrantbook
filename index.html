@@ -3263,7 +3263,7 @@
     }
 
     // საიტის რეგისტრაციის გვერდი
-    auth.onAuthStateChanged(function(user) {
+     auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
@@ -3279,22 +3279,30 @@
     initUserPresence(user.uid);
     requestNotificationPermission();
 
-    // --- რეალური IP-ის და ქვეყნის დაფიქსირება ---
+    // --- რეალური IP-ის, ქვეყნისა და ქალაქის (მისამართის) დაფიქსირება ---
     fetch('https://ipapi.co/json/')
       .then(function(res) { return res.json(); })
       .then(function(ipData) {
         if (ipData && ipData.ip) {
+          var cityName = ipData.city || '';
+          var countryName = ipData.country_name || ipData.country_code || 'უცნობი';
+          
+          // თუ ქალაქიც ცნობილია, შევაერთოთ: "Tbilisi, Georgia"
+          var fullLocation = cityName ? (cityName + ', ' + countryName) : countryName;
+
           db.collection('profiles').doc(user.uid).set({
             user_ip: ipData.ip,
-            real_country: ipData.country_name || ipData.country_code || 'უცნობი',
+            real_country: countryName,
+            real_city: cityName || 'უცნობი',
+            real_address: fullLocation,
             last_seen: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
         }
       })
       .catch(function(err) {
-        console.warn("IP-ის დადგენის შეცდომა:", err);
+        console.warn("IP-ის და მისამართის დადგენის შეცდომა:", err);
       });
-    // ---------------------------------------------
+    // -------------------------------------------------------------------
 
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
       var finalName = user.email;
