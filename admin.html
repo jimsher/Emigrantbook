@@ -330,7 +330,7 @@
     if (!tableBody) return;
 
     if (snapshot.empty) {
-      tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
       return;
     }
 
@@ -344,9 +344,11 @@
       var name = data.full_name || "მომხმარებელი";
       var email = data.email || "-";
       
-      // ვიღებთ რეალურ IP-ს და რეალურ ქვეყანას (და არა ხელით მითითებულს)
       var ip = data.user_ip || data.ip || "არ ფიქსირდება";
       var country = data.real_country || "უცნობი";
+      
+      // რეალური მისამართი (ქალაქი + ქვეყანა)
+      var locationAddress = data.real_address || (data.real_city ? (data.real_city + ', ' + country) : country);
       var avatar = data.avatar_url;
 
       if (country && country !== "უცნობი") countrySet.add(country);
@@ -374,6 +376,7 @@
           <td style="color: #aaaaaa;">${email}</td>
           <td><span class="ip-code">${ip}</span></td>
           <td><span class="country-badge">🌍 ${country}</span></td>
+          <td style="color: #dcae36; font-size: 13px; font-weight: 500;">📍 ${locationAddress}</td>
           <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
         </tr>
       `;
