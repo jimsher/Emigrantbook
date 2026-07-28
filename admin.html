@@ -1,1 +1,387 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
+  <title>ადმინ პანელი - Emigrantbook</title>
+  <link rel="stylesheet" href="supabase1.css">
+  <link rel="manifest" href="manifest.json">
 
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    body {
+      background-color: #0b0b0b;
+      color: #e4e6eb;
+      padding-bottom: 30px;
+    }
+
+    .header {
+      background: #141414;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #222222;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: bold;
+      color: #dcae36;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-back-home {
+      background: #222222;
+      color: #e4e6eb;
+      border: 1px solid #333333;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-back-home:hover {
+      background: #2a2a2c;
+      border-color: #dcae36;
+      color: #dcae36;
+    }
+
+    .admin-container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .admin-card {
+      background: #141414;
+      border-radius: 12px;
+      border: 1px solid #222222;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .admin-header-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #dcae36;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-subtitle {
+      font-size: 13px;
+      color: #aaaaaa;
+      margin-bottom: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: #1c1c1e;
+      border: 1px solid #282828;
+      border-radius: 10px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .stat-box-val {
+      font-size: 24px;
+      font-weight: bold;
+      color: #dcae36;
+      margin-top: 5px;
+    }
+    .stat-box-lbl {
+      font-size: 12px;
+      color: #8a8a8f;
+    }
+
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #222222;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .admin-table th {
+      background-color: #1a1a1c;
+      color: #dcae36;
+      font-weight: 600;
+      padding: 12px 14px;
+      border-bottom: 1px solid #282828;
+      white-space: nowrap;
+    }
+
+    .admin-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1f1f22;
+      color: #e4e6eb;
+      white-space: nowrap;
+    }
+
+    .admin-table tr:hover {
+      background-color: #18181a;
+    }
+
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar-mini {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #dcae36;
+      color: #111;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .user-avatar-mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .ip-code {
+      background: #222226;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #70baff;
+      font-size: 13px;
+      border: 1px solid #33333d;
+    }
+
+    .country-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(220, 174, 54, 0.1);
+      color: #dcae36;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 12px;
+      border: 1px solid rgba(220, 174, 54, 0.25);
+    }
+
+    .access-denied {
+      text-align: center;
+      padding: 50px 20px;
+    }
+    .access-denied-icon {
+      font-size: 50px;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 680px) {
+      .admin-container {
+        padding: 0 !important;
+      }
+      .admin-card {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="index.html" class="logo-text">
+      <span>🛡️</span>
+      <span>Emigrantbook Admin</span>
+    </a>
+    <a href="index.html" class="btn-back-home">← მთავარზე</a>
+  </div>
+
+  <div class="admin-container">
+    <div id="admin-content" class="admin-card" style="display: none;">
+      <div class="admin-header-title">
+        <span>📊</span>
+        <span>მომხმარებლების IP და Geolocation მონიტორინგი</span>
+      </div>
+      <div class="admin-subtitle">ადმინისტრატორის პანელი: საიტზე დარეგისტრირებული მომხმარებლების ქვეყნები და IP მისამართები</div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-box-lbl">სულ მომხმარებელი</span>
+          <span class="stat-box-val" id="stat-total-users">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">დაფიქსირებული ქვეყნები</span>
+          <span class="stat-box-val" id="stat-total-countries">0</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>მომხმარებელი</th>
+              <th>Email</th>
+              <th>IP მისამართი</th>
+              <th>ქვეყანა</th>
+              <th>რეგისტრაციის თარიღი</th>
+            </tr>
+          </thead>
+          <tbody id="admin-user-table-body">
+            <tr>
+              <td colspan="5" style="text-align: center; color: #aaaaaa; padding: 20px;">მონაცემები იტვირთება...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="access-denied-card" class="admin-card access-denied" style="display: none;">
+      <div class="access-denied-icon">🔒</div>
+      <h2 style="color: #ff4d4f; margin-bottom: 10px;">წვდომა შეზღუდულია</h2>
+      <p style="color: #aaaaaa; font-size: 14px;">ამ გვერდის ნახვის უფლება აქვს მხოლოდ სისტემის ადმინისტრატორს.</p>
+      <br>
+      <a href="index.html" class="btn-back-home" style="display: inline-block;">მთავარ გვერდზე დაბრუნება</a>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
+          if (docSnap.exists) {
+            var profile = docSnap.data();
+            // ადმინისტრატორის გადამოწმება (is_admin ფლაგით ან ფოსტით)
+            if (profile.is_admin === true || user.email === 'admin@emigrantbook.com') {
+              document.getElementById('admin-content').style.display = 'block';
+              loadUsersData();
+            } else {
+              document.getElementById('access-denied-card').style.display = 'block';
+            }
+          } else {
+            document.getElementById('access-denied-card').style.display = 'block';
+          }
+        }).catch(function(err) {
+          console.error("Admin check error:", err);
+          document.getElementById('access-denied-card').style.display = 'block';
+        });
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    function loadUsersData() {
+      db.collection('profiles').onSnapshot(function(snapshot) {
+        var tableBody = document.getElementById('admin-user-table-body');
+        if (!tableBody) return;
+
+        if (snapshot.empty) {
+          tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
+          return;
+        }
+
+        document.getElementById('stat-total-users').innerText = snapshot.size;
+
+        var countrySet = new Set();
+        tableBody.innerHTML = "";
+
+        snapshot.forEach(function(doc) {
+          var data = doc.data();
+          var name = data.full_name || "მომხმარებელი";
+          var email = data.email || "-";
+          var ip = data.user_ip || data.ip || "127.0.0.1";
+          var country = data.country || data.registration_country || "უცნობი";
+          var avatar = data.avatar_url;
+
+          if (country && country !== "უცნობი") countrySet.add(country);
+
+          var regDate = "-";
+          if (data.created_at) {
+            var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
+            regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          } else if (data.updated_at) {
+            var d = data.updated_at.toDate ? data.updated_at.toDate() : new Date(data.updated_at);
+            regDate = d.toLocaleDateString('ka-GE');
+          }
+
+          var initial = name.charAt(0).toUpperCase();
+          var avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : initial;
+
+          var row = `
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar-mini">${avatarHtml}</div>
+                  <span style="font-weight: 600;">${name}</span>
+                </div>
+              </td>
+              <td style="color: #aaaaaa;">${email}</td>
+              <td><span class="ip-code">${ip}</span></td>
+              <td><span class="country-badge">🌍 ${country}</span></td>
+              <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
+            </tr>
+          `;
+
+          tableBody.innerHTML += row;
+        });
+
+        document.getElementById('stat-total-countries').innerText = countrySet.size;
+      });
+    }
+  </script>
+</body>
+</html>
