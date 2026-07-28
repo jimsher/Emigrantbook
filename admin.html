@@ -345,14 +345,16 @@
       var name = data.full_name || "მომხმარებელი";
       var email = data.email || "-";
       
-      var ip = data.user_ip || data.ip || "არ ფიქსირდება";
-      var country = data.real_country || "უცნობი";
+      // მხოლოდ IP-ით დადგენილი მონაცემების წაკითხვა
+      var ip = data.user_ip || "არ ფიქსირდება";
+      var country = data.real_ip_country || "უცნობი";
+      var realAddress = data.real_ip_address || (data.real_ip_city ? (data.real_ip_city + ', ' + country) : "არ ფიქსირდება");
       
-      // რეალური მისამართი (ქალაქი + ქვეყანა)
-      var locationAddress = data.real_address || (data.real_city ? (data.real_city + ', ' + country) : country);
       var avatar = data.avatar_url;
 
-      if (country && country !== "უცნობი") countrySet.add(country);
+      if (country && country !== "უცნობი" && country !== "არ ფიქსირდება") {
+        countrySet.add(country);
+      }
 
       var regDate = "-";
       if (data.created_at) {
@@ -377,7 +379,7 @@
           <td style="color: #aaaaaa;">${email}</td>
           <td><span class="ip-code">${ip}</span></td>
           <td><span class="country-badge">🌍 ${country}</span></td>
-          <td style="color: #dcae36; font-size: 13px; font-weight: 500;">📍 ${locationAddress}</td>
+          <td style="color: #dcae36; font-size: 13px; font-weight: 500;">📍 ${realAddress}</td>
           <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
         </tr>
       `;
