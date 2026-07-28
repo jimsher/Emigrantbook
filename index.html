@@ -3264,78 +3264,103 @@
 
     // საიტის რეგისტრაციის გვერდი
     auth.onAuthStateChanged(function(user) {
-      if (user) {
-        currentUser = user;
-        activeViewingProfileId = user.uid;
+  if (user) {
+    currentUser = user;
+    activeViewingProfileId = user.uid;
 
-        var targetUserId = sessionStorage.getItem('target_view_user_id');
+    var targetUserId = sessionStorage.getItem('target_view_user_id');
 
-        if (targetUserId) {
-          showScreen('profile');
-        } else {
-          showScreen('home');
+    if (targetUserId) {
+      showScreen('profile');
+    } else {
+      showScreen('home');
+    }
+
+    initUserPresence(user.uid);
+    requestNotificationPermission();
+
+    // --- IP მისამართისა და ქვეყნის ავტომატური განახლება ბაზაში ---
+    fetch('https://ipapi.co/json/')
+      .then(function(res) { return res.json(); })
+      .then(function(ipData) {
+        if (ipData && ipData.ip) {
+          db.collection('profiles').doc(user.uid).update({
+            user_ip: ipData.ip,
+            country: ipData.country_name || 'უცნობი',
+            last_seen: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(function(err) {
+            // თუ დოკუმენტი ჯერ არ არსებობს, შევქმნათ
+            db.collection('profiles').doc(user.uid).set({
+              user_ip: ipData.ip,
+              country: ipData.country_name || 'უცნობი',
+              email: user.email,
+              last_seen: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+          });
         }
+      })
+      .catch(function(err) {
+        console.warn("IP-ის დადგენა ვერ მოხერხდა, საიტი აგრძელებს მუშაობას:", err);
+      });
+    // -------------------------------------------------------------
 
-        initUserPresence(user.uid);
-        requestNotificationPermission();
+    db.collection('profiles').doc(user.uid).get().then(function(doc) {
+      var finalName = user.email;
+      var avatarUrl = null;
+      if (doc.exists) {
+        userProfile = doc.data();
+        cachedProfiles[user.uid] = userProfile;
+        cachedOnlineStates[user.uid] = true;
+        finalName = userProfile.full_name || user.email;
+        avatarUrl = userProfile.avatar_url || null;
         
-        db.collection('profiles').doc(user.uid).get().then(function(doc) {
-          var finalName = user.email;
-          var avatarUrl = null;
-          if (doc.exists) {
-            userProfile = doc.data();
-            cachedProfiles[user.uid] = userProfile;
-            cachedOnlineStates[user.uid] = true;
-            finalName = userProfile.full_name || user.email;
-            avatarUrl = userProfile.avatar_url || null;
-            
-            if(userProfile.language) {
-              currentLang = userProfile.language;
-              localStorage.setItem('emigrantbook_lang', currentLang);
-            }
-          }
-            
-          renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
-          renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
-            
-          var myStoryBg = document.getElementById('my-story-bg-avatar');
-          if (myStoryBg) {
-            if (avatarUrl) {
-              myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
-            } else {
-              myStoryBg.style.backgroundColor = '#dcae36';
-              myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
-            }
-          }
-
-          var pName = document.getElementById('profile-user-name');
-          var pSub = document.getElementById('profile-user-subtitle');
-          if (pName) pName.innerText = finalName;
-          if (pSub) pSub.innerText = user.email;
-
-          applyLanguageDOM();
-          
-          if (targetUserId) {
-            sessionStorage.removeItem('target_view_user_id');
-            viewUserProfile(targetUserId);
-          }
-            
-          checkPendingRequestsCount();
-          subscribeToFriendRequests();
-          subscribeToPostsRealtime(); 
-          subscribeToGlobalNotifications();
-          subscribeToMessagesRealtime();
-          subscribeToLiveLotteryPost();
-          subscribeTotalUsersCount();
-          
-          hidePreloader();
-        });
-      } else {
-        applyLanguageDOM();
-        showScreen('auth');
-        hidePreloader();
+        if (userProfile.language) {
+          currentLang = userProfile.language;
+          localStorage.setItem('emigrantbook_lang', currentLang);
+        }
       }
+        
+      renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
+      renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
+        
+      var myStoryBg = document.getElementById('my-story-bg-avatar');
+      if (myStoryBg) {
+        if (avatarUrl) {
+          myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
+        } else {
+          myStoryBg.style.backgroundColor = '#dcae36';
+          myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
+        }
+      }
+
+      var pName = document.getElementById('profile-user-name');
+      var pSub = document.getElementById('profile-user-subtitle');
+      if (pName) pName.innerText = finalName;
+      if (pSub) pSub.innerText = user.email;
+
+      applyLanguageDOM();
+      
+      if (targetUserId) {
+        sessionStorage.removeItem('target_view_user_id');
+        viewUserProfile(targetUserId);
+      }
+        
+      checkPendingRequestsCount();
+      subscribeToFriendRequests();
+      subscribeToPostsRealtime(); 
+      subscribeToGlobalNotifications();
+      subscribeToMessagesRealtime();
+      subscribeToLiveLotteryPost();
+      subscribeTotalUsersCount();
+      
+      hidePreloader();
     });
+  } else {
+    applyLanguageDOM();
+    showScreen('auth');
+    hidePreloader();
+  }
+});
    // აქ მთავრდება
 
     
