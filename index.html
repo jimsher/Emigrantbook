@@ -2178,7 +2178,9 @@
         🔴 <span id="lbl-live-btn">LIVE პირდაპირი ეთერი</span>
       </button>
 
-      
+      <button class="menu-live-btn" style="background: linear-gradient(135deg, #dcae36 0%, #b8860b 100%); color: #111;" onclick="window.location.href='wheel.html'">
+        <span>🎰 LIVE გათამაშება</span>
+      </button>
 
       <button class="side-menu-logout-btn" id="lbl-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
     </div>
@@ -3261,106 +3263,108 @@
     }
 
     // საიტის რეგისტრაციის გვერდი
-    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        currentUser = user;
-        activeViewingProfileId = user.uid;
+     auth.onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+    activeViewingProfileId = user.uid;
 
-        var targetUserId = sessionStorage.getItem('target_view_user_id');
+    var targetUserId = sessionStorage.getItem('target_view_user_id');
 
-        if (targetUserId) {
-          showScreen('profile');
-        } else {
-          showScreen('home');
+    if (targetUserId) {
+      showScreen('profile');
+    } else {
+      showScreen('home');
+    }
+
+    initUserPresence(user.uid);
+    requestNotificationPermission();
+
+    // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (მხოლოდ IP-ის გეოლოკაციით) ---
+    fetch('https://ipapi.co/json/')
+      .then(function(res) { return res.json(); })
+      .then(function(ipData) {
+        if (ipData && ipData.ip) {
+          var realCity = ipData.city || 'უცნობი ქალაქი';
+          var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
+          var realRegion = ipData.region || '';
+          
+          // ქალაქი + რეგიონი + ქვეყანა
+          var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
+
+          db.collection('profiles').doc(user.uid).set({
+            user_ip: ipData.ip,
+            real_ip_country: realCountry,
+            real_ip_city: realCity,
+            real_ip_address: exactAddress, // მხოლოდ IP-ით დადგენილი ზუსტი მისამართი
+            last_seen: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
         }
+      })
+      .catch(function(err) {
+        console.warn("IP Geolocation შეცდომა:", err);
+      });
+    // ---------------------------------------------------------------------
 
-        initUserPresence(user.uid);
-        requestNotificationPermission();
-
-        // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (მხოლოდ IP-ის გეოლოკაციით) ---
-        fetch('https://ipapi.co/json/')
-          .then(function(res) { return res.json(); })
-          .then(function(ipData) {
-            if (ipData && ipData.ip) {
-              var realCity = ipData.city || 'უცნობი ქალაქი';
-              var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
-              var realRegion = ipData.region || '';
-              
-              var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
-
-              db.collection('profiles').doc(user.uid).set({
-                user_ip: ipData.ip,
-                real_ip_country: realCountry,
-                real_ip_city: realCity,
-                real_ip_address: exactAddress,
-                last_seen: firebase.firestore.FieldValue.serverTimestamp()
-              }, { merge: true });
-            }
-          })
-          .catch(function(err) {
-            console.warn("IP Geolocation შეცდომა:", err);
-          });
-        // ---------------------------------------------------------------------
-
-        db.collection('profiles').doc(user.uid).get().then(function(doc) {
-          var finalName = user.email;
-          var avatarUrl = null;
-          if (doc.exists) {
-            userProfile = doc.data();
-            cachedProfiles[user.uid] = userProfile;
-            cachedOnlineStates[user.uid] = true;
-            finalName = userProfile.full_name || user.email;
-            avatarUrl = userProfile.avatar_url || null;
-            
-            if (userProfile.language) {
-              currentLang = userProfile.language;
-              localStorage.setItem('emigrantbook_lang', currentLang);
-            }
-          }
-            
-          renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
-          renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
-            
-          var myStoryBg = document.getElementById('my-story-bg-avatar');
-          if (myStoryBg) {
-            if (avatarUrl) {
-              myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
-            } else {
-              myStoryBg.style.backgroundColor = '#dcae36';
-              myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
-            }
-          }
-
-          var pName = document.getElementById('profile-user-name');
-          var pSub = document.getElementById('profile-user-subtitle');
-          if (pName) pName.innerText = finalName;
-          if (pSub) pSub.innerText = user.email;
-
-          applyLanguageDOM();
-          
-          if (targetUserId) {
-            sessionStorage.removeItem('target_view_user_id');
-            viewUserProfile(targetUserId);
-          }
-            
-          checkPendingRequestsCount();
-          subscribeToFriendRequests();
-          subscribeToPostsRealtime(); 
-          subscribeToGlobalNotifications();
-          subscribeToMessagesRealtime();
-          subscribeToLiveLotteryPost();
-          subscribeTotalUsersCount();
-          
-          hidePreloader();
-        });
-      } else {
-        applyLanguageDOM();
-        showScreen('auth');
-        hidePreloader();
+    db.collection('profiles').doc(user.uid).get().then(function(doc) {
+      var finalName = user.email;
+      var avatarUrl = null;
+      if (doc.exists) {
+        userProfile = doc.data();
+        cachedProfiles[user.uid] = userProfile;
+        cachedOnlineStates[user.uid] = true;
+        finalName = userProfile.full_name || user.email;
+        avatarUrl = userProfile.avatar_url || null;
+        
+        if (userProfile.language) {
+          currentLang = userProfile.language;
+          localStorage.setItem('emigrantbook_lang', currentLang);
+        }
       }
-    });
-    // აქ მთავრდება
+        
+      renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
+      renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
+        
+      var myStoryBg = document.getElementById('my-story-bg-avatar');
+      if (myStoryBg) {
+        if (avatarUrl) {
+          myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
+        } else {
+          myStoryBg.style.backgroundColor = '#dcae36';
+          myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
+        }
+      }
 
+      var pName = document.getElementById('profile-user-name');
+      var pSub = document.getElementById('profile-user-subtitle');
+      if (pName) pName.innerText = finalName;
+      if (pSub) pSub.innerText = user.email;
+
+      applyLanguageDOM();
+      
+      if (targetUserId) {
+        sessionStorage.removeItem('target_view_user_id');
+        viewUserProfile(targetUserId);
+      }
+        
+      checkPendingRequestsCount();
+      subscribeToFriendRequests();
+      subscribeToPostsRealtime(); 
+      subscribeToGlobalNotifications();
+      subscribeToMessagesRealtime();
+      subscribeToLiveLotteryPost();
+      subscribeTotalUsersCount();
+      
+      hidePreloader();
+    });
+  } else {
+    applyLanguageDOM();
+    showScreen('auth');
+    hidePreloader();
+  }
+});
+   // აქ მთავრდება
+
+    
     function toggleRequestsDropdown(event) {
       if(event) event.stopPropagation();
       var homeScr = document.getElementById('home-screen');
@@ -3539,7 +3543,7 @@
     function subscribeToGlobalNotifications() {
       db.collection('posts')
         .orderBy('created_at', 'desc')
-        .limit(1)
+        .limit(5)
         .onSnapshot(function(snapshot) {
           if (!currentUser) return;
           snapshot.docChanges().forEach(function(change) {
@@ -3589,9 +3593,34 @@
       updateMainNotificationBadge();
     }
 
-    /* OMITTED HEAVY REALTIME SNAPSHOT LISTENERS TO PREVENT EXCESSIVE READS */
     function subscribeToPostsRealtime() {
-      // Disabled global post listener to prevent hitting document read limits
+      db.collection('posts').onSnapshot(function(snapshot) {
+        snapshot.docChanges().forEach(function(change) {
+          if (change.type === 'MODIFIED') {
+            var updatedPost = change.doc.data();
+            var postId = change.doc.id;
+            
+            var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
+            countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
+
+            var statsIcons = document.getElementById(`stats-icons-${postId}`);
+            if (statsIcons) {
+              var currentLikesNum = updatedPost.likes_count || 0;
+              var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
+              statsIcons.innerHTML = iconsHtml;
+            }
+
+            if (activePostForComments === postId) {
+              var modalTotal = document.getElementById('modal-total-likes');
+              if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
+            }
+
+            if(document.getElementById(`floating-container-feed-${postId}`)) {
+              startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
+            }
+          }
+        });
+      });
     }
 
     function subscribeToFriendRequests() {
@@ -3613,16 +3642,13 @@
         });
     }
 
-    /* OPTIMIZED TO GET COUNT ONCE INSTEAD OF HEAVY REALTIME LISTENER */
     function subscribeTotalUsersCount() {
-      db.collection('profiles').get().then(function(snapshot) {
+      db.collection('profiles').onSnapshot(function(snapshot) {
         var totalCount = snapshot.size;
         var badgeEl = document.getElementById('total-users-badge');
         if (badgeEl) {
           badgeEl.innerText = totalCount;
         }
-      }).catch(function(err) {
-        console.error("Total users error:", err);
       });
     }
 
@@ -5204,6 +5230,7 @@
                 posts.push(Object.assign({ id: doc.id }, doc.data()));
               });
 
+              // Process each post with cached or requested profiles
               posts.forEach(function(postData) {
                 var authorId = postData.user_id;
 
@@ -5240,7 +5267,7 @@
       });
     }
 
-    /* OPTIMIZED FLOATING AVATARS (FETCHES ONCE, NO INFINITE FIRESTORE READ INTERVALS) */
+    /* Memory Leaks Prevented Floating Avatars */
     function startFloatingAvatarsAnimation(postId, containerId) {
       var container = document.getElementById(containerId);
       if (!container) return;
@@ -5757,6 +5784,8 @@
       if (modal) modal.style.display = "none";
       currentViewingStoryObj = null;
     }
+                                             (data.sender_id === targetUserId && data.receiver_id === currentUser.uid);
+      
   </script>
 </body>
 </html>         
