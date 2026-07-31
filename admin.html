@@ -79,6 +79,41 @@
       margin-bottom: 20px;
     }
 
+    /* ადმინ ნავიგაცია / ტაბები */
+    .admin-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #222222;
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      background: #1c1c1e;
+      color: #aaaaaa;
+      border: 1px solid #282828;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      background: #26262a;
+      color: #ffffff;
+    }
+
+    .tab-btn.active {
+      background: #dcae36;
+      color: #111111;
+      border-color: #dcae36;
+    }
+
     .admin-header-title {
       font-size: 20px;
       font-weight: bold;
@@ -206,6 +241,100 @@
       border: 1px solid rgba(220, 174, 54, 0.25);
     }
 
+    /* ფორმის სტილები მართვის გვერდისთვის */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      color: #cccccc;
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #1c1c1e;
+      border: 1px solid #282828;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: #dcae36;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn-action {
+      background: #dcae36;
+      color: #111111;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #e5bd4c;
+    }
+
+    .btn-danger {
+      background: #ff4d4f;
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background: #ff7875;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .maintenance-box {
+      background: #1c1c1e;
+      border: 1px solid #282828;
+      padding: 20px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .status-active {
+      background: rgba(82, 196, 26, 0.15);
+      color: #52c41a;
+      border: 1px solid rgba(82, 196, 26, 0.3);
+    }
+
+    .status-warning {
+      background: rgba(255, 77, 79, 0.15);
+      color: #ff4d4f;
+      border: 1px solid rgba(255, 77, 79, 0.3);
+    }
+
     .access-denied {
       text-align: center;
       padding: 50px 20px;
@@ -224,6 +353,10 @@
         border-left: none !important;
         border-right: none !important;
       }
+      .admin-tabs {
+        padding: 0 10px 10px 10px;
+        overflow-x: auto;
+      }
     }
   </style>
 </head>
@@ -238,7 +371,15 @@
   </div>
 
   <div class="admin-container">
-    <div id="admin-content" class="admin-card" style="display: none;">
+    
+    <!-- ტაბების ნავიგაცია -->
+    <div id="admin-tabs-nav" class="admin-tabs" style="display: none;">
+      <button class="tab-btn active" onclick="switchTab('monitoring')">📊 მონიტორინგი</button>
+      <button class="tab-btn" onclick="switchTab('actions')">⚙️ მართვის ცენტრი</button>
+    </div>
+
+    <!-- ტაბი 1: მონიტორინგის გვერდი -->
+    <div id="tab-monitoring" class="admin-card" style="display: none;">
       <div class="admin-header-title">
         <span>📊</span>
         <span>მომხმარებლების IP და Geolocation მონიტორინგი</span>
@@ -260,23 +401,99 @@
         <table class="admin-table">
           <thead>
             <tr>
-            <th>მომხმარებელი</th>
-            <th>Email</th>
-            <th>IP მისამართი</th>
-            <th>ქვეყანა</th>
-            <th>მისამართი / ქალაქი</th>
-            <th>რეგისტრაციის თარიღი</th>
+              <th>მომხმარებელი</th>
+              <th>Email</th>
+              <th>IP მისამართი</th>
+              <th>ქვეყანა</th>
+              <th>მისამართი / ქალაქი</th>
+              <th>რეგისტრაციის თარიღი</th>
             </tr>
           </thead>
           <tbody id="admin-user-table-body">
             <tr>
-              <td colspan="5" style="text-align: center; color: #aaaaaa; padding: 20px;">მონაცემები იტვირთება...</td>
+              <td colspan="6" style="text-align: center; color: #aaaaaa; padding: 20px;">მონაცემები იტვირთება...</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
+    <!-- ტაბი 2: მართვის ცენტრი -->
+    <div id="tab-actions" class="admin-card" style="display: none;">
+      <div class="admin-header-title">
+        <span>⚙️</span>
+        <span>მომხმარებლებისა და სისტემის მართვა</span>
+      </div>
+      <div class="admin-subtitle">გაფრთხილებების გაგზავნა, მომხმარებლების დაბლოკვა და საიტის ტექნიკური შესვენების რეჟიმი</div>
+
+      <div class="action-grid">
+        
+        <!-- 1. გაფრთხილების გაგზავნა -->
+        <div class="maintenance-box">
+          <h3 style="color: #dcae36; font-size: 16px;">⚠️ გაფრთხილების გაგზავნა</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">აირჩიეთ მომხმარებელი და გაუგზავნეთ ინდივიდუალური გაფრთხილება.</p>
+          
+          <div class="form-group">
+            <label>მომხმარებელი:</label>
+            <select id="warn-user-select" class="form-control">
+              <option value="">იტვირთება...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>გაფრთხილების ტექსტი:</label>
+            <textarea id="warn-message-text" class="form-control" placeholder="ჩაწერეთ გაფრთხილების მიზეზი..."></textarea>
+          </div>
+
+          <button onclick="sendUserWarning()" class="btn-action">⚠️ გაფრთხილების გაგზავნა</button>
+        </div>
+
+        <!-- 2. მომხმარებლის დაბლოკვა -->
+        <div class="maintenance-box">
+          <h3 style="color: #ff4d4f; font-size: 16px;">🚫 მომხმარებლის დაბლოკვა</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">დაბლოკეთ მომხმარებლის ანგარიში წესების დარღვევის გამო.</p>
+          
+          <div class="form-group">
+            <label>მომხმარებელი:</label>
+            <select id="block-user-select" class="form-control">
+              <option value="">იტვირთება...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>დაბლოკვის მიზეზი:</label>
+            <input type="text" id="block-reason-text" class="form-control" placeholder="მაგ: წესების დარღვევა">
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button onclick="setUserBlockStatus(true)" class="btn-action btn-danger" style="flex: 1;">🚫 დაბლოკვა</button>
+            <button onclick="setUserBlockStatus(false)" class="btn-action" style="background: #282828; color: #fff; flex: 1;">🔓 განბლოკვა</button>
+          </div>
+        </div>
+
+        <!-- 3. ტექნიკური ხარვეზის რეჟიმი -->
+        <div class="maintenance-box" style="grid-column: 1 / -1;">
+          <h3 style="color: #dcae36; font-size: 16px;">🛠️ საიტის ტექნიკური შესვენება</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">
+            საიტის დროებით გათიშვა ტექნიკური სამუშაოების გამო. ჩართვის შემთხვევაში ჩვეულებრივი მომხმარებლები ვერ შეძლებენ საიტით სარგებლობას.
+          </p>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #141414; padding: 15px; border-radius: 8px; border: 1px solid #282828;">
+            <div>
+              <span style="font-weight: bold; font-size: 14px;">მიმდინარე სტატუსი:</span>
+              <span id="maintenance-status-badge" class="status-badge status-active">🟢 საიტი აქტიურია</span>
+            </div>
+            
+            <button id="maintenance-toggle-btn" onclick="toggleMaintenanceMode()" class="btn-action btn-danger">
+              🛠️ ტექნიკური რეჟიმის ჩართვა
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- წვდომა შეზღუდულია -->
     <div id="access-denied-card" class="admin-card access-denied" style="display: none;">
       <div class="access-denied-icon">🔒</div>
       <h2 style="color: #ff4d4f; margin-bottom: 10px;">წვდომა შეზღუდულია</h2>
@@ -284,6 +501,7 @@
       <br>
       <a href="index.html" class="btn-back-home" style="display: inline-block;">მთავარ გვერდზე დაბრუნება</a>
     </div>
+
   </div>
 
   <script>
@@ -301,15 +519,20 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    let allUsersList = [];
+    let isMaintenanceActive = false;
+
     auth.onAuthStateChanged(function(user) {
       if (user) {
         db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
           if (docSnap.exists) {
             var profile = docSnap.data();
-            // ადმინისტრატორის გადამოწმება (is_admin ფლაგით ან ფოსტით)
+            // ადმინისტრატორის გადამოწმება
             if (profile.is_admin === true || user.email === 'admin@emigrantbook.com') {
-              document.getElementById('admin-content').style.display = 'block';
+              document.getElementById('admin-tabs-nav').style.display = 'flex';
+              document.getElementById('tab-monitoring').style.display = 'block';
               loadUsersData();
+              loadMaintenanceState();
             } else {
               document.getElementById('access-denied-card').style.display = 'block';
             }
@@ -325,71 +548,199 @@
       }
     });
 
-    function loadUsersData() {
-  db.collection('profiles').onSnapshot(function(snapshot) {
-    var tableBody = document.getElementById('admin-user-table-body');
-    if (!tableBody) return;
+    // ტაბების გადართვა
+    function switchTab(tabName) {
+      const tabs = ['monitoring', 'actions'];
+      tabs.forEach(t => {
+        document.getElementById('tab-' + t).style.display = (t === tabName) ? 'block' : 'none';
+      });
 
-    if (snapshot.empty) {
-      tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
-      return;
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach((btn, idx) => {
+        btn.classList.toggle('active', (idx === 0 && tabName === 'monitoring') || (idx === 1 && tabName === 'actions'));
+      });
     }
 
-    document.getElementById('stat-total-users').innerText = snapshot.size;
+    // მომხმარებლების მონაცემების ჩატვირთვა
+    function loadUsersData() {
+      db.collection('profiles').onSnapshot(function(snapshot) {
+        var tableBody = document.getElementById('admin-user-table-body');
+        var warnSelect = document.getElementById('warn-user-select');
+        var blockSelect = document.getElementById('block-user-select');
 
-    var countrySet = new Set();
-    tableBody.innerHTML = "";
+        if (!tableBody) return;
 
-    snapshot.forEach(function(doc) {
-      var data = doc.data();
-      var name = data.full_name || "მომხმარებელი";
-      var email = data.email || "-";
-      
-      // მხოლოდ IP-ით დადგენილი მონაცემების წაკითხვა
-      var ip = data.user_ip || "არ ფიქსირდება";
-      var country = data.real_ip_country || "უცნობი";
-      var realAddress = data.real_ip_address || (data.real_ip_city ? (data.real_ip_city + ', ' + country) : "არ ფიქსირდება");
-      
-      var avatar = data.avatar_url;
+        if (snapshot.empty) {
+          tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
+          return;
+        }
 
-      if (country && country !== "უცნობი" && country !== "არ ფიქსირდება") {
-        countrySet.add(country);
+        document.getElementById('stat-total-users').innerText = snapshot.size;
+
+        var countrySet = new Set();
+        tableBody.innerHTML = "";
+        allUsersList = [];
+
+        var selectOptionsHtml = '<option value="">-- აირჩიეთ მომხმარებელი --</option>';
+
+        snapshot.forEach(function(doc) {
+          var data = doc.data();
+          data.uid = doc.id;
+          allUsersList.push(data);
+
+          var name = data.full_name || "მომხმარებელი";
+          var email = data.email || "-";
+          var ip = data.user_ip || "არ ფიქსირდება";
+          var country = data.real_ip_country || "უცნობი";
+          var realAddress = data.real_ip_address || (data.real_ip_city ? (data.real_ip_city + ', ' + country) : "არ ფიქსირდება");
+          var avatar = data.avatar_url;
+
+          var blockedTag = data.is_blocked ? ' <span style="color:#ff4d4f; font-size:11px;">(დაბლოკილი)</span>' : '';
+
+          selectOptionsHtml += `<option value="${doc.id}">${name} (${email})</option>`;
+
+          if (country && country !== "უცნობი" && country !== "არ ფიქსირდება") {
+            countrySet.add(country);
+          }
+
+          var regDate = "-";
+          if (data.created_at) {
+            var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
+            regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          } else if (data.updated_at) {
+            var d = data.updated_at.toDate ? data.updated_at.toDate() : new Date(data.updated_at);
+            regDate = d.toLocaleDateString('ka-GE');
+          }
+
+          var initial = name.charAt(0).toUpperCase();
+          var avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : initial;
+
+          var row = `
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar-mini">${avatarHtml}</div>
+                  <span style="font-weight: 600;">${name}${blockedTag}</span>
+                </div>
+              </td>
+              <td style="color: #aaaaaa;">${email}</td>
+              <td><span class="ip-code">${ip}</span></td>
+              <td><span class="country-badge">🌍 ${country}</span></td>
+              <td style="color: #dcae36; font-size: 13px; font-weight: 500;">📍 ${realAddress}</td>
+              <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
+            </tr>
+          `;
+
+          tableBody.innerHTML += row;
+        });
+
+        if (warnSelect) warnSelect.innerHTML = selectOptionsHtml;
+        if (blockSelect) blockSelect.innerHTML = selectOptionsHtml;
+
+        document.getElementById('stat-total-countries').innerText = countrySet.size;
+      });
+    }
+
+    // 1. გაფრთხილების გაგზავნა
+    function sendUserWarning() {
+      const userId = document.getElementById('warn-user-select').value;
+      const text = document.getElementById('warn-message-text').value.trim();
+
+      if (!userId) {
+        alert("გთხოვთ აირჩიოთ მომხმარებელი!");
+        return;
+      }
+      if (!text) {
+        alert("გთხოვთ ჩაწეროთ გაფრთხილების ტექსტი!");
+        return;
       }
 
-      var regDate = "-";
-      if (data.created_at) {
-        var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
-        regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      } else if (data.updated_at) {
-        var d = data.updated_at.toDate ? data.updated_at.toDate() : new Date(data.updated_at);
-        regDate = d.toLocaleDateString('ka-GE');
+      db.collection('profiles').doc(userId).collection('warnings').add({
+        message: text,
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      }).then(() => {
+        // ასევე ვინახავთ ძირითად პროფილში ბოლო გაფრთხილებას
+        return db.collection('profiles').doc(userId).update({
+          has_warning: true,
+          last_warning_text: text
+        });
+      }).then(() => {
+        alert("გაფრთხილება წარმატებით გაიგზავნა!");
+        document.getElementById('warn-message-text').value = "";
+      }).catch(err => {
+        console.error("Warning error:", err);
+        alert("შეცდომა გაფრთხილების გაგზავნისას: " + err.message);
+      });
+    }
+
+    // 2. მომხმარებლის დაბლოკვა / განბლოკვა
+    function setUserBlockStatus(block) {
+      const userId = document.getElementById('block-user-select').value;
+      const reason = document.getElementById('block-reason-text').value.trim();
+
+      if (!userId) {
+        alert("გთხოვთ აირჩიოთ მომხმარებელი!");
+        return;
       }
 
-      var initial = name.charAt(0).toUpperCase();
-      var avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : initial;
+      const updateData = {
+        is_blocked: block,
+        blocked_at: block ? firebase.firestore.FieldValue.serverTimestamp() : null,
+        block_reason: block ? (reason || "წესების დარღვევა") : null
+      };
 
-      var row = `
-        <tr>
-          <td>
-            <div class="user-cell">
-              <div class="user-avatar-mini">${avatarHtml}</div>
-              <span style="font-weight: 600;">${name}</span>
-            </div>
-          </td>
-          <td style="color: #aaaaaa;">${email}</td>
-          <td><span class="ip-code">${ip}</span></td>
-          <td><span class="country-badge">🌍 ${country}</span></td>
-          <td style="color: #dcae36; font-size: 13px; font-weight: 500;">📍 ${realAddress}</td>
-          <td style="color: #aaaaaa; font-size: 13px;">${regDate}</td>
-        </tr>
-      `;
+      db.collection('profiles').doc(userId).update(updateData).then(() => {
+        alert(block ? "მომხმარებელი წარმატებით დაიბლოკა!" : "მომხმარებელი წარმატებით განბლოკდა!");
+        document.getElementById('block-reason-text').value = "";
+      }).catch(err => {
+        console.error("Block error:", err);
+        alert("შეცდომა სტატუსის შეცვლისას: " + err.message);
+      });
+    }
 
-      tableBody.innerHTML += row;
-    });
+    // 3. ტექნიკური შესვენების სტატუსის წაკითხვა
+    function loadMaintenanceState() {
+      db.collection('system_settings').doc('maintenance').onSnapshot(doc => {
+        const badge = document.getElementById('maintenance-status-badge');
+        const btn = document.getElementById('maintenance-toggle-btn');
 
-    document.getElementById('stat-total-countries').innerText = countrySet.size;
-  });
-}
+        if (doc.exists && doc.data().is_active === true) {
+          isMaintenanceActive = true;
+          badge.className = "status-badge status-warning";
+          badge.innerHTML = "🔴 ტექნიკური რეჟიმი ჩართულია";
+          btn.innerHTML = "🟢 ტექნიკური რეჟიმის გამორთვა";
+          btn.className = "btn-action";
+        } else {
+          isMaintenanceActive = false;
+          badge.className = "status-badge status-active";
+          badge.innerHTML = "🟢 საიტი აქტიურია";
+          btn.innerHTML = "🛠️ ტექნიკური რეჟიმის ჩართვა";
+          btn.className = "btn-action btn-danger";
+        }
+      });
+    }
+
+    // ტექნიკური შესვენების ჩართვა / გამორთვა
+    function toggleMaintenanceMode() {
+      const newStatus = !isMaintenanceActive;
+      const confirmMsg = newStatus 
+        ? "დარწმუნებული ხართ, რომ გსურთ საიტის ტექნიკურ რეჟიმში გადაყვანა? ჩვეულებრივი მომხმარებლები ვერ შეძლებენ შესვლას!" 
+        : "გსურთ ტექნიკური რეჟიმის გამორთვა და საიტის ჩვეულებრივ რეჟიმში დაბრუნება?";
+
+      if (confirm(confirmMsg)) {
+        db.collection('system_settings').doc('maintenance').set({
+          is_active: newStatus,
+          message: "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.",
+          updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => {
+          alert("სტატუსი წარმატებით განახლდა!");
+        }).catch(err => {
+          console.error("Maintenance toggle error:", err);
+          alert("შეცდომა სტატუსის განახლებისას: " + err.message);
+        });
+      }
+    }
   </script>
 </body>
 </html>
