@@ -660,9 +660,35 @@
                 return;
             }
 
-            currentLiveChannel = "live_" + window.auth.currentUser.uid; 
-            currentHostUid = window.auth.currentUser.uid;
-            window.currentLiveHostUid = window.auth.currentUser.uid;
+            const currentUid = window.auth.currentUser.uid;
+
+            // === 100 ფოლოვერის შემოწმება (Firestore ან RTDB-იდან) ===
+            try {
+                let followerCount = 0;
+                
+                // 1. ჯერ ვამოწმებთ Firestore-ის followers კოლექციას
+                const fsFollowers = await firebase.firestore().collection('followers').where('following_id', '==', currentUid).get();
+                followerCount = fsFollowers.size;
+
+                // 2. თუ Firestore-ში არ აღმოჩნდა, ვამოწმებთ Realtime Database-ს
+                if (followerCount === 0) {
+                    const rtdbSnap = await get(ref(window.db, `followers/${currentUid}`));
+                    if (rtdbSnap.exists()) {
+                        followerCount = Object.keys(rtdbSnap.val()).length;
+                    }
+                }
+
+                if (followerCount < 100) {
+                    alert(`ლაივის დასაწყებად საჭიროა სულ მცირე 100 გამომწერი! თქვენ გაქვთ: ${followerCount}`);
+                    return;
+                }
+            } catch (err) {
+                console.error("Followers count check error:", err);
+            }
+
+            currentLiveChannel = "live_" + currentUid; 
+            currentHostUid = currentUid;
+            window.currentLiveHostUid = currentUid;
 
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveHostName').innerText = window.myName || "Host";
@@ -672,7 +698,7 @@
                 await liveClient.leave(); 
                 await liveClient.setClientRole("host");
                 await new Promise(resolve => setTimeout(resolve, 500)); 
-                await liveClient.join(appId, currentLiveChannel, token, window.auth.currentUser.uid);
+                await liveClient.join(appId, currentLiveChannel, token, currentUid);
 
                 registerLiveInDatabase(currentLiveChannel, window.myName || "Host");
 
@@ -759,14 +785,25 @@
             if (guestDiv) guestDiv.innerHTML = "";
             closeActiveLivesModal();
 
-            get(ref(window.db, `lives_active/${channelName}`)).then(snap => {
+            get(ref(window.db, `lives_active/${channelName}`)).then(async (snap) => {
                 const liveData = snap.val();
                 if(liveData) {
                     currentHostUid = liveData.uid || liveData.hostId;
                     window.currentLiveHostUid = currentHostUid;
                     
-                    document.getElementById('liveHostName').innerText = liveData.host;
-                    document.getElementById('liveHostAva').src = liveData.hostPhoto || 'https://via.placeholder.com/150';
+                    document.getElementById('liveHostName').innerText = liveData.host || "Host";
+
+                    // === ავატარის ჩატვირთვა FIRESTORE-იდან (თუ RTDB-ში არ წერია ან არ ჩანს) ===
+                    let hostPhotoUrl = liveData.hostPhoto;
+                    if (!hostPhotoUrl || hostPhotoUrl === 'https://via.placeholder.com/150') {
+                        try {
+                            const hostDoc = await firebase.firestore().collection('profiles').doc(currentHostUid).get();
+                            if (hostDoc.exists && hostDoc.data().avatar_url) {
+                                hostPhotoUrl = hostDoc.data().avatar_url;
+                            }
+                        } catch (e) { console.error("Host photo fetch error:", e); }
+                    }
+                    document.getElementById('liveHostAva').src = hostPhotoUrl || 'https://via.placeholder.com/150';
 
                     if (window.auth && window.auth.currentUser) {
                         get(ref(window.db, `followers/${currentHostUid}/${window.auth.currentUser.uid}`)).then(followSnap => {
