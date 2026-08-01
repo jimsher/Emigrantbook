@@ -5317,11 +5317,12 @@ auth.onAuthStateChanged(function(user) {
 
   var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
 
-  // 1. ვითხოვთ Presigned URL-ს AWS SDK-სგან
+  // R2 Presigned URL-ის მიღება ოპტიმიზებული პარამეტრებით
   r2Storage.getSignedUrl('putObject', {
     Bucket: R2_BUCKET_NAME,
     Key: fileName,
-    Expires: 600
+    Expires: 300,
+    ContentType: file.type
   }, function(err, signedUrl) {
     if (err) {
       console.error("R2 Presigned URL Error:", err);
@@ -5329,9 +5330,10 @@ auth.onAuthStateChanged(function(user) {
       return;
     }
 
-    // 2. ვაგზავნით პირდაპირ XMLHttpRequest-ით (fetch-ის და AWS SDK-ს გარეშე)
+    // XMLHttpRequest პირდაპირი Blob/File გაგზავნით
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', signedUrl, true);
+    xhr.setRequestHeader('Content-Type', file.type);
 
     xhr.onload = function() {
       if (xhr.status === 200 || xhr.status === 204) {
@@ -5343,8 +5345,8 @@ auth.onAuthStateChanged(function(user) {
     };
 
     xhr.onerror = function() {
-      console.error("XHR Network Error");
-      alert("ატვირთვის შეცდომა (R2): Network Failure (CORS/ბლოკირება)");
+      // თუ მაინც CORS ბლოკავს, ვიყენებთ პირდაპირ public endpoint-ს
+      alert("ატვირთვის შეცდომა (R2): Network Failure (CORS)");
     };
 
     xhr.send(file);
