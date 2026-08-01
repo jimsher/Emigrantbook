@@ -2617,161 +2617,164 @@
 
 
     /*  აქ იწყება ადმინის */
+  const sysAuth = firebase.auth();
+  const sysDb = firebase.firestore();
+
+  let maintenanceUnsubscribe = null;
+
+  sysAuth.onAuthStateChanged(user => {
+    // თუ უკვე მოსმენაზე ვიყავით, ჯერ გავთიშოთ რომ არ გადაიფაროს
+    if (maintenanceUnsubscribe) {
+      maintenanceUnsubscribe();
+      maintenanceUnsubscribe = null;
+    }
+
+    if (user) {
+      // 1. ჯერ ვამოწმებთ ბაზაში შენს ადმინ სტატუსს
+      sysDb.collection('profiles').doc(user.uid).get().then(pDoc => {
+        const pData = pDoc.exists ? pDoc.data() : {};
+        const isAdmin = (pData.is_admin === true) || (user.email === 'admin@emigrantbook.com');
+
+        if (isAdmin) {
+          // შენ (ადმინი) ხარ! არაფერი არ გადაგეფარება!
+          removeMaintenanceUI();
+          removeBlockedUI();
+        } else {
+          // ჩვეულებრივი მომხმარებელია -> ირთვება დაბლოკვის და ტექნიკურის მოსმენა
+          startMaintenanceCheck();
+          listenToUserStatus(user, pData);
+        }
+      }).catch(err => {
+        console.error("Profile check error:", err);
+        startMaintenanceCheck();
+      });
+    } else {
+      // ავტორიზაციის გარეშე მყოფი მომხმარებელი (სტუმარი) -> ეგრევე ემორჩილება ტექნიკურ რეჟიმს
+      startMaintenanceCheck();
+    }
+  });
+
+  // ტექნიკური შესვენების მოსმენა მხოლო ჩვეულებრივი მომხმარებლისთვის
+  function startMaintenanceCheck() {
+    maintenanceUnsubscribe = sysDb.collection('system_settings').doc('maintenance')
+      .onSnapshot(doc => {
+        if (doc.exists && doc.data().is_active === true) {
+          renderMaintenanceUI(doc.data().message);
+        } else {
+          removeMaintenanceUI();
+        }
+      });
+  }
+
+  // მომხმარებლის დაბლოკვისა და გაფრთხილების მოსმენა
+  function listenToUserStatus(user, initialData) {
+    if (initialData.is_blocked === true) {
+      renderBlockedUI(initialData.block_reason);
+      return;
+    }
+
+    sysDb.collection('profiles').doc(user.uid)
+      .onSnapshot(doc => {
+        if (!doc.exists) return;
+        const data = doc.data();
+
+        if (data.is_blocked === true) {
+          renderBlockedUI(data.block_reason);
+        } else {
+          removeBlockedUI();
+        }
+
+        if (data.has_warning === true && data.last_warning_text) {
+          renderWarningUI(data.last_warning_text, user.uid);
+        }
+      });
+  }
+
   // ==========================================
-// Emigrantbook Admin Control System (Fixed)
-// ==========================================
+  // UI ელემენტები
+  // ==========================================
 
-const sysAuth = firebase.auth();
-const sysDb = firebase.firestore();
-
-sysAuth.onAuthStateChanged(user => {
-  if (user) {
-    // 1. ჯერ ვამოწმებთ არის თუ არა მომხმარებელი ადმინი
-    sysDb.collection('profiles').doc(user.uid).get().then(pDoc => {
-      const pData = pDoc.exists ? pDoc.data() : {};
-      const isAdmin = (pData.is_admin === true) || (user.email === 'admin@emigrantbook.com');
-
-      if (isAdmin) {
-        // ადმინისტრატორს ყველაფერი ეხსნება - არც ტექნიკური შესვენება ეხება და არც დაბლოკვა
-        removeMaintenanceUI();
-        removeBlockedUI();
-      } else {
-        // ჩვეულებრივ მომხმარებელზე იწყება დაბლოკვის და ტექნიკურის მოსმენა
-        listenToSystemMaintenance(false);
-        listenToUserStatus(user, pData);
-      }
-    }).catch(err => {
-      console.error("Profile check error:", err);
-      listenToSystemMaintenance(false);
-    });
-  } else {
-    // ავტორიზაციის გარეშე მყოფ მომხმარებელზე მოწმდება მხოლოდ ტექნიკური რეჟიმი
-    listenToSystemMaintenance(false);
-  }
-});
-
-// ტექნიკური შესვენების Real-time მოსმენა
-function listenToSystemMaintenance(isAdmin) {
-  if (isAdmin) return;
-
-  sysDb.collection('system_settings').doc('maintenance')
-    .onSnapshot(doc => {
-      if (doc.exists && doc.data().is_active === true) {
-        renderMaintenanceUI(doc.data().message);
-      } else {
-        removeMaintenanceUI();
-      }
-    });
-}
-
-// მომხმარებლის სტატუსისა და გაფრთხილებების მოსმენა
-function listenToUserStatus(user, initialData) {
-  // შემოწმება ჩატვირთვისთანავე
-  if (initialData.is_blocked === true) {
-    renderBlockedUI(initialData.block_reason);
-    return;
+  function renderMaintenanceUI(msg) {
+    let el = document.getElementById('eb-sys-maintenance-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'eb-sys-maintenance-overlay';
+      el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0b0b0b;color:#e4e6eb;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      document.body.appendChild(el);
+    }
+    const text = msg || "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.";
+    el.innerHTML = `
+      <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
+      <h1 style="color: #dcae36; font-size: 24px; margin-bottom: 10px;">ტექნიკური შესვენება</h1>
+      <p style="color: #aaaaaa; max-width: 450px; line-height: 1.6; font-size: 15px;">${text}</p>
+    `;
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
   }
 
-  // Real-time ცვლილებები
-  sysDb.collection('profiles').doc(user.uid)
-    .onSnapshot(doc => {
-      if (!doc.exists) return;
-      const data = doc.data();
-
-      if (data.is_blocked === true) {
-        renderBlockedUI(data.block_reason);
-      } else {
-        removeBlockedUI();
-      }
-
-      if (data.has_warning === true && data.last_warning_text) {
-        renderWarningUI(data.last_warning_text, user.uid);
-      }
-    });
-}
-
-// UI ფუნქციები
-function renderMaintenanceUI(msg) {
-  let el = document.getElementById('eb-sys-maintenance-overlay');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'eb-sys-maintenance-overlay';
-    el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0b0b0b;color:#e4e6eb;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
-    document.body.appendChild(el);
+  function removeMaintenanceUI() {
+    const el = document.getElementById('eb-sys-maintenance-overlay');
+    if (el) el.remove();
+    document.body.style.overflow = '';
   }
-  const text = msg || "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.";
-  el.innerHTML = `
-    <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
-    <h1 style="color: #dcae36; font-size: 24px; margin-bottom: 10px;">ტექნიკური შესვენება</h1>
-    <p style="color: #aaaaaa; max-width: 450px; line-height: 1.6; font-size: 15px;">${text}</p>
-  `;
-  el.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
 
-function removeMaintenanceUI() {
-  const el = document.getElementById('eb-sys-maintenance-overlay');
-  if (el) el.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function renderBlockedUI(reason) {
-  let el = document.getElementById('eb-sys-blocked-overlay');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'eb-sys-blocked-overlay';
-    el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(11,11,11,0.98);color:#e4e6eb;z-index:999998;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
-    document.body.appendChild(el);
-  }
-  const blockReason = reason || "წესების დარღვევა";
-  el.innerHTML = `
-    <div style="font-size: 60px; margin-bottom: 20px;">🚫</div>
-    <h1 style="color: #ff4d4f; font-size: 24px; margin-bottom: 10px;">თქვენი ანგარიში დაბლოკილია</h1>
-    <p style="color: #aaaaaa; max-width: 450px; line-height: 1.6; font-size: 14px; margin-bottom: 20px;">
-      მიზეზი: <strong style="color: #ffffff;">${blockReason}</strong>
-    </p>
-    <button onclick="firebase.auth().signOut()" style="background:#222222;color:#ffffff;border:1px solid #333333;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;">სისტემიდან გამოსვლა</button>
-  `;
-  el.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function removeBlockedUI() {
-  const el = document.getElementById('eb-sys-blocked-overlay');
-  if (el) el.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function renderWarningUI(warnText, userId) {
-  let modal = document.getElementById('eb-sys-warn-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'eb-sys-warn-modal';
-    modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999997;display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
-    document.body.appendChild(modal);
-  }
-  modal.innerHTML = `
-    <div style="background:#141414;border:1px solid #dcae36;border-radius:12px;padding:24px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-      <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
-      <h2 style="color: #dcae36; font-size: 18px; margin-bottom: 12px;">ადმინისტრაციის გაფრთხილება</h2>
-      <p style="color: #e4e6eb; font-size: 14px; line-height: 1.5; margin-bottom: 20px; background: #1c1c1e; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
-        ${warnText}
+  function renderBlockedUI(reason) {
+    let el = document.getElementById('eb-sys-blocked-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'eb-sys-blocked-overlay';
+      el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(11,11,11,0.98);color:#e4e6eb;z-index:999998;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      document.body.appendChild(el);
+    }
+    const blockReason = reason || "წესების დარღვევა";
+    el.innerHTML = `
+      <div style="font-size: 60px; margin-bottom: 20px;">🚫</div>
+      <h1 style="color: #ff4d4f; font-size: 24px; margin-bottom: 10px;">თქვენი ანგარიში დაბლოკილია</h1>
+      <p style="color: #aaaaaa; max-width: 450px; line-height: 1.6; font-size: 14px; margin-bottom: 20px;">
+        მიზეზი: <strong style="color: #ffffff;">${blockReason}</strong>
       </p>
-      <button onclick="clearUserWarning('${userId}')" style="background:#dcae36;color:#111111;border:none;padding:10px 24px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;">გავეცანი / დახურვა</button>
-    </div>
-  `;
-  modal.style.display = 'flex';
-}
+      <button onclick="firebase.auth().signOut()" style="background:#222222;color:#ffffff;border:1px solid #333333;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;">სისტემიდან გამოსვლა</button>
+    `;
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
 
-function clearUserWarning(userId) {
-  sysDb.collection('profiles').doc(userId).update({
-    has_warning: false,
-    last_warning_text: firebase.firestore.FieldValue.delete()
-  }).then(() => {
-    const modal = document.getElementById('eb-sys-warn-modal');
-    if (modal) modal.style.display = 'none';
-  }).catch(err => console.error("Warning error:", err));
-}
+  function removeBlockedUI() {
+    const el = document.getElementById('eb-sys-blocked-overlay');
+    if (el) el.remove();
+    document.body.style.overflow = '';
+  }
+
+  function renderWarningUI(warnText, userId) {
+    let modal = document.getElementById('eb-sys-warn-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'eb-sys-warn-modal';
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999997;display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#141414;border:1px solid #dcae36;border-radius:12px;padding:24px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
+        <h2 style="color: #dcae36; font-size: 18px; margin-bottom: 12px;">ადმინისტრაციის გაფრთხილება</h2>
+        <p style="color: #e4e6eb; font-size: 14px; line-height: 1.5; margin-bottom: 20px; background: #1c1c1e; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+          ${warnText}
+        </p>
+        <button onclick="clearUserWarning('${userId}')" style="background:#dcae36;color:#111111;border:none;padding:10px 24px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;">გავეცანი / დახურვა</button>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  function clearUserWarning(userId) {
+    sysDb.collection('profiles').doc(userId).update({
+      has_warning: false,
+      last_warning_text: firebase.firestore.FieldValue.delete()
+    }).then(() => {
+      const modal = document.getElementById('eb-sys-warn-modal');
+      if (modal) modal.remove();
+    }).catch(err => console.error("Warning error:", err));
+  }
     /* და აქ მთავრდება */
 
 
