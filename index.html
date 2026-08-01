@@ -3647,12 +3647,14 @@
     
 
     function subscribeTotalUsersCount() {
-      db.collection('profiles').onSnapshot(function(snapshot) {
+      db.collection('profiles').get().then(function(snapshot) {
         var totalCount = snapshot.size;
         var badgeEl = document.getElementById('total-users-badge');
         if (badgeEl) {
           badgeEl.innerText = totalCount;
         }
+      }).catch(function(err) {
+        console.error("Total users get error:", err);
       });
     }
 
