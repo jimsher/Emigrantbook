@@ -3924,6 +3924,7 @@
       db.collection('friend_requests')
         .where('receiver_id', '==', currentUser.uid)
         .where('status', '==', 'pending')
+        .limit(15)
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
@@ -3931,12 +3932,16 @@
             return;
           }
 
-          container.innerHTML = "";
+          var itemsHtml = "";
+          var totalCount = snapshot.size;
+          var processedCount = 0;
+
           snapshot.forEach(function(docSnap) {
             var req = docSnap.data();
             var reqId = docSnap.id;
             
             fetchUserProfileCached(req.sender_id, function(pData) {
+              processedCount++;
               var senderName = pData.full_name || "User";
               var senderAvatar = pData.avatar_url || null;
               var isOnline = isUserOnline(pData);
@@ -3945,7 +3950,7 @@
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
               var avatarContent = senderAvatar ? `<div class="avatar-has-online"><img src="${senderAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
 
-              container.innerHTML += `
+              itemsHtml += `
                 <div class="request-item">
                   <div class="request-item-avatar" onclick="viewUserProfile('${req.sender_id}')">${avatarContent}</div>
                   <div class="request-item-info">
@@ -3957,8 +3962,15 @@
                   </div>
                 </div>
               `;
+
+              if (processedCount === totalCount && container) {
+                container.innerHTML = itemsHtml;
+              }
             });
           });
+        }).catch(function(err) {
+          console.error("Error loading incoming friend requests:", err);
+          if (container) container.innerHTML = `<div class="dropdown-empty">შეცდომა ჩატვირთვისას</div>`;
         });
     }
 
