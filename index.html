@@ -3633,22 +3633,18 @@
 
     function subscribeToFriendRequests() {
       if (!currentUser) return;
-      db.collection('friend_requests')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('status', '==', 'pending')
-        .onSnapshot(function(snapshot) {
-          checkPendingRequestsCount();
-          var homeScr = document.getElementById('home-screen');
-          var isHome = homeScr && homeScr.style.display === 'block';
-          var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-          if (dropdown && dropdown.style.display === 'flex') {
-            loadIncomingFriendRequests();
-          }
-          if (currentUser && activeViewingProfileId) {
-            updateRealtimeStats(activeViewingProfileId);
-          }
-        });
+      checkPendingRequestsCount();
+      var homeScr = document.getElementById('home-screen');
+      var isHome = homeScr && homeScr.style.display === 'block';
+      var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
+      if (dropdown && dropdown.style.display === 'flex') {
+        loadIncomingFriendRequests();
+      }
+      if (currentUser && activeViewingProfileId) {
+        updateRealtimeStats(activeViewingProfileId);
+      }
     }
+    
 
     function subscribeTotalUsersCount() {
       db.collection('profiles').onSnapshot(function(snapshot) {
