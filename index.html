@@ -2622,14 +2622,14 @@
 
   let maintenanceUnsubscribe = null;
 
- // sysAuth.onAuthStateChanged(user => {
-     //თუ უკვე მოსმენაზე ვიყავით, ჯერ გავთიშოთ რომ არ გადაიფაროს
-   // if (maintenanceUnsubscribe) {
-     // maintenanceUnsubscribe();
-    //  maintenanceUnsubscribe = null;
-  //  }
+  sysAuth.onAuthStateChanged(user => {
+     თუ უკვე მოსმენაზე ვიყავით, ჯერ გავთიშოთ რომ არ გადაიფაროს
+    if (maintenanceUnsubscribe) {
+      maintenanceUnsubscribe();
+      maintenanceUnsubscribe = null;
+    }
 
-    if (user) {
+    //if (user) {
       // 1. ჯერ ვამოწმებთ ბაზაში შენს ადმინ სტატუსს
       sysDb.collection('profiles').doc(user.uid).get().then(pDoc => {
         const pData = pDoc.exists ? pDoc.data() : {};
@@ -2652,7 +2652,7 @@
       // ავტორიზაციის გარეშე მყოფი მომხმარებელი (სტუმარი) -> ეგრევე ემორჩილება ტექნიკურ რეჟიმს
       startMaintenanceCheck();
     }
-  });
+ // });
 
   // ტექნიკური შესვენების მოსმენა მხოლო ჩვეულებრივი მომხმარებლისთვის
   function startMaintenanceCheck() {
