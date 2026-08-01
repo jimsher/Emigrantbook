@@ -5313,41 +5313,41 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function uploadMediaToFirebase(file, folder, callback) {
-      if (!currentUser) return;
+  if (!currentUser) return;
 
-      var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
+  var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
+  var uploadUrl = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${fileName}`;
 
-      // 1. იღებს სწორ Presigned URL-ს R2-დან
-      r2Storage.getSignedUrl('putObject', {
-        Bucket: R2_BUCKET_NAME,
-        Key: fileName,
-        Expires: 300
-      }, function(err, url) {
-        if (err) {
-          console.error("R2 Presigned URL Error:", err);
-          alert("ატვირთვის შეცდომა (URL): " + err.message);
-          return;
-        }
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', uploadUrl, true);
+  xhr.setRequestHeader('Content-Type', file.type);
 
-        // 2. აგზავნის ფაილს პირდაპირ R2-ზე
-        fetch(url, {
-          method: 'PUT',
-          body: file
-        })
-        .then(function(response) {
-          if (response.ok) {
-            var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
-            callback(publicUrl);
-          } else {
-            alert("ატვირთვის შეცდომა (R2): სერვერის სტატუსი " + response.status);
-          }
-        })
-        .catch(function(error) {
-          console.error("R2 Fetch Error:", error);
-          alert("ატვირთვის შეცდომა (R2): " + error.message);
-        });
-      });
+  // R2 API Token ავტორიზაციისთვის
+  r2Storage.config.credentials.get(function(err) {
+    if (err) {
+      alert("ავტორიზაციის შეცდომა: " + err.message);
+      return;
     }
+    
+    // AWS S3 Signature-ის გარეშე პირდაპირი AWS SDK Upload (რომელიც ბრაუზერში მუშაობს)
+    var params = {
+      Bucket: R2_BUCKET_NAME,
+      Key: fileName,
+      Body: file,
+      ContentType: file.type
+    };
+
+    r2Storage.putObject(params, function(err, data) {
+      if (err) {
+        console.error("Cloudflare R2 Upload Error:", err);
+        alert("ატვირთვის შეცდომა (R2): " + err.message);
+      } else {
+        var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
+        callback(publicUrl);
+      }
+    });
+  });
+}
 
     function uploadImageToImgBB(file, callback) {
       if (file.type.startsWith('video/')) {
