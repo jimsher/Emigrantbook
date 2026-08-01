@@ -5900,13 +5900,15 @@
         });
     }
 
+    
     function fetchStoriesForUsers(userIdsList, listDiv) {
-      if(userIdsList.length === 0) return;
+      if (!userIdsList || userIdsList.length === 0) return;
       
       var oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
       db.collection('stories')
         .where('created_at', '>=', oneDayAgo)
+        .limit(20)
         .get()
         .then(function(snapshot) {
           var stories = [];
@@ -5960,6 +5962,7 @@
           console.error("Error loading stories: ", error);
         });
     }
+          
 
     function openStoryViewer(story, username, avatarUrl) {
       currentViewingStoryObj = story;
