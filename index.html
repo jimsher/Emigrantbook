@@ -5317,12 +5317,11 @@ auth.onAuthStateChanged(function(user) {
 
       var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
 
-      // პირდაპირი Upload R2-ზე AWS SDK-ის გვერდის ავლით
+      // 1. იღებს სწორ Presigned URL-ს R2-დან
       r2Storage.getSignedUrl('putObject', {
         Bucket: R2_BUCKET_NAME,
         Key: fileName,
-        ContentType: file.type,
-        Expires: 60
+        Expires: 300
       }, function(err, url) {
         if (err) {
           console.error("R2 Presigned URL Error:", err);
@@ -5330,12 +5329,9 @@ auth.onAuthStateChanged(function(user) {
           return;
         }
 
-        // ბრაუზერიდან პირდაპირი გაგზავნა
+        // 2. აგზავნის ფაილს პირდაპირ R2-ზე
         fetch(url, {
           method: 'PUT',
-          headers: {
-            'Content-Type': file.type
-          },
           body: file
         })
         .then(function(response) {
@@ -5343,11 +5339,11 @@ auth.onAuthStateChanged(function(user) {
             var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
             callback(publicUrl);
           } else {
-            throw new Error("სერვერმა ფაილი არ მიიღო (Status: " + response.status + ")");
+            alert("ატვირთვის შეცდომა (R2): სერვერის სტატუსი " + response.status);
           }
         })
         .catch(function(error) {
-          console.error("R2 Upload Error:", error);
+          console.error("R2 Fetch Error:", error);
           alert("ატვირთვის შეცდომა (R2): " + error.message);
         });
       });
