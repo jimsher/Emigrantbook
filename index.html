@@ -3550,26 +3550,27 @@
     function subscribeToGlobalNotifications() {
       db.collection('posts')
         .orderBy('created_at', 'desc')
-        .limit(5)
-        .onSnapshot(function(snapshot) {
+        .limit(1)
+        .get()
+        .then(function(snapshot) {
           if (!currentUser) return;
-          snapshot.docChanges().forEach(function(change) {
-            if (change.type === 'ADDED') {
-              var newPost = change.doc.data();
-              if (newPost.user_id !== currentUser.uid) {
-                var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
-                if (newPost.media_url) {
-                  type = (newPost.media_type === 'video' ? (currentLang === 'ka' ? "ახალი ვიდეო" : "new video") : (currentLang === 'ka' ? "ახალი სურათი" : "new photo"));
-                }
-                var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
-                realtimeNotificationsList.unshift({
-                  text: nText,
-                  time: new Date()
-                });
-                updateMainNotificationBadge();
+          snapshot.forEach(function(docSnap) {
+            var newPost = docSnap.data();
+            if (newPost.user_id !== currentUser.uid) {
+              var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
+              if (newPost.media_url) {
+                type = (newPost.media_type === 'video' ? (currentLang === 'ka' ? "ახალი ვიდეო" : "new video") : (currentLang === 'ka' ? "ახალი სურათი" : "new photo"));
               }
+              var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
+              realtimeNotificationsList.unshift({
+                text: nText,
+                time: new Date()
+              });
+              updateMainNotificationBadge();
             }
           });
+        }).catch(function(err) {
+          console.error("Global notifications get error:", err);
         });
     }
 
