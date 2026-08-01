@@ -5289,6 +5289,7 @@ auth.onAuthStateChanged(function(user) {
         });
     }
 
+    // აქ არის მთავარი ფოტოსბდა ვიდეოსბატვირთვა 
     function triggerAvatarUpload() {
       var input = document.getElementById('avatar-file-input');
       if (input) input.click();
@@ -5296,26 +5297,25 @@ auth.onAuthStateChanged(function(user) {
 
     function uploadMediaToFirebase(file, folder, callback) {
       if (!currentUser) return;
-      var storageRef = storage.ref();
-      var fileRef = storageRef.child(folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name);
 
-      var uploadTask = fileRef.put(file);
+      var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
 
-      uploadTask.on('state_changed', 
-        function(snapshot) {
-          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-        }, 
-        function(error) {
-          console.error("Firebase Storage Upload Error:", error);
-          alert("ატვირთვის შეცდომა: " + error.message);
-        }, 
-        function() {
-          uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-            callback(downloadURL);
-          });
+      var params = {
+        Bucket: R2_BUCKET_NAME,
+        Key: fileName,
+        Body: file,
+        ContentType: file.type
+      };
+
+      r2Storage.upload(params, function(err, data) {
+        if (err) {
+          console.error("Cloudflare R2 Upload Error:", err);
+          alert("ატვირთვის შეცდომა (R2): " + err.message);
+        } else {
+          var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
+          callback(publicUrl);
         }
-      );
+      });
     }
 
     function uploadImageToImgBB(file, callback) {
@@ -5342,11 +5342,12 @@ auth.onAuthStateChanged(function(user) {
         }
       })
       .catch(function(error) {
-        console.error("ImgBB Upload Error, falling back to Firebase:", error);
+        console.error("ImgBB Upload Error, falling back to R2:", error);
         uploadMediaToFirebase(file, 'images', callback);
       });
     }
-
+   // აქ მთავრდება
+    
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
       if (!fileInput || fileInput.files.length === 0) return;
