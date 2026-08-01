@@ -5324,10 +5324,11 @@ auth.onAuthStateChanged(function(user) {
         ContentType: file.type
       };
 
-      r2Storage.upload(params, function(err, data) {
+      // upload()-ის ნაცვლად ვიყენებთ putObject-ს ბრაუზერის სტაბილურობისთვის
+      r2Storage.putObject(params, function(err, data) {
         if (err) {
           console.error("Cloudflare R2 Upload Error:", err);
-          alert("ატვირთვის შეცდომა (R2): " + err.message);
+          alert("ატვირთვის შეცდომა (R2): " + (err.message || err.code));
         } else {
           var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
           callback(publicUrl);
