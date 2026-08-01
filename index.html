@@ -4026,7 +4026,8 @@
       container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
     }
 
-    function updateRealtimeStats(userId) {
+    
+   function updateRealtimeStats(userId) {
       if (!userId) return;
 
       db.collection('friend_requests')
@@ -4064,31 +4065,41 @@
       var previewDocs = followerDocs.slice(0, 3);
       grid.innerHTML = "";
       
+      var gridHtml = "";
+      var processedCount = 0;
+
       previewDocs.forEach(function(docSnap) {
         var conn = docSnap.data();
         var targetId = conn.sender_id;
 
         fetchUserProfileCached(targetId, function(profile) {
-          if (!profile.full_name && !profile.avatar_url) return;
-          var finalName = profile.full_name || "User";
-          var avatarUrl = profile.avatar_url;
-          var isOnline = isUserOnline(profile);
-          var initial = finalName.charAt(0).toUpperCase();
+          processedCount++;
+          if (profile.full_name || profile.avatar_url) {
+            var finalName = profile.full_name || "User";
+            var avatarUrl = profile.avatar_url;
+            var isOnline = isUserOnline(profile);
+            var initial = finalName.charAt(0).toUpperCase();
 
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+            var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
 
-          grid.innerHTML += `
-            <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
-              <div class="friend-grid-avatar-holder">
-                ${avatarHtml}
+            gridHtml += `
+              <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
+                <div class="friend-grid-avatar-holder">
+                  ${avatarHtml}
+                </div>
+                <div class="friend-grid-name">${finalName}</div>
               </div>
-              <div class="friend-grid-name">${finalName}</div>
-            </div>
-          `;
+            `;
+          }
+
+          if (processedCount === previewDocs.length && grid) {
+            grid.innerHTML = gridHtml;
+          }
         });
       });
     }
+    
 
     function updateProfileStats(userId, postsCount) {
       var statP = document.getElementById('stat-posts-count');
