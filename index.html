@@ -3146,7 +3146,7 @@
 
       card.style.display = 'block';
 
-      db.collection('lottery_state').doc('current').onSnapshot(function(docSnap) {
+      db.collection('lottery_state').doc('current').get().then(function(docSnap) {
         var statusText = document.getElementById('lottery-live-status');
         var winnerBox = document.getElementById('lottery-post-winner-box');
         var winnerName = document.getElementById('lottery-post-winner-name');
@@ -3204,11 +3204,12 @@
         } else {
           renderDefaultWaitingBanner();
         }
-      }, function(err) {
-        console.error("Lottery state listener error:", err);
+      }).catch(function(err) {
+        console.error("Lottery state get error:", err);
         renderDefaultWaitingBanner();
       });
     }
+    
 
     function renderDefaultWaitingBanner() {
       var statusText = document.getElementById('lottery-live-status');
