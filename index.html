@@ -3495,7 +3495,8 @@
     }
 
     // საიტის რეგისტრაციის გვერდი
-     auth.onAuthStateChanged(function(user) {
+     // საიტის რეგისტრაციის გვერდი
+auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
@@ -3511,7 +3512,6 @@
     initUserPresence(user.uid);
     requestNotificationPermission();
 
-    // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (მხოლოდ IP-ის გეოლოკაციით) ---
     // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (დღეში მხოლოდ 1-ხელ localStorage-ით) ---
     var todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
     var lastCheckDate = localStorage.getItem('last_ip_check_date');
@@ -3542,7 +3542,6 @@
           console.warn("IP Geolocation შეცდომა:", err);
         });
     }
-    // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
 
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
