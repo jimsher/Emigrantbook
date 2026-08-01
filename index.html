@@ -5316,36 +5316,38 @@ auth.onAuthStateChanged(function(user) {
   if (!currentUser) return;
 
   var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
-  var uploadUrl = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${fileName}`;
 
-  var xhr = new XMLHttpRequest();
-  xhr.open('PUT', uploadUrl, true);
-  xhr.setRequestHeader('Content-Type', file.type);
-
-  // R2 API Token ავტორიზაციისთვის
-  r2Storage.config.credentials.get(function(err) {
+  // 1. ვითხოვთ Presigned URL-ს AWS SDK-სგან
+  r2Storage.getSignedUrl('putObject', {
+    Bucket: R2_BUCKET_NAME,
+    Key: fileName,
+    Expires: 600
+  }, function(err, signedUrl) {
     if (err) {
-      alert("ავტორიზაციის შეცდომა: " + err.message);
+      console.error("R2 Presigned URL Error:", err);
+      alert("ატვირთვის შეცდომა (URL): " + err.message);
       return;
     }
-    
-    // AWS S3 Signature-ის გარეშე პირდაპირი AWS SDK Upload (რომელიც ბრაუზერში მუშაობს)
-    var params = {
-      Bucket: R2_BUCKET_NAME,
-      Key: fileName,
-      Body: file,
-      ContentType: file.type
-    };
 
-    r2Storage.putObject(params, function(err, data) {
-      if (err) {
-        console.error("Cloudflare R2 Upload Error:", err);
-        alert("ატვირთვის შეცდომა (R2): " + err.message);
-      } else {
+    // 2. ვაგზავნით პირდაპირ XMLHttpRequest-ით (fetch-ის და AWS SDK-ს გარეშე)
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', signedUrl, true);
+
+    xhr.onload = function() {
+      if (xhr.status === 200 || xhr.status === 204) {
         var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
         callback(publicUrl);
+      } else {
+        alert("ატვირთვის შეცდომა (R2 Status): " + xhr.status);
       }
-    });
+    };
+
+    xhr.onerror = function() {
+      console.error("XHR Network Error");
+      alert("ატვირთვის შეცდომა (R2): Network Failure (CORS/ბლოკირება)");
+    };
+
+    xhr.send(file);
   });
 }
 
