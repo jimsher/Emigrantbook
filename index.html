@@ -5317,12 +5317,12 @@ auth.onAuthStateChanged(function(user) {
 
   var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
 
-  // R2 Presigned URL-ის მიღება ოპტიმიზებული პარამეტრებით
+  // 1. Presigned URL Content-Type-ით
   r2Storage.getSignedUrl('putObject', {
     Bucket: R2_BUCKET_NAME,
     Key: fileName,
-    Expires: 300,
-    ContentType: file.type
+    ContentType: file.type,
+    Expires: 600
   }, function(err, signedUrl) {
     if (err) {
       console.error("R2 Presigned URL Error:", err);
@@ -5330,7 +5330,7 @@ auth.onAuthStateChanged(function(user) {
       return;
     }
 
-    // XMLHttpRequest პირდაპირი Blob/File გაგზავნით
+    // 2. პირდაპირი გაგზავნა
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', signedUrl, true);
     xhr.setRequestHeader('Content-Type', file.type);
@@ -5345,8 +5345,7 @@ auth.onAuthStateChanged(function(user) {
     };
 
     xhr.onerror = function() {
-      // თუ მაინც CORS ბლოკავს, ვიყენებთ პირდაპირ public endpoint-ს
-      alert("ატვირთვის შეცდომა (R2): Network Failure (CORS)");
+      alert("ატვირთვის შე测დომა (R2): Network Failure (CORS)");
     };
 
     xhr.send(file);
