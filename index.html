@@ -3279,29 +3279,37 @@
     requestNotificationPermission();
 
     // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (მხოლოდ IP-ის გეოლოკაციით) ---
-    fetch('https://ipapi.co/json/')
-      .then(function(res) { return res.json(); })
-      .then(function(ipData) {
-        if (ipData && ipData.ip) {
-          var realCity = ipData.city || 'უცნობი ქალაქი';
-          var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
-          var realRegion = ipData.region || '';
-          
-          // ქალაქი + რეგიონი + ქვეყანა
-          var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
+    // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (დღეში მხოლოდ 1-ხელ localStorage-ით) ---
+    var todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    var lastCheckDate = localStorage.getItem('last_ip_check_date');
 
-          db.collection('profiles').doc(user.uid).set({
-            user_ip: ipData.ip,
-            real_ip_country: realCountry,
-            real_ip_city: realCity,
-            real_ip_address: exactAddress, // მხოლოდ IP-ით დადგენილი ზუსტი მისამართი
-            last_seen: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        }
-      })
-      .catch(function(err) {
-        console.warn("IP Geolocation შეცდომა:", err);
-      });
+    if (lastCheckDate !== todayStr) {
+      fetch('https://ipapi.co/json/')
+        .then(function(res) { return res.json(); })
+        .then(function(ipData) {
+          if (ipData && ipData.ip) {
+            var realCity = ipData.city || 'უცნობი ქალაქი';
+            var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
+            var realRegion = ipData.region || '';
+            
+            var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
+
+            db.collection('profiles').doc(user.uid).set({
+              user_ip: ipData.ip,
+              real_ip_country: realCountry,
+              real_ip_city: realCity,
+              real_ip_address: exactAddress,
+              last_seen: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).then(function() {
+              localStorage.setItem('last_ip_check_date', todayStr);
+            });
+          }
+        })
+        .catch(function(err) {
+          console.warn("IP Geolocation შეცდომა:", err);
+        });
+    }
+    // ---------------------------------------------------------------------
     // ---------------------------------------------------------------------
 
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
