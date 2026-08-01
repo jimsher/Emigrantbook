@@ -5879,23 +5879,24 @@
       if (!listDiv) return;
       listDiv.innerHTML = "";
 
+      if (!currentUser) return;
+
       db.collection('friend_requests')
         .where('status', '==', 'accepted')
         .get()
         .then(function(snapshot) {
-          var myFriendsSet = new Set();
-          snapshot.forEach(function(doc) {
-            var req = doc.data();
-            if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
-            if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
-          });
-
-          var myFriendsArray = Array.from(myFriendsSet);
           var allowedUsersSet = new Set();
           allowedUsersSet.add(currentUser.uid);
-          myFriendsArray.forEach(function(fId) { allowedUsersSet.add(fId); });
+
+          snapshot.forEach(function(doc) {
+            var req = doc.data();
+            if (req.sender_id === currentUser.uid) allowedUsersSet.add(req.receiver_id);
+            if (req.receiver_id === currentUser.uid) allowedUsersSet.add(req.sender_id);
+          });
 
           fetchStoriesForUsers(Array.from(allowedUsersSet), listDiv);
+        }).catch(function(err) {
+          console.error("Error loading stories friends:", err);
         });
     }
 
