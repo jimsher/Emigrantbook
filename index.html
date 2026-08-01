@@ -5317,22 +5317,39 @@ auth.onAuthStateChanged(function(user) {
 
       var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
 
-      var params = {
+      // პირდაპირი Upload R2-ზე AWS SDK-ის გვერდის ავლით
+      r2Storage.getSignedUrl('putObject', {
         Bucket: R2_BUCKET_NAME,
         Key: fileName,
-        Body: file,
-        ContentType: file.type
-      };
-
-      // upload()-ის ნაცვლად ვიყენებთ putObject-ს ბრაუზერის სტაბილურობისთვის
-      r2Storage.putObject(params, function(err, data) {
+        ContentType: file.type,
+        Expires: 60
+      }, function(err, url) {
         if (err) {
-          console.error("Cloudflare R2 Upload Error:", err);
-          alert("ატვირთვის შეცდომა (R2): " + (err.message || err.code));
-        } else {
-          var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
-          callback(publicUrl);
+          console.error("R2 Presigned URL Error:", err);
+          alert("ატვირთვის შეცდომა (URL): " + err.message);
+          return;
         }
+
+        // ბრაუზერიდან პირდაპირი გაგზავნა
+        fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type
+          },
+          body: file
+        })
+        .then(function(response) {
+          if (response.ok) {
+            var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
+            callback(publicUrl);
+          } else {
+            throw new Error("სერვერმა ფაილი არ მიიღო (Status: " + response.status + ")");
+          }
+        })
+        .catch(function(error) {
+          console.error("R2 Upload Error:", error);
+          alert("ატვირთვის შეცდომა (R2): " + error.message);
+        });
       });
     }
 
