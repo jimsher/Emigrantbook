@@ -2588,7 +2588,23 @@
     <div id="tiktok-slides-wrapper"></div>
   </div>
 
-  <script>    
+  <script> 
+    // Cloudflare R2 კონფიგურაცია
+const R2_ACCOUNT_ID = "YOUR_ACCOUNT_ID"; // ჩასვით თქვენი Account ID
+const R2_ACCESS_KEY_ID = "YOUR_ACCESS_KEY_ID"; // ჩასვით თქვენი Access Key ID
+const R2_SECRET_ACCESS_KEY = "YOUR_SECRET_ACCESS_KEY"; // ჩასვით თქვენი Secret Access Key
+const R2_BUCKET_NAME = "YOUR_BUCKET_NAME"; // ჩასვით თქვენი Bucket-ის ზუსტი სახელი
+const R2_PUBLIC_DOMAIN = "https://your-custom-domain.com"; // ჩასვით თქვენი R2 Public Domain ან pub-xxx.r2.dev ბმული
+
+// S3-ის ინიციალიზაცია R2 Endpoint-ისთვის
+const r2Storage = new AWS.S3({
+  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  accessKeyId: R2_ACCESS_KEY_ID,
+  secretAccessKey: R2_SECRET_ACCESS_KEY,
+  signatureVersion: 'v4',
+  region: 'auto'
+});
+    
         
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
