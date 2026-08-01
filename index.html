@@ -3835,33 +3835,7 @@
     }
 
     function subscribeToPostsRealtime() {
-      db.collection('posts').onSnapshot(function(snapshot) {
-        snapshot.docChanges().forEach(function(change) {
-          if (change.type === 'MODIFIED') {
-            var updatedPost = change.doc.data();
-            var postId = change.doc.id;
-            
-            var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-            countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
-
-            var statsIcons = document.getElementById(`stats-icons-${postId}`);
-            if (statsIcons) {
-              var currentLikesNum = updatedPost.likes_count || 0;
-              var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-              statsIcons.innerHTML = iconsHtml;
-            }
-
-            if (activePostForComments === postId) {
-              var modalTotal = document.getElementById('modal-total-likes');
-              if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
-            }
-
-            if(document.getElementById(`floating-container-feed-${postId}`)) {
-              startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-            }
-          }
-        });
-      });
+      // რეალთაიმ მოსმენა გაუქმებულია Firestore-ის ლიმიტების დასაზოგად.
     }
 
     function subscribeToFriendRequests() {
