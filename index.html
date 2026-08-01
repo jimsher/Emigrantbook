@@ -1900,9 +1900,76 @@
         border-right: none !important;
       }
     }
+
+
+
+    /* ტექნიკური შესვენების ეკრანი */
+#maintenance-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0b0b0b;
+  color: #ffffff;
+  z-index: 999999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* გაფრთხილების ფანჯარა */
+#warning-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  z-index: 999998;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.warning-modal-box {
+  background: #141414;
+  border: 1px solid #dcae36;
+  border-radius: 15px;
+  padding: 25px;
+  max-width: 420px;
+  width: 100%;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(220, 174, 54, 0.2);
+}
   </style>
 </head>
 <body>
+  <!-- 🛠️ ტექნიკური შესვენების გადამფარავი -->
+<div id="maintenance-overlay">
+  <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
+  <h1 style="color: #dcae36; margin-bottom: 15px; font-size: 24px;">საიტი დროებით მიუწვდომელია</h1>
+  <p id="maintenance-msg-text" style="color: #aaaaaa; max-width: 500px; line-height: 1.6; font-size: 15px;">
+    მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება. გთხოვთ სცადოთ მოგვიანებით.
+  </p>
+</div>
+
+<!-- ⚠️ გაფრთხილების მოდალური ფანჯარა -->
+<div id="warning-modal-overlay">
+  <div class="warning-modal-box">
+    <div style="font-size: 45px; margin-bottom: 10px;">⚠️</div>
+    <h3 style="color: #dcae36; margin-bottom: 12px; font-size: 18px;">ადმინისტრაციის გაფრთხილება</h3>
+    <p id="warning-user-text" style="color: #e4e6eb; font-size: 14px; line-height: 1.5; margin-bottom: 20px; background: #1c1c1e; padding: 12px; border-radius: 8px; border: 1px solid #282828;"></p>
+    <button onclick="closeWarningModal()" style="background: #dcae36; color: #111; border: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">გავიგე</button>
+  </div>
+</div>
+  <!-- აწ მთავრდება -->
 
   <div id="app-preloader">
     <img src="logo.png" alt="Emigrantbook Logo" class="preloader-logo">
