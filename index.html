@@ -5863,100 +5863,93 @@
 
     
 
-    <!-- 3. ეს ახალი სკრიპტი ჩასვი აი აქ, ბოლოში: -->
-    document.addEventListener("DOMContentLoaded", function () {
-      var checkFirebase = setInterval(function () {
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-          clearInterval(checkFirebase);
-          initSystemListeners();
+       // ==========================================
+// ადმინ სისტემის ლაივ შემოწმებები (COMPAT VERSION)
+// ==========================================
+
+// 1. ტექნიკური შესვენების (Maintenance) შემოწმება
+firebase.firestore().collection('system_settings').doc('maintenance').onSnapshot(function(doc) {
+  var overlay = document.getElementById('maintenance-overlay');
+  var msgText = document.getElementById('maintenance-msg-text');
+
+  if (doc && doc.exists && doc.data().is_active === true) {
+    var user = firebase.auth().currentUser;
+    var currentMsg = doc.data().message || "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.";
+
+    if (user) {
+      // ვამოწმებთ არის თუ არა ადმინი
+      firebase.firestore().collection('profiles').doc(user.uid).get().then(function(pDoc) {
+        var profile = pDoc.data();
+        if (profile && (profile.is_admin === true || user.email === 'admin@emigrantbook.com')) {
+          if (overlay) overlay.style.display = 'none'; // ადმინს არ ეთიშება!
+        } else {
+          if (overlay) {
+            overlay.style.display = 'flex';
+            if (msgText) msgText.innerText = currentMsg;
+          }
         }
-      }, 200);
+      }).catch(function() {
+        if (overlay) overlay.style.display = 'flex';
+      });
+    } else {
+      // არაავტორიზებულ მომხმარებელს ეთიშება
+      if (overlay) {
+        overlay.style.display = 'flex';
+        if (msgText) msgText.innerText = currentMsg;
+      }
+    }
+  } else {
+    if (overlay) overlay.style.display = 'none';
+  }
+});
 
-      function initSystemListeners() {
-        var db = firebase.firestore();
-        var auth = firebase.auth();
+// 2. დაბლოკვის და გაფრთხილებების შემოწმება
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    firebase.firestore().collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
+      if (docSnap.exists) {
+        var data = docSnap.data();
 
-        // ა) ტექნიკური შესვენება
-        db.collection('system_settings').doc('maintenance').onSnapshot(function (doc) {
-          var overlay = document.getElementById('maintenance-overlay');
-          var msgText = document.getElementById('maintenance-msg-text');
+        // ა) თუ დაბლოკილია -> ილოგაუტება
+        if (data.is_blocked === true) {
+          alert("თქვენი ანგარიში დაბლოკილია ადმინისტრატორის მიერ!\nმიზეზი: " + (data.block_reason || "წესების დარღვევა"));
+          firebase.auth().signOut().then(function() {
+            window.location.reload();
+          });
+          return;
+        }
 
-          if (doc.exists && doc.data().is_active === true) {
-            var user = auth.currentUser;
-            var currentMsg = doc.data().message || "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.";
-
-            if (user) {
-              db.collection('profiles').doc(user.uid).get().then(function (pDoc) {
-                var profile = pDoc.data();
-                if (profile && (profile.is_admin === true || user.email === 'admin@emigrantbook.com')) {
-                  if (overlay) overlay.style.display = 'none';
-                } else {
-                  if (overlay) {
-                    overlay.style.display = 'flex';
-                    if (msgText) msgText.innerText = currentMsg;
-                  }
-                }
-              }).catch(function () {
-                if (overlay) overlay.style.display = 'flex';
-              });
-            } else {
-              if (overlay) {
-                overlay.style.display = 'flex';
-                if (msgText) msgText.innerText = currentMsg;
-              }
-            }
-          } else {
-            if (overlay) overlay.style.display = 'none';
-          }
-        });
-
-        // ბ) დაბლოკვა და გაფრთხილება
-        auth.onAuthStateChanged(function (user) {
-          if (user) {
-            db.collection('profiles').doc(user.uid).onSnapshot(function (docSnap) {
-              if (docSnap.exists) {
-                var data = docSnap.data();
-
-                if (data.is_blocked === true) {
-                  alert("თქვენი ანგარიში დაბლოკილია ადმინისტრატორის მიერ!\nმიზეზი: " + (data.block_reason || "წესების დარღვევა"));
-                  auth.signOut().then(function () {
-                    window.location.reload();
-                  });
-                  return;
-                }
-
-                if (data.has_warning === true && data.last_warning_text) {
-                  var warnModal = document.getElementById('warning-modal-overlay');
-                  var warnText = document.getElementById('warning-user-text');
-
-                  if (warnModal && warnText) {
-                    warnText.innerText = data.last_warning_text;
-                    warnModal.style.display = 'flex';
-                  }
-                }
-              }
-            });
-          }
-        });
-
-        // გ) გაფრთხილების დახურვა
-        window.closeWarningModal = function () {
-          var user = auth.currentUser;
+        // ბ) თუ გაფრთხილება აქვს -> ამოხტება მოდალი
+        if (data.has_warning === true && data.last_warning_text) {
           var warnModal = document.getElementById('warning-modal-overlay');
+          var warnText = document.getElementById('warning-user-text');
 
-          if (user) {
-            db.collection('profiles').doc(user.uid).update({
-              has_warning: false,
-              last_warning_text: firebase.firestore.FieldValue.delete()
-            }).then(function () {
-              if (warnModal) warnModal.style.display = 'none';
-            });
-          } else {
-            if (warnModal) warnModal.style.display = 'none';
+          if (warnModal && warnText) {
+            warnText.innerText = data.last_warning_text;
+            warnModal.style.display = 'flex';
           }
-        };
+        }
       }
     });
+  }
+});
+
+// 3. გაფრთხილების დახურვის ფუნქცია
+window.closeWarningModal = function() {
+  var user = firebase.auth().currentUser;
+  var warnModal = document.getElementById('warning-modal-overlay');
+
+  if (user) {
+    firebase.firestore().collection('profiles').doc(user.uid).update({
+      has_warning: false,
+      last_warning_text: firebase.firestore.FieldValue.delete()
+    }).then(function() {
+      if (warnModal) warnModal.style.display = 'none';
+    });
+  } else {
+    if (warnModal) warnModal.style.display = 'none';
+  }
+};         
     
   </script>
 </body>
