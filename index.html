@@ -5292,29 +5292,39 @@ auth.onAuthStateChanged(function(user) {
       if (input) input.click();
     }
 
-    function uploadMediaToFirebase(file, folder, callback) {
-      if (!currentUser) return;
-      var storageRef = storage.ref();
-      var fileRef = storageRef.child(folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name);
+    შევცვალეთ მხოლოდ ეს ნაწილი დაიმახსოვრე მხოლოდ ეს ნაწილი  დანარჩენს გამოგიგზავნი და ნახე მათი ლოგიკაც
 
-      var uploadTask = fileRef.put(file);
+function uploadMediaToFirebase(file, folder, callback) {
+  if (!currentUser) return;
 
-      uploadTask.on('state_changed', 
-        function(snapshot) {
-          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-        }, 
-        function(error) {
-          console.error("Firebase Storage Upload Error:", error);
-          alert("ატვირთვის შეცდომა: " + error.message);
-        }, 
-        function() {
-          uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-            callback(downloadURL);
-          });
-        }
-      );
-    }
+  var CLOUD_NAME = "kim1albt";
+  var UPLOAD_PRESET = "fhlkp9ld"; // ზუსტად ის, რაც სქრინზე წითლად გაქვს!
+
+  var formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+
+  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(data) {
+    if (data.secure_url) {
+      callback(data.secure_url);
+    } else {
+      alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
+    }
+  })
+  .catch(function(error) {
+    console.error("Upload Error:", error);
+    alert("ატვირთვის შეცდომა: " + error.message);
+  });
+}
 
     function uploadImageToImgBB(file, callback) {
       if (file.type.startsWith('video/')) {
