@@ -1900,9 +1900,78 @@
         border-right: none !important;
       }
     }
+
+
+
+    /* ტექნიკური შესვენების ეკრანი */
+#maintenance-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0b0b0b;
+  color: #ffffff;
+  z-index: 999999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* გაფრთხილების ფანჯარა */
+#warning-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  z-index: 999998;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.warning-modal-box {
+  background: #141414;
+  border: 1px solid #dcae36;
+  border-radius: 15px;
+  padding: 25px;
+  max-width: 420px;
+  width: 100%;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(220, 174, 54, 0.2);
+}
   </style>
 </head>
 <body>
+<!-- აქ არის შენი საიტის სხვა HTML კოდები... -->
+
+    <!-- 1. ტექნიკური შესვენების ეკრანი -->
+    <div id="maintenance-overlay">
+      <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
+      <h1 style="color: #dcae36; margin-bottom: 15px; font-size: 24px;">საიტი დროებით მიუწვდომელია</h1>
+      <p id="maintenance-msg-text" style="color: #aaaaaa; max-width: 500px; line-height: 1.6; font-size: 15px;">
+        მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება. გთხოვთ სცადოთ მოგვიანებით.
+      </p>
+    </div>
+
+    <!-- 2. გაფრთხილების ფანჯარა -->
+    <div id="warning-modal-overlay">
+      <div class="warning-modal-box">
+        <div style="font-size: 45px; margin-bottom: 10px;">⚠️</div>
+        <h3 style="color: #dcae36; margin-bottom: 12px; font-size: 18px;">ადმინისტრაციის გაფრთხილება</h3>
+        <p id="warning-user-text" style="color: #e4e6eb; font-size: 14px; line-height: 1.5; margin-bottom: 20px; background: #1c1c1e; padding: 12px; border-radius: 8px; border: 1px solid #282828;"></p>
+        <button onclick="closeWarningModal()" style="background: #dcae36; color: #111; border: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">გავიგე</button>
+      </div>
+    </div>
+  <!-- აწ მთავრდება -->
 
   <div id="app-preloader">
     <img src="logo.png" alt="Emigrantbook Logo" class="preloader-logo">
@@ -1921,7 +1990,7 @@
       <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
 
       <div class="input-group" id="name-group" style="display: none;">
-        <label id="lbl-fullname">სახელი<br>გვარი</label>
+        <label id="lbl-fullname">🙏<br>👌</label>
         <input type="text" id="fullname" placeholder="სახელი და გვარი">
       </div>
 
@@ -2145,6 +2214,15 @@
   <span class="menu-item-arrow">›</span>
 </button>
 
+     <button class="menu-item-row" onclick="window.location.href='admin.html'">
+  <div class="menu-item-left">
+    <span class="menu-item-icon">🛡️</span>
+    <span style="color: #dcae36;">ადმინ პანელი</span>
+  </div>
+  <span class="menu-item-arrow">›</span>
+    </button>
+      
+
       <button class="menu-item-row">
         <div class="menu-item-left">
           <span class="menu-item-icon">🔥</span>
@@ -2169,9 +2247,7 @@
         🔴 <span id="lbl-live-btn">LIVE პირდაპირი ეთერი</span>
       </button>
 
-      <button class="menu-live-btn" style="background: linear-gradient(135deg, #dcae36 0%, #b8860b 100%); color: #111;" onclick="window.location.href='wheel.html'">
-        <span>🎰 LIVE გათამაშება</span>
-      </button>
+      
 
       <button class="side-menu-logout-btn" id="lbl-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
     </div>
@@ -2510,7 +2586,8 @@
     <div id="tiktok-slides-wrapper"></div>
   </div>
 
-  <script>
+  <script>    
+        
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -2538,6 +2615,170 @@
       });
     }
 
+
+    /*  აქ იწყება ადმინის */
+  const sysAuth = firebase.auth();
+  const sysDb = firebase.firestore();
+
+  let maintenanceUnsubscribe = null;
+
+  sysAuth.onAuthStateChanged(user => {
+     //თუ უკვე მოსმენაზე ვიყავით, ჯერ გავთიშოთ რომ არ გადაიფაროს
+    if (maintenanceUnsubscribe) {
+      maintenanceUnsubscribe();
+      maintenanceUnsubscribe = null;
+    }
+
+    if (user) {
+      // 1. ჯერ ვამოწმებთ ბაზაში შენს ადმინ სტატუსს
+      sysDb.collection('profiles').doc(user.uid).get().then(pDoc => {
+        const pData = pDoc.exists ? pDoc.data() : {};
+        const isAdmin = (pData.is_admin === true) || (user.email === 'admin@emigrantbook.com');
+
+        if (isAdmin) {
+          // შენ (ადმინი) ხარ! არაფერი არ გადაგეფარება!
+          removeMaintenanceUI();
+          removeBlockedUI();
+        } else {
+          // ჩვეულებრივი მომხმარებელია -> ირთვება დაბლოკვის და ტექნიკურის მოსმენა
+          startMaintenanceCheck();
+          listenToUserStatus(user, pData);
+        }
+      }).catch(err => {
+        console.error("Profile check error:", err);
+        startMaintenanceCheck();
+      });
+    } else {
+      // ავტორიზაციის გარეშე მყოფი მომხმარებელი (სტუმარი) -> ეგრევე ემორჩილება ტექნიკურ რეჟიმს
+      startMaintenanceCheck();
+    }
+  });
+
+  // ტექნიკური შესვენების მოსმენა მხოლო ჩვეულებრივი მომხმარებლისთვის
+  function startMaintenanceCheck() {
+    maintenanceUnsubscribe = sysDb.collection('system_settings').doc('maintenance')
+      .onSnapshot(doc => {
+        if (doc.exists && doc.data().is_active === true) {
+          renderMaintenanceUI(doc.data().message);
+        } else {
+          removeMaintenanceUI();
+        }
+      });
+  }
+
+  // მომხმარებლის დაბლოკვისა და გაფრთხილების მოსმენა
+  function listenToUserStatus(user, initialData) {
+    if (initialData.is_blocked === true) {
+      renderBlockedUI(initialData.block_reason);
+      return;
+    }
+
+    sysDb.collection('profiles').doc(user.uid)
+      .onSnapshot(doc => {
+        if (!doc.exists) return;
+        const data = doc.data();
+
+        if (data.is_blocked === true) {
+          renderBlockedUI(data.block_reason);
+        } else {
+          removeBlockedUI();
+        }
+
+        if (data.has_warning === true && data.last_warning_text) {
+          renderWarningUI(data.last_warning_text, user.uid);
+        }
+      });
+  }
+
+  // ==========================================
+  // UI ელემენტები
+  // ==========================================
+
+  function renderMaintenanceUI(msg) {
+    let el = document.getElementById('eb-sys-maintenance-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'eb-sys-maintenance-overlay';
+      el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0b0b0b;color:#e4e6eb;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      document.body.appendChild(el);
+    }
+    const text = msg || "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.";
+    el.innerHTML = `
+      <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
+      <h1 style="color: #dcae36; font-size: 24px; margin-bottom: 10px;">ტექნიკური შესვენება</h1>
+      <p style="color: #aaaaaa; max-width: 450px; line-height: 1.6; font-size: 15px;">${text}</p>
+    `;
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function removeMaintenanceUI() {
+    const el = document.getElementById('eb-sys-maintenance-overlay');
+    if (el) el.remove();
+    document.body.style.overflow = '';
+  }
+
+  function renderBlockedUI(reason) {
+    let el = document.getElementById('eb-sys-blocked-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'eb-sys-blocked-overlay';
+      el.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(11,11,11,0.98);color:#e4e6eb;z-index:999998;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      document.body.appendChild(el);
+    }
+    const blockReason = reason || "წესების დარღვევა";
+    el.innerHTML = `
+      <div style="font-size: 60px; margin-bottom: 20px;">🚫</div>
+      <h1 style="color: #ff4d4f; font-size: 24px; margin-bottom: 10px;">თქვენი ანგარიში დაბლოკილია</h1>
+      <p style="color: #aaaaaa; max-width: 450px; line-height: 1.6; font-size: 14px; margin-bottom: 20px;">
+        მიზეზი: <strong style="color: #ffffff;">${blockReason}</strong>
+      </p>
+      <button onclick="firebase.auth().signOut()" style="background:#222222;color:#ffffff;border:1px solid #333333;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;">სისტემიდან გამოსვლა</button>
+    `;
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function removeBlockedUI() {
+    const el = document.getElementById('eb-sys-blocked-overlay');
+    if (el) el.remove();
+    document.body.style.overflow = '';
+  }
+
+  function renderWarningUI(warnText, userId) {
+    let modal = document.getElementById('eb-sys-warn-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'eb-sys-warn-modal';
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:999997;display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div style="background:#141414;border:1px solid #dcae36;border-radius:12px;padding:24px;max-width:400px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
+        <h2 style="color: #dcae36; font-size: 18px; margin-bottom: 12px;">ადმინისტრაციის გაფრთხილება</h2>
+        <p style="color: #e4e6eb; font-size: 14px; line-height: 1.5; margin-bottom: 20px; background: #1c1c1e; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+          ${warnText}
+        </p>
+        <button onclick="clearUserWarning('${userId}')" style="background:#dcae36;color:#111111;border:none;padding:10px 24px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;">გავეცანი / დახურვა</button>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  function clearUserWarning(userId) {
+    sysDb.collection('profiles').doc(userId).update({
+      has_warning: false,
+      last_warning_text: firebase.firestore.FieldValue.delete()
+    }).then(() => {
+      const modal = document.getElementById('eb-sys-warn-modal');
+      if (modal) modal.remove();
+    }).catch(err => console.error("Warning error:", err));
+  }
+    /* და აქ მთავრდება */
+
+
+    
     /* PWA INSTALL EVENT LISTENER */
     var deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', function(e) {
@@ -2597,6 +2838,27 @@
     var presenceInterval = null;
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
+
+    /* HELPER: CACHE PROFILE LOAD */
+    function fetchUserProfileCached(userId, callback) {
+      if (cachedProfiles[userId] && cachedProfiles[userId].full_name !== undefined) {
+        callback(cachedProfiles[userId]);
+        return;
+      }
+      db.collection('profiles').doc(userId).get().then(function(docSnap) {
+        if (docSnap.exists) {
+          var data = docSnap.data();
+          cachedProfiles[userId] = data;
+          cachedOnlineStates[userId] = isUserOnline(data);
+          callback(data);
+        } else {
+          callback({});
+        }
+      }).catch(function(err) {
+        console.error("Profile fetch error:", err);
+        callback({});
+      });
+    }
 
     function requestNotificationPermission() {
       if (!currentUser) return;
@@ -2671,11 +2933,13 @@
 
     function openAkhoInfoModal(event) {
       if(event) event.stopPropagation();
-      document.getElementById('akho-info-modal').style.display = 'flex';
+      var modal = document.getElementById('akho-info-modal');
+      if (modal) modal.style.display = 'flex';
     }
 
     function closeAkhoInfoModal() {
-      document.getElementById('akho-info-modal').style.display = 'none';
+      var modal = document.getElementById('akho-info-modal');
+      if (modal) modal.style.display = 'none';
     }
 
     function redirectToMessenger(targetUserId) {
@@ -2694,7 +2958,7 @@
     var TRANSLATIONS = {
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
-        fullname: "სახელი<br>გვარი", forgotPass: "დაგავიწყდათ პაროლი?",
+        fullname: "<br>", forgotPass: "დაგავიწყდათ პაროლი?",
         think: "რაზე ფიქრობთ?", photoVideo: "📷 ფოტო / 🎥 ვიდეო", publish: "გამოქვეყნება",
         createStory: "სიუჟეტის შექმნა", loadingPosts: "პოსტები იტვირთება...",
         emptyWall: "კედელი ცარიელია. დაწერე პირველი პოსტი!", loadingActions: "იტვირთება მომოქმედებები...",
@@ -3013,7 +3277,8 @@
       var lockedSub = document.getElementById('lbl-locked-sub');
       if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
 
-      document.getElementById('site-language-select').value = lang;
+      var siteLangSelect = document.getElementById('site-language-select');
+      if (siteLangSelect) siteLangSelect.value = lang;
     }
 
     function changeSiteLanguage(newLang) {
@@ -3024,9 +3289,11 @@
       if (currentUser) {
         db.collection('profiles').doc(currentUser.uid).update({ language: newLang });
           
-        if (document.getElementById('home-screen').style.display === 'block') {
+        var homeScr = document.getElementById('home-screen');
+        var profScr = document.getElementById('profile-screen');
+        if (homeScr && homeScr.style.display === 'block') {
           loadPosts();
-        } else if (document.getElementById('profile-screen').style.display === 'block') {
+        } else if (profScr && profScr.style.display === 'block') {
           var targetUserId = activeViewingProfileId || currentUser.uid;
           loadUserPosts(targetUserId);
         }
@@ -3057,13 +3324,14 @@
       if(event) event.stopPropagation();
       var menu = document.getElementById('side-menu-content');
       var overlay = document.getElementById('side-menu-overlay');
+      if (!menu) return;
       
       if(menu.classList.contains('open')) {
         menu.classList.remove('open');
-        overlay.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
       } else {
         menu.classList.add('open');
-        overlay.style.display = 'block';
+        if (overlay) overlay.style.display = 'block';
       }
     }
 
@@ -3111,7 +3379,7 @@
 
       card.style.display = 'block';
 
-      db.collection('lottery_state').doc('current').onSnapshot(function(docSnap) {
+      db.collection('lottery_state').doc('current').get().then(function(docSnap) {
         var statusText = document.getElementById('lottery-live-status');
         var winnerBox = document.getElementById('lottery-post-winner-box');
         var winnerName = document.getElementById('lottery-post-winner-name');
@@ -3169,11 +3437,12 @@
         } else {
           renderDefaultWaitingBanner();
         }
-      }, function(err) {
-        console.error("Lottery state listener error:", err);
+      }).catch(function(err) {
+        console.error("Lottery state get error:", err);
         renderDefaultWaitingBanner();
       });
     }
+    
 
     function renderDefaultWaitingBanner() {
       var statusText = document.getElementById('lottery-live-status');
@@ -3225,92 +3494,134 @@
       lotteryCountdownInterval = setInterval(updateCountdown, 1000);
     }
 
-    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        currentUser = user;
-        activeViewingProfileId = user.uid;
+    // საიტის რეგისტრაციის გვერდი
+     // საიტის რეგისტრაციის გვერდი
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+    activeViewingProfileId = user.uid;
 
-        // ამოწმებს users.html-იდან ხომ არ გადმოვედით პროფილის სანახავად
-        var targetUserId = sessionStorage.getItem('target_view_user_id');
+    var targetUserId = sessionStorage.getItem('target_view_user_id');
 
-        // მყისიერად ვმალავთ auth ეკრანს, რომ თვალში არ აციმციმდეს
-        if (targetUserId) {
-          showScreen('profile');
-        } else {
-          showScreen('home');
-        }
+    if (targetUserId) {
+      showScreen('profile');
+    } else {
+      showScreen('home');
+    }
 
-        initUserPresence(user.uid);
-        requestNotificationPermission();
-        
-        db.collection('profiles').doc(user.uid).get().then(function(doc) {
-          var finalName = user.email;
-          var avatarUrl = null;
-          if (doc.exists) {
-            userProfile = doc.data();
-            finalName = userProfile.full_name || user.email;
-            avatarUrl = userProfile.avatar_url || null;
+    initUserPresence(user.uid);
+    requestNotificationPermission();
+
+    // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (დღეში მხოლოდ 1-ხელ localStorage-ით) ---
+    var todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    var lastCheckDate = localStorage.getItem('last_ip_check_date');
+
+    if (lastCheckDate !== todayStr) {
+      fetch('https://ipapi.co/json/')
+        .then(function(res) { return res.json(); })
+        .then(function(ipData) {
+          if (ipData && ipData.ip) {
+            var realCity = ipData.city || 'უცნობი ქალაქი';
+            var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
+            var realRegion = ipData.region || '';
             
-            if(userProfile.language) {
-              currentLang = userProfile.language;
-              localStorage.setItem('emigrantbook_lang', currentLang);
-            }
+            var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
+
+            db.collection('profiles').doc(user.uid).set({
+              user_ip: ipData.ip,
+              real_ip_country: realCountry,
+              real_ip_city: realCity,
+              real_ip_address: exactAddress,
+              last_seen: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).then(function() {
+              localStorage.setItem('last_ip_check_date', todayStr);
+            });
           }
-            
-          renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
-          renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
-            
-          var myStoryBg = document.getElementById('my-story-bg-avatar');
-          if (myStoryBg) {
-            if (avatarUrl) {
-              myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
-            } else {
-              myStoryBg.style.backgroundColor = '#dcae36';
-              myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
-            }
-          }
-
-          document.getElementById('profile-user-name').innerText = finalName;
-          document.getElementById('profile-user-subtitle').innerText = user.email;
-
-          applyLanguageDOM();
-          
-          if (targetUserId) {
-            sessionStorage.removeItem('target_view_user_id');
-            viewUserProfile(targetUserId);
-          }
-            
-          checkPendingRequestsCount();
-          subscribeToFriendRequests();
-          subscribeToPostsRealtime(); 
-          subscribeToGlobalNotifications();
-          subscribeToMessagesRealtime();
-          subscribeToLiveLotteryPost();
-          subscribeTotalUsersCount();
-          
-          hidePreloader();
+        })
+        .catch(function(err) {
+          console.warn("IP Geolocation შეცდომა:", err);
         });
-      } else {
-        applyLanguageDOM();
-        showScreen('auth');
-        hidePreloader();
-      }
-    });
+    }
+    // ---------------------------------------------------------------------
+
+    db.collection('profiles').doc(user.uid).get().then(function(doc) {
+      var finalName = user.email;
+      var avatarUrl = null;
+      if (doc.exists) {
+        userProfile = doc.data();
+        cachedProfiles[user.uid] = userProfile;
+        cachedOnlineStates[user.uid] = true;
+        finalName = userProfile.full_name || user.email;
+        avatarUrl = userProfile.avatar_url || null;
         
+        if (userProfile.language) {
+          currentLang = userProfile.language;
+          localStorage.setItem('emigrantbook_lang', currentLang);
+        }
+      }
+        
+      renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
+      renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
+        
+      var myStoryBg = document.getElementById('my-story-bg-avatar');
+      if (myStoryBg) {
+        if (avatarUrl) {
+          myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
+        } else {
+          myStoryBg.style.backgroundColor = '#dcae36';
+          myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
+        }
+      }
 
+      var pName = document.getElementById('profile-user-name');
+      var pSub = document.getElementById('profile-user-subtitle');
+      if (pName) pName.innerText = finalName;
+      if (pSub) pSub.innerText = user.email;
+
+      applyLanguageDOM();
+      
+      if (targetUserId) {
+        sessionStorage.removeItem('target_view_user_id');
+        viewUserProfile(targetUserId);
+      }
+        
+      checkPendingRequestsCount();
+      subscribeToFriendRequests();
+      subscribeToPostsRealtime(); 
+      subscribeToGlobalNotifications();
+      subscribeToMessagesRealtime();
+      subscribeToLiveLotteryPost();
+      subscribeTotalUsersCount();
+      
+      hidePreloader();
+    });
+  } else {
+    applyLanguageDOM();
+    showScreen('auth');
+    hidePreloader();
+  }
+});
+   // აქ მთავრდება
+
+    
     function toggleRequestsDropdown(event) {
-      event.stopPropagation();
-      var isHome = document.getElementById('home-screen').style.display === 'block';
+      if(event) event.stopPropagation();
+      var homeScr = document.getElementById('home-screen');
+      var isHome = homeScr && homeScr.style.display === 'block';
       var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-                      
-      document.getElementById('requests-dropdown-home').style.display = 'none';
-      document.getElementById('requests-dropdown-profile').style.display = 'none';
+      
+      var dropHome = document.getElementById('requests-dropdown-home');
+      var dropProf = document.getElementById('requests-dropdown-profile');
+      if (dropHome) dropHome.style.display = 'none';
+      if (dropProf) dropProf.style.display = 'none';
 
-      if (dropdown.style.display === 'flex') {
-        dropdown.style.display = 'none';
-      } else {
-        dropdown.style.display = 'flex';
-        loadIncomingFriendRequests(); 
+      if (dropdown) {
+        if (dropdown.style.display === 'flex') {
+          dropdown.style.display = 'none';
+        } else {
+          dropdown.style.display = 'flex';
+          loadIncomingFriendRequests(); 
+        }
       }
     }
 
@@ -3331,21 +3642,22 @@
     function showSelectedFileName() {
       var fileInput = document.getElementById('post-media-file');
       var nameDiv = document.getElementById('selected-file-name');
-      if (fileInput.files.length > 0) {
-        nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
-        nameDiv.style.display = "block";
-      } else {
-        nameDiv.style.display = "none";
+      if (fileInput && nameDiv) {
+        if (fileInput.files.length > 0) {
+          nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
+          nameDiv.style.display = "block";
+        } else {
+          nameDiv.style.display = "none";
+        }
       }
     }
 
     function showScreen(screenName) {
-      document.getElementById('auth-screen').style.display = 'none';
-      document.getElementById('home-screen').style.display = 'none';
-      document.getElementById('profile-screen').style.display = 'none';
-      document.getElementById('edit-profile-screen').style.display = 'none';
-      document.getElementById('connections-screen').style.display = 'none';
-      document.getElementById('privacy-screen').style.display = 'none';
+      var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen'];
+      screens.forEach(s => {
+        var el = document.getElementById(s);
+        if (el) el.style.display = 'none';
+      });
 
       var dropdownHome = document.getElementById('requests-dropdown-home');
       var dropdownProfile = document.getElementById('requests-dropdown-profile');
@@ -3353,19 +3665,25 @@
       if (dropdownProfile) dropdownProfile.style.display = 'none';
 
       if (screenName === 'auth') {
-        document.getElementById('auth-screen').style.display = 'flex';
+        var authEl = document.getElementById('auth-screen');
+        if (authEl) authEl.style.display = 'flex';
       } else if (screenName === 'home') {
-        document.getElementById('home-screen').style.display = 'block';
+        var homeEl = document.getElementById('home-screen');
+        if (homeEl) homeEl.style.display = 'block';
         loadPosts();
         loadStories();
       } else if (screenName === 'profile') {
-        document.getElementById('profile-screen').style.display = 'block';
+        var profEl = document.getElementById('profile-screen');
+        if (profEl) profEl.style.display = 'block';
       } else if (screenName === 'connections') {
-        document.getElementById('connections-screen').style.display = 'block';
+        var connEl = document.getElementById('connections-screen');
+        if (connEl) connEl.style.display = 'block';
       } else if (screenName === 'edit-profile') {
-        document.getElementById('edit-profile-screen').style.display = 'block';
+        var editEl = document.getElementById('edit-profile-screen');
+        if (editEl) editEl.style.display = 'block';
       } else if (screenName === 'privacy') {
-        document.getElementById('privacy-screen').style.display = 'block';
+        var privEl = document.getElementById('privacy-screen');
+        if (privEl) privEl.style.display = 'block';
       }
         
       if (currentUser) {
@@ -3402,14 +3720,17 @@
     function subscribeToMessagesRealtime() {
       if (!currentUser) return;
 
-      messengerUnsubscribeGroup.forEach(unsub => unsub());
+      messengerUnsubscribeGroup.forEach(function(unsub) {
+        if (typeof unsub === 'function') unsub();
+      });
       messengerUnsubscribeGroup = [];
 
       db.collection('friend_requests')
         .where('status', '==', 'accepted')
-        .onSnapshot(function(snapshot) {
+        .get()
+        .then(function(snapshot) {
           let friendIds = [];
-          snapshot.forEach(docSnap => {
+          snapshot.forEach(function(docSnap) {
             let req = docSnap.data();
             if (req.sender_id === currentUser.uid) friendIds.push(req.receiver_id);
             else if (req.receiver_id === currentUser.uid) friendIds.push(req.sender_id);
@@ -3422,15 +3743,18 @@
           }
 
           let unreadChatsMap = {};
+          let processed = 0;
 
-          friendIds.forEach(fId => {
+          friendIds.forEach(function(fId) {
             let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
             
-            let unsub = db.collection('chats').doc(chatId).collection('messages')
+            db.collection('chats').doc(chatId).collection('messages')
               .where('read', '==', false)
-              .onSnapshot(function(msgsSnap) {
+              .get()
+              .then(function(msgsSnap) {
+                processed++;
                 let unreadCountFromFriend = 0;
-                msgsSnap.forEach(msgDoc => {
+                msgsSnap.forEach(function(msgDoc) {
                   if (msgDoc.data().senderId !== currentUser.uid) {
                     unreadCountFromFriend++;
                   }
@@ -3442,48 +3766,51 @@
                   delete unreadChatsMap[fId];
                 }
 
-                let totalUnreadChats = Object.keys(unreadChatsMap).length;
-                var badge = document.getElementById('messenger-badge');
-                if (badge) {
-                  if (totalUnreadChats > 0) {
-                    badge.innerText = totalUnreadChats;
-                    badge.style.display = 'flex';
-                  } else {
-                    badge.style.display = 'none';
+                if (processed === friendIds.length) {
+                  let totalUnreadChats = Object.keys(unreadChatsMap).length;
+                  var badge = document.getElementById('messenger-badge');
+                  if (badge) {
+                    if (totalUnreadChats > 0) {
+                      badge.innerText = totalUnreadChats;
+                      badge.style.display = 'flex';
+                    } else {
+                      badge.style.display = 'none';
+                    }
                   }
                 }
-              }, function(err) {
-                console.error("Messages listener error:", err);
+              }).catch(function(err) {
+                console.error("Messages get error:", err);
               });
-
-            messengerUnsubscribeGroup.push(unsub);
           });
+        }).catch(function(err) {
+          console.error("Friend requests get error:", err);
         });
     }
 
     function subscribeToGlobalNotifications() {
       db.collection('posts')
         .orderBy('created_at', 'desc')
-        .limit(10)
-        .onSnapshot(function(snapshot) {
+        .limit(1)
+        .get()
+        .then(function(snapshot) {
           if (!currentUser) return;
-          snapshot.docChanges().forEach(function(change) {
-            if (change.type === 'ADDED') {
-              var newPost = change.doc.data();
-              if (newPost.user_id !== currentUser.uid) {
-                var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
-                if (newPost.media_url) {
-                  type = (newPost.media_type === 'video' ? (currentLang === 'ka' ? "ახალი ვიდეო" : "new video") : (currentLang === 'ka' ? "ახალი სურათი" : "new photo"));
-                }
-                var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
-                realtimeNotificationsList.unshift({
-                  text: nText,
-                  time: new Date()
-                });
-                updateMainNotificationBadge();
+          snapshot.forEach(function(docSnap) {
+            var newPost = docSnap.data();
+            if (newPost.user_id !== currentUser.uid) {
+              var type = currentLang === 'ka' ? "ახალი პოსტი" : "new post";
+              if (newPost.media_url) {
+                type = (newPost.media_type === 'video' ? (currentLang === 'ka' ? "ახალი ვიდეო" : "new video") : (currentLang === 'ka' ? "ახალი სურათი" : "new photo"));
               }
+              var nText = currentLang === 'ka' ? `${newPost.author_name}-მა გამოაქვეყნა ${type}!` : `${newPost.author_name} published a ${type}!`;
+              realtimeNotificationsList.unshift({
+                text: nText,
+                time: new Date()
+              });
+              updateMainNotificationBadge();
             }
           });
+        }).catch(function(err) {
+          console.error("Global notifications get error:", err);
         });
     }
 
@@ -3515,64 +3842,35 @@
     }
 
     function subscribeToPostsRealtime() {
-      db.collection('posts').onSnapshot(function(snapshot) {
-        snapshot.docChanges().forEach(function(change) {
-          if (change.type === 'MODIFIED') {
-            var updatedPost = change.doc.data();
-            var postId = change.doc.id;
-            
-            var countLabels = document.querySelectorAll(`.post-likes-count-label[data-post-id="${postId}"]`);
-            countLabels.forEach(function(l) { l.innerText = updatedPost.likes_count || 0; });
-
-            var statsIcons = document.getElementById(`stats-icons-${postId}`);
-            if (statsIcons) {
-              var currentLikesNum = updatedPost.likes_count || 0;
-              var iconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
-              statsIcons.innerHTML = iconsHtml;
-            }
-
-            if (activePostForComments === postId) {
-              var modalTotal = document.getElementById('modal-total-likes');
-              if (modalTotal) modalTotal.innerText = updatedPost.likes_count || 0;
-            }
-
-            if(document.getElementById(`floating-container-feed-${postId}`)) {
-              startFloatingAvatarsAnimation(postId, `floating-container-feed-${postId}`);
-            }
-          }
-        });
-      });
+      // რეალთაიმ მოსმენა გაუქმებულია Firestore-ის ლიმიტების დასაზოგად.
     }
 
     function subscribeToFriendRequests() {
       if (!currentUser) return;
-      db.collection('friend_requests')
-        .where('receiver_id', '==', currentUser.uid)
-        .where('status', '==', 'pending')
-        .onSnapshot(function(snapshot) {
-          checkPendingRequestsCount();
-          var isHome = document.getElementById('home-screen').style.display === 'block';
-          var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
-          if (dropdown && dropdown.style.display === 'flex') {
-            dropdown.style.display = 'flex';
-            loadIncomingFriendRequests();
-          }
-          if (currentUser && activeViewingProfileId) {
-            updateRealtimeStats(activeViewingProfileId);
-          }
-        });
+      checkPendingRequestsCount();
+      var homeScr = document.getElementById('home-screen');
+      var isHome = homeScr && homeScr.style.display === 'block';
+      var dropdown = document.getElementById(isHome ? 'requests-dropdown-home' : 'requests-dropdown-profile');
+      if (dropdown && dropdown.style.display === 'flex') {
+        loadIncomingFriendRequests();
+      }
+      if (currentUser && activeViewingProfileId) {
+        updateRealtimeStats(activeViewingProfileId);
+      }
     }
+    
 
-    // ბაზიდან მომხმარებლების რეალური რაოდენობის წამოღება და ავტომატური განახლება
-function subscribeTotalUsersCount() {
-  db.collection('profiles').onSnapshot(function(snapshot) {
-    var totalCount = snapshot.size; // ითვლის დარეგისტრირებულების სრულ რაოდენობას
-    var badgeEl = document.getElementById('total-users-badge');
-    if (badgeEl) {
-      badgeEl.innerText = totalCount;
+    function subscribeTotalUsersCount() {
+      db.collection('profiles').get().then(function(snapshot) {
+        var totalCount = snapshot.size;
+        var badgeEl = document.getElementById('total-users-badge');
+        if (badgeEl) {
+          badgeEl.innerText = totalCount;
+        }
+      }).catch(function(err) {
+        console.error("Total users get error:", err);
+      });
     }
-  });
-}
 
     function checkPendingRequestsCount() {
       if (!currentUser) return;
@@ -3596,7 +3894,8 @@ function subscribeTotalUsersCount() {
     }
 
     function loadIncomingFriendRequests() {
-      var isHome = document.getElementById('home-screen').style.display === 'block';
+      var homeScr = document.getElementById('home-screen');
+      var isHome = homeScr && homeScr.style.display === 'block';
       var container = document.getElementById(isHome ? 'dropdown-items-container-home' : 'dropdown-items-container-profile');
       if (!container) return;
       var t = TRANSLATIONS[currentLang];
@@ -3606,6 +3905,7 @@ function subscribeTotalUsersCount() {
       db.collection('friend_requests')
         .where('receiver_id', '==', currentUser.uid)
         .where('status', '==', 'pending')
+        .limit(15)
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
@@ -3613,13 +3913,16 @@ function subscribeTotalUsersCount() {
             return;
           }
 
-          container.innerHTML = "";
+          var itemsHtml = "";
+          var totalCount = snapshot.size;
+          var processedCount = 0;
+
           snapshot.forEach(function(docSnap) {
             var req = docSnap.data();
             var reqId = docSnap.id;
             
-            db.collection('profiles').doc(req.sender_id).get().then(function(profileDoc) {
-              var pData = profileDoc.exists ? profileDoc.data() : {};
+            fetchUserProfileCached(req.sender_id, function(pData) {
+              processedCount++;
               var senderName = pData.full_name || "User";
               var senderAvatar = pData.avatar_url || null;
               var isOnline = isUserOnline(pData);
@@ -3628,7 +3931,7 @@ function subscribeTotalUsersCount() {
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
               var avatarContent = senderAvatar ? `<div class="avatar-has-online"><img src="${senderAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
 
-              container.innerHTML += `
+              itemsHtml += `
                 <div class="request-item">
                   <div class="request-item-avatar" onclick="viewUserProfile('${req.sender_id}')">${avatarContent}</div>
                   <div class="request-item-info">
@@ -3640,13 +3943,20 @@ function subscribeTotalUsersCount() {
                   </div>
                 </div>
               `;
+
+              if (processedCount === totalCount && container) {
+                container.innerHTML = itemsHtml;
+              }
             });
           });
+        }).catch(function(err) {
+          console.error("Error loading incoming friend requests:", err);
+          if (container) container.innerHTML = `<div class="dropdown-empty">შეცდომა ჩატვირთვისას</div>`;
         });
     }
 
     function acceptRequestFromNavbar(requestId, event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       db.collection('friend_requests').doc(requestId).update({ status: 'accepted' }).then(function() {
         checkPendingRequestsCount();
         loadIncomingFriendRequests();
@@ -3656,7 +3966,7 @@ function subscribeTotalUsersCount() {
     }
 
     function rejectRequestFromNavbar(requestId, event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       db.collection('friend_requests').doc(requestId).delete().then(function() {
         checkPendingRequestsCount();
         loadIncomingFriendRequests();
@@ -3709,9 +4019,9 @@ function subscribeTotalUsersCount() {
       container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
     }
 
-    function updateRealtimeStats(userId) {
+    
+   function updateRealtimeStats(userId) {
       if (!userId) return;
-      var t = TRANSLATIONS[currentLang];
 
       db.collection('friend_requests')
         .where('receiver_id', '==', userId)
@@ -3719,7 +4029,8 @@ function subscribeTotalUsersCount() {
         .get()
         .then(function(followersSnap) {
           var followersCount = followersSnap.size;
-          document.getElementById('stat-followers-count').innerText = followersCount;
+          var statFol = document.getElementById('stat-followers-count');
+          if (statFol) statFol.innerText = followersCount;
 
           loadMiniFriendsGrid(followersSnap.docs);
 
@@ -3728,7 +4039,8 @@ function subscribeTotalUsersCount() {
             .where('status', '==', 'accepted')
             .get()
             .then(function(followingSnap) {
-              document.getElementById('stat-following-count').innerText = followingSnap.size;
+              var statFing = document.getElementById('stat-following-count');
+              if (statFing) statFing.innerText = followingSnap.size;
             });
         });
     }
@@ -3746,35 +4058,45 @@ function subscribeTotalUsersCount() {
       var previewDocs = followerDocs.slice(0, 3);
       grid.innerHTML = "";
       
+      var gridHtml = "";
+      var processedCount = 0;
+
       previewDocs.forEach(function(docSnap) {
         var conn = docSnap.data();
         var targetId = conn.sender_id;
 
-        db.collection('profiles').doc(targetId).get().then(function(profileDoc) {
-          if (!profileDoc.exists) return;
-          var profile = profileDoc.data();
-          var finalName = profile.full_name || "User";
-          var avatarUrl = profile.avatar_url;
-          var isOnline = isUserOnline(profile);
-          var initial = finalName.charAt(0).toUpperCase();
+        fetchUserProfileCached(targetId, function(profile) {
+          processedCount++;
+          if (profile.full_name || profile.avatar_url) {
+            var finalName = profile.full_name || "User";
+            var avatarUrl = profile.avatar_url;
+            var isOnline = isUserOnline(profile);
+            var initial = finalName.charAt(0).toUpperCase();
 
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+            var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
 
-          grid.innerHTML += `
-            <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
-              <div class="friend-grid-avatar-holder">
-                ${avatarHtml}
+            gridHtml += `
+              <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
+                <div class="friend-grid-avatar-holder">
+                  ${avatarHtml}
+                </div>
+                <div class="friend-grid-name">${finalName}</div>
               </div>
-              <div class="friend-grid-name">${finalName}</div>
-            </div>
-          `;
+            `;
+          }
+
+          if (processedCount === previewDocs.length && grid) {
+            grid.innerHTML = gridHtml;
+          }
         });
       });
     }
+    
 
     function updateProfileStats(userId, postsCount) {
-      document.getElementById('stat-posts-count').innerText = postsCount;
+      var statP = document.getElementById('stat-posts-count');
+      if (statP) statP.innerText = postsCount;
       updateRealtimeStats(userId);
     }
 
@@ -3786,7 +4108,8 @@ function subscribeTotalUsersCount() {
       activeConnectionsType = type;
       activeConnectionsUserId = activeViewingProfileId || currentUser.uid;
       
-      document.getElementById('connections-title').innerText = (type === 'all') ? t.friendsTitle : ((type === 'followers') ? t.followersTitle : t.followingTitle);
+      var connTitle = document.getElementById('connections-title');
+      if (connTitle) connTitle.innerText = (type === 'all') ? t.friendsTitle : ((type === 'followers') ? t.followersTitle : t.followingTitle);
       showScreen('connections');
       loadConnectionsData();
     }
@@ -3795,6 +4118,7 @@ function subscribeTotalUsersCount() {
       var listWrapper = document.getElementById('connections-list-wrapper');
       var countLabel = document.getElementById('connections-count');
       var t = TRANSLATIONS[currentLang];
+      if (!listWrapper || !countLabel) return;
       listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
 
       if (activeConnectionsType === 'followers') {
@@ -3848,10 +4172,7 @@ function subscribeTotalUsersCount() {
             var requestId = item.docId;
             var targetUserId = item.targetUserId;
 
-            db.collection('profiles').doc(targetUserId).get().then(function(profileDoc) {
-              if (!profileDoc.exists) return;
-              var profile = profileDoc.data();
-
+            fetchUserProfileCached(targetUserId, function(profile) {
               var finalName = profile.full_name || "User";
               var avatarUrl = profile.avatar_url;
               var isOnline = isUserOnline(profile);
@@ -3897,10 +4218,7 @@ function subscribeTotalUsersCount() {
         var requestId = docSnap.id;
         var targetUserId = conn[targetIdKey];
 
-        db.collection('profiles').doc(targetUserId).get().then(function(profileDoc) {
-          if (!profileDoc.exists) return;
-          var profile = profileDoc.data();
-
+        fetchUserProfileCached(targetUserId, function(profile) {
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
           var isOnline = isUserOnline(profile);
@@ -3926,7 +4244,7 @@ function subscribeTotalUsersCount() {
     }
 
     function deleteConnectionFromList(requestId, event) {
-      event.stopPropagation();
+      if (event) event.stopPropagation();
       if (confirm(currentLang === 'ka' ? "ნამდვილად გსურთ ამ კავშირის წაშლა?" : "Are you sure?")) {
         db.collection('friend_requests').doc(requestId).delete().then(function() {
           loadConnectionsData();
@@ -3960,14 +4278,22 @@ function subscribeTotalUsersCount() {
       var container = document.getElementById('modal-comments-container');
       if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">${t.loading}</div>`;
       
-      document.getElementById('comments-sheet-modal').style.display = "flex";
+      var sheetModal = document.getElementById('comments-sheet-modal');
+      if (sheetModal) sheetModal.style.display = "flex";
 
-      document.getElementById('modal-comment-submit-btn').onclick = function() { submitCommentFromModal(postId); };
-      document.getElementById('modal-comment-input-field').placeholder = t.commentPlaceholder;
-      document.getElementById('modal-comment-submit-btn').innerText = t.send;
-      document.getElementById('modal-comment-input-field').onkeypress = function(e) {
-        if (e.key === 'Enter') submitCommentFromModal(postId);
-      };
+      var submitBtn = document.getElementById('modal-comment-submit-btn');
+      var inputField = document.getElementById('modal-comment-input-field');
+
+      if (submitBtn) {
+        submitBtn.onclick = function() { submitCommentFromModal(postId); };
+        submitBtn.innerText = t.send;
+      }
+      if (inputField) {
+        inputField.placeholder = t.commentPlaceholder;
+        inputField.onkeypress = function(e) {
+          if (e.key === 'Enter') submitCommentFromModal(postId);
+        };
+      }
 
       loadCommentsIntoModal(postId);
     }
@@ -3977,9 +4303,10 @@ function subscribeTotalUsersCount() {
       var t = TRANSLATIONS[currentLang];
       var bar = document.getElementById('reply-active-bar');
       var txt = document.getElementById('reply-active-text');
-      txt.innerText = t.replyTo + authorName;
-      bar.style.display = "flex";
-      document.getElementById('modal-comment-input-field').focus();
+      if (txt) txt.innerText = t.replyTo + authorName;
+      if (bar) bar.style.display = "flex";
+      var inputField = document.getElementById('modal-comment-input-field');
+      if (inputField) inputField.focus();
     }
 
     function cancelReplyMode() {
@@ -3990,7 +4317,7 @@ function subscribeTotalUsersCount() {
 
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
-      if (!postId) return;
+      if (!postId || !container) return;
       var t = TRANSLATIONS[currentLang];
       
       db.collection('post_comments')
@@ -4118,6 +4445,7 @@ function subscribeTotalUsersCount() {
 
     function submitCommentFromModal(postId) {
       var input = document.getElementById('modal-comment-input-field');
+      if (!input) return;
       var text = input.value.trim();
       if (!text) return;
 
@@ -4152,11 +4480,13 @@ function subscribeTotalUsersCount() {
           });
         });
         
-        if(document.getElementById('custom-gallery-modal').style.display === "flex") {
+        var customGal = document.getElementById('custom-gallery-modal');
+        if(customGal && customGal.style.display === "flex") {
           setTimeout(function() {
             db.collection('post_comments').where('post_id', '==', postId).get().then(function(snapshot) {
               var t = TRANSLATIONS[currentLang];
-              document.getElementById('gallery-comments-counter-label').innerText = snapshot.size + " " + t.commentsCount;
+              var galLbl = document.getElementById('gallery-comments-counter-label');
+              if (galLbl) galLbl.innerText = snapshot.size + " " + t.commentsCount;
             });
           }, 300);
         }
@@ -4166,7 +4496,8 @@ function subscribeTotalUsersCount() {
     }
 
     function closeCommentsModal() {
-      document.getElementById('comments-sheet-modal').style.display = "none";
+      var sheetModal = document.getElementById('comments-sheet-modal');
+      if (sheetModal) sheetModal.style.display = "none";
       activePostForComments = null;
       cancelReplyMode();
     }
@@ -4175,8 +4506,10 @@ function subscribeTotalUsersCount() {
       if (!activePostForComments) return;
       var container = document.getElementById('likers-list-container');
       var t = TRANSLATIONS[currentLang];
+      if (!container) return;
       container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
-      document.getElementById('likers-list-modal').style.display = "flex";
+      var likersModal = document.getElementById('likers-list-modal');
+      if (likersModal) likersModal.style.display = "flex";
 
       db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
         if (snapshot.empty) {
@@ -4210,7 +4543,8 @@ function subscribeTotalUsersCount() {
     }
 
     function closeLikersModal() {
-      document.getElementById('likers-list-modal').style.display = "none";
+      var likersModal = document.getElementById('likers-list-modal');
+      if (likersModal) likersModal.style.display = "none";
     }
 
     function showMyProfile() {
@@ -4239,8 +4573,10 @@ function subscribeTotalUsersCount() {
         var coverUrl = userProfile ? userProfile.cover_url : null;
         
         renderAvatar('profile-big-avatar', avatarUrl, finalName, currentUser.uid);
-        document.getElementById('profile-user-name').innerText = finalName;
-        document.getElementById('profile-user-subtitle').innerText = currentUser.email;
+        var pName = document.getElementById('profile-user-name');
+        var pSub = document.getElementById('profile-user-subtitle');
+        if (pName) pName.innerText = finalName;
+        if (pSub) pSub.innerText = currentUser.email;
 
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
@@ -4251,28 +4587,34 @@ function subscribeTotalUsersCount() {
           }
         }
 
-        document.getElementById('avatar-camera-btn').style.display = "flex";
-        document.getElementById('cover-camera-btn').style.display = "flex";
+        var avCam = document.getElementById('avatar-camera-btn');
+        var covCam = document.getElementById('cover-camera-btn');
+        var burgBtn = document.getElementById('profile-burger-btn');
+        if (avCam) avCam.style.display = "flex";
+        if (covCam) covCam.style.display = "flex";
+        if (burgBtn) burgBtn.style.display = "flex";
 
-        document.getElementById('profile-action-panel').innerHTML = `
-          <button class="fb-btn-primary" onclick="triggerStoryUpload()">
-            <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
-            ${t.stories}
-          </button>
-          <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
-            <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-            ${t.edit}
-          </button>
-          <button class="btn-more-options">•••</button>
-        `;
-        
-        document.getElementById('profile-burger-btn').style.display = "flex";
+        var actionPanel = document.getElementById('profile-action-panel');
+        if (actionPanel) {
+          actionPanel.innerHTML = `
+            <button class="fb-btn-primary" onclick="triggerStoryUpload()">
+              <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"></path></svg>
+              ${t.stories}
+            </button>
+            <button class="fb-btn-secondary" onclick="showEditProfileScreen()">
+              <svg class="fb-btn-icon" viewBox="0 0 20 20" fill="currentColor" style="width:16px;height:16px;"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+              ${t.edit}
+            </button>
+            <button class="btn-more-options">•••</button>
+          `;
+        }
         
         renderProfileDetails(userProfile || {});
         switchProfileTab('posts');
         showScreen('profile');
       });
     }
+
 
     function viewUserProfile(userId) {
       if (!userId) return;
@@ -4282,13 +4624,12 @@ function subscribeTotalUsersCount() {
       }
       activeViewingProfileId = userId;
 
-      db.collection('profiles').doc(userId).get().then(function(doc) {
-        if (!doc.exists) {
+      fetchUserProfileCached(userId, function(selectedUser) {
+        if (!selectedUser.full_name && !selectedUser.avatar_url) {
           alert("User not found");
           return;
         }
 
-        var selectedUser = doc.data();
         var finalName = selectedUser.full_name || "User";
         var avatarUrl = selectedUser.avatar_url;
         var coverUrl = selectedUser.cover_url;
@@ -4299,8 +4640,10 @@ function subscribeTotalUsersCount() {
         }
 
         renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
-        document.getElementById('profile-user-name').innerText = finalName;
-        document.getElementById('profile-user-subtitle').innerText = "Imigrant";
+        var pName = document.getElementById('profile-user-name');
+        var pSub = document.getElementById('profile-user-subtitle');
+        if (pName) pName.innerText = finalName;
+        if (pSub) pSub.innerText = "Imigrant";
 
         var banner = document.getElementById('profile-cover-banner');
         if (banner) {
@@ -4311,22 +4654,15 @@ function subscribeTotalUsersCount() {
           }
         }
 
-        document.getElementById('avatar-camera-btn').style.display = "none";
-        document.getElementById('cover-camera-btn').style.display = "none";
-        document.getElementById('profile-burger-btn').style.display = "none";
+        var avCam = document.getElementById('avatar-camera-btn');
+        var covCam = document.getElementById('cover-camera-btn');
+        var burgBtn = document.getElementById('profile-burger-btn');
+        if (avCam) avCam.style.display = "none";
+        if (covCam) covCam.style.display = "none";
+        if (burgBtn) burgBtn.style.display = "none";
 
-        // FRIENDSHIP & PRIVACY CHECK
-        db.collection('friend_requests').get().then(function(snapshot) {
-          var isFriend = false;
-          snapshot.forEach(function(rDoc) {
-            var data = rDoc.data();
-            var isPair = (data.sender_id === currentUser.uid && data.receiver_id === userId) ||
-                         (data.sender_id === userId && data.receiver_id === currentUser.uid);
-            if (isPair && data.status === 'accepted') {
-              isFriend = true;
-            }
-          });
-
+        // OPTIMIZED FRIENDSHIP CHECK (Only queries current pair)
+        checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
           var privacySetting = selectedUser.privacy_setting || 'public';
           var isLocked = false;
           if (privacySetting === 'friends' && !isFriend) {
@@ -4372,33 +4708,66 @@ function subscribeTotalUsersCount() {
       });
     }
 
-    function switchProfileTab(tabName) {
-      document.getElementById('tab-btn-posts').classList.remove('active');
-      document.getElementById('tab-btn-photos').classList.remove('active');
-      document.getElementById('tab-btn-videos').classList.remove('active');
+    /* Helper for checking friendship between 2 users efficiently */
+    function checkFriendshipPair(uid1, uid2, callback) {
+      db.collection('friend_requests')
+        .where('sender_id', '==', uid1)
+        .where('receiver_id', '==', uid2)
+        .limit(1)
+        .get()
+        .then(function(snap1) {
+          if (!snap1.empty && snap1.docs[0].data().status === 'accepted') {
+            callback(true);
+            return;
+          }
+          db.collection('friend_requests')
+            .where('sender_id', '==', uid2)
+            .where('receiver_id', '==', uid1)
+            .limit(1)
+            .get()
+            .then(function(snap2) {
+              if (!snap2.empty && snap2.docs[0].data().status === 'accepted') {
+                callback(true);
+              } else {
+                callback(false);
+              }
+            });
+        }).catch(function() { callback(false); });
+    }
 
-      document.getElementById('profile-posts-wall').style.display = 'none';
-      document.getElementById('profile-photos-wall').style.display = 'none';
+    function switchProfileTab(tabName) {
+      var btnPosts = document.getElementById('tab-btn-posts');
+      var btnPhotos = document.getElementById('tab-btn-photos');
+      var btnVideos = document.getElementById('tab-btn-videos');
+      if (btnPosts) btnPosts.classList.remove('active');
+      if (btnPhotos) btnPhotos.classList.remove('active');
+      if (btnVideos) btnVideos.classList.remove('active');
+
+      var postsWall = document.getElementById('profile-posts-wall');
+      var photosWall = document.getElementById('profile-photos-wall');
+      if (postsWall) postsWall.style.display = 'none';
+      if (photosWall) photosWall.style.display = 'none';
 
       var targetUserId = activeViewingProfileId || currentUser.uid;
 
       if (tabName === 'posts') {
-        document.getElementById('tab-btn-posts').classList.add('active');
-        document.getElementById('profile-posts-wall').style.display = 'block';
+        if (btnPosts) btnPosts.classList.add('active');
+        if (postsWall) postsWall.style.display = 'block';
         loadUserPosts(targetUserId);
       } else if (tabName === 'photos') {
-        document.getElementById('tab-btn-photos').classList.add('active');
-        document.getElementById('profile-photos-wall').style.display = 'block';
+        if (btnPhotos) btnPhotos.classList.add('active');
+        if (photosWall) photosWall.style.display = 'block';
         loadUserPhotos(targetUserId);
       } else if (tabName === 'videos') {
-        document.getElementById('tab-btn-videos').classList.add('active');
-        document.getElementById('profile-photos-wall').style.display = 'block';
+        if (btnVideos) btnVideos.classList.add('active');
+        if (photosWall) photosWall.style.display = 'block';
         loadUserVideos(targetUserId);
       }
     }
 
     function loadUserPhotos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
+      if (!photosWall) return;
       var t = TRANSLATIONS[currentLang];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
@@ -4443,6 +4812,7 @@ function subscribeTotalUsersCount() {
 
     function loadUserVideos(userId) {
       var photosWall = document.getElementById('profile-photos-wall');
+      if (!photosWall) return;
       var t = TRANSLATIONS[currentLang];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
@@ -4488,6 +4858,7 @@ function subscribeTotalUsersCount() {
       var modal = document.getElementById('tiktok-video-modal');
       var wrapper = document.getElementById('tiktok-slides-wrapper');
       var t = TRANSLATIONS[currentLang];
+      if (!modal || !wrapper) return;
       
       wrapper.innerHTML = "";
       modal.style.display = "block";
@@ -4551,6 +4922,7 @@ function subscribeTotalUsersCount() {
     }
 
     function toggleVideoPlay(videoElem) {
+      if (!videoElem) return;
       if (videoElem.paused) {
         videoElem.play();
       } else {
@@ -4579,13 +4951,14 @@ function subscribeTotalUsersCount() {
 
     function closeTiktokVideoModal() {
       document.querySelectorAll('.tiktok-slide-video').forEach(function(v) { v.pause(); });
-      document.getElementById('tiktok-video-modal').style.display = "none";
+      var modal = document.getElementById('tiktok-video-modal');
+      if (modal) modal.style.display = "none";
     }
 
     function openFullGalleryModal(index) {
       galleryCurrentIndex = index;
       var modal = document.getElementById('custom-gallery-modal');
-      modal.style.display = "flex";
+      if (modal) modal.style.display = "flex";
       
       updateGalleryViewData();
       initGallerySwipeEvents();
@@ -4598,54 +4971,73 @@ function subscribeTotalUsersCount() {
       var currentUrl = galleryPhotoUrls[galleryCurrentIndex];
       var currentPost = galleryPostsReference[galleryCurrentIndex];
       
-      document.getElementById('gallery-fullscreen-img').src = currentUrl;
-      document.getElementById('gallery-photo-counter').innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
-      document.getElementById('gallery-post-author-name').innerText = currentPost.author_name || "Emigrantbook User";
-      document.getElementById('gallery-post-content-text').innerText = currentPost.content || t.descPlaceholder;
+      var fullImg = document.getElementById('gallery-fullscreen-img');
+      var counter = document.getElementById('gallery-photo-counter');
+      var authorName = document.getElementById('gallery-post-author-name');
+      var contentTxt = document.getElementById('gallery-post-content-text');
+      var timeLbl = document.getElementById('gallery-post-time-label');
+
+      if (fullImg) fullImg.src = currentUrl;
+      if (counter) counter.innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
+      if (authorName) authorName.innerText = currentPost.author_name || "Emigrantbook User";
+      if (contentTxt) contentTxt.innerText = currentPost.content || t.descPlaceholder;
       
       var postDate = currentPost.created_at ? new Date(currentPost.created_at.toDate ? currentPost.created_at.toDate() : currentPost.created_at).toLocaleDateString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : "";
-      document.getElementById('gallery-post-time-label').innerText = postDate;
+      if (timeLbl) timeLbl.innerText = postDate;
       
-      var authorAvatarUrl = cachedProfiles[currentPost.user_id] || null;
+      var authorAvatarUrl = cachedProfiles[currentPost.user_id] ? cachedProfiles[currentPost.user_id].avatar_url : null;
       var avatarPlaceholder = document.getElementById('gallery-user-avatar-placeholder');
-      if (authorAvatarUrl) {
-        avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
-      } else {
-        avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
+      if (avatarPlaceholder) {
+        if (authorAvatarUrl) {
+          avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+        } else {
+          avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
+        }
       }
 
       var totalLikes = currentPost.likes_count || 0;
-      document.getElementById('gallery-total-likes-counter').innerText = totalLikes;
+      var likesCounter = document.getElementById('gallery-total-likes-counter');
+      if (likesCounter) likesCounter.innerText = totalLikes;
       
       db.collection('post_comments').where('post_id', '==', currentPost.id).get().then(function(snapshot) {
-        document.getElementById('gallery-comments-counter-label').innerText = snapshot.size + " " + t.commentsCount;
+        var commLbl = document.getElementById('gallery-comments-counter-label');
+        if (commLbl) commLbl.innerText = snapshot.size + " " + t.commentsCount;
       });
 
       var likeBtn = document.getElementById('gallery-like-main-action-btn');
       var hasLiked = likedPosts.includes(currentPost.id);
-      if (hasLiked) {
-        likeBtn.classList.add('liked-active');
-      } else {
-        likeBtn.classList.remove('liked-active');
+      if (likeBtn) {
+        if (hasLiked) {
+          likeBtn.classList.add('liked-active');
+        } else {
+          likeBtn.classList.remove('liked-active');
+        }
+
+        likeBtn.onclick = function() {
+          likePost(currentPost.id, false);
+          setTimeout(updateGalleryViewData, 200);
+        };
       }
 
-      likeBtn.onclick = function() {
-        likePost(currentPost.id, false);
-        setTimeout(updateGalleryViewData, 200);
-      };
-
-      document.getElementById('gallery-comment-main-action-btn').onclick = function() {
-        openCommentsModal(currentPost.id, currentPost.likes_count || 0);
-      };
+      var commBtn = document.getElementById('gallery-comment-main-action-btn');
+      if (commBtn) {
+        commBtn.onclick = function() {
+          openCommentsModal(currentPost.id, currentPost.likes_count || 0);
+        };
+      }
       
-      document.getElementById('gallery-likes-trigger-area').onclick = function() {
-        activePostForComments = currentPost.id;
-        openLikersListModal();
-      };
+      var likesTrig = document.getElementById('gallery-likes-trigger-area');
+      if (likesTrig) {
+        likesTrig.onclick = function() {
+          activePostForComments = currentPost.id;
+          openLikersListModal();
+        };
+      }
     }
 
     function initGallerySwipeEvents() {
       var zone = document.getElementById('gallery-swipe-zone');
+      if (!zone) return;
       
       zone.ontouchstart = function(e) {
         touchStartX = e.changedTouches[0].screenX;
@@ -4676,60 +5068,77 @@ function subscribeTotalUsersCount() {
     }
 
     function closeFullGalleryModal() {
-      document.getElementById('custom-gallery-modal').style.display = "none";
+      var modal = document.getElementById('custom-gallery-modal');
+      if (modal) modal.style.display = "none";
     }
 
     function updateFriendshipButtons(targetUserId) {
       var actionPanel = document.getElementById('profile-action-panel');
+      if (!actionPanel) return;
       var t = TRANSLATIONS[currentLang];
       actionPanel.innerHTML = `<div style="text-align: center; padding: 10px; color:#aaaaaa;">...</div>`;
 
+      // OPTIMIZED QUERY FOR SPECIFIC PAIR
       db.collection('friend_requests')
+        .where('sender_id', '==', currentUser.uid)
+        .where('receiver_id', '==', targetUserId)
+        .limit(1)
         .get()
-        .then(function(snapshot) {
+        .then(function(snap1) {
           var request = null;
           var requestId = null;
 
-          snapshot.forEach(function(doc) {
-            var data = doc.data();
-            var isUserPair = (data.sender_id === currentUser.uid && data.receiver_id === targetUserId) ||
-                             (data.sender_id === targetUserId && data.receiver_id === currentUser.uid);
-            if (isUserPair) {
-              request = data;
-              requestId = doc.id;
-            }
-          });
-
-          if (!request) {
-            actionPanel.innerHTML = `
-              <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
-              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-              <button class="btn-more-options">•••</button>
-            `;
-          } else if (request.status === 'pending') {
-            if (request.sender_id === currentUser.uid) {
-              actionPanel.innerHTML = `
-                <button class="fb-btn-secondary" onclick="cancelFriendRequest('${requestId}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
-                <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-                <button class="btn-more-options">•••</button>
-              `;
-            } else {
-              actionPanel.innerHTML = `
-                <div class="btn-group-row">
-                  <button class="fb-btn-success" onclick="acceptFriendRequest('${requestId}', '${targetUserId}')">${t.accept}</button>
-                  <button class="fb-btn-danger" onclick="rejectFriendRequest('${requestId}', '${targetUserId}')">${t.reject}</button>
-                </div>
-                <button class="btn-more-options">•••</button>
-              `;
-            }
-          } else if (request.status === 'accepted') {
-            actionPanel.innerHTML = `
-              <button class="fb-btn-success" onclick="deleteFriendship('${requestId}', '${targetUserId}')">${t.removeFriend}</button>
-              <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-              <button class="btn-more-options">•••</button>
-            `;
+          if (!snap1.empty) {
+            request = snap1.docs[0].data();
+            requestId = snap1.docs[0].id;
+            renderFriendshipButtonsHTML(actionPanel, request, requestId, targetUserId, t);
+          } else {
+            db.collection('friend_requests')
+              .where('sender_id', '==', targetUserId)
+              .where('receiver_id', '==', currentUser.uid)
+              .limit(1)
+              .get()
+              .then(function(snap2) {
+                if (!snap2.empty) {
+                  request = snap2.docs[0].data();
+                  requestId = snap2.docs[0].id;
+                }
+                renderFriendshipButtonsHTML(actionPanel, request, requestId, targetUserId, t);
+              });
           }
         });
+    }
+
+    function renderFriendshipButtonsHTML(actionPanel, request, requestId, targetUserId, t) {
+      if (!request) {
+        actionPanel.innerHTML = `
+          <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
+          <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+          <button class="btn-more-options">•••</button>
+        `;
+      } else if (request.status === 'pending') {
+        if (request.sender_id === currentUser.uid) {
+          actionPanel.innerHTML = `
+            <button class="fb-btn-secondary" onclick="cancelFriendRequest('${requestId}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
+            <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+            <button class="btn-more-options">•••</button>
+          `;
+        } else {
+          actionPanel.innerHTML = `
+            <div class="btn-group-row">
+              <button class="fb-btn-success" onclick="acceptFriendRequest('${requestId}', '${targetUserId}')">${t.accept}</button>
+              <button class="fb-btn-danger" onclick="rejectFriendRequest('${requestId}', '${targetUserId}')">${t.reject}</button>
+            </div>
+            <button class="btn-more-options">•••</button>
+          `;
+        }
+      } else if (request.status === 'accepted') {
+        actionPanel.innerHTML = `
+          <button class="fb-btn-success" onclick="deleteFriendship('${requestId}', '${targetUserId}')">${t.removeFriend}</button>
+          <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
+          <button class="btn-more-options">•••</button>
+        `;
+      }
     }
 
     function sendFriendRequest(targetUserId) {
@@ -4772,21 +5181,23 @@ function subscribeTotalUsersCount() {
     function loadUserPosts(userId) {
       var profileWall = document.getElementById('profile-posts-wall');
       var t = TRANSLATIONS[currentLang];
-      if(document.getElementById('tab-btn-posts').classList.contains('active')) {
+      var btnPosts = document.getElementById('tab-btn-posts');
+      if(profileWall && btnPosts && btnPosts.classList.contains('active')) {
          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
       }
 
-      // ✅ სწორია:
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
-        .limit(20) // წამოიღებს მხოლოდ ბოლო 20 პოსტს
+        .limit(20)
         .get()
         .then(function(snapshot) {
           var posts = [];
           snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
           
           updateProfileStats(userId, posts.length);
+
+          if (!profileWall) return;
 
           if (posts.length === 0) {
             profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">Empty wall.</div>`;
@@ -4795,44 +5206,43 @@ function subscribeTotalUsersCount() {
 
           profileWall.innerHTML = "";
           
-          db.collection('profiles').get().then(function(profilesSnap) {
-            cachedProfiles = {};
-            cachedOnlineStates = {};
-            profilesSnap.forEach(function(pDoc) {
-              var pData = pDoc.data();
-              cachedProfiles[pDoc.id] = pData.avatar_url;
-              cachedOnlineStates[pDoc.id] = isUserOnline(pData);
-            });
-
-            posts.forEach(function(post) {
-              profileWall.innerHTML += createPostCardHtml(post);
-              renderCommentsCountOnly(post);
-              checkMyLikeState(post.id);
-            });
-            observeVideos();
+          posts.forEach(function(post) {
+            profileWall.innerHTML += createPostCardHtml(post);
+            renderCommentsCountOnly(post);
+            // checkMyLikeState(post.id) - ამოღებულია ზედმეტი Firestore მოთხოვნების თავიდან ასაცილებლად
           });
+          observeVideos();
         }).catch(function(error) {
           console.error("Firestore Index Error or query failure: ", error);
-          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">შეცდომა პოსტების ჩატვირთვისას.</div>`;
+          if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">შეცდომა პოსტების ჩატვირთვისას.</div>`;
         });
     }
 
     function showEditProfileScreen() {
       if (!userProfile) return;
 
-      document.getElementById('edit-fullname').value = userProfile.full_name || "";
-      document.getElementById('edit-age').value = userProfile.age || "";
-      document.getElementById('edit-job').value = userProfile.job_title || "";
-      document.getElementById('edit-city').value = userProfile.current_city || "";
-      document.getElementById('edit-country').value = userProfile.country || "";
-      document.getElementById('edit-relationship').value = userProfile.relationship || "";
-      document.getElementById('edit-events').value = userProfile.life_events || "";
+      var fn = document.getElementById('edit-fullname');
+      var age = document.getElementById('edit-age');
+      var job = document.getElementById('edit-job');
+      var city = document.getElementById('edit-city');
+      var country = document.getElementById('edit-country');
+      var rel = document.getElementById('edit-relationship');
+      var ev = document.getElementById('edit-events');
+
+      if (fn) fn.value = userProfile.full_name || "";
+      if (age) age.value = userProfile.age || "";
+      if (job) job.value = userProfile.job_title || "";
+      if (city) city.value = userProfile.current_city || "";
+      if (country) country.value = userProfile.country || "";
+      if (rel) rel.value = userProfile.relationship || "";
+      if (ev) ev.value = userProfile.life_events || "";
 
       showScreen('edit-profile');
     }
 
     function saveProfileChanges() {
-      var fullName = document.getElementById('edit-fullname').value.trim();
+      var fnEl = document.getElementById('edit-fullname');
+      var fullName = fnEl ? fnEl.value.trim() : "";
       var age = document.getElementById('edit-age').value.trim();
       var job = document.getElementById('edit-job').value.trim();
       var city = document.getElementById('edit-city').value.trim();
@@ -4866,7 +5276,10 @@ function subscribeTotalUsersCount() {
             });
             batch.commit().then(function() {
               db.collection('profiles').doc(currentUser.uid).get().then(function(profileDoc) {
-                if (profileDoc.exists) userProfile = profileDoc.data();
+                if (profileDoc.exists) {
+                  userProfile = profileDoc.data();
+                  cachedProfiles[currentUser.uid] = userProfile;
+                }
                 showMyProfile();
               });
             });
@@ -4875,7 +5288,8 @@ function subscribeTotalUsersCount() {
     }
 
     function triggerAvatarUpload() {
-      document.getElementById('avatar-file-input').click();
+      var input = document.getElementById('avatar-file-input');
+      if (input) input.click();
     }
 
     function uploadMediaToFirebase(file, folder, callback) {
@@ -4933,13 +5347,15 @@ function subscribeTotalUsersCount() {
 
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
-      if (fileInput.files.length === 0) return;
+      if (!fileInput || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
 
       uploadImageToImgBB(file, function(downloadURL) {
         db.collection('profiles').doc(currentUser.uid)
           .update({ avatar_url: downloadURL })
           .then(function() {
+            if (userProfile) userProfile.avatar_url = downloadURL;
+            if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
             auth.currentUser.reload().then(function() {
               showMyProfile();
             });
@@ -4948,18 +5364,20 @@ function subscribeTotalUsersCount() {
     }
 
     function triggerCoverUpload() {
-      document.getElementById('cover-file-input').click();
+      var input = document.getElementById('cover-file-input');
+      if (input) input.click();
     }
 
     function uploadCover() {
       var fileInput = document.getElementById('cover-file-input');
-      if (fileInput.files.length === 0) return;
+      if (!fileInput || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
 
       uploadImageToImgBB(file, function(downloadURL) {
         db.collection('profiles').doc(currentUser.uid)
           .update({ cover_url: downloadURL })
           .then(function() {
+            if (userProfile) userProfile.cover_url = downloadURL;
             showMyProfile();
           });
       });
@@ -4969,30 +5387,38 @@ function subscribeTotalUsersCount() {
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       var nameGroup = document.getElementById('name-group');
-      document.getElementById('error-message').style.display = 'none';
-      nameGroup.style.display = isLoginMode ? 'none' : 'block';
+      var errDiv = document.getElementById('error-message');
+      if (errDiv) errDiv.style.display = 'none';
+      if (nameGroup) nameGroup.style.display = isLoginMode ? 'none' : 'block';
       applyLanguageDOM();
     }
 
     function handleAuth() {
-      var email = document.getElementById('email').value.trim();
-      var password = document.getElementById('password').value.trim();
-      var fullname = document.getElementById('fullname').value.trim();
+      var emailEl = document.getElementById('email');
+      var passEl = document.getElementById('password');
+      var nameEl = document.getElementById('fullname');
       var errorDiv = document.getElementById('error-message');
 
-      errorDiv.style.display = 'none';
+      var email = emailEl ? emailEl.value.trim() : "";
+      var password = passEl ? passEl.value.trim() : "";
+      var fullname = nameEl ? nameEl.value.trim() : "";
+
+      if (errorDiv) errorDiv.style.display = 'none';
 
       if (!email || !password || (!isLoginMode && !fullname)) {
-        errorDiv.innerText = "Fill all fields!";
-        errorDiv.style.display = 'block';
+        if (errorDiv) {
+          errorDiv.innerText = "Fill all fields!";
+          errorDiv.style.display = 'block';
+        }
         return;
       }
 
       if (isLoginMode) {
-        auth.signInWithEmailAndPassword(email, password).then(function(result) {
-        }).catch(function(error) {
-          errorDiv.innerText = error.message;
-          errorDiv.style.display = 'block';
+        auth.signInWithEmailAndPassword(email, password).catch(function(error) {
+          if (errorDiv) {
+            errorDiv.innerText = error.message;
+            errorDiv.style.display = 'block';
+          }
         });
       } else {
         auth.createUserWithEmailAndPassword(email, password).then(function(result) {
@@ -5005,96 +5431,76 @@ function subscribeTotalUsersCount() {
             last_seen: firebase.firestore.FieldValue.serverTimestamp(),
             updated_at: firebase.firestore.FieldValue.serverTimestamp()
           });
-        }).then(function() {
         }).catch(function(error) {
-          errorDiv.innerText = error.message;
-          errorDiv.style.display = 'block';
+          if (errorDiv) {
+            errorDiv.innerText = error.message;
+            errorDiv.style.display = 'block';
+          }
         });
       }
     }
 
+
     function loadPosts() {
       if (!currentUser) return;
 
-      Promise.all([
-        db.collection('friend_requests').where('status', '==', 'accepted').get(),
-        db.collection('profiles').get()
-      ]).then(function(results) {
-        var friendReqSnap = results[0];
-        var profilesSnap = results[1];
-
-        // 1. მეგობრების სია
-        var myFriendsSet = new Set();
-        friendReqSnap.forEach(function(docSnap) {
-          var req = docSnap.data();
-          if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
-          if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
-        });
-
-        // 2. პროფილების/კონფიდენციალურობის ქეში
-        cachedProfiles = {};
-        cachedOnlineStates = {};
-        var userPrivacyMap = {};
-
-        profilesSnap.forEach(function(pDoc) {
-          var pData = pDoc.data();
-          cachedProfiles[pDoc.id] = pData.avatar_url;
-          cachedOnlineStates[pDoc.id] = isUserOnline(pData);
-          userPrivacyMap[pDoc.id] = pData.privacy_setting || 'public';
-        });
-
-        // 3. პოსტების წამოღება და ფილტრაცია
-        // ✅ სწორია:
-        db.collection('posts')
-          .orderBy('created_at', 'desc')
-          .limit(20) // წამოიღებს მხოლოდ ბოლო 20 პოსტს
-          .get()
-          .then(function(snapshot) {
-            var postsWall = document.getElementById('posts-wall');
-            var t = TRANSLATIONS[currentLang];
-            postsWall.innerHTML = "";
-
-            if (snapshot.empty) {
-              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-              return;
-            }
-
-            var posts = [];
-            snapshot.forEach(function(doc) {
-              var postData = Object.assign({ id: doc.id }, doc.data());
-              var authorId = postData.user_id;
-              var privacy = userPrivacyMap[authorId] || 'public';
-
-              var isMyOwnPost = (authorId === currentUser.uid);
-              var isFriend = myFriendsSet.has(authorId);
-
-              // ფილტრაციის წესები:
-              if (isMyOwnPost) {
-                posts.push(postData); // ჩემი პოსტი ყოველთვის ჩანს ჩემთან
-              } else if (privacy === 'public') {
-                posts.push(postData); // საჯარო პოსტი ჩანს ყველასთან
-              } else if (privacy === 'friends' && isFriend) {
-                posts.push(postData); // მეგობრების პოსტი ჩანს მხოლოდ მეგობრებთან
-              }
-              // private ან friends (თუ მეგობარი არაა) არ ემატება მთავარ გვერდზე
-            });
-
-            if (posts.length === 0) {
-              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-              return;
-            }
-
-            posts.forEach(function(post) {
-              postsWall.innerHTML += createPostCardHtml(post);
-              renderCommentsCountOnly(post);
-              checkMyLikeState(post.id);
-            });
-            observeVideos();
+      db.collection('friend_requests')
+        .where('status', '==', 'accepted')
+        .get()
+        .then(function(friendReqSnap) {
+          var myFriendsSet = new Set();
+          friendReqSnap.forEach(function(docSnap) {
+            var req = docSnap.data();
+            if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
+            if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
           });
-      }).catch(function(err) {
-        console.error("Error loading posts with privacy filter:", err);
-      });
+
+          db.collection('posts')
+            .orderBy('created_at', 'desc')
+            .limit(30)
+            .get()
+            .then(function(snapshot) {
+              var postsWall = document.getElementById('posts-wall');
+              var t = TRANSLATIONS[currentLang];
+              if (!postsWall) return;
+              postsWall.innerHTML = "";
+
+              if (snapshot.empty) {
+                postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+                return;
+              }
+
+              var posts = [];
+              snapshot.forEach(function(doc) {
+                posts.push(Object.assign({ id: doc.id }, doc.data()));
+              });
+
+              // Process each post with cached or requested profiles
+              posts.forEach(function(postData) {
+                var authorId = postData.user_id;
+
+                fetchUserProfileCached(authorId, function(pData) {
+                  var privacy = pData.privacy_setting || 'public';
+                  var isMyOwnPost = (authorId === currentUser.uid);
+                  var isFriend = myFriendsSet.has(authorId);
+
+                  var shouldShow = isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend);
+
+                  if (shouldShow) {
+                    postsWall.innerHTML += createPostCardHtml(postData);
+                    renderCommentsCountOnly(postData);
+                    // checkMyLikeState-ის ზედმეტი Firestore მოთხოვნა ამოღებულია
+                  }
+                });
+              });
+
+              observeVideos();
+            });
+        }).catch(function(err) {
+          console.error("Error loading posts with privacy filter:", err);
+        });
     }
+
 
     function checkMyLikeState(postId) {
       if (!currentUser) return;
@@ -5107,31 +5513,38 @@ function subscribeTotalUsersCount() {
       });
     }
 
+    /* Memory Leaks Prevented Floating Avatars */
     function startFloatingAvatarsAnimation(postId, containerId) {
       var container = document.getElementById(containerId);
-      if(!container) return;
+      if (!container) return;
 
-      if(activeFloatingIntervals[postId]) {
+      if (activeFloatingIntervals[postId]) {
         clearInterval(activeFloatingIntervals[postId]);
+        delete activeFloatingIntervals[postId];
         container.innerHTML = "";
       }
 
-      db.collection('posts').doc(postId).collection('post_likes').get().then(function(snapshot) {
-        if(snapshot.empty) return;
+      db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
+        if (snapshot.empty) return;
 
         var likersList = [];
         snapshot.forEach(function(doc) {
           likersList.push(Object.assign({ id: doc.id }, doc.data()));
         });
 
-        if(likersList.length === 0) return;
+        if (likersList.length === 0) return;
         var index = 0;
         
         function spawn() {
-          if (document.getElementById(containerId) === null) {
-            clearInterval(activeFloatingIntervals[postId]);
+          var targetElem = document.getElementById(containerId);
+          if (!targetElem) {
+            if (activeFloatingIntervals[postId]) {
+              clearInterval(activeFloatingIntervals[postId]);
+              delete activeFloatingIntervals[postId];
+            }
             return;
           }
+          
           var person = likersList[index];
           var name = person.full_name || "User";
           var isOnline = isUserOnline(person);
@@ -5142,14 +5555,14 @@ function subscribeTotalUsersCount() {
           bubble.className = "tiktok-floating-avatar-item";
           bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
           
-          container.appendChild(bubble);
-          setTimeout(function() { if(bubble && bubble.parentNode) bubble.remove(); }, 6000);
+          targetElem.appendChild(bubble);
+          setTimeout(function() { if (bubble && bubble.parentNode) bubble.remove(); }, 6000);
           index = (index + 1) % likersList.length;
         }
 
-        document.getElementById(containerId).innerHTML = "";
+        container.innerHTML = "";
         spawn();
-        activeFloatingIntervals[postId] = setInterval(spawn, 1900);
+        activeFloatingIntervals[postId] = setInterval(spawn, 3000);
       });
     }
 
@@ -5205,7 +5618,10 @@ function subscribeTotalUsersCount() {
       db.collection('posts').doc(postId).delete().then(function() {
         var el = document.getElementById(`post-card-${postId}`);
         if (el) el.remove();
-        if(activeFloatingIntervals[postId]) clearInterval(activeFloatingIntervals[postId]);
+        if(activeFloatingIntervals[postId]) {
+          clearInterval(activeFloatingIntervals[postId]);
+          delete activeFloatingIntervals[postId];
+        }
       }).catch(function(error) {
         alert("Error: " + error.message);
       });
@@ -5214,7 +5630,7 @@ function subscribeTotalUsersCount() {
     function createPostCardHtml(post) {
       var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
       var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
-      var authorAvatarUrl = cachedProfiles[post.user_id] || null;
+      var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
       var isOnline = cachedOnlineStates[post.user_id] === true;
       var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
@@ -5274,17 +5690,20 @@ function subscribeTotalUsersCount() {
     }
 
     function createPost() {
-      var text = document.getElementById('post-text-input').value.trim();
+      var txtEl = document.getElementById('post-text-input');
       var fileInput = document.getElementById('post-media-file');
       var publishBtn = document.getElementById('publish-submit-btn');
 
+      var text = txtEl ? txtEl.value.trim() : "";
       if (!text && fileInput.files.length === 0) return;
 
-      publishBtn.disabled = true;
-      publishBtn.innerText = "...";
+      if (publishBtn) {
+        publishBtn.disabled = true;
+        publishBtn.innerText = "...";
+      }
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
 
-      if (fileInput.files.length > 0) {
+      if (fileInput && fileInput.files.length > 0) {
         var files = Array.from(fileInput.files).slice(0, 6);
         var isVideo = files[0].type.startsWith('video/');
 
@@ -5310,7 +5729,7 @@ function subscribeTotalUsersCount() {
             var mediaUrlsJoined = uploadedUrls.join(",");
             savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
           }).catch(function() {
-            publishBtn.disabled = false;
+            if (publishBtn) publishBtn.disabled = false;
           });
         }
       } else {
@@ -5328,26 +5747,28 @@ function subscribeTotalUsersCount() {
         likes_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
-        publishBtn.disabled = false;
+        if (publishBtn) publishBtn.disabled = false;
         applyLanguageDOM();
-        document.getElementById('post-text-input').value = "";
-        document.getElementById('post-media-file').value = "";
-        document.getElementById('selected-file-name').style.display = "none";
+        var txtInput = document.getElementById('post-text-input');
+        var mediaInput = document.getElementById('post-media-file');
+        var nameDiv = document.getElementById('selected-file-name');
+        if (txtInput) txtInput.value = "";
+        if (mediaInput) mediaInput.value = "";
+        if (nameDiv) nameDiv.style.display = "none";
         loadPosts();
       }).catch(function(error) {
-        publishBtn.disabled = false;
+        if (publishBtn) publishBtn.disabled = false;
         alert("Error: " + error.message);
       });
     }
 
-     function likePost(postId, isTiktokView) {
+    function likePost(postId, isTiktokView) {
       if (!currentUser) return;
       var postRef = db.collection('posts').doc(postId);
       var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
 
       likeRef.get().then(function(doc) {
         if (doc.exists) {
-          // Unlike
           likeRef.delete().then(function() {
             updatePostLikesCount(postId, -1);
             likedPosts = likedPosts.filter(id => id !== postId);
@@ -5356,7 +5777,6 @@ function subscribeTotalUsersCount() {
             console.error("Unlike error:", err);
           });
         } else {
-          // Like
           var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
           var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
 
@@ -5430,12 +5850,13 @@ function subscribeTotalUsersCount() {
     }
 
     function triggerStoryUpload() {
-      document.getElementById('story-file-input').click();
+      var input = document.getElementById('story-file-input');
+      if (input) input.click();
     }
 
     function uploadStory() {
       var fileInput = document.getElementById('story-file-input');
-      if (fileInput.files.length === 0) return;
+      if (!fileInput || fileInput.files.length === 0) return;
       var file = fileInput.files[0];
       var isVideo = file.type.startsWith('video/');
 
@@ -5463,33 +5884,36 @@ function subscribeTotalUsersCount() {
       if (!listDiv) return;
       listDiv.innerHTML = "";
 
+      if (!currentUser) return;
+
       db.collection('friend_requests')
         .where('status', '==', 'accepted')
         .get()
         .then(function(snapshot) {
-          var myFriendsSet = new Set();
-          snapshot.forEach(function(doc) {
-            var req = doc.data();
-            if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
-            if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
-          });
-
-          var myFriendsArray = Array.from(myFriendsSet);
           var allowedUsersSet = new Set();
           allowedUsersSet.add(currentUser.uid);
-          myFriendsArray.forEach(function(fId) { allowedUsersSet.add(fId); });
+
+          snapshot.forEach(function(doc) {
+            var req = doc.data();
+            if (req.sender_id === currentUser.uid) allowedUsersSet.add(req.receiver_id);
+            if (req.receiver_id === currentUser.uid) allowedUsersSet.add(req.sender_id);
+          });
 
           fetchStoriesForUsers(Array.from(allowedUsersSet), listDiv);
+        }).catch(function(err) {
+          console.error("Error loading stories friends:", err);
         });
     }
 
+    
     function fetchStoriesForUsers(userIdsList, listDiv) {
-      if(userIdsList.length === 0) return;
+      if (!userIdsList || userIdsList.length === 0) return;
       
       var oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
       db.collection('stories')
         .where('created_at', '>=', oneDayAgo)
+        .limit(20)
         .get()
         .then(function(snapshot) {
           var stories = [];
@@ -5513,16 +5937,12 @@ function subscribeTotalUsersCount() {
 
           if (stories.length === 0) return;
 
-          db.collection('profiles').get().then(function(profilesSnap) {
-            var profilesMap = {};
-            profilesSnap.forEach(function(pDoc) { profilesMap[pDoc.id] = pDoc.data(); });
-
-            stories.forEach(function(story) {
-              var author = profilesMap[story.user_id];
+          stories.forEach(function(story) {
+            fetchUserProfileCached(story.user_id, function(author) {
               var authorName = author ? author.full_name : "User";
               var authorAvatar = author ? author.avatar_url : null;
               var isOnline = isUserOnline(author);
-              var initial = authorName.charAt(0).toUpperCase();
+              var initial = authorName ? authorName.charAt(0).toUpperCase() : "?";
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
               var avatarHtml = authorAvatar ? `<div class="avatar-has-online"><img src="${authorAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
@@ -5547,6 +5967,7 @@ function subscribeTotalUsersCount() {
           console.error("Error loading stories: ", error);
         });
     }
+          
 
     function openStoryViewer(story, username, avatarUrl) {
       currentViewingStoryObj = story;
@@ -5556,22 +5977,28 @@ function subscribeTotalUsersCount() {
       var mediaContainer = document.getElementById('sv-media-container');
       var t = TRANSLATIONS[currentLang];
 
-      userSpan.innerText = username;
-      if (avatarUrl) {
-        avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
-      } else {
-        avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+      if (userSpan) userSpan.innerText = username;
+      if (avatarDiv) {
+        if (avatarUrl) {
+          avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+        } else {
+          avatarDiv.innerHTML = `<div style="background-color:#dcae36; color:#111111; display:flex; font-weight:bold;">${username.charAt(0).toUpperCase()}</div>`;
+        }
       }
 
-      if (story.media_type === 'video') {
-        mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
-      } else {
-        mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+      if (mediaContainer) {
+        if (story.media_type === 'video') {
+          mediaContainer.innerHTML = `<video src="${story.media_url}" autoplay playsinline controls style="width:100%; height:100%; object-fit:contain;"></video>`;
+        } else {
+          mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain;">`;
+        }
       }
 
-      document.getElementById('story-likes-label').innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
-      document.getElementById('story-comment-field').placeholder = t.msgPlaceholder;
-      modal.style.display = "flex";
+      var likesLbl = document.getElementById('story-likes-label');
+      var commField = document.getElementById('story-comment-field');
+      if (likesLbl) likesLbl.innerText = `❤️ ${story.likes_count || 0} ${t.like}`;
+      if (commField) commField.placeholder = t.msgPlaceholder;
+      if (modal) modal.style.display = "flex";
     }
 
     function reactToStory(emoji) {
@@ -5583,7 +6010,8 @@ function subscribeTotalUsersCount() {
         .update({ likes_count: newLikes })
         .then(function() {
           currentViewingStoryObj.likes_count = newLikes;
-          document.getElementById('story-likes-label').innerText = `❤️ ${newLikes} ${t.like}`;
+          var likesLbl = document.getElementById('story-likes-label');
+          if (likesLbl) likesLbl.innerText = `❤️ ${newLikes} ${t.like}`;
         });
     }
 
@@ -5593,6 +6021,7 @@ function subscribeTotalUsersCount() {
 
     function submitStoryComment() {
       var input = document.getElementById('story-comment-field');
+      if (!input) return;
       var text = input.value.trim();
       if (!text) return;
       input.value = "";
@@ -5600,8 +6029,9 @@ function subscribeTotalUsersCount() {
 
     function closeStoryViewer() {
       var modal = document.getElementById('story-viewer-modal');
-      document.getElementById('sv-media-container').innerHTML = "";
-      modal.style.display = "none";
+      var mediaContainer = document.getElementById('sv-media-container');
+      if (mediaContainer) mediaContainer.innerHTML = "";
+      if (modal) modal.style.display = "none";
       currentViewingStoryObj = null;
     }
   </script>
