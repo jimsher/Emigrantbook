@@ -13,7 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
 
-  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1001.0.min.js"></script>
+  
   
   <style>
     * {
@@ -2589,24 +2589,6 @@
   </div>
 
   <script> 
-    // Cloudflare R2 კონფიგურაცია
-const R2_ACCOUNT_ID = "af3cd56176683991d0edf4699532175e"; // ჩასვით თქვენი Account ID
-const R2_ACCESS_KEY_ID = "fcc0eecfbd39da850414e25545a19b13"; // ჩასვით თქვენი Access Key ID
-const R2_SECRET_ACCESS_KEY = "3cf956b308b1b453e0594ca008f58d351ff550cb58be01bb3074b886e287dfa3"; // ჩასვით თქვენი Secret Access Key
-const R2_BUCKET_NAME = "emigrantbook-assets"; // ჩასვით თქვენი Bucket-ის ზუსტი სახელი
-const R2_PUBLIC_DOMAIN = "https://pub-3a71369c5e4547999ab7dca61c8a421e.r2.dev"; // ჩასვით თქვენი R2 Public Domain ან pub-xxx.r2.dev ბმული
-
-// S3-ის ინიციალიზაცია R2 Endpoint-ისთვის
-const r2Storage = new AWS.S3({
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  accessKeyId: R2_ACCESS_KEY_ID,
-  secretAccessKey: R2_SECRET_ACCESS_KEY,
-  signatureVersion: 'v4',
-  region: 'auto',
-  s3ForcePathStyle: true
-});
-    
-        
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
       authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -5315,40 +5297,34 @@ auth.onAuthStateChanged(function(user) {
     function uploadMediaToFirebase(file, folder, callback) {
   if (!currentUser) return;
 
-  var fileName = folder + '/' + currentUser.uid + '_' + Date.now() + '_' + file.name;
+  var CLOUD_NAME = "kim1albt";
+  var UPLOAD_PRESET = "fhikp9ld";
 
-  // 1. Presigned URL Content-Type-ით
-  r2Storage.getSignedUrl('putObject', {
-    Bucket: R2_BUCKET_NAME,
-    Key: fileName,
-    ContentType: file.type,
-    Expires: 600
-  }, function(err, signedUrl) {
-    if (err) {
-      console.error("R2 Presigned URL Error:", err);
-      alert("ატვირთვის შეცდომა (URL): " + err.message);
-      return;
+  var formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  // განვსაზღვროთ ვიდეოა თუ ფოტო
+  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+
+  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(data) {
+    if (data.secure_url) {
+      // აბრუნებს პირდაპირ ლინკს, რომელიც Firebase-ში შეინახება
+      callback(data.secure_url);
+    } else {
+      alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
     }
-
-    // 2. პირდაპირი გაგზავნა
-    var xhr = new XMLHttpRequest();
-    xhr.open('PUT', signedUrl, true);
-    xhr.setRequestHeader('Content-Type', file.type);
-
-    xhr.onload = function() {
-      if (xhr.status === 200 || xhr.status === 204) {
-        var publicUrl = R2_PUBLIC_DOMAIN + '/' + fileName;
-        callback(publicUrl);
-      } else {
-        alert("ატვირთვის შეცდომა (R2 Status): " + xhr.status);
-      }
-    };
-
-    xhr.onerror = function() {
-      alert("ატვირთვის შე测დომა (R2): Network Failure (CORS)");
-    };
-
-    xhr.send(file);
+  })
+  .catch(function(error) {
+    console.error("Upload Error:", error);
+    alert("ატვირთვის შეცდომა: " + error.message);
   });
 }
 
