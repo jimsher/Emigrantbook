@@ -5400,6 +5400,7 @@ auth.onAuthStateChanged(function(user) {
       }
     }
 
+    // აქ იწყება
   function loadPosts() {
       if (!currentUser) return;
 
@@ -5434,7 +5435,6 @@ auth.onAuthStateChanged(function(user) {
                 posts.push(Object.assign({ id: doc.id }, doc.data()));
               });
 
-              // Process each post with cached or requested profiles
               posts.forEach(function(postData) {
                 var authorId = postData.user_id;
 
@@ -5446,9 +5446,14 @@ auth.onAuthStateChanged(function(user) {
                   var shouldShow = isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend);
 
                   if (shouldShow) {
-                    postsWall.innerHTML += createPostCardHtml(postData);
+                    // თუ ვიდეოა, TikTok/Reels სტილის ბარათს ვქმნით, თუ არა - სტანდარტულს
+                    if (postData.media_type === 'video') {
+                      postsWall.innerHTML += createTiktokPostCardHtml(postData);
+                      startFloatingAvatarsAnimation(postData.id, `tiktok-floating-container-${postData.id}`);
+                    } else {
+                      postsWall.innerHTML += createPostCardHtml(postData);
+                    }
                     renderCommentsCountOnly(postData);
-                    // checkMyLikeState-ის ზედმეტი Firestore მოთხოვნა ამოღებულია
                   }
                 });
               });
@@ -5460,6 +5465,75 @@ auth.onAuthStateChanged(function(user) {
         });
     }
 
+    /* TikTok / Reels Style Video Post Card */
+    function createTiktokPostCardHtml(post) {
+      var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
+      var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+      var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
+      var isOnline = cachedOnlineStates[post.user_id] === true;
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+
+      var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+      var t = TRANSLATIONS[currentLang];
+
+      var hasLiked = likedPosts.includes(post.id);
+      var currentLikesNum = post.likes_count || 0;
+      var likedClass = hasLiked ? "btn-liked" : "";
+
+      var deleteButtonHtml = "";
+      if (currentUser && post.user_id === currentUser.uid) {
+        deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">${t.delete}</button>`;
+      }
+
+      return `
+        <div class="post-card tiktok-video-card" id="post-card-${post.id}">
+          <div class="tiktok-video-wrapper">
+            <video class="post-media tiktok-player" src="${post.media_url}" loop preload="metadata" playsinline onclick="togglePlayVideo(this)"></video>
+            
+            <!-- Floating Avatars Container -->
+            <div id="tiktok-floating-container-${post.id}" class="tiktok-floating-avatars-layer"></div>
+
+            <!-- TikTok Right Sidebar Overlay Actions -->
+            <div class="tiktok-actions-overlay">
+              <div class="tiktok-action-item" onclick="viewUserProfile('${post.user_id}')">
+                <div class="tiktok-avatar-ring">${avatarContent}</div>
+              </div>
+
+              <div class="tiktok-action-item">
+                <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', true)">
+                  <span id="like-btn-emoji-icon-${post.id}">❤️</span>
+                </button>
+                <span class="post-likes-count-label tiktok-action-label" data-post-id="${post.id}">${currentLikesNum}</span>
+              </div>
+
+              <div class="tiktok-action-item" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
+                <button class="action-btn">
+                  <svg class="action-btn-svg" viewBox="0 0 24 24"><path fill="#ffffff" d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+                </button>
+                <span class="comment-count-label tiktok-action-label" data-post-id="${post.id}">0</span>
+              </div>
+            </div>
+
+            <!-- Bottom Video Info Overlay -->
+            <div class="tiktok-bottom-info">
+              <div class="tiktok-author-name" onclick="viewUserProfile('${post.user_id}')">@${post.author_name}</div>
+              <div class="tiktok-description">${post.content || ""}</div>
+              <div class="tiktok-date">${date}</div>
+            </div>
+
+            ${deleteButtonHtml ? `<div class="tiktok-top-delete">${deleteButtonHtml}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function togglePlayVideo(videoElem) {
+      if (videoElem.paused) {
+        videoElem.play();
+      } else {
+        videoElem.pause();
+      }
+    }
 
     function checkMyLikeState(postId) {
       if (!currentUser) return;
@@ -5648,6 +5722,26 @@ auth.onAuthStateChanged(function(user) {
       `;
     }
 
+    function observeVideos() {
+      var videos = document.querySelectorAll('video.post-media');
+      if ('IntersectionObserver' in window) {
+        var videoObserver = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+              entry.target.play().catch(function(){});
+            } else {
+              entry.target.pause();
+            }
+          });
+        }, { threshold: 0.6 });
+
+        videos.forEach(function(video) {
+          videoObserver.observe(video);
+        });
+      }
+    }
+   // აქ მთავრდება
+    
     function createPost() {
       var txtEl = document.getElementById('post-text-input');
       var fileInput = document.getElementById('post-media-file');
