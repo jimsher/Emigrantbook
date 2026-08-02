@@ -13,8 +13,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
 
-  
-  
   <style>
     * {
       box-sizing: border-box;
@@ -851,7 +849,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
-                                                
+                                              
     .post-media {
       width: 100% !important;
       max-width: 100% !important;
@@ -1654,7 +1652,6 @@
     .btn-save { background: #dcae36; color: #111111; }
     .btn-cancel { background: #222222; color: #e4e6eb; }
 
-    /* PRIVACY SETTINGS STYLES */
     .privacy-section-card {
       background: #141414;
       border-radius: 12px;
@@ -1903,59 +1900,53 @@
       }
     }
 
+    #maintenance-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0b0b0b;
+      color: #ffffff;
+      z-index: 999999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
 
+    #warning-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 999998;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
 
-    /* ტექნიკური შესვენების ეკრანი */
-#maintenance-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #0b0b0b;
-  color: #ffffff;
-  z-index: 999999;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-}
-
-/* გაფრთხილების ფანჯარა */
-#warning-modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(5px);
-  z-index: 999998;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.warning-modal-box {
-  background: #141414;
-  border: 1px solid #dcae36;
-  border-radius: 15px;
-  padding: 25px;
-  max-width: 420px;
-  width: 100%;
-  color: #fff;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(220, 174, 54, 0.2);
-}
+    .warning-modal-box {
+      background: #141414;
+      border: 1px solid #dcae36;
+      border-radius: 15px;
+      padding: 25px;
+      max-width: 420px;
+      width: 100%;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(220, 174, 54, 0.2);
+    }
   </style>
 </head>
 <body>
-<!-- აქ არის შენი საიტის სხვა HTML კოდები... -->
 
-    <!-- 1. ტექნიკური შესვენების ეკრანი -->
     <div id="maintenance-overlay">
       <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
       <h1 style="color: #dcae36; margin-bottom: 15px; font-size: 24px;">საიტი დროებით მიუწვდომელია</h1>
@@ -1964,7 +1955,6 @@
       </p>
     </div>
 
-    <!-- 2. გაფრთხილების ფანჯარა -->
     <div id="warning-modal-overlay">
       <div class="warning-modal-box">
         <div style="font-size: 45px; margin-bottom: 10px;">⚠️</div>
@@ -1973,7 +1963,6 @@
         <button onclick="closeWarningModal()" style="background: #dcae36; color: #111; border: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%;">გავიგე</button>
       </div>
     </div>
-  <!-- აწ მთავრდება -->
 
   <div id="app-preloader">
     <img src="logo.png" alt="Emigrantbook Logo" class="preloader-logo">
@@ -2015,7 +2004,6 @@
       </div>
     </div>
     
-    <!-- PWA INSTALL APP BUTTON -->
     <div class="pwa-install-card" id="pwa-install-card" onclick="installPWA()">
       <div class="pwa-install-left">
         <img src="logo.png" alt="Emigrantbook Logo" class="pwa-install-icon">
@@ -2098,15 +2086,12 @@
         <div id="friends-stories-list" style="display: flex; gap: 8px;"></div>
       </div>
 
-      <!-- LOTTERY COMPACT TIMER BANNER -->
-      <!-- საიტის მომხმარებლების ღილაკი რეალური რაოდენობის მაჩვენებლით -->
 <div class="user-list-banner-card" onclick="window.location.href='users.html'" style="background: #141414; border: 1px solid #222222; border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; cursor: pointer; transition: background 0.2s;">
   <div style="display: flex; align-items: center; gap: 12px;">
     <span style="font-size: 22px;">👥</span>
     <span style="color: #ffffff; font-size: 15px; font-weight: 600;">საიტის მომხმარებლები</span>
   </div>
   <div style="display: flex; align-items: center; gap: 10px;">
-    <!-- მარცხნივ/გვერდით რაოდენობის მაჩვენებელი -->
     <span id="total-users-badge" style="background: #dcae36; color: #111111; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 28px; text-align: center;">0</span>
     <span style="color: #666666; font-weight: bold; font-size: 18px;">›</span>
   </div>
@@ -2302,7 +2287,6 @@
           </div>
         </div>
 
-        <!-- LOCKED PROFILE BANNER (FOR NON-FRIENDS / PRIVATE) -->
         <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
           <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
           <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">ეს პროფილი დახურულია</div>
@@ -2391,7 +2375,6 @@
     </div>
   </div>
 
-  <!-- PRIVACY SETTINGS SCREEN -->
   <div id="privacy-screen" style="display: none;">
     <div class="header">
       <div class="logo-text" id="lbl-back-to-profile-privacy" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
@@ -2616,32 +2599,26 @@
       });
     }
 
-
-    /*  აქ იწყება ადმინის */
   const sysAuth = firebase.auth();
   const sysDb = firebase.firestore();
 
   let maintenanceUnsubscribe = null;
 
   sysAuth.onAuthStateChanged(user => {
-     //თუ უკვე მოსმენაზე ვიყავით, ჯერ გავთიშოთ რომ არ გადაიფაროს
     if (maintenanceUnsubscribe) {
       maintenanceUnsubscribe();
       maintenanceUnsubscribe = null;
     }
 
     if (user) {
-      // 1. ჯერ ვამოწმებთ ბაზაში შენს ადმინ სტატუსს
       sysDb.collection('profiles').doc(user.uid).get().then(pDoc => {
         const pData = pDoc.exists ? pDoc.data() : {};
         const isAdmin = (pData.is_admin === true) || (user.email === 'admin@emigrantbook.com');
 
         if (isAdmin) {
-          // შენ (ადმინი) ხარ! არაფერი არ გადაგეფარება!
           removeMaintenanceUI();
           removeBlockedUI();
         } else {
-          // ჩვეულებრივი მომხმარებელია -> ირთვება დაბლოკვის და ტექნიკურის მოსმენა
           startMaintenanceCheck();
           listenToUserStatus(user, pData);
         }
@@ -2650,12 +2627,10 @@
         startMaintenanceCheck();
       });
     } else {
-      // ავტორიზაციის გარეშე მყოფი მომხმარებელი (სტუმარი) -> ეგრევე ემორჩილება ტექნიკურ რეჟიმს
       startMaintenanceCheck();
     }
   });
 
-  // ტექნიკური შესვენების მოსმენა მხოლო ჩვეულებრივი მომხმარებლისთვის
   function startMaintenanceCheck() {
     maintenanceUnsubscribe = sysDb.collection('system_settings').doc('maintenance')
       .onSnapshot(doc => {
@@ -2667,7 +2642,6 @@
       });
   }
 
-  // მომხმარებლის დაბლოკვისა და გაფრთხილების მოსმენა
   function listenToUserStatus(user, initialData) {
     if (initialData.is_blocked === true) {
       renderBlockedUI(initialData.block_reason);
@@ -2690,10 +2664,6 @@
         }
       });
   }
-
-  // ==========================================
-  // UI ელემენტები
-  // ==========================================
 
   function renderMaintenanceUI(msg) {
     let el = document.getElementById('eb-sys-maintenance-overlay');
@@ -2776,11 +2746,7 @@
       if (modal) modal.remove();
     }).catch(err => console.error("Warning error:", err));
   }
-    /* და აქ მთავრდება */
 
-
-    
-    /* PWA INSTALL EVENT LISTENER */
     var deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', function(e) {
       e.preventDefault();
@@ -2840,7 +2806,6 @@
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
 
-    /* HELPER: CACHE PROFILE LOAD */
     function fetchUserProfileCached(userId, callback) {
       if (cachedProfiles[userId] && cachedProfiles[userId].full_name !== undefined) {
         callback(cachedProfiles[userId]);
@@ -3336,7 +3301,6 @@
       }
     }
 
-    /* PRIVACY SETTINGS NAVIGATION & ACTIONS */
     function showPrivacySettings() {
       if (!currentUser) return;
       var currentPrivacy = (userProfile && userProfile.privacy_setting) ? userProfile.privacy_setting : 'public';
@@ -3373,7 +3337,6 @@
       });
     }
 
-    /* ---- 🎰 COMPACT TIMER BANNER LOGIC ---- */
     function subscribeToLiveLotteryPost() {
       var card = document.getElementById('live-lottery-post-card');
       if (!card) return;
@@ -3443,7 +3406,6 @@
         renderDefaultWaitingBanner();
       });
     }
-    
 
     function renderDefaultWaitingBanner() {
       var statusText = document.getElementById('lottery-live-status');
@@ -3495,8 +3457,6 @@
       lotteryCountdownInterval = setInterval(updateCountdown, 1000);
     }
 
-    // საიტის რეგისტრაციის გვერდი
-     // საიტის რეგისტრაციის გვერდი
 auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
@@ -3513,8 +3473,7 @@ auth.onAuthStateChanged(function(user) {
     initUserPresence(user.uid);
     requestNotificationPermission();
 
-    // --- რეალური IP-ის, ქვეყნის და ქალაქის ჩაწერა (დღეში მხოლოდ 1-ხელ localStorage-ით) ---
-    var todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    var todayStr = new Date().toISOString().slice(0, 10);
     var lastCheckDate = localStorage.getItem('last_ip_check_date');
 
     if (lastCheckDate !== todayStr) {
@@ -3543,7 +3502,6 @@ auth.onAuthStateChanged(function(user) {
           console.warn("IP Geolocation შეცდომა:", err);
         });
     }
-    // ---------------------------------------------------------------------
 
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
       var finalName = user.email;
@@ -3602,9 +3560,7 @@ auth.onAuthStateChanged(function(user) {
     hidePreloader();
   }
 });
-   // აქ მთავრდება
 
-    
     function toggleRequestsDropdown(event) {
       if(event) event.stopPropagation();
       var homeScr = document.getElementById('home-screen');
@@ -3843,7 +3799,6 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function subscribeToPostsRealtime() {
-      // რეალთაიმ მოსმენა გაუქმებულია Firestore-ის ლიმიტების დასაზოგად.
     }
 
     function subscribeToFriendRequests() {
@@ -4616,7 +4571,6 @@ auth.onAuthStateChanged(function(user) {
       });
     }
 
-
     function viewUserProfile(userId) {
       if (!userId) return;
       if (userId === currentUser.uid) {
@@ -4662,7 +4616,6 @@ auth.onAuthStateChanged(function(user) {
         if (covCam) covCam.style.display = "none";
         if (burgBtn) burgBtn.style.display = "none";
 
-        // OPTIMIZED FRIENDSHIP CHECK (Only queries current pair)
         checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
           var privacySetting = selectedUser.privacy_setting || 'public';
           var isLocked = false;
@@ -4709,7 +4662,6 @@ auth.onAuthStateChanged(function(user) {
       });
     }
 
-    /* Helper for checking friendship between 2 users efficiently */
     function checkFriendshipPair(uid1, uid2, callback) {
       db.collection('friend_requests')
         .where('sender_id', '==', uid1)
@@ -5079,7 +5031,6 @@ auth.onAuthStateChanged(function(user) {
       var t = TRANSLATIONS[currentLang];
       actionPanel.innerHTML = `<div style="text-align: center; padding: 10px; color:#aaaaaa;">...</div>`;
 
-      // OPTIMIZED QUERY FOR SPECIFIC PAIR
       db.collection('friend_requests')
         .where('sender_id', '==', currentUser.uid)
         .where('receiver_id', '==', targetUserId)
@@ -5210,7 +5161,6 @@ auth.onAuthStateChanged(function(user) {
           posts.forEach(function(post) {
             profileWall.innerHTML += createPostCardHtml(post);
             renderCommentsCountOnly(post);
-            // checkMyLikeState(post.id) - ამოღებულია ზედმეტი Firestore მოთხოვნების თავიდან ასაცილებლად
           });
           observeVideos();
         }).catch(function(error) {
@@ -5288,43 +5238,43 @@ auth.onAuthStateChanged(function(user) {
         });
     }
 
-    // აქ არის მთავარი ფოტოსბდა ვიდეოსბატვირთვა 
     function triggerAvatarUpload() {
       var input = document.getElementById('avatar-file-input');
       if (input) input.click();
     }
 
+    /* Cloudinary Upload Engine */
     function uploadMediaToFirebase(file, folder, callback) {
-  if (!currentUser) return;
+      if (!currentUser) return;
 
-  var CLOUD_NAME = "kim1albt";
-  var UPLOAD_PRESET = "fhlkp9ld"; // ზუსტად ის, რაც სქრინზე წითლად გაქვს!
+      var CLOUD_NAME = "kim1albt";
+      var UPLOAD_PRESET = "fhlkp9ld"; 
 
-  var formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
+      var formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
 
-  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+      var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
 
-  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
-    method: "POST",
-    body: formData
-  })
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(data) {
-    if (data.secure_url) {
-      callback(data.secure_url);
-    } else {
-      alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
+      fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+        method: "POST",
+        body: formData
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        if (data.secure_url) {
+          callback(data.secure_url);
+        } else {
+          alert("ატვირთვის შეცდომა Cloudinary-ზე: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
+        }
+      })
+      .catch(function(error) {
+        console.error("Cloudinary Upload Error:", error);
+        alert("ატვირთვის შეცდომა: " + error.message);
+      });
     }
-  })
-  .catch(function(error) {
-    console.error("Upload Error:", error);
-    alert("ატვირთვის შეცდომა: " + error.message);
-  });
-}
 
     function uploadImageToImgBB(file, callback) {
       if (file.type.startsWith('video/')) {
@@ -5350,11 +5300,10 @@ auth.onAuthStateChanged(function(user) {
         }
       })
       .catch(function(error) {
-        console.error("ImgBB Upload Error, falling back to R2:", error);
+        console.error("ImgBB Upload Error, falling back to Cloudinary:", error);
         uploadMediaToFirebase(file, 'images', callback);
       });
     }
-   // აქ მთავრდება
     
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
@@ -5451,8 +5400,7 @@ auth.onAuthStateChanged(function(user) {
       }
     }
 
-
-    function loadPosts() {
+  function loadPosts() {
       if (!currentUser) return;
 
       db.collection('friend_requests')
@@ -6047,4 +5995,4 @@ auth.onAuthStateChanged(function(user) {
     }
   </script>
 </body>
-</html>         
+</html>
