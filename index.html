@@ -5298,13 +5298,12 @@ auth.onAuthStateChanged(function(user) {
   if (!currentUser) return;
 
   var CLOUD_NAME = "kim1albt";
-  var UPLOAD_PRESET = "fhikp9ld";
+  var UPLOAD_PRESET = "ml_default"; // ნაგულისხმევი preset
 
   var formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  // განვსაზღვროთ ვიდეოა თუ ფოტო
   var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
 
   fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
@@ -5316,7 +5315,6 @@ auth.onAuthStateChanged(function(user) {
   })
   .then(function(data) {
     if (data.secure_url) {
-      // აბრუნებს პირდაპირ ლინკს, რომელიც Firebase-ში შეინახება
       callback(data.secure_url);
     } else {
       alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
