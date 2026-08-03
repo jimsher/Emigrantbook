@@ -717,45 +717,38 @@
         startMaintenanceCheck();
       });
     } else {
-      // ავტორიზაციის გარეშე მყოფი მომხმარებელი (სტუმარი) -> ეგრევე ემორჩილება ტექნიკურ რეჟიმს
-      startMaintenanceCheck();
-    }
-  });
-
-  // ტექნიკური შესვენების მოსმენა მხოლო ჩვეულებრივი მომხმარებლისთვის
-  function startMaintenanceCheck() {
-    maintenanceUnsubscribe = sysDb.collection('system_settings').doc('maintenance')
-      .onSnapshot(doc => {
+      // ავტორიზაციის გარეშე მყოფი მომხმარებელი (სტუმარი) -> ემორჩილება ტექნიკურ რეჟიმს Single Get-ით
+      sysDb.collection('system_settings').doc('maintenance').get().then(doc => {
         if (doc.exists && doc.data().is_active === true) {
           renderMaintenanceUI(doc.data().message);
         } else {
           removeMaintenanceUI();
         }
       });
+    }
+  });
+
+  // ტექნიკური შესვენების მოსმენა მხოლო ჩვეულებრივი მომხმარებლისთვის Single Get-ით (reads-ის დასაზოგად)
+  function startMaintenanceCheck() {
+    sysDb.collection('system_settings').doc('maintenance').get().then(doc => {
+      if (doc.exists && doc.data().is_active === true) {
+        renderMaintenanceUI(doc.data().message);
+      } else {
+        removeMaintenanceUI();
+      }
+    });
   }
 
-  // მომხმარებლის დაბლოკვისა და გაფრთხილების მოსმენა
+  // მომხმარებლის დაბლოკვისა და გაფრთხილების შემოწმება Single Get-ით
   function listenToUserStatus(user, initialData) {
     if (initialData.is_blocked === true) {
       renderBlockedUI(initialData.block_reason);
       return;
     }
 
-    sysDb.collection('profiles').doc(user.uid)
-      .onSnapshot(doc => {
-        if (!doc.exists) return;
-        const data = doc.data();
-
-        if (data.is_blocked === true) {
-          renderBlockedUI(data.block_reason);
-        } else {
-          removeBlockedUI();
-        }
-
-        if (data.has_warning === true && data.last_warning_text) {
-          renderWarningUI(data.last_warning_text, user.uid);
-        }
-      });
+    if (initialData.has_warning === true && initialData.last_warning_text) {
+      renderWarningUI(initialData.last_warning_text, user.uid);
+    }
   }
 
   // ==========================================
@@ -888,6 +881,7 @@
     var userProfile = null;
     var cachedProfiles = {};
     var cachedOnlineStates = {};
+    var cachedFriendsSet = null; // ქეში მეგობრების სიისთვის
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
     var activePostForComments = null;
@@ -907,7 +901,7 @@
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
 
-    /* HELPER: CACHE PROFILE LOAD */
+    /* HELPER: CACHE PROFILE LOAD WITH BATCH SUPPORT */
     function fetchUserProfileCached(userId, callback) {
       if (cachedProfiles[userId] && cachedProfiles[userId].full_name !== undefined) {
         callback(cachedProfiles[userId]);
@@ -925,6 +919,37 @@
       }).catch(function(err) {
         console.error("Profile fetch error:", err);
         callback({});
+      });
+    }
+
+    // მრავლობითი პროფილების ბატჩირებული წამოღება (reads-ის დასაზოგად)
+    function fetchMultipleProfilesCached(userIds, callback) {
+      var missingIds = userIds.filter(id => !cachedProfiles[id] || cachedProfiles[id].full_name === undefined);
+      if (missingIds.length === 0) {
+        callback();
+        return;
+      }
+      
+      // Firestore `in` ლიმიტი 10-ია, ამიტომ 10-10-ად დავყოფთ
+      var chunks = [];
+      for (var i = 0; i < missingIds.length; i += 10) {
+        chunks.push(missingIds.slice(i, i + 10));
+      }
+
+      var promises = chunks.map(chunk => {
+        return db.collection('profiles').where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get()
+          .then(snap => {
+            snap.forEach(doc => {
+              var data = doc.data();
+              cachedProfiles[doc.id] = data;
+              cachedOnlineStates[doc.id] = isUserOnline(data);
+            });
+          });
+      });
+
+      Promise.all(promises).then(() => callback()).catch(err => {
+        console.error("Batch profiles fetch error:", err);
+        callback();
       });
     }
 
@@ -962,7 +987,7 @@
       if (presenceInterval) clearInterval(presenceInterval);
       presenceInterval = setInterval(function() {
         updateUserPresence(userId, true);
-      }, 30000);
+      }, 60000); // 60 წამამდე გაზრდილია reads/writes-ის დასაზოგად
 
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
@@ -996,7 +1021,7 @@
       var now = new Date();
       var diffMinutes = (now - lastSeenDate) / (1000 * 60);
 
-      return diffMinutes < 2;
+      return diffMinutes < 3;
     }
 
     function openAkhoInfoModal(event) {
@@ -1563,7 +1588,6 @@
     }
 
     // საიტის რეგისტრაციის გვერდი
-     // საიტის რეგისტრაციის გვერდი
 auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
@@ -1961,6 +1985,7 @@ auth.onAuthStateChanged(function(user) {
         });
     }
 
+    // ოპტიმიზირებული BATCH GET პროფილების წამოსაღებად Single Queries-ების ნაცვლად
     function loadIncomingFriendRequests() {
       var homeScr = document.getElementById('home-screen');
       var isHome = homeScr && homeScr.style.display === 'block';
@@ -1981,16 +2006,19 @@ auth.onAuthStateChanged(function(user) {
             return;
           }
 
-          var itemsHtml = "";
-          var totalCount = snapshot.size;
-          var processedCount = 0;
+          var senderIds = [];
+          var reqList = [];
 
           snapshot.forEach(function(docSnap) {
             var req = docSnap.data();
-            var reqId = docSnap.id;
-            
-            fetchUserProfileCached(req.sender_id, function(pData) {
-              processedCount++;
+            senderIds.push(req.sender_id);
+            reqList.push({ id: docSnap.id, sender_id: req.sender_id });
+          });
+
+          fetchMultipleProfilesCached(senderIds, function() {
+            var itemsHtml = "";
+            reqList.forEach(function(reqItem) {
+              var pData = cachedProfiles[reqItem.sender_id] || {};
               var senderName = pData.full_name || "User";
               var senderAvatar = pData.avatar_url || null;
               var isOnline = isUserOnline(pData);
@@ -2001,21 +2029,18 @@ auth.onAuthStateChanged(function(user) {
 
               itemsHtml += `
                 <div class="request-item">
-                  <div class="request-item-avatar" onclick="viewUserProfile('${req.sender_id}')">${avatarContent}</div>
+                  <div class="request-item-avatar" onclick="viewUserProfile('${reqItem.sender_id}')">${avatarContent}</div>
                   <div class="request-item-info">
-                    <span class="request-item-name" onclick="viewUserProfile('${req.sender_id}')">${senderName}</span>
+                    <span class="request-item-name" onclick="viewUserProfile('${reqItem.sender_id}')">${senderName}</span>
                     <div class="request-item-actions">
-                      <button class="req-btn-confirm" onclick="acceptRequestFromNavbar('${reqId}', event)">${t.accept}</button>
-                      <button class="req-btn-delete" onclick="rejectRequestFromNavbar('${reqId}', event)">${t.reject}</button>
+                      <button class="req-btn-confirm" onclick="acceptRequestFromNavbar('${reqItem.id}', event)">${t.accept}</button>
+                      <button class="req-btn-delete" onclick="rejectRequestFromNavbar('${reqItem.id}', event)">${t.reject}</button>
                     </div>
                   </div>
                 </div>
               `;
-
-              if (processedCount === totalCount && container) {
-                container.innerHTML = itemsHtml;
-              }
             });
+            if (container) container.innerHTML = itemsHtml;
           });
         }).catch(function(err) {
           console.error("Error loading incoming friend requests:", err);
@@ -2124,17 +2149,12 @@ auth.onAuthStateChanged(function(user) {
       }
 
       var previewDocs = followerDocs.slice(0, 3);
-      grid.innerHTML = "";
-      
-      var gridHtml = "";
-      var processedCount = 0;
+      var targetIds = previewDocs.map(d => d.data().sender_id);
 
-      previewDocs.forEach(function(docSnap) {
-        var conn = docSnap.data();
-        var targetId = conn.sender_id;
-
-        fetchUserProfileCached(targetId, function(profile) {
-          processedCount++;
+      fetchMultipleProfilesCached(targetIds, function() {
+        var gridHtml = "";
+        targetIds.forEach(function(targetId) {
+          var profile = cachedProfiles[targetId] || {};
           if (profile.full_name || profile.avatar_url) {
             var finalName = profile.full_name || "User";
             var avatarUrl = profile.avatar_url;
@@ -2153,11 +2173,8 @@ auth.onAuthStateChanged(function(user) {
               </div>
             `;
           }
-
-          if (processedCount === previewDocs.length && grid) {
-            grid.innerHTML = gridHtml;
-          }
         });
+        if (grid) grid.innerHTML = gridHtml;
       });
     }
     
@@ -2234,13 +2251,15 @@ auth.onAuthStateChanged(function(user) {
           }
 
           countLabel.innerText = combinedMap.size + " " + t.userUnit;
-          listWrapper.innerHTML = "";
+          
+          var targetIds = Array.from(combinedMap.keys());
+          fetchMultipleProfilesCached(targetIds, function() {
+            var listHtml = "";
+            combinedMap.forEach(function(item) {
+              var requestId = item.docId;
+              var targetUserId = item.targetUserId;
+              var profile = cachedProfiles[targetUserId] || {};
 
-          combinedMap.forEach(function(item) {
-            var requestId = item.docId;
-            var targetUserId = item.targetUserId;
-
-            fetchUserProfileCached(targetUserId, function(profile) {
               var finalName = profile.full_name || "User";
               var avatarUrl = profile.avatar_url;
               var isOnline = isUserOnline(profile);
@@ -2252,7 +2271,7 @@ auth.onAuthStateChanged(function(user) {
               var deleteBtnHtml = showDeleteButton ? 
                 `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
 
-              listWrapper.innerHTML += `
+              listHtml += `
                 <div class="connection-row">
                   <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
                     <div class="connection-avatar">${avatarContent}</div>
@@ -2262,6 +2281,7 @@ auth.onAuthStateChanged(function(user) {
                 </div>
               `;
             });
+            listWrapper.innerHTML = listHtml;
           });
         }).catch(function(error) {
           console.error("Error loading combined connections:", error);
@@ -2279,14 +2299,21 @@ auth.onAuthStateChanged(function(user) {
       }
 
       countLabel.innerText = snapshot.size + " " + t.userUnit;
-      listWrapper.innerHTML = "";
+
+      var targetIds = [];
+      var connList = [];
 
       snapshot.forEach(function(docSnap) {
         var conn = docSnap.data();
-        var requestId = docSnap.id;
         var targetUserId = conn[targetIdKey];
+        targetIds.push(targetUserId);
+        connList.push({ requestId: docSnap.id, targetUserId: targetUserId });
+      });
 
-        fetchUserProfileCached(targetUserId, function(profile) {
+      fetchMultipleProfilesCached(targetIds, function() {
+        var listHtml = "";
+        connList.forEach(function(item) {
+          var profile = cachedProfiles[item.targetUserId] || {};
           var finalName = profile.full_name || "User";
           var avatarUrl = profile.avatar_url;
           var isOnline = isUserOnline(profile);
@@ -2296,11 +2323,11 @@ auth.onAuthStateChanged(function(user) {
           var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
           var showDeleteButton = activeConnectionsUserId === currentUser.uid;
           var deleteBtnHtml = showDeleteButton ? 
-            `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
+            `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${item.requestId}', event)">${t.delete}</button>` : '';
 
-          listWrapper.innerHTML += `
+          listHtml += `
             <div class="connection-row">
-              <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
+              <div class="connection-user-info" onclick="viewUserProfile('${item.targetUserId}')">
                 <div class="connection-avatar">${avatarContent}</div>
                 <span class="connection-name">${finalName}</span>
               </div>
@@ -2308,6 +2335,7 @@ auth.onAuthStateChanged(function(user) {
             </div>
           `;
         });
+        listWrapper.innerHTML = listHtml;
       });
     }
 
@@ -3277,7 +3305,6 @@ auth.onAuthStateChanged(function(user) {
           posts.forEach(function(post) {
             profileWall.innerHTML += createPostCardHtml(post);
             renderCommentsCountOnly(post);
-            // checkMyLikeState(post.id) - ამოღებულია ზედმეტი Firestore მოთხოვნების თავიდან ასაცილებლად
           });
           observeVideos();
         }).catch(function(error) {
@@ -3361,35 +3388,35 @@ auth.onAuthStateChanged(function(user) {
     }
 
 function uploadMediaToFirebase(file, folder, callback) {
-  if (!currentUser) return;
+  if (!currentUser) return;
 
-  var CLOUD_NAME = "kim1albt";
-  var UPLOAD_PRESET = "fhlkp9ld"; // ზუსტად ის, რაც სქრინზე წითლად გაქვს!
+  var CLOUD_NAME = "kim1albt";
+  var UPLOAD_PRESET = "fhlkp9ld"; // ზუსტად ის, რაც სქრინზე წითლად გაქვს!
 
-  var formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
+  var formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
 
-  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
+  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
 
-  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
-    method: "POST",
-    body: formData
-  })
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(data) {
-    if (data.secure_url) {
-      callback(data.secure_url);
-    } else {
-      alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
-    }
-  })
-  .catch(function(error) {
-    console.error("Upload Error:", error);
-    alert("ატვირთვის შეცდომა: " + error.message);
-  });
+  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(data) {
+    if (data.secure_url) {
+      callback(data.secure_url);
+    } else {
+      alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
+    }
+  })
+  .catch(function(error) {
+    console.error("Upload Error:", error);
+    alert("ატვირთვის შეცდომა: " + error.message);
+  });
 }
 
     function uploadImageToImgBB(file, callback) {
@@ -3516,65 +3543,71 @@ function uploadMediaToFirebase(file, folder, callback) {
       }
     }
 
-
+    // ოპტიმიზირებული LOAD POSTS (BATCH PROFILES READ & CACHED FRIENDS)
     function loadPosts() {
       if (!currentUser) return;
 
-      db.collection('friend_requests')
-        .where('status', '==', 'accepted')
-        .get()
-        .then(function(friendReqSnap) {
-          var myFriendsSet = new Set();
-          friendReqSnap.forEach(function(docSnap) {
-            var req = docSnap.data();
-            if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
-            if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
+      var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) : 
+        db.collection('friend_requests')
+          .where('status', '==', 'accepted')
+          .get()
+          .then(function(friendReqSnap) {
+            var myFriendsSet = new Set();
+            friendReqSnap.forEach(function(docSnap) {
+              var req = docSnap.data();
+              if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
+              if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
+            });
+            cachedFriendsSet = myFriendsSet;
+            return myFriendsSet;
           });
 
-          db.collection('posts')
-            .orderBy('created_at', 'desc')
-            .limit(30)
-            .get()
-            .then(function(snapshot) {
-              var postsWall = document.getElementById('posts-wall');
-              var t = TRANSLATIONS[currentLang];
-              if (!postsWall) return;
-              postsWall.innerHTML = "";
+      fetchFriendsPromise.then(function(myFriendsSet) {
+        db.collection('posts')
+          .orderBy('created_at', 'desc')
+          .limit(30)
+          .get()
+          .then(function(snapshot) {
+            var postsWall = document.getElementById('posts-wall');
+            var t = TRANSLATIONS[currentLang];
+            if (!postsWall) return;
+            postsWall.innerHTML = "";
 
-              if (snapshot.empty) {
-                postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-                return;
-              }
+            if (snapshot.empty) {
+              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+              return;
+            }
 
-              var posts = [];
-              snapshot.forEach(function(doc) {
-                posts.push(Object.assign({ id: doc.id }, doc.data()));
-              });
+            var posts = [];
+            var authorIds = [];
+            snapshot.forEach(function(doc) {
+              var postData = Object.assign({ id: doc.id }, doc.data());
+              posts.push(postData);
+              if (postData.user_id) authorIds.push(postData.user_id);
+            });
 
-              // Process each post with cached or requested profiles
+            // ბატჩირებული პროფილების ჩატვირთვა
+            fetchMultipleProfilesCached(authorIds, function() {
               posts.forEach(function(postData) {
                 var authorId = postData.user_id;
+                var pData = cachedProfiles[authorId] || {};
+                var privacy = pData.privacy_setting || 'public';
+                var isMyOwnPost = (authorId === currentUser.uid);
+                var isFriend = myFriendsSet.has(authorId);
 
-                fetchUserProfileCached(authorId, function(pData) {
-                  var privacy = pData.privacy_setting || 'public';
-                  var isMyOwnPost = (authorId === currentUser.uid);
-                  var isFriend = myFriendsSet.has(authorId);
+                var shouldShow = isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend);
 
-                  var shouldShow = isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend);
-
-                  if (shouldShow) {
-                    postsWall.innerHTML += createPostCardHtml(postData);
-                    renderCommentsCountOnly(postData);
-                    // checkMyLikeState-ის ზედმეტი Firestore მოთხოვნა ამოღებულია
-                  }
-                });
+                if (shouldShow) {
+                  postsWall.innerHTML += createPostCardHtml(postData);
+                  renderCommentsCountOnly(postData);
+                }
               });
-
               observeVideos();
             });
-        }).catch(function(err) {
-          console.error("Error loading posts with privacy filter:", err);
-        });
+          });
+      }).catch(function(err) {
+        console.error("Error loading posts with privacy filter:", err);
+      });
     }
 
 
@@ -3962,23 +3995,28 @@ function uploadMediaToFirebase(file, folder, callback) {
 
       if (!currentUser) return;
 
-      db.collection('friend_requests')
-        .where('status', '==', 'accepted')
-        .get()
-        .then(function(snapshot) {
-          var allowedUsersSet = new Set();
-          allowedUsersSet.add(currentUser.uid);
+      var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) :
+        db.collection('friend_requests')
+          .where('status', '==', 'accepted')
+          .get()
+          .then(function(snapshot) {
+            var allowedUsersSet = new Set();
+            allowedUsersSet.add(currentUser.uid);
 
-          snapshot.forEach(function(doc) {
-            var req = doc.data();
-            if (req.sender_id === currentUser.uid) allowedUsersSet.add(req.receiver_id);
-            if (req.receiver_id === currentUser.uid) allowedUsersSet.add(req.sender_id);
+            snapshot.forEach(function(doc) {
+              var req = doc.data();
+              if (req.sender_id === currentUser.uid) allowedUsersSet.add(req.receiver_id);
+              if (req.receiver_id === currentUser.uid) allowedUsersSet.add(req.sender_id);
+            });
+            cachedFriendsSet = allowedUsersSet;
+            return allowedUsersSet;
           });
 
-          fetchStoriesForUsers(Array.from(allowedUsersSet), listDiv);
-        }).catch(function(err) {
-          console.error("Error loading stories friends:", err);
-        });
+      fetchFriendsPromise.then(function(allowedUsersSet) {
+        fetchStoriesForUsers(Array.from(allowedUsersSet), listDiv);
+      }).catch(function(err) {
+        console.error("Error loading stories friends:", err);
+      });
     }
 
     
@@ -3993,10 +4031,13 @@ function uploadMediaToFirebase(file, folder, callback) {
         .get()
         .then(function(snapshot) {
           var stories = [];
+          var authorIds = [];
+
           snapshot.forEach(function(doc) {
             var data = doc.data();
             if (userIdsList.includes(data.user_id)) {
               stories.push(Object.assign({ id: doc.id }, data));
+              authorIds.push(data.user_id);
             }
           });
 
@@ -4013,10 +4054,11 @@ function uploadMediaToFirebase(file, folder, callback) {
 
           if (stories.length === 0) return;
 
-          stories.forEach(function(story) {
-            fetchUserProfileCached(story.user_id, function(author) {
-              var authorName = author ? author.full_name : "User";
-              var authorAvatar = author ? author.avatar_url : null;
+          fetchMultipleProfilesCached(authorIds, function() {
+            stories.forEach(function(story) {
+              var author = cachedProfiles[story.user_id] || {};
+              var authorName = author.full_name || "User";
+              var authorAvatar = author.avatar_url || null;
               var isOnline = isUserOnline(author);
               var initial = authorName ? authorName.charAt(0).toUpperCase() : "?";
 
@@ -4112,4 +4154,4 @@ function uploadMediaToFirebase(file, folder, callback) {
     }
   </script>
 </body>
-</html>         
+</html>
