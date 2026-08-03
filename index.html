@@ -3627,6 +3627,11 @@ function uploadMediaToFirebase(file, folder, callback) {
                 if (shouldShow) {
                   postsWall.innerHTML += createPostCardHtml(postData);
                   renderCommentsCountOnly(postData);
+                  
+                  // თუ პოსტი ვიდეოა, მთავარ ეკრანზეც ჩავრთოთ მცურავი ავატარების ანიმაცია
+                  if (postData.media_type === 'video') {
+                    startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
+                  }
                 }
               });
               observeVideos();
@@ -3709,6 +3714,7 @@ function uploadMediaToFirebase(file, folder, callback) {
         return `
           <div class="video-container-rel">
             <video class="post-media" src="${urlsString}" preload="metadata" playsinline loop onclick="toggleVideoPlay(this)"></video>
+            <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
           </div>
         `;
       }
