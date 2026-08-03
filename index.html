@@ -857,7 +857,6 @@
   }
     /* და აქ მთავრდება */
 
-
     
     /* PWA INSTALL EVENT LISTENER */
     var deferredPrompt = null;
@@ -2933,25 +2932,32 @@ auth.onAuthStateChanged(function(user) {
       var t = TRANSLATIONS[currentLang];
       photosWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
 
+      // Single GET Request (without composite index filters) to avoid limits & query errors
       db.collection('posts')
         .where('user_id', '==', userId)
-        .where('media_type', '==', 'video')
         .orderBy('created_at', 'desc')
         .get()
         .then(function(snapshot) {
-          if (snapshot.empty) {
+          activeTiktokVideosList = [];
+          var videoPosts = [];
+
+          snapshot.forEach(function(doc) {
+            var postData = Object.assign({ id: doc.id }, doc.data());
+            // JS side filtering for video posts
+            if (postData.media_type === 'video' || (postData.media_url && (postData.media_url.includes('.mp4') || postData.media_url.includes('video')))) {
+              videoPosts.push(postData);
+            }
+          });
+
+          if (videoPosts.length === 0) {
             photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noVideos}</div>`;
             return;
           }
 
-          activeTiktokVideosList = [];
+          activeTiktokVideosList = videoPosts;
           var gridHtml = '<div class="video-grid-full">';
 
-          snapshot.forEach(function(doc) {
-            var vPost = Object.assign({ id: doc.id }, doc.data());
-            activeTiktokVideosList.push(vPost);
-            var idx = activeTiktokVideosList.length - 1;
-
+          videoPosts.forEach(function(vPost, idx) {
             gridHtml += `
               <div class="video-grid-card" onclick="openTiktokVideoModal(${idx})">
                 <video class="video-grid-thumbnail" src="${vPost.media_url}#t=0.5" preload="metadata" muted></video>
