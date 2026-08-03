@@ -14,7 +14,26 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
   
   <style>
-            
+    /* TikTok Style Video Styling: Fill width completely & Hide UI controls visual gaps */
+    .video-container-rel {
+      position: relative;
+      width: 100%;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    video.post-media,
+    video.tiktok-slide-video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important; /* გაჭიმავს ვიდეოს კიდეებამდე შავი არეების გარეშე */
+      display: block;
+      outline: none;
+      border: none;
+    }
   </style>
   
 </head>
@@ -1398,11 +1417,13 @@
 
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
-        if (!entry.isIntersecting) {
+        if (entry.isIntersecting) {
+          entry.target.play().catch(function(){});
+        } else {
           entry.target.pause();
         }
       });
-    }, { threshold: 0.1 });
+    }, { threshold: 0.5 });
 
     function observeVideos() {
       var videos = document.querySelectorAll('video');
@@ -3681,7 +3702,7 @@ function uploadMediaToFirebase(file, folder, callback) {
       if (mediaType === 'video') {
         return `
           <div class="video-container-rel">
-            <video class="post-media" src="${urlsString}" controls preload="metadata" playsinline></video>
+            <video class="post-media" src="${urlsString}" preload="metadata" playsinline loop onclick="toggleVideoPlay(this)"></video>
           </div>
         `;
       }
