@@ -51,6 +51,53 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Facebook HD Live Button Style */
+    .live-post-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #242526;
+      border: 1px solid #3a3b3c;
+      color: #e4e6eb;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .live-post-btn:hover {
+      background: #3a3b3c;
+      border-color: #4e4f50;
+    }
+
+    .live-dot-pulse {
+      width: 8px;
+      height: 8px;
+      background-color: #ff4d4f;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+      animation: pulse-red 1.5s infinite;
+    }
+
+    @keyframes pulse-red {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(255, 77, 79, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+      }
+    }
   </style>
   
 </head>
@@ -184,6 +231,10 @@
             <div class="file-upload-btn" id="lbl-photo-video">📷 ფოტო / 🎥 ვიდეო</div>
             <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           </div>
+          <button class="live-post-btn" onclick="window.location.href='live.html'">
+            <span class="live-dot-pulse"></span>
+            <span id="lbl-live-btn">LIVE ეთერი</span>
+          </button>
           <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">გამოქვეყნება</button>
         </div>
         <div class="selected-file-info" id="selected-file-name"></div>
@@ -346,12 +397,6 @@
       </button>
 
       <div class="menu-divider"></div>
-
-      <button class="menu-live-btn" onclick="window.location.href='live.html'">
-        🔴 <span id="lbl-live-btn">LIVE პირდაპირი ეთერი</span>
-      </button>
-
-      
 
       <button class="side-menu-logout-btn" id="lbl-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
     </div>
@@ -1109,7 +1154,7 @@
         noVideos: "მომხმარებელს ვიდეოები არ აქვს.", descPlaceholder: "ფოტოს აღწერა არ არის მითითებული.",
         selectLang: "🌐 ენის არჩევა / Language",
         balanceTitle: "💳 შიდა ბალანსი", topUp: "+ შევსება",
-        liveBtn: "LIVE პირდაპირი ეთერი",
+        liveBtn: "LIVE ეთერი",
         pwaTitle: "დააინსტალირე აპლიკაცია", pwaSub: "სწრაფი წვდომა ტელეფონიდან", pwaBtn: "ინსტალაცია",
         authFooter: "© 2026 Emigrantbook. ყველა უფლება დაცულია.",
         privacyHeader: "⚙️ პარამეტრები და კონფიდენციალურობა",
