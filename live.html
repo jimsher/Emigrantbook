@@ -273,18 +273,18 @@
     /* ჩატის ყუთის გასწორებული სტილი */
     #liveChatBox {
         position: absolute;
-        bottom: 80px;
-        left: 15px;
+        bottom: 75px;
+        left: 12px;
         width: 75%;
-        height: 250px;
-        max-height: 250px;
+        max-height: 240px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
         gap: 6px;
-        z-index: 10000 !important;
+        z-index: 1000 !important;
         pointer-events: auto !important;
+        scroll-behavior: smooth;
     }
 
     .live-comment-item {
@@ -486,9 +486,9 @@
             </div>
         </div>
 
-        <div style="position:absolute; top:15px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:center; z-index: 100;">
+        <div style="position:absolute; top:15px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:center; z-index: 1001;">
             <div style="display:flex; align-items:center; background:rgba(0,0,0,0.4); padding:3px 12px 3px 3px; border-radius:30px; border: 0.5px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
-                <img id="liveHostAva" src="" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff; object-fit: cover;">
+                <img id="liveHostAva" src="https://via.placeholder.com/150" onerror="this.src='https://via.placeholder.com/150'" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff; object-fit: cover;">
                 <div style="margin: 0 10px; line-height: 1.2;">
                     <b id="liveHostName" style="color:white; font-size:13px; display:block; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Host</b>
                     <div style="display: flex; align-items: center; gap: 3px; color:#fff; font-size:11px; opacity: 0.9;">
@@ -516,7 +516,7 @@
         <!-- ჩატის კონტეინერი -->
         <div id="liveChatBox"></div>
 
-        <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 100;">
+        <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 1001;">
             <div style="flex: 1.5; display: flex; align-items: center; background: rgba(0,0,0,0.6) !important; border-radius: 25px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.3);">
                 <input type="text" id="liveMsgInp" onkeypress="if(event.key==='Enter') sendLiveComment()" style="width:100%; background:transparent !important; border:none !important; padding:10px 0; color:white; outline:none; font-size:14px;" placeholder="თქვი რამე...">
             </div>
@@ -596,14 +596,17 @@
                     if(doc.exists) {
                         const pData = doc.data();
                         window.myName = pData.full_name || user.email;
-                        window.myPhoto = pData.avatar_url || "";
+                        window.myPhoto = pData.avatar_url || "https://via.placeholder.com/150";
                         
                         const balEl = document.getElementById('userBalance');
                         if(balEl) balEl.innerText = pData.balance !== undefined ? pData.balance : 0;
                     } else {
                         window.myName = user.email;
-                        window.myPhoto = "";
+                        window.myPhoto = "https://via.placeholder.com/150";
                     }
+                }).catch(() => {
+                    window.myName = user.email;
+                    window.myPhoto = "https://via.placeholder.com/150";
                 });
             } else {
                 console.log("მომხმარებელი არ არის ავტორიზებული");
@@ -690,9 +693,24 @@
             currentHostUid = currentUid;
             window.currentLiveHostUid = currentUid;
 
+            // ავატარის უსაფრთხო წამოღება Firestore-იდან თუ window.myPhoto ჯერ ჩატვირთული არ არის
+            if (!window.myPhoto || window.myPhoto === "") {
+                try {
+                    const myDoc = await firebase.firestore().collection('profiles').doc(currentUid).get();
+                    if (myDoc.exists && myDoc.data().avatar_url) {
+                        window.myPhoto = myDoc.data().avatar_url;
+                        window.myName = myDoc.data().full_name || window.myName;
+                    }
+                } catch(e) {}
+            }
+
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveHostName').innerText = window.myName || "Host";
-            document.getElementById('liveHostAva').src = window.myPhoto || "https://via.placeholder.com/150";
+            
+            const hostAvaImg = document.getElementById('liveHostAva');
+            if (hostAvaImg) {
+                hostAvaImg.src = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+            }
 
             try {
                 await liveClient.leave(); 
@@ -764,7 +782,7 @@
                     if (live && live.host) {
                         const liveCard = `
                         <div class="live-item" onclick="joinLive('${live.channel}')">
-                            <img src="${live.hostPhoto || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; margin-right:10px; object-fit:cover;">
+                            <img src="${live.hostPhoto || 'https://via.placeholder.com/150'}" onerror="this.src='https://via.placeholder.com/150'" style="width:40px; height:40px; border-radius:50%; margin-right:10px; object-fit:cover;">
                             <strong>${live.host}</strong>
                         </div>`;
                         activeLivesContainer.innerHTML += liveCard;
@@ -795,7 +813,7 @@
 
                     // === ავატარის ჩატვირთვა FIRESTORE-იდან (თუ RTDB-ში არ წერია ან არ ჩანს) ===
                     let hostPhotoUrl = liveData.hostPhoto;
-                    if (!hostPhotoUrl || hostPhotoUrl === 'https://via.placeholder.com/150') {
+                    if (!hostPhotoUrl || hostPhotoUrl === 'https://via.placeholder.com/150' || hostPhotoUrl === "") {
                         try {
                             const hostDoc = await firebase.firestore().collection('profiles').doc(currentHostUid).get();
                             if (hostDoc.exists && hostDoc.data().avatar_url) {
@@ -803,7 +821,8 @@
                             }
                         } catch (e) { console.error("Host photo fetch error:", e); }
                     }
-                    document.getElementById('liveHostAva').src = hostPhotoUrl || 'https://via.placeholder.com/150';
+                    const hostAvaImg = document.getElementById('liveHostAva');
+                    if(hostAvaImg) hostAvaImg.src = hostPhotoUrl || 'https://via.placeholder.com/150';
 
                     if (window.auth && window.auth.currentUser) {
                         get(ref(window.db, `followers/${currentHostUid}/${window.auth.currentUser.uid}`)).then(followSnap => {
@@ -877,8 +896,9 @@
                         if (msg && msg.name) {
                             const div = document.createElement('div');
                             div.className = "live-comment-item";
+                            const photoSrc = msg.photo && msg.photo !== "" ? msg.photo : 'https://via.placeholder.com/150';
                             div.innerHTML = `
-                                <img src="${msg.photo || 'https://via.placeholder.com/150'}" style="width:22px; height:22px; border-radius:50%; object-fit:cover;">
+                                <img src="${photoSrc}" onerror="this.src='https://via.placeholder.com/150'" style="width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0;">
                                 <div>
                                     <b style="color:#d4af37; font-size:11px; margin-right:4px;">${msg.name}:</b>
                                     <span style="color:white; font-size:13px;">${msg.text}</span>
@@ -887,7 +907,9 @@
                             chatBox.appendChild(div);
                         }
                     });
-                    chatBox.scrollTop = chatBox.scrollHeight;
+                    setTimeout(() => {
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }, 50);
                 }
             });
         }
@@ -896,9 +918,11 @@
             const inp = document.getElementById('liveMsgInp');
             if(!inp || !inp.value.trim() || !currentLiveChannel) return;
 
+            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+
             push(ref(window.db, `live_chats/${currentLiveChannel}`), {
                 name: window.myName || "User",
-                photo: window.myPhoto || "https://via.placeholder.com/150",
+                photo: photoToSend,
                 text: inp.value.trim(),
                 ts: Date.now()
             });
@@ -1016,8 +1040,9 @@
                 if(avDiv) {
                     avDiv.innerHTML = "";
                     Object.values(viewers).slice(-1).forEach(v => {
-                        if (v && v.photo) {
-                            avDiv.innerHTML += `<div style="position:relative;"><img src="${v.photo}" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
+                        if (v) {
+                            const photoSrc = v.photo && v.photo !== "" ? v.photo : 'https://via.placeholder.com/150';
+                            avDiv.innerHTML += `<div style="position:relative;"><img src="${photoSrc}" onerror="this.src='https://via.placeholder.com/150'" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
                         }
                     });
                 }
@@ -1091,7 +1116,8 @@
         function updateViewerCount(channel, action) {
             if (!window.auth || !window.auth.currentUser) return;
             const vRef = ref(window.db, `lives_meta/${channel}/viewers/${window.auth.currentUser.uid}`);
-            action === 'join' ? set(vRef, { name: window.myName || "User", photo: window.myPhoto || "https://via.placeholder.com/150" }) : remove(vRef);
+            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+            action === 'join' ? set(vRef, { name: window.myName || "User", photo: photoToSend }) : remove(vRef);
         }
 
         window.toggleViewerList = function(show) {
@@ -1118,7 +1144,8 @@
                     if (v && v.name) {
                         const row = document.createElement('div');
                         row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
-                        row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${v.photo || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div>`;
+                        const photoSrc = v.photo && v.photo !== "" ? v.photo : 'https://via.placeholder.com/150';
+                        row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${photoSrc}" onerror="this.src='https://via.placeholder.com/150'" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div>`;
                         container.appendChild(row);
                     }
                 });
@@ -1127,10 +1154,11 @@
 
         function registerLiveInDatabase(channelName, hostNickname) {
             const liveRef = ref(window.db, `lives_active/${channelName}`);
+            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
             const liveData = { 
                 channel: channelName, 
                 host: hostNickname, 
-                hostPhoto: window.myPhoto || "https://via.placeholder.com/150", 
+                hostPhoto: photoToSend, 
                 startTime: Date.now(), 
                 status: "online", 
                 uid: window.auth.currentUser.uid 
@@ -1156,10 +1184,11 @@
 
         window.sendJoinRequest = function() {
             if (!currentLiveChannel || !window.auth || !window.auth.currentUser) return;
+            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
             set(ref(window.db, `live_requests/${currentLiveChannel}`), { 
                 uid: window.auth.currentUser.uid, 
                 name: window.myName || "User", 
-                photo: window.myPhoto || "https://via.placeholder.com/150", 
+                photo: photoToSend, 
                 status: 'pending', 
                 ts: Date.now() 
             }).then(() => {
@@ -1191,9 +1220,10 @@
                 await liveTracks.video.setEnabled(false);
                 guestCamEnabled = false;
                 if(camIcon) camIcon.className = "fas fa-video-slash";
+                const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
                 set(ref(window.db, `lives_active/${currentLiveChannel}/guest_status`), {
                     showPhoto: true,
-                    photoUrl: window.myPhoto || "https://via.placeholder.com/150"
+                    photoUrl: photoToSend
                 });
             } else {
                 await liveTracks.video.setEnabled(true);
@@ -1256,11 +1286,13 @@
 
                 await userDocRef.update({ balance: currentBalance - price });
 
+                const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+
                 push(ref(window.db, `received_gifts/${hostUid}`), {
                     giftUrl: giftImg,
                     price: price,
                     fromName: window.myName || "User",
-                    fromPhoto: window.myPhoto || "https://via.placeholder.com/150",
+                    fromPhoto: photoToSend,
                     timestamp: Date.now()
                 });
 
