@@ -23,7 +23,6 @@
             overflow: hidden;
         }
 
-        /* FB Style Live Indicator */
         .fb-live-badge {
             background-color: #e41e3f;
             color: #ffffff;
@@ -53,7 +52,6 @@
             50% { opacity: 0.3; }
         }
 
-        /* Pre-Live Modal Setup */
         #preLiveSetupModal {
             position: fixed;
             top: 0;
@@ -130,7 +128,6 @@
             gap: 8px;
         }
 
-        /* MAIN LIVE UI */
         #liveUI {
             display: none;
             position: fixed;
@@ -309,37 +306,6 @@
             backdrop-filter: blur(10px);
         }
 
-        .fb-reaction-tray { display: flex; gap: 6px; }
-
-        .fb-reaction-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: rgba(36, 37, 38, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .floating-reaction {
-            position: absolute;
-            bottom: 80px;
-            right: 20px;
-            font-size: 32px;
-            pointer-events: none;
-            animation: floatUp 2s ease-out forwards;
-            z-index: 9999;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(0.8); opacity: 1; }
-            50% { transform: translateY(-150px) scale(1.2) rotate(15deg); }
-            100% { transform: translateY(-300px) scale(0.6); opacity: 0; }
-        }
-
         .lives-modal-overlay, .viewers-sheet-overlay {
             display: none;
             position: fixed;
@@ -465,12 +431,6 @@
             <div class="fb-input-wrapper">
                 <input type="text" id="liveMsgInp" class="fb-live-input" placeholder="დაწერეთ კომენტარი..." onkeypress="if(event.key==='Enter') sendLiveComment()">
             </div>
-            <div class="fb-reaction-tray">
-                <button class="fb-reaction-btn" onclick="sendFBReaction('👍')">👍</button>
-                <button class="fb-reaction-btn" onclick="sendFBReaction('❤️')">❤️</button>
-                <button class="fb-reaction-btn" onclick="sendFBReaction('😂')">😂</button>
-                <button class="fb-reaction-btn" onclick="sendFBReaction('😮')">😮</button>
-            </div>
         </div>
     </div>
 
@@ -523,6 +483,9 @@
         let timerInterval = null;
         let streamSeconds = 0;
         let currentViewersList = [];
+        
+        let liveDocUnsubscribe = null;
+        let chatUnsubscribe = null;
 
         window.myName = "";
         window.myPhoto = "";
@@ -588,9 +551,10 @@
             document.getElementById('liveHostName').innerText = window.myName;
             document.getElementById('liveStreamTitle').innerText = title;
             document.getElementById('liveHostAva').src = window.myPhoto;
+            document.getElementById('liveChatBox').innerHTML = "";
 
             try {
-                // 🔥 Firestore-ის `lives` კოლექციაში დოკუმენტის ჩაწერა!
+                // Firestore დოკუმენტის შექმნა
                 const liveDoc = await db.collection('lives').add({
                     host_id: uid,
                     host_name: window.myName,
@@ -614,8 +578,8 @@
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
                 startStreamTimer();
+                listenToLiveDoc(currentLiveDocId);
                 listenToLiveChat(currentLiveDocId);
-                listenToViewers(currentLiveDocId);
 
             } catch (e) {
                 console.error("Stream Start Error:", e);
@@ -629,6 +593,7 @@
 
             closeActiveLivesModal();
             document.getElementById('liveUI').style.display = 'flex';
+            document.getElementById('liveChatBox').innerHTML = "";
 
             if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
 
@@ -643,7 +608,7 @@
             await liveClient.setClientRole("audience");
             await liveClient.join(appId, docId, null, auth.currentUser.uid);
 
-            // მაყურებლის დამატება Firestore-ის სიაში
+            // მაყურებლის დამატება
             db.collection('lives').doc(docId).update({
                 viewers: firebase.firestore.FieldValue.arrayUnion({
                     uid: auth.currentUser.uid,
@@ -653,8 +618,8 @@
             });
 
             startStreamTimer();
+            listenToLiveDoc(docId);
             listenToLiveChat(docId);
-            listenToViewers(docId);
 
             liveClient.on("user-published", async (user, mediaType) => {
                 await liveClient.subscribe(user, mediaType);
@@ -683,6 +648,10 @@
         window.endLive = async function() {
             if (timerInterval) clearInterval(timerInterval);
 
+            // 🛑 მოსმენების გათიშვა ლიმიტების დასაზოგად
+            if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
+            if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+
             if (currentLiveDocId && auth.currentUser) {
                 const docRef = db.collection('lives').doc(currentLiveDocId);
                 const docSnap = await docRef.get();
@@ -698,45 +667,63 @@
             document.getElementById('liveUI').style.display = 'none';
         };
 
-        function listenToLiveChat(docId) {
-            const chatBox = document.getElementById('liveChatBox');
-            db.collection('lives').doc(docId).collection('comments').orderBy('ts', 'asc')
-            .onSnapshot(snapshot => {
-                chatBox.innerHTML = "";
-                snapshot.forEach(doc => {
-                    const msg = doc.data();
-                    const div = document.createElement('div');
-                    div.className = "fb-comment-bubble";
-                    div.innerHTML = `<span class="fb-comment-author">${msg.name}</span>${msg.text}`;
-                    chatBox.appendChild(div);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-        }
+        // 👁️ მაყურებლების მოსმენა
+        function listenToLiveDoc(docId) {
+            if (liveDocUnsubscribe) liveDocUnsubscribe();
 
-        window.sendLiveComment = async function() {
-            const inp = document.getElementById('liveMsgInp');
-            if (!inp.value.trim() || !currentLiveDocId) return;
-
-            db.collection('lives').doc(currentLiveDocId).collection('comments').add({
-                name: window.myName || "User",
-                text: inp.value.trim(),
-                ts: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            inp.value = "";
-        };
-
-        function listenToViewers(docId) {
-            db.collection('lives').doc(docId).onSnapshot(doc => {
+            liveDocUnsubscribe = db.collection('lives').doc(docId).onSnapshot(doc => {
                 if (doc.exists) {
-                    currentViewersList = doc.data().viewers || [];
+                    const data = doc.data();
+                    currentViewersList = data.viewers || [];
                     const count = currentViewersList.length;
                     document.getElementById('vCount').innerText = count;
                     document.getElementById('sheetViewerCount').innerText = count;
                 }
             });
         }
+
+        // 💬 კომენტარების ოპტიმიზებული Realtime მოსმენა (მხოლოდ ახალ ჩანაწერზე = 1 Read)
+        function listenToLiveChat(docId) {
+            const chatBox = document.getElementById('liveChatBox');
+            if (chatUnsubscribe) chatUnsubscribe();
+
+            chatUnsubscribe = db.collection('lives').doc(docId)
+                .collection('comments')
+                .orderBy('ts', 'asc')
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === "added") {
+                            const msg = change.doc.data();
+                            const div = document.createElement('div');
+                            div.className = "fb-comment-bubble";
+                            div.innerHTML = `<span class="fb-comment-author">${msg.name}</span>${msg.text}`;
+                            chatBox.appendChild(div);
+                        }
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
+        }
+
+        // 📤 კომენტარის გაგზავნა
+        window.sendLiveComment = async function() {
+            const inp = document.getElementById('liveMsgInp');
+            const commentText = inp.value.trim();
+            if (!commentText || !currentLiveDocId) return;
+
+            inp.value = "";
+
+            try {
+                await db.collection('lives').doc(currentLiveDocId)
+                    .collection('comments')
+                    .add({
+                        name: window.myName || "User",
+                        text: commentText,
+                        ts: Date.now()
+                    });
+            } catch (e) {
+                console.error("Comment Error:", e);
+            }
+        };
 
         window.openViewersSheet = function() {
             const container = document.getElementById('viewersListContainer');
