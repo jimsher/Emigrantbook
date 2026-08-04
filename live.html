@@ -152,13 +152,12 @@
             background: #000;
         }
 
-        #remote-live-video, #guest-remote-video {
+        #remote-live-video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Top Overlay Header */
         .fb-live-top-bar {
             position: absolute;
             top: 15px;
@@ -231,11 +230,6 @@
             backdrop-filter: blur(8px);
             cursor: pointer;
             user-select: none;
-            transition: background 0.2s;
-        }
-
-        .fb-viewer-badge:active {
-            background: rgba(255, 255, 255, 0.2);
         }
 
         .fb-close-btn {
@@ -252,7 +246,6 @@
             justify-content: center;
         }
 
-        /* FB Chat Comments */
         #liveChatBox {
             position: absolute;
             bottom: 75px;
@@ -269,9 +262,7 @@
             scroll-behavior: smooth;
         }
 
-        #liveChatBox::-webkit-scrollbar {
-            display: none;
-        }
+        #liveChatBox::-webkit-scrollbar { display: none; }
 
         .fb-comment-bubble {
             background: rgba(0, 0, 0, 0.65);
@@ -293,7 +284,6 @@
             display: inline-block;
         }
 
-        /* Bottom Controls Bar */
         .fb-bottom-bar {
             position: absolute;
             bottom: 15px;
@@ -305,10 +295,7 @@
             z-index: 1000;
         }
 
-        .fb-input-wrapper {
-            flex: 1;
-            position: relative;
-        }
+        .fb-input-wrapper { flex: 1; }
 
         .fb-live-input {
             width: 100%;
@@ -322,10 +309,7 @@
             backdrop-filter: blur(10px);
         }
 
-        .fb-reaction-tray {
-            display: flex;
-            gap: 6px;
-        }
+        .fb-reaction-tray { display: flex; gap: 6px; }
 
         .fb-reaction-btn {
             width: 38px;
@@ -338,14 +322,8 @@
             justify-content: center;
             font-size: 18px;
             cursor: pointer;
-            transition: transform 0.1s;
         }
 
-        .fb-reaction-btn:active {
-            transform: scale(1.3);
-        }
-
-        /* Floating Animated Reactions */
         .floating-reaction {
             position: absolute;
             bottom: 80px;
@@ -362,8 +340,7 @@
             100% { transform: translateY(-300px) scale(0.6); opacity: 0; }
         }
 
-        /* Active Lives Modal */
-        .lives-modal-overlay {
+        .lives-modal-overlay, .viewers-sheet-overlay {
             display: none;
             position: fixed;
             top: 0;
@@ -376,6 +353,8 @@
             justify-content: center;
         }
 
+        .viewers-sheet-overlay { align-items: flex-end; z-index: 100001; }
+
         .lives-modal-box {
             background: #242526;
             width: 90%;
@@ -383,6 +362,17 @@
             border-radius: 12px;
             padding: 20px;
             border: 1px solid #3a3b3c;
+        }
+
+        .viewers-sheet {
+            background: #242526;
+            width: 100%;
+            max-height: 60vh;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
         .live-card-row {
@@ -394,53 +384,6 @@
             border-radius: 8px;
             margin-top: 8px;
             cursor: pointer;
-        }
-
-        /* Viewers Bottom Sheet Drawer */
-        .viewers-sheet-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 100001;
-            align-items: flex-end;
-        }
-
-        .viewers-sheet {
-            background: #242526;
-            width: 100%;
-            max-height: 60vh;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .viewers-sheet-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #3a3b3c;
-            margin-bottom: 12px;
-        }
-
-        .viewers-list-container {
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
         }
 
         .viewer-item {
@@ -456,32 +399,24 @@
             border-radius: 50%;
             object-fit: cover;
         }
-
-        .viewer-item span {
-            font-weight: 600;
-            font-size: 15px;
-            color: #e4e6eb;
-        }
     </style>
 </head>
 <body>
 
-    <!-- 1. Navigation Bar Buttons -->
     <div style="padding: 15px;">
-        <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
             <i class="fas fa-video"></i> პირდაპირი ეთერი (LIVE)
         </button>
-
         <button onclick="openActiveLivesModal()" style="background: #242526; color: white; border: 1px solid #3a3b3c; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: 10px;">
             <i class="fas fa-play-circle"></i> აქტიური ლაივები
         </button>
     </div>
 
-    <!-- 2. Pre-Live Setup Modal -->
+    <!-- Pre-Live Modal -->
     <div id="preLiveSetupModal">
         <div class="setup-header">
-            <span style="font-weight: bold; font-size: 16px;">პირდაპირი ეთერის პარამეტრები</span>
-            <button onclick="closeLiveSetup()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
+            <span style="font-weight: bold;">პირდაპირი ეთერის პარამეტრები</span>
+            <button onclick="closeLiveSetup()" style="background:none; border:none; color:white; font-size:22px;">&times;</button>
         </div>
         <div class="setup-preview-zone">
             <div id="localCameraPreview"></div>
@@ -494,7 +429,7 @@
         </div>
     </div>
 
-    <!-- 3. MAIN LIVE INTERFACE -->
+    <!-- Main Live UI -->
     <div id="liveUI">
         <div id="live-video-container">
             <div id="remote-live-video"></div>
@@ -539,118 +474,95 @@
         </div>
     </div>
 
-    <!-- 4. Active Lives Modal -->
+    <!-- Modals -->
     <div id="activeLivesModal" class="lives-modal-overlay">
         <div class="lives-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3>მიმდინარე პირდაპირი ეთერები</h3>
-                <button onclick="closeActiveLivesModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
+                <button onclick="closeActiveLivesModal()" style="background:none; border:none; color:white; font-size:20px;">&times;</button>
             </div>
             <div id="activeLivesList"></div>
         </div>
     </div>
 
-    <!-- 5. Viewers List Bottom Sheet Modal -->
-    <div id="viewersSheetOverlay" class="viewers-sheet-overlay" onclick="closeViewersSheet(event)">
+    <div id="viewersSheetOverlay" class="viewers-sheet-overlay" onclick="closeViewersSheet()">
         <div class="viewers-sheet" onclick="event.stopPropagation()">
-            <div class="viewers-sheet-header">
-                <h3 style="font-size: 16px;">მაყურებლები (<span id="sheetViewerCount">0</span>)</h3>
-                <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px; cursor:pointer;">&times;</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3>მაყურებლები (<span id="sheetViewerCount">0</span>)</h3>
+                <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px;">&times;</button>
             </div>
-            <div id="viewersListContainer" class="viewers-list-container">
-                <!-- Viewers items rendered dynamically -->
-            </div>
+            <div id="viewersListContainer" style="overflow-y:auto;"></div>
         </div>
     </div>
 
-    <!-- 6. FIREBASE & AGORA MODULE SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, remove, onValue, push, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
             authDomain: "emigrantbook-4b7bd.firebaseapp.com",
-            databaseURL: "https://emigrantbook-4b7bd-default-rtdb.firebaseio.com",
             projectId: "emigrantbook-4b7bd",
             storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
             messagingSenderId: "109907338554",
             appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        const firestore = getFirestore(app);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
         let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
         let localTracks = { video: null, audio: null };
-        let currentLiveChannel = null;
+        let currentLiveDocId = null;
         let timerInterval = null;
         let streamSeconds = 0;
-        let currentViewersData = {};
+        let currentViewersList = [];
 
-        // 🎯 პროფილის წამოღება Firestore-იდან (full_name და avatar_url)
+        window.myName = "";
+        window.myPhoto = "";
+
         async function fetchUserProfile(uid) {
-            window.myName = "";
-            window.myPhoto = "";
-
             if (!uid) return;
-
             try {
-                const docRef = doc(firestore, 'profiles', uid);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
+                const docSnap = await db.collection('profiles').doc(uid).get();
+                if (docSnap.exists) {
                     const data = docSnap.data();
-                    window.myName = data.full_name || data.fullName || data.name || data.username;
-                    window.myPhoto = data.avatar_url || data.avatar || data.photoURL;
+                    window.myName = data.full_name || data.fullName || auth.currentUser?.email || "მომხმარებელი";
+                    window.myPhoto = data.avatar_url || data.avatar || "https://via.placeholder.com/150";
                 } else {
-                    const q = query(collection(firestore, 'profiles'), where('uid', '==', uid));
-                    const querySnap = await getDocs(q);
-                    if (!querySnap.empty) {
-                        const data = querySnap.docs[0].data();
-                        window.myName = data.full_name || data.fullName || data.name || data.username;
-                        window.myPhoto = data.avatar_url || data.avatar || data.photoURL;
-                    }
+                    window.myName = auth.currentUser?.displayName || auth.currentUser?.email || "მომხმარებელი";
+                    window.myPhoto = auth.currentUser?.photoURL || "https://via.placeholder.com/150";
                 }
             } catch (e) {
-                console.error("Firestore Error:", e);
+                console.error("Profile load error:", e);
+                window.myName = auth.currentUser?.email || "მომხმარებელი";
+                window.myPhoto = "https://via.placeholder.com/150";
             }
-
-            if (!window.myName && auth.currentUser) {
-                window.myName = auth.currentUser.displayName || auth.currentUser.email || "მომხმარებელი";
-            }
-            if (!window.myPhoto && auth.currentUser) {
-                window.myPhoto = auth.currentUser.photoURL || "https://via.placeholder.com/150";
-            }
-
-            if (!window.myName) window.myName = "მომხმარებელი";
-            if (!window.myPhoto) window.myPhoto = "https://via.placeholder.com/150";
         }
 
-        onAuthStateChanged(auth, async (user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 await fetchUserProfile(user.uid);
             }
         });
 
-        // 1. კამერის ჩართვის ფანჯარა
         window.startLiveSetup = async function() {
             if (!auth.currentUser) {
                 alert("გთხოვთ გაიაროთ ავტორიზაცია!");
                 return;
             }
             await fetchUserProfile(auth.currentUser.uid);
-
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
                 localTracks.video.play("localCameraPreview");
             } catch (e) {
-                console.error("Camera access error:", e);
                 alert("კამერის ჩართვა ვერ მოხერხდა!");
             }
         };
@@ -664,26 +576,35 @@
             document.getElementById('preLiveSetupModal').style.display = 'none';
         };
 
-        // 2. ინდივიდუალური ლაივის დაწყება
         window.launchLiveStream = async function() {
             const title = document.getElementById('streamTitleInput').value.trim() || "პირდაპირი ეთერი";
-            const currentUid = auth.currentUser ? auth.currentUser.uid : "user_" + Date.now();
+            const uid = auth.currentUser.uid;
             const appId = "258897e8fb5f4dd089b761eca6568b24";
 
-            await fetchUserProfile(currentUid);
-
-            currentLiveChannel = `live_${currentUid}_${Date.now()}`;
+            await fetchUserProfile(uid);
 
             document.getElementById('preLiveSetupModal').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
-            
             document.getElementById('liveHostName').innerText = window.myName;
             document.getElementById('liveStreamTitle').innerText = title;
             document.getElementById('liveHostAva').src = window.myPhoto;
 
             try {
+                // 🔥 Firestore-ის `lives` კოლექციაში დოკუმენტის ჩაწერა!
+                const liveDoc = await db.collection('lives').add({
+                    host_id: uid,
+                    host_name: window.myName,
+                    host_photo: window.myPhoto,
+                    title: title,
+                    status: "active",
+                    created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    viewers: []
+                });
+
+                currentLiveDocId = liveDoc.id;
+
                 await liveClient.setClientRole("host");
-                await liveClient.join(appId, currentLiveChannel, null, currentUid);
+                await liveClient.join(appId, currentLiveDocId, null, uid);
 
                 if (!localTracks.audio) {
                     localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
@@ -692,57 +613,48 @@
                 localTracks.video.play("remote-live-video");
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
-                const liveRef = ref(db, `lives_active/${currentLiveChannel}`);
-                await set(liveRef, {
-                    channel: currentLiveChannel,
-                    host: window.myName,
-                    hostPhoto: window.myPhoto,
-                    title: title,
-                    uid: currentUid,
-                    startTime: Date.now()
-                });
-                onDisconnect(liveRef).remove();
-
                 startStreamTimer();
-                listenToLiveChat(currentLiveChannel);
-                listenToViewers(currentLiveChannel);
-                listenToReactions(currentLiveChannel);
+                listenToLiveChat(currentLiveDocId);
+                listenToViewers(currentLiveDocId);
 
             } catch (e) {
-                console.error("Agora Stream error:", e);
-                alert("ეთერის გაშვების შეცდომა: " + e.message);
+                console.error("Stream Start Error:", e);
+                alert("შეცდომა: " + e.message);
             }
         };
 
-        // 3. მაყურებლის შეყვანა ლაივში
-        window.joinLive = async function(channelName) {
+        window.joinLive = async function(docId) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
-            currentLiveChannel = channelName;
+            currentLiveDocId = docId;
 
             closeActiveLivesModal();
             document.getElementById('liveUI').style.display = 'flex';
 
-            if (auth.currentUser) {
-                await fetchUserProfile(auth.currentUser.uid);
+            if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
+
+            const docSnap = await db.collection('lives').doc(docId).get();
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                document.getElementById('liveHostName').innerText = data.host_name;
+                document.getElementById('liveStreamTitle').innerText = data.title;
+                document.getElementById('liveHostAva').src = data.host_photo;
             }
 
-            get(ref(db, `lives_active/${channelName}`)).then(snap => {
-                const liveData = snap.val();
-                if (liveData) {
-                    document.getElementById('liveHostName').innerText = liveData.host;
-                    document.getElementById('liveStreamTitle').innerText = liveData.title || "Live Video";
-                    document.getElementById('liveHostAva').src = liveData.hostPhoto || "https://via.placeholder.com/150";
-                }
+            await liveClient.setClientRole("audience");
+            await liveClient.join(appId, docId, null, auth.currentUser.uid);
+
+            // მაყურებლის დამატება Firestore-ის სიაში
+            db.collection('lives').doc(docId).update({
+                viewers: firebase.firestore.FieldValue.arrayUnion({
+                    uid: auth.currentUser.uid,
+                    name: window.myName,
+                    photo: window.myPhoto
+                })
             });
 
-            await liveClient.setClientRole("audience");
-            await liveClient.join(appId, channelName, null, auth.currentUser ? auth.currentUser.uid : "viewer_" + Date.now());
-
-            updateViewerCount(channelName, 'join');
             startStreamTimer();
-            listenToLiveChat(channelName);
-            listenToViewers(channelName);
-            listenToReactions(channelName);
+            listenToLiveChat(docId);
+            listenToViewers(docId);
 
             liveClient.on("user-published", async (user, mediaType) => {
                 await liveClient.subscribe(user, mediaType);
@@ -751,17 +663,15 @@
             });
 
             liveClient.on("user-left", () => {
-                alert("ლაივი დასრულდა წამყვანის მიერ.");
+                alert("ლაივი დასრულდა!");
                 endLive();
             });
         };
 
-        // ⏱️ ტაიმერის ფუნქცია (გასწორებული)
         function startStreamTimer() {
             if (timerInterval) clearInterval(timerInterval);
             streamSeconds = 0;
             document.getElementById('streamTimer').innerText = "00:00";
-
             timerInterval = setInterval(() => {
                 streamSeconds++;
                 const mins = String(Math.floor(streamSeconds / 60)).padStart(2, '0');
@@ -771,18 +681,13 @@
         }
 
         window.endLive = async function() {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-            }
+            if (timerInterval) clearInterval(timerInterval);
 
-            if (currentLiveChannel && auth.currentUser) {
-                if (currentLiveChannel.includes(auth.currentUser.uid)) {
-                    remove(ref(db, `lives_active/${currentLiveChannel}`));
-                    remove(ref(db, `live_chats/${currentLiveChannel}`));
-                    remove(ref(db, `live_reactions/${currentLiveChannel}`));
-                } else {
-                    updateViewerCount(currentLiveChannel, 'leave');
+            if (currentLiveDocId && auth.currentUser) {
+                const docRef = db.collection('lives').doc(currentLiveDocId);
+                const docSnap = await docRef.get();
+                if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
+                    await docRef.update({ status: "ended" });
                 }
             }
 
@@ -790,153 +695,90 @@
             if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
 
             await liveClient.leave();
-            closeViewersSheet();
             document.getElementById('liveUI').style.display = 'none';
         };
 
-        function listenToLiveChat(channel) {
+        function listenToLiveChat(docId) {
             const chatBox = document.getElementById('liveChatBox');
-            onValue(ref(db, `live_chats/${channel}`), snap => {
+            db.collection('lives').doc(docId).collection('comments').orderBy('ts', 'asc')
+            .onSnapshot(snapshot => {
                 chatBox.innerHTML = "";
-                const data = snap.val();
-                if (data) {
-                    Object.values(data).forEach(msg => {
-                        const div = document.createElement('div');
-                        div.className = "fb-comment-bubble";
-                        div.innerHTML = `<span class="fb-comment-author">${msg.name}</span>${msg.text}`;
-                        chatBox.appendChild(div);
-                    });
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const div = document.createElement('div');
+                    div.className = "fb-comment-bubble";
+                    div.innerHTML = `<span class="fb-comment-author">${msg.name}</span>${msg.text}`;
+                    chatBox.appendChild(div);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
             });
         }
 
         window.sendLiveComment = async function() {
             const inp = document.getElementById('liveMsgInp');
-            if (!inp.value.trim() || !currentLiveChannel) return;
+            if (!inp.value.trim() || !currentLiveDocId) return;
 
-            if (!window.myName && auth.currentUser) {
-                await fetchUserProfile(auth.currentUser.uid);
-            }
-
-            push(ref(db, `live_chats/${currentLiveChannel}`), {
+            db.collection('lives').doc(currentLiveDocId).collection('comments').add({
                 name: window.myName || "User",
                 text: inp.value.trim(),
-                ts: Date.now()
+                ts: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             inp.value = "";
         };
 
-        window.sendFBReaction = function(emoji) {
-            if (!currentLiveChannel) return;
-            push(ref(db, `live_reactions/${currentLiveChannel}`), { emoji: emoji, ts: Date.now() });
-        };
-
-        function listenToReactions(channel) {
-            onValue(ref(db, `live_reactions/${channel}`), snap => {
-                const data = snap.val();
-                if (data) {
-                    const lastReaction = Object.values(data).pop();
-                    if (lastReaction && (Date.now() - lastReaction.ts < 3000)) {
-                        spawnFloatingEmoji(lastReaction.emoji);
-                    }
+        function listenToViewers(docId) {
+            db.collection('lives').doc(docId).onSnapshot(doc => {
+                if (doc.exists) {
+                    currentViewersList = doc.data().viewers || [];
+                    const count = currentViewersList.length;
+                    document.getElementById('vCount').innerText = count;
+                    document.getElementById('sheetViewerCount').innerText = count;
                 }
             });
         }
 
-        function spawnFloatingEmoji(emoji) {
-            const el = document.createElement('div');
-            el.className = 'floating-reaction';
-            el.innerText = emoji;
-            el.style.left = (Math.random() * 40 + 50) + '%';
-            document.getElementById('liveUI').appendChild(el);
-            setTimeout(() => el.remove(), 2000);
-        }
-
-        // 👁️ მაყურებლების მონაცემების შენახვა
-        function updateViewerCount(channel, action) {
-            if (!auth.currentUser) return;
-            const vRef = ref(db, `lives_active/${channel}/viewers/${auth.currentUser.uid}`);
-            
-            if (action === 'join') {
-                set(vRef, {
-                    name: window.myName || "მაყურებელი",
-                    photo: window.myPhoto || "https://via.placeholder.com/150",
-                    joinedAt: Date.now()
-                });
-                onDisconnect(vRef).remove();
-            } else {
-                remove(vRef);
-            }
-        }
-
-        function listenToViewers(channel) {
-            onValue(ref(db, `lives_active/${channel}/viewers`), snap => {
-                currentViewersData = snap.val() || {};
-                const count = Object.keys(currentViewersData).length;
-                document.getElementById('vCount').innerText = count;
-                document.getElementById('sheetViewerCount').innerText = count;
-
-                if (document.getElementById('viewersSheetOverlay').style.display === 'flex') {
-                    renderViewersList();
-                }
-            });
-        }
-
-        // 📋 მაყურებლების სიის ამოშლადი ფანჯარა (Bottom Sheet)
         window.openViewersSheet = function() {
-            renderViewersList();
+            const container = document.getElementById('viewersListContainer');
+            container.innerHTML = "";
+            if (currentViewersList.length === 0) {
+                container.innerHTML = "<div style='color:#aaa; padding:10px;'>ჯერ მაყურებლები არ არიან.</div>";
+            } else {
+                currentViewersList.forEach(v => {
+                    container.innerHTML += `
+                        <div class="viewer-item">
+                            <img src="${v.photo}">
+                            <span>${v.name}</span>
+                        </div>
+                    `;
+                });
+            }
             document.getElementById('viewersSheetOverlay').style.display = 'flex';
         };
 
-        window.closeViewersSheet = function(e) {
+        window.closeViewersSheet = function() {
             document.getElementById('viewersSheetOverlay').style.display = 'none';
         };
-
-        function renderViewersList() {
-            const container = document.getElementById('viewersListContainer');
-            container.innerHTML = "";
-
-            const entries = Object.values(currentViewersData);
-            if (entries.length === 0) {
-                container.innerHTML = "<div style='color: #aaa; padding: 10px 0;'>ჯერ მაყურებლები არ არიან.</div>";
-                return;
-            }
-
-            entries.forEach(v => {
-                const name = typeof v === 'object' ? (v.name || "მაყურებელი") : "მაყურებელი";
-                const photo = typeof v === 'object' ? (v.photo || "https://via.placeholder.com/150") : "https://via.placeholder.com/150";
-
-                const div = document.createElement('div');
-                div.className = 'viewer-item';
-                div.innerHTML = `
-                    <img src="${photo}" alt="${name}">
-                    <span>${name}</span>
-                `;
-                container.appendChild(div);
-            });
-        }
 
         window.openActiveLivesModal = function() {
             document.getElementById('activeLivesModal').style.display = 'flex';
             const container = document.getElementById('activeLivesList');
             container.innerHTML = "იტვირთება...";
 
-            get(ref(db, 'lives_active')).then(snap => {
+            db.collection('lives').where('status', '==', 'active').get().then(snap => {
                 container.innerHTML = "";
-                if (!snap.exists()) {
+                if (snap.empty) {
                     container.innerHTML = "აქტიური ლაივები არ არის.";
                     return;
                 }
-                snap.forEach(child => {
-                    const live = child.val();
+                snap.forEach(doc => {
+                    const live = doc.data();
                     container.innerHTML += `
-                        <div class="live-card-row" onclick="joinLive('${live.channel}')">
+                        <div class="live-card-row" onclick="joinLive('${doc.id}')">
                             <div style="display:flex; align-items:center; gap:10px;">
-                                <img src="${live.hostPhoto || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                                <img src="${live.host_photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
                                 <div>
-                                    <div style="font-weight:bold;">${live.host}</div>
+                                    <div style="font-weight:bold;">${live.host_name}</div>
                                     <div style="font-size:12px; color:#aaa;">${live.title}</div>
                                 </div>
                             </div>
