@@ -32,21 +32,21 @@
         .fb-live-badge {
             background-color: #e41e3f;
             color: #ffffff;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             padding: 3px 8px;
             border-radius: 4px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .fb-live-badge::before {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background-color: #ffffff;
             border-radius: 50%;
             display: inline-block;
@@ -163,7 +163,7 @@
             object-fit: cover;
         }
 
-        /* Top Overlay Header */
+        /* Top Overlay Header - Fixed Layout */
         .fb-live-top-bar {
             position: absolute;
             top: 15px;
@@ -175,14 +175,27 @@
             z-index: 1000;
         }
 
-        .fb-host-details {
+        .fb-top-left {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 12px;
-            border-radius: 20px;
-            backdrop-filter: blur(8px);
+        }
+
+        .fb-top-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fb-host-details {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.55);
+            padding: 5px 12px 5px 6px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .fb-host-avatar {
@@ -194,33 +207,34 @@
         }
 
         .fb-stream-time {
-            background: rgba(0, 0, 0, 0.6);
-            color: #e4e6eb;
-            padding: 3px 8px;
+            background: rgba(0, 0, 0, 0.65);
+            color: #ffffff;
+            padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-family: monospace;
+            font-weight: bold;
         }
 
         .fb-viewer-badge {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .fb-close-btn {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             border: none;
             color: #fff;
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -230,36 +244,42 @@
         /* FB Chat Comments */
         #liveChatBox {
             position: absolute;
-            bottom: 80px;
+            bottom: 75px;
             left: 15px;
-            width: 80%;
-            max-width: 380px;
-            max-height: 250px;
+            width: 85%;
+            max-width: 360px;
+            max-height: 240px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 8px;
             z-index: 1000;
             pointer-events: auto;
+            scroll-behavior: smooth;
+        }
+
+        #liveChatBox::-webkit-scrollbar {
+            display: none;
         }
 
         .fb-comment-bubble {
-            background: rgba(24, 25, 26, 0.85);
+            background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(8px);
             padding: 8px 12px;
-            border-radius: 16px;
+            border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e4e6eb;
+            color: #ffffff;
             font-size: 13px;
             width: fit-content;
             max-width: 100%;
+            word-break: break-word;
         }
 
         .fb-comment-author {
             font-weight: bold;
             color: #4599ff;
-            margin-bottom: 2px;
-            display: block;
+            margin-right: 6px;
+            display: inline-block;
         }
 
         /* Bottom Controls Bar */
@@ -270,7 +290,7 @@
             right: 15px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             z-index: 1000;
         }
 
@@ -283,7 +303,7 @@
             width: 100%;
             background: rgba(36, 37, 38, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 12px 40px 12px 16px;
+            padding: 10px 16px;
             border-radius: 25px;
             color: #fff;
             font-size: 14px;
@@ -293,19 +313,19 @@
 
         .fb-reaction-tray {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .fb-reaction-btn {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             background: rgba(36, 37, 38, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             transition: transform 0.1s;
         }
@@ -368,7 +388,7 @@
 </head>
 <body>
 
-    <!-- 1. Навბარის Facebook Live ღილაკი -->
+    <!-- 1. ნავბარის Facebook Live ღილაკი -->
     <div style="padding: 15px;">
         <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-video"></i> პირდაპირი ეთერი (LIVE)
@@ -404,19 +424,19 @@
 
         <!-- Top Header Bar -->
         <div class="fb-live-top-bar">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="fb-live-badge">LIVE</div>
-                <div class="fb-stream-time" id="streamTimer">00:00</div>
+            <div class="fb-top-left">
                 <div class="fb-host-details">
                     <img id="liveHostAva" class="fb-host-avatar" src="https://via.placeholder.com/150">
                     <div>
                         <div id="liveHostName" style="font-weight: bold; font-size: 13px;">Host</div>
-                        <div id="liveStreamTitle" style="font-size: 11px; color: #aaaaaa;">Live Video</div>
+                        <div id="liveStreamTitle" style="font-size: 11px; color: #d0d0d0;">Live Video</div>
                     </div>
                 </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="fb-top-right">
+                <div class="fb-live-badge">LIVE</div>
+                <div class="fb-stream-time" id="streamTimer">00:00</div>
                 <div class="fb-viewer-badge">
                     <i class="fas fa-eye" style="color: #1877f2;"></i>
                     <span id="vCount">0</span>
@@ -457,7 +477,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, update, remove, onValue, push, onDisconnect, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, update, remove, onValue, push, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -482,15 +502,27 @@
         let timerInterval = null;
         let streamSeconds = 0;
 
+        async function fetchUserProfile(uid) {
+            try {
+                const doc = await firebase.firestore().collection('profiles').doc(uid).get();
+                if (doc.exists) {
+                    const p = doc.data();
+                    window.myName = p.full_name || p.username || auth.currentUser.email.split('@')[0];
+                    window.myPhoto = p.avatar_url || p.photoURL || "https://via.placeholder.com/150";
+                } else {
+                    window.myName = auth.currentUser.displayName || auth.currentUser.email.split('@')[0];
+                    window.myPhoto = auth.currentUser.photoURL || "https://via.placeholder.com/150";
+                }
+            } catch (e) {
+                console.error("Error fetching user profile:", e);
+                window.myName = auth.currentUser.email ? auth.currentUser.email.split('@')[0] : "Host";
+                window.myPhoto = "https://via.placeholder.com/150";
+            }
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                firebase.firestore().collection('profiles').doc(user.uid).get().then(doc => {
-                    if (doc.exists) {
-                        const p = doc.data();
-                        window.myName = p.full_name || user.email;
-                        window.myPhoto = p.avatar_url || "https://via.placeholder.com/150";
-                    }
-                });
+                fetchUserProfile(user.uid);
             }
         });
 
@@ -500,6 +532,7 @@
                 alert("გთხოვთ გაიაროთ ავტორიზაცია!");
                 return;
             }
+            await fetchUserProfile(auth.currentUser.uid);
 
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
@@ -526,10 +559,15 @@
             const currentUid = auth.currentUser.uid;
             const appId = "258897e8fb5f4dd089b761eca6568b24";
 
+            if (!window.myName || window.myName === "Host") {
+                await fetchUserProfile(currentUid);
+            }
+
             currentLiveChannel = "live_" + currentUid;
 
             document.getElementById('preLiveSetupModal').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
+            
             document.getElementById('liveHostName').innerText = window.myName || "Host";
             document.getElementById('liveStreamTitle').innerText = title;
             document.getElementById('liveHostAva').src = window.myPhoto || "https://via.placeholder.com/150";
@@ -580,7 +618,7 @@
                 if (liveData) {
                     document.getElementById('liveHostName').innerText = liveData.host;
                     document.getElementById('liveStreamTitle').innerText = liveData.title || "Live";
-                    document.getElementById('liveHostAva').src = liveData.hostPhoto;
+                    document.getElementById('liveHostAva').src = liveData.hostPhoto || "https://via.placeholder.com/150";
                 }
             });
 
@@ -648,9 +686,13 @@
             });
         }
 
-        window.sendLiveComment = function() {
+        window.sendLiveComment = async function() {
             const inp = document.getElementById('liveMsgInp');
             if (!inp.value.trim() || !currentLiveChannel) return;
+
+            if (!window.myName) {
+                await fetchUserProfile(auth.currentUser.uid);
+            }
 
             push(ref(db, `live_chats/${currentLiveChannel}`), {
                 name: window.myName || "User",
@@ -716,7 +758,7 @@
                     container.innerHTML += `
                         <div class="live-card-row" onclick="joinLive('${live.channel}')">
                             <div style="display:flex; align-items:center; gap:10px;">
-                                <img src="${live.hostPhoto}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                                <img src="${live.hostPhoto || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
                                 <div>
                                     <div style="font-weight:bold;">${live.host}</div>
                                     <div style="font-size:12px; color:#aaa;">${live.title}</div>
