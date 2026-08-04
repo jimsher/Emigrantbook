@@ -99,100 +99,116 @@
       }
     }
 
-    /* === TIKTOK STYLE LIVE AVATAR ANIMATION & BADGE === */
-    .header-avatar-live-wrap {
+    /* --- TIKTOK STYLE LIVE AVATAR (მხოლოდ პოსტების ავატარებზე) --- */
+    .post-avatar.is-live {
       position: relative;
-      display: inline-block;
-      width: 42px;
-      height: 42px;
-      cursor: pointer;
-    }
-
-    .header-avatar-live-wrap.is-live::before {
-      content: '';
-      position: absolute;
-      top: -3px;
-      left: -3px;
-      right: -3px;
-      bottom: -3px;
+      padding: 3px;
       border-radius: 50%;
-      background: linear-gradient(45deg, #ff4d4f, #dcae36, #ff007f, #ff4d4f);
-      background-size: 400% 400%;
-      z-index: 1;
-      animation: tiktok-spin 2s linear infinite;
+      background: linear-gradient(45deg, #ff0050, #00f2fe, #ff0050);
+      background-size: 300% 300%;
+      animation: liveGradient 2s linear infinite;
     }
 
-    @keyframes tiktok-spin {
-      0% { background-position: 0% 50%; transform: rotate(0deg); }
+    @keyframes liveGradient {
+      0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; transform: rotate(360deg); }
+      100% { background-position: 0% 50%; }
     }
 
-    .header-avatar-live-inner {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: #141414;
-      z-index: 2;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid #141414;
-    }
-
-    .live-badge-overlay {
+    .post-avatar.is-live::after {
+      content: 'LIVE';
       position: absolute;
       bottom: -4px;
       left: 50%;
       transform: translateX(-50%);
-      background: #ff4d4f;
+      background: #ff0050;
       color: #ffffff;
       font-size: 9px;
-      font-weight: 900;
-      padding: 1px 5px;
-      border-radius: 4px;
-      z-index: 3;
+      font-weight: bold;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid #ffffff;
       letter-spacing: 0.5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      animation: pulse-badge 1.2s infinite alternate;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      z-index: 10;
     }
 
-    @keyframes pulse-badge {
-      0% { transform: translateX(-50%) scale(0.95); }
-      100% { transform: translateX(-50%) scale(1.08); }
-    }
-
-    /* Live Card in Feed */
-    .live-feed-card {
-      background: linear-gradient(135deg, #1f080a 0%, #141414 100%);
-      border: 1px solid #ff4d4f;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      cursor: pointer;
+    /* --- FACEBOOK STYLE LIVE CARD IN FEED --- */
+    .post-card.live-feed-card {
+      border: 2px solid #ff0050 !important;
       position: relative;
       overflow: hidden;
+      background: #18191a;
+      box-shadow: 0 0 15px rgba(255, 0, 80, 0.25);
     }
-    .live-feed-card-header {
+
+    .live-feed-banner {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      background-color: #000000;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
+      justify-content: center;
+      overflow: hidden;
     }
-    .live-feed-tag {
-      background: #ff4d4f;
-      color: #fff;
+
+    .live-feed-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .live-overlay-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #ff0050;
+      color: #ffffff;
       font-size: 11px;
       font-weight: bold;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: 4px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      z-index: 5;
+    }
+
+    .live-overlay-tag .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      animation: blinkDot 1s infinite;
+    }
+
+    @keyframes blinkDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .join-live-feed-btn {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      background: #ff0050;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 0, 80, 0.4);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      z-index: 5;
+    }
+
+    .join-live-feed-btn:hover {
+      transform: scale(1.05);
+      background: #e00045;
     }
   </style>
   
@@ -234,26 +250,26 @@
         <img src="logo.png" alt="Emigrantbook Logo" class="logo-img-text">
       </div>
       <div class="logo">Emigrantbook</div>
-      <div class="subtitle" id="auth-subtitle">Log in to your profile</div>
+      <div class="subtitle" id="auth-subtitle">შედი შენს პროფილში</div>
 
       <div class="input-group" id="name-group" style="display: none;">
-        <label id="lbl-fullname">First Name<br>Last Name</label>
-        <input type="text" id="fullname" placeholder="Full Name">
+        <label id="lbl-fullname">🙏<br>👌</label>
+        <input type="text" id="fullname" placeholder="სახელი და გვარი">
       </div>
 
       <div class="input-group">
-        <input type="email" id="email" placeholder="Email">
+        <input type="email" id="email" placeholder="Email / ელფოსტა">
       </div>
 
       <div class="input-group">
-        <input type="password" id="password" placeholder="Password">
+        <input type="password" id="password" placeholder="Password / პაროლი">
       </div>
 
       <div class="error-msg" id="error-message"></div>
 
       <button class="btn" id="auth-btn" onclick="handleAuth()">Login</button>
 
-      <div class="forgot-pass" id="forgot-pass-btn" onclick="alert('Password recovery coming soon!')">Forgot password?</div>
+      <div class="forgot-pass" id="forgot-pass-btn" onclick="alert('პაროლის აღდგენა მალე დაემატება!')">დაგავიწყდათ პაროლი?</div>
 
       <div class="toggle-text">
         <span id="toggle-link" onclick="toggleAuthMode()">Create Account</span>
@@ -265,17 +281,17 @@
       <div class="pwa-install-left">
         <img src="logo.png" alt="Emigrantbook Logo" class="pwa-install-icon">
         <div class="pwa-install-info">
-          <div class="pwa-install-title" id="lbl-pwa-title">Install Application</div>
-          <div class="pwa-install-sub" id="lbl-pwa-sub">Quick access on mobile</div>
+          <div class="pwa-install-title" id="lbl-pwa-title">დააინსტალირე აპლიკაცია</div>
+          <div class="pwa-install-sub" id="lbl-pwa-sub">სწრაფი წვდომა ტელეფონიდან</div>
         </div>
       </div>
       <button class="pwa-install-action-btn">
-        <span>📲</span> <span id="lbl-pwa-btn-text">Install</span>
+        <span>📲</span> <span id="lbl-pwa-btn-text">ინსტალაცია</span>
       </button>
     </div>
 
     <div class="auth-footer" id="lbl-auth-footer">
-      © 2026 Emigrantbook. All rights reserved.
+      © 2026 Emigrantbook. ყველა უფლება დაცულია.
     </div>
   </div>
 
@@ -308,34 +324,30 @@
           <div class="header-badge" id="main-notifications-badge" style="display: none; background: #ff4d4f;">0</div>
         </button>
 
-        <!-- TikTok Style Live Animated Avatar Header Wrapper -->
-        <div class="header-avatar-live-wrap" id="header-avatar-wrap" onclick="handleHeaderAvatarClick()">
-          <div class="header-avatar-live-inner" id="header-avatar-btn">?</div>
-          <div class="live-badge-overlay" id="header-live-badge" style="display: none;">LIVE</div>
-        </div>
+        <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
       </div>
     </div>
 
     <div class="requests-dropdown" id="requests-dropdown-home" style="display: none;">
-      <div class="dropdown-header" id="dr-title-home">Friend Requests</div>
+      <div class="dropdown-header" id="dr-title-home">მეგობრობის მოთხოვნები</div>
       <div id="dropdown-items-container-home">
-        <div class="dropdown-empty">No new requests</div>
+        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
     
     <div class="feed-container">
       <div class="create-post-card">
-        <textarea class="create-post-input" id="post-text-input" placeholder="What's on your mind?"></textarea>
+        <textarea class="create-post-input" id="post-text-input" placeholder="რაზე ფიქრობთ?"></textarea>
         <div class="create-post-actions">
           <div class="file-upload-wrapper">
-            <div class="file-upload-btn" id="lbl-photo-video">📷 Photo / 🎥 Video</div>
+            <div class="file-upload-btn" id="lbl-photo-video">📷 ფოტო / 🎥 ვიდეო</div>
             <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           </div>
-          <button class="live-post-btn" onclick="startLiveStream()">
+          <button class="live-post-btn" onclick="window.location.href='live.html'">
             <span class="live-dot-pulse"></span>
             <span id="lbl-live-btn">LIVE</span>
           </button>
-          <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">Publish</button>
+          <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">გამოქვეყნება</button>
         </div>
         <div class="selected-file-info" id="selected-file-name"></div>
       </div>
@@ -345,7 +357,7 @@
           <div class="story-image-bg" id="my-story-bg-avatar"></div>
           <div class="create-story-btn-wrapper">
             <div class="create-story-plus">+</div>
-            <span id="lbl-create-story">Create Story</span>
+            <span id="lbl-create-story">სიუჟეტის შექმნა</span>
           </div>
         </div>
         <div id="friends-stories-list" style="display: flex; gap: 8px;"></div>
@@ -356,7 +368,7 @@
 <div class="user-list-banner-card" onclick="window.location.href='users.html'" style="background: #141414; border: 1px solid #222222; border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; cursor: pointer; transition: background 0.2s;">
   <div style="display: flex; align-items: center; gap: 12px;">
     <span style="font-size: 22px;">👥</span>
-    <span style="color: #ffffff; font-size: 15px; font-weight: 600;">Site Users</span>
+    <span style="color: #ffffff; font-size: 15px; font-weight: 600;">საიტის მომხმარებლები</span>
   </div>
   <div style="display: flex; align-items: center; gap: 10px;">
     <!-- მარცხნივ/გვერდით რაოდენობის მაჩვენებელი -->
@@ -366,7 +378,7 @@
 </div>
 
       <div id="posts-wall">
-        <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
+        <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
       </div>
     </div>
   </div>
@@ -401,34 +413,34 @@
     <div class="side-menu-content" id="side-menu-content">
       
       <div style="padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
-        <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 Select Language</label>
+        <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 ენის არჩევა / Language</label>
         <select id="site-language-select" onchange="changeSiteLanguage(this.value)" style="margin-top: 8px; width: 100%; padding: 10px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; outline: none;">
-          <option value="en" selected>English</option>
           <option value="ka">Georgian (ქართული)</option>
+          <option value="en">English</option>
           <option value="ru">Russian (Русский)</option>
           <option value="fr">French (Français)</option>
           <option value="de">German (Deutsch)</option>
         </select>
       </div>
 
-      <div class="menu-section-title">Resources</div>
+      <div class="menu-section-title">რესურსები</div>
 
       <button class="menu-item-row" onclick="window.location.href='balance.html'">
         <div class="menu-item-left">
           <span class="menu-item-icon">👛</span>
-          <span>Balance</span>
+          <span>ბალანსი</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
 
       <div class="menu-divider"></div>
 
-      <div class="menu-section-title">Personal Tools</div>
+      <div class="menu-section-title">პირადი ინსტრუმენტები</div>
 
       <button class="menu-item-row" onclick="window.location.href='activity.html'">
         <div class="menu-item-left">
           <span class="menu-item-icon">🕒</span>
-          <span>Activity Center</span>
+          <span>აქტივობის ცენტრი</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
@@ -436,7 +448,7 @@
       <button class="menu-item-row">
         <div class="menu-item-left">
           <span class="menu-item-icon">☁️</span>
-          <span>Offline Video</span>
+          <span>ვიდეო ოფლაინ</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
@@ -444,14 +456,14 @@
       <button class="menu-item-row">
         <div class="menu-item-left">
           <span class="menu-item-icon">🔲</span>
-          <span>Your QR Code</span>
+          <span>შენი QR-კოდი</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
 
       <div class="menu-divider"></div>
 
-      <div class="menu-section-title">Tools for Creation & Business</div>
+      <div class="menu-section-title">ინსტრუმენტები შემოქმედებისა და ბიზნესისთვის</div>
 
       <button class="menu-item-row">
         <div class="menu-item-left">
@@ -464,7 +476,7 @@
       <button class="menu-item-row" onclick="window.location.href='users.html'">
   <div class="menu-item-left">
     <span class="menu-item-icon">👥</span>
-    <span>Site Users</span>
+    <span>საიტის მომხმარებლები</span>
   </div>
   <span class="menu-item-arrow">›</span>
 </button>
@@ -472,7 +484,7 @@
      <button class="menu-item-row" onclick="window.location.href='admin.html'">
   <div class="menu-item-left">
     <span class="menu-item-icon">🛡️</span>
-    <span style="color: #dcae36;">Admin Panel</span>
+    <span style="color: #dcae36;">ადმინ პანელი</span>
   </div>
   <span class="menu-item-arrow">›</span>
     </button>
@@ -481,7 +493,7 @@
       <button class="menu-item-row">
         <div class="menu-item-left">
           <span class="menu-item-icon">🔥</span>
-          <span>Promotion (Promo)</span>
+          <span>დაწინაურება (პრომო)</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
@@ -491,20 +503,20 @@
       <button class="menu-item-row" onclick="showPrivacySettings()">
         <div class="menu-item-left">
           <span class="menu-item-icon">⚙️</span>
-          <span id="lbl-privacy-menu-btn">Settings & Privacy</span>
+          <span id="lbl-privacy-menu-btn">პარამეტრები და კონფიდენციალურობა</span>
         </div>
         <span class="menu-item-arrow">›</span>
       </button>
 
       <div class="menu-divider"></div>
 
-      <button class="side-menu-logout-btn" id="lbl-logout-btn" onclick="logout()">Log Out</button>
+      <button class="side-menu-logout-btn" id="lbl-logout-btn" onclick="logout()">სისტემიდან გამოსვლა</button>
     </div>
 
     <div class="requests-dropdown" id="requests-dropdown-profile" style="display: none;">
-      <div class="dropdown-header" id="dr-title-profile">Friend Requests</div>
+      <div class="dropdown-header" id="dr-title-profile">მეგობრობის მოთხოვნები</div>
       <div id="dropdown-items-container-profile">
-        <div class="dropdown-empty">No new requests</div>
+        <div class="dropdown-empty">ახალი მოთხოვნები არ არის</div>
       </div>
     </div>
         
@@ -526,63 +538,63 @@
             <div class="profile-stats-block">
               <div class="stat-item">
                 <span class="stat-value" id="stat-posts-count">0</span>
-                <span class="stat-label" id="lbl-stat-post">post</span>
+                <span class="stat-label" id="lbl-stat-post">პოსტი</span>
               </div>
               <div class="stat-item" onclick="openConnectionsScreen('followers')">
                 <span class="stat-value" id="stat-followers-count">0</span>
-                <span class="stat-label" id="lbl-stat-followers">follower</span>
+                <span class="stat-label" id="lbl-stat-followers">გამომწერი</span>
               </div>
               <div class="stat-item" onclick="openConnectionsScreen('following')">
                 <span class="stat-value" id="stat-following-count">0</span>
-                <span class="stat-label" id="lbl-stat-following">Following</span>
+                <span class="stat-label" id="lbl-stat-following">გამოწერილი</span>
               </div>
             </div>
           </div>
             
           <div class="profile-user-headline">
-            <div class="profile-fb-name" id="profile-user-name">Loading...</div>
+            <div class="profile-fb-name" id="profile-user-name">იტვირთება...</div>
             <div class="profile-fb-subtitle" id="profile-user-subtitle">...</div>
           </div>
 
           <div class="profile-action-column" id="profile-action-panel">
-            <div style="text-align: center; padding: 10px; color:#aaaaaa;">Loading actions...</div>
+            <div style="text-align: center; padding: 10px; color:#aaaaaa;">იტვირთება მომოქმედებები...</div>
           </div>
         </div>
 
         <!-- LOCKED PROFILE BANNER (FOR NON-FRIENDS / PRIVATE) -->
         <div id="private-profile-lock-msg" style="display: none; text-align: center; padding: 40px 20px; background: #141414; border-radius: 12px; border: 1px solid #222222; margin: 0 20px 20px 20px;">
           <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-          <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">This profile is private</div>
-          <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">Only friends can see this user's posts, photos, and videos.</div>
+          <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">ეს პროფილი დახურულია</div>
+          <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა.</div>
         </div>
 
         <div class="profile-details-box" id="profile-details-container">
-          <div style="text-align:center; color:#aaaaaa; padding:10px;">Loading details...</div>
+          <div style="text-align:center; color:#aaaaaa; padding:10px;">დეტალები იტვირთება...</div>
         </div>
 
         <div class="profile-friends-preview-box">
           <div class="friends-preview-header">
             <div class="friends-preview-title-area" onclick="openConnectionsScreen('all')" style="cursor: pointer;">
-              <span class="friends-preview-title" id="lbl-followers-title">Friends / Followers</span>
+              <span class="friends-preview-title" id="lbl-followers-title">მეგობრები / გამომწერები</span>
               <span class="friends-preview-count" id="mini-friends-count"></span>
             </div>
-            <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('all')">See all</button>
+            <button class="friends-see-all-btn" id="lbl-see-all" onclick="openConnectionsScreen('all')">ყველას ნახვა</button>
           </div>
           <div class="friends-preview-grid" id="mini-friends-grid"></div>
         </div>
 
         <div class="profile-tabs">
-          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">Posts</button>
-          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">Photos</button>
-          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">Videos</button>
+          <button class="tab-button active" id="tab-btn-posts" onclick="switchProfileTab('posts')">პოსტები</button>
+          <button class="tab-button" id="tab-btn-photos" onclick="switchProfileTab('photos')">ფოტოები</button>
+          <button class="tab-button" id="tab-btn-videos" onclick="switchProfileTab('videos')">ვიდეოები</button>
         </div>
 
         <div id="profile-posts-wall">
-          <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
+          <div style="text-align: center; padding: 20px; color: #aaaaaa;">პოსტები იტვირთება...</div>
         </div>
 
         <div id="profile-photos-wall" style="display: none;">
-          <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading photos...</div>
+          <div style="text-align: center; padding: 20px; color: #aaaaaa;">ფოტოები იტვირთება...</div>
         </div>
       </div>
     </div>
@@ -590,49 +602,49 @@
   
   <div id="edit-profile-screen">
     <div class="header">
-      <div class="logo-text" id="lbl-back-to-profile" onclick="showScreen('profile')">← Back to Profile</div>
+      <div class="logo-text" id="lbl-back-to-profile" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
     </div>
     <div class="feed-container">
       <div class="edit-profile-card">
-        <div class="edit-header" id="lbl-edit-header">✏️ Update Profile Info</div>
+        <div class="edit-header" id="lbl-edit-header">✏️ პროფილის ინფორმაციის განახლება</div>
         <div class="input-group">
-          <label id="lbl-edit-fullname">First Name<br>Last Name</label>
-          <input type="text" id="edit-fullname" placeholder="John Doe">
+          <label id="lbl-edit-fullname">სახელი<br>გვარი</label>
+          <input type="text" id="edit-fullname" placeholder="გიორგი ბერიძე">
         </div>
         <div class="input-group">
-          <label id="lbl-edit-age">Age</label>
-          <input type="number" id="edit-age" placeholder="e.g. 25">
+          <label id="lbl-edit-age">ასაკი</label>
+          <input type="number" id="edit-age" placeholder="მაგ. 25">
         </div>
         <div class="input-group">
-          <label id="lbl-edit-job">Workplace (Position, Company)</label>
-          <input type="text" id="edit-job" placeholder="e.g. Developer">
+          <label id="lbl-edit-job">სამუშაო ადგილი (პოზიცია, კომპანია)</label>
+          <input type="text" id="edit-job" placeholder="მაგ. დეველოპერი">
         </div>
         <div class="input-group">
-          <label id="lbl-edit-city">Current City</label>
-          <input type="text" id="edit-city" placeholder="e.g. Tbilisi">
+          <label id="lbl-edit-city">ამჟამინდელი ქალაქი</label>
+          <input type="text" id="edit-city" placeholder="მაგ. თბილისი">
         </div>
         <div class="input-group">
-          <label id="lbl-edit-country">Country</label>
-          <input type="text" id="edit-country" placeholder="e.g. Georgia">
+          <label id="lbl-edit-country">ქვეყანა</label>
+          <input type="text" id="edit-country" placeholder="მაგ. საქართველო">
         </div>
         <div class="input-group">
-          <label id="lbl-edit-relationship">Relationship Status</label>
+          <label id="lbl-edit-relationship">ურთიერთობის სტატუსი</label>
           <select id="edit-relationship">
-            <option value="" id="opt-rel-1">Not specified</option>
-            <option value="Single" id="opt-rel-2">Single</option>
-            <option value="In a relationship" id="opt-rel-3">In a relationship</option>
-            <option value="Engaged" id="opt-rel-4">Engaged</option>
-            <option value="Married" id="opt-rel-5">Married</option>
-            <option value="It's complicated" id="opt-rel-6">It's complicated</option>
+            <option value="" id="opt-rel-1">არ არის მითითებული</option>
+            <option value="დასაოჯახებელი" id="opt-rel-2">დასაოჯახებელი</option>
+            <option value="ურთიერთობაშია" id="opt-rel-3">ურთიერთობაშია</option>
+            <option value="დანიშნულია" id="opt-rel-4">დანიშნულია</option>
+            <option value="დაოჯახებულია" id="opt-rel-5">დაოჯახებულია</option>
+            <option value="რთულია" id="opt-rel-6">რთულია</option>
           </select>
         </div>
         <div class="input-group">
-          <label id="lbl-edit-events">Life Events</label>
-          <textarea id="edit-events" placeholder="e.g. Started a new job, moved to a new country..."></textarea>
+          <label id="lbl-edit-events">ცხოვრებისეული მოვლენები (Life Events)</label>
+          <textarea id="edit-events" placeholder="მაგ. დავიწყე ახალი სამსახური, გადმოვედი ემიგრაციაში..."></textarea>
         </div>
         <div class="edit-buttons-wrapper">
-          <button class="btn btn-save" id="lbl-save-changes" onclick="saveProfileChanges()">Save Changes</button>
-          <button class="btn btn-cancel" id="lbl-cancel-changes" onclick="showScreen('profile')">Cancel</button>
+          <button class="btn btn-save" id="lbl-save-changes" onclick="saveProfileChanges()">ცვლილებების შენახვა</button>
+          <button class="btn btn-cancel" id="lbl-cancel-changes" onclick="showScreen('profile')">გაუქმება</button>
         </div>
       </div>
     </div>
@@ -641,35 +653,35 @@
   <!-- PRIVACY SETTINGS SCREEN -->
   <div id="privacy-screen" style="display: none;">
     <div class="header">
-      <div class="logo-text" id="lbl-back-to-profile-privacy" onclick="showScreen('profile')">← Back to Profile</div>
+      <div class="logo-text" id="lbl-back-to-profile-privacy" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
     </div>
     <div class="feed-container">
       <div class="privacy-section-card">
-        <div class="edit-header" id="lbl-privacy-header">⚙️ Settings & Privacy</div>
+        <div class="edit-header" id="lbl-privacy-header">⚙️ პარამეტრები და კონფიდენციალურობა</div>
         
         <div class="privacy-option-item">
-          <div class="privacy-option-title" id="lbl-privacy-opt-title">🔒 Profile Privacy</div>
-          <div class="privacy-option-desc" id="lbl-privacy-opt-desc">Choose who can see your profile, posts, photos, and videos:</div>
+          <div class="privacy-option-title" id="lbl-privacy-opt-title">🔒 პროფილის კონფიდენციალურობა</div>
+          <div class="privacy-option-desc" id="lbl-privacy-opt-desc">აირჩიეთ ვინ შეძლებს თქვენი პროფილის, პოსტების, ფოტოებისა და ვიდეოების ნახვას:</div>
           
           <div class="privacy-radio-list">
             <label class="privacy-radio-item">
               <input type="radio" name="privacy_setting" value="public" checked>
-              <span id="lbl-opt-public">🌐 Everyone (Public)</span>
+              <span id="lbl-opt-public">🌐 ყველასთვის (საჯარო)</span>
             </label>
             <label class="privacy-radio-item">
               <input type="radio" name="privacy_setting" value="friends">
-              <span id="lbl-opt-friends">👥 Friends Only</span>
+              <span id="lbl-opt-friends">👥 მხოლოდ მეგობრებისთვის</span>
             </label>
             <label class="privacy-radio-item">
               <input type="radio" name="privacy_setting" value="private">
-              <span id="lbl-opt-private">🔒 Only Me (Private)</span>
+              <span id="lbl-opt-private">🔒 მხოლოდ ჩემთვის (დახურული)</span>
             </label>
           </div>
         </div>
 
         <div class="edit-buttons-wrapper" style="margin-top: 25px;">
-          <button class="btn btn-save" id="lbl-save-privacy" onclick="savePrivacySettings()">Save Changes</button>
-          <button class="btn btn-cancel" id="lbl-cancel-privacy" onclick="showScreen('profile')">Cancel</button>
+          <button class="btn btn-save" id="lbl-save-privacy" onclick="savePrivacySettings()">შენახვა</button>
+          <button class="btn btn-cancel" id="lbl-cancel-privacy" onclick="showScreen('profile')">გაუქმება</button>
         </div>
       </div>
     </div>
@@ -677,16 +689,16 @@
 
   <div id="connections-screen">
     <div class="header">
-      <div class="logo-text" id="lbl-back-to-profile-conn" onclick="showScreen('profile')">← Back to Profile</div>
+      <div class="logo-text" id="lbl-back-to-profile-conn" onclick="showScreen('profile')">← პროფილზე დაბრუნება</div>
     </div>
     <div class="feed-container">
       <div class="connections-container">
         <div class="connections-header">
-          <span id="connections-title">Friends</span>
-          <span style="font-size: 14px; color: #aaaaaa;" id="connections-count">0 users</span>
+          <span id="connections-title">მეგობრები</span>
+          <span style="font-size: 14px; color: #aaaaaa;" id="connections-count">0 მომხმარებელი</span>
         </div>
         <div class="connections-list" id="connections-list-wrapper">
-          <div class="connections-empty" id="lbl-conn-loading">Loading...</div>
+          <div class="connections-empty" id="lbl-conn-loading">იტვირთება...</div>
         </div>
       </div>
     </div>
@@ -696,22 +708,22 @@
     <div class="akho-info-modal" onclick="event.stopPropagation()">
       <div class="akho-info-header">
         <div class="akho-info-title">
-          <span>💳 What is Akho?</span>
+          <span>💳 რა არის აკნო (akho)?</span>
         </div>
         <button class="akho-info-close" onclick="closeAkhoInfoModal()">✕</button>
       </div>
       <div class="akho-info-body">
-        <p><strong>Akho</strong> is the internal digital currency of <strong>Emigrantbook</strong>, which users can purchase with real money.</p>
+        <p><strong>აკნო (akho)</strong> წარმოადგენს <strong>Emigrantbook</strong>-ის შიდა ციფრულ ვალუტას, რომლის შეძენაც მომხმარებელს შეუძლია რეალური თანხით.</p>
         
         <div class="akho-info-box">
-          💎 Official Rate: 20 akho = 1 €
+          💎 ოფიციალური კურსი: 20 akho = 1 €
         </div>
 
-        <p><strong>What is Akho used for?</strong></p>
+        <p><strong>რისთვის გამოიყენება აკნო?</strong></p>
         <ul class="akho-feature-list">
-          <li>🛒 <strong>Shopping:</strong> An online store will soon be added where you can buy products and services.</li>
-          <li>🎁 <strong>Automatic Rewards:</strong> Active platform users will automatically receive Akho rewards.</li>
-          <li>🎉 <strong>Raffles:</strong> Participate in exclusive raffles and contests.</li>
+          <li>🛒 <strong>შოპინგი:</strong> მალე საიტზე დაემატება ონლაინ მაღაზია, სადაც აკნოს ბალანსით შეძლებთ სხვადასხვა პროდუქციისა და სერვისების ყიდვას.</li>
+          <li>🎁 <strong>ავტომატური დასაჩუქრება:</strong> საიტზე მაღალი აქტივობისთვის მომხმარებლები ავტომატურად შეირჩევიან და დასაჩუქრდებიან აკნოებით.</li>
+          <li>🎉 <strong>გათამაშებები:</strong> მონაწილეობა მიიღეთ ექსკლუზიურ გათამაშებებსა და კონკურსებსა.</li>
         </ul>
       </div>
     </div>
@@ -722,7 +734,7 @@
       <div class="story-viewer-header">
         <div class="story-viewer-user">
           <div class="story-viewer-avatar" id="sv-avatar"></div>
-          <span id="sv-username">User</span>
+          <span id="sv-username">მომხმარებელი</span>
         </div>
         <button class="story-close-btn" onclick="closeStoryViewer()">×</button>
       </div>
@@ -730,14 +742,14 @@
 
       <div class="story-viewer-footer">
         <div class="story-stats-row">
-          <span id="story-likes-label">❤️ 0 Like</span>
-          <span id="lbl-stories-footer">Stories</span>
+          <span id="story-likes-label">❤️ 0 ლაიქი</span>
+          <span id="lbl-stories-footer">სიუჟეტები</span>
         </div>
         <div class="story-reactions-bar">
           <span class="story-react-btn" onclick="reactToStory('❤️')">❤️</span>
         </div>
         <div class="story-input-container">
-          <input type="text" id="story-comment-field" class="story-comment-input" placeholder="Send a message..." onkeypress="handleStoryCommentKeyPress(event)">
+          <input type="text" id="story-comment-field" class="story-comment-input" placeholder="გაუგზავნე შეტყობინება..." onkeypress="handleStoryCommentKeyPress(event)">
           <button class="story-send-btn" onclick="submitStoryComment()">➔</button>
         </div>
       </div>
@@ -756,16 +768,16 @@
       <div class="comments-modal-body" id="modal-comments-container"></div>
       
       <div id="reply-active-bar" class="reply-input-active-bar">
-        <span id="reply-active-text">Reply to: ...</span>
-        <span style="cursor:pointer;color:#ff4d4f;font-weight:bold;" id="lbl-reply-cancel" onclick="cancelReplyMode()">Cancel</span>
+        <span id="reply-active-text">პასუხი მომხმარებელს...</span>
+        <span style="cursor:pointer;color:#ff4d4f;font-weight:bold;" id="lbl-reply-cancel" onclick="cancelReplyMode()">გაუქმება</span>
       </div>
 
       <div class="comments-modal-footer">
         <div class="modal-footer-input-row">
           <div class="modal-input-holder">
-            <input type="text" id="modal-comment-input-field" placeholder="Write a comment...">
+            <input type="text" id="modal-comment-input-field" placeholder="დაწერეთ კომენტარი...">
           </div>
-          <button class="comment-submit-button" id="modal-comment-submit-btn">Send</button>
+          <button class="comment-submit-button" id="modal-comment-submit-btn">გაგზავნა</button>
         </div>
       </div>
     </div>
@@ -774,7 +786,7 @@
   <div id="likers-list-modal" class="likers-modal-overlay" onclick="closeLikersModal()">
     <div class="likers-modal-content" onclick="event.stopPropagation()">
       <div class="likers-modal-header">
-        <span style="font-weight: bold; font-size: 16px;" id="lbl-likers-title">Likers</span>
+        <span style="font-weight: bold; font-size: 16px;" id="lbl-likers-title">მომწონებლები</span>
         <button class="comments-modal-close" onclick="closeLikersModal()">×</button>
       </div>
       <div class="likers-modal-body" id="likers-list-container"></div>
@@ -786,9 +798,9 @@
       <button class="gallery-close-x" onclick="closeFullGalleryModal()">×</button>
       <span class="gallery-counter-label" id="gallery-photo-counter">1 of 1</span>
       <div class="gallery-top-icons">
-        <span onclick="alert('Tagging coming soon!')">🏷️</span>
-        <span onclick="alert('Location unavailable')">📍</span>
-        <span onclick="alert('More options')">⋮</span>
+        <span onclick="alert('მონიშვნა მალე დაემატება!')">🏷️</span>
+        <span onclick="alert('ლოკაცია ხელმიუწვდომელია')">📍</span>
+        <span onclick="alert('დამატებითი პარამეტრები')">⋮</span>
       </div>
     </div>
     
@@ -801,30 +813,30 @@
         <div class="gallery-author-avatar" id="gallery-user-avatar-placeholder">?</div>
         <div class="gallery-author-meta">
           <span class="gallery-author-name" id="gallery-post-author-name">Gabo JI</span>
-          <span class="gallery-time-stamp"><span id="gallery-post-time-label">Jul 27, 06:41</span> · 🌐</span>
+          <span class="gallery-time-stamp"><span id="gallery-post-time-label">27 ივლ, 06:41</span> · 🌐</span>
         </div>
       </div>
       
       <div class="gallery-post-caption" id="gallery-post-content-text">
-        Photo description...
+        ფოტოს აღწერა...
       </div>
       
       <div class="gallery-reactions-summary">
         <div id="gallery-likes-trigger-area" style="display:flex; align-items:center; gap:4px; cursor:pointer;">
           <span>❤️ <span id="gallery-total-likes-counter">0</span></span>
         </div>
-        <span id="gallery-comments-counter-label" style="cursor:pointer;">0 comments</span>
+        <span id="gallery-comments-counter-label" style="cursor:pointer;">0 კომენტარი</span>
       </div>
       
       <div class="gallery-actions-buttons-row">
         <button class="gallery-act-btn" id="gallery-like-main-action-btn">
-          <span>❤️</span> <span id="lbl-gallery-like">Like</span>
+          <span>❤️</span> <span id="lbl-gallery-like">მოწონება</span>
         </button>
         <button class="gallery-act-btn" id="gallery-comment-main-action-btn">
-          <span>💬</span> <span id="lbl-gallery-comment">Comment</span>
+          <span>💬</span> <span id="lbl-gallery-comment">კომენტარები</span>
         </button>
-        <button class="gallery-act-btn" onclick="alert('Link copied!')">
-          <span>↩️</span> <span id="lbl-gallery-share">Share</span>
+        <button class="gallery-act-btn" onclick="alert('ბმული კოპირებულია!')">
+          <span>↩️</span> <span id="lbl-gallery-share">გაზიარება</span>
         </button>
       </div>
     </div>
@@ -1076,15 +1088,10 @@
     var activeTiktokVideosList = [];
     var realtimeNotificationsList = [];
     var activeFloatingIntervals = {};
-    var currentLang = localStorage.getItem('emigrantbook_lang') || 'en';
+    var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
     var presenceInterval = null;
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
-
-    // MediaRecorder & Live Stream Variables
-    var mediaRecorder = null;
-    var recordedChunks = [];
-    var currentActiveLivePostId = null;
 
     /* HELPER: CACHE PROFILE LOAD WITH BATCH SUPPORT */
     function fetchUserProfileCached(userId, callback) {
@@ -1680,7 +1687,7 @@
               badge.style.background = '#ff4d4f';
               badge.style.color = '#ffffff';
             }
-            if (statusText) statusText.innerText = '🎰 Raffle in progress!';
+            if (statusText) statusText.innerText = '🎰 გათამაშება მიმდინარეობს!';
           } 
           else if (data.status === 'finished' && data.finished_at) {
             var finishedTime = data.finished_at.toDate ? data.finished_at.toDate().getTime() : new Date(data.finished_at).getTime();
@@ -1689,12 +1696,12 @@
 
             if (diffMinutes < 5) {
               if (badge) {
-                badge.innerText = '🏆 Ended';
+                badge.innerText = '🏆 დასრულდა';
                 badge.style.background = '#28a745';
                 badge.style.color = '#ffffff';
               }
-              if (statusText) statusText.innerText = '🏆 Raffle ended!';
-              if (winnerName) winnerName.innerText = '🎉 Winner: ' + (data.winner_name || 'User');
+              if (statusText) statusText.innerText = '🏆 გათამაშება დასრულდა!';
+              if (winnerName) winnerName.innerText = '🎉 გამარჯვებული: ' + (data.winner_name || 'მომხმარებელი');
               if (winnerBox) winnerBox.style.display = 'block';
             } else {
               renderDefaultWaitingBanner();
@@ -1731,11 +1738,11 @@
 
       if (winnerBox) winnerBox.style.display = 'none';
       if (badge) {
-        badge.innerText = '⏳ Waiting';
+        badge.innerText = '⏳ მოლოდინში';
         badge.style.background = '#dcae36';
         badge.style.color = '#111111';
       }
-      if (statusText) statusText.innerText = '⏳ Starting soon';
+      if (statusText) statusText.innerText = '⏳ მალე დაიწყება';
     }
 
     function renderTimerState(targetTime) {
@@ -1745,7 +1752,7 @@
 
       if (winnerBox) winnerBox.style.display = 'none';
       if (badge) {
-        badge.innerText = '⏳ Countdown';
+        badge.innerText = '⏳ ათვლა';
         badge.style.background = '#dcae36';
         badge.style.color = '#111111';
       }
@@ -1765,7 +1772,7 @@
 
           if (statusText) statusText.innerText = `${hStr}:${mStr}:${sStr}`;
         } else {
-          if (statusText) statusText.innerText = '⏳ Preparing...';
+          if (statusText) statusText.innerText = '⏳ ემზადება...';
           if (lotteryCountdownInterval) clearInterval(lotteryCountdownInterval);
         }
       }
@@ -1800,8 +1807,8 @@ auth.onAuthStateChanged(function(user) {
         .then(function(res) { return res.json(); })
         .then(function(ipData) {
           if (ipData && ipData.ip) {
-            var realCity = ipData.city || 'Unknown city';
-            var realCountry = ipData.country_name || ipData.country_code || 'Unknown country';
+            var realCity = ipData.city || 'უცნობი ქალაქი';
+            var realCountry = ipData.country_name || ipData.country_code || 'უცნობი ქვეყანა';
             var realRegion = ipData.region || '';
             
             var exactAddress = realCity + (realRegion ? (', ' + realRegion) : '') + ', ' + realCountry;
@@ -1871,7 +1878,7 @@ auth.onAuthStateChanged(function(user) {
       subscribeToMessagesRealtime();
       subscribeToLiveLotteryPost();
       subscribeTotalUsersCount();
-      listenForUserLiveStatus(); // იწყებს ლაივის სტატუსების მოსმენას
+      subscribeToActiveLiveStreams(); // LIVE REALTIME LISTEN
       
       hidePreloader();
     });
@@ -1924,7 +1931,7 @@ auth.onAuthStateChanged(function(user) {
       var nameDiv = document.getElementById('selected-file-name');
       if (fileInput && nameDiv) {
         if (fileInput.files.length > 0) {
-          nameDiv.innerText = "📎 Selected: " + fileInput.files.length + " file(s)";
+          nameDiv.innerText = "📎 მონიშნულია: " + fileInput.files.length + " ფაილი";
           nameDiv.style.display = "block";
         } else {
           nameDiv.style.display = "none";
@@ -2232,7 +2239,7 @@ auth.onAuthStateChanged(function(user) {
           });
         }).catch(function(err) {
           console.error("Error loading incoming friend requests:", err);
-          if (container) container.innerHTML = `<div class="dropdown-empty">Error loading</div>`;
+          if (container) container.innerHTML = `<div class="dropdown-empty">შეცდომა ჩატვირთვისას</div>`;
         });
     }
 
@@ -2242,7 +2249,7 @@ auth.onAuthStateChanged(function(user) {
         checkPendingRequestsCount();
         loadIncomingFriendRequests();
       }).catch(function(error) {
-        alert("Error: " + error.message);
+        alert("შეცდომა: " + error.message);
       });
     }
 
@@ -2252,7 +2259,7 @@ auth.onAuthStateChanged(function(user) {
         checkPendingRequestsCount();
         loadIncomingFriendRequests();
       }).catch(function(error) {
-        alert("Error: " + error.message);
+        alert("შეცდომა: " + error.message);
       });
     }
 
@@ -2473,7 +2480,7 @@ auth.onAuthStateChanged(function(user) {
           });
         }).catch(function(error) {
           console.error("Error loading combined connections:", error);
-          listWrapper.innerHTML = `<div class="connections-empty">Error loading</div>`;
+          listWrapper.innerHTML = `<div class="connections-empty">შეცდომა ჩატვირთვისას</div>`;
         });
       }
     }
@@ -2609,7 +2616,7 @@ auth.onAuthStateChanged(function(user) {
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
-            container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">No comments. Write the first one!</div>`;
+            container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">კომენტარები არ არის. დაწერეთ პირველი!</div>`;
             return;
           }
 
@@ -2709,7 +2716,7 @@ auth.onAuthStateChanged(function(user) {
           });
         }).catch(function(error) {
           console.error("Comments error:", error);
-          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">Error loading comments: ${error.message}</div>`;
+          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას: ${error.message}</div>`;
         });
     }
 
@@ -2775,7 +2782,7 @@ auth.onAuthStateChanged(function(user) {
           }, 300);
         }
       }).catch(function(err) {
-        alert("Error sending comment: " + err.message);
+        alert("კომენტარის გაგზავნის შეცდომა: " + err.message);
       });
     }
 
@@ -2797,7 +2804,7 @@ auth.onAuthStateChanged(function(user) {
 
       db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
         if (snapshot.empty) {
-          container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
+          container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">ჯერ არავის მოუწონებია</div>`;
           return;
         }
 
@@ -2822,7 +2829,7 @@ auth.onAuthStateChanged(function(user) {
         });
       }).catch(function(err) {
         console.error("Likers load error:", err);
-        container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">Error loading</div>`;
+        container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">შეცდომა ჩატვირთვისას</div>`;
       });
     }
 
@@ -2973,8 +2980,8 @@ auth.onAuthStateChanged(function(user) {
               var t = TRANSLATIONS[currentLang];
               lockMsgEl.innerHTML = `
                 <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
-                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
+                <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "ეს პროფილი დახურულია"}</div>
+                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">${t.lockedProfileSub || "მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა."}</div>
               `;
             }
           } else {
@@ -3181,7 +3188,7 @@ auth.onAuthStateChanged(function(user) {
                 <span class="comment-count-label" data-post-id="${vid.id}">0</span>
               </div>
 
-              <div class="tiktok-action-item" onclick="alert('Link copied!')">
+              <div class="tiktok-action-item" onclick="alert('ბმული კოპირებულია!')">
                 <div class="tiktok-icon-circle">
                   <svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
                 </div>
@@ -3504,7 +3511,7 @@ auth.onAuthStateChanged(function(user) {
           observeVideos();
         }).catch(function(error) {
           console.error("Firestore Index Error or query failure: ", error);
-          if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">Error loading posts.</div>`;
+          if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">შეცდომა პოსტების ჩატვირთვისას.</div>`;
         });
     }
 
@@ -3605,12 +3612,12 @@ function uploadMediaToFirebase(file, folder, callback) {
     if (data.secure_url) {
       callback(data.secure_url);
     } else {
-      alert("Upload error: " + (data.error ? data.error.message : "Unknown error"));
+      alert("ატვირთვის შეცდომა: " + (data.error ? data.error.message : "უცნობი შეცდომა"));
     }
   })
   .catch(function(error) {
     console.error("Upload Error:", error);
-    alert("Upload error: " + error.message);
+    alert("ატვირთვის შეცდომა: " + error.message);
   });
 }
 
@@ -3876,33 +3883,13 @@ function uploadMediaToFirebase(file, folder, callback) {
     }
 
     function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
-      if (!urlsString && mediaType !== 'live') return "";
+      if (!urlsString) return "";
       
       if (mediaType === 'video') {
         return `
           <div class="video-container-rel">
             <video class="post-media" src="${urlsString}" preload="metadata" playsinline loop onclick="toggleVideoPlay(this)"></video>
             <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
-          </div>
-        `;
-      }
-
-      // LIVE Video Card HTML
-      if (mediaType === 'live') {
-        return `
-          <div class="live-feed-card" onclick="window.location.href='live.html?stream=${postId}'">
-            <div class="live-feed-card-header">
-              <div class="live-feed-tag">
-                <span class="live-dot-pulse" style="background:#fff; width:6px; height:6px;"></span>
-                LIVE VIDEO
-              </div>
-              <span style="color:#ff4d4f; font-weight:bold; font-size:13px;">🔴 CLICK TO WATCH</span>
-            </div>
-            <div style="text-align:center; padding: 25px 10px; background: rgba(0,0,0,0.4); border-radius: 8px;">
-              <div style="font-size: 40px; margin-bottom: 5px;">🎥</div>
-              <div style="color: #ffffff; font-weight: bold; font-size: 16px;">პირდაპირი ეთერი მიმდინარეობს</div>
-              <div style="color: #aaaaaa; font-size: 13px; margin-top: 4px;">დააჭირეთ ეთერში შესასვლელად</div>
-            </div>
           </div>
         `;
       }
@@ -3964,6 +3951,9 @@ function uploadMediaToFirebase(file, folder, callback) {
       var isOnline = cachedOnlineStates[post.user_id] === true;
       var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
+      var isLiveStreamer = (cachedProfiles[post.user_id] && cachedProfiles[post.user_id].is_live === true);
+      var liveAvatarClass = isLiveStreamer ? "is-live" : "";
+
       var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
       var t = TRANSLATIONS[currentLang];
 
@@ -3983,7 +3973,7 @@ function uploadMediaToFirebase(file, folder, callback) {
         <div class="post-card" id="post-card-${post.id}">
           <div class="post-header">
             <div class="post-header-left">
-              <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
+              <div class="post-avatar ${liveAvatarClass}" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
               <div class="post-author-info">
                 <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
                 <span class="post-time">${date}</span>
@@ -4378,117 +4368,115 @@ function uploadMediaToFirebase(file, folder, callback) {
       currentViewingStoryObj = null;
     }
 
-    // ======================================================
-    // 🎥 TIKTOK STYLE LIVE & AUTOMATIC RECORDING LOGIC
-    // ======================================================
+    /* ==========================================================================
+       REALTIME LIVE STREAMS & AUTOMATIC RECORDING TO POST CONVERSION LOGIC
+       ========================================================================== */
+    var liveStreamsUnsubscribe = null;
 
-    function listenForUserLiveStatus() {
-      if (!currentUser) return;
-      db.collection('profiles').doc(currentUser.uid).onSnapshot(function(docSnap) {
-        if (docSnap.exists) {
-          var data = docSnap.data();
-          var wrap = document.getElementById('header-avatar-wrap');
-          var badge = document.getElementById('header-live-badge');
-          if (data.is_live === true) {
-            if (wrap) wrap.classList.add('is-live');
-            if (badge) badge.style.display = 'block';
+    function subscribeToActiveLiveStreams() {
+      if (liveStreamsUnsubscribe) {
+        liveStreamsUnsubscribe();
+      }
+
+      liveStreamsUnsubscribe = db.collection('live_streams')
+        .where('is_active', '==', true)
+        .onSnapshot(function(snapshot) {
+          var postsWall = document.getElementById('posts-wall');
+          
+          // წავშალოთ ძველი Live ბარათები ფიდიდან
+          var existingLiveCards = document.querySelectorAll('.live-feed-card');
+          existingLiveCards.forEach(function(card) { card.remove(); });
+
+          snapshot.forEach(function(docSnap) {
+            var liveData = docSnap.data();
+            var streamId = docSnap.id;
+
+            // განვაახლოთ ქეშირებული პროფილის LIVE სტატუსი
+            if (cachedProfiles[liveData.user_id]) {
+              cachedProfiles[liveData.user_id].is_live = true;
+            }
+
+            // მოვძებნოთ ამ მომხმარებლის პოსტის ავატარები და დავადოთ is-live კლასი
+            updatePostAvatarsLiveStatus(liveData.user_id, true);
+
+            // შევქმნათ Facebook Style Live Post ბარათი Feed-ის თავში
+            renderLivePostCard(streamId, liveData);
+          });
+
+          // თუ რომელიმე მომხმარებელი გამოვიდა ლაივიდან, მოვხსნათ is-live
+          snapshot.docChanges().forEach(function(change) {
+            if (change.type === "removed") {
+              var endedStream = change.doc.data();
+              if (cachedProfiles[endedStream.user_id]) {
+                cachedProfiles[endedStream.user_id].is_live = false;
+              }
+              updatePostAvatarsLiveStatus(endedStream.user_id, false);
+
+              var card = document.getElementById(`live-stream-card-${change.doc.id}`);
+              if (card) card.remove();
+            }
+          });
+        }, function(error) {
+          console.error("Live streams listener error:", error);
+        });
+    }
+
+    function updatePostAvatarsLiveStatus(userId, isLive) {
+      var postCards = document.querySelectorAll('.post-card');
+      postCards.forEach(function(card) {
+        var avatarElem = card.querySelector('.post-avatar');
+        var avatarOnClick = avatarElem ? avatarElem.getAttribute('onclick') : '';
+        if (avatarOnClick && avatarOnClick.includes(userId)) {
+          if (isLive) {
+            avatarElem.classList.add('is-live');
           } else {
-            if (wrap) wrap.classList.remove('is-live');
-            if (badge) badge.style.display = 'none';
+            avatarElem.classList.remove('is-live');
           }
         }
       });
     }
 
-    function handleHeaderAvatarClick() {
-      if (userProfile && userProfile.is_live === true && userProfile.active_live_id) {
-        window.location.href = `live.html?stream=${userProfile.active_live_id}`;
-      } else {
-        showMyProfile();
-      }
-    }
+    function renderLivePostCard(streamId, liveData) {
+      var postsWall = document.getElementById('posts-wall');
+      if (!postsWall) return;
 
-    function startLiveStream() {
-      if (!currentUser) return;
-      var authorName = userProfile ? (userProfile.full_name || currentUser.email) : currentUser.email;
+      if (document.getElementById(`live-stream-card-${streamId}`)) return;
 
-      // 1. იქმნება LIVE Video ბარათი Feed-ში
-      db.collection('posts').add({
-        user_id: currentUser.uid,
-        author_name: authorName,
-        content: "🔴 პირდაპირი ეთერი (LIVE Stream)",
-        media_url: null,
-        media_type: "live",
-        is_live_active: true,
-        likes_count: 0,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function(docRef) {
-        currentActiveLivePostId = docRef.id;
+      var authorName = liveData.author_name || "User";
+      var avatarUrl = liveData.avatar_url || null;
+      var previewThumb = liveData.thumbnail_url || "logo.png";
+      var isOnline = cachedOnlineStates[liveData.user_id] === true;
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
-        // 2. პროფილის განახლება (is_live: true)
-        db.collection('profiles').doc(currentUser.uid).update({
-          is_live: true,
-          active_live_id: currentActiveLivePostId
-        });
+      var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${authorName.charAt(0).toUpperCase()}${dotHtml}</div>`;
 
-        // 3. კამერის/მიკროფონის ჩართვა MediaRecorder-ით ჩასაწერად
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(stream) {
-            recordedChunks = [];
-            try {
-              mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
-            } catch (e) {
-              mediaRecorder = new MediaRecorder(stream);
-            }
+      var liveCard = document.createElement('div');
+      liveCard.className = 'post-card live-feed-card';
+      liveCard.id = `live-stream-card-${streamId}`;
 
-            mediaRecorder.ondataavailable = function(e) {
-              if (e.data.size > 0) {
-                recordedChunks.push(e.data);
-              }
-            };
+      liveCard.innerHTML = `
+        <div class="post-header">
+          <div class="post-header-left">
+            <div class="post-avatar is-live" onclick="viewUserProfile('${liveData.user_id}')">${avatarContent}</div>
+            <div class="post-author-info">
+              <span class="post-author" onclick="viewUserProfile('${liveData.user_id}')">${authorName}</span>
+              <span class="post-time" style="color: #ff0050; font-weight: bold;">🔴 ახლა პირდაპირ ეთერშია</span>
+            </div>
+          </div>
+        </div>
+        <div class="post-content">${liveData.title || "პირდაპირი ეთერი"}</div>
+        <div class="live-feed-banner">
+          <div class="live-overlay-tag">
+            <span class="live-dot"></span> LIVE VIDEO
+          </div>
+          <img src="${previewThumb}" alt="Live Stream Preview">
+          <button class="join-live-feed-btn" onclick="window.location.href='live.html?stream=${streamId}'">
+            ▶ ეთერში შესვლა
+          </button>
+        </div>
+      `;
 
-            mediaRecorder.onstop = function() {
-              var blob = new Blob(recordedChunks, { type: 'video/mp4' });
-              var file = new File([blob], "live_recording.mp4", { type: "video/mp4" });
-              
-              // აიტვირთოს ვიდეო და გარდაიქმნას Feed-ის პოსტად
-              uploadMediaToFirebase(file, 'live_recordings', function(videoUrl) {
-                if (currentActiveLivePostId) {
-                  db.collection('posts').doc(currentActiveLivePostId).update({
-                    media_type: "video",
-                    media_url: videoUrl,
-                    is_live_active: false,
-                    content: "🎥 ჩაწერილი პირდაპირი ეთერი"
-                  }).then(function() {
-                    loadPosts();
-                  });
-                }
-              });
-            };
-
-            mediaRecorder.start(1000); // ჩაწერა ყოველ წამს
-            window.location.href = `live.html?stream=${currentActiveLivePostId}`;
-          }).catch(function(err) {
-            console.error("Camera access error:", err);
-            window.location.href = `live.html?stream=${currentActiveLivePostId}`;
-          });
-        } else {
-          window.location.href = `live.html?stream=${currentActiveLivePostId}`;
-        }
-      });
-    }
-
-    // ფუნქცია ლაივის გათიშვისთვის (რომელიც გამოიძახება live.html-იდან ან საიტიდან)
-    function endLiveStream() {
-      if (!currentUser) return;
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-      }
-
-      db.collection('profiles').doc(currentUser.uid).update({
-        is_live: false,
-        active_live_id: null
-      });
+      postsWall.prepend(liveCard);
     }
   </script>
 </body>
