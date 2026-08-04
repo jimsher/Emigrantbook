@@ -515,42 +515,48 @@
         let timerInterval = null;
         let streamSeconds = 0;
 
-        // 🎯 100%-ით გარანტირებული პროფილის წამოღება (3 დონის გადამოწმებით)
+        // 🎯 ზუსტი პროფილის წამოღება კონკრეტულ მომხმარებელზე
         async function fetchUserProfile(uid) {
             window.myName = "";
             window.myPhoto = "";
 
+            if (!uid) return;
+
             try {
-                // 1. პირდაპირი ძებნა Firestore 'profiles' კოლექციაში
-                const snapshot = await firebase.firestore().collection('profiles').get();
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (doc.id === uid || data.uid === uid || data.user_id === uid || data.id === uid) {
+                // 1. ჯერ პირდაპირ დოკუმენტის ID-ით მოძებნა (ყველაზე სწრაფი და ზუსტი)
+                const docRef = await firebase.firestore().collection('profiles').doc(uid).get();
+                if (docRef.exists) {
+                    const data = docRef.data();
+                    window.myName = data.full_name || data.fullName || data.name || data.username;
+                    window.myPhoto = data.avatar_url || data.avatar || data.photoURL;
+                } else {
+                    // 2. თუ ID-ით ვერ იპოვა, uid ველის მიხედვით ძებნა
+                    const querySnap = await firebase.firestore().collection('profiles').where('uid', '==', uid).get();
+                    if (!querySnap.empty) {
+                        const data = querySnap.docs[0].data();
                         window.myName = data.full_name || data.fullName || data.name || data.username;
                         window.myPhoto = data.avatar_url || data.avatar || data.photoURL;
                     }
-                });
+                }
             } catch (e) {
                 console.error("Firestore error:", e);
             }
 
-            // 2. თუ Firestore-ში ვერ იპოვა, ამოიღოს Firebase Auth პროფილიდან
-            if (!window.myName && auth.currentUser) {
+            // 3. Fallback Firebase Auth-ზე
+            if (!window.myName && auth.currentUser && auth.currentUser.uid === uid) {
                 window.myName = auth.currentUser.displayName;
             }
-            if (!window.myPhoto && auth.currentUser) {
+            if (!window.myPhoto && auth.currentUser && auth.currentUser.uid === uid) {
                 window.myPhoto = auth.currentUser.photoURL;
             }
 
-            // 3. თუ მაინც ცარიელია, გამოიყენოს localStorage ან საიტზე შენახული სახელი
+            // 4. Default fallback
             if (!window.myName) {
-                window.myName = localStorage.getItem('user_full_name') || "Bacho";
+                window.myName = "მომხმარებელი";
             }
-            if (!window.myPhoto) {
-                window.myPhoto = localStorage.getItem('user_avatar') || "https://via.placeholder.com/150";
+            if (!window.myPhoto || window.myPhoto === "") {
+                window.myPhoto = "https://via.placeholder.com/150";
             }
-
-            // ❌ არავითარ შემთხვევაში არ გამოიყენოს ელ-ფოსტა!
         }
 
         onAuthStateChanged(auth, async (user) => {
