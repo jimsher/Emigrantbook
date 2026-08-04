@@ -9,11 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <style>
         * {
             box-sizing: border-box;
@@ -163,7 +158,7 @@
             object-fit: cover;
         }
 
-        /* Top Overlay Header - Facebook Vertical Style */
+        /* Top Overlay Header */
         .fb-live-top-bar {
             position: absolute;
             top: 15px;
@@ -360,7 +355,7 @@
             100% { transform: translateY(-300px) scale(0.6); opacity: 0; }
         }
 
-        /* Active Lives Drawer Modal */
+        /* Active Lives Modal */
         .lives-modal-overlay {
             display: none;
             position: fixed;
@@ -397,7 +392,7 @@
 </head>
 <body>
 
-    <!-- 1. ნავბარის Facebook Live ღილაკი -->
+    <!-- 1. Navigation Bar Buttons -->
     <div style="padding: 15px;">
         <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
             <i class="fas fa-video"></i> პირდაპირი ეთერი (LIVE)
@@ -408,7 +403,7 @@
         </button>
     </div>
 
-    <!-- 2. Pre-Live Setup Modal (Facebook Preview Screen) -->
+    <!-- 2. Pre-Live Setup Modal -->
     <div id="preLiveSetupModal">
         <div class="setup-header">
             <span style="font-weight: bold; font-size: 16px;">პირდაპირი ეთერის პარამეტრები</span>
@@ -425,16 +420,14 @@
         </div>
     </div>
 
-    <!-- 3. MAIN FACEBOOK LIVE INTERFACE -->
+    <!-- 3. MAIN LIVE INTERFACE -->
     <div id="liveUI">
         <div id="live-video-container">
             <div id="remote-live-video"></div>
         </div>
 
-        <!-- Top Header Bar -->
         <div class="fb-live-top-bar">
             <div class="fb-top-left">
-                <!-- Host Details Header -->
                 <div class="fb-host-card">
                     <img id="liveHostAva" class="fb-host-avatar" src="https://via.placeholder.com/150">
                     <div>
@@ -442,7 +435,6 @@
                         <div id="liveStreamTitle" style="font-size: 11px; color: #d0d0d0;">Live Video</div>
                     </div>
                 </div>
-                <!-- LIVE Badge & Timer Below Avatar -->
                 <div class="fb-meta-info">
                     <div class="fb-live-badge">LIVE</div>
                     <div class="fb-stream-time" id="streamTimer">00:00</div>
@@ -458,10 +450,8 @@
             </div>
         </div>
 
-        <!-- Comments Chat Box -->
         <div id="liveChatBox"></div>
 
-        <!-- Bottom Actions & Input -->
         <div class="fb-bottom-bar">
             <div class="fb-input-wrapper">
                 <input type="text" id="liveMsgInp" class="fb-live-input" placeholder="დაწერეთ კომენტარი..." onkeypress="if(event.key==='Enter') sendLiveComment()">
@@ -486,11 +476,12 @@
         </div>
     </div>
 
-    <!-- 5. JS LOGIC -->
+    <!-- 5. FIREBASE & AGORA MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getDatabase, ref, set, get, update, remove, onValue, push, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, get, remove, onValue, push, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -505,9 +496,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-
-        window.auth = auth;
-        window.db = db;
+        const firestore = getFirestore(app);
 
         let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
         let localTracks = { video: null, audio: null };
@@ -515,7 +504,7 @@
         let timerInterval = null;
         let streamSeconds = 0;
 
-        // 🎯 ზუსტი პროფილის წამოღება კონკრეტულ მომხმარებელზე
+        // 🎯 პროფილის წამოღება Firestore-იდან (full_name და avatar_url)
         async function fetchUserProfile(uid) {
             window.myName = "";
             window.myPhoto = "";
@@ -523,15 +512,18 @@
             if (!uid) return;
 
             try {
-                // 1. ჯერ პირდაპირ დოკუმენტის ID-ით მოძებნა (ყველაზე სწრაფი და ზუსტი)
-                const docRef = await firebase.firestore().collection('profiles').doc(uid).get();
-                if (docRef.exists) {
-                    const data = docRef.data();
+                // 1. პირდაპირ doc(uid)-ით მოძებნა
+                const docRef = doc(firestore, 'profiles', uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
                     window.myName = data.full_name || data.fullName || data.name || data.username;
                     window.myPhoto = data.avatar_url || data.avatar || data.photoURL;
                 } else {
-                    // 2. თუ ID-ით ვერ იპოვა, uid ველის მიხედვით ძებნა
-                    const querySnap = await firebase.firestore().collection('profiles').where('uid', '==', uid).get();
+                    // 2. where('uid', '==', uid) მოძებნა
+                    const q = query(collection(firestore, 'profiles'), where('uid', '==', uid));
+                    const querySnap = await getDocs(q);
                     if (!querySnap.empty) {
                         const data = querySnap.docs[0].data();
                         window.myName = data.full_name || data.fullName || data.name || data.username;
@@ -539,24 +531,19 @@
                     }
                 }
             } catch (e) {
-                console.error("Firestore error:", e);
+                console.error("Firestore Error:", e);
             }
 
-            // 3. Fallback Firebase Auth-ზე
-            if (!window.myName && auth.currentUser && auth.currentUser.uid === uid) {
-                window.myName = auth.currentUser.displayName;
+            // Fallback
+            if (!window.myName && auth.currentUser) {
+                window.myName = auth.currentUser.displayName || auth.currentUser.email || "მომხმარებელი";
             }
-            if (!window.myPhoto && auth.currentUser && auth.currentUser.uid === uid) {
-                window.myPhoto = auth.currentUser.photoURL;
+            if (!window.myPhoto && auth.currentUser) {
+                window.myPhoto = auth.currentUser.photoURL || "https://via.placeholder.com/150";
             }
 
-            // 4. Default fallback
-            if (!window.myName) {
-                window.myName = "მომხმარებელი";
-            }
-            if (!window.myPhoto || window.myPhoto === "") {
-                window.myPhoto = "https://via.placeholder.com/150";
-            }
+            if (!window.myName) window.myName = "მომხმარებელი";
+            if (!window.myPhoto) window.myPhoto = "https://via.placeholder.com/150";
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -565,7 +552,7 @@
             }
         });
 
-        // Step 1: Open Pre-Live Camera Setup Screen
+        // 1. კამერის ჩართვის ფანჯარა
         window.startLiveSetup = async function() {
             if (!auth.currentUser) {
                 alert("გთხოვთ გაიაროთ ავტორიზაცია!");
@@ -592,7 +579,7 @@
             document.getElementById('preLiveSetupModal').style.display = 'none';
         };
 
-        // Step 2: Go Live Stream
+        // 2. ინდივიდუალური ლაივის დაწყება
         window.launchLiveStream = async function() {
             const title = document.getElementById('streamTitleInput').value.trim() || "პირდაპირი ეთერი";
             const currentUid = auth.currentUser ? auth.currentUser.uid : "user_" + Date.now();
@@ -600,12 +587,12 @@
 
             await fetchUserProfile(currentUid);
 
-            currentLiveChannel = "live_" + currentUid;
+            // ინდივიდუალური უნიკალური არხის ID (UID + Timestamp)
+            currentLiveChannel = `live_${currentUid}_${Date.now()}`;
 
             document.getElementById('preLiveSetupModal').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
             
-            // ეკრანზე სახელის და ფოტოს გამოჩენა
             document.getElementById('liveHostName').innerText = window.myName;
             document.getElementById('liveStreamTitle').innerText = title;
             document.getElementById('liveHostAva').src = window.myPhoto;
@@ -621,7 +608,7 @@
                 localTracks.video.play("remote-live-video");
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
-                // Register Stream to Realtime DB
+                // Realtime DB-ში რეგისტრაცია
                 const liveRef = ref(db, `lives_active/${currentLiveChannel}`);
                 await set(liveRef, {
                     channel: currentLiveChannel,
@@ -640,10 +627,11 @@
 
             } catch (e) {
                 console.error("Agora Stream error:", e);
+                alert("ეთერის გაშვების შეცდომა: " + e.message);
             }
         };
 
-        // Step 3: Viewers Join Live
+        // 3. მაყურებლის შეყვანა ლაივში
         window.joinLive = async function(channelName) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
             currentLiveChannel = channelName;
@@ -655,13 +643,13 @@
                 const liveData = snap.val();
                 if (liveData) {
                     document.getElementById('liveHostName').innerText = liveData.host;
-                    document.getElementById('liveStreamTitle').innerText = liveData.title || "Live";
+                    document.getElementById('liveStreamTitle').innerText = liveData.title || "Live Video";
                     document.getElementById('liveHostAva').src = liveData.hostPhoto || "https://via.placeholder.com/150";
                 }
             });
 
             await liveClient.setClientRole("audience");
-            await liveClient.join(appId, channelName, null, auth.currentUser.uid);
+            await liveClient.join(appId, channelName, null, auth.currentUser ? auth.currentUser.uid : "viewer_" + Date.now());
 
             updateViewerCount(channelName, 'join');
             listenToLiveChat(channelName);
@@ -675,12 +663,14 @@
             });
 
             liveClient.on("user-left", () => {
+                alert("ლაივი დასრულდა წამყვანის მიერ.");
                 endLive();
             });
         };
 
         function startStreamTimer() {
             streamSeconds = 0;
+            if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 streamSeconds++;
                 const mins = String(Math.floor(streamSeconds / 60)).padStart(2, '0');
@@ -695,6 +685,7 @@
                 if (currentLiveChannel.includes(auth.currentUser.uid)) {
                     remove(ref(db, `lives_active/${currentLiveChannel}`));
                     remove(ref(db, `live_chats/${currentLiveChannel}`));
+                    remove(ref(db, `live_reactions/${currentLiveChannel}`));
                 } else {
                     updateViewerCount(currentLiveChannel, 'leave');
                 }
@@ -728,7 +719,7 @@
             const inp = document.getElementById('liveMsgInp');
             if (!inp.value.trim() || !currentLiveChannel) return;
 
-            if (!window.myName) {
+            if (!window.myName && auth.currentUser) {
                 await fetchUserProfile(auth.currentUser.uid);
             }
 
