@@ -229,6 +229,13 @@
             align-items: center;
             gap: 6px;
             backdrop-filter: blur(8px);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .fb-viewer-badge:active {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .fb-close-btn {
@@ -388,6 +395,73 @@
             margin-top: 8px;
             cursor: pointer;
         }
+
+        /* Viewers Bottom Sheet Drawer */
+        .viewers-sheet-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100001;
+            align-items: flex-end;
+        }
+
+        .viewers-sheet {
+            background: #242526;
+            width: 100%;
+            max-height: 60vh;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .viewers-sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3a3b3c;
+            margin-bottom: 12px;
+        }
+
+        .viewers-list-container {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .viewer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 0;
+        }
+
+        .viewer-item img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .viewer-item span {
+            font-weight: 600;
+            font-size: 15px;
+            color: #e4e6eb;
+        }
     </style>
 </head>
 <body>
@@ -442,7 +516,7 @@
             </div>
 
             <div class="fb-top-right">
-                <div class="fb-viewer-badge">
+                <div class="fb-viewer-badge" onclick="openViewersSheet()">
                     <i class="fas fa-eye" style="color: #1877f2;"></i>
                     <span id="vCount">0</span>
                 </div>
@@ -476,7 +550,20 @@
         </div>
     </div>
 
-    <!-- 5. FIREBASE & AGORA MODULE SCRIPT -->
+    <!-- 5. Viewers List Bottom Sheet Modal -->
+    <div id="viewersSheetOverlay" class="viewers-sheet-overlay" onclick="closeViewersSheet(event)">
+        <div class="viewers-sheet" onclick="event.stopPropagation()">
+            <div class="viewers-sheet-header">
+                <h3 style="font-size: 16px;">მაყურებლები (<span id="sheetViewerCount">0</span>)</h3>
+                <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="viewersListContainer" class="viewers-list-container">
+                <!-- Viewers items rendered dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. FIREBASE & AGORA MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -503,6 +590,7 @@
         let currentLiveChannel = null;
         let timerInterval = null;
         let streamSeconds = 0;
+        let currentViewersData = {};
 
         // 🎯 პროფილის წამოღება Firestore-იდან (full_name და avatar_url)
         async function fetchUserProfile(uid) {
@@ -512,7 +600,6 @@
             if (!uid) return;
 
             try {
-                // 1. პირდაპირ doc(uid)-ით მოძებნა
                 const docRef = doc(firestore, 'profiles', uid);
                 const docSnap = await getDoc(docRef);
 
@@ -521,7 +608,6 @@
                     window.myName = data.full_name || data.fullName || data.name || data.username;
                     window.myPhoto = data.avatar_url || data.avatar || data.photoURL;
                 } else {
-                    // 2. where('uid', '==', uid) მოძებნა
                     const q = query(collection(firestore, 'profiles'), where('uid', '==', uid));
                     const querySnap = await getDocs(q);
                     if (!querySnap.empty) {
@@ -534,7 +620,6 @@
                 console.error("Firestore Error:", e);
             }
 
-            // Fallback
             if (!window.myName && auth.currentUser) {
                 window.myName = auth.currentUser.displayName || auth.currentUser.email || "მომხმარებელი";
             }
@@ -587,7 +672,6 @@
 
             await fetchUserProfile(currentUid);
 
-            // ინდივიდუალური უნიკალური არხის ID (UID + Timestamp)
             currentLiveChannel = `live_${currentUid}_${Date.now()}`;
 
             document.getElementById('preLiveSetupModal').style.display = 'none';
@@ -608,7 +692,6 @@
                 localTracks.video.play("remote-live-video");
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
-                // Realtime DB-ში რეგისტრაცია
                 const liveRef = ref(db, `lives_active/${currentLiveChannel}`);
                 await set(liveRef, {
                     channel: currentLiveChannel,
@@ -639,6 +722,10 @@
             closeActiveLivesModal();
             document.getElementById('liveUI').style.display = 'flex';
 
+            if (auth.currentUser) {
+                await fetchUserProfile(auth.currentUser.uid);
+            }
+
             get(ref(db, `lives_active/${channelName}`)).then(snap => {
                 const liveData = snap.val();
                 if (liveData) {
@@ -652,6 +739,7 @@
             await liveClient.join(appId, channelName, null, auth.currentUser ? auth.currentUser.uid : "viewer_" + Date.now());
 
             updateViewerCount(channelName, 'join');
+            startStreamTimer();
             listenToLiveChat(channelName);
             listenToViewers(channelName);
             listenToReactions(channelName);
@@ -668,9 +756,12 @@
             });
         };
 
+        // ⏱️ ტაიმერის ფუნქცია (გასწორებული)
         function startStreamTimer() {
-            streamSeconds = 0;
             if (timerInterval) clearInterval(timerInterval);
+            streamSeconds = 0;
+            document.getElementById('streamTimer').innerText = "00:00";
+
             timerInterval = setInterval(() => {
                 streamSeconds++;
                 const mins = String(Math.floor(streamSeconds / 60)).padStart(2, '0');
@@ -680,7 +771,11 @@
         }
 
         window.endLive = async function() {
-            if (timerInterval) clearInterval(timerInterval);
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
             if (currentLiveChannel && auth.currentUser) {
                 if (currentLiveChannel.includes(auth.currentUser.uid)) {
                     remove(ref(db, `lives_active/${currentLiveChannel}`));
@@ -695,6 +790,7 @@
             if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
 
             await liveClient.leave();
+            closeViewersSheet();
             document.getElementById('liveUI').style.display = 'none';
         };
 
@@ -758,16 +854,67 @@
             setTimeout(() => el.remove(), 2000);
         }
 
+        // 👁️ მაყურებლების მონაცემების შენახვა
         function updateViewerCount(channel, action) {
             if (!auth.currentUser) return;
             const vRef = ref(db, `lives_active/${channel}/viewers/${auth.currentUser.uid}`);
-            action === 'join' ? set(vRef, true) : remove(vRef);
+            
+            if (action === 'join') {
+                set(vRef, {
+                    name: window.myName || "მაყურებელი",
+                    photo: window.myPhoto || "https://via.placeholder.com/150",
+                    joinedAt: Date.now()
+                });
+                onDisconnect(vRef).remove();
+            } else {
+                remove(vRef);
+            }
         }
 
         function listenToViewers(channel) {
             onValue(ref(db, `lives_active/${channel}/viewers`), snap => {
-                const v = snap.val() || {};
-                document.getElementById('vCount').innerText = Object.keys(v).length;
+                currentViewersData = snap.val() || {};
+                const count = Object.keys(currentViewersData).length;
+                document.getElementById('vCount').innerText = count;
+                document.getElementById('sheetViewerCount').innerText = count;
+
+                if (document.getElementById('viewersSheetOverlay').style.display === 'flex') {
+                    renderViewersList();
+                }
+            });
+        }
+
+        // 📋 მაყურებლების სიის ამოშლადი ფანჯარა (Bottom Sheet)
+        window.openViewersSheet = function() {
+            renderViewersList();
+            document.getElementById('viewersSheetOverlay').style.display = 'flex';
+        };
+
+        window.closeViewersSheet = function(e) {
+            document.getElementById('viewersSheetOverlay').style.display = 'none';
+        };
+
+        function renderViewersList() {
+            const container = document.getElementById('viewersListContainer');
+            container.innerHTML = "";
+
+            const entries = Object.values(currentViewersData);
+            if (entries.length === 0) {
+                container.innerHTML = "<div style='color: #aaa; padding: 10px 0;'>ჯერ მაყურებლები არ არიან.</div>";
+                return;
+            }
+
+            entries.forEach(v => {
+                const name = typeof v === 'object' ? (v.name || "მაყურებელი") : "მაყურებელი";
+                const photo = typeof v === 'object' ? (v.photo || "https://via.placeholder.com/150") : "https://via.placeholder.com/150";
+
+                const div = document.createElement('div');
+                div.className = 'viewer-item';
+                div.innerHTML = `
+                    <img src="${photo}" alt="${name}">
+                    <span>${name}</span>
+                `;
+                container.appendChild(div);
             });
         }
 
