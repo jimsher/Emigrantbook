@@ -98,118 +98,6 @@
         box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
       }
     }
-
-    /* --- TIKTOK STYLE LIVE AVATAR (მხოლოდ პოსტების ავატარებზე) --- */
-    .post-avatar.is-live {
-      position: relative;
-      padding: 3px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, #ff0050, #00f2fe, #ff0050);
-      background-size: 300% 300%;
-      animation: liveGradient 2s linear infinite;
-    }
-
-    @keyframes liveGradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    .post-avatar.is-live::after {
-      content: 'LIVE';
-      position: absolute;
-      bottom: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ff0050;
-      color: #ffffff;
-      font-size: 9px;
-      font-weight: bold;
-      padding: 1px 4px;
-      border-radius: 3px;
-      border: 1px solid #ffffff;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-      z-index: 10;
-    }
-
-    /* --- FACEBOOK STYLE LIVE CARD IN FEED --- */
-    .post-card.live-feed-card {
-      border: 2px solid #ff0050 !important;
-      position: relative;
-      overflow: hidden;
-      background: #18191a;
-      box-shadow: 0 0 15px rgba(255, 0, 80, 0.25);
-    }
-
-    .live-feed-banner {
-      position: relative;
-      width: 100%;
-      height: 320px;
-      background-color: #000000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .live-feed-banner img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .live-overlay-tag {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: #ff0050;
-      color: #ffffff;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 4px 10px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      z-index: 5;
-    }
-
-    .live-overlay-tag .live-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #ffffff;
-      border-radius: 50%;
-      animation: blinkDot 1s infinite;
-    }
-
-    @keyframes blinkDot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    .join-live-feed-btn {
-      position: absolute;
-      bottom: 15px;
-      right: 15px;
-      background: #ff0050;
-      color: #ffffff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 13px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(255, 0, 80, 0.4);
-      transition: transform 0.2s ease, background-color 0.2s ease;
-      z-index: 5;
-    }
-
-    .join-live-feed-btn:hover {
-      transform: scale(1.05);
-      background: #e00045;
-    }
   </style>
   
 </head>
@@ -1878,7 +1766,6 @@ auth.onAuthStateChanged(function(user) {
       subscribeToMessagesRealtime();
       subscribeToLiveLotteryPost();
       subscribeTotalUsersCount();
-      subscribeToActiveLiveStreams(); // LIVE REALTIME LISTEN
       
       hidePreloader();
     });
@@ -3951,9 +3838,6 @@ function uploadMediaToFirebase(file, folder, callback) {
       var isOnline = cachedOnlineStates[post.user_id] === true;
       var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
-      var isLiveStreamer = (cachedProfiles[post.user_id] && cachedProfiles[post.user_id].is_live === true);
-      var liveAvatarClass = isLiveStreamer ? "is-live" : "";
-
       var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
       var t = TRANSLATIONS[currentLang];
 
@@ -3973,7 +3857,7 @@ function uploadMediaToFirebase(file, folder, callback) {
         <div class="post-card" id="post-card-${post.id}">
           <div class="post-header">
             <div class="post-header-left">
-              <div class="post-avatar ${liveAvatarClass}" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
+              <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
               <div class="post-author-info">
                 <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
                 <span class="post-time">${date}</span>
@@ -4366,117 +4250,6 @@ function uploadMediaToFirebase(file, folder, callback) {
       if (mediaContainer) mediaContainer.innerHTML = "";
       if (modal) modal.style.display = "none";
       currentViewingStoryObj = null;
-    }
-
-    /* ==========================================================================
-       REALTIME LIVE STREAMS & AUTOMATIC RECORDING TO POST CONVERSION LOGIC
-       ========================================================================== */
-    var liveStreamsUnsubscribe = null;
-
-    function subscribeToActiveLiveStreams() {
-      if (liveStreamsUnsubscribe) {
-        liveStreamsUnsubscribe();
-      }
-
-      liveStreamsUnsubscribe = db.collection('live_streams')
-        .where('is_active', '==', true)
-        .onSnapshot(function(snapshot) {
-          var postsWall = document.getElementById('posts-wall');
-          
-          // წავშალოთ ძველი Live ბარათები ფიდიდან
-          var existingLiveCards = document.querySelectorAll('.live-feed-card');
-          existingLiveCards.forEach(function(card) { card.remove(); });
-
-          snapshot.forEach(function(docSnap) {
-            var liveData = docSnap.data();
-            var streamId = docSnap.id;
-
-            // განვაახლოთ ქეშირებული პროფილის LIVE სტატუსი
-            if (cachedProfiles[liveData.user_id]) {
-              cachedProfiles[liveData.user_id].is_live = true;
-            }
-
-            // მოვძებნოთ ამ მომხმარებლის პოსტის ავატარები და დავადოთ is-live კლასი
-            updatePostAvatarsLiveStatus(liveData.user_id, true);
-
-            // შევქმნათ Facebook Style Live Post ბარათი Feed-ის თავში
-            renderLivePostCard(streamId, liveData);
-          });
-
-          // თუ რომელიმე მომხმარებელი გამოვიდა ლაივიდან, მოვხსნათ is-live
-          snapshot.docChanges().forEach(function(change) {
-            if (change.type === "removed") {
-              var endedStream = change.doc.data();
-              if (cachedProfiles[endedStream.user_id]) {
-                cachedProfiles[endedStream.user_id].is_live = false;
-              }
-              updatePostAvatarsLiveStatus(endedStream.user_id, false);
-
-              var card = document.getElementById(`live-stream-card-${change.doc.id}`);
-              if (card) card.remove();
-            }
-          });
-        }, function(error) {
-          console.error("Live streams listener error:", error);
-        });
-    }
-
-    function updatePostAvatarsLiveStatus(userId, isLive) {
-      var postCards = document.querySelectorAll('.post-card');
-      postCards.forEach(function(card) {
-        var avatarElem = card.querySelector('.post-avatar');
-        var avatarOnClick = avatarElem ? avatarElem.getAttribute('onclick') : '';
-        if (avatarOnClick && avatarOnClick.includes(userId)) {
-          if (isLive) {
-            avatarElem.classList.add('is-live');
-          } else {
-            avatarElem.classList.remove('is-live');
-          }
-        }
-      });
-    }
-
-    function renderLivePostCard(streamId, liveData) {
-      var postsWall = document.getElementById('posts-wall');
-      if (!postsWall) return;
-
-      if (document.getElementById(`live-stream-card-${streamId}`)) return;
-
-      var authorName = liveData.author_name || "User";
-      var avatarUrl = liveData.avatar_url || null;
-      var previewThumb = liveData.thumbnail_url || "logo.png";
-      var isOnline = cachedOnlineStates[liveData.user_id] === true;
-      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-
-      var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${authorName.charAt(0).toUpperCase()}${dotHtml}</div>`;
-
-      var liveCard = document.createElement('div');
-      liveCard.className = 'post-card live-feed-card';
-      liveCard.id = `live-stream-card-${streamId}`;
-
-      liveCard.innerHTML = `
-        <div class="post-header">
-          <div class="post-header-left">
-            <div class="post-avatar is-live" onclick="viewUserProfile('${liveData.user_id}')">${avatarContent}</div>
-            <div class="post-author-info">
-              <span class="post-author" onclick="viewUserProfile('${liveData.user_id}')">${authorName}</span>
-              <span class="post-time" style="color: #ff0050; font-weight: bold;">🔴 ახლა პირდაპირ ეთერშია</span>
-            </div>
-          </div>
-        </div>
-        <div class="post-content">${liveData.title || "პირდაპირი ეთერი"}</div>
-        <div class="live-feed-banner">
-          <div class="live-overlay-tag">
-            <span class="live-dot"></span> LIVE VIDEO
-          </div>
-          <img src="${previewThumb}" alt="Live Stream Preview">
-          <button class="join-live-feed-btn" onclick="window.location.href='live.html?stream=${streamId}'">
-            ▶ ეთერში შესვლა
-          </button>
-        </div>
-      `;
-
-      postsWall.prepend(liveCard);
     }
   </script>
 </body>
