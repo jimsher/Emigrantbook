@@ -98,6 +98,102 @@
         box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
       }
     }
+
+    /* === TIKTOK STYLE LIVE AVATAR ANIMATION & BADGE === */
+    .header-avatar-live-wrap {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 42px;
+      cursor: pointer;
+    }
+
+    .header-avatar-live-wrap.is-live::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #ff4d4f, #dcae36, #ff007f, #ff4d4f);
+      background-size: 400% 400%;
+      z-index: 1;
+      animation: tiktok-spin 2s linear infinite;
+    }
+
+    @keyframes tiktok-spin {
+      0% { background-position: 0% 50%; transform: rotate(0deg); }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; transform: rotate(360deg); }
+    }
+
+    .header-avatar-live-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #141414;
+      z-index: 2;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #141414;
+    }
+
+    .live-badge-overlay {
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ff4d4f;
+      color: #ffffff;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 4px;
+      z-index: 3;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      animation: pulse-badge 1.2s infinite alternate;
+    }
+
+    @keyframes pulse-badge {
+      0% { transform: translateX(-50%) scale(0.95); }
+      100% { transform: translateX(-50%) scale(1.08); }
+    }
+
+    /* Live Card in Feed */
+    .live-feed-card {
+      background: linear-gradient(135deg, #1f080a 0%, #141414 100%);
+      border: 1px solid #ff4d4f;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .live-feed-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .live-feed-tag {
+      background: #ff4d4f;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
   </style>
   
 </head>
@@ -212,7 +308,11 @@
           <div class="header-badge" id="main-notifications-badge" style="display: none; background: #ff4d4f;">0</div>
         </button>
 
-        <div class="header-avatar" id="header-avatar-btn" onclick="showMyProfile()">?</div>
+        <!-- TikTok Style Live Animated Avatar Header Wrapper -->
+        <div class="header-avatar-live-wrap" id="header-avatar-wrap" onclick="handleHeaderAvatarClick()">
+          <div class="header-avatar-live-inner" id="header-avatar-btn">?</div>
+          <div class="live-badge-overlay" id="header-live-badge" style="display: none;">LIVE</div>
+        </div>
       </div>
     </div>
 
@@ -231,7 +331,7 @@
             <div class="file-upload-btn" id="lbl-photo-video">📷 Photo / 🎥 Video</div>
             <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           </div>
-          <button class="live-post-btn" onclick="window.location.href='live.html'">
+          <button class="live-post-btn" onclick="startLiveStream()">
             <span class="live-dot-pulse"></span>
             <span id="lbl-live-btn">LIVE</span>
           </button>
@@ -980,6 +1080,11 @@
     var presenceInterval = null;
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
+
+    // MediaRecorder & Live Stream Variables
+    var mediaRecorder = null;
+    var recordedChunks = [];
+    var currentActiveLivePostId = null;
 
     /* HELPER: CACHE PROFILE LOAD WITH BATCH SUPPORT */
     function fetchUserProfileCached(userId, callback) {
@@ -1766,6 +1871,7 @@ auth.onAuthStateChanged(function(user) {
       subscribeToMessagesRealtime();
       subscribeToLiveLotteryPost();
       subscribeTotalUsersCount();
+      listenForUserLiveStatus(); // იწყებს ლაივის სტატუსების მოსმენას
       
       hidePreloader();
     });
@@ -3770,13 +3876,33 @@ function uploadMediaToFirebase(file, folder, callback) {
     }
 
     function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
-      if (!urlsString) return "";
+      if (!urlsString && mediaType !== 'live') return "";
       
       if (mediaType === 'video') {
         return `
           <div class="video-container-rel">
             <video class="post-media" src="${urlsString}" preload="metadata" playsinline loop onclick="toggleVideoPlay(this)"></video>
             <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
+          </div>
+        `;
+      }
+
+      // LIVE Video Card HTML
+      if (mediaType === 'live') {
+        return `
+          <div class="live-feed-card" onclick="window.location.href='live.html?stream=${postId}'">
+            <div class="live-feed-card-header">
+              <div class="live-feed-tag">
+                <span class="live-dot-pulse" style="background:#fff; width:6px; height:6px;"></span>
+                LIVE VIDEO
+              </div>
+              <span style="color:#ff4d4f; font-weight:bold; font-size:13px;">🔴 CLICK TO WATCH</span>
+            </div>
+            <div style="text-align:center; padding: 25px 10px; background: rgba(0,0,0,0.4); border-radius: 8px;">
+              <div style="font-size: 40px; margin-bottom: 5px;">🎥</div>
+              <div style="color: #ffffff; font-weight: bold; font-size: 16px;">პირდაპირი ეთერი მიმდინარეობს</div>
+              <div style="color: #aaaaaa; font-size: 13px; margin-top: 4px;">დააჭირეთ ეთერში შესასვლელად</div>
+            </div>
           </div>
         `;
       }
@@ -4250,6 +4376,119 @@ function uploadMediaToFirebase(file, folder, callback) {
       if (mediaContainer) mediaContainer.innerHTML = "";
       if (modal) modal.style.display = "none";
       currentViewingStoryObj = null;
+    }
+
+    // ======================================================
+    // 🎥 TIKTOK STYLE LIVE & AUTOMATIC RECORDING LOGIC
+    // ======================================================
+
+    function listenForUserLiveStatus() {
+      if (!currentUser) return;
+      db.collection('profiles').doc(currentUser.uid).onSnapshot(function(docSnap) {
+        if (docSnap.exists) {
+          var data = docSnap.data();
+          var wrap = document.getElementById('header-avatar-wrap');
+          var badge = document.getElementById('header-live-badge');
+          if (data.is_live === true) {
+            if (wrap) wrap.classList.add('is-live');
+            if (badge) badge.style.display = 'block';
+          } else {
+            if (wrap) wrap.classList.remove('is-live');
+            if (badge) badge.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    function handleHeaderAvatarClick() {
+      if (userProfile && userProfile.is_live === true && userProfile.active_live_id) {
+        window.location.href = `live.html?stream=${userProfile.active_live_id}`;
+      } else {
+        showMyProfile();
+      }
+    }
+
+    function startLiveStream() {
+      if (!currentUser) return;
+      var authorName = userProfile ? (userProfile.full_name || currentUser.email) : currentUser.email;
+
+      // 1. იქმნება LIVE Video ბარათი Feed-ში
+      db.collection('posts').add({
+        user_id: currentUser.uid,
+        author_name: authorName,
+        content: "🔴 პირდაპირი ეთერი (LIVE Stream)",
+        media_url: null,
+        media_type: "live",
+        is_live_active: true,
+        likes_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(docRef) {
+        currentActiveLivePostId = docRef.id;
+
+        // 2. პროფილის განახლება (is_live: true)
+        db.collection('profiles').doc(currentUser.uid).update({
+          is_live: true,
+          active_live_id: currentActiveLivePostId
+        });
+
+        // 3. კამერის/მიკროფონის ჩართვა MediaRecorder-ით ჩასაწერად
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(stream) {
+            recordedChunks = [];
+            try {
+              mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
+            } catch (e) {
+              mediaRecorder = new MediaRecorder(stream);
+            }
+
+            mediaRecorder.ondataavailable = function(e) {
+              if (e.data.size > 0) {
+                recordedChunks.push(e.data);
+              }
+            };
+
+            mediaRecorder.onstop = function() {
+              var blob = new Blob(recordedChunks, { type: 'video/mp4' });
+              var file = new File([blob], "live_recording.mp4", { type: "video/mp4" });
+              
+              // აიტვირთოს ვიდეო და გარდაიქმნას Feed-ის პოსტად
+              uploadMediaToFirebase(file, 'live_recordings', function(videoUrl) {
+                if (currentActiveLivePostId) {
+                  db.collection('posts').doc(currentActiveLivePostId).update({
+                    media_type: "video",
+                    media_url: videoUrl,
+                    is_live_active: false,
+                    content: "🎥 ჩაწერილი პირდაპირი ეთერი"
+                  }).then(function() {
+                    loadPosts();
+                  });
+                }
+              });
+            };
+
+            mediaRecorder.start(1000); // ჩაწერა ყოველ წამს
+            window.location.href = `live.html?stream=${currentActiveLivePostId}`;
+          }).catch(function(err) {
+            console.error("Camera access error:", err);
+            window.location.href = `live.html?stream=${currentActiveLivePostId}`;
+          });
+        } else {
+          window.location.href = `live.html?stream=${currentActiveLivePostId}`;
+        }
+      });
+    }
+
+    // ფუნქცია ლაივის გათიშვისთვის (რომელიც გამოიძახება live.html-იდან ან საიტიდან)
+    function endLiveStream() {
+      if (!currentUser) return;
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+
+      db.collection('profiles').doc(currentUser.uid).update({
+        is_live: false,
+        active_live_id: null
+      });
     }
   </script>
 </body>
