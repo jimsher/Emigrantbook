@@ -34,6 +34,23 @@
       outline: none;
       border: none;
     }
+
+    /* ატვირთვის ლურჯი მრგვალი რგოლის სტილი */
+    .btn-spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid #1877f2; /* ლურჯი ფერი */
+      border-radius: 50%;
+      display: inline-block;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
   
 </head>
@@ -3841,7 +3858,7 @@ function uploadMediaToFirebase(file, folder, callback) {
 
       if (publishBtn) {
         publishBtn.disabled = true;
-        publishBtn.innerText = "...";
+        publishBtn.innerHTML = '<span class="btn-spinner"></span>';
       }
       var authorName = userProfile ? userProfile.full_name : currentUser.email;
 
@@ -3871,7 +3888,10 @@ function uploadMediaToFirebase(file, folder, callback) {
             var mediaUrlsJoined = uploadedUrls.join(",");
             savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
           }).catch(function() {
-            if (publishBtn) publishBtn.disabled = false;
+            if (publishBtn) {
+              publishBtn.disabled = false;
+              applyLanguageDOM();
+            }
           });
         }
       } else {
@@ -3900,6 +3920,7 @@ function uploadMediaToFirebase(file, folder, callback) {
         loadPosts();
       }).catch(function(error) {
         if (publishBtn) publishBtn.disabled = false;
+        applyLanguageDOM();
         alert("Error: " + error.message);
       });
     }
