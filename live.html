@@ -515,25 +515,38 @@
         let timerInterval = null;
         let streamSeconds = 0;
 
+        // 🔍 Firestore Profile Fetching (Checked with User's Database Structure)
         async function fetchUserProfile(uid) {
             try {
-                // Check Firestore 'profiles' collection
-                let doc = await firebase.firestore().collection('profiles').doc(uid).get();
-                if (!doc.exists) {
-                    // Fallback to 'users' collection if profiles does not exist
-                    doc = await firebase.firestore().collection('users').doc(uid).get();
+                let docData = null;
+
+                // 1. First check profiles collection by Document ID (uid)
+                const docRef = await firebase.firestore().collection('profiles').doc(uid).get();
+                if (docRef.exists) {
+                    docData = docRef.data();
+                } else {
+                    // 2. Query profiles collection where field uid/user_id equals current uid
+                    const snap = await firebase.firestore().collection('profiles').where('uid', '==', uid).get();
+                    if (!snap.empty) {
+                        docData = snap.docs[0].data();
+                    } else {
+                        const snapUser = await firebase.firestore().collection('profiles').where('user_id', '==', uid).get();
+                        if (!snapUser.empty) {
+                            docData = snapUser.docs[0].data();
+                        }
+                    }
                 }
 
-                if (doc.exists) {
-                    const p = doc.data();
-                    window.myName = p.full_name || p.fullName || p.name || p.username || (auth.currentUser ? auth.currentUser.displayName : null);
-                    window.myPhoto = p.avatar_url || p.avatar || p.photoURL || p.profileImage || (auth.currentUser ? auth.currentUser.photoURL : null);
+                if (docData) {
+                    // Exactly mapped to your Firestore fields: full_name and avatar_url
+                    window.myName = docData.full_name || docData.fullName || docData.name;
+                    window.myPhoto = docData.avatar_url || docData.avatar || docData.photoURL;
                 }
             } catch (e) {
                 console.error("Firestore fetch error:", e);
             }
 
-            // Fallback to Auth Profile
+            // Fallbacks if not set
             if (!window.myName && auth.currentUser) {
                 window.myName = auth.currentUser.displayName || (auth.currentUser.email ? auth.currentUser.email.split('@')[0] : "Host");
             }
@@ -605,7 +618,7 @@
 
                 // Register Stream to Realtime DB
                 const liveRef = ref(db, `lives_active/${currentLiveChannel}`);
-                set(liveRef, {
+                await set(liveRef, {
                     channel: currentLiveChannel,
                     host: window.myName || "Host",
                     hostPhoto: window.myPhoto || "https://via.placeholder.com/150",
