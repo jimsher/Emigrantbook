@@ -184,13 +184,16 @@
         justify-content: center;
         position: absolute;
         width: 100%;
+        height: 100%;
         overflow: hidden;
         transition: all 0.4s ease;
+        z-index: 1 !important;
     }
 
     /* ჰოსტის ვიდეოს ყუთი */
     #host-video-wrapper {
         position: relative;
+        width: 100%;
         height: 100%;
         transition: all 0.4s ease;
         flex-shrink: 0;
@@ -233,12 +236,13 @@
     .live-top-header {
         position: absolute;
         top: 25px;
-        left: 15px;
-        right: 15px;
+        left: 12px;
+        right: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        z-index: 1010;
+        z-index: 999999 !important;
+        pointer-events: auto;
     }
 
     .host-info-pill {
@@ -257,6 +261,7 @@
         height: 36px;
         border-radius: 50%;
         border: 1.5px solid #d4af37;
+        object-fit: cover;
     }
 
     #followHostBtn {
@@ -272,23 +277,23 @@
 
     /* ჩატის ყუთის გასწორებული სტილი */
     #liveChatBox {
-        position: absolute;
-        bottom: 75px;
-        left: 12px;
-        width: 75%;
-        max-height: 240px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        gap: 6px;
-        z-index: 1000 !important;
-        pointer-events: auto !important;
-        scroll-behavior: smooth;
+        position: absolute !important;
+        bottom: 75px !important;
+        left: 12px !important;
+        width: 75% !important;
+        height: 200px !important;
+        max-height: 200px !important;
+        overflow-y: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        gap: 6px !important;
+        z-index: 999999 !important;
+        pointer-events: none !important;
     }
 
     .live-comment-item {
-        background: rgba(0, 0, 0, 0.6) !important;
+        background: rgba(0, 0, 0, 0.65) !important;
         padding: 6px 12px;
         border-radius: 12px;
         color: #ffffff !important;
@@ -300,6 +305,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        pointer-events: auto !important;
     }
 
     .side-actions-bar {
@@ -310,7 +316,7 @@
         flex-direction: column;
         gap: 20px;
         align-items: center;
-        z-index: 1010;
+        z-index: 999999 !important;
     }
 
     .live-action-btn i {
@@ -324,14 +330,15 @@
 
     .live-bottom-bar {
         position: absolute;
-        bottom: 20px;
+        bottom: 15px;
         left: 0;
         width: 100%;
-        padding: 0 15px;
+        padding: 0 12px;
         display: flex;
-        gap: 10px;
         align-items: center;
-        z-index: 1010;
+        justify-content: space-between;
+        gap: 8px;
+        z-index: 999999 !important;
     }
 
     #liveMsgInp {
@@ -425,7 +432,7 @@
             </svg>
         </div>
 
-        <!-- ბურგერ მენიუს ღილაკი - პირდაპირ რთავს ლაივს შუალედური გვერდის გარეშე -->
+        <!-- ბურგერ მენიუს ღილაკი -->
         <div class="menu-item" onclick="startLiveFunc()" style="display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px; cursor: pointer;">
             <div class="live-btn-custom" style="display: flex; align-items: center; gap: 10px;">
                 <div class="live-status-dot" style="width: 10px; height: 10px; background: #fe2c55; border-radius: 50%;"></div>
@@ -462,13 +469,14 @@
     <!-- მთავარი ლაივის ინტერფეისი (FULL LIVE UI) -->
     <div id="liveUI" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:99999; flex-direction:column; font-family: sans-serif; overflow: hidden;">
         
-        <div id="live-video-container" style="width:100%; height:100%; background:#111; position:absolute; top:0; left:0; overflow: hidden; display: flex; flex-direction: row; align-items: center; justify-content: center; z-index: 1;">
-            <div id="host-video-wrapper" style="width: 100%; height: 100%; position: relative; background: #000; transition: all 0.4s ease;">
-                <div id="remote-live-video" style="width:100%; height:100%; object-fit: cover;"></div>
+        <!-- ვიდეოს კონტეინერი -->
+        <div id="live-video-container">
+            <div id="host-video-wrapper">
+                <div id="remote-live-video"></div>
             </div>
 
             <div id="guest-video-box" style="display:none; width: 0%; height: 100%; position: relative; background: #000; border-left: 2px solid #d4af37; transition: all 0.4s ease;">
-                <div id="guest-remote-video" style="width:100%; height:100%; object-fit: cover;"></div>
+                <div id="guest-remote-video"></div>
                 <img id="guest-static-photo" src="" style="display:none; width:100%; height:100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 2;">
                 <div id="guest-cam-controls" style="position: absolute; bottom: 10px; left: 10px; z-index: 3; display: none;">
                     <button onclick="toggleGuestCamera()" style="background: rgba(0,0,0,0.5); border: 1px solid #d4af37; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">
@@ -478,7 +486,8 @@
             </div>
         </div>
 
-        <div id="guestRequestPanel" style="display:none; position:absolute; top:85px; left:15px; background:rgba(0,0,0,0.85); padding:10px; border-radius:12px; border:1px solid #3498db; z-index:1001; color:white; backdrop-filter: blur(10px);">
+        <!-- სტუმრის მოთხოვნის პანელი -->
+        <div id="guestRequestPanel" style="display:none; position:absolute; top:85px; left:15px; background:rgba(0,0,0,0.85); padding:10px; border-radius:12px; border:1px solid #3498db; z-index:999999; color:white; backdrop-filter: blur(10px);">
             <small id="reqUserName" style="font-weight: bold; color: #3498db;"></small> <span style="font-size: 11px;">-ს უნდა ჩართვა</span>
             <div style="margin-top:5px; display:flex; gap:5px;">
                 <button onclick="acceptGuest()" style="background:#2ecc71; border:none; border-radius:5px; padding:4px 10px; color:white; font-size:11px; cursor:pointer; font-weight: bold;">ჩართვა</button>
@@ -486,13 +495,14 @@
             </div>
         </div>
 
-        <div style="position:absolute; top:15px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:center; z-index: 1001;">
-            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.4); padding:3px 12px 3px 3px; border-radius:30px; border: 0.5px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
-                <img id="liveHostAva" src="https://via.placeholder.com/150" onerror="this.src='https://via.placeholder.com/150'" style="width:34px; height:34px; border-radius:50%; border:1px solid #fff; object-fit: cover;">
+        <!-- ზედა ბარი (ავატარი, სახელი, ლაიქები, მაყურებლები) -->
+        <div class="live-top-header">
+            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.5); padding:3px 12px 3px 3px; border-radius:30px; border: 0.5px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                <img id="liveHostAva" src="https://via.placeholder.com/150" onerror="this.src='https://via.placeholder.com/150'">
                 <div style="margin: 0 10px; line-height: 1.2;">
                     <b id="liveHostName" style="color:white; font-size:13px; display:block; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Host</b>
                     <div style="display: flex; align-items: center; gap: 3px; color:#fff; font-size:11px; opacity: 0.9;">
-                        <i class="fas fa-heart" style="font-size: 10px;"></i> 
+                        <i class="fas fa-heart" style="font-size: 10px; color: #fe2c55;"></i> 
                         <span id="liveLikeCount">0</span>
                     </div>
                 </div>
@@ -505,7 +515,7 @@
 
             <div style="display:flex; align-items:center; gap:8px;">
                 <div id="viewerAvatars" style="display:flex; align-items:center; position: relative;"></div>
-                <div onclick="toggleViewerList(true)" style="background:rgba(0,0,0,0.4); padding:4px 12px; border-radius:15px; color:white; font-size:13px; font-weight:bold; border: 0.5px solid rgba(255,255,255,0.1); cursor: pointer;">
+                <div onclick="toggleViewerList(true)" style="background:rgba(0,0,0,0.5); padding:4px 12px; border-radius:15px; color:white; font-size:13px; font-weight:bold; border: 0.5px solid rgba(255,255,255,0.1); cursor: pointer;">
                     <span id="vCount">0</span>
                 </div>
                 <div style="color:white; font-size:18px; opacity:0.8; margin: 0 5px;"><i class="fas fa-chevron-down"></i></div>
@@ -516,29 +526,30 @@
         <!-- ჩატის კონტეინერი -->
         <div id="liveChatBox"></div>
 
-        <div style="position:absolute; bottom:15px; left:0; width:100%; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; z-index: 1001;">
+        <!-- ქვედა ბარი (ინპუტი და ღილაკები) -->
+        <div class="live-bottom-bar">
             <div style="flex: 1.5; display: flex; align-items: center; background: rgba(0,0,0,0.6) !important; border-radius: 25px; padding: 0 15px; border: 1px solid rgba(255,255,255,0.3);">
                 <input type="text" id="liveMsgInp" onkeypress="if(event.key==='Enter') sendLiveComment()" style="width:100%; background:transparent !important; border:none !important; padding:10px 0; color:white; outline:none; font-size:14px;" placeholder="თქვი რამე...">
             </div>
 
             <div style="display:flex; align-items:center; gap:10px;">
-                <div onclick="sendLiveComment()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white;">
+                <div onclick="sendLiveComment()" style="background:rgba(0,0,0,0.5); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white;">
                     <i class="fas fa-paper-plane" style="font-size: 16px;"></i>
                 </div>
-                <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:flex; background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; align-items:center; justify-content:center; cursor:pointer;">
+                <div id="requestJoinBtn" class="live-action-btn" onclick="sendJoinRequest()" style="display:flex; background:rgba(0,0,0,0.5); width:38px; height:38px; border-radius:50%; align-items:center; justify-content:center; cursor:pointer;">
                     <i class="fas fa-user-friends" style="color:#00f2ea; font-size:18px;"></i>
                 </div>
-                <div onclick="sendLiveHeart()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                <div onclick="sendLiveHeart()" style="background:rgba(0,0,0,0.5); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                     <i class="fas fa-heart" style="color:#ff2d55; font-size:20px;"></i>
                 </div>
-                <div onclick="toggleGiftPanel()" style="background:rgba(0,0,0,0.4); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                <div onclick="toggleGiftPanel()" style="background:rgba(0,0,0,0.5); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
                     <i class="fas fa-gift" style="color:#ff2d55; font-size:20px;"></i>
                 </div>
             </div>
         </div>
 
-        <!-- საჩუქრების პანელი ლაივში -->
-        <div id="giftPanel" style="display:none; position:fixed; bottom:0; left:0; width:100%; height: 420px; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px 20px 0 0; z-index: 2000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; animation: slideUp 0.3s ease-out;">
+        <!-- საჩუქრების პანელი -->
+        <div id="giftPanel" style="display:none; position:fixed; bottom:0; left:0; width:100%; height: 420px; background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px 20px 0 0; z-index: 1000000; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; animation: slideUp 0.3s ease-out;">
             <div onclick="toggleGiftPanel()" style="width: 40px; height: 5px; background: rgba(255,255,255,0.2); border-radius: 5px; margin: 12px auto; cursor: pointer;"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px 15px;">
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -553,7 +564,7 @@
         </div>
 
         <!-- მაყურებლების სია -->
-        <div id="viewerListModal" style="display:none; position:absolute; bottom:-100%; left:0; width:100%; height:60%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(255,255,255,0.1); border-radius:20px 20px 0 0; z-index:200000; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); backdrop-filter: blur(20px);">
+        <div id="viewerListModal" style="display:none; position:absolute; bottom:-100%; left:0; width:100%; height:60%; background:rgba(15,15,15,0.98); border-top:1px solid rgba(255,255,255,0.1); border-radius:20px 20px 0 0; z-index:1000000; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); backdrop-filter: blur(20px);">
             <div style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <b style="color:white; font-size:16px;">მაყურებელი (<span id="vCountFull">0</span>)</b>
                 <div onclick="toggleViewerList(false)" style="color:white; font-size:24px; cursor:pointer;">&times;</div>
@@ -595,7 +606,7 @@
                 firebase.firestore().collection('profiles').doc(user.uid).get().then(doc => {
                     if(doc.exists) {
                         const pData = doc.data();
-                        window.myName = pData.full_name || user.email;
+                        window.myName = pData.full_name || pData.nickname || user.email;
                         window.myPhoto = pData.avatar_url || "https://via.placeholder.com/150";
                         
                         const balEl = document.getElementById('userBalance');
@@ -669,11 +680,9 @@
             try {
                 let followerCount = 0;
                 
-                // 1. ჯერ ვამოწმებთ Firestore-ის followers კოლექციას
                 const fsFollowers = await firebase.firestore().collection('followers').where('following_id', '==', currentUid).get();
                 followerCount = fsFollowers.size;
 
-                // 2. თუ Firestore-ში არ აღმოჩნდა, ვამოწმებთ Realtime Database-ს
                 if (followerCount === 0) {
                     const rtdbSnap = await get(ref(window.db, `followers/${currentUid}`));
                     if (rtdbSnap.exists()) {
@@ -693,29 +702,28 @@
             currentHostUid = currentUid;
             window.currentLiveHostUid = currentUid;
 
-            // ავატარის უსაფრთხო წამოღება Firestore-იდან თუ window.myPhoto ჯერ ჩატვირთული არ არის
-            if (!window.myPhoto || window.myPhoto === "") {
-                try {
-                    const myDoc = await firebase.firestore().collection('profiles').doc(currentUid).get();
-                    if (myDoc.exists && myDoc.data().avatar_url) {
-                        window.myPhoto = myDoc.data().avatar_url;
-                        window.myName = myDoc.data().full_name || window.myName;
-                    }
-                } catch(e) {}
-            }
+            // პროფილის მონაცემების გარანტირებული წამოღება Firestore-იდან
+            try {
+                const myDoc = await firebase.firestore().collection('profiles').doc(currentUid).get();
+                if (myDoc.exists) {
+                    const d = myDoc.data();
+                    window.myName = d.full_name || d.nickname || window.myName || "Host";
+                    window.myPhoto = d.avatar_url || window.myPhoto || "https://via.placeholder.com/150";
+                }
+            } catch(e) { console.error(e); }
 
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveHostName').innerText = window.myName || "Host";
             
             const hostAvaImg = document.getElementById('liveHostAva');
             if (hostAvaImg) {
-                hostAvaImg.src = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+                hostAvaImg.src = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
             }
 
             try {
                 await liveClient.leave(); 
                 await liveClient.setClientRole("host");
-                await new Promise(resolve => setTimeout(resolve, 500)); 
+                await new Promise(resolve => setTimeout(resolve, 300)); 
                 await liveClient.join(appId, currentLiveChannel, token, currentUid);
 
                 registerLiveInDatabase(currentLiveChannel, window.myName || "Host");
@@ -752,7 +760,7 @@
                 liveTracks.video = await AgoraRTC.createCameraVideoTrack();
                 liveTracks.video.play("remote-live-video");
 
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 300));
                 await liveClient.publish([liveTracks.audio, liveTracks.video]);
 
                 listenToLiveChat(currentLiveChannel);
@@ -811,7 +819,6 @@
                     
                     document.getElementById('liveHostName').innerText = liveData.host || "Host";
 
-                    // === ავატარის ჩატვირთვა FIRESTORE-იდან (თუ RTDB-ში არ წერია ან არ ჩანს) ===
                     let hostPhotoUrl = liveData.hostPhoto;
                     if (!hostPhotoUrl || hostPhotoUrl === 'https://via.placeholder.com/150' || hostPhotoUrl === "") {
                         try {
@@ -882,7 +889,7 @@
             } catch (e) { console.log(e); }
         };
 
-        // გასწორებული ჩატის მოსმენის ფუნქცია
+        // ჩატის მოსმენის ფუნქცია
         function listenToLiveChat(channel) {
             const chatBox = document.getElementById('liveChatBox');
             if(!chatBox) return;
@@ -896,7 +903,7 @@
                         if (msg && msg.name) {
                             const div = document.createElement('div');
                             div.className = "live-comment-item";
-                            const photoSrc = msg.photo && msg.photo !== "" ? msg.photo : 'https://via.placeholder.com/150';
+                            const photoSrc = (msg.photo && msg.photo !== "") ? msg.photo : 'https://via.placeholder.com/150';
                             div.innerHTML = `
                                 <img src="${photoSrc}" onerror="this.src='https://via.placeholder.com/150'" style="width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0;">
                                 <div>
@@ -918,7 +925,7 @@
             const inp = document.getElementById('liveMsgInp');
             if(!inp || !inp.value.trim() || !currentLiveChannel) return;
 
-            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+            const photoToSend = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
 
             push(ref(window.db, `live_chats/${currentLiveChannel}`), {
                 name: window.myName || "User",
@@ -942,7 +949,7 @@
             } else {
                 container.classList.remove('split-mode');
                 container.style.top = "0";
-                container.style.height = "100vh";
+                container.style.height = "100%";
                 if(guestBox) guestBox.style.display = "none";
             }
         }
@@ -983,12 +990,12 @@
         };
 
         function animateHeart() {
-            const container = document.getElementById('live-video-container');
+            const container = document.getElementById('liveUI');
             if(!container) return;
 
             const heart = document.createElement('i');
             heart.className = "fas fa-heart";
-            heart.style = `position:absolute; right:20px; bottom:100px; color:hsl(${Math.random()*360},100%,70%); font-size:24px; transition:all 1.5s ease-out; z-index:100; pointer-events:none;`;
+            heart.style = `position:absolute; right:20px; bottom:100px; color:hsl(${Math.random()*360},100%,70%); font-size:24px; transition:all 1.5s ease-out; z-index:999999; pointer-events:none;`;
             container.appendChild(heart);
 
             setTimeout(() => { heart.style.bottom = "400px"; heart.style.opacity = "0"; }, 50);
@@ -1041,7 +1048,7 @@
                     avDiv.innerHTML = "";
                     Object.values(viewers).slice(-1).forEach(v => {
                         if (v) {
-                            const photoSrc = v.photo && v.photo !== "" ? v.photo : 'https://via.placeholder.com/150';
+                            const photoSrc = (v.photo && v.photo !== "") ? v.photo : 'https://via.placeholder.com/150';
                             avDiv.innerHTML += `<div style="position:relative;"><img src="${photoSrc}" onerror="this.src='https://via.placeholder.com/150'" style="width:28px; height:28px; border-radius:50%; border:1.5px solid #d4af37; object-fit:cover;"></div>`;
                         }
                     });
@@ -1116,7 +1123,7 @@
         function updateViewerCount(channel, action) {
             if (!window.auth || !window.auth.currentUser) return;
             const vRef = ref(window.db, `lives_meta/${channel}/viewers/${window.auth.currentUser.uid}`);
-            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+            const photoToSend = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
             action === 'join' ? set(vRef, { name: window.myName || "User", photo: photoToSend }) : remove(vRef);
         }
 
@@ -1144,7 +1151,7 @@
                     if (v && v.name) {
                         const row = document.createElement('div');
                         row.style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; padding:5px;";
-                        const photoSrc = v.photo && v.photo !== "" ? v.photo : 'https://via.placeholder.com/150';
+                        const photoSrc = (v.photo && v.photo !== "") ? v.photo : 'https://via.placeholder.com/150';
                         row.innerHTML = `<div style="display:flex; align-items:center; gap:12px;"><img src="${photoSrc}" onerror="this.src='https://via.placeholder.com/150'" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"><div><b style="color:white; font-size:14px; display:block;">${v.name}</b></div></div>`;
                         container.appendChild(row);
                     }
@@ -1154,7 +1161,7 @@
 
         function registerLiveInDatabase(channelName, hostNickname) {
             const liveRef = ref(window.db, `lives_active/${channelName}`);
-            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+            const photoToSend = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
             const liveData = { 
                 channel: channelName, 
                 host: hostNickname, 
@@ -1184,7 +1191,7 @@
 
         window.sendJoinRequest = function() {
             if (!currentLiveChannel || !window.auth || !window.auth.currentUser) return;
-            const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+            const photoToSend = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
             set(ref(window.db, `live_requests/${currentLiveChannel}`), { 
                 uid: window.auth.currentUser.uid, 
                 name: window.myName || "User", 
@@ -1220,7 +1227,7 @@
                 await liveTracks.video.setEnabled(false);
                 guestCamEnabled = false;
                 if(camIcon) camIcon.className = "fas fa-video-slash";
-                const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+                const photoToSend = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
                 set(ref(window.db, `lives_active/${currentLiveChannel}/guest_status`), {
                     showPhoto: true,
                     photoUrl: photoToSend
@@ -1286,7 +1293,7 @@
 
                 await userDocRef.update({ balance: currentBalance - price });
 
-                const photoToSend = window.myPhoto && window.myPhoto !== "" ? window.myPhoto : "https://via.placeholder.com/150";
+                const photoToSend = (window.myPhoto && window.myPhoto !== "") ? window.myPhoto : "https://via.placeholder.com/150";
 
                 push(ref(window.db, `received_gifts/${hostUid}`), {
                     giftUrl: giftImg,
@@ -1326,7 +1333,7 @@
             const animDiv = document.createElement('div');
             animDiv.style = `
                 position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                z-index: 10000; pointer-events: none;
+                z-index: 1000000; pointer-events: none;
             `;
             
             animDiv.innerHTML = `
