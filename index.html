@@ -196,7 +196,101 @@
 }
 
 
-    
+
+    /* 🌐 Custom ენის ფანჯრის სტილები */
+.custom-lang-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(5px);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.custom-lang-modal-box {
+    background: #18191a;
+    width: 90%;
+    max-width: 380px;
+    border-radius: 14px;
+    border: 1px solid #dcae36;
+    box-shadow: 0 8px 25px rgba(220, 174, 54, 0.2);
+    overflow: hidden;
+}
+
+.custom-lang-modal-header {
+    padding: 15px 18px;
+    background: #242526;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #dcae36;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.custom-lang-close-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.custom-lang-close-btn:hover {
+    color: #fff;
+}
+
+.custom-lang-list {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.lang-option-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #222222;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.lang-option-card:hover {
+    background: #2c2c2c;
+    border-color: #dcae36;
+}
+
+.lang-check {
+    color: #dcae36;
+    font-weight: bold;
+    display: none;
+}
+
+.lang-option-card.active-lang {
+    border-color: #dcae36;
+    background: rgba(220, 174, 54, 0.1);
+}
+
+.lang-option-card.active-lang .lang-check {
+    display: inline;
+}
   </style>
   
 </head>
@@ -395,17 +489,50 @@
     <div class="side-menu-overlay" id="side-menu-overlay" onclick="toggleSideMenu(event)"></div>
     <div class="side-menu-content" id="side-menu-content">
       
+
       <div style="padding: 10px 20px 15px 20px; border-bottom: 1px solid #222222;">
-        <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 Select Language</label>
-        <select id="site-language-select" onchange="changeSiteLanguage(this.value)" style="margin-top: 8px; width: 100%; padding: 10px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; outline: none;">
-          <option value="en" selected>English</option>
-          <option value="ka">Georgian (ქართული)</option>
-          <option value="ru">Russian (Русский)</option>
-          <option value="fr">French (Français)</option>
-          <option value="de">German (Deutsch)</option>
-          <option value="it">italy (italiano)</option>
-        </select>
+  <label style="color: #dcae36; font-weight: bold; font-size: 13px;" id="lbl-select-lang">🌐 ენის არჩევა / Select Language</label>
+  
+  <button id="langSelectBtn" onclick="openLangModal()" style="margin-top: 8px; width: 100%; padding: 12px; background: #222222; border: 1px solid #dcae36; border-radius: 8px; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between; outline: none;">
+    <span id="currentLangDisplay">🇬🇧 English</span>
+    <span style="color: #dcae36; font-size: 12px;">▼</span>
+  </button>
+</div>
+
+<div id="customLangModal" class="custom-lang-modal-overlay" onclick="closeLangModal()">
+  <div class="custom-lang-modal-box" onclick="event.stopPropagation()">
+    <div class="custom-lang-modal-header">
+      <span id="lbl-modal-lang-title">🌐 აირჩიეთ ენა / Select Language</span>
+      <button onclick="closeLangModal()" class="custom-lang-close-btn">&times;</button>
+    </div>
+    <div class="custom-lang-list">
+      <div class="lang-option-card" onclick="selectLangCustom('ka')">
+        <span>🇬🇪 ქართული (Georgian)</span>
+        <span class="lang-check" id="check-ka">✓</span>
       </div>
+      <div class="lang-option-card" onclick="selectLangCustom('en')">
+        <span>🇬🇧 English</span>
+        <span class="lang-check" id="check-en">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('it')">
+        <span>🇮🇹 Italiano (Italian)</span>
+        <span class="lang-check" id="check-it">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('ru')">
+        <span>🇷🇺 Русский (Russian)</span>
+        <span class="lang-check" id="check-ru">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('fr')">
+        <span>🇫🇷 Français (French)</span>
+        <span class="lang-check" id="check-fr">✓</span>
+      </div>
+      <div class="lang-option-card" onclick="selectLangCustom('de')">
+        <span>🇩🇪 Deutsch (German)</span>
+        <span class="lang-check" id="check-de">✓</span>
+      </div>
+    </div>
+  </div>
+</div>
 
       <div class="menu-section-title">Resources</div>
 
