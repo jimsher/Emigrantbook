@@ -480,7 +480,7 @@
         </div>
     </div>
 
-    <!-- ჩაწერის Cloudinary-ზე ატვირთვის ინდიკატორი -->
+    <!-- Cloudinary-ზე ვიდეოს ატვირთვის ინდიკატორი -->
     <div id="uploadingOverlay">
         <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 12px; color: #1877f2;"></i>
         <div>ინახება და იტვირთება ლაივის ჩანაწერი...</div>
@@ -636,7 +636,7 @@
         let liveDocUnsubscribe = null;
         let chatUnsubscribe = null;
 
-        // 🎥 ვიდეოს ჩაწერის ცვლადები
+        // 🎥 ჩაწერის ცვლადები
         let mediaRecorder = null;
         let recordedChunks = [];
 
@@ -747,7 +747,7 @@
                 localTracks.video.play("remote-live-video");
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
-                // 🎥 MediaRecorder-ის ჩართვა ლაივის ჩასაწერად
+                // 🎥 ჩაწერის დაწყება
                 startRecordingStream();
 
                 startStreamTimer();
@@ -760,7 +760,7 @@
             }
         };
 
-        // 🎥 ლაივის ნაკადის ჩაწერის ლოგიკა
+        // 🎥 ვიდეო ნაკადის ჩაწერა (Cross-Browser თავსებადობით)
         function startRecordingStream() {
             recordedChunks = [];
             try {
@@ -768,8 +768,10 @@
                 const audioTrack = localTracks.audio.getMediaStreamTrack();
                 const combinedStream = new MediaStream([videoTrack, audioTrack]);
 
-                let options = { mimeType: 'video/webm;codecs=vp8,opus' };
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                let options = {};
+                if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+                    options = { mimeType: 'video/webm;codecs=vp8,opus' };
+                } else if (MediaRecorder.isTypeSupported('video/mp4')) {
                     options = { mimeType: 'video/mp4' };
                 }
 
@@ -787,11 +789,12 @@
             }
         }
 
-        // ☁️ Cloudinary-ზე ვიდეო ფაილის ატვირთვის ფუნქცია
+        // ☁️ Cloudinary-ზე ვიდეოს სწორი ატვირთვის ფუნქცია (resource_type: video)
         async function uploadToCloudinary(blob) {
             const formData = new FormData();
-            formData.append('file', blob, 'live_stream.webm');
+            formData.append('file', blob, 'live_stream.mp4');
             formData.append('upload_preset', 'emigrantbook');
+            formData.append('resource_type', 'video');
 
             const res = await fetch('https://api.cloudinary.com/v1_1/dcz3a216z/video/upload', {
                 method: 'POST',
@@ -799,7 +802,9 @@
             });
 
             if (!res.ok) {
-                throw new Error("Cloudinary upload failed");
+                const errData = await res.json();
+                console.error("Cloudinary Error Details:", errData);
+                throw new Error(errData.error?.message || "Cloudinary upload failed");
             }
 
             const data = await res.json();
@@ -882,15 +887,15 @@
                         document.getElementById('uploadingOverlay').style.display = 'flex';
                         
                         mediaRecorder.stop();
-                        await new Promise(r => setTimeout(r, 500));
+                        await new Promise(r => setTimeout(r, 800));
 
                         try {
-                            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                            const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
                             
-                            // ატვირთვა Cloudinary-ზე!
+                            // ატვირთვა Cloudinary-ზე
                             const recordedVideoUrl = await uploadToCloudinary(blob);
 
-                            // 🔴 პოსტის შექმნა Cloudinary-ის ვიდეო ლინკით!
+                            // 🔴 პოსტის დამატება Cloudinary-ის ვიდეოს ლინკით
                             await db.collection('posts').add({
                                 user_id: auth.currentUser.uid,
                                 author_name: window.myName || "User",
