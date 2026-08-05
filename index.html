@@ -3866,6 +3866,40 @@ function subscribeActiveLivesForFeed() {
     });
 }
 
+
+// 💬 ჩაწერილი ლაივის კომენტარების სინქრონიზაცია ვიდეოს დროსთან
+function attachLiveReplayComments(videoElem, liveDocId, commentsOverlayId) {
+    if (!liveDocId) return;
+
+    var commentsList = [];
+    var overlay = document.getElementById(commentsOverlayId);
+
+    // Firestore-იდან ამ ლაივის კომენტარების წამოღება
+    db.collection('lives').doc(liveDocId).collection('comments').orderBy('stream_sec', 'asc').get().then(function(snap) {
+        snap.forEach(function(docSnap) {
+            commentsList.push(docSnap.data());
+        });
+    });
+
+    // ვიდეოს დაკვრისას კომენტარების ჩვენება
+    videoElem.ontimeupdate = function() {
+        if (!overlay || commentsList.length === 0) return;
+        var currentSec = Math.floor(videoElem.currentTime);
+
+        overlay.innerHTML = "";
+        commentsList.forEach(function(c) {
+            if (c.stream_sec <= currentSec) {
+                var div = document.createElement('div');
+                div.className = 'live-replay-comment-item';
+                div.innerHTML = `<b style="color:#4599ff; margin-right:4px;">${c.name}:</b> ${c.text}`;
+                overlay.appendChild(div);
+            }
+        });
+        overlay.scrollTop = overlay.scrollHeight;
+    };
+}
+    // აქ მთავრდება
+    
     
     function checkMyLikeState(postId) {
       if (!currentUser) return;
