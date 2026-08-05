@@ -568,9 +568,13 @@
             }
         };
 
-        // 🌐 მიმდინარე ენის წამოღება (Default: ka)
+        // 🌐 მიმდინარე ენის წამოღება (ამოწმებს ყველა შესაძლო გასაღებს)
         function getLang() {
-            return localStorage.getItem('site_lang') || 'ka';
+            return localStorage.getItem('site_lang') || 
+                   localStorage.getItem('lang') || 
+                   localStorage.getItem('app_lang') || 
+                   localStorage.getItem('selected_language') || 
+                   'ka';
         }
 
         // 🌐 ენის მიხედვით ინტერფეისის განახლების ფუნქცია
@@ -588,14 +592,14 @@
             if(document.getElementById('lbl-viewers-title')) document.getElementById('lbl-viewers-title').innerText = t.viewersTitle;
         }
 
-        // გვერდის ჩატვირთვისას ენის დაყენება
+        // მომენტალურად გამოძახება
+        applyLiveTranslations();
         document.addEventListener('DOMContentLoaded', applyLiveTranslations);
-        
+        window.addEventListener('load', applyLiveTranslations);
+
         // თუ მთავარ გვერდზე ენა შეიცვალა, რეალურ დროში განახლება
         window.addEventListener('storage', function(e) {
-            if (e.key === 'site_lang') {
-                applyLiveTranslations();
-            }
+            applyLiveTranslations();
         });
 
         const firebaseConfig = {
@@ -647,8 +651,8 @@
             }
         }
 
-        // ავტომატური შემოწმება: თუ ლინკით შემოვიდა ლაივზე `live.html?join=ID`
         auth.onAuthStateChanged(async (user) => {
+            applyLiveTranslations(); // ხელახლა ვთარგმნით ავტორიზაციისას
             if (user) {
                 await fetchUserProfile(user.uid);
 
@@ -656,13 +660,14 @@
                 const joinId = urlParams.get('join');
                 if (joinId) {
                     const topBar = document.getElementById('topActionBar');
-                    if (topBar) topBar.style.display = 'none'; // ვმალავთ ზედა ზოლს
-                    joinLive(joinId); // პირდაპირ ვრთავთ ლაივს
+                    if (topBar) topBar.style.display = 'none';
+                    joinLive(joinId);
                 }
             }
         });
 
         window.startLiveSetup = async function() {
+            applyLiveTranslations();
             const t = liveTranslations[getLang()] || liveTranslations['ka'];
             if (!auth.currentUser) {
                 alert(t.authAlert);
