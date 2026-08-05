@@ -469,7 +469,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🌐 ენების თარგმანების ლექსიკონი
+        // 🌐 ენების თარგმანების ლექსიკონი (ემთხვევა მთავარი საიტის სტრუქტურას)
         const liveTranslations = {
             ka: {
                 liveBtn: "პირდაპირი ეთერი (LIVE)",
@@ -568,16 +568,16 @@
             }
         };
 
-        // 🌐 მიმდინარე ენის წამოღება (ამოწმებს ყველა შესაძლო გასაღებს)
+        // 🌐 მთავარი საიტიდან არჩეული ენის ავტომატური ამოღება
         function getLang() {
-            return localStorage.getItem('site_lang') || 
+            return localStorage.getItem('selectedLang') || 
+                   localStorage.getItem('site_lang') || 
                    localStorage.getItem('lang') || 
                    localStorage.getItem('app_lang') || 
-                   localStorage.getItem('selected_language') || 
                    'ka';
         }
 
-        // 🌐 ენის მიხედვით ინტერფეისის განახლების ფუნქცია
+        // 🌐 ენის მიხედვით ტექსტების განახლება
         function applyLiveTranslations() {
             const lang = getLang();
             const t = liveTranslations[lang] || liveTranslations['ka'];
@@ -592,12 +592,12 @@
             if(document.getElementById('lbl-viewers-title')) document.getElementById('lbl-viewers-title').innerText = t.viewersTitle;
         }
 
-        // მომენტალურად გამოძახება
+        // გვერდის ჩატვირთვისას მომენტალური გაშვება
         applyLiveTranslations();
         document.addEventListener('DOMContentLoaded', applyLiveTranslations);
         window.addEventListener('load', applyLiveTranslations);
 
-        // თუ მთავარ გვერდზე ენა შეიცვალა, რეალურ დროში განახლება
+        // თუ მთავარ საიტზე ენა შეიცვალა, ლაივშიც ავტომატურად განახლდება
         window.addEventListener('storage', function(e) {
             applyLiveTranslations();
         });
@@ -652,7 +652,7 @@
         }
 
         auth.onAuthStateChanged(async (user) => {
-            applyLiveTranslations(); // ხელახლა ვთარგმნით ავტორიზაციისას
+            applyLiveTranslations();
             if (user) {
                 await fetchUserProfile(user.uid);
 
