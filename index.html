@@ -4534,6 +4534,65 @@ function subscribeActiveLivesForFeed() {
       if (modal) modal.style.display = "none";
       currentViewingStoryObj = null;
     }
+
+
+
+
+
+
+    // 🌐 ენის მოდალის ფუნქციები
+function openLangModal() {
+    document.getElementById('customLangModal').style.display = 'flex';
+    highlightCurrentLang();
+}
+
+function closeLangModal() {
+    document.getElementById('customLangModal').style.display = 'none';
+}
+
+// ენის არჩევა
+function selectLangCustom(langCode) {
+    closeLangModal();
+    
+    // შენი არსებული ენის შეცვლის ფუნქციის გამოძახება
+    if (typeof changeSiteLanguage === 'function') {
+        changeSiteLanguage(langCode);
+    }
+    
+    updateLangDisplayUI(langCode);
+}
+
+// არჩეული ენის ტექსტის და ჩექმარკის განახლება
+function updateLangDisplayUI(langCode) {
+    const langNames = {
+        ka: "🇬🇪 ქართული",
+        en: "🇬🇧 English",
+        it: "🇮🇹 Italiano",
+        ru: "🇷🇺 Русский",
+        fr: "🇫🇷 Français",
+        de: "🇩🇪 Deutsch"
+    };
+
+    const displayElem = document.getElementById('currentLangDisplay');
+    if (displayElem) {
+        displayElem.innerText = langNames[langCode] || langNames['en'];
+    }
+
+    // მოვხსნათ მონიშვნა ყველას და დავუსვათ არჩეულს
+    document.querySelectorAll('.lang-option-card').forEach(el => el.classList.remove('active-lang'));
+    document.querySelectorAll('.lang-check').forEach(el => el.style.display = 'none');
+
+    const activeCard = document.getElementById('check-' + langCode);
+    if (activeCard) {
+        activeCard.style.display = 'inline';
+        activeCard.parentElement.classList.add('active-lang');
+    }
+}
+
+function highlightCurrentLang() {
+    var cur = window.currentLang || window.currentSiteLang || 'en';
+    updateLangDisplayUI(cur);
+}
   </script>
 </body>
 </html>
