@@ -96,13 +96,12 @@
             object-fit: cover;
         }
 
-        /* 🪞 ლაივის ჩაწერილი ვიდეოების სარკისებურად ჩვენება მთავარ გვერდზე და TikTok/Feed პლეერში */
-video[src*="cloudinary"], 
-.tiktok-slide-video, 
-.video-grid-thumbnail {
-    transform: scaleX(-1);
-    -webkit-transform: scaleX(-1);
-}
+        /* 🪞 სარკისებური ეფექტი პრევის და ლაივის ვიდეოზე */
+        #localCameraPreview video, #remote-live-video video {
+            transform: scaleX(-1) !important;
+            -webkit-transform: scaleX(-1) !important;
+            object-fit: cover !important;
+        }
 
         .setup-controls-overlay {
             position: absolute;
@@ -702,9 +701,9 @@ video[src*="cloudinary"],
             }
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
-                // 🪞 კამერის სარკისებურად ჩართვა
+                // ⚡ 480p ოპტიმიზებული ვიდეო პროფაილი (ჭედვის თავიდან ასაცილებლად)
                 localTracks.video = await AgoraRTC.createCameraVideoTrack({
-                    encoderConfig: "720p_1",
+                    encoderConfig: "480p_1",
                     optimizationMode: "motion"
                 });
                 localTracks.video.play("localCameraPreview", { mirror: true });
@@ -756,11 +755,10 @@ video[src*="cloudinary"],
                     localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 }
 
-                // 🪞 სარკისებური ჩვენება ლაივის დროს
                 localTracks.video.play("remote-live-video", { mirror: true });
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
-                // 🎥 ვიდეოს ჩაწერის დაწყება
+                // 🎥 ჩაწერის დაწყება ოპტიმიზებული ბიტრეიტით
                 startRecordingStream();
 
                 startStreamTimer();
@@ -773,7 +771,7 @@ video[src*="cloudinary"],
             }
         };
 
-        // 🎥 ვიდეო ნაკადის ჩაწერა
+        // 🎥 მსუბუქი ჩაწერის ლოგიკა (ჭედვის გარეშე)
         function startRecordingStream() {
             recordedChunks = [];
             try {
@@ -781,11 +779,11 @@ video[src*="cloudinary"],
                 const audioTrack = localTracks.audio.getMediaStreamTrack();
                 const combinedStream = new MediaStream([videoTrack, audioTrack]);
 
-                let options = {};
+                let options = { videoBitsPerSecond: 1000000 }; // 1 Mbps (მსუბუქი ბიტრეიტი)
                 if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-                    options = { mimeType: 'video/webm;codecs=vp8,opus' };
+                    options.mimeType = 'video/webm;codecs=vp8,opus';
                 } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-                    options = { mimeType: 'video/mp4' };
+                    options.mimeType = 'video/mp4';
                 }
 
                 mediaRecorder = new MediaRecorder(combinedStream, options);
@@ -796,33 +794,33 @@ video[src*="cloudinary"],
                     }
                 };
 
-                mediaRecorder.start(1000);
+                mediaRecorder.start(); // ავტომატური ბუფერიზაცია პროცესორის გადატვირთვის გარეშე
             } catch (e) {
                 console.error("MediaRecorder start error:", e);
             }
         }
 
-        // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია ("kim1albt" / "fhlkp9ld")
+        // ☁️ Cloudinary-ზე სწრაფი ატვირთვის ფუნქცია ("kim1albt" / "fhlkp9ld")
         async function uploadVideoToCloudinary(blob) {
-    var CLOUD_NAME = "kim1albt";
-    var UPLOAD_PRESET = "fhlkp9ld";
+            var CLOUD_NAME = "kim1albt";
+            var UPLOAD_PRESET = "fhlkp9ld";
 
-    var formData = new FormData();
-    formData.append("file", blob, "live_stream.mp4");
-    formData.append("upload_preset", UPLOAD_PRESET);
+            var formData = new FormData();
+            formData.append("file", blob, "live_stream.mp4");
+            formData.append("upload_preset", UPLOAD_PRESET);
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/video/upload", {
-        method: "POST",
-        body: formData
-    });
+            const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/video/upload", {
+                method: "POST",
+                body: formData
+            });
 
-    const data = await res.json();
-    if (data.secure_url) {
-        return data.secure_url;
-    } else {
-        throw new Error("Upload error: " + (data.error ? data.error.message : "Unknown error"));
-    }
-}
+            const data = await res.json();
+            if (data.secure_url) {
+                return data.secure_url;
+            } else {
+                throw new Error("Upload error: " + (data.error ? data.error.message : "Unknown error"));
+            }
+        }
 
         window.joinLive = async function(docId) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
@@ -895,20 +893,20 @@ video[src*="cloudinary"],
                 if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
                     await docRef.update({ status: "ended" });
 
-                    // 🎥 ჩაწერილი ლაივის Cloudinary-ზე ატვირთვა
+                    // 🎥 ჩაწერილი ლაივის ატვირთვა
                     if (mediaRecorder && mediaRecorder.state !== "inactive") {
                         document.getElementById('uploadingOverlay').style.display = 'flex';
                         
                         mediaRecorder.stop();
-                        await new Promise(r => setTimeout(r, 800));
+                        await new Promise(r => setTimeout(r, 500));
 
                         try {
                             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
                             
-                            // ატვირთვა Cloudinary-ზე!
+                            // ატვირთვა Cloudinary-ზე
                             const recordedVideoUrl = await uploadVideoToCloudinary(blob);
 
-                            // 🔴 პოსტის დამატება Firestore-ში!
+                            // 🔴 პოსტის დამატება Firestore-ში
                             await db.collection('posts').add({
                                 user_id: auth.currentUser.uid,
                                 author_name: window.myName || "User",
