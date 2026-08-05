@@ -377,7 +377,7 @@
 </head>
 <body>
 
-    <div class="top-action-bar">
+    <div class="top-action-bar" id="topActionBar">
         <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
             <i class="fas fa-video"></i> პირდაპირი ეთერი (LIVE)
         </button>
@@ -517,9 +517,18 @@
             }
         }
 
+        // ავტომატური შემოწმება: თუ ლინკით შემოვიდა ლაივზე `live.html?join=ID`
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 await fetchUserProfile(user.uid);
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const joinId = urlParams.get('join');
+                if (joinId) {
+                    const topBar = document.getElementById('topActionBar');
+                    if (topBar) topBar.style.display = 'none'; // ვმალავთ ზედა ზოლს
+                    joinLive(joinId); // პირდაპირ ვრთავთ ლაივს
+                }
             }
         });
 
@@ -562,7 +571,6 @@
             document.getElementById('liveChatBox').innerHTML = "";
 
             try {
-                // Firestore დოკუმენტის შექმნა
                 const liveDoc = await db.collection('lives').add({
                     host_id: uid,
                     host_name: window.myName,
@@ -616,7 +624,6 @@
             await liveClient.setClientRole("audience");
             await liveClient.join(appId, docId, null, auth.currentUser.uid);
 
-            // მაყურებლის დამატება
             db.collection('lives').doc(docId).update({
                 viewers: firebase.firestore.FieldValue.arrayUnion({
                     uid: auth.currentUser.uid,
@@ -664,15 +671,13 @@
                 const docSnap = await docRef.get();
                 
                 if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
-                    // 1. ლაივის სტატუსის შეცვლა
                     await docRef.update({ status: "ended" });
 
-                    // 2. ავტომატურად შექმნას ვიდეო პოსტი მთავარ გვერდზე დასატოვებლად
                     await db.collection('posts').add({
                         user_id: auth.currentUser.uid,
                         author_name: window.myName || "User",
                         content: "🔴 ჩაწერილი ლაივი: " + (docSnap.data().title || ""),
-                        media_url: docSnap.data().stream_url || null, // თუ აგორას ჩანაწერი/სტრიმ ლინკი გაქვს
+                        media_url: docSnap.data().stream_url || null,
                         media_type: "video",
                         likes_count: 0,
                         created_at: firebase.firestore.FieldValue.serverTimestamp()
@@ -685,9 +690,11 @@
 
             await liveClient.leave();
             document.getElementById('liveUI').style.display = 'none';
+
+            // თუ მაყურებელი იყო, ლაივიდან გამოსვლისას დავაბრუნოთ მთავარ გვერდზე
+            window.location.href = "index.html";
         };
 
-        // 👁️ მაყურებლების მოსმენა
         function listenToLiveDoc(docId) {
             if (liveDocUnsubscribe) liveDocUnsubscribe();
 
@@ -702,7 +709,6 @@
             });
         }
 
-        // 💬 კომენტარების ოპტიმიზებული Realtime მოსმენა (მხოლოდ ახალ ჩანაწერზე = 1 Read)
         function listenToLiveChat(docId) {
             const chatBox = document.getElementById('liveChatBox');
             if (chatUnsubscribe) chatUnsubscribe();
@@ -724,7 +730,6 @@
                 });
         }
 
-        // 📤 კომენტარის გაგზავნა
         window.sendLiveComment = async function() {
             const inp = document.getElementById('liveMsgInp');
             const commentText = inp.value.trim();
