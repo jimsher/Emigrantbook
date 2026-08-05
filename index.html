@@ -3858,41 +3858,8 @@ function subscribeActiveLivesForFeed() {
 
 
 // 💬 ჩაწერილი ლაივის კომენტარების სინქრონიზაცია ვიდეოს დროსთან
-// 💬 ვიდეოს დაკვრისას კომენტარების გამოჩენა შესაბამის წამებზე
-function syncLiveReplayComments(videoElem, liveDocId, overlayId) {
-    if (!liveDocId) return;
-    var overlay = document.getElementById(overlayId);
-    if (!overlay) return;
 
-    if (videoElem.dataset.loadedComments) return; // რომ ხელახლა არ წამოიღოს
-    videoElem.dataset.loadedComments = "true";
-
-    var streamComments = [];
-
-    // Firestore-იდან ამ ლაივის კომენტარების წამოღება
-    db.collection('lives').doc(liveDocId).collection('comments').orderBy('stream_sec', 'asc').get().then(function(snap) {
-        snap.forEach(function(docSnap) {
-            streamComments.push(docSnap.data());
-        });
-    });
-
-    videoElem.ontimeupdate = function() {
-        var currentSec = Math.floor(videoElem.currentTime);
-        overlay.innerHTML = "";
-
-        streamComments.forEach(function(c) {
-            if (c.stream_sec <= currentSec) {
-                var div = document.createElement('div');
-                div.className = 'live-overlay-msg';
-                div.innerHTML = `<b style="color:#4599ff; margin-right:4px;">${c.name}:</b> ${c.text}`;
-                overlay.appendChild(div);
-            }
-        });
-        overlay.scrollTop = overlay.scrollHeight;
-    };
-}
-
-    // აქ მთავრდება
+// აქ მთავრდება
     
     
     function checkMyLikeState(postId) {
