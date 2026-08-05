@@ -373,6 +373,23 @@
             border-radius: 50%;
             object-fit: cover;
         }
+
+        #uploadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 200000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -463,16 +480,20 @@
         </div>
     </div>
 
+    <!-- ჩაწერის Cloudinary-ზე ატვირთვის ინდიკატორი -->
+    <div id="uploadingOverlay">
+        <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 12px; color: #1877f2;"></i>
+        <div>ინახება და იტვირთება ლაივის ჩანაწერი...</div>
+    </div>
+
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // global ცვლადი მიმდინარე ენისთვის
         window.currentSiteLang = 'ka';
 
-        // 🌐 ენების თარგმანების ლექსიკონი
         const liveTranslations = {
             ka: {
                 liveBtn: "პირდაპირი ეთერი (LIVE)",
@@ -575,7 +596,6 @@
             return window.currentSiteLang || 'ka';
         }
 
-        // 🌐 ენის მიხედვით ტექსტების განახლება
         function applyLiveTranslations() {
             const lang = getLang();
             const t = liveTranslations[lang] || liveTranslations['ka'];
@@ -616,23 +636,23 @@
         let liveDocUnsubscribe = null;
         let chatUnsubscribe = null;
 
+        // 🎥 ვიდეოს ჩაწერის ცვლადები
+        let mediaRecorder = null;
+        let recordedChunks = [];
+
         window.myName = "";
         window.myPhoto = "";
 
-        // 🔥 Firestore-ის `profiles` კოლექციიდან `language` ველის წაკითხვა
         async function fetchUserProfile(uid) {
             if (!uid) return;
             try {
                 const docSnap = await db.collection('profiles').doc(uid).get();
                 if (docSnap.exists) {
                     const data = docSnap.data();
-                    
-                    // ენის ავტომატური დაყენება ბაზაში არსებული `language` ველის მიხედვით!
                     if (data.language) {
                         window.currentSiteLang = data.language;
                         applyLiveTranslations();
                     }
-
                     const t = liveTranslations[getLang()] || liveTranslations['ka'];
                     window.myName = data.full_name || data.fullName || auth.currentUser?.email || t.defaultUser;
                     window.myPhoto = data.avatar_url || data.avatar || "https://via.placeholder.com/150";
@@ -727,6 +747,9 @@
                 localTracks.video.play("remote-live-video");
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
+                // 🎥 MediaRecorder-ის ჩართვა ლაივის ჩასაწერად
+                startRecordingStream();
+
                 startStreamTimer();
                 listenToLiveDoc(currentLiveDocId);
                 listenToLiveChat(currentLiveDocId);
@@ -736,6 +759,52 @@
                 alert("Error: " + e.message);
             }
         };
+
+        // 🎥 ლაივის ნაკადის ჩაწერის ლოგიკა
+        function startRecordingStream() {
+            recordedChunks = [];
+            try {
+                const videoTrack = localTracks.video.getMediaStreamTrack();
+                const audioTrack = localTracks.audio.getMediaStreamTrack();
+                const combinedStream = new MediaStream([videoTrack, audioTrack]);
+
+                let options = { mimeType: 'video/webm;codecs=vp8,opus' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'video/mp4' };
+                }
+
+                mediaRecorder = new MediaRecorder(combinedStream, options);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.start(1000);
+            } catch (e) {
+                console.error("MediaRecorder start error:", e);
+            }
+        }
+
+        // ☁️ Cloudinary-ზე ვიდეო ფაილის ატვირთვის ფუნქცია
+        async function uploadToCloudinary(blob) {
+            const formData = new FormData();
+            formData.append('file', blob, 'live_stream.webm');
+            formData.append('upload_preset', 'emigrantbook');
+
+            const res = await fetch('https://api.cloudinary.com/v1_1/dcz3a216z/video/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                throw new Error("Cloudinary upload failed");
+            }
+
+            const data = await res.json();
+            return data.secure_url;
+        }
 
         window.joinLive = async function(docId) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
@@ -808,15 +877,36 @@
                 if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
                     await docRef.update({ status: "ended" });
 
-                    await db.collection('posts').add({
-                        user_id: auth.currentUser.uid,
-                        author_name: window.myName || "User",
-                        content: "🔴 LIVE: " + (docSnap.data().title || ""),
-                        media_url: docSnap.data().stream_url || null,
-                        media_type: "video",
-                        likes_count: 0,
-                        created_at: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    // 🎥 ჩაწერილი ვიდეოს Cloudinary-ზე ატვირთვა
+                    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                        document.getElementById('uploadingOverlay').style.display = 'flex';
+                        
+                        mediaRecorder.stop();
+                        await new Promise(r => setTimeout(r, 500));
+
+                        try {
+                            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                            
+                            // ატვირთვა Cloudinary-ზე!
+                            const recordedVideoUrl = await uploadToCloudinary(blob);
+
+                            // 🔴 პოსტის შექმნა Cloudinary-ის ვიდეო ლინკით!
+                            await db.collection('posts').add({
+                                user_id: auth.currentUser.uid,
+                                author_name: window.myName || "User",
+                                author_avatar: window.myPhoto || "https://via.placeholder.com/150",
+                                content: "🔴 LIVE ჩანაწერი: " + (docSnap.data().title || ""),
+                                media_url: recordedVideoUrl,
+                                media_type: "video",
+                                likes_count: 0,
+                                created_at: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        } catch (err) {
+                            console.error("Cloudinary upload failed:", err);
+                        }
+                        
+                        document.getElementById('uploadingOverlay').style.display = 'none';
+                    }
                 }
             }
 
