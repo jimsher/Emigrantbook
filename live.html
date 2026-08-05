@@ -96,12 +96,13 @@
             object-fit: cover;
         }
 
-        /* 🪞 სარკისებური ეფექტი პრევის ვიდეოზე */
-        #localCameraPreview video, #remote-live-video video {
-            transform: scaleX(-1) !important;
-            -webkit-transform: scaleX(-1) !important;
-            object-fit: cover !important;
-        }
+        /* 🪞 ლაივის ჩაწერილი ვიდეოების სარკისებურად ჩვენება მთავარ გვერდზე და TikTok/Feed პლეერში */
+video[src*="cloudinary"], 
+.tiktok-slide-video, 
+.video-grid-thumbnail {
+    transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+}
 
         .setup-controls-overlay {
             position: absolute;
@@ -802,7 +803,7 @@
         }
 
         // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია ("kim1albt" / "fhlkp9ld")
-        // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია სარკისებური (Flip) ტრანსფორმაციით
+        // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია (სტანდარტული და უსაფრთხო)
 async function uploadVideoToCloudinary(blob) {
     var CLOUD_NAME = "kim1albt";
     var UPLOAD_PRESET = "fhlkp9ld";
@@ -818,9 +819,7 @@ async function uploadVideoToCloudinary(blob) {
 
     const data = await res.json();
     if (data.secure_url) {
-        // 🪞 Cloudinary-ის URL-ში 'hflip'-ის ჩასმა, რომ ვიდეო ფაილი დაკვრისას სარკისებური იყოს
-        let mirroredUrl = data.secure_url.replace('/upload/', '/upload/fl_hflip/');
-        return mirroredUrl;
+        return data.secure_url; // სუფთა URL ყოველგვარი ტრანსფორმაციის გარეშე
     } else {
         throw new Error("Upload error: " + (data.error ? data.error.message : "Unknown error"));
     }
