@@ -469,7 +469,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // 🌐 ენების თარგმანების ლექსიკონი (ემთხვევა მთავარი საიტის სტრუქტურას)
+        // global ცვლადი მიმდინარე ენისთვის
+        window.currentSiteLang = 'ka';
+
+        // 🌐 ენების თარგმანების ლექსიკონი
         const liveTranslations = {
             ka: {
                 liveBtn: "პირდაპირი ეთერი (LIVE)",
@@ -568,13 +571,8 @@
             }
         };
 
-        // 🌐 მთავარი საიტიდან არჩეული ენის ავტომატური ამოღება
         function getLang() {
-            return localStorage.getItem('selectedLang') || 
-                   localStorage.getItem('site_lang') || 
-                   localStorage.getItem('lang') || 
-                   localStorage.getItem('app_lang') || 
-                   'ka';
+            return window.currentSiteLang || 'ka';
         }
 
         // 🌐 ენის მიხედვით ტექსტების განახლება
@@ -591,16 +589,6 @@
             if(document.getElementById('lbl-modal-active-title')) document.getElementById('lbl-modal-active-title').innerText = t.activeModalTitle;
             if(document.getElementById('lbl-viewers-title')) document.getElementById('lbl-viewers-title').innerText = t.viewersTitle;
         }
-
-        // გვერდის ჩატვირთვისას მომენტალური გაშვება
-        applyLiveTranslations();
-        document.addEventListener('DOMContentLoaded', applyLiveTranslations);
-        window.addEventListener('load', applyLiveTranslations);
-
-        // თუ მთავარ საიტზე ენა შეიცვალა, ლაივშიც ავტომატურად განახლდება
-        window.addEventListener('storage', function(e) {
-            applyLiveTranslations();
-        });
 
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -631,28 +619,37 @@
         window.myName = "";
         window.myPhoto = "";
 
+        // 🔥 Firestore-ის `profiles` კოლექციიდან `language` ველის წაკითხვა
         async function fetchUserProfile(uid) {
             if (!uid) return;
-            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             try {
                 const docSnap = await db.collection('profiles').doc(uid).get();
                 if (docSnap.exists) {
                     const data = docSnap.data();
+                    
+                    // ენის ავტომატური დაყენება ბაზაში არსებული `language` ველის მიხედვით!
+                    if (data.language) {
+                        window.currentSiteLang = data.language;
+                        applyLiveTranslations();
+                    }
+
+                    const t = liveTranslations[getLang()] || liveTranslations['ka'];
                     window.myName = data.full_name || data.fullName || auth.currentUser?.email || t.defaultUser;
                     window.myPhoto = data.avatar_url || data.avatar || "https://via.placeholder.com/150";
                 } else {
+                    const t = liveTranslations[getLang()] || liveTranslations['ka'];
                     window.myName = auth.currentUser?.displayName || auth.currentUser?.email || t.defaultUser;
                     window.myPhoto = auth.currentUser?.photoURL || "https://via.placeholder.com/150";
                 }
             } catch (e) {
                 console.error("Profile load error:", e);
+                const t = liveTranslations[getLang()] || liveTranslations['ka'];
                 window.myName = auth.currentUser?.email || t.defaultUser;
                 window.myPhoto = "https://via.placeholder.com/150";
             }
         }
 
         auth.onAuthStateChanged(async (user) => {
-            applyLiveTranslations();
             if (user) {
                 await fetchUserProfile(user.uid);
 
@@ -663,17 +660,18 @@
                     if (topBar) topBar.style.display = 'none';
                     joinLive(joinId);
                 }
+            } else {
+                applyLiveTranslations();
             }
         });
 
         window.startLiveSetup = async function() {
-            applyLiveTranslations();
+            if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
             const t = liveTranslations[getLang()] || liveTranslations['ka'];
             if (!auth.currentUser) {
                 alert(t.authAlert);
                 return;
             }
-            await fetchUserProfile(auth.currentUser.uid);
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
@@ -693,12 +691,11 @@
         };
 
         window.launchLiveStream = async function() {
+            if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
             const t = liveTranslations[getLang()] || liveTranslations['ka'];
             const title = document.getElementById('streamTitleInput').value.trim() || t.defaultTitle;
             const uid = auth.currentUser.uid;
             const appId = "258897e8fb5f4dd089b761eca6568b24";
-
-            await fetchUserProfile(uid);
 
             document.getElementById('preLiveSetupModal').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
