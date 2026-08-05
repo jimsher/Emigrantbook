@@ -721,27 +721,6 @@
 
     // 3. ტექნიკური შესვენების სტატუსის წაკითხვა
     
-
-    // ტექნიკური შესვენების ჩართვა / გამორთვა
-    function toggleMaintenanceMode() {
-      const newStatus = !isMaintenanceActive;
-      const confirmMsg = newStatus 
-        ? "დარწმუნებული ხართ, რომ გსურთ საიტის ტექნიკურ რეჟიმში გადაყვანა? ჩვეულებრივი მომხმარებლები ვერ შეძლებენ შესვლას!" 
-        : "გსურთ ტექნიკური რეჟიმის გამორთვა და საიტის ჩვეულებრივ რეჟიმში დაბრუნება?";
-
-      if (confirm(confirmMsg)) {
-        db.collection('system_settings').doc('maintenance').set({
-          is_active: newStatus,
-          message: "საიტი დროებით მიუწვდომელია, მიმდინარეობს ტექნიკური ხარვეზის გამოსწორება.",
-          updated_at: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(() => {
-          alert("სტატუსი წარმატებით განახლდა!");
-        }).catch(err => {
-          console.error("Maintenance toggle error:", err);
-          alert("შეცდომა სტატუსის განახლებისას: " + err.message);
-        });
-      }
-    }
   </script>
 </body>
 </html>
