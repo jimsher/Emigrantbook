@@ -856,45 +856,10 @@
           });
       });
     }
-
-  const sysAuth = firebase.auth();
-  const sysDb = firebase.firestore();
-
-  let maintenanceUnsubscribe = null;
-
-  sysAuth.onAuthStateChanged(user => {
-    if (maintenanceUnsubscribe) {
-      maintenanceUnsubscribe();
-      maintenanceUnsubscribe = null;
-    }
-
-    if (user) {
-      sysDb.collection('profiles').doc(user.uid).get().then(pDoc => {
-        const pData = pDoc.exists ? pDoc.data() : {};
-        const isAdmin = (pData.is_admin === true) || (user.email === 'admin@emigrantbook.com');
-
-        if (isAdmin) {
-          removeMaintenanceUI();
-          removeBlockedUI();
-        } else {
-          startMaintenanceCheck();
-          listenToUserStatus(user, pData);
-        }
-      }).catch(err => {
-        console.error("Profile check error:", err);
-        startMaintenanceCheck();
-      });
-    } else {
-      sysDb.collection('system_settings').doc('maintenance').get().then(doc => {
-        if (doc.exists && doc.data().is_active === true) {
-          renderMaintenanceUI(doc.data().message);
-        } else {
-          removeMaintenanceUI();
-        }
-      });
-    }
-  });
-
+// ადმინი
+  
+// აქ მთავრდება
+    
   function startMaintenanceCheck() {
     sysDb.collection('system_settings').doc('maintenance').get().then(doc => {
       if (doc.exists && doc.data().is_active === true) {
