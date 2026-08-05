@@ -379,17 +379,17 @@
 
     <div class="top-action-bar" id="topActionBar">
         <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
-            <i class="fas fa-video"></i> პირდაპირი ეთერი (LIVE)
+            <i class="fas fa-video"></i> <span id="lbl-live-btn">პირდაპირი ეთერი (LIVE)</span>
         </button>
         <button onclick="openActiveLivesModal()" style="background: #242526; color: white; border: 1px solid #3a3b3c; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
-            <i class="fas fa-play-circle"></i> აქტიური ლაივები
+            <i class="fas fa-play-circle"></i> <span id="lbl-active-lives-btn">აქტიური ლაივები</span>
         </button>
     </div>
 
     <!-- Pre-Live Modal -->
     <div id="preLiveSetupModal">
         <div class="setup-header">
-            <span style="font-weight: bold;">პირდაპირი ეთერის პარამეტრები</span>
+            <span style="font-weight: bold;" id="lbl-setup-title">პირდაპირი ეთერის პარამეტრები</span>
             <button onclick="closeLiveSetup()" style="background:none; border:none; color:white; font-size:22px;">&times;</button>
         </div>
         <div class="setup-preview-zone">
@@ -397,7 +397,7 @@
             <div class="setup-controls-overlay">
                 <input type="text" id="streamTitleInput" class="setup-input" placeholder="დაწერეთ ლაივის აღწერა ან სათაური...">
                 <button class="btn-fb-go-live" onclick="launchLiveStream()">
-                    <i class="fas fa-broadcast-tower"></i> პირდაპირი ეთერის დაწყება
+                    <i class="fas fa-broadcast-tower"></i> <span id="lbl-start-stream-btn">პირდაპირი ეთერის დაწყება</span>
                 </button>
             </div>
         </div>
@@ -446,7 +446,7 @@
     <div id="activeLivesModal" class="lives-modal-overlay">
         <div class="lives-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>მიმდინარე პირდაპირი ეთერები</h3>
+                <h3 id="lbl-modal-active-title">მიმდინარე პირდაპირი ეთერები</h3>
                 <button onclick="closeActiveLivesModal()" style="background:none; border:none; color:white; font-size:20px;">&times;</button>
             </div>
             <div id="activeLivesList"></div>
@@ -456,7 +456,7 @@
     <div id="viewersSheetOverlay" class="viewers-sheet-overlay" onclick="closeViewersSheet()">
         <div class="viewers-sheet" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3>მაყურებლები (<span id="sheetViewerCount">0</span>)</h3>
+                <h3><span id="lbl-viewers-title">მაყურებლები</span> (<span id="sheetViewerCount">0</span>)</h3>
                 <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px;">&times;</button>
             </div>
             <div id="viewersListContainer" style="overflow-y:auto;"></div>
@@ -469,6 +469,135 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // 🌐 ენების თარგმანების ლექსიკონი
+        const liveTranslations = {
+            ka: {
+                liveBtn: "პირდაპირი ეთერი (LIVE)",
+                activeLivesBtn: "აქტიური ლაივები",
+                setupTitle: "პირდაპირი ეთერის პარამეტრები",
+                inputPlaceholder: "დაწერეთ ლაივის აღწერა ან სათაური...",
+                startStreamBtn: "პირდაპირი ეთერის დაწყება",
+                commentPlaceholder: "დაწერეთ კომენტარი...",
+                activeModalTitle: "მიმდინარე პირდაპირი ეთერები",
+                viewersTitle: "მაყურებლები",
+                noViewers: "ჯერ მაყურებლები არ არიან.",
+                loading: "იტვირთება...",
+                noActiveLives: "აქტიური ლაივები არ არის.",
+                watchBtn: "უყურე",
+                authAlert: "გთხოვთ გაიაროთ ავტორიზაცია!",
+                cameraErr: "კამერის ჩართვა ვერ მოხერხდა!",
+                liveEnded: "ლაივი დასრულდა!",
+                defaultTitle: "პირდაპირი ეთერი",
+                defaultUser: "მომხმარებელი"
+            },
+            en: {
+                liveBtn: "Go LIVE",
+                activeLivesBtn: "Active Lives",
+                setupTitle: "Live Stream Settings",
+                inputPlaceholder: "Write live description or title...",
+                startStreamBtn: "Start Live Stream",
+                commentPlaceholder: "Write a comment...",
+                activeModalTitle: "Current Live Streams",
+                viewersTitle: "Viewers",
+                noViewers: "No viewers yet.",
+                loading: "Loading...",
+                noActiveLives: "No active live streams.",
+                watchBtn: "Watch",
+                authAlert: "Please log in!",
+                cameraErr: "Failed to access camera!",
+                liveEnded: "Live stream ended!",
+                defaultTitle: "Live Stream",
+                defaultUser: "User"
+            },
+            ru: {
+                liveBtn: "Прямой эфир (LIVE)",
+                activeLivesBtn: "Активные эфиры",
+                setupTitle: "Настройки прямого эфира",
+                inputPlaceholder: "Напишите описание или название эфира...",
+                startStreamBtn: "Начать прямой эфир",
+                commentPlaceholder: "Напишите комментарий...",
+                activeModalTitle: "Текущие прямые эфиры",
+                viewersTitle: "Зрители",
+                noViewers: "Пока нет зрителей.",
+                loading: "Загрузка...",
+                noActiveLives: "Нет активных эфиров.",
+                watchBtn: "Смотреть",
+                authAlert: "Пожалуйста, авторизуйтесь!",
+                cameraErr: "Не удалось включить камеру!",
+                liveEnded: "Эфир завершен!",
+                defaultTitle: "Прямой эфир",
+                defaultUser: "Пользователь"
+            },
+            fr: {
+                liveBtn: "En direct (LIVE)",
+                activeLivesBtn: "En direct actifs",
+                setupTitle: "Paramètres du direct",
+                inputPlaceholder: "Écrivez la description ou le titre...",
+                startStreamBtn: "Démarrer le direct",
+                commentPlaceholder: "Écrire un commentaire...",
+                activeModalTitle: "Diffusions en direct actuelles",
+                viewersTitle: "Spectateurs",
+                noViewers: "Pas encore de spectateurs.",
+                loading: "Chargement...",
+                noActiveLives: "Aucun direct actif.",
+                watchBtn: "Regarder",
+                authAlert: "Veuillez vous connecter!",
+                cameraErr: "Impossible d'accéder à la caméra!",
+                liveEnded: "Le direct est terminé!",
+                defaultTitle: "Diffusion en direct",
+                defaultUser: "Utilisateur"
+            },
+            de: {
+                liveBtn: "LIVE gehen",
+                activeLivesBtn: "Aktive Streams",
+                setupTitle: "Live-Stream-Einstellungen",
+                inputPlaceholder: "Beschreibung oder Titel eingeben...",
+                startStreamBtn: "Live-Stream starten",
+                commentPlaceholder: "Kommentar schreiben...",
+                activeModalTitle: "Aktuelle Live-Streams",
+                viewersTitle: "Zuschauer",
+                noViewers: "Noch keine Zuschauer.",
+                loading: "Laden...",
+                noActiveLives: "Keine aktiven Streams.",
+                watchBtn: "Ansehen",
+                authAlert: "Bitte anmelden!",
+                cameraErr: "Kamera konnte nicht aktiviert werden!",
+                liveEnded: "Live-Stream beendet!",
+                defaultTitle: "Live-Stream",
+                defaultUser: "Benutzer"
+            }
+        };
+
+        // 🌐 მიმდინარე ენის წამოღება (Default: ka)
+        function getLang() {
+            return localStorage.getItem('site_lang') || 'ka';
+        }
+
+        // 🌐 ენის მიხედვით ინტერფეისის განახლების ფუნქცია
+        function applyLiveTranslations() {
+            const lang = getLang();
+            const t = liveTranslations[lang] || liveTranslations['ka'];
+
+            if(document.getElementById('lbl-live-btn')) document.getElementById('lbl-live-btn').innerText = t.liveBtn;
+            if(document.getElementById('lbl-active-lives-btn')) document.getElementById('lbl-active-lives-btn').innerText = t.activeLivesBtn;
+            if(document.getElementById('lbl-setup-title')) document.getElementById('lbl-setup-title').innerText = t.setupTitle;
+            if(document.getElementById('streamTitleInput')) document.getElementById('streamTitleInput').placeholder = t.inputPlaceholder;
+            if(document.getElementById('lbl-start-stream-btn')) document.getElementById('lbl-start-stream-btn').innerText = t.startStreamBtn;
+            if(document.getElementById('liveMsgInp')) document.getElementById('liveMsgInp').placeholder = t.commentPlaceholder;
+            if(document.getElementById('lbl-modal-active-title')) document.getElementById('lbl-modal-active-title').innerText = t.activeModalTitle;
+            if(document.getElementById('lbl-viewers-title')) document.getElementById('lbl-viewers-title').innerText = t.viewersTitle;
+        }
+
+        // გვერდის ჩატვირთვისას ენის დაყენება
+        document.addEventListener('DOMContentLoaded', applyLiveTranslations);
+        
+        // თუ მთავარ გვერდზე ენა შეიცვალა, რეალურ დროში განახლება
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'site_lang') {
+                applyLiveTranslations();
+            }
+        });
+
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
             authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -500,19 +629,20 @@
 
         async function fetchUserProfile(uid) {
             if (!uid) return;
+            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             try {
                 const docSnap = await db.collection('profiles').doc(uid).get();
                 if (docSnap.exists) {
                     const data = docSnap.data();
-                    window.myName = data.full_name || data.fullName || auth.currentUser?.email || "მომხმარებელი";
+                    window.myName = data.full_name || data.fullName || auth.currentUser?.email || t.defaultUser;
                     window.myPhoto = data.avatar_url || data.avatar || "https://via.placeholder.com/150";
                 } else {
-                    window.myName = auth.currentUser?.displayName || auth.currentUser?.email || "მომხმარებელი";
+                    window.myName = auth.currentUser?.displayName || auth.currentUser?.email || t.defaultUser;
                     window.myPhoto = auth.currentUser?.photoURL || "https://via.placeholder.com/150";
                 }
             } catch (e) {
                 console.error("Profile load error:", e);
-                window.myName = auth.currentUser?.email || "მომხმარებელი";
+                window.myName = auth.currentUser?.email || t.defaultUser;
                 window.myPhoto = "https://via.placeholder.com/150";
             }
         }
@@ -533,8 +663,9 @@
         });
 
         window.startLiveSetup = async function() {
+            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             if (!auth.currentUser) {
-                alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+                alert(t.authAlert);
                 return;
             }
             await fetchUserProfile(auth.currentUser.uid);
@@ -543,7 +674,7 @@
                 localTracks.video = await AgoraRTC.createCameraVideoTrack();
                 localTracks.video.play("localCameraPreview");
             } catch (e) {
-                alert("კამერის ჩართვა ვერ მოხერხდა!");
+                alert(t.cameraErr);
             }
         };
 
@@ -557,7 +688,8 @@
         };
 
         window.launchLiveStream = async function() {
-            const title = document.getElementById('streamTitleInput').value.trim() || "პირდაპირი ეთერი";
+            const t = liveTranslations[getLang()] || liveTranslations['ka'];
+            const title = document.getElementById('streamTitleInput').value.trim() || t.defaultTitle;
             const uid = auth.currentUser.uid;
             const appId = "258897e8fb5f4dd089b761eca6568b24";
 
@@ -599,7 +731,7 @@
 
             } catch (e) {
                 console.error("Stream Start Error:", e);
-                alert("შეცდომა: " + e.message);
+                alert("Error: " + e.message);
             }
         };
 
@@ -643,7 +775,8 @@
             });
 
             liveClient.on("user-left", () => {
-                alert("ლაივი დასრულდა!");
+                const t = liveTranslations[getLang()] || liveTranslations['ka'];
+                alert(t.liveEnded);
                 endLive();
             });
         };
@@ -676,7 +809,7 @@
                     await db.collection('posts').add({
                         user_id: auth.currentUser.uid,
                         author_name: window.myName || "User",
-                        content: "🔴 ჩაწერილი ლაივი: " + (docSnap.data().title || ""),
+                        content: "🔴 LIVE: " + (docSnap.data().title || ""),
                         media_url: docSnap.data().stream_url || null,
                         media_type: "video",
                         likes_count: 0,
@@ -691,7 +824,6 @@
             await liveClient.leave();
             document.getElementById('liveUI').style.display = 'none';
 
-            // თუ მაყურებელი იყო, ლაივიდან გამოსვლისას დავაბრუნოთ მთავარ გვერდზე
             window.location.href = "index.html";
         };
 
@@ -751,10 +883,11 @@
         };
 
         window.openViewersSheet = function() {
+            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             const container = document.getElementById('viewersListContainer');
             container.innerHTML = "";
             if (currentViewersList.length === 0) {
-                container.innerHTML = "<div style='color:#aaa; padding:10px;'>ჯერ მაყურებლები არ არიან.</div>";
+                container.innerHTML = `<div style='color:#aaa; padding:10px;'>${t.noViewers}</div>`;
             } else {
                 currentViewersList.forEach(v => {
                     container.innerHTML += `
@@ -773,14 +906,15 @@
         };
 
         window.openActiveLivesModal = function() {
+            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             document.getElementById('activeLivesModal').style.display = 'flex';
             const container = document.getElementById('activeLivesList');
-            container.innerHTML = "იტვირთება...";
+            container.innerHTML = t.loading;
 
             db.collection('lives').where('status', '==', 'active').get().then(snap => {
                 container.innerHTML = "";
                 if (snap.empty) {
-                    container.innerHTML = "აქტიური ლაივები არ არის.";
+                    container.innerHTML = t.noActiveLives;
                     return;
                 }
                 snap.forEach(doc => {
@@ -794,7 +928,7 @@
                                     <div style="font-size:12px; color:#aaa;">${live.title}</div>
                                 </div>
                             </div>
-                            <span class="fb-live-badge">უყურე</span>
+                            <span class="fb-live-badge">${t.watchBtn}</span>
                         </div>
                     `;
                 });
