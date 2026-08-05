@@ -802,26 +802,29 @@
         }
 
         // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია ("kim1albt" / "fhlkp9ld")
-        async function uploadVideoToCloudinary(blob) {
-            var CLOUD_NAME = "kim1albt";
-            var UPLOAD_PRESET = "fhlkp9ld";
+        // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია სარკისებური (Flip) ტრანსფორმაციით
+async function uploadVideoToCloudinary(blob) {
+    var CLOUD_NAME = "kim1albt";
+    var UPLOAD_PRESET = "fhlkp9ld";
 
-            var formData = new FormData();
-            formData.append("file", blob, "live_stream.mp4");
-            formData.append("upload_preset", UPLOAD_PRESET);
+    var formData = new FormData();
+    formData.append("file", blob, "live_stream.mp4");
+    formData.append("upload_preset", UPLOAD_PRESET);
 
-            const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/video/upload", {
-                method: "POST",
-                body: formData
-            });
+    const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/video/upload", {
+        method: "POST",
+        body: formData
+    });
 
-            const data = await res.json();
-            if (data.secure_url) {
-                return data.secure_url;
-            } else {
-                throw new Error("Upload error: " + (data.error ? data.error.message : "Unknown error"));
-            }
-        }
+    const data = await res.json();
+    if (data.secure_url) {
+        // 🪞 Cloudinary-ის URL-ში 'hflip'-ის ჩასმა, რომ ვიდეო ფაილი დაკვრისას სარკისებური იყოს
+        let mirroredUrl = data.secure_url.replace('/upload/', '/upload/fl_hflip/');
+        return mirroredUrl;
+    } else {
+        throw new Error("Upload error: " + (data.error ? data.error.message : "Unknown error"));
+    }
+}
 
         window.joinLive = async function(docId) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
