@@ -3748,13 +3748,13 @@ function uploadMediaToFirebase(file, folder, callback) {
 
 
    // 1. აქტიური ლაივების მოსმენა და Feed-ის სათავეში გამოჩენა
+// აქტიური ლაივების მოსმენა Feed-ისთვის
 function subscribeActiveLivesForFeed() {
   db.collection('lives')
     .where('status', '==', 'active')
     .onSnapshot(function(snapshot) {
       var liveContainer = document.getElementById('active-lives-feed-zone');
       if (!liveContainer) {
-        // თუ ზონა ჯერ არ არსებობს, შევქმნათ #posts-wall-ის წინ
         var postsWall = document.getElementById('posts-wall');
         if (postsWall) {
           liveContainer = document.createElement('div');
@@ -3770,7 +3770,7 @@ function subscribeActiveLivesForFeed() {
 
       snapshot.forEach(function(docSnap) {
         var liveData = docSnap.data();
-        var liveId = docSnap.id;
+        var liveId = docSnap.id; // 👈 აი ეს არის ლაივის ID
 
         var liveCardHtml = `
           <div class="live-feed-card">
@@ -3785,11 +3785,11 @@ function subscribeActiveLivesForFeed() {
                   <div style="font-size:12px; color:#aaa;">${liveData.title || 'პირდაპირი ეთერი'}</div>
                 </div>
               </div>
-              <span class="live-dot-pulse"></span>
             </div>
 
+            <!-- 👇 აი აქ `live.html?join=${liveId}` გადაიყვანს პირდაპირ ამ ლაივში! -->
             <div class="live-watch-banner" onclick="window.location.href='live.html?join=${liveId}'">
-              <img src="${liveData.host_photo}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
+              <img src="${liveData.host_photo || 'https://via.placeholder.com/150'}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
               <button class="live-watch-btn">
                 <span>▶</span> უყურე ლაივს
               </button>
