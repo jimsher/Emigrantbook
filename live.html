@@ -646,26 +646,38 @@
         }
 
         window.endLive = async function() {
-            if (timerInterval) clearInterval(timerInterval);
+    if (timerInterval) clearInterval(timerInterval);
 
-            // 🛑 მოსმენების გათიშვა ლიმიტების დასაზოგად
-            if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
-            if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+    if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
+    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
 
-            if (currentLiveDocId && auth.currentUser) {
-                const docRef = db.collection('lives').doc(currentLiveDocId);
-                const docSnap = await docRef.get();
-                if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
-                    await docRef.update({ status: "ended" });
-                }
-            }
+    if (currentLiveDocId && auth.currentUser) {
+        const docRef = db.collection('lives').doc(currentLiveDocId);
+        const docSnap = await docRef.get();
+        
+        if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
+            // 1. ლაივის სტატუსის შეცვლა
+            await docRef.update({ status: "ended" });
 
-            if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
-            if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
+            // 2. ავტომატურად შექმნას ვიდეო პოსტი მთავარ გვერდზე დასატოვებლად
+            await db.collection('posts').add({
+                user_id: auth.currentUser.uid,
+                author_name: window.myName || "User",
+                content: "🔴 ჩაწერილი ლაივი: " + (docSnap.data().title || ""),
+                media_url: docSnap.data().stream_url || null, // თუ აგორას ჩანაწერი/სტრიმ ლინკი გაქვს
+                media_type: "video",
+                likes_count: 0,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    }
 
-            await liveClient.leave();
-            document.getElementById('liveUI').style.display = 'none';
-        };
+    if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
+    if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
+
+    await liveClient.leave();
+    document.getElementById('liveUI').style.display = 'none';
+};
 
         // 👁️ მაყურებლების მოსმენა
         function listenToLiveDoc(docId) {
