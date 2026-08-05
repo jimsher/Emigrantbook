@@ -23,6 +23,14 @@
             overflow: hidden;
         }
 
+        .top-action-bar {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
         .fb-live-badge {
             background-color: #e41e3f;
             color: #ffffff;
@@ -369,11 +377,11 @@
 </head>
 <body>
 
-    <div style="padding: 15px;">
+    <div class="top-action-bar">
         <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
             <i class="fas fa-video"></i> პირდაპირი ეთერი (LIVE)
         </button>
-        <button onclick="openActiveLivesModal()" style="background: #242526; color: white; border: 1px solid #3a3b3c; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: 10px;">
+        <button onclick="openActiveLivesModal()" style="background: #242526; color: white; border: 1px solid #3a3b3c; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
             <i class="fas fa-play-circle"></i> აქტიური ლაივები
         </button>
     </div>
@@ -646,38 +654,38 @@
         }
 
         window.endLive = async function() {
-    if (timerInterval) clearInterval(timerInterval);
+            if (timerInterval) clearInterval(timerInterval);
 
-    if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
-    if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
+            if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
+            if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
 
-    if (currentLiveDocId && auth.currentUser) {
-        const docRef = db.collection('lives').doc(currentLiveDocId);
-        const docSnap = await docRef.get();
-        
-        if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
-            // 1. ლაივის სტატუსის შეცვლა
-            await docRef.update({ status: "ended" });
+            if (currentLiveDocId && auth.currentUser) {
+                const docRef = db.collection('lives').doc(currentLiveDocId);
+                const docSnap = await docRef.get();
+                
+                if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
+                    // 1. ლაივის სტატუსის შეცვლა
+                    await docRef.update({ status: "ended" });
 
-            // 2. ავტომატურად შექმნას ვიდეო პოსტი მთავარ გვერდზე დასატოვებლად
-            await db.collection('posts').add({
-                user_id: auth.currentUser.uid,
-                author_name: window.myName || "User",
-                content: "🔴 ჩაწერილი ლაივი: " + (docSnap.data().title || ""),
-                media_url: docSnap.data().stream_url || null, // თუ აგორას ჩანაწერი/სტრიმ ლინკი გაქვს
-                media_type: "video",
-                likes_count: 0,
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-    }
+                    // 2. ავტომატურად შექმნას ვიდეო პოსტი მთავარ გვერდზე დასატოვებლად
+                    await db.collection('posts').add({
+                        user_id: auth.currentUser.uid,
+                        author_name: window.myName || "User",
+                        content: "🔴 ჩაწერილი ლაივი: " + (docSnap.data().title || ""),
+                        media_url: docSnap.data().stream_url || null, // თუ აგორას ჩანაწერი/სტრიმ ლინკი გაქვს
+                        media_type: "video",
+                        likes_count: 0,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
 
-    if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
-    if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
+            if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
+            if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
 
-    await liveClient.leave();
-    document.getElementById('liveUI').style.display = 'none';
-};
+            await liveClient.leave();
+            document.getElementById('liveUI').style.display = 'none';
+        };
 
         // 👁️ მაყურებლების მოსმენა
         function listenToLiveDoc(docId) {
