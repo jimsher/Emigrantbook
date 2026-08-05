@@ -96,6 +96,13 @@
             object-fit: cover;
         }
 
+        /* 🪞 სარკისებური ეფექტი პრევის ვიდეოზე */
+        #localCameraPreview video, #remote-live-video video {
+            transform: scaleX(-1) !important;
+            -webkit-transform: scaleX(-1) !important;
+            object-fit: cover !important;
+        }
+
         .setup-controls-overlay {
             position: absolute;
             bottom: 20px;
@@ -694,8 +701,12 @@
             }
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
-                localTracks.video = await AgoraRTC.createCameraVideoTrack();
-                localTracks.video.play("localCameraPreview");
+                // 🪞 კამერის სარკისებურად ჩართვა
+                localTracks.video = await AgoraRTC.createCameraVideoTrack({
+                    encoderConfig: "720p_1",
+                    optimizationMode: "motion"
+                });
+                localTracks.video.play("localCameraPreview", { mirror: true });
             } catch (e) {
                 alert(t.cameraErr);
             }
@@ -744,7 +755,8 @@
                     localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 }
 
-                localTracks.video.play("remote-live-video");
+                // 🪞 სარკისებური ჩვენება ლაივის დროს
+                localTracks.video.play("remote-live-video", { mirror: true });
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
                 // 🎥 ვიდეოს ჩაწერის დაწყება
@@ -789,7 +801,7 @@
             }
         }
 
-        // ☁️ შენი Cloudinary-ის ატვირთვის ზუსტი ფუნქცია ("kim1albt" / "fhlkp9ld")
+        // ☁️ Cloudinary-ზე ატვირთვის ფუნქცია ("kim1albt" / "fhlkp9ld")
         async function uploadVideoToCloudinary(blob) {
             var CLOUD_NAME = "kim1albt";
             var UPLOAD_PRESET = "fhlkp9ld";
@@ -882,7 +894,7 @@
                 if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
                     await docRef.update({ status: "ended" });
 
-                    // 🎥 ჩაწერილი ლაივის Cloudinary-ზე ატვირთვა და პოსტად გამოჩენა!
+                    // 🎥 ჩაწერილი ლაივის Cloudinary-ზე ატვირთვა
                     if (mediaRecorder && mediaRecorder.state !== "inactive") {
                         document.getElementById('uploadingOverlay').style.display = 'flex';
                         
@@ -892,10 +904,10 @@
                         try {
                             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
                             
-                            // ატვირთვა შენს Cloudinary-ზე!
+                            // ატვირთვა Cloudinary-ზე!
                             const recordedVideoUrl = await uploadVideoToCloudinary(blob);
 
-                            // 🔴 პოსტის დამატება Firestore-ის 'posts' კოლექციაში!
+                            // 🔴 პოსტის დამატება Firestore-ში!
                             await db.collection('posts').add({
                                 user_id: auth.currentUser.uid,
                                 author_name: window.myName || "User",
