@@ -720,26 +720,7 @@
     }
 
     // 3. ტექნიკური შესვენების სტატუსის წაკითხვა
-    function loadMaintenanceState() {
-      db.collection('system_settings').doc('maintenance').onSnapshot(doc => {
-        const badge = document.getElementById('maintenance-status-badge');
-        const btn = document.getElementById('maintenance-toggle-btn');
-
-        if (doc.exists && doc.data().is_active === true) {
-          isMaintenanceActive = true;
-          badge.className = "status-badge status-warning";
-          badge.innerHTML = "🔴 ტექნიკური რეჟიმი ჩართულია";
-          btn.innerHTML = "🟢 ტექნიკური რეჟიმის გამორთვა";
-          btn.className = "btn-action";
-        } else {
-          isMaintenanceActive = false;
-          badge.className = "status-badge status-active";
-          badge.innerHTML = "🟢 საიტი აქტიურია";
-          btn.innerHTML = "🛠️ ტექნიკური რეჟიმის ჩართვა";
-          btn.className = "btn-action btn-danger";
-        }
-      });
-    }
+    
 
     // ტექნიკური შესვენების ჩართვა / გამორთვა
     function toggleMaintenanceMode() {
