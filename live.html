@@ -96,7 +96,7 @@
             object-fit: cover;
         }
 
-        /* 🪞 სარკისებური ეფექტი პრევის და ლაივის ვიდეოზე */
+        /* 🪞 სარკისებური ეფექტი ლაივის ვიდეოზე */
         #localCameraPreview video, #remote-live-video video {
             transform: scaleX(-1) !important;
             -webkit-transform: scaleX(-1) !important;
@@ -643,7 +643,6 @@
         let liveDocUnsubscribe = null;
         let chatUnsubscribe = null;
 
-        // 🎥 ჩაწერის ცვლადები
         let mediaRecorder = null;
         let recordedChunks = [];
 
@@ -701,7 +700,6 @@
             }
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
-                // ⚡ 480p ოპტიმიზებული ვიდეო პროფაილი (ჭედვის თავიდან ასაცილებლად)
                 localTracks.video = await AgoraRTC.createCameraVideoTrack({
                     encoderConfig: "480p_1",
                     optimizationMode: "motion"
@@ -758,9 +756,7 @@
                 localTracks.video.play("remote-live-video", { mirror: true });
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
-                // 🎥 ჩაწერის დაწყება ოპტიმიზებული ბიტრეიტით
                 startRecordingStream();
-
                 startStreamTimer();
                 listenToLiveDoc(currentLiveDocId);
                 listenToLiveChat(currentLiveDocId);
@@ -771,7 +767,6 @@
             }
         };
 
-        // 🎥 მსუბუქი ჩაწერის ლოგიკა (ჭედვის გარეშე)
         function startRecordingStream() {
             recordedChunks = [];
             try {
@@ -779,7 +774,7 @@
                 const audioTrack = localTracks.audio.getMediaStreamTrack();
                 const combinedStream = new MediaStream([videoTrack, audioTrack]);
 
-                let options = { videoBitsPerSecond: 1000000 }; // 1 Mbps (მსუბუქი ბიტრეიტი)
+                let options = { videoBitsPerSecond: 1000000 };
                 if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
                     options.mimeType = 'video/webm;codecs=vp8,opus';
                 } else if (MediaRecorder.isTypeSupported('video/mp4')) {
@@ -794,13 +789,12 @@
                     }
                 };
 
-                mediaRecorder.start(); // ავტომატური ბუფერიზაცია პროცესორის გადატვირთვის გარეშე
+                mediaRecorder.start();
             } catch (e) {
                 console.error("MediaRecorder start error:", e);
             }
         }
 
-        // ☁️ Cloudinary-ზე სწრაფი ატვირთვის ფუნქცია ("kim1albt" / "fhlkp9ld")
         async function uploadVideoToCloudinary(blob) {
             var CLOUD_NAME = "kim1albt";
             var UPLOAD_PRESET = "fhlkp9ld";
@@ -893,7 +887,6 @@
                 if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
                     await docRef.update({ status: "ended" });
 
-                    // 🎥 ჩაწერილი ლაივის ატვირთვა
                     if (mediaRecorder && mediaRecorder.state !== "inactive") {
                         document.getElementById('uploadingOverlay').style.display = 'flex';
                         
@@ -902,18 +895,18 @@
 
                         try {
                             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
-                            
-                            // ატვირთვა Cloudinary-ზე
                             const recordedVideoUrl = await uploadVideoToCloudinary(blob);
 
-                            // 🔴 პოსტის დამატება Firestore-ში
+                            // 🔴 პოსტის შექმნა 'is_live_replay: true' და 'live_doc_id' ველებით
                             await db.collection('posts').add({
                                 user_id: auth.currentUser.uid,
                                 author_name: window.myName || "User",
                                 author_avatar: window.myPhoto || "https://via.placeholder.com/150",
-                                content: "🔴 LIVE: " + (docSnap.data().title || ""),
+                                content: "🔴 LIVE ჩანაწერი: " + (docSnap.data().title || ""),
                                 media_url: recordedVideoUrl,
                                 media_type: "video",
+                                is_live_replay: true,
+                                live_doc_id: currentLiveDocId,
                                 likes_count: 0,
                                 created_at: firebase.firestore.FieldValue.serverTimestamp()
                             });
@@ -978,11 +971,13 @@
             inp.value = "";
 
             try {
+                // ⏱️ იწერება stream_sec (მერამდენე წამზე დაიწერა კომენტარი)
                 await db.collection('lives').doc(currentLiveDocId)
                     .collection('comments')
                     .add({
                         name: window.myName || "User",
                         text: commentText,
+                        stream_sec: streamSeconds,
                         ts: Date.now()
                     });
             } catch (e) {
