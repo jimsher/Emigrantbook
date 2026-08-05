@@ -3770,7 +3770,7 @@ function subscribeActiveLivesForFeed() {
 
       snapshot.forEach(function(docSnap) {
         var liveData = docSnap.data();
-        var liveId = docSnap.id; // 👈 აი ეს არის ლაივის ID
+        var liveId = docSnap.id;
 
         var liveCardHtml = `
           <div class="live-feed-card">
@@ -3781,13 +3781,12 @@ function subscribeActiveLivesForFeed() {
                   <span class="live-badge-overlay">LIVE</span>
                 </div>
                 <div>
-                  <div style="font-weight:bold; color:#fff; font-size:14px;">${liveData.host_name}</div>
+                  <div style="font-weight:bold; color:#fff; font-size:14px;">${liveData.host_name || 'მომხმარებელი'}</div>
                   <div style="font-size:12px; color:#aaa;">${liveData.title || 'პირდაპირი ეთერი'}</div>
                 </div>
               </div>
             </div>
 
-            <!-- 👇 აი აქ `live.html?join=${liveId}` გადაიყვანს პირდაპირ ამ ლაივში! -->
             <div class="live-watch-banner" onclick="window.location.href='live.html?join=${liveId}'">
               <img src="${liveData.host_photo || 'https://via.placeholder.com/150'}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
               <button class="live-watch-btn">
