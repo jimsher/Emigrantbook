@@ -305,8 +305,211 @@
         .clear-btn:hover { background: #e74c3c; }
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
 
+        /* =========================================================
+           სრული ეკრანის ისტორიის მოდალის სტილები (FULL SCREEN HISTROY)
+           ========================================================= */
+        .history-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 12, 24, 0.96);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 99999;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .history-modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .history-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 15px auto;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .history-modal-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #f1c40f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);
+        }
+
+        .close-history-btn {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-history-btn:hover {
+            background: #e74c3c;
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        /* ისტორიის სტატისტიკა */
+        .history-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 15px auto;
+        }
+
+        .summary-card {
+            background: rgba(10, 25, 45, 0.9);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-title {
+            font-size: 0.75rem;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        .summary-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .summary-value.win { color: #2ecc71; }
+        .summary-value.loss { color: #e74c3c; }
+
+        /* ისტორიის ცხრილის კონტეინერი */
+        .history-table-wrapper {
+            flex: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow-y: auto;
+            background: rgba(8, 20, 35, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        .history-table th {
+            position: sticky;
+            top: 0;
+            background: #092336;
+            color: #d4af37;
+            padding: 12px 10px;
+            font-weight: bold;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+            z-index: 2;
+        }
+
+        .history-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .history-table tr:hover {
+            background: rgba(0, 150, 255, 0.08);
+        }
+
+        .num-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .num-badge.red { background: #c0392b; }
+        .num-badge.black { background: #1b1b1b; border: 1px solid #444; }
+        .num-badge.green { background: #27ae60; }
+
+        .win-text { color: #2ecc71; font-weight: bold; }
+        .loss-text { color: #e74c3c; font-weight: bold; }
+
+        .history-footer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+            margin: 15px auto 0 auto;
+        }
+
+        .clear-hist-btn {
+            background: rgba(192, 57, 43, 0.3);
+            color: #ff6b6b;
+            border: 1px solid #c0392b;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .clear-hist-btn:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        .no-history-msg {
+            text-align: center;
+            padding: 40px 10px;
+            color: #777;
+            font-size: 1rem;
+        }
+
         @media (max-width: 768px) {
             .dealer-avatar { display: none; } /* მობილურზე რომ არ დაფაროს ეკრანი */
+        }
+
+        @media (max-width: 480px) {
+            .history-table th, .history-table td { padding: 8px 5px; font-size: 0.78rem; }
+            .num-badge { width: 24px; height: 24px; font-size: 0.72rem; }
+            .history-modal-title { font-size: 1.1rem; }
         }
 
         @media (max-width: 380px) {
@@ -326,7 +529,7 @@
 <div class="casino-container">
     <!-- ზედა პანელი -->
     <div class="top-header">
-        <button class="history-btn" onclick="window.location.href='history.html'">📜 ისტორია</button>
+        <button class="history-btn" onclick="openHistoryModal()">📜 ისტორია</button>
         <div class="real-balance-badge">რეალური ბალანსი: <span class="balance-val" id="headerBalanceText">$1000</span></div>
     </div>
 
@@ -365,6 +568,60 @@
     <div class="action-btns">
         <button class="btn clear-btn" id="clearBtn" onclick="clearBets()">გასუფთავება</button>
         <button class="btn spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
+    </div>
+</div>
+
+<!-- =========================================================
+     სრული ეკრანის ისტორიის მოდალი (FULL SCREEN HISTORY MODAL)
+     ========================================================= -->
+<div class="history-modal-overlay" id="historyModal">
+    <div class="history-modal-header">
+        <div class="history-modal-title">
+            <span>📜</span> თამაშის სრული ისტორია
+        </div>
+        <button class="close-history-btn" onclick="closeHistoryModal()" title="დახურვა">&times;</button>
+    </div>
+
+    <!-- ისტორიის შეჯამება -->
+    <div class="history-summary">
+        <div class="summary-card">
+            <div class="summary-title">სულ თამაში</div>
+            <div class="summary-value" id="summaryTotalGames">0</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">სულ მოგება</div>
+            <div class="summary-value win" id="summaryTotalWins">$0</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-title">სულ წაგება</div>
+            <div class="summary-value loss" id="summaryTotalLosses">$0</div>
+        </div>
+    </div>
+
+    <!-- ისტორიის ცხრილი -->
+    <div class="history-table-wrapper">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>დრო</th>
+                    <th>რიცხვი</th>
+                    <th>ფსონი</th>
+                    <th>შედეგი</th>
+                    <th>ბალანსი</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody">
+                <!-- დინამიურად ივსება JavaScript-ით -->
+            </tbody>
+        </table>
+        <div id="noHistoryText" class="no-history-msg" style="display:none;">
+            ისტორია ცარიელია. ითამაშეთ და შედეგები გამოჩნდება აქ!
+        </div>
+    </div>
+
+    <div class="history-footer-actions">
+        <button class="clear-hist-btn" onclick="clearHistory()">🗑 ისტორიის წაშლა</button>
+        <button class="btn spin-btn" style="padding: 8px 20px; flex: initial;" onclick="closeHistoryModal()">დახურვა</button>
     </div>
 </div>
 
@@ -746,6 +1003,79 @@ function saveToHistory(number, color, bet, win, endBalance) {
 
     if (history.length > 50) history.pop(); // ბოლო 50 ისტორია
     localStorage.setItem('rouletteHistory', JSON.stringify(history));
+}
+
+/* =========================================================
+   ისტორიის მოდალის მართვის ფუნქციები (FULL SCREEN HISTORY JS)
+   ========================================================= */
+function openHistoryModal() {
+    renderHistoryTable();
+    document.getElementById('historyModal').classList.add('active');
+}
+
+function closeHistoryModal() {
+    document.getElementById('historyModal').classList.remove('active');
+}
+
+function clearHistory() {
+    if (confirm('ნამდვილად გსურთ ისტორიის სრულად წაშლა?')) {
+        localStorage.removeItem('rouletteHistory');
+        renderHistoryTable();
+    }
+}
+
+function renderHistoryTable() {
+    const history = JSON.parse(localStorage.getItem('rouletteHistory') || '[]');
+    const tbody = document.getElementById('historyTableBody');
+    const noHistText = document.getElementById('noHistoryText');
+    
+    tbody.innerHTML = '';
+
+    let totalWins = 0;
+    let totalLosses = 0;
+
+    if (history.length === 0) {
+        noHistText.style.display = 'block';
+    } else {
+        noHistText.style.display = 'none';
+
+        history.forEach(item => {
+            const tr = document.createElement('tr');
+
+            // რიცხვის ფერი ბეჯისთვის
+            let colorClass = 'black';
+            if (item.number === 0) colorClass = 'green';
+            else if (redNumbers.has(item.number)) colorClass = 'red';
+
+            const netResult = item.win - item.bet;
+            let resultHTML = '';
+
+            if (item.win > 0) {
+                totalWins += (item.win - item.bet);
+                resultHTML = `<span class="win-text">+ $${item.win} (მოგება)</span>`;
+            } else {
+                totalLosses += item.bet;
+                resultHTML = `<span class="loss-text">- $${item.bet} (წაგება)</span>`;
+            }
+
+            tr.innerHTML = `
+                <td style="color:#aaa;">${item.time}</td>
+                <td>
+                    <span class="num-badge ${colorClass}">${item.number}</span>
+                </td>
+                <td style="color:#f1c40f; font-weight:bold;">$${item.bet}</td>
+                <td>${resultHTML}</td>
+                <td style="color:#2ecc71; font-weight:bold;">$${item.balance}</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // სტატისტიკის განახლება
+    document.getElementById('summaryTotalGames').innerText = history.length;
+    document.getElementById('summaryTotalWins').innerText = `$${totalWins}`;
+    document.getElementById('summaryTotalLosses').innerText = `$${totalLosses}`;
 }
 
 drawRoulette();
