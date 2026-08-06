@@ -296,7 +296,7 @@ const sliceAngle = (Math.PI * 2) / totalPockets;
 
 let wheelAngle = 0;
 let ballAngle = 0;
-let ballRadius = outerRadius - 28;
+let ballRadius = outerRadius - 25;
 let isSpinning = false;
 
 // თამაშის მონაცემები
@@ -503,6 +503,7 @@ function drawBall() {
     ctx.restore();
 }
 
+// რეალისტური ფიზიკით მართული სპინი
 function spin() {
     if (isSpinning) return;
     
@@ -521,11 +522,27 @@ function spin() {
     const winningIndex = Math.floor(Math.random() * totalPockets);
     const winningNumber = numbers[winningIndex];
 
-    const duration = 5500;
+    const duration = 6500; // 6.5 წამი
     const startTime = performance.now();
 
-    const initialWheelSpeed = 0.08;
-    const initialBallSpeed = -0.22;
+    const startWheelAngle = wheelAngle;
+    const startBallAngle = ballAngle;
+
+    // ბორბლის ტრიალის ზუსტი ფიზიკა (~3.5 წრე)
+    const wheelSpins = 3.5 + Math.random();
+    const totalWheelRotation = wheelSpins * Math.PI * 2;
+    const finalWheelAngle = startWheelAngle + totalWheelRotation;
+
+    // მოგებული სექტორის საბოლოო კუთხე
+    const winningPocketRelativeAngle = winningIndex * sliceAngle + sliceAngle / 2;
+    const finalPocketAngle = finalWheelAngle + winningPocketRelativeAngle;
+
+    // ბურთულის ტრიალი საპირისპიროდ (~6 სრული წრე)
+    const ballSpins = 6;
+    let targetBallAngle = finalPocketAngle;
+    while (targetBallAngle > startBallAngle - (ballSpins * Math.PI * 2)) {
+        targetBallAngle -= Math.PI * 2;
+    }
 
     const startBallRadius = outerRadius - 25;
     const targetBallRadius = outerRadius - 55;
@@ -533,18 +550,27 @@ function spin() {
     function animate(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 3);
 
-        wheelAngle += initialWheelSpeed * (1 - easeOut * 0.85);
+        // გლუვი დამუხრუჭების მრუდი (Monotonic Deceleration - არანაირი აჩქარება!)
+        const wheelEase = 1 - Math.pow(1 - progress, 2.8);
+        wheelAngle = startWheelAngle + totalWheelRotation * wheelEase;
 
-        if (progress < 0.7) {
-            ballAngle += initialBallSpeed * (1 - progress * 0.9);
-            ballRadius = startBallRadius;
+        const ballEase = 1 - Math.pow(1 - progress, 3.2);
+        ballAngle = startBallAngle + (targetBallAngle - startBallAngle) * ballEase;
+
+        // ბურთულის რადიუსის ჩამოსვლა და არეკვლა
+        if (progress < 0.6) {
+            ballRadius = startBallRadius; // გარე ტრეკზე სრიალი
+        } else if (progress < 0.88) {
+            // ცენტრისკენ ჩამოსვლა
+            const dropProgress = (progress - 0.6) / 0.28;
+            const dropEase = Math.sin(dropProgress * Math.PI / 2);
+            ballRadius = startBallRadius - (startBallRadius - targetBallRadius) * dropEase;
         } else {
-            const dropProgress = (progress - 0.7) / 0.3;
-            ballRadius = startBallRadius - (startBallRadius - targetBallRadius) * Math.sin(dropProgress * Math.PI / 2);
-            const targetAngle = wheelAngle + (winningIndex * sliceAngle) + (sliceAngle / 2);
-            ballAngle += (targetAngle - ballAngle) * 0.12;
+            // მსუბუქი რეალისტური bounce (არეკვლა) უჯრაში ჩასვლისას
+            const bounceProgress = (progress - 0.88) / 0.12;
+            const bounceFactor = Math.sin(bounceProgress * Math.PI * 3) * 2 * (1 - bounceProgress);
+            ballRadius = targetBallRadius + bounceFactor;
         }
 
         drawRoulette();
