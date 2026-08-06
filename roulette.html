@@ -30,10 +30,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
             padding: 10px 5px;
-            background: radial-gradient(circle at center, #0a1420 0%, #02060c 100%);
+            background: radial-gradient(circle at center, #061523 0%, #01050a 100%);
         }
 
-        /* თამაშის კონტეინერი შიდა HD კაზინოს ფონით */
+        /* თამაშის კონტეინერი HD კაზინოს 3D მაგიდის ზედაპირით */
         .casino-container {
             position: relative;
             z-index: 10;
@@ -41,14 +41,18 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            /* HD კაზინოს სურათი უშუალოდ კონტეინერის შიგნით */
+            /* 3D კაზინოს ლურჯი მაგიდის ტექსტურა */
             background: 
-                linear-gradient(rgba(5, 12, 22, 0.78), rgba(5, 12, 22, 0.88)),
-                url('https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=800&q=80') center/cover no-repeat;
+                radial-gradient(circle at 50% 30%, rgba(16, 68, 105, 0.95) 0%, rgba(5, 25, 42, 0.98) 70%, rgba(2, 10, 18, 1) 100%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 4px);
             padding: 14px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), inset 0 0 20px rgba(212, 175, 55, 0.4);
-            border: 2px solid rgba(212, 175, 55, 0.5);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 60px rgba(0, 0, 0, 0.95), 
+                inset 0 0 35px rgba(0, 180, 255, 0.15),
+                inset 0 0 15px rgba(212, 175, 55, 0.4);
+            border: 3px solid #aa771c;
+            outline: 1px solid rgba(255, 215, 0, 0.3);
             max-width: 450px;
             width: 100%;
         }
@@ -89,18 +93,18 @@
             font-size: 0.85rem;
             font-weight: bold;
             color: #e0e0e0;
-            background: rgba(10, 20, 30, 0.9);
+            background: rgba(4, 14, 24, 0.9);
             padding: 6px 12px;
             border-radius: 20px;
             border: 1px solid rgba(212, 175, 55, 0.5);
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+            box-shadow: 0 0 10px rgba(0, 150, 255, 0.2);
         }
 
         .dashboard {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            background: rgba(10, 20, 30, 0.9);
+            background: rgba(6, 20, 34, 0.9);
             padding: 8px 14px;
             border-radius: 10px;
             border: 1px solid rgba(212, 175, 55, 0.4);
@@ -702,7 +706,7 @@ function evaluateWin(winningNumber, totalBet) {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). სცადეთ ხელახლა!`;
     }
 
-    // 2 წამის შემდეგ ავტომატურად ბრუნდება
+    // ზუსტად 2 წამში ბრუნდება
     zoomTimeout = setTimeout(() => {
         resetZoom();
     }, 2000);
