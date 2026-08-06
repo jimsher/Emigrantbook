@@ -30,10 +30,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
             padding: 10px 5px;
-            background: #06101e;
+            background: #000;
         }
 
-        /* ანიმირებული HD კაზინოს დარბაზის ფონი */
+        /* HD რეალისტური კაზინოს ფონი */
         .live-casino-bg {
             position: fixed;
             top: 0;
@@ -42,11 +42,8 @@
             height: 100vh;
             z-index: 1;
             background: 
-                radial-gradient(circle at 80% 20%, rgba(0, 150, 255, 0.4) 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, rgba(0, 200, 150, 0.3) 0%, transparent 40%),
-                radial-gradient(ellipse at center, rgba(10, 30, 60, 0.85) 0%, rgba(3, 8, 16, 0.98) 100%),
-                linear-gradient(45deg, #091a2f 25%, #0d233f 25%, #0d233f 50%, #091a2f 50%, #091a2f 75%, #0d233f 75%, #0d233f 100%);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px;
+                radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.85) 100%),
+                url('https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
             pointer-events: none;
         }
 
@@ -62,7 +59,7 @@
             background: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80') center top / cover no-repeat;
             mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
             -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
-            filter: drop-shadow(0 0 15px rgba(0, 150, 255, 0.5));
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.5));
             pointer-events: none;
         }
 
@@ -73,13 +70,13 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            background: rgba(8, 20, 35, 0.85);
+            background: rgba(10, 15, 25, 0.88);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             padding: 14px;
             border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 180, 255, 0.2);
-            border: 1px solid rgba(0, 200, 255, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), inset 0 0 20px rgba(212, 175, 55, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.4);
             max-width: 450px;
             width: 100%;
         }
@@ -120,18 +117,18 @@
             font-size: 0.85rem;
             font-weight: bold;
             color: #e0e0e0;
-            background: rgba(5, 15, 25, 0.9);
+            background: rgba(15, 20, 30, 0.9);
             padding: 6px 12px;
             border-radius: 20px;
-            border: 1px solid rgba(0, 200, 255, 0.4);
-            box-shadow: 0 0 10px rgba(0, 150, 255, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
         }
 
         .dashboard {
             display: flex;
             justify-content: space-between;
             width: 100%;
-            background: rgba(10, 25, 45, 0.9);
+            background: rgba(15, 25, 35, 0.9);
             padding: 8px 14px;
             border-radius: 10px;
             border: 1px solid rgba(212, 175, 55, 0.4);
@@ -408,7 +405,7 @@ let wheelAngle = 0;
 let ballAngle = 0;
 let ballRadius = outerRadius - 25;
 let isSpinning = false;
-let zoomTimeout = null; // ტაიმერის ცვლადი ავტომატური Zoom-Out-ისთვის
+let zoomTimeout = null;
 
 let balance = parseInt(localStorage.getItem('rouletteBalance')) || 1000;
 let currentChip = 10;
@@ -740,10 +737,10 @@ function evaluateWin(winningNumber, totalBet) {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). სცადეთ ხელახლა!`;
     }
 
-    // 5 წამის შემდეგ კამერა ავტომატურად ბრუნდება ჩვეულებრივ ხედზე
+    // ზუსტად 2 წამის შემდეგ კამერა ავტომატურად ბრუნდება
     zoomTimeout = setTimeout(() => {
         resetZoom();
-    }, 5000);
+    }, 2000);
 }
 
 function saveToHistory(number, color, bet, win, endBalance) {
