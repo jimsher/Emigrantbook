@@ -408,6 +408,7 @@ let wheelAngle = 0;
 let ballAngle = 0;
 let ballRadius = outerRadius - 25;
 let isSpinning = false;
+let zoomTimeout = null; // ტაიმერის ცვლადი ავტომატური Zoom-Out-ისთვის
 
 let balance = parseInt(localStorage.getItem('rouletteBalance')) || 1000;
 let currentChip = 10;
@@ -441,7 +442,7 @@ function selectChip(val, el) {
 
 function placeBet(type, el) {
     if (isSpinning) return;
-    resetZoom(); // ფსონის დადებისას კამერა ჩვეულებრივ რეჟიმში ბრუნდება
+    resetZoom(); 
     if (balance < currentChip) {
         resultText.innerText = 'არ გაქვთ საკმარისი ბალანსი!';
         return;
@@ -473,6 +474,10 @@ function clearBets() {
 }
 
 function resetZoom() {
+    if (zoomTimeout) {
+        clearTimeout(zoomTimeout);
+        zoomTimeout = null;
+    }
     canvasWrapper.classList.remove('zoomed');
 }
 
@@ -623,7 +628,7 @@ function spin() {
         return;
     }
 
-    resetZoom(); // სპინის დასაწყისში კამერა ზოგად ხედზე გადადის
+    resetZoom(); 
     isSpinning = true;
     spinBtn.disabled = true;
     clearBtn.disabled = true;
@@ -664,7 +669,6 @@ function spin() {
         const ballEase = 1 - Math.pow(1 - progress, 3.2);
         ballAngle = startBallAngle + (targetBallAngle - startBallAngle) * ballEase;
 
-        // ბურთულას ჩასვლისას კამერის რეალისტური Zoom-ინ ეფექტი
         if (progress > 0.65) {
             canvasWrapper.classList.add('zoomed');
         }
@@ -735,6 +739,11 @@ function evaluateWin(winningNumber, totalBet) {
     } else {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). სცადეთ ხელახლა!`;
     }
+
+    // 5 წამის შემდეგ კამერა ავტომატურად ბრუნდება ჩვეულებრივ ხედზე
+    zoomTimeout = setTimeout(() => {
+        resetZoom();
+    }, 5000);
 }
 
 function saveToHistory(number, color, bet, win, endBalance) {
