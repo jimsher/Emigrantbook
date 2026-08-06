@@ -11,9 +11,18 @@
             padding: 0;
         }
 
-        /* 3D HD Live Casino ფონი (როგორც ატვირთულ ფოტოში) */
+        /* ეკრანის მოძრაობისა და სქროლის სრული გათიშვა */
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
         body {
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -21,8 +30,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
             padding: 10px 5px;
-            overflow-x: hidden;
-            position: relative;
             background: #06101e;
         }
 
@@ -35,17 +42,15 @@
             height: 100vh;
             z-index: 1;
             background: 
-                /* ცისფერი ნეონის სინათლეები */
                 radial-gradient(circle at 80% 20%, rgba(0, 150, 255, 0.4) 0%, transparent 40%),
                 radial-gradient(circle at 20% 80%, rgba(0, 200, 150, 0.3) 0%, transparent 40%),
-                /* კაზინოს 3D ხალიჩის ეფექტი */
                 radial-gradient(ellipse at center, rgba(10, 30, 60, 0.85) 0%, rgba(3, 8, 16, 0.98) 100%),
                 linear-gradient(45deg, #091a2f 25%, #0d233f 25%, #0d233f 50%, #091a2f 50%, #091a2f 75%, #0d233f 75%, #0d233f 100%);
             background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px;
             pointer-events: none;
         }
 
-        /* 3D ლაივ დილერის ავატარი ფონზე */
+        /* 3D ლაივ დილერის ავატარი */
         .dealer-avatar {
             position: fixed;
             right: 5%;
@@ -79,7 +84,7 @@
             width: 100%;
         }
 
-        /* ზედა პანელი ისტორიითა და რეალური ბალანსით */
+        /* ზედა პანელი */
         .top-header {
             display: flex;
             justify-content: space-between;
@@ -137,6 +142,7 @@
         .balance-val { color: #2ecc71; }
         .bet-val { color: #f1c40f; }
 
+        /* Zoom-ინ ეფექტის მქონე Canvas კონტეინერი */
         .canvas-wrapper {
             position: relative;
             filter: drop-shadow(0 12px 25px rgba(0,0,0,0.9));
@@ -146,6 +152,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: transform 1.2s cubic-bezier(0.25, 1, 0.3, 1);
+            z-index: 20;
+        }
+
+        /* მოახლოებული კამერის სტილი */
+        .canvas-wrapper.zoomed {
+            transform: scale(1.65) translateY(12px);
+            filter: drop-shadow(0 20px 35px rgba(0,0,0,0.95)) drop-shadow(0 0 15px rgba(212, 175, 55, 0.6));
         }
 
         canvas {
@@ -165,7 +179,7 @@
             text-align: center;
         }
 
-        /* ჟეტონები (Chips) */
+        /* ჟეტონები */
         .chip-selector {
             display: flex;
             gap: 10px;
@@ -199,7 +213,7 @@
         .chip-100 { background: #27ae60; color: white; }
         .chip-500 { background: #8e44ad; color: white; }
 
-        /* HD ცისფერი პრემიუმ კაზინოს მაგიდა */
+        /* ფსონების დაფა */
         .betting-table {
             display: grid;
             grid-template-columns: 32px repeat(12, 1fr);
@@ -306,7 +320,7 @@
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
 
         @media (max-width: 768px) {
-            .dealer-avatar { display: none; } /* მობილურზე რომ არ დაფაროს ეკრანი */
+            .dealer-avatar { display: none; }
         }
 
         @media (max-width: 380px) {
@@ -319,12 +333,10 @@
 </head>
 <body>
 
-<!-- 3D HD Live კაზინოს ფონური ეფექტი -->
 <div class="live-casino-bg"></div>
 <div class="dealer-avatar"></div>
 
 <div class="casino-container">
-    <!-- ზედა პანელი -->
     <div class="top-header">
         <button class="history-btn" onclick="window.location.href='history.html'">📜 ისტორია</button>
         <div class="real-balance-badge">რეალური ბალანსი: <span class="balance-val" id="headerBalanceText">$1000</span></div>
@@ -335,13 +347,12 @@
         <div>სულ ფსონი: <span class="bet-val" id="totalBetText">$0</span></div>
     </div>
 
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper" id="canvasWrapper">
         <canvas id="rouletteCanvas" width="400" height="400"></canvas>
     </div>
 
     <div class="result-box" id="resultText">აირჩიეთ ფსონი და დააჭირეთ "SPIN"-ს</div>
 
-    <!-- ჟეტონების არჩევა -->
     <div class="chip-selector">
         <div class="chip chip-10 active" onclick="selectChip(10, this)">10</div>
         <div class="chip chip-50" onclick="selectChip(50, this)">50</div>
@@ -349,10 +360,8 @@
         <div class="chip chip-500" onclick="selectChip(500, this)">500</div>
     </div>
 
-    <!-- ფსონების დაფა -->
     <div class="betting-table" id="bettingBoard">
         <div class="cell zero" onclick="placeBet('0', this)">0</div>
-        <!-- 36 ციფრი გენერირდება JS-ით -->
     </div>
 
     <div class="outside-bets">
@@ -371,6 +380,7 @@
 <script>
 const canvas = document.getElementById('rouletteCanvas');
 const ctx = canvas.getContext('2d');
+const canvasWrapper = document.getElementById('canvasWrapper');
 const spinBtn = document.getElementById('spinBtn');
 const clearBtn = document.getElementById('clearBtn');
 const resultText = document.getElementById('resultText');
@@ -378,7 +388,6 @@ const balanceText = document.getElementById('balanceText');
 const headerBalanceText = document.getElementById('headerBalanceText');
 const totalBetText = document.getElementById('totalBetText');
 
-// Retina HD მკვეთრი გამოსახულება
 const dpr = window.devicePixelRatio || 1;
 const displaySize = 400;
 canvas.width = displaySize * dpr;
@@ -400,15 +409,12 @@ let ballAngle = 0;
 let ballRadius = outerRadius - 25;
 let isSpinning = false;
 
-// თამაშის მონაცემები (localStorage-ით შენახვა)
 let balance = parseInt(localStorage.getItem('rouletteBalance')) || 1000;
 let currentChip = 10;
 let activeBets = {};
 
-// საწყისი ბალანსის განახლება
 updateUI();
 
-// მაგიდის გენერირება (3x12 ბადე)
 const board = document.getElementById('bettingBoard');
 const rows = [
     [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
@@ -435,6 +441,7 @@ function selectChip(val, el) {
 
 function placeBet(type, el) {
     if (isSpinning) return;
+    resetZoom(); // ფსონის დადებისას კამერა ჩვეულებრივ რეჟიმში ბრუნდება
     if (balance < currentChip) {
         resultText.innerText = 'არ გაქვთ საკმარისი ბალანსი!';
         return;
@@ -456,12 +463,17 @@ function placeBet(type, el) {
 
 function clearBets() {
     if (isSpinning) return;
+    resetZoom();
     let totalRefund = 0;
     for (let k in activeBets) totalRefund += activeBets[k];
     balance += totalRefund;
     activeBets = {};
     document.querySelectorAll('.cell-chip').forEach(c => c.remove());
     updateUI();
+}
+
+function resetZoom() {
+    canvasWrapper.classList.remove('zoomed');
 }
 
 function updateUI() {
@@ -474,7 +486,6 @@ function updateUI() {
     totalBetText.innerText = `$${totalBet}`;
 }
 
-// ოქროსფერი პრიალა გრადიენტი
 function getGoldGrad() {
     const g = ctx.createLinearGradient(-100, -100, 100, 100);
     g.addColorStop(0, '#bf953f');
@@ -488,7 +499,6 @@ function getGoldGrad() {
 function drawRoulette() {
     ctx.clearRect(0, 0, displaySize, displaySize);
 
-    // 1. გარე ხის ჩარჩო
     const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 20, centerX, centerY, outerRadius);
     woodGrad.addColorStop(0, '#3a170c');
     woodGrad.addColorStop(0.5, '#6a2915');
@@ -502,14 +512,12 @@ function drawRoulette() {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // 2. ოქროს შიდა კანტი
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius - 12, 0, Math.PI * 2);
     ctx.strokeStyle = getGoldGrad();
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // 3. ბურთულას ტრეკი
     const trackGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 40, centerX, centerY, outerRadius - 12);
     trackGrad.addColorStop(0, '#111');
     trackGrad.addColorStop(0.8, '#222');
@@ -520,7 +528,6 @@ function drawRoulette() {
     ctx.fillStyle = trackGrad;
     ctx.fill();
 
-    // 4. მოტრიალე ბორბალი
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(wheelAngle);
@@ -546,7 +553,6 @@ function drawRoulette() {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // ციფრები
         ctx.save();
         ctx.rotate(startAngle + sliceAngle / 2);
         ctx.textAlign = 'center';
@@ -559,7 +565,6 @@ function drawRoulette() {
         ctx.restore();
     }
 
-    // ცენტრალური ოქროს კოშკურა
     const centerGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
     centerGrad.addColorStop(0, '#fff5cc');
     centerGrad.addColorStop(0.4, '#d4af37');
@@ -570,7 +575,6 @@ function drawRoulette() {
     ctx.fillStyle = centerGrad;
     ctx.fill();
 
-    // კოშკურის ჯვარედინი სახელურები
     for (let a = 0; a < 4; a++) {
         ctx.rotate(Math.PI / 2);
         ctx.beginPath();
@@ -584,7 +588,6 @@ function drawRoulette() {
 
     ctx.restore();
 
-    // 5. ბურთულა
     drawBall();
 }
 
@@ -610,7 +613,6 @@ function drawBall() {
     ctx.restore();
 }
 
-// რეალისტური ფიზიკით მართული სპინი
 function spin() {
     if (isSpinning) return;
     
@@ -621,6 +623,7 @@ function spin() {
         return;
     }
 
+    resetZoom(); // სპინის დასაწყისში კამერა ზოგად ხედზე გადადის
     isSpinning = true;
     spinBtn.disabled = true;
     clearBtn.disabled = true;
@@ -660,6 +663,11 @@ function spin() {
 
         const ballEase = 1 - Math.pow(1 - progress, 3.2);
         ballAngle = startBallAngle + (targetBallAngle - startBallAngle) * ballEase;
+
+        // ბურთულას ჩასვლისას კამერის რეალისტური Zoom-ინ ეფექტი
+        if (progress > 0.65) {
+            canvasWrapper.classList.add('zoomed');
+        }
 
         if (progress < 0.6) {
             ballRadius = startBallRadius;
@@ -716,7 +724,6 @@ function evaluateWin(winningNumber, totalBet) {
     
     let colorName = isRed ? 'წითელი' : (winningNumber === 0 ? 'მწვანე' : 'შავი');
     
-    // ისტორიის შენახვა LocalStorage-ში
     saveToHistory(winningNumber, colorName, totalBet, winAmount, balance);
 
     activeBets = {};
@@ -744,7 +751,7 @@ function saveToHistory(number, color, bet, win, endBalance) {
         balance: endBalance
     });
 
-    if (history.length > 50) history.pop(); // ბოლო 50 ისტორია
+    if (history.length > 50) history.pop();
     localStorage.setItem('rouletteHistory', JSON.stringify(history));
 }
 
