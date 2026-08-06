@@ -35,9 +35,10 @@
             border: 2px solid rgba(212, 175, 55, 0.4);
             max-width: 450px;
             width: 100%;
+            position: relative;
         }
 
-        /* ახალი ზედა პანელი ისტორიითა და რეალური ბალანსით */
+        /* ზედა პანელი ისტორიითა და რეალური ბალანსით */
         .top-header {
             display: flex;
             justify-content: space-between;
@@ -122,7 +123,6 @@
             text-align: center;
         }
 
-        /* ენერგიული ჟეტონები (Chips) */
         .chip-selector {
             display: flex;
             gap: 10px;
@@ -156,7 +156,6 @@
         .chip-100 { background: #27ae60; color: white; }
         .chip-500 { background: #8e44ad; color: white; }
 
-        /* ფსონების მაგიდა (Betting Board) */
         .betting-table {
             display: grid;
             grid-template-columns: 32px repeat(12, 1fr);
@@ -261,6 +260,102 @@
         .clear-btn:hover { background: #e74c3c; }
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
 
+        /* --- ისტორიის MODAL (ფანჯარა) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: #0f2617;
+            border: 2px solid #d4af37;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 1.4rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .close-btn:hover { color: #fff; }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .num-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .win-val { color: #2ecc71; font-weight: bold; }
+        .loss-val { color: #e74c3c; font-weight: bold; }
+
+        .clear-history {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border: 1px solid #444;
+            padding: 6px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
         @media (max-width: 380px) {
             .cell { font-size: 0.68rem; height: 25px; }
             .outside-bets .cell { font-size: 0.62rem; }
@@ -272,9 +367,9 @@
 <body>
 
 <div class="casino-container">
-    <!-- ახალი ზედა პანელი -->
+    <!-- ზედა პანელი -->
     <div class="top-header">
-        <button class="history-btn" onclick="window.location.href='history.html'">📜 ისტორია</button>
+        <button class="history-btn" onclick="openHistoryModal()">📜 ისტორია</button>
         <div class="real-balance-badge">რეალური ბალანსი: <span class="balance-val" id="headerBalanceText">$1000</span></div>
     </div>
 
@@ -289,7 +384,7 @@
 
     <div class="result-box" id="resultText">აირჩიეთ ფსონი და დააჭირეთ "SPIN"-ს</div>
 
-    <!-- ჟეტონების არჩევა -->
+    <!-- ჟეტონები -->
     <div class="chip-selector">
         <div class="chip chip-10 active" onclick="selectChip(10, this)">10</div>
         <div class="chip chip-50" onclick="selectChip(50, this)">50</div>
@@ -300,7 +395,6 @@
     <!-- ფსონების დაფა -->
     <div class="betting-table" id="bettingBoard">
         <div class="cell zero" onclick="placeBet('0', this)">0</div>
-        <!-- 36 ციფრი გენერირდება JS-ით -->
     </div>
 
     <div class="outside-bets">
@@ -316,6 +410,18 @@
     </div>
 </div>
 
+<!-- ისტორიის ფანჯარა (MODAL) -->
+<div class="modal-overlay" id="historyModal" onclick="closeModalOnOverlay(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">📜 თამაშების ისტორია</div>
+            <button class="close-btn" onclick="closeHistoryModal()">&times;</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+        <button class="clear-history" onclick="clearHistory()">ისტორიის წაშლა</button>
+    </div>
+</div>
+
 <script>
 const canvas = document.getElementById('rouletteCanvas');
 const ctx = canvas.getContext('2d');
@@ -326,7 +432,6 @@ const balanceText = document.getElementById('balanceText');
 const headerBalanceText = document.getElementById('headerBalanceText');
 const totalBetText = document.getElementById('totalBetText');
 
-// Retina HD მკვეთრი გამოსახულება
 const dpr = window.devicePixelRatio || 1;
 const displaySize = 400;
 canvas.width = displaySize * dpr;
@@ -348,15 +453,12 @@ let ballAngle = 0;
 let ballRadius = outerRadius - 25;
 let isSpinning = false;
 
-// თამაშის მონაცემები (localStorage-ით შენახვა)
 let balance = parseInt(localStorage.getItem('rouletteBalance')) || 1000;
 let currentChip = 10;
 let activeBets = {};
 
-// საწყისი ბალანსის განახლება
 updateUI();
 
-// მაგიდის გენერირება (3x12 ბადე)
 const board = document.getElementById('bettingBoard');
 const rows = [
     [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
@@ -422,7 +524,6 @@ function updateUI() {
     totalBetText.innerText = `$${totalBet}`;
 }
 
-// ოქროსფერი პრიალა გრადიენტი
 function getGoldGrad() {
     const g = ctx.createLinearGradient(-100, -100, 100, 100);
     g.addColorStop(0, '#bf953f');
@@ -436,7 +537,6 @@ function getGoldGrad() {
 function drawRoulette() {
     ctx.clearRect(0, 0, displaySize, displaySize);
 
-    // 1. გარე ხის ჩარჩო
     const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 20, centerX, centerY, outerRadius);
     woodGrad.addColorStop(0, '#3a170c');
     woodGrad.addColorStop(0.5, '#6a2915');
@@ -450,14 +550,12 @@ function drawRoulette() {
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // 2. ოქროს შიდა კანტი
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius - 12, 0, Math.PI * 2);
     ctx.strokeStyle = getGoldGrad();
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // 3. ბურთულას ტრეკი
     const trackGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 40, centerX, centerY, outerRadius - 12);
     trackGrad.addColorStop(0, '#111');
     trackGrad.addColorStop(0.8, '#222');
@@ -468,7 +566,6 @@ function drawRoulette() {
     ctx.fillStyle = trackGrad;
     ctx.fill();
 
-    // 4. მოტრიალე ბორბალი
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(wheelAngle);
@@ -494,7 +591,6 @@ function drawRoulette() {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // ციფრები
         ctx.save();
         ctx.rotate(startAngle + sliceAngle / 2);
         ctx.textAlign = 'center';
@@ -507,7 +603,6 @@ function drawRoulette() {
         ctx.restore();
     }
 
-    // ცენტრალური ოქროს კოშკურა
     const centerGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
     centerGrad.addColorStop(0, '#fff5cc');
     centerGrad.addColorStop(0.4, '#d4af37');
@@ -518,7 +613,6 @@ function drawRoulette() {
     ctx.fillStyle = centerGrad;
     ctx.fill();
 
-    // კოშკურის ჯვარედინი სახელურები
     for (let a = 0; a < 4; a++) {
         ctx.rotate(Math.PI / 2);
         ctx.beginPath();
@@ -531,8 +625,6 @@ function drawRoulette() {
     }
 
     ctx.restore();
-
-    // 5. ბურთულა
     drawBall();
 }
 
@@ -558,7 +650,6 @@ function drawBall() {
     ctx.restore();
 }
 
-// რეალისტური ფიზიკით მართული სპინი
 function spin() {
     if (isSpinning) return;
     
@@ -661,10 +752,8 @@ function evaluateWin(winningNumber, totalBet) {
     }
 
     balance += winAmount;
-    
     let colorName = isRed ? 'წითელი' : (winningNumber === 0 ? 'მწვანე' : 'შავი');
     
-    // ისტორიის შენახვა LocalStorage-ში
     saveToHistory(winningNumber, colorName, totalBet, winAmount, balance);
 
     activeBets = {};
@@ -678,6 +767,7 @@ function evaluateWin(winningNumber, totalBet) {
     }
 }
 
+// --- ისტორიის ლოგიკა ---
 function saveToHistory(number, color, bet, win, endBalance) {
     let history = JSON.parse(localStorage.getItem('rouletteHistory') || '[]');
     const now = new Date();
@@ -692,8 +782,62 @@ function saveToHistory(number, color, bet, win, endBalance) {
         balance: endBalance
     });
 
-    if (history.length > 50) history.pop(); // ბოლო 50 ისტორია
+    if (history.length > 50) history.pop();
     localStorage.setItem('rouletteHistory', JSON.stringify(history));
+}
+
+function openHistoryModal() {
+    renderHistory();
+    document.getElementById('historyModal').style.display = 'flex';
+}
+
+function closeHistoryModal() {
+    document.getElementById('historyModal').style.display = 'none';
+}
+
+function closeModalOnOverlay(e) {
+    if (e.target.id === 'historyModal') closeHistoryModal();
+}
+
+function renderHistory() {
+    const list = document.getElementById('historyList');
+    const history = JSON.parse(localStorage.getItem('rouletteHistory') || '[]');
+
+    if (history.length === 0) {
+        list.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">ისტორია ცარიელია</div>';
+        return;
+    }
+
+    list.innerHTML = '';
+    history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        
+        let colorBg = '#222';
+        if (item.color === 'წითელი') colorBg = '#c0392b';
+        else if (item.color === 'მწვანე') colorBg = '#27ae60';
+
+        const isWin = item.win > 0;
+        const resultClass = isWin ? 'win-val' : 'loss-val';
+        const resultText = isWin ? `+${item.win}$` : `-${item.bet}$`;
+
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="num-badge" style="background:${colorBg}">${item.number}</div>
+                <div style="font-size:0.75rem; color:#aaa;">${item.time}</div>
+            </div>
+            <div style="text-align:right;">
+                <div class="${resultClass}">${resultText}</div>
+                <div style="font-size:0.7rem; color:#888;">ბალანსი: $${item.balance}</div>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function clearHistory() {
+    localStorage.removeItem('rouletteHistory');
+    renderHistory();
 }
 
 drawRoulette();
