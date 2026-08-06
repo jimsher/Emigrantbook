@@ -2,8 +2,8 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Casino HD Roulette</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Casino HD Roulette - Fullscreen</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,28 +12,26 @@
         }
         html, body {
             width: 100%;
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden; /* სქროლის სრული გაუქმება, აპლიკაციის სტილი */
             background: #040a05;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
-            padding: 10px 0;
         }
 
-        /* ლაივ კაზინოს სტუდია - ორიგინალი სრული ზომები */
+        /* ლაივ კაზინოს სტუდია - 100% ეკრანზე გაშლილი */
         .live-studio {
             position: relative;
             width: 100%;
-            max-width: 440px;
+            height: 100%;
             background: radial-gradient(circle at 50% 30%, #123821 0%, #030d07 100%);
-            border-radius: 16px;
-            border: 2px solid rgba(212, 175, 55, 0.5);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            justify-content: space-between;
             padding: 10px;
         }
 
@@ -43,36 +41,39 @@
             justify-content: space-between;
             align-items: center;
             z-index: 10;
-            background: rgba(0,0,0,0.65);
-            padding: 6px 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 15px;
             border-radius: 10px;
             border: 1px solid rgba(212, 175, 55, 0.3);
+            flex-shrink: 0;
         }
 
         .history-btn {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
             border: none;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 0.8rem;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
         }
 
-        .balance-info { font-size: 0.82rem; font-weight: bold; }
+        .balance-info { font-size: 0.9rem; font-weight: bold; }
         .balance-val { color: #2ecc71; }
         .bet-val { color: #f1c40f; }
 
-        /* შუა ლაივ სცენა (ორიგინალი სიმაღლე) */
+        /* შუა ლაივ სცენა - იღებს მაქსიმალურ ცარიელ ადგილს */
         .middle-stage {
             position: relative;
             width: 100%;
-            height: 220px;
+            flex: 1; 
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin: 10px 0;
+            gap: 10px;
         }
 
         .wheel-box {
@@ -84,18 +85,22 @@
             border: 2px solid #d4af37;
             box-shadow: 0 6px 20px rgba(0,0,0,0.8);
             background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         canvas {
             width: 100%;
             height: 100%;
+            object-fit: contain; /* იცავს ოვალურად გაწელვისგან */
             display: block;
         }
 
-        /* დილერის ბოქსი */
+        /* ნამდვილი დილერის ბოქსი */
         .dealer-box {
             position: relative;
-            width: 43%;
+            width: 45%;
             height: 100%;
             border-radius: 14px;
             overflow: hidden;
@@ -112,20 +117,26 @@
             height: 100%;
             object-fit: cover;
             object-position: top center;
-            filter: contrast(1.05) brightness(0.95);
+            filter: contrast(1.08) brightness(0.95);
+            animation: liveDealerMove 4s ease-in-out infinite alternate;
         }
 
-        /* საუბრის ღრუბელი (Speech Bubble) */
+        @keyframes liveDealerMove {
+            0% { transform: scale(1) translateY(0); }
+            100% { transform: scale(1.04) translateY(-3px); }
+        }
+
+        /* საუბრის ღრუბელი */
         .speech-bubble {
             position: absolute;
-            top: 6px;
-            left: 6px;
-            right: 6px;
-            background: rgba(255, 255, 255, 0.92);
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
             color: #111;
-            padding: 5px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: bold;
             box-shadow: 0 4px 12px rgba(0,0,0,0.7), 0 0 6px rgba(212, 175, 55, 0.8);
             z-index: 25;
@@ -144,39 +155,43 @@
             border: 1px solid #d4af37;
             color: #f39c12;
             text-align: center;
-            padding: 6px;
-            font-size: 0.85rem;
+            padding: 8px;
+            font-size: 0.9rem;
             font-weight: bold;
             border-radius: 8px;
-            min-height: 28px;
+            min-height: 32px;
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+            flex-shrink: 0;
+            margin-bottom: 5px;
         }
 
         .chip-selector {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 15px;
+            margin: 5px 0 10px 0;
+            flex-shrink: 0;
         }
 
         .chip {
-            width: 36px;
-            height: 36px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.75rem;
+            font-size: 0.9rem;
             cursor: pointer;
             border: 2px dashed #fff;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
             transition: all 0.2s ease;
             user-select: none;
         }
 
         .chip.active {
-            transform: scale(1.12);
-            box-shadow: 0 0 10px #f1c40f;
+            transform: scale(1.15);
+            box-shadow: 0 0 12px #f1c40f;
             border-style: solid;
         }
 
@@ -186,22 +201,23 @@
         .chip-500 { background: #8e44ad; color: white; }
 
         .table-wrapper {
-            perspective: 500px;
+            perspective: 600px;
             width: 100%;
+            flex-shrink: 0;
         }
 
         .betting-table {
-            transform: rotateX(15deg);
+            transform: rotateX(10deg);
             transform-origin: bottom center;
             display: grid;
-            grid-template-columns: 28px repeat(12, 1fr);
-            grid-gap: 2px;
+            grid-template-columns: 35px repeat(12, 1fr);
+            grid-gap: 3px;
             width: 100%;
             background: #082112;
             padding: 5px;
             border-radius: 8px;
             border: 1.5px solid #d4af37;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.8);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.8);
             user-select: none;
         }
 
@@ -213,11 +229,12 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.72rem;
-            height: 24px;
+            font-size: 0.85rem;
+            min-height: 35px; /* გაზრდილი სიმაღლე ეკრანისთვის */
+            height: 4vh;
             cursor: pointer;
             position: relative;
-            border-radius: 3px;
+            border-radius: 4px;
         }
 
         .cell.red { background: #a93226; }
@@ -228,41 +245,44 @@
             grid-column: 2 / span 12;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-gap: 2px;
-            margin-top: 2px;
+            grid-gap: 3px;
+            margin-top: 3px;
         }
 
         .cell-chip {
             position: absolute;
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             background: #f1c40f;
             color: #111;
             border-radius: 50%;
-            font-size: 0.58rem;
+            font-size: 0.65rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 1px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.8);
             pointer-events: none;
         }
 
-        /* ორიგინალი დიდი ღილაკები */
+        /* ქმედების ღილაკები */
         .action-btns {
             display: flex;
             gap: 10px;
             width: 100%;
-            margin-top: 5px;
+            flex-shrink: 0;
+            margin-top: 10px;
+            padding-bottom: 5px;
+            z-index: 30;
         }
 
         .btn {
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: bold;
-            padding: 12px;
+            padding: 14px 10px;
             border: none;
-            border-radius: 18px;
+            border-radius: 16px;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
@@ -272,7 +292,7 @@
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
             flex: 2;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
         }
 
         .clear-btn { background: #c0392b; color: white; flex: 1; }
@@ -292,13 +312,13 @@
             border: 2px solid #d4af37;
             border-radius: 14px;
             width: 90%;
-            max-width: 360px;
-            padding: 14px;
-            display: flex; flex-direction: column; gap: 8px;
+            max-width: 400px;
+            padding: 18px;
+            display: flex; flex-direction: column; gap: 10px;
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #d4af37; padding-bottom: 5px; }
-        .history-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 5px 8px; border-radius: 5px; font-size: 0.78rem; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #d4af37; padding-bottom: 8px; }
+        .history-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .history-item { display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 8px 10px; border-radius: 6px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -313,14 +333,14 @@
         </div>
     </div>
 
-    <!-- შუა ლაივ სცენა -->
+    <!-- შუა ლაივ სცენა (რულეტკა + ნამდვილი ლაივ დილერი გოგო) -->
     <div class="middle-stage">
         <div class="wheel-box">
             <canvas id="rouletteCanvas" width="300" height="300"></canvas>
         </div>
         <div class="dealer-box">
             <div class="speech-bubble" id="dealerBubble">გთხოვთ დადოთ ფსონები! 🎲</div>
-            <img class="dealer-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=500&q=80" alt="Live Casino Dealer">
+            <img class="dealer-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80" alt="Live Casino Dealer">
         </div>
     </div>
 
@@ -345,7 +365,7 @@
         </div>
     </div>
 
-    <!-- ქმედების ღილაკები -->
+    <!-- ქმედების ღილაკები (SPIN & გასუფთავება) -->
     <div class="action-btns">
         <button class="btn clear-btn" id="clearBtn" onclick="clearBets()">გასუფთავება</button>
         <button class="btn spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
@@ -355,8 +375,8 @@
 <div class="modal-overlay" id="historyModal" onclick="if(event.target.id==='historyModal') closeHistoryModal()">
     <div class="modal-content">
         <div class="modal-header">
-            <div style="color:#f1c40f; font-weight:bold; font-size:0.95rem;">📜 ნათამაშები ისტორია</div>
-            <button style="background:none; border:none; color:#fff; font-size:1.2rem; cursor:pointer;" onclick="closeHistoryModal()">&times;</button>
+            <div style="color:#f1c40f; font-weight:bold; font-size:1.1rem;">📜 ნათამაშები ისტორია</div>
+            <button style="background:none; border:none; color:#fff; font-size:1.4rem; cursor:pointer;" onclick="closeHistoryModal()">&times;</button>
         </div>
         <div class="history-list" id="historyList"></div>
     </div>
