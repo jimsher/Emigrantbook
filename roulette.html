@@ -37,6 +37,48 @@
             width: 100%;
         }
 
+        /* ახალი ზედა პანელი ისტორიითა და რეალური ბალანსით */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 2px 4px;
+            margin-bottom: 2px;
+        }
+
+        .history-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+            color: #111;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .history-btn:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #f1c40f 0%, #b8860b 100%);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+        }
+
+        .real-balance-badge {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #e0e0e0;
+            background: rgba(15, 30, 20, 0.9);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
         .dashboard {
             display: flex;
             justify-content: space-between;
@@ -230,6 +272,12 @@
 <body>
 
 <div class="casino-container">
+    <!-- ახალი ზედა პანელი -->
+    <div class="top-header">
+        <button class="history-btn" onclick="window.location.href='history.html'">📜 ისტორია</button>
+        <div class="real-balance-badge">რეალური ბალანსი: <span class="balance-val" id="headerBalanceText">$1000</span></div>
+    </div>
+
     <div class="dashboard">
         <div>ბალანსი: <span class="balance-val" id="balanceText">$1000</span></div>
         <div>სულ ფსონი: <span class="bet-val" id="totalBetText">$0</span></div>
@@ -275,6 +323,7 @@ const spinBtn = document.getElementById('spinBtn');
 const clearBtn = document.getElementById('clearBtn');
 const resultText = document.getElementById('resultText');
 const balanceText = document.getElementById('balanceText');
+const headerBalanceText = document.getElementById('headerBalanceText');
 const totalBetText = document.getElementById('totalBetText');
 
 // Retina HD მკვეთრი გამოსახულება
@@ -299,10 +348,13 @@ let ballAngle = 0;
 let ballRadius = outerRadius - 25;
 let isSpinning = false;
 
-// თამაშის მონაცემები
-let balance = 1000;
+// თამაშის მონაცემები (localStorage-ით შენახვა)
+let balance = parseInt(localStorage.getItem('rouletteBalance')) || 1000;
 let currentChip = 10;
 let activeBets = {};
+
+// საწყისი ბალანსის განახლება
+updateUI();
 
 // მაგიდის გენერირება (3x12 ბადე)
 const board = document.getElementById('bettingBoard');
@@ -362,6 +414,9 @@ function clearBets() {
 
 function updateUI() {
     balanceText.innerText = `$${balance}`;
+    if (headerBalanceText) headerBalanceText.innerText = `$${balance}`;
+    localStorage.setItem('rouletteBalance', balance);
+
     let totalBet = 0;
     for (let k in activeBets) totalBet += activeBets[k];
     totalBetText.innerText = `$${totalBet}`;
@@ -522,22 +577,19 @@ function spin() {
     const winningIndex = Math.floor(Math.random() * totalPockets);
     const winningNumber = numbers[winningIndex];
 
-    const duration = 6500; // 6.5 წამი
+    const duration = 6500;
     const startTime = performance.now();
 
     const startWheelAngle = wheelAngle;
     const startBallAngle = ballAngle;
 
-    // ბორბლის ტრიალის ზუსტი ფიზიკა (~3.5 წრე)
     const wheelSpins = 3.5 + Math.random();
     const totalWheelRotation = wheelSpins * Math.PI * 2;
     const finalWheelAngle = startWheelAngle + totalWheelRotation;
 
-    // მოგებული სექტორის საბოლოო კუთხე
     const winningPocketRelativeAngle = winningIndex * sliceAngle + sliceAngle / 2;
     const finalPocketAngle = finalWheelAngle + winningPocketRelativeAngle;
 
-    // ბურთულის ტრიალი საპირისპიროდ (~6 სრული წრე)
     const ballSpins = 6;
     let targetBallAngle = finalPocketAngle;
     while (targetBallAngle > startBallAngle - (ballSpins * Math.PI * 2)) {
@@ -551,23 +603,19 @@ function spin() {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
-        // გლუვი დამუხრუჭების მრუდი (Monotonic Deceleration - არანაირი აჩქარება!)
         const wheelEase = 1 - Math.pow(1 - progress, 2.8);
         wheelAngle = startWheelAngle + totalWheelRotation * wheelEase;
 
         const ballEase = 1 - Math.pow(1 - progress, 3.2);
         ballAngle = startBallAngle + (targetBallAngle - startBallAngle) * ballEase;
 
-        // ბურთულის რადიუსის ჩამოსვლა და არეკვლა
         if (progress < 0.6) {
-            ballRadius = startBallRadius; // გარე ტრეკზე სრიალი
+            ballRadius = startBallRadius;
         } else if (progress < 0.88) {
-            // ცენტრისკენ ჩამოსვლა
             const dropProgress = (progress - 0.6) / 0.28;
             const dropEase = Math.sin(dropProgress * Math.PI / 2);
             ballRadius = startBallRadius - (startBallRadius - targetBallRadius) * dropEase;
         } else {
-            // მსუბუქი რეალისტური bounce (არეკვლა) უჯრაში ჩასვლისას
             const bounceProgress = (progress - 0.88) / 0.12;
             const bounceFactor = Math.sin(bounceProgress * Math.PI * 3) * 2 * (1 - bounceProgress);
             ballRadius = targetBallRadius + bounceFactor;
@@ -581,14 +629,14 @@ function spin() {
             isSpinning = false;
             spinBtn.disabled = false;
             clearBtn.disabled = false;
-            evaluateWin(winningNumber);
+            evaluateWin(winningNumber, totalBet);
         }
     }
 
     requestAnimationFrame(animate);
 }
 
-function evaluateWin(winningNumber) {
+function evaluateWin(winningNumber, totalBet) {
     let winAmount = 0;
     const isRed = redNumbers.has(winningNumber);
     const isEven = winningNumber !== 0 && winningNumber % 2 === 0;
@@ -613,16 +661,39 @@ function evaluateWin(winningNumber) {
     }
 
     balance += winAmount;
+    
+    let colorName = isRed ? 'წითელი' : (winningNumber === 0 ? 'მწვანე' : 'შავი');
+    
+    // ისტორიის შენახვა LocalStorage-ში
+    saveToHistory(winningNumber, colorName, totalBet, winAmount, balance);
+
     activeBets = {};
     document.querySelectorAll('.cell-chip').forEach(c => c.remove());
     updateUI();
 
-    let colorName = isRed ? 'წითელი' : (winningNumber === 0 ? 'მწვანე' : 'შავი');
     if (winAmount > 0) {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). მოიგეთ $${winAmount}! 🎉`;
     } else {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). სცადეთ ხელახლა!`;
     }
+}
+
+function saveToHistory(number, color, bet, win, endBalance) {
+    let history = JSON.parse(localStorage.getItem('rouletteHistory') || '[]');
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    history.unshift({
+        time: timeStr,
+        number: number,
+        color: color,
+        bet: bet,
+        win: win,
+        balance: endBalance
+    });
+
+    if (history.length > 50) history.pop(); // ბოლო 50 ისტორია
+    localStorage.setItem('rouletteHistory', JSON.stringify(history));
 }
 
 drawRoulette();
