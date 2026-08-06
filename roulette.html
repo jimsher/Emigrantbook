@@ -146,6 +146,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden; /* კამერის ზუმის დროს რომ არ გასცდეს საზღვრებს */
+            border-radius: 15px;
         }
 
         canvas {
@@ -154,6 +156,14 @@
             height: 100% !important;
             aspect-ratio: 1 / 1;
             object-fit: contain;
+            transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); /* კამერის ზუმის გლუვი ანიმაცია */
+            transform-origin: center center;
+        }
+
+        /* კამერის ზუმ ეფექტის კლასი */
+        canvas.zoom-effect {
+            transform: scale(1.35) rotate(5deg);
+            filter: drop-shadow(0 0 25px rgba(241, 196, 15, 0.6));
         }
 
         .result-box {
@@ -867,7 +877,7 @@ function drawBall() {
     ctx.restore();
 }
 
-// რეალისტური ფიზიკით მართული სპინი
+// რეალისტური ფიზიკით მართული სპინი + კამერის ზუმ ეფექტი
 function spin() {
     if (isSpinning) return;
     
@@ -882,6 +892,9 @@ function spin() {
     spinBtn.disabled = true;
     clearBtn.disabled = true;
     resultText.innerText = 'ბორბალი ტრიალებს...';
+
+    // სპინის დაწყებისას კანვასს ვუხსნით ზუმს (რომ მოშორდეს ან ნორმალური იყოს ტრიალისას)
+    canvas.classList.remove('zoom-effect');
 
     const winningIndex = Math.floor(Math.random() * totalPockets);
     const winningNumber = numbers[winningIndex];
@@ -936,9 +949,14 @@ function spin() {
             requestAnimationFrame(animate);
         } else {
             isSpinning = false;
-            spinBtn.disabled = false;
-            clearBtn.disabled = false;
-            evaluateWin(winningNumber, totalBet);
+            
+            // 🔥 კამერის ეფექტი: როცა ბურთი ჩავარდება და ბორბალი ჩერდება, კანვასი იწევს ახლოს (Zoom In)
+            canvas.classList.add('zoom-effect');
+
+            // 1.5 წამის შემდეგ (როცა მოთხოვნილი ციფრი კარგად გამოჩნდება ახლოდან) ვპოულობთ მოგებას და ღილაკებს ვრთავთ
+            setTimeout(() => {
+                evaluateWin(winningNumber, totalBet);
+            }, 1200);
         }
     }
 
@@ -985,6 +1003,13 @@ function evaluateWin(winningNumber, totalBet) {
     } else {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). სცადეთ ხელახლა!`;
     }
+
+    // შედეგის გამოცხადებიდან მცირე პაუზის შემდეგ კამერა უბრუნდება ჩვეულებრივ ზომას
+    setTimeout(() => {
+        canvas.classList.remove('zoom-effect');
+        spinBtn.disabled = false;
+        clearBtn.disabled = false;
+    }, 1500);
 }
 
 function saveToHistory(number, color, bet, win, endBalance) {
