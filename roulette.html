@@ -3,187 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Live Casino HD Roulette</title>
+    <title>Luxury HD Casino Roulette</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        html, body {
-            width: 100%;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            background: #030d07;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #fff;
-        }
 
-        /* 100% ეკრანზე მორგებული კონტეინერი */
-        .live-studio {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            background: radial-gradient(circle at 50% 30%, #123821 0%, #030d07 100%);
+        /* 3D HD Live Casino ფონი (როგორც ატვირთულ ფოტოში) */
+        body {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 8px;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            padding: 10px 5px;
+            overflow-x: hidden;
+            position: relative;
+            background: #06101e;
         }
 
-        /* ზედა პანელი */
-        .top-bar {
+        /* ანიმირებული HD კაზინოს დარბაზის ფონი */
+        .live-casino-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            background: 
+                /* ცისფერი ნეონის სინათლეები */
+                radial-gradient(circle at 80% 20%, rgba(0, 150, 255, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(0, 200, 150, 0.3) 0%, transparent 40%),
+                /* კაზინოს 3D ხალიჩის ეფექტი */
+                radial-gradient(ellipse at center, rgba(10, 30, 60, 0.85) 0%, rgba(3, 8, 16, 0.98) 100%),
+                linear-gradient(45deg, #091a2f 25%, #0d233f 25%, #0d233f 50%, #091a2f 50%, #091a2f 75%, #0d233f 75%, #0d233f 100%);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px;
+            pointer-events: none;
+        }
+
+        /* 3D ლაივ დილერის ავატარი ფონზე */
+        .dealer-avatar {
+            position: fixed;
+            right: 5%;
+            top: 25%;
+            width: 220px;
+            height: 320px;
+            z-index: 2;
+            opacity: 0.85;
+            background: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80') center top / cover no-repeat;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+            filter: drop-shadow(0 0 15px rgba(0, 150, 255, 0.5));
+            pointer-events: none;
+        }
+
+        .casino-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: rgba(8, 20, 35, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 14px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 180, 255, 0.2);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        /* ზედა პანელი ისტორიითა და რეალური ბალანსით */
+        .top-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 10;
-            background: rgba(0,0,0,0.7);
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(212, 175, 55, 0.4);
-            flex-shrink: 0;
+            width: 100%;
+            padding: 2px 4px;
+            margin-bottom: 2px;
         }
 
         .history-btn {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .balance-info { font-size: 0.85rem; font-weight: bold; }
+        .history-btn:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(135deg, #f1c40f 0%, #b8860b 100%);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+        }
+
+        .real-balance-badge {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #e0e0e0;
+            background: rgba(5, 15, 25, 0.9);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 200, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 150, 255, 0.2);
+        }
+
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(10, 25, 45, 0.9);
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
         .balance-val { color: #2ecc71; }
         .bet-val { color: #f1c40f; }
 
-        /* შუა ლაივ სცენა - შეზღუდული სიმაღლით, რომ ღილაკებს ადგილი დარჩეს */
-        .middle-stage {
+        .canvas-wrapper {
             position: relative;
+            filter: drop-shadow(0 12px 25px rgba(0,0,0,0.9));
             width: 100%;
-            height: 180px;
+            max-width: 320px;
+            aspect-ratio: 1 / 1;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 4px 0;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .wheel-box {
-            position: relative;
-            width: 53%;
-            height: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid #d4af37;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.8);
-            background: #000;
-            display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
         }
 
         canvas {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
             display: block;
+            width: 100% !important;
+            height: 100% !important;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
         }
 
-        /* დილერის ბოქსი */
-        .dealer-box {
-            position: relative;
-            width: 45%;
-            height: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1.5px solid rgba(212, 175, 55, 0.4);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.8);
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dealer-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: top center;
-            filter: contrast(1.08) brightness(0.95);
-        }
-
-        /* საუბრის ღრუბელი */
-        .speech-bubble {
-            position: absolute;
-            top: 6px;
-            left: 4px;
-            right: 4px;
-            background: rgba(255, 255, 255, 0.95);
-            color: #111;
-            padding: 4px;
-            border-radius: 8px;
-            font-size: 0.72rem;
+        .result-box {
+            font-size: 1.05rem;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.7), 0 0 6px rgba(212, 175, 55, 0.8);
-            z-index: 25;
-            text-align: center;
-            border: 1.5px solid #d4af37;
-            animation: bubbleFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes bubbleFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-2px); }
-        }
-
-        .status-banner {
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid #d4af37;
+            min-height: 24px;
             color: #f39c12;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             text-align: center;
-            padding: 6px;
-            font-size: 0.82rem;
-            font-weight: bold;
-            border-radius: 8px;
-            min-height: 28px;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-            flex-shrink: 0;
         }
 
+        /* ჟეტონები (Chips) */
         .chip-selector {
             display: flex;
-            justify-content: center;
             gap: 10px;
-            margin: 2px 0;
-            flex-shrink: 0;
         }
 
         .chip {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             cursor: pointer;
             border: 2px dashed #fff;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
             transition: all 0.2s ease;
             user-select: none;
         }
 
+        .chip:hover { transform: scale(1.08); }
         .chip.active {
             transform: scale(1.12);
-            box-shadow: 0 0 10px #f1c40f;
+            box-shadow: 0 0 15px #f1c40f;
             border-style: solid;
         }
 
@@ -192,45 +199,46 @@
         .chip-100 { background: #27ae60; color: white; }
         .chip-500 { background: #8e44ad; color: white; }
 
-        .table-wrapper {
-            perspective: 500px;
-            width: 100%;
-            flex-shrink: 0;
-        }
-
+        /* HD ცისფერი პრემიუმ კაზინოს მაგიდა */
         .betting-table {
-            transform: rotateX(8deg);
-            transform-origin: bottom center;
             display: grid;
-            grid-template-columns: 28px repeat(12, 1fr);
+            grid-template-columns: 32px repeat(12, 1fr);
             grid-gap: 2px;
             width: 100%;
-            background: #082112;
-            padding: 3px;
-            border-radius: 6px;
+            background: linear-gradient(180deg, #092f44 0%, #051a26 100%);
+            padding: 6px;
+            border-radius: 10px;
             border: 1.5px solid #d4af37;
-            box-shadow: 0 6px 14px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
             user-select: none;
         }
 
         .cell {
-            background: #113a1f;
+            background: #0d4261;
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.72rem;
-            height: 22px;
+            font-size: 0.75rem;
+            height: 28px;
             cursor: pointer;
             position: relative;
-            border-radius: 2px;
+            border-radius: 3px;
+            transition: background 0.2s;
         }
 
+        .cell:hover { background: #145b85; }
         .cell.red { background: #a93226; }
-        .cell.black { background: #1a1a1a; }
-        .cell.zero { grid-row: span 3; background: #27ae60; height: 100%; }
+        .cell.red:hover { background: #c0392b; }
+        .cell.black { background: #1b1b1b; }
+        .cell.black:hover { background: #2c2c2c; }
+        .cell.zero {
+            grid-row: span 3;
+            background: #27ae60;
+            height: 100%;
+        }
 
         .outside-bets {
             grid-column: 2 / span 12;
@@ -242,101 +250,98 @@
 
         .cell-chip {
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: 20px;
+            height: 20px;
             background: #f1c40f;
             color: #111;
             border-radius: 50%;
-            font-size: 0.55rem;
+            font-size: 0.65rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #fff;
+            border: 1.5px solid #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.8);
             pointer-events: none;
         }
 
-        /* ქმედების ღილაკები - გარანტირებულად ჩანს ეკრანზე */
         .action-btns {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
-            flex-shrink: 0;
-            margin-top: 4px;
-            padding-bottom: 2px;
-            z-index: 30;
+            justify-content: center;
         }
 
         .btn {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: bold;
-            padding: 10px 8px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 12px;
+            border-radius: 25px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .spin-btn {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
             flex: 2;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
         }
 
-        .clear-btn { background: #c0392b; color: white; flex: 1; }
-        .btn:disabled { background: #444; color: #777; cursor: not-allowed; box-shadow: none; }
+        .spin-btn:hover {
+            background: linear-gradient(135deg, #f1c40f 0%, #b8860b 100%);
+            box-shadow: 0 6px 18px rgba(212, 175, 55, 0.6);
+        }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
+        .clear-btn {
+            background: #c0392b;
+            color: white;
+            flex: 1;
         }
-        .modal-content {
-            background: #0f2617;
-            border: 2px solid #d4af37;
-            border-radius: 14px;
-            width: 90%;
-            max-width: 380px;
-            padding: 16px;
-            display: flex; flex-direction: column; gap: 10px;
+
+        .clear-btn:hover { background: #e74c3c; }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
+
+        @media (max-width: 768px) {
+            .dealer-avatar { display: none; } /* მობილურზე რომ არ დაფაროს ეკრანი */
         }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #d4af37; padding-bottom: 6px; }
-        .history-list { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-        .history-item { display: flex; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 6px 10px; border-radius: 6px; font-size: 0.82rem; }
+
+        @media (max-width: 380px) {
+            .cell { font-size: 0.68rem; height: 25px; }
+            .outside-bets .cell { font-size: 0.62rem; }
+            .chip { width: 34px; height: 34px; font-size: 0.75rem; }
+            .dashboard { font-size: 0.85rem; }
+        }
     </style>
 </head>
 <body>
 
-<div class="live-studio">
-    <!-- ზედა ბარი -->
-    <div class="top-bar">
-        <button class="history-btn" onclick="openHistoryModal()">📜 ისტორია</button>
-        <div class="balance-info">
-            ბალანსი: <span class="balance-val" id="balanceText">$1000</span> | 
-            ფსონი: <span class="bet-val" id="totalBetText">$0</span>
-        </div>
+<!-- 3D HD Live კაზინოს ფონური ეფექტი -->
+<div class="live-casino-bg"></div>
+<div class="dealer-avatar"></div>
+
+<div class="casino-container">
+    <!-- ზედა პანელი -->
+    <div class="top-header">
+        <button class="history-btn" onclick="window.location.href='history.html'">📜 ისტორია</button>
+        <div class="real-balance-badge">რეალური ბალანსი: <span class="balance-val" id="headerBalanceText">$1000</span></div>
     </div>
 
-    <!-- შუა ლაივ სცენა -->
-    <div class="middle-stage">
-        <div class="wheel-box">
-            <canvas id="rouletteCanvas" width="300" height="300"></canvas>
-        </div>
-        <div class="dealer-box">
-            <div class="speech-bubble" id="dealerBubble">გთხოვთ დადოთ ფსონები! 🎲</div>
-            <img class="dealer-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80" alt="Live Casino Dealer">
-        </div>
+    <div class="dashboard">
+        <div>ბალანსი: <span class="balance-val" id="balanceText">$1000</span></div>
+        <div>სულ ფსონი: <span class="bet-val" id="totalBetText">$0</span></div>
     </div>
 
-    <div class="status-banner" id="resultText">აირჩიეთ ფსონი და დააჭირეთ "SPIN"-ს</div>
+    <div class="canvas-wrapper">
+        <canvas id="rouletteCanvas" width="400" height="400"></canvas>
+    </div>
 
+    <div class="result-box" id="resultText">აირჩიეთ ფსონი და დააჭირეთ "SPIN"-ს</div>
+
+    <!-- ჟეტონების არჩევა -->
     <div class="chip-selector">
         <div class="chip chip-10 active" onclick="selectChip(10, this)">10</div>
         <div class="chip chip-50" onclick="selectChip(50, this)">50</div>
@@ -344,32 +349,22 @@
         <div class="chip chip-500" onclick="selectChip(500, this)">500</div>
     </div>
 
-    <div class="table-wrapper">
-        <div class="betting-table" id="bettingBoard">
-            <div class="cell zero" onclick="placeBet('0', this)">0</div>
-        </div>
-        <div class="outside-bets">
-            <div class="cell red" onclick="placeBet('RED', this)">RED</div>
-            <div class="cell black" onclick="placeBet('BLACK', this)">BLACK</div>
-            <div class="cell" onclick="placeBet('EVEN', this)">EVEN</div>
-            <div class="cell" onclick="placeBet('ODD', this)">ODD</div>
-        </div>
+    <!-- ფსონების დაფა -->
+    <div class="betting-table" id="bettingBoard">
+        <div class="cell zero" onclick="placeBet('0', this)">0</div>
+        <!-- 36 ციფრი გენერირდება JS-ით -->
     </div>
 
-    <!-- ქმედების ღილაკები (SPIN & გასუფთავება) -->
+    <div class="outside-bets">
+        <div class="cell red" onclick="placeBet('RED', this)">RED</div>
+        <div class="cell black" onclick="placeBet('BLACK', this)">BLACK</div>
+        <div class="cell" onclick="placeBet('EVEN', this)">EVEN</div>
+        <div class="cell" onclick="placeBet('ODD', this)">ODD</div>
+    </div>
+
     <div class="action-btns">
         <button class="btn clear-btn" id="clearBtn" onclick="clearBets()">გასუფთავება</button>
         <button class="btn spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
-    </div>
-</div>
-
-<div class="modal-overlay" id="historyModal" onclick="if(event.target.id==='historyModal') closeHistoryModal()">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div style="color:#f1c40f; font-weight:bold; font-size:1rem;">📜 ნათამაშები ისტორია</div>
-            <button style="background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer;" onclick="closeHistoryModal()">&times;</button>
-        </div>
-        <div class="history-list" id="historyList"></div>
     </div>
 </div>
 
@@ -380,18 +375,19 @@ const spinBtn = document.getElementById('spinBtn');
 const clearBtn = document.getElementById('clearBtn');
 const resultText = document.getElementById('resultText');
 const balanceText = document.getElementById('balanceText');
+const headerBalanceText = document.getElementById('headerBalanceText');
 const totalBetText = document.getElementById('totalBetText');
-const dealerBubble = document.getElementById('dealerBubble');
 
+// Retina HD მკვეთრი გამოსახულება
 const dpr = window.devicePixelRatio || 1;
-const displaySize = 300;
+const displaySize = 400;
 canvas.width = displaySize * dpr;
 canvas.height = displaySize * dpr;
 ctx.scale(dpr, dpr);
 
 const centerX = displaySize / 2;
 const centerY = displaySize / 2;
-const outerRadius = 135;
+const outerRadius = 180;
 
 const numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3];
 const redNumbers = new Set([32, 19, 21, 25, 34, 27, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35]);
@@ -401,23 +397,18 @@ const sliceAngle = (Math.PI * 2) / totalPockets;
 
 let wheelAngle = 0;
 let ballAngle = 0;
-let ballRadius = outerRadius - 20;
+let ballRadius = outerRadius - 25;
 let isSpinning = false;
 
-let zoomScale = 1;
-let cameraOffsetX = 0;
-let cameraOffsetY = 0;
-
+// თამაშის მონაცემები (localStorage-ით შენახვა)
 let balance = parseInt(localStorage.getItem('rouletteBalance')) || 1000;
 let currentChip = 10;
 let activeBets = {};
 
+// საწყისი ბალანსის განახლება
 updateUI();
 
-function dealerSpeak(text) {
-    dealerBubble.innerText = text;
-}
-
+// მაგიდის გენერირება (3x12 ბადე)
 const board = document.getElementById('bettingBoard');
 const rows = [
     [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
@@ -446,7 +437,6 @@ function placeBet(type, el) {
     if (isSpinning) return;
     if (balance < currentChip) {
         resultText.innerText = 'არ გაქვთ საკმარისი ბალანსი!';
-        dealerSpeak('არ გაქვთ საკმარისი თანხა! ⚠️');
         return;
     }
 
@@ -462,8 +452,6 @@ function placeBet(type, el) {
         el.appendChild(chipEl);
     }
     chipEl.innerText = activeBets[type];
-
-    dealerSpeak('ფსონი მიღებულია! 🎯');
 }
 
 function clearBets() {
@@ -474,60 +462,70 @@ function clearBets() {
     activeBets = {};
     document.querySelectorAll('.cell-chip').forEach(c => c.remove());
     updateUI();
-    dealerSpeak('ფსონები გასუფთავდა! ✨');
 }
 
 function updateUI() {
     balanceText.innerText = `$${balance}`;
+    if (headerBalanceText) headerBalanceText.innerText = `$${balance}`;
     localStorage.setItem('rouletteBalance', balance);
+
     let totalBet = 0;
     for (let k in activeBets) totalBet += activeBets[k];
     totalBetText.innerText = `$${totalBet}`;
 }
 
+// ოქროსფერი პრიალა გრადიენტი
 function getGoldGrad() {
-    const g = ctx.createLinearGradient(-80, -80, 80, 80);
+    const g = ctx.createLinearGradient(-100, -100, 100, 100);
     g.addColorStop(0, '#bf953f');
+    g.addColorStop(0.25, '#fcf6ba');
     g.addColorStop(0.5, '#b38728');
+    g.addColorStop(0.75, '#fbf5b7');
     g.addColorStop(1, '#aa771c');
     return g;
 }
 
 function drawRoulette() {
-    ctx.save();
     ctx.clearRect(0, 0, displaySize, displaySize);
 
-    if (zoomScale > 1) {
-        ctx.translate(centerX, centerY);
-        ctx.scale(zoomScale, zoomScale);
-        ctx.translate(-centerX + cameraOffsetX, -centerY + cameraOffsetY);
-    }
-
-    const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 15, centerX, centerY, outerRadius);
+    // 1. გარე ხის ჩარჩო
+    const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 20, centerX, centerY, outerRadius);
     woodGrad.addColorStop(0, '#3a170c');
+    woodGrad.addColorStop(0.5, '#6a2915');
     woodGrad.addColorStop(1, '#150603');
 
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
     ctx.fillStyle = woodGrad;
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 12;
     ctx.fill();
+    ctx.shadowBlur = 0;
 
+    // 2. ოქროს შიდა კანტი
     ctx.beginPath();
-    ctx.arc(centerX, centerY, outerRadius - 10, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, outerRadius - 12, 0, Math.PI * 2);
     ctx.strokeStyle = getGoldGrad();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
+    // 3. ბურთულას ტრეკი
+    const trackGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 40, centerX, centerY, outerRadius - 12);
+    trackGrad.addColorStop(0, '#111');
+    trackGrad.addColorStop(0.8, '#222');
+    trackGrad.addColorStop(1, '#050505');
+
     ctx.beginPath();
-    ctx.arc(centerX, centerY, outerRadius - 10, 0, Math.PI * 2);
-    ctx.fillStyle = '#111';
+    ctx.arc(centerX, centerY, outerRadius - 12, 0, Math.PI * 2);
+    ctx.fillStyle = trackGrad;
     ctx.fill();
 
+    // 4. მოტრიალე ბორბალი
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(wheelAngle);
 
-    const wheelRadius = outerRadius - 30;
+    const wheelRadius = outerRadius - 40;
 
     for (let i = 0; i < totalPockets; i++) {
         const startAngle = i * sliceAngle;
@@ -545,35 +543,49 @@ function drawRoulette() {
         ctx.fill();
 
         ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
-        ctx.lineWidth = 0.8;
+        ctx.lineWidth = 1;
         ctx.stroke();
 
+        // ციფრები
         ctx.save();
         ctx.rotate(startAngle + sliceAngle / 2);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 9px Arial';
-        ctx.fillText(num, wheelRadius - 12, 0);
+        ctx.font = 'bold 10px Arial';
+        ctx.shadowColor = 'black';
+        ctx.shadowBlur = 2;
+        ctx.fillText(num, wheelRadius - 15, 0);
         ctx.restore();
     }
 
+    // ცენტრალური ოქროს კოშკურა
+    const centerGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
+    centerGrad.addColorStop(0, '#fff5cc');
+    centerGrad.addColorStop(0.4, '#d4af37');
+    centerGrad.addColorStop(1, '#553c06');
+
     ctx.beginPath();
-    ctx.arc(0, 0, 22, 0, Math.PI * 2);
-    ctx.fillStyle = getGoldGrad();
+    ctx.arc(0, 0, 28, 0, Math.PI * 2);
+    ctx.fillStyle = centerGrad;
     ctx.fill();
 
+    // კოშკურის ჯვარედინი სახელურები
     for (let a = 0; a < 4; a++) {
         ctx.rotate(Math.PI / 2);
         ctx.beginPath();
-        ctx.rect(-2, 0, 4, 28);
+        ctx.rect(-2.5, 0, 5, 36);
         ctx.fillStyle = getGoldGrad();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 36, 4, 0, Math.PI * 2);
         ctx.fill();
     }
 
     ctx.restore();
+
+    // 5. ბურთულა
     drawBall();
-    ctx.restore();
 }
 
 function drawBall() {
@@ -582,19 +594,23 @@ function drawBall() {
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(ballX, ballY, 4.5, 0, Math.PI * 2);
+    ctx.arc(ballX, ballY, 5, 0, Math.PI * 2);
     
-    const ballGrad = ctx.createRadialGradient(ballX - 1, ballY - 1, 0.5, ballX, ballY, 4.5);
+    const ballGrad = ctx.createRadialGradient(ballX - 1.5, ballY - 1.5, 1, ballX, ballY, 5);
     ballGrad.addColorStop(0, '#ffffff');
-    ballGrad.addColorStop(1, '#888888');
+    ballGrad.addColorStop(0.7, '#dcdcdc');
+    ballGrad.addColorStop(1, '#777777');
 
     ctx.fillStyle = ballGrad;
-    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur = 3;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1.5;
+    ctx.shadowOffsetY = 1.5;
     ctx.fill();
     ctx.restore();
 }
 
+// რეალისტური ფიზიკით მართული სპინი
 function spin() {
     if (isSpinning) return;
     
@@ -602,15 +618,13 @@ function spin() {
     for (let k in activeBets) totalBet += activeBets[k];
     if (totalBet === 0) {
         resultText.innerText = 'გთხოვთ ჯერ დადოთ ფსონი!';
-        dealerSpeak('გთხოვთ ჯერ აირჩიოთ ფსონი! 🎲');
         return;
     }
 
     isSpinning = true;
     spinBtn.disabled = true;
     clearBtn.disabled = true;
-    resultText.innerText = 'No more bets!';
-    dealerSpeak('ბორბალი ტრიალებს, წარმატებები! 🎰');
+    resultText.innerText = 'ბორბალი ტრიალებს...';
 
     const winningIndex = Math.floor(Math.random() * totalPockets);
     const winningNumber = numbers[winningIndex];
@@ -634,12 +648,8 @@ function spin() {
         targetBallAngle -= Math.PI * 2;
     }
 
-    const startBallRadius = outerRadius - 18;
-    const targetBallRadius = outerRadius - 42;
-
-    zoomScale = 1;
-    cameraOffsetX = 0;
-    cameraOffsetY = 0;
+    const startBallRadius = outerRadius - 25;
+    const targetBallRadius = outerRadius - 55;
 
     function animate(currentTime) {
         const elapsed = currentTime - startTime;
@@ -653,18 +663,14 @@ function spin() {
 
         if (progress < 0.6) {
             ballRadius = startBallRadius;
-        } else if (progress < 0.85) {
-            const dropProgress = (progress - 0.6) / 0.25;
-            ballRadius = startBallRadius - (startBallRadius - targetBallRadius) * Math.sin(dropProgress * Math.PI / 2);
+        } else if (progress < 0.88) {
+            const dropProgress = (progress - 0.6) / 0.28;
+            const dropEase = Math.sin(dropProgress * Math.PI / 2);
+            ballRadius = startBallRadius - (startBallRadius - targetBallRadius) * dropEase;
         } else {
-            const zoomProgress = (progress - 0.85) / 0.15;
-            zoomScale = 1 + zoomProgress * 1.6;
-
-            const currentBallX = centerX + Math.cos(ballAngle) * ballRadius;
-            const currentBallY = centerY + Math.sin(ballAngle) * ballRadius;
-
-            cameraOffsetX = (centerX - currentBallX) * 0.7;
-            cameraOffsetY = (centerY - currentBallY) * 0.7;
+            const bounceProgress = (progress - 0.88) / 0.12;
+            const bounceFactor = Math.sin(bounceProgress * Math.PI * 3) * 2 * (1 - bounceProgress);
+            ballRadius = targetBallRadius + bounceFactor;
         }
 
         drawRoulette();
@@ -672,6 +678,9 @@ function spin() {
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
+            isSpinning = false;
+            spinBtn.disabled = false;
+            clearBtn.disabled = false;
             evaluateWin(winningNumber, totalBet);
         }
     }
@@ -687,15 +696,27 @@ function evaluateWin(winningNumber, totalBet) {
 
     for (let betKey in activeBets) {
         const amount = activeBets[betKey];
-        if (betKey === winningNumber.toString()) winAmount += amount * 36;
-        else if (betKey === 'RED' && isRed) winAmount += amount * 2;
-        else if (betKey === 'BLACK' && !isRed && winningNumber !== 0) winAmount += amount * 2;
-        else if (betKey === 'EVEN' && isEven) winAmount += amount * 2;
-        else if (betKey === 'ODD' && isOdd) winAmount += amount * 2;
+
+        if (betKey === winningNumber.toString()) {
+            winAmount += amount * 36;
+        }
+        else if (betKey === 'RED' && isRed) {
+            winAmount += amount * 2;
+        } else if (betKey === 'BLACK' && !isRed && winningNumber !== 0) {
+            winAmount += amount * 2;
+        }
+        else if (betKey === 'EVEN' && isEven) {
+            winAmount += amount * 2;
+        } else if (betKey === 'ODD' && isOdd) {
+            winAmount += amount * 2;
+        }
     }
 
     balance += winAmount;
+    
     let colorName = isRed ? 'წითელი' : (winningNumber === 0 ? 'მწვანე' : 'შავი');
+    
+    // ისტორიის შენახვა LocalStorage-ში
     saveToHistory(winningNumber, colorName, totalBet, winAmount, balance);
 
     activeBets = {};
@@ -704,49 +725,28 @@ function evaluateWin(winningNumber, totalBet) {
 
     if (winAmount > 0) {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). მოიგეთ $${winAmount}! 🎉`;
-        dealerSpeak(`ვაუ! ამოვიდა ${winningNumber}! მოიგეთ $${winAmount}! 🎉`);
     } else {
-        resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}).`;
-        dealerSpeak(`ამოვიდა ${winningNumber} (${colorName}). შემდეგში გაგიმართლებთ! 🍀`);
+        resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). სცადეთ ხელახლა!`;
     }
-
-    setTimeout(() => {
-        zoomScale = 1;
-        cameraOffsetX = 0;
-        cameraOffsetY = 0;
-        drawRoulette();
-        isSpinning = false;
-        spinBtn.disabled = false;
-        clearBtn.disabled = false;
-    }, 2500);
 }
 
 function saveToHistory(number, color, bet, win, endBalance) {
     let history = JSON.parse(localStorage.getItem('rouletteHistory') || '[]');
     const now = new Date();
     const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-    history.unshift({ time: timeStr, number: number, color: color, bet: bet, win: win, balance: endBalance });
-    if (history.length > 50) history.pop();
+    
+    history.unshift({
+        time: timeStr,
+        number: number,
+        color: color,
+        bet: bet,
+        win: win,
+        balance: endBalance
+    });
+
+    if (history.length > 50) history.pop(); // ბოლო 50 ისტორია
     localStorage.setItem('rouletteHistory', JSON.stringify(history));
 }
-
-function openHistoryModal() {
-    const list = document.getElementById('historyList');
-    const history = JSON.parse(localStorage.getItem('rouletteHistory') || '[]');
-    if (history.length === 0) {
-        list.innerHTML = '<div style="text-align:center; color:#888; padding:15px;">ისტორია ცარიელია</div>';
-    } else {
-        list.innerHTML = history.map(item => `
-            <div class="history-item">
-                <span><b>${item.number}</b> (${item.color}) - ${item.time}</span>
-                <span style="color:${item.win > 0 ? '#2ecc71' : '#e74c3c'}">${item.win > 0 ? '+' + item.win : '-' + item.bet}$</span>
-            </div>
-        `).join('');
-    }
-    document.getElementById('historyModal').style.display = 'flex';
-}
-
-function closeHistoryModal() { document.getElementById('historyModal').style.display = 'none'; }
 
 drawRoulette();
 </script>
