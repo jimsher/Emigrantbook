@@ -2,7 +2,7 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Casino HD Roulette</title>
     <style>
         * {
@@ -12,34 +12,29 @@
         }
         html, body {
             width: 100%;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden; /* სქროლის სრული გაუქმება */
+            min-height: 100vh;
             background: #040a05;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
+            padding: 10px 0;
         }
 
-        /* ლაივ კაზინოს სტუდია - ზუსტად ეკრანის ზომაზე */
+        /* ლაივ კაზინოს სტუდია - ორიგინალი სრული ზომები */
         .live-studio {
             position: relative;
             width: 100%;
-            max-width: 410px;
-            height: 100vh;
-            height: 100dvh;
-            max-height: 800px;
+            max-width: 440px;
             background: radial-gradient(circle at 50% 30%, #123821 0%, #030d07 100%);
-            border-radius: 12px;
+            border-radius: 16px;
             border: 2px solid rgba(212, 175, 55, 0.5);
             box-shadow: 0 15px 40px rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 6px;
-            overflow: hidden;
+            gap: 10px;
+            padding: 10px;
         }
 
         /* ზედა პანელი */
@@ -48,49 +43,46 @@
             justify-content: space-between;
             align-items: center;
             z-index: 10;
-            background: rgba(0,0,0,0.7);
-            padding: 4px 8px;
-            border-radius: 8px;
+            background: rgba(0,0,0,0.65);
+            padding: 6px 12px;
+            border-radius: 10px;
             border: 1px solid rgba(212, 175, 55, 0.3);
-            flex-shrink: 0;
         }
 
         .history-btn {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
             border: none;
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 0.72rem;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
         }
 
-        .balance-info { font-size: 0.75rem; font-weight: bold; }
+        .balance-info { font-size: 0.82rem; font-weight: bold; }
         .balance-val { color: #2ecc71; }
         .bet-val { color: #f1c40f; }
 
-        /* შუა ლაივ სცენა: რულეტკა + ნამდვილი დილერი გოგო */
+        /* შუა ლაივ სცენა (ორიგინალი სიმაღლე) */
         .middle-stage {
             position: relative;
             width: 100%;
-            height: 145px;
+            height: 220px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 2px 0;
-            flex-shrink: 0;
         }
 
         .wheel-box {
             position: relative;
-            width: 53%;
+            width: 55%;
             height: 100%;
-            border-radius: 10px;
+            border-radius: 14px;
             overflow: hidden;
             border: 2px solid #d4af37;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.8);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.8);
             background: #000;
         }
 
@@ -100,49 +92,42 @@
             display: block;
         }
 
-        /* ნამდვილი დილერის ბოქსი */
+        /* დილერის ბოქსი */
         .dealer-box {
             position: relative;
-            width: 45%;
+            width: 43%;
             height: 100%;
-            border-radius: 10px;
+            border-radius: 14px;
             overflow: hidden;
             border: 1.5px solid rgba(212, 175, 55, 0.4);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.8);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.8);
             background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* ნამდვილი გოგო დილერის ფოტო ცოცხალი ანიმაციით */
         .dealer-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             object-position: top center;
-            filter: contrast(1.08) brightness(0.95);
-            animation: liveDealerMove 4s ease-in-out infinite alternate;
-        }
-
-        @keyframes liveDealerMove {
-            0% { transform: scale(1) translateY(0); }
-            100% { transform: scale(1.04) translateY(-3px); }
+            filter: contrast(1.05) brightness(0.95);
         }
 
         /* საუბრის ღრუბელი (Speech Bubble) */
         .speech-bubble {
             position: absolute;
-            top: 4px;
-            left: 4px;
-            right: 4px;
-            background: rgba(255, 255, 255, 0.95);
+            top: 6px;
+            left: 6px;
+            right: 6px;
+            background: rgba(255, 255, 255, 0.92);
             color: #111;
-            padding: 3px 5px;
-            border-radius: 8px;
-            font-size: 0.65rem;
+            padding: 5px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
             font-weight: bold;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.7), 0 0 6px rgba(212, 175, 55, 0.8);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.7), 0 0 6px rgba(212, 175, 55, 0.8);
             z-index: 25;
             text-align: center;
             border: 1.5px solid #d4af37;
@@ -159,42 +144,39 @@
             border: 1px solid #d4af37;
             color: #f39c12;
             text-align: center;
-            padding: 3px;
-            font-size: 0.78rem;
+            padding: 6px;
+            font-size: 0.85rem;
             font-weight: bold;
-            border-radius: 6px;
-            min-height: 22px;
+            border-radius: 8px;
+            min-height: 28px;
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-            flex-shrink: 0;
         }
 
         .chip-selector {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            margin: 2px 0;
-            flex-shrink: 0;
+            gap: 10px;
         }
 
         .chip {
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             cursor: pointer;
             border: 2px dashed #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.5);
             transition: all 0.2s ease;
             user-select: none;
         }
 
         .chip.active {
             transform: scale(1.12);
-            box-shadow: 0 0 8px #f1c40f;
+            box-shadow: 0 0 10px #f1c40f;
             border-style: solid;
         }
 
@@ -206,21 +188,20 @@
         .table-wrapper {
             perspective: 500px;
             width: 100%;
-            flex-shrink: 0;
         }
 
         .betting-table {
-            transform: rotateX(8deg);
+            transform: rotateX(15deg);
             transform-origin: bottom center;
             display: grid;
-            grid-template-columns: 24px repeat(12, 1fr);
+            grid-template-columns: 28px repeat(12, 1fr);
             grid-gap: 2px;
             width: 100%;
             background: #082112;
-            padding: 3px;
-            border-radius: 6px;
+            padding: 5px;
+            border-radius: 8px;
             border: 1.5px solid #d4af37;
-            box-shadow: 0 5px 12px rgba(0,0,0,0.8);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.8);
             user-select: none;
         }
 
@@ -232,11 +213,11 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.64rem;
-            height: 19px;
+            font-size: 0.72rem;
+            height: 24px;
             cursor: pointer;
             position: relative;
-            border-radius: 2px;
+            border-radius: 3px;
         }
 
         .cell.red { background: #a93226; }
@@ -253,12 +234,12 @@
 
         .cell-chip {
             position: absolute;
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             background: #f1c40f;
             color: #111;
             border-radius: 50%;
-            font-size: 0.52rem;
+            font-size: 0.58rem;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -268,23 +249,20 @@
             pointer-events: none;
         }
 
-        /* ღილაკების პანელი - გარანტირებულად ჩანს ეკრანის ბოლოში */
+        /* ორიგინალი დიდი ღილაკები */
         .action-btns {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
-            flex-shrink: 0;
-            margin-top: 2px;
-            padding-bottom: 2px;
-            z-index: 30;
+            margin-top: 5px;
         }
 
         .btn {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: bold;
-            padding: 10px 4px;
+            padding: 12px;
             border: none;
-            border-radius: 14px;
+            border-radius: 18px;
             cursor: pointer;
             transition: all 0.2s;
             text-transform: uppercase;
@@ -294,7 +272,7 @@
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
             flex: 2;
-            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
         }
 
         .clear-btn { background: #c0392b; color: white; flex: 1; }
@@ -335,15 +313,13 @@
         </div>
     </div>
 
-    <!-- შუა ლაივ სცენა (რულეტკა + ნამდვილი ლაივ დილერი გოგო) -->
+    <!-- შუა ლაივ სცენა -->
     <div class="middle-stage">
         <div class="wheel-box">
             <canvas id="rouletteCanvas" width="300" height="300"></canvas>
         </div>
         <div class="dealer-box">
-            <!-- საუბრის დინამიური ღრუბელი -->
             <div class="speech-bubble" id="dealerBubble">გთხოვთ დადოთ ფსონები! 🎲</div>
-            <!-- ნამდვილი გოგო დილერი კაზინოში -->
             <img class="dealer-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=500&q=80" alt="Live Casino Dealer">
         </div>
     </div>
@@ -369,7 +345,7 @@
         </div>
     </div>
 
-    <!-- ქმედების ღილაკები (SPIN & გასუფთავება) -->
+    <!-- ქმედების ღილაკები -->
     <div class="action-btns">
         <button class="btn clear-btn" id="clearBtn" onclick="clearBets()">გასუფთავება</button>
         <button class="btn spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
