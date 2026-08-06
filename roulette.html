@@ -22,7 +22,6 @@
             overflow-x: hidden;
         }
 
-        /* ლაივ კაზინოს მთავარი სტუდია */
         .live-studio {
             position: relative;
             width: 100%;
@@ -40,7 +39,6 @@
             overflow: hidden;
         }
 
-        /* ზედა პანელი */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -64,14 +62,10 @@
             box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3);
         }
 
-        .balance-info {
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
+        .balance-info { font-size: 0.85rem; font-weight: bold; }
         .balance-val { color: #2ecc71; }
         .bet-val { color: #f1c40f; }
 
-        /* შუა ზონა: რულეტკის ვიდეო-ფანჯარა და დილერი */
         .middle-stage {
             position: relative;
             width: 100%;
@@ -82,7 +76,6 @@
             margin: 5px 0;
         }
 
-        /* რულეტკის ეკრანი (Canvas Box) */
         .wheel-box {
             position: relative;
             width: 58%;
@@ -100,7 +93,7 @@
             display: block;
         }
 
-        /* დილერი ქალბატონის იმიტაცია */
+        /* ანიმაციური დილერი და საუბრის ღრუბელი */
         .dealer-box {
             position: relative;
             width: 40%;
@@ -109,30 +102,66 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-end;
-            background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%);
         }
 
-        .dealer-img {
-            width: 100%;
-            max-height: 220px;
-            object-fit: contain;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.8));
-            transform: scaleX(-1); /* ლამაზი პოზისთვის */
-        }
-
-        .dealer-status {
+        /* საუბრის ღრუბელი (Speech Bubble) */
+        .speech-bubble {
             position: absolute;
-            top: 10px;
-            background: rgba(0,0,0,0.7);
-            color: #f1c40f;
-            padding: 4px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            border: 1px solid rgba(212,175,55,0.4);
+            top: 5px;
+            left: -25px;
+            background: #ffffff;
+            color: #111;
+            padding: 7px 11px;
+            border-radius: 14px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6), 0 0 8px rgba(212, 175, 55, 0.6);
+            z-index: 25;
+            max-width: 135px;
             text-align: center;
+            border: 1.5px solid #d4af37;
+            animation: bubbleFloat 3s ease-in-out infinite;
         }
 
-        /* შეტყობინების ზოლი */
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            right: 20px;
+            border-width: 7px 7px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+        }
+
+        @keyframes bubbleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        /* დილერი ქალის ცოცხალი ანიმაციები */
+        .dealer-img {
+            width: 105%;
+            max-height: 215px;
+            object-fit: contain;
+            transform-origin: bottom center;
+            animation: dealerIdle 4s ease-in-out infinite;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.8));
+        }
+
+        .dealer-img.talking {
+            animation: dealerTalk 0.5s ease-in-out infinite alternate, dealerIdle 4s ease-in-out infinite;
+        }
+
+        @keyframes dealerIdle {
+            0%, 100% { transform: scaleX(-1) translateY(0) rotate(0deg); }
+            50% { transform: scaleX(-1) translateY(-4px) rotate(1deg); }
+        }
+
+        @keyframes dealerTalk {
+            0% { transform: scaleX(-1) translateY(-4px) scale(1); }
+            100% { transform: scaleX(-1) translateY(-7px) scale(1.02); }
+        }
+
         .status-banner {
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid #d4af37;
@@ -146,7 +175,6 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.9);
         }
 
-        /* ჟეტონების არჩევა */
         .chip-selector {
             display: flex;
             justify-content: center;
@@ -181,7 +209,6 @@
         .chip-100 { background: #27ae60; color: white; }
         .chip-500 { background: #8e44ad; color: white; }
 
-        /* 3D პერსპექტივის ფსონების მაგიდა (3D Table View) */
         .table-wrapper {
             perspective: 500px;
             width: 100%;
@@ -247,7 +274,6 @@
             pointer-events: none;
         }
 
-        /* ღილაკები */
         .action-btns {
             display: flex;
             gap: 10px;
@@ -275,7 +301,6 @@
         .clear-btn { background: #c0392b; color: white; flex: 1; }
         .btn:disabled { background: #444; color: #777; cursor: not-allowed; box-shadow: none; }
 
-        /* Modal ისტორიისთვის */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -311,22 +336,21 @@
         </div>
     </div>
 
-    <!-- შუა ლაივ სცენა (რულეტკის ეკრანი + დილერი ქალი) -->
+    <!-- შუა ლაივ სცენა -->
     <div class="middle-stage">
         <div class="wheel-box">
             <canvas id="rouletteCanvas" width="300" height="300"></canvas>
         </div>
         <div class="dealer-box">
-            <div class="dealer-status" id="dealerStatus">Place your bets!</div>
-            <!-- დილერი ქალის გამოსახულება -->
-            <img class="dealer-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80" alt="Live Dealer">
+            <!-- საუბრის დინამიური ღრუბელი -->
+            <div class="speech-bubble" id="dealerBubble">გთხოვთ დადოთ ფსონები! 🎲</div>
+            <!-- დილერი ქალი -->
+            <img class="dealer-img" id="dealerImg" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80" alt="Live Dealer">
         </div>
     </div>
 
-    <!-- სტატუსის ბანერი -->
     <div class="status-banner" id="resultText">აირჩიეთ ფსონი და დააჭირეთ "SPIN"-ს</div>
 
-    <!-- ჟეტონები -->
     <div class="chip-selector">
         <div class="chip chip-10 active" onclick="selectChip(10, this)">10</div>
         <div class="chip chip-50" onclick="selectChip(50, this)">50</div>
@@ -334,7 +358,6 @@
         <div class="chip chip-500" onclick="selectChip(500, this)">500</div>
     </div>
 
-    <!-- 3D ფსონების მაგიდა -->
     <div class="table-wrapper">
         <div class="betting-table" id="bettingBoard">
             <div class="cell zero" onclick="placeBet('0', this)">0</div>
@@ -347,14 +370,12 @@
         </div>
     </div>
 
-    <!-- ქმედების ღილაკები -->
     <div class="action-btns">
         <button class="btn clear-btn" id="clearBtn" onclick="clearBets()">გასუფთავება</button>
         <button class="btn spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
     </div>
 </div>
 
-<!-- ისტორიის Modal -->
 <div class="modal-overlay" id="historyModal" onclick="if(event.target.id==='historyModal') closeHistoryModal()">
     <div class="modal-content">
         <div class="modal-header">
@@ -373,7 +394,8 @@ const clearBtn = document.getElementById('clearBtn');
 const resultText = document.getElementById('resultText');
 const balanceText = document.getElementById('balanceText');
 const totalBetText = document.getElementById('totalBetText');
-const dealerStatus = document.getElementById('dealerStatus');
+const dealerBubble = document.getElementById('dealerBubble');
+const dealerImg = document.getElementById('dealerImg');
 
 const dpr = window.devicePixelRatio || 1;
 const displaySize = 300;
@@ -396,7 +418,6 @@ let ballAngle = 0;
 let ballRadius = outerRadius - 20;
 let isSpinning = false;
 
-// Zoom (კამერის მიახლოების) ცვლადები
 let zoomScale = 1;
 let cameraOffsetX = 0;
 let cameraOffsetY = 0;
@@ -407,7 +428,15 @@ let activeBets = {};
 
 updateUI();
 
-// მაგიდის აწყობა
+// დილერის საუბრის ფუნქცია
+function dealerSpeak(text, duration = 4000) {
+    dealerBubble.innerText = text;
+    dealerImg.classList.add('talking');
+    setTimeout(() => {
+        dealerImg.classList.remove('talking');
+    }, duration);
+}
+
 const board = document.getElementById('bettingBoard');
 const rows = [
     [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
@@ -436,6 +465,7 @@ function placeBet(type, el) {
     if (isSpinning) return;
     if (balance < currentChip) {
         resultText.innerText = 'არ გაქვთ საკმარისი ბალანსი!';
+        dealerSpeak('არ გაქვთ საკმარისი თანხა! ⚠️');
         return;
     }
 
@@ -451,6 +481,8 @@ function placeBet(type, el) {
         el.appendChild(chipEl);
     }
     chipEl.innerText = activeBets[type];
+
+    dealerSpeak('ფსონი მიღებულია! 🎯');
 }
 
 function clearBets() {
@@ -461,6 +493,7 @@ function clearBets() {
     activeBets = {};
     document.querySelectorAll('.cell-chip').forEach(c => c.remove());
     updateUI();
+    dealerSpeak('ფსონები გასუფთავდა! ✨');
 }
 
 function updateUI() {
@@ -479,19 +512,16 @@ function getGoldGrad() {
     return g;
 }
 
-// რულეტკის დახატვა დინამიური Zoom კამერით
 function drawRoulette() {
     ctx.save();
     ctx.clearRect(0, 0, displaySize, displaySize);
 
-    // კამერის Zoom-In ტრანსფორმაცია
     if (zoomScale > 1) {
         ctx.translate(centerX, centerY);
         ctx.scale(zoomScale, zoomScale);
         ctx.translate(-centerX + cameraOffsetX, -centerY + cameraOffsetY);
     }
 
-    // ხის გარე რგოლი
     const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 15, centerX, centerY, outerRadius);
     woodGrad.addColorStop(0, '#3a170c');
     woodGrad.addColorStop(1, '#150603');
@@ -501,20 +531,17 @@ function drawRoulette() {
     ctx.fillStyle = woodGrad;
     ctx.fill();
 
-    // ოქროს შიდა კანტი
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius - 10, 0, Math.PI * 2);
     ctx.strokeStyle = getGoldGrad();
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // ბურთულის ტრეკი
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius - 10, 0, Math.PI * 2);
     ctx.fillStyle = '#111';
     ctx.fill();
 
-    // ბორბალი
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(wheelAngle);
@@ -550,7 +577,6 @@ function drawRoulette() {
         ctx.restore();
     }
 
-    // ცენტრალური ოქროს კოშკურა
     ctx.beginPath();
     ctx.arc(0, 0, 22, 0, Math.PI * 2);
     ctx.fillStyle = getGoldGrad();
@@ -565,10 +591,7 @@ function drawRoulette() {
     }
 
     ctx.restore();
-
-    // ბურთულა
     drawBall();
-
     ctx.restore();
 }
 
@@ -591,7 +614,6 @@ function drawBall() {
     ctx.restore();
 }
 
-// სპინისა და Zoom ანიმაციის მართვა
 function spin() {
     if (isSpinning) return;
     
@@ -599,6 +621,7 @@ function spin() {
     for (let k in activeBets) totalBet += activeBets[k];
     if (totalBet === 0) {
         resultText.innerText = 'გთხოვთ ჯერ დადოთ ფსონი!';
+        dealerSpeak('გთხოვთ ჯერ აირჩიოთ ფსონი! 🎲');
         return;
     }
 
@@ -606,7 +629,7 @@ function spin() {
     spinBtn.disabled = true;
     clearBtn.disabled = true;
     resultText.innerText = 'No more bets!';
-    dealerStatus.innerText = 'Spinning...';
+    dealerSpeak('ბორბალი ტრიალებს, წარმატებები! 🎰', 6000);
 
     const winningIndex = Math.floor(Math.random() * totalPockets);
     const winningNumber = numbers[winningIndex];
@@ -633,7 +656,6 @@ function spin() {
     const startBallRadius = outerRadius - 18;
     const targetBallRadius = outerRadius - 42;
 
-    // Zoom-ის საწყისი პარამეტრების განულება
     zoomScale = 1;
     cameraOffsetX = 0;
     cameraOffsetY = 0;
@@ -654,9 +676,8 @@ function spin() {
             const dropProgress = (progress - 0.6) / 0.25;
             ballRadius = startBallRadius - (startBallRadius - targetBallRadius) * Math.sin(dropProgress * Math.PI / 2);
         } else {
-            // ბოლო ფაზაში კამერის ახლოს მიყვანა (Zoom-In ეფექტი მოგებულ უჯრაზე)
             const zoomProgress = (progress - 0.85) / 0.15;
-            zoomScale = 1 + zoomProgress * 1.6; // 2.6x Zoom
+            zoomScale = 1 + zoomProgress * 1.6;
 
             const currentBallX = centerX + Math.cos(ballAngle) * ballRadius;
             const currentBallY = centerY + Math.sin(ballAngle) * ballRadius;
@@ -700,15 +721,14 @@ function evaluateWin(winningNumber, totalBet) {
     document.querySelectorAll('.cell-chip').forEach(c => c.remove());
     updateUI();
 
-    dealerStatus.innerText = `Winning Number: ${winningNumber}`;
-
     if (winAmount > 0) {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}). მოიგეთ $${winAmount}! 🎉`;
+        dealerSpeak(`ვაუ! ამოვიდა ${winningNumber}! მოიგეთ $${winAmount}! 🎉`, 5000);
     } else {
         resultText.innerText = `ამოვიდა: ${winningNumber} (${colorName}).`;
+        dealerSpeak(`ამოვიდა ${winningNumber} (${colorName}). შემდეგში აუცილებლად გაგიმართლებთ! 🍀`, 5000);
     }
 
-    // 2.5 წამში კამერის უკან დაბრუნება (Zoom-Out)
     setTimeout(() => {
         zoomScale = 1;
         cameraOffsetX = 0;
@@ -717,7 +737,6 @@ function evaluateWin(winningNumber, totalBet) {
         isSpinning = false;
         spinBtn.disabled = false;
         clearBtn.disabled = false;
-        dealerStatus.innerText = 'Place your bets!';
     }, 2500);
 }
 
