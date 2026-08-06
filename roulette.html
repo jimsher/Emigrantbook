@@ -12,6 +12,7 @@
         }
         html, body {
             width: 100%;
+            height: 100vh;
             height: 100dvh;
             overflow: hidden; /* სქროლის სრული გაუქმება */
             background: #040a05;
@@ -26,9 +27,10 @@
         .live-studio {
             position: relative;
             width: 100%;
-            max-width: 420px;
+            max-width: 410px;
+            height: 100vh;
             height: 100dvh;
-            max-height: 820px;
+            max-height: 800px;
             background: radial-gradient(circle at 50% 30%, #123821 0%, #030d07 100%);
             border-radius: 12px;
             border: 2px solid rgba(212, 175, 55, 0.5);
@@ -57,23 +59,23 @@
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
             border: none;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 0.72rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
         }
 
-        .balance-info { font-size: 0.78rem; font-weight: bold; }
+        .balance-info { font-size: 0.75rem; font-weight: bold; }
         .balance-val { color: #2ecc71; }
         .bet-val { color: #f1c40f; }
 
-        /* შუა ლაივ სცენა: რულეტკა + ანიმაციური დილერი */
+        /* შუა ლაივ სცენა: რულეტკა + ნამდვილი დილერი გოგო */
         .middle-stage {
             position: relative;
             width: 100%;
-            height: 155px;
+            height: 145px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -98,7 +100,7 @@
             display: block;
         }
 
-        /* ჩაშენებული ცოცხალი ანიმაციური დილერის ბოქსი */
+        /* ნამდვილი დილერის ბოქსი */
         .dealer-box {
             position: relative;
             width: 45%;
@@ -107,25 +109,25 @@
             overflow: hidden;
             border: 1.5px solid rgba(212, 175, 55, 0.4);
             box-shadow: 0 6px 16px rgba(0,0,0,0.8);
-            background: radial-gradient(circle at center, #1a4a2a 0%, #06170c 100%);
+            background: #000;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: center;
         }
 
-        /* დილერი ქალის SVG ანიმაციით */
-        .dealer-svg {
-            width: 85%;
-            height: 115px;
-            transform-origin: bottom center;
-            animation: dealerBreathe 3.5s ease-in-out infinite;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
+        /* ნამდვილი გოგო დილერის ფოტო ცოცხალი ანიმაციით */
+        .dealer-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            filter: contrast(1.08) brightness(0.95);
+            animation: liveDealerMove 4s ease-in-out infinite alternate;
         }
 
-        @keyframes dealerBreathe {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-3px) rotate(0.8deg); }
+        @keyframes liveDealerMove {
+            0% { transform: scale(1) translateY(0); }
+            100% { transform: scale(1.04) translateY(-3px); }
         }
 
         /* საუბრის ღრუბელი (Speech Bubble) */
@@ -158,7 +160,7 @@
             color: #f39c12;
             text-align: center;
             padding: 3px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: bold;
             border-radius: 6px;
             min-height: 22px;
@@ -208,7 +210,7 @@
         }
 
         .betting-table {
-            transform: rotateX(10deg);
+            transform: rotateX(8deg);
             transform-origin: bottom center;
             display: grid;
             grid-template-columns: 24px repeat(12, 1fr);
@@ -230,8 +232,8 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.65rem;
-            height: 20px;
+            font-size: 0.64rem;
+            height: 19px;
             cursor: pointer;
             position: relative;
             border-radius: 2px;
@@ -266,20 +268,21 @@
             pointer-events: none;
         }
 
-        /* ღილაკების პანელი - 100%-ით ჩანს ეკრანის ბოლოში */
+        /* ღილაკების პანელი - გარანტირებულად ჩანს ეკრანის ბოლოში */
         .action-btns {
             display: flex;
             gap: 8px;
             width: 100%;
             flex-shrink: 0;
-            margin-top: 4px;
+            margin-top: 2px;
             padding-bottom: 2px;
+            z-index: 30;
         }
 
         .btn {
             font-size: 0.85rem;
             font-weight: bold;
-            padding: 9px 4px;
+            padding: 10px 4px;
             border: none;
             border-radius: 14px;
             cursor: pointer;
@@ -291,7 +294,7 @@
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
             flex: 2;
-            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.5);
         }
 
         .clear-btn { background: #c0392b; color: white; flex: 1; }
@@ -332,7 +335,7 @@
         </div>
     </div>
 
-    <!-- შუა ლაივ სცენა (რულეტკა + ჩაშენებული ანიმაციური დილერი) -->
+    <!-- შუა ლაივ სცენა (რულეტკა + ნამდვილი ლაივ დილერი გოგო) -->
     <div class="middle-stage">
         <div class="wheel-box">
             <canvas id="rouletteCanvas" width="300" height="300"></canvas>
@@ -340,29 +343,8 @@
         <div class="dealer-box">
             <!-- საუბრის დინამიური ღრუბელი -->
             <div class="speech-bubble" id="dealerBubble">გთხოვთ დადოთ ფსონები! 🎲</div>
-            
-            <!-- ანიმაციური SVG დილერი ქალი (გამომწვევი წითელი პიჯაკით) -->
-            <svg class="dealer-svg" viewBox="0 0 100 120">
-                <!-- თმები -->
-                <path d="M 25,45 Q 15,65 22,95 A 30,30 0 0,0 78,95 Q 85,65 75,45 Q 50,15 25,45 Z" fill="#2c1a0e"/>
-                <!-- სახე -->
-                <ellipse cx="50" cy="42" rx="16" ry="20" fill="#fcd7b6"/>
-                <!-- თვალები და მაკიაჟი -->
-                <ellipse cx="43" cy="40" rx="3" ry="2" fill="#3a2312"/>
-                <ellipse cx="57" cy="40" rx="3" ry="2" fill="#3a2312"/>
-                <path d="M 39,37 Q 43,35 47,37" stroke="#111" stroke-width="0.8" fill="none"/>
-                <path d="M 53,37 Q 57,35 61,37" stroke="#111" stroke-width="0.8" fill="none"/>
-                <!-- ტუჩები -->
-                <path d="M 45,52 Q 50,56 55,52 Q 50,54 45,52 Z" fill="#c0392b"/>
-                <!-- ყელი და დეკოლტე -->
-                <path d="M 42,60 L 58,60 L 58,68 Q 50,75 42,68 Z" fill="#fcd7b6"/>
-                <!-- წითელი პიჯაკი / დილერის ფორმა -->
-                <path d="M 22,70 Q 38,64 50,76 Q 62,64 78,70 L 88,120 L 12,120 Z" fill="#a93226"/>
-                <!-- პერანგის შიდა თეთრი ნაწილი -->
-                <polygon points="42,70 58,70 50,88" fill="#ffffff"/>
-                <!-- ოქროს ყელსახვევი / გულსაბნევი -->
-                <circle cx="50" cy="85" r="2.5" fill="#f1c40f"/>
-            </svg>
+            <!-- ნამდვილი გოგო დილერი კაზინოში -->
+            <img class="dealer-img" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=500&q=80" alt="Live Casino Dealer">
         </div>
     </div>
 
