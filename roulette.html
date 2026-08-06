@@ -2,7 +2,7 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Luxury HD Casino Roulette</title>
     <style>
         * {
@@ -16,10 +16,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #fff;
-            padding: 20px 10px;
+            padding: 10px 5px;
             overflow-x: hidden;
         }
 
@@ -27,13 +27,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            background: rgba(0, 0, 0, 0.65);
-            padding: 20px;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(212, 175, 55, 0.25);
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.9), inset 0 0 15px rgba(212, 175, 55, 0.25);
             border: 2px solid rgba(212, 175, 55, 0.4);
-            max-width: 650px;
+            max-width: 450px;
             width: 100%;
         }
 
@@ -41,12 +41,12 @@
             display: flex;
             justify-content: space-between;
             width: 100%;
-            background: rgba(15, 30, 20, 0.8);
-            padding: 12px 20px;
-            border-radius: 12px;
+            background: rgba(15, 30, 20, 0.85);
+            padding: 8px 14px;
+            border-radius: 10px;
             border: 1px solid rgba(212, 175, 55, 0.3);
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
         }
 
         .balance-val { color: #2ecc71; }
@@ -54,20 +54,27 @@
 
         .canvas-wrapper {
             position: relative;
-            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.9));
-            max-width: 100%;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.9));
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         canvas {
             display: block;
-            max-width: 100%;
-            height: auto;
+            width: 100% !important;
+            height: 100% !important;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
         }
 
         .result-box {
-            font-size: 1.3rem;
+            font-size: 1.05rem;
             font-weight: bold;
-            height: 35px;
+            min-height: 24px;
             color: #f39c12;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             text-align: center;
@@ -76,30 +83,29 @@
         /* ენერგიული ჟეტონები (Chips) */
         .chip-selector {
             display: flex;
-            gap: 12px;
-            margin-bottom: 5px;
+            gap: 10px;
         }
 
         .chip {
-            width: 45px;
-            height: 45px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
-            border: 3px dashed #fff;
+            border: 2px dashed #fff;
             box-shadow: 0 4px 8px rgba(0,0,0,0.5);
             transition: all 0.2s ease;
             user-select: none;
         }
 
-        .chip:hover { transform: scale(1.1); }
+        .chip:hover { transform: scale(1.08); }
         .chip.active {
-            transform: scale(1.15);
-            box-shadow: 0 0 15px #f1c40f;
+            transform: scale(1.12);
+            box-shadow: 0 0 12px #f1c40f;
             border-style: solid;
         }
 
@@ -111,13 +117,13 @@
         /* ფსონების მაგიდა (Betting Board) */
         .betting-table {
             display: grid;
-            grid-template-columns: 40px repeat(12, 1fr);
-            grid-gap: 3px;
+            grid-template-columns: 32px repeat(12, 1fr);
+            grid-gap: 2px;
             width: 100%;
             background: #0f381e;
-            padding: 10px;
-            border-radius: 12px;
-            border: 2px solid #d4af37;
+            padding: 6px;
+            border-radius: 10px;
+            border: 1.5px solid #d4af37;
             user-select: none;
         }
 
@@ -129,11 +135,11 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 0.9rem;
-            height: 38px;
+            font-size: 0.75rem;
+            height: 28px;
             cursor: pointer;
             position: relative;
-            border-radius: 4px;
+            border-radius: 3px;
             transition: background 0.2s;
         }
 
@@ -152,39 +158,40 @@
             grid-column: 2 / span 12;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-gap: 3px;
-            margin-top: 3px;
+            grid-gap: 2px;
+            margin-top: 2px;
         }
 
         .cell-chip {
             position: absolute;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             background: #f1c40f;
             color: #111;
             border-radius: 50%;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            border: 1.5px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
             pointer-events: none;
         }
 
         .action-btns {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             width: 100%;
             justify-content: center;
         }
 
         .btn {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: bold;
-            padding: 12px 30px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 30px;
+            border-radius: 25px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-transform: uppercase;
@@ -194,13 +201,13 @@
         .spin-btn {
             background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
             color: #111;
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
             flex: 2;
         }
 
         .spin-btn:hover {
             background: linear-gradient(135deg, #f1c40f 0%, #b8860b 100%);
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+            box-shadow: 0 6px 18px rgba(212, 175, 55, 0.6);
         }
 
         .clear-btn {
@@ -212,9 +219,11 @@
         .clear-btn:hover { background: #e74c3c; }
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
 
-        @media (max-width: 500px) {
-            .cell { font-size: 0.75rem; height: 32px; }
-            .outside-bets .cell { font-size: 0.7rem; }
+        @media (max-width: 380px) {
+            .cell { font-size: 0.68rem; height: 25px; }
+            .outside-bets .cell { font-size: 0.62rem; }
+            .chip { width: 34px; height: 34px; font-size: 0.75rem; }
+            .dashboard { font-size: 0.85rem; }
         }
     </style>
 </head>
@@ -227,7 +236,7 @@
     </div>
 
     <div class="canvas-wrapper">
-        <canvas id="rouletteCanvas" width="500" height="500"></canvas>
+        <canvas id="rouletteCanvas" width="400" height="400"></canvas>
     </div>
 
     <div class="result-box" id="resultText">აირჩიეთ ფსონი და დააჭირეთ "SPIN"-ს</div>
@@ -268,18 +277,16 @@ const resultText = document.getElementById('resultText');
 const balanceText = document.getElementById('balanceText');
 const totalBetText = document.getElementById('totalBetText');
 
-// Retina HD მხარდაჭერა
+// Retina HD მკვეთრი გამოსახულება
 const dpr = window.devicePixelRatio || 1;
-const displaySize = 500;
+const displaySize = 400;
 canvas.width = displaySize * dpr;
 canvas.height = displaySize * dpr;
-canvas.style.width = displaySize + 'px';
-canvas.style.height = displaySize + 'px';
 ctx.scale(dpr, dpr);
 
 const centerX = displaySize / 2;
 const centerY = displaySize / 2;
-const outerRadius = 220;
+const outerRadius = 180;
 
 const numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3];
 const redNumbers = new Set([32, 19, 21, 25, 34, 27, 13, 11, 8, 10, 24, 33, 20, 31, 22, 29, 28, 35]);
@@ -289,13 +296,13 @@ const sliceAngle = (Math.PI * 2) / totalPockets;
 
 let wheelAngle = 0;
 let ballAngle = 0;
-let ballRadius = outerRadius - 35;
+let ballRadius = outerRadius - 28;
 let isSpinning = false;
 
 // თამაშის მონაცემები
 let balance = 1000;
 let currentChip = 10;
-let activeBets = {}; // { '32': 50, 'RED': 100 }
+let activeBets = {};
 
 // მაგიდის გენერირება (3x12 ბადე)
 const board = document.getElementById('bettingBoard');
@@ -334,7 +341,6 @@ function placeBet(type, el) {
 
     updateUI();
 
-    // ჟეტონის გამოსახვა უჯრაზე
     let chipEl = el.querySelector('.cell-chip');
     if (!chipEl) {
         chipEl = document.createElement('div');
@@ -375,8 +381,8 @@ function getGoldGrad() {
 function drawRoulette() {
     ctx.clearRect(0, 0, displaySize, displaySize);
 
-    // 1. გარე მდიდრული ხის ჩარჩო
-    const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 25, centerX, centerY, outerRadius);
+    // 1. გარე ხის ჩარჩო
+    const woodGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 20, centerX, centerY, outerRadius);
     woodGrad.addColorStop(0, '#3a170c');
     woodGrad.addColorStop(0.5, '#6a2915');
     woodGrad.addColorStop(1, '#150603');
@@ -384,26 +390,26 @@ function drawRoulette() {
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
     ctx.fillStyle = woodGrad;
-    ctx.shadowColor = 'rgba(0,0,0,0.9)';
-    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 12;
     ctx.fill();
     ctx.shadowBlur = 0;
 
     // 2. ოქროს შიდა კანტი
     ctx.beginPath();
-    ctx.arc(centerX, centerY, outerRadius - 15, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, outerRadius - 12, 0, Math.PI * 2);
     ctx.strokeStyle = getGoldGrad();
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
     // 3. ბურთულას ტრეკი
-    const trackGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 50, centerX, centerY, outerRadius - 15);
+    const trackGrad = ctx.createRadialGradient(centerX, centerY, outerRadius - 40, centerX, centerY, outerRadius - 12);
     trackGrad.addColorStop(0, '#111');
     trackGrad.addColorStop(0.8, '#222');
     trackGrad.addColorStop(1, '#050505');
 
     ctx.beginPath();
-    ctx.arc(centerX, centerY, outerRadius - 15, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, outerRadius - 12, 0, Math.PI * 2);
     ctx.fillStyle = trackGrad;
     ctx.fill();
 
@@ -412,7 +418,7 @@ function drawRoulette() {
     ctx.translate(centerX, centerY);
     ctx.rotate(wheelAngle);
 
-    const wheelRadius = outerRadius - 50;
+    const wheelRadius = outerRadius - 40;
 
     for (let i = 0; i < totalPockets; i++) {
         const startAngle = i * sliceAngle;
@@ -429,7 +435,7 @@ function drawRoulette() {
         ctx.fillStyle = color;
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -439,21 +445,21 @@ function drawRoulette() {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 11px Arial';
+        ctx.font = 'bold 10px Arial';
         ctx.shadowColor = 'black';
         ctx.shadowBlur = 2;
-        ctx.fillText(num, wheelRadius - 18, 0);
+        ctx.fillText(num, wheelRadius - 15, 0);
         ctx.restore();
     }
 
     // ცენტრალური ოქროს კოშკურა
-    const centerGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 35);
+    const centerGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, 28);
     centerGrad.addColorStop(0, '#fff5cc');
     centerGrad.addColorStop(0.4, '#d4af37');
     centerGrad.addColorStop(1, '#553c06');
 
     ctx.beginPath();
-    ctx.arc(0, 0, 35, 0, Math.PI * 2);
+    ctx.arc(0, 0, 28, 0, Math.PI * 2);
     ctx.fillStyle = centerGrad;
     ctx.fill();
 
@@ -461,17 +467,17 @@ function drawRoulette() {
     for (let a = 0; a < 4; a++) {
         ctx.rotate(Math.PI / 2);
         ctx.beginPath();
-        ctx.rect(-3, 0, 6, 45);
+        ctx.rect(-2.5, 0, 5, 36);
         ctx.fillStyle = getGoldGrad();
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(0, 45, 5, 0, Math.PI * 2);
+        ctx.arc(0, 36, 4, 0, Math.PI * 2);
         ctx.fill();
     }
 
     ctx.restore();
 
-    // 5. ბურთულა (3D ეფექტით)
+    // 5. ბურთულა
     drawBall();
 }
 
@@ -481,9 +487,9 @@ function drawBall() {
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(ballX, ballY, 6, 0, Math.PI * 2);
+    ctx.arc(ballX, ballY, 5, 0, Math.PI * 2);
     
-    const ballGrad = ctx.createRadialGradient(ballX - 2, ballY - 2, 1, ballX, ballY, 6);
+    const ballGrad = ctx.createRadialGradient(ballX - 1.5, ballY - 1.5, 1, ballX, ballY, 5);
     ballGrad.addColorStop(0, '#ffffff');
     ballGrad.addColorStop(0.7, '#dcdcdc');
     ballGrad.addColorStop(1, '#777777');
@@ -491,8 +497,8 @@ function drawBall() {
     ctx.fillStyle = ballGrad;
     ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
     ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    ctx.shadowOffsetX = 1.5;
+    ctx.shadowOffsetY = 1.5;
     ctx.fill();
     ctx.restore();
 }
@@ -521,8 +527,8 @@ function spin() {
     const initialWheelSpeed = 0.08;
     const initialBallSpeed = -0.22;
 
-    const startBallRadius = outerRadius - 32;
-    const targetBallRadius = outerRadius - 68;
+    const startBallRadius = outerRadius - 25;
+    const targetBallRadius = outerRadius - 55;
 
     function animate(currentTime) {
         const elapsed = currentTime - startTime;
@@ -556,7 +562,6 @@ function spin() {
     requestAnimationFrame(animate);
 }
 
-// მოგების გაანგარიშება რეალური კაზინოს წესებით
 function evaluateWin(winningNumber) {
     let winAmount = 0;
     const isRed = redNumbers.has(winningNumber);
@@ -566,17 +571,14 @@ function evaluateWin(winningNumber) {
     for (let betKey in activeBets) {
         const amount = activeBets[betKey];
 
-        // კონკრეტულ ციფრზე მოგება (35x + ორიგინალი ფსონი)
         if (betKey === winningNumber.toString()) {
             winAmount += amount * 36;
         }
-        // წითელი / შავი (1x + ორიგინალი ფსონი)
         else if (betKey === 'RED' && isRed) {
             winAmount += amount * 2;
         } else if (betKey === 'BLACK' && !isRed && winningNumber !== 0) {
             winAmount += amount * 2;
         }
-        // ლუწი / კენტი (1x + ორიგინალი ფსონი)
         else if (betKey === 'EVEN' && isEven) {
             winAmount += amount * 2;
         } else if (betKey === 'ODD' && isOdd) {
