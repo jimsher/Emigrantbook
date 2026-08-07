@@ -273,7 +273,7 @@
     }
 
     /* =========================================================
-       FULL-SCREEN TRANSACTIONS HISTORY MODAL STYLES
+       FULL-SCREEN OVERLAY COMMON STYLES (Modals)
        ========================================================= */
     .tx-modal-overlay {
       position: fixed;
@@ -499,6 +499,186 @@
       font-size: 48px;
       opacity: 0.5;
     }
+
+    /* =========================================================
+       BUY AKHO COINS (TOP-UP) OVERLAY STYLES
+       ========================================================= */
+    .topup-banner {
+      background: linear-gradient(135deg, rgba(220, 174, 54, 0.15) 0%, rgba(46, 213, 115, 0.1) 100%);
+      border: 1px solid rgba(220, 174, 54, 0.25);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      margin-bottom: 16px;
+    }
+
+    .topup-banner-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .topup-banner-title {
+      font-size: 13px;
+      color: #aaaaaa;
+    }
+
+    .topup-banner-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #dcae36;
+    }
+
+    .topup-section-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #dddddd;
+      margin-bottom: 10px;
+    }
+
+    /* Coin Package Cards Grid */
+    .packages-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .pkg-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .pkg-card:active {
+      transform: scale(0.97);
+    }
+
+    .pkg-card.selected {
+      border-color: #2ed573;
+      background: rgba(46, 213, 115, 0.12);
+      box-shadow: 0 0 15px rgba(46, 213, 115, 0.25);
+    }
+
+    .pkg-badge {
+      position: absolute;
+      top: -8px;
+      right: 10px;
+      background: #dcae36;
+      color: #111111;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    .pkg-coins {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pkg-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2ed573;
+    }
+
+    /* Payment Method Selector */
+    .pay-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .pay-method-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .pay-method-card.selected {
+      border-color: #2ed573;
+      background: rgba(46, 213, 115, 0.08);
+    }
+
+    .pay-method-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .pay-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #666666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pay-method-card.selected .pay-radio {
+      border-color: #2ed573;
+      background: #2ed573;
+    }
+
+    /* Bottom Sticky Pay CTA Button */
+    .topup-cta-container {
+      margin-top: auto;
+      padding: 16px 0;
+    }
+
+    .topup-pay-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #2ed573 0%, #26af5f 100%);
+      border: none;
+      color: #0d0d11;
+      padding: 16px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(46, 213, 115, 0.35);
+      transition: transform 0.15s ease, opacity 0.2s;
+    }
+
+    .topup-pay-btn:active {
+      transform: scale(0.98);
+    }
+
+    .topup-pay-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -535,7 +715,7 @@
     </div>
 
     <!-- Akho Coins Badge (Приобрести Монеты) -->
-    <div class="akho-pill-card" onclick="topUpAkho()">
+    <div class="akho-pill-card" onclick="openTopUpModal()">
       <div class="akho-pill-left">
         <div class="akho-icon-badge">A</div>
         <span>აკჰო: <strong id="akho-coins-val">0</strong></span>
@@ -604,6 +784,93 @@
     </div>
   </div>
 
+  <!-- =========================================================
+       FULL-SCREEN BUY AKHO COINS (TOP-UP) OVERLAY PAGE
+       ========================================================= -->
+  <div class="tx-modal-overlay" id="topUpModal">
+    <div class="tx-modal-content">
+      <!-- Header -->
+      <div class="tx-header">
+        <button class="tx-back-btn" onclick="closeTopUpModal()">‹</button>
+        <div class="tx-modal-title" id="lbl-topup-title">აკჰოს შეძენა</div>
+        <div style="width: 40px;"></div>
+      </div>
+
+      <!-- Scrollable content area -->
+      <div style="flex: 1; overflow-y: auto; padding-top: 10px;">
+        <!-- Banner Quick Balance -->
+        <div class="topup-banner">
+          <div class="topup-banner-left">
+            <span class="topup-banner-title" id="lbl-current-coins">მიმდინარე აკჰო</span>
+            <span class="topup-banner-val"><span id="topup-current-val">0</span> AKHO</span>
+          </div>
+          <div class="akho-icon-badge" style="width:36px; height:36px; font-size:18px;">A</div>
+        </div>
+
+        <div class="topup-section-label" id="lbl-choose-pkg">აირჩიეთ პაკეტი</div>
+
+        <!-- Coin Packages Grid -->
+        <div class="packages-grid">
+          <div class="pkg-card" onclick="selectPackage(100, 1.00, this)">
+            <div class="pkg-coins">100 <span>AKHO</span></div>
+            <div class="pkg-price">$1.00</div>
+          </div>
+
+          <div class="pkg-card selected" onclick="selectPackage(500, 4.99, this)">
+            <div class="pkg-badge" id="lbl-badge-popular">პოპულარული</div>
+            <div class="pkg-coins">500 <span>AKHO</span></div>
+            <div class="pkg-price">$4.99</div>
+          </div>
+
+          <div class="pkg-card" onclick="selectPackage(1000, 8.99, this)">
+            <div class="pkg-badge">+10%</div>
+            <div class="pkg-coins">1,000 <span>AKHO</span></div>
+            <div class="pkg-price">$8.99</div>
+          </div>
+
+          <div class="pkg-card" onclick="selectPackage(2500, 19.99, this)">
+            <div class="pkg-badge">+15%</div>
+            <div class="pkg-coins">2,500 <span>AKHO</span></div>
+            <div class="pkg-price">$19.99</div>
+          </div>
+
+          <div class="pkg-card" style="grid-column: span 2;" onclick="selectPackage(5000, 38.99, this)">
+            <div class="pkg-badge" id="lbl-badge-best">საუკეთესო ფასი +20%</div>
+            <div class="pkg-coins">5,000 <span>AKHO</span></div>
+            <div class="pkg-price">$38.99</div>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="topup-section-label" id="lbl-pay-method">გადახდის მეთოდი</div>
+        <div class="pay-methods">
+          <div class="pay-method-card selected" onclick="selectPayMethod('card', this)">
+            <div class="pay-method-left">
+              <span>💳</span>
+              <span id="lbl-pay-card">საბანკო ბარათი (Visa / Mastercard)</span>
+            </div>
+            <div class="pay-radio"></div>
+          </div>
+
+          <div class="pay-method-card" onclick="selectPayMethod('applepay', this)">
+            <div class="pay-method-left">
+              <span>🍏</span>
+              <span>Apple Pay / Google Pay</span>
+            </div>
+            <div class="pay-radio"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="topup-cta-container">
+        <button class="topup-pay-btn" id="btn-pay-submit" onclick="processCoinPurchase()">
+          <span id="lbl-pay-btn">შეძენა - $4.99</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -622,6 +889,10 @@
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
     var rawTransactions = []; // Holds real Firestore documents
     var activeFilter = 'all';
+
+    // Active selection state for Top-Up
+    var selectedPackage = { coins: 500, price: 4.99 };
+    var selectedPaymentMethod = 'card';
 
     var TRANSLATIONS = {
       ka: {
@@ -644,7 +915,17 @@
         completedStatus: "წარმატებული",
         defaultIncomeTitle: "ბალანსის შევსება",
         defaultExpenseTitle: "გადახდა / ხარჯი",
-        defaultRewardTitle: "მიღებული ჯილდო"
+        defaultRewardTitle: "მიღებული ჯილდო",
+        topupTitle: "აკჰოს შეძენა",
+        currentCoins: "მიმდინარე აკჰო",
+        choosePkg: "აირჩიეთ პაკეტი",
+        payMethod: "გადახდის მეთოდი",
+        payCard: "საბანკო ბარათი (Visa / Mastercard)",
+        payBtnPrefix: "შეძენა - $",
+        badgePopular: "პოპულარული",
+        badgeBest: "საუკეთესო ფასი +20%",
+        purchaseSuccess: "გილოცავთ! ბალანსი წარმატებით შეივსო ",
+        processing: "მუშავდება..."
       },
       en: {
         title: "Balance",
@@ -666,7 +947,17 @@
         completedStatus: "Completed",
         defaultIncomeTitle: "Balance Top-up",
         defaultExpenseTitle: "Payment / Expense",
-        defaultRewardTitle: "Received Reward"
+        defaultRewardTitle: "Received Reward",
+        topupTitle: "Buy AKHO Coins",
+        currentCoins: "Current AKHO",
+        choosePkg: "Choose Package",
+        payMethod: "Payment Method",
+        payCard: "Bank Card (Visa / Mastercard)",
+        payBtnPrefix: "Pay - $",
+        badgePopular: "POPULAR",
+        badgeBest: "BEST VALUE +20%",
+        purchaseSuccess: "Congratulations! Top-up successful ",
+        processing: "Processing..."
       },
       ru: {
         title: "Баланс",
@@ -688,7 +979,17 @@
         completedStatus: "Успешно",
         defaultIncomeTitle: "Пополнение баланса",
         defaultExpenseTitle: "Списание / Расход",
-        defaultRewardTitle: "Награда"
+        defaultRewardTitle: "Награда",
+        topupTitle: "Купить Монеты AKHO",
+        currentCoins: "Текущие AKHO",
+        choosePkg: "Выберите пакет",
+        payMethod: "Способ оплаты",
+        payCard: "Банковская карта (Visa / Mastercard)",
+        payBtnPrefix: "Оплатить - $",
+        badgePopular: "ПОПУЛЯРНОЕ",
+        badgeBest: "ВЫГОДНО +20%",
+        purchaseSuccess: "Поздравляем! Баланс успешно пополнен ",
+        processing: "Обработка..."
       }
     };
 
@@ -711,6 +1012,22 @@
       document.getElementById('btn-filter-income').innerText = lang.filterIncome;
       document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
       document.getElementById('btn-filter-reward').innerText = lang.filterReward;
+
+      // Top-Up modal translations
+      document.getElementById('lbl-topup-title').innerText = lang.topupTitle;
+      document.getElementById('lbl-current-coins').innerText = lang.currentCoins;
+      document.getElementById('lbl-choose-pkg').innerText = lang.choosePkg;
+      document.getElementById('lbl-pay-method').innerText = lang.payMethod;
+      document.getElementById('lbl-pay-card').innerText = lang.payCard;
+      if (document.getElementById('lbl-badge-popular')) document.getElementById('lbl-badge-popular').innerText = lang.badgePopular;
+      if (document.getElementById('lbl-badge-best')) document.getElementById('lbl-badge-best').innerText = lang.badgeBest;
+
+      updatePayButtonText();
+    }
+
+    function updatePayButtonText() {
+      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+      document.getElementById('lbl-pay-btn').innerText = lang.payBtnPrefix + selectedPackage.price.toFixed(2);
     }
 
     // Helper function to convert Firestore Timestamp or JS Date into nice format
@@ -736,6 +1053,7 @@
             var balance = data.balance || 0;
             document.getElementById('main-balance-val').innerText = parseFloat(balance).toFixed(2);
             document.getElementById('akho-coins-val').innerText = Math.floor(balance);
+            document.getElementById('topup-current-val').innerText = Math.floor(balance);
             
             if (data.language) {
               currentLang = data.language;
@@ -752,12 +1070,90 @@
       }
     });
 
-    function topUpAkho() {
-      alert("ბალანსის შევსების სისტემა მალე გააქტიურდება!");
-    }
-
     function openAkhoInfo() {
       alert("აკჰო (AKHO) წარმოადგენს Emigrantbook-ის შიდა ციფრულ ვალუტას.");
+    }
+
+    /* =========================================================
+       BUY AKHO COINS (TOP-UP) LOGIC
+       ========================================================= */
+    function openTopUpModal() {
+      const modal = document.getElementById('topUpModal');
+      modal.style.display = 'flex';
+      setTimeout(function() {
+        modal.classList.add('active');
+      }, 10);
+    }
+
+    function closeTopUpModal() {
+      const modal = document.getElementById('topUpModal');
+      modal.classList.remove('active');
+      setTimeout(function() {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    function selectPackage(coins, price, element) {
+      selectedPackage = { coins: coins, price: price };
+      var pkgCards = document.querySelectorAll('.pkg-card');
+      pkgCards.forEach(function(card) { card.classList.remove('selected'); });
+      element.classList.add('selected');
+      updatePayButtonText();
+    }
+
+    function selectPayMethod(method, element) {
+      selectedPaymentMethod = method;
+      var methodCards = document.querySelectorAll('.pay-method-card');
+      methodCards.forEach(function(card) { card.classList.remove('selected'); });
+      element.classList.add('selected');
+    }
+
+    // REAL FIRESTORE TRANSACTION: Top-up coins and write log
+    function processCoinPurchase() {
+      var user = auth.currentUser;
+      if (!user) {
+        alert("ავტორიზაცია აუცილებელია!");
+        return;
+      }
+
+      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+      var btn = document.getElementById('btn-pay-submit');
+      var originalText = document.getElementById('lbl-pay-btn').innerText;
+
+      btn.disabled = true;
+      document.getElementById('lbl-pay-btn').innerText = lang.processing;
+
+      var batch = db.batch();
+      var userRef = db.collection('profiles').doc(user.uid);
+      var newTxRef = userRef.collection('transactions').doc();
+
+      // 1) Increment User's Balance
+      batch.update(userRef, {
+        balance: firebase.firestore.FieldValue.increment(selectedPackage.coins)
+      });
+
+      // 2) Write Transaction Record
+      batch.set(newTxRef, {
+        type: 'income',
+        title: lang.topupTitle,
+        amount: '+ ' + selectedPackage.coins + ' AKHO',
+        price: '$' + selectedPackage.price.toFixed(2),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: lang.completedStatus
+      });
+
+      // Commit Batch Write to Firestore
+      batch.commit().then(function() {
+        btn.disabled = false;
+        document.getElementById('lbl-pay-btn').innerText = originalText;
+        alert(lang.purchaseSuccess + selectedPackage.coins + " AKHO!");
+        closeTopUpModal();
+      }).catch(function(error) {
+        console.error("Topup error:", error);
+        btn.disabled = false;
+        document.getElementById('lbl-pay-btn').innerText = originalText;
+        alert("შეცდომა: " + error.message);
+      });
     }
 
     /* =========================================================
