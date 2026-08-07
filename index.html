@@ -2165,66 +2165,63 @@ auth.onAuthStateChanged(function(user) {
       });
       messengerUnsubscribeGroup = [];
 
-      db.collection('friend_requests')
-        .where('status', '==', 'accepted')
-        .get()
-        .then(function(snapshot) {
-          let friendIds = [];
-          snapshot.forEach(function(docSnap) {
-            let req = docSnap.data();
-            if (req.sender_id === currentUser.uid) friendIds.push(req.receiver_id);
-            else if (req.receiver_id === currentUser.uid) friendIds.push(req.sender_id);
-          });
+      Promise.all([
+        db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+        db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+      ]).then(function(results) {
+        let friendIds = [];
+        results[0].forEach(function(docSnap) { friendIds.push(docSnap.data().receiver_id); });
+        results[1].forEach(function(docSnap) { friendIds.push(docSnap.data().sender_id); });
 
-          if (friendIds.length === 0) {
-            var badge = document.getElementById('messenger-badge');
-            if (badge) badge.style.display = 'none';
-            return;
-          }
+        if (friendIds.length === 0) {
+          var badge = document.getElementById('messenger-badge');
+          if (badge) badge.style.display = 'none';
+          return;
+        }
 
-          let unreadChatsMap = {};
-          let processed = 0;
+        let unreadChatsMap = {};
+        let processed = 0;
 
-          friendIds.forEach(function(fId) {
-            let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
-            
-            db.collection('chats').doc(chatId).collection('messages')
-              .where('read', '==', false)
-              .get()
-              .then(function(msgsSnap) {
-                processed++;
-                let unreadCountFromFriend = 0;
-                msgsSnap.forEach(function(msgDoc) {
-                  if (msgDoc.data().senderId !== currentUser.uid) {
-                    unreadCountFromFriend++;
-                  }
-                });
-
-                if (unreadCountFromFriend > 0) {
-                  unreadChatsMap[fId] = true;
-                } else {
-                  delete unreadChatsMap[fId];
+        friendIds.forEach(function(fId) {
+          let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
+          
+          db.collection('chats').doc(chatId).collection('messages')
+            .where('read', '==', false)
+            .get()
+            .then(function(msgsSnap) {
+              processed++;
+              let unreadCountFromFriend = 0;
+              msgsSnap.forEach(function(msgDoc) {
+                if (msgDoc.data().senderId !== currentUser.uid) {
+                  unreadCountFromFriend++;
                 }
-
-                if (processed === friendIds.length) {
-                  let totalUnreadChats = Object.keys(unreadChatsMap).length;
-                  var badge = document.getElementById('messenger-badge');
-                  if (badge) {
-                    if (totalUnreadChats > 0) {
-                      badge.innerText = totalUnreadChats;
-                      badge.style.display = 'flex';
-                    } else {
-                      badge.style.display = 'none';
-                    }
-                  }
-                }
-              }).catch(function(err) {
-                console.error("Messages get error:", err);
               });
-          });
-        }).catch(function(err) {
-          console.error("Friend requests get error:", err);
+
+              if (unreadCountFromFriend > 0) {
+                unreadChatsMap[fId] = true;
+              } else {
+                delete unreadChatsMap[fId];
+              }
+
+              if (processed === friendIds.length) {
+                let totalUnreadChats = Object.keys(unreadChatsMap).length;
+                var badge = document.getElementById('messenger-badge');
+                if (badge) {
+                  if (totalUnreadChats > 0) {
+                    badge.innerText = totalUnreadChats;
+                    badge.style.display = 'flex';
+                  } else {
+                    badge.style.display = 'none';
+                  }
+                }
+              }
+            }).catch(function(err) {
+              console.error("Messages get error:", err);
+            });
         });
+      }).catch(function(err) {
+        console.error("Friend requests get error:", err);
+      });
     }
 
     function subscribeToGlobalNotifications() {
@@ -2322,15 +2319,22 @@ auth.onAuthStateChanged(function(user) {
     
 
     function subscribeTotalUsersCount() {
-      db.collection('profiles').get().then(function(snapshot) {
-        var totalCount = snapshot.size;
-        var badgeEl = document.getElementById('total-users-badge');
-        if (badgeEl) {
-          badgeEl.innerText = totalCount;
-        }
-      }).catch(function(err) {
-        console.error("Total users get error:", err);
-      });
+      if (typeof db.collection('profiles').count === 'function') {
+        db.collection('profiles').count().get().then(function(snapshot) {
+          var totalCount = snapshot.data().count;
+          var badgeEl = document.getElementById('total-users-badge');
+          if (badgeEl) badgeEl.innerText = totalCount;
+        }).catch(function(err) {
+          console.error("Total users count error:", err);
+        });
+      } else {
+        db.collection('profiles').limit(100).get().then(function(snapshot) {
+          var badgeEl = document.getElementById('total-users-badge');
+          if (badgeEl) badgeEl.innerText = snapshot.size;
+        }).catch(function(err) {
+          console.error("Total users fallback get error:", err);
+        });
+      }
     }
 
     function checkPendingRequestsCount() {
@@ -2720,13 +2724,17 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function renderCommentsCountOnly(post) {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
+      if (typeof post.comments_count === 'number') {
+        countLabels.forEach(function(lbl) { lbl.innerText = post.comments_count + " " + t.commentsCount; });
+        return;
+      }
       db.collection('post_comments')
         .where('post_id', '==', post.id)
         .get()
         .then(function(snapshot) {
           var count = snapshot.size;
-          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
           countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; }); 
         });
     }
@@ -3235,6 +3243,7 @@ auth.onAuthStateChanged(function(user) {
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
+        .limit(30)
         .get()
         .then(function(snapshot) {
           var posts = [];
@@ -3280,6 +3289,7 @@ auth.onAuthStateChanged(function(user) {
       db.collection('posts')
         .where('user_id', '==', userId)
         .orderBy('created_at', 'desc')
+        .limit(30)
         .get()
         .then(function(snapshot) {
           activeTiktokVideosList = [];
@@ -3993,19 +4003,16 @@ function uploadMediaToFirebase(file, folder, callback) {
       if (!currentUser) return;
 
       var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) : 
-        db.collection('friend_requests')
-          .where('status', '==', 'accepted')
-          .get()
-          .then(function(friendReqSnap) {
-            var myFriendsSet = new Set();
-            friendReqSnap.forEach(function(docSnap) {
-              var req = docSnap.data();
-              if (req.sender_id === currentUser.uid) myFriendsSet.add(req.receiver_id);
-              if (req.receiver_id === currentUser.uid) myFriendsSet.add(req.sender_id);
-            });
-            cachedFriendsSet = myFriendsSet;
-            return myFriendsSet;
-          });
+        Promise.all([
+          db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+          db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+        ]).then(function(results) {
+          var myFriendsSet = new Set();
+          results[0].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().receiver_id); });
+          results[1].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().sender_id); });
+          cachedFriendsSet = myFriendsSet;
+          return myFriendsSet;
+        });
 
       fetchFriendsPromise.then(function(myFriendsSet) {
         db.collection('posts')
@@ -4499,21 +4506,18 @@ function subscribeActiveLivesForFeed() {
       if (!currentUser) return;
 
       var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) :
-        db.collection('friend_requests')
-          .where('status', '==', 'accepted')
-          .get()
-          .then(function(snapshot) {
-            var allowedUsersSet = new Set();
-            allowedUsersSet.add(currentUser.uid);
+        Promise.all([
+          db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+          db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+        ]).then(function(results) {
+          var allowedUsersSet = new Set();
+          allowedUsersSet.add(currentUser.uid);
 
-            snapshot.forEach(function(doc) {
-              var req = doc.data();
-              if (req.sender_id === currentUser.uid) allowedUsersSet.add(req.receiver_id);
-              if (req.receiver_id === currentUser.uid) allowedUsersSet.add(req.sender_id);
-            });
-            cachedFriendsSet = allowedUsersSet;
-            return allowedUsersSet;
-          });
+          results[0].forEach(function(doc) { allowedUsersSet.add(doc.data().receiver_id); });
+          results[1].forEach(function(doc) { allowedUsersSet.add(doc.data().sender_id); });
+          cachedFriendsSet = allowedUsersSet;
+          return allowedUsersSet;
+        });
 
       fetchFriendsPromise.then(function(allowedUsersSet) {
         fetchStoriesForUsers(Array.from(allowedUsersSet), listDiv);
