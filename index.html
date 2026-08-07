@@ -2312,25 +2312,34 @@ auth.onAuthStateChanged(function(user) {
         updateRealtimeStats(activeViewingProfileId);
       }
     }
-    
 
+    /* 👥 მომხმარებლების რაოდენობის გარანტირებული გამოსახვა */
     function subscribeTotalUsersCount() {
+      var badgeEl = document.getElementById('total-users-badge');
+      if (!badgeEl) return;
+
       if (typeof db.collection('profiles').count === 'function') {
         db.collection('profiles').count().get().then(function(snapshot) {
-          var totalCount = snapshot.data().count;
-          var badgeEl = document.getElementById('total-users-badge');
-          if (badgeEl) badgeEl.innerText = totalCount;
+          if (snapshot && snapshot.data() && typeof snapshot.data().count !== 'undefined') {
+            badgeEl.innerText = snapshot.data().count;
+          } else {
+            fetchTotalUsersFallback(badgeEl);
+          }
         }).catch(function(err) {
-          console.error("Total users count error:", err);
+          console.warn("Count aggregation fallback triggered:", err);
+          fetchTotalUsersFallback(badgeEl);
         });
       } else {
-        db.collection('profiles').limit(1).get().then(function(snapshot) {
-          var badgeEl = document.getElementById('total-users-badge');
-          if (badgeEl) badgeEl.innerText = snapshot.size;
-        }).catch(function(err) {
-          console.error("Total users fallback get error:", err);
-        });
+        fetchTotalUsersFallback(badgeEl);
       }
+    }
+
+    function fetchTotalUsersFallback(badgeEl) {
+      db.collection('profiles').get().then(function(snapshot) {
+        if (badgeEl) badgeEl.innerText = snapshot.size;
+      }).catch(function(err) {
+        console.error("Error fetching total users count fallback:", err);
+      });
     }
 
     function checkPendingRequestsCount() {
