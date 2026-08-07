@@ -25,7 +25,7 @@
     }
 
     body {
-      background-color: #0b0b0e;
+      background-color: #08080b;
       color: #ffffff;
       min-height: 100vh;
       display: flex;
@@ -40,8 +40,8 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
-                  radial-gradient(circle at 90% 90%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+      background: radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
       pointer-events: none;
       z-index: 0;
     }
@@ -49,7 +49,7 @@
     .container {
       position: relative;
       z-index: 1;
-      max-width: 500px;
+      max-width: 480px;
       margin: 0 auto;
       width: 100%;
       padding: 16px;
@@ -58,16 +58,42 @@
       gap: 20px;
     }
 
+    /* Success Toast Notification */
+    .toast-notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #ffffff;
+      color: #08080b;
+      padding: 14px 22px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .toast-notification.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
     /* Header */
     .balance-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 8px 0;
     }
 
     .back-btn, .settings-btn {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #ffffff;
       font-size: 20px;
@@ -75,10 +101,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(16px);
+      transition: background 0.2s;
+    }
+
+    .back-btn:active, .settings-btn:active {
+      background: rgba(255, 255, 255, 0.12);
     }
 
     .header-title-container {
@@ -87,7 +118,7 @@
 
     .header-title {
       font-size: 17px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: -0.3px;
     }
 
@@ -100,7 +131,8 @@
       gap: 4px;
       margin-top: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
+      font-weight: 600;
     }
 
     .header-subtitle svg {
@@ -112,8 +144,8 @@
     /* Main Balance Section */
     .balance-display-section {
       text-align: center;
-      margin-top: 15px;
-      margin-bottom: 10px;
+      margin-top: 10px;
+      margin-bottom: 5px;
     }
 
     .balance-label-row {
@@ -121,99 +153,99 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      color: #888888;
-      font-size: 13px;
+      color: #777777;
+      font-size: 12px;
       margin-bottom: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
+      font-weight: 700;
     }
 
     .balance-amount-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
     }
 
     .balance-amount {
-      font-size: 44px;
-      font-weight: 800;
-      letter-spacing: -1px;
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -1.5px;
       color: #ffffff;
     }
 
     .balance-arrow {
-      font-size: 20px;
-      color: #555555;
+      font-size: 22px;
+      color: #444444;
     }
 
-    /* Coin/Akho Pill Badge Button */
+    /* Coin Pill Badge Card */
     .akho-pill-card {
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 12px 18px;
+      border-radius: 22px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 10px 0;
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(20px);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
     .akho-pill-card:active {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.18);
     }
 
     .akho-pill-left {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      font-weight: 600;
+      gap: 12px;
+      font-size: 15px;
+      font-weight: 700;
     }
 
     .akho-icon-badge {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       background: #ffffff;
       border-radius: 50%;
-      color: #0b0b0e;
+      color: #08080b;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     .akho-pill-right {
       color: #aaaaaa;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    /* Transactions Bar */
+    /* Section Cards */
     .section-card {
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 18px;
-      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      padding: 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(12px);
-      transition: all 0.2s;
+      backdrop-filter: blur(20px);
+      transition: all 0.2s ease;
     }
 
     .section-card:active {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .section-card-title {
@@ -225,19 +257,20 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      color: #777777;
+      color: #666666;
       font-size: 13px;
+      font-weight: 600;
     }
 
     /* Services Grid */
     .services-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #888888;
+      font-size: 13px;
+      font-weight: 800;
+      color: #666666;
       margin-top: 5px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
     }
 
     .services-grid {
@@ -247,8 +280,8 @@
     }
 
     .service-card {
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
       padding: 16px 10px;
       display: flex;
       flex-direction: column;
@@ -259,18 +292,18 @@
       cursor: pointer;
       min-height: 115px;
       justify-content: center;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
     .service-card:active {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .service-icon-box {
-      width: 42px;
-      height: 42px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -282,17 +315,17 @@
       font-size: 12px;
       font-weight: 600;
       color: #cccccc;
-      line-height: 1.2;
+      line-height: 1.25;
     }
 
-    /* Overlay Modals */
+    /* Fullscreen Overlay Modals */
     .tx-modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: #0b0b0e;
+      background: #08080b;
       z-index: 9999;
       display: none;
       flex-direction: column;
@@ -308,7 +341,7 @@
     }
 
     .tx-modal-content {
-      max-width: 500px;
+      max-width: 480px;
       width: 100%;
       margin: 0 auto;
       height: 100%;
@@ -327,7 +360,7 @@
     }
 
     .tx-back-btn {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #ffffff;
       font-size: 22px;
@@ -347,7 +380,7 @@
 
     .tx-modal-title {
       font-size: 17px;
-      font-weight: 700;
+      font-weight: 800;
       letter-spacing: -0.3px;
     }
 
@@ -366,11 +399,11 @@
     .tx-filter-btn {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #888888;
-      padding: 8px 16px;
+      color: #777777;
+      padding: 8px 18px;
       border-radius: 20px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       white-space: nowrap;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -378,9 +411,8 @@
 
     .tx-filter-btn.active {
       background: #ffffff;
-      color: #0b0b0e;
+      color: #08080b;
       border-color: #ffffff;
-      font-weight: 700;
     }
 
     .tx-list {
@@ -396,7 +428,7 @@
     .tx-item {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px 16px;
       display: flex;
       align-items: center;
@@ -418,7 +450,7 @@
       align-items: center;
       justify-content: center;
       font-size: 16px;
-      font-weight: bold;
+      font-weight: 800;
       flex-shrink: 0;
       background: rgba(255, 255, 255, 0.06);
       color: #ffffff;
@@ -433,7 +465,7 @@
 
     .tx-title {
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       color: #ffffff;
     }
 
@@ -451,14 +483,14 @@
 
     .tx-amount {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
       color: #ffffff;
     }
 
     .tx-status {
       font-size: 11px;
-      color: #888888;
-      font-weight: 500;
+      color: #777777;
+      font-weight: 600;
     }
 
     .tx-empty-state {
@@ -467,25 +499,26 @@
       align-items: center;
       justify-content: center;
       height: 60%;
-      color: #666666;
+      color: #555555;
       gap: 12px;
       text-align: center;
       font-size: 14px;
+      font-weight: 600;
     }
 
     .tx-empty-icon {
       font-size: 40px;
-      opacity: 0.3;
+      opacity: 0.25;
     }
 
-    /* TOP UP / AKHO WALLET PREMIUM MONOCHROME UI STYLES */
+    /* AKHO WALLET TOP UP UI */
     .wallet-sub-btn {
       width: 100%;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
-      padding: 12px;
-      border-radius: 14px;
+      padding: 13px;
+      border-radius: 16px;
       margin-top: 12px;
       margin-bottom: 20px;
       cursor: pointer;
@@ -499,7 +532,7 @@
     }
 
     .wallet-sub-btn:active {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.09);
       transform: scale(0.98);
     }
 
@@ -513,13 +546,13 @@
     .pkg-btn {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 18px 16px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
       position: relative;
       transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
@@ -532,15 +565,16 @@
     }
 
     .pkg-price {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
-      color: #aaaaaa;
+      color: #888888;
     }
 
     .pkg-label {
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 900;
       color: #ffffff;
+      letter-spacing: -0.5px;
     }
 
     .pkg-vip-badge {
@@ -548,7 +582,7 @@
       top: -9px;
       right: 12px;
       background: #ffffff;
-      color: #0b0b0e;
+      color: #08080b;
       font-size: 9px;
       font-weight: 900;
       padding: 3px 8px;
@@ -560,7 +594,7 @@
     .cashout-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 18px;
       margin-bottom: 20px;
     }
@@ -568,25 +602,27 @@
     .cashout-title {
       color: #ffffff;
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .cashout-desc {
       font-size: 12px;
       color: #777777;
       margin-top: 4px;
+      font-weight: 500;
     }
 
     .auth-input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: #ffffff;
-      padding: 12px;
-      border-radius: 12px;
+      padding: 13px 16px;
+      border-radius: 14px;
       font-size: 13px;
       outline: none;
-      margin-top: 10px;
+      margin-top: 12px;
+      transition: border-color 0.2s;
     }
 
     .auth-input:focus {
@@ -597,9 +633,9 @@
       width: 100%;
       background: #ffffff;
       border: none;
-      color: #0b0b0e;
-      padding: 12px;
-      border-radius: 12px;
+      color: #08080b;
+      padding: 14px;
+      border-radius: 14px;
       font-weight: 800;
       font-size: 13px;
       margin-top: 10px;
@@ -609,13 +645,13 @@
 
     .withdraw-btn:active {
       transform: scale(0.98);
-      background: #e5e5e5;
+      background: #e0e0e0;
     }
 
     .activity-log {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 18px;
       margin-bottom: 20px;
     }
@@ -624,6 +660,12 @@
 <body>
 
   <div class="bg-gradient"></div>
+
+  <!-- Toast Notification for Payment Success -->
+  <div class="toast-notification" id="successToast">
+    <span>✅</span>
+    <span id="toastText">ბალანსი წარმატებით შეივსო!</span>
+  </div>
 
   <div class="container">
     <!-- Header -->
@@ -727,51 +769,51 @@
       </div>
 
       <div style="flex: 1; overflow-y: auto; padding-top: 10px;" id="walletMain">
-        <p style="font-size:13px; color:#888888; text-transform:uppercase; letter-spacing:0.5px;" data-key="wallet_desc">შეავსეთ ბალანსი Stripe გადახდით</p>
-        <p onclick="openInfoUI()" style="font-size:12px; color:#ffffff; cursor:pointer; margin-top:4px; text-decoration:underline;" data-key="how_it_works">როგორ მუშაობს AKHO?</p>
+        <p style="font-size:12px; color:#777777; text-transform:uppercase; letter-spacing:0.6px; font-weight:700;" data-key="wallet_desc">შეავსეთ ბალანსი Stripe გადახდით</p>
+        <p onclick="openInfoUI()" style="font-size:12px; color:#ffffff; cursor:pointer; margin-top:4px; text-decoration:underline; font-weight:600;" data-key="how_it_works">როგორ მუშაობს AKHO?</p>
 
         <button class="wallet-sub-btn" onclick="openLeaderboard()">
           <span>🏆</span> <span data-key="view_leaderboard">ნახე რეიტინგი</span>
         </button>
 
-        <!-- STRIPE PACKAGES GRID -->
+        <!-- STRIPE PACKAGES GRID WITH AKHO / EUR VALUES -->
         <div class="package-grid">
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x26oI8PPdfldhy0Fq57W0f')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x26oI8PPdfldhy0Fq57W0f', 10, '1.00')">
             <span class="pkg-price">€1.00</span>
             <span class="pkg-label">10 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/7sY7sM5DD1wDb9q4VG57W0g')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/7sY7sM5DD1wDb9q4VG57W0g', 60, '5.00')">
             <span class="pkg-price">€5.00</span>
             <span class="pkg-label">60 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/4gMeVe6HH3EL1yQ3RC57W0h')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/4gMeVe6HH3EL1yQ3RC57W0h', 120, '10.00')">
             <span class="pkg-price">€10.00</span>
             <span class="pkg-label">120 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/aFa3cwc21fnt1yQag057W0j')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/aFa3cwc21fnt1yQag057W0j', 300, '25.00')">
             <span class="pkg-price">€25.00</span>
             <span class="pkg-label">300 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28E9AUaXX0sz4L287S57W0k')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28E9AUaXX0sz4L287S57W0k', 700, '50.00')">
             <span class="pkg-price">€50.00</span>
             <span class="pkg-label">700 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x25kEaXXfntfpG2Ny57W0l')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x25kEaXXfntfpG2Ny57W0l', 1400, '100.00')">
             <span class="pkg-price">€100.00</span>
             <span class="pkg-label">1400 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x28wQc218Z5fpG3RC57W0m')">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x28wQc218Z5fpG3RC57W0m', 2250, '150.00')">
             <span class="pkg-price">€150.00</span>
             <span class="pkg-label">2250 AKHO</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28EaEY3vva392CUewg57W0n')" style="grid-column: span 2;">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28EaEY3vva392CUewg57W0n', 8500, '500.00')" style="grid-column: span 2;">
             <span class="pkg-vip-badge">VIP</span>
             <span class="pkg-price">€500.00</span>
             <span class="pkg-label">8500 AKHO</span>
@@ -787,22 +829,14 @@
             <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal">
             <button class="withdraw-btn" onclick="submitWithdraw()" data-key="withdraw_req">გატანის მოთხოვნა</button>
           </div>
-          <div id="cashoutStatus" style="color:#ff4757; font-size: 11px; margin-top: 10px; font-weight: bold;"></div>
+          <div id="cashoutStatus" style="color:#ff4757; font-size: 12px; margin-top: 10px; font-weight: 700;"></div>
         </div>
 
         <!-- ACTIVITY LOG -->
         <div class="activity-log">
-          <div style="color:#ffffff; font-size:14px; font-weight:700;">აქტივობის ისტორია</div>
-          <div id="logContent" style="margin-top:10px; font-size:12px; color:#888888;">ისტორია ცარიელია</div>
+          <div style="color:#ffffff; font-size:14px; font-weight:800;">აქტივობის ისტორია</div>
+          <div id="logContent" style="margin-top:10px; font-size:12px; color:#777777; font-weight:500;">ისტორია ცარიელია</div>
         </div>
-      </div>
-
-      <!-- PAYMENT PENDING SCREEN -->
-      <div id="paymentPending" style="display:none; text-align:center; padding: 40px 20px;">
-        <div style="font-size: 40px; margin-bottom: 15px;">⌛</div>
-        <h2 style="color:#ffffff; font-weight:800;" data-key="thanks">მადლობა!</h2>
-        <p style="color:#aaaaaa; margin:15px 0; font-size:13px;" data-key="payment_msg">გადახდა მიღებულია. AKHO თქვენს ბალანსზე აისახება 5-10 წუთში გადამოწმების შემდეგ.</p>
-        <button class="withdraw-btn" onclick="location.reload()" data-key="check_balance">ბალანსის გადამოწმება</button>
       </div>
     </div>
   </div>
@@ -855,7 +889,7 @@
         min_withdraw: "მინიმალური გატანა: 50.00 € (800 AKHO)",
         withdraw_req: "გატანის მოთხოვნა",
         thanks: "მადლობა!",
-        payment_msg: "გადახდა მიღებულია. AKHO თქვენს ბალანსზე აისახება 5-10 წუთში გადამოწმების შემდეგ.",
+        payment_msg: "გადახდა მიღებულია. AKHO თქვენს ბალანსზე აისახება მყისიერად.",
         check_balance: "ბალანსის გადამოწმება"
       },
       en: {
@@ -886,7 +920,7 @@
         min_withdraw: "Minimum withdrawal: €50.00 (800 AKHO)",
         withdraw_req: "Request Withdrawal",
         thanks: "Thank you!",
-        payment_msg: "Payment received. AKHO will reflect in your balance in 5-10 minutes.",
+        payment_msg: "Payment received. AKHO reflects in your balance instantly.",
         check_balance: "Check Balance"
       },
       ru: {
@@ -917,7 +951,7 @@
         min_withdraw: "Минимальный вывод: 50.00 € (800 AKHO)",
         withdraw_req: "Запросить вывод",
         thanks: "Спасибо!",
-        payment_msg: "Оплата получена. AKHO зачислится в течение 5-10 минут.",
+        payment_msg: "Оплата получена. AKHO зачисляется мгновенно.",
         check_balance: "Проверить баланс"
       }
     };
@@ -941,7 +975,6 @@
       document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
       document.getElementById('btn-filter-reward').innerText = lang.filterReward;
 
-      // Translate data-key elements
       document.querySelectorAll('[data-key]').forEach(function(el) {
         var key = el.getAttribute('data-key');
         if (lang[key]) {
@@ -963,16 +996,67 @@
       });
     }
 
+    /* AUTOMATIC STRIPE PAYMENT COMPLETION HANDLER */
+    function checkStripePaymentReturn(user) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const status = urlParams.get('status') || urlParams.get('payment');
+      const coins = parseInt(urlParams.get('coins'), 10);
+      const price = urlParams.get('price') || '';
+
+      if ((status === 'success' || status === 'completed') && coins > 0) {
+        const txId = urlParams.get('session_id') || ('tx_' + Date.now());
+        const processedKey = 'processed_stripe_tx_' + txId;
+
+        // Prevent double processing on page refresh
+        if (sessionStorage.getItem(processedKey)) return;
+        sessionStorage.setItem(processedKey, 'true');
+
+        var batch = db.batch();
+        var userRef = db.collection('profiles').doc(user.uid);
+        var txRef = userRef.collection('transactions').doc();
+
+        // 1) REAL INCREMENT IN FIRESTORE
+        batch.update(userRef, {
+          balance: firebase.firestore.FieldValue.increment(coins)
+        });
+
+        // 2) RECORD TRANSACTION
+        batch.set(txRef, {
+          type: 'income',
+          title: 'AKHO შევსება (Stripe)',
+          amount: '+ ' + coins + ' AKHO',
+          price: price ? ('€' + price) : '',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          status: 'წარმატებული'
+        });
+
+        batch.commit().then(function() {
+          // Clear query params clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showToast("გილოცავთ! +" + coins + " AKHO ჩაირიცხა ანგარიშზე!");
+        }).catch(function(err) {
+          console.error("Stripe balance update error:", err);
+        });
+      }
+    }
+
+    function showToast(message) {
+      var toast = document.getElementById('successToast');
+      var toastText = document.getElementById('toastText');
+      if (toast && toastText) {
+        toastText.innerText = message;
+        toast.classList.add('show');
+        setTimeout(function() {
+          toast.classList.remove('show');
+        }, 4000);
+      }
+    }
+
     auth.onAuthStateChanged(function(user) {
       if (user) {
         var userRef = db.collection('profiles').doc(user.uid);
 
-        // პირდაპირი განულება Firestore-ში ძველი ტესტური ბალანსის წასაშლელად
-        userRef.set({ balance: 0 }, { merge: true }).catch(function(err) {
-          console.warn("Reset error:", err);
-        });
-
-        // რეალური დროის მსმენელი
+        // REAL-TIME FIRESTORE LISTENER (No forced zeroing!)
         userRef.onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
@@ -987,6 +1071,9 @@
           }
         });
 
+        // Check if user just returned from Stripe Payment
+        checkStripePaymentReturn(user);
+
         listenToTransactions(user.uid);
       } else {
         window.location.href = "index.html";
@@ -994,14 +1081,18 @@
     });
 
     /* STRIPE PAYMENT DIRECT REDIRECT FUNCTION */
-    function initStripePayment(stripeUrl) {
+    function initStripePayment(stripeUrl, coinsCount, eurPrice) {
       var user = auth.currentUser;
       if (!user) {
         alert("ავტორიზაცია აუცილებელია!");
         return;
       }
-      // გადამისამართება Stripe-ის ოფიციალურ საგადახდო ლინკზე
-      window.location.href = stripeUrl + "?client_reference_id=" + user.uid;
+
+      // Append redirect back parameters
+      var currentReturnUrl = encodeURIComponent(window.location.origin + window.location.pathname + '?status=success&coins=' + coinsCount + '&price=' + eurPrice);
+      var finalUrl = stripeUrl + "?client_reference_id=" + user.uid;
+
+      window.location.href = finalUrl;
     }
 
     function openInfoUI() {
