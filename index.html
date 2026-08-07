@@ -373,6 +373,24 @@
     </div>
   </div>
 
+  <!-- 🔑 PAROLIS AGDGENIS CUSTOM MODAL -->
+  <div id="reset-password-modal" class="custom-lang-modal-overlay" onclick="closeResetPasswordModal()">
+    <div class="custom-lang-modal-box" onclick="event.stopPropagation()" style="padding: 20px;">
+      <div class="custom-lang-modal-header" style="background: transparent; border-bottom: 1px solid #282828; padding: 0 0 12px 0; margin-bottom: 15px;">
+        <span style="color: #dcae36; font-weight: bold; font-size: 16px;">🔑 Reset Password</span>
+        <button onclick="closeResetPasswordModal()" class="custom-lang-close-btn">&times;</button>
+      </div>
+      <p style="color: #aaaaaa; font-size: 13px; line-height: 1.5; margin-bottom: 15px;">
+        Enter your registered email address and we will send you a reset link.
+      </p>
+      <div class="input-group" style="margin-bottom: 15px;">
+        <input type="email" id="reset-email-input" placeholder="Enter your email">
+      </div>
+      <div id="reset-msg-box" style="display: none; font-size: 13px; padding: 10px; border-radius: 8px; margin-bottom: 15px;"></div>
+      <button class="btn" id="reset-submit-btn" onclick="submitPasswordReset()" style="width: 100%;">Send Reset Link</button>
+    </div>
+  </div>
+
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
@@ -3815,18 +3833,67 @@ function uploadMediaToFirebase(file, folder, callback) {
       applyLanguageDOM();
     }
 
+    /* 🔑 PAROLIS AGDGENIS CUSTOM MODAL FUNCTIONS */
     function handleForgotPassword() {
       var emailEl = document.getElementById('email');
-      var email = emailEl ? emailEl.value.trim() : "";
-      if (!email) {
-        email = prompt("შეიყვანეთ ელ-ფოსტა პაროლის აღსადგენად / Enter email for password recovery:");
+      var resetInput = document.getElementById('reset-email-input');
+      var msgBox = document.getElementById('reset-msg-box');
+      var modal = document.getElementById('reset-password-modal');
+
+      if (msgBox) msgBox.style.display = 'none';
+      if (resetInput && emailEl) {
+        resetInput.value = emailEl.value.trim();
       }
-      if (!email) return;
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeResetPasswordModal() {
+      var modal = document.getElementById('reset-password-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function submitPasswordReset() {
+      var resetInput = document.getElementById('reset-email-input');
+      var msgBox = document.getElementById('reset-msg-box');
+      var submitBtn = document.getElementById('reset-submit-btn');
+
+      var email = resetInput ? resetInput.value.trim() : "";
+
+      if (!email) {
+        if (msgBox) {
+          msgBox.innerText = "Please enter your email!";
+          msgBox.style.background = "rgba(255,77,79,0.2)";
+          msgBox.style.color = "#ff4d4f";
+          msgBox.style.border = "1px solid #ff4d4f";
+          msgBox.style.display = "block";
+        }
+        return;
+      }
+
+      if (submitBtn) submitBtn.disabled = true;
 
       auth.sendPasswordResetEmail(email).then(function() {
-        alert("პაროლის აღდგენის ბმული გაიგზავნა ელ-ფოსტაზე! / Password reset email sent to " + email);
+        if (submitBtn) submitBtn.disabled = false;
+        if (msgBox) {
+          msgBox.innerText = "Reset link sent! Check your email inbox.";
+          msgBox.style.background = "rgba(40,167,69,0.2)";
+          msgBox.style.color = "#28a745";
+          msgBox.style.border = "1px solid #28a745";
+          msgBox.style.display = "block";
+        }
+        setTimeout(function() {
+          closeResetPasswordModal();
+        }, 3000);
       }).catch(function(error) {
-        alert("შეცდომა: " + error.message);
+        if (submitBtn) submitBtn.disabled = false;
+        if (msgBox) {
+          msgBox.innerText = error.message;
+          msgBox.style.background = "rgba(255,77,79,0.2)";
+          msgBox.style.color = "#ff4d4f";
+          msgBox.style.border = "1px solid #ff4d4f";
+          msgBox.style.display = "block";
+        }
       });
     }
 
