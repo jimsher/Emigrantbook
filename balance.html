@@ -693,7 +693,7 @@
       <button class="settings-btn" onclick="alert('პარამეტრები')">⚙️</button>
     </div>
 
-    <!-- Main Balance Display -->
+    <!-- Main Balance Display (Default Clean 0.00) -->
     <div class="balance-display-section">
       <div class="balance-label-row">
         <span id="lbl-expected-sum">სავარაუდო თანხა</span>
@@ -862,9 +862,6 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
-    // ინიციალიზაცია Stripe (ჩასვი შენი Stripe Public Key)
-    // const stripe = Stripe('pk_live_xxxxxxxxx');
 
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
     var rawTransactions = [];
@@ -1069,9 +1066,7 @@
       element.classList.add('selected');
     }
 
-    /* =========================================================
-       REAL STRIPE / PAYMENT GATEWAY INTEGRATION FUNCTION
-       ========================================================= */
+    /* REAL PAYMENT GATEWAY FUNCTION (No simulated increments) */
     async function processRealCheckout() {
       var user = auth.currentUser;
       if (!user) {
@@ -1085,11 +1080,6 @@
       document.getElementById('lbl-pay-btn').innerText = lang.redirecting;
 
       try {
-        /*
-          რეალური API მოთხოვნა შენს backend / Firebase Cloud Function-ზე.
-          სერვერი შექმნის Stripe Checkout Session-ს და დაგიბრუნებს session.id-ს ან საგადახდო ლინკს:
-        */
-        
         const response = await fetch('https://YOUR_BACKEND_API_OR_FIREBASE_FUNCTION/create-checkout-session', {
           method: 'POST',
           headers: {
@@ -1106,10 +1096,8 @@
         const session = await response.json();
 
         if (session.url) {
-          // გადამისამართება ოფიციალურ უსაფრთხო საბანკო გადახდის გვერდზე
           window.location.href = session.url;
-        } else if (session.id) {
-          // Stripe SDK-ით გადამისამართება
+        } else if (session.id && typeof stripe !== 'undefined') {
           const result = await stripe.redirectToCheckout({ sessionId: session.id });
           if (result.error) alert(result.error.message);
         } else {
@@ -1120,7 +1108,6 @@
 
       } catch (err) {
         console.error("Payment error:", err);
-        // თუ ბექენდი ჯერ გაშვებული არ არის, ვაჩვენებთ შეტყობინებას
         alert("რეალური გადახდისთვის საჭიროა Stripe/TBC backend API-ის დაკავშირება.");
         btn.disabled = false;
         updatePayButtonText();
