@@ -12,7 +12,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
-  <!-- Real Payment Gateway SDK (Stripe) -->
+  <!-- Stripe SDK -->
   <script src="https://js.stripe.com/v3/"></script>
 
   <style>
@@ -478,57 +478,39 @@
       opacity: 0.3;
     }
 
-    /* Top Up Premium Monochrome */
-    .topup-banner {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 18px 20px;
+    /* TOP UP / AKHO WALLET PREMIUM MONOCHROME UI STYLES */
+    .wallet-sub-btn {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 14px;
+      margin-top: 12px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-top: 10px;
-      margin-bottom: 20px;
-      backdrop-filter: blur(10px);
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
     }
 
-    .topup-banner-left {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .wallet-sub-btn:active {
+      background: rgba(255, 255, 255, 0.08);
+      transform: scale(0.98);
     }
 
-    .topup-banner-title {
-      font-size: 12px;
-      color: #777777;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .topup-banner-val {
-      font-size: 24px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -0.5px;
-    }
-
-    .topup-section-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: #888888;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .packages-grid {
+    .package-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
       margin-bottom: 24px;
     }
 
-    .pkg-card {
+    .pkg-btn {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 18px;
@@ -537,49 +519,16 @@
       flex-direction: column;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       cursor: pointer;
       position: relative;
       transition: all 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
 
-    .pkg-card:active {
+    .pkg-btn:active {
       transform: scale(0.97);
-    }
-
-    .pkg-card.selected {
       border-color: #ffffff;
       background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.06);
-    }
-
-    .pkg-badge {
-      position: absolute;
-      top: -9px;
-      right: 12px;
-      background: #ffffff;
-      color: #0b0b0e;
-      font-size: 9px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .pkg-coins {
-      font-size: 20px;
-      font-weight: 800;
-      color: #ffffff;
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-    }
-
-    .pkg-coins span {
-      font-size: 11px;
-      color: #888888;
-      font-weight: 600;
     }
 
     .pkg-price {
@@ -588,88 +537,87 @@
       color: #aaaaaa;
     }
 
-    .pkg-card.selected .pkg-price {
+    .pkg-label {
+      font-size: 20px;
+      font-weight: 800;
       color: #ffffff;
     }
 
-    .pay-methods {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 24px;
+    .pkg-vip-badge {
+      position: absolute;
+      top: -9px;
+      right: 12px;
+      background: #ffffff;
+      color: #0b0b0e;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .pay-method-card {
+    .cashout-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 20px;
     }
 
-    .pay-method-card.selected {
-      border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .pay-method-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .cashout-title {
+      color: #ffffff;
       font-size: 14px;
-      font-weight: 600;
-      color: #dddddd;
+      font-weight: 700;
     }
 
-    .pay-radio {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid #444444;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .cashout-desc {
+      font-size: 12px;
+      color: #777777;
+      margin-top: 4px;
     }
 
-    .pay-method-card.selected .pay-radio {
+    .auth-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      margin-top: 10px;
+    }
+
+    .auth-input:focus {
       border-color: #ffffff;
-      background: #ffffff;
     }
 
-    .topup-cta-container {
-      margin-top: auto;
-      padding: 16px 0;
-    }
-
-    .topup-pay-btn {
+    .withdraw-btn {
       width: 100%;
       background: #ffffff;
       border: none;
       color: #0b0b0e;
-      padding: 16px;
-      border-radius: 25px;
-      font-size: 15px;
+      padding: 12px;
+      border-radius: 12px;
       font-weight: 800;
+      font-size: 13px;
+      margin-top: 10px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.15s ease, opacity 0.2s;
+      transition: all 0.2s;
     }
 
-    .topup-pay-btn:active {
+    .withdraw-btn:active {
       transform: scale(0.98);
       background: #e5e5e5;
     }
 
-    .topup-pay-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    .activity-log {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 20px;
     }
   </style>
 </head>
@@ -700,7 +648,7 @@
         <span style="font-weight: bold; color: #fff;">AKHO</span>
         <span>👁️</span>
       </div>
-      <div class="balance-amount-row" onclick="openAkhoInfo()">
+      <div class="balance-amount-row" onclick="openInfoUI()">
         <span class="balance-amount" id="main-balance-val">0.00</span>
         <span class="balance-arrow">›</span>
       </div>
@@ -769,81 +717,92 @@
     </div>
   </div>
 
-  <!-- TOP-UP OVERLAY PAGE -->
+  <!-- TOP-UP OVERLAY PAGE / AKHO WALLET UI -->
   <div class="tx-modal-overlay" id="topUpModal">
     <div class="tx-modal-content">
       <div class="tx-header">
         <button class="tx-back-btn" onclick="closeTopUpModal()">‹</button>
-        <div class="tx-modal-title" id="lbl-topup-title">აკჰოს შეძენა</div>
+        <div class="tx-modal-title">AKHO WALLET</div>
         <div style="width: 40px;"></div>
       </div>
 
-      <div style="flex: 1; overflow-y: auto; padding-top: 10px;">
-        <div class="topup-banner">
-          <div class="topup-banner-left">
-            <span class="topup-banner-title" id="lbl-current-coins">მიმდინარე აკჰო</span>
-            <span class="topup-banner-val"><span id="topup-current-val">0</span> AKHO</span>
+      <div style="flex: 1; overflow-y: auto; padding-top: 10px;" id="walletMain">
+        <p style="font-size:13px; color:#888888; text-transform:uppercase; letter-spacing:0.5px;" data-key="wallet_desc">შეავსეთ ბალანსი Stripe გადახდით</p>
+        <p onclick="openInfoUI()" style="font-size:12px; color:#ffffff; cursor:pointer; margin-top:4px; text-decoration:underline;" data-key="how_it_works">როგორ მუშაობს AKHO?</p>
+
+        <button class="wallet-sub-btn" onclick="openLeaderboard()">
+          <span>🏆</span> <span data-key="view_leaderboard">ნახე რეიტინგი</span>
+        </button>
+
+        <!-- STRIPE PACKAGES GRID -->
+        <div class="package-grid">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x26oI8PPdfldhy0Fq57W0f')">
+            <span class="pkg-price">€1.00</span>
+            <span class="pkg-label">10 AKHO</span>
           </div>
-          <div class="akho-icon-badge" style="width:32px; height:32px; font-size:15px;">A</div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/7sY7sM5DD1wDb9q4VG57W0g')">
+            <span class="pkg-price">€5.00</span>
+            <span class="pkg-label">60 AKHO</span>
+          </div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/4gMeVe6HH3EL1yQ3RC57W0h')">
+            <span class="pkg-price">€10.00</span>
+            <span class="pkg-label">120 AKHO</span>
+          </div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/aFa3cwc21fnt1yQag057W0j')">
+            <span class="pkg-price">€25.00</span>
+            <span class="pkg-label">300 AKHO</span>
+          </div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28E9AUaXX0sz4L287S57W0k')">
+            <span class="pkg-price">€50.00</span>
+            <span class="pkg-label">700 AKHO</span>
+          </div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x25kEaXXfntfpG2Ny57W0l')">
+            <span class="pkg-price">€100.00</span>
+            <span class="pkg-label">1400 AKHO</span>
+          </div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x28wQc218Z5fpG3RC57W0m')">
+            <span class="pkg-price">€150.00</span>
+            <span class="pkg-label">2250 AKHO</span>
+          </div>
+
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28EaEY3vva392CUewg57W0n')" style="grid-column: span 2;">
+            <span class="pkg-vip-badge">VIP</span>
+            <span class="pkg-price">€500.00</span>
+            <span class="pkg-label">8500 AKHO</span>
+          </div>
         </div>
 
-        <div class="topup-section-label" id="lbl-choose-pkg">აირჩიეთ პაკეტი</div>
-
-        <div class="packages-grid">
-          <div class="pkg-card" onclick="selectPackage(100, 1.00, this)">
-            <div class="pkg-coins">100 <span>AKHO</span></div>
-            <div class="pkg-price">$1.00</div>
+        <!-- CASHOUT BOX -->
+        <div class="cashout-box">
+          <div class="cashout-title" data-key="cash_out">თანხის გატანა</div>
+          <div class="cashout-desc" data-key="min_withdraw">მინიმალური გატანა: 50.00 € (800 AKHO)</div>
+          
+          <div id="cashoutForm">
+            <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal">
+            <button class="withdraw-btn" onclick="submitWithdraw()" data-key="withdraw_req">გატანის მოთხოვნა</button>
           </div>
-
-          <div class="pkg-card selected" onclick="selectPackage(500, 4.99, this)">
-            <div class="pkg-badge" id="lbl-badge-popular">პოპულარული</div>
-            <div class="pkg-coins">500 <span>AKHO</span></div>
-            <div class="pkg-price">$4.99</div>
-          </div>
-
-          <div class="pkg-card" onclick="selectPackage(1000, 8.99, this)">
-            <div class="pkg-badge">+10%</div>
-            <div class="pkg-coins">1,000 <span>AKHO</span></div>
-            <div class="pkg-price">$8.99</div>
-          </div>
-
-          <div class="pkg-card" onclick="selectPackage(2500, 19.99, this)">
-            <div class="pkg-badge">+15%</div>
-            <div class="pkg-coins">2,500 <span>AKHO</span></div>
-            <div class="pkg-price">$19.99</div>
-          </div>
-
-          <div class="pkg-card" style="grid-column: span 2;" onclick="selectPackage(5000, 38.99, this)">
-            <div class="pkg-badge" id="lbl-badge-best">საუკეთესო ფასი +20%</div>
-            <div class="pkg-coins">5,000 <span>AKHO</span></div>
-            <div class="pkg-price">$38.99</div>
-          </div>
+          <div id="cashoutStatus" style="color:#ff4757; font-size: 11px; margin-top: 10px; font-weight: bold;"></div>
         </div>
 
-        <div class="topup-section-label" id="lbl-pay-method">გადახდის მეთოდი</div>
-        <div class="pay-methods">
-          <div class="pay-method-card selected" onclick="selectPayMethod('card', this)">
-            <div class="pay-method-left">
-              <span>💳</span>
-              <span id="lbl-pay-card">საბანკო ბარათი (Visa / Mastercard)</span>
-            </div>
-            <div class="pay-radio"></div>
-          </div>
-
-          <div class="pay-method-card" onclick="selectPayMethod('applepay', this)">
-            <div class="pay-method-left">
-              <span></span>
-              <span>Apple Pay / Google Pay</span>
-            </div>
-            <div class="pay-radio"></div>
-          </div>
+        <!-- ACTIVITY LOG -->
+        <div class="activity-log">
+          <div style="color:#ffffff; font-size:14px; font-weight:700;">აქტივობის ისტორია</div>
+          <div id="logContent" style="margin-top:10px; font-size:12px; color:#888888;">ისტორია ცარიელია</div>
         </div>
       </div>
 
-      <div class="topup-cta-container">
-        <button class="topup-pay-btn" id="btn-pay-submit" onclick="processRealCheckout()">
-          <span id="lbl-pay-btn">შეძენა - $4.99</span>
-        </button>
+      <!-- PAYMENT PENDING SCREEN -->
+      <div id="paymentPending" style="display:none; text-align:center; padding: 40px 20px;">
+        <div style="font-size: 40px; margin-bottom: 15px;">⌛</div>
+        <h2 style="color:#ffffff; font-weight:800;" data-key="thanks">მადლობა!</h2>
+        <p style="color:#aaaaaa; margin:15px 0; font-size:13px;" data-key="payment_msg">გადახდა მიღებულია. AKHO თქვენს ბალანსზე აისახება 5-10 წუთში გადამოწმების შემდეგ.</p>
+        <button class="withdraw-btn" onclick="location.reload()" data-key="check_balance">ბალანსის გადამოწმება</button>
       </div>
     </div>
   </div>
@@ -867,9 +826,6 @@
     var rawTransactions = [];
     var activeFilter = 'all';
 
-    var selectedPackage = { coins: 500, price: 4.99 };
-    var selectedPaymentMethod = 'card';
-
     var TRANSLATIONS = {
       ka: {
         title: "ბალანსი",
@@ -892,15 +848,15 @@
         defaultIncomeTitle: "ბალანსის შევსება",
         defaultExpenseTitle: "გადახდა / ხარჯი",
         defaultRewardTitle: "მიღებული ჯილდო",
-        topupTitle: "აკჰოს შეძენა",
-        currentCoins: "მიმდინარე აკჰო",
-        choosePkg: "აირჩიეთ პაკეტი",
-        payMethod: "გადახდის მეთოდი",
-        payCard: "საბანკო ბარათი (Visa / Mastercard)",
-        payBtnPrefix: "შეძენა - $",
-        badgePopular: "პოპულარული",
-        badgeBest: "საუკეთესო ფასი +20%",
-        redirecting: "გადასვლა საგადახდო გვერდზე..."
+        wallet_desc: "შეავსეთ ბალანსი Stripe გადახდით",
+        how_it_works: "როგორ მუშაობს AKHO?",
+        view_leaderboard: "ნახე რეიტინგი",
+        cash_out: "თანხის გატანა",
+        min_withdraw: "მინიმალური გატანა: 50.00 € (800 AKHO)",
+        withdraw_req: "გატანის მოთხოვნა",
+        thanks: "მადლობა!",
+        payment_msg: "გადახდა მიღებულია. AKHO თქვენს ბალანსზე აისახება 5-10 წუთში გადამოწმების შემდეგ.",
+        check_balance: "ბალანსის გადამოწმება"
       },
       en: {
         title: "Balance",
@@ -923,15 +879,15 @@
         defaultIncomeTitle: "Balance Top-up",
         defaultExpenseTitle: "Payment / Expense",
         defaultRewardTitle: "Received Reward",
-        topupTitle: "Buy AKHO Coins",
-        currentCoins: "Current AKHO",
-        choosePkg: "Choose Package",
-        payMethod: "Payment Method",
-        payCard: "Bank Card (Visa / Mastercard)",
-        payBtnPrefix: "Pay - $",
-        badgePopular: "POPULAR",
-        badgeBest: "BEST VALUE +20%",
-        redirecting: "Redirecting to Payment Gateway..."
+        wallet_desc: "Top up your balance via Stripe",
+        how_it_works: "How AKHO works?",
+        view_leaderboard: "View Leaderboard",
+        cash_out: "Cash Out",
+        min_withdraw: "Minimum withdrawal: €50.00 (800 AKHO)",
+        withdraw_req: "Request Withdrawal",
+        thanks: "Thank you!",
+        payment_msg: "Payment received. AKHO will reflect in your balance in 5-10 minutes.",
+        check_balance: "Check Balance"
       },
       ru: {
         title: "Баланс",
@@ -954,15 +910,15 @@
         defaultIncomeTitle: "Пополнение баланса",
         defaultExpenseTitle: "Списание / Расход",
         defaultRewardTitle: "Награда",
-        topupTitle: "Купить Монеты AKHO",
-        currentCoins: "Текущие AKHO",
-        choosePkg: "Выберите пакет",
-        payMethod: "Способ оплаты",
-        payCard: "Банковская карта (Visa / Mastercard)",
-        payBtnPrefix: "Оплатить - $",
-        badgePopular: "ПОПУЛЯРНОЕ",
-        badgeBest: "ВЫГОДНО +20%",
-        redirecting: "Переход на страницу оплаты..."
+        wallet_desc: "Пополните баланс через Stripe",
+        how_it_works: "Как работает AKHO?",
+        view_leaderboard: "Рейтинг",
+        cash_out: "Вывод средств",
+        min_withdraw: "Минимальный вывод: 50.00 € (800 AKHO)",
+        withdraw_req: "Запросить вывод",
+        thanks: "Спасибо!",
+        payment_msg: "Оплата получена. AKHO зачислится в течение 5-10 минут.",
+        check_balance: "Проверить баланс"
       }
     };
 
@@ -985,20 +941,13 @@
       document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
       document.getElementById('btn-filter-reward').innerText = lang.filterReward;
 
-      document.getElementById('lbl-topup-title').innerText = lang.topupTitle;
-      document.getElementById('lbl-current-coins').innerText = lang.currentCoins;
-      document.getElementById('lbl-choose-pkg').innerText = lang.choosePkg;
-      document.getElementById('lbl-pay-method').innerText = lang.payMethod;
-      document.getElementById('lbl-pay-card').innerText = lang.payCard;
-      if (document.getElementById('lbl-badge-popular')) document.getElementById('lbl-badge-popular').innerText = lang.badgePopular;
-      if (document.getElementById('lbl-badge-best')) document.getElementById('lbl-badge-best').innerText = lang.badgeBest;
-
-      updatePayButtonText();
-    }
-
-    function updatePayButtonText() {
-      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
-      document.getElementById('lbl-pay-btn').innerText = lang.payBtnPrefix + selectedPackage.price.toFixed(2);
+      // Translate data-key elements
+      document.querySelectorAll('[data-key]').forEach(function(el) {
+        var key = el.getAttribute('data-key');
+        if (lang[key]) {
+          el.innerText = lang[key];
+        }
+      });
     }
 
     function formatTxDate(timestamp) {
@@ -1030,7 +979,6 @@
             var balance = data.balance || 0;
             document.getElementById('main-balance-val').innerText = parseFloat(balance).toFixed(2);
             document.getElementById('akho-coins-val').innerText = Math.floor(balance);
-            document.getElementById('topup-current-val').innerText = Math.floor(balance);
             
             if (data.language) {
               currentLang = data.language;
@@ -1045,8 +993,33 @@
       }
     });
 
-    function openAkhoInfo() {
+    /* STRIPE PAYMENT DIRECT REDIRECT FUNCTION */
+    function initStripePayment(stripeUrl) {
+      var user = auth.currentUser;
+      if (!user) {
+        alert("ავტორიზაცია აუცილებელია!");
+        return;
+      }
+      // გადამისამართება Stripe-ის ოფიციალურ საგადახდო ლინკზე
+      window.location.href = stripeUrl + "?client_reference_id=" + user.uid;
+    }
+
+    function openInfoUI() {
       alert("აკჰო (AKHO) წარმოადგენს Emigrantbook-ის შიდა ციფრულ ვალუტას.");
+    }
+
+    function openLeaderboard() {
+      alert("რეიტინგის გვერდი მალე დაემატება!");
+    }
+
+    function submitWithdraw() {
+      var iban = document.getElementById('ibanInput').value;
+      if (!iban) {
+        document.getElementById('cashoutStatus').innerText = "გთხოვთ მიუთითოთ IBAN ან PayPal!";
+        return;
+      }
+      alert("გატანის მოთხოვნა მიღებულია! გადამოწმება მოხდება 24 საათში.");
+      document.getElementById('ibanInput').value = '';
     }
 
     function openTopUpModal() {
@@ -1059,67 +1032,6 @@
       const modal = document.getElementById('topUpModal');
       modal.classList.remove('active');
       setTimeout(() => modal.style.display = 'none', 300);
-    }
-
-    function selectPackage(coins, price, element) {
-      selectedPackage = { coins: coins, price: price };
-      document.querySelectorAll('.pkg-card').forEach(card => card.classList.remove('selected'));
-      element.classList.add('selected');
-      updatePayButtonText();
-    }
-
-    function selectPayMethod(method, element) {
-      selectedPaymentMethod = method;
-      document.querySelectorAll('.pay-method-card').forEach(card => card.classList.remove('selected'));
-      element.classList.add('selected');
-    }
-
-    /* REAL PAYMENT GATEWAY FUNCTION (No simulated increments) */
-    async function processRealCheckout() {
-      var user = auth.currentUser;
-      if (!user) {
-        alert("ავტორიზაცია აუცილებელია!");
-        return;
-      }
-
-      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
-      var btn = document.getElementById('btn-pay-submit');
-      btn.disabled = true;
-      document.getElementById('lbl-pay-btn').innerText = lang.redirecting;
-
-      try {
-        const response = await fetch('https://YOUR_BACKEND_API_OR_FIREBASE_FUNCTION/create-checkout-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            uid: user.uid,
-            coins: selectedPackage.coins,
-            price: selectedPackage.price,
-            paymentMethod: selectedPaymentMethod
-          }),
-        });
-
-        const session = await response.json();
-
-        if (session.url) {
-          window.location.href = session.url;
-        } else if (session.id && typeof stripe !== 'undefined') {
-          const result = await stripe.redirectToCheckout({ sessionId: session.id });
-          if (result.error) alert(result.error.message);
-        } else {
-          alert("საგადახდო სისტემასთან დაკავშირება ვერ მოხერხდა. ჩართეთ Stripe / BOG / TBC Backend-ი.");
-          btn.disabled = false;
-          updatePayButtonText();
-        }
-
-      } catch (err) {
-        console.error("Payment error:", err);
-        alert("რეალური გადახდისთვის საჭიროა Stripe/TBC backend API-ის დაკავშირება.");
-        btn.disabled = false;
-        updatePayButtonText();
-      }
     }
 
     /* TRANSACTIONS HISTORY MODAL LOGIC */
