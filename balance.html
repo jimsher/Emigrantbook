@@ -599,7 +599,7 @@
 
       <!-- List Container -->
       <div class="tx-list" id="tx-list-container">
-        <!-- Dynamically rendered list items -->
+        <!-- Dynamically rendered real list items -->
       </div>
     </div>
   </div>
@@ -620,7 +620,7 @@
     const db = firebase.firestore();
 
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
-    var rawTransactions = []; // Store active user transactions
+    var rawTransactions = []; // Holds real Firestore documents
     var activeFilter = 'all';
 
     var TRANSLATIONS = {
@@ -641,7 +641,10 @@
         filterExpense: "ხარჯი",
         filterReward: "ჯილდოები",
         noTransactions: "ტრანზაქციების ისტორია ცარიელია",
-        completedStatus: "წარმატებული"
+        completedStatus: "წარმატებული",
+        defaultIncomeTitle: "ბალანსის შევსება",
+        defaultExpenseTitle: "გადახდა / ხარჯი",
+        defaultRewardTitle: "მიღებული ჯილდო"
       },
       en: {
         title: "Balance",
@@ -660,7 +663,10 @@
         filterExpense: "Expenses",
         filterReward: "Rewards",
         noTransactions: "No transactions found",
-        completedStatus: "Completed"
+        completedStatus: "Completed",
+        defaultIncomeTitle: "Balance Top-up",
+        defaultExpenseTitle: "Payment / Expense",
+        defaultRewardTitle: "Received Reward"
       },
       ru: {
         title: "Баланс",
@@ -679,7 +685,10 @@
         filterExpense: "Расходы",
         filterReward: "Награды",
         noTransactions: "История транзакций пуста",
-        completedStatus: "Успешно"
+        completedStatus: "Успешно",
+        defaultIncomeTitle: "Пополнение баланса",
+        defaultExpenseTitle: "Списание / Расход",
+        defaultRewardTitle: "Награда"
       }
     };
 
@@ -696,7 +705,7 @@
       document.getElementById('lbl-monetization').innerText = lang.monetization;
       document.getElementById('lbl-subscriptions').innerText = lang.subscriptions;
 
-      // Transaction modal elements
+      // Transaction modal translations
       document.getElementById('lbl-tx-history-title').innerText = lang.txHistoryTitle;
       document.getElementById('btn-filter-all').innerText = lang.filterAll;
       document.getElementById('btn-filter-income').innerText = lang.filterIncome;
@@ -704,9 +713,23 @@
       document.getElementById('btn-filter-reward').innerText = lang.filterReward;
     }
 
+    // Helper function to convert Firestore Timestamp or JS Date into nice format
+    function formatTxDate(timestamp) {
+      if (!timestamp) return 'ახლახანს';
+      var dateObj = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      var locale = currentLang === 'ka' ? 'ka-GE' : (currentLang === 'ru' ? 'ru-RU' : 'en-US');
+      
+      return dateObj.toLocaleDateString(locale, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        // Balance Snapshot
+        // Real-time Balance Snapshot
         db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
@@ -721,7 +744,7 @@
           }
         });
 
-        // Load Transactions from Firestore
+        // Real-time Firestore Transactions Stream
         listenToTransactions(user.uid);
 
       } else {
@@ -738,7 +761,7 @@
     }
 
     /* =========================================================
-       TRANSACTIONS MODAL LOGIC & RENDERING
+       TRANSACTIONS HISTORY MODAL REAL DATA LOGIC
        ========================================================= */
     function openTransactionsModal() {
       const modal = document.getElementById('txHistoryModal');
@@ -767,6 +790,7 @@
       renderTransactions();
     }
 
+    // Fetches real data from profiles/{uid}/transactions
     function listenToTransactions(uid) {
       db.collection('profiles').doc(uid).collection('transactions')
         .orderBy('timestamp', 'desc')
@@ -778,41 +802,12 @@
             rawTransactions.push(item);
           });
 
-          // Fallback mock transactions if user has no entries yet (so UI looks beautiful)
-          if (rawTransactions.length === 0) {
-            rawTransactions = [
-              {
-                id: 'mock1',
-                type: 'income',
-                title: 'აკჰოს შეძენა',
-                date: 'დღეს, 14:20',
-                amount: '+ 100 AKHO',
-                status: 'წარმატებული'
-              },
-              {
-                id: 'mock2',
-                type: 'reward',
-                title: 'გათამაშების ჯილდო',
-                date: 'გუშინ, 18:45',
-                amount: '+ 25 AKHO',
-                status: 'წარმატებული'
-              },
-              {
-                id: 'mock3',
-                type: 'expense',
-                title: 'სუპერ გამოწერა',
-                date: '5 აგვისტო, 11:10',
-                amount: '- 50 AKHO',
-                status: 'წარმატებული'
-              }
-            ];
-          }
-
+          // Re-render UI immediately if history modal is open
           if (document.getElementById('txHistoryModal').classList.contains('active')) {
             renderTransactions();
           }
         }, function(error) {
-          console.warn("Transactions query warning:", error);
+          console.warn("Transactions Firestore query error/warning:", error);
         });
     }
 
@@ -822,11 +817,13 @@
 
       var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
+      // Filter real items by type
       var filtered = rawTransactions.filter(function(tx) {
         if (activeFilter === 'all') return true;
         return tx.type === activeFilter;
       });
 
+      // Show Empty State if no real records exist
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="tx-empty-state">
@@ -837,32 +834,47 @@
         return;
       }
 
+      // Render actual transaction items from Firestore
       filtered.forEach(function(tx) {
         var iconChar = '➕';
         var iconClass = 'tx-icon-income';
         var amountClass = 'positive';
+        var defaultTitle = lang.defaultIncomeTitle;
+        var amountDisplay = '';
 
         if (tx.type === 'expense') {
           iconChar = '➖';
           iconClass = 'tx-icon-expense';
           amountClass = 'negative';
+          defaultTitle = lang.defaultExpenseTitle;
         } else if (tx.type === 'reward') {
           iconChar = '🎁';
           iconClass = 'tx-icon-reward';
           amountClass = 'reward';
+          defaultTitle = lang.defaultRewardTitle;
         }
+
+        // Format numerical or string amounts
+        if (typeof tx.amount === 'number') {
+          var prefix = tx.type === 'expense' ? '- ' : '+ ';
+          amountDisplay = prefix + Math.abs(tx.amount) + ' AKHO';
+        } else {
+          amountDisplay = tx.amount || '0 AKHO';
+        }
+
+        var formattedDate = formatTxDate(tx.timestamp || tx.date);
 
         var itemHtml = `
           <div class="tx-item">
             <div class="tx-item-left">
               <div class="tx-icon-box ${iconClass}">${iconChar}</div>
               <div class="tx-info">
-                <div class="tx-title">${tx.title || 'ტრანზაქცია'}</div>
-                <div class="tx-date">${tx.date || 'ახლახანს'}</div>
+                <div class="tx-title">${tx.title || defaultTitle}</div>
+                <div class="tx-date">${formattedDate}</div>
               </div>
             </div>
             <div class="tx-item-right">
-              <div class="tx-amount ${amountClass}">${tx.amount}</div>
+              <div class="tx-amount ${amountClass}">${amountDisplay}</div>
               <div class="tx-status">${tx.status || lang.completedStatus}</div>
             </div>
           </div>
