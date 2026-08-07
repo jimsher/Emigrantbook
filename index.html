@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="supabase.css">
   <link rel="manifest" href="manifest.json">
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js)"></script>
+  <script src="[https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js](https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js)"></script>
   
   <style>
     /* TikTok Style Video Styling: Fill width completely & Hide UI controls visual gaps */
@@ -334,12 +334,18 @@
       <div class="input-group">
         <input type="password" id="password" placeholder="Password">
       </div>
+      
+      <!-- ✅ განმეორებითი პაროლის ველი (რეგისტრაციის დროს გამოსაჩენად) -->
+      <div class="input-group" id="confirm-password-group" style="display: none;">
+        <input type="password" id="confirm-password" placeholder="Repeat Password">
+      </div>
 
       <div class="error-msg" id="error-message"></div>
 
       <button class="btn" id="auth-btn" onclick="handleAuth()">Login</button>
-
-      <div class="forgot-pass" id="forgot-pass-btn" onclick="alert('Password recovery will be added soon!')">Forgot password?</div>
+      
+      <!-- ✅ პაროლის აღდგენის ღილაკი -->
+      <div class="forgot-pass" id="forgot-pass-btn" onclick="showPasswordReset()">Forgot password?</div>
 
       <div class="toggle-text">
         <span id="toggle-link" onclick="toggleAuthMode()">Create Account</span>
@@ -1568,6 +1574,10 @@
       var toggleLink = document.getElementById('toggle-link');
       if(toggleLink) toggleLink.innerText = isLoginMode ? "Create Account" : "Already have an account? Login";
       
+      // ✅ განმეორებითი პაროლის placeholder
+      var confirmPassInput = document.getElementById('confirm-password');
+      if(confirmPassInput) confirmPassInput.placeholder = t.authSubtitleReg === "Create a new account" ? "Repeat Password" : "Repeat Password"; // Adjust translation as needed
+
       var pwaTitle = document.getElementById('lbl-pwa-title');
       if(pwaTitle) pwaTitle.innerText = t.pwaTitle;
       var pwaSub = document.getElementById('lbl-pwa-sub');
@@ -1918,7 +1928,7 @@ auth.onAuthStateChanged(function(user) {
     var lastCheckDate = localStorage.getItem('last_ip_check_date');
 
     if (lastCheckDate !== todayStr) {
-      fetch('https://ipapi.co/json/')
+      fetch('[https://ipapi.co/json/](https://ipapi.co/json/)')
         .then(function(res) { return res.json(); })
         .then(function(ipData) {
           if (ipData && ipData.ip) {
@@ -3712,7 +3722,7 @@ function uploadMediaToFirebase(file, folder, callback) {
 
   var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
 
-  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+  fetch("[https://api.cloudinary.com/v1_1/](https://api.cloudinary.com/v1_1/)" + CLOUD_NAME + "/" + resourceType + "/upload", {
     method: "POST",
     body: formData
   })
@@ -3741,7 +3751,7 @@ function uploadMediaToFirebase(file, folder, callback) {
       let formData = new FormData();
       formData.append("image", file);
 
-      fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+      fetch("[https://api.imgbb.com/1/upload?key=](https://api.imgbb.com/1/upload?key=)" + IMGBB_API_KEY, {
         method: "POST",
         body: formData
       })
@@ -3803,30 +3813,65 @@ function uploadMediaToFirebase(file, folder, callback) {
     function toggleAuthMode() {
       isLoginMode = !isLoginMode;
       var nameGroup = document.getElementById('name-group');
+      var confirmPasswordGroup = document.getElementById('confirm-password-group'); // ✅
       var errDiv = document.getElementById('error-message');
+      var authBtn = document.getElementById('auth-btn'); // ✅
+
       if (errDiv) errDiv.style.display = 'none';
       if (nameGroup) nameGroup.style.display = isLoginMode ? 'none' : 'block';
+      if (confirmPasswordGroup) confirmPasswordGroup.style.display = isLoginMode ? 'none' : 'block'; // ✅
+
       applyLanguageDOM();
+    }
+
+    // ✅ პაროლის აღდგენის ფუნქცია
+    function showPasswordReset() {
+      var emailEl = document.getElementById('email');
+      var email = emailEl ? emailEl.value.trim() : "";
+      if (!email) {
+        alert("Please enter your email address first.");
+        if(emailEl) emailEl.focus();
+        return;
+      }
+      if (confirm("Send password reset email to " + email + "?")) {
+        auth.sendPasswordResetEmail(email).then(function() {
+          alert("Password reset email sent! Check your inbox.");
+        }).catch(function(error) {
+          alert("Error: " + error.message);
+        });
+      }
     }
 
     function handleAuth() {
       var emailEl = document.getElementById('email');
       var passEl = document.getElementById('password');
+      var confirmPassEl = document.getElementById('confirm-password'); // ✅
       var nameEl = document.getElementById('fullname');
       var errorDiv = document.getElementById('error-message');
 
       var email = emailEl ? emailEl.value.trim() : "";
       var password = passEl ? passEl.value.trim() : "";
+      var confirmPassword = confirmPassEl ? confirmPassEl.value.trim() : ""; // ✅
       var fullname = nameEl ? nameEl.value.trim() : "";
 
       if (errorDiv) errorDiv.style.display = 'none';
 
-      if (!email || !password || (!isLoginMode && !fullname)) {
+      // ✅ Validation checks
+      if (!email || !password || (!isLoginMode && (!fullname || !confirmPassword))) {
         if (errorDiv) {
           errorDiv.innerText = "Fill all fields!";
           errorDiv.style.display = 'block';
         }
         return;
+      }
+      
+      // ✅ Check passwords match on registration
+      if (!isLoginMode && password !== confirmPassword) {
+          if (errorDiv) {
+              errorDiv.innerText = "Passwords do not match!";
+              errorDiv.style.display = 'block';
+          }
+          return;
       }
 
       if (isLoginMode) {
@@ -3957,7 +4002,7 @@ function subscribeActiveLivesForFeed() {
             <div class="live-feed-header">
               <div style="display:flex; align-items:center; gap:10px;">
                 <div class="live-avatar-ring">
-                  <img src="${liveData.host_photo || 'https://via.placeholder.com/150'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; display:block;">
+                  <img src="${liveData.host_photo || '[https://via.placeholder.com/150](https://via.placeholder.com/150)'}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; display:block;">
                   <span class="live-badge-overlay">LIVE</span>
                 </div>
                 <div>
@@ -3968,7 +4013,7 @@ function subscribeActiveLivesForFeed() {
             </div>
 
             <div class="live-watch-banner" onclick="window.location.href='live.html?join=${liveId}'">
-              <img src="${liveData.host_photo || 'https://via.placeholder.com/150'}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
+              <img src="${liveData.host_photo || '[https://via.placeholder.com/150](https://via.placeholder.com/150)'}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
               <button class="live-watch-btn">
                 <span>▶</span> უყურე ლაივს
               </button>
