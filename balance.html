@@ -591,18 +591,52 @@
       letter-spacing: 0.5px;
     }
 
+    /* Dynamic Cashout Box (Locked vs Unlocked) */
     .cashout-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
       padding: 18px;
       margin-bottom: 20px;
+      transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    /* Green Frame state when balance >= 800 AKHO (€50) */
+    .cashout-box.unlocked {
+      border: 1px solid #2ed573;
+      background: rgba(46, 213, 115, 0.05);
+      box-shadow: 0 0 20px rgba(46, 213, 115, 0.15);
+    }
+
+    .cashout-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .cashout-title {
       color: #ffffff;
       font-size: 14px;
       font-weight: 800;
+    }
+
+    .cashout-status-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .cashout-status-badge.locked {
+      background: rgba(255, 255, 255, 0.08);
+      color: #777777;
+    }
+
+    .cashout-status-badge.unlocked {
+      background: #2ed573;
+      color: #08080b;
     }
 
     .cashout-desc {
@@ -646,6 +680,11 @@
     .withdraw-btn:active {
       transform: scale(0.98);
       background: #e0e0e0;
+    }
+
+    .withdraw-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
 
     .activity-log {
@@ -820,16 +859,21 @@
           </div>
         </div>
 
-        <!-- CASHOUT BOX -->
-        <div class="cashout-box">
-          <div class="cashout-title" data-key="cash_out">თანხის გატანა</div>
+        <!-- DYNAMIC CASHOUT BOX (Locked vs Green Unlocked Frame) -->
+        <div class="cashout-box" id="cashoutBox">
+          <div class="cashout-header-row">
+            <div class="cashout-title" data-key="cash_out">თანხის გატანა</div>
+            <span class="cashout-status-badge locked" id="cashoutBadge">ჩაკეტილი</span>
+          </div>
           <div class="cashout-desc" data-key="min_withdraw">მინიმალური გატანა: 50.00 € (800 AKHO)</div>
           
-          <div id="cashoutForm">
-            <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal">
-            <button class="withdraw-btn" onclick="submitWithdraw()" data-key="withdraw_req">გატანის მოთხოვნა</button>
+          <div id="cashoutForm" style="display:none;">
+            <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal" disabled>
+            <button class="withdraw-btn" id="withdrawBtn" onclick="submitWithdraw()" disabled data-key="withdraw_req">გატანის მოთხოვნა</button>
           </div>
-          <div id="cashoutStatus" style="color:#ff4757; font-size: 12px; margin-top: 10px; font-weight: 700;"></div>
+          <div id="cashoutStatus" style="color:#777777; font-size: 11px; margin-top: 10px; font-weight: 700;">
+            🔒 გატანისთვის გჭირდებათ მინიმუმ 800 AKHO (€50.00)
+          </div>
         </div>
 
         <!-- ACTIVITY LOG -->
@@ -859,6 +903,7 @@
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
     var rawTransactions = [];
     var activeFilter = 'all';
+    var currentUserBalance = 0; // Store real numeric balance
 
     var TRANSLATIONS = {
       ka: {
@@ -996,6 +1041,58 @@
       });
     }
 
+    /* REAL-TIME DYNAMIC CASHOUT UI CONTROL (800 AKHO = €50.00 threshold) */
+    function updateCashoutUI(balance) {
+      currentUserBalance = balance;
+      var cashoutBox = document.getElementById('cashoutBox');
+      var cashoutForm = document.getElementById('cashoutForm');
+      var cashoutBadge = document.getElementById('cashoutBadge');
+      var cashoutStatus = document.getElementById('cashoutStatus');
+      var ibanInput = document.getElementById('ibanInput');
+      var withdrawBtn = document.getElementById('withdrawBtn');
+
+      var MIN_LIMIT = 800; // 800 AKHO = €50.00
+
+      if (balance >= MIN_LIMIT) {
+        // UNLOCKED STATE: Green border, form visible & editable
+        if (cashoutBox) cashoutBox.classList.add('unlocked');
+        if (cashoutForm) cashoutForm.style.display = 'block';
+        if (cashoutBadge) {
+          cashoutBadge.className = 'cashout-status-badge unlocked';
+          cashoutBadge.innerText = 'ხელმისაწვდომია';
+        }
+        if (ibanInput) {
+          ibanInput.disabled = false;
+        }
+        if (withdrawBtn) {
+          withdrawBtn.disabled = false;
+        }
+        if (cashoutStatus) {
+          cashoutStatus.style.color = '#2ed573';
+          cashoutStatus.innerText = '✓ გატანა ხელმისაწვდომია (ბალანსი > 50 €)';
+        }
+      } else {
+        // LOCKED STATE: Default border, form hidden, inputs disabled
+        if (cashoutBox) cashoutBox.classList.remove('unlocked');
+        if (cashoutForm) cashoutForm.style.display = 'none';
+        if (cashoutBadge) {
+          cashoutBadge.className = 'cashout-status-badge locked';
+          cashoutBadge.innerText = 'ჩაკეტილი';
+        }
+        if (ibanInput) {
+          ibanInput.disabled = true;
+          ibanInput.value = '';
+        }
+        if (withdrawBtn) {
+          withdrawBtn.disabled = true;
+        }
+        if (cashoutStatus) {
+          cashoutStatus.style.color = '#777777';
+          cashoutStatus.innerText = '🔒 გატანისთვის გჭირდებათ მინიმუმ 800 AKHO (€50.00)';
+        }
+      }
+    }
+
     /* AUTOMATIC STRIPE PAYMENT COMPLETION HANDLER */
     function checkStripePaymentReturn(user) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -1007,7 +1104,6 @@
         const txId = urlParams.get('session_id') || ('tx_' + Date.now());
         const processedKey = 'processed_stripe_tx_' + txId;
 
-        // Prevent double processing on page refresh
         if (sessionStorage.getItem(processedKey)) return;
         sessionStorage.setItem(processedKey, 'true');
 
@@ -1015,12 +1111,10 @@
         var userRef = db.collection('profiles').doc(user.uid);
         var txRef = userRef.collection('transactions').doc();
 
-        // 1) REAL INCREMENT IN FIRESTORE
         batch.update(userRef, {
           balance: firebase.firestore.FieldValue.increment(coins)
         });
 
-        // 2) RECORD TRANSACTION
         batch.set(txRef, {
           type: 'income',
           title: 'AKHO შევსება (Stripe)',
@@ -1031,7 +1125,6 @@
         });
 
         batch.commit().then(function() {
-          // Clear query params clean URL
           window.history.replaceState({}, document.title, window.location.pathname);
           showToast("გილოცავთ! +" + coins + " AKHO ჩაირიცხა ანგარიშზე!");
         }).catch(function(err) {
@@ -1056,7 +1149,7 @@
       if (user) {
         var userRef = db.collection('profiles').doc(user.uid);
 
-        // REAL-TIME FIRESTORE LISTENER (No forced zeroing!)
+        // REAL-TIME FIRESTORE LISTENER
         userRef.onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
@@ -1064,6 +1157,9 @@
             document.getElementById('main-balance-val').innerText = parseFloat(balance).toFixed(2);
             document.getElementById('akho-coins-val').innerText = Math.floor(balance);
             
+            // Dynamic update for Cashout UI limits
+            updateCashoutUI(balance);
+
             if (data.language) {
               currentLang = data.language;
               applyTranslations();
@@ -1088,10 +1184,7 @@
         return;
       }
 
-      // Append redirect back parameters
-      var currentReturnUrl = encodeURIComponent(window.location.origin + window.location.pathname + '?status=success&coins=' + coinsCount + '&price=' + eurPrice);
       var finalUrl = stripeUrl + "?client_reference_id=" + user.uid;
-
       window.location.href = finalUrl;
     }
 
@@ -1104,11 +1197,17 @@
     }
 
     function submitWithdraw() {
+      if (currentUserBalance < 800) {
+        alert("თანხის გატანისთვის აუცილებელია მინიმუმ 800 AKHO (€50.00)!");
+        return;
+      }
+
       var iban = document.getElementById('ibanInput').value;
       if (!iban) {
         document.getElementById('cashoutStatus').innerText = "გთხოვთ მიუთითოთ IBAN ან PayPal!";
         return;
       }
+
       alert("გატანის მოთხოვნა მიღებულია! გადამოწმება მოხდება 24 საათში.");
       document.getElementById('ibanInput').value = '';
     }
