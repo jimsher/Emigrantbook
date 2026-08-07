@@ -391,6 +391,19 @@
     </div>
   </div>
 
+  <!-- 🔔 NOTIFICATIONS CUSTOM MODAL -->
+  <div id="notifications-modal" class="custom-lang-modal-overlay" onclick="closeNotificationsModal()">
+    <div class="custom-lang-modal-box" onclick="event.stopPropagation()">
+      <div class="custom-lang-modal-header">
+        <span style="color: #dcae36; font-weight: bold; font-size: 16px;">🔔 Notifications</span>
+        <button onclick="closeNotificationsModal()" class="custom-lang-close-btn">&times;</button>
+      </div>
+      <div id="notifications-list-container" class="custom-lang-list" style="padding: 12px; gap: 8px; max-height: 400px; overflow-y: auto;">
+        <div style="text-align: center; color: #aaaaaa; padding: 20px;">No new notifications</div>
+      </div>
+    </div>
+  </div>
+
   <div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
@@ -2254,18 +2267,40 @@ auth.onAuthStateChanged(function(user) {
       }
     }
 
+    /* 🔔 NOTIFICATIONS CUSTOM MODAL FUNCTIONS */
     function openRealtimeNotifications() {
+      var modal = document.getElementById('notifications-modal');
+      var container = document.getElementById('notifications-list-container');
+      
+      if (!container || !modal) return;
+      
       if (realtimeNotificationsList.length === 0) {
-        alert("No new notifications");
-        return;
+        container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 25px; font-size: 14px;">No new notifications</div>`;
+      } else {
+        var html = "";
+        realtimeNotificationsList.forEach(function(n) {
+          var timeStr = n.time ? new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+          html += `
+            <div style="background: #222222; border: 1px solid #333333; border-left: 3px solid #dcae36; border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 20px;">🔔</span>
+              <div style="flex: 1;">
+                <div style="color: #e4e6eb; font-size: 13px; font-weight: 500; line-height: 1.4;">${n.text}</div>
+                <div style="color: #aaaaaa; font-size: 11px; margin-top: 4px;">${timeStr}</div>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
       }
-      var msg = "🔔 Realtime Notifications:\n\n";
-      realtimeNotificationsList.forEach(function(n, i) {
-        msg += (i + 1) + ") " + n.text + "\n";
-      });
-      alert(msg);
+
+      modal.style.display = 'flex';
       realtimeNotificationsList = [];
       updateMainNotificationBadge();
+    }
+
+    function closeNotificationsModal() {
+      var modal = document.getElementById('notifications-modal');
+      if (modal) modal.style.display = 'none';
     }
 
     function subscribeToPostsRealtime() {
