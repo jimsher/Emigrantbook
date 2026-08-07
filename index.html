@@ -1298,11 +1298,7 @@
     function initUserPresence(userId) {
       if (!userId) return;
       updateUserPresence(userId, true);
-      if (presenceInterval) clearInterval(presenceInterval);
-      presenceInterval = setInterval(function() {
-        updateUserPresence(userId, true);
-      }, 60000);
-
+      
       document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden') {
           updateUserPresence(userId, false);
@@ -2328,7 +2324,7 @@ auth.onAuthStateChanged(function(user) {
           console.error("Total users count error:", err);
         });
       } else {
-        db.collection('profiles').limit(100).get().then(function(snapshot) {
+        db.collection('profiles').limit(1).get().then(function(snapshot) {
           var badgeEl = document.getElementById('total-users-badge');
           if (badgeEl) badgeEl.innerText = snapshot.size;
         }).catch(function(err) {
@@ -4069,7 +4065,8 @@ function uploadMediaToFirebase(file, folder, callback) {
 function subscribeActiveLivesForFeed() {
   db.collection('lives')
     .where('status', '==', 'active')
-    .onSnapshot(function(snapshot) {
+    .get()
+    .then(function(snapshot) {
       var liveContainer = document.getElementById('active-lives-feed-zone');
       if (!liveContainer) {
         var postsWall = document.getElementById('posts-wall');
@@ -4114,6 +4111,8 @@ function subscribeActiveLivesForFeed() {
         `;
         liveContainer.innerHTML += liveCardHtml;
       });
+    }).catch(function(err) {
+      console.error("Active lives get error:", err);
     });
 }
 
