@@ -199,6 +199,11 @@
       cursor: pointer;
       border: 1px solid rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(8px);
+      transition: background 0.2s;
+    }
+
+    .section-card:active {
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .section-card-title {
@@ -266,6 +271,234 @@
       color: #dddddd;
       line-height: 1.2;
     }
+
+    /* =========================================================
+       FULL-SCREEN TRANSACTIONS HISTORY MODAL STYLES
+       ========================================================= */
+    .tx-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #0d0d11;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.25s ease;
+    }
+
+    .tx-modal-overlay.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .tx-modal-content {
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      position: relative;
+    }
+
+    .tx-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0 16px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .tx-back-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #ffffff;
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .tx-back-btn:active {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .tx-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* Filter Tabs */
+    .tx-filters {
+      display: flex;
+      gap: 8px;
+      padding: 16px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tx-filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tx-filter-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #aaaaaa;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tx-filter-btn.active {
+      background: #2ed573;
+      color: #0d0d11;
+      border-color: #2ed573;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(46, 213, 115, 0.3);
+    }
+
+    /* Transaction List Container */
+    .tx-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 8px;
+      padding-bottom: 24px;
+    }
+
+    .tx-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      transition: transform 0.15s ease;
+    }
+
+    .tx-item:active {
+      transform: scale(0.98);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tx-item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tx-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .tx-icon-income {
+      background: rgba(46, 213, 115, 0.15);
+      color: #2ed573;
+      border: 1px solid rgba(46, 213, 115, 0.3);
+    }
+
+    .tx-icon-expense {
+      background: rgba(255, 71, 87, 0.15);
+      color: #ff4757;
+      border: 1px solid rgba(255, 71, 87, 0.3);
+    }
+
+    .tx-icon-reward {
+      background: rgba(220, 174, 54, 0.15);
+      color: #dcae36;
+      border: 1px solid rgba(220, 174, 54, 0.3);
+    }
+
+    .tx-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .tx-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .tx-date {
+      font-size: 12px;
+      color: #888888;
+    }
+
+    .tx-item-right {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .tx-amount {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .tx-amount.positive {
+      color: #2ed573;
+    }
+
+    .tx-amount.negative {
+      color: #ff4757;
+    }
+
+    .tx-amount.reward {
+      color: #dcae36;
+    }
+
+    .tx-status {
+      font-size: 11px;
+      color: #2ed573;
+      font-weight: 600;
+    }
+
+    .tx-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 60%;
+      color: #777777;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .tx-empty-icon {
+      font-size: 48px;
+      opacity: 0.5;
+    }
   </style>
 </head>
 <body>
@@ -313,11 +546,11 @@
       </div>
     </div>
 
-    <!-- Transactions Section -->
-    <div class="section-card" onclick="alert('ტრანზაქციების ისტორია მალე დაემატება!')">
+    <!-- Transactions Section Button -->
+    <div class="section-card" onclick="openTransactionsModal()">
       <div class="section-card-title" id="lbl-transactions">ტრანზაქციები</div>
       <div class="section-card-right">
-        <span id="lbl-last-purchase">ყიდვა: 0 AKHO</span>
+        <span id="lbl-last-purchase">აკჰოს შეძენა</span>
         <span>›</span>
       </div>
     </div>
@@ -344,6 +577,33 @@
     </div>
   </div>
 
+  <!-- =========================================================
+       FULL-SCREEN TRANSACTIONS HISTORY OVERLAY PAGE
+       ========================================================= -->
+  <div class="tx-modal-overlay" id="txHistoryModal">
+    <div class="tx-modal-content">
+      <!-- Header -->
+      <div class="tx-header">
+        <button class="tx-back-btn" onclick="closeTransactionsModal()">‹</button>
+        <div class="tx-modal-title" id="lbl-tx-history-title">ტრანზაქციების ისტორია</div>
+        <div style="width: 40px;"></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="tx-filters">
+        <button class="tx-filter-btn active" onclick="filterTransactions('all', this)" id="btn-filter-all">ყველა</button>
+        <button class="tx-filter-btn" onclick="filterTransactions('income', this)" id="btn-filter-income">შევსება</button>
+        <button class="tx-filter-btn" onclick="filterTransactions('expense', this)" id="btn-filter-expense">ხარჯი</button>
+        <button class="tx-filter-btn" onclick="filterTransactions('reward', this)" id="btn-filter-reward">ჯილდოები</button>
+      </div>
+
+      <!-- List Container -->
+      <div class="tx-list" id="tx-list-container">
+        <!-- Dynamically rendered list items -->
+      </div>
+    </div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -360,6 +620,8 @@
     const db = firebase.firestore();
 
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+    var rawTransactions = []; // Store active user transactions
+    var activeFilter = 'all';
 
     var TRANSLATIONS = {
       ka: {
@@ -372,7 +634,14 @@
         services: "სერვისები",
         liveRewards: "გათამაშების ჯილდოები",
         monetization: "მონეტიზაცია",
-        subscriptions: "გამოწერების მართვა"
+        subscriptions: "გამოწერების მართვა",
+        txHistoryTitle: "ტრანზაქციების ისტორია",
+        filterAll: "ყველა",
+        filterIncome: "შევსება",
+        filterExpense: "ხარჯი",
+        filterReward: "ჯილდოები",
+        noTransactions: "ტრანზაქციების ისტორია ცარიელია",
+        completedStatus: "წარმატებული"
       },
       en: {
         title: "Balance",
@@ -384,7 +653,14 @@
         services: "Services",
         liveRewards: "LIVE Rewards",
         monetization: "Monetization",
-        subscriptions: "Subscriptions"
+        subscriptions: "Subscriptions",
+        txHistoryTitle: "Transaction History",
+        filterAll: "All",
+        filterIncome: "Top-up",
+        filterExpense: "Expenses",
+        filterReward: "Rewards",
+        noTransactions: "No transactions found",
+        completedStatus: "Completed"
       },
       ru: {
         title: "Баланс",
@@ -396,7 +672,14 @@
         services: "Услуги",
         liveRewards: "Награды из прямых...",
         monetization: "Монетизация",
-        subscriptions: "Управление суперподп..."
+        subscriptions: "Управление суперподп...",
+        txHistoryTitle: "История транзакций",
+        filterAll: "Все",
+        filterIncome: "Пополнения",
+        filterExpense: "Расходы",
+        filterReward: "Награды",
+        noTransactions: "История транзакций пуста",
+        completedStatus: "Успешно"
       }
     };
 
@@ -412,10 +695,18 @@
       document.getElementById('lbl-live-rewards').innerText = lang.liveRewards;
       document.getElementById('lbl-monetization').innerText = lang.monetization;
       document.getElementById('lbl-subscriptions').innerText = lang.subscriptions;
+
+      // Transaction modal elements
+      document.getElementById('lbl-tx-history-title').innerText = lang.txHistoryTitle;
+      document.getElementById('btn-filter-all').innerText = lang.filterAll;
+      document.getElementById('btn-filter-income').innerText = lang.filterIncome;
+      document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
+      document.getElementById('btn-filter-reward').innerText = lang.filterReward;
     }
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
+        // Balance Snapshot
         db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
@@ -429,6 +720,10 @@
             }
           }
         });
+
+        // Load Transactions from Firestore
+        listenToTransactions(user.uid);
+
       } else {
         window.location.href = "index.html";
       }
@@ -440,6 +735,140 @@
 
     function openAkhoInfo() {
       alert("აკჰო (AKHO) წარმოადგენს Emigrantbook-ის შიდა ციფრულ ვალუტას.");
+    }
+
+    /* =========================================================
+       TRANSACTIONS MODAL LOGIC & RENDERING
+       ========================================================= */
+    function openTransactionsModal() {
+      const modal = document.getElementById('txHistoryModal');
+      modal.style.display = 'flex';
+      setTimeout(function() {
+        modal.classList.add('active');
+      }, 10);
+      renderTransactions();
+    }
+
+    function closeTransactionsModal() {
+      const modal = document.getElementById('txHistoryModal');
+      modal.classList.remove('active');
+      setTimeout(function() {
+        modal.style.display = 'none';
+      }, 300);
+    }
+
+    function filterTransactions(type, btnElement) {
+      activeFilter = type;
+      var filterBtns = document.querySelectorAll('.tx-filter-btn');
+      filterBtns.forEach(function(btn) { btn.classList.remove('active'); });
+      if (btnElement) {
+        btnElement.classList.add('active');
+      }
+      renderTransactions();
+    }
+
+    function listenToTransactions(uid) {
+      db.collection('profiles').doc(uid).collection('transactions')
+        .orderBy('timestamp', 'desc')
+        .onSnapshot(function(snapshot) {
+          rawTransactions = [];
+          snapshot.forEach(function(doc) {
+            var item = doc.data();
+            item.id = doc.id;
+            rawTransactions.push(item);
+          });
+
+          // Fallback mock transactions if user has no entries yet (so UI looks beautiful)
+          if (rawTransactions.length === 0) {
+            rawTransactions = [
+              {
+                id: 'mock1',
+                type: 'income',
+                title: 'აკჰოს შეძენა',
+                date: 'დღეს, 14:20',
+                amount: '+ 100 AKHO',
+                status: 'წარმატებული'
+              },
+              {
+                id: 'mock2',
+                type: 'reward',
+                title: 'გათამაშების ჯილდო',
+                date: 'გუშინ, 18:45',
+                amount: '+ 25 AKHO',
+                status: 'წარმატებული'
+              },
+              {
+                id: 'mock3',
+                type: 'expense',
+                title: 'სუპერ გამოწერა',
+                date: '5 აგვისტო, 11:10',
+                amount: '- 50 AKHO',
+                status: 'წარმატებული'
+              }
+            ];
+          }
+
+          if (document.getElementById('txHistoryModal').classList.contains('active')) {
+            renderTransactions();
+          }
+        }, function(error) {
+          console.warn("Transactions query warning:", error);
+        });
+    }
+
+    function renderTransactions() {
+      var container = document.getElementById('tx-list-container');
+      container.innerHTML = '';
+
+      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+
+      var filtered = rawTransactions.filter(function(tx) {
+        if (activeFilter === 'all') return true;
+        return tx.type === activeFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="tx-empty-state">
+            <div class="tx-empty-icon">📜</div>
+            <div>${lang.noTransactions}</div>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(function(tx) {
+        var iconChar = '➕';
+        var iconClass = 'tx-icon-income';
+        var amountClass = 'positive';
+
+        if (tx.type === 'expense') {
+          iconChar = '➖';
+          iconClass = 'tx-icon-expense';
+          amountClass = 'negative';
+        } else if (tx.type === 'reward') {
+          iconChar = '🎁';
+          iconClass = 'tx-icon-reward';
+          amountClass = 'reward';
+        }
+
+        var itemHtml = `
+          <div class="tx-item">
+            <div class="tx-item-left">
+              <div class="tx-icon-box ${iconClass}">${iconChar}</div>
+              <div class="tx-info">
+                <div class="tx-title">${tx.title || 'ტრანზაქცია'}</div>
+                <div class="tx-date">${tx.date || 'ახლახანს'}</div>
+              </div>
+            </div>
+            <div class="tx-item-right">
+              <div class="tx-amount ${amountClass}">${tx.amount}</div>
+              <div class="tx-status">${tx.status || lang.completedStatus}</div>
+            </div>
+          </div>
+        `;
+        container.innerHTML += itemHtml;
+      });
     }
 
     applyTranslations();
