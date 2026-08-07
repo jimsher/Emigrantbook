@@ -12,6 +12,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+  <!-- Real Payment Gateway SDK (Stripe) -->
+  <script src="https://js.stripe.com/v3/"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -31,7 +34,6 @@
       overflow-x: hidden;
     }
 
-    /* Ambient Background Gradient (Monochrome / Dark Ambient) */
     .bg-gradient {
       position: fixed;
       top: 0;
@@ -283,9 +285,7 @@
       line-height: 1.2;
     }
 
-    /* =========================================================
-       FULL-SCREEN OVERLAY COMMON STYLES (Modals)
-       ========================================================= */
+    /* Overlay Modals */
     .tx-modal-overlay {
       position: fixed;
       top: 0;
@@ -351,7 +351,6 @@
       letter-spacing: -0.3px;
     }
 
-    /* Filter Tabs */
     .tx-filters {
       display: flex;
       gap: 8px;
@@ -384,7 +383,6 @@
       font-weight: 700;
     }
 
-    /* Transaction List Container */
     .tx-list {
       flex: 1;
       overflow-y: auto;
@@ -404,12 +402,6 @@
       align-items: center;
       justify-content: space-between;
       backdrop-filter: blur(10px);
-      transition: transform 0.15s ease;
-    }
-
-    .tx-item:active {
-      transform: scale(0.98);
-      background: rgba(255, 255, 255, 0.06);
     }
 
     .tx-item-left {
@@ -486,9 +478,7 @@
       opacity: 0.3;
     }
 
-    /* =========================================================
-       BUY AKHO COINS (TOP-UP) OVERLAY - MONOCHROME PREMIUM STYLES
-       ========================================================= */
+    /* Top Up Premium Monochrome */
     .topup-banner {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -531,7 +521,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* Coin Package Cards Grid */
     .packages-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -603,7 +592,6 @@
       color: #ffffff;
     }
 
-    /* Payment Method Selector */
     .pay-methods {
       display: flex;
       flex-direction: column;
@@ -645,7 +633,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
     }
 
     .pay-method-card.selected .pay-radio {
@@ -653,7 +640,6 @@
       background: #ffffff;
     }
 
-    /* Bottom Sticky Pay CTA Button */
     .topup-cta-container {
       margin-top: auto;
       padding: 16px 0;
@@ -674,7 +660,6 @@
       justify-content: center;
       gap: 8px;
       transition: transform 0.15s ease, opacity 0.2s;
-      letter-spacing: -0.2px;
     }
 
     .topup-pay-btn:active {
@@ -721,7 +706,7 @@
       </div>
     </div>
 
-    <!-- Akho Coins Badge (Приобрести Монеты) -->
+    <!-- Akho Coins Badge -->
     <div class="akho-pill-card" onclick="openTopUpModal()">
       <div class="akho-pill-left">
         <div class="akho-icon-badge">A</div>
@@ -733,7 +718,7 @@
       </div>
     </div>
 
-    <!-- Transactions Section Button -->
+    <!-- Transactions Section -->
     <div class="section-card" onclick="openTransactionsModal()">
       <div class="section-card-title" id="lbl-transactions">ტრანზაქციები</div>
       <div class="section-card-right">
@@ -742,7 +727,7 @@
       </div>
     </div>
 
-    <!-- Services Grid (Услуги) -->
+    <!-- Services Grid -->
     <div>
       <div class="services-title" id="lbl-services">სერვისები</div>
       <div class="services-grid">
@@ -764,19 +749,15 @@
     </div>
   </div>
 
-  <!-- =========================================================
-       FULL-SCREEN TRANSACTIONS HISTORY OVERLAY PAGE
-       ========================================================= -->
+  <!-- TRANSACTIONS OVERLAY -->
   <div class="tx-modal-overlay" id="txHistoryModal">
     <div class="tx-modal-content">
-      <!-- Header -->
       <div class="tx-header">
         <button class="tx-back-btn" onclick="closeTransactionsModal()">‹</button>
         <div class="tx-modal-title" id="lbl-tx-history-title">ტრანზაქციების ისტორია</div>
         <div style="width: 40px;"></div>
       </div>
 
-      <!-- Filters -->
       <div class="tx-filters">
         <button class="tx-filter-btn active" onclick="filterTransactions('all', this)" id="btn-filter-all">ყველა</button>
         <button class="tx-filter-btn" onclick="filterTransactions('income', this)" id="btn-filter-income">შევსება</button>
@@ -784,28 +765,20 @@
         <button class="tx-filter-btn" onclick="filterTransactions('reward', this)" id="btn-filter-reward">ჯილდოები</button>
       </div>
 
-      <!-- List Container -->
-      <div class="tx-list" id="tx-list-container">
-        <!-- Dynamically rendered real list items -->
-      </div>
+      <div class="tx-list" id="tx-list-container"></div>
     </div>
   </div>
 
-  <!-- =========================================================
-       FULL-SCREEN BUY AKHO COINS (TOP-UP) OVERLAY PAGE
-       ========================================================= -->
+  <!-- TOP-UP OVERLAY PAGE -->
   <div class="tx-modal-overlay" id="topUpModal">
     <div class="tx-modal-content">
-      <!-- Header -->
       <div class="tx-header">
         <button class="tx-back-btn" onclick="closeTopUpModal()">‹</button>
         <div class="tx-modal-title" id="lbl-topup-title">აკჰოს შეძენა</div>
         <div style="width: 40px;"></div>
       </div>
 
-      <!-- Scrollable content area -->
       <div style="flex: 1; overflow-y: auto; padding-top: 10px;">
-        <!-- Banner Quick Balance -->
         <div class="topup-banner">
           <div class="topup-banner-left">
             <span class="topup-banner-title" id="lbl-current-coins">მიმდინარე აკჰო</span>
@@ -816,7 +789,6 @@
 
         <div class="topup-section-label" id="lbl-choose-pkg">აირჩიეთ პაკეტი</div>
 
-        <!-- Coin Packages Grid -->
         <div class="packages-grid">
           <div class="pkg-card" onclick="selectPackage(100, 1.00, this)">
             <div class="pkg-coins">100 <span>AKHO</span></div>
@@ -848,7 +820,6 @@
           </div>
         </div>
 
-        <!-- Payment Method -->
         <div class="topup-section-label" id="lbl-pay-method">გადახდის მეთოდი</div>
         <div class="pay-methods">
           <div class="pay-method-card selected" onclick="selectPayMethod('card', this)">
@@ -869,9 +840,8 @@
         </div>
       </div>
 
-      <!-- Action Button -->
       <div class="topup-cta-container">
-        <button class="topup-pay-btn" id="btn-pay-submit" onclick="processCoinPurchase()">
+        <button class="topup-pay-btn" id="btn-pay-submit" onclick="processRealCheckout()">
           <span id="lbl-pay-btn">შეძენა - $4.99</span>
         </button>
       </div>
@@ -893,11 +863,13 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // ინიციალიზაცია Stripe (ჩასვი შენი Stripe Public Key)
+    // const stripe = Stripe('pk_live_xxxxxxxxx');
+
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
-    var rawTransactions = []; // Holds real Firestore documents
+    var rawTransactions = [];
     var activeFilter = 'all';
 
-    // Active selection state for Top-Up
     var selectedPackage = { coins: 500, price: 4.99 };
     var selectedPaymentMethod = 'card';
 
@@ -931,8 +903,7 @@
         payBtnPrefix: "შეძენა - $",
         badgePopular: "პოპულარული",
         badgeBest: "საუკეთესო ფასი +20%",
-        purchaseSuccess: "გილოცავთ! ბალანსი წარმატებით შეივსო ",
-        processing: "მუშავდება..."
+        redirecting: "გადასვლა საგადახდო გვერდზე..."
       },
       en: {
         title: "Balance",
@@ -963,8 +934,7 @@
         payBtnPrefix: "Pay - $",
         badgePopular: "POPULAR",
         badgeBest: "BEST VALUE +20%",
-        purchaseSuccess: "Congratulations! Top-up successful ",
-        processing: "Processing..."
+        redirecting: "Redirecting to Payment Gateway..."
       },
       ru: {
         title: "Баланс",
@@ -995,8 +965,7 @@
         payBtnPrefix: "Оплатить - $",
         badgePopular: "ПОПУЛЯРНОЕ",
         badgeBest: "ВЫГОДНО +20%",
-        purchaseSuccess: "Поздравляем! Баланс успешно пополнен ",
-        processing: "Обработка..."
+        redirecting: "Переход на страницу оплаты..."
       }
     };
 
@@ -1013,14 +982,12 @@
       document.getElementById('lbl-monetization').innerText = lang.monetization;
       document.getElementById('lbl-subscriptions').innerText = lang.subscriptions;
 
-      // Transaction modal translations
       document.getElementById('lbl-tx-history-title').innerText = lang.txHistoryTitle;
       document.getElementById('btn-filter-all').innerText = lang.filterAll;
       document.getElementById('btn-filter-income').innerText = lang.filterIncome;
       document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
       document.getElementById('btn-filter-reward').innerText = lang.filterReward;
 
-      // Top-Up modal translations
       document.getElementById('lbl-topup-title').innerText = lang.topupTitle;
       document.getElementById('lbl-current-coins').innerText = lang.currentCoins;
       document.getElementById('lbl-choose-pkg').innerText = lang.choosePkg;
@@ -1037,7 +1004,6 @@
       document.getElementById('lbl-pay-btn').innerText = lang.payBtnPrefix + selectedPackage.price.toFixed(2);
     }
 
-    // Helper function to convert Firestore Timestamp or JS Date into nice format
     function formatTxDate(timestamp) {
       if (!timestamp) return 'ახლახანს';
       var dateObj = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -1053,7 +1019,6 @@
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        // Real-time Balance Snapshot
         db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
@@ -1069,9 +1034,7 @@
           }
         });
 
-        // Real-time Firestore Transactions Stream
         listenToTransactions(user.uid);
-
       } else {
         window.location.href = "index.html";
       }
@@ -1081,42 +1044,35 @@
       alert("აკჰო (AKHO) წარმოადგენს Emigrantbook-ის შიდა ციფრულ ვალუტას.");
     }
 
-    /* =========================================================
-       BUY AKHO COINS (TOP-UP) LOGIC
-       ========================================================= */
     function openTopUpModal() {
       const modal = document.getElementById('topUpModal');
       modal.style.display = 'flex';
-      setTimeout(function() {
-        modal.classList.add('active');
-      }, 10);
+      setTimeout(() => modal.classList.add('active'), 10);
     }
 
     function closeTopUpModal() {
       const modal = document.getElementById('topUpModal');
       modal.classList.remove('active');
-      setTimeout(function() {
-        modal.style.display = 'none';
-      }, 300);
+      setTimeout(() => modal.style.display = 'none', 300);
     }
 
     function selectPackage(coins, price, element) {
       selectedPackage = { coins: coins, price: price };
-      var pkgCards = document.querySelectorAll('.pkg-card');
-      pkgCards.forEach(function(card) { card.classList.remove('selected'); });
+      document.querySelectorAll('.pkg-card').forEach(card => card.classList.remove('selected'));
       element.classList.add('selected');
       updatePayButtonText();
     }
 
     function selectPayMethod(method, element) {
       selectedPaymentMethod = method;
-      var methodCards = document.querySelectorAll('.pay-method-card');
-      methodCards.forEach(function(card) { card.classList.remove('selected'); });
+      document.querySelectorAll('.pay-method-card').forEach(card => card.classList.remove('selected'));
       element.classList.add('selected');
     }
 
-    // REAL FIRESTORE TRANSACTION: Top-up coins and write log
-    function processCoinPurchase() {
+    /* =========================================================
+       REAL STRIPE / PAYMENT GATEWAY INTEGRATION FUNCTION
+       ========================================================= */
+    async function processRealCheckout() {
       var user = auth.currentUser;
       if (!user) {
         alert("ავტორიზაცია აუცილებელია!");
@@ -1125,75 +1081,73 @@
 
       var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       var btn = document.getElementById('btn-pay-submit');
-      var originalText = document.getElementById('lbl-pay-btn').innerText;
-
       btn.disabled = true;
-      document.getElementById('lbl-pay-btn').innerText = lang.processing;
+      document.getElementById('lbl-pay-btn').innerText = lang.redirecting;
 
-      var batch = db.batch();
-      var userRef = db.collection('profiles').doc(user.uid);
-      var newTxRef = userRef.collection('transactions').doc();
+      try {
+        /*
+          რეალური API მოთხოვნა შენს backend / Firebase Cloud Function-ზე.
+          სერვერი შექმნის Stripe Checkout Session-ს და დაგიბრუნებს session.id-ს ან საგადახდო ლინკს:
+        */
+        
+        const response = await fetch('https://YOUR_BACKEND_API_OR_FIREBASE_FUNCTION/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: user.uid,
+            coins: selectedPackage.coins,
+            price: selectedPackage.price,
+            paymentMethod: selectedPaymentMethod
+          }),
+        });
 
-      // 1) Increment User's Balance
-      batch.update(userRef, {
-        balance: firebase.firestore.FieldValue.increment(selectedPackage.coins)
-      });
+        const session = await response.json();
 
-      // 2) Write Transaction Record
-      batch.set(newTxRef, {
-        type: 'income',
-        title: lang.topupTitle,
-        amount: '+ ' + selectedPackage.coins + ' AKHO',
-        price: '$' + selectedPackage.price.toFixed(2),
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        status: lang.completedStatus
-      });
+        if (session.url) {
+          // გადამისამართება ოფიციალურ უსაფრთხო საბანკო გადახდის გვერდზე
+          window.location.href = session.url;
+        } else if (session.id) {
+          // Stripe SDK-ით გადამისამართება
+          const result = await stripe.redirectToCheckout({ sessionId: session.id });
+          if (result.error) alert(result.error.message);
+        } else {
+          alert("საგადახდო სისტემასთან დაკავშირება ვერ მოხერხდა. ჩართეთ Stripe / BOG / TBC Backend-ი.");
+          btn.disabled = false;
+          updatePayButtonText();
+        }
 
-      // Commit Batch Write to Firestore
-      batch.commit().then(function() {
+      } catch (err) {
+        console.error("Payment error:", err);
+        // თუ ბექენდი ჯერ გაშვებული არ არის, ვაჩვენებთ შეტყობინებას
+        alert("რეალური გადახდისთვის საჭიროა Stripe/TBC backend API-ის დაკავშირება.");
         btn.disabled = false;
-        document.getElementById('lbl-pay-btn').innerText = originalText;
-        alert(lang.purchaseSuccess + selectedPackage.coins + " AKHO!");
-        closeTopUpModal();
-      }).catch(function(error) {
-        console.error("Topup error:", error);
-        btn.disabled = false;
-        document.getElementById('lbl-pay-btn').innerText = originalText;
-        alert("შეცდომა: " + error.message);
-      });
+        updatePayButtonText();
+      }
     }
 
-    /* =========================================================
-       TRANSACTIONS HISTORY MODAL REAL DATA LOGIC
-       ========================================================= */
+    /* TRANSACTIONS HISTORY MODAL LOGIC */
     function openTransactionsModal() {
       const modal = document.getElementById('txHistoryModal');
       modal.style.display = 'flex';
-      setTimeout(function() {
-        modal.classList.add('active');
-      }, 10);
+      setTimeout(() => modal.classList.add('active'), 10);
       renderTransactions();
     }
 
     function closeTransactionsModal() {
       const modal = document.getElementById('txHistoryModal');
       modal.classList.remove('active');
-      setTimeout(function() {
-        modal.style.display = 'none';
-      }, 300);
+      setTimeout(() => modal.style.display = 'none', 300);
     }
 
     function filterTransactions(type, btnElement) {
       activeFilter = type;
-      var filterBtns = document.querySelectorAll('.tx-filter-btn');
-      filterBtns.forEach(function(btn) { btn.classList.remove('active'); });
-      if (btnElement) {
-        btnElement.classList.add('active');
-      }
+      document.querySelectorAll('.tx-filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
       renderTransactions();
     }
 
-    // Fetches real data from profiles/{uid}/transactions
     function listenToTransactions(uid) {
       db.collection('profiles').doc(uid).collection('transactions')
         .orderBy('timestamp', 'desc')
@@ -1205,28 +1159,24 @@
             rawTransactions.push(item);
           });
 
-          // Re-render UI immediately if history modal is open
           if (document.getElementById('txHistoryModal').classList.contains('active')) {
             renderTransactions();
           }
         }, function(error) {
-          console.warn("Transactions Firestore query error/warning:", error);
+          console.warn("Transactions query error:", error);
         });
     }
 
     function renderTransactions() {
       var container = document.getElementById('tx-list-container');
       container.innerHTML = '';
-
       var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
-      // Filter real items by type
       var filtered = rawTransactions.filter(function(tx) {
         if (activeFilter === 'all') return true;
         return tx.type === activeFilter;
       });
 
-      // Show Empty State if no real records exist
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="tx-empty-state">
@@ -1237,7 +1187,6 @@
         return;
       }
 
-      // Render actual transaction items from Firestore
       filtered.forEach(function(tx) {
         var iconChar = '↑';
         var defaultTitle = lang.defaultIncomeTitle;
@@ -1251,7 +1200,6 @@
           defaultTitle = lang.defaultRewardTitle;
         }
 
-        // Format numerical or string amounts
         if (typeof tx.amount === 'number') {
           var prefix = tx.type === 'expense' ? '- ' : '+ ';
           amountDisplay = prefix + Math.abs(tx.amount) + ' AKHO';
