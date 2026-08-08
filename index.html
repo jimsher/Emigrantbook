@@ -953,6 +953,7 @@
     var cachedProfiles = {};
     var cachedOnlineStates = {};
     var cachedFriendsSet = null;
+    var cachedBlockedSet = null; // ორმხრივი დაბლოკილების ქეში
     var activeViewingProfileId = null;
     var currentViewingStoryObj = null;
     var activePostForComments = null;
@@ -978,6 +979,29 @@
     var presenceInterval = null;
     var messengerUnsubscribeGroup = [];
     var lotteryCountdownInterval = null;
+
+    /* 🚫 HELPER: FETCH BIDIRECTIONAL BLOCKED USERS */
+    function fetchBlockedUserIds(callback) {
+      if (!currentUser) { callback(new Set()); return; }
+      if (cachedBlockedSet !== null) {
+        callback(cachedBlockedSet);
+        return;
+      }
+
+      Promise.all([
+        db.collection('blocked_users').where('blocker_id', '==', currentUser.uid).get(),
+        db.collection('blocked_users').where('blocked_id', '==', currentUser.uid).get()
+      ]).then(function(results) {
+        var blockedSet = new Set();
+        results[0].forEach(function(docSnap) { blockedSet.add(docSnap.data().blocked_id); });
+        results[1].forEach(function(docSnap) { blockedSet.add(docSnap.data().blocker_id); });
+        cachedBlockedSet = blockedSet;
+        callback(blockedSet);
+      }).catch(function(err) {
+        console.error("Error fetching blocked users:", err);
+        callback(new Set());
+      });
+    }
 
     /* HELPER: CACHE PROFILE LOAD WITH BATCH SUPPORT */
     function fetchUserProfileCached(userId, callback) {
@@ -1165,7 +1189,9 @@
         confirmBlock: "Are you sure you want to block this user?",
         confirmUnblock: "Are you sure you want to unblock this user?",
         noBlockedUsers: "No blocked users",
-        blockSuccess: "User blocked successfully."
+        blockSuccess: "User blocked successfully.",
+        blockedProfileTitle: "Profile Unavailable",
+        blockedProfileSub: "You cannot view this profile because a block is active."
       },
       it: {
         authSubtitle: "Accedi al tuo profilo", authSubtitleReg: "Crea un nuovo account",
@@ -1211,7 +1237,9 @@
         confirmBlock: "Sei sicuro di voler bloccare questo utente?",
         confirmUnblock: "Sei sicuro di voler sbloccare questo utente?",
         noBlockedUsers: "Nessun utente bloccato",
-        blockSuccess: "Utente bloccato con successo."
+        blockSuccess: "Utente bloccato con successo.",
+        blockedProfileTitle: "Profilo non disponibile",
+        blockedProfileSub: "Non puoi visualizzare questo profilo a causa di un blocco attivo."
       },
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
@@ -1257,7 +1285,9 @@
         confirmBlock: "ნამდვილად გსურთ ამ მომხმარებლის დაბლოკვა?",
         confirmUnblock: "ნამდვილად გსურთ ამ მომხმარებლის განბლოკვა?",
         noBlockedUsers: "დაბლოკილი მომხმარებლები არ არის",
-        blockSuccess: "მომხმარებელი წარმატებით დაიბლოკა."
+        blockSuccess: "მომხმარებელი წარმატებით დაიბლოკა.",
+        blockedProfileTitle: "პროფილი მიუწვდომელია",
+        blockedProfileSub: "თქვენ ვერ ხედავთ ამ პროფილს აქტიური დაბლოკვის გამო."
       },
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
@@ -1303,7 +1333,9 @@
         confirmBlock: "Вы уверены, что хотите заблокировать этого пользователя?",
         confirmUnblock: "Вы уверены, что хотите разблокировать этого пользователя?",
         noBlockedUsers: "Нет заблокированных пользователей",
-        blockSuccess: "Пользователь успешно заблокирован."
+        blockSuccess: "Пользователь успешно заблокирован.",
+        blockedProfileTitle: "Профиль недоступен",
+        blockedProfileSub: "Вы не можете просматривать этот профиль из-за блокировки."
       },
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
@@ -1349,7 +1381,9 @@
         confirmBlock: "Êtes-vous sûr de vouloir bloquer cet utilisateur ?",
         confirmUnblock: "Êtes-vous sûr de vouloir débloquer cet utilisateur ?",
         noBlockedUsers: "Aucun utilisateur bloqué",
-        blockSuccess: "Utilisateur bloqué avec succès."
+        blockSuccess: "Utilisateur bloqué avec succès.",
+        blockedProfileTitle: "Profil indisponible",
+        blockedProfileSub: "Vous ne pouvez pas afficher ce profil car un blocage est actif."
       },
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
@@ -1395,7 +1429,9 @@
         confirmBlock: "Sind Sie sicher, dass Sie diesen Benutzer blockieren möchten?",
         confirmUnblock: "Sind Sie sicher, dass Sie diesen Benutzer entsperren möchten?",
         noBlockedUsers: "Keine blockierten Benutzer",
-        blockSuccess: "Benutzer erfolgreich blockiert."
+        blockSuccess: "Benutzer erfolgreich blockiert.",
+        blockedProfileTitle: "Profil nicht verfügbar",
+        blockedProfileSub: "Sie können dieses Profil aufgrund einer aktiven Sperre nicht anzeigen."
       }
     };
 
@@ -2621,6 +2657,7 @@ auth.onAuthStateChanged(function(user) {
       if (!confirm(t.confirmUnblock || "Are you sure you want to unblock this user?")) return;
 
       db.collection('blocked_users').doc(docId).delete().then(function() {
+        cachedBlockedSet = null; // ქეშის გასუფთავება
         loadBlockedUsersData();
       }).catch(function(err) {
         alert("Error unblocking user: " + err.message);
@@ -2637,6 +2674,7 @@ auth.onAuthStateChanged(function(user) {
         blocked_id: targetUserId,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
+        cachedBlockedSet = null; // ქეშის გასუფთავება
         Promise.all([
           db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('receiver_id', '==', targetUserId).get(),
           db.collection('friend_requests').where('sender_id', '==', targetUserId).where('receiver_id', '==', currentUser.uid).get()
@@ -3057,51 +3095,45 @@ auth.onAuthStateChanged(function(user) {
       }
       activeViewingProfileId = userId;
 
-      fetchUserProfileCached(userId, function(selectedUser) {
-        if (!selectedUser.full_name && !selectedUser.avatar_url) {
-          alert("User not found");
-          return;
-        }
+      fetchBlockedUserIds(function(blockedSet) {
+        var isBlocked = blockedSet.has(userId);
 
-        var finalName = selectedUser.full_name || "User";
-        var avatarUrl = selectedUser.avatar_url;
-        var coverUrl = selectedUser.cover_url;
-
-        var onlineBadge = document.getElementById('profile-online-badge');
-        if (onlineBadge) {
-          onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
-        }
-
-        renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
-        var pName = document.getElementById('profile-user-name');
-        var pSub = document.getElementById('profile-user-subtitle');
-        if (pName) pName.innerText = finalName;
-        if (pSub) pSub.innerText = "Emigrant";
-
-        var banner = document.getElementById('profile-cover-banner');
-        if (banner) {
-          if (coverUrl) {
-            banner.style.backgroundImage = `url('${coverUrl}')`;
-          } else {
-            banner.style.backgroundImage = 'none';
+        fetchUserProfileCached(userId, function(selectedUser) {
+          if (!selectedUser.full_name && !selectedUser.avatar_url) {
+            alert("User not found");
+            return;
           }
-        }
 
-        var avCam = document.getElementById('avatar-camera-btn');
-        var covCam = document.getElementById('cover-camera-btn');
-        var burgBtn = document.getElementById('profile-burger-btn');
-        if (avCam) avCam.style.display = "none";
-        if (covCam) covCam.style.display = "none";
-        if (burgBtn) burgBtn.style.display = "none";
+          var finalName = selectedUser.full_name || "User";
+          var avatarUrl = selectedUser.avatar_url;
+          var coverUrl = selectedUser.cover_url;
 
-        checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
-          var privacySetting = selectedUser.privacy_setting || 'public';
-          var isLocked = false;
-          if (privacySetting === 'friends' && !isFriend) {
-            isLocked = true;
-          } else if (privacySetting === 'private') {
-            isLocked = true;
+          var onlineBadge = document.getElementById('profile-online-badge');
+          if (onlineBadge) {
+            onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
           }
+
+          renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
+          var pName = document.getElementById('profile-user-name');
+          var pSub = document.getElementById('profile-user-subtitle');
+          if (pName) pName.innerText = finalName;
+          if (pSub) pSub.innerText = "Emigrant";
+
+          var banner = document.getElementById('profile-cover-banner');
+          if (banner) {
+            if (coverUrl) {
+              banner.style.backgroundImage = `url('${coverUrl}')`;
+            } else {
+              banner.style.backgroundImage = 'none';
+            }
+          }
+
+          var avCam = document.getElementById('avatar-camera-btn');
+          var covCam = document.getElementById('cover-camera-btn');
+          var burgBtn = document.getElementById('profile-burger-btn');
+          if (avCam) avCam.style.display = "none";
+          if (covCam) covCam.style.display = "none";
+          if (burgBtn) burgBtn.style.display = "none";
 
           var lockMsgEl = document.getElementById('private-profile-lock-msg');
           var detailsBox = document.getElementById('profile-details-container');
@@ -3109,8 +3141,9 @@ auth.onAuthStateChanged(function(user) {
           var tabsEl = document.querySelector('.profile-tabs');
           var postsWall = document.getElementById('profile-posts-wall');
           var photosWall = document.getElementById('profile-photos-wall');
+          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-          if (isLocked) {
+          if (isBlocked) {
             if (detailsBox) detailsBox.style.display = 'none';
             if (friendsPreview) friendsPreview.style.display = 'none';
             if (tabsEl) tabsEl.style.display = 'none';
@@ -3118,24 +3151,52 @@ auth.onAuthStateChanged(function(user) {
             if (photosWall) photosWall.style.display = 'none';
             if (lockMsgEl) {
               lockMsgEl.style.display = 'block';
-              var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
               lockMsgEl.innerHTML = `
-                <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
-                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
+                <div style="font-size: 48px; margin-bottom: 10px;">🚫</div>
+                <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
+                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
               `;
             }
-          } else {
-            if (lockMsgEl) lockMsgEl.style.display = 'none';
-            if (detailsBox) detailsBox.style.display = 'block';
-            if (friendsPreview) friendsPreview.style.display = 'block';
-            if (tabsEl) tabsEl.style.display = 'flex';
-            renderProfileDetails(selectedUser);
-            switchProfileTab('posts');
+            showScreen('profile');
+            updateFriendshipButtons(userId);
+            return;
           }
 
-          showScreen('profile');
-          updateFriendshipButtons(userId);
+          checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
+            var privacySetting = selectedUser.privacy_setting || 'public';
+            var isLocked = false;
+            if (privacySetting === 'friends' && !isFriend) {
+              isLocked = true;
+            } else if (privacySetting === 'private') {
+              isLocked = true;
+            }
+
+            if (isLocked) {
+              if (detailsBox) detailsBox.style.display = 'none';
+              if (friendsPreview) friendsPreview.style.display = 'none';
+              if (tabsEl) tabsEl.style.display = 'none';
+              if (postsWall) postsWall.style.display = 'none';
+              if (photosWall) photosWall.style.display = 'none';
+              if (lockMsgEl) {
+                lockMsgEl.style.display = 'block';
+                lockMsgEl.innerHTML = `
+                  <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
+                  <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
+                  <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
+                `;
+              }
+            } else {
+              if (lockMsgEl) lockMsgEl.style.display = 'none';
+              if (detailsBox) detailsBox.style.display = 'block';
+              if (friendsPreview) friendsPreview.style.display = 'block';
+              if (tabsEl) tabsEl.style.display = 'flex';
+              renderProfileDetails(selectedUser);
+              switchProfileTab('posts');
+            }
+
+            showScreen('profile');
+            updateFriendshipButtons(userId);
+          });
         });
       });
     }
@@ -4169,66 +4230,69 @@ function uploadMediaToFirebase(file, folder, callback) {
     function loadPosts() {
       if (!currentUser) return;
 
-      var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) : 
-        Promise.all([
-          db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
-          db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
-        ]).then(function(results) {
-          var myFriendsSet = new Set();
-          results[0].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().receiver_id); });
-          results[1].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().sender_id); });
-          cachedFriendsSet = myFriendsSet;
-          return myFriendsSet;
-        });
-
-      fetchFriendsPromise.then(function(myFriendsSet) {
-        db.collection('posts')
-          .orderBy('created_at', 'desc')
-          .limit(30)
-          .get()
-          .then(function(snapshot) {
-            var postsWall = document.getElementById('posts-wall');
-            var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-            if (!postsWall) return;
-            postsWall.innerHTML = "";
-
-            if (snapshot.empty) {
-              postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-              return;
-            }
-
-            var posts = [];
-            var authorIds = [];
-            snapshot.forEach(function(doc) {
-              var postData = Object.assign({ id: doc.id }, doc.data());
-              posts.push(postData);
-              if (postData.user_id) authorIds.push(postData.user_id);
-            });
-
-            fetchMultipleProfilesCached(authorIds, function() {
-              posts.forEach(function(postData) {
-                var authorId = postData.user_id;
-                var pData = cachedProfiles[authorId] || {};
-                var privacy = pData.privacy_setting || 'public';
-                var isMyOwnPost = (authorId === currentUser.uid);
-                var isFriend = myFriendsSet.has(authorId);
-
-                var shouldShow = isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend);
-
-                if (shouldShow) {
-                  postsWall.innerHTML += createPostCardHtml(postData);
-                  renderCommentsCountOnly(postData);
-                  
-                  if (postData.media_type === 'video') {
-                    startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
-                  }
-                }
-              });
-              observeVideos();
-            });
+      fetchBlockedUserIds(function(blockedSet) {
+        var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) : 
+          Promise.all([
+            db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+            db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+          ]).then(function(results) {
+            var myFriendsSet = new Set();
+            results[0].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().receiver_id); });
+            results[1].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().sender_id); });
+            cachedFriendsSet = myFriendsSet;
+            return myFriendsSet;
           });
-      }).catch(function(err) {
-        console.error("Error loading posts with privacy filter:", err);
+
+        fetchFriendsPromise.then(function(myFriendsSet) {
+          db.collection('posts')
+            .orderBy('created_at', 'desc')
+            .limit(30)
+            .get()
+            .then(function(snapshot) {
+              var postsWall = document.getElementById('posts-wall');
+              var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+              if (!postsWall) return;
+              postsWall.innerHTML = "";
+
+              if (snapshot.empty) {
+                postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+                return;
+              }
+
+              var posts = [];
+              var authorIds = [];
+              snapshot.forEach(function(doc) {
+                var postData = Object.assign({ id: doc.id }, doc.data());
+                posts.push(postData);
+                if (postData.user_id) authorIds.push(postData.user_id);
+              });
+
+              fetchMultipleProfilesCached(authorIds, function() {
+                posts.forEach(function(postData) {
+                  var authorId = postData.user_id;
+                  var pData = cachedProfiles[authorId] || {};
+                  var privacy = pData.privacy_setting || 'public';
+                  var isMyOwnPost = (authorId === currentUser.uid);
+                  var isFriend = myFriendsSet.has(authorId);
+                  var isBlocked = blockedSet.has(authorId);
+
+                  var shouldShow = !isBlocked && (isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend));
+
+                  if (shouldShow) {
+                    postsWall.innerHTML += createPostCardHtml(postData);
+                    renderCommentsCountOnly(postData);
+                    
+                    if (postData.media_type === 'video') {
+                      startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
+                    }
+                  }
+                });
+                observeVideos();
+              });
+            });
+        }).catch(function(err) {
+          console.error("Error loading posts with privacy filter:", err);
+        });
       });
     }
 
@@ -4675,24 +4739,28 @@ function subscribeActiveLivesForFeed() {
 
       if (!currentUser) return;
 
-      var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) :
-        Promise.all([
-          db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
-          db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
-        ]).then(function(results) {
-          var allowedUsersSet = new Set();
-          allowedUsersSet.add(currentUser.uid);
+      fetchBlockedUserIds(function(blockedSet) {
+        var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) :
+          Promise.all([
+            db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+            db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+          ]).then(function(results) {
+            var allowedUsersSet = new Set();
+            allowedUsersSet.add(currentUser.uid);
 
-          results[0].forEach(function(doc) { allowedUsersSet.add(doc.data().receiver_id); });
-          results[1].forEach(function(doc) { allowedUsersSet.add(doc.data().sender_id); });
-          cachedFriendsSet = allowedUsersSet;
-          return allowedUsersSet;
+            results[0].forEach(function(doc) { allowedUsersSet.add(doc.data().receiver_id); });
+            results[1].forEach(function(doc) { allowedUsersSet.add(doc.data().sender_id); });
+            cachedFriendsSet = allowedUsersSet;
+            return allowedUsersSet;
+          });
+
+        fetchFriendsPromise.then(function(allowedUsersSet) {
+          // ფილტრაცია - დაბლოკილების ამოღება სთორებიდან
+          var filteredList = Array.from(allowedUsersSet).filter(id => !blockedSet.has(id));
+          fetchStoriesForUsers(filteredList, listDiv);
+        }).catch(function(err) {
+          console.error("Error loading stories friends:", err);
         });
-
-      fetchFriendsPromise.then(function(allowedUsersSet) {
-        fetchStoriesForUsers(Array.from(allowedUsersSet), listDiv);
-      }).catch(function(err) {
-        console.error("Error loading stories friends:", err);
       });
     }
 
@@ -4953,6 +5021,7 @@ function unblockUser(docId, blockedUserId, event) {
   if (!confirm(t.confirmUnblock || "Are you sure you want to unblock this user?")) return;
 
   db.collection('blocked_users').doc(docId).delete().then(function() {
+    cachedBlockedSet = null; // ქეშის გასუფთავება
     loadBlockedUsersData();
   }).catch(function(err) {
     alert("Error unblocking user: " + err.message);
@@ -4969,6 +5038,7 @@ function blockUser(targetUserId) {
     blocked_id: targetUserId,
     created_at: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function() {
+    cachedBlockedSet = null; // ქეშის გასუფთავება
     Promise.all([
       db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('receiver_id', '==', targetUserId).get(),
       db.collection('friend_requests').where('sender_id', '==', targetUserId).where('receiver_id', '==', currentUser.uid).get()
