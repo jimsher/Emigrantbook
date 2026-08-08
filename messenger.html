@@ -707,10 +707,11 @@
     .chat-date-separator {
       font-size: 11px;
       font-weight: 600;
-      color: #666666;
+      color: #8e8e93;
       text-transform: uppercase;
-      margin: 10px 0;
+      margin: 14px 0 6px 0;
       text-align: center;
+      letter-spacing: 0.5px;
     }
 
     /* შეტყობინების ბუშტები */
@@ -750,6 +751,15 @@
       color: #000000;
       font-weight: 500;
       border-bottom-right-radius: 4px;
+    }
+
+    /* მხოლოდ სმაილების დიდი ზომა (Messenger Style) */
+    .msg-bubble.big-emoji {
+      font-size: 38px !important;
+      background: transparent !important;
+      padding: 2px 4px !important;
+      line-height: 1.1 !important;
+      box-shadow: none !important;
     }
 
     /* ქვედა ინფუთის პანელი */
@@ -800,6 +810,19 @@
     .input-wrapper input::placeholder {
       color: #8e8e93;
     }
+    
+    .input-emoji-btn {
+      width: 22px;
+      height: 22px;
+      fill: #0084ff;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .input-emoji-btn:active {
+      transform: scale(0.9);
+    }
+
     .like-action-btn {
       background: #2ed573;
       border: none;
@@ -811,11 +834,46 @@
       align-items: center;
       justify-content: center;
       box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+      flex-shrink: 0;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .like-action-btn:active {
+      transform: scale(0.92);
     }
     .like-action-btn svg {
       width: 20px;
       height: 20px;
       fill: #000000;
+    }
+
+    /* EMOJI PICKER POPUP */
+    .emoji-picker-container {
+      display: none;
+      position: absolute;
+      bottom: 68px;
+      right: 12px;
+      background: rgba(22, 22, 30, 0.95);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 10px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      z-index: 200;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      max-width: 280px;
+    }
+    .emoji-picker-container span {
+      font-size: 22px;
+      cursor: pointer;
+      text-align: center;
+      padding: 4px;
+      border-radius: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .emoji-picker-container span:active {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.15);
     }
 
     /* ----------------------------------------------------
@@ -1040,11 +1098,34 @@
         </div>
 
         <div class="input-wrapper">
-          <input type="text" id="message-input-field" placeholder="შეტყობინება..." onkeypress="handleKeyPress(event)">
+          <input type="text" id="message-input-field" placeholder="შეტყობინება..." oninput="handleInputTyping()" onkeypress="handleKeyPress(event)">
+          <svg viewBox="0 0 24 24" class="input-emoji-btn" onclick="toggleEmojiPicker()"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
         </div>
 
-        <button class="like-action-btn" id="send-action-btn" onclick="sendLikeOrMessage()">
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        <!-- EMOJI POPUP -->
+        <div id="emoji-picker-popup" class="emoji-picker-container">
+          <span onclick="insertEmoji('😀')">😀</span>
+          <span onclick="insertEmoji('😂')">😂</span>
+          <span onclick="insertEmoji('😍')">😍</span>
+          <span onclick="insertEmoji('❤️')">❤️</span>
+          <span onclick="insertEmoji('👍')">👍</span>
+          <span onclick="insertEmoji('🔥')">🔥</span>
+          <span onclick="insertEmoji('🎉')">🎉</span>
+          <span onclick="insertEmoji('😊')">😊</span>
+          <span onclick="insertEmoji('🙏')">🙏</span>
+          <span onclick="insertEmoji('😭')">😭</span>
+          <span onclick="insertEmoji('😎')">😎</span>
+          <span onclick="insertEmoji('😮')">😮</span>
+          <span onclick="insertEmoji('🥰')">🥰</span>
+          <span onclick="insertEmoji('👏')">👏</span>
+          <span onclick="insertEmoji('✨')">✨</span>
+          <span onclick="insertEmoji('🤔')">🤔</span>
+          <span onclick="insertEmoji('💯')">💯</span>
+          <span onclick="insertEmoji('🥳')">🥳</span>
+        </div>
+
+        <button class="like-action-btn" id="send-action-btn" data-mode="like" onclick="sendLikeOrMessage()">
+          <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
         </button>
       </div>
     </div>
@@ -1193,7 +1274,7 @@
     var threadProfileUnsubscribe = null;
     var storyTimer = null;
 
-    // TAB SWITCHING (ჩატები <-> სტორიები <-> შეტყობინებები)
+    // TAB SWITCHING
     function switchTab(tabName) {
       currentActiveTab = tabName;
       document.getElementById('chats-screen').style.display = 'none';
@@ -1216,7 +1297,6 @@
       } else if (tabName === 'notifs') {
         if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'flex';
         if(document.getElementById('nav-tab-notifs')) document.getElementById('nav-tab-notifs').classList.add('active');
-        // მხოლოდ ღილაკზე დაჭერისას 1-ხელ ითხოვს მონაცემებს Firestore-იდან (წაკითხვის ლიმიტების დასაზოგად)
         if (auth.currentUser) {
           fetchNotificationsOnce(auth.currentUser.uid);
         }
@@ -1268,7 +1348,6 @@
       return displayName || ("User_" + uid.substring(0, 5));
     }
 
-    // URL პარამეტრიდან მომხმარებლის ID-ს წაკითხვა და პირდაპირ ჩატის გახსნა
     function checkUrlForDirectChat() {
       const urlParams = new URLSearchParams(window.location.search);
       const targetUid = urlParams.get('uid') || urlParams.get('userId') || urlParams.get('user') || urlParams.get('chat');
@@ -1287,7 +1366,6 @@
       }
     }
 
-    // Auth State Listener & Realtime Language Listener
     auth.onAuthStateChanged(function(user) {
       if (user) {
         db.collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
@@ -1305,15 +1383,12 @@
 
         fetchFirestoreChatList(user.uid);
         listenToStories();
-        
-        // შევამოწმოთ პირდაპირი ლინკით გადმოსვლა
         checkUrlForDirectChat();
       } else {
         window.location.href = "index.html";
       }
     });
 
-    // 1. იღებს მეგობრების სიას და ბოლო შეტყობინებებს
     function fetchFirestoreChatList(currentUid) {
       const listTarget = document.getElementById('chats-list-target');
       
@@ -1377,7 +1452,6 @@
               let msgText = lastMsgDoc.text || "📷 Photo";
               let timeStr = lastMsgDoc.createdAt ? new Date(lastMsgDoc.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
-              // წაუკითხავი შეტყობინების შემოწმება
               const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
 
               let existingRow = document.getElementById('chat-row-' + user.uid);
@@ -1429,10 +1503,12 @@
       document.getElementById('chat-start-big-name').innerText = username;
       document.getElementById('chat-start-big-avatar').src = finalAvatar;
 
+      handleInputTyping();
+      hideEmojiPicker();
+
       const currentUid = auth.currentUser.uid;
       const chatId = getChatId(currentUid, targetUid);
 
-      // წაუკითხავი შეტყობინებების წაკითხულად მონიშვნა (read: true)
       db.collection('chats').doc(chatId).collection('messages')
         .where('senderId', '==', targetUid)
         .where('read', '==', false)
@@ -1459,6 +1535,38 @@
       listenToFirestoreMessages(chatId, finalAvatar);
     }
 
+    // ამოწმებს მხოლოდ სმაილებს შეიცავს თუ არა ტექსტი
+    function isOnlyEmoji(str) {
+      if (!str) return false;
+      const clean = str.replace(/\s+/g, '');
+      if (!clean) return false;
+      const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])+$/g;
+      return emojiRegex.test(clean) && clean.length <= 12;
+    }
+
+    // დროის და თარიღის ფორმატირება (MESSENGER STYLE)
+    function formatMessageDateSeparator(dateObj) {
+      if (!dateObj) return "";
+      const monthsKA = ["იან", "თებ", "მარ", "აპრ", "მაის", "ივნ", "ივლ", "აგვ", "სექ", "ოქტ", "ნოე", "დეკ"];
+      const monthsEN = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      
+      const day = dateObj.getDate();
+      const monthStr = (currentLang === 'ka' ? monthsKA : monthsEN)[dateObj.getMonth()];
+      
+      let hours = dateObj.getHours();
+      const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+      
+      if (currentLang === 'ka') {
+        const timeFormatted = `${hours.toString().padStart(2, '0')}:${minutes}`;
+        return `${day} ${monthStr}, ${timeFormatted}`;
+      } else {
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${monthStr} ${day} AT ${hours}:${minutes} ${ampm}`;
+      }
+    }
+
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
       const myUid = auth.currentUser.uid;
@@ -1469,19 +1577,35 @@
         .orderBy('createdAt', 'asc')
         .onSnapshot(function(snapshot) {
           msgBlock.innerHTML = "";
+          let lastMsgDate = null;
+
           snapshot.forEach(docSnap => {
             const msg = docSnap.data();
             const isMine = msg.senderId === myUid;
 
+            // თარიღის სეპარატორის გამოთვლა (15 წუთზე მეტი დაშორებისას ან სხვა დღეს)
+            let msgDateObj = msg.createdAt && msg.createdAt.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date();
+            
+            if (!lastMsgDate || (msgDateObj - lastMsgDate > 15 * 60 * 1000)) {
+              let dateSepDiv = document.createElement('div');
+              dateSepDiv.className = "chat-date-separator";
+              dateSepDiv.innerText = formatMessageDateSeparator(msgDateObj);
+              msgBlock.appendChild(dateSepDiv);
+              lastMsgDate = msgDateObj;
+            }
+
             const msgRow = document.createElement('div');
             msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
+            const isEmojiOnly = isOnlyEmoji(msg.text);
+            const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
+
             if (isMine) {
-              msgRow.innerHTML = `<div class="msg-bubble">${msg.text}</div>`;
+              msgRow.innerHTML = `<div class="${bubbleClass}">${msg.text}</div>`;
             } else {
               msgRow.innerHTML = `
                 <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
-                <div class="msg-bubble">${msg.text}</div>
+                <div class="${bubbleClass}">${msg.text}</div>
               `;
             }
             msgBlock.appendChild(msgRow);
@@ -1495,6 +1619,7 @@
     function closeChat() {
       if (unsubscribeMessages) unsubscribeMessages();
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
+      hideEmojiPicker();
       document.getElementById('thread-screen').style.display = 'none';
       switchTab(currentActiveTab);
       currentActiveChatUid = null;
@@ -1504,19 +1629,74 @@
       if (event.key === 'Enter') sendLikeOrMessage();
     }
 
+    // ინფუთში ტექსტის წერისას ღილაკის გადართვა (LIKE -> SEND)
+    function handleInputTyping() {
+      var input = document.getElementById('message-input-field');
+      var btn = document.getElementById('send-action-btn');
+      if (!input || !btn) return;
+
+      if (input.value.trim().length > 0) {
+        // თვითმფრინავის ღილაკი (SEND)
+        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+        btn.dataset.mode = "send";
+      } else {
+        // ლაიქის ღილაკი (LIKE)
+        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>`;
+        btn.dataset.mode = "like";
+      }
+    }
+
+    // EMOJI PICKER TOGGLE
+    function toggleEmojiPicker() {
+      var picker = document.getElementById('emoji-picker-popup');
+      if (!picker) return;
+      if (picker.style.display === 'grid') {
+        picker.style.display = 'none';
+      } else {
+        picker.style.display = 'grid';
+      }
+    }
+
+    function hideEmojiPicker() {
+      var picker = document.getElementById('emoji-picker-popup');
+      if (picker) picker.style.display = 'none';
+    }
+
+    function insertEmoji(emojiChar) {
+      var input = document.getElementById('message-input-field');
+      if (!input) return;
+      input.value += emojiChar;
+      input.focus();
+      handleInputTyping();
+    }
+
     function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
-      if (!text || !currentActiveChatUid || !auth.currentUser) return;
+      var btn = document.getElementById('send-action-btn');
+      var mode = btn ? (btn.dataset.mode || "like") : "like";
+
+      if (!currentActiveChatUid || !auth.currentUser) return;
+
+      var sendText = "";
+      if (mode === "like" && !text) {
+        sendText = "👍";
+      } else if (text) {
+        sendText = text;
+      } else {
+        return;
+      }
+
+      input.value = "";
+      handleInputTyping();
+      hideEmojiPicker();
 
       const myUid = auth.currentUser.uid;
       const chatId = getChatId(myUid, currentActiveChatUid);
 
-      input.value = "";
-
       db.collection('chats').doc(chatId).collection('messages').add({
         senderId: myUid,
-        text: text,
+        text: sendText,
         read: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
