@@ -315,6 +315,14 @@
         <span class="menu-item-arrow">›</span>
       </button>
 
+      <button class="menu-item-row" onclick="openBlockedUsersScreen()">
+        <div class="menu-item-left">
+          <span class="menu-item-icon">🚫</span>
+          <span id="lbl-blocked-users-menu">Blocked Users</span>
+        </div>
+        <span class="menu-item-arrow">›</span>
+      </button>
+
       <button class="menu-item-row">
         <div class="menu-item-left">
           <span class="menu-item-icon">☁️</span>
@@ -573,6 +581,24 @@
     </div>
   </div>
 
+  <!-- BLOCKED USERS SCREEN -->
+  <div id="blocked-users-screen" style="display: none;">
+    <div class="header">
+      <div class="logo-text" id="lbl-back-to-profile-blocked" onclick="showScreen('profile')">← Back to Profile</div>
+    </div>
+    <div class="feed-container">
+      <div class="connections-container">
+        <div class="connections-header">
+          <span id="blocked-users-title">🚫 Blocked Users</span>
+          <span style="font-size: 14px; color: #aaaaaa;" id="blocked-users-count">0 users</span>
+        </div>
+        <div class="connections-list" id="blocked-users-list-wrapper">
+          <div class="connections-empty" id="lbl-blocked-loading">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="akho-info-modal" class="akho-info-overlay" onclick="closeAkhoInfoModal()">
     <div class="akho-info-modal" onclick="event.stopPropagation()">
       <div class="akho-info-header">
@@ -605,7 +631,7 @@
           <div class="story-viewer-avatar" id="sv-avatar"></div>
           <span id="sv-username">User</span>
         </div>
-        <button class="story-close-btn" onclick="closeStoryViewer()">× </button>
+        <button class="story-close-btn" onclick="closeStoryViewer()">×</button>
       </div>
       <div class="story-viewer-media" id="sv-media-container"></div>
 
@@ -1132,7 +1158,14 @@
         lockedProfileTitle: "This profile is private",
         lockedProfileSub: "Only friends can see this user's posts, photos, and videos.",
         privacyMenuBtn: "Settings & Privacy",
-        selected: "selected"
+        selected: "selected",
+        blockUser: "Block User",
+        blockedUsers: "Blocked Users",
+        unblock: "Unblock",
+        confirmBlock: "Are you sure you want to block this user?",
+        confirmUnblock: "Are you sure you want to unblock this user?",
+        noBlockedUsers: "No blocked users",
+        blockSuccess: "User blocked successfully."
       },
       it: {
         authSubtitle: "Accedi al tuo profilo", authSubtitleReg: "Crea un nuovo account",
@@ -1171,7 +1204,14 @@
         lockedProfileTitle: "Questo profilo è privato",
         lockedProfileSub: "Solo gli amici possono vedere i post, le foto e i video di questo utente.",
         privacyMenuBtn: "Impostazioni e privacy",
-        selected: "selezionate"
+        selected: "selezionate",
+        blockUser: "Blocca utente",
+        blockedUsers: "Utenti bloccati",
+        unblock: "Sblocca",
+        confirmBlock: "Sei sicuro di voler bloccare questo utente?",
+        confirmUnblock: "Sei sicuro di voler sbloccare questo utente?",
+        noBlockedUsers: "Nessun utente bloccato",
+        blockSuccess: "Utente bloccato con successo."
       },
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
@@ -1210,7 +1250,14 @@
         lockedProfileTitle: "ეს პროფილი დახურულია",
         lockedProfileSub: "მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა.",
         privacyMenuBtn: "პარამეტრები და კონფიდენციალურობა",
-        selected: "მონიშნული"
+        selected: "მონიშნული",
+        blockUser: "მომხმარებლის დაბლოკვა",
+        blockedUsers: "დაბლოკილი მომხმარებლები",
+        unblock: "განბლოკვა",
+        confirmBlock: "ნამდვილად გსურთ ამ მომხმარებლის დაბლოკვა?",
+        confirmUnblock: "ნამდვილად გსურთ ამ მომხმარებლის განბლოკვა?",
+        noBlockedUsers: "დაბლოკილი მომხმარებლები არ არის",
+        blockSuccess: "მომხმარებელი წარმატებით დაიბლოკა."
       },
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
@@ -1249,7 +1296,14 @@
         lockedProfileTitle: "Этот профиль закрыт",
         lockedProfileSub: "Только друзья могут видеть публикации, фото и видео этого пользователя.",
         privacyMenuBtn: "Настройки и конфиденциальность",
-        selected: "выбрано"
+        selected: "выбрано",
+        blockUser: "Заблокировать",
+        blockedUsers: "Заблокированные",
+        unblock: "Разблокировать",
+        confirmBlock: "Вы уверены, что хотите заблокировать этого пользователя?",
+        confirmUnblock: "Вы уверены, что хотите разблокировать этого пользователя?",
+        noBlockedUsers: "Нет заблокированных пользователей",
+        blockSuccess: "Пользователь успешно заблокирован."
       },
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
@@ -1288,7 +1342,14 @@
         lockedProfileTitle: "Ce profil est privé",
         lockedProfileSub: "Seuls les amis peuvent voir les publications, photos et vidéos de cet utilisateur.",
         privacyMenuBtn: "Paramètres et confidentialité",
-        selected: "sélectionné"
+        selected: "sélectionné",
+        blockUser: "Bloquer l'utilisateur",
+        blockedUsers: "Utilisateurs bloqués",
+        unblock: "Débloquer",
+        confirmBlock: "Êtes-vous sûr de vouloir bloquer cet utilisateur ?",
+        confirmUnblock: "Êtes-vous sûr de vouloir débloquer cet utilisateur ?",
+        noBlockedUsers: "Aucun utilisateur bloqué",
+        blockSuccess: "Utilisateur bloqué avec succès."
       },
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
@@ -1327,7 +1388,14 @@
         lockedProfileTitle: "Dieses Profil ist privat",
         lockedProfileSub: "Nur Freunde können die Beiträge, Fotos und Videos dieses Benutzers sehen.",
         privacyMenuBtn: "Einstellungen & Datenschutz",
-        selected: "ausgewählt"
+        selected: "ausgewählt",
+        blockUser: "Benutzer blockieren",
+        blockedUsers: "Blockierte Benutzer",
+        unblock: "Entsperren",
+        confirmBlock: "Sind Sie sicher, dass Sie diesen Benutzer blockieren möchten?",
+        confirmUnblock: "Sind Sie sicher, dass Sie diesen Benutzer entsperren möchten?",
+        noBlockedUsers: "Keine blockierten Benutzer",
+        blockSuccess: "Benutzer erfolgreich blockiert."
       }
     };
 
@@ -1459,6 +1527,13 @@
       if (lockedTitle) lockedTitle.innerText = t.lockedProfileTitle;
       var lockedSub = document.getElementById('lbl-locked-sub');
       if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
+
+      var blockedMenuBtn = document.getElementById('lbl-blocked-users-menu');
+      if (blockedMenuBtn) blockedMenuBtn.innerText = t.blockedUsers;
+      var bProfileBlocked = document.getElementById('lbl-back-to-profile-blocked');
+      if (bProfileBlocked) bProfileBlocked.innerText = t.backToProfile;
+      var blockedTitle = document.getElementById('blocked-users-title');
+      if (blockedTitle) blockedTitle.innerText = "🚫 " + t.blockedUsers;
 
       var siteLangSelect = document.getElementById('site-language-select');
       if (siteLangSelect) siteLangSelect.value = lang;
@@ -1814,6 +1889,8 @@ auth.onAuthStateChanged(function(user) {
         menu.classList.remove('open');
         if(overlay) overlay.style.display = 'none';
       }
+
+      removeProfileMoreMenu();
     });
 
     function showSelectedFileName() {
@@ -1831,7 +1908,7 @@ auth.onAuthStateChanged(function(user) {
 
     function showScreen(screenName) {
       exitPhotoSelectionMode();
-      var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen'];
+      var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen', 'blocked-users-screen'];
       screens.forEach(s => {
         var el = document.getElementById(s);
         if (el) el.style.display = 'none';
@@ -1862,6 +1939,9 @@ auth.onAuthStateChanged(function(user) {
       } else if (screenName === 'privacy') {
         var privEl = document.getElementById('privacy-screen');
         if (privEl) privEl.style.display = 'block';
+      } else if (screenName === 'blocked-users') {
+        var blockEl = document.getElementById('blocked-users-screen');
+        if (blockEl) blockEl.style.display = 'block';
       }
         
       if (currentUser) {
@@ -2468,6 +2548,141 @@ auth.onAuthStateChanged(function(user) {
           alert("Error: " + error.message);
         });
       }
+    }
+
+    /* 🚫 BLOCKED USERS LOGIC */
+    function openBlockedUsersScreen() {
+      showScreen('blocked-users');
+      loadBlockedUsersData();
+    }
+
+    function loadBlockedUsersData() {
+      var listWrapper = document.getElementById('blocked-users-list-wrapper');
+      var countLabel = document.getElementById('blocked-users-count');
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      if (!listWrapper || !countLabel) return;
+
+      listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
+
+      db.collection('blocked_users')
+        .where('blocker_id', '==', currentUser.uid)
+        .get()
+        .then(function(snapshot) {
+          if (snapshot.empty) {
+            listWrapper.innerHTML = `<div class="connections-empty">${t.noBlockedUsers || "No blocked users"}</div>`;
+            countLabel.innerText = "0 " + t.userUnit;
+            return;
+          }
+
+          countLabel.innerText = snapshot.size + " " + t.userUnit;
+
+          var blockedDocMap = [];
+          var blockedUserIds = [];
+
+          snapshot.forEach(function(docSnap) {
+            var data = docSnap.data();
+            blockedDocMap.push({ docId: docSnap.id, blockedId: data.blocked_id });
+            blockedUserIds.push(data.blocked_id);
+          });
+
+          fetchMultipleProfilesCached(blockedUserIds, function() {
+            var listHtml = "";
+            blockedDocMap.forEach(function(item) {
+              var profile = cachedProfiles[item.blockedId] || {};
+              var finalName = profile.full_name || "User";
+              var avatarUrl = profile.avatar_url;
+              var initial = finalName.charAt(0).toUpperCase();
+
+              var avatarContent = avatarUrl ? 
+                `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : 
+                `<div style="display:flex; align-items:center; justify-content:center; height:100%; width:100%;">${initial}</div>`;
+
+              listHtml += `
+                <div class="connection-row">
+                  <div class="connection-user-info" onclick="viewUserProfile('${item.blockedId}')">
+                    <div class="connection-avatar">${avatarContent}</div>
+                    <span class="connection-name">${finalName}</span>
+                  </div>
+                  <button class="btn-unblock-user" onclick="unblockUser('${item.docId}', '${item.blockedId}', event)" style="background: #ff4d4f; color: #ffffff; border: 1px solid #ff4d4f; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">${t.unblock || "Unblock"}</button>
+                </div>
+              `;
+            });
+            listWrapper.innerHTML = listHtml;
+          });
+        }).catch(function(err) {
+          console.error("Error loading blocked users:", err);
+          listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
+        });
+    }
+
+    function unblockUser(docId, blockedUserId, event) {
+      if (event) event.stopPropagation();
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      if (!confirm(t.confirmUnblock || "Are you sure you want to unblock this user?")) return;
+
+      db.collection('blocked_users').doc(docId).delete().then(function() {
+        loadBlockedUsersData();
+      }).catch(function(err) {
+        alert("Error unblocking user: " + err.message);
+      });
+    }
+
+    function blockUser(targetUserId) {
+      if (!currentUser) return;
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      if (!confirm(t.confirmBlock || "Are you sure you want to block this user?")) return;
+
+      db.collection('blocked_users').add({
+        blocker_id: currentUser.uid,
+        blocked_id: targetUserId,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        Promise.all([
+          db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('receiver_id', '==', targetUserId).get(),
+          db.collection('friend_requests').where('sender_id', '==', targetUserId).where('receiver_id', '==', currentUser.uid).get()
+        ]).then(function(results) {
+          results.forEach(function(snap) {
+            snap.forEach(function(docSnap) {
+              docSnap.ref.delete();
+            });
+          });
+          alert(t.blockSuccess || "User blocked successfully.");
+          showScreen('home');
+        });
+      }).catch(function(err) {
+        alert("Error blocking user: " + err.message);
+      });
+    }
+
+    function toggleProfileMoreMenu(targetUserId, event) {
+      if (event) event.stopPropagation();
+      var existing = document.getElementById('profile-more-menu-dropdown');
+      if (existing) {
+        existing.remove();
+        return;
+      }
+      var btn = event.currentTarget;
+      var dropdown = document.createElement('div');
+      dropdown.id = 'profile-more-menu-dropdown';
+      dropdown.style.cssText = 'position: absolute; background: #242526; border: 1px solid #3a3b3c; border-radius: 8px; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 9999; display: flex; flex-direction: column; gap: 4px; min-width: 150px;';
+      
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      
+      dropdown.innerHTML = `
+        <button onclick="blockUser('${targetUserId}'); removeProfileMoreMenu();" style="background: transparent; border: none; color: #ff4d4f; padding: 8px 12px; text-align: left; font-weight: 600; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+          <span>🚫</span> <span>${t.blockUser || "Block User"}</span>
+        </button>
+      `;
+      
+      btn.parentNode.style.position = 'relative';
+      btn.parentNode.appendChild(dropdown);
+      dropdown.style.top = (btn.offsetTop + btn.offsetHeight + 5) + 'px';
+      dropdown.style.right = '0px';
+    }
+
+    function removeProfileMoreMenu() {
+      var existing = document.getElementById('profile-more-menu-dropdown');
+      if (existing) existing.remove();
     }
 
     function renderCommentsCountOnly(post) {
@@ -3541,14 +3756,14 @@ auth.onAuthStateChanged(function(user) {
         actionPanel.innerHTML = `
           <button class="fb-btn-primary" onclick="sendFriendRequest('${targetUserId}')">${t.addFriend}</button>
           <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-          <button class="btn-more-options">•••</button>
+          <button class="btn-more-options" onclick="toggleProfileMoreMenu('${targetUserId}', event)">•••</button>
         `;
       } else if (request.status === 'pending') {
         if (request.sender_id === currentUser.uid) {
           actionPanel.innerHTML = `
             <button class="fb-btn-secondary" onclick="cancelFriendRequest('${requestId}', '${targetUserId}')" style="background-color: #333333;">${t.cancelReq}</button>
             <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-            <button class="btn-more-options">•••</button>
+            <button class="btn-more-options" onclick="toggleProfileMoreMenu('${targetUserId}', event)">•••</button>
           `;
         } else {
           actionPanel.innerHTML = `
@@ -3556,14 +3771,14 @@ auth.onAuthStateChanged(function(user) {
               <button class="fb-btn-success" onclick="acceptFriendRequest('${requestId}', '${targetUserId}')">${t.accept}</button>
               <button class="fb-btn-danger" onclick="rejectFriendRequest('${requestId}', '${targetUserId}')">${t.reject}</button>
             </div>
-            <button class="btn-more-options">•••</button>
+            <button class="btn-more-options" onclick="toggleProfileMoreMenu('${targetUserId}', event)">•••</button>
           `;
         }
       } else if (request.status === 'accepted') {
         actionPanel.innerHTML = `
           <button class="fb-btn-success" onclick="deleteFriendship('${requestId}', '${targetUserId}')">${t.removeFriend}</button>
           <button class="fb-btn-secondary" onclick="redirectToMessenger('${targetUserId}')">${t.messenger}</button>
-          <button class="btn-more-options">•••</button>
+          <button class="btn-more-options" onclick="toggleProfileMoreMenu('${targetUserId}', event)">•••</button>
         `;
       }
     }
@@ -4665,6 +4880,141 @@ function updateLangDisplayUI(langCode) {
 function highlightCurrentLang() {
     var cur = window.currentLang || window.currentSiteLang || 'en';
     updateLangDisplayUI(cur);
+}
+
+/* 🚫 BLOCKED USERS LOGIC */
+function openBlockedUsersScreen() {
+  showScreen('blocked-users');
+  loadBlockedUsersData();
+}
+
+function loadBlockedUsersData() {
+  var listWrapper = document.getElementById('blocked-users-list-wrapper');
+  var countLabel = document.getElementById('blocked-users-count');
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  if (!listWrapper || !countLabel) return;
+
+  listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
+
+  db.collection('blocked_users')
+    .where('blocker_id', '==', currentUser.uid)
+    .get()
+    .then(function(snapshot) {
+      if (snapshot.empty) {
+        listWrapper.innerHTML = `<div class="connections-empty">${t.noBlockedUsers || "No blocked users"}</div>`;
+        countLabel.innerText = "0 " + t.userUnit;
+        return;
+      }
+
+      countLabel.innerText = snapshot.size + " " + t.userUnit;
+
+      var blockedDocMap = [];
+      var blockedUserIds = [];
+
+      snapshot.forEach(function(docSnap) {
+        var data = docSnap.data();
+        blockedDocMap.push({ docId: docSnap.id, blockedId: data.blocked_id });
+        blockedUserIds.push(data.blocked_id);
+      });
+
+      fetchMultipleProfilesCached(blockedUserIds, function() {
+        var listHtml = "";
+        blockedDocMap.forEach(function(item) {
+          var profile = cachedProfiles[item.blockedId] || {};
+          var finalName = profile.full_name || "User";
+          var avatarUrl = profile.avatar_url;
+          var initial = finalName.charAt(0).toUpperCase();
+
+          var avatarContent = avatarUrl ? 
+            `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : 
+            `<div style="display:flex; align-items:center; justify-content:center; height:100%; width:100%;">${initial}</div>`;
+
+          listHtml += `
+            <div class="connection-row">
+              <div class="connection-user-info" onclick="viewUserProfile('${item.blockedId}')">
+                <div class="connection-avatar">${avatarContent}</div>
+                <span class="connection-name">${finalName}</span>
+              </div>
+              <button class="btn-unblock-user" onclick="unblockUser('${item.docId}', '${item.blockedId}', event)" style="background: #ff4d4f; color: #ffffff; border: 1px solid #ff4d4f; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">${t.unblock || "Unblock"}</button>
+            </div>
+          `;
+        });
+        listWrapper.innerHTML = listHtml;
+      });
+    }).catch(function(err) {
+      console.error("Error loading blocked users:", err);
+      listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
+    });
+}
+
+function unblockUser(docId, blockedUserId, event) {
+  if (event) event.stopPropagation();
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  if (!confirm(t.confirmUnblock || "Are you sure you want to unblock this user?")) return;
+
+  db.collection('blocked_users').doc(docId).delete().then(function() {
+    loadBlockedUsersData();
+  }).catch(function(err) {
+    alert("Error unblocking user: " + err.message);
+  });
+}
+
+function blockUser(targetUserId) {
+  if (!currentUser) return;
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  if (!confirm(t.confirmBlock || "Are you sure you want to block this user?")) return;
+
+  db.collection('blocked_users').add({
+    blocker_id: currentUser.uid,
+    blocked_id: targetUserId,
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    Promise.all([
+      db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('receiver_id', '==', targetUserId).get(),
+      db.collection('friend_requests').where('sender_id', '==', targetUserId).where('receiver_id', '==', currentUser.uid).get()
+    ]).then(function(results) {
+      results.forEach(function(snap) {
+        snap.forEach(function(docSnap) {
+          docSnap.ref.delete();
+        });
+      });
+      alert(t.blockSuccess || "User blocked successfully.");
+      showScreen('home');
+    });
+  }).catch(function(err) {
+    alert("Error blocking user: " + err.message);
+  });
+}
+
+function toggleProfileMoreMenu(targetUserId, event) {
+  if (event) event.stopPropagation();
+  var existing = document.getElementById('profile-more-menu-dropdown');
+  if (existing) {
+    existing.remove();
+    return;
+  }
+  var btn = event.currentTarget;
+  var dropdown = document.createElement('div');
+  dropdown.id = 'profile-more-menu-dropdown';
+  dropdown.style.cssText = 'position: absolute; background: #242526; border: 1px solid #3a3b3c; border-radius: 8px; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 9999; display: flex; flex-direction: column; gap: 4px; min-width: 150px;';
+  
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  
+  dropdown.innerHTML = `
+    <button onclick="blockUser('${targetUserId}'); removeProfileMoreMenu();" style="background: transparent; border: none; color: #ff4d4f; padding: 8px 12px; text-align: left; font-weight: 600; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+      <span>🚫</span> <span>${t.blockUser || "Block User"}</span>
+    </button>
+  `;
+  
+  btn.parentNode.style.position = 'relative';
+  btn.parentNode.appendChild(dropdown);
+  dropdown.style.top = (btn.offsetTop + btn.offsetHeight + 5) + 'px';
+  dropdown.style.right = '0px';
+}
+
+function removeProfileMoreMenu() {
+  var existing = document.getElementById('profile-more-menu-dropdown');
+  if (existing) existing.remove();
 }
   </script>
 </body>
