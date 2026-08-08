@@ -411,6 +411,7 @@
       text-overflow: ellipsis;
     }
 
+    /* Create story card special style */
     .story-card-create {
       background: rgba(255, 255, 255, 0.04);
       border: 2px dashed rgba(46, 213, 115, 0.4);
@@ -1427,6 +1428,87 @@
     var threadProfileUnsubscribe = null;
     var storyTimer = null;
 
+    // WEB AUDIO API SOUND SYNTHESIZER FOR CALL RINGTONES
+    var audioCtx = null;
+    var ringtoneInterval = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playOutgoingRingtone() {
+      stopCallSounds();
+      try {
+        let ctx = getAudioContext();
+        function playBeep() {
+          if (!audioCtx) return;
+          let osc1 = ctx.createOscillator();
+          let osc2 = ctx.createOscillator();
+          let gain = ctx.createGain();
+
+          osc1.frequency.value = 440;
+          osc2.frequency.value = 480;
+
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc1.start(ctx.currentTime);
+          osc2.start(ctx.currentTime);
+          osc1.stop(ctx.currentTime + 1.2);
+          osc2.stop(ctx.currentTime + 1.2);
+        }
+
+        playBeep();
+        ringtoneInterval = setInterval(playBeep, 3000);
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    function playIncomingRingtone() {
+      stopCallSounds();
+      try {
+        let ctx = getAudioContext();
+        function playRiff() {
+          if (!audioCtx) return;
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, ctx.currentTime + idx * 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.15 + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.15);
+            osc.stop(ctx.currentTime + idx * 0.15 + 0.3);
+          });
+        }
+
+        playRiff();
+        ringtoneInterval = setInterval(playRiff, 1800);
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    function stopCallSounds() {
+      if (ringtoneInterval) {
+        clearInterval(ringtoneInterval);
+        ringtoneInterval = null;
+      }
+    }
+
     // TAB SWITCHING
     function switchTab(tabName) {
       currentActiveTab = tabName;
@@ -1998,7 +2080,7 @@
       document.getElementById('story-viewer-modal').style.display = 'none';
     }
 
-    // 4. NOTIFICATIONS LOGIC (ერთჯერადი წაკითხვა - FIRESTORE READS-ის დასაზოგად)
+    // 4. NOTIFICATIONS LOGIC
     function fetchNotificationsOnce(currentUid) {
       const notifTarget = document.getElementById('notifications-list-target');
       if (!notifTarget) return;
@@ -2109,7 +2191,7 @@
       });
     }
 
-    // 5. WEBRTC VIDEO CALL LOGIC
+    // 5. WEBRTC VIDEO CALL LOGIC WITH AUDIO RINGTONES
     const rtcServers = {
       iceServers: [
         { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
@@ -2133,6 +2215,7 @@
           if (!snapshot || snapshot.empty) {
             document.getElementById('incoming-call-modal').style.display = 'none';
             activeIncomingCallData = null;
+            stopCallSounds();
             return;
           }
 
@@ -2149,6 +2232,9 @@
             document.getElementById('incoming-caller-name').innerText = cName;
             document.getElementById('incoming-caller-avatar').src = cPhoto;
             document.getElementById('incoming-call-modal').style.display = 'flex';
+            
+            // ირთვება შემომავალი ზარის მელოდია
+            playIncomingRingtone();
           });
         });
     }
@@ -2160,6 +2246,9 @@
 
       document.getElementById('video-call-screen').style.display = 'block';
       document.getElementById('video-call-status').innerText = "ზარი ირეკება...";
+
+      // ირთვება ზარის გასვლის ხმა ("ტუ-ტუ...")
+      playOutgoingRingtone();
 
       db.collection('profiles').doc(targetUid).get().then(pSnap => {
         let pData = pSnap.exists ? pSnap.data() : null;
@@ -2222,6 +2311,8 @@
             const answerDescription = new RTCSessionDescription(data.answer);
             peerConnection.setRemoteDescription(answerDescription);
             document.getElementById('video-call-status').innerText = "დაკავშირებულია";
+            // დაკავშირებისას ზარის გასვლის ხმა თიშება
+            stopCallSounds();
           }
 
           if (data.status === 'rejected' || data.status === 'ended') {
@@ -2248,6 +2339,8 @@
 
     async function acceptIncomingCall() {
       if (!activeIncomingCallData || !auth.currentUser) return;
+      stopCallSounds();
+
       const callData = activeIncomingCallData;
       currentCallId = callData.callId;
 
@@ -2332,6 +2425,7 @@
     }
 
     function rejectIncomingCall() {
+      stopCallSounds();
       if (activeIncomingCallData) {
         db.collection('calls').doc(activeIncomingCallData.callId).update({
           status: 'rejected'
@@ -2342,6 +2436,7 @@
     }
 
     function endCall() {
+      stopCallSounds();
       if (currentCallId) {
         db.collection('calls').doc(currentCallId).update({
           status: 'ended'
@@ -2351,6 +2446,7 @@
     }
 
     function endCallLocally() {
+      stopCallSounds();
       if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
