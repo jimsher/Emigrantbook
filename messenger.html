@@ -1416,7 +1416,7 @@
       });
     }
 
-    // 3. STORIES - ატვირთვა და ნახვა (მთავარ ზოლშიც და ცალკე გვერდზეც)
+    // 3. STORIES - ატვირთვა და ნახვა (მთავარ საიტთან სრული თავსებადობით)
     function triggerStoryUpload() {
       document.getElementById('story-file-input').click();
     }
@@ -1430,74 +1430,119 @@
 
       fileRef.put(file).then(snapshot => {
         snapshot.ref.getDownloadURL().then(url => {
+          const serverNow = firebase.firestore.FieldValue.serverTimestamp();
+          // მთავარ საიტთან სრული თავსებადობისთვის ვინახავთ ყველა გავრცელებულ ველს
           db.collection('stories').add({
             uid: user.uid,
+            userId: user.uid,
+            user_id: user.uid,
             imageUrl: url,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            url: url,
+            mediaUrl: url,
+            media_url: url,
+            createdAt: serverNow,
+            created_at: serverNow
           }).then(() => {
             alert("სტორი წარმატებით აიტვირთა!");
+          }).catch(err => {
+            console.error("Story save error:", err);
+            alert("შეცდომა სტორის შენახვისას!");
           });
         });
+      }).catch(err => {
+        console.error("Storage upload error:", err);
+        alert("ფაილის ატვირთვა ვერ მოხერხდა!");
       });
     }
 
     function listenToStories() {
-      db.collection('stories')
-        .orderBy('createdAt', 'desc')
-        .onSnapshot(snapshot => {
-          // 1. ჰორიზონტალური ზოლის განახლება ჩატებში
-          const storiesRow = document.getElementById('stories-target-row');
-          const firstRowItem = storiesRow.firstElementChild;
-          storiesRow.innerHTML = "";
-          storiesRow.appendChild(firstRowItem);
+      db.collection('stories').onSnapshot(snapshot => {
+        if (!snapshot) return;
 
-          // 2. ბადის განახლება ცალკე გვერდზე
-          const storiesGrid = document.getElementById('stories-grid-target');
-          const firstGridItem = storiesGrid.firstElementChild;
-          storiesGrid.innerHTML = "";
-          storiesGrid.appendChild(firstGridItem);
+        const nowMs = Date.now();
+        const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+        let userStoriesMap = {};
 
-          snapshot.forEach(docSnap => {
-            let story = docSnap.data();
-            
-            db.collection('profiles').doc(story.uid).get().then(profileSnap => {
-              if (profileSnap.exists) {
-                let uData = profileSnap.data();
-                let name = extractName(uData, story.uid);
-                let photo = extractPhotoUrl(uData) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff`;
+        snapshot.forEach(docSnap => {
+          let story = docSnap.data();
+          // იღებს ავტორის ID-ს ნებისმიერი შესაძლო ველიდან
+          let authorUid = story.uid || story.userId || story.user_id || story.authorId;
+          // იღებს სურათის ლინკს ნებისმიერი შესაძლო ველიდან
+          let storyImg = story.imageUrl || story.url || story.mediaUrl || story.media_url || story.image || story.fileUrl;
 
-                // ჰორიზონტალური ელემენტი
-                let storyDiv = document.createElement('div');
-                storyDiv.className = 'story-item';
-                storyDiv.onclick = function() { openStoryViewer(name, photo, story.imageUrl); };
+          if (!authorUid || !storyImg) return;
 
-                storyDiv.innerHTML = `
-                  <div class="story-avatar-wrapper has-story">
-                    <img class="story-avatar" src="${photo}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff';">
-                  </div>
-                  <span class="story-name">${name}</span>
-                `;
-                storiesRow.appendChild(storyDiv);
+          // 24 საათიანი ფილტრაცია
+          let storyTime = story.createdAt || story.created_at || story.timestamp;
+          let storyMs = storyTime && storyTime.seconds ? storyTime.seconds * 1000 : nowMs;
+          if (nowMs - storyMs > twentyFourHoursMs) return;
 
-                // ბარათი Grid გვერდზე
-                let cardDiv = document.createElement('div');
-                cardDiv.className = 'story-card';
-                cardDiv.onclick = function() { openStoryViewer(name, photo, story.imageUrl); };
-
-                cardDiv.innerHTML = `
-                  <img class="story-card-bg" src="${story.imageUrl}" onerror="this.src='${photo}';">
-                  <div class="story-card-overlay">
-                    <div class="story-card-avatar-holder">
-                      <img class="story-card-avatar" src="${photo}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff';">
-                    </div>
-                    <span class="story-card-name">${name}</span>
-                  </div>
-                `;
-                storiesGrid.appendChild(cardDiv);
-              }
-            });
-          });
+          // ჯგუფდება ავტორის მიხედვით (თითო მომხმარებელზე ინახება ბოლო სტორი)
+          if (!userStoriesMap[authorUid] || storyMs > userStoriesMap[authorUid].storyMs) {
+            userStoriesMap[authorUid] = {
+              uid: authorUid,
+              imageUrl: storyImg,
+              storyMs: storyMs
+            };
+          }
         });
+
+        const activeStoryUsers = Object.values(userStoriesMap).sort((a, b) => b.storyMs - a.storyMs);
+        renderStoriesUI(activeStoryUsers);
+      }, err => {
+        console.error("Stories snapshot error:", err);
+      });
+    }
+
+    function renderStoriesUI(storyUsers) {
+      const storiesRow = document.getElementById('stories-target-row');
+      const storiesGrid = document.getElementById('stories-grid-target');
+
+      if (!storiesRow || !storiesGrid) return;
+
+      const firstRowItem = storiesRow.firstElementChild;
+      const firstGridItem = storiesGrid.firstElementChild;
+
+      storiesRow.innerHTML = "";
+      if (firstRowItem) storiesRow.appendChild(firstRowItem);
+
+      storiesGrid.innerHTML = "";
+      if (firstGridItem) storiesGrid.appendChild(firstGridItem);
+
+      storyUsers.forEach(item => {
+        db.collection('profiles').doc(item.uid).get().then(profileSnap => {
+          let uData = profileSnap.exists ? profileSnap.data() : null;
+          let name = extractName(uData, item.uid);
+          let photo = extractPhotoUrl(uData) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff`;
+
+          // 1. ჰორიზონტალური ელემენტი ჩატების ზოლში
+          let storyDiv = document.createElement('div');
+          storyDiv.className = 'story-item';
+          storyDiv.onclick = function() { openStoryViewer(name, photo, item.imageUrl); };
+          storyDiv.innerHTML = `
+            <div class="story-avatar-wrapper has-story">
+              <img class="story-avatar" src="${photo}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff';">
+            </div>
+            <span class="story-name">${name}</span>
+          `;
+          storiesRow.appendChild(storyDiv);
+
+          // 2. ბარათი Grid გვერდზე
+          let cardDiv = document.createElement('div');
+          cardDiv.className = 'story-card';
+          cardDiv.onclick = function() { openStoryViewer(name, photo, item.imageUrl); };
+          cardDiv.innerHTML = `
+            <img class="story-card-bg" src="${item.imageUrl}" onerror="this.src='${photo}';">
+            <div class="story-card-overlay">
+              <div class="story-card-avatar-holder">
+                <img class="story-card-avatar" src="${photo}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff';">
+              </div>
+              <span class="story-card-name">${name}</span>
+            </div>
+          `;
+          storiesGrid.appendChild(cardDiv);
+        });
+      });
     }
 
     function openStoryViewer(name, avatar, imageUrl) {
