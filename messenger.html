@@ -752,6 +752,67 @@
       border-bottom-right-radius: 4px;
     }
 
+    /* Messenger Call Bubble Style (MISSED & FINISHED CALLS) */
+    .msg-bubble.call-card-bubble {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #ffffff !important;
+      border-radius: 16px !important;
+      padding: 12px 16px !important;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .call-card-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .call-card-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .call-card-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffffff;
+    }
+    .call-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .call-card-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #ffffff;
+    }
+    .call-card-duration {
+      font-size: 12px;
+      color: #8e8e93;
+    }
+    .call-card-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.2s;
+    }
+    .call-card-btn:active {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
     /* მხოლოდ სმაილების დიდი ზომა (Messenger Style) */
     .msg-bubble.big-emoji {
       font-size: 38px !important;
@@ -1632,6 +1693,9 @@
             if (!snapshot.empty) {
               const lastMsgDoc = snapshot.docs[0].data();
               let msgText = lastMsgDoc.text || "📷 Photo";
+              if (lastMsgDoc.type === 'missed_call') msgText = "📞 გამოტოვებული ვიდეო ზარი";
+              else if (lastMsgDoc.type === 'finished_call') msgText = `📞 ვიდეო ზარი (${lastMsgDoc.duration || "0 წმ"})`;
+
               let timeStr = lastMsgDoc.createdAt ? new Date(lastMsgDoc.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
               const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
@@ -1776,16 +1840,38 @@
             const msgRow = document.createElement('div');
             msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
-            const isEmojiOnly = isOnlyEmoji(msg.text);
-            const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
-
-            if (isMine) {
-              msgRow.innerHTML = `<div class="${bubbleClass}">${msg.text}</div>`;
-            } else {
-              msgRow.innerHTML = `
-                <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
-                <div class="${bubbleClass}">${msg.text}</div>
+            // ზარის ბარათების რენდერი (Missed & Finished Call Cards)
+            if (msg.type === 'missed_call' || msg.type === 'finished_call') {
+              let titleText = msg.type === 'missed_call' ? 'გამოტოვებული ვიდეო ზარი' : 'ვიდეო ზარი';
+              let durationText = msg.type === 'finished_call' ? (msg.duration || '0 წმ') : new Date(msgDateObj).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+              
+              let cardHtml = `
+                <div class="msg-bubble call-card-bubble">
+                  <div class="call-card-top">
+                    <div class="call-card-icon">
+                      <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    </div>
+                    <div class="call-card-info">
+                      <span class="call-card-title">${titleText}</span>
+                      <span class="call-card-duration">${durationText}</span>
+                    </div>
+                  </div>
+                  <button class="call-card-btn" onclick="startVideoCall()">თავიდან დარეკვა</button>
+                </div>
               `;
+              msgRow.innerHTML = cardHtml;
+            } else {
+              const isEmojiOnly = isOnlyEmoji(msg.text);
+              const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
+
+              if (isMine) {
+                msgRow.innerHTML = `<div class="${bubbleClass}">${msg.text}</div>`;
+              } else {
+                msgRow.innerHTML = `
+                  <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
+                  <div class="${bubbleClass}">${msg.text}</div>
+                `;
+              }
             }
             msgBlock.appendChild(msgRow);
           });
@@ -2137,7 +2223,7 @@
       });
     }
 
-    // 5. WEBRTC VIDEO CALL LOGIC WITH GITHUB MP3 RINGTONES
+    // 5. WEBRTC VIDEO CALL LOGIC WITH GITHUB MP3 RINGTONES & CALL DURATION / MISSED CARDS
     const rtcServers = {
       iceServers: [
         { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
@@ -2152,6 +2238,10 @@
     let callerCandidatesUnsubscribe = null;
     let calleeCandidatesUnsubscribe = null;
     let activeIncomingCallData = null;
+    
+    let callStartTime = null;
+    let callTimerInterval = null;
+    let callConnectedFlag = false;
 
     function listenForIncomingCalls(myUid) {
       db.collection('calls')
@@ -2189,6 +2279,7 @@
       const myUid = auth.currentUser.uid;
       const targetUid = currentActiveChatUid;
 
+      callConnectedFlag = false;
       document.getElementById('video-call-screen').style.display = 'block';
       document.getElementById('video-call-status').innerText = "ზარი ირეკება...";
 
@@ -2254,13 +2345,14 @@
           if (data.status === 'connected' && peerConnection && !peerConnection.currentRemoteDescription && data.answer) {
             const answerDescription = new RTCSessionDescription(data.answer);
             peerConnection.setRemoteDescription(answerDescription);
-            document.getElementById('video-call-status').innerText = "დაკავშირებულია";
+            callConnectedFlag = true;
+            callStartTime = Date.now();
+            startCallTimer();
             stopCallSounds();
           }
 
           if (data.status === 'rejected' || data.status === 'ended') {
-            endCallLocally();
-            alert("ზარი დასრულდა");
+            handleCallFinished(data.status);
           }
         });
 
@@ -2336,12 +2428,14 @@
           sdp: answerDescription.sdp
         };
 
+        callConnectedFlag = true;
+        callStartTime = Date.now();
+        startCallTimer();
+
         await callDocRef.update({
           answer: answer,
           status: 'connected'
         });
-
-        document.getElementById('video-call-status').innerText = "დაკავშირებულია";
 
         callerCandidatesUnsubscribe = callerCandidatesCollection.onSnapshot(snapshot => {
           snapshot.docChanges().forEach(change => {
@@ -2355,8 +2449,7 @@
         callDocUnsubscribe = callDocRef.onSnapshot(snapshot => {
           const data = snapshot ? snapshot.data() : null;
           if (data && (data.status === 'ended' || data.status === 'rejected')) {
-            endCallLocally();
-            alert("ზარი დასრულდა");
+            handleCallFinished(data.status);
           }
         });
 
@@ -2365,6 +2458,17 @@
         alert("კამერის ან მიკროფონის ჩართვა ვერ მოხერხდა.");
         rejectIncomingCall();
       }
+    }
+
+    function startCallTimer() {
+      if (callTimerInterval) clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => {
+        if (!callStartTime) return;
+        let diffSec = Math.floor((Date.now() - callStartTime) / 1000);
+        let mins = Math.floor(diffSec / 60);
+        let secs = diffSec % 60;
+        document.getElementById('video-call-status').innerText = `${mins} წთ ${secs} წმ`;
+      }, 1000);
     }
 
     function rejectIncomingCall() {
@@ -2385,11 +2489,49 @@
           status: 'ended'
         });
       }
+      handleCallFinished('ended');
+    }
+
+    function handleCallFinished(status) {
+      let durationStr = "";
+      if (callConnectedFlag && callStartTime) {
+        let diffSec = Math.floor((Date.now() - callStartTime) / 1000);
+        let mins = Math.floor(diffSec / 60);
+        let secs = diffSec % 60;
+        durationStr = mins > 0 ? `${mins} წთ ${secs} წმ` : `${secs} წმ`;
+      }
+
+      if (currentActiveChatUid && auth.currentUser) {
+        const myUid = auth.currentUser.uid;
+        const chatId = getChatId(myUid, currentActiveChatUid);
+
+        let msgPayload = {
+          senderId: myUid,
+          read: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (callConnectedFlag) {
+          msgPayload.type = 'finished_call';
+          msgPayload.duration = durationStr;
+          msgPayload.text = `📞 ვიდეო ზარი (${durationStr})`;
+        } else {
+          msgPayload.type = 'missed_call';
+          msgPayload.text = '📞 გამოტოვებული ვიდეო ზარი';
+        }
+
+        db.collection('chats').doc(chatId).collection('messages').add(msgPayload);
+      }
+
       endCallLocally();
     }
 
     function endCallLocally() {
       stopCallSounds();
+      if (callTimerInterval) { clearInterval(callTimerInterval); callTimerInterval = null; }
+      callStartTime = null;
+      callConnectedFlag = false;
+
       if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
