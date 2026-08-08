@@ -411,7 +411,6 @@
       text-overflow: ellipsis;
     }
 
-    /* Create story card special style */
     .story-card-create {
       background: rgba(255, 255, 255, 0.04);
       border: 2px dashed rgba(46, 213, 115, 0.4);
@@ -1320,6 +1319,34 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
+    // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის (GitHub Raw Links) ---
+    const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
+    const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
+
+    outgoingAudio.loop = true;
+    incomingAudio.loop = true;
+    outgoingAudio.volume = 1.0;
+    incomingAudio.volume = 1.0;
+
+    function playOutgoingRingtone() {
+      stopCallSounds();
+      outgoingAudio.currentTime = 0;
+      outgoingAudio.play().catch(e => console.log("Outgoing audio play error:", e));
+    }
+
+    function playIncomingRingtone() {
+      stopCallSounds();
+      incomingAudio.currentTime = 0;
+      incomingAudio.play().catch(e => console.log("Incoming audio play error:", e));
+    }
+
+    function stopCallSounds() {
+      outgoingAudio.pause();
+      outgoingAudio.currentTime = 0;
+      incomingAudio.pause();
+      incomingAudio.currentTime = 0;
+    }
+
     // ენების ლექსიკონი
     var TRANSLATIONS = {
       en: {
@@ -1427,87 +1454,6 @@
     var unsubscribeMessages = null;
     var threadProfileUnsubscribe = null;
     var storyTimer = null;
-
-    // WEB AUDIO API SOUND SYNTHESIZER FOR CALL RINGTONES
-    var audioCtx = null;
-    var ringtoneInterval = null;
-
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
-    }
-
-    function playOutgoingRingtone() {
-      stopCallSounds();
-      try {
-        let ctx = getAudioContext();
-        function playBeep() {
-          if (!audioCtx) return;
-          let osc1 = ctx.createOscillator();
-          let osc2 = ctx.createOscillator();
-          let gain = ctx.createGain();
-
-          osc1.frequency.value = 440;
-          osc2.frequency.value = 480;
-
-          gain.gain.setValueAtTime(0.08, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-
-          osc1.connect(gain);
-          osc2.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc1.start(ctx.currentTime);
-          osc2.start(ctx.currentTime);
-          osc1.stop(ctx.currentTime + 1.2);
-          osc2.stop(ctx.currentTime + 1.2);
-        }
-
-        playBeep();
-        ringtoneInterval = setInterval(playBeep, 3000);
-      } catch (e) {
-        console.error("Audio error:", e);
-      }
-    }
-
-    function playIncomingRingtone() {
-      stopCallSounds();
-      try {
-        let ctx = getAudioContext();
-        function playRiff() {
-          if (!audioCtx) return;
-          const notes = [523.25, 659.25, 783.99, 1046.50];
-          notes.forEach((freq, idx) => {
-            let osc = ctx.createOscillator();
-            let gain = ctx.createGain();
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.1, ctx.currentTime + idx * 0.15);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.15 + 0.3);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(ctx.currentTime + idx * 0.15);
-            osc.stop(ctx.currentTime + idx * 0.15 + 0.3);
-          });
-        }
-
-        playRiff();
-        ringtoneInterval = setInterval(playRiff, 1800);
-      } catch (e) {
-        console.error("Audio error:", e);
-      }
-    }
-
-    function stopCallSounds() {
-      if (ringtoneInterval) {
-        clearInterval(ringtoneInterval);
-        ringtoneInterval = null;
-      }
-    }
 
     // TAB SWITCHING
     function switchTab(tabName) {
@@ -2191,7 +2137,7 @@
       });
     }
 
-    // 5. WEBRTC VIDEO CALL LOGIC WITH AUDIO RINGTONES
+    // 5. WEBRTC VIDEO CALL LOGIC WITH GITHUB MP3 RINGTONES
     const rtcServers = {
       iceServers: [
         { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
@@ -2233,7 +2179,6 @@
             document.getElementById('incoming-caller-avatar').src = cPhoto;
             document.getElementById('incoming-call-modal').style.display = 'flex';
             
-            // ირთვება შემომავალი ზარის მელოდია
             playIncomingRingtone();
           });
         });
@@ -2247,7 +2192,6 @@
       document.getElementById('video-call-screen').style.display = 'block';
       document.getElementById('video-call-status').innerText = "ზარი ირეკება...";
 
-      // ირთვება ზარის გასვლის ხმა ("ტუ-ტუ...")
       playOutgoingRingtone();
 
       db.collection('profiles').doc(targetUid).get().then(pSnap => {
@@ -2311,7 +2255,6 @@
             const answerDescription = new RTCSessionDescription(data.answer);
             peerConnection.setRemoteDescription(answerDescription);
             document.getElementById('video-call-status').innerText = "დაკავშირებულია";
-            // დაკავშირებისას ზარის გასვლის ხმა თიშება
             stopCallSounds();
           }
 
