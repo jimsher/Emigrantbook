@@ -436,6 +436,84 @@
       box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
     }
 
+    /* ----------------------------------------------------
+        1.8. ახალი: შეტყობინებების ეკრანი (NOTIFICATIONS SCREEN)
+    ------------------------------------------------------- */
+    #notifications-screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .notifications-header-top {
+      padding: 15px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(13, 13, 17, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+    .notifications-header-top h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #2ed573 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .notifications-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 10px;
+    }
+
+    .notif-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .notif-item:active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .notif-item.unread {
+      background: rgba(46, 213, 115, 0.08);
+    }
+    .notif-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .notif-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .notif-text {
+      font-size: 14px;
+      color: #ffffff;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .notif-time {
+      font-size: 11px;
+      color: #888888;
+    }
+
     /* ქვედა ნავბარი - STICKY FIXED BOTTOM */
     .footer-nav {
       position: sticky;
@@ -883,6 +961,17 @@
       </div>
     </div>
 
+    <!-- ================= 1.8. ახალი: შეტყობინებების ეკრანი ================= -->
+    <div id="notifications-screen">
+      <div class="notifications-header-top">
+        <h1 id="lbl-notifs-page-title">შეტყობინებები</h1>
+      </div>
+
+      <div class="notifications-scroll-area" id="notifications-list-target">
+        <p style="padding:20px; color:#8e8e93; text-align:center;" id="lbl-no-notifs">შეტყობინებები არ არის.</p>
+      </div>
+    </div>
+
     <input type="file" id="story-file-input" accept="image/*" style="display:none;" onchange="uploadStoryFile(event)">
 
     <!-- ================= FOOTER NAV (საერთო ნავბარი) ================= -->
@@ -896,8 +985,9 @@
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.53c-.26-.81-1-1.4-1.9-1.4h-1v-3c0-.55-.45-1-1-1h-6v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
         <span class="nav-tab-label" id="lbl-nav-stories">სტორიები</span>
       </button>
-      <button class="nav-tab" onclick="alert('Notifications tab')">
+      <button class="nav-tab" id="nav-tab-notifs" onclick="switchTab('notifs')">
         <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <div class="nav-badge" id="notif-count-badge">0</div>
         <span class="nav-tab-label" id="lbl-nav-notifs">შეტყობინებები</span>
       </button>
       <button class="nav-tab" onclick="window.location.href='index.html';">
@@ -1004,6 +1094,7 @@
         createStory: "Add Story",
         loading: "Loading...",
         noChats: "No chats available.",
+        noNotifs: "No notifications.",
         navChats: "Chats",
         navStories: "Stories",
         navNotifs: "Notifications",
@@ -1022,6 +1113,7 @@
         createStory: "სტორის დამატება",
         loading: "იტვირთება...",
         noChats: "ჩატები არ არის.",
+        noNotifs: "შეტყობინებები არ არის.",
         navChats: "ჩატები",
         navStories: "სტორიები",
         navNotifs: "შეტყობინებები",
@@ -1040,6 +1132,7 @@
         createStory: "Aggiungi storia",
         loading: "Caricamento...",
         noChats: "Nessuna chat presente.",
+        noNotifs: "Nessuna notifica.",
         navChats: "Chat",
         navStories: "Storie",
         navNotifs: "Notifiche",
@@ -1058,6 +1151,7 @@
         createStory: "Создать историю",
         loading: "Загрузка...",
         noChats: "Нет чатов.",
+        noNotifs: "Нет уведомлений.",
         navChats: "Чаты",
         navStories: "Истории",
         navNotifs: "Уведомления",
@@ -1077,6 +1171,8 @@
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       document.getElementById('lbl-chats-title').innerText = t.chats;
       if (document.getElementById('lbl-stories-page-title')) document.getElementById('lbl-stories-page-title').innerText = t.storiesPageTitle || t.navStories;
+      if (document.getElementById('lbl-notifs-page-title')) document.getElementById('lbl-notifs-page-title').innerText = t.navNotifs;
+      if (document.getElementById('lbl-no-notifs')) document.getElementById('lbl-no-notifs').innerText = t.noNotifs;
       document.getElementById('input-search-placeholder').placeholder = t.search;
       document.getElementById('lbl-create-story').innerText = t.createStory;
       if (document.getElementById('lbl-create-story-card')) document.getElementById('lbl-create-story-card').innerText = t.createStory;
@@ -1097,15 +1193,17 @@
     var threadProfileUnsubscribe = null;
     var storyTimer = null;
 
-    // TAB SWITCHING (ჩატები <-> სტორიები)
+    // TAB SWITCHING (ჩატები <-> სტორიები <-> შეტყობინებები)
     function switchTab(tabName) {
       currentActiveTab = tabName;
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('stories-screen').style.display = 'none';
+      if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'none';
 
       document.getElementById('nav-tab-chats').classList.remove('active');
       document.getElementById('nav-tab-stories').classList.remove('active');
+      if(document.getElementById('nav-tab-notifs')) document.getElementById('nav-tab-notifs').classList.remove('active');
 
       document.getElementById('main-footer-nav').style.display = 'flex';
 
@@ -1115,6 +1213,9 @@
       } else if (tabName === 'stories') {
         document.getElementById('stories-screen').style.display = 'flex';
         document.getElementById('nav-tab-stories').classList.add('active');
+      } else if (tabName === 'notifs') {
+        if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'flex';
+        if(document.getElementById('nav-tab-notifs')) document.getElementById('nav-tab-notifs').classList.add('active');
       }
     }
 
@@ -1200,6 +1301,7 @@
 
         fetchFirestoreChatList(user.uid);
         listenToStories();
+        listenToNotifications(user.uid);
         
         // შევამოწმოთ პირდაპირი ლინკით გადმოსვლა
         checkUrlForDirectChat();
@@ -1315,6 +1417,7 @@
 
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('stories-screen').style.display = 'none';
+      if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
       document.getElementById('main-footer-nav').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'flex';
 
@@ -1431,7 +1534,6 @@
       fileRef.put(file).then(snapshot => {
         snapshot.ref.getDownloadURL().then(url => {
           const serverNow = firebase.firestore.FieldValue.serverTimestamp();
-          // მთავარ საიტთან სრული თავსებადობისთვის ვინახავთ ყველა გავრცელებულ ველს
           db.collection('stories').add({
             uid: user.uid,
             userId: user.uid,
@@ -1465,19 +1567,15 @@
 
         snapshot.forEach(docSnap => {
           let story = docSnap.data();
-          // იღებს ავტორის ID-ს ნებისმიერი შესაძლო ველიდან
           let authorUid = story.uid || story.userId || story.user_id || story.authorId;
-          // იღებს სურათის ლინკს ნებისმიერი შესაძლო ველიდან
           let storyImg = story.imageUrl || story.url || story.mediaUrl || story.media_url || story.image || story.fileUrl;
 
           if (!authorUid || !storyImg) return;
 
-          // 24 საათიანი ფილტრაცია
           let storyTime = story.createdAt || story.created_at || story.timestamp;
           let storyMs = storyTime && storyTime.seconds ? storyTime.seconds * 1000 : nowMs;
           if (nowMs - storyMs > twentyFourHoursMs) return;
 
-          // ჯგუფდება ავტორის მიხედვით (თითო მომხმარებელზე ინახება ბოლო სტორი)
           if (!userStoriesMap[authorUid] || storyMs > userStoriesMap[authorUid].storyMs) {
             userStoriesMap[authorUid] = {
               uid: authorUid,
@@ -1515,7 +1613,6 @@
           let name = extractName(uData, item.uid);
           let photo = extractPhotoUrl(uData) || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2ed573&color=fff`;
 
-          // 1. ჰორიზონტალური ელემენტი ჩატების ზოლში
           let storyDiv = document.createElement('div');
           storyDiv.className = 'story-item';
           storyDiv.onclick = function() { openStoryViewer(name, photo, item.imageUrl); };
@@ -1527,7 +1624,6 @@
           `;
           storiesRow.appendChild(storyDiv);
 
-          // 2. ბარათი Grid გვერდზე
           let cardDiv = document.createElement('div');
           cardDiv.className = 'story-card';
           cardDiv.onclick = function() { openStoryViewer(name, photo, item.imageUrl); };
@@ -1570,6 +1666,117 @@
     function closeStoryViewer() {
       clearInterval(storyTimer);
       document.getElementById('story-viewer-modal').style.display = 'none';
+    }
+
+    // 4. NOTIFICATIONS LOGIC
+    function listenToNotifications(currentUid) {
+      const notifTarget = document.getElementById('notifications-list-target');
+      if (!notifTarget) return;
+
+      db.collection('notifications').onSnapshot(snapshot => {
+        if (!snapshot || snapshot.empty) {
+          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+          notifTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noNotifs}</p>`;
+          return;
+        }
+
+        let notifList = [];
+        const nowMs = Date.now();
+
+        snapshot.forEach(docSnap => {
+          let nData = docSnap.data();
+          let targetUser = nData.receiver_id || nData.receiverId || nData.to_id || nData.toUid || nData.userId || nData.uid;
+
+          if (targetUser === currentUid) {
+            let timeVal = nData.createdAt || nData.created_at || nData.timestamp;
+            let ms = timeVal && timeVal.seconds ? timeVal.seconds * 1000 : nowMs;
+
+            notifList.push({
+              id: docSnap.id,
+              senderId: nData.sender_id || nData.senderId || nData.from_id || nData.fromUid,
+              text: nData.text || nData.message || nData.title || nData.content || "ახალი შეტყობინება",
+              read: nData.read || false,
+              timeMs: ms,
+              docRef: docSnap.ref
+            });
+          }
+        });
+
+        if (notifList.length === 0) {
+          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+          notifTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noNotifs}</p>`;
+          let badgeEl = document.getElementById('notif-count-badge');
+          if (badgeEl) badgeEl.style.display = 'none';
+          return;
+        }
+
+        notifList.sort((a, b) => b.timeMs - a.timeMs);
+        renderNotificationsUI(notifList, notifTarget);
+      }, err => {
+        console.error("Notification snapshot error:", err);
+      });
+    }
+
+    function renderNotificationsUI(notifList, notifTarget) {
+      notifTarget.innerHTML = "";
+
+      let unreadCount = notifList.filter(n => !n.read).length;
+      let badgeEl = document.getElementById('notif-count-badge');
+      if (badgeEl) {
+        if (unreadCount > 0) {
+          badgeEl.innerText = unreadCount;
+          badgeEl.style.display = 'block';
+        } else {
+          badgeEl.style.display = 'none';
+        }
+      }
+
+      notifList.forEach(notif => {
+        let itemDiv = document.createElement('div');
+        itemDiv.className = 'notif-item' + (!notif.read ? ' unread' : '');
+        
+        let timeStr = new Date(notif.timeMs).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        itemDiv.onclick = function() {
+          if (!notif.read) {
+            notif.docRef.update({ read: true });
+          }
+          if (notif.senderId) {
+            db.collection('profiles').doc(notif.senderId).get().then(pSnap => {
+              if (pSnap.exists) {
+                let uData = pSnap.data();
+                openChat(extractName(uData, notif.senderId), extractPhotoUrl(uData), notif.senderId);
+              }
+            });
+          }
+        };
+
+        if (notif.senderId) {
+          db.collection('profiles').doc(notif.senderId).get().then(pSnap => {
+            let pData = pSnap.exists ? pSnap.data() : null;
+            let sName = extractName(pData, notif.senderId);
+            let sPhoto = extractPhotoUrl(pData) || `https://ui-avatars.com/api/?name=${encodeURIComponent(sName)}&background=2ed573&color=fff`;
+
+            itemDiv.innerHTML = `
+              <img class="notif-avatar" src="${sPhoto}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(sName)}&background=2ed573&color=fff';">
+              <div class="notif-content">
+                <span class="notif-text">${notif.text}</span>
+                <span class="notif-time">${timeStr}</span>
+              </div>
+            `;
+          });
+        } else {
+          itemDiv.innerHTML = `
+            <img class="notif-avatar" src="https://emigrantbook.com/logo.png">
+            <div class="notif-content">
+              <span class="notif-text">${notif.text}</span>
+              <span class="notif-time">${timeStr}</span>
+            </div>
+          `;
+        }
+
+        notifTarget.appendChild(itemDiv);
+      });
     }
 
     applyTranslations();
