@@ -1216,6 +1216,10 @@
       } else if (tabName === 'notifs') {
         if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'flex';
         if(document.getElementById('nav-tab-notifs')) document.getElementById('nav-tab-notifs').classList.add('active');
+        // მხოლოდ ღილაკზე დაჭერისას 1-ხელ ითხოვს მონაცემებს Firestore-იდან (წაკითხვის ლიმიტების დასაზოგად)
+        if (auth.currentUser) {
+          fetchNotificationsOnce(auth.currentUser.uid);
+        }
       }
     }
 
@@ -1301,7 +1305,6 @@
 
         fetchFirestoreChatList(user.uid);
         listenToStories();
-        listenToNotifications(user.uid);
         
         // შევამოწმოთ პირდაპირი ლინკით გადმოსვლა
         checkUrlForDirectChat();
@@ -1668,12 +1671,12 @@
       document.getElementById('story-viewer-modal').style.display = 'none';
     }
 
-    // 4. NOTIFICATIONS LOGIC
-    function listenToNotifications(currentUid) {
+    // 4. NOTIFICATIONS LOGIC (ერთჯერადი წაკითხვა - FIRESTORE READS-ის დასაზოგად)
+    function fetchNotificationsOnce(currentUid) {
       const notifTarget = document.getElementById('notifications-list-target');
       if (!notifTarget) return;
 
-      db.collection('notifications').onSnapshot(snapshot => {
+      db.collection('notifications').get().then(snapshot => {
         if (!snapshot || snapshot.empty) {
           var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
           notifTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noNotifs}</p>`;
@@ -1712,8 +1715,8 @@
 
         notifList.sort((a, b) => b.timeMs - a.timeMs);
         renderNotificationsUI(notifList, notifTarget);
-      }, err => {
-        console.error("Notification snapshot error:", err);
+      }).catch(err => {
+        console.error("Notification fetch error:", err);
       });
     }
 
