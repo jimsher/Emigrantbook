@@ -2383,33 +2383,41 @@ auth.onAuthStateChanged(function(user) {
         return;
       }
 
-      var previewDocs = followerDocs.slice(0, 3);
-      var targetIds = previewDocs.map(d => d.data().sender_id);
+      fetchBlockedUserIds(function(blockedSet) {
+        var validDocs = followerDocs.filter(d => !blockedSet.has(d.data().sender_id));
+        if (validDocs.length === 0) {
+          grid.innerHTML = `<div style="grid-column: span 3; text-align: center; color: #aaaaaa; font-size: 13px; padding: 10px;">${t.noReqs}</div>`;
+          return;
+        }
 
-      fetchMultipleProfilesCached(targetIds, function() {
-        var gridHtml = "";
-        targetIds.forEach(function(targetId) {
-          var profile = cachedProfiles[targetId] || {};
-          if (profile.full_name || profile.avatar_url) {
-            var finalName = profile.full_name || "User";
-            var avatarUrl = profile.avatar_url;
-            var isOnline = isUserOnline(profile);
-            var initial = finalName.charAt(0).toUpperCase();
+        var previewDocs = validDocs.slice(0, 3);
+        var targetIds = previewDocs.map(d => d.data().sender_id);
 
-            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-            var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+        fetchMultipleProfilesCached(targetIds, function() {
+          var gridHtml = "";
+          targetIds.forEach(function(targetId) {
+            var profile = cachedProfiles[targetId] || {};
+            if (profile.full_name || profile.avatar_url) {
+              var finalName = profile.full_name || "User";
+              var avatarUrl = profile.avatar_url;
+              var isOnline = isUserOnline(profile);
+              var initial = finalName.charAt(0).toUpperCase();
 
-            gridHtml += `
-              <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
-                <div class="friend-grid-avatar-holder">
-                  ${avatarHtml}
+              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+              var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+
+              gridHtml += `
+                <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
+                  <div class="friend-grid-avatar-holder">
+                    ${avatarHtml}
+                  </div>
+                  <div class="friend-grid-name">${finalName}</div>
                 </div>
-                <div class="friend-grid-name">${finalName}</div>
-              </div>
-            `;
-          }
+              `;
+            }
+          });
+          if (grid) grid.innerHTML = gridHtml;
         });
-        if (grid) grid.innerHTML = gridHtml;
       });
     }
     
@@ -2441,91 +2449,95 @@ auth.onAuthStateChanged(function(user) {
       if (!listWrapper || !countLabel) return;
       listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
 
-      if (activeConnectionsType === 'followers') {
-        db.collection('friend_requests')
-          .where('receiver_id', '==', activeConnectionsUserId)
-          .where('status', '==', 'accepted')
-          .get()
-          .then(function(snapshot) {
-            handleConnectionsResult(snapshot, 'sender_id', listWrapper, countLabel);
-          });
-      } else if (activeConnectionsType === 'following') {
-        db.collection('friend_requests')
-          .where('sender_id', '==', activeConnectionsUserId)
-          .where('status', '==', 'accepted')
-          .get()
-          .then(function(snapshot) {
-            handleConnectionsResult(snapshot, 'receiver_id', listWrapper, countLabel);
-          });
-      } else if (activeConnectionsType === 'all') {
-        Promise.all([
-          db.collection('friend_requests').where('receiver_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get(),
-          db.collection('friend_requests').where('sender_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get()
-        ]).then(function(results) {
-          var followersSnap = results[0];
-          var followingSnap = results[1];
-          
-          var combinedMap = new Map();
-          
-          followersSnap.forEach(function(docSnap) {
-            var conn = docSnap.data();
-            combinedMap.set(conn.sender_id, { docId: docSnap.id, targetUserId: conn.sender_id });
-          });
-          
-          followingSnap.forEach(function(docSnap) {
-            var conn = docSnap.data();
-            if (!combinedMap.has(conn.receiver_id)) {
-              combinedMap.set(conn.receiver_id, { docId: docSnap.id, targetUserId: conn.receiver_id });
-            }
-          });
-
-          if (combinedMap.size === 0) {
-            listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
-            countLabel.innerText = "0 " + t.userUnit;
-            return;
-          }
-
-          countLabel.innerText = combinedMap.size + " " + t.userUnit;
-          
-          var targetIds = Array.from(combinedMap.keys());
-          fetchMultipleProfilesCached(targetIds, function() {
-            var listHtml = "";
-            combinedMap.forEach(function(item) {
-              var requestId = item.docId;
-              var targetUserId = item.targetUserId;
-              var profile = cachedProfiles[targetUserId] || {};
-
-              var finalName = profile.full_name || "User";
-              var avatarUrl = profile.avatar_url;
-              var isOnline = isUserOnline(profile);
-              var initial = finalName.charAt(0).toUpperCase();
-
-              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-              var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-              var showDeleteButton = activeConnectionsUserId === currentUser.uid;
-              var deleteBtnHtml = showDeleteButton ? 
-                `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
-
-              listHtml += `
-                <div class="connection-row">
-                  <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
-                    <div class="connection-avatar">${avatarContent}</div>
-                    <span class="connection-name">${finalName}</span>
-                  </div>
-                  ${deleteBtnHtml}
-                </div>
-              `;
+      fetchBlockedUserIds(function(blockedSet) {
+        if (activeConnectionsType === 'followers') {
+          db.collection('friend_requests')
+            .where('receiver_id', '==', activeConnectionsUserId)
+            .where('status', '==', 'accepted')
+            .get()
+            .then(function(snapshot) {
+              handleConnectionsResult(snapshot, 'sender_id', listWrapper, countLabel, blockedSet);
             });
-            listWrapper.innerHTML = listHtml;
+        } else if (activeConnectionsType === 'following') {
+          db.collection('friend_requests')
+            .where('sender_id', '==', activeConnectionsUserId)
+            .where('status', '==', 'accepted')
+            .get()
+            .then(function(snapshot) {
+              handleConnectionsResult(snapshot, 'receiver_id', listWrapper, countLabel, blockedSet);
+            });
+        } else if (activeConnectionsType === 'all') {
+          Promise.all([
+            db.collection('friend_requests').where('receiver_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get(),
+            db.collection('friend_requests').where('sender_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get()
+          ]).then(function(results) {
+            var followersSnap = results[0];
+            var followingSnap = results[1];
+            
+            var combinedMap = new Map();
+            
+            followersSnap.forEach(function(docSnap) {
+              var conn = docSnap.data();
+              if (!blockedSet.has(conn.sender_id)) {
+                combinedMap.set(conn.sender_id, { docId: docSnap.id, targetUserId: conn.sender_id });
+              }
+            });
+            
+            followingSnap.forEach(function(docSnap) {
+              var conn = docSnap.data();
+              if (!blockedSet.has(conn.receiver_id) && !combinedMap.has(conn.receiver_id)) {
+                combinedMap.set(conn.receiver_id, { docId: docSnap.id, targetUserId: conn.receiver_id });
+              }
+            });
+
+            if (combinedMap.size === 0) {
+              listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
+              countLabel.innerText = "0 " + t.userUnit;
+              return;
+            }
+
+            countLabel.innerText = combinedMap.size + " " + t.userUnit;
+            
+            var targetIds = Array.from(combinedMap.keys());
+            fetchMultipleProfilesCached(targetIds, function() {
+              var listHtml = "";
+              combinedMap.forEach(function(item) {
+                var requestId = item.docId;
+                var targetUserId = item.targetUserId;
+                var profile = cachedProfiles[targetUserId] || {};
+
+                var finalName = profile.full_name || "User";
+                var avatarUrl = profile.avatar_url;
+                var isOnline = isUserOnline(profile);
+                var initial = finalName.charAt(0).toUpperCase();
+
+                var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+                var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+                var showDeleteButton = activeConnectionsUserId === currentUser.uid;
+                var deleteBtnHtml = showDeleteButton ? 
+                  `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
+
+                listHtml += `
+                  <div class="connection-row">
+                    <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
+                      <div class="connection-avatar">${avatarContent}</div>
+                      <span class="connection-name">${finalName}</span>
+                    </div>
+                    ${deleteBtnHtml}
+                  </div>
+                `;
+              });
+              listWrapper.innerHTML = listHtml;
+            });
+          }).catch(function(error) {
+            console.error("Error loading combined connections:", error);
+            listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
           });
-        }).catch(function(error) {
-          console.error("Error loading combined connections:", error);
-          listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
-        });
-      }
+        }
+      });
     }
 
-    function handleConnectionsResult(snapshot, targetIdKey, listWrapper, countLabel) {
+    function handleConnectionsResult(snapshot, targetIdKey, listWrapper, countLabel, blockedSet) {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
       if (snapshot.empty) {
         listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
@@ -2533,17 +2545,25 @@ auth.onAuthStateChanged(function(user) {
         return;
       }
 
-      countLabel.innerText = snapshot.size + " " + t.userUnit;
-
       var targetIds = [];
       var connList = [];
 
       snapshot.forEach(function(docSnap) {
         var conn = docSnap.data();
         var targetUserId = conn[targetIdKey];
-        targetIds.push(targetUserId);
-        connList.push({ requestId: docSnap.id, targetUserId: targetUserId });
+        if (!blockedSet || !blockedSet.has(targetUserId)) {
+          targetIds.push(targetUserId);
+          connList.push({ requestId: docSnap.id, targetUserId: targetUserId });
+        }
       });
+
+      if (connList.length === 0) {
+        listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
+        countLabel.innerText = "0 " + t.userUnit;
+        return;
+      }
+
+      countLabel.innerText = connList.length + " " + t.userUnit;
 
       fetchMultipleProfilesCached(targetIds, function() {
         var listHtml = "";
@@ -2584,143 +2604,6 @@ auth.onAuthStateChanged(function(user) {
           alert("Error: " + error.message);
         });
       }
-    }
-
-    /* 🚫 BLOCKED USERS LOGIC */
-    function openBlockedUsersScreen() {
-      showScreen('blocked-users');
-      loadBlockedUsersData();
-    }
-
-    function loadBlockedUsersData() {
-      var listWrapper = document.getElementById('blocked-users-list-wrapper');
-      var countLabel = document.getElementById('blocked-users-count');
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      if (!listWrapper || !countLabel) return;
-
-      listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
-
-      db.collection('blocked_users')
-        .where('blocker_id', '==', currentUser.uid)
-        .get()
-        .then(function(snapshot) {
-          if (snapshot.empty) {
-            listWrapper.innerHTML = `<div class="connections-empty">${t.noBlockedUsers || "No blocked users"}</div>`;
-            countLabel.innerText = "0 " + t.userUnit;
-            return;
-          }
-
-          countLabel.innerText = snapshot.size + " " + t.userUnit;
-
-          var blockedDocMap = [];
-          var blockedUserIds = [];
-
-          snapshot.forEach(function(docSnap) {
-            var data = docSnap.data();
-            blockedDocMap.push({ docId: docSnap.id, blockedId: data.blocked_id });
-            blockedUserIds.push(data.blocked_id);
-          });
-
-          fetchMultipleProfilesCached(blockedUserIds, function() {
-            var listHtml = "";
-            blockedDocMap.forEach(function(item) {
-              var profile = cachedProfiles[item.blockedId] || {};
-              var finalName = profile.full_name || "User";
-              var avatarUrl = profile.avatar_url;
-              var initial = finalName.charAt(0).toUpperCase();
-
-              var avatarContent = avatarUrl ? 
-                `<img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` : 
-                `<div style="display:flex; align-items:center; justify-content:center; height:100%; width:100%;">${initial}</div>`;
-
-              listHtml += `
-                <div class="connection-row">
-                  <div class="connection-user-info" onclick="viewUserProfile('${item.blockedId}')">
-                    <div class="connection-avatar">${avatarContent}</div>
-                    <span class="connection-name">${finalName}</span>
-                  </div>
-                  <button class="btn-unblock-user" onclick="unblockUser('${item.docId}', '${item.blockedId}', event)" style="background: #ff4d4f; color: #ffffff; border: 1px solid #ff4d4f; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">${t.unblock || "Unblock"}</button>
-                </div>
-              `;
-            });
-            listWrapper.innerHTML = listHtml;
-          });
-        }).catch(function(err) {
-          console.error("Error loading blocked users:", err);
-          listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
-        });
-    }
-
-    function unblockUser(docId, blockedUserId, event) {
-      if (event) event.stopPropagation();
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      if (!confirm(t.confirmUnblock || "Are you sure you want to unblock this user?")) return;
-
-      db.collection('blocked_users').doc(docId).delete().then(function() {
-        cachedBlockedSet = null; // ქეშის გასუფთავება
-        loadBlockedUsersData();
-      }).catch(function(err) {
-        alert("Error unblocking user: " + err.message);
-      });
-    }
-
-    function blockUser(targetUserId) {
-      if (!currentUser) return;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      if (!confirm(t.confirmBlock || "Are you sure you want to block this user?")) return;
-
-      db.collection('blocked_users').add({
-        blocker_id: currentUser.uid,
-        blocked_id: targetUserId,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        cachedBlockedSet = null; // ქეშის გასუფთავება
-        Promise.all([
-          db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('receiver_id', '==', targetUserId).get(),
-          db.collection('friend_requests').where('sender_id', '==', targetUserId).where('receiver_id', '==', currentUser.uid).get()
-        ]).then(function(results) {
-          results.forEach(function(snap) {
-            snap.forEach(function(docSnap) {
-              docSnap.ref.delete();
-            });
-          });
-          alert(t.blockSuccess || "User blocked successfully.");
-          showScreen('home');
-        });
-      }).catch(function(err) {
-        alert("Error blocking user: " + err.message);
-      });
-    }
-
-    function toggleProfileMoreMenu(targetUserId, event) {
-      if (event) event.stopPropagation();
-      var existing = document.getElementById('profile-more-menu-dropdown');
-      if (existing) {
-        existing.remove();
-        return;
-      }
-      var btn = event.currentTarget;
-      var dropdown = document.createElement('div');
-      dropdown.id = 'profile-more-menu-dropdown';
-      dropdown.style.cssText = 'position: absolute; background: #242526; border: 1px solid #3a3b3c; border-radius: 8px; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 9999; display: flex; flex-direction: column; gap: 4px; min-width: 150px;';
-      
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      
-      dropdown.innerHTML = `
-        <button onclick="blockUser('${targetUserId}'); removeProfileMoreMenu();" style="background: transparent; border: none; color: #ff4d4f; padding: 8px 12px; text-align: left; font-weight: 600; cursor: pointer; border-radius: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
-          <span>🚫</span> <span>${t.blockUser || "Block User"}</span>
-        </button>
-      `;
-      
-      btn.parentNode.style.position = 'relative';
-      btn.parentNode.appendChild(dropdown);
-      dropdown.style.top = (btn.offsetTop + btn.offsetHeight + 5) + 'px';
-      dropdown.style.right = '0px';
-    }
-
-    function removeProfileMoreMenu() {
-      var existing = document.getElementById('profile-more-menu-dropdown');
-      if (existing) existing.remove();
     }
 
     function renderCommentsCountOnly(post) {
@@ -3030,9 +2913,18 @@ auth.onAuthStateChanged(function(user) {
       var lockMsgEl = document.getElementById('private-profile-lock-msg');
       if (lockMsgEl) lockMsgEl.style.display = 'none';
 
+      var avatarHolder = document.querySelector('.profile-avatar-holder');
+      var statsBlock = document.querySelector('.profile-stats-block');
+      var userHeadline = document.querySelector('.profile-user-headline');
+      var actionPanel = document.getElementById('profile-action-panel');
       var detailsBox = document.getElementById('profile-details-container');
       var friendsPreview = document.querySelector('.profile-friends-preview-box');
       var tabsEl = document.querySelector('.profile-tabs');
+
+      if (avatarHolder) avatarHolder.style.display = 'block';
+      if (statsBlock) statsBlock.style.display = 'flex';
+      if (userHeadline) userHeadline.style.display = 'block';
+      if (actionPanel) actionPanel.style.display = 'flex';
       if (detailsBox) detailsBox.style.display = 'block';
       if (friendsPreview) friendsPreview.style.display = 'block';
       if (tabsEl) tabsEl.style.display = 'flex';
@@ -3066,7 +2958,6 @@ auth.onAuthStateChanged(function(user) {
         if (covCam) covCam.style.display = "flex";
         if (burgBtn) burgBtn.style.display = "flex";
 
-        var actionPanel = document.getElementById('profile-action-panel');
         if (actionPanel) {
           actionPanel.innerHTML = `
             <button class="fb-btn-primary" onclick="triggerStoryUpload()">
@@ -3104,6 +2995,56 @@ auth.onAuthStateChanged(function(user) {
             return;
           }
 
+          var lockMsgEl = document.getElementById('private-profile-lock-msg');
+          var detailsBox = document.getElementById('profile-details-container');
+          var friendsPreview = document.querySelector('.profile-friends-preview-box');
+          var tabsEl = document.querySelector('.profile-tabs');
+          var postsWall = document.getElementById('profile-posts-wall');
+          var photosWall = document.getElementById('profile-photos-wall');
+          var avatarHolder = document.querySelector('.profile-avatar-holder');
+          var statsBlock = document.querySelector('.profile-stats-block');
+          var userHeadline = document.querySelector('.profile-user-headline');
+          var actionPanel = document.getElementById('profile-action-panel');
+          var banner = document.getElementById('profile-cover-banner');
+          var avCam = document.getElementById('avatar-camera-btn');
+          var covCam = document.getElementById('cover-camera-btn');
+          var burgBtn = document.getElementById('profile-burger-btn');
+
+          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+          if (isBlocked) {
+            if (banner) banner.style.backgroundImage = 'none';
+            if (avatarHolder) avatarHolder.style.display = 'none';
+            if (statsBlock) statsBlock.style.display = 'none';
+            if (userHeadline) userHeadline.style.display = 'none';
+            if (actionPanel) actionPanel.style.display = 'none';
+            if (detailsBox) detailsBox.style.display = 'none';
+            if (friendsPreview) friendsPreview.style.display = 'none';
+            if (tabsEl) tabsEl.style.display = 'none';
+            if (postsWall) postsWall.style.display = 'none';
+            if (photosWall) photosWall.style.display = 'none';
+            if (avCam) avCam.style.display = "none";
+            if (covCam) covCam.style.display = "none";
+            if (burgBtn) burgBtn.style.display = "none";
+
+            if (lockMsgEl) {
+              lockMsgEl.style.display = 'block';
+              lockMsgEl.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 10px;">🚫</div>
+                <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
+                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
+              `;
+            }
+            showScreen('profile');
+            return;
+          }
+
+          // Unblocked - display header elements
+          if (avatarHolder) avatarHolder.style.display = 'block';
+          if (statsBlock) statsBlock.style.display = 'flex';
+          if (userHeadline) userHeadline.style.display = 'block';
+          if (actionPanel) actionPanel.style.display = 'flex';
+
           var finalName = selectedUser.full_name || "User";
           var avatarUrl = selectedUser.avatar_url;
           var coverUrl = selectedUser.cover_url;
@@ -3119,7 +3060,6 @@ auth.onAuthStateChanged(function(user) {
           if (pName) pName.innerText = finalName;
           if (pSub) pSub.innerText = "Emigrant";
 
-          var banner = document.getElementById('profile-cover-banner');
           if (banner) {
             if (coverUrl) {
               banner.style.backgroundImage = `url('${coverUrl}')`;
@@ -3128,39 +3068,9 @@ auth.onAuthStateChanged(function(user) {
             }
           }
 
-          var avCam = document.getElementById('avatar-camera-btn');
-          var covCam = document.getElementById('cover-camera-btn');
-          var burgBtn = document.getElementById('profile-burger-btn');
           if (avCam) avCam.style.display = "none";
           if (covCam) covCam.style.display = "none";
           if (burgBtn) burgBtn.style.display = "none";
-
-          var lockMsgEl = document.getElementById('private-profile-lock-msg');
-          var detailsBox = document.getElementById('profile-details-container');
-          var friendsPreview = document.querySelector('.profile-friends-preview-box');
-          var tabsEl = document.querySelector('.profile-tabs');
-          var postsWall = document.getElementById('profile-posts-wall');
-          var photosWall = document.getElementById('profile-photos-wall');
-          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-
-          if (isBlocked) {
-            if (detailsBox) detailsBox.style.display = 'none';
-            if (friendsPreview) friendsPreview.style.display = 'none';
-            if (tabsEl) tabsEl.style.display = 'none';
-            if (postsWall) postsWall.style.display = 'none';
-            if (photosWall) photosWall.style.display = 'none';
-            if (lockMsgEl) {
-              lockMsgEl.style.display = 'block';
-              lockMsgEl.innerHTML = `
-                <div style="font-size: 48px; margin-bottom: 10px;">🚫</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
-                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
-              `;
-            }
-            showScreen('profile');
-            updateFriendshipButtons(userId);
-            return;
-          }
 
           checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
             var privacySetting = selectedUser.privacy_setting || 'public';
@@ -4998,21 +4908,21 @@ function loadBlockedUsersData() {
             `<div style="display:flex; align-items:center; justify-content:center; height:100%; width:100%;">${initial}</div>`;
 
           listHtml += `
-            <div class="connection-row">
-              <div class="connection-user-info" onclick="viewUserProfile('${item.blockedId}')">
-                <div class="connection-avatar">${avatarContent}</div>
-                <span class="connection-name">${finalName}</span>
-              </div>
-              <button class="btn-unblock-user" onclick="unblockUser('${item.docId}', '${item.blockedId}', event)" style="background: #ff4d4f; color: #ffffff; border: 1px solid #ff4d4f; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">${t.unblock || "Unblock"}</button>
-            </div>
-          `;
+                <div class="connection-row">
+                  <div class="connection-user-info" onclick="viewUserProfile('${item.blockedId}')">
+                    <div class="connection-avatar">${avatarContent}</div>
+                    <span class="connection-name">${finalName}</span>
+                  </div>
+                  <button class="btn-unblock-user" onclick="unblockUser('${item.docId}', '${item.blockedId}', event)" style="background: #ff4d4f; color: #ffffff; border: 1px solid #ff4d4f; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">${t.unblock || "Unblock"}</button>
+                </div>
+              `;
+            });
+            listWrapper.innerHTML = listHtml;
+          });
+        }).catch(function(err) {
+          console.error("Error loading blocked users:", err);
+          listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
         });
-        listWrapper.innerHTML = listHtml;
-      });
-    }).catch(function(err) {
-      console.error("Error loading blocked users:", err);
-      listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
-    });
 }
 
 function unblockUser(docId, blockedUserId, event) {
