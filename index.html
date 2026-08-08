@@ -1839,6 +1839,7 @@ auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
+    listenForIncomingCalls(user.uid);
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
 
@@ -5044,6 +5045,145 @@ function removeProfileMoreMenu() {
   var existing = document.getElementById('profile-more-menu-dropdown');
   if (existing) existing.remove();
 }
+
+
+
+    /* ზარის დარეკვის ლოგიკა */
+    const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
+incomingAudio.loop = true;
+incomingAudio.volume = 1.0;
+
+let activeIncomingCallData = null;
+let currentCallId = null;
+let localStream = null;
+let remoteStream = null;
+let peerConnection = null;
+let callDocUnsubscribe = null;
+let callerCandidatesUnsubscribe = null;
+
+const rtcServers = {
+  iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }]
+};
+
+function stopCallSounds() {
+  incomingAudio.pause();
+  incomingAudio.currentTime = 0;
+}
+
+function listenForIncomingCalls(myUid) {
+  db.collection('calls')
+    .where('receiverUid', '==', myUid)
+    .where('status', '==', 'dialing')
+    .onSnapshot(snapshot => {
+      if (!snapshot || snapshot.empty) {
+        document.getElementById('incoming-call-modal').style.display = 'none';
+        activeIncomingCallData = null;
+        stopCallSounds();
+        return;
+      }
+
+      const docSnap = snapshot.docs[0];
+      const callData = docSnap.data();
+      callData.callId = docSnap.id;
+      activeIncomingCallData = callData;
+
+      db.collection('profiles').doc(callData.callerUid).get().then(pSnap => {
+        let pData = pSnap.exists ? pSnap.data() : null;
+        let cName = (pData && (pData.full_name || pData.name)) || "მომხმარებელი";
+        let cPhoto = (pData && (pData.photo || pData.avatar || pData.profile_pic)) || 'https://emigrantbook.com/logo.png';
+
+        document.getElementById('incoming-caller-name').innerText = cName;
+        document.getElementById('incoming-caller-avatar').src = cPhoto;
+        document.getElementById('incoming-call-modal').style.display = 'flex';
+        
+        incomingAudio.currentTime = 0;
+        incomingAudio.play().catch(e => console.log(e));
+      });
+    });
+}
+
+async function acceptIncomingCall() {
+  if (!activeIncomingCallData || !auth.currentUser) return;
+  stopCallSounds();
+
+  const callData = activeIncomingCallData;
+  currentCallId = callData.callId;
+
+  document.getElementById('incoming-call-modal').style.display = 'none';
+  document.getElementById('video-call-screen').style.display = 'block';
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    remoteStream = new MediaStream();
+
+    document.getElementById('local-video').srcObject = localStream;
+    document.getElementById('remote-video').srcObject = remoteStream;
+
+    peerConnection = new RTCPeerConnection(rtcServers);
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.ontrack = (event) => {
+      event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+    };
+
+    const callDocRef = db.collection('calls').doc(currentCallId);
+    const calleeCandidatesCollection = callDocRef.collection('calleeCandidates');
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) calleeCandidatesCollection.add(event.candidate.toJSON());
+    };
+
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
+    const answerDescription = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answerDescription);
+
+    await callDocRef.update({
+      answer: { type: answerDescription.type, sdp: answerDescription.sdp },
+      status: 'connected'
+    });
+
+    callDocUnsubscribe = callDocRef.onSnapshot(snapshot => {
+      const data = snapshot ? snapshot.data() : null;
+      if (data && (data.status === 'ended' || data.status === 'rejected')) {
+        endCallLocally();
+      }
+    });
+  } catch (err) {
+    rejectIncomingCall();
+  }
+}
+
+function rejectIncomingCall() {
+  stopCallSounds();
+  if (activeIncomingCallData) {
+    db.collection('calls').doc(activeIncomingCallData.callId).update({ status: 'rejected' });
+  }
+  document.getElementById('incoming-call-modal').style.display = 'none';
+  activeIncomingCallData = null;
+}
+
+function endCall() {
+  stopCallSounds();
+  if (currentCallId) {
+    db.collection('calls').doc(currentCallId).update({ status: 'ended' });
+  }
+  endCallLocally();
+}
+
+function endCallLocally() {
+  stopCallSounds();
+  if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+  if (remoteStream) { remoteStream.getTracks().forEach(track => track.stop()); remoteStream = null; }
+  if (peerConnection) { peerConnection.close(); peerConnection = null; }
+  if (callDocUnsubscribe) { callDocUnsubscribe(); callDocUnsubscribe = null; }
+
+  document.getElementById('video-call-screen').style.display = 'none';
+  document.getElementById('incoming-call-modal').style.display = 'none';
+  currentCallId = null;
+  activeIncomingCallData = null;
+}
+    /* აქ მთავრდება */
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
