@@ -286,6 +286,84 @@
     .lang-option-card.active-lang .lang-check {
         display: inline;
     }
+
+    /* 🖼️ Photo Grid Selection & Deletion Styles */
+    .photo-grid-full {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .photo-item-container {
+      position: relative;
+      width: 100%;
+      padding-top: 100%;
+      overflow: hidden;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      background: #1e1e1e;
+    }
+
+    .photo-item-container img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .photo-select-checkbox {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      background: rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      transition: all 0.2s ease;
+    }
+
+    .selection-mode-active .photo-select-checkbox {
+      display: flex;
+    }
+
+    .photo-item-container.selected .photo-select-checkbox {
+      background: #1877f2;
+      border-color: #ffffff;
+    }
+
+    .photo-item-container.selected img {
+      opacity: 0.75;
+      transform: scale(0.94);
+    }
+
+    .photo-selection-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: #242526;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #3a3b3c;
+    }
+
+    .photo-selection-bar.active {
+      display: flex;
+    }
   </style>
   
 </head>
@@ -1209,6 +1287,13 @@
     var touchStartX = 0;
     var touchEndX = 0;
 
+    /* 📸 PHOTO SELECTION & DELETION VARIABLES */
+    var isPhotoSelectionMode = false;
+    var selectedPhotoIndices = new Set();
+    var photoLongPressTimer = null;
+    var isLongPressTriggered = false;
+    var photoTouchStartPos = { x: 0, y: 0 };
+
     var activeTiktokVideosList = [];
     var realtimeNotificationsList = [];
     var activeFloatingIntervals = {};
@@ -1395,7 +1480,8 @@
         optPrivate: "🔒 Only Me (Private)",
         lockedProfileTitle: "This profile is private",
         lockedProfileSub: "Only friends can see this user's posts, photos, and videos.",
-        privacyMenuBtn: "Settings & Privacy"
+        privacyMenuBtn: "Settings & Privacy",
+        selected: "selected"
       },
       it: {
         authSubtitle: "Accedi al tuo profilo", authSubtitleReg: "Crea un nuovo account",
@@ -1406,7 +1492,7 @@
         loadingDetails: "Caricamento dettagli...", miniFriends: "follower", seeAll: "Vedi tutti",
         tabPosts: "Post", tabPhotos: "Foto", tabVideos: "Video",
         backToProfile: "← Torna al profilo", updateInfo: "✏️ Aggiorna informazioni profilo",
-        age: "Età", job: "Lavoro (Posizione, Azienda)", city: "Città attuale",
+        age: "Età", job: "Lavoro (Posizione, Azienda)", city: "Cittàattuale",
         country: "Paese", relStatus: "Stato sentimentale", lifeEvents: "Eventi importanti (Life Events)",
         saveChanges: "Salva modifiche", cancel: "Annulla", friendsTitle: "Amici / Follower",
         followersTitle: "Follower", followingTitle: "Seguiti", postUnit: "post",
@@ -1433,7 +1519,8 @@
         optPrivate: "🔒 Solo io (Privato)",
         lockedProfileTitle: "Questo profilo è privato",
         lockedProfileSub: "Solo gli amici possono vedere i post, le foto e i video di questo utente.",
-        privacyMenuBtn: "Impostazioni e privacy"
+        privacyMenuBtn: "Impostazioni e privacy",
+        selected: "selezionate"
       },
       ka: {
         authSubtitle: "შედი შენს პროფილში", authSubtitleReg: "შექმენი ახალი ანგარიში",
@@ -1471,7 +1558,8 @@
         optPrivate: "🔒 მხოლოდ ჩემთვის (დახურული)",
         lockedProfileTitle: "ეს პროფილი დახურულია",
         lockedProfileSub: "მხოლოდ მეგობრებს შეუძლიათ ამ მომხმარებლის პოსტების, ფოტოების და ვიდეოების ნახვა.",
-        privacyMenuBtn: "პარამეტრები და კონფიდენციალურობა"
+        privacyMenuBtn: "პარამეტრები და კონფიდენციალურობა",
+        selected: "მონიშნული"
       },
       ru: {
         authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
@@ -1509,7 +1597,8 @@
         optPrivate: "🔒 Только я (Закрытый)",
         lockedProfileTitle: "Этот профиль закрыт",
         lockedProfileSub: "Только друзья могут видеть публикации, фото и видео этого пользователя.",
-        privacyMenuBtn: "Настройки и конфиденциальность"
+        privacyMenuBtn: "Настройки и конфиденциальность",
+        selected: "выбрано"
       },
       fr: {
         authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
@@ -1547,7 +1636,8 @@
         optPrivate: "🔒 Moi uniquement (Privé)",
         lockedProfileTitle: "Ce profil est privé",
         lockedProfileSub: "Seuls les amis peuvent voir les publications, photos et vidéos de cet utilisateur.",
-        privacyMenuBtn: "Paramètres et confidentialité"
+        privacyMenuBtn: "Paramètres et confidentialité",
+        selected: "sélectionné"
       },
       de: {
         authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neus Konto erstellen",
@@ -1585,7 +1675,8 @@
         optPrivate: "🔒 Nur ich (Privat)",
         lockedProfileTitle: "Dieses Profil ist privat",
         lockedProfileSub: "Nur Freunde können die Beiträge, Fotos und Videos dieses Benutzers sehen.",
-        privacyMenuBtn: "Einstellungen & Datenschutz"
+        privacyMenuBtn: "Einstellungen & Datenschutz",
+        selected: "ausgewählt"
       }
     };
 
@@ -1883,7 +1974,6 @@
         renderDefaultWaitingBanner();
       });
     }
-    
 
     function renderDefaultWaitingBanner() {
       var statusText = document.getElementById('lottery-live-status');
@@ -2089,6 +2179,7 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function showScreen(screenName) {
+      exitPhotoSelectionMode();
       var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen'];
       screens.forEach(s => {
         var el = document.getElementById(s);
@@ -3210,6 +3301,7 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function switchProfileTab(tabName) {
+      exitPhotoSelectionMode();
       var btnPosts = document.getElementById('tab-btn-posts');
       var btnPhotos = document.getElementById('tab-btn-photos');
       var btnVideos = document.getElementById('tab-btn-videos');
@@ -3275,14 +3367,218 @@ auth.onAuthStateChanged(function(user) {
             return;
           }
 
-          var collageHtml = '<div class="photo-grid-full">';
-          galleryPhotoUrls.forEach(function(url, index) {
-            collageHtml += `<img class="collage-item" src="${url}" alt="Media" onclick="openFullGalleryModal(${index})">`;
-          });
-          collageHtml += '</div>';
-          
-          photosWall.innerHTML = `<div style="padding: 10px 0;">${collageHtml}</div>`;
+          renderPhotoGridUI();
+        }).catch(function(err) {
+          console.error("Photos load error:", err);
+          photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noPhotos}</div>`;
         });
+    }
+
+    /* 📸 PHOTO GRID RENDERER WITH SELECTION MODE SUPPORT */
+    function renderPhotoGridUI() {
+      var photosWall = document.getElementById('profile-photos-wall');
+      if (!photosWall) return;
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+      if (galleryPhotoUrls.length === 0) {
+        photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noPhotos}</div>`;
+        return;
+      }
+
+      var isOwnProfile = (activeViewingProfileId === currentUser.uid);
+      var barClass = isPhotoSelectionMode ? 'photo-selection-bar active' : 'photo-selection-bar';
+      
+      var selectionBarHtml = '';
+      if (isOwnProfile) {
+        selectionBarHtml = `
+          <div id="photo-selection-bar" class="${barClass}">
+            <span style="color:#ffffff; font-weight:bold; font-size:14px;" id="selected-photos-count">${selectedPhotoIndices.size} ${t.selected || 'selected'}</span>
+            <div style="display:flex; gap:8px;">
+              <button onclick="deleteSelectedPhotos()" style="background:#ff4d4f; color:#ffffff; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🗑️ ${t.delete || 'Delete'}</button>
+              <button onclick="exitPhotoSelectionMode()" style="background:#3a3b3c; color:#ffffff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">${t.cancel || 'Cancel'}</button>
+            </div>
+          </div>
+        `;
+      }
+
+      var gridClass = isPhotoSelectionMode ? 'photo-grid-full selection-mode-active' : 'photo-grid-full';
+      var collageHtml = `<div class="${gridClass}">`;
+
+      galleryPhotoUrls.forEach(function(url, index) {
+        var isSelected = selectedPhotoIndices.has(index);
+        var containerClass = isSelected ? 'photo-item-container selected' : 'photo-item-container';
+
+        collageHtml += `
+          <div class="${containerClass}" 
+               data-index="${index}"
+               ontouchstart="handlePhotoTouchStart(event, ${index})"
+               ontouchend="handlePhotoTouchEnd(event, ${index})"
+               ontouchmove="handlePhotoTouchMove(event)"
+               onmousedown="handlePhotoMouseDown(event, ${index})"
+               onmouseup="handlePhotoMouseUp(event, ${index})"
+               onmouseleave="handlePhotoMouseLeave(event)"
+               onclick="handlePhotoClick(event, ${index})">
+            <img src="${url}" alt="Media">
+            <div class="photo-select-checkbox">${isSelected ? '✓' : ''}</div>
+          </div>
+        `;
+      });
+      collageHtml += '</div>';
+
+      photosWall.innerHTML = `<div style="padding: 10px 0;">${selectionBarHtml}${collageHtml}</div>`;
+    }
+
+    /* 📸 PHOTO TOUCH & SELECTION HANDLERS */
+    function handlePhotoTouchStart(e, index) {
+      var isOwnProfile = (activeViewingProfileId === currentUser.uid);
+      if (!isOwnProfile) return;
+
+      isLongPressTriggered = false;
+      if (e.touches && e.touches[0]) {
+        photoTouchStartPos.x = e.touches[0].clientX;
+        photoTouchStartPos.y = e.touches[0].clientY;
+      }
+
+      photoLongPressTimer = setTimeout(function() {
+        isLongPressTriggered = true;
+        if (!isPhotoSelectionMode) {
+          isPhotoSelectionMode = true;
+          if (navigator.vibrate) navigator.vibrate(50);
+        }
+        togglePhotoSelection(index);
+      }, 600);
+    }
+
+    function handlePhotoTouchMove(e) {
+      if (e.touches && e.touches[0]) {
+        var moveX = Math.abs(e.touches[0].clientX - photoTouchStartPos.x);
+        var moveY = Math.abs(e.touches[0].clientY - photoTouchStartPos.y);
+        if (moveX > 10 || moveY > 10) {
+          clearTimeout(photoLongPressTimer);
+        }
+      }
+    }
+
+    function handlePhotoTouchEnd(e, index) {
+      clearTimeout(photoLongPressTimer);
+    }
+
+    function handlePhotoMouseDown(e, index) {
+      var isOwnProfile = (activeViewingProfileId === currentUser.uid);
+      if (!isOwnProfile) return;
+
+      isLongPressTriggered = false;
+      photoLongPressTimer = setTimeout(function() {
+        isLongPressTriggered = true;
+        if (!isPhotoSelectionMode) {
+          isPhotoSelectionMode = true;
+        }
+        togglePhotoSelection(index);
+      }, 600);
+    }
+
+    function handlePhotoMouseUp(e, index) {
+      clearTimeout(photoLongPressTimer);
+    }
+
+    function handlePhotoMouseLeave(e) {
+      clearTimeout(photoLongPressTimer);
+    }
+
+    function handlePhotoClick(e, index) {
+      if (isLongPressTriggered) {
+        e.preventDefault();
+        e.stopPropagation();
+        isLongPressTriggered = false;
+        return;
+      }
+
+      if (isPhotoSelectionMode) {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePhotoSelection(index);
+      } else {
+        openFullGalleryModal(index);
+      }
+    }
+
+    function togglePhotoSelection(index) {
+      if (selectedPhotoIndices.has(index)) {
+        selectedPhotoIndices.delete(index);
+      } else {
+        selectedPhotoIndices.add(index);
+      }
+      renderPhotoGridUI();
+    }
+
+    function exitPhotoSelectionMode() {
+      isPhotoSelectionMode = false;
+      selectedPhotoIndices.clear();
+      renderPhotoGridUI();
+    }
+
+    /* 🗑️ MULTI-PHOTO DELETION LOGIC */
+    function deleteSelectedPhotos() {
+      if (selectedPhotoIndices.size === 0) {
+        alert("გთხოვთ აირჩიოთ სულ მცირე 1 ფოტო წასაშლელად.");
+        return;
+      }
+
+      if (!confirm(`ნამდვილად გსურთ ${selectedPhotoIndices.size} არჩეული ფოტოს წაშლა?`)) {
+        return;
+      }
+
+      var postsToUpdate = {};
+
+      selectedPhotoIndices.forEach(function(index) {
+        var post = galleryPostsReference[index];
+        var url = galleryPhotoUrls[index];
+        if (post && post.id) {
+          if (!postsToUpdate[post.id]) {
+            postsToUpdate[post.id] = {
+              post: post,
+              urlsToRemove: []
+            };
+          }
+          postsToUpdate[post.id].urlsToRemove.push(url);
+        }
+      });
+
+      var promises = [];
+
+      Object.keys(postsToUpdate).forEach(function(postId) {
+        var item = postsToUpdate[postId];
+        var postDoc = item.post;
+        var urlsToRemove = item.urlsToRemove;
+
+        var currentUrls = postDoc.media_url ? postDoc.media_url.split(',').map(u => u.trim()) : [];
+        var remainingUrls = currentUrls.filter(u => !urlsToRemove.includes(u));
+
+        if (remainingUrls.length === 0) {
+          if (!postDoc.content || postDoc.content.trim() === '') {
+            promises.push(db.collection('posts').doc(postId).delete());
+          } else {
+            promises.push(db.collection('posts').doc(postId).update({
+              media_url: null,
+              media_type: null
+            }));
+          }
+        } else {
+          promises.push(db.collection('posts').doc(postId).update({
+            media_url: remainingUrls.join(',')
+          }));
+        }
+      });
+
+      Promise.all(promises).then(function() {
+        exitPhotoSelectionMode();
+        var targetUserId = activeViewingProfileId || currentUser.uid;
+        loadUserPhotos(targetUserId);
+        loadUserPosts(targetUserId);
+      }).catch(function(err) {
+        console.error("Error deleting photos:", err);
+        alert("ფოტოების წაშლისას დაფიქსირდა შეცდომა: " + err.message);
+      });
     }
 
     function loadUserVideos(userId) {
