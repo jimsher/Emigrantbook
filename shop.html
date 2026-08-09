@@ -3,55 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Shop | Emigrantbook</title>
+    <title>Online Store | Emigrantbook</title>
 
-    <!-- Google Fonts & Font Awesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --bg-main: #0b0f19;
-            --surface: #151c2c;
-            --surface-hover: #1e293b;
+            --bg-body: #060911;
+            --bg-card: #0d1322;
+            --bg-card-hover: #141c30;
+            --surface: #111827;
+            --surface-border: rgba(255, 255, 255, 0.08);
             --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
             --primary-hover: #4f46e5;
-            --accent: #10b981;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
-            --radius-lg: 18px;
-            --radius-md: 12px;
-            --shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5);
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --radius-xl: 20px;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --shadow-glow: 0 10px 30px -5px rgba(99, 102, 241, 0.2);
+            --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         body {
-            background-color: var(--bg-main);
-            color: var(--text);
+            background-color: var(--bg-body);
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         /* Header Navigation */
         header {
-            background: rgba(21, 28, 44, 0.85);
-            backdrop-filter: blur(12px);
+            background: rgba(13, 19, 34, 0.85);
+            backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--surface-border);
         }
 
         .nav-container {
-            max-width: 1240px;
+            max-width: 1280px;
             margin: 0 auto;
             padding: 1rem 1.5rem;
             display: flex;
@@ -67,30 +74,33 @@
 
         .burger-trigger {
             background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
             font-size: 1.2rem;
             cursor: pointer;
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
 
         .burger-trigger:hover {
-            background: var(--surface-hover);
             border-color: var(--primary);
+            background: var(--bg-card-hover);
         }
 
         .logo {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
             text-decoration: none;
             letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .logo span {
@@ -103,27 +113,48 @@
             gap: 1rem;
         }
 
-        .cart-icon-btn {
+        .action-icon-btn {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .action-icon-btn:hover {
+            border-color: var(--primary);
+            background: var(--bg-card-hover);
+        }
+
+        .cart-trigger-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 0.65rem 1.25rem;
+            padding: 0.65rem 1.4rem;
             border-radius: 30px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            transition: var(--transition);
+            box-shadow: var(--shadow-glow);
         }
 
-        .cart-icon-btn:hover {
+        .cart-trigger-btn:hover {
             background: var(--primary-hover);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
 
-        .cart-badge {
+        .badge {
             background: white;
             color: var(--primary);
             font-size: 0.75rem;
@@ -132,16 +163,16 @@
             border-radius: 20px;
         }
 
-        /* Sidebar / Burger Menu */
+        /* Burger Menu Drawer */
         .burger-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
             z-index: 999;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s;
+            transition: var(--transition);
         }
 
         .burger-overlay.active {
@@ -155,13 +186,13 @@
             left: -320px;
             width: 300px;
             height: 100%;
-            background: var(--surface);
+            background: var(--bg-card);
             z-index: 1000;
-            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             padding: 1.5rem;
-            border-right: 1px solid var(--border);
+            border-right: 1px solid var(--surface-border);
         }
 
         .burger-sidebar.active {
@@ -174,16 +205,15 @@
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--surface-border);
         }
 
-        /* ორიგინალი ღილაკის სტილი */
         .menu-item-row {
             width: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.9rem 1.1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 0.95rem 1.1rem;
             border-radius: var(--radius-md);
             display: flex;
             justify-content: space-between;
@@ -191,7 +221,8 @@
             cursor: pointer;
             margin-bottom: 0.75rem;
             font-size: 0.95rem;
-            transition: all 0.2s;
+            font-weight: 600;
+            transition: var(--transition);
         }
 
         .menu-item-row:hover {
@@ -211,20 +242,50 @@
 
         .menu-item-arrow {
             font-size: 1.2rem;
-            color: var(--text-muted);
+            color: var(--text-sub);
         }
 
         .menu-item-row:hover .menu-item-arrow {
             color: white;
         }
 
-        /* Main Section */
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-xl);
+            margin: 2rem auto 1.5rem;
+            max-width: 1280px;
+            padding: 2.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-content p {
+            color: var(--text-sub);
+            font-size: 1rem;
+        }
+
+        /* Controls Bar */
         main {
-            max-width: 1240px;
-            margin: 2rem auto;
+            max-width: 1280px;
+            margin: 0 auto 3rem;
             padding: 0 1.5rem;
-            flex: 1;
             width: 100%;
+            flex: 1;
         }
 
         .shop-controls {
@@ -232,7 +293,7 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            gap: 1.25rem;
             margin-bottom: 2rem;
         }
 
@@ -244,18 +305,19 @@
 
         .search-box input {
             width: 100%;
-            padding: 0.85rem 1rem 0.85rem 2.75rem;
-            border: 1px solid var(--border);
+            padding: 0.9rem 1rem 0.9rem 2.8rem;
+            border: 1px solid var(--surface-border);
             border-radius: var(--radius-md);
             outline: none;
             font-size: 0.95rem;
-            background: var(--surface);
-            color: var(--text);
-            transition: border-color 0.2s;
+            background: var(--bg-card);
+            color: var(--text-main);
+            transition: var(--transition);
         }
 
         .search-box input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
         }
 
         .search-box i {
@@ -263,7 +325,25 @@
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-muted);
+            color: var(--text-sub);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sort-select {
+            background: var(--bg-card);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 0.85rem 1.2rem;
+            border-radius: var(--radius-md);
+            outline: none;
+            font-size: 0.9rem;
+            cursor: pointer;
         }
 
         .filter-tags {
@@ -274,16 +354,16 @@
         }
 
         .tag-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 0.6rem 1.2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--surface-border);
+            color: var(--text-sub);
+            padding: 0.65rem 1.25rem;
             border-radius: 30px;
             cursor: pointer;
             font-size: 0.85rem;
             font-weight: 600;
             white-space: nowrap;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
 
         .tag-btn.active, .tag-btn:hover {
@@ -295,31 +375,57 @@
         /* Products Grid */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.75rem;
         }
 
         .product-card {
-            background: var(--surface);
+            background: var(--bg-card);
             border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
+            border: 1px solid var(--surface-border);
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: var(--transition);
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .product-card:hover {
             transform: translateY(-6px);
-            box-shadow: var(--shadow);
-            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow-card);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .wishlist-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            background: rgba(6, 9, 17, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--surface-border);
+            color: var(--text-sub);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .wishlist-btn.active {
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--accent-red);
         }
 
         .product-img-wrapper {
             width: 100%;
-            height: 220px;
+            height: 230px;
             overflow: hidden;
-            background: rgba(0,0,0,0.3);
+            background: #000;
             position: relative;
         }
 
@@ -327,7 +433,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.4s;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .product-card:hover .product-img-wrapper img {
@@ -335,27 +441,40 @@
         }
 
         .product-info {
-            padding: 1.25rem;
+            padding: 1.35rem;
             display: flex;
             flex-direction: column;
             flex: 1;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
         }
 
         .product-category {
             font-size: 0.75rem;
             text-transform: uppercase;
             color: var(--primary);
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 0.5px;
-            margin-bottom: 0.4rem;
+        }
+
+        .rating-stars {
+            color: #f59e0b;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
         .product-title {
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 0.5rem;
             cursor: pointer;
-            color: var(--text);
+            color: var(--text-main);
+            transition: var(--transition);
         }
 
         .product-title:hover {
@@ -363,23 +482,42 @@
         }
 
         .product-price {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--accent);
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--accent-green);
             margin-top: auto;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .quick-view-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 0.8rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-view-btn:hover {
+            background: var(--bg-card-hover);
         }
 
         .add-to-cart-btn {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.85rem;
+            flex: 1;
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 0.8rem;
             border-radius: var(--radius-md);
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: var(--transition);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -387,21 +525,20 @@
         }
 
         .add-to-cart-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
+            background: var(--primary-hover);
+            box-shadow: var(--shadow-glow);
         }
 
-        /* Cart Drawer */
+        /* Cart Drawer Slide */
         .cart-drawer-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s;
+            transition: var(--transition);
         }
 
         .cart-drawer-overlay.active {
@@ -412,17 +549,17 @@
         .cart-drawer {
             position: fixed;
             top: 0;
-            right: -440px;
+            right: -450px;
             width: 100%;
-            max-width: 420px;
+            max-width: 430px;
             height: 100%;
-            background: var(--surface);
+            background: var(--bg-card);
             z-index: 1001;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
+            transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
-            border-left: 1px solid var(--border);
+            border-left: 1px solid var(--surface-border);
         }
 
         .cart-drawer.active {
@@ -431,7 +568,7 @@
 
         .cart-header {
             padding: 1.5rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--surface-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -442,7 +579,12 @@
             border: none;
             font-size: 1.3rem;
             cursor: pointer;
-            color: var(--text-muted);
+            color: var(--text-sub);
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: var(--text-main);
         }
 
         .cart-body {
@@ -454,17 +596,17 @@
         .cart-item {
             display: flex;
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
             align-items: center;
-            background: rgba(255,255,255,0.02);
-            padding: 0.85rem;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.9rem;
             border-radius: var(--radius-md);
-            border: 1px solid var(--border);
+            border: 1px solid var(--surface-border);
         }
 
         .cart-item img {
-            width: 65px;
-            height: 65px;
+            width: 70px;
+            height: 70px;
             object-fit: cover;
             border-radius: 8px;
         }
@@ -475,29 +617,29 @@
 
         .cart-item-title {
             font-size: 0.95rem;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 4px;
         }
 
         .cart-item-price {
             font-size: 0.9rem;
-            color: var(--accent);
-            font-weight: 700;
+            color: var(--accent-green);
+            font-weight: 800;
         }
 
         .cart-item-qty {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-top: 6px;
+            margin-top: 8px;
         }
 
         .qty-btn {
-            background: var(--surface-hover);
-            color: var(--text);
-            border: 1px solid var(--border);
-            width: 26px;
-            height: 26px;
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--surface-border);
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
@@ -505,29 +647,66 @@
 
         .cart-footer {
             padding: 1.5rem;
-            border-top: 1px solid var(--border);
-            background: rgba(0,0,0,0.2);
+            border-top: 1px solid var(--surface-border);
+            background: rgba(0, 0, 0, 0.25);
         }
 
-        .total-row {
+        .promo-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+
+        .promo-box input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            padding: 0.6rem 0.9rem;
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        .promo-box button {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .summary-line {
             display: flex;
             justify-content: space-between;
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 1.2rem;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-line.total {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed var(--surface-border);
         }
 
         .checkout-btn {
             width: 100%;
-            background: var(--accent);
+            background: var(--accent-green);
             color: white;
             border: none;
             padding: 1rem;
             border-radius: var(--radius-md);
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             font-size: 1rem;
-            transition: all 0.2s;
+            margin-top: 1rem;
+            transition: var(--transition);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -535,23 +714,23 @@
         }
 
         .checkout-btn:hover {
-            opacity: 0.9;
+            opacity: 0.92;
         }
 
-        /* Generic Modals (Product Details & Checkout) */
+        /* Modal Overlay & Card Layout */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1002;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s;
-            padding: 1rem;
+            transition: var(--transition);
+            padding: 1.5rem;
         }
 
         .modal-overlay.active {
@@ -560,15 +739,15 @@
         }
 
         .modal-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text);
+            background: var(--bg-card);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
             width: 100%;
-            max-width: 650px;
-            border-radius: var(--radius-lg);
-            padding: 2rem;
+            max-width: 680px;
+            border-radius: var(--radius-xl);
+            padding: 2.25rem;
             position: relative;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-card);
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -577,8 +756,8 @@
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 1.1rem;
+            margin-top: 1.25rem;
         }
 
         .form-group {
@@ -593,53 +772,55 @@
 
         .form-group label {
             font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
+            font-weight: 700;
+            color: var(--text-sub);
         }
 
         .form-group input, .form-group select {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
-            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--surface-border);
+            padding: 0.85rem 1rem;
             border-radius: var(--radius-md);
-            color: var(--text);
+            color: var(--text-main);
             font-size: 0.95rem;
             outline: none;
+            transition: var(--transition);
         }
 
         .form-group input:focus {
             border-color: var(--primary);
         }
 
-        /* Receipt View */
+        /* Order Success Receipt */
         .receipt-card {
             text-align: center;
             padding: 1rem 0;
         }
 
         .receipt-icon {
-            font-size: 3.5rem;
-            color: var(--accent);
+            font-size: 4rem;
+            color: var(--accent-green);
             margin-bottom: 1rem;
         }
 
         .receipt-details {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px dashed var(--border);
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px dashed var(--surface-border);
             border-radius: var(--radius-md);
-            padding: 1.25rem;
+            padding: 1.5rem;
             margin: 1.5rem 0;
             text-align: left;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
 
         .receipt-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem;
         }
 
-        @media(max-width: 600px) {
+        @media(max-width: 650px) {
+            .hero-banner { flex-direction: column; text-align: center; }
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
         }
@@ -654,13 +835,19 @@
                 <button class="burger-trigger" id="openBurgerBtn" aria-label="Menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <a href="#" class="logo">Emigrant<span>book</span></a>
+                <a href="index.html" class="logo">
+                    Emigrant<span>book</span>
+                </a>
             </div>
             <div class="nav-right">
-                <button class="cart-icon-btn" id="openCartBtn">
+                <button class="action-icon-btn" id="wishlistTriggerBtn" title="Wishlist">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="badge" id="wishlistBadge" style="position: absolute; top: -5px; right: -5px; background: var(--accent-red); color: white;">0</span>
+                </button>
+                <button class="cart-trigger-btn" id="openCartBtn">
                     <i class="fa-solid fa-bag-shopping"></i>
                     <span data-i18n="cart">Cart</span>
-                    <span class="cart-badge" id="cartBadge">0</span>
+                    <span class="badge" id="cartBadge">0</span>
                 </button>
             </div>
         </div>
@@ -670,7 +857,7 @@
     <div class="burger-overlay" id="burgerOverlay"></div>
     <aside class="burger-sidebar" id="burgerSidebar">
         <div class="burger-header">
-            <h3 data-i18n="menu" style="font-size: 1.1rem; font-weight: 600;">Menu</h3>
+            <h3 data-i18n="menu" style="font-size: 1.15rem; font-weight: 700;">Menu</h3>
             <button class="close-btn" id="closeBurgerBtn"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
@@ -702,19 +889,38 @@
 
     <!-- Main Content -->
     <main>
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+            <div class="hero-content">
+                <h1 data-i18n="hero_title">Official Online Store</h1>
+                <p data-i18n="hero_subtitle">Explore exclusive books, tech gadgets, and official merchandise.</p>
+            </div>
+        </div>
+
+        <!-- Controls Bar -->
         <div class="shop-controls">
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" id="searchInput" placeholder="Search products..." data-i18n-placeholder="search_placeholder">
             </div>
-            <div class="filter-tags">
-                <button class="tag-btn active" data-category="all" data-i18n="cat_all">All</button>
-                <button class="tag-btn" data-category="electronics" data-i18n="cat_electronics">Electronics</button>
-                <button class="tag-btn" data-category="fashion" data-i18n="cat_fashion">Fashion</button>
-                <button class="tag-btn" data-category="accessories" data-i18n="cat_accessories">Accessories</button>
+
+            <div class="control-group">
+                <select class="sort-select" id="sortSelect" onchange="sortProducts()">
+                    <option value="default" data-i18n="sort_default">Sort: Default</option>
+                    <option value="low-high" data-i18n="sort_low_high">Price: Low to High</option>
+                    <option value="high-low" data-i18n="sort_high_low">Price: High to Low</option>
+                </select>
+
+                <div class="filter-tags">
+                    <button class="tag-btn active" data-category="all" data-i18n="cat_all">All</button>
+                    <button class="tag-btn" data-category="books" data-i18n="cat_books">Books</button>
+                    <button class="tag-btn" data-category="electronics" data-i18n="cat_electronics">Electronics</button>
+                    <button class="tag-btn" data-category="merch" data-i18n="cat_merch">Merchandise</button>
+                </div>
             </div>
         </div>
 
+        <!-- Products Grid -->
         <div class="products-grid" id="productsGrid"></div>
     </main>
 
@@ -722,44 +928,65 @@
     <div class="cart-drawer-overlay" id="cartOverlay"></div>
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-header">
-            <h3 data-i18n="your_cart">Your Cart</h3>
+            <h3 data-i18n="your_cart" style="font-weight: 800;">Your Cart</h3>
             <button class="close-btn" id="closeCartBtn"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="cart-body" id="cartItemsContainer"></div>
         <div class="cart-footer">
-            <div class="total-row">
+            <div class="promo-box">
+                <input type="text" id="promoInput" placeholder="Promo code (e.g. EMIGRANT10)">
+                <button onclick="applyPromo()"><i class="fa-solid fa-check"></i></button>
+            </div>
+            <div class="summary-line">
+                <span data-i18n="subtotal">Subtotal:</span>
+                <span id="cartSubtotal">0.00 ₾</span>
+            </div>
+            <div class="summary-line" id="discountRow" style="display: none; color: var(--accent-green);">
+                <span>Discount (10%):</span>
+                <span id="cartDiscount">-0.00 ₾</span>
+            </div>
+            <div class="summary-line total">
                 <span data-i18n="total">Total:</span>
                 <span id="cartTotalSum">0.00 ₾</span>
             </div>
             <button class="checkout-btn" onclick="openCheckoutModal()">
-                <i class="fa-solid fa-lock"></i> <span data-i18n="checkout_btn">Proceed to Checkout</span>
+                <i class="fa-solid fa-shield-halved"></i> <span data-i18n="checkout_btn">Proceed to Checkout</span>
             </button>
         </div>
     </div>
 
-    <!-- Product Detail View Modal -->
+    <!-- Wishlist Modal -->
+    <div class="modal-overlay" id="wishlistModal">
+        <div class="modal-card">
+            <button class="close-btn" onclick="closeWishlistModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="margin-bottom: 1rem; font-weight: 800;">Saved Wishlist</h3>
+            <div id="wishlistItemsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
     <div class="modal-overlay" id="productModal">
         <div class="modal-card" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
             <button class="close-btn" onclick="closeProductModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: var(--radius-md);" alt="">
+            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: var(--radius-lg);" alt="">
             <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column;">
-                <h2 id="modalTitle" style="margin-bottom: 0.5rem;"></h2>
+                <h2 id="modalTitle" style="margin-bottom: 0.5rem; font-size: 1.4rem;"></h2>
                 <div id="modalCategory" class="product-category" style="margin-bottom: 1rem;"></div>
-                <p id="modalDescription" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;"></p>
+                <p id="modalDescription" style="color: var(--text-sub); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;"></p>
                 <div id="modalPrice" class="product-price"></div>
-                <button class="add-to-cart-btn" id="modalAddBtn" style="margin-top: auto; background: var(--primary); color: white;">
+                <button class="add-to-cart-btn" id="modalAddBtn" style="margin-top: auto; padding: 0.9rem;">
                     <i class="fa-solid fa-cart-plus"></i> <span data-i18n="add_to_cart">Add to Cart</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Real Checkout Payment Modal -->
+    <!-- Real Checkout Modal -->
     <div class="modal-overlay" id="checkoutModal">
         <div class="modal-card">
             <button class="close-btn" onclick="closeCheckoutModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <h3 data-i18n="checkout_title" style="margin-bottom: 0.5rem;">Card Payment</h3>
-            <p data-i18n="checkout_subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Enter your card details to complete order</p>
+            <h3 data-i18n="checkout_title" style="margin-bottom: 0.5rem; font-size: 1.3rem;">Card Payment</h3>
+            <p data-i18n="checkout_subtitle" style="color: var(--text-sub); font-size: 0.85rem; margin-bottom: 1rem;">Enter shipping and credit card details to finalize order.</p>
 
             <form id="paymentForm" onsubmit="handlePaymentSubmit(event)">
                 <div class="form-grid">
@@ -769,7 +996,7 @@
                     </div>
                     <div class="form-group full">
                         <label data-i18n="address">Shipping Address</label>
-                        <input type="text" required placeholder="123 Main Street">
+                        <input type="text" required placeholder="123 Main Street, New York">
                     </div>
                     <div class="form-group full">
                         <label data-i18n="card_number">Card Number</label>
@@ -785,12 +1012,12 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="margin-top: 1.75rem; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <span data-i18n="total_to_pay" style="font-size: 0.85rem; color: var(--text-muted);">Total Amount:</span>
-                        <div id="checkoutTotalSum" style="font-size: 1.3rem; font-weight: 700; color: var(--accent);">0.00 ₾</div>
+                        <span data-i18n="total_to_pay" style="font-size: 0.85rem; color: var(--text-sub);">Total to Pay:</span>
+                        <div id="checkoutTotalSum" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green);">0.00 ₾</div>
                     </div>
-                    <button type="submit" class="checkout-btn" id="paySubmitBtn" style="width: auto; padding: 0.8rem 2rem;">
+                    <button type="submit" class="checkout-btn" id="paySubmitBtn" style="width: auto; padding: 0.85rem 2.2rem; margin-top: 0;">
                         <i class="fa-solid fa-shield-halved"></i> <span data-i18n="pay_now">Pay Now</span>
                     </button>
                 </div>
@@ -798,13 +1025,13 @@
         </div>
     </div>
 
-    <!-- Receipt / Confirmation Modal -->
+    <!-- Receipt Modal -->
     <div class="modal-overlay" id="receiptModal">
         <div class="modal-card">
             <div class="receipt-card">
                 <i class="fa-solid fa-circle-check receipt-icon"></i>
-                <h2 data-i18n="payment_success">Payment Successful!</h2>
-                <p data-i18n="order_processed" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Your order has been received and is being processed.</p>
+                <h2 data-i18n="payment_success" style="font-weight: 800;">Payment Successful!</h2>
+                <p data-i18n="order_processed" style="color: var(--text-sub); font-size: 0.95rem; margin-top: 0.3rem;">Your order has been verified and processed successfully.</p>
 
                 <div class="receipt-details">
                     <div class="receipt-row">
@@ -817,11 +1044,11 @@
                     </div>
                     <div class="receipt-row">
                         <span data-i18n="status">Status:</span>
-                        <span style="color: var(--accent); font-weight: 700;" data-i18n="confirmed">Confirmed</span>
+                        <span style="color: var(--accent-green); font-weight: 700;" data-i18n="confirmed">Confirmed</span>
                     </div>
                 </div>
 
-                <button class="checkout-btn" onclick="closeReceiptModal()" style="background: var(--surface-hover); border: 1px solid var(--border);">
+                <button class="checkout-btn" onclick="closeReceiptModal()" style="background: var(--surface); border: 1px solid var(--surface-border); margin-top: 0;">
                     <span data-i18n="close">Close</span>
                 </button>
             </div>
@@ -829,144 +1056,110 @@
     </div>
 
     <script>
-        // --- 1. Automatic Language Logic (Defaults to English) ---
+        // Automatic Multi-language logic
         const translations = {
             en: {
-                cart: "Cart",
-                menu: "Menu",
-                nav_home: "Home Page",
-                nav_shop: "Online Shopping",
-                search_placeholder: "Search products...",
-                cat_all: "All",
-                cat_electronics: "Electronics",
-                cat_fashion: "Fashion",
-                cat_accessories: "Accessories",
-                your_cart: "Your Cart",
-                total: "Total:",
-                checkout_btn: "Proceed to Checkout",
-                add_to_cart: "Add to Cart",
-                checkout_title: "Card Payment",
-                checkout_subtitle: "Enter your card details to complete order",
-                full_name: "Full Name",
-                address: "Shipping Address",
-                card_number: "Card Number",
-                card_expiry: "Expiry (MM/YY)",
-                card_cvc: "CVC/CVV",
-                total_to_pay: "Total Amount:",
-                pay_now: "Pay Now",
-                payment_success: "Payment Successful!",
-                order_processed: "Your order has been received and is being processed.",
-                order_number: "Order #:",
-                paid_amount: "Paid Amount:",
-                status: "Status:",
-                confirmed: "Confirmed",
-                close: "Close",
-                empty_cart: "Your cart is empty"
+                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping",
+                hero_title: "Official Online Store", hero_subtitle: "Explore exclusive books, tech gadgets, and official merchandise.",
+                search_placeholder: "Search products...", sort_default: "Sort: Default", sort_low_high: "Price: Low to High", sort_high_low: "Price: High to Low",
+                cat_all: "All", cat_books: "Books", cat_electronics: "Electronics", cat_merch: "Merchandise",
+                your_cart: "Your Cart", subtotal: "Subtotal:", total: "Total:", checkout_btn: "Proceed to Checkout", add_to_cart: "Add to Cart",
+                checkout_title: "Card Payment", checkout_subtitle: "Enter shipping and credit card details to finalize order.",
+                full_name: "Full Name", address: "Shipping Address", card_number: "Card Number", card_expiry: "Expiry (MM/YY)", card_cvc: "CVC/CVV",
+                total_to_pay: "Total to Pay:", pay_now: "Pay Now", payment_success: "Payment Successful!", order_processed: "Your order has been verified and processed successfully.",
+                order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty"
             },
             ka: {
-                cart: "კალათა",
-                menu: "მენიუ",
-                nav_home: "მთავარი გვერდი",
-                nav_shop: "ონლაინ შოპინგი",
-                search_placeholder: "მოძებნეთ პროდუქტი...",
-                cat_all: "ყველა",
-                cat_electronics: "ტექნიკა",
-                cat_fashion: "ტანსაცმელი",
-                cat_accessories: "აქსესუარები",
-                your_cart: "თქვენი კალათა",
-                total: "სულ:",
-                checkout_btn: "გადახდაზე გადასვლა",
-                add_to_cart: "კალათაში დამატება",
-                checkout_title: "ბარათით გადახდა",
-                checkout_subtitle: "შეიყვანეთ მონაცემები შეკვეთის დასასრულებლად",
-                full_name: "სრული სახელი",
-                address: "მიწოდების მისამართი",
-                card_number: "ბარათის ნომერი",
-                card_expiry: "ვადა (MM/YY)",
-                card_cvc: "CVC/CVV",
-                total_to_pay: "გადასახდელი თანხა:",
-                pay_now: "გადახდა",
-                payment_success: "გადახდა წარმატებულია!",
-                order_processed: "თქვენი შეკვეთა მიღებულია და იგზავნება დამუშავებაზე.",
-                order_number: "შეკვეთის #:",
-                paid_amount: "გადახდილი თანხა:",
-                status: "სტატუსი:",
-                confirmed: "დადასტურებულია",
-                close: "დახურვა",
-                empty_cart: "კალათა ცარიელია"
+                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი",
+                hero_title: "ოფიციალური ონლაინ მაღაზია", hero_subtitle: "აღმოაჩინეთ ექსკლუზიური წიგნები, ტექნიკა და ოფიციალური აქსესუარები.",
+                search_placeholder: "მოძებნეთ პროდუქტი...", sort_default: "სორტირება: სტანდარტული", sort_low_high: "ფასი: ზრდადობით", sort_high_low: "ფასი: კლებადობით",
+                cat_all: "ყველა", cat_books: "წიგნები", cat_electronics: "ტექნიკა", cat_merch: "აქსესუარები",
+                your_cart: "თქვენი კალათა", subtotal: "ჯამი:", total: "სულ:", checkout_btn: "გადახდაზე გადასვლა", add_to_cart: "კალათაში დამატება",
+                checkout_title: "ბარათით გადახდა", checkout_subtitle: "შეიყვანეთ მონაცემები შეკვეთის დასასრულებლად.",
+                full_name: "სრული სახელი", address: "მიწოდების მისამართი", card_number: "ბარათის ნომერი", card_expiry: "ვადა (MM/YY)", card_cvc: "CVC/CVV",
+                total_to_pay: "გადასახდელი თანხა:", pay_now: "გადახდა", payment_success: "გადახდა წარმატებულია!", order_processed: "თქვენი შეკვეთა მიღებულია და იგზავნება დამუშავებაზე.",
+                order_number: "შეკვეთის #:", paid_amount: "გადახდილი თანხა:", status: "სტატუსი:", confirmed: "დადასტურებულია", close: "დახურვა", empty_cart: "კალათა ცარიელია"
             }
         };
 
-        // ავტომატურად იღებს მთავარ საიტზე არჩეულ ენას (localStorage-იდან). თუ არ წერია, ნაგულისხმევად არის 'en' (ინგლისური)
-        let currentLang = localStorage.getItem('lang') || 
-                          localStorage.getItem('language') || 
-                          localStorage.getItem('selectedLanguage') || 
-                          localStorage.getItem('emigrantbook_lang') || 'en';
+        let currentLang = localStorage.getItem('lang') || localStorage.getItem('language') || 'en';
 
         function applyLanguage() {
-            document.documentElement.lang = currentLang;
-
+            const dict = translations[currentLang] || translations.en;
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
-                if (translations[currentLang] && translations[currentLang][key]) {
-                    el.textContent = translations[currentLang][key];
-                }
+                if (dict[key]) el.textContent = dict[key];
             });
-
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-i18n-placeholder');
-                if (translations[currentLang] && translations[currentLang][key]) {
-                    el.placeholder = translations[currentLang][key];
-                }
+                if (dict[key]) el.placeholder = dict[key];
             });
         }
 
-        // --- 2. Database & State ---
+        // Product Catalog Database
         const products = [
-            { id: 1, title: { en: "Wireless Headphones Pro", ka: "Wireless Headphones Pro" }, category: "electronics", price: 249.00, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", description: { en: "High quality wireless headphones with active noise cancellation.", ka: "მაღალი ხარისხის უსადენო ყურსასმენები ANC ფუნქციით." } },
-            { id: 2, title: { en: "Smart Watch Series 7", ka: "Smart Watch Series 7" }, category: "electronics", price: 399.00, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", description: { en: "Smart watch with full health and fitness tracking system.", ka: "ჭკვიანი საათი ჯანმრთელობის მონიტორინგის სისტემით." } },
-            { id: 3, title: { en: "Leather Backpack", ka: "Leather Backpack" }, category: "accessories", price: 129.00, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", description: { en: "Genuine leather comfortable and spacious backpack.", ka: "ნატურალური ტყავის მოხერხებული ზურგჩანთა." } },
-            { id: 4, title: { en: "Organic Cotton T-Shirt", ka: "Organic Cotton T-Shirt" }, category: "fashion", price: 45.00, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&q=80", description: { en: "100% organic cotton premium minimalist t-shirt.", ka: "100% ორგანული ბამბის პრემიუმ მაისური." } },
-            { id: 5, title: { en: "Designer Sunglasses", ka: "Designer Sunglasses" }, category: "accessories", price: 89.00, image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", description: { en: "Stylish sunglasses equipped with UV400 protection.", ka: "UV400 დაცვით აღჭურვილი მზის სათვალე." } }
+            { id: 1, title: { en: "Emigrantbook Premium Hardcover Edition", ka: "Emigrantbook პრემიუმ გამოცემა" }, category: "books", price: 49.00, rating: 5.0, image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80", description: { en: "Official limited physical edition with premium hardcover design.", ka: "ოფიციალური შეზღუდული ფიზიკური გამოცემა პრემიუმ ყდით." } },
+            { id: 2, title: { en: "Pro Wireless Noise-Canceling Headphones", ka: "უპროვოდო პრო ყურსასმენები" }, category: "electronics", price: 299.00, rating: 4.9, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", description: { en: "High-fidelity audio with active noise cancellation technology.", ka: "უმაღლესი ხარისხის ჟღერადობა ANC ტექნოლოგიით." } },
+            { id: 3, title: { en: "Smart Watch Ultra Fitness Tracker", ka: "ჭკვიანი საათი Ultra" }, category: "electronics", price: 349.00, rating: 4.8, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", description: { en: "Advanced health tracking, heart rate, and GPS features.", ka: "ჯანმრთელობისა და GPS აქტივობების მონიტორინგი." } },
+            { id: 4, title: { en: "Emigrantbook Official Designer Hoodie", ka: "ოფიციალური ჰუდი Emigrantbook" }, category: "merch", price: 79.00, rating: 4.7, image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80", description: { en: "100% premium heavy cotton comfortable hoodie.", ka: "100% პრემიუმ ბამბისგან დამზადებული თბილი ჰუდი." } },
+            { id: 5, title: { en: "Minimalist Leather Backpack", ka: "ტყავის მინიმალისტური ჩანთა" }, category: "merch", price: 139.00, rating: 4.9, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", description: { en: "Durable natural leather laptop backpack.", ka: "ნატურალური ტყავის გამძლე და ტევადი ზურგჩანთა." } },
+            { id: 6, title: { en: "UV400 Polarized Designer Sunglasses", ka: "დიზაინერული მზის სათვალე" }, category: "merch", price: 89.00, rating: 4.6, image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", description: { en: "Stylish modern frames with full UV protection.", ka: "სტილური სათვალე UV400 სრული დაცვით." } }
         ];
 
-        let cart = JSON.parse(localStorage.getItem('emigrantbook_cart')) || [];
+        let cart = JSON.parse(localStorage.getItem('eb_shop_cart')) || [];
+        let wishlist = JSON.parse(localStorage.getItem('eb_shop_wishlist')) || [];
+        let appliedDiscount = 0;
 
-        // DOM References
-        const productsGrid = document.getElementById('productsGrid');
-        const cartDrawer = document.getElementById('cartDrawer');
-        const cartOverlay = document.getElementById('cartOverlay');
-        const cartItemsContainer = document.getElementById('cartItemsContainer');
-        const cartBadge = document.getElementById('cartBadge');
-        const cartTotalSum = document.getElementById('cartTotalSum');
-        const burgerSidebar = document.getElementById('burgerSidebar');
-        const burgerOverlay = document.getElementById('burgerOverlay');
-
-        // --- 3. Render Functions ---
+        // Render Catalog
         function renderProducts(items) {
+            const grid = document.getElementById('productsGrid');
             const lang = translations[currentLang] ? currentLang : 'en';
-            productsGrid.innerHTML = items.map(p => `
+
+            grid.innerHTML = items.map(p => {
+                const isWish = wishlist.includes(p.id);
+                return `
                 <div class="product-card">
+                    <button class="wishlist-btn ${isWish ? 'active' : ''}" onclick="toggleWishlist(${p.id})">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
                     <div class="product-img-wrapper">
                         <img src="${p.image}" alt="${p.title[lang] || p.title.en}">
                     </div>
                     <div class="product-info">
-                        <span class="product-category">${translations[lang]['cat_' + p.category] || p.category}</span>
+                        <div class="product-meta">
+                            <span class="product-category">${p.category}</span>
+                            <span class="rating-stars"><i class="fa-solid fa-star"></i> ${p.rating}</span>
+                        </div>
                         <h3 class="product-title" onclick="openProductModal(${p.id})">${p.title[lang] || p.title.en}</h3>
                         <div class="product-price">${p.price.toFixed(2)} ₾</div>
-                        <button class="add-to-cart-btn" onclick="addToCart(${p.id})">
-                            <i class="fa-solid fa-cart-plus"></i> ${translations[lang].add_to_cart}
-                        </button>
+                        <div class="card-actions">
+                            <button class="quick-view-btn" onclick="openProductModal(${p.id})" title="Quick View"><i class="fa-solid fa-eye"></i></button>
+                            <button class="add-to-cart-btn" onclick="addToCart(${p.id})">
+                                <i class="fa-solid fa-cart-plus"></i> ${translations[lang].add_to_cart}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        // --- 4. Cart Operations ---
+        // Wishlist Control
+        function toggleWishlist(id) {
+            if (wishlist.includes(id)) {
+                wishlist = wishlist.filter(item => item !== id);
+            } else {
+                wishlist.push(id);
+            }
+            localStorage.setItem('eb_shop_wishlist', JSON.stringify(wishlist));
+            document.getElementById('wishlistBadge').textContent = wishlist.length;
+            renderProducts(products);
+        }
+
+        // Cart Control
         function addToCart(id) {
-            const p = products.find(prod => prod.id === id);
-            const item = cart.find(i => i.id === id);
-            if(item) item.qty++;
+            const p = products.find(item => item.id === id);
+            const exist = cart.find(item => item.id === id);
+            if (exist) exist.qty++;
             else cart.push({ ...p, qty: 1 });
             
             updateCartUI();
@@ -984,13 +1177,14 @@
 
         function updateCartUI() {
             const lang = translations[currentLang] ? currentLang : 'en';
-            localStorage.setItem('emigrantbook_cart', JSON.stringify(cart));
-            cartBadge.textContent = cart.reduce((acc, i) => acc + i.qty, 0);
+            localStorage.setItem('eb_shop_cart', JSON.stringify(cart));
+            document.getElementById('cartBadge').textContent = cart.reduce((a, b) => a + b.qty, 0);
 
+            const container = document.getElementById('cartItemsContainer');
             if(cart.length === 0) {
-                cartItemsContainer.innerHTML = `<p style="text-align:center; color: var(--text-muted); margin-top: 2rem;">${translations[lang].empty_cart}</p>`;
+                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin-top: 2rem;">${translations[lang].empty_cart}</p>`;
             } else {
-                cartItemsContainer.innerHTML = cart.map(i => `
+                container.innerHTML = cart.map(i => `
                     <div class="cart-item">
                         <img src="${i.image}" alt="">
                         <div class="cart-item-details">
@@ -1006,57 +1200,82 @@
                 `).join('');
             }
 
-            const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-            cartTotalSum.textContent = `${total.toFixed(2)} ₾`;
-            document.getElementById('checkoutTotalSum').textContent = `${total.toFixed(2)} ₾`;
+            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            const discountAmt = subtotal * appliedDiscount;
+            const finalTotal = subtotal - discountAmt;
+
+            document.getElementById('cartSubtotal').textContent = `${subtotal.toFixed(2)} ₾`;
+            document.getElementById('cartDiscount').textContent = `-${discountAmt.toFixed(2)} ₾`;
+            document.getElementById('cartTotalSum').textContent = `${finalTotal.toFixed(2)} ₾`;
+            document.getElementById('checkoutTotalSum').textContent = `${finalTotal.toFixed(2)} ₾`;
+        }
+
+        function applyPromo() {
+            const val = document.getElementById('promoInput').value.trim().toUpperCase();
+            if (val === 'EMIGRANT10') {
+                appliedDiscount = 0.10;
+                document.getElementById('discountRow').style.display = 'flex';
+                alert("Promo code applied! 10% discount.");
+            } else {
+                alert("Invalid promo code!");
+            }
+            updateCartUI();
         }
 
         function toggleCart(open) {
-            cartDrawer.classList.toggle('active', open);
-            cartOverlay.classList.toggle('active', open);
+            document.getElementById('cartDrawer').classList.toggle('active', open);
+            document.getElementById('cartOverlay').classList.toggle('active', open);
         }
 
-        document.getElementById('openCartBtn').addEventListener('click', () => toggleCart(true));
-        document.getElementById('closeCartBtn').addEventListener('click', () => toggleCart(false));
-        cartOverlay.addEventListener('click', () => toggleCart(false));
+        document.getElementById('openCartBtn').onclick = () => toggleCart(true);
+        document.getElementById('closeCartBtn').onclick = () => toggleCart(false);
+        document.getElementById('cartOverlay').onclick = () => toggleCart(false);
 
-        // --- 5. Burger Controls ---
-        document.getElementById('openBurgerBtn').addEventListener('click', () => {
-            burgerSidebar.classList.add('active');
-            burgerOverlay.classList.add('active');
-        });
-        document.getElementById('closeBurgerBtn').addEventListener('click', () => {
-            burgerSidebar.classList.remove('active');
-            burgerOverlay.classList.remove('active');
-        });
-        burgerOverlay.addEventListener('click', () => {
-            burgerSidebar.classList.remove('active');
-            burgerOverlay.classList.remove('active');
-        });
+        // Burger Sidebar Events
+        document.getElementById('openBurgerBtn').onclick = () => {
+            document.getElementById('burgerSidebar').classList.add('active');
+            document.getElementById('burgerOverlay').classList.add('active');
+        };
+        document.getElementById('closeBurgerBtn').onclick = () => {
+            document.getElementById('burgerSidebar').classList.remove('active');
+            document.getElementById('burgerOverlay').classList.remove('active');
+        };
+        document.getElementById('burgerOverlay').onclick = () => {
+            document.getElementById('burgerSidebar').classList.remove('active');
+            document.getElementById('burgerOverlay').classList.remove('active');
+        };
 
-        // --- 6. Search & Filter ---
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const lang = translations[currentLang] ? currentLang : 'en';
+        // Filter & Sort
+        document.getElementById('searchInput').oninput = (e) => {
             const term = e.target.value.toLowerCase();
+            const lang = translations[currentLang] ? currentLang : 'en';
             renderProducts(products.filter(p => (p.title[lang] || p.title.en).toLowerCase().includes(term)));
-        });
+        };
 
         document.querySelectorAll('.tag-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.onclick = (e) => {
                 document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 const cat = e.target.dataset.category;
                 renderProducts(cat === 'all' ? products : products.filter(p => p.category === cat));
-            });
+            };
         });
 
-        // --- 7. Product Modal ---
+        function sortProducts() {
+            const val = document.getElementById('sortSelect').value;
+            let sorted = [...products];
+            if (val === 'low-high') sorted.sort((a,b) => a.price - b.price);
+            if (val === 'high-low') sorted.sort((a,b) => b.price - a.price);
+            renderProducts(sorted);
+        }
+
+        // Modal Viewers
         function openProductModal(id) {
             const lang = translations[currentLang] ? currentLang : 'en';
             const p = products.find(item => item.id === id);
             document.getElementById('modalImg').src = p.image;
             document.getElementById('modalTitle').textContent = p.title[lang] || p.title.en;
-            document.getElementById('modalCategory').textContent = translations[lang]['cat_' + p.category];
+            document.getElementById('modalCategory').textContent = p.category;
             document.getElementById('modalDescription').textContent = p.description[lang] || p.description.en;
             document.getElementById('modalPrice').textContent = `${p.price.toFixed(2)} ₾`;
             document.getElementById('modalAddBtn').onclick = () => { addToCart(p.id); closeProductModal(); };
@@ -1064,7 +1283,7 @@
         }
         function closeProductModal() { document.getElementById('productModal').classList.remove('active'); }
 
-        // --- 8. Checkout & Payment Handling ---
+        // Checkout & Payment Simulation
         function openCheckoutModal() {
             const lang = translations[currentLang] ? currentLang : 'en';
             if(cart.length === 0) return alert(translations[lang].empty_cart);
@@ -1086,22 +1305,25 @@
 
         function handlePaymentSubmit(e) {
             e.preventDefault();
-            const lang = translations[currentLang] ? currentLang : 'en';
             const btn = document.getElementById('paySubmitBtn');
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
 
             setTimeout(() => {
-                const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+                const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+                const finalTotal = subtotal - (subtotal * appliedDiscount);
+
                 document.getElementById('receiptOrderId').textContent = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
-                document.getElementById('receiptAmount').textContent = `${total.toFixed(2)} ₾`;
+                document.getElementById('receiptAmount').textContent = `${finalTotal.toFixed(2)} ₾`;
 
                 cart = [];
+                appliedDiscount = 0;
+                document.getElementById('discountRow').style.display = 'none';
                 updateCartUI();
 
                 closeCheckoutModal();
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${translations[lang].pay_now}`;
+                btn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${translations[currentLang] ? translations[currentLang].pay_now : 'Pay Now'}`;
                 document.getElementById('paymentForm').reset();
                 document.getElementById('receiptModal').classList.add('active');
             }, 1200);
@@ -1109,10 +1331,11 @@
 
         function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
 
-        // Init
+        // Init App
         applyLanguage();
         renderProducts(products);
         updateCartUI();
+        document.getElementById('wishlistBadge').textContent = wishlist.length;
     </script>
 </body>
 </html>
