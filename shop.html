@@ -27,7 +27,7 @@
             --radius-lg: 0px;
             --radius-md: 10px;
             --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -732,12 +732,85 @@
             overflow-y: auto;
         }
 
-        /* Admin Modal Styling */
-        .admin-order-card {
-            background: rgba(255, 255, 255, 0.02);
+        /* Full-Screen Dedicated Admin Control Center Page */
+        #adminModal {
+            padding: 0;
+        }
+
+        #adminModal .modal-card {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+            border: none;
+            background: var(--bg-body);
+            padding: 5rem 2rem 2rem;
+            display: block;
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            overflow-y: auto;
+        }
+
+        .admin-header-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--surface-border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-stat-card {
+            background: var(--bg-card);
             border: 1px solid var(--surface-border);
             border-radius: 12px;
-            padding: 1.2rem;
+            padding: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .admin-stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-stat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .admin-stat-lbl {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .admin-order-card {
+            background: var(--bg-card);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 1.25rem;
             margin-bottom: 1rem;
         }
 
@@ -745,11 +818,23 @@
             display: flex;
             justify-content: space-between;
             border-bottom: 1px solid var(--surface-border);
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.6rem;
             margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        /* Full Screen Product View Page */
+        .admin-order-status {
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        /* Full Screen Product View Page & Thumbnail Strip */
         #productModal {
             padding: 0;
         }
@@ -930,6 +1015,7 @@
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
             #productModal .modal-card { padding: 4.5rem 1rem 2rem; }
+            #adminModal .modal-card { padding: 5.5rem 1rem 2rem; }
             .fullscreen-product-img { height: 260px; }
             .thumb-img { width: 60px; height: 60px; }
         }
@@ -1085,16 +1171,47 @@
         </div>
     </div>
 
-    <!-- Admin Panel Modal -->
+    <!-- Full Screen Dedicated Admin Control Center Modal -->
     <div class="modal-overlay" id="adminModal">
-        <div class="modal-card" style="max-width: 820px;">
-            <button class="close-btn" onclick="closeAdminModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <h2 style="margin-bottom: 1.25rem; font-weight: 800; font-size: 1.5rem;">⚙️ Admin Control Center</h2>
-            
+        <div class="modal-card">
+            <div class="admin-header-bar">
+                <h2 style="font-weight: 800; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Admin Control Center
+                </h2>
+                <button class="fullscreen-close-btn" onclick="closeAdminModal()" style="top: auto; left: auto; position: static;">
+                    <i class="fa-solid fa-arrow-left"></i> Exit Admin
+                </button>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="admin-stats-grid">
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                    <div>
+                        <div class="admin-stat-val" id="adminTotalRevenue">0.00 ₾</div>
+                        <div class="admin-stat-lbl">Total Sales Revenue</div>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon" style="color: var(--accent-green); background: rgba(16, 185, 129, 0.15);"><i class="fa-solid fa-box-archive"></i></div>
+                    <div>
+                        <div class="admin-stat-val" id="adminOrdersCount">0</div>
+                        <div class="admin-stat-lbl">Total Orders Received</div>
+                    </div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="admin-stat-icon" style="color: var(--primary); background: rgba(99, 102, 241, 0.15);"><i class="fa-solid fa-cart-flatbed"></i></div>
+                    <div>
+                        <div class="admin-stat-val" id="adminProductsCount">0</div>
+                        <div class="admin-stat-lbl">Active Products in Store</div>
+                    </div>
+                </div>
+            </div>
+
             <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 12px; overflow-x: auto;">
-                <button class="tag-btn active" id="adminTabOrdersBtn" onclick="switchAdminTab('orders')">📦 Orders (<span id="adminOrdersCount">0</span>)</button>
-                <button class="tag-btn" id="adminTabAddBtn" onclick="switchAdminTab('add')">➕ Add Product</button>
-                <button class="tag-btn" id="adminTabManageBtn" onclick="switchAdminTab('manage')">🛠️ Products List</button>
+                <button class="tag-btn active" id="adminTabOrdersBtn" onclick="switchAdminTab('orders')">📦 Orders Management</button>
+                <button class="tag-btn" id="adminTabAddBtn" onclick="switchAdminTab('add')">➕ Add New Product</button>
+                <button class="tag-btn" id="adminTabManageBtn" onclick="switchAdminTab('manage')">🛠️ Manage Inventory</button>
             </div>
 
             <!-- Admin Tab 1: Orders -->
@@ -1143,7 +1260,7 @@
                             <input type="text" id="newDescKa" required placeholder="პროდუქტის აღწერა ქართულად...">
                         </div>
                     </div>
-                    <button type="submit" class="checkout-btn" style="margin-top: 1.5rem;">
+                    <button type="submit" class="checkout-btn" style="margin-top: 1.5rem; max-width: 280px;">
                         <i class="fa-solid fa-plus"></i> Save Product
                     </button>
                 </form>
@@ -1647,13 +1764,13 @@
                 document.getElementById('receiptOrderId').textContent = orderId;
                 document.getElementById('receiptAmount').textContent = `${finalTotal.toFixed(2)} ₾`;
 
-                // Save Order to Admin Orders list
                 const lang = translations[currentLang] ? currentLang : 'en';
                 const newOrder = {
                     id: orderId,
-                    customer: document.getElementById('custNameInput').value.trim(),
-                    address: document.getElementById('custAddressInput').value.trim(),
+                    customer: document.getElementById('custNameInput').value.trim() || 'Anonymous',
+                    address: document.getElementById('custAddressInput').value.trim() || 'Not specified',
                     total: finalTotal,
+                    status: 'Processing',
                     items: cart.map(i => ({ title: i.title[lang] || i.title.en, qty: i.qty, price: i.price })),
                     date: new Date().toLocaleString()
                 };
@@ -1676,10 +1793,11 @@
 
         function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
 
-        // --- Admin Control Center Logic ---
+        // --- Full-Screen Admin Control Center Logic ---
         function openAdminModal() {
             document.getElementById('burgerSidebar').classList.remove('active');
             document.getElementById('burgerOverlay').classList.remove('active');
+            updateAdminStats();
             renderAdminOrders();
             renderAdminProductsList();
             document.getElementById('adminModal').classList.add('active');
@@ -1687,6 +1805,13 @@
 
         function closeAdminModal() {
             document.getElementById('adminModal').classList.remove('active');
+        }
+
+        function updateAdminStats() {
+            const totalRev = orders.reduce((acc, o) => acc + (o.total || 0), 0);
+            document.getElementById('adminTotalRevenue').textContent = `${totalRev.toFixed(2)} ₾`;
+            document.getElementById('adminOrdersCount').textContent = orders.length;
+            document.getElementById('adminProductsCount').textContent = products.length;
         }
 
         function switchAdminTab(tab) {
@@ -1701,30 +1826,42 @@
 
         function renderAdminOrders() {
             const container = document.getElementById('adminOrdersList');
-            document.getElementById('adminOrdersCount').textContent = orders.length;
 
             if(orders.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">No incoming orders yet.</p>`;
+                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 3rem 0; font-size: 1.1rem;">No customer orders received yet.</p>`;
             } else {
-                container.innerHTML = orders.map(o => `
+                container.innerHTML = orders.map((o, index) => `
                     <div class="admin-order-card">
                         <div class="admin-order-header">
                             <div>
-                                <strong style="color: var(--primary); font-size: 1.1rem;">${o.id}</strong>
-                                <span style="color: var(--text-sub); font-size: 0.8rem; margin-left: 10px;">${o.date}</span>
+                                <strong style="color: var(--primary); font-size: 1.15rem;">${o.id}</strong>
+                                <span style="color: var(--text-sub); font-size: 0.85rem; margin-left: 12px;"><i class="fa-regular fa-clock"></i> ${o.date}</span>
                             </div>
-                            <strong style="color: var(--accent-green); font-size: 1.1rem;">${o.total.toFixed(2)} ₾</strong>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="admin-order-status">${o.status || 'Processing'}</span>
+                                <strong style="color: var(--accent-green); font-size: 1.25rem;">${o.total.toFixed(2)} ₾</strong>
+                                <button onclick="deleteOrder(${index})" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1.1rem;" title="Delete Order"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
-                        <div style="font-size: 0.9rem; margin-bottom: 0.4rem;">👤 <strong>${o.customer}</strong></div>
-                        <div style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 0.8rem;">📍 ${o.address}</div>
-                        <div style="background: rgba(0,0,0,0.2); padding: 0.6rem; border-radius: 8px; font-size: 0.85rem;">
-                            <strong>Items Purchased:</strong>
-                            <ul style="margin-left: 1.2rem; margin-top: 0.3rem;">
-                                ${o.items.map(item => `<li>${item.title} (x${item.qty}) - ${(item.price * item.qty).toFixed(2)} ₾</li>`).join('')}
+                        <div style="font-size: 0.95rem; margin-bottom: 0.4rem;">👤 Customer: <strong>${o.customer}</strong></div>
+                        <div style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 0.8rem;">📍 Address: ${o.address}</div>
+                        <div style="background: rgba(0,0,0,0.3); padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.9rem;">
+                            <strong style="color: var(--text-main);">Purchased Items:</strong>
+                            <ul style="margin-left: 1.2rem; margin-top: 0.4rem; color: var(--text-sub);">
+                                ${o.items.map(item => `<li><strong>${item.title}</strong> (Qty: ${item.qty}) - ${(item.price * item.qty).toFixed(2)} ₾</li>`).join('')}
                             </ul>
                         </div>
                     </div>
                 `).join('');
+            }
+        }
+
+        function deleteOrder(index) {
+            if(confirm("Are you sure you want to delete this order?")) {
+                orders.splice(index, 1);
+                localStorage.setItem('eb_shop_orders', JSON.stringify(orders));
+                updateAdminStats();
+                renderAdminOrders();
             }
         }
 
@@ -1754,7 +1891,8 @@
             products.unshift(newProd);
             localStorage.setItem('eb_shop_products', JSON.stringify(products));
             renderProducts(products);
-            alert("Product added successfully!");
+            updateAdminStats();
+            alert("New product successfully added to store!");
             document.getElementById('addProductForm').reset();
             switchAdminTab('manage');
             renderAdminProductsList();
@@ -1765,22 +1903,23 @@
             const lang = translations[currentLang] ? currentLang : 'en';
 
             container.innerHTML = products.map(p => `
-                <div class="cart-item" style="margin-bottom: 0.8rem;">
-                    <img src="${p.image}" alt="">
+                <div class="cart-item" style="margin-bottom: 0.8rem; background: var(--bg-card); padding: 1rem;">
+                    <img src="${p.image}" alt="" style="width: 80px; height: 80px; border-radius: 8px;">
                     <div class="cart-item-details">
-                        <div class="cart-item-title">${p.title[lang] || p.title.en}</div>
-                        <div class="cart-item-price">${p.price.toFixed(2)} ₾ (${p.category})</div>
+                        <div class="cart-item-title" style="font-size: 1.05rem;">${p.title[lang] || p.title.en}</div>
+                        <div class="cart-item-price" style="font-size: 0.95rem; color: var(--accent-green); margin-top: 4px;">${p.price.toFixed(2)} ₾ &bull; <span style="color: var(--text-sub); text-transform: uppercase;">${p.category}</span></div>
                     </div>
-                    <button class="close-btn" onclick="deleteProduct(${p.id})" style="color: var(--accent-red);" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    <button class="close-btn" onclick="deleteProduct(${p.id})" style="color: var(--accent-red); font-size: 1.2rem; padding: 8px;" title="Delete Product"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
         function deleteProduct(id) {
-            if(confirm("Are you sure you want to delete this product?")) {
+            if(confirm("Are you sure you want to delete this product from store?")) {
                 products = products.filter(p => p.id !== id);
                 localStorage.setItem('eb_shop_products', JSON.stringify(products));
                 renderProducts(products);
+                updateAdminStats();
                 renderAdminProductsList();
             }
         }
