@@ -353,7 +353,7 @@
             border-color: var(--primary);
         }
 
-        /* Products Grid - Touches Left and Right Boundaries */
+        /* Products Grid */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -404,7 +404,6 @@
             border-color: var(--accent-red);
         }
 
-        /* Image Fill Completely Touch Left & Right */
         .product-img-wrapper {
             width: 100%;
             height: 250px;
@@ -733,7 +732,7 @@
             overflow-y: auto;
         }
 
-        /* Full Screen Product View Page */
+        /* Full Screen Product View Page & Thumbnail Strip */
         #productModal {
             padding: 0;
         }
@@ -746,33 +745,42 @@
             border-radius: 0;
             border: none;
             background: var(--bg-body);
-            padding: 4rem 2rem 2rem;
+            padding: 4.5rem 1.5rem 2rem;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            gap: 3rem;
+            gap: 2.5rem;
             flex-wrap: wrap;
             position: fixed;
             inset: 0;
             z-index: 2000;
         }
 
+        .product-media-col {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
         .fullscreen-close-btn {
             position: absolute;
-            top: 1.5rem;
-            left: 1.5rem;
+            top: 1.25rem;
+            left: 1.25rem;
             background: var(--surface);
             border: 1px solid var(--surface-border);
             color: var(--text-main);
-            padding: 0.75rem 1.25rem;
+            padding: 0.7rem 1.2rem;
             border-radius: 30px;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
             transition: var(--transition);
+            z-index: 10;
         }
 
         .fullscreen-close-btn:hover {
@@ -782,11 +790,46 @@
 
         .fullscreen-product-img {
             width: 100%;
-            max-width: 480px;
-            height: 440px;
+            height: 360px;
             object-fit: cover;
             border-radius: 16px;
             border: 1px solid var(--surface-border);
+        }
+
+        /* Horizontal Scrollable Thumbnail Strip */
+        .thumbnail-strip {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 6px 2px;
+            width: 100%;
+            scroll-behavior: smooth;
+        }
+
+        .thumbnail-strip::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .thumbnail-strip::-webkit-scrollbar-thumb {
+            background: var(--surface-border);
+            border-radius: 4px;
+        }
+
+        .thumb-img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid var(--surface-border);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: var(--transition);
+            opacity: 0.6;
+        }
+
+        .thumb-img:hover, .thumb-img.active {
+            border-color: var(--primary);
+            opacity: 1;
         }
 
         .fullscreen-product-details {
@@ -869,8 +912,9 @@
             .hero-banner { flex-direction: column; text-align: center; }
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
-            #productModal .modal-card { padding: 4.5rem 1.25rem 2rem; justify-content: flex-start; }
-            .fullscreen-product-img { height: 280px; }
+            #productModal .modal-card { padding: 4.5rem 1rem 2rem; }
+            .fullscreen-product-img { height: 260px; }
+            .thumb-img { width: 60px; height: 60px; }
         }
     </style>
 </head>
@@ -1015,13 +1059,19 @@
         </div>
     </div>
 
-    <!-- Full Screen Product View Modal (სრულეკრანიანი გვერდი) -->
+    <!-- Full Screen Product View Modal (სრულეკრანიანი გვერდი + ფოტოების ზოლი) -->
     <div class="modal-overlay" id="productModal">
         <div class="modal-card">
             <button class="fullscreen-close-btn" onclick="closeProductModal()">
                 <i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_shop">Back to Shop</span>
             </button>
-            <img src="" id="modalImg" class="fullscreen-product-img" alt="">
+            
+            <div class="product-media-col">
+                <img src="" id="modalImg" class="fullscreen-product-img" alt="">
+                <!-- ჰორიზონტალურად ასქროლადი თამბნეილების ზოლი -->
+                <div class="thumbnail-strip" id="modalThumbnails"></div>
+            </div>
+
             <div class="fullscreen-product-details">
                 <div id="modalCategory" class="product-category" style="margin-bottom: 0.5rem; font-size: 0.9rem;"></div>
                 <h1 id="modalTitle" style="margin-bottom: 1rem; font-size: 2rem; font-weight: 800;"></h1>
@@ -1149,14 +1199,91 @@
             });
         }
 
-        // Product Catalog Database
+        // Product Catalog Database (თითოეულ პროდუქტს აქვს რამდენიმე ფოტო)
         const products = [
-            { id: 1, title: { en: "Emigrantbook Premium Hardcover Edition", ka: "Emigrantbook პრემიუმ გამოცემა" }, category: "books", price: 49.00, rating: 5.0, image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80", description: { en: "Official limited physical edition with premium hardcover design.", ka: "ოფიციალური შეზღუდული ფიზიკური გამოცემა პრემიუმ ყდით." } },
-            { id: 2, title: { en: "Pro Wireless Noise-Canceling Headphones", ka: "უპროვოდო პრო ყურსასმენები" }, category: "electronics", price: 299.00, rating: 4.9, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", description: { en: "High-fidelity audio with active noise cancellation technology.", ka: "უმაღლესი ხარისხის ჟღერადობა ANC ტექნოლოგიით." } },
-            { id: 3, title: { en: "Smart Watch Ultra Fitness Tracker", ka: "ჭკვიანი საათი Ultra" }, category: "electronics", price: 349.00, rating: 4.8, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", description: { en: "Advanced health tracking, heart rate, and GPS features.", ka: "ჯანმრთელობისა და GPS აქტივობების მონიტორინგი." } },
-            { id: 4, title: { en: "Emigrantbook Official Designer Hoodie", ka: "ოფიციალური ჰუდი Emigrantbook" }, category: "merch", price: 79.00, rating: 4.7, image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80", description: { en: "100% premium heavy cotton comfortable hoodie.", ka: "100% პრემიუმ ბამბისგან დამზადებული თბილი ჰუდი." } },
-            { id: 5, title: { en: "Minimalist Leather Backpack", ka: "ტყავის მინიმალისტური ჩანთა" }, category: "merch", price: 139.00, rating: 4.9, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", description: { en: "Durable natural leather laptop backpack.", ka: "ნატურალური ტყავის გამძლე და ტევადი ზურგჩანთა." } },
-            { id: 6, title: { en: "UV400 Polarized Designer Sunglasses", ka: "დიზაინერული მზის სათვალე" }, category: "merch", price: 89.00, rating: 4.6, image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", description: { en: "Stylish modern frames with full UV protection.", ka: "სტილური სათვალე UV400 სრული დაცვით." } }
+            { 
+                id: 1, 
+                title: { en: "Emigrantbook Premium Hardcover Edition", ka: "Emigrantbook პრემიუმ გამოცემა" }, 
+                category: "books", 
+                price: 49.00, 
+                rating: 5.0, 
+                image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80", 
+                images: [
+                    "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80",
+                    "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&q=80",
+                    "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=500&q=80"
+                ],
+                description: { en: "Official limited physical edition with premium hardcover design.", ka: "ოფიციალური შეზღუდული ფიზიკური გამოცემა პრემიუმ ყდით." } 
+            },
+            { 
+                id: 2, 
+                title: { en: "Pro Wireless Noise-Canceling Headphones", ka: "უპროვოდო პრო ყურსასმენები" }, 
+                category: "electronics", 
+                price: 299.00, 
+                rating: 4.9, 
+                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", 
+                images: [
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
+                    "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&q=80",
+                    "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500&q=80"
+                ],
+                description: { en: "High-fidelity audio with active noise cancellation technology.", ka: "უმაღლესი ხარისხის ჟღერადობა ANC ტექნოლოგიით." } 
+            },
+            { 
+                id: 3, 
+                title: { en: "Smart Watch Ultra Fitness Tracker", ka: "ჭკვიანი საათი Ultra" }, 
+                category: "electronics", 
+                price: 349.00, 
+                rating: 4.8, 
+                image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", 
+                images: [
+                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
+                    "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=500&q=80",
+                    "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=500&q=80"
+                ],
+                description: { en: "Advanced health tracking, heart rate, and GPS features.", ka: "ჯანმრთელობისა და GPS აქტივობების მონიტორინგი." } 
+            },
+            { 
+                id: 4, 
+                title: { en: "Emigrantbook Official Designer Hoodie", ka: "ოფიციალური ჰუდი Emigrantbook" }, 
+                category: "merch", 
+                price: 79.00, 
+                rating: 4.7, 
+                image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80", 
+                images: [
+                    "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80",
+                    "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=500&q=80"
+                ],
+                description: { en: "100% premium heavy cotton comfortable hoodie.", ka: "100% პრემიუმ ბამბისგან დამზადებული თბილი ჰუდი." } 
+            },
+            { 
+                id: 5, 
+                title: { en: "Minimalist Leather Backpack", ka: "ტყავის მინიმალისტური ჩანთა" }, 
+                category: "merch", 
+                price: 139.00, 
+                rating: 4.9, 
+                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", 
+                images: [
+                    "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80",
+                    "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=500&q=80"
+                ],
+                description: { en: "Durable natural leather laptop backpack.", ka: "ნატურალური ტყავის გამძლე და ტევადი ზურგჩანთა." } 
+            },
+            { 
+                id: 6, 
+                title: { en: "UV400 Polarized Designer Sunglasses", ka: "დიზაინერული მზის სათვალე" }, 
+                category: "merch", 
+                price: 89.00, 
+                rating: 4.6, 
+                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", 
+                images: [
+                    "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80",
+                    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&q=80",
+                    "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=500&q=80",
+                    "https://images.unsplash.com/photo-1577803645773-f96470509666?w=500&q=80"
+                ],
+                description: { en: "Stylish modern frames with full UV protection.", ka: "სტილური სათვალე UV400 სრული დაცვით." } 
+            }
         ];
 
         let cart = JSON.parse(localStorage.getItem('eb_shop_cart')) || [];
@@ -1354,17 +1481,33 @@
             renderProducts(sorted);
         }
 
-        // Full Screen Product Page Opener
+        // Full Screen Product Page Opener & Gallery Logic
         function openProductModal(id) {
             const lang = translations[currentLang] ? currentLang : 'en';
             const p = products.find(item => item.id === id);
-            document.getElementById('modalImg').src = p.image;
+            const pImages = (p.images && p.images.length > 0) ? p.images : [p.image];
+
+            // Set main image to first image
+            document.getElementById('modalImg').src = pImages[0];
             document.getElementById('modalTitle').textContent = p.title[lang] || p.title.en;
             document.getElementById('modalCategory').textContent = p.category;
             document.getElementById('modalDescription').textContent = p.description[lang] || p.description.en;
             document.getElementById('modalPrice').textContent = `${p.price.toFixed(2)} ₾`;
             document.getElementById('modalAddBtn').onclick = () => { addToCart(p.id); closeProductModal(); };
+
+            // Render Thumbnails
+            const thumbsContainer = document.getElementById('modalThumbnails');
+            thumbsContainer.innerHTML = pImages.map((imgUrl, index) => `
+                <img src="${imgUrl}" class="thumb-img ${index === 0 ? 'active' : ''}" onclick="changeModalMainImage('${imgUrl}', this)" alt="thumbnail">
+            `).join('');
+
             document.getElementById('productModal').classList.add('active');
+        }
+
+        function changeModalMainImage(url, el) {
+            document.getElementById('modalImg').src = url;
+            document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
         }
 
         function closeProductModal() { 
