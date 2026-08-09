@@ -2,18 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Online Store | Emigrantbook</title>
 
     <!-- Google Fonts & Font Awesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Firebase 10.8.0 SDK (Emigrantbook Core) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
     <style>
         :root {
@@ -52,7 +46,7 @@
             padding-top: 70px;
         }
 
-        /* Fixed Unmovable Header */
+        /* Fixed Header */
         header {
             background: rgba(13, 19, 34, 0.95);
             backdrop-filter: blur(16px);
@@ -236,7 +230,7 @@
             color: #111;
         }
 
-        /* Hero Banner - Full Edge */
+        /* Hero Banner */
         .hero-banner {
             background: linear-gradient(135deg, rgba(220, 174, 54, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
             border-bottom: 1px solid var(--surface-border);
@@ -247,8 +241,6 @@
             justify-content: space-between;
             align-items: center;
             gap: 2rem;
-            position: relative;
-            overflow: hidden;
         }
 
         .hero-content h1 {
@@ -356,7 +348,7 @@
             border-color: var(--primary);
         }
 
-        /* Products Grid - Edge to Edge */
+        /* Products Grid */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -376,10 +368,6 @@
             position: relative;
             transition: var(--transition);
             width: 100%;
-        }
-
-        .product-card:hover {
-            border-color: rgba(220, 174, 54, 0.4);
         }
 
         .wishlist-btn {
@@ -413,8 +401,6 @@
             overflow: hidden;
             background: #000;
             position: relative;
-            margin: 0;
-            padding: 0;
         }
 
         .product-img-wrapper img {
@@ -735,7 +721,7 @@
             overflow-y: auto;
         }
 
-        /* Full Screen Admin Control Center Modal */
+        /* Full Screen Admin Center Modal */
         #adminModal {
             padding: 0;
         }
@@ -838,7 +824,7 @@
             border: 1px solid var(--accent-green);
         }
 
-        /* Full Screen Product View Page & Thumbnail Strip */
+        /* Full Screen Product View */
         #productModal {
             padding: 0;
         }
@@ -903,7 +889,6 @@
             border: 1px solid var(--surface-border);
         }
 
-        /* Thumbnail Strip */
         .thumbnail-strip {
             display: flex;
             gap: 10px;
@@ -947,7 +932,7 @@
             flex-direction: column;
         }
 
-        /* Checkout Form Styling */
+        /* Form Controls */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -986,7 +971,6 @@
             border-color: var(--primary);
         }
 
-        /* Receipt */
         .receipt-card {
             text-align: center;
             padding: 1rem 0;
@@ -1081,8 +1065,8 @@
             <span class="menu-item-arrow">›</span>
         </button>
 
-        <!-- Admin Control Center (Dynamically checked) -->
-        <button class="menu-item-row" id="adminMenuBtn" onclick="openAdminModal()">
+        <!-- Admin Panel Menu Button -->
+        <button class="menu-item-row" onclick="openAdminModal()">
             <div class="menu-item-left">
                 <span class="menu-item-icon">⚙️</span>
                 <span data-i18n="nav_admin">Admin Panel</span>
@@ -1265,7 +1249,7 @@
                             <input type="text" id="newDescKa" required placeholder="პროდუქტის აღწერა ქართულად...">
                         </div>
                     </div>
-                    <button type="submit" class="checkout-btn" id="saveProductBtn" style="margin-top: 1.5rem; max-width: 280px;">
+                    <button type="submit" class="checkout-btn" id="saveProductBtn" style="margin-top: 1.5rem; max-width: 280px; background: var(--primary); color: #111;">
                         <i class="fa-solid fa-plus"></i> Save & Publish Product
                     </button>
                 </form>
@@ -1381,7 +1365,7 @@
     </div>
 
     <script>
-        // --- 1. FIREBASE INITIALIZATION ---
+        // --- 1. FIREBASE SETUP ---
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
             authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -1392,11 +1376,13 @@
             measurementId: "G-MRPP7G4H30"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- 2. MULTILINGUAL TRANSLATIONS ---
+        // --- 2. MULTILINGUAL DICTIONARY ---
         const translations = {
             en: {
                 cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", nav_admin: "Admin Panel", back_to_shop: "Back to Shop",
@@ -1422,6 +1408,7 @@
             }
         };
 
+        // ავტომატურად იღებს მთავარ საიტზე არჩეულ ენას
         let currentLang = localStorage.getItem('emigrantbook_lang') || localStorage.getItem('lang') || 'en';
 
         function applyLanguage() {
@@ -1436,69 +1423,29 @@
             });
         }
 
-        // --- 3. STATE & DATA ---
+        // --- 3. STATE & FIREBASE SYNC ---
         let currentUser = null;
-        let userProfile = null;
         let products = [];
         let orders = [];
         let cart = JSON.parse(localStorage.getItem('eb_shop_cart')) || [];
         let wishlist = JSON.parse(localStorage.getItem('eb_shop_wishlist')) || [];
         let appliedDiscount = 0;
 
-        // Auth Observer
         auth.onAuthStateChanged(user => {
-            if(user) {
-                currentUser = user;
+            currentUser = user;
+            if (user) {
                 db.collection('profiles').doc(user.uid).get().then(doc => {
-                    if(doc.exists) {
-                        userProfile = doc.data();
-                        if(userProfile.language) {
-                            currentLang = userProfile.language;
-                            applyLanguage();
-                        }
+                    if (doc.exists && doc.data().language) {
+                        currentLang = doc.data().language;
+                        localStorage.setItem('emigrantbook_lang', currentLang);
+                        applyLanguage();
                     }
                 });
             }
         });
 
-        // --- 4. IMGBB & CLOUDINARY UPLOAD SERVICES ---
-        const IMGBB_API_KEY = "20b1ff9fe9c8896477a6bf04c86bcc67";
-
-        function uploadImageToImgBB(file, callback) {
-            let formData = new FormData();
-            formData.append("image", file);
-
-            fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result && result.success) callback(result.data.url);
-                else uploadToCloudinary(file, callback);
-            })
-            .catch(() => uploadToCloudinary(file, callback));
-        }
-
-        function uploadToCloudinary(file, callback) {
-            let formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", "fhlkp9ld");
-
-            fetch("https://api.cloudinary.com/v1_1/kim1albt/image/upload", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.secure_url) callback(data.secure_url);
-                else alert("Image upload failed");
-            })
-            .catch(err => alert("Upload error: " + err.message));
-        }
-
-        // --- 5. FIRESTORE REALTIME SYNC ---
-        function subscribeFirestoreProducts() {
+        // Realtime sync for products and orders
+        function initFirebaseListeners() {
             db.collection('shop_products').orderBy('created_at', 'desc').onSnapshot(snapshot => {
                 products = [];
                 snapshot.forEach(doc => {
@@ -1506,10 +1453,8 @@
                 });
                 renderProducts(products);
                 updateAdminStats();
-            }, err => console.error("Products Sync Error:", err));
-        }
+            }, err => console.error("Products sync error:", err));
 
-        function subscribeFirestoreOrders() {
             db.collection('shop_orders').orderBy('created_at', 'desc').onSnapshot(snapshot => {
                 orders = [];
                 snapshot.forEach(doc => {
@@ -1517,10 +1462,10 @@
                 });
                 updateAdminStats();
                 renderAdminOrders();
-            }, err => console.error("Orders Sync Error:", err));
+            }, err => console.error("Orders sync error:", err));
         }
 
-        // --- 6. CATALOG RENDER ---
+        // --- 4. CATALOG RENDER ---
         function renderProducts(items) {
             const grid = document.getElementById('productsGrid');
             const lang = translations[currentLang] ? currentLang : 'en';
@@ -1699,7 +1644,7 @@
             document.getElementById('burgerOverlay').classList.remove('active');
         };
 
-        // Filter & Sort
+        // Filter & Search
         document.getElementById('searchInput').oninput = (e) => {
             const term = e.target.value.toLowerCase();
             const lang = translations[currentLang] ? currentLang : 'en';
@@ -1726,7 +1671,7 @@
             renderProducts(sorted);
         }
 
-        // Full Screen Product Page Opener
+        // Product Modal Viewer
         function openProductModal(id) {
             const lang = translations[currentLang] ? currentLang : 'en';
             const p = products.find(item => item.id === id);
@@ -1831,6 +1776,38 @@
         function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
 
         // --- 7. ADMIN CONTROL CENTER ---
+        const IMGBB_API_KEY = "20b1ff9fe9c8896477a6bf04c86bcc67";
+
+        function uploadImageForAdmin(file, callback) {
+            let formData = new FormData();
+            formData.append("image", file);
+
+            fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result && result.success) callback(result.data.url);
+                else {
+                    // Fallback to Cloudinary if ImgBB limit reached
+                    let fd = new FormData();
+                    fd.append("file", file);
+                    fd.append("upload_preset", "fhlkp9ld");
+                    fetch("https://api.cloudinary.com/v1_1/kim1albt/image/upload", {
+                        method: "POST",
+                        body: fd
+                    })
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d.secure_url) callback(d.secure_url);
+                        else alert("Image upload failed.");
+                    });
+                }
+            })
+            .catch(() => alert("Image upload network error."));
+        }
+
         function openAdminModal() {
             document.getElementById('burgerSidebar').classList.remove('active');
             document.getElementById('burgerOverlay').classList.remove('active');
@@ -1897,7 +1874,7 @@
 
         function deleteFirestoreOrder(orderDocId) {
             if(confirm("Are you sure you want to delete this order?")) {
-                db.collection('shop_orders').doc(orderDocId).delete();
+                db.collection('shop_orders').doc(orderDocId).delete().catch(err => alert("Error: " + err.message));
             }
         }
 
@@ -1917,14 +1894,12 @@
                 return;
             }
 
-            // Step 1: Upload main image
-            uploadImageToImgBB(mainImgFile, function(mainImgUrl) {
-                // Step 2: Upload extra gallery files if any
+            uploadImageForAdmin(mainImgFile, function(mainImgUrl) {
                 if(galleryFiles.length > 0) {
                     let uploadedGalleryUrls = [];
                     let uploadPromises = galleryFiles.map(file => {
                         return new Promise(resolve => {
-                            uploadImageToImgBB(file, url => {
+                            uploadImageForAdmin(file, url => {
                                 uploadedGalleryUrls.push(url);
                                 resolve();
                             });
@@ -1974,6 +1949,11 @@
             const container = document.getElementById('adminProductsList');
             const lang = translations[currentLang] ? currentLang : 'en';
 
+            if(products.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">No products found.</p>`;
+                return;
+            }
+
             container.innerHTML = products.map(p => {
                 const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
                 return `
@@ -1990,14 +1970,13 @@
 
         function deleteFirestoreProduct(id) {
             if(confirm("Are you sure you want to delete this product?")) {
-                db.collection('shop_products').doc(id).delete();
+                db.collection('shop_products').doc(id).delete().catch(err => alert("Error: " + err.message));
             }
         }
 
-        // Init Application
+        // Run application on load
         applyLanguage();
-        subscribeFirestoreProducts();
-        subscribeFirestoreOrders();
+        initFirebaseListeners();
         updateCartUI();
         document.getElementById('menuWishlistBadge').textContent = wishlist.length;
     </script>
