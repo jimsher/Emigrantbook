@@ -719,6 +719,8 @@
       align-items: flex-end;
       gap: 8px;
       max-width: 82%;
+      cursor: pointer;
+      user-select: none;
     }
     .message-row.incoming {
       align-self: flex-start;
@@ -739,6 +741,7 @@
       font-size: 14px;
       line-height: 1.4;
       word-break: break-word;
+      transition: transform 0.15s;
     }
     .incoming .msg-bubble {
       background-color: rgba(255, 255, 255, 0.08);
@@ -976,6 +979,72 @@
     .emoji-picker-container span:active {
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.15);
+    }
+
+    /* DELETE MESSAGE MODAL (MESSENGER STYLE) */
+    .delete-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      z-index: 4000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeInDeleteModal 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes fadeInDeleteModal {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .delete-modal-content {
+      background: rgba(22, 22, 30, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 22px;
+      padding: 20px;
+      width: 88%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+    }
+    .delete-modal-content h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .delete-modal-content p {
+      font-size: 13px;
+      color: #8e8e93;
+      margin-bottom: 6px;
+    }
+    .delete-option-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .delete-option-btn:active {
+      transform: scale(0.97);
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .delete-option-btn.danger {
+      color: #ff4757;
+      background: rgba(255, 71, 87, 0.15);
+      border-color: rgba(255, 71, 87, 0.3);
+    }
+    .delete-option-btn.cancel {
+      color: #8e8e93;
+      background: transparent;
+      border: none;
+      margin-top: 2px;
     }
 
     /* ----------------------------------------------------
@@ -1397,6 +1466,17 @@
 
   </div>
 
+  <!-- DELETE MESSAGE MODAL (MESSENGER STYLE) -->
+  <div id="delete-msg-modal" class="delete-modal-overlay" onclick="closeDeleteModal(event)">
+    <div class="delete-modal-content" onclick="event.stopPropagation()">
+      <h3>შეტყობინების წაშლა</h3>
+      <p>ვისთვის გსურთ ამ შეტყობინების წაშლა?</p>
+      <button class="delete-option-btn danger" id="btn-delete-everyone" onclick="executeDeleteForEveryone()">ყველასთან წაშლა</button>
+      <button class="delete-option-btn" id="btn-delete-me" onclick="executeDeleteForMe()">ჩემთან წაშლა</button>
+      <button class="delete-option-btn cancel" onclick="closeDeleteModal()">გაუქმება</button>
+    </div>
+  </div>
+
   <!-- FACEBOOK STYLE TOP FLOATING INCOMING CALL BANNER -->
   <div id="incoming-call-modal">
     <div class="incoming-banner-left">
@@ -1631,6 +1711,9 @@
     // Realtime typing variables
     var typingTimer = null;
     var unsubscribeTyping = null;
+
+    // Selected message for deletion
+    var currentSelectedMsgId = null;
 
     // TAB SWITCHING
     function switchTab(tabName) {
@@ -1929,6 +2012,34 @@
       }
     }
 
+    // LONG PRESS DELETION LISTENER ATTACHMENT
+    function attachLongPressListener(element, msgId, isMine) {
+      let pressTimer = null;
+
+      const startPress = (e) => {
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        pressTimer = setTimeout(() => {
+          openDeleteModal(msgId, isMine);
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
+      };
+
+      const cancelPress = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+
+      element.addEventListener('mousedown', startPress);
+      element.addEventListener('touchstart', startPress, { passive: true });
+
+      element.addEventListener('mouseup', cancelPress);
+      element.addEventListener('mouseleave', cancelPress);
+      element.addEventListener('touchend', cancelPress);
+      element.addEventListener('touchmove', cancelPress);
+    }
+
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
       const myUid = auth.currentUser.uid;
@@ -1943,7 +2054,13 @@
 
           snapshot.forEach(docSnap => {
             const msg = docSnap.data();
+            const msgId = docSnap.id;
             const isMine = msg.senderId === myUid;
+
+            // თუ ჩემთან წაშლილია - არ გამოაჩინო
+            if (msg.deletedFor && Array.isArray(msg.deletedFor) && msg.deletedFor.includes(myUid)) {
+              return;
+            }
 
             let msgDateObj = msg.createdAt && msg.createdAt.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date();
             
@@ -1991,12 +2108,66 @@
                 `;
               }
             }
+
+            attachLongPressListener(msgRow, msgId, isMine);
             msgBlock.appendChild(msgRow);
           });
 
           const target = document.getElementById('messages-target');
           if (target) target.scrollTop = target.scrollHeight;
         });
+    }
+
+    // --- DELETE MESSAGE FUNCTIONS ---
+    function openDeleteModal(msgId, isMine) {
+      currentSelectedMsgId = msgId;
+      const modal = document.getElementById('delete-msg-modal');
+      const btnEveryone = document.getElementById('btn-delete-everyone');
+
+      if (isMine) {
+        btnEveryone.style.display = 'block';
+      } else {
+        btnEveryone.style.display = 'none';
+      }
+
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeDeleteModal(e) {
+      if (e && e.target && e.target.id !== 'delete-msg-modal') return;
+      const modal = document.getElementById('delete-msg-modal');
+      if (modal) modal.style.display = 'none';
+      currentSelectedMsgId = null;
+    }
+
+    function executeDeleteForEveryone() {
+      if (!currentSelectedMsgId || !currentActiveChatUid || !auth.currentUser) return;
+      const myUid = auth.currentUser.uid;
+      const chatId = getChatId(myUid, currentActiveChatUid);
+
+      db.collection('chats').doc(chatId).collection('messages').doc(currentSelectedMsgId).delete()
+        .then(() => {
+          closeDeleteModal();
+        })
+        .catch(err => {
+          console.error("Delete for everyone error:", err);
+          closeDeleteModal();
+        });
+    }
+
+    function executeDeleteForMe() {
+      if (!currentSelectedMsgId || !currentActiveChatUid || !auth.currentUser) return;
+      const myUid = auth.currentUser.uid;
+      const chatId = getChatId(myUid, currentActiveChatUid);
+
+      db.collection('chats').doc(chatId).collection('messages').doc(currentSelectedMsgId).update({
+        deletedFor: firebase.firestore.FieldValue.arrayUnion(myUid)
+      }).then(() => {
+        closeDeleteModal();
+      }).catch(err => {
+        console.error("Delete for me error:", err);
+        closeDeleteModal();
+      });
     }
 
     // --- REALTIME TYPING INDICATOR LOGIC ---
