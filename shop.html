@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ონლაინ მაღაზია | Online Shop</title>
+    <title>ონლაინ შოპინგი | Emigrantbook</title>
+
     <!-- Google Fonts & Font Awesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Stripe SDK რეალური გადახდებისთვის -->
+    <!-- Stripe SDK -->
     <script src="https://js.stripe.com/v3/"></script>
 
     <style>
+        /* Emigrantbook-ის ძირითადი ფერები და ცვლადები */
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-light: #f8fafc;
-            --surface: #ffffff;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            --radius: 16px;
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --accent-color: #10b981;
+            --radius: 14px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -31,21 +35,20 @@
         }
 
         body {
-            background-color: var(--bg-light);
-            color: var(--text-dark);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* Header / Navbar */
+        /* Header & Navigation */
         header {
-            background: var(--surface);
+            background: var(--surface-color);
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .nav-container {
@@ -57,19 +60,43 @@
             align-items: center;
         }
 
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .burger-trigger {
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--text-color);
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
+        .logo span {
+            color: var(--primary-color);
+        }
+
         .cart-icon-btn {
-            background: #f1f5f9;
-            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
             padding: 0.6rem 1.2rem;
             border-radius: 30px;
             cursor: pointer;
@@ -82,18 +109,117 @@
         }
 
         .cart-icon-btn:hover {
-            background: #e2e8f0;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .cart-badge {
-            background: var(--primary);
+            background: var(--primary-color);
             color: white;
             font-size: 0.75rem;
             padding: 2px 7px;
             border-radius: 50%;
         }
 
-        /* Main Container */
+        /* Burger Menu Sidebar */
+        .burger-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .burger-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .burger-sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 100%;
+            max-width: 300px;
+            height: 100%;
+            background: var(--surface-color);
+            z-index: 1000;
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .burger-sidebar.active {
+            left: 0;
+        }
+
+        .burger-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .burger-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+
+        /* Оригинальная структура მენიუს ღილაკის */
+        .menu-item-row {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .menu-item-row:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .menu-item-icon {
+            font-size: 1.2rem;
+        }
+
+        .menu-item-arrow {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+        }
+
+        .menu-item-row:hover .menu-item-arrow {
+            color: #ffffff;
+        }
+
+        /* Main Section */
         main {
             max-width: 1200px;
             margin: 2rem auto;
@@ -102,7 +228,6 @@
             width: 100%;
         }
 
-        /* Controls Section */
         .shop-controls {
             display: flex;
             flex-wrap: wrap;
@@ -120,12 +245,13 @@
 
         .search-box input {
             width: 100%;
-            padding: 0.8rem 1rem 0.8rem 2.5rem;
-            border: 1px solid var(--border);
+            padding: 0.82rem 1rem 0.82rem 2.6rem;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             outline: none;
             font-size: 0.95rem;
-            background: var(--surface);
+            background: var(--surface-color);
+            color: var(--text-color);
         }
 
         .search-box i {
@@ -144,21 +270,22 @@
         }
 
         .tag-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 0.5rem 1rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.55rem 1.1rem;
             border-radius: 20px;
             cursor: pointer;
             font-size: 0.85rem;
             font-weight: 500;
             white-space: nowrap;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .tag-btn.active, .tag-btn:hover {
-            background: var(--primary);
+            background: var(--primary-color);
             color: white;
-            border-color: var(--primary);
+            border-color: var(--primary-color);
         }
 
         /* Products Grid */
@@ -169,9 +296,9 @@
         }
 
         .product-card {
-            background: var(--surface);
+            background: var(--card-bg);
             border-radius: var(--radius);
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-color);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: flex;
@@ -179,15 +306,15 @@
         }
 
         .product-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-6px);
             box-shadow: var(--shadow);
         }
 
         .product-img-wrapper {
             width: 100%;
-            height: 200px;
+            height: 210px;
             overflow: hidden;
-            background: #f1f5f9;
+            background: rgba(0, 0, 0, 0.2);
             position: relative;
         }
 
@@ -199,7 +326,7 @@
         }
 
         .product-card:hover .product-img-wrapper img {
-            transform: scale(1.05);
+            transform: scale(1.06);
         }
 
         .product-info {
@@ -214,31 +341,33 @@
             text-transform: uppercase;
             color: var(--text-muted);
             font-weight: 600;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.3rem;
         }
 
         .product-title {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             cursor: pointer;
+            color: var(--text-color);
+            transition: color 0.2s;
         }
 
         .product-title:hover {
-            color: var(--primary);
+            color: var(--primary-color);
         }
 
         .product-price {
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--accent-color);
             margin-top: auto;
             margin-bottom: 1rem;
         }
 
         .add-to-cart-btn {
             width: 100%;
-            background: var(--primary);
+            background: var(--primary-color);
             color: white;
             border: none;
             padding: 0.75rem;
@@ -256,14 +385,15 @@
             background: var(--primary-hover);
         }
 
-        /* Drawer / Cart Modal */
+        /* Cart Drawer */
         .cart-drawer-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
@@ -282,12 +412,13 @@
             width: 100%;
             max-width: 400px;
             height: 100%;
-            background: var(--surface);
+            background: var(--surface-color);
             z-index: 1001;
-            box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
             transition: right 0.3s ease;
             display: flex;
             flex-direction: column;
+            border-left: 1px solid var(--border-color);
         }
 
         .cart-drawer.active {
@@ -296,7 +427,7 @@
 
         .cart-header {
             padding: 1.25rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -321,6 +452,10 @@
             gap: 1rem;
             margin-bottom: 1.25rem;
             align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
         }
 
         .cart-item img {
@@ -337,11 +472,12 @@
         .cart-item-title {
             font-size: 0.9rem;
             font-weight: 600;
+            margin-bottom: 4px;
         }
 
         .cart-item-price {
             font-size: 0.85rem;
-            color: var(--primary);
+            color: var(--accent-color);
             font-weight: 600;
         }
 
@@ -349,22 +485,24 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
         .qty-btn {
-            background: #f1f5f9;
+            background: var(--border-color);
+            color: var(--text-color);
             border: none;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: bold;
         }
 
         .cart-footer {
             padding: 1.25rem;
-            border-top: 1px solid var(--border);
-            background: #fafafa;
+            border-top: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .total-row {
@@ -377,7 +515,7 @@
 
         .checkout-btn {
             width: 100%;
-            background: #10b981;
+            background: var(--accent-color);
             color: white;
             border: none;
             padding: 0.9rem;
@@ -385,25 +523,26 @@
             font-weight: 600;
             cursor: pointer;
             font-size: 1rem;
-            transition: background 0.2s;
+            transition: opacity 0.2s;
         }
 
         .checkout-btn:hover {
-            background: #059669;
+            opacity: 0.9;
         }
 
         /* Product Detail Modal */
         .modal-overlay {
             position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.5);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1002;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
 
         .modal-overlay.active {
@@ -412,7 +551,9 @@
         }
 
         .modal-content {
-            background: var(--surface);
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
             width: 90%;
             max-width: 700px;
             border-radius: var(--radius);
@@ -421,6 +562,7 @@
             display: flex;
             gap: 2rem;
             flex-wrap: wrap;
+            box-shadow: var(--shadow);
         }
 
         .modal-close {
@@ -429,8 +571,9 @@
             right: 1rem;
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             cursor: pointer;
+            color: var(--text-muted);
         }
 
         .modal-img {
@@ -456,12 +599,17 @@
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header Navigation -->
     <header>
         <div class="nav-container">
-            <a href="#" class="logo">
-                <i class="fa-solid fa-bag-shopping"></i> ShopStore
-            </a>
+            <div class="nav-left">
+                <button class="burger-trigger" id="openBurgerBtn" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <a href="#" class="logo">
+                    Emigrant<span>book</span>
+                </a>
+            </div>
             <button class="cart-icon-btn" id="openCartBtn">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span>კალათა</span>
@@ -469,6 +617,40 @@
             </button>
         </div>
     </header>
+
+    <!-- Burger Menu Sidebar -->
+    <div class="burger-overlay" id="burgerOverlay"></div>
+    <aside class="burger-sidebar" id="burgerSidebar">
+        <div class="burger-header">
+            <h3 style="font-size: 1.1rem; font-weight: 600;">მენიუ</h3>
+            <button class="burger-close" id="closeBurgerBtn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- ორიგინალი ღილაკების სტრუქტურა -->
+        <button class="menu-item-row" onclick="window.location.href='index.html'">
+            <div class="menu-item-left">
+                <span class="menu-item-icon">🏠</span>
+                <span>მთავარი გვერდი</span>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </button>
+
+        <button class="menu-item-row" onclick="window.location.href='shop.html'">
+            <div class="menu-item-left">
+                <span class="menu-item-icon">🛍️</span>
+                <span>ონლაინ შოპინგი</span>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </button>
+
+        <button class="menu-item-row" onclick="window.location.href='offline-video.html'">
+            <div class="menu-item-left">
+                <span class="menu-item-icon">☁️</span>
+                <span>Offline Video</span>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </button>
+    </aside>
 
     <!-- Main Content -->
     <main>
@@ -486,11 +668,11 @@
         </div>
 
         <div class="products-grid" id="productsGrid">
-            <!-- პროდუქტები ჩაიტვირთება დინამიურად JS-ით -->
+            <!-- ჩაიტვირთება დინამიურად JS-ის საშუალებით -->
         </div>
     </main>
 
-    <!-- Cart Drawer Modal -->
+    <!-- Cart Drawer -->
     <div class="cart-drawer-overlay" id="cartOverlay"></div>
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-header">
@@ -511,13 +693,13 @@
         </div>
     </div>
 
-    <!-- Product Detail View Modal -->
+    <!-- Product Detail Modal -->
     <div class="modal-overlay" id="productModal">
         <div class="modal-content">
             <button class="modal-close" id="closeModalBtn"><i class="fa-solid fa-xmark"></i></button>
-            <img src="" id="modalImg" class="modal-img" alt="">
+            <img src="" id="modalImg" class="modal-img" alt="Product Image">
             <div class="modal-details">
-                <h2 id="modalTitle" style="margin-bottom: 0.5rem;"></h2>
+                <h2 id="modalTitle" style="margin-bottom: 0.5rem; font-size: 1.3rem;"></h2>
                 <div id="modalCategory" class="product-category" style="margin-bottom: 1rem;"></div>
                 <p id="modalDescription" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;"></p>
                 <div id="modalPrice" class="product-price"></div>
@@ -529,7 +711,7 @@
     </div>
 
     <script>
-        // --- 1. პროდუქტების მონაცემთა ბაზა (Real-like Data) ---
+        // --- 1. პროდუქტების მონაცემთა ბაზა ---
         const products = [
             {
                 id: 1,
@@ -574,8 +756,8 @@
         ];
 
         // --- 2. State & DOM Elements ---
-        let cart = JSON.parse(localStorage.getItem('shop_cart')) || [];
-        
+        let cart = JSON.parse(localStorage.getItem('emigrantbook_cart')) || [];
+
         const productsGrid = document.getElementById('productsGrid');
         const searchInput = document.getElementById('searchInput');
         const cartDrawer = document.getElementById('cartDrawer');
@@ -588,7 +770,28 @@
         const productModal = document.getElementById('productModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
 
-        // --- 3. Render Products ---
+        // Burger Elements
+        const openBurgerBtn = document.getElementById('openBurgerBtn');
+        const closeBurgerBtn = document.getElementById('closeBurgerBtn');
+        const burgerSidebar = document.getElementById('burgerSidebar');
+        const burgerOverlay = document.getElementById('burgerOverlay');
+
+        // --- 3. Burger Navigation Control ---
+        function toggleBurger(open) {
+            if(open) {
+                burgerSidebar.classList.add('active');
+                burgerOverlay.classList.add('active');
+            } else {
+                burgerSidebar.classList.remove('active');
+                burgerOverlay.classList.remove('active');
+            }
+        }
+
+        openBurgerBtn.addEventListener('click', () => toggleBurger(true));
+        closeBurgerBtn.addEventListener('click', () => toggleBurger(false));
+        burgerOverlay.addEventListener('click', () => toggleBurger(false));
+
+        // --- 4. Render Products ---
         function renderProducts(items) {
             productsGrid.innerHTML = items.map(product => `
                 <div class="product-card">
@@ -607,7 +810,7 @@
             `).join('');
         }
 
-        // --- 4. Search & Filter Logic ---
+        // --- 5. Search & Filters ---
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
             const filtered = products.filter(p => p.title.toLowerCase().includes(term));
@@ -618,7 +821,7 @@
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                
+
                 const cat = e.target.dataset.category;
                 if(cat === 'all') {
                     renderProducts(products);
@@ -628,11 +831,11 @@
             });
         });
 
-        // --- 5. Cart Management ---
+        // --- 6. Cart Management ---
         function addToCart(id) {
             const product = products.find(p => p.id === id);
             const existing = cart.find(item => item.id === id);
-            
+
             if(existing) {
                 existing.qty++;
             } else {
@@ -654,13 +857,11 @@
         }
 
         function updateCartUI() {
-            localStorage.setItem('shop_cart', JSON.stringify(cart));
-            
-            // Update badge count
+            localStorage.setItem('emigrantbook_cart', JSON.stringify(cart));
+
             const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
             cartBadge.textContent = totalQty;
 
-            // Render Items
             if(cart.length === 0) {
                 cartItemsContainer.innerHTML = `<p style="text-align:center; color: var(--text-muted); margin-top: 2rem;">კალათა ცარიელია</p>`;
             } else {
@@ -680,7 +881,6 @@
                 `).join('');
             }
 
-            // Calculate Total
             const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
             cartTotalSum.textContent = `${total.toFixed(2)} ₾`;
         }
@@ -699,7 +899,7 @@
         closeCartBtn.addEventListener('click', () => toggleCart(false));
         cartOverlay.addEventListener('click', () => toggleCart(false));
 
-        // --- 6. Modal Functions ---
+        // --- 7. Modal Controls ---
         function openModal(id) {
             const product = products.find(p => p.id === id);
             document.getElementById('modalImg').src = product.image;
@@ -720,7 +920,7 @@
 
         closeModalBtn.addEventListener('click', closeModal);
 
-        // --- 7. Real Payment Script (Stripe Integration Example) ---
+        // --- 8. Checkout Process Script ---
         async function processCheckout() {
             if(cart.length === 0) {
                 alert("თქვენი კალათა ცარიელია!");
@@ -731,14 +931,7 @@
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = "მუშავდება...";
 
-            /* 
-              რეალური გადახდისთვის:
-              აქ იგზავნება მოთხოვნა Backend-ზე (Node.js/PHP/Python), რომელიც ქმნის Stripe Checkout Session-ს
-              და აბრუნებს session.id-ს.
-            */
-
             try {
-                // იმიტაცია რეალური API მოთხოვნის
                 setTimeout(() => {
                     alert("გადახდა წარმატებით განხორციელდა! გმადლობთ შენაძენისთვის.");
                     cart = [];
@@ -747,7 +940,6 @@
                     checkoutBtn.disabled = false;
                     checkoutBtn.innerHTML = `<i class="fa-solid fa-credit-card"></i> ყიდვა / გადახდა`;
                 }, 1500);
-
             } catch (err) {
                 alert("შეცდომა გადახდისას");
                 checkoutBtn.disabled = false;
