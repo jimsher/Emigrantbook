@@ -752,6 +752,48 @@
       border-bottom-right-radius: 4px;
     }
 
+    /* Messenger 3 Dots Realtime Typing Indicator CSS */
+    .typing-indicator-row {
+      display: none;
+      align-items: flex-end;
+      gap: 8px;
+      align-self: flex-start;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+    .typing-indicator-bubble {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 12px 16px;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      background-color: #a0a0ab;
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out both;
+    }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+      }
+      40% {
+        transform: scale(1.1);
+        opacity: 1;
+        background-color: #2ed573;
+      }
+    }
+
     /* Messenger Call Bubble Style (MISSED & FINISHED CALLS) */
     .msg-bubble.call-card-bubble {
       background: rgba(255, 255, 255, 0.08) !important;
@@ -1303,6 +1345,16 @@
         <div class="chat-date-separator" id="chat-date-lbl">დღეს</div>
 
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+        <!-- Realtime Messenger 3 Dots Typing Indicator Row -->
+        <div id="typing-indicator-row" class="typing-indicator-row">
+          <img class="msg-bubble-avatar" id="typing-avatar" src="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
+          <div class="typing-indicator-bubble">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
       </div>
 
       <div class="thread-footer">
@@ -1426,6 +1478,23 @@
     // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის (GitHub Raw Links) ---
     const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
     const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
+
+    // --- აუდიო ფაილი კლავიატურის ბეჭდვისთვის ---
+    const klaviaturaAudio = new Audio("klaviatura.MP3");
+    klaviaturaAudio.loop = true;
+    klaviaturaAudio.volume = 0.8;
+
+    function playKlaviaturaSound() {
+      if (klaviaturaAudio.paused) {
+        klaviaturaAudio.currentTime = 0;
+        klaviaturaAudio.play().catch(e => console.log("Keyboard sound autoplay restriction:", e));
+      }
+    }
+
+    function stopKlaviaturaSound() {
+      klaviaturaAudio.pause();
+      klaviaturaAudio.currentTime = 0;
+    }
 
     outgoingAudio.loop = true;
     incomingAudio.loop = true;
@@ -1558,6 +1627,10 @@
     var unsubscribeMessages = null;
     var threadProfileUnsubscribe = null;
     var storyTimer = null;
+
+    // Realtime typing variables
+    var typingTimer = null;
+    var unsubscribeTyping = null;
 
     // TAB SWITCHING
     function switchTab(tabName) {
@@ -1791,6 +1864,7 @@
       document.getElementById('active-thread-avatar').src = finalAvatar;
       document.getElementById('chat-start-big-name').innerText = username;
       document.getElementById('chat-start-big-avatar').src = finalAvatar;
+      document.getElementById('typing-avatar').src = finalAvatar;
 
       handleInputTyping();
       hideEmojiPicker();
@@ -1822,6 +1896,7 @@
       });
 
       listenToFirestoreMessages(chatId, finalAvatar);
+      listenToTypingStatus(chatId, targetUid);
     }
 
     function isOnlyEmoji(str) {
@@ -1924,9 +1999,49 @@
         });
     }
 
+    // --- REALTIME TYPING INDICATOR LOGIC ---
+    function sendTypingStatus(isTyping) {
+      if (!currentActiveChatUid || !auth.currentUser) return;
+      const myUid = auth.currentUser.uid;
+      const chatId = getChatId(myUid, currentActiveChatUid);
+
+      db.collection('chats').doc(chatId).collection('typing').doc(myUid).set({
+        isTyping: isTyping,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(err => console.log("Typing state send error:", err));
+    }
+
+    function listenToTypingStatus(chatId, targetUid) {
+      const typingRow = document.getElementById('typing-indicator-row');
+
+      if (unsubscribeTyping) unsubscribeTyping();
+
+      unsubscribeTyping = db.collection('chats').doc(chatId).collection('typing').doc(targetUid)
+        .onSnapshot(docSnap => {
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            if (data && data.isTyping === true) {
+              if (typingRow) typingRow.style.display = 'flex';
+              playKlaviaturaSound();
+              const target = document.getElementById('messages-target');
+              if (target) target.scrollTop = target.scrollHeight;
+            } else {
+              if (typingRow) typingRow.style.display = 'none';
+              stopKlaviaturaSound();
+            }
+          } else {
+            if (typingRow) typingRow.style.display = 'none';
+            stopKlaviaturaSound();
+          }
+        }, err => console.log("Typing state listen error:", err));
+    }
+
     function closeChat() {
       if (unsubscribeMessages) unsubscribeMessages();
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
+      if (unsubscribeTyping) unsubscribeTyping();
+      sendTypingStatus(false);
+      stopKlaviaturaSound();
       hideEmojiPicker();
       document.getElementById('thread-screen').style.display = 'none';
       switchTab(currentActiveTab);
@@ -1945,9 +2060,18 @@
       if (input.value.trim().length > 0) {
         btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
         btn.dataset.mode = "send";
+
+        // Broadcast realtime typing state
+        sendTypingStatus(true);
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+          sendTypingStatus(false);
+        }, 2000);
       } else {
         btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>`;
         btn.dataset.mode = "like";
+
+        sendTypingStatus(false);
       }
     }
 
@@ -1992,6 +2116,8 @@
       }
 
       input.value = "";
+      sendTypingStatus(false);
+      clearTimeout(typingTimer);
       handleInputTyping();
       hideEmojiPicker();
 
