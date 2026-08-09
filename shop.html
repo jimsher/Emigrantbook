@@ -732,7 +732,24 @@
             overflow-y: auto;
         }
 
-        /* Full Screen Product View Page & Thumbnail Strip */
+        /* Admin Modal Styling */
+        .admin-order-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-order-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* Full Screen Product View Page */
         #productModal {
             padding: 0;
         }
@@ -973,6 +990,15 @@
             <span class="menu-item-arrow">›</span>
         </button>
 
+        <!-- Admin Control Center in Burger Menu -->
+        <button class="menu-item-row" onclick="openAdminModal()">
+            <div class="menu-item-left">
+                <span class="menu-item-icon">⚙️</span>
+                <span data-i18n="nav_admin">Admin Panel</span>
+            </div>
+            <span class="menu-item-arrow">›</span>
+        </button>
+
         <button class="menu-item-row" onclick="window.location.href='offline-video.html'">
             <div class="menu-item-left">
                 <span class="menu-item-icon">☁️</span>
@@ -1059,6 +1085,77 @@
         </div>
     </div>
 
+    <!-- Admin Panel Modal -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-card" style="max-width: 820px;">
+            <button class="close-btn" onclick="closeAdminModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
+            <h2 style="margin-bottom: 1.25rem; font-weight: 800; font-size: 1.5rem;">⚙️ Admin Control Center</h2>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 12px; overflow-x: auto;">
+                <button class="tag-btn active" id="adminTabOrdersBtn" onclick="switchAdminTab('orders')">📦 Orders (<span id="adminOrdersCount">0</span>)</button>
+                <button class="tag-btn" id="adminTabAddBtn" onclick="switchAdminTab('add')">➕ Add Product</button>
+                <button class="tag-btn" id="adminTabManageBtn" onclick="switchAdminTab('manage')">🛠️ Products List</button>
+            </div>
+
+            <!-- Admin Tab 1: Orders -->
+            <div id="adminTabOrders">
+                <div id="adminOrdersList"></div>
+            </div>
+
+            <!-- Admin Tab 2: Add Product -->
+            <div id="adminTabAdd" style="display: none;">
+                <form id="addProductForm" onsubmit="handleProductAdd(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Title (English)</label>
+                            <input type="text" id="newTitleEn" required placeholder="e.g. Official Cap">
+                        </div>
+                        <div class="form-group">
+                            <label>Title (Georgian)</label>
+                            <input type="text" id="newTitleKa" required placeholder="მაგ. ოფიციალური ქუდი">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="newCategory">
+                                <option value="books">Books</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="merch">Merchandise</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (₾)</label>
+                            <input type="number" step="0.01" id="newPrice" required placeholder="59.00">
+                        </div>
+                        <div class="form-group full">
+                            <label>Main Image URL</label>
+                            <input type="url" id="newImage" required placeholder="https://images.unsplash.com/...">
+                        </div>
+                        <div class="form-group full">
+                            <label>Extra Gallery Image URLs (Comma separated)</label>
+                            <input type="text" id="newGallery" placeholder="url1, url2, url3">
+                        </div>
+                        <div class="form-group full">
+                            <label>Description (English)</label>
+                            <input type="text" id="newDescEn" required placeholder="Product description in English...">
+                        </div>
+                        <div class="form-group full">
+                            <label>Description (Georgian)</label>
+                            <input type="text" id="newDescKa" required placeholder="პროდუქტის აღწერა ქართულად...">
+                        </div>
+                    </div>
+                    <button type="submit" class="checkout-btn" style="margin-top: 1.5rem;">
+                        <i class="fa-solid fa-plus"></i> Save Product
+                    </button>
+                </form>
+            </div>
+
+            <!-- Admin Tab 3: Manage Products -->
+            <div id="adminTabManage" style="display: none;">
+                <div id="adminProductsList"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Full Screen Product View Modal (სრულეკრანიანი გვერდი + ფოტოების ზოლი) -->
     <div class="modal-overlay" id="productModal">
         <div class="modal-card">
@@ -1095,11 +1192,11 @@
                 <div class="form-grid">
                     <div class="form-group full">
                         <label data-i18n="full_name">Full Name</label>
-                        <input type="text" required placeholder="John Doe">
+                        <input type="text" id="custNameInput" required placeholder="John Doe">
                     </div>
                     <div class="form-group full">
                         <label data-i18n="address">Shipping Address</label>
-                        <input type="text" required placeholder="123 Main Street, New York">
+                        <input type="text" id="custAddressInput" required placeholder="123 Main Street, New York">
                     </div>
                     <div class="form-group full">
                         <label data-i18n="card_number">Card Number</label>
@@ -1162,7 +1259,7 @@
         // Automatic Multi-language logic
         const translations = {
             en: {
-                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", back_to_shop: "Back to Shop",
+                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", nav_admin: "Admin Panel", back_to_shop: "Back to Shop",
                 hero_title: "Official Online Store", hero_subtitle: "Explore exclusive books, tech gadgets, and official merchandise.",
                 search_placeholder: "Search products...", sort_default: "Sort: Default", sort_low_high: "Price: Low to High", sort_high_low: "Price: High to Low",
                 cat_all: "All", cat_books: "Books", cat_electronics: "Electronics", cat_merch: "Merchandise",
@@ -1173,7 +1270,7 @@
                 order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty", empty_wishlist: "No saved items in wishlist."
             },
             ka: {
-                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები", back_to_shop: "უკან დაბრუნება",
+                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები", nav_admin: "ადმინ პანელი", back_to_shop: "უკან დაბრუნება",
                 hero_title: "ოფიციალური ონლაინ მაღაზია", hero_subtitle: "აღმოაჩინეთ ექსკლუზიური წიგნები, ტექნიკა და ოფიციალური აქსესუარები.",
                 search_placeholder: "მოძებნეთ პროდუქტი...", sort_default: "სორტირება: სტანდარტული", sort_low_high: "ფასი: ზრდადობით", sort_high_low: "ფასი: კლებადობით",
                 cat_all: "ყველა", cat_books: "წიგნები", cat_electronics: "ტექნიკა", cat_merch: "აქსესუარები",
@@ -1199,8 +1296,8 @@
             });
         }
 
-        // Product Catalog Database (თითოეულ პროდუქტს აქვს რამდენიმე ფოტო)
-        const products = [
+        // Product Catalog Database
+        const defaultProducts = [
             { 
                 id: 1, 
                 title: { en: "Emigrantbook Premium Hardcover Edition", ka: "Emigrantbook პრემიუმ გამოცემა" }, 
@@ -1286,8 +1383,12 @@
             }
         ];
 
+        let savedProducts = JSON.parse(localStorage.getItem('eb_shop_products'));
+        let products = savedProducts || defaultProducts;
+
         let cart = JSON.parse(localStorage.getItem('eb_shop_cart')) || [];
         let wishlist = JSON.parse(localStorage.getItem('eb_shop_wishlist')) || [];
+        let orders = JSON.parse(localStorage.getItem('eb_shop_orders')) || [];
         let appliedDiscount = 0;
 
         // Render Catalog
@@ -1487,7 +1588,6 @@
             const p = products.find(item => item.id === id);
             const pImages = (p.images && p.images.length > 0) ? p.images : [p.image];
 
-            // Set main image to first image
             document.getElementById('modalImg').src = pImages[0];
             document.getElementById('modalTitle').textContent = p.title[lang] || p.title.en;
             document.getElementById('modalCategory').textContent = p.category;
@@ -1495,7 +1595,6 @@
             document.getElementById('modalPrice').textContent = `${p.price.toFixed(2)} ₾`;
             document.getElementById('modalAddBtn').onclick = () => { addToCart(p.id); closeProductModal(); };
 
-            // Render Thumbnails
             const thumbsContainer = document.getElementById('modalThumbnails');
             thumbsContainer.innerHTML = pImages.map((imgUrl, index) => `
                 <img src="${imgUrl}" class="thumb-img ${index === 0 ? 'active' : ''}" onclick="changeModalMainImage('${imgUrl}', this)" alt="thumbnail">
@@ -1543,9 +1642,24 @@
             setTimeout(() => {
                 const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
                 const finalTotal = subtotal - (subtotal * appliedDiscount);
+                const orderId = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
 
-                document.getElementById('receiptOrderId').textContent = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
+                document.getElementById('receiptOrderId').textContent = orderId;
                 document.getElementById('receiptAmount').textContent = `${finalTotal.toFixed(2)} ₾`;
+
+                // Save Order to Admin Orders list
+                const lang = translations[currentLang] ? currentLang : 'en';
+                const newOrder = {
+                    id: orderId,
+                    customer: document.getElementById('custNameInput').value.trim(),
+                    address: document.getElementById('custAddressInput').value.trim(),
+                    total: finalTotal,
+                    items: cart.map(i => ({ title: i.title[lang] || i.title.en, qty: i.qty, price: i.price })),
+                    date: new Date().toLocaleString()
+                };
+
+                orders.unshift(newOrder);
+                localStorage.setItem('eb_shop_orders', JSON.stringify(orders));
 
                 cart = [];
                 appliedDiscount = 0;
@@ -1561,6 +1675,115 @@
         }
 
         function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
+
+        // --- Admin Control Center Logic ---
+        function openAdminModal() {
+            document.getElementById('burgerSidebar').classList.remove('active');
+            document.getElementById('burgerOverlay').classList.remove('active');
+            renderAdminOrders();
+            renderAdminProductsList();
+            document.getElementById('adminModal').classList.add('active');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('active');
+        }
+
+        function switchAdminTab(tab) {
+            document.getElementById('adminTabOrders').style.display = tab === 'orders' ? 'block' : 'none';
+            document.getElementById('adminTabAdd').style.display = tab === 'add' ? 'block' : 'none';
+            document.getElementById('adminTabManage').style.display = tab === 'manage' ? 'block' : 'none';
+
+            document.getElementById('adminTabOrdersBtn').classList.toggle('active', tab === 'orders');
+            document.getElementById('adminTabAddBtn').classList.toggle('active', tab === 'add');
+            document.getElementById('adminTabManageBtn').classList.toggle('active', tab === 'manage');
+        }
+
+        function renderAdminOrders() {
+            const container = document.getElementById('adminOrdersList');
+            document.getElementById('adminOrdersCount').textContent = orders.length;
+
+            if(orders.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">No incoming orders yet.</p>`;
+            } else {
+                container.innerHTML = orders.map(o => `
+                    <div class="admin-order-card">
+                        <div class="admin-order-header">
+                            <div>
+                                <strong style="color: var(--primary); font-size: 1.1rem;">${o.id}</strong>
+                                <span style="color: var(--text-sub); font-size: 0.8rem; margin-left: 10px;">${o.date}</span>
+                            </div>
+                            <strong style="color: var(--accent-green); font-size: 1.1rem;">${o.total.toFixed(2)} ₾</strong>
+                        </div>
+                        <div style="font-size: 0.9rem; margin-bottom: 0.4rem;">👤 <strong>${o.customer}</strong></div>
+                        <div style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 0.8rem;">📍 ${o.address}</div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 0.6rem; border-radius: 8px; font-size: 0.85rem;">
+                            <strong>Items Purchased:</strong>
+                            <ul style="margin-left: 1.2rem; margin-top: 0.3rem;">
+                                ${o.items.map(item => `<li>${item.title} (x${item.qty}) - ${(item.price * item.qty).toFixed(2)} ₾</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function handleProductAdd(e) {
+            e.preventDefault();
+            const mainImg = document.getElementById('newImage').value.trim();
+            const galleryVal = document.getElementById('newGallery').value.trim();
+            const galleryArr = galleryVal ? galleryVal.split(',').map(s => s.trim()) : [];
+
+            const newProd = {
+                id: Date.now(),
+                title: {
+                    en: document.getElementById('newTitleEn').value.trim(),
+                    ka: document.getElementById('newTitleKa').value.trim()
+                },
+                category: document.getElementById('newCategory').value,
+                price: parseFloat(document.getElementById('newPrice').value),
+                rating: 5.0,
+                image: mainImg,
+                images: [mainImg, ...galleryArr],
+                description: {
+                    en: document.getElementById('newDescEn').value.trim(),
+                    ka: document.getElementById('newDescKa').value.trim()
+                }
+            };
+
+            products.unshift(newProd);
+            localStorage.setItem('eb_shop_products', JSON.stringify(products));
+            renderProducts(products);
+            alert("Product added successfully!");
+            document.getElementById('addProductForm').reset();
+            switchAdminTab('manage');
+            renderAdminProductsList();
+        }
+
+        function renderAdminProductsList() {
+            const container = document.getElementById('adminProductsList');
+            const lang = translations[currentLang] ? currentLang : 'en';
+
+            container.innerHTML = products.map(p => `
+                <div class="cart-item" style="margin-bottom: 0.8rem;">
+                    <img src="${p.image}" alt="">
+                    <div class="cart-item-details">
+                        <div class="cart-item-title">${p.title[lang] || p.title.en}</div>
+                        <div class="cart-item-price">${p.price.toFixed(2)} ₾ (${p.category})</div>
+                    </div>
+                    <button class="close-btn" onclick="deleteProduct(${p.id})" style="color: var(--accent-red);" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function deleteProduct(id) {
+            if(confirm("Are you sure you want to delete this product?")) {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('eb_shop_products', JSON.stringify(products));
+                renderProducts(products);
+                renderAdminProductsList();
+            }
+        }
 
         // Init App
         applyLanguage();
