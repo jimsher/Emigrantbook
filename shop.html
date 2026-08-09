@@ -1,58 +1,57 @@
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ონლაინ შოპინგი | Emigrantbook</title>
+    <title>Online Shop | Emigrantbook</title>
 
-    <!-- Google Fonts & Font Awesome Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Stripe SDK -->
-    <script src="https://js.stripe.com/v3/"></script>
 
     <style>
-        /* Emigrantbook-ის ძირითადი ფერები და ცვლადები */
         :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #0f172a;
-            --surface-color: #1e293b;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
+            --bg-main: #0b0f19;
+            --surface: #151c2c;
+            --surface-hover: #1e293b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --accent: #10b981;
+            --text: #f8fafc;
             --text-muted: #94a3b8;
-            --border-color: #334155;
-            --accent-color: #10b981;
-            --radius: 14px;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            --border: rgba(255, 255, 255, 0.08);
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.5);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg-main);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* Header & Navigation */
+        /* Header Navigation */
         header {
-            background: var(--surface-color);
+            background: rgba(21, 28, 44, 0.85);
+            backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
         }
 
         .nav-container {
-            max-width: 1200px;
+            max-width: 1240px;
             margin: 0 auto;
             padding: 1rem 1.5rem;
             display: flex;
@@ -63,76 +62,86 @@
         .nav-left {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.25rem;
         }
 
         .burger-trigger {
-            background: transparent;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.4rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.2rem;
             cursor: pointer;
-            padding: 0.4rem;
-            border-radius: 8px;
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .burger-trigger:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
         }
 
         .logo {
             font-size: 1.4rem;
             font-weight: 700;
-            color: var(--text-color);
+            color: var(--text);
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: -0.5px;
         }
 
         .logo span {
-            color: var(--primary-color);
+            color: var(--primary);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .cart-icon-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.6rem 1.2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.65rem 1.25rem;
             border-radius: 30px;
             cursor: pointer;
-            position: relative;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
         .cart-icon-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         .cart-badge {
-            background: var(--primary-color);
-            color: white;
+            background: white;
+            color: var(--primary);
             font-size: 0.75rem;
-            padding: 2px 7px;
-            border-radius: 50%;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
         }
 
-        /* Burger Menu Sidebar */
+        /* Sidebar / Burger Menu */
         .burger-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
             z-index: 999;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
 
         .burger-overlay.active {
@@ -144,17 +153,15 @@
             position: fixed;
             top: 0;
             left: -320px;
-            width: 100%;
-            max-width: 300px;
+            width: 300px;
             height: 100%;
-            background: var(--surface-color);
+            background: var(--surface);
             z-index: 1000;
-            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
-            transition: left 0.3s ease;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             padding: 1.5rem;
-            border-right: 1px solid var(--border-color);
+            border-right: 1px solid var(--border);
         }
 
         .burger-sidebar.active {
@@ -167,37 +174,29 @@
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
         }
 
-        .burger-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.3rem;
-            cursor: pointer;
-        }
-
-        /* Оригинальная структура მენიუს ღილაკის */
+        /* ორიგინალი ღილაკის სტილი */
         .menu-item-row {
             width: 100%;
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.85rem 1rem;
-            border-radius: 12px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.9rem 1.1rem;
+            border-radius: var(--radius-md);
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             margin-bottom: 0.75rem;
             font-size: 0.95rem;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .menu-item-row:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
+            background: var(--primary);
+            border-color: var(--primary);
         }
 
         .menu-item-left {
@@ -216,12 +215,12 @@
         }
 
         .menu-item-row:hover .menu-item-arrow {
-            color: #ffffff;
+            color: white;
         }
 
         /* Main Section */
         main {
-            max-width: 1200px;
+            max-width: 1240px;
             margin: 2rem auto;
             padding: 0 1.5rem;
             flex: 1;
@@ -245,13 +244,18 @@
 
         .search-box input {
             width: 100%;
-            padding: 0.82rem 1rem 0.82rem 2.6rem;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             outline: none;
             font-size: 0.95rem;
-            background: var(--surface-color);
-            color: var(--text-color);
+            background: var(--surface);
+            color: var(--text);
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
         }
 
         .search-box i {
@@ -266,41 +270,41 @@
             display: flex;
             gap: 0.5rem;
             overflow-x: auto;
-            padding-bottom: 5px;
+            padding-bottom: 4px;
         }
 
         .tag-btn {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.55rem 1.1rem;
-            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
             cursor: pointer;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
             white-space: nowrap;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .tag-btn.active, .tag-btn:hover {
-            background: var(--primary-color);
+            background: var(--primary);
             color: white;
-            border-color: var(--primary-color);
+            border-color: var(--primary);
         }
 
         /* Products Grid */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 1.75rem;
         }
 
         .product-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s, box-shadow 0.3s;
             display: flex;
             flex-direction: column;
         }
@@ -308,13 +312,14 @@
         .product-card:hover {
             transform: translateY(-6px);
             box-shadow: var(--shadow);
+            border-color: rgba(99, 102, 241, 0.3);
         }
 
         .product-img-wrapper {
             width: 100%;
-            height: 210px;
+            height: 220px;
             overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0,0,0,0.3);
             position: relative;
         }
 
@@ -322,11 +327,11 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
+            transition: transform 0.4s;
         }
 
         .product-card:hover .product-img-wrapper img {
-            transform: scale(1.06);
+            transform: scale(1.08);
         }
 
         .product-info {
@@ -339,42 +344,42 @@
         .product-category {
             font-size: 0.75rem;
             text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 0.3rem;
+            color: var(--primary);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
         }
 
         .product-title {
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             cursor: pointer;
-            color: var(--text-color);
-            transition: color 0.2s;
+            color: var(--text);
         }
 
         .product-title:hover {
-            color: var(--primary-color);
+            color: var(--primary);
         }
 
         .product-price {
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             font-weight: 700;
-            color: var(--accent-color);
+            color: var(--accent);
             margin-top: auto;
             margin-bottom: 1rem;
         }
 
         .add-to-cart-btn {
             width: 100%;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease;
+            transition: all 0.2s;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -382,22 +387,21 @@
         }
 
         .add-to-cart-btn:hover {
-            background: var(--primary-hover);
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
         }
 
         /* Cart Drawer */
         .cart-drawer-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
             z-index: 1000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
 
         .cart-drawer-overlay.active {
@@ -408,17 +412,17 @@
         .cart-drawer {
             position: fixed;
             top: 0;
-            right: -420px;
+            right: -440px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             height: 100%;
-            background: var(--surface-color);
+            background: var(--surface);
             z-index: 1001;
-            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
-            transition: right 0.3s ease;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
-            border-left: 1px solid var(--border-color);
+            border-left: 1px solid var(--border);
         }
 
         .cart-drawer.active {
@@ -426,17 +430,17 @@
         }
 
         .cart-header {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .close-cart {
+        .close-btn {
             background: none;
             border: none;
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             cursor: pointer;
             color: var(--text-muted);
         }
@@ -444,23 +448,23 @@
         .cart-body {
             flex: 1;
             overflow-y: auto;
-            padding: 1.25rem;
+            padding: 1.5rem;
         }
 
         .cart-item {
             display: flex;
             gap: 1rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1rem;
             align-items: center;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.75rem;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
+            background: rgba(255,255,255,0.02);
+            padding: 0.85rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
         }
 
         .cart-item img {
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             object-fit: cover;
             border-radius: 8px;
         }
@@ -470,79 +474,84 @@
         }
 
         .cart-item-title {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
             margin-bottom: 4px;
         }
 
         .cart-item-price {
-            font-size: 0.85rem;
-            color: var(--accent-color);
-            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 700;
         }
 
         .cart-item-qty {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             margin-top: 6px;
         }
 
         .qty-btn {
-            background: var(--border-color);
-            color: var(--text-color);
-            border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
+            background: var(--surface-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
         }
 
         .cart-footer {
-            padding: 1.25rem;
-            border-top: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.2);
         }
 
         .total-row {
             display: flex;
             justify-content: space-between;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
         }
 
         .checkout-btn {
             width: 100%;
-            background: var(--accent-color);
+            background: var(--accent);
             color: white;
             border: none;
-            padding: 0.9rem;
-            border-radius: 10px;
-            font-weight: 600;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-weight: 700;
             cursor: pointer;
             font-size: 1rem;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
         }
 
         .checkout-btn:hover {
             opacity: 0.9;
         }
 
-        /* Product Detail Modal */
+        /* Generic Modals (Product Details & Checkout) */
         .modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1002;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
+            padding: 1rem;
         }
 
         .modal-overlay.active {
@@ -550,50 +559,89 @@
             visibility: visible;
         }
 
-        .modal-content {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            width: 90%;
-            max-width: 700px;
-            border-radius: var(--radius);
+        .modal-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 100%;
+            max-width: 650px;
+            border-radius: var(--radius-lg);
             padding: 2rem;
             position: relative;
-            display: flex;
-            gap: 2rem;
-            flex-wrap: wrap;
             box-shadow: var(--shadow);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
+        /* Checkout Form Styling */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--text-muted);
         }
 
-        .modal-img {
-            flex: 1;
-            min-width: 250px;
-            height: 280px;
-            object-fit: cover;
-            border-radius: 12px;
+        .form-group input, .form-group select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            padding: 0.8rem 1rem;
+            border-radius: var(--radius-md);
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
         }
 
-        .modal-details {
-            flex: 1;
-            min-width: 250px;
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        /* Receipt View */
+        .receipt-card {
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .receipt-icon {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .receipt-details {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .receipt-row {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
         }
 
         @media(max-width: 600px) {
-            .modal-content { flex-direction: column; padding: 1.5rem; }
-            .modal-img { height: 200px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: span 1; }
         }
     </style>
 </head>
@@ -606,15 +654,15 @@
                 <button class="burger-trigger" id="openBurgerBtn" aria-label="Menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <a href="#" class="logo">
-                    Emigrant<span>book</span>
-                </a>
+                <a href="#" class="logo">Emigrant<span>book</span></a>
             </div>
-            <button class="cart-icon-btn" id="openCartBtn">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span>კალათა</span>
-                <span class="cart-badge" id="cartBadge">0</span>
-            </button>
+            <div class="nav-right">
+                <button class="cart-icon-btn" id="openCartBtn">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span data-i18n="cart">Cart</span>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -622,15 +670,15 @@
     <div class="burger-overlay" id="burgerOverlay"></div>
     <aside class="burger-sidebar" id="burgerSidebar">
         <div class="burger-header">
-            <h3 style="font-size: 1.1rem; font-weight: 600;">მენიუ</h3>
-            <button class="burger-close" id="closeBurgerBtn"><i class="fa-solid fa-xmark"></i></button>
+            <h3 data-i18n="menu" style="font-size: 1.1rem; font-weight: 600;">Menu</h3>
+            <button class="close-btn" id="closeBurgerBtn"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <!-- ორიგინალი ღილაკების სტრუქტურა -->
+        <!-- ორიგინალი ღილაკის ზუსტი სტრუქტურა -->
         <button class="menu-item-row" onclick="window.location.href='index.html'">
             <div class="menu-item-left">
                 <span class="menu-item-icon">🏠</span>
-                <span>მთავარი გვერდი</span>
+                <span data-i18n="nav_home">Home Page</span>
             </div>
             <span class="menu-item-arrow">›</span>
         </button>
@@ -638,7 +686,7 @@
         <button class="menu-item-row" onclick="window.location.href='shop.html'">
             <div class="menu-item-left">
                 <span class="menu-item-icon">🛍️</span>
-                <span>ონლაინ შოპინგი</span>
+                <span data-i18n="nav_shop">Online Shopping</span>
             </div>
             <span class="menu-item-arrow">›</span>
         </button>
@@ -657,190 +705,270 @@
         <div class="shop-controls">
             <div class="search-box">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="მოძებნეთ პროდუქტი...">
+                <input type="text" id="searchInput" placeholder="Search products..." data-i18n-placeholder="search_placeholder">
             </div>
             <div class="filter-tags">
-                <button class="tag-btn active" data-category="all">ყველა</button>
-                <button class="tag-btn" data-category="electronics">ტექნიკა</button>
-                <button class="tag-btn" data-category="fashion">ტანსაცმელი</button>
-                <button class="tag-btn" data-category="accessories">აქსესუარები</button>
+                <button class="tag-btn active" data-category="all" data-i18n="cat_all">All</button>
+                <button class="tag-btn" data-category="electronics" data-i18n="cat_electronics">Electronics</button>
+                <button class="tag-btn" data-category="fashion" data-i18n="cat_fashion">Fashion</button>
+                <button class="tag-btn" data-category="accessories" data-i18n="cat_accessories">Accessories</button>
             </div>
         </div>
 
-        <div class="products-grid" id="productsGrid">
-            <!-- ჩაიტვირთება დინამიურად JS-ის საშუალებით -->
-        </div>
+        <div class="products-grid" id="productsGrid"></div>
     </main>
 
     <!-- Cart Drawer -->
     <div class="cart-drawer-overlay" id="cartOverlay"></div>
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-header">
-            <h3>თქვენი კალათა</h3>
-            <button class="close-cart" id="closeCartBtn"><i class="fa-solid fa-xmark"></i></button>
+            <h3 data-i18n="your_cart">Your Cart</h3>
+            <button class="close-btn" id="closeCartBtn"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="cart-body" id="cartItemsContainer">
-            <!-- კალათის ელემენტები -->
-        </div>
+        <div class="cart-body" id="cartItemsContainer"></div>
         <div class="cart-footer">
             <div class="total-row">
-                <span>სულ:</span>
+                <span data-i18n="total">Total:</span>
                 <span id="cartTotalSum">0.00 ₾</span>
             </div>
-            <button class="checkout-btn" id="checkoutBtn" onclick="processCheckout()">
-                <i class="fa-solid fa-credit-card"></i> ყიდვა / გადახდა
+            <button class="checkout-btn" onclick="openCheckoutModal()">
+                <i class="fa-solid fa-lock"></i> <span data-i18n="checkout_btn">Proceed to Checkout</span>
             </button>
         </div>
     </div>
 
-    <!-- Product Detail Modal -->
+    <!-- Product Detail View Modal -->
     <div class="modal-overlay" id="productModal">
-        <div class="modal-content">
-            <button class="modal-close" id="closeModalBtn"><i class="fa-solid fa-xmark"></i></button>
-            <img src="" id="modalImg" class="modal-img" alt="Product Image">
-            <div class="modal-details">
-                <h2 id="modalTitle" style="margin-bottom: 0.5rem; font-size: 1.3rem;"></h2>
+        <div class="modal-card" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <button class="close-btn" onclick="closeProductModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
+            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: var(--radius-md);" alt="">
+            <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column;">
+                <h2 id="modalTitle" style="margin-bottom: 0.5rem;"></h2>
                 <div id="modalCategory" class="product-category" style="margin-bottom: 1rem;"></div>
-                <p id="modalDescription" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;"></p>
+                <p id="modalDescription" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;"></p>
                 <div id="modalPrice" class="product-price"></div>
-                <button class="add-to-cart-btn" id="modalAddBtn" style="margin-top: auto;">
-                    <i class="fa-solid fa-cart-plus"></i> კალათაში დამატება
+                <button class="add-to-cart-btn" id="modalAddBtn" style="margin-top: auto; background: var(--primary); color: white;">
+                    <i class="fa-solid fa-cart-plus"></i> <span data-i18n="add_to_cart">Add to Cart</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real Checkout Payment Modal -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal-card">
+            <button class="close-btn" onclick="closeCheckoutModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
+            <h3 data-i18n="checkout_title" style="margin-bottom: 0.5rem;">Card Payment</h3>
+            <p data-i18n="checkout_subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Enter your card details to complete order</p>
+
+            <form id="paymentForm" onsubmit="handlePaymentSubmit(event)">
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label data-i18n="full_name">Full Name</label>
+                        <input type="text" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group full">
+                        <label data-i18n="address">Shipping Address</label>
+                        <input type="text" required placeholder="123 Main Street">
+                    </div>
+                    <div class="form-group full">
+                        <label data-i18n="card_number">Card Number</label>
+                        <input type="text" id="cardNumInput" required placeholder="4532 •••• •••• 8901" maxlength="19" oninput="formatCardNumber(this)">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="card_expiry">Expiry (MM/YY)</label>
+                        <input type="text" id="cardExpInput" required placeholder="12/28" maxlength="5" oninput="formatExpiry(this)">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="card_cvc">CVC/CVV</label>
+                        <input type="password" required placeholder="•••" maxlength="3">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span data-i18n="total_to_pay" style="font-size: 0.85rem; color: var(--text-muted);">Total Amount:</span>
+                        <div id="checkoutTotalSum" style="font-size: 1.3rem; font-weight: 700; color: var(--accent);">0.00 ₾</div>
+                    </div>
+                    <button type="submit" class="checkout-btn" id="paySubmitBtn" style="width: auto; padding: 0.8rem 2rem;">
+                        <i class="fa-solid fa-shield-halved"></i> <span data-i18n="pay_now">Pay Now</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt / Confirmation Modal -->
+    <div class="modal-overlay" id="receiptModal">
+        <div class="modal-card">
+            <div class="receipt-card">
+                <i class="fa-solid fa-circle-check receipt-icon"></i>
+                <h2 data-i18n="payment_success">Payment Successful!</h2>
+                <p data-i18n="order_processed" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem;">Your order has been received and is being processed.</p>
+
+                <div class="receipt-details">
+                    <div class="receipt-row">
+                        <span data-i18n="order_number">Order #:</span>
+                        <strong id="receiptOrderId">#EB-00000</strong>
+                    </div>
+                    <div class="receipt-row">
+                        <span data-i18n="paid_amount">Paid Amount:</span>
+                        <strong id="receiptAmount">0.00 ₾</strong>
+                    </div>
+                    <div class="receipt-row">
+                        <span data-i18n="status">Status:</span>
+                        <span style="color: var(--accent); font-weight: 700;" data-i18n="confirmed">Confirmed</span>
+                    </div>
+                </div>
+
+                <button class="checkout-btn" onclick="closeReceiptModal()" style="background: var(--surface-hover); border: 1px solid var(--border);">
+                    <span data-i18n="close">Close</span>
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. პროდუქტების მონაცემთა ბაზა ---
-        const products = [
-            {
-                id: 1,
-                title: "Wireless Headphones Pro",
-                category: "electronics",
-                price: 249.00,
-                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
-                description: "მაღალი ხარისხის უსადენო ყურსასმენები ხმის აქტიური ჩახშობის (ANC) ფუნქციით და 30 საათიანი ელემენტით."
+        // --- 1. Automatic Language Logic (Defaults to English) ---
+        const translations = {
+            en: {
+                cart: "Cart",
+                menu: "Menu",
+                nav_home: "Home Page",
+                nav_shop: "Online Shopping",
+                search_placeholder: "Search products...",
+                cat_all: "All",
+                cat_electronics: "Electronics",
+                cat_fashion: "Fashion",
+                cat_accessories: "Accessories",
+                your_cart: "Your Cart",
+                total: "Total:",
+                checkout_btn: "Proceed to Checkout",
+                add_to_cart: "Add to Cart",
+                checkout_title: "Card Payment",
+                checkout_subtitle: "Enter your card details to complete order",
+                full_name: "Full Name",
+                address: "Shipping Address",
+                card_number: "Card Number",
+                card_expiry: "Expiry (MM/YY)",
+                card_cvc: "CVC/CVV",
+                total_to_pay: "Total Amount:",
+                pay_now: "Pay Now",
+                payment_success: "Payment Successful!",
+                order_processed: "Your order has been received and is being processed.",
+                order_number: "Order #:",
+                paid_amount: "Paid Amount:",
+                status: "Status:",
+                confirmed: "Confirmed",
+                close: "Close",
+                empty_cart: "Your cart is empty"
             },
-            {
-                id: 2,
-                title: "Smart Watch Series 7",
-                category: "electronics",
-                price: 399.00,
-                image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
-                description: "თანამედროვე ჭკვიანი საათი ჯანმრთელობისა და აქტივობების მონიტორინგის სრული სისტემით."
-            },
-            {
-                id: 3,
-                title: "Classic Leather Backpack",
-                category: "accessories",
-                price: 129.00,
-                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80",
-                description: "ნატურალური ტყავისგან დამზადებული მოხერხებული და ტევადი ზურგჩანთა ყოველდღიური გამოყენებისთვის."
-            },
-            {
-                id: 4,
-                title: "Minimalist Cotton T-Shirt",
-                category: "fashion",
-                price: 45.00,
-                image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&q=80",
-                description: "100%-ით ორგანული ბამბისგან დამზადებული პრემიუმ ხარისხის მაისური."
-            },
-            {
-                id: 5,
-                title: "Designer Sunglasses",
-                category: "accessories",
-                price: 89.00,
-                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80",
-                description: "UV400 დაცვით აღჭურვილი სტილური მზის სათვალე თანამედროვე დიზაინით."
+            ka: {
+                cart: "კალათა",
+                menu: "მენიუ",
+                nav_home: "მთავარი გვერდი",
+                nav_shop: "ონლაინ შოპინგი",
+                search_placeholder: "მოძებნეთ პროდუქტი...",
+                cat_all: "ყველა",
+                cat_electronics: "ტექნიკა",
+                cat_fashion: "ტანსაცმელი",
+                cat_accessories: "აქსესუარები",
+                your_cart: "თქვენი კალათა",
+                total: "სულ:",
+                checkout_btn: "გადახდაზე გადასვლა",
+                add_to_cart: "კალათაში დამატება",
+                checkout_title: "ბარათით გადახდა",
+                checkout_subtitle: "შეიყვანეთ მონაცემები შეკვეთის დასასრულებლად",
+                full_name: "სრული სახელი",
+                address: "მიწოდების მისამართი",
+                card_number: "ბარათის ნომერი",
+                card_expiry: "ვადა (MM/YY)",
+                card_cvc: "CVC/CVV",
+                total_to_pay: "გადასახდელი თანხა:",
+                pay_now: "გადახდა",
+                payment_success: "გადახდა წარმატებულია!",
+                order_processed: "თქვენი შეკვეთა მიღებულია და იგზავნება დამუშავებაზე.",
+                order_number: "შეკვეთის #:",
+                paid_amount: "გადახდილი თანხა:",
+                status: "სტატუსი:",
+                confirmed: "დადასტურებულია",
+                close: "დახურვა",
+                empty_cart: "კალათა ცარიელია"
             }
+        };
+
+        // ავტომატურად იღებს მთავარ საიტზე არჩეულ ენას (localStorage-იდან). თუ არ წერია, ნაგულისხმევად არის 'en' (ინგლისური)
+        let currentLang = localStorage.getItem('lang') || 
+                          localStorage.getItem('language') || 
+                          localStorage.getItem('selectedLanguage') || 
+                          localStorage.getItem('emigrantbook_lang') || 'en';
+
+        function applyLanguage() {
+            document.documentElement.lang = currentLang;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang] && translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLang] && translations[currentLang][key]) {
+                    el.placeholder = translations[currentLang][key];
+                }
+            });
+        }
+
+        // --- 2. Database & State ---
+        const products = [
+            { id: 1, title: { en: "Wireless Headphones Pro", ka: "Wireless Headphones Pro" }, category: "electronics", price: 249.00, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", description: { en: "High quality wireless headphones with active noise cancellation.", ka: "მაღალი ხარისხის უსადენო ყურსასმენები ANC ფუნქციით." } },
+            { id: 2, title: { en: "Smart Watch Series 7", ka: "Smart Watch Series 7" }, category: "electronics", price: 399.00, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", description: { en: "Smart watch with full health and fitness tracking system.", ka: "ჭკვიანი საათი ჯანმრთელობის მონიტორინგის სისტემით." } },
+            { id: 3, title: { en: "Leather Backpack", ka: "Leather Backpack" }, category: "accessories", price: 129.00, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", description: { en: "Genuine leather comfortable and spacious backpack.", ka: "ნატურალური ტყავის მოხერხებული ზურგჩანთა." } },
+            { id: 4, title: { en: "Organic Cotton T-Shirt", ka: "Organic Cotton T-Shirt" }, category: "fashion", price: 45.00, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&q=80", description: { en: "100% organic cotton premium minimalist t-shirt.", ka: "100% ორგანული ბამბის პრემიუმ მაისური." } },
+            { id: 5, title: { en: "Designer Sunglasses", ka: "Designer Sunglasses" }, category: "accessories", price: 89.00, image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", description: { en: "Stylish sunglasses equipped with UV400 protection.", ka: "UV400 დაცვით აღჭურვილი მზის სათვალე." } }
         ];
 
-        // --- 2. State & DOM Elements ---
         let cart = JSON.parse(localStorage.getItem('emigrantbook_cart')) || [];
 
+        // DOM References
         const productsGrid = document.getElementById('productsGrid');
-        const searchInput = document.getElementById('searchInput');
         const cartDrawer = document.getElementById('cartDrawer');
         const cartOverlay = document.getElementById('cartOverlay');
-        const openCartBtn = document.getElementById('openCartBtn');
-        const closeCartBtn = document.getElementById('closeCartBtn');
         const cartItemsContainer = document.getElementById('cartItemsContainer');
         const cartBadge = document.getElementById('cartBadge');
         const cartTotalSum = document.getElementById('cartTotalSum');
-        const productModal = document.getElementById('productModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        // Burger Elements
-        const openBurgerBtn = document.getElementById('openBurgerBtn');
-        const closeBurgerBtn = document.getElementById('closeBurgerBtn');
         const burgerSidebar = document.getElementById('burgerSidebar');
         const burgerOverlay = document.getElementById('burgerOverlay');
 
-        // --- 3. Burger Navigation Control ---
-        function toggleBurger(open) {
-            if(open) {
-                burgerSidebar.classList.add('active');
-                burgerOverlay.classList.add('active');
-            } else {
-                burgerSidebar.classList.remove('active');
-                burgerOverlay.classList.remove('active');
-            }
-        }
-
-        openBurgerBtn.addEventListener('click', () => toggleBurger(true));
-        closeBurgerBtn.addEventListener('click', () => toggleBurger(false));
-        burgerOverlay.addEventListener('click', () => toggleBurger(false));
-
-        // --- 4. Render Products ---
+        // --- 3. Render Functions ---
         function renderProducts(items) {
-            productsGrid.innerHTML = items.map(product => `
+            const lang = translations[currentLang] ? currentLang : 'en';
+            productsGrid.innerHTML = items.map(p => `
                 <div class="product-card">
                     <div class="product-img-wrapper">
-                        <img src="${product.image}" alt="${product.title}" loading="lazy">
+                        <img src="${p.image}" alt="${p.title[lang] || p.title.en}">
                     </div>
                     <div class="product-info">
-                        <span class="product-category">${product.category}</span>
-                        <h3 class="product-title" onclick="openModal(${product.id})">${product.title}</h3>
-                        <div class="product-price">${product.price.toFixed(2)} ₾</div>
-                        <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
-                            <i class="fa-solid fa-cart-plus"></i> დამატება
+                        <span class="product-category">${translations[lang]['cat_' + p.category] || p.category}</span>
+                        <h3 class="product-title" onclick="openProductModal(${p.id})">${p.title[lang] || p.title.en}</h3>
+                        <div class="product-price">${p.price.toFixed(2)} ₾</div>
+                        <button class="add-to-cart-btn" onclick="addToCart(${p.id})">
+                            <i class="fa-solid fa-cart-plus"></i> ${translations[lang].add_to_cart}
                         </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- 5. Search & Filters ---
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = products.filter(p => p.title.toLowerCase().includes(term));
-            renderProducts(filtered);
-        });
-
-        document.querySelectorAll('.tag-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-
-                const cat = e.target.dataset.category;
-                if(cat === 'all') {
-                    renderProducts(products);
-                } else {
-                    renderProducts(products.filter(p => p.category === cat));
-                }
-            });
-        });
-
-        // --- 6. Cart Management ---
+        // --- 4. Cart Operations ---
         function addToCart(id) {
-            const product = products.find(p => p.id === id);
-            const existing = cart.find(item => item.id === id);
-
-            if(existing) {
-                existing.qty++;
-            } else {
-                cart.push({ ...product, qty: 1 });
-            }
+            const p = products.find(prod => prod.id === id);
+            const item = cart.find(i => i.id === id);
+            if(item) item.qty++;
+            else cart.push({ ...p, qty: 1 });
+            
             updateCartUI();
             toggleCart(true);
         }
@@ -849,104 +977,140 @@
             const item = cart.find(i => i.id === id);
             if(item) {
                 item.qty += delta;
-                if(item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
-                }
+                if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
             }
             updateCartUI();
         }
 
         function updateCartUI() {
+            const lang = translations[currentLang] ? currentLang : 'en';
             localStorage.setItem('emigrantbook_cart', JSON.stringify(cart));
-
-            const totalQty = cart.reduce((acc, item) => acc + item.qty, 0);
-            cartBadge.textContent = totalQty;
+            cartBadge.textContent = cart.reduce((acc, i) => acc + i.qty, 0);
 
             if(cart.length === 0) {
-                cartItemsContainer.innerHTML = `<p style="text-align:center; color: var(--text-muted); margin-top: 2rem;">კალათა ცარიელია</p>`;
+                cartItemsContainer.innerHTML = `<p style="text-align:center; color: var(--text-muted); margin-top: 2rem;">${translations[lang].empty_cart}</p>`;
             } else {
-                cartItemsContainer.innerHTML = cart.map(item => `
+                cartItemsContainer.innerHTML = cart.map(i => `
                     <div class="cart-item">
-                        <img src="${item.image}" alt="${item.title}">
+                        <img src="${i.image}" alt="">
                         <div class="cart-item-details">
-                            <div class="cart-item-title">${item.title}</div>
-                            <div class="cart-item-price">${item.price.toFixed(2)} ₾</div>
+                            <div class="cart-item-title">${i.title[lang] || i.title.en}</div>
+                            <div class="cart-item-price">${i.price.toFixed(2)} ₾</div>
                             <div class="cart-item-qty">
-                                <button class="qty-btn" onclick="updateCartQty(${item.id}, -1)">-</button>
-                                <span>${item.qty}</span>
-                                <button class="qty-btn" onclick="updateCartQty(${item.id}, 1)">+</button>
+                                <button class="qty-btn" onclick="updateCartQty(${i.id}, -1)">-</button>
+                                <span>${i.qty}</span>
+                                <button class="qty-btn" onclick="updateCartQty(${i.id}, 1)">+</button>
                             </div>
                         </div>
                     </div>
                 `).join('');
             }
 
-            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
             cartTotalSum.textContent = `${total.toFixed(2)} ₾`;
+            document.getElementById('checkoutTotalSum').textContent = `${total.toFixed(2)} ₾`;
         }
 
         function toggleCart(open) {
-            if(open) {
-                cartDrawer.classList.add('active');
-                cartOverlay.classList.add('active');
-            } else {
-                cartDrawer.classList.remove('active');
-                cartOverlay.classList.remove('active');
-            }
+            cartDrawer.classList.toggle('active', open);
+            cartOverlay.classList.toggle('active', open);
         }
 
-        openCartBtn.addEventListener('click', () => toggleCart(true));
-        closeCartBtn.addEventListener('click', () => toggleCart(false));
+        document.getElementById('openCartBtn').addEventListener('click', () => toggleCart(true));
+        document.getElementById('closeCartBtn').addEventListener('click', () => toggleCart(false));
         cartOverlay.addEventListener('click', () => toggleCart(false));
 
-        // --- 7. Modal Controls ---
-        function openModal(id) {
-            const product = products.find(p => p.id === id);
-            document.getElementById('modalImg').src = product.image;
-            document.getElementById('modalTitle').textContent = product.title;
-            document.getElementById('modalCategory').textContent = product.category;
-            document.getElementById('modalDescription').textContent = product.description;
-            document.getElementById('modalPrice').textContent = `${product.price.toFixed(2)} ₾`;
-            document.getElementById('modalAddBtn').onclick = () => {
-                addToCart(product.id);
-                closeModal();
-            };
-            productModal.classList.add('active');
+        // --- 5. Burger Controls ---
+        document.getElementById('openBurgerBtn').addEventListener('click', () => {
+            burgerSidebar.classList.add('active');
+            burgerOverlay.classList.add('active');
+        });
+        document.getElementById('closeBurgerBtn').addEventListener('click', () => {
+            burgerSidebar.classList.remove('active');
+            burgerOverlay.classList.remove('active');
+        });
+        burgerOverlay.addEventListener('click', () => {
+            burgerSidebar.classList.remove('active');
+            burgerOverlay.classList.remove('active');
+        });
+
+        // --- 6. Search & Filter ---
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const lang = translations[currentLang] ? currentLang : 'en';
+            const term = e.target.value.toLowerCase();
+            renderProducts(products.filter(p => (p.title[lang] || p.title.en).toLowerCase().includes(term)));
+        });
+
+        document.querySelectorAll('.tag-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                const cat = e.target.dataset.category;
+                renderProducts(cat === 'all' ? products : products.filter(p => p.category === cat));
+            });
+        });
+
+        // --- 7. Product Modal ---
+        function openProductModal(id) {
+            const lang = translations[currentLang] ? currentLang : 'en';
+            const p = products.find(item => item.id === id);
+            document.getElementById('modalImg').src = p.image;
+            document.getElementById('modalTitle').textContent = p.title[lang] || p.title.en;
+            document.getElementById('modalCategory').textContent = translations[lang]['cat_' + p.category];
+            document.getElementById('modalDescription').textContent = p.description[lang] || p.description.en;
+            document.getElementById('modalPrice').textContent = `${p.price.toFixed(2)} ₾`;
+            document.getElementById('modalAddBtn').onclick = () => { addToCart(p.id); closeProductModal(); };
+            document.getElementById('productModal').classList.add('active');
+        }
+        function closeProductModal() { document.getElementById('productModal').classList.remove('active'); }
+
+        // --- 8. Checkout & Payment Handling ---
+        function openCheckoutModal() {
+            const lang = translations[currentLang] ? currentLang : 'en';
+            if(cart.length === 0) return alert(translations[lang].empty_cart);
+            toggleCart(false);
+            document.getElementById('checkoutModal').classList.add('active');
+        }
+        function closeCheckoutModal() { document.getElementById('checkoutModal').classList.remove('active'); }
+
+        function formatCardNumber(input) {
+            let val = input.value.replace(/\D/g, '');
+            input.value = val.replace(/(.{4})/g, '$1 ').trim();
         }
 
-        function closeModal() {
-            productModal.classList.remove('active');
+        function formatExpiry(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length >= 2) input.value = val.substring(0, 2) + '/' + val.substring(2, 4);
+            else input.value = val;
         }
 
-        closeModalBtn.addEventListener('click', closeModal);
+        function handlePaymentSubmit(e) {
+            e.preventDefault();
+            const lang = translations[currentLang] ? currentLang : 'en';
+            const btn = document.getElementById('paySubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
 
-        // --- 8. Checkout Process Script ---
-        async function processCheckout() {
-            if(cart.length === 0) {
-                alert("თქვენი კალათა ცარიელია!");
-                return;
-            }
+            setTimeout(() => {
+                const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+                document.getElementById('receiptOrderId').textContent = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
+                document.getElementById('receiptAmount').textContent = `${total.toFixed(2)} ₾`;
 
-            const checkoutBtn = document.getElementById('checkoutBtn');
-            checkoutBtn.disabled = true;
-            checkoutBtn.textContent = "მუშავდება...";
+                cart = [];
+                updateCartUI();
 
-            try {
-                setTimeout(() => {
-                    alert("გადახდა წარმატებით განხორციელდა! გმადლობთ შენაძენისთვის.");
-                    cart = [];
-                    updateCartUI();
-                    toggleCart(false);
-                    checkoutBtn.disabled = false;
-                    checkoutBtn.innerHTML = `<i class="fa-solid fa-credit-card"></i> ყიდვა / გადახდა`;
-                }, 1500);
-            } catch (err) {
-                alert("შეცდომა გადახდისას");
-                checkoutBtn.disabled = false;
-            }
+                closeCheckoutModal();
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${translations[lang].pay_now}`;
+                document.getElementById('paymentForm').reset();
+                document.getElementById('receiptModal').classList.add('active');
+            }, 1200);
         }
+
+        function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
 
         // Init
+        applyLanguage();
         renderProducts(products);
         updateCartUI();
     </script>
