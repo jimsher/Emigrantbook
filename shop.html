@@ -23,8 +23,8 @@
             --accent-red: #ef4444;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
-            --radius-xl: 20px;
-            --radius-lg: 14px;
+            --radius-xl: 0px;
+            --radius-lg: 0px;
             --radius-md: 10px;
             --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -48,7 +48,7 @@
             padding-top: 70px;
         }
 
-        /* Fixed Header - უმოძრავო ჰედერი ასქროლვისას */
+        /* Fixed Header - Full Edge Width */
         header {
             background: rgba(13, 19, 34, 0.95);
             backdrop-filter: blur(16px);
@@ -62,9 +62,9 @@
 
         .nav-container {
             width: 100%;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 1rem 1.5rem;
+            max-width: 100%;
+            margin: 0;
+            padding: 1rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -231,14 +231,13 @@
             color: white;
         }
 
-        /* Hero Banner */
+        /* Hero Banner - Full Edge */
         .hero-banner {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
-            border: 1px solid var(--surface-border);
-            border-radius: var(--radius-xl);
-            margin: 1.5rem auto;
-            max-width: 1280px;
-            padding: 2.5rem 2rem;
+            border-bottom: 1px solid var(--surface-border);
+            margin: 0 0 1.5rem 0;
+            width: 100%;
+            padding: 2.5rem 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -261,12 +260,12 @@
             font-size: 1rem;
         }
 
-        /* Controls Bar & Main Content */
+        /* Main Content - Completely Edge-to-Edge */
         main {
-            max-width: 1280px;
-            margin: 0 auto 3rem;
-            padding: 0 1.5rem;
             width: 100%;
+            max-width: 100%;
+            margin: 0 0 3rem 0;
+            padding: 0;
             flex: 1;
         }
 
@@ -276,7 +275,8 @@
             justify-content: space-between;
             align-items: center;
             gap: 1.25rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 0 1rem;
         }
 
         .search-box {
@@ -353,22 +353,26 @@
             border-color: var(--primary);
         }
 
-        /* Products Grid */
+        /* Products Grid - Touches Left and Right Boundaries */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.75rem;
+            gap: 1rem;
+            width: 100%;
         }
 
         .product-card {
             background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--surface-border);
+            border-radius: 0;
+            border: none;
+            border-bottom: 1px solid var(--surface-border);
+            border-top: 1px solid var(--surface-border);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             position: relative;
             transition: var(--transition);
+            width: 100%;
         }
 
         .product-card:hover {
@@ -400,22 +404,26 @@
             border-color: var(--accent-red);
         }
 
+        /* Image Fill Completely Touch Left & Right */
         .product-img-wrapper {
             width: 100%;
-            height: 230px;
+            height: 250px;
             overflow: hidden;
             background: #000;
             position: relative;
+            margin: 0;
+            padding: 0;
         }
 
         .product-img-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
         .product-info {
-            padding: 1.35rem;
+            padding: 1.25rem 1rem;
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -717,7 +725,7 @@
             color: var(--text-main);
             width: 100%;
             max-width: 680px;
-            border-radius: var(--radius-xl);
+            border-radius: 16px;
             padding: 2.25rem;
             position: relative;
             box-shadow: var(--shadow-card);
@@ -793,6 +801,7 @@
         }
 
         @media(max-width: 650px) {
+            .products-grid { grid-template-columns: 1fr; gap: 0; }
             .hero-banner { flex-direction: column; text-align: center; }
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
@@ -944,7 +953,7 @@
     <div class="modal-overlay" id="productModal">
         <div class="modal-card" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
             <button class="close-btn" onclick="closeProductModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: var(--radius-lg);" alt="">
+            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: 12px;" alt="">
             <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column;">
                 <h2 id="modalTitle" style="margin-bottom: 0.5rem; font-size: 1.4rem;"></h2>
                 <div id="modalCategory" class="product-category" style="margin-bottom: 1rem;"></div>
