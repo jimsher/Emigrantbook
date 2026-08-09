@@ -110,41 +110,22 @@
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
-        .action-icon-btn {
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            width: 44px;
-            height: 44px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            transition: var(--transition);
-        }
-
-        .action-icon-btn:hover {
-            border-color: var(--primary);
-            background: var(--bg-card-hover);
-        }
-
+        /* Compact Header Cart Button */
         .cart-trigger-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 0.65rem 1.4rem;
+            padding: 0.65rem 1rem;
             border-radius: 30px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 1rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: var(--transition);
             box-shadow: var(--shadow-glow);
         }
@@ -159,7 +140,7 @@
             color: var(--primary);
             font-size: 0.75rem;
             font-weight: 800;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 20px;
         }
 
@@ -840,13 +821,9 @@
                 </a>
             </div>
             <div class="nav-right">
-                <button class="action-icon-btn" id="wishlistTriggerBtn" title="Wishlist">
-                    <i class="fa-solid fa-heart"></i>
-                    <span class="badge" id="wishlistBadge" style="position: absolute; top: -5px; right: -5px; background: var(--accent-red); color: white;">0</span>
-                </button>
-                <button class="cart-trigger-btn" id="openCartBtn">
+                <!-- მხოლოდ ხატულა და ბეჯი ადგილის დასაზოგად -->
+                <button class="cart-trigger-btn" id="openCartBtn" title="Cart">
                     <i class="fa-solid fa-bag-shopping"></i>
-                    <span data-i18n="cart">Cart</span>
                     <span class="badge" id="cartBadge">0</span>
                 </button>
             </div>
@@ -861,7 +838,6 @@
             <button class="close-btn" id="closeBurgerBtn"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <!-- ორიგინალი ღილაკის ზუსტი სტრუქტურა -->
         <button class="menu-item-row" onclick="window.location.href='index.html'">
             <div class="menu-item-left">
                 <span class="menu-item-icon">🏠</span>
@@ -875,6 +851,16 @@
                 <span class="menu-item-icon">🛍️</span>
                 <span data-i18n="nav_shop">Online Shopping</span>
             </div>
+            <span class="menu-item-arrow">›</span>
+        </button>
+
+        <!-- გული/ფავორიტები გადატანილი ბურგერ მენიუში -->
+        <button class="menu-item-row" onclick="openWishlistModal()">
+            <div class="menu-item-left">
+                <span class="menu-item-icon">❤️</span>
+                <span data-i18n="nav_wishlist">Wishlist</span>
+            </div>
+            <span class="badge" id="menuWishlistBadge" style="background: var(--accent-red); color: white; margin-left: auto; margin-right: 8px;">0</span>
             <span class="menu-item-arrow">›</span>
         </button>
 
@@ -959,7 +945,7 @@
     <div class="modal-overlay" id="wishlistModal">
         <div class="modal-card">
             <button class="close-btn" onclick="closeWishlistModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <h3 style="margin-bottom: 1rem; font-weight: 800;">Saved Wishlist</h3>
+            <h3 style="margin-bottom: 1rem; font-weight: 800;" data-i18n="nav_wishlist">Wishlist</h3>
             <div id="wishlistItemsContainer"></div>
         </div>
     </div>
@@ -1059,7 +1045,7 @@
         // Automatic Multi-language logic
         const translations = {
             en: {
-                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping",
+                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist",
                 hero_title: "Official Online Store", hero_subtitle: "Explore exclusive books, tech gadgets, and official merchandise.",
                 search_placeholder: "Search products...", sort_default: "Sort: Default", sort_low_high: "Price: Low to High", sort_high_low: "Price: High to Low",
                 cat_all: "All", cat_books: "Books", cat_electronics: "Electronics", cat_merch: "Merchandise",
@@ -1067,10 +1053,10 @@
                 checkout_title: "Card Payment", checkout_subtitle: "Enter shipping and credit card details to finalize order.",
                 full_name: "Full Name", address: "Shipping Address", card_number: "Card Number", card_expiry: "Expiry (MM/YY)", card_cvc: "CVC/CVV",
                 total_to_pay: "Total to Pay:", pay_now: "Pay Now", payment_success: "Payment Successful!", order_processed: "Your order has been verified and processed successfully.",
-                order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty"
+                order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty", empty_wishlist: "No saved items in wishlist."
             },
             ka: {
-                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი",
+                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები",
                 hero_title: "ოფიციალური ონლაინ მაღაზია", hero_subtitle: "აღმოაჩინეთ ექსკლუზიური წიგნები, ტექნიკა და ოფიციალური აქსესუარები.",
                 search_placeholder: "მოძებნეთ პროდუქტი...", sort_default: "სორტირება: სტანდარტული", sort_low_high: "ფასი: ზრდადობით", sort_high_low: "ფასი: კლებადობით",
                 cat_all: "ყველა", cat_books: "წიგნები", cat_electronics: "ტექნიკა", cat_merch: "აქსესუარები",
@@ -1078,7 +1064,7 @@
                 checkout_title: "ბარათით გადახდა", checkout_subtitle: "შეიყვანეთ მონაცემები შეკვეთის დასასრულებლად.",
                 full_name: "სრული სახელი", address: "მიწოდების მისამართი", card_number: "ბარათის ნომერი", card_expiry: "ვადა (MM/YY)", card_cvc: "CVC/CVV",
                 total_to_pay: "გადასახდელი თანხა:", pay_now: "გადახდა", payment_success: "გადახდა წარმატებულია!", order_processed: "თქვენი შეკვეთა მიღებულია და იგზავნება დამუშავებაზე.",
-                order_number: "შეკვეთის #:", paid_amount: "გადახდილი თანხა:", status: "სტატუსი:", confirmed: "დადასტურებულია", close: "დახურვა", empty_cart: "კალათა ცარიელია"
+                order_number: "შეკვეთის #:", paid_amount: "გადახდილი თანხა:", status: "სტატუსი:", confirmed: "დადასტურებულია", close: "დახურვა", empty_cart: "კალათა ცარიელია", empty_wishlist: "ფავორიტებში არაფერია შენახული."
             }
         };
 
@@ -1151,8 +1137,40 @@
                 wishlist.push(id);
             }
             localStorage.setItem('eb_shop_wishlist', JSON.stringify(wishlist));
-            document.getElementById('wishlistBadge').textContent = wishlist.length;
+            document.getElementById('menuWishlistBadge').textContent = wishlist.length;
             renderProducts(products);
+        }
+
+        function openWishlistModal() {
+            document.getElementById('burgerSidebar').classList.remove('active');
+            document.getElementById('burgerOverlay').classList.remove('active');
+            renderWishlistItems();
+            document.getElementById('wishlistModal').classList.add('active');
+        }
+
+        function closeWishlistModal() {
+            document.getElementById('wishlistModal').classList.remove('active');
+        }
+
+        function renderWishlistItems() {
+            const container = document.getElementById('wishlistItemsContainer');
+            const lang = translations[currentLang] ? currentLang : 'en';
+            const wishProducts = products.filter(p => wishlist.includes(p.id));
+
+            if (wishProducts.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">${translations[lang].empty_wishlist}</p>`;
+            } else {
+                container.innerHTML = wishProducts.map(i => `
+                    <div class="cart-item">
+                        <img src="${i.image}" alt="">
+                        <div class="cart-item-details">
+                            <div class="cart-item-title">${i.title[lang] || i.title.en}</div>
+                            <div class="cart-item-price">${i.price.toFixed(2)} ₾</div>
+                        </div>
+                        <button class="close-btn" onclick="toggleWishlist(${i.id}); renderWishlistItems();" style="color: var(--accent-red);" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            }
         }
 
         // Cart Control
@@ -1335,7 +1353,7 @@
         applyLanguage();
         renderProducts(products);
         updateCartUI();
-        document.getElementById('wishlistBadge').textContent = wishlist.length;
+        document.getElementById('menuWishlistBadge').textContent = wishlist.length;
     </script>
 </body>
 </html>
