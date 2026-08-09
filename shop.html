@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Online Store | Emigrantbook</title>
 
     <!-- Google Fonts & Font Awesome Icons -->
@@ -27,7 +27,7 @@
             --radius-lg: 14px;
             --radius-md: 10px;
             --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            --transition: all 0.2s ease;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -35,6 +35,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
+            touch-action: manipulation;
         }
 
         body {
@@ -44,23 +45,25 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            padding-top: 70px;
         }
 
-        /* Header Navigation - Full Edge-to-Edge Width */
+        /* Fixed Header - უმოძრავო ჰედერი ასქროლვისას */
         header {
             background: rgba(13, 19, 34, 0.95);
             backdrop-filter: blur(16px);
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--surface-border);
+            left: 0;
             width: 100%;
+            z-index: 1000;
+            border-bottom: 1px solid var(--surface-border);
         }
 
         .nav-container {
             width: 100%;
-            max-width: 100%;
-            margin: 0;
+            max-width: 1280px;
+            margin: 0 auto;
             padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
@@ -148,7 +151,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
-            z-index: 999;
+            z-index: 1001;
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
@@ -166,8 +169,8 @@
             width: 300px;
             height: 100%;
             background: var(--bg-card);
-            z-index: 1000;
-            transition: left 0.3s ease;
+            z-index: 1002;
+            transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             padding: 1.5rem;
@@ -228,17 +231,20 @@
             color: white;
         }
 
-        /* Hero Banner - Full Edge-to-Edge */
+        /* Hero Banner */
         .hero-banner {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
-            border-bottom: 1px solid var(--surface-border);
-            width: 100%;
-            padding: 2.5rem 1.5rem;
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius-xl);
+            margin: 1.5rem auto;
+            max-width: 1280px;
+            padding: 2.5rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 2rem;
-            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
         }
 
         .hero-content h1 {
@@ -255,12 +261,12 @@
             font-size: 1rem;
         }
 
-        /* Main Section - Full Edge-to-Edge */
+        /* Controls Bar & Main Content */
         main {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 0 3rem 0;
+            max-width: 1280px;
+            margin: 0 auto 3rem;
             padding: 0 1.5rem;
+            width: 100%;
             flex: 1;
         }
 
@@ -351,8 +357,7 @@
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            width: 100%;
+            gap: 1.75rem;
         }
 
         .product-card {
@@ -363,6 +368,7 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            transition: var(--transition);
         }
 
         .product-card:hover {
@@ -394,10 +400,9 @@
             border-color: var(--accent-red);
         }
 
-        /* ამოღებულია Zoom ანიმაცია */
         .product-img-wrapper {
             width: 100%;
-            height: 240px;
+            height: 230px;
             overflow: hidden;
             background: #000;
             position: relative;
@@ -410,7 +415,7 @@
         }
 
         .product-info {
-            padding: 1.25rem;
+            padding: 1.35rem;
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -503,7 +508,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
-            z-index: 1000;
+            z-index: 1001;
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
@@ -522,9 +527,9 @@
             max-width: 430px;
             height: 100%;
             background: var(--bg-card);
-            z-index: 1001;
+            z-index: 1002;
             box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
-            transition: right 0.3s ease;
+            transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
             border-left: 1px solid var(--surface-border);
@@ -685,16 +690,16 @@
             opacity: 0.92;
         }
 
-        /* Generic Modal Overlay */
+        /* Modal Overlays & Cards */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1002;
+            z-index: 1005;
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
@@ -718,66 +723,6 @@
             box-shadow: var(--shadow-card);
             max-height: 90vh;
             overflow-y: auto;
-        }
-
-        /* FULL-SCREEN Product Page Modal (სრულეკრანიანი გვერდი პროდუქტზე დაჭერისას) */
-        #productModal .modal-card {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
-            border-radius: 0;
-            border: none;
-            background: var(--bg-body);
-            padding: 3rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3rem;
-            flex-wrap: wrap;
-            position: fixed;
-            inset: 0;
-            z-index: 1005;
-        }
-
-        .fullscreen-close-btn {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            padding: 0.8rem 1.4rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-        .fullscreen-close-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .fullscreen-product-img {
-            width: 100%;
-            max-width: 520px;
-            height: 480px;
-            object-fit: cover;
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--surface-border);
-        }
-
-        .fullscreen-product-details {
-            flex: 1;
-            min-width: 300px;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
         }
 
         /* Checkout Form Styling */
@@ -847,18 +792,16 @@
             margin-bottom: 0.6rem;
         }
 
-        @media(max-width: 768px) {
+        @media(max-width: 650px) {
             .hero-banner { flex-direction: column; text-align: center; }
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
-            #productModal .modal-card { padding: 4rem 1.5rem 2rem; justify-content: flex-start; }
-            .fullscreen-product-img { height: 300px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header Navigation - Full Edge-to-Edge -->
+    <!-- Header Navigation - უმოძრავოდ ფიქსირებული -->
     <header>
         <div class="nav-container">
             <div class="nav-left">
@@ -920,7 +863,7 @@
         </button>
     </aside>
 
-    <!-- Main Content - Full Edge-to-Edge -->
+    <!-- Main Content -->
     <main>
         <!-- Hero Banner -->
         <div class="hero-banner">
@@ -997,19 +940,17 @@
         </div>
     </div>
 
-    <!-- FULL SCREEN Product Page Modal (სრულეკრანიანი გვერდი) -->
+    <!-- Product Detail Modal -->
     <div class="modal-overlay" id="productModal">
-        <div class="modal-card">
-            <button class="fullscreen-close-btn" onclick="closeProductModal()">
-                <i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_shop">Back to Shop</span>
-            </button>
-            <img src="" id="modalImg" class="fullscreen-product-img" alt="">
-            <div class="fullscreen-product-details">
-                <div id="modalCategory" class="product-category" style="margin-bottom: 0.5rem; font-size: 0.9rem;"></div>
-                <h1 id="modalTitle" style="margin-bottom: 1rem; font-size: 2rem; font-weight: 800;"></h1>
-                <p id="modalDescription" style="color: var(--text-sub); font-size: 1.05rem; margin-bottom: 2rem; line-height: 1.7;"></p>
-                <div id="modalPrice" class="product-price" style="font-size: 2.2rem; margin-bottom: 2rem;"></div>
-                <button class="add-to-cart-btn" id="modalAddBtn" style="padding: 1.1rem; font-size: 1.1rem; max-width: 320px;">
+        <div class="modal-card" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+            <button class="close-btn" onclick="closeProductModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
+            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: var(--radius-lg);" alt="">
+            <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column;">
+                <h2 id="modalTitle" style="margin-bottom: 0.5rem; font-size: 1.4rem;"></h2>
+                <div id="modalCategory" class="product-category" style="margin-bottom: 1rem;"></div>
+                <p id="modalDescription" style="color: var(--text-sub); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;"></p>
+                <div id="modalPrice" class="product-price"></div>
+                <button class="add-to-cart-btn" id="modalAddBtn" style="margin-top: auto; padding: 0.9rem;">
                     <i class="fa-solid fa-cart-plus"></i> <span data-i18n="add_to_cart">Add to Cart</span>
                 </button>
             </div>
@@ -1094,7 +1035,7 @@
         // Automatic Multi-language logic
         const translations = {
             en: {
-                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", back_to_shop: "Back to Shop",
+                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist",
                 hero_title: "Official Online Store", hero_subtitle: "Explore exclusive books, tech gadgets, and official merchandise.",
                 search_placeholder: "Search products...", sort_default: "Sort: Default", sort_low_high: "Price: Low to High", sort_high_low: "Price: High to Low",
                 cat_all: "All", cat_books: "Books", cat_electronics: "Electronics", cat_merch: "Merchandise",
@@ -1105,7 +1046,7 @@
                 order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty", empty_wishlist: "No saved items in wishlist."
             },
             ka: {
-                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები", back_to_shop: "უკან დაბრუნება",
+                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები",
                 hero_title: "ოფიციალური ონლაინ მაღაზია", hero_subtitle: "აღმოაჩინეთ ექსკლუზიური წიგნები, ტექნიკა და ოფიციალური აქსესუარები.",
                 search_placeholder: "მოძებნეთ პროდუქტი...", sort_default: "სორტირება: სტანდარტული", sort_low_high: "ფასი: ზრდადობით", sort_high_low: "ფასი: კლებადობით",
                 cat_all: "ყველა", cat_books: "წიგნები", cat_electronics: "ტექნიკა", cat_merch: "აქსესუარები",
@@ -1336,7 +1277,7 @@
             renderProducts(sorted);
         }
 
-        // Full Screen Product Page Opener
+        // Product Modal Viewer
         function openProductModal(id) {
             const lang = translations[currentLang] ? currentLang : 'en';
             const p = products.find(item => item.id === id);
