@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
     <title>Online Store | Emigrantbook</title>
 
     <!-- Google Fonts & Font Awesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase 10.8.0 SDK (Emigrantbook Core) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
     <style>
         :root {
@@ -16,18 +22,16 @@
             --bg-card-hover: #141c30;
             --surface: #111827;
             --surface-border: rgba(255, 255, 255, 0.08);
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.35);
-            --primary-hover: #4f46e5;
+            --primary: #dcae36;
+            --primary-glow: rgba(220, 174, 54, 0.35);
+            --primary-hover: #c79c2e;
             --accent-green: #10b981;
             --accent-red: #ef4444;
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
-            --radius-xl: 0px;
-            --radius-lg: 0px;
             --radius-md: 10px;
             --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -48,7 +52,7 @@
             padding-top: 70px;
         }
 
-        /* Fixed Header - Full Edge Width */
+        /* Fixed Unmovable Header */
         header {
             background: rgba(13, 19, 34, 0.95);
             backdrop-filter: blur(16px);
@@ -119,12 +123,12 @@
 
         .cart-trigger-btn {
             background: var(--primary);
-            color: white;
+            color: #111;
             border: none;
             padding: 0.65rem 1rem;
             border-radius: 30px;
             cursor: pointer;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1rem;
             display: flex;
             align-items: center;
@@ -137,7 +141,7 @@
         }
 
         .badge {
-            background: white;
+            background: #111;
             color: var(--primary);
             font-size: 0.75rem;
             font-weight: 800;
@@ -209,6 +213,7 @@
 
         .menu-item-row:hover {
             background: var(--primary);
+            color: #111;
             border-color: var(--primary);
         }
 
@@ -228,12 +233,12 @@
         }
 
         .menu-item-row:hover .menu-item-arrow {
-            color: white;
+            color: #111;
         }
 
         /* Hero Banner - Full Edge */
         .hero-banner {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
+            background: linear-gradient(135deg, rgba(220, 174, 54, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
             border-bottom: 1px solid var(--surface-border);
             margin: 0 0 1.5rem 0;
             width: 100%;
@@ -250,9 +255,7 @@
             font-size: 2.2rem;
             font-weight: 800;
             margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #ffffff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #ffffff;
         }
 
         .hero-content p {
@@ -260,7 +263,7 @@
             font-size: 1rem;
         }
 
-        /* Main Content - Completely Edge-to-Edge */
+        /* Main Content */
         main {
             width: 100%;
             max-width: 100%;
@@ -349,11 +352,11 @@
 
         .tag-btn.active, .tag-btn:hover {
             background: var(--primary);
-            color: white;
+            color: #111;
             border-color: var(--primary);
         }
 
-        /* Products Grid */
+        /* Products Grid - Edge to Edge */
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -376,7 +379,7 @@
         }
 
         .product-card:hover {
-            border-color: rgba(99, 102, 241, 0.4);
+            border-color: rgba(220, 174, 54, 0.4);
         }
 
         .wishlist-btn {
@@ -493,10 +496,10 @@
             flex: 1;
             background: var(--primary);
             border: none;
-            color: white;
+            color: #111;
             padding: 0.8rem;
             border-radius: var(--radius-md);
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             transition: var(--transition);
             display: flex;
@@ -697,7 +700,7 @@
             opacity: 0.92;
         }
 
-        /* Modal Overlays & Cards */
+        /* Modals Base */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -732,7 +735,7 @@
             overflow-y: auto;
         }
 
-        /* Full-Screen Dedicated Admin Control Center Page */
+        /* Full Screen Admin Control Center Modal */
         #adminModal {
             padding: 0;
         }
@@ -745,7 +748,7 @@
             border-radius: 0;
             border: none;
             background: var(--bg-body);
-            padding: 5rem 2rem 2rem;
+            padding: 5rem 1.5rem 2rem;
             display: block;
             position: fixed;
             inset: 0;
@@ -754,16 +757,17 @@
         }
 
         .admin-header-bar {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             background: var(--bg-card);
             border-bottom: 1px solid var(--surface-border);
-            padding: 1rem 2rem;
+            padding: 1rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 10;
         }
 
         .admin-stats-grid {
@@ -787,7 +791,7 @@
             width: 50px;
             height: 50px;
             border-radius: 12px;
-            background: rgba(99, 102, 241, 0.15);
+            background: rgba(220, 174, 54, 0.15);
             color: var(--primary);
             font-size: 1.5rem;
             display: flex;
@@ -867,7 +871,7 @@
         }
 
         .fullscreen-close-btn {
-            position: absolute;
+            position: fixed;
             top: 1.25rem;
             left: 1.25rem;
             background: var(--surface);
@@ -882,11 +886,12 @@
             align-items: center;
             gap: 8px;
             transition: var(--transition);
-            z-index: 10;
+            z-index: 2010;
         }
 
         .fullscreen-close-btn:hover {
             background: var(--primary);
+            color: #111;
             border-color: var(--primary);
         }
 
@@ -898,7 +903,7 @@
             border: 1px solid var(--surface-border);
         }
 
-        /* Horizontal Scrollable Thumbnail Strip */
+        /* Thumbnail Strip */
         .thumbnail-strip {
             display: flex;
             gap: 10px;
@@ -981,7 +986,7 @@
             border-color: var(--primary);
         }
 
-        /* Order Success Receipt */
+        /* Receipt */
         .receipt-card {
             text-align: center;
             padding: 1rem 0;
@@ -1023,7 +1028,7 @@
 </head>
 <body>
 
-    <!-- Header Navigation - უმოძრავოდ ფიქსირებული -->
+    <!-- Header Navigation -->
     <header>
         <div class="nav-container">
             <div class="nav-left">
@@ -1076,8 +1081,8 @@
             <span class="menu-item-arrow">›</span>
         </button>
 
-        <!-- Admin Control Center in Burger Menu -->
-        <button class="menu-item-row" onclick="openAdminModal()">
+        <!-- Admin Control Center (Dynamically checked) -->
+        <button class="menu-item-row" id="adminMenuBtn" onclick="openAdminModal()">
             <div class="menu-item-left">
                 <span class="menu-item-icon">⚙️</span>
                 <span data-i18n="nav_admin">Admin Panel</span>
@@ -1200,7 +1205,7 @@
                     </div>
                 </div>
                 <div class="admin-stat-card">
-                    <div class="admin-stat-icon" style="color: var(--primary); background: rgba(99, 102, 241, 0.15);"><i class="fa-solid fa-cart-flatbed"></i></div>
+                    <div class="admin-stat-icon" style="color: var(--primary); background: rgba(220, 174, 54, 0.15);"><i class="fa-solid fa-cart-flatbed"></i></div>
                     <div>
                         <div class="admin-stat-val" id="adminProductsCount">0</div>
                         <div class="admin-stat-lbl">Active Products in Store</div>
@@ -1244,12 +1249,12 @@
                             <input type="number" step="0.01" id="newPrice" required placeholder="59.00">
                         </div>
                         <div class="form-group full">
-                            <label>Main Image URL</label>
-                            <input type="url" id="newImage" required placeholder="https://images.unsplash.com/...">
+                            <label>Main Product Image (File)</label>
+                            <input type="file" id="newImageFile" accept="image/*" required>
                         </div>
                         <div class="form-group full">
-                            <label>Extra Gallery Image URLs (Comma separated)</label>
-                            <input type="text" id="newGallery" placeholder="url1, url2, url3">
+                            <label>Extra Gallery Images (Multiple Files)</label>
+                            <input type="file" id="newGalleryFiles" accept="image/*" multiple>
                         </div>
                         <div class="form-group full">
                             <label>Description (English)</label>
@@ -1260,8 +1265,8 @@
                             <input type="text" id="newDescKa" required placeholder="პროდუქტის აღწერა ქართულად...">
                         </div>
                     </div>
-                    <button type="submit" class="checkout-btn" style="margin-top: 1.5rem; max-width: 280px;">
-                        <i class="fa-solid fa-plus"></i> Save Product
+                    <button type="submit" class="checkout-btn" id="saveProductBtn" style="margin-top: 1.5rem; max-width: 280px;">
+                        <i class="fa-solid fa-plus"></i> Save & Publish Product
                     </button>
                 </form>
             </div>
@@ -1273,7 +1278,7 @@
         </div>
     </div>
 
-    <!-- Full Screen Product View Modal (სრულეკრანიანი გვერდი + ფოტოების ზოლი) -->
+    <!-- Full Screen Product View Modal -->
     <div class="modal-overlay" id="productModal">
         <div class="modal-card">
             <button class="fullscreen-close-btn" onclick="closeProductModal()">
@@ -1282,7 +1287,6 @@
             
             <div class="product-media-col">
                 <img src="" id="modalImg" class="fullscreen-product-img" alt="">
-                <!-- ჰორიზონტალურად ასქროლადი თამბნეილების ზოლი -->
                 <div class="thumbnail-strip" id="modalThumbnails"></div>
             </div>
 
@@ -1314,6 +1318,10 @@
                     <div class="form-group full">
                         <label data-i18n="address">Shipping Address</label>
                         <input type="text" id="custAddressInput" required placeholder="123 Main Street, New York">
+                    </div>
+                    <div class="form-group full">
+                        <label>Phone Number</label>
+                        <input type="tel" id="custPhoneInput" required placeholder="+995 599 00 00 00">
                     </div>
                     <div class="form-group full">
                         <label data-i18n="card_number">Card Number</label>
@@ -1373,7 +1381,22 @@
     </div>
 
     <script>
-        // Automatic Multi-language logic
+        // --- 1. FIREBASE INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+            authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+            projectId: "emigrantbook-4b7bd",
+            storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+            messagingSenderId: "109907338554",
+            appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+            measurementId: "G-MRPP7G4H30"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- 2. MULTILINGUAL TRANSLATIONS ---
         const translations = {
             en: {
                 cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", nav_admin: "Admin Panel", back_to_shop: "Back to Shop",
@@ -1399,7 +1422,7 @@
             }
         };
 
-        let currentLang = localStorage.getItem('lang') || localStorage.getItem('language') || 'en';
+        let currentLang = localStorage.getItem('emigrantbook_lang') || localStorage.getItem('lang') || 'en';
 
         function applyLanguage() {
             const dict = translations[currentLang] || translations.en;
@@ -1413,126 +1436,123 @@
             });
         }
 
-        // Product Catalog Database
-        const defaultProducts = [
-            { 
-                id: 1, 
-                title: { en: "Emigrantbook Premium Hardcover Edition", ka: "Emigrantbook პრემიუმ გამოცემა" }, 
-                category: "books", 
-                price: 49.00, 
-                rating: 5.0, 
-                image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80", 
-                images: [
-                    "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80",
-                    "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=500&q=80",
-                    "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=500&q=80"
-                ],
-                description: { en: "Official limited physical edition with premium hardcover design.", ka: "ოფიციალური შეზღუდული ფიზიკური გამოცემა პრემიუმ ყდით." } 
-            },
-            { 
-                id: 2, 
-                title: { en: "Pro Wireless Noise-Canceling Headphones", ka: "უპროვოდო პრო ყურსასმენები" }, 
-                category: "electronics", 
-                price: 299.00, 
-                rating: 4.9, 
-                image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80", 
-                images: [
-                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
-                    "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&q=80",
-                    "https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=500&q=80"
-                ],
-                description: { en: "High-fidelity audio with active noise cancellation technology.", ka: "უმაღლესი ხარისხის ჟღერადობა ANC ტექნოლოგიით." } 
-            },
-            { 
-                id: 3, 
-                title: { en: "Smart Watch Ultra Fitness Tracker", ka: "ჭკვიანი საათი Ultra" }, 
-                category: "electronics", 
-                price: 349.00, 
-                rating: 4.8, 
-                image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80", 
-                images: [
-                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
-                    "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=500&q=80",
-                    "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=500&q=80"
-                ],
-                description: { en: "Advanced health tracking, heart rate, and GPS features.", ka: "ჯანმრთელობისა და GPS აქტივობების მონიტორინგი." } 
-            },
-            { 
-                id: 4, 
-                title: { en: "Emigrantbook Official Designer Hoodie", ka: "ოფიციალური ჰუდი Emigrantbook" }, 
-                category: "merch", 
-                price: 79.00, 
-                rating: 4.7, 
-                image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80", 
-                images: [
-                    "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&q=80",
-                    "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=500&q=80"
-                ],
-                description: { en: "100% premium heavy cotton comfortable hoodie.", ka: "100% პრემიუმ ბამბისგან დამზადებული თბილი ჰუდი." } 
-            },
-            { 
-                id: 5, 
-                title: { en: "Minimalist Leather Backpack", ka: "ტყავის მინიმალისტური ჩანთა" }, 
-                category: "merch", 
-                price: 139.00, 
-                rating: 4.9, 
-                image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80", 
-                images: [
-                    "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&q=80",
-                    "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=500&q=80"
-                ],
-                description: { en: "Durable natural leather laptop backpack.", ka: "ნატურალური ტყავის გამძლე და ტევადი ზურგჩანთა." } 
-            },
-            { 
-                id: 6, 
-                title: { en: "UV400 Polarized Designer Sunglasses", ka: "დიზაინერული მზის სათვალე" }, 
-                category: "merch", 
-                price: 89.00, 
-                rating: 4.6, 
-                image: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80", 
-                images: [
-                    "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=500&q=80",
-                    "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&q=80",
-                    "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=500&q=80",
-                    "https://images.unsplash.com/photo-1577803645773-f96470509666?w=500&q=80"
-                ],
-                description: { en: "Stylish modern frames with full UV protection.", ka: "სტილური სათვალე UV400 სრული დაცვით." } 
-            }
-        ];
-
-        let savedProducts = JSON.parse(localStorage.getItem('eb_shop_products'));
-        let products = savedProducts || defaultProducts;
-
+        // --- 3. STATE & DATA ---
+        let currentUser = null;
+        let userProfile = null;
+        let products = [];
+        let orders = [];
         let cart = JSON.parse(localStorage.getItem('eb_shop_cart')) || [];
         let wishlist = JSON.parse(localStorage.getItem('eb_shop_wishlist')) || [];
-        let orders = JSON.parse(localStorage.getItem('eb_shop_orders')) || [];
         let appliedDiscount = 0;
 
-        // Render Catalog
+        // Auth Observer
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                currentUser = user;
+                db.collection('profiles').doc(user.uid).get().then(doc => {
+                    if(doc.exists) {
+                        userProfile = doc.data();
+                        if(userProfile.language) {
+                            currentLang = userProfile.language;
+                            applyLanguage();
+                        }
+                    }
+                });
+            }
+        });
+
+        // --- 4. IMGBB & CLOUDINARY UPLOAD SERVICES ---
+        const IMGBB_API_KEY = "20b1ff9fe9c8896477a6bf04c86bcc67";
+
+        function uploadImageToImgBB(file, callback) {
+            let formData = new FormData();
+            formData.append("image", file);
+
+            fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result && result.success) callback(result.data.url);
+                else uploadToCloudinary(file, callback);
+            })
+            .catch(() => uploadToCloudinary(file, callback));
+        }
+
+        function uploadToCloudinary(file, callback) {
+            let formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", "fhlkp9ld");
+
+            fetch("https://api.cloudinary.com/v1_1/kim1albt/image/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.secure_url) callback(data.secure_url);
+                else alert("Image upload failed");
+            })
+            .catch(err => alert("Upload error: " + err.message));
+        }
+
+        // --- 5. FIRESTORE REALTIME SYNC ---
+        function subscribeFirestoreProducts() {
+            db.collection('shop_products').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+                products = [];
+                snapshot.forEach(doc => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+                renderProducts(products);
+                updateAdminStats();
+            }, err => console.error("Products Sync Error:", err));
+        }
+
+        function subscribeFirestoreOrders() {
+            db.collection('shop_orders').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+                orders = [];
+                snapshot.forEach(doc => {
+                    orders.push({ id: doc.id, ...doc.data() });
+                });
+                updateAdminStats();
+                renderAdminOrders();
+            }, err => console.error("Orders Sync Error:", err));
+        }
+
+        // --- 6. CATALOG RENDER ---
         function renderProducts(items) {
             const grid = document.getElementById('productsGrid');
             const lang = translations[currentLang] ? currentLang : 'en';
 
+            if(items.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-sub);">No products available in store.</div>`;
+                return;
+            }
+
             grid.innerHTML = items.map(p => {
                 const isWish = wishlist.includes(p.id);
+                const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
+                const imgMain = p.image || (p.images ? p.images[0] : '');
+
                 return `
                 <div class="product-card">
-                    <button class="wishlist-btn ${isWish ? 'active' : ''}" onclick="toggleWishlist(${p.id})">
+                    <button class="wishlist-btn ${isWish ? 'active' : ''}" onclick="toggleWishlist('${p.id}')">
                         <i class="fa-solid fa-heart"></i>
                     </button>
-                    <div class="product-img-wrapper" onclick="openProductModal(${p.id})" style="cursor: pointer;">
-                        <img src="${p.image}" alt="${p.title[lang] || p.title.en}">
+                    <div class="product-img-wrapper" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
+                        <img src="${imgMain}" alt="${titleText}">
                     </div>
                     <div class="product-info">
                         <div class="product-meta">
-                            <span class="product-category">${p.category}</span>
-                            <span class="rating-stars"><i class="fa-solid fa-star"></i> ${p.rating}</span>
+                            <span class="product-category">${p.category || 'General'}</span>
+                            <span class="rating-stars"><i class="fa-solid fa-star"></i> ${p.rating || 5.0}</span>
                         </div>
-                        <h3 class="product-title" onclick="openProductModal(${p.id})">${p.title[lang] || p.title.en}</h3>
-                        <div class="product-price">${p.price.toFixed(2)} ₾</div>
+                        <h3 class="product-title" onclick="openProductModal('${p.id}')">${titleText}</h3>
+                        <div class="product-price">${parseFloat(p.price).toFixed(2)} ₾</div>
                         <div class="card-actions">
-                            <button class="quick-view-btn" onclick="openProductModal(${p.id})" title="Quick View"><i class="fa-solid fa-eye"></i></button>
-                            <button class="add-to-cart-btn" onclick="addToCart(${p.id})">
+                            <button class="quick-view-btn" onclick="openProductModal('${p.id}')" title="Quick View"><i class="fa-solid fa-eye"></i></button>
+                            <button class="add-to-cart-btn" onclick="addToCart('${p.id}')">
                                 <i class="fa-solid fa-cart-plus"></i> ${translations[lang].add_to_cart}
                             </button>
                         </div>
@@ -1541,7 +1561,7 @@
             `}).join('');
         }
 
-        // Wishlist Control
+        // Wishlist
         function toggleWishlist(id) {
             if (wishlist.includes(id)) {
                 wishlist = wishlist.filter(item => item !== id);
@@ -1572,20 +1592,22 @@
             if (wishProducts.length === 0) {
                 container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">${translations[lang].empty_wishlist}</p>`;
             } else {
-                container.innerHTML = wishProducts.map(i => `
+                container.innerHTML = wishProducts.map(i => {
+                    const titleText = (typeof i.title === 'object') ? (i.title[lang] || i.title.en) : i.title;
+                    return `
                     <div class="cart-item">
                         <img src="${i.image}" alt="">
                         <div class="cart-item-details">
-                            <div class="cart-item-title">${i.title[lang] || i.title.en}</div>
-                            <div class="cart-item-price">${i.price.toFixed(2)} ₾</div>
+                            <div class="cart-item-title">${titleText}</div>
+                            <div class="cart-item-price">${parseFloat(i.price).toFixed(2)} ₾</div>
                         </div>
-                        <button class="close-btn" onclick="toggleWishlist(${i.id}); renderWishlistItems();" style="color: var(--accent-red);" title="Remove"><i class="fa-solid fa-trash"></i></button>
+                        <button class="close-btn" onclick="toggleWishlist('${i.id}'); renderWishlistItems();" style="color: var(--accent-red);" title="Remove"><i class="fa-solid fa-trash"></i></button>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
 
-        // Cart Control
+        // Cart
         function addToCart(id) {
             const p = products.find(item => item.id === id);
             const exist = cart.find(item => item.id === id);
@@ -1614,20 +1636,22 @@
             if(cart.length === 0) {
                 container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin-top: 2rem;">${translations[lang].empty_cart}</p>`;
             } else {
-                container.innerHTML = cart.map(i => `
+                container.innerHTML = cart.map(i => {
+                    const titleText = (typeof i.title === 'object') ? (i.title[lang] || i.title.en) : i.title;
+                    return `
                     <div class="cart-item">
                         <img src="${i.image}" alt="">
                         <div class="cart-item-details">
-                            <div class="cart-item-title">${i.title[lang] || i.title.en}</div>
-                            <div class="cart-item-price">${i.price.toFixed(2)} ₾</div>
+                            <div class="cart-item-title">${titleText}</div>
+                            <div class="cart-item-price">${parseFloat(i.price).toFixed(2)} ₾</div>
                             <div class="cart-item-qty">
-                                <button class="qty-btn" onclick="updateCartQty(${i.id}, -1)">-</button>
+                                <button class="qty-btn" onclick="updateCartQty('${i.id}', -1)">-</button>
                                 <span>${i.qty}</span>
-                                <button class="qty-btn" onclick="updateCartQty(${i.id}, 1)">+</button>
+                                <button class="qty-btn" onclick="updateCartQty('${i.id}', 1)">+</button>
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
 
             const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
@@ -1661,7 +1685,7 @@
         document.getElementById('closeCartBtn').onclick = () => toggleCart(false);
         document.getElementById('cartOverlay').onclick = () => toggleCart(false);
 
-        // Burger Sidebar Events
+        // Burger Controls
         document.getElementById('openBurgerBtn').onclick = () => {
             document.getElementById('burgerSidebar').classList.add('active');
             document.getElementById('burgerOverlay').classList.add('active');
@@ -1679,7 +1703,10 @@
         document.getElementById('searchInput').oninput = (e) => {
             const term = e.target.value.toLowerCase();
             const lang = translations[currentLang] ? currentLang : 'en';
-            renderProducts(products.filter(p => (p.title[lang] || p.title.en).toLowerCase().includes(term)));
+            renderProducts(products.filter(p => {
+                const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
+                return titleText.toLowerCase().includes(term);
+            }));
         };
 
         document.querySelectorAll('.tag-btn').forEach(btn => {
@@ -1699,17 +1726,21 @@
             renderProducts(sorted);
         }
 
-        // Full Screen Product Page Opener & Gallery Logic
+        // Full Screen Product Page Opener
         function openProductModal(id) {
             const lang = translations[currentLang] ? currentLang : 'en';
             const p = products.find(item => item.id === id);
+            if(!p) return;
+
             const pImages = (p.images && p.images.length > 0) ? p.images : [p.image];
+            const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
+            const descText = (typeof p.description === 'object') ? (p.description[lang] || p.description.en) : p.description;
 
             document.getElementById('modalImg').src = pImages[0];
-            document.getElementById('modalTitle').textContent = p.title[lang] || p.title.en;
-            document.getElementById('modalCategory').textContent = p.category;
-            document.getElementById('modalDescription').textContent = p.description[lang] || p.description.en;
-            document.getElementById('modalPrice').textContent = `${p.price.toFixed(2)} ₾`;
+            document.getElementById('modalTitle').textContent = titleText;
+            document.getElementById('modalCategory').textContent = p.category || 'General';
+            document.getElementById('modalDescription').textContent = descText || '';
+            document.getElementById('modalPrice').textContent = `${parseFloat(p.price).toFixed(2)} ₾`;
             document.getElementById('modalAddBtn').onclick = () => { addToCart(p.id); closeProductModal(); };
 
             const thumbsContainer = document.getElementById('modalThumbnails');
@@ -1730,7 +1761,7 @@
             document.getElementById('productModal').classList.remove('active'); 
         }
 
-        // Checkout & Payment Simulation
+        // Checkout & Payment
         function openCheckoutModal() {
             const lang = translations[currentLang] ? currentLang : 'en';
             if(cart.length === 0) return alert(translations[lang].empty_cart);
@@ -1756,27 +1787,30 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
 
-            setTimeout(() => {
-                const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-                const finalTotal = subtotal - (subtotal * appliedDiscount);
-                const orderId = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
+            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
+            const finalTotal = subtotal - (subtotal * appliedDiscount);
+            const orderId = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
 
+            const lang = translations[currentLang] ? currentLang : 'en';
+            const newOrder = {
+                order_id: orderId,
+                customer_uid: currentUser ? currentUser.uid : 'guest',
+                customer_name: document.getElementById('custNameInput').value.trim() || 'Anonymous',
+                customer_address: document.getElementById('custAddressInput').value.trim() || 'Not specified',
+                customer_phone: document.getElementById('custPhoneInput').value.trim() || 'Not specified',
+                total_amount: finalTotal,
+                status: 'Processing',
+                items: cart.map(i => ({ 
+                    title: (typeof i.title === 'object') ? (i.title[lang] || i.title.en) : i.title, 
+                    qty: i.qty, 
+                    price: i.price 
+                })),
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection('shop_orders').add(newOrder).then(() => {
                 document.getElementById('receiptOrderId').textContent = orderId;
                 document.getElementById('receiptAmount').textContent = `${finalTotal.toFixed(2)} ₾`;
-
-                const lang = translations[currentLang] ? currentLang : 'en';
-                const newOrder = {
-                    id: orderId,
-                    customer: document.getElementById('custNameInput').value.trim() || 'Anonymous',
-                    address: document.getElementById('custAddressInput').value.trim() || 'Not specified',
-                    total: finalTotal,
-                    status: 'Processing',
-                    items: cart.map(i => ({ title: i.title[lang] || i.title.en, qty: i.qty, price: i.price })),
-                    date: new Date().toLocaleString()
-                };
-
-                orders.unshift(newOrder);
-                localStorage.setItem('eb_shop_orders', JSON.stringify(orders));
 
                 cart = [];
                 appliedDiscount = 0;
@@ -1788,12 +1822,15 @@
                 btn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${translations[currentLang] ? translations[currentLang].pay_now : 'Pay Now'}`;
                 document.getElementById('paymentForm').reset();
                 document.getElementById('receiptModal').classList.add('active');
-            }, 1200);
+            }).catch(err => {
+                alert("Order error: " + err.message);
+                btn.disabled = false;
+            });
         }
 
         function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
 
-        // --- Full-Screen Admin Control Center Logic ---
+        // --- 7. ADMIN CONTROL CENTER ---
         function openAdminModal() {
             document.getElementById('burgerSidebar').classList.remove('active');
             document.getElementById('burgerOverlay').classList.remove('active');
@@ -1808,7 +1845,7 @@
         }
 
         function updateAdminStats() {
-            const totalRev = orders.reduce((acc, o) => acc + (o.total || 0), 0);
+            const totalRev = orders.reduce((acc, o) => acc + (o.total_amount || 0), 0);
             document.getElementById('adminTotalRevenue').textContent = `${totalRev.toFixed(2)} ₾`;
             document.getElementById('adminOrdersCount').textContent = orders.length;
             document.getElementById('adminProductsCount').textContent = products.length;
@@ -1830,21 +1867,23 @@
             if(orders.length === 0) {
                 container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 3rem 0; font-size: 1.1rem;">No customer orders received yet.</p>`;
             } else {
-                container.innerHTML = orders.map((o, index) => `
+                container.innerHTML = orders.map(o => {
+                    const orderTime = o.created_at ? new Date(o.created_at.toDate ? o.created_at.toDate() : o.created_at).toLocaleString() : 'Just now';
+                    return `
                     <div class="admin-order-card">
                         <div class="admin-order-header">
                             <div>
-                                <strong style="color: var(--primary); font-size: 1.15rem;">${o.id}</strong>
-                                <span style="color: var(--text-sub); font-size: 0.85rem; margin-left: 12px;"><i class="fa-regular fa-clock"></i> ${o.date}</span>
+                                <strong style="color: var(--primary); font-size: 1.15rem;">${o.order_id || o.id}</strong>
+                                <span style="color: var(--text-sub); font-size: 0.85rem; margin-left: 12px;"><i class="fa-regular fa-clock"></i> ${orderTime}</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span class="admin-order-status">${o.status || 'Processing'}</span>
-                                <strong style="color: var(--accent-green); font-size: 1.25rem;">${o.total.toFixed(2)} ₾</strong>
-                                <button onclick="deleteOrder(${index})" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1.1rem;" title="Delete Order"><i class="fa-solid fa-trash"></i></button>
+                                <strong style="color: var(--accent-green); font-size: 1.25rem;">${parseFloat(o.total_amount || 0).toFixed(2)} ₾</strong>
+                                <button onclick="deleteFirestoreOrder('${o.id}')" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1.1rem;" title="Delete Order"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
-                        <div style="font-size: 0.95rem; margin-bottom: 0.4rem;">👤 Customer: <strong>${o.customer}</strong></div>
-                        <div style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 0.8rem;">📍 Address: ${o.address}</div>
+                        <div style="font-size: 0.95rem; margin-bottom: 0.4rem;">👤 Customer: <strong>${o.customer_name}</strong> (${o.customer_phone})</div>
+                        <div style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 0.8rem;">📍 Address: ${o.customer_address}</div>
                         <div style="background: rgba(0,0,0,0.3); padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.9rem;">
                             <strong style="color: var(--text-main);">Purchased Items:</strong>
                             <ul style="margin-left: 1.2rem; margin-top: 0.4rem; color: var(--text-sub);">
@@ -1852,27 +1891,57 @@
                             </ul>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
 
-        function deleteOrder(index) {
+        function deleteFirestoreOrder(orderDocId) {
             if(confirm("Are you sure you want to delete this order?")) {
-                orders.splice(index, 1);
-                localStorage.setItem('eb_shop_orders', JSON.stringify(orders));
-                updateAdminStats();
-                renderAdminOrders();
+                db.collection('shop_orders').doc(orderDocId).delete();
             }
         }
 
         function handleProductAdd(e) {
             e.preventDefault();
-            const mainImg = document.getElementById('newImage').value.trim();
-            const galleryVal = document.getElementById('newGallery').value.trim();
-            const galleryArr = galleryVal ? galleryVal.split(',').map(s => s.trim()) : [];
+            const btn = document.getElementById('saveProductBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading & Saving...`;
 
+            const mainImgFile = document.getElementById('newImageFile').files[0];
+            const galleryFiles = Array.from(document.getElementById('newGalleryFiles').files);
+
+            if(!mainImgFile) {
+                alert("Please select a main product image!");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-plus"></i> Save & Publish Product`;
+                return;
+            }
+
+            // Step 1: Upload main image
+            uploadImageToImgBB(mainImgFile, function(mainImgUrl) {
+                // Step 2: Upload extra gallery files if any
+                if(galleryFiles.length > 0) {
+                    let uploadedGalleryUrls = [];
+                    let uploadPromises = galleryFiles.map(file => {
+                        return new Promise(resolve => {
+                            uploadImageToImgBB(file, url => {
+                                uploadedGalleryUrls.push(url);
+                                resolve();
+                            });
+                        });
+                    });
+
+                    Promise.all(uploadPromises).then(() => {
+                        saveProductToFirestore(mainImgUrl, [mainImgUrl, ...uploadedGalleryUrls], btn);
+                    });
+                } else {
+                    saveProductToFirestore(mainImgUrl, [mainImgUrl], btn);
+                }
+            });
+        }
+
+        function saveProductToFirestore(mainImgUrl, galleryUrls, btn) {
             const newProd = {
-                id: Date.now(),
                 title: {
                     en: document.getElementById('newTitleEn').value.trim(),
                     ka: document.getElementById('newTitleKa').value.trim()
@@ -1880,53 +1949,55 @@
                 category: document.getElementById('newCategory').value,
                 price: parseFloat(document.getElementById('newPrice').value),
                 rating: 5.0,
-                image: mainImg,
-                images: [mainImg, ...galleryArr],
+                image: mainImgUrl,
+                images: galleryUrls,
                 description: {
                     en: document.getElementById('newDescEn').value.trim(),
                     ka: document.getElementById('newDescKa').value.trim()
-                }
+                },
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            products.unshift(newProd);
-            localStorage.setItem('eb_shop_products', JSON.stringify(products));
-            renderProducts(products);
-            updateAdminStats();
-            alert("New product successfully added to store!");
-            document.getElementById('addProductForm').reset();
-            switchAdminTab('manage');
-            renderAdminProductsList();
+            db.collection('shop_products').add(newProd).then(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-plus"></i> Save & Publish Product`;
+                alert("Product successfully published to store!");
+                document.getElementById('addProductForm').reset();
+                switchAdminTab('manage');
+            }).catch(err => {
+                alert("Database error: " + err.message);
+                btn.disabled = false;
+            });
         }
 
         function renderAdminProductsList() {
             const container = document.getElementById('adminProductsList');
             const lang = translations[currentLang] ? currentLang : 'en';
 
-            container.innerHTML = products.map(p => `
+            container.innerHTML = products.map(p => {
+                const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
+                return `
                 <div class="cart-item" style="margin-bottom: 0.8rem; background: var(--bg-card); padding: 1rem;">
                     <img src="${p.image}" alt="" style="width: 80px; height: 80px; border-radius: 8px;">
                     <div class="cart-item-details">
-                        <div class="cart-item-title" style="font-size: 1.05rem;">${p.title[lang] || p.title.en}</div>
-                        <div class="cart-item-price" style="font-size: 0.95rem; color: var(--accent-green); margin-top: 4px;">${p.price.toFixed(2)} ₾ &bull; <span style="color: var(--text-sub); text-transform: uppercase;">${p.category}</span></div>
+                        <div class="cart-item-title" style="font-size: 1.05rem;">${titleText}</div>
+                        <div class="cart-item-price" style="font-size: 0.95rem; color: var(--accent-green); margin-top: 4px;">${parseFloat(p.price).toFixed(2)} ₾ &bull; <span style="color: var(--text-sub); text-transform: uppercase;">${p.category}</span></div>
                     </div>
-                    <button class="close-btn" onclick="deleteProduct(${p.id})" style="color: var(--accent-red); font-size: 1.2rem; padding: 8px;" title="Delete Product"><i class="fa-solid fa-trash"></i></button>
+                    <button class="close-btn" onclick="deleteFirestoreProduct('${p.id}')" style="color: var(--accent-red); font-size: 1.2rem; padding: 8px;" title="Delete Product"><i class="fa-solid fa-trash"></i></button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        function deleteProduct(id) {
-            if(confirm("Are you sure you want to delete this product from store?")) {
-                products = products.filter(p => p.id !== id);
-                localStorage.setItem('eb_shop_products', JSON.stringify(products));
-                renderProducts(products);
-                updateAdminStats();
-                renderAdminProductsList();
+        function deleteFirestoreProduct(id) {
+            if(confirm("Are you sure you want to delete this product?")) {
+                db.collection('shop_products').doc(id).delete();
             }
         }
 
-        // Init App
+        // Init Application
         applyLanguage();
-        renderProducts(products);
+        subscribeFirestoreProducts();
+        subscribeFirestoreOrders();
         updateCartUI();
         document.getElementById('menuWishlistBadge').textContent = wishlist.length;
     </script>
