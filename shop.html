@@ -702,7 +702,7 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
@@ -731,6 +731,70 @@
             box-shadow: var(--shadow-card);
             max-height: 90vh;
             overflow-y: auto;
+        }
+
+        /* Full Screen Product View Page */
+        #productModal {
+            padding: 0;
+        }
+
+        #productModal .modal-card {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+            border: none;
+            background: var(--bg-body);
+            padding: 4rem 2rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+        }
+
+        .fullscreen-close-btn {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            padding: 0.75rem 1.25rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .fullscreen-close-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .fullscreen-product-img {
+            width: 100%;
+            max-width: 480px;
+            height: 440px;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 1px solid var(--surface-border);
+        }
+
+        .fullscreen-product-details {
+            flex: 1;
+            min-width: 280px;
+            max-width: 580px;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Checkout Form Styling */
@@ -800,11 +864,13 @@
             margin-bottom: 0.6rem;
         }
 
-        @media(max-width: 650px) {
+        @media(max-width: 768px) {
             .products-grid { grid-template-columns: 1fr; gap: 0; }
             .hero-banner { flex-direction: column; text-align: center; }
             .form-grid { grid-template-columns: 1fr; }
             .form-group.full { grid-column: span 1; }
+            #productModal .modal-card { padding: 4.5rem 1.25rem 2rem; justify-content: flex-start; }
+            .fullscreen-product-img { height: 280px; }
         }
     </style>
 </head>
@@ -949,17 +1015,19 @@
         </div>
     </div>
 
-    <!-- Product Detail Modal -->
+    <!-- Full Screen Product View Modal (სრულეკრანიანი გვერდი) -->
     <div class="modal-overlay" id="productModal">
-        <div class="modal-card" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-            <button class="close-btn" onclick="closeProductModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <img src="" id="modalImg" style="width: 100%; max-width: 260px; height: 260px; object-fit: cover; border-radius: 12px;" alt="">
-            <div style="flex: 1; min-width: 240px; display: flex; flex-direction: column;">
-                <h2 id="modalTitle" style="margin-bottom: 0.5rem; font-size: 1.4rem;"></h2>
-                <div id="modalCategory" class="product-category" style="margin-bottom: 1rem;"></div>
-                <p id="modalDescription" style="color: var(--text-sub); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;"></p>
-                <div id="modalPrice" class="product-price"></div>
-                <button class="add-to-cart-btn" id="modalAddBtn" style="margin-top: auto; padding: 0.9rem;">
+        <div class="modal-card">
+            <button class="fullscreen-close-btn" onclick="closeProductModal()">
+                <i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_shop">Back to Shop</span>
+            </button>
+            <img src="" id="modalImg" class="fullscreen-product-img" alt="">
+            <div class="fullscreen-product-details">
+                <div id="modalCategory" class="product-category" style="margin-bottom: 0.5rem; font-size: 0.9rem;"></div>
+                <h1 id="modalTitle" style="margin-bottom: 1rem; font-size: 2rem; font-weight: 800;"></h1>
+                <p id="modalDescription" style="color: var(--text-sub); font-size: 1.05rem; margin-bottom: 2rem; line-height: 1.7;"></p>
+                <div id="modalPrice" class="product-price" style="font-size: 2.2rem; margin-bottom: 2rem;"></div>
+                <button class="add-to-cart-btn" id="modalAddBtn" style="padding: 1.1rem; font-size: 1.1rem; max-width: 320px;">
                     <i class="fa-solid fa-cart-plus"></i> <span data-i18n="add_to_cart">Add to Cart</span>
                 </button>
             </div>
@@ -1044,7 +1112,7 @@
         // Automatic Multi-language logic
         const translations = {
             en: {
-                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist",
+                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", back_to_shop: "Back to Shop",
                 hero_title: "Official Online Store", hero_subtitle: "Explore exclusive books, tech gadgets, and official merchandise.",
                 search_placeholder: "Search products...", sort_default: "Sort: Default", sort_low_high: "Price: Low to High", sort_high_low: "Price: High to Low",
                 cat_all: "All", cat_books: "Books", cat_electronics: "Electronics", cat_merch: "Merchandise",
@@ -1055,7 +1123,7 @@
                 order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty", empty_wishlist: "No saved items in wishlist."
             },
             ka: {
-                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები",
+                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები", back_to_shop: "უკან დაბრუნება",
                 hero_title: "ოფიციალური ონლაინ მაღაზია", hero_subtitle: "აღმოაჩინეთ ექსკლუზიური წიგნები, ტექნიკა და ოფიციალური აქსესუარები.",
                 search_placeholder: "მოძებნეთ პროდუქტი...", sort_default: "სორტირება: სტანდარტული", sort_low_high: "ფასი: ზრდადობით", sort_high_low: "ფასი: კლებადობით",
                 cat_all: "ყველა", cat_books: "წიგნები", cat_electronics: "ტექნიკა", cat_merch: "აქსესუარები",
@@ -1286,7 +1354,7 @@
             renderProducts(sorted);
         }
 
-        // Product Modal Viewer
+        // Full Screen Product Page Opener
         function openProductModal(id) {
             const lang = translations[currentLang] ? currentLang : 'en';
             const p = products.find(item => item.id === id);
