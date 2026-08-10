@@ -12,6 +12,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
+  <!-- Cloudflare R2 AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
   
   <style>
   #incoming-call-modal {
@@ -3942,6 +3944,40 @@ auth.onAuthStateChanged(function(user) {
 function uploadMediaToFirebase(file, folder, callback) {
   if (!currentUser) return;
 
+  var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+
+  // 1. თუ ვიდეოა -> ტვირთავს პირდაპირ Cloudflare R2-ში
+  if (isVideo) {
+    var r2S3 = new AWS.S3({
+      endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+      accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+      secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+      signatureVersion: 'v4',
+      region: 'auto'
+    });
+
+    var fileKey = (folder || 'videos') + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+
+    var params = {
+      Bucket: 'emigrantbook-videos',
+      Key: fileKey,
+      Body: file,
+      ContentType: file.type || 'video/mp4'
+    };
+
+    r2S3.upload(params, function(err, data) {
+      if (err) {
+        console.error("R2 Upload Error:", err);
+        alert("ვიდეოს ატვირთვა ჩაიშალა: " + err.message);
+      } else {
+        var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+        callback(publicUrl);
+      }
+    });
+    return;
+  }
+
+  // 2. თუ სურათია -> Cloudinary Fallback
   var CLOUD_NAME = "kim1albt";
   var UPLOAD_PRESET = "fhlkp9ld";
 
@@ -3949,9 +3985,7 @@ function uploadMediaToFirebase(file, folder, callback) {
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
-
-  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload", {
     method: "POST",
     body: formData
   })
@@ -4954,8 +4988,13 @@ function loadBlockedUsersData() {
             });
             listWrapper.innerHTML = listHtml;
           });
+        }).catch(functionI'm having a hard time fulfilling your request. Can I help you with something else instead?
+    }).catch(function(err) {
+              console.error("Error loading blocked users:", err);
+              listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
+            });
         }).catch(function(err) {
-          console.error("Error loading blocked users:", err);
+          console.error("Error fetching blocked users:", err);
           listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
         });
 }
@@ -5031,8 +5070,6 @@ function removeProfileMoreMenu() {
   var existing = document.getElementById('profile-more-menu-dropdown');
   if (existing) existing.remove();
 }
-
-
 
     /* ზარის დარეკვის ლოგიკა */
     const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
