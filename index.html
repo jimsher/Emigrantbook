@@ -3941,9 +3941,43 @@ auth.onAuthStateChanged(function(user) {
       if (input) input.click();
     }
 
-function uploadMediaToFirebase(file, folder, callback) {
+   function uploadMediaToFirebase(file, folder, callback) {
   if (!currentUser) return;
 
+  var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+
+  // 1. თუ ვიდეოა -> ტვირთავს პირდაპირ Cloudflare R2-ში
+  if (isVideo) {
+    var r2S3 = new AWS.S3({
+      endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+      accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+      secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+      signatureVersion: 'v4',
+      region: 'auto'
+    });
+
+    var fileKey = (folder || 'videos') + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+
+    var params = {
+      Bucket: 'emigrantbook-videos',
+      Key: fileKey,
+      Body: file,
+      ContentType: file.type || 'video/mp4'
+    };
+
+    r2S3.upload(params, function(err, data) {
+      if (err) {
+        console.error("R2 Upload Error:", err);
+        alert("ვიდეოს ატვირთვა ჩაიშალა: " + err.message);
+      } else {
+        var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+        callback(publicUrl);
+      }
+    });
+    return;
+  }
+
+  // 2. თუ სურათია -> Cloudinary Fallback
   var CLOUD_NAME = "kim1albt";
   var UPLOAD_PRESET = "fhlkp9ld";
 
@@ -3951,9 +3985,7 @@ function uploadMediaToFirebase(file, folder, callback) {
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  var resourceType = file.type.startsWith('video/') ? 'video' : 'image';
-
-  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/" + resourceType + "/upload", {
+  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload", {
     method: "POST",
     body: formData
   })
