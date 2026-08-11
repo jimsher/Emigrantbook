@@ -1748,6 +1748,9 @@
     // Selected message for deletion
     var currentSelectedMsgId = null;
 
+    // Pagination message limit per chat
+    var currentMessageLimit = 25;
+
     // TAB SWITCHING
     function switchTab(tabName) {
       currentActiveTab = tabName;
@@ -1907,8 +1910,10 @@
       });
     }
 
+    // MAP TO STORE CHAT LAST MESSAGE TIMES FOR SORTING CHATS LIST
+    let chatLastMessagesMap = {};
+
     function renderActiveChats(users, currentUid, listTarget) {
-      listTarget.innerHTML = "";
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       if (users.length === 0) {
@@ -1928,46 +1933,81 @@
               if (lastMsgDoc.type === 'missed_call') msgText = "📞 გამოტოვებული ვიდეო ზარი";
               else if (lastMsgDoc.type === 'finished_call') msgText = `📞 ვიდეო ზარი (${lastMsgDoc.duration || "0 წმ"})`;
 
-              let timeStr = lastMsgDoc.createdAt ? new Date(lastMsgDoc.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+              let timeMs = lastMsgDoc.createdAt && lastMsgDoc.createdAt.seconds ? lastMsgDoc.createdAt.seconds * 1000 : Date.now();
+              chatLastMessagesMap[user.uid] = timeMs;
+
+              let timeStr = lastMsgDoc.createdAt ? new Date(timeMs).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
               const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
 
-              let existingRow = document.getElementById('chat-row-' + user.uid);
-              if (!existingRow) {
-                existingRow = document.createElement('div');
-                existingRow.id = 'chat-row-' + user.uid;
-                listTarget.appendChild(existingRow);
-              }
+              user.lastMsgText = msgText;
+              user.lastMsgTimeMs = timeMs;
+              user.lastMsgTimeStr = timeStr;
+              user.isUnread = isUnread;
 
-              existingRow.className = 'chat-row-item' + (isUnread ? ' unread' : '');
-
-              const isOnline = user.presence === 'online';
-              const imgSrc = user.photo ? user.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff`;
-
-              existingRow.onclick = function() { openChat(user.name, user.photo, user.uid); };
-
-              existingRow.innerHTML = `
-                <div class="chat-row-avatar-holder">
-                  <img class="chat-row-avatar" src="${imgSrc}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff';">
-                  <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
-                </div>
-                <div class="chat-row-details">
-                  <span class="chat-row-name">${user.name}</span>
-                  <div class="chat-row-meta">
-                    <span class="chat-row-last-msg">${msgText}</span>
-                    <span class="chat-row-time">${timeStr}</span>
-                    ${isUnread ? '<div class="unread-dot"></div>' : ''}
-                  </div>
-                </div>
-              `;
+              redrawSortedChatsList(users, currentUid, listTarget);
+            } else {
+              chatLastMessagesMap[user.uid] = 0;
+              user.lastMsgText = "";
+              user.lastMsgTimeMs = 0;
+              user.lastMsgTimeStr = "";
+              user.isUnread = false;
+              redrawSortedChatsList(users, currentUid, listTarget);
             }
           });
+      });
+    }
+
+    function redrawSortedChatsList(users, currentUid, listTarget) {
+      // Sort users by lastMsgTimeMs descending (newest chat on top)
+      let sortedUsers = [...users].sort((a, b) => (b.lastMsgTimeMs || 0) - (a.lastMsgTimeMs || 0));
+
+      listTarget.innerHTML = "";
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+
+      if (sortedUsers.length === 0) {
+        listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
+        return;
+      }
+
+      sortedUsers.forEach(user => {
+        let existingRow = document.getElementById('chat-row-' + user.uid);
+        if (!existingRow) {
+          existingRow = document.createElement('div');
+          existingRow.id = 'chat-row-' + user.uid;
+        }
+
+        existingRow.className = 'chat-row-item' + (user.isUnread ? ' unread' : '');
+
+        const isOnline = user.presence === 'online';
+        const imgSrc = user.photo ? user.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff`;
+
+        existingRow.onclick = function() { openChat(user.name, user.photo, user.uid); };
+
+        existingRow.innerHTML = `
+          <div class="chat-row-avatar-holder">
+            <img class="chat-row-avatar" src="${imgSrc}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2ed573&color=fff';">
+            <div class="active-badge" style="display:${isOnline ? 'block' : 'none'};"></div>
+          </div>
+          <div class="chat-row-details">
+            <span class="chat-row-name">${user.name}</span>
+            <div class="chat-row-meta">
+              <span class="chat-row-last-msg">${user.lastMsgText || ''}</span>
+              <span class="chat-row-time">${user.lastMsgTimeStr || ''}</span>
+              ${user.isUnread ? '<div class="unread-dot"></div>' : ''}
+            </div>
+          </div>
+        `;
+
+        listTarget.appendChild(existingRow);
       });
     }
 
     // 2. ჩატის გახსნა, მიმოწერა და წაუკითხავების "წაკითხულად" მონიშვნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
+      lastSeenMsgId = null;
+      currentMessageLimit = 25; // Reset limit when opening chat
       const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
 
       document.getElementById('chats-screen').style.display = 'none';
@@ -2073,14 +2113,24 @@
       element.addEventListener('touchmove', cancelPress);
     }
 
+    let lastSeenMsgId = null;
+
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
+      const messagesTarget = document.getElementById('messages-target');
       const myUid = auth.currentUser.uid;
 
       if (unsubscribeMessages) unsubscribeMessages();
 
+      if (messagesTarget._scrollListener) {
+        messagesTarget.removeEventListener('scroll', messagesTarget._scrollListener);
+      }
+
+      let isInitialLoad = true;
+
       unsubscribeMessages = db.collection('chats').doc(chatId).collection('messages')
-        .orderBy('createdAt', 'asc')
+        .orderBy('createdAt', 'desc')
+        .limit(currentMessageLimit)
         .onSnapshot(function(snapshot) {
           
           // REALTIME SEEN SOUND TRIGGER ON MODIFIED STATUS
@@ -2092,6 +2142,14 @@
               }
             }
           });
+
+          // Convert docs and reverse for chronological order (oldest top, newest bottom)
+          let docs = [];
+          snapshot.forEach(docSnap => docs.push(docSnap));
+          docs.reverse();
+
+          const oldScrollHeight = messagesTarget.scrollHeight;
+          const oldScrollTop = messagesTarget.scrollTop;
 
           msgBlock.innerHTML = "";
           let lastMsgDate = null;
@@ -2108,7 +2166,14 @@
             }
           });
 
-          snapshot.forEach(docSnap => {
+          if (lastSeenOutgoingMsgId && lastSeenOutgoingMsgId !== lastSeenMsgId) {
+            if (lastSeenMsgId !== null) {
+              playSeenSound();
+            }
+            lastSeenMsgId = lastSeenOutgoingMsgId;
+          }
+
+          docs.forEach(docSnap => {
             const msg = docSnap.data();
             const msgId = docSnap.id;
             const isMine = msg.senderId === myUid;
@@ -2175,9 +2240,28 @@
             }
           });
 
-          const target = document.getElementById('messages-target');
-          if (target) target.scrollTop = target.scrollHeight;
+          if (isInitialLoad) {
+            messagesTarget.scrollTop = messagesTarget.scrollHeight;
+            isInitialLoad = false;
+          } else {
+            // Maintain scroll position when older messages are loaded at top
+            const newScrollHeight = messagesTarget.scrollHeight;
+            if (oldScrollTop < 30) {
+              messagesTarget.scrollTop = newScrollHeight - oldScrollHeight;
+            } else if (oldScrollHeight - oldScrollTop - messagesTarget.clientHeight < 150) {
+              messagesTarget.scrollTop = messagesTarget.scrollHeight;
+            }
+          }
         });
+
+      // Infinite scroll upwards to load older messages
+      messagesTarget._scrollListener = function() {
+        if (messagesTarget.scrollTop <= 15) {
+          currentMessageLimit += 20;
+          listenToFirestoreMessages(chatId, targetAvatar);
+        }
+      };
+      messagesTarget.addEventListener('scroll', messagesTarget._scrollListener);
     }
 
     // --- DELETE MESSAGE FUNCTIONS ---
