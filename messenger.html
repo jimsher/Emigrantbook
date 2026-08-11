@@ -755,6 +755,29 @@
       border-bottom-right-radius: 4px;
     }
 
+    /* SEEN READ INDICATOR AVATAR (MESSENGER STYLE) */
+    .seen-indicator-row {
+      display: flex;
+      justify-content: flex-end;
+      align-self: flex-end;
+      margin-top: -4px;
+      margin-bottom: 4px;
+      padding-right: 2px;
+    }
+    .seen-avatar-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.6);
+      border: 1px solid #0d0d11;
+      animation: seenPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes seenPop {
+      0% { transform: scale(0.3); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     /* Messenger 3 Dots Realtime Typing Indicator CSS */
     .typing-indicator-row {
       display: none;
@@ -1564,6 +1587,15 @@
     klaviaturaAudio.loop = true;
     klaviaturaAudio.volume = 0.8;
 
+    // --- აუდიო ფაილი შეტყობინების წაკითხვისთვის (SEEN SOUND) ---
+    const seenAudio = new Audio("seen.mp3"); // აქ შეგიძლიათ შეცვალოთ ხმის ფაილი ან ლინკი
+    seenAudio.volume = 0.9;
+
+    function playSeenSound() {
+      seenAudio.currentTime = 0;
+      seenAudio.play().catch(e => console.log("Seen sound audio restriction:", e));
+    }
+
     function playKlaviaturaSound() {
       if (klaviaturaAudio.paused) {
         klaviaturaAudio.currentTime = 0;
@@ -1714,6 +1746,9 @@
 
     // Selected message for deletion
     var currentSelectedMsgId = null;
+
+    // Track seen state to play sound on change
+    var lastSeenMsgId = null;
 
     // TAB SWITCHING
     function switchTab(tabName) {
@@ -1935,6 +1970,7 @@
     // 2. ჩატის გახსნა, მიმოწერა და წაუკითხავების "წაკითხულად" მონიშვნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
+      lastSeenMsgId = null;
       const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
 
       document.getElementById('chats-screen').style.display = 'none';
@@ -2051,6 +2087,26 @@
         .onSnapshot(function(snapshot) {
           msgBlock.innerHTML = "";
           let lastMsgDate = null;
+          let lastSeenOutgoingMsgId = null;
+
+          // Mark incoming unread messages as read automatically while chat is active
+          snapshot.forEach(docSnap => {
+            const msgData = docSnap.data();
+            if (msgData.senderId !== myUid && msgData.read === false) {
+              docSnap.ref.update({ read: true });
+            }
+            if (msgData.senderId === myUid && msgData.read === true) {
+              lastSeenOutgoingMsgId = docSnap.id;
+            }
+          });
+
+          // Trigger seen sound if new message became seen
+          if (lastSeenOutgoingMsgId && lastSeenOutgoingMsgId !== lastSeenMsgId) {
+            if (lastSeenMsgId !== null) {
+              playSeenSound();
+            }
+            lastSeenMsgId = lastSeenOutgoingMsgId;
+          }
 
           snapshot.forEach(docSnap => {
             const msg = docSnap.data();
@@ -2111,6 +2167,14 @@
 
             attachLongPressListener(msgRow, msgId, isMine);
             msgBlock.appendChild(msgRow);
+
+            // RENDER SEEN READ AVATAR INDICATOR UNDER LAST SEEN OUTGOING MESSAGE
+            if (isMine && msgId === lastSeenOutgoingMsgId) {
+              const seenDiv = document.createElement('div');
+              seenDiv.className = 'seen-indicator-row';
+              seenDiv.innerHTML = `<img class="seen-avatar-icon" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">`;
+              msgBlock.appendChild(seenDiv);
+            }
           });
 
           const target = document.getElementById('messages-target');
