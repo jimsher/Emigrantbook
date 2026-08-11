@@ -1588,12 +1588,13 @@
     klaviaturaAudio.volume = 0.8;
 
     // --- აუდიო ფაილი შეტყობინების წაკითხვისთვის (SEEN SOUND) ---
-    const seenAudio = new Audio("seen.mp3"); // აქ შეგიძლიათ შეცვალოთ ხმის ფაილი ან ლინკი
+    const seenAudio = new Audio("seen.mp3");
     seenAudio.volume = 0.9;
+    seenAudio.load();
 
     function playSeenSound() {
       seenAudio.currentTime = 0;
-      seenAudio.play().catch(e => console.log("Seen sound audio restriction:", e));
+      seenAudio.play().catch(e => console.log("Seen sound play error:", e));
     }
 
     function playKlaviaturaSound() {
@@ -1746,9 +1747,6 @@
 
     // Selected message for deletion
     var currentSelectedMsgId = null;
-
-    // Track seen state to play sound on change
-    var lastSeenMsgId = null;
 
     // TAB SWITCHING
     function switchTab(tabName) {
@@ -1970,7 +1968,6 @@
     // 2. ჩატის გახსნა, მიმოწერა და წაუკითხავების "წაკითხულად" მონიშვნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
-      lastSeenMsgId = null;
       const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
 
       document.getElementById('chats-screen').style.display = 'none';
@@ -2085,11 +2082,22 @@
       unsubscribeMessages = db.collection('chats').doc(chatId).collection('messages')
         .orderBy('createdAt', 'asc')
         .onSnapshot(function(snapshot) {
+          
+          // REALTIME SEEN SOUND TRIGGER ON MODIFIED STATUS
+          snapshot.docChanges().forEach(change => {
+            if (change.type === "modified") {
+              const msgData = change.doc.data();
+              if (msgData.senderId === myUid && msgData.read === true) {
+                playSeenSound();
+              }
+            }
+          });
+
           msgBlock.innerHTML = "";
           let lastMsgDate = null;
           let lastSeenOutgoingMsgId = null;
 
-          // Mark incoming unread messages as read automatically while chat is active
+          // Auto mark received unread messages as read
           snapshot.forEach(docSnap => {
             const msgData = docSnap.data();
             if (msgData.senderId !== myUid && msgData.read === false) {
@@ -2100,20 +2108,11 @@
             }
           });
 
-          // Trigger seen sound if new message became seen
-          if (lastSeenOutgoingMsgId && lastSeenOutgoingMsgId !== lastSeenMsgId) {
-            if (lastSeenMsgId !== null) {
-              playSeenSound();
-            }
-            lastSeenMsgId = lastSeenOutgoingMsgId;
-          }
-
           snapshot.forEach(docSnap => {
             const msg = docSnap.data();
             const msgId = docSnap.id;
             const isMine = msg.senderId === myUid;
 
-            // თუ ჩემთან წაშლილია - არ გამოაჩინო
             if (msg.deletedFor && Array.isArray(msg.deletedFor) && msg.deletedFor.includes(myUid)) {
               return;
             }
@@ -2131,7 +2130,6 @@
             const msgRow = document.createElement('div');
             msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
-            // ზარის ბარათების რენდერი (Missed & Finished Call Cards)
             if (msg.type === 'missed_call' || msg.type === 'finished_call') {
               let titleText = msg.type === 'missed_call' ? 'გამოტოვებული ვიდეო ზარი' : 'ვიდეო ზარი';
               let durationText = msg.type === 'finished_call' ? (msg.duration || '0 წმ') : new Date(msgDateObj).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
