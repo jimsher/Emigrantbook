@@ -216,6 +216,7 @@
       height: 14px;
       border-radius: 50%;
       border: 2px solid #0d0d11;
+      box-shadow: 0 0 6px rgba(46, 213, 115, 0.8);
     }
     .story-name {
       font-size: 12px;
@@ -1840,8 +1841,32 @@
       }
     }
 
+    // --- ONLINE / OFFLINE REALTIME STATUS TRACKER ---
+    function setUserOnlineStatus(uid, isOnline) {
+      db.collection('profiles').doc(uid).update({
+        status: isOnline ? 'online' : 'offline',
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(err => console.log("Status update error:", err));
+    }
+
     auth.onAuthStateChanged(function(user) {
       if (user) {
+        // Set Online on Auth
+        setUserOnlineStatus(user.uid, true);
+
+        // Window Close / Unload -> Offline
+        window.addEventListener('beforeunload', function() {
+          setUserOnlineStatus(user.uid, false);
+        });
+
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'visible') {
+            setUserOnlineStatus(user.uid, true);
+          } else {
+            setUserOnlineStatus(user.uid, false);
+          }
+        });
+
         db.collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
           if (docSnap.exists) {
             var data = docSnap.data();
@@ -1907,8 +1932,6 @@
       });
     }
 
-    let chatLastMessagesMap = {};
-
     function renderActiveChats(users, currentUid, listTarget) {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
@@ -1917,12 +1940,18 @@
         return;
       }
 
+      let validChatsList = [];
+      let loadedCount = 0;
+
       users.forEach(user => {
         const chatId = getChatId(currentUid, user.uid);
         
         db.collection('chats').doc(chatId).collection('messages')
           .orderBy('createdAt', 'desc').limit(1)
           .onSnapshot(function(snapshot) {
+            loadedCount++;
+
+            // FILTER OUT EMPTY CHATS (გამოჩნდება მხოლოდ ის ჩატები, სადაც რეალურად არის მესიჯი)
             if (!snapshot.empty) {
               const lastMsgDoc = snapshot.docs[0].data();
               let msgText = lastMsgDoc.text || "📷 Photo";
@@ -1930,8 +1959,6 @@
               else if (lastMsgDoc.type === 'finished_call') msgText = `📞 ვიდეო ზარი (${lastMsgDoc.duration || "0 წმ"})`;
 
               let timeMs = lastMsgDoc.createdAt && lastMsgDoc.createdAt.seconds ? lastMsgDoc.createdAt.seconds * 1000 : Date.now();
-              chatLastMessagesMap[user.uid] = timeMs;
-
               let timeStr = lastMsgDoc.createdAt ? new Date(timeMs).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
 
               const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
@@ -1941,21 +1968,26 @@
               user.lastMsgTimeStr = timeStr;
               user.isUnread = isUnread;
 
-              redrawSortedChatsList(users, currentUid, listTarget);
+              // Save or update in validChatsList
+              let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
+              if (existingIdx > -1) {
+                validChatsList[existingIdx] = user;
+              } else {
+                validChatsList.push(user);
+              }
             } else {
-              chatLastMessagesMap[user.uid] = 0;
-              user.lastMsgText = "";
-              user.lastMsgTimeMs = 0;
-              user.lastMsgTimeStr = "";
-              user.isUnread = false;
-              redrawSortedChatsList(users, currentUid, listTarget);
+              // If empty, remove from list
+              validChatsList = validChatsList.filter(u => u.uid !== user.uid);
             }
+
+            redrawSortedChatsList(validChatsList, currentUid, listTarget);
           });
       });
     }
 
-    function redrawSortedChatsList(users, currentUid, listTarget) {
-      let sortedUsers = [...users].sort((a, b) => (b.lastMsgTimeMs || 0) - (a.lastMsgTimeMs || 0));
+    function redrawSortedChatsList(validUsers, currentUid, listTarget) {
+      // Sort users by lastMsgTimeMs descending (newest chat on top)
+      let sortedUsers = [...validUsers].sort((a, b) => (b.lastMsgTimeMs || 0) - (a.lastMsgTimeMs || 0));
 
       listTarget.innerHTML = "";
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
@@ -2032,6 +2064,7 @@
 
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
 
+      // REALTIME ONLINE / OFFLINE STATUS IN CHAT THREAD HEADER
       threadProfileUnsubscribe = db.collection('profiles').doc(targetUid).onSnapshot(function(docSnap) {
         const statusEl = document.getElementById('active-thread-status');
         var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
