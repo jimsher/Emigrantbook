@@ -3992,45 +3992,6 @@ auth.onAuthStateChanged(function(user) {
 
     return;
   }
-
-  // 2. თუ სურათია -> Cloudinary Fallback
-  var CLOUD_NAME = "kim1albt";
-  var UPLOAD_PRESET = "fhlkp9ld";
-
-  var formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
-
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload");
-
-  // ატვირთვის პროცენტის თვლა რეალურ დროში Cloudinary-ზე
-  xhr.upload.onprogress = function(e) {
-    if (e.lengthComputable && progressCallback) {
-      var percent = Math.round((e.loaded / e.total) * 100);
-      progressCallback(percent);
-    }
-  };
-
-  xhr.onload = function() {
-    try {
-      var data = JSON.parse(xhr.responseText);
-      if (data.secure_url) {
-        callback(data.secure_url);
-      } else {
-        alert("Upload error: " + (data.error ? data.error.message : "Unknown error"));
-      }
-    } catch (err) {
-      alert("Upload error parsing response");
-    }
-  };
-
-  xhr.onerror = function(error) {
-    console.error("Upload Error:", error);
-    alert("Upload error occurred");
-  };
-
-  xhr.send(formData);
 }
     // აქ მთავრდება
 
