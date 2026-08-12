@@ -4520,6 +4520,66 @@ function subscribeActiveLivesForFeed() {
       });
     }
 
+    // სამი წერტილის მენიუ
+    // 3 წერტილის მენიუს გახსნა / დახურვა
+function togglePostMenu(postId, event) {
+  event.stopPropagation();
+  var menu = document.getElementById('options-menu-' + postId);
+  
+  // დავხუროთ ყველა სხვა ღია მენიუ
+  document.querySelectorAll('.post-options-menu').forEach(function(m) {
+    if (m !== menu) m.style.display = 'none';
+  });
+
+  if (menu) {
+    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+  }
+}
+
+// ეკრანზე ნებისმიერ ადგილას დაჭერისას მენიუს დახურვა
+document.addEventListener('click', function() {
+  document.querySelectorAll('.post-options-menu').forEach(function(m) {
+    m.style.display = 'none';
+  });
+});
+
+// 1. პოსტის რედაქტირება
+function editPost(postId) {
+  var postCard = document.getElementById('post-card-' + postId);
+  if (!postCard) return;
+  
+  var contentEl = postCard.querySelector('.post-content');
+  var currentText = contentEl ? contentEl.innerText.trim() : "";
+
+  var newText = prompt("შეიყვანეთ ახალი ტექსტი:", currentText);
+  if (newText === null) return; // გაუქმება
+
+  db.collection('posts').doc(postId).update({
+    content: newText.trim()
+  }).then(function() {
+    if (contentEl) contentEl.innerText = newText.trim();
+  }).catch(function(err) {
+    alert("შეცდომა რედაქტირებისას: " + err.message);
+  });
+}
+
+// 2. პოსტის დამალვა მთავარი გვერდიდან (ინდივიდუალური)
+function hidePostFromFeed(postId) {
+  var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
+  var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
+  
+  if (!hiddenPosts.includes(postId)) {
+    hiddenPosts.push(postId);
+    localStorage.setItem(key, JSON.stringify(hiddenPosts));
+  }
+
+  // მომენტალურად დავმალოთ ეკრანზე
+  var postCard = document.getElementById('post-card-' + postId);
+  if (postCard) {
+    postCard.style.display = 'none';
+  }
+}
+    // აქ მთავრდება
     
     function createPostCardHtml(post) {
   var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
