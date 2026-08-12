@@ -4565,9 +4565,19 @@ function subscribeActiveLivesForFeed() {
     var isVideo = files[0].type.startsWith('video/');
 
     if (isVideo) {
-      if (publishBtn) publishBtn.innerText = '0%';
-      
-      // გადაეცემა მე-4 პარამეტრი (progressCallback) პროცენტების ასასახად
+      var file = files[0];
+
+      // თუ ფაილის ზომა 100 MB-ზე მეტია
+      if (file.size > 100 * 1024 * 1024) {
+        alert("ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.");
+        if (publishBtn) {
+          publishBtn.disabled = false;
+          publishBtn.innerHTML = 'Publish';
+          if (typeof applyLanguageDOM === 'function') applyLanguageDOM();
+        }
+        return;
+      }
+
       uploadMediaToFirebase(files[0], 'videos', function(videoUrl) {
         savePostToDatabase(authorName, text, videoUrl, "video", publishBtn);
       }, function(percent) {
