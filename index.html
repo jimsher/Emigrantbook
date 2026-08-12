@@ -4528,9 +4528,9 @@ function subscribeActiveLivesForFeed() {
     if (isVideo) {
       var file = files[0];
 
-      // თუ ფაილის ზომა 100 MB-ზე მეტია
+      // თუ ფაილის ზომა 100 MB-ზე მეტია -> ვაჩვენებთ ჩვენს ლამაზ მოდალს
       if (file.size > 100 * 1024 * 1024) {
-        alert("ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.");
+        showSizeLimitModal();
         if (publishBtn) {
           publishBtn.disabled = false;
           publishBtn.innerHTML = 'Publish';
@@ -5209,6 +5209,19 @@ function endCallLocally() {
   activeIncomingCallData = null;
 }
     /* აქ მთავრდება */
+
+
+    // მოდალის ჩვენება
+function showSizeLimitModal() {
+  var modal = document.getElementById('custom-size-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+// მოდალის დახურვა
+function closeSizeModal() {
+  var modal = document.getElementById('custom-size-modal');
+  if (modal) modal.style.display = 'none';
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
