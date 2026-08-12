@@ -4445,7 +4445,8 @@ function subscribeActiveLivesForFeed() {
       });
     }
 
-    function createPostCardHtml(post) {
+    
+   function createPostCardHtml(post) {
   var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
   var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
   var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
@@ -4464,7 +4465,19 @@ function subscribeActiveLivesForFeed() {
 
   var hasLiked = likedPosts.includes(post.id);
   var currentLikesNum = post.likes_count || 0;
-  var currentCommentsNum = post.comments_count || 0; // კომენტარების რეალური რაოდენობა ბაზიდან
+
+  // 💬 კომენტარების რაოდენობის წაკითხვა post_comments ველიდან
+  var currentCommentsNum = 0;
+  if (post.post_comments) {
+    if (Array.isArray(post.post_comments)) {
+      currentCommentsNum = post.post_comments.length;
+    } else if (typeof post.post_comments === 'number') {
+      currentCommentsNum = post.post_comments;
+    }
+  } else if (post.comments_count) {
+    currentCommentsNum = post.comments_count;
+  }
+
   var likedClass = hasLiked ? "btn-liked" : "";
   var statsIconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
 
@@ -4507,6 +4520,7 @@ function subscribeActiveLivesForFeed() {
     </div>
   `;
 }
+      
 
     function createPost() {
   var txtEl = document.getElementById('post-text-input');
