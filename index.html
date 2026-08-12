@@ -4521,12 +4521,11 @@ function subscribeActiveLivesForFeed() {
     }
 
     // სამი წერტილის მენიუ
-    // 3 წერტილის მენიუს გახსნა / დახურვა
+  // 3 წერტილის მენიუს გახსნა / დახურვა
 function togglePostMenu(postId, event) {
-  event.stopPropagation();
+  if (event) event.stopPropagation();
   var menu = document.getElementById('options-menu-' + postId);
   
-  // დავხუროთ ყველა სხვა ღია მენიუ
   document.querySelectorAll('.post-options-menu').forEach(function(m) {
     if (m !== menu) m.style.display = 'none';
   });
@@ -4536,60 +4535,73 @@ function togglePostMenu(postId, event) {
   }
 }
 
-// ეკრანზე ნებისმიერ ადგილას დაჭერისას მენიუს დახურვა
-document.addEventListener('click', function() {
+// ეკრანზე სხვაგან დაჭერისას მენიუს დახურვა
+window.addEventListener('click', function() {
   document.querySelectorAll('.post-options-menu').forEach(function(m) {
     m.style.display = 'none';
   });
 });
 
-// 1. პოსტის რედაქტირება
+// პოსტის რედაქტირება
 function editPost(postId) {
   var postCard = document.getElementById('post-card-' + postId);
-  if (!postCard) return;
-  
-  var contentEl = postCard.querySelector('.post-content');
+  var contentEl = postCard ? postCard.querySelector('.post-content') : null;
   var currentText = contentEl ? contentEl.innerText.trim() : "";
 
   var newText = prompt("შეიყვანეთ ახალი ტექსტი:", currentText);
-  if (newText === null) return; // გაუქმება
+  if (newText === null) return;
 
   db.collection('posts').doc(postId).update({
     content: newText.trim()
   }).then(function() {
     if (contentEl) contentEl.innerText = newText.trim();
   }).catch(function(err) {
-    alert("შეცდომა რედაქტირებისას: " + err.message);
+    alert("შეცდომა: " + err.message);
   });
 }
 
-// 2. პოსტის დამალვა მთავარი გვერდიდან (ინდივიდუალური)
+// პოსტის დამალვა მხოლოდ მთავარი გვერდიდან
 function hidePostFromFeed(postId) {
   var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
   var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
-  
   if (!hiddenPosts.includes(postId)) {
     hiddenPosts.push(postId);
     localStorage.setItem(key, JSON.stringify(hiddenPosts));
   }
-
-  // მომენტალურად დავმალოთ ეკრანზე
+  
+  // მთავარ გვერდზე ეგრევე გააქრობს
   var postCard = document.getElementById('post-card-' + postId);
   if (postCard) {
     postCard.style.display = 'none';
   }
 }
+
+// პოსტის ხელახლა გამოჩენა მთავარ გვერდზე (პროფილიდან)
+function unhidePostFromFeed(postId) {
+  var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
+  var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
+  var updated = hiddenPosts.filter(function(id) { return id !== postId; });
+  localStorage.setItem(key, JSON.stringify(updated));
+  
+  alert("პოსტი აღდგენილია მთავარ გვერდზე!");
+  location.reload();
+}
     // აქ მთავრდება
     
     function createPostCardHtml(post, isProfilePage) {
-  // 👁️‍🗨️ თუ მთავარ გვერდზე ვართ და პოსტი დამალულია -> არ გამოვაჩინოთ
-  // პროფილის გვერდზე (isProfilePage === true) პოსტი მაინც გამოჩნდება!
-  if (!isProfilePage) {
-    var hiddenKey = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
-    var hiddenPosts = JSON.parse(localStorage.getItem(hiddenKey)) || [];
-    if (hiddenPosts.includes(post.id)) {
-      return "";
-    }
+  // ავტომატური შემოწმება: პროფილის გვერდზე ვართ თუ მთავარზე
+  var isProfile = isProfilePage || 
+                  (document.getElementById('profile-section') && document.getElementById('profile-section').style.display !== 'none') ||
+                  (document.getElementById('user-profile-modal') && document.getElementById('user-profile-modal').style.display === 'flex');
+
+  // 👁️‍🗨️ თუ მთავარ გვერდზე ვართ და პოსტი დამალულია -> არ გამოვაჩინოთ მთავარზე.
+  // პროფილის გვერდზე პოსტი ყოველთვის გამოჩნდება!
+  var hiddenKey = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
+  var hiddenPosts = JSON.parse(localStorage.getItem(hiddenKey)) || [];
+  var isHidden = hiddenPosts.includes(post.id);
+
+  if (!isProfile && isHidden) {
+    return "";
   }
 
   var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
@@ -4608,17 +4620,17 @@ function hidePostFromFeed(postId) {
   if (currentUser && post.user_id === currentUser.uid) {
     deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">${t.delete}</button>`;
     
-    // პროფილის გვერდზე "გამოჩენა" (Unhide), მთავარზე "დამალვა" (Hide)
-    var hideUnhideBtn = isProfilePage 
-      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">👁️ მთავარზე გამოჩენა</button>`
-      : `<button onclick="hidePostFromFeed('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">👁️ პოსტის დამალვა</button>`;
+    // პროფილზე გამოაჩენს "მთავარზე გამოჩენას", მთავარზე გამოაჩენს "დამალვას"
+    var hideOptionBtn = isHidden 
+      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">👁️ მთავარზე გამოჩენა</button>`
+      : `<button onclick="hidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">👁️‍🗨️ დამალვა მთავარი გვერდიდან</button>`;
 
     optionsMenuHtml = `
       <div class="post-options-dropdown" style="position: relative; display: inline-block;">
-        <button class="post-options-btn" onclick="togglePostMenu('${post.id}', event)" style="background: transparent; border: none; color: #aaaaaa; font-size: 20px; cursor: pointer; padding: 0 6px; line-height: 1;">⋮</button>
-        <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; min-width: 210px; overflow: hidden;">
-          <button onclick="editPost('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">✏️ რედაქტირება</button>
-          ${hideUnhideBtn}
+        <button class="post-options-btn" onclick="togglePostMenu('${post.id}', event)" style="background: transparent; border: none; color: #aaaaaa; font-size: 22px; cursor: pointer; padding: 0 8px; line-height: 1;">⋮</button>
+        <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999; min-width: 200px; overflow: hidden;">
+          <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">✏️ რედაქტირება</button>
+          ${hideOptionBtn}
         </div>
       </div>
     `;
@@ -4627,7 +4639,6 @@ function hidePostFromFeed(postId) {
   var hasLiked = likedPosts.includes(post.id);
   var currentLikesNum = post.likes_count || 0;
 
-  // 💬 კომენტარების რაოდენობის წაკითხვა post_comments ველიდან
   var currentCommentsNum = 0;
   if (post.post_comments) {
     if (Array.isArray(post.post_comments)) {
@@ -4683,19 +4694,7 @@ function hidePostFromFeed(postId) {
       </div>
     </div>
   `;
-}
-
-// 👁️‍🗨️ ხელახლა გამოჩენის ფუნქცია (პროფილის გვერდისთვის)
-function unhidePostFromFeed(postId) {
-  var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
-  var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
-  
-  var updated = hiddenPosts.filter(function(id) { return id !== postId; });
-  localStorage.setItem(key, JSON.stringify(updated));
-  
-  alert("პოსტი ისევ გამოჩნდება მთავარ გვერდზე!");
-  location.reload();
-}   
+}      
 
     function createPost() {
   var txtEl = document.getElementById('post-text-input');
