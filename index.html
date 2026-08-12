@@ -3941,7 +3941,8 @@ auth.onAuthStateChanged(function(user) {
       if (input) input.click();
     }
 
-   function uploadMediaToFirebase(file, folder, callback) {
+    // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
+     function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   if (!currentUser) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
@@ -3971,7 +3972,7 @@ auth.onAuthStateChanged(function(user) {
       queueSize: 1                // სათითაოდ გაგზავნა
     };
 
-    r2S3.upload(params, options, function(err, data) {
+    var uploadObj = r2S3.upload(params, options, function(err, data) {
       if (err) {
         console.error("R2 Upload Error:", err);
         alert("ვიდეოს ატვირთვა ჩაიშალა: " + err.message);
@@ -3980,6 +3981,15 @@ auth.onAuthStateChanged(function(user) {
         callback(publicUrl);
       }
     });
+
+    // ატვირთვის პროცენტის თვლა რეალურ დროში R2-ზე
+    uploadObj.on('httpUploadProgress', function(evt) {
+      if (evt.total && progressCallback) {
+        var percent = Math.round((evt.loaded / evt.total) * 100);
+        progressCallback(percent);
+      }
+    });
+
     return;
   }
 
@@ -3991,25 +4001,38 @@ auth.onAuthStateChanged(function(user) {
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload", {
-    method: "POST",
-    body: formData
-  })
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(data) {
-    if (data.secure_url) {
-      callback(data.secure_url);
-    } else {
-      alert("Upload error: " + (data.error ? data.error.message : "Unknown error"));
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload");
+
+  // ატვირთვის პროცენტის თვლა რეალურ დროში Cloudinary-ზე
+  xhr.upload.onprogress = function(e) {
+    if (e.lengthComputable && progressCallback) {
+      var percent = Math.round((e.loaded / e.total) * 100);
+      progressCallback(percent);
     }
-  })
-  .catch(function(error) {
+  };
+
+  xhr.onload = function() {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      if (data.secure_url) {
+        callback(data.secure_url);
+      } else {
+        alert("Upload error: " + (data.error ? data.error.message : "Unknown error"));
+      }
+    } catch (err) {
+      alert("Upload error parsing response");
+    }
+  };
+
+  xhr.onerror = function(error) {
     console.error("Upload Error:", error);
-    alert("Upload error: " + error.message);
-  });
+    alert("Upload error occurred");
+  };
+
+  xhr.send(formData);
 }
+    // აქ მთავრდება
 
     function uploadImageToImgBB(file, callback) {
       if (file.type.startsWith('video/')) {
@@ -4524,55 +4547,60 @@ function subscribeActiveLivesForFeed() {
     }
 
     function createPost() {
-      var txtEl = document.getElementById('post-text-input');
-      var fileInput = document.getElementById('post-media-file');
-      var publishBtn = document.getElementById('publish-submit-btn');
+  var txtEl = document.getElementById('post-text-input');
+  var fileInput = document.getElementById('post-media-file');
+  var publishBtn = document.getElementById('publish-submit-btn');
 
-      var text = txtEl ? txtEl.value.trim() : "";
-      if (!text && fileInput.files.length === 0) return;
+  var text = txtEl ? txtEl.value.trim() : "";
+  if (!text && fileInput.files.length === 0) return;
 
-      if (publishBtn) {
-        publishBtn.disabled = true;
-        publishBtn.innerHTML = '<span class="btn-spinner"></span>';
-      }
-      var authorName = userProfile ? userProfile.full_name : currentUser.email;
+  if (publishBtn) {
+    publishBtn.disabled = true;
+    publishBtn.innerHTML = '<span class="btn-spinner"></span>';
+  }
+  var authorName = userProfile ? userProfile.full_name : currentUser.email;
 
-      if (fileInput && fileInput.files.length > 0) {
-        var files = Array.from(fileInput.files).slice(0, 6);
-        var isVideo = files[0].type.startsWith('video/');
+  if (fileInput && fileInput.files.length > 0) {
+    var files = Array.from(fileInput.files).slice(0, 6);
+    var isVideo = files[0].type.startsWith('video/');
 
-        if (isVideo) {
-          uploadMediaToFirebase(files[0], 'videos', function(videoUrl) {
-            savePostToDatabase(authorName, text, videoUrl, "video", publishBtn);
+    if (isVideo) {
+      if (publishBtn) publishBtn.innerText = '0%';
+      
+      // გადაეცემა მე-4 პარამეტრი (progressCallback) პროცენტების ასასახად
+      uploadMediaToFirebase(files[0], 'videos', function(videoUrl) {
+        savePostToDatabase(authorName, text, videoUrl, "video", publishBtn);
+      }, function(percent) {
+        if (publishBtn) publishBtn.innerText = percent + '%';
+      });
+    } else {
+      var uploadedUrls = [];
+      var promises = [];
+
+      files.forEach(function(file) {
+        let p = new Promise(function(resolve, reject) {
+          uploadImageToImgBB(file, function(url) {
+            uploadedUrls.push(url);
+            resolve();
           });
-        } else {
-          var uploadedUrls = [];
-          var promises = [];
+        });
+        promises.push(p);
+      });
 
-          files.forEach(function(file) {
-            let p = new Promise(function(resolve, reject) {
-              uploadImageToImgBB(file, function(url) {
-                uploadedUrls.push(url);
-                resolve();
-              });
-            });
-            promises.push(p);
-          });
-
-          Promise.all(promises).then(function() {
-            var mediaUrlsJoined = uploadedUrls.join(",");
-            savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
-          }).catch(function() {
-            if (publishBtn) {
-              publishBtn.disabled = false;
-              applyLanguageDOM();
-            }
-          });
+      Promise.all(promises).then(function() {
+        var mediaUrlsJoined = uploadedUrls.join(",");
+        savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
+      }).catch(function() {
+        if (publishBtn) {
+          publishBtn.disabled = false;
+          applyLanguageDOM();
         }
-      } else {
-        savePostToDatabase(authorName, text, null, null, publishBtn);
-      }
+      });
     }
+  } else {
+    savePostToDatabase(authorName, text, null, null, publishBtn);
+  }
+}
 
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
       db.collection('posts').add({
