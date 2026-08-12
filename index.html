@@ -3965,7 +3965,13 @@ auth.onAuthStateChanged(function(user) {
       ContentType: file.type || 'video/mp4'
     };
 
-    r2S3.upload(params, function(err, data) {
+    // დიდი ვიდეოების დაჭრა 10MB-იან ნაწილებად (სტაბილური ატვირთვისთვის)
+    var options = {
+      partSize: 10 * 1024 * 1024, // 10 MB ჩანკები
+      queueSize: 1                // სათითაოდ გაგზავნა
+    };
+
+    r2S3.upload(params, options, function(err, data) {
       if (err) {
         console.error("R2 Upload Error:", err);
         alert("ვიდეოს ატვირთვა ჩაიშალა: " + err.message);
