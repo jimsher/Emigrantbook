@@ -4581,12 +4581,15 @@ function hidePostFromFeed(postId) {
 }
     // აქ მთავრდება
     
-      function createPostCardHtml(post) {
-  // 👁️‍🗨️ თუ პოსტი მომხმარებელმა დამალა, არ გამოვაჩინოთ
-  var hiddenKey = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
-  var hiddenPosts = JSON.parse(localStorage.getItem(hiddenKey)) || [];
-  if (hiddenPosts.includes(post.id)) {
-    return "";
+    function createPostCardHtml(post, isProfilePage) {
+  // 👁️‍🗨️ თუ მთავარ გვერდზე ვართ და პოსტი დამალულია -> არ გამოვაჩინოთ
+  // პროფილის გვერდზე (isProfilePage === true) პოსტი მაინც გამოჩნდება!
+  if (!isProfilePage) {
+    var hiddenKey = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
+    var hiddenPosts = JSON.parse(localStorage.getItem(hiddenKey)) || [];
+    if (hiddenPosts.includes(post.id)) {
+      return "";
+    }
   }
 
   var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
@@ -4604,12 +4607,18 @@ function hidePostFromFeed(postId) {
   var optionsMenuHtml = "";
   if (currentUser && post.user_id === currentUser.uid) {
     deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">${t.delete}</button>`;
+    
+    // პროფილის გვერდზე "გამოჩენა" (Unhide), მთავარზე "დამალვა" (Hide)
+    var hideUnhideBtn = isProfilePage 
+      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">👁️ მთავარზე გამოჩენა</button>`
+      : `<button onclick="hidePostFromFeed('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">👁️ პოსტის დამალვა</button>`;
+
     optionsMenuHtml = `
       <div class="post-options-dropdown" style="position: relative; display: inline-block;">
         <button class="post-options-btn" onclick="togglePostMenu('${post.id}', event)" style="background: transparent; border: none; color: #aaaaaa; font-size: 20px; cursor: pointer; padding: 0 6px; line-height: 1;">⋮</button>
         <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100; min-width: 210px; overflow: hidden;">
           <button onclick="editPost('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">✏️ რედაქტირება</button>
-          <button onclick="hidePostFromFeed('${post.id}')" style="width: 100%; padding: 10px 14px; background: transparent; border: none; color: #e4e6eb; font-size: 13px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">👁️ პოსტის დამალვა</button>
+          ${hideUnhideBtn}
         </div>
       </div>
     `;
@@ -4674,7 +4683,19 @@ function hidePostFromFeed(postId) {
       </div>
     </div>
   `;
-}               
+}
+
+// 👁️‍🗨️ ხელახლა გამოჩენის ფუნქცია (პროფილის გვერდისთვის)
+function unhidePostFromFeed(postId) {
+  var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
+  var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
+  
+  var updated = hiddenPosts.filter(function(id) { return id !== postId; });
+  localStorage.setItem(key, JSON.stringify(updated));
+  
+  alert("პოსტი ისევ გამოჩნდება მთავარ გვერდზე!");
+  location.reload();
+}   
 
     function createPost() {
   var txtEl = document.getElementById('post-text-input');
