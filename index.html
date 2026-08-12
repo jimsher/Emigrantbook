@@ -2644,20 +2644,26 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function renderCommentsCountOnly(post) {
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
-      if (typeof post.comments_count === 'number') {
-        countLabels.forEach(function(lbl) { lbl.innerText = post.comments_count + " " + t.commentsCount; });
-        return;
-      }
-      db.collection('post_comments')
-        .where('post_id', '==', post.id)
-        .get()
-        .then(function(snapshot) {
-          var count = snapshot.size;
-          countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; }); 
-        });
-    }
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
+  
+  if (typeof post.comments_count === 'number') {
+    countLabels.forEach(function(lbl) { lbl.innerText = post.comments_count + " " + t.commentsCount; });
+    return;
+  }
+  
+  // თუ ბაზაში არ ეწერა, ითვლის post_comments-დან და ავტომატურად ინახავს პოსტის დოკუმენტშიც
+  db.collection('post_comments')
+    .where('post_id', '==', post.id)
+    .get()
+    .then(function(snapshot) {
+      var count = snapshot.size;
+      countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; }); 
+      
+      // ინახავს დათვლილ ციფრს პოსტის დოკუმენტში, რომ შემდეგ რეფრეშზე ეგრევე გამოჩნდეს
+      db.collection('posts').doc(post.id).update({ comments_count: count }).catch(function(){});
+    });
+}
 
     function openCommentsModal(postId, totalLikes) {
       activePostForComments = postId;
