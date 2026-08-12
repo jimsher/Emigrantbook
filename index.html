@@ -3917,43 +3917,44 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function loadUserPosts(userId) {
-      var profileWall = document.getElementById('profile-posts-wall');
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      var btnPosts = document.getElementById('tab-btn-posts');
-      if(profileWall && btnPosts && btnPosts.classList.contains('active')) {
-          profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
+  var profileWall = document.getElementById('profile-posts-wall');
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var btnPosts = document.getElementById('tab-btn-posts');
+  if(profileWall && btnPosts && btnPosts.classList.contains('active')) {
+      profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
+  }
+
+  db.collection('posts')
+    .where('user_id', '==', userId)
+    .orderBy('created_at', 'desc')
+    .limit(20)
+    .get()
+    .then(function(snapshot) {
+      var posts = [];
+      snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
+      
+      updateProfileStats(userId, posts.length);
+
+      if (!profileWall) return;
+
+      if (posts.length === 0) {
+        profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">Empty wall.</div>`;
+        return;
       }
 
-      db.collection('posts')
-        .where('user_id', '==', userId)
-        .orderBy('created_at', 'desc')
-        .limit(20)
-        .get()
-        .then(function(snapshot) {
-          var posts = [];
-          snapshot.forEach(function(doc) { posts.push(Object.assign({ id: doc.id }, doc.data())); });
-          
-          updateProfileStats(userId, posts.length);
-
-          if (!profileWall) return;
-
-          if (posts.length === 0) {
-            profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">Empty wall.</div>`;
-            return;
-          }
-
-          profileWall.innerHTML = "";
-          
-          posts.forEach(function(post) {
-            profileWall.innerHTML += createPostCardHtml(post);
-            renderCommentsCountOnly(post);
-          });
-          observeVideos();
-        }).catch(function(error) {
-          console.error("Firestore Index Error or query failure: ", error);
-          if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">Error loading posts.</div>`;
-        });
-    }
+      profileWall.innerHTML = "";
+      
+      posts.forEach(function(post) {
+        // აქ გადაეცემა true, რომ კოდმა იცოდეს პროფილის გვერდია და მთავარზე დამალული პოსტიც აქ გამოჩნდეს
+        profileWall.innerHTML += createPostCardHtml(post, true);
+        renderCommentsCountOnly(post);
+      });
+      observeVideos();
+    }).catch(function(error) {
+      console.error("Firestore Index Error or query failure: ", error);
+      if (profileWall) profileWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff4d4f;">Error loading posts.</div>`;
+    });
+}
 
     function showEditProfileScreen() {
       if (!userProfile) return;
