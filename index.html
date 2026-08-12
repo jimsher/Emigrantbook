@@ -4588,7 +4588,7 @@ function unhidePostFromFeed(postId) {
 }
     // აქ მთავრდება
     
-    function createPostCardHtml(post, isProfilePage) {
+     function createPostCardHtml(post, isProfilePage) {
   // ავტომატური შემოწმება: პროფილის გვერდზე ვართ თუ მთავარზე
   var isProfile = isProfilePage || 
                   (document.getElementById('profile-section') && document.getElementById('profile-section').style.display !== 'none') ||
@@ -4616,17 +4616,22 @@ function unhidePostFromFeed(postId) {
 
   var optionsMenuHtml = "";
   if (currentUser && post.user_id === currentUser.uid) {
+    // თარგმანები მენიუს ღილაკებისთვის
+    var editText = t.edit || "რედაქტირება";
+    var hideText = t.hidePost || "პოსტის დამალვა";
+    var showText = t.showPost || "მთავარზე გამოჩენა";
+
     // პროფილზე გამოაჩენს "მთავარზე გამოჩენას", მთავარზე გამოაჩენს "დამალვას"
     var hideOptionBtn = isHidden 
-      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">👁️ მთავარზე გამოჩენა</button>`
-      : `<button onclick="hidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">👁️ პოსტის დამალვა</button>`;
+      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">👁️ ${showText}</button>`
+      : `<button onclick="hidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">👁️ ${hideText}</button>`;
 
-    // 3 წერტილიანი მენიუ, სადაც შიგნით არის ჩასმული წაშლის (ურნის) ღილაკიც
+    // 3 წერტილიანი მენიუ
     optionsMenuHtml = `
       <div class="post-options-dropdown" style="position: relative; display: inline-block;">
         <button class="post-options-btn" onclick="togglePostMenu('${post.id}', event)" style="background: transparent; border: none; color: #aaaaaa; font-size: 22px; cursor: pointer; padding: 0 8px; line-height: 1;">⋮</button>
         <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999; min-width: 200px; overflow: hidden;">
-          <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">✏️ რედაქტირება</button>
+          <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">✏️ ${editText}</button>
           ${hideOptionBtn}
           <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a;">🗑️ ${t.delete}</button>
         </div>
@@ -4691,7 +4696,7 @@ function unhidePostFromFeed(postId) {
       </div>
     </div>
   `;
-}        
+}                   
 
     function createPost() {
   var txtEl = document.getElementById('post-text-input');
