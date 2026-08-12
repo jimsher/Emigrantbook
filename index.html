@@ -4446,69 +4446,80 @@ function subscribeActiveLivesForFeed() {
     }
 
     
-   function createPostCardHtml(post) {
-      var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
-      var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
-      var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
-      var isOnline = cachedOnlineStates[post.user_id] === true;
-      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+    function createPostCardHtml(post) {
+  var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
+  var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
+  var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
+  var isOnline = cachedOnlineStates[post.user_id] === true;
+  var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
-      var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-      var t = TRANSLATIONS[currentLang];
+  var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-      var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0, post.media_type);
+  var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0, post.media_type);
 
-      var deleteButtonHtml = "";
-      if (currentUser && post.user_id === currentUser.uid) {
-        deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">${t.delete}</button>`;
-      }
+  var deleteButtonHtml = "";
+  if (currentUser && post.user_id === currentUser.uid) {
+    deleteButtonHtml = `<button class="post-delete-btn" onclick="deletePost('${post.id}')">${t.delete}</button>`;
+  }
 
-      var hasLiked = likedPosts.includes(post.id);
-      var currentLikesNum = post.likes_count || 0;
-      var likedClass = hasLiked ? "btn-liked" : "";
-      var statsIconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
+  var hasLiked = likedPosts.includes(post.id);
+  var currentLikesNum = post.likes_count || 0;
 
-      return `
-        <div class="post-card" id="post-card-${post.id}">
-          <div class="post-header">
-            <div class="post-header-left">
-              <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
-              <div class="post-author-info">
-                <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
-                <span class="post-time">${date}</span>
-              </div>
-            </div>
-            ${deleteButtonHtml}
-          </div>
-          <div class="post-content">${post.content || ""}</div>
-          
-          ${mediaHtml}
-          
-          <div class="post-stats">
-            <div class="fb-stats-left" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
-              <div class="fb-reaction-icons" id="stats-icons-${post.id}">
-                ${statsIconsHtml}
-              </div>
-              <span class="post-likes-count-label" data-post-id="${post.id}">${currentLikesNum}</span>
-            </div>
-            <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">0 ${t.commentsCount}</span>
-          </div>
+  // 💬 კომენტარების რაოდენობის წაკითხვა post_comments ველიდან
+  var currentCommentsNum = 0;
+  if (post.post_comments) {
+    if (Array.isArray(post.post_comments)) {
+      currentCommentsNum = post.post_comments.length;
+    } else if (typeof post.post_comments === 'number') {
+      currentCommentsNum = post.post_comments;
+    }
+  } else if (post.comments_count) {
+    currentCommentsNum = post.comments_count;
+  }
 
-          <div class="post-actions" id="actions-row-${post.id}">
-            <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">
-              <span id="like-btn-emoji-icon-${post.id}">❤️ </span>
-              <span id="like-btn-text-label-${post.id}">${t.like}</span>
-            </button>
-            <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
-              <svg class="action-btn-svg" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-              ${t.comment}
-            </button>
+  var likedClass = hasLiked ? "btn-liked" : "";
+  var statsIconsHtml = currentLikesNum > 0 ? `<span class="fb-icon-svg-badge">❤️</span>` : "";
+
+  return `
+    <div class="post-card" id="post-card-${post.id}">
+      <div class="post-header">
+        <div class="post-header-left">
+          <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
+          <div class="post-author-info">
+            <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
+            <span class="post-time">${date}</span>
           </div>
         </div>
-      `;
-    }
-
+        ${deleteButtonHtml}
+      </div>
+      <div class="post-content">${post.content || ""}</div>
       
+      ${mediaHtml}
+      
+      <div class="post-stats">
+        <div class="fb-stats-left" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
+          <div class="fb-reaction-icons" id="stats-icons-${post.id}">
+            ${statsIconsHtml}
+          </div>
+          <span class="post-likes-count-label" data-post-id="${post.id}">${currentLikesNum}</span>
+        </div>
+        <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">${currentCommentsNum} ${t.commentsCount}</span>
+      </div>
+
+      <div class="post-actions" id="actions-row-${post.id}">
+        <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">
+          <span id="like-btn-emoji-icon-${post.id}">❤️ </span>
+          <span id="like-btn-text-label-${post.id}">${t.like}</span>
+        </button>
+        <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
+          <svg class="action-btn-svg" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+          ${t.comment}
+        </button>
+      </div>
+    </div>
+  `;
+}             
 
     function createPost() {
   var txtEl = document.getElementById('post-text-input');
