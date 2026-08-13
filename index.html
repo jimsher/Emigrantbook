@@ -4037,7 +4037,6 @@ auth.onAuthStateChanged(function(user) {
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
-  // Cloudflare R2 კლიენტი (ვიდეოებისთვისაც და ფოტოებისთვისაც)
   var r2S3 = new AWS.S3({
     endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
     accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
@@ -4046,33 +4045,37 @@ auth.onAuthStateChanged(function(user) {
     region: 'auto'
   });
 
-  // საქაღალდის განსაზღვრა (videos ან images)
   var targetFolder = folder || (isVideo ? 'videos' : 'images');
   var fileKey = targetFolder + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+
+  // MIME ტიპის ავტომატური განსაზღვრა, რომ ტელეფონებმა არ დაბლოკონ
+  var contentType = file.type;
+  if (!contentType || contentType === "") {
+    contentType = isVideo ? 'video/mp4' : 'image/jpeg';
+  }
 
   var params = {
     Bucket: 'emigrantbook-videos',
     Key: fileKey,
     Body: file,
-    ContentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg')
+    ContentType: contentType
   };
 
   var options = {
-    partSize: 10 * 1024 * 1024, // 10 MB ჩანკები
+    partSize: 10 * 1024 * 1024,
     queueSize: 1
   };
 
   var uploadObj = r2S3.upload(params, options, function(err, data) {
     if (err) {
       console.error("R2 Upload Error:", err);
-      alert("ფაილის ატვირთვა ჩაიშალა: " + err.message);
+      alert("ატვირთვის შეცდომა: " + err.message);
     } else {
       var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
       callback(publicUrl);
     }
   });
 
-  // ატვირთვის პროცენტი რეალურ დროში
   uploadObj.on('httpUploadProgress', function(evt) {
     if (evt.total && progressCallback) {
       var percent = Math.round((evt.loaded / evt.total) * 100);
@@ -4081,16 +4084,14 @@ auth.onAuthStateChanged(function(user) {
   });
 }
 
-// ფოტოების ატვირთვის ფუნქცია (ImgBB-ის ნაცვლად პირდაპირ Cloudflare R2-ს იყენებს)
 function uploadImageToImgBB(file, callback) {
   if (file.type.startsWith('video/')) {
     uploadMediaToFirebase(file, 'videos', callback);
     return;
   }
-
-  // ყველა ახალი ფოტო პირდაპირ Cloudflare R2-ში მიდის 'images' საქაღალდეში
   uploadMediaToFirebase(file, 'images', callback);
 }
+  
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
 
