@@ -4555,31 +4555,32 @@ function editPost(postId) {
   });
 }
 
-// პოსტის დამალვა მხოლოდ მთავარი გვერდიდან
+
+// პოსტის დამალვა მთავარი გვერდიდან (ყველასთვის გაქრება მთავარზე)
 function hidePostFromFeed(postId) {
-  var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
-  var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
-  if (!hiddenPosts.includes(postId)) {
-    hiddenPosts.push(postId);
-    localStorage.setItem(key, JSON.stringify(hiddenPosts));
-  }
-  
-  // მთავარ გვერდზე ეგრევე გააქრობს
-  var postCard = document.getElementById('post-card-' + postId);
-  if (postCard) {
-    postCard.style.display = 'none';
-  }
+  db.collection('posts').doc(postId).update({
+    is_hidden_from_feed: true
+  }).then(function() {
+    // მთავარ გვერდზე ეგრევე გააქრობს ბარათს
+    var postCard = document.getElementById('post-card-' + postId);
+    if (postCard) {
+      postCard.style.display = 'none';
+    }
+  }).catch(function(err) {
+    alert("შეცდომა: " + err.message);
+  });
 }
 
 // პოსტის ხელახლა გამოჩენა მთავარ გვერდზე (პროფილიდან)
 function unhidePostFromFeed(postId) {
-  var key = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
-  var hiddenPosts = JSON.parse(localStorage.getItem(key)) || [];
-  var updated = hiddenPosts.filter(function(id) { return id !== postId; });
-  localStorage.setItem(key, JSON.stringify(updated));
-  
-  alert("პოსტი აღდგენილია მთავარ გვერდზე!");
-  location.reload();
+  db.collection('posts').doc(postId).update({
+    is_hidden_from_feed: false
+  }).then(function() {
+    alert("პოსტი აღდგენილია მთავარ გვერდზე!");
+    location.reload();
+  }).catch(function(err) {
+    alert("შეცდომა: " + err.message);
+  });
 }
     // აქ მთავრდება
     
