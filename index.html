@@ -2103,29 +2103,20 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function renderAvatar(elementId, avatarUrl, name, userId = null) {
-      var el = document.getElementById(elementId);
-      if (!el) return;
-      
-      var isOnline = userId ? (cachedOnlineStates[userId] === true) : false;
-      var dotHtml = (userId && isOnline) ? `<div class="online-status-dot-sm"></div>` : ``;
+  var el = document.getElementById(elementId);
+  if (!el) return;
+  
+  var isOnline = userId ? (cachedOnlineStates[userId] === true) : false;
+  var dotHtml = (userId && isOnline) ? `<div class="online-status-dot-sm"></div>` : ``;
+  var finalAvatar = avatarUrl ? avatarUrl : DEFAULT_AVATAR_URL;
 
-      if (avatarUrl) {
-        el.innerHTML = `
-          <div class="avatar-has-online">
-            <img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-            ${dotHtml}
-          </div>
-        `;
-      } else {
-        var firstLetter = name ? name.charAt(0).toUpperCase() : "?";
-        el.innerHTML = `
-          <div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center; height:100%; width:100%;">
-            ${firstLetter}
-            ${dotHtml}
-          </div>
-        `;
-      }
-    }
+  el.innerHTML = `
+    <div class="avatar-has-online" style="width:100%; height:100%;">
+      <img src="${finalAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+      ${dotHtml}
+    </div>
+  `;
+}
 
     function subscribeToMessagesRealtime() {
       if (!currentUser) return;
