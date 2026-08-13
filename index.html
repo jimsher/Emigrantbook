@@ -4583,17 +4583,15 @@ function unhidePostFromFeed(postId) {
   });
 }
     // აქ მთავრდება
-    
+
     function createPostCardHtml(post, isProfilePage) {
   // ავტომატური შემოწმება: პროფილის გვერდზე ვართ თუ მთავარზე
-  var isProfile = isProfilePage || 
+  var isProfile = isProfilePage === true || 
                   (document.getElementById('profile-screen') && document.getElementById('profile-screen').style.display === 'block') ||
                   (document.getElementById('user-profile-modal') && document.getElementById('user-profile-modal').style.display === 'flex');
 
-  // 👁️‍🗨️ თუ მთავარ გვერდზე ვართ და პოსტი დამალულია -> არ გამოვაჩინოთ მთავარზე.
-  var hiddenKey = 'hidden_posts_' + (currentUser ? currentUser.uid : 'guest');
-  var hiddenPosts = JSON.parse(localStorage.getItem(hiddenKey)) || [];
-  var isHidden = hiddenPosts.includes(post.id);
+  // 👁️‍🗨️ თუ პოსტი ბაზაში დამალულია და ვართ მთავარ გვერდზე -> არცერთ მომხმარებელს არ გამოუჩნდეს
+  var isHidden = post.is_hidden_from_feed === true;
 
   if (!isProfile && isHidden) {
     return "";
@@ -4626,7 +4624,7 @@ function unhidePostFromFeed(postId) {
         <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999; min-width: 200px; overflow: hidden;">
           <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer;">✏️ ${editText}</button>
           ${hideOptionBtn}
-          <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a;"> ${t.delete}</button>
+          <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a;">🗑️ ${t.delete}</button>
         </div>
       </div>
     `;
@@ -4689,7 +4687,8 @@ function unhidePostFromFeed(postId) {
       </div>
     </div>
   `;
-}                    
+}
+                        
 
     function createPost() {
   var txtEl = document.getElementById('post-text-input');
