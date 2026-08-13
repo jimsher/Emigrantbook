@@ -4030,88 +4030,69 @@ auth.onAuthStateChanged(function(user) {
       if (input) input.click();
     }
 
+    // აქ იწყება
     // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
      function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   if (!currentUser) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
-  // 1. თუ ვიდეოა -> ტვირთავს პირდაპირ Cloudflare R2-ში
-  if (isVideo) {
-    var r2S3 = new AWS.S3({
-      endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
-      accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
-      secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
-      signatureVersion: 'v4',
-      region: 'auto'
-    });
+  // Cloudflare R2 კლიენტი (ვიდეოებისთვისაც და ფოტოებისთვისაც)
+  var r2S3 = new AWS.S3({
+    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+    signatureVersion: 'v4',
+    region: 'auto'
+  });
 
-    var fileKey = (folder || 'videos') + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+  // საქაღალდის განსაზღვრა (videos ან images)
+  var targetFolder = folder || (isVideo ? 'videos' : 'images');
+  var fileKey = targetFolder + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
 
-    var params = {
-      Bucket: 'emigrantbook-videos',
-      Key: fileKey,
-      Body: file,
-      ContentType: file.type || 'video/mp4'
-    };
+  var params = {
+    Bucket: 'emigrantbook-videos',
+    Key: fileKey,
+    Body: file,
+    ContentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg')
+  };
 
-    // დიდი ვიდეოების დაჭრა 10MB-იან ნაწილებად (სტაბილური ატვირთვისთვის)
-    var options = {
-      partSize: 10 * 1024 * 1024, // 10 MB ჩანკები
-      queueSize: 1                // სათითაოდ გაგზავნა
-    };
+  var options = {
+    partSize: 10 * 1024 * 1024, // 10 MB ჩანკები
+    queueSize: 1
+  };
 
-    var uploadObj = r2S3.upload(params, options, function(err, data) {
-      if (err) {
-        console.error("R2 Upload Error:", err);
-        alert("ვიდეოს ატვირთვა ჩაიშალა: " + err.message);
-      } else {
-        var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
-        callback(publicUrl);
-      }
-    });
+  var uploadObj = r2S3.upload(params, options, function(err, data) {
+    if (err) {
+      console.error("R2 Upload Error:", err);
+      alert("ფაილის ატვირთვა ჩაიშალა: " + err.message);
+    } else {
+      var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+      callback(publicUrl);
+    }
+  });
 
-    // ატვირთვის პროცენტის თვლა რეალურ დროში R2-ზე
-    uploadObj.on('httpUploadProgress', function(evt) {
-      if (evt.total && progressCallback) {
-        var percent = Math.round((evt.loaded / evt.total) * 100);
-        progressCallback(percent);
-      }
-    });
+  // ატვირთვის პროცენტი რეალურ დროში
+  uploadObj.on('httpUploadProgress', function(evt) {
+    if (evt.total && progressCallback) {
+      var percent = Math.round((evt.loaded / evt.total) * 100);
+      progressCallback(percent);
+    }
+  });
+}
 
+// ფოტოების ატვირთვის ფუნქცია (ImgBB-ის ნაცვლად პირდაპირ Cloudflare R2-ს იყენებს)
+function uploadImageToImgBB(file, callback) {
+  if (file.type.startsWith('video/')) {
+    uploadMediaToFirebase(file, 'videos', callback);
     return;
   }
+
+  // ყველა ახალი ფოტო პირდაპირ Cloudflare R2-ში მიდის 'images' საქაღალდეში
+  uploadMediaToFirebase(file, 'images', callback);
 }
     // აქ მთავრდება
-
-    function uploadImageToImgBB(file, callback) {
-      if (file.type.startsWith('video/')) {
-        uploadMediaToFirebase(file, 'videos', callback);
-        return;
-      }
-
-      let formData = new FormData();
-      formData.append("image", file);
-
-      fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
-        method: "POST",
-        body: formData
-      })
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(result) {
-        if (result && result.success) {
-          callback(result.data.url);
-        } else {
-          uploadMediaToFirebase(file, 'images', callback);
-        }
-      })
-      .catch(function(error) {
-        console.error("ImgBB Upload Error, falling back to Firebase:", error);
-        uploadMediaToFirebase(file, 'images', callback);
-      });
-    }
+    // აქ მთავრდება იმაგე
 
     function uploadAvatar() {
       var fileInput = document.getElementById('avatar-file-input');
