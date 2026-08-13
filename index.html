@@ -4598,7 +4598,8 @@ function unhidePostFromFeed(postId) {
   var isOnline = cachedOnlineStates[post.user_id] === true;
   var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
 
-  var avatarContent = authorAvatarUrl ? `<div class="avatar-has-online"><img src="${authorAvatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+  var finalAvatar = authorAvatarUrl || DEFAULT_AVATAR_URL;
+  var avatarContent = `<div class="avatar-has-online"><img src="${finalAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
   var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0, post.media_type);
