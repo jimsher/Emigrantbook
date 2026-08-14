@@ -128,6 +128,24 @@
   background: #2a2a2a;
   color: #dcae36;
 }
+
+
+
+
+    /* WebView-ის შიდა ფლეიერის ღილაკების სრული დაბლოკვა */
+video::-webkit-media-controls-overlay-play-button,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-play-button {
+    display: none !important;
+    -webkit-appearance: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* ვიდეოს ლამაზი შავი ფონი ჩატვირთვამდე */
+video {
+    background-color: #000 !important;
+}
   </style>
   
 </head>
@@ -5412,6 +5430,36 @@ function closeSizeModal() {
 
     return `<div class="avatar-has-online" style="width:100%; height:100%;"><img src="${finalUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
   }
+
+
+
+
+    // უნივერსალური ფუნქცია WebView-ის მახინჯი Play ღილაკის მოსაშორებლად
+function fixAllVideos() {
+    const blankPoster = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+    
+    // საიტზე არსებულ ყველა ვიდეოს ვუწერთ გამჭვირვალე პოსტერს
+    document.querySelectorAll('video').forEach(video => {
+        if (!video.getAttribute('poster')) {
+            video.setAttribute('poster', blankPoster);
+        }
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+    });
+}
+
+// 1. გაეშვას საიტის ჩატვირთვისთანავე
+document.addEventListener('DOMContentLoaded', fixAllVideos);
+
+// 2. ავტომატურად გაასწოროს ახლად გამოჩენილი ვიდეოები (სქროლვისას, სთორებში, პროფილში გადასვლისას)
+const videoObserver = new MutationObserver(() => {
+    fixAllVideos();
+});
+
+videoObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+});
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
