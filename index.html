@@ -1734,34 +1734,40 @@ video::-webkit-media-controls-play-button {
         var video = entry.target;
 
         if (entry.isIntersecting) {
-          // 1. თუ სხვა რომელიმე ვიდეო უკვე უკრავს, მომენტალურად ვაჩერებთ
+          // სხვა ვიდეოს ვაჩერებთ
           if (currentPlayingVideo && currentPlayingVideo !== video) {
             currentPlayingVideo.pause();
           }
 
-          // 2. ვრთავთ მხოლოდ ამ ერთ ვიდეოს
           currentPlayingVideo = video;
+          video.muted = false; // ხმა ჩართულია
+          
           var playPromise = video.play();
           if (playPromise !== undefined) {
-            playPromise.catch(function() {});
+            playPromise.catch(function(err) {
+              console.log("Autoplay error:", err);
+            });
           }
         } else {
-          // 3. ეკრანს როგორც კი გასცდება, ეგრევე ვაჩერებთ
-          video.pause();
+          // ეკრანს გაცდა -> ვაჩერებთ
+          if (!video.paused) {
+            video.pause();
+          }
           if (currentPlayingVideo === video) {
             currentPlayingVideo = null;
           }
         }
       });
     }, { 
-      threshold: 0.7 // ვიდეო ჩაირთვება მხოლოდ მაშინ, როცა ეკრანის ცენტრში (70%-ით) დადგება
+      threshold: 0.5 
     });
 
     function observeVideos() {
       videoObserver.disconnect();
       var videos = document.querySelectorAll('video');
       videos.forEach(function(video) {
-        if (!video.classList.contains('tiktok-slide-video')) {
+        if (!video.classList.contains('tiktok-slide-video') && video.id !== 'remote-video' && video.id !== 'local-video') {
+          video.muted = false; // ხმა ჩართულია
           videoObserver.observe(video);
         }
       });
