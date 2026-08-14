@@ -5434,32 +5434,7 @@ function closeSizeModal() {
 
 
 
-    // უნივერსალური ფუნქცია WebView-ის მახინჯი Play ღილაკის მოსაშორებლად
-function fixAllVideos() {
-    const blankPoster = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    
-    // საიტზე არსებულ ყველა ვიდეოს ვუწერთ გამჭვირვალე პოსტერს
-    document.querySelectorAll('video').forEach(video => {
-        if (!video.getAttribute('poster')) {
-            video.setAttribute('poster', blankPoster);
-        }
-        video.setAttribute('playsinline', '');
-        video.setAttribute('webkit-playsinline', '');
-    });
-}
 
-// 1. გაეშვას საიტის ჩატვირთვისთანავე
-document.addEventListener('DOMContentLoaded', fixAllVideos);
-
-// 2. ავტომატურად გაასწოროს ახლად გამოჩენილი ვიდეოები (სქროლვისას, სთორებში, პროფილში გადასვლისას)
-const videoObserver = new MutationObserver(() => {
-    fixAllVideos();
-});
-
-videoObserver.observe(document.body, {
-    childList: true,
-    subtree: true
-});
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
