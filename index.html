@@ -1727,25 +1727,38 @@ video::-webkit-media-controls-play-button {
     var likedPosts = [];
     var postReactionMap = {};
 
+    var currentPlayingVideo = null;
+
     var videoObserver = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
         var video = entry.target;
+
         if (entry.isIntersecting) {
+          // 1. თუ სხვა რომელიმე ვიდეო უკვე უკრავს, მომენტალურად ვაჩერებთ
+          if (currentPlayingVideo && currentPlayingVideo !== video) {
+            currentPlayingVideo.pause();
+          }
+
+          // 2. ვრთავთ მხოლოდ ამ ერთ ვიდეოს
+          currentPlayingVideo = video;
           var playPromise = video.play();
           if (playPromise !== undefined) {
             playPromise.catch(function() {});
           }
         } else {
+          // 3. ეკრანს როგორც კი გასცდება, ეგრევე ვაჩერებთ
           video.pause();
+          if (currentPlayingVideo === video) {
+            currentPlayingVideo = null;
+          }
         }
       });
-    }, { threshold: 0.6 });
+    }, { 
+      threshold: 0.7 // ვიდეო ჩაირთვება მხოლოდ მაშინ, როცა ეკრანის ცენტრში (70%-ით) დადგება
+    });
 
     function observeVideos() {
-      // 1. ჯერ ვასუფთავებთ ძველ ობსერვერს, რომ პროცესორი არ გაიჭედოს
       videoObserver.disconnect();
-      
-      // 2. ხელახლა ვადებთ მხოლოდ არსებულ ვიდეოებს
       var videos = document.querySelectorAll('video');
       videos.forEach(function(video) {
         if (!video.classList.contains('tiktok-slide-video')) {
