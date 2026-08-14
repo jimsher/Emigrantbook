@@ -1731,10 +1731,11 @@ video::-webkit-media-controls-play-button {
       entries.forEach(function(entry) {
         var video = entry.target;
         if (entry.isIntersecting) {
+          video.muted = true;
           var playPromise = video.play();
           if (playPromise !== undefined) {
             playPromise.catch(function(err) {
-              console.log("Autoplay handled:", err);
+              console.log("Autoplay:", err);
             });
           }
         } else {
