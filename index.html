@@ -2058,6 +2058,16 @@ auth.onAuthStateChanged(function(user) {
       }
     }
 
+    window.forceTriggerFileInput = function() {
+      var fileInput = document.getElementById('post-media-file');
+      if (fileInput) {
+        var event = new Event('change', { bubbles: true });
+        fileInput.dispatchEvent(event);
+        showSelectedFileName();
+      }
+    };
+
+
     function showScreen(screenName) {
       exitPhotoSelectionMode();
       var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen', 'blocked-users-screen'];
