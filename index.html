@@ -292,7 +292,7 @@
         <div class="create-post-actions">
           <div class="file-upload-wrapper">
             <div class="file-upload-btn" id="lbl-photo-video">📷 Photo / 🎥 Video</div>
-            <input type="file" id="post-media-file" accept="*/*" onchange="showSelectedFileName()">
+            <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
           </div>
           <button class="live-post-btn" onclick="window.location.href='live.html'">
             <span class="live-dot-pulse"></span>
@@ -2057,16 +2057,6 @@ auth.onAuthStateChanged(function(user) {
         }
       }
     }
-
-    window.forceTriggerFileInput = function() {
-      var fileInput = document.getElementById('post-media-file');
-      if (fileInput) {
-        var event = new Event('change', { bubbles: true });
-        fileInput.dispatchEvent(event);
-        showSelectedFileName();
-      }
-    };
-
 
     function showScreen(screenName) {
       exitPhotoSelectionMode();
