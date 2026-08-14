@@ -4470,51 +4470,51 @@ function subscribeActiveLivesForFeed() {
     }
 
     function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
-      if (!urlsString) return "";
-      
-      if (mediaType === 'video') {
-        return `
-          <div class="video-container-rel">
-            <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="metadata" playsinline webkit-playsinline muted loop onclick="toggleVideoPlay(this)"></video>
-            <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
-          </div>
-        `;
-      }
+  if (!urlsString) return "";
+  
+  if (mediaType === 'video') {
+    return `
+      <div class="video-container-rel">
+        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="metadata" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
+        <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
+      </div>
+    `;
+  }
 
-      var urls = [];
-      if (urlsString.includes(",")) {
-        urls = urlsString.split(",");
-      } else {
-        urls = [urlsString];
-      }
+  var urls = [];
+  if (urlsString.includes(",")) {
+    urls = urlsString.split(",");
+  } else {
+    urls = [urlsString];
+  }
 
-      if (urls.length === 1) {
-        var url = urls[0];
-        return '<img class="post-media" src="' + url + '" alt="Media">';
-      }
+  if (urls.length === 1) {
+    var url = urls[0];
+    return '<img class="post-media" src="' + url + '" alt="Media">';
+  }
 
-      var total = urls.length;
-      var showLimit = Math.min(total, 6);
-      var gridClass = "collage-" + showLimit;
+  var total = urls.length;
+  var showLimit = Math.min(total, 6);
+  var gridClass = "collage-" + showLimit;
 
-      var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
-      for (var i = 0; i < showLimit; i++) {
-        var url = urls[i];
-        var isLastCell = (i === showLimit - 1);
-        var moreCount = total - showLimit;
+  var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
+  for (var i = 0; i < showLimit; i++) {
+    var url = urls[i];
+    var isLastCell = (i === showLimit - 1);
+    var moreCount = total - showLimit;
 
-        if (isLastCell && moreCount > 0) {
-          html += '<div class="collage-overlay">';
-          html += '<img class="collage-item" src="' + url + '">';
-          html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
-          html += '</div>';
-        } else {
-          html += '<img class="collage-item" src="' + url + '">';
-        }
-      }
-      html += '</div></div>';
-      return html;
+    if (isLastCell && moreCount > 0) {
+      html += '<div class="collage-overlay">';
+      html += '<img class="collage-item" src="' + url + '">';
+      html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
+      html += '</div>';
+    } else {
+      html += '<img class="collage-item" src="' + url + '">';
     }
+  }
+  html += '</div></div>';
+  return html;
+}
 
     function deletePost(postId) {
       if (!confirm("Are you sure?")) return;
