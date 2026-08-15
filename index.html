@@ -3340,73 +3340,78 @@ auth.onAuthStateChanged(function(user) {
             if (burgBtn) burgBtn.style.display = "none";
 
             if (lockMsgEl) {
+            lockMsgEl.style.display = 'block';
+            lockMsgEl.innerHTML = `
+              <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+                <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Blocked">
+              </div>
+              <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
+              <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
+            `;
+          }
+          showScreen('profile');
+          return;
+        }
+
+        // Unblocked - display header elements
+        if (avatarHolder) avatarHolder.style.display = 'block';
+        if (statsBlock) statsBlock.style.display = 'flex';
+        if (userHeadline) userHeadline.style.display = 'block';
+        if (actionPanel) actionPanel.style.display = 'flex';
+
+        var finalName = selectedUser.full_name || "User";
+        var avatarUrl = selectedUser.avatar_url;
+        var coverUrl = selectedUser.cover_url;
+
+        var onlineBadge = document.getElementById('profile-online-badge');
+        if (onlineBadge) {
+          onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
+        }
+
+        renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
+        var pName = document.getElementById('profile-user-name');
+        var pSub = document.getElementById('profile-user-subtitle');
+        if (pName) pName.innerText = finalName;
+        if (pSub) pSub.innerText = "Emigrant";
+
+        if (banner) {
+          if (coverUrl) {
+            banner.style.backgroundImage = `url('${coverUrl}')`;
+          } else {
+            banner.style.backgroundImage = 'none';
+          }
+        }
+
+        if (avCam) avCam.style.display = "none";
+        if (covCam) covCam.style.display = "none";
+        if (burgBtn) burgBtn.style.display = "none";
+
+        checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
+          var privacySetting = selectedUser.privacy_setting || 'public';
+          var isLocked = false;
+          if (privacySetting === 'friends' && !isFriend) {
+            isLocked = true;
+          } else if (privacySetting === 'private') {
+            isLocked = true;
+          }
+
+          if (isLocked) {
+            if (detailsBox) detailsBox.style.display = 'none';
+            if (friendsPreview) friendsPreview.style.display = 'none';
+            if (tabsEl) tabsEl.style.display = 'none';
+            if (postsWall) postsWall.style.display = 'none';
+            if (photosWall) photosWall.style.display = 'none';
+            if (lockMsgEl) {
               lockMsgEl.style.display = 'block';
               lockMsgEl.innerHTML = `
-                <div style="font-size: 48px; margin-bottom: 10px;">🚫</div>
-                <div style="font-size: 18px; font-weight: bold; color: #ffffff;">${t.blockedProfileTitle || "Profile Unavailable"}</div>
-                <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;">${t.blockedProfileSub || "You cannot view this profile because a block is active."}</div>
+                <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+                  <img src="icons/lock.svg" class="post-action-icon" style="width: 46px; height: 46px; opacity: 0.9;" alt="Private Profile">
+                </div>
+                <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
+                <div style="color: #8a8f9d; font-size: 14px; margin-top: 6px; line-height: 1.4;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
               `;
             }
-            showScreen('profile');
-            return;
           }
-
-          // Unblocked - display header elements
-          if (avatarHolder) avatarHolder.style.display = 'block';
-          if (statsBlock) statsBlock.style.display = 'flex';
-          if (userHeadline) userHeadline.style.display = 'block';
-          if (actionPanel) actionPanel.style.display = 'flex';
-
-          var finalName = selectedUser.full_name || "User";
-          var avatarUrl = selectedUser.avatar_url;
-          var coverUrl = selectedUser.cover_url;
-
-          var onlineBadge = document.getElementById('profile-online-badge');
-          if (onlineBadge) {
-            onlineBadge.style.display = isUserOnline(selectedUser) ? "block" : "none";
-          }
-
-          renderAvatar('profile-big-avatar', avatarUrl, finalName, userId);
-          var pName = document.getElementById('profile-user-name');
-          var pSub = document.getElementById('profile-user-subtitle');
-          if (pName) pName.innerText = finalName;
-          if (pSub) pSub.innerText = "Emigrant";
-
-          if (banner) {
-            if (coverUrl) {
-              banner.style.backgroundImage = `url('${coverUrl}')`;
-            } else {
-              banner.style.backgroundImage = 'none';
-            }
-          }
-
-          if (avCam) avCam.style.display = "none";
-          if (covCam) covCam.style.display = "none";
-          if (burgBtn) burgBtn.style.display = "none";
-
-          checkFriendshipPair(currentUser.uid, userId, function(isFriend) {
-            var privacySetting = selectedUser.privacy_setting || 'public';
-            var isLocked = false;
-            if (privacySetting === 'friends' && !isFriend) {
-              isLocked = true;
-            } else if (privacySetting === 'private') {
-              isLocked = true;
-            }
-
-            if (isLocked) {
-              if (detailsBox) detailsBox.style.display = 'none';
-              if (friendsPreview) friendsPreview.style.display = 'none';
-              if (tabsEl) tabsEl.style.display = 'none';
-              if (postsWall) postsWall.style.display = 'none';
-              if (photosWall) photosWall.style.display = 'none';
-              if (lockMsgEl) {
-                lockMsgEl.style.display = 'block';
-                lockMsgEl.innerHTML = `
-                  <div style="font-size: 48px; margin-bottom: 10px;">🔒</div>
-                  <div style="font-size: 18px; font-weight: bold; color: #ffffff;" id="lbl-locked-title">${t.lockedProfileTitle || "This profile is private"}</div>
-                  <div style="color: #aaaaaa; font-size: 14px; margin-top: 6px;" id="lbl-locked-sub">${t.lockedProfileSub || "Only friends can see this user's posts, photos, and videos."}</div>
-                `;
-              }
             } else {
               if (lockMsgEl) lockMsgEl.style.display = 'none';
               if (detailsBox) detailsBox.style.display = 'block';
