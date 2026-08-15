@@ -145,6 +145,25 @@ video::-webkit-media-controls-play-button {
     visibility: hidden !important;
     pointer-events: none !important;
 }
+
+
+
+    /* ახალი იქონები საიტზე */
+    /* ფოტო/ვიდეო ღილაკში აიკონის გასწორება და ზომა */
+.file-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.post-action-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+}
   </style>
   
 </head>
@@ -304,21 +323,25 @@ video::-webkit-media-controls-play-button {
     </div>
     
     <div class="feed-container">
-      <div class="create-post-card">
-        <textarea class="create-post-input" id="post-text-input" placeholder="What's on your mind?"></textarea>
-        <div class="create-post-actions">
-          <div class="file-upload-wrapper">
-            <div class="file-upload-btn" id="lbl-photo-video">📷 Photo / 🎥 Video</div>
-            <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
-          </div>
-          <button class="live-post-btn" onclick="window.location.href='live.html'">
-            <span class="live-dot-pulse"></span>
-            <span id="lbl-live-btn">LIVE</span>
-          </button>
-          <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">Publish</button>
+  <div class="create-post-card">
+    <textarea class="create-post-input" id="post-text-input" placeholder="What's on your mind?"></textarea>
+    <div class="create-post-actions">
+      <div class="file-upload-wrapper">
+        <div class="file-upload-btn" id="lbl-photo-video">
+          <img src="icons/camera.svg" alt="Photo" class="post-action-icon"> Photo / 
+          <img src="icons/video.svg" alt="Video" class="post-action-icon"> Video
         </div>
-        <div class="selected-file-info" id="selected-file-name"></div>
+        <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
       </div>
+      <button class="live-post-btn" onclick="window.location.href='live.html'">
+        <span class="live-dot-pulse"></span>
+        <span id="lbl-live-btn">LIVE</span>
+      </button>
+      <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">Publish</button>
+    </div>
+    <div class="selected-file-info" id="selected-file-name"></div>
+  </div>
+</div>
 
       <div class="stories-wrapper">
         <div class="story-card create-story-card" onclick="triggerStoryUpload()">
