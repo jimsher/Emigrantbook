@@ -705,6 +705,16 @@
           <input type="hidden" id="srv-cat" value="გადაზიდვები / ტრანსპორტი">
         </div>
 
+        <!-- ⏱️ რეკლამის განთავსების ვადა და ტარიფი -->
+        <div class="form-group">
+          <label>განთავსების ვადა და ტარიფი</label>
+          <div class="custom-select-trigger" onclick="openCustomPicker('srv-plan')">
+            <span id="label-srv-plan">7 დღე — 10.00 ₾</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <input type="hidden" id="srv-plan" value="10">
+        </div>
+
         <div class="form-group">
           <label>ფასი ან პირობა</label>
           <input type="text" id="srv-price" class="form-control" placeholder="მაგ: 500 € / 1.5€ კგ / შეთანხმებით">
@@ -731,7 +741,7 @@
           <label>დეტალური აღწერა</label>
           <textarea id="srv-desc" class="form-control" rows="3" placeholder="დაწერეთ დეტალური პირობები..."></textarea>
         </div>
-        <button class="studio-btn-primary" id="btn-publish-srv" onclick="publishService()">სერვისის გამოქვეყნება</button>
+        <button class="studio-btn-primary studio-btn-gold" id="btn-publish-srv" onclick="publishService()">სერვისის გამოქვეყნება</button>
       </div>
 
       <div class="card-head-title" style="margin: 18px 0 10px 4px;">
@@ -834,6 +844,17 @@
           { val: '5', label: '1 დღე — 5.00 ₾ (პრიორიტეტული ჩვენება)' },
           { val: '12', label: '3 დღე — 12.00 ₾ (მაღალი ჩართულობა)' },
           { val: '25', label: '7 დღე — 25.00 ₾ (მაქსიმალური დაფარვა)' }
+        ]
+      },
+      'srv-plan': {
+        title: 'განთავსების ვადა და ტარიფი',
+        targetInput: 'srv-plan',
+        targetLabel: 'label-srv-plan',
+        options: [
+          { val: '5', label: '3 დღე — 5.00 ₾' },
+          { val: '10', label: '7 დღე — 10.00 ₾' },
+          { val: '18', label: '14 დღე — 18.00 ₾' },
+          { val: '30', label: '30 დღე — 30.00 ₾' }
         ]
       },
       'srv-cat': {
@@ -1062,7 +1083,6 @@
             totalComments += Number(comments) || 0;
           });
 
-          // პირველი პოსტის ავტომატური არჩევა
           if (userPostsCache.length > 0) {
             var firstP = userPostsCache[0];
             document.getElementById('boost-post-select').value = firstP.id;
@@ -1130,10 +1150,11 @@
       });
     }
 
-    // 4. სერვისის გამოქვეყნება ფოტოებთან ერთად
+    // 4. სერვისის გამოქვეყნება ფასიანი ვადით და ბალანსის ჩამოჭრით
     function publishService() {
       var title = document.getElementById('srv-title').value.trim();
       var cat = document.getElementById('srv-cat').value;
+      var planPrice = Number(document.getElementById('srv-plan').value) || 10;
       var price = document.getElementById('srv-price').value.trim();
       var whatsapp = document.getElementById('srv-whatsapp').value.trim();
       var desc = document.getElementById('srv-desc').value.trim();
@@ -1141,6 +1162,15 @@
 
       if (!title || !whatsapp) {
         alert("სათაური და WhatsApp ნომერი აუცილებელია!");
+        return;
+      }
+
+      // ბალანსის შემოწმება
+      var currentBal = Number(userProfile && userProfile.balance ? userProfile.balance : 0);
+      if (currentBal < planPrice) {
+        if (confirm("სერვისის განთავსებისთვის ბალანსზე არ გაქვთ საკმარისი თანხა (" + planPrice + ".00 ₾). გადავიდეთ ბალანსის შევსებაზე?")) {
+          window.location.href = 'balance.html';
+        }
         return;
       }
 
@@ -1173,9 +1203,19 @@
       Promise.all(uploadPromises).then(function() {
         btn.innerText = "ქვეყნდება...";
 
+        // ვადის გამოთვლა
+        var durationDays = planPrice === 5 ? 3 : (planPrice === 10 ? 7 : (planPrice === 18 ? 14 : 30));
+        var expiresDate = new Date(Date.now() + (durationDays * 86400000));
+        var newBal = currentBal - planPrice;
+
         var mediaUrlsJoined = uploadedPhotoUrls.join(",");
         var batch = db.batch();
 
+        // 0. ბალანსის ჩამოჭრა
+        var profileRef = db.collection('profiles').doc(currentUser.uid);
+        batch.update(profileRef, { balance: newBal });
+
+        // 1. studio_services კოლექცია
         var studioRef = db.collection('studio_services').doc();
         batch.set(studioRef, {
           user_id: currentUser.uid,
@@ -1187,9 +1227,13 @@
           whatsapp: cleanWhatsapp,
           desc: desc,
           media_url: mediaUrlsJoined || null,
+          service_cost: planPrice,
+          service_duration_days: durationDays,
+          service_expires_at: firebase.firestore.Timestamp.fromDate(expiresDate),
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        // 2. posts კოლექცია (მთავარი Feed-ისთვის)
         var postRef = db.collection('posts').doc();
         batch.set(postRef, {
           user_id: currentUser.uid,
@@ -1205,13 +1249,19 @@
           content: desc || title,
           media_url: mediaUrlsJoined || null,
           media_type: mediaUrlsJoined ? "image" : null,
+          service_duration_days: durationDays,
+          service_expires_at: firebase.firestore.Timestamp.fromDate(expiresDate),
           likes_count: 0,
           comments_count: 0,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         batch.commit().then(function() {
-          alert("განცხადება წარმატებით გამოქვეყნდა Studio-ში და მთავარ კედელზე!");
+          if (userProfile) userProfile.balance = newBal;
+          sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid);
+          updateBalanceUI();
+
+          alert("სერვისი წარმატებით გამოქვეყნდა " + durationDays + " დღით!");
           document.getElementById('srv-title').value = '';
           document.getElementById('srv-price').value = '';
           document.getElementById('srv-whatsapp').value = '';
