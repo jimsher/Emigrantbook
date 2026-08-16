@@ -4834,6 +4834,25 @@ function unhidePostFromFeed(postId) {
 
   var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0, post.media_type);
 
+ // 💼 თუ პოსტი წარმოადგენს Studio-ს სერვისს
+  var studioServiceHtml = '';
+  if (post.is_studio_service) {
+    studioServiceHtml = `
+      <div style="margin: 12px 0 6px 0; background: #16171a; border: 1px solid #282a30; border-radius: 10px; padding: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 11px; background: rgba(220,174,54,0.15); color: #dcae36; padding: 3px 8px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+            ⭐ STUDIO SERVICE • ${post.service_category || 'მომსახურება'}
+          </span>
+          <span style="font-size: 13px; font-weight: bold; color: #ffffff;">${post.service_price || ''}</span>
+        </div>
+        <a href="https://wa.me/${post.service_whatsapp}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #25D366; color: #ffffff; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-top: 10px;">
+          <span>WhatsApp-ით დაკავშირება</span>
+        </a>
+      </div>
+    `;
+  }
+      
+
   var optionsMenuHtml = "";
   if (currentUser && post.user_id === currentUser.uid) {
     var editText = t.edit || "რედაქტირება";
