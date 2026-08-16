@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Emigrantbook Studio</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0a0a0a;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .studio-app {
+      width: 100%;
+      max-width: 680px;
+      background-color: #0f0f10;
+      min-height: 100vh;
+      border-left: 1px solid #1f1f22;
+      border-right: 1px solid #1f1f22;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 50px;
+    }
+
+    /* HEADER */
+    .studio-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 15, 16, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1f1f22;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .back-arrow {
+      font-size: 20px;
+      color: #cfd3dc;
+    }
+
+    .studio-title-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .studio-title-badge span {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .studio-crown {
+      width: 18px;
+      height: 18px;
+      filter: invert(72%) sepia(50%) saturate(600%) hue-rotate(5deg) brightness(95%) contrast(90%);
+    }
+
+    .header-balance-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #191a1d;
+      border: 1px solid #282a2e;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e1e3e8;
+    }
+
+    .balance-icon {
+      width: 15px;
+      height: 15px;
+      filter: brightness(0) invert(1);
+    }
+
+    /* TOP TABS NAVIGATION */
+    .studio-tabs {
+      display: flex;
+      border-bottom: 1px solid #1f1f22;
+      background: #121315;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .studio-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 110px;
+      padding: 13px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: transparent;
+      border: none;
+      color: #8a8f9d;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+      border-bottom: 2px solid #ffffff;
+      background: #17181b;
+    }
+
+    .tab-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+      filter: brightness(0) invert(1);
+    }
+
+    .tab-btn.active .tab-icon {
+      opacity: 1;
+    }
+
+    /* MAIN CONTAINER */
+    .tab-content {
+      display: none;
+      padding: 20px 16px;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* CARDS & CONTAINERS */
+    .studio-card {
+      background: #141518;
+      border: 1px solid #212327;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .card-head-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .card-head-title img {
+      width: 17px;
+      height: 17px;
+      filter: brightness(0) invert(1);
+      opacity: 0.85;
+    }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: #191a1e;
+      border: 1px solid #25282e;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .stat-box-title {
+      font-size: 12px;
+      color: #8a8f9d;
+      margin-bottom: 6px;
+    }
+
+    .stat-box-num {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .stat-box-trend {
+      font-size: 11px;
+      color: #34d399;
+      margin-top: 4px;
+    }
+
+    /* COUNTRY LIST ROW */
+    .country-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #1c1d22;
+      font-size: 13px;
+    }
+
+    .country-row:last-child {
+      border-bottom: none;
+    }
+
+    .country-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #cfd3dc;
+    }
+
+    .country-bar-bg {
+      width: 80px;
+      height: 6px;
+      background: #25282e;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .country-bar-fill {
+      height: 100%;
+      background: #ffffff;
+      border-radius: 3px;
+    }
+
+    /* FORMS & INPUTS */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #9da3af;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .form-control {
+      width: 100%;
+      background: #191a1e;
+      border: 1px solid #282a30;
+      color: #ffffff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: #555a64;
+    }
+
+    select.form-control {
+      cursor: pointer;
+    }
+
+    /* PRIMARY BUTTON */
+    .studio-btn-primary {
+      width: 100%;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .studio-btn-primary:active {
+      opacity: 0.85;
+    }
+
+    .studio-btn-gold {
+      background: linear-gradient(135deg, #dcae36, #f3cf7a);
+      color: #111111;
+    }
+
+    /* SERVICE CARD ITEM */
+    .service-item-card {
+      background: #191a1e;
+      border: 1px solid #26292f;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .service-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+
+    .service-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .service-price-tag {
+      background: #25272e;
+      color: #dcae36;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .service-desc {
+      font-size: 13px;
+      color: #8a8f9d;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .service-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #22242a;
+      padding-top: 10px;
+    }
+
+    .service-author {
+      font-size: 12px;
+      color: #adb2bd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .whatsapp-contact-btn {
+      background: #25D366;
+      color: #ffffff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="studio-app">
+    
+    <!-- HEADER -->
+    <div class="studio-header">
+      <div class="header-left" onclick="window.location.href='index.html'">
+        <span class="back-arrow">←</span>
+        <div class="studio-title-badge">
+          <img src="icons/crown.svg" class="studio-crown" alt="Studio Crown">
+          <span>Creator Studio</span>
+        </div>
+      </div>
+      <div class="header-balance-badge" onclick="window.location.href='balance.html'" style="cursor: pointer;">
+        <img src="icons/circle-dollar-sign.svg" class="balance-icon" alt="Balance">
+        <span id="studio-balance-val">0.00 ₾</span>
+      </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="studio-tabs">
+      <button class="tab-btn active" onclick="switchStudioTab('analytics')">
+        <img src="icons/chart-no-axes-combined.svg" class="tab-icon" alt="Analytics">
+        <span>ანალიტიკა</span>
+      </button>
+      <button class="tab-btn" onclick="switchStudioTab('boost')">
+        <img src="icons/wand-sparkles.svg" class="tab-icon" alt="Boost">
+        <span>დაბუსტვა</span>
+      </button>
+      <button class="tab-btn" onclick="switchStudioTab('services')">
+        <img src="icons/briefcase-business.svg" class="tab-icon" alt="Services">
+        <span>სერვისები</span>
+      </button>
+      <button class="tab-btn" onclick="switchStudioTab('monetization')">
+        <img src="icons/circle-dollar-sign.svg" class="tab-icon" alt="Monetization">
+        <span>შემოსავალი</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: ANALYTICS -->
+    <div id="tab-analytics" class="tab-content active">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-title">პოსტის ნახვები (30 დღე)</div>
+          <div class="stat-box-num" id="stat-total-views">1,420</div>
+          <div class="stat-box-trend">↑ +18.4%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-title">ჩართულობა (Likes/Comm)</div>
+          <div class="stat-box-num" id="stat-engagement">388</div>
+          <div class="stat-box-trend">↑ +7.2%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-title">პროფილის ვიზიტორები</div>
+          <div class="stat-box-num" id="stat-profile-visits">214</div>
+          <div class="stat-box-trend">↑ +12.0%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-title">ახალი გამომწერი</div>
+          <div class="stat-box-num" id="stat-new-followers">+34</div>
+          <div class="stat-box-trend">↑ +5.5%</div>
+        </div>
+      </div>
+
+      <div class="studio-card">
+        <div class="card-head-title">
+          <img src="icons/map-pinned.svg" alt="Audience">
+          <span>აუდიტორიის ტოპ ქვეყნები</span>
+        </div>
+        <div class="country-row">
+          <div class="country-info">🇮🇹 იტალია (იტალიაში მყოფები)</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="country-bar-bg"><div class="country-bar-fill" style="width: 55%;"></div></div>
+            <span style="font-weight:600;">55%</span>
+          </div>
+        </div>
+        <div class="country-row">
+          <div class="country-info">🇬🇪 საქართველო</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="country-bar-bg"><div class="country-bar-fill" style="width: 25%;"></div></div>
+            <span style="font-weight:600;">25%</span>
+          </div>
+        </div>
+        <div class="country-row">
+          <div class="country-info">🇬🇷 საბერძნეთი</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="country-bar-bg"><div class="country-bar-fill" style="width: 12%;"></div></div>
+            <span style="font-weight:600;">12%</span>
+          </div>
+        </div>
+        <div class="country-row">
+          <div class="country-info">🇩🇪 გერმანია</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="country-bar-bg"><div class="country-bar-fill" style="width: 8%;"></div></div>
+            <span style="font-weight:600;">8%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: POST BOOST / PROMOTION -->
+    <div id="tab-boost" class="tab-content">
+      <div class="studio-card">
+        <div class="card-head-title">
+          <img src="icons/wand-sparkles.svg" alt="Boost">
+          <span>პოსტის დარეკლამება / Boost</span>
+        </div>
+        
+        <div class="form-group">
+          <label>აირჩიე შენი პოსტი</label>
+          <select id="boost-post-select" class="form-control">
+            <option value="">იტვირთება შენი პოსტები...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>მიზნობრივი აუდიტორია (ქვეყანა)</label>
+          <select id="boost-target-country" class="form-control">
+            <option value="ALL">ყველა ქვეყანა (გლობალური)</option>
+            <option value="IT">მხოლოდ იტალიაში მყოფები 🇮🇹</option>
+            <option value="GR">მხოლოდ საბერძნეთში მყოფები 🇬🇷</option>
+            <option value="DE">მხოლოდ გერმანიაში მყოფები 🇩🇪</option>
+            <option value="GE">მხოლოდ საქართველოში მყოფები 🇬🇪</option>
+            <option value="US">მხოლოდ აშშ-ში მყოფები 🇺🇸</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>ბიუჯეტი და ხანგრძლივობა</label>
+          <select id="boost-plan" class="form-control">
+            <option value="5">1 დღე — 5.00 ₾ (~1,000 ნახვა)</option>
+            <option value="12">3 დღე — 12.00 ₾ (~3,000 ნახვა)</option>
+            <option value="25">7 დღე — 25.00 ₾ (~8,000 ნახვა)</option>
+          </select>
+        </div>
+
+        <button class="studio-btn-primary studio-btn-gold" onclick="submitPostBoost()">
+          <img src="icons/wand-sparkles.svg" style="width:16px;height:16px;" alt="Boost">
+          დაბუსტვის გააქტიურება
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 3: SERVICES DIRECTORY -->
+    <div id="tab-services" class="tab-content">
+      <div class="studio-card">
+        <div class="card-head-title">
+          <img src="icons/briefcase-business.svg" alt="Add Service">
+          <span>შექმენი სერვისის განცხადება</span>
+        </div>
+        <div class="form-group">
+          <label>სერვისის დასახელება</label>
+          <input type="text" id="srv-title" class="form-control" placeholder="მაგ: ამანათების გადაზიდვა იტალია-საქართველო">
+        </div>
+        <div class="form-group">
+          <label>კატეგორია</label>
+          <select id="srv-cat" class="form-control">
+            <option value="გადაზიდვები / ტრანსპორტი">გადაზიდვები / ტრანსპორტი</option>
+            <option value="საბუთები / იურისტი">საბუთები / თარგმნა / იურისტი</option>
+            <option value="ბინები / უძრავი ქონება">ბინები / ქირაობა</option>
+            <option value="ხელოსანი / რემონტი">ხელოსანი / რემონტი</option>
+            <option value="კულინარია / შეკვეთები">კულინარია / პროდუქტი</option>
+            <option value="სხვა მომსახურება">სხვა მომსახურება</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ფასი ან პირობა</label>
+          <input type="text" id="srv-price" class="form-control" placeholder="მაგ: 1.5€ / კგ ან შეთანხმებით">
+        </div>
+        <div class="form-group">
+          <label>WhatsApp ნომერი (პირდაპირი დაკავშირებისთვის)</label>
+          <input type="text" id="srv-whatsapp" class="form-control" placeholder="+39 3XX XXXXXXX">
+        </div>
+        <div class="form-group">
+          <label>დეტალური აღწერა</label>
+          <textarea id="srv-desc" class="form-control" rows="3" placeholder="დაწერეთ დეტალური პირობები..."></textarea>
+        </div>
+        <button class="studio-btn-primary" onclick="publishService()">სერვისის გამოქვეყნება</button>
+      </div>
+
+      <div class="card-head-title" style="margin: 18px 0 10px 4px;">
+        <img src="icons/users.svg" alt="Active Services">
+        <span>აქტიური სერვისები ემიგრანტებისთვის</span>
+      </div>
+
+      <div id="services-list-container">
+        <!-- Rendered dynamically -->
+        <div class="service-item-card">
+          <div class="service-head">
+            <span class="service-title">ამანათების გადაზიდვა (რომი - თბილისი)</span>
+            <span class="service-price-tag">1.50 € / კგ</span>
+          </div>
+          <div class="service-desc">ყოველ პარასკევს რომიდან, ბარდება თბილისსა და რეგიონებში უსაფრთხოდ.</div>
+          <div class="service-footer">
+            <div class="service-author">👤 გიორგი ბერიძე (რომი)</div>
+            <a href="https://wa.me/393280000000" target="_blank" class="whatsapp-contact-btn">WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: MONETIZATION -->
+    <div id="tab-monetization" class="tab-content">
+      <div class="studio-card">
+        <div class="card-head-title">
+          <img src="icons/circle-dollar-sign.svg" alt="Earnings">
+          <span>მონეტიზაცია & გატანა</span>
+        </div>
+        
+        <div class="stat-box" style="margin-bottom: 16px;">
+          <div class="stat-box-title">გამომუშავებული თანხა (საჩუქრები/სერვისები)</div>
+          <div class="stat-box-num" id="monetize-available-bal">0.00 ₾</div>
+          <div class="stat-box-trend" style="color: #8a8f9d;">მინიმალური გასატანი: 20.00 ₾</div>
+        </div>
+
+        <div class="form-group">
+          <label>გატანის მეთოდი</label>
+          <select id="payout-method" class="form-control">
+            <option value="bank_ge">საქართველოს ბანკი (IBAN)</option>
+            <option value="tbc_ge">თიბისი ბანკი (IBAN)</option>
+            <option value="iban_eu">ევროპული IBAN (SEPA)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>ანგარიშის ნომერი / IBAN</label>
+          <input type="text" id="payout-iban" class="form-control" placeholder="GE00XX0000000000000000">
+        </div>
+
+        <button class="studio-btn-primary" onclick="requestPayout()">თანხის გატანის მოთხოვნა</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    var db, auth, currentUser = null, userProfile = null;
+
+    window.addEventListener('DOMContentLoaded', function() {
+      if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+        db = firebase.firestore();
+        auth = firebase.auth();
+
+        auth.onAuthStateChanged(function(user) {
+          if (user) {
+            currentUser = user;
+            loadUserData();
+            loadUserPostsForBoost();
+            loadPublishedServices();
+          } else {
+            window.location.href = 'index.html';
+          }
+        });
+      }
+    });
+
+    function switchStudioTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      var activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      var activeContent = document.getElementById('tab-' + tabId);
+      if (activeContent) activeContent.classList.add('active');
+    }
+
+    function loadUserData() {
+      db.collection('profiles').doc(currentUser.uid).get().then(function(doc) {
+        if (doc.exists) {
+          userProfile = doc.data();
+          var bal = userProfile.balance || 0;
+          document.getElementById('studio-balance-val').innerText = Number(bal).toFixed(2) + " ₾";
+          document.getElementById('monetize-available-bal').innerText = Number(bal).toFixed(2) + " ₾";
+        }
+      });
+    }
+
+    function loadUserPostsForBoost() {
+      var selectEl = document.getElementById('boost-post-select');
+      if (!selectEl) return;
+
+      db.collection('posts')
+        .where('user_id', '==', currentUser.uid)
+        .limit(10)
+        .get()
+        .then(function(snap) {
+          selectEl.innerHTML = '';
+          if (snap.empty) {
+            selectEl.innerHTML = '<option value="">პოსტები არ მოიძებნა</option>';
+            return;
+          }
+          snap.forEach(function(doc) {
+            var p = doc.data();
+            var txt = (p.text || "ფოტო/ვიდეო პოსტი").substring(0, 45) + "...";
+            var opt = document.createElement('option');
+            opt.value = doc.id;
+            opt.innerText = txt;
+            selectEl.appendChild(opt);
+          });
+        });
+    }
+
+    function submitPostBoost() {
+      var postId = document.getElementById('boost-post-select').value;
+      var country = document.getElementById('boost-target-country').value;
+      var price = Number(document.getElementById('boost-plan').value);
+
+      if (!postId) {
+        alert("გთხოვთ აირჩიოთ პოსტი!");
+        return;
+      }
+
+      var currentBal = Number(userProfile.balance || 0);
+      if (currentBal < price) {
+        if (confirm("ბალანსზე არ გაქვთ საკმარისი თანხა (" + price + " ₾). გსურთ ბალანსის შევსება?")) {
+          window.location.href = 'balance.html';
+        }
+        return;
+      }
+
+      // ჩამოჭრა ბალანსიდან და დაბუსტვა
+      db.collection('profiles').doc(currentUser.uid).update({
+        balance: currentBal - price
+      }).then(function() {
+        db.collection('posts').doc(postId).update({
+          is_boosted: true,
+          boost_target_country: country,
+          boost_expires_at: new Date(Date.now() + 86400000 * (price === 5 ? 1 : (price === 12 ? 3 : 7)))
+        }).then(function() {
+          alert("პოსტი წარმატებით დაბუსტულია!");
+          loadUserData();
+        });
+      });
+    }
+
+    function publishService() {
+      var title = document.getElementById('srv-title').value.trim();
+      var cat = document.getElementById('srv-cat').value;
+      var price = document.getElementById('srv-price').value.trim();
+      var whatsapp = document.getElementById('srv-whatsapp').value.trim();
+      var desc = document.getElementById('srv-desc').value.trim();
+
+      if (!title || !whatsapp) {
+        alert("სათაური და WhatsApp ნომერი სავალდებულოა!");
+        return;
+      }
+
+      db.collection('studio_services').add({
+        user_id: currentUser.uid,
+        author_name: userProfile.full_name || "ემიგრანტი",
+        title: title,
+        category: cat,
+        price: price || "შეთანხმებით",
+        whatsapp: whatsapp.replace(/[^0-9+]/g, ''),
+        desc: desc,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        alert("სერვისი წარმატებით გამოქვეყნდა!");
+        document.getElementById('srv-title').value = '';
+        document.getElementById('srv-price').value = '';
+        document.getElementById('srv-whatsapp').value = '';
+        document.getElementById('srv-desc').value = '';
+        loadPublishedServices();
+      });
+    }
+
+    function loadPublishedServices() {
+      var container = document.getElementById('services-list-container');
+      if (!container) return;
+
+      db.collection('studio_services')
+        .orderBy('created_at', 'desc')
+        .limit(20)
+        .get()
+        .then(function(snapshot) {
+          if (snapshot.empty) return;
+          var html = '';
+          snapshot.forEach(function(docSnap) {
+            var s = docSnap.data();
+            html += `
+              <div class="service-item-card">
+                <div class="service-head">
+                  <span class="service-title">${s.title}</span>
+                  <span class="service-price-tag">${s.price}</span>
+                </div>
+                <div class="service-desc">${s.desc || ''}</div>
+                <div class="service-footer">
+                  <div class="service-author">👤 ${s.author_name} (${s.category})</div>
+                  <a href="https://wa.me/${s.whatsapp}" target="_blank" class="whatsapp-contact-btn">WhatsApp</a>
+                </div>
+              </div>
+            `;
+          });
+          container.innerHTML = html;
+        });
+    }
+
+    function requestPayout() {
+      var iban = document.getElementById('payout-iban').value.trim();
+      var bal = Number(userProfile.balance || 0);
+
+      if (bal < 20) {
+        alert("მინიმალური გასატანი თანხა შეადგენს 20.00 ₾-ს.");
+        return;
+      }
+      if (!iban) {
+        alert("გთხოვთ მიუთითოთ ანგარიშის ნომერი / IBAN");
+        return;
+      }
+
+      db.collection('payout_requests').add({
+        user_id: currentUser.uid,
+        user_name: userProfile.full_name || "User",
+        amount: bal,
+        iban: iban,
+        method: document.getElementById('payout-method').value,
+        status: 'pending',
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        alert("მოთხოვნა მიღებულია! ადმინისტრაცია დაგიკავშირდებათ 24 საათში.");
+      });
+    }
+  </script>
+</body>
+</html>
