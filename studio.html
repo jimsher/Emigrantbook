@@ -540,6 +540,96 @@
       background: rgba(220, 174, 54, 0.08);
       font-weight: 700;
     }
+
+    /* 🌟 CUSTOM STUDIO ALERT & CONFIRM MODAL (Sleek Dark UI) */
+    .studio-dialog-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    .studio-dialog-box {
+      width: 100%;
+      max-width: 380px;
+      background: #16171b;
+      border: 1px solid #2a2c34;
+      border-radius: 18px;
+      padding: 24px 20px 20px 20px;
+      text-align: center;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+      animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .dialog-icon {
+      font-size: 38px;
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+
+    .dialog-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .dialog-message {
+      font-size: 13px;
+      color: #a6abb8;
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+
+    .dialog-actions-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .dialog-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .dialog-btn:active {
+      opacity: 0.85;
+    }
+
+    .dialog-btn-cancel {
+      background: #23252c;
+      color: #cfd3dc;
+    }
+
+    .dialog-btn-confirm {
+      background: linear-gradient(135deg, #dcae36, #f3cf7a);
+      color: #111111;
+    }
+
+    .dialog-btn-single {
+      background: #ffffff;
+      color: #000000;
+    }
   </style>
 </head>
 <body>
@@ -799,6 +889,18 @@
     </div>
   </div>
 
+  <!-- 🌟 CUSTOM STUDIO DIALOG MODAL (Alert & Confirm) -->
+  <div id="studio-dialog-modal" class="studio-dialog-overlay" onclick="closeStudioDialog()">
+    <div class="studio-dialog-box" onclick="event.stopPropagation()">
+      <div class="dialog-icon" id="dialog-icon">⚠️</div>
+      <div class="dialog-title" id="dialog-title">შეტყობინება</div>
+      <div class="dialog-message" id="dialog-message">...</div>
+      <div class="dialog-actions-row" id="dialog-actions-row">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -893,6 +995,54 @@
       }
     });
 
+    // 🌟 CUSTOM STUDIO DIALOG SYSTEM (Alerts & Confirms)
+    function showStudioAlert(message, title, icon) {
+      var modal = document.getElementById('studio-dialog-modal');
+      var iconEl = document.getElementById('dialog-icon');
+      var titleEl = document.getElementById('dialog-title');
+      var msgEl = document.getElementById('dialog-message');
+      var actionsEl = document.getElementById('dialog-actions-row');
+
+      iconEl.innerText = icon || 'ℹ️';
+      titleEl.innerText = title || 'შეტყობინება';
+      msgEl.innerText = message || '';
+
+      actionsEl.innerHTML = `
+        <button class="dialog-btn dialog-btn-single" onclick="closeStudioDialog()">კარგი</button>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    function showStudioConfirm(message, title, icon, onConfirm, confirmText, cancelText) {
+      var modal = document.getElementById('studio-dialog-modal');
+      var iconEl = document.getElementById('dialog-icon');
+      var titleEl = document.getElementById('dialog-title');
+      var msgEl = document.getElementById('dialog-message');
+      var actionsEl = document.getElementById('dialog-actions-row');
+
+      iconEl.innerText = icon || '💳';
+      titleEl.innerText = title || 'დადასტურება';
+      msgEl.innerText = message || '';
+
+      actionsEl.innerHTML = `
+        <button class="dialog-btn dialog-btn-cancel" onclick="closeStudioDialog()">${cancelText || 'გაუქმება'}</button>
+        <button class="dialog-btn dialog-btn-confirm" id="btn-dialog-confirm">${confirmText || 'კარგი'}</button>
+      `;
+
+      document.getElementById('btn-dialog-confirm').onclick = function() {
+        closeStudioDialog();
+        if (onConfirm) onConfirm();
+      };
+
+      modal.style.display = 'flex';
+    }
+
+    function closeStudioDialog() {
+      var modal = document.getElementById('studio-dialog-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
     function switchStudioTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -924,7 +1074,7 @@
 
       if (pickerType === 'boost-post') {
         if (userPostsCache.length === 0) {
-          alert("თქვენ არ გაქვთ გამოქვეყნებული პოსტები.");
+          showStudioAlert("თქვენ არ გაქვთ გამოქვეყნებული პოსტები.", "პოსტი არ მოიძებნა", "📝");
           return;
         }
         var postOpts = userPostsCache.map(p => ({
@@ -1007,7 +1157,7 @@
       r2S3.upload(params, { partSize: 10 * 1024 * 1024, queueSize: 1 }, function(err, data) {
         if (err) {
           console.error("R2 Upload Error:", err);
-          alert("ფოტოს ატვირთვის შეცდომა: " + err.message);
+          showStudioAlert("ფოტოს ატვირთვის შეცდომა: " + err.message, "შეცდომა", "❌");
         } else {
           var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
           callback(publicUrl);
@@ -1105,15 +1255,20 @@
       var btn = document.getElementById('btn-submit-boost');
 
       if (!postId) {
-        alert("გთხოვთ ჯერ შექმნათ ან აირჩიოთ პოსტი!");
+        showStudioAlert("გთხოვთ ჯერ შექმნათ ან აირჩიოთ პოსტი!", "პოსტი არ არის არჩეული", "⚠️");
         return;
       }
 
       var currentBal = Number(userProfile && userProfile.balance ? userProfile.balance : 0);
       if (currentBal < price) {
-        if (confirm("ბალანსზე არ გაქვთ საკმარისი თანხა (" + price + ".00 ₾). გადავიდეთ ბალანსის შევსებაზე?")) {
-          window.location.href = 'balance.html';
-        }
+        showStudioConfirm(
+          "ბალანსზე არ გაქვთ საკმარისი თანხა (" + price + ".00 ₾). გადავიდეთ ბალანსის შევსებაზე?",
+          "არასაკმარისი ბალანსი",
+          "💳",
+          function() { window.location.href = 'balance.html'; },
+          "შევსება",
+          "გაუქმება"
+        );
         return;
       }
 
@@ -1139,12 +1294,12 @@
         if (userProfile) userProfile.balance = newBal;
         sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid);
         updateBalanceUI();
-        alert("პოსტი წარმატებით დაბუსტულია " + days + " დღით!");
+        showStudioAlert("პოსტი წარმატებით დაბუსტულია " + days + " დღით!", "წარმატება", "🚀");
         btn.disabled = false;
         btn.innerHTML = '<img src="icons/wand-sparkles.svg" style="width:16px;height:16px;" alt="Boost"> დაბუსტვის გააქტიურება';
         loadUserPostsAndStats();
       }).catch(function(err) {
-        alert("შეცდომა: " + err.message);
+        showStudioAlert("შეცდომა: " + err.message, "შეცდომა", "❌");
         btn.disabled = false;
         btn.innerHTML = '<img src="icons/wand-sparkles.svg" style="width:16px;height:16px;" alt="Boost"> დაბუსტვის გააქტიურება';
       });
@@ -1161,16 +1316,21 @@
       var btn = document.getElementById('btn-publish-srv');
 
       if (!title || !whatsapp) {
-        alert("სათაური და WhatsApp ნომერი აუცილებელია!");
+        showStudioAlert("სათაური და WhatsApp ნომერი აუცილებელია!", "შეავსეთ ველები", "⚠️");
         return;
       }
 
       // ბალანსის შემოწმება
       var currentBal = Number(userProfile && userProfile.balance ? userProfile.balance : 0);
       if (currentBal < planPrice) {
-        if (confirm("სერვისის განთავსებისთვის ბალანსზე არ გაქვთ საკმარისი თანხა (" + planPrice + ".00 ₾). გადავიდეთ ბალანსის შევსებაზე?")) {
-          window.location.href = 'balance.html';
-        }
+        showStudioConfirm(
+          "სერვისის განთავსებისთვის ბალანსზე არ გაქვთ საკმარისი თანხა (" + planPrice + ".00 ₾). გადავიდეთ ბალანსის შევსებაზე?",
+          "არასაკმარისი ბალანსი",
+          "💳",
+          function() { window.location.href = 'balance.html'; },
+          "შევსება",
+          "გაუქმება"
+        );
         return;
       }
 
@@ -1261,7 +1421,7 @@
           sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid);
           updateBalanceUI();
 
-          alert("სერვისი წარმატებით გამოქვეყნდა " + durationDays + " დღით!");
+          showStudioAlert("განცხადება წარმატებით გამოქვეყნდა " + durationDays + " დღით!", "წარმატება", "✅");
           document.getElementById('srv-title').value = '';
           document.getElementById('srv-price').value = '';
           document.getElementById('srv-whatsapp').value = '';
@@ -1275,7 +1435,7 @@
           sessionStorage.removeItem('eb_studio_services');
           loadPublishedServices(true);
         }).catch(function(err) {
-          alert("შეცდომა გამოქვეყნებისას: " + err.message);
+          showStudioAlert("შეცდომა გამოქვეყნებისას: " + err.message, "შეცდომა", "❌");
           btn.disabled = false;
           btn.innerText = "სერვისის გამოქვეყნება";
         });
@@ -1355,14 +1515,21 @@
     }
 
     function deleteService(serviceId) {
-      if (!confirm("ნამდვილად გსურთ ამ სერვისის წაშლა?")) return;
-
-      db.collection('studio_services').doc(serviceId).delete().then(function() {
-        sessionStorage.removeItem('eb_studio_services');
-        loadPublishedServices(true);
-      }).catch(function(err) {
-        alert("წაშლის შეცდომა: " + err.message);
-      });
+      showStudioConfirm(
+        "ნამდვილად გსურთ ამ სერვისის წაშლა?",
+        "სერვისის წაშლა",
+        "🗑️",
+        function() {
+          db.collection('studio_services').doc(serviceId).delete().then(function() {
+            sessionStorage.removeItem('eb_studio_services');
+            loadPublishedServices(true);
+          }).catch(function(err) {
+            showStudioAlert("წაშლის შეცდომა: " + err.message, "შეცდომა", "❌");
+          });
+        },
+        "წაშლა",
+        "გაუქმება"
+      );
     }
 
     // 6. მონეტიზაციის მოთხოვნა
@@ -1373,11 +1540,11 @@
       var btn = document.getElementById('btn-request-payout');
 
       if (bal < 20) {
-        alert("მინიმალური გასატანი თანხა შეადგენს 20.00 ₾-ს. თქვენი ბალანსია: " + bal.toFixed(2) + " ₾");
+        showStudioAlert("მინიმალური გასატანი თანხა შეადგენს 20.00 ₾-ს. თქვენი ბალანსია: " + bal.toFixed(2) + " ₾", "შეზღუდვა", "💳");
         return;
       }
       if (!iban || iban.length < 10) {
-        alert("გთხოვთ მიუთითოთ ვალიდური ანგარიშის ნომერი / IBAN!");
+        showStudioAlert("გთხოვთ მიუთითოთ ვალიდური ანგარიშის ნომერი / IBAN!", "შეცდომა", "⚠️");
         return;
       }
 
@@ -1393,12 +1560,12 @@
         status: 'pending',
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(function() {
-        alert("გატანის მოთხოვნა მიღებულია! ადმინისტრაცია შეამოწმებს და ჩაგირიცხავთ თანხას 24 საათში.");
+        showStudioAlert("გატანის მოთხოვნა მიღებულია! ადმინისტრაცია შეამოწმებს და ჩაგირიცხავთ თანხას 24 საათში.", "მოთხოვნა გაგზავნილია", "✅");
         document.getElementById('payout-iban').value = '';
         btn.disabled = false;
         btn.innerText = "თანხის გატანის მოთხოვნა";
       }).catch(function(err) {
-        alert("შეცდომა: " + err.message);
+        showStudioAlert("შეცდომა: " + err.message, "შეცდომა", "❌");
         btn.disabled = false;
         btn.innerText = "თანხის გატანის მოთხოვნა";
       });
