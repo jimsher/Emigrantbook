@@ -9,6 +9,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <!-- Cloudflare R2 AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
 
   <style>
     * {
@@ -411,6 +413,21 @@
       text-align: center;
       padding: 20px 0;
     }
+
+    .upload-btn-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #191a1e;
+      border: 1px dashed #33363f;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .upload-btn-box:hover {
+      border-color: #555a64;
+    }
   </style>
 </head>
 <body>
@@ -561,18 +578,20 @@
       <div class="studio-card">
         <div class="card-head-title">
           <img src="icons/briefcase-business.svg" alt="Add Service">
-          <span>შექმენი სერვისის განცხადება</span>
+          <span>განათავსე განცხადება / სერვისი</span>
         </div>
         <div class="form-group">
-          <label>სერვისის დასახელება</label>
-          <input type="text" id="srv-title" class="form-control" placeholder="მაგ: ამანათების გადაზიდვა იტალია-საქართველო">
+          <label>სათაური (ნივთი, ბინა, მანქანა ან სერვისი)</label>
+          <input type="text" id="srv-title" class="form-control" placeholder="მაგ: ქირავდება ბინა რომში / ამანათების გადაზიდვა">
         </div>
         <div class="form-group">
           <label>კატეგორია</label>
           <select id="srv-cat" class="form-control">
             <option value="გადაზიდვები / ტრანსპორტი">გადაზიდვები / ტრანსპორტი</option>
-            <option value="საბუთები / იურისტი">საბუთები / თარგმნა / იურისტი</option>
             <option value="ბინები / უძრავი ქონება">ბინები / ქირაობა</option>
+            <option value="ავტომობილები / გაყიდვა">ავტომობილები / გაყიდვა</option>
+            <option value="ნივთები / ტექნიკა / გაყიდვა">ნივთები / ტექნიკა / გაყიდვა</option>
+            <option value="საბუთები / იურისტი">საბუთები / თარგმნა / იურისტი</option>
             <option value="ხელოსანი / რემონტი">ხელოსანი / რემონტი</option>
             <option value="კულინარია / შეკვეთები">კულინარია / პროდუქტი</option>
             <option value="სხვა მომსახურება">სხვა მომსახურება</option>
@@ -580,12 +599,26 @@
         </div>
         <div class="form-group">
           <label>ფასი ან პირობა</label>
-          <input type="text" id="srv-price" class="form-control" placeholder="მაგ: 1.5€ / კგ ან შეთანხმებით">
+          <input type="text" id="srv-price" class="form-control" placeholder="მაგ: 500 € / 1.5€ კგ / შეთანხმებით">
         </div>
         <div class="form-group">
           <label>WhatsApp ნომერი (ქვეყნის კოდით)</label>
           <input type="text" id="srv-whatsapp" class="form-control" placeholder="+39 3XX XXXXXXX">
         </div>
+        
+        <!-- 📸 ფოტოების დამატების ველი -->
+        <div class="form-group">
+          <label>ფოტოების დამატება (მაქს. 6 ფოტო)</label>
+          <div class="upload-btn-box" onclick="document.getElementById('srv-photos-file').click()">
+            <img src="icons/camera.svg" class="tab-icon" alt="Photo" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #fff;">ატვირთეთ ფოტოები</div>
+              <div id="srv-photos-label" style="font-size: 11px; color: #8a8f9d;">ფოტო არ არის არჩეული</div>
+            </div>
+          </div>
+          <input type="file" id="srv-photos-file" accept="image/*" multiple style="display: none;" onchange="handleServicePhotosSelect(this)">
+        </div>
+
         <div class="form-group">
           <label>დეტალური აღწერა</label>
           <textarea id="srv-desc" class="form-control" rows="3" placeholder="დაწერეთ დეტალური პირობები..."></textarea>
@@ -657,6 +690,7 @@
     var currentUser = null;
     var userProfile = null;
     var userPostsCache = [];
+    var selectedServiceFiles = [];
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
@@ -688,13 +722,57 @@
       });
     }
 
+    function handleServicePhotosSelect(input) {
+      var label = document.getElementById('srv-photos-label');
+      if (input.files && input.files.length > 0) {
+        selectedServiceFiles = Array.from(input.files).slice(0, 6);
+        label.innerText = `📎 არჩეულია ${selectedServiceFiles.length} ფოტო`;
+        label.style.color = '#34d399';
+      } else {
+        selectedServiceFiles = [];
+        label.innerText = "ფოტო არ არის არჩეული";
+        label.style.color = '#8a8f9d';
+      }
+    }
+
+    // 📸 Cloudflare R2 Upload ფუნქცია
+    function uploadMediaToR2(file, folder, callback) {
+      var r2S3 = new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto'
+      });
+
+      var fileKey = (folder || 'images') + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+      var contentType = file.type || 'image/jpeg';
+
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: contentType
+      };
+
+      r2S3.upload(params, { partSize: 10 * 1024 * 1024, queueSize: 1 }, function(err, data) {
+        if (err) {
+          console.error("R2 Upload Error:", err);
+          alert("ფოტოს ატვირთვის შეცდომა: " + err.message);
+        } else {
+          var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+          callback(publicUrl);
+        }
+      });
+    }
+
     // 1. მომხმარებლის პროფილის ჩატვირთვა (ქეშირებით)
     function loadUserData(callback) {
       var cachedProfile = sessionStorage.getItem('eb_studio_profile_' + currentUser.uid);
       var cacheTime = sessionStorage.getItem('eb_studio_profile_time_' + currentUser.uid);
       var now = Date.now();
 
-      if (cachedProfile && cacheTime && (now - Number(cacheTime) < 180000)) { // 3 წუთიანი ქეში
+      if (cachedProfile && cacheTime && (now - Number(cacheTime) < 180000)) {
         userProfile = JSON.parse(cachedProfile);
         updateBalanceUI();
         if (callback) callback();
@@ -754,7 +832,6 @@
             p.id = docSnap.id;
             userPostsCache.push(p);
 
-            // ანალიტიკის შეკრება
             var likes = p.likes_count || (p.likes ? (Array.isArray(p.likes) ? p.likes.length : Object.keys(p.likes).length) : 0);
             var comments = p.comments_count || (p.comments ? p.comments.length : 0);
             totalLikes += Number(likes) || 0;
@@ -769,7 +846,6 @@
             }
           });
 
-          // რეალური ციფრების გამოტანა
           document.getElementById('stat-total-likes').innerText = totalLikes;
           document.getElementById('stat-total-comments').innerText = totalComments;
           document.getElementById('stat-posts-count').innerText = postsCount;
@@ -805,7 +881,6 @@
       var days = price === 5 ? 1 : (price === 12 ? 3 : 7);
       var expiresDate = new Date(Date.now() + (days * 86400000));
 
-      // Batch Write - ორივე დოკუმენტის ერთდროული განახლება (მინიმალური Quota)
       var batch = db.batch();
       var profileRef = db.collection('profiles').doc(currentUser.uid);
       var postRef = db.collection('posts').doc(postId);
@@ -819,7 +894,7 @@
 
       batch.commit().then(function() {
         if (userProfile) userProfile.balance = newBal;
-        sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid); // ქეშის განახლება
+        sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid);
         updateBalanceUI();
         alert("პოსტი წარმატებით დაბუსტულია " + days + " დღით!");
         btn.disabled = false;
@@ -832,7 +907,7 @@
       });
     }
 
-    // 4. სერვისის გამოქვეყნება
+    // 4. სერვისის გამოქვეყნება ფოტოებთან ერთად
     function publishService() {
       var title = document.getElementById('srv-title').value.trim();
       var cat = document.getElementById('srv-cat').value;
@@ -850,61 +925,90 @@
       if (cleanWhatsapp.startsWith('+')) cleanWhatsapp = cleanWhatsapp.substring(1);
 
       btn.disabled = true;
-      btn.innerText = "ქვეყნდება...";
+      btn.innerText = "ფოტოები იტვირთება...";
 
       var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : "ემიგრანტი";
       var authorAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "";
       var authorCity = (userProfile && (userProfile.current_city || userProfile.real_ip_city)) ? (userProfile.current_city || userProfile.real_ip_city) : "";
       var authorCountry = (userProfile && (userProfile.country || userProfile.real_ip_country)) ? (userProfile.country || userProfile.real_ip_country) : "";
 
-      var batch = db.batch();
+      // ფოტოების ატვირთვის პროცესი
+      var uploadPromises = [];
+      var uploadedPhotoUrls = [];
 
-      // 1. studio_services კოლექცია
-      var studioRef = db.collection('studio_services').doc();
-      batch.set(studioRef, {
-        user_id: currentUser.uid,
-        author_name: authorName,
-        author_avatar: authorAvatar,
-        title: title,
-        category: cat,
-        price: price || "შეთანხმებით",
-        whatsapp: cleanWhatsapp,
-        desc: desc,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      if (selectedServiceFiles && selectedServiceFiles.length > 0) {
+        selectedServiceFiles.forEach(function(file) {
+          var p = new Promise(function(resolve) {
+            uploadMediaToR2(file, 'services', function(url) {
+              uploadedPhotoUrls.push(url);
+              resolve();
+            });
+          });
+          uploadPromises.push(p);
+        });
+      }
 
-      // 2. posts კოლექცია (მთავარი Feed-ისთვის)
-      var postRef = db.collection('posts').doc();
-      batch.set(postRef, {
-        user_id: currentUser.uid,
-        author_name: authorName,
-        author_avatar: authorAvatar,
-        user_city: authorCity,
-        user_country: authorCountry,
-        is_studio_service: true,
-        service_category: cat,
-        service_price: price || "შეთანხმებით",
-        service_whatsapp: cleanWhatsapp,
-        service_title: title,
-        content: desc || title,
-        likes_count: 0,
-        comments_count: 0,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      Promise.all(uploadPromises).then(function() {
+        btn.innerText = "ქვეყნდება...";
 
-      batch.commit().then(function() {
-        alert("სერვისი წარმატებით გამოქვეყნდა Studio-ში და მთავარ კედელზე!");
-        document.getElementById('srv-title').value = '';
-        document.getElementById('srv-price').value = '';
-        document.getElementById('srv-whatsapp').value = '';
-        document.getElementById('srv-desc').value = '';
-        btn.disabled = false;
-        btn.innerText = "სერვისის გამოქვეყნება";
-        if (typeof loadPublishedServices === 'function') loadPublishedServices();
-      }).catch(function(err) {
-        alert("შეცდომა გამოქვეყნებისას: " + err.message);
-        btn.disabled = false;
-        btn.innerText = "სერვისის გამოქვეყნება";
+        var mediaUrlsJoined = uploadedPhotoUrls.join(",");
+        var batch = db.batch();
+
+        // 1. studio_services კოლექცია
+        var studioRef = db.collection('studio_services').doc();
+        batch.set(studioRef, {
+          user_id: currentUser.uid,
+          author_name: authorName,
+          author_avatar: authorAvatar,
+          title: title,
+          category: cat,
+          price: price || "შეთანხმებით",
+          whatsapp: cleanWhatsapp,
+          desc: desc,
+          media_url: mediaUrlsJoined || null,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. posts კოლექცია (მთავარი Feed-ისთვის)
+        var postRef = db.collection('posts').doc();
+        batch.set(postRef, {
+          user_id: currentUser.uid,
+          author_name: authorName,
+          author_avatar: authorAvatar,
+          user_city: authorCity,
+          user_country: authorCountry,
+          is_studio_service: true,
+          service_category: cat,
+          service_price: price || "შეთანხმებით",
+          service_whatsapp: cleanWhatsapp,
+          service_title: title,
+          content: desc || title,
+          media_url: mediaUrlsJoined || null,
+          media_type: mediaUrlsJoined ? "image" : null,
+          likes_count: 0,
+          comments_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        batch.commit().then(function() {
+          alert("განცხადება წარმატებით გამოქვეყნდა Studio-ში და მთავარ კედელზე!");
+          document.getElementById('srv-title').value = '';
+          document.getElementById('srv-price').value = '';
+          document.getElementById('srv-whatsapp').value = '';
+          document.getElementById('srv-desc').value = '';
+          document.getElementById('srv-photos-file').value = '';
+          document.getElementById('srv-photos-label').innerText = "ფოტო არ არის არჩეული";
+          document.getElementById('srv-photos-label').style.color = "#8a8f9d";
+          selectedServiceFiles = [];
+          btn.disabled = false;
+          btn.innerText = "სერვისის გამოქვეყნება";
+          sessionStorage.removeItem('eb_studio_services');
+          loadPublishedServices(true);
+        }).catch(function(err) {
+          alert("შეცდომა გამოქვეყნებისას: " + err.message);
+          btn.disabled = false;
+          btn.innerText = "სერვისის გამოქვეყნება";
+        });
       });
     }
 
@@ -955,9 +1059,16 @@
       var html = '';
       list.forEach(function(s) {
         var isMine = (currentUser && s.user_id === currentUser.uid);
+        var photosHtml = '';
+        if (s.media_url) {
+          var firstImg = s.media_url.split(',')[0].trim();
+          photosHtml = `<img src="${firstImg}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">`;
+        }
+
         html += `
           <div class="service-item-card">
             ${isMine ? `<button class="delete-service-btn" onclick="deleteService('${s.id}')" title="წაშლა">✕</button>` : ''}
+            ${photosHtml}
             <div class="service-head">
               <span class="service-title">${escapeHtml(s.title)}</span>
               <span class="service-price-tag">${escapeHtml(s.price)}</span>
