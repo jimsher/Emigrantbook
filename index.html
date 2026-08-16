@@ -2603,10 +2603,18 @@ auth.onAuthStateChanged(function(user) {
       });
     }
 
-    function renderProfileDetails(profileData) {
+    
+      function renderProfileDetails(profileData) {
       var container = document.getElementById('profile-details-container');
       if (!container) return;
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+      // სქესი (გამოჩნდება მხოლოდ თუ მითითებულია)
+      var genderHtml = profileData.gender ? `
+        <div class="detail-item">
+          <span class="icon"><img src="icons/circle-user-round.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Gender"></span>
+          <span>${t.gender || 'Gender'}: <strong>${profileData.gender}</strong></span>
+        </div>` : '';
 
       // ასაკი (გამოჩნდება მხოლოდ თუ მითითებულია)
       var ageHtml = profileData.age ? `
@@ -2622,19 +2630,19 @@ auth.onAuthStateChanged(function(user) {
           <span>Works as: <strong>${profileData.job_title}</strong></span>
         </div>` : '';
 
-      // ქალაქი (ჯერ ამოწმებს შეყვანილს, შემდეგ IP-ით განსაზღვრულს)
+      // ქალაქი (საცხოვრებელი ადგილი - House)
       var userCity = profileData.current_city || profileData.real_ip_city;
       var cityHtml = userCity ? `
         <div class="detail-item">
-          <span class="icon"><img src="icons/map-pinned.svg" class="post-action-icon" style="width:16px;height:16px;" alt="City"></span>
+          <span class="icon"><img src="icons/house.svg" class="post-action-icon" style="width:16px;height:16px;" alt="City"></span>
           <span>Lives in: <strong>${userCity}</strong></span>
         </div>` : '';
 
-      // ქვეყანა (ჯერ ამოწმებს შეყვანილს, შემდეგ IP-ით განსაზღვრულს)
+      // ქვეყანა (წარმომავლობის ლოკაცია - Map Pin)
       var userCountry = profileData.country || profileData.real_ip_country;
       var countryHtml = userCountry ? `
         <div class="detail-item">
-          <span class="icon"><img src="icons/house.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Country"></span>
+          <span class="icon"><img src="icons/map-pinned.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Country"></span>
           <span>From: <strong>${userCountry}</strong></span>
         </div>` : '';
 
@@ -2652,7 +2660,7 @@ auth.onAuthStateChanged(function(user) {
           <span>Event: <strong>${profileData.life_events}</strong></span>
         </div>` : '';
 
-      container.innerHTML = ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
+      container.innerHTML = genderHtml + ageHtml + jobHtml + cityHtml + countryHtml + relHtml + eventHtml;
     }
 
     
