@@ -857,10 +857,9 @@
       var authorCity = (userProfile && (userProfile.current_city || userProfile.real_ip_city)) ? (userProfile.current_city || userProfile.real_ip_city) : "";
       var authorCountry = (userProfile && (userProfile.country || userProfile.real_ip_country)) ? (userProfile.country || userProfile.real_ip_country) : "";
 
-      // Firestore Batch - 2 ჩანაწერი 1 მოთხოვნით
       var batch = db.batch();
 
-      // 1. სტუდიოს სერვისების კოლექცია
+      // 1. studio_services კოლექცია
       var studioRef = db.collection('studio_services').doc();
       batch.set(studioRef, {
         user_id: currentUser.uid,
@@ -874,7 +873,7 @@
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // 2. მთავარი Feed-ის პოსტების კოლექცია
+      // 2. posts კოლექცია (მთავარი Feed-ისთვის)
       var postRef = db.collection('posts').doc();
       batch.set(postRef, {
         user_id: currentUser.uid,
@@ -887,7 +886,7 @@
         service_price: price || "შეთანხმებით",
         service_whatsapp: cleanWhatsapp,
         service_title: title,
-        content: `💼 <strong>${title}</strong><br><br>${desc}`,
+        content: desc || title,
         likes_count: 0,
         comments_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
@@ -901,8 +900,7 @@
         document.getElementById('srv-desc').value = '';
         btn.disabled = false;
         btn.innerText = "სერვისის გამოქვეყნება";
-        sessionStorage.removeItem('eb_studio_services');
-        loadPublishedServices(true);
+        if (typeof loadPublishedServices === 'function') loadPublishedServices();
       }).catch(function(err) {
         alert("შეცდომა გამოქვეყნებისას: " + err.message);
         btn.disabled = false;
