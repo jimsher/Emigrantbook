@@ -293,8 +293,29 @@
       border-color: #555a64;
     }
 
-    select.form-control {
+    /* CUSTOM SELECT TRIGGER */
+    .custom-select-trigger {
+      width: 100%;
+      background: #191a1e;
+      border: 1px solid #282a30;
+      color: #ffffff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       cursor: pointer;
+      user-select: none;
+    }
+
+    .custom-select-trigger:active {
+      background: #202227;
+    }
+
+    .custom-select-arrow {
+      color: #8a8f9d;
+      font-size: 12px;
     }
 
     /* PRIMARY BUTTON */
@@ -420,13 +441,104 @@
       gap: 12px;
       background: #191a1e;
       border: 1px dashed #33363f;
-      padding: 10px 14px;
+      padding: 12px 14px;
       border-radius: 10px;
       cursor: pointer;
     }
 
     .upload-btn-box:hover {
       border-color: #555a64;
+    }
+
+    /* CUSTOM BOTTOM SHEET MODAL (Dark Theme) */
+    .studio-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .studio-modal-sheet {
+      width: 100%;
+      max-width: 680px;
+      background: #141518;
+      border-top: 1px solid #282a30;
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      max-height: 75vh;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #22242a;
+      margin-bottom: 10px;
+    }
+
+    .sheet-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .sheet-close-btn {
+      background: transparent;
+      border: none;
+      color: #8a8f9d;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .sheet-list {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .sheet-option-item {
+      padding: 13px 14px;
+      background: #191a1e;
+      border: 1px solid #24262c;
+      border-radius: 10px;
+      color: #e4e6eb;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s;
+    }
+
+    .sheet-option-item:active {
+      background: #23252c;
+    }
+
+    .sheet-option-item.selected {
+      border-color: #dcae36;
+      color: #dcae36;
+      background: rgba(220, 174, 54, 0.08);
+      font-weight: 700;
     }
   </style>
 </head>
@@ -540,30 +652,29 @@
         
         <div class="form-group">
           <label>აირჩიე შენი პოსტი</label>
-          <select id="boost-post-select" class="form-control">
-            <option value="">იტვირთება შენი პოსტები...</option>
-          </select>
+          <div class="custom-select-trigger" onclick="openCustomPicker('boost-post')">
+            <span id="label-boost-post">იტვირთება შენი პოსტები...</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <input type="hidden" id="boost-post-select" value="">
         </div>
 
         <div class="form-group">
           <label>მიზნობრივი აუდიტორია (ქვეყანა)</label>
-          <select id="boost-target-country" class="form-control">
-            <option value="ALL">ყველა ქვეყანა (გლობალური)</option>
-            <option value="IT">მხოლოდ იტალიაში მყოფები 🇮🇹</option>
-            <option value="GR">მხოლოდ საბერძნეთში მყოფები 🇬🇷</option>
-            <option value="DE">მხოლოდ გერმანიაში მყოფები 🇩🇪</option>
-            <option value="GE">მხოლოდ საქართველოში მყოფები 🇬🇪</option>
-            <option value="US">მხოლოდ აშშ-ში მყოფები 🇺🇸</option>
-          </select>
+          <div class="custom-select-trigger" onclick="openCustomPicker('boost-country')">
+            <span id="label-boost-country">ყველა ქვეყანა (გლობალური)</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <input type="hidden" id="boost-target-country" value="ALL">
         </div>
 
         <div class="form-group">
           <label>ბიუჯეტი და ხანგრძლივობა</label>
-          <select id="boost-plan" class="form-control">
-            <option value="5">1 დღე — 5.00 ₾ (პრიორიტეტული ჩვენება)</option>
-            <option value="12">3 დღე — 12.00 ₾ (მაღალი ჩართულობა)</option>
-            <option value="25">7 დღე — 25.00 ₾ (მაქსიმალური დაფარვა)</option>
-          </select>
+          <div class="custom-select-trigger" onclick="openCustomPicker('boost-plan')">
+            <span id="label-boost-plan">1 დღე — 5.00 ₾ (პრიორიტეტული ჩვენება)</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <input type="hidden" id="boost-plan" value="5">
         </div>
 
         <button class="studio-btn-primary studio-btn-gold" id="btn-submit-boost" onclick="submitPostBoost()">
@@ -584,19 +695,16 @@
           <label>სათაური (ნივთი, ბინა, მანქანა ან სერვისი)</label>
           <input type="text" id="srv-title" class="form-control" placeholder="მაგ: ქირავდება ბინა რომში / ამანათების გადაზიდვა">
         </div>
+        
         <div class="form-group">
           <label>კატეგორია</label>
-          <select id="srv-cat" class="form-control">
-            <option value="გადაზიდვები / ტრანსპორტი">გადაზიდვები / ტრანსპორტი</option>
-            <option value="ბინები / უძრავი ქონება">ბინები / ქირაობა</option>
-            <option value="ავტომობილები / გაყიდვა">ავტომობილები / გაყიდვა</option>
-            <option value="ნივთები / ტექნიკა / გაყიდვა">ნივთები / ტექნიკა / გაყიდვა</option>
-            <option value="საბუთები / იურისტი">საბუთები / თარგმნა / იურისტი</option>
-            <option value="ხელოსანი / რემონტი">ხელოსანი / რემონტი</option>
-            <option value="კულინარია / შეკვეთები">კულინარია / პროდუქტი</option>
-            <option value="სხვა მომსახურება">სხვა მომსახურება</option>
-          </select>
+          <div class="custom-select-trigger" onclick="openCustomPicker('srv-cat')">
+            <span id="label-srv-cat">გადაზიდვები / ტრანსპორტი</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <input type="hidden" id="srv-cat" value="გადაზიდვები / ტრანსპორტი">
         </div>
+
         <div class="form-group">
           <label>ფასი ან პირობა</label>
           <input type="text" id="srv-price" class="form-control" placeholder="მაგ: 500 € / 1.5€ კგ / შეთანხმებით">
@@ -652,11 +760,11 @@
 
         <div class="form-group">
           <label>გატანის მეთოდი</label>
-          <select id="payout-method" class="form-control">
-            <option value="საქართველოს ბანკი (IBAN)">საქართველოს ბანკი (IBAN)</option>
-            <option value="თიბისი ბანკი (IBAN)">თიბისი ბანკი (IBAN)</option>
-            <option value="ევროპული IBAN (SEPA)">ევროპული IBAN (SEPA)</option>
-          </select>
+          <div class="custom-select-trigger" onclick="openCustomPicker('payout-method')">
+            <span id="label-payout-method">საქართველოს ბანკი (IBAN)</span>
+            <span class="custom-select-arrow">▼</span>
+          </div>
+          <input type="hidden" id="payout-method" value="საქართველოს ბანკი (IBAN)">
         </div>
 
         <div class="form-group">
@@ -668,6 +776,17 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- 🎨 CUSTOM BOTTOM SHEET PICKER MODAL -->
+  <div id="custom-picker-modal" class="studio-modal-overlay" onclick="closeCustomPicker()">
+    <div class="studio-modal-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-header">
+        <span class="sheet-title" id="sheet-header-title">აირჩიეთ</span>
+        <button class="sheet-close-btn" onclick="closeCustomPicker()">✕</button>
+      </div>
+      <div class="sheet-list" id="sheet-options-list"></div>
+    </div>
   </div>
 
   <script>
@@ -691,6 +810,58 @@
     var userProfile = null;
     var userPostsCache = [];
     var selectedServiceFiles = [];
+
+    // Custom Pickers Data Config
+    const PICKER_CONFIGS = {
+      'boost-country': {
+        title: 'მიზნობრივი ქვეყანა',
+        targetInput: 'boost-target-country',
+        targetLabel: 'label-boost-country',
+        options: [
+          { val: 'ALL', label: 'ყველა ქვეყანა (გლობალური)' },
+          { val: 'IT', label: 'მხოლოდ იტალიაში მყოფები 🇮🇹' },
+          { val: 'GR', label: 'მხოლოდ საბერძნეთში მყოფები 🇬🇷' },
+          { val: 'DE', label: 'მხოლოდ გერმანიაში მყოფები 🇩🇪' },
+          { val: 'GE', label: 'მხოლოდ საქართველოში მყოფები 🇬🇪' },
+          { val: 'US', label: 'მხოლოდ აშშ-ში მყოფები 🇺🇸' }
+        ]
+      },
+      'boost-plan': {
+        title: 'ბიუჯეტი და ხანგრძლივობა',
+        targetInput: 'boost-plan',
+        targetLabel: 'label-boost-plan',
+        options: [
+          { val: '5', label: '1 დღე — 5.00 ₾ (პრიორიტეტული ჩვენება)' },
+          { val: '12', label: '3 დღე — 12.00 ₾ (მაღალი ჩართულობა)' },
+          { val: '25', label: '7 დღე — 25.00 ₾ (მაქსიმალური დაფარვა)' }
+        ]
+      },
+      'srv-cat': {
+        title: 'სერვისის კატეგორია',
+        targetInput: 'srv-cat',
+        targetLabel: 'label-srv-cat',
+        options: [
+          { val: 'გადაზიდვები / ტრანსპორტი', label: 'გადაზიდვები / ტრანსპორტი' },
+          { val: 'ბინები / უძრავი ქონება', label: 'ბინები / ქირაობა' },
+          { val: 'ავტომობილები / გაყიდვა', label: 'ავტომობილები / გაყიდვა' },
+          { val: 'ნივთები / ტექნიკა / გაყიდვა', label: 'ნივთები / ტექნიკა / გაყიდვა' },
+          { val: 'საბუთები / იურისტი', label: 'საბუთები / თარგმნა / იურისტი' },
+          { val: 'ხელოსანი / რემონტი', label: 'ხელოსანი / რემონტი' },
+          { val: 'კულინარია / შეკვეთები', label: 'კულინარია / პროდუქტი' },
+          { val: 'სხვა მომსახურება', label: 'სხვა მომსახურება' }
+        ]
+      },
+      'payout-method': {
+        title: 'გატანის მეთოდი',
+        targetInput: 'payout-method',
+        targetLabel: 'label-payout-method',
+        options: [
+          { val: 'საქართველოს ბანკი (IBAN)', label: 'საქართველოს ბანკი (IBAN)' },
+          { val: 'თიბისი ბანკი (IBAN)', label: 'თიბისი ბანკი (IBAN)' },
+          { val: 'ევროპული IBAN (SEPA)', label: 'ევროპული IBAN (SEPA)' }
+        ]
+      }
+    };
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
@@ -720,6 +891,63 @@
         loadUserPostsAndStats();
         loadPublishedServices();
       });
+    }
+
+    // 🎨 CUSTOM BOTTOM SHEET PICKER CONTROLLER
+    function openCustomPicker(pickerType) {
+      var modal = document.getElementById('custom-picker-modal');
+      var titleEl = document.getElementById('sheet-header-title');
+      var listEl = document.getElementById('sheet-options-list');
+
+      var config = null;
+
+      if (pickerType === 'boost-post') {
+        if (userPostsCache.length === 0) {
+          alert("თქვენ არ გაქვთ გამოქვეყნებული პოსტები.");
+          return;
+        }
+        var postOpts = userPostsCache.map(p => ({
+          val: p.id,
+          label: (p.is_boosted ? "⚡ [Boosted] " : "") + (p.content || p.text || "მედია პოსტი").replace(/<[^>]*>?/gm, '').substring(0, 45) + "..."
+        }));
+        config = {
+          title: 'აირჩიეთ პოსტი',
+          targetInput: 'boost-post-select',
+          targetLabel: 'label-boost-post',
+          options: postOpts
+        };
+      } else {
+        config = PICKER_CONFIGS[pickerType];
+      }
+
+      if (!config) return;
+
+      titleEl.innerText = config.title;
+      var currentVal = document.getElementById(config.targetInput).value;
+
+      var html = '';
+      config.options.forEach(function(opt) {
+        var isSelected = (opt.val === currentVal);
+        html += `
+          <div class="sheet-option-item ${isSelected ? 'selected' : ''}" onclick="selectCustomOption('${config.targetInput}', '${config.targetLabel}', '${opt.val}', '${escapeHtml(opt.label)}')">
+            <span>${opt.label}</span>
+            <span>${isSelected ? '✓' : ''}</span>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+      modal.style.display = 'flex';
+    }
+
+    function selectCustomOption(inputId, labelId, val, label) {
+      document.getElementById(inputId).value = val;
+      document.getElementById(labelId).innerText = label;
+      closeCustomPicker();
+    }
+
+    function closeCustomPicker() {
+      document.getElementById('custom-picker-modal').style.display = 'none';
     }
 
     function handleServicePhotosSelect(input) {
@@ -766,7 +994,7 @@
       });
     }
 
-    // 1. მომხმარებლის პროფილის ჩატვირთვა (ქეშირებით)
+    // 1. მომხმარებლის პროფილის ჩატვირთვა
     function loadUserData(callback) {
       var cachedProfile = sessionStorage.getItem('eb_studio_profile_' + currentUser.uid);
       var cacheTime = sessionStorage.getItem('eb_studio_profile_time_' + currentUser.uid);
@@ -803,10 +1031,8 @@
       document.getElementById('stat-followers-count').innerText = followers;
     }
 
-    // 2. პოსტების და რეალური ანალიტიკის ჩატვირთვა (მაქს. 10 პოსტი Firestore Quota-ს დასაზოგად)
+    // 2. პოსტების და სტატისტიკის ჩატვირთვა
     function loadUserPostsAndStats() {
-      var selectEl = document.getElementById('boost-post-select');
-
       db.collection('posts')
         .where('user_id', '==', currentUser.uid)
         .limit(10)
@@ -817,10 +1043,8 @@
           var totalComments = 0;
           var postsCount = snap.size;
 
-          if (selectEl) selectEl.innerHTML = '';
-
           if (snap.empty) {
-            if (selectEl) selectEl.innerHTML = '<option value="">პოსტები არ გაქვთ შექმნილი</option>';
+            document.getElementById('label-boost-post').innerText = "პოსტები არ გაქვთ შექმნილი";
             document.getElementById('stat-total-likes').innerText = '0';
             document.getElementById('stat-total-comments').innerText = '0';
             document.getElementById('stat-posts-count').innerText = '0';
@@ -836,15 +1060,14 @@
             var comments = p.comments_count || (p.comments ? p.comments.length : 0);
             totalLikes += Number(likes) || 0;
             totalComments += Number(comments) || 0;
-
-            if (selectEl) {
-              var txt = (p.content || p.text || "მედია პოსტი").replace(/<[^>]*>?/gm, '').substring(0, 40) + "...";
-              var opt = document.createElement('option');
-              opt.value = p.id;
-              opt.innerText = (p.is_boosted ? "⚡ [Boosted] " : "") + txt;
-              selectEl.appendChild(opt);
-            }
           });
+
+          // პირველი პოსტის ავტომატური არჩევა
+          if (userPostsCache.length > 0) {
+            var firstP = userPostsCache[0];
+            document.getElementById('boost-post-select').value = firstP.id;
+            document.getElementById('label-boost-post').innerText = (firstP.is_boosted ? "⚡ [Boosted] " : "") + (firstP.content || firstP.text || "მედია პოსტი").replace(/<[^>]*>?/gm, '').substring(0, 45) + "...";
+          }
 
           document.getElementById('stat-total-likes').innerText = totalLikes;
           document.getElementById('stat-total-comments').innerText = totalComments;
@@ -854,7 +1077,7 @@
         });
     }
 
-    // 3. პოსტის დაბუსტვა და ბალანსის უსაფრთხო ჩამოჭრა
+    // 3. პოსტის დაბუსტვა
     function submitPostBoost() {
       var postId = document.getElementById('boost-post-select').value;
       var country = document.getElementById('boost-target-country').value;
@@ -932,7 +1155,6 @@
       var authorCity = (userProfile && (userProfile.current_city || userProfile.real_ip_city)) ? (userProfile.current_city || userProfile.real_ip_city) : "";
       var authorCountry = (userProfile && (userProfile.country || userProfile.real_ip_country)) ? (userProfile.country || userProfile.real_ip_country) : "";
 
-      // ფოტოების ატვირთვის პროცესი
       var uploadPromises = [];
       var uploadedPhotoUrls = [];
 
@@ -954,7 +1176,6 @@
         var mediaUrlsJoined = uploadedPhotoUrls.join(",");
         var batch = db.batch();
 
-        // 1. studio_services კოლექცია
         var studioRef = db.collection('studio_services').doc();
         batch.set(studioRef, {
           user_id: currentUser.uid,
@@ -969,7 +1190,6 @@
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 2. posts კოლექცია (მთავარი Feed-ისთვის)
         var postRef = db.collection('posts').doc();
         batch.set(postRef, {
           user_id: currentUser.uid,
@@ -1012,7 +1232,7 @@
       });
     }
 
-    // 5. სერვისების ჩატვირთვა (ქეშირებით და ლიმიტით)
+    // 5. სერვისების ჩატვირთვა
     function loadPublishedServices(forceReload) {
       var container = document.getElementById('services-list-container');
       if (!container) return;
@@ -1095,7 +1315,7 @@
       });
     }
 
-    // 6. მონეტიზაციის მოთხოვნის გაგზავნა
+    // 6. მონეტიზაციის მოთხოვნა
     function requestPayout() {
       var iban = document.getElementById('payout-iban').value.trim();
       var method = document.getElementById('payout-method').value;
