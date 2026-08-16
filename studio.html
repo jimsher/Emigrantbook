@@ -843,24 +843,57 @@
       btn.disabled = true;
       btn.innerText = "ქვეყნდება...";
 
-      db.collection('studio_services').add({
+      var authorName = userProfile.full_name || "ემიგრანტი";
+      var authorAvatar = userProfile.avatar_url || "";
+      var authorCity = userProfile.current_city || userProfile.real_ip_city || "";
+      var authorCountry = userProfile.country || userProfile.real_ip_country || "";
+
+      // Firestore Batch - 2 ჩანაწერი 1 მოთხოვნით
+      var batch = db.batch();
+
+      // 1. სტუდიოს სერვისების კოლექცია
+      var studioRef = db.collection('studio_services').doc();
+      batch.set(studioRef, {
         user_id: currentUser.uid,
-        author_name: userProfile.full_name || "ემიგრანტი",
+        author_name: authorName,
+        author_avatar: authorAvatar,
         title: title,
         category: cat,
         price: price || "შეთანხმებით",
         whatsapp: cleanWhatsapp,
         desc: desc,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        alert("სერვისი წარმატებით გამოქვეყნდა!");
+      });
+
+      // 2. მთავარი Feed-ის პოსტების კოლექცია
+      var postRef = db.collection('posts').doc();
+      batch.set(postRef, {
+        user_id: currentUser.uid,
+        author_name: authorName,
+        author_avatar: authorAvatar,
+        user_city: authorCity,
+        user_country: authorCountry,
+        is_studio_service: true,
+        service_category: cat,
+        service_price: price || "შეთანხმებით",
+        service_whatsapp: cleanWhatsapp,
+        service_title: title,
+        text: `💼 <strong>${title}</strong><br><br>${desc}`,
+        likes: [],
+        likes_count: 0,
+        comments_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      batch.commit().then(function() {
+        alert("სერვისი წარმატებით გამოქვეყნდა Studio-ში და მთავარ კედელზე!");
         document.getElementById('srv-title').value = '';
         document.getElementById('srv-price').value = '';
         document.getElementById('srv-whatsapp').value = '';
         document.getElementById('srv-desc').value = '';
         btn.disabled = false;
         btn.innerText = "სერვისის გამოქვეყნება";
-        sessionStorage.removeItem('eb_studio_services'); // ქეშის გასუფთავება
+        sessionStorage.removeItem('eb_studio_services');
         loadPublishedServices(true);
       }).catch(function(err) {
         alert("შეცდომა გამოქვეყნებისას: " + err.message);
