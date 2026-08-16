@@ -6,10 +6,9 @@
   <title>Emigrantbook Studio</title>
   
   <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     * {
@@ -639,22 +638,32 @@
   </div>
 
   <script>
-    var db, auth, currentUser = null, userProfile = null;
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    var currentUser = null;
+    var userProfile = null;
     var userPostsCache = [];
 
-    window.addEventListener('DOMContentLoaded', function() {
-      if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-        db = firebase.firestore();
-        auth = firebase.auth();
-
-        auth.onAuthStateChanged(function(user) {
-          if (user) {
-            currentUser = user;
-            initStudio();
-          } else {
-            window.location.href = 'index.html';
-          }
-        });
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        initStudio();
+      } else {
+        window.location.href = 'index.html';
       }
     });
 
@@ -752,7 +761,7 @@
             totalComments += Number(comments) || 0;
 
             if (selectEl) {
-              var txt = (p.text || "მედია პოსტი").replace(/<[^>]*>?/gm, '').substring(0, 40) + "...";
+              var txt = (p.content || p.text || "მედია პოსტი").replace(/<[^>]*>?/gm, '').substring(0, 40) + "...";
               var opt = document.createElement('option');
               opt.value = p.id;
               opt.innerText = (p.is_boosted ? "⚡ [Boosted] " : "") + txt;
@@ -781,7 +790,7 @@
         return;
       }
 
-      var currentBal = Number(userProfile.balance || 0);
+      var currentBal = Number(userProfile && userProfile.balance ? userProfile.balance : 0);
       if (currentBal < price) {
         if (confirm("ბალანსზე არ გაქვთ საკმარისი თანხა (" + price + ".00 ₾). გადავიდეთ ბალანსის შევსებაზე?")) {
           window.location.href = 'balance.html';
@@ -809,7 +818,7 @@
       });
 
       batch.commit().then(function() {
-        userProfile.balance = newBal;
+        if (userProfile) userProfile.balance = newBal;
         sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid); // ქეშის განახლება
         updateBalanceUI();
         alert("პოსტი წარმატებით დაბუსტულია " + days + " დღით!");
@@ -843,10 +852,10 @@
       btn.disabled = true;
       btn.innerText = "ქვეყნდება...";
 
-      var authorName = userProfile.full_name || "ემიგრანტი";
-      var authorAvatar = userProfile.avatar_url || "";
-      var authorCity = userProfile.current_city || userProfile.real_ip_city || "";
-      var authorCountry = userProfile.country || userProfile.real_ip_country || "";
+      var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : "ემიგრანტი";
+      var authorAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "";
+      var authorCity = (userProfile && (userProfile.current_city || userProfile.real_ip_city)) ? (userProfile.current_city || userProfile.real_ip_city) : "";
+      var authorCountry = (userProfile && (userProfile.country || userProfile.real_ip_country)) ? (userProfile.country || userProfile.real_ip_country) : "";
 
       // Firestore Batch - 2 ჩანაწერი 1 მოთხოვნით
       var batch = db.batch();
@@ -878,8 +887,7 @@
         service_price: price || "შეთანხმებით",
         service_whatsapp: cleanWhatsapp,
         service_title: title,
-        text: `💼 <strong>${title}</strong><br><br>${desc}`,
-        likes: [],
+        content: `💼 <strong>${title}</strong><br><br>${desc}`,
         likes_count: 0,
         comments_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
@@ -982,7 +990,7 @@
     function requestPayout() {
       var iban = document.getElementById('payout-iban').value.trim();
       var method = document.getElementById('payout-method').value;
-      var bal = Number(userProfile.balance || 0);
+      var bal = Number(userProfile && userProfile.balance ? userProfile.balance : 0);
       var btn = document.getElementById('btn-request-payout');
 
       if (bal < 20) {
