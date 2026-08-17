@@ -3273,7 +3273,8 @@ auth.onAuthStateChanged(function(user) {
       if (likersModal) likersModal.style.display = "none";
     }
 
-    function showMyProfile() {
+    // აქ იწყება ფუნქცია ორივე ერთად
+      function showMyProfile() {
       if (!currentUser) return;
       activeViewingProfileId = currentUser.uid;
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
@@ -3346,6 +3347,13 @@ auth.onAuthStateChanged(function(user) {
         renderProfileDetails(userProfile || {});
         switchProfileTab('posts');
         showScreen('profile');
+
+        // ჰედერში ღილაკის ჩვენება და ახალი მნახველების შემოწმება
+        var viewsBtn = document.getElementById('profile-views-btn-header');
+        if (viewsBtn) {
+          viewsBtn.style.display = 'flex';
+          checkNewProfileVisitors();
+        }
       });
     }
 
@@ -3357,6 +3365,9 @@ auth.onAuthStateChanged(function(user) {
         return;
       }
       activeViewingProfileId = userId;
+
+      var viewsBtn = document.getElementById('profile-views-btn-header');
+      if (viewsBtn) viewsBtn.style.display = 'none';
 
       // ვიზიტის დაფიქსირება
       if (currentUser && userId !== currentUser.uid) {
@@ -3496,8 +3507,10 @@ auth.onAuthStateChanged(function(user) {
           });
         });
       });
-    } 
+    }      
+    // აქ მთავრდება ორივე ერთად
 
+    
     function checkFriendshipPair(uid1, uid2, callback) {
       db.collection('friend_requests')
         .where('sender_id', '==', uid1)
