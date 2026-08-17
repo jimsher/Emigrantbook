@@ -3312,13 +3312,24 @@ auth.onAuthStateChanged(function(user) {
       });
     }
 
-    function viewUserProfile(userId) {
+    
+       function viewUserProfile(userId) {
       if (!userId) return;
       if (userId === currentUser.uid) {
         showMyProfile();
         return;
       }
       activeViewingProfileId = userId;
+
+      // ვიზიტის დაფიქსირება
+      if (currentUser && userId !== currentUser.uid) {
+        var viewDocId = currentUser.uid + '_' + userId;
+        db.collection('profile_views').doc(viewDocId).set({
+          viewer_id: currentUser.uid,
+          profile_user_id: userId,
+          viewed_at: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(function(){});
+      }
 
       fetchBlockedUserIds(function(blockedSet) {
         var isBlocked = blockedSet.has(userId);
@@ -3448,7 +3459,7 @@ auth.onAuthStateChanged(function(user) {
           });
         });
       });
-    }
+    } 
 
     function checkFriendshipPair(uid1, uid2, callback) {
       db.collection('friend_requests')
