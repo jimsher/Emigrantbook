@@ -226,6 +226,35 @@ video::-webkit-media-controls-play-button {
   font-weight: 500;
   cursor: pointer;
 }
+
+
+
+
+
+
+
+
+    /* Feed კონტეინერის და პოსტების ბარათების ფიქსირებული ზომა და ცენტრირება */
+.feed-container {
+  width: 100%;
+  max-width: 600px; /* ან 680px თქვენი დიზაინის მიხედვით */
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 10px;
+}
+
+#posts-wall,
+.post-card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.post-media {
+  width: 100%;
+  max-height: 550px;
+  object-fit: cover;
+  border-radius: 8px;
+}
   </style>
   
 </head>
@@ -344,7 +373,8 @@ video::-webkit-media-controls-play-button {
     </div>
   </div>
 
-  <div id="home-screen">
+  
+<div id="home-screen">
     <div class="header">
       <div class="logo-text" onclick="showScreen('home')">Emigrantbook</div>
         
@@ -384,26 +414,26 @@ video::-webkit-media-controls-play-button {
       </div>
     </div>
     
+    <!-- მთავარი კონტეინერი, რომელიც აერთიანებს მთლიან არხს -->
     <div class="feed-container">
-  <div class="create-post-card">
-    <textarea class="create-post-input" id="post-text-input" placeholder="What's on your mind?"></textarea>
-    <div class="create-post-actions">
-      <div class="file-upload-wrapper">
-        <div class="file-upload-btn" id="lbl-photo-video">
-          <img src="icons/camera.svg" alt="Photo" class="post-action-icon"> Photo / 
-          <img src="icons/video.svg" alt="Video" class="post-action-icon"> Video
+      <div class="create-post-card">
+        <textarea class="create-post-input" id="post-text-input" placeholder="What's on your mind?"></textarea>
+        <div class="create-post-actions">
+          <div class="file-upload-wrapper">
+            <div class="file-upload-btn" id="lbl-photo-video">
+              <img src="icons/camera.svg" alt="Photo" class="post-action-icon"> Photo / 
+              <img src="icons/video.svg" alt="Video" class="post-action-icon"> Video
+            </div>
+            <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
+          </div>
+          <button class="live-post-btn" onclick="window.location.href='live.html'">
+            <span class="live-dot-pulse"></span>
+            <span id="lbl-live-btn">LIVE</span>
+          </button>
+          <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">Publish</button>
         </div>
-        <input type="file" id="post-media-file" accept="image/*,video/*" multiple onchange="showSelectedFileName()">
+        <div class="selected-file-info" id="selected-file-name"></div>
       </div>
-      <button class="live-post-btn" onclick="window.location.href='live.html'">
-        <span class="live-dot-pulse"></span>
-        <span id="lbl-live-btn">LIVE</span>
-      </button>
-      <button class="publish-btn" id="publish-submit-btn" onclick="createPost()">Publish</button>
-    </div>
-    <div class="selected-file-info" id="selected-file-name"></div>
-  </div>
-</div>
 
       <div class="stories-wrapper">
         <div class="story-card create-story-card" onclick="triggerStoryUpload()">
@@ -417,22 +447,24 @@ video::-webkit-media-controls-play-button {
       </div>
 
       <!-- Site Users Button with Real Counter -->
-   <div class="user-list-banner-card" onclick="window.location.href='users.html'" style="background: #141414; border: 1px solid #222222; border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; cursor: pointer; transition: background 0.2s;">
-  <div style="display: flex; align-items: center; gap: 12px;">
-    <img src="icons/users.svg" alt="Users" class="post-action-icon" style="width: 22px; height: 22px;">
-    <span style="color: #ffffff; font-size: 15px; font-weight: 600;">Site Users</span>
-  </div>
-  <div style="display: flex; align-items: center; gap: 10px;">
-    <span id="total-users-badge" style="background: #dcae36; color: #111111; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 28px; text-align: center;">0</span>
-    <span style="color: #666666; font-weight: bold; font-size: 18px;">›</span>
-  </div>
-</div>
+      <div class="user-list-banner-card" onclick="window.location.href='users.html'" style="background: #141414; border: 1px solid #222222; border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; cursor: pointer; transition: background 0.2s;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img src="icons/users.svg" alt="Users" class="post-action-icon" style="width: 22px; height: 22px;">
+          <span style="color: #ffffff; font-size: 15px; font-weight: 600;">Site Users</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="total-users-badge" style="background: #dcae36; color: #111111; font-size: 13px; font-weight: bold; padding: 4px 10px; border-radius: 20px; min-width: 28px; text-align: center;">0</span>
+          <span style="color: #666666; font-weight: bold; font-size: 18px;">›</span>
+        </div>
+      </div>
 
-    <div id="posts-wall">
+      <!-- პოსტების კედელი -->
+      <div id="posts-wall">
         <div style="text-align: center; padding: 20px; color: #aaaaaa;">Loading posts...</div>
       </div>
     </div>
   </div>
+      
         
   <div id="profile-screen">
     <div class="header profile-header-fix">
