@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Profile Views</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .views-app {
+      width: 100%;
+      max-width: 680px;
+      background-color: #0a0a0a;
+      min-height: 100vh;
+      border-left: 1px solid #1a1a1a;
+      border-right: 1px solid #1a1a1a;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .views-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #181818;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+
+    .back-arrow {
+      font-size: 22px;
+      color: #ffffff;
+      font-weight: 300;
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+    }
+
+    .settings-icon-btn {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.85;
+    }
+
+    /* LIST CONTAINER */
+    .views-list {
+      display: flex;
+      flex-direction: column;
+      padding: 8px 16px;
+      gap: 4px;
+    }
+
+    /* VISITOR ROW ITEM */
+    .visitor-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #141414;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .visitor-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #222;
+    }
+
+    .avatar-fallback {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #2a2a2a;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .online-dot {
+      position: absolute;
+      bottom: 1px;
+      right: 1px;
+      width: 11px;
+      height: 11px;
+      background: #2ed573;
+      border-radius: 50%;
+      border: 2px solid #0a0a0a;
+    }
+
+    .visitor-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .visitor-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .visitor-sub {
+      font-size: 12px;
+      color: #8a8a8a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* TIKTOK STYLE RED FOLLOW BUTTON */
+    .follow-btn {
+      background: #fe2c55;
+      color: #ffffff;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: opacity 0.15s, background 0.15s;
+    }
+
+    .follow-btn:active {
+      opacity: 0.85;
+    }
+
+    .follow-btn.following {
+      background: #222222;
+      color: #cfd3dc;
+      border: 1px solid #333333;
+    }
+
+    .follow-btn.pending {
+      background: #2a2a2a;
+      color: #aaaaaa;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      color: #8a8a8a;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .empty-state-icon {
+      width: 56px;
+      height: 56px;
+      opacity: 0.4;
+      stroke: #8a8a8a;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="views-app">
+    
+    <!-- HEADER -->
+    <div class="views-header">
+      <div class="header-left" onclick="window.location.href='index.html'">
+        <span class="back-arrow">←</span>
+        <span class="header-title" id="txt-page-title">Profile views</span>
+      </div>
+      <button class="settings-icon-btn" onclick="alert('Profile view history is visible only to you for 30 days.')">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- LIST -->
+    <div class="views-list" id="views-list-container">
+      <div class="empty-state">
+        <div class="empty-state-text" id="txt-loading">Loading visitors...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    var currentUser = null;
+    var cachedProfiles = {};
+    var friendshipStatusMap = {};
+    var currentLang = localStorage.getItem('emigrantbook_lang') || 'en';
+
+    const TRANSLATIONS = {
+      en: {
+        pageTitle: "Profile views",
+        loading: "Loading visitors...",
+        empty: "No profile views yet in the last 30 days.",
+        viewedJustNow: "Viewed your profile recently",
+        follow: "Follow",
+        following: "Friends",
+        requested: "Requested"
+      },
+      ka: {
+        pageTitle: "პროფილის ნახვები",
+        loading: "მნახველები იტვირთება...",
+        empty: "ბოლო 30 დღეში პროფილის ნახვები არ არის.",
+        viewedJustNow: "დაათვალიერა შენი პროფილი",
+        follow: "დამატება",
+        following: "მეგობრები",
+        requested: "გაგზავნილია"
+      },
+      it: {
+        pageTitle: "Visualizzazioni del profilo",
+        loading: "Caricamento visitatori...",
+        empty: "Nessuna visualizzazione del profilo negli ultimi 30 giorni.",
+        viewedJustNow: "Ha visualizzato il tuo profilo",
+        follow: "Segui",
+        following: "Amici",
+        requested: "Richiesto"
+      },
+      ru: {
+        pageTitle: "Просмотры профиля",
+        loading: "Загрузка просмотров...",
+        empty: "За последние 30 дней просмотров профиля не было.",
+        viewedJustNow: "Просмотрели ваш профиль",
+        follow: "Подписаться",
+        following: "Друзья",
+        requested: "Запрос отправлен"
+      },
+      fr: {
+        pageTitle: "Vues du profil",
+        loading: "Chargement des visiteurs...",
+        empty: "Aucune vue du profil au cours des 30 derniers jours.",
+        viewedJustNow: "A consulté votre profil",
+        follow: "Suivre",
+        following: "Amis",
+        requested: "Demandé"
+      },
+      de: {
+        pageTitle: "Profilaufrufe",
+        loading: "Besucher werden geladen...",
+        empty: "In den letzten 30 Tagen gab es keine Profilaufrufe.",
+        viewedJustNow: "Hat dein Profil angesehen",
+        follow: "Folgen",
+        following: "Freunde",
+        requested: "Angefragt"
+      }
+    };
+
+    function getT() {
+      return TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+    }
+
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        currentUser = user;
+        applyLanguageUI();
+        loadProfileVisitors();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    function applyLanguageUI() {
+      var t = getT();
+      document.getElementById('txt-page-title').innerText = t.pageTitle;
+      var loadEl = document.getElementById('txt-loading');
+      if (loadEl) loadEl.innerText = t.loading;
+    }
+
+    function loadProfileVisitors() {
+      var container = document.getElementById('views-list-container');
+      var t = getT();
+
+      // 30 დღის წინანდელი დრო
+      var thirtyDaysAgo = new Date(Date.now() - (30 * 86400000));
+
+      db.collection('profile_views')
+        .where('profile_user_id', '==', currentUser.uid)
+        .where('viewed_at', '>=', thirtyDaysAgo)
+        .orderBy('viewed_at', 'desc')
+        .limit(40)
+        .get()
+        .then(function(snapshot) {
+          if (snapshot.empty) {
+            container.innerHTML = `
+              <div class="empty-state">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 16v-2.38C4 11.5 2.97 9.5 4.14 7.66 5.3 5.82 7.74 5 9 6.5c1.26 1.5.5 4.5-1 6L4 16z"></path>
+                  <path d="M20 20v-2.38c0-2.12 1.03-4.12-.14-5.96C18.7 9.82 16.26 9 15 10.5c-1.26 1.5-.5 4.5 1 6l4 3.5z"></path>
+                </svg>
+                <div class="empty-state-text">${t.empty}</div>
+              </div>
+            `;
+            return;
+          }
+
+          var viewerIds = [];
+          var viewsList = [];
+
+          snapshot.forEach(function(docSnap) {
+            var v = docSnap.data();
+            if (v.viewer_id && v.viewer_id !== currentUser.uid && !viewerIds.includes(v.viewer_id)) {
+              viewerIds.push(v.viewer_id);
+              viewsList.push(v);
+            }
+          });
+
+          if (viewerIds.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-text">${t.empty}</div></div>`;
+            return;
+          }
+
+          // ჩავტვირთოთ მეგობრობის სტატუსები და პროფილები
+          loadFriendshipStates(viewerIds, function() {
+            fetchProfilesBatch(viewerIds, function() {
+              renderVisitorsList(viewsList);
+            });
+          });
+        }).catch(function(err) {
+          console.error("Profile views error:", err);
+          container.innerHTML = `<div class="empty-state"><div class="empty-state-text">${t.empty}</div></div>`;
+        });
+    }
+
+    function loadFriendshipStates(targetUserIds, callback) {
+      Promise.all([
+        db.collection('friend_requests').where('sender_id', '==', currentUser.uid).get(),
+        db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).get()
+      ]).then(function(results) {
+        friendshipStatusMap = {};
+        results[0].forEach(function(doc) {
+          var data = doc.data();
+          friendshipStatusMap[data.receiver_id] = { status: data.status, reqId: doc.id, isSender: true };
+        });
+        results[1].forEach(function(doc) {
+          var data = doc.data();
+          friendshipStatusMap[data.sender_id] = { status: data.status, reqId: doc.id, isSender: false };
+        });
+        callback();
+      }).catch(function() {
+        callback();
+      });
+    }
+
+    function fetchProfilesBatch(userIds, callback) {
+      var chunks = [];
+      for (var i = 0; i < userIds.length; i += 10) {
+        chunks.push(userIds.slice(i, i + 10));
+      }
+
+      var promises = chunks.map(chunk => {
+        return db.collection('profiles').where(firebase.firestore.FieldPath.documentId(), 'in', chunk).get()
+          .then(snap => {
+            snap.forEach(doc => {
+              cachedProfiles[doc.id] = doc.data();
+            });
+          });
+      });
+
+      Promise.all(promises).then(() => callback()).catch(() => callback());
+    }
+
+    function renderVisitorsList(viewsList) {
+      var container = document.getElementById('views-list-container');
+      var t = getT();
+      var html = '';
+
+      viewsList.forEach(function(v) {
+        var profile = cachedProfiles[v.viewer_id] || {};
+        var name = profile.full_name || "Emigrantbook User";
+        var avatarUrl = profile.avatar_url || "";
+        var isOnline = (profile.is_online === true);
+        var initial = name.charAt(0).toUpperCase();
+
+        var avatarHtml = avatarUrl 
+          ? `<img src="${avatarUrl}" class="avatar-img" alt="Avatar">`
+          : `<div class="avatar-fallback">${initial}</div>`;
+
+        var fState = friendshipStatusMap[v.viewer_id];
+        var btnText = t.follow;
+        var btnClass = "follow-btn";
+
+        if (fState && fState.status === 'accepted') {
+          btnText = t.following;
+          btnClass = "follow-btn following";
+        } else if (fState && fState.status === 'pending') {
+          btnText = t.requested;
+          btnClass = "follow-btn pending";
+        }
+
+        html += `
+          <div class="visitor-row" id="row-${v.viewer_id}">
+            <div class="visitor-left" onclick="goToUserProfile('${v.viewer_id}')">
+              <div class="avatar-wrapper">
+                ${avatarHtml}
+                ${isOnline ? `<div class="online-dot"></div>` : ''}
+              </div>
+              <div class="visitor-info">
+                <span class="visitor-name">${name}</span>
+                <span class="visitor-sub">${t.viewedJustNow}</span>
+              </div>
+            </div>
+            <button class="${btnClass}" id="btn-follow-${v.viewer_id}" onclick="handleFollowClick('${v.viewer_id}')">
+              ${btnText}
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function handleFollowClick(targetUserId) {
+      var fState = friendshipStatusMap[targetUserId];
+      var btn = document.getElementById('btn-follow-' + targetUserId);
+      var t = getT();
+
+      if (fState && fState.status === 'accepted') {
+        goToUserProfile(targetUserId);
+        return;
+      }
+
+      if (fState && fState.status === 'pending') {
+        return;
+      }
+
+      // მეგობრობის მოთხოვნის გაგზავნა
+      btn.disabled = true;
+      btn.innerText = "...";
+
+      db.collection('friend_requests').add({
+        sender_id: currentUser.uid,
+        receiver_id: targetUserId,
+        status: 'pending',
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function(docRef) {
+        friendshipStatusMap[targetUserId] = { status: 'pending', reqId: docRef.id, isSender: true };
+        btn.innerText = t.requested;
+        btn.className = "follow-btn pending";
+        btn.disabled = false;
+      }).catch(function(err) {
+        btn.disabled = false;
+        btn.innerText = t.follow;
+        alert("Error: " + err.message);
+      });
+    }
+
+    function goToUserProfile(targetUserId) {
+      sessionStorage.setItem('target_view_user_id', targetUserId);
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
