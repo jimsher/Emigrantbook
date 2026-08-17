@@ -444,10 +444,14 @@ video::-webkit-media-controls-play-button {
         </button>
         
 
-        <!-- 👣 TikTok Style Profile Views (ფეხის ნაკვალევი) -->
-        <button class="nav-icon-btn" onclick="window.location.href='profile-views.html'" title="Profile Views">
-         <img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">
-         </button>
+        <!-- 👣 TikTok Style Profile Views Button / Avatar Badge -->
+        <button class="nav-icon-btn" id="profile-views-btn-header" onclick="openProfileViewsFromHeader()" title="Profile Views" style="display: none; position: relative;">
+          <div id="views-header-icon-container" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;">
+            <img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">
+          </div>
+          <!-- ლურჯი წერტილი / ინდიკატორი -->
+          <div id="views-unread-dot" style="display: none; position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: #2e86de; border-radius: 50%; border: 1.5px solid #000;"></div>
+        </button>
         
         <button class="burger-btn" id="profile-burger-btn" onclick="toggleSideMenu(event)">
           <div class="burger-line"></div>
@@ -5691,7 +5695,77 @@ function closeSizeModal() {
 
 
 
+// 👣 ბოლო მნახველის შემოწმება და ჰედერში ავატარის გამოჩენა
+function checkNewProfileVisitors() {
+  if (!currentUser) return;
 
+  var lastSeenTime = localStorage.getItem('eb_last_views_seen_time_' + currentUser.uid) || 0;
+
+  db.collection('profile_views')
+    .where('profile_user_id', '==', currentUser.uid)
+    .get()
+    .then(function(snapshot) {
+      if (snapshot.empty) return;
+
+      var latestView = null;
+      var latestTime = 0;
+
+      snapshot.forEach(function(docSnap) {
+        var data = docSnap.data();
+        if (data.viewer_id && data.viewer_id !== currentUser.uid) {
+          var vTime = data.viewed_at && data.viewed_at.toMillis ? data.viewed_at.toMillis() : (data.viewed_at ? new Date(data.viewed_at).getTime() : 0);
+          if (vTime > latestTime) {
+            latestTime = vTime;
+            latestView = data;
+          }
+        }
+      });
+
+      var iconContainer = document.getElementById('views-header-icon-container');
+      var dot = document.getElementById('views-unread-dot');
+
+      // თუ ბოლო ნახვა უფრო ახალია, ვიდრე მომხმარებლის ბოლო გახსნა
+      if (latestView && latestTime > Number(lastSeenTime)) {
+        fetchUserProfileCached(latestView.viewer_id, function(visitorProfile) {
+          var avatarUrl = visitorProfile.avatar_url;
+          var name = visitorProfile.full_name || "User";
+          var initial = name.charAt(0).toUpperCase();
+
+          if (iconContainer) {
+            if (avatarUrl) {
+              iconContainer.innerHTML = `<img src="${avatarUrl}" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #dcae36;">`;
+            } else {
+              iconContainer.innerHTML = `<div style="width: 22px; height: 22px; border-radius: 50%; background: #dcae36; color: #111; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center;">${initial}</div>`;
+            }
+          }
+          if (dot) dot.style.display = 'block';
+        });
+      } else {
+        // თუ ახალი არაფერია -> სტანდარტული ფეხის აიკონი
+        if (iconContainer) {
+          iconContainer.innerHTML = `<img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">`;
+        }
+        if (dot) dot.style.display = 'none';
+      }
+    }).catch(function(err) {
+      console.error("Error checking new visitors:", err);
+    });
+}
+
+// 👣 ჰედერში დაჭერისას: მონიშნოს ნანახად, დააბრუნოს ფეხები და გადავიდეს გვერდზე
+function openProfileViewsFromHeader() {
+  if (currentUser) {
+    localStorage.setItem('eb_last_views_seen_time_' + currentUser.uid, Date.now().toString());
+  }
+  var iconContainer = document.getElementById('views-header-icon-container');
+  var dot = document.getElementById('views-unread-dot');
+  if (iconContainer) {
+    iconContainer.innerHTML = `<img src="icons/footprints.svg" class="post-action-icon" style="width: 20px; height: 20px;" alt="Profile Views">`;
+  }
+  if (dot) dot.style.display = 'none';
+
+  window.location.href = 'profile-views.html';
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
