@@ -362,20 +362,14 @@
       var container = document.getElementById('views-list-container');
       var t = getT();
 
-      // 30 დღის წინანდელი დრო
-      var thirtyDaysAgo = new Date(Date.now() - (30 * 86400000));
-
       db.collection('profile_views')
         .where('profile_user_id', '==', currentUser.uid)
-        .where('viewed_at', '>=', thirtyDaysAgo)
-        .orderBy('viewed_at', 'desc')
-        .limit(40)
         .get()
         .then(function(snapshot) {
           if (snapshot.empty) {
             container.innerHTML = `
               <div class="empty-state">
-                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 16v-2.38C4 11.5 2.97 9.5 4.14 7.66 5.3 5.82 7.74 5 9 6.5c1.26 1.5.5 4.5-1 6L4 16z"></path>
                   <path d="M20 20v-2.38c0-2.12 1.03-4.12-.14-5.96C18.7 9.82 16.26 9 15 10.5c-1.26 1.5-.5 4.5 1 6l4 3.5z"></path>
                 </svg>
@@ -385,8 +379,8 @@
             return;
           }
 
-          var viewerIds = [];
           var viewsList = [];
+          var viewerIds = [];
 
           snapshot.forEach(function(docSnap) {
             var v = docSnap.data();
@@ -396,10 +390,17 @@
             }
           });
 
-          if (viewerIds.length === 0) {
+          if (viewsList.length === 0) {
             container.innerHTML = `<div class="empty-state"><div class="empty-state-text">${t.empty}</div></div>`;
             return;
           }
+
+          // დალაგება დროის მიხედვით (უახლესი ზემოთ)
+          viewsList.sort(function(a, b) {
+            var timeA = a.viewed_at && a.viewed_at.toMillis ? a.viewed_at.toMillis() : (a.viewed_at ? new Date(a.viewed_at).getTime() : 0);
+            var timeB = b.viewed_at && b.viewed_at.toMillis ? b.viewed_at.toMillis() : (b.viewed_at ? new Date(b.viewed_at).getTime() : 0);
+            return timeB - timeA;
+          });
 
           // ჩავტვირთოთ მეგობრობის სტატუსები და პროფილები
           loadFriendshipStates(viewerIds, function() {
@@ -515,7 +516,6 @@
         return;
       }
 
-      // მეგობრობის მოთხოვნის გაგზავნა
       btn.disabled = true;
       btn.innerText = "...";
 
