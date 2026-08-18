@@ -18,7 +18,7 @@
     
     .groups-wrapper { width: 100%; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 70px; }
     
-    /* Header */
+    /* Sticky Top Header */
     .groups-header {
       position: sticky; top: 0; z-index: 100;
       background: #141418; border-bottom: 1px solid #222228;
@@ -26,8 +26,8 @@
       padding: 12px 16px;
     }
     .header-left { display: flex; align-items: center; gap: 12px; }
-    .back-btn { background: none; border: none; color: #dcae36; font-size: 20px; cursor: pointer; display: flex; align-items: center; }
-    .header-title { font-size: 20px; font-weight: 700; color: #ffffff; }
+    .back-btn { background: none; border: none; color: #dcae36; font-size: 22px; cursor: pointer; display: flex; align-items: center; }
+    .header-title { font-size: 19px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; }
     .header-actions { display: flex; gap: 10px; }
     .action-circle-btn {
       width: 38px; height: 38px; border-radius: 50%;
@@ -50,44 +50,123 @@
     }
     .tab-pill.active { background: rgba(220, 174, 54, 0.15); color: #dcae36; border-color: #dcae36; }
 
-    /* Sections */
+    /* List Sections */
     .section-box { padding: 16px; border-bottom: 1px solid #1c1c22; }
     .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .section-title { font-size: 16px; font-weight: 700; color: #ffffff; }
     .section-link { font-size: 13px; color: #dcae36; text-decoration: none; cursor: pointer; }
 
-    /* Group Cards List */
+    /* Group Cards */
     .group-item-card {
       display: flex; align-items: center; gap: 12px;
-      padding: 10px; border-radius: 12px; background: #16161c;
+      padding: 12px; border-radius: 12px; background: #16161c;
       border: 1px solid #24242e; margin-bottom: 10px; cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
     }
     .group-item-card:hover { background: #1c1c24; }
+    .group-item-card:active { transform: scale(0.99); }
     .group-avatar {
-      width: 54px; height: 54px; border-radius: 12px;
+      width: 56px; height: 56px; border-radius: 12px;
       object-fit: cover; background: #282832; flex-shrink: 0;
       border: 1px solid #333340;
     }
     .group-info { flex: 1; min-width: 0; }
-    .group-name { font-size: 15px; font-weight: 600; color: #ffffff; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .group-name { font-size: 15px; font-weight: 600; color: #ffffff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .group-meta { font-size: 12px; color: #8a8f9d; }
 
-    /* Post in Group View */
-    .group-feed-card {
-      background: #141418; border: 1px solid #222228;
-      border-radius: 14px; margin: 14px 16px; padding: 14px;
+    /* --- ჯგუფის შიდა დეტალური გვერდი --- */
+    #group-detail-view { display: none; }
+    .group-cover-wrapper {
+      position: relative; width: 100%; height: 210px;
+      background: #1c1c24; overflow: hidden;
     }
-    .feed-group-badge {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-      padding-bottom: 8px; border-bottom: 1px solid #202028;
+    .group-cover-img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .admin-ribbon-bar {
+      background: linear-gradient(90deg, #dcae36, #e67e22);
+      color: #111; font-weight: 700; font-size: 13px;
+      padding: 8px 16px; display: flex; align-items: center; gap: 8px;
     }
-    .feed-group-badge img { width: 24px; height: 24px; border-radius: 6px; }
-    .feed-group-badge span { font-size: 13px; font-weight: 700; color: #dcae36; }
 
-    /* Create Modal / Bottom Sheet */
+    .group-detail-header {
+      padding: 16px; background: #141418; border-bottom: 1px solid #222228;
+    }
+    .group-detail-title {
+      font-size: 22px; font-weight: 800; color: #ffffff;
+      line-height: 1.3; margin-bottom: 6px;
+    }
+    .group-detail-subtitle {
+      font-size: 13px; color: #8a8f9d; display: flex;
+      align-items: center; gap: 6px; margin-bottom: 15px;
+    }
+    
+    .group-actions-grid {
+      display: flex; gap: 10px; margin-bottom: 15px;
+    }
+    .btn-joined {
+      flex: 1; padding: 12px; border-radius: 10px;
+      background: #24242e; color: #ffffff; font-weight: 700;
+      border: 1px solid #383848; display: flex; align-items: center;
+      justify-content: center; gap: 6px; cursor: pointer; font-size: 14px;
+    }
+    .btn-invite {
+      flex: 1; padding: 12px; border-radius: 10px;
+      background: #dcae36; color: #111111; font-weight: 700;
+      border: none; display: flex; align-items: center;
+      justify-content: center; gap: 6px; cursor: pointer; font-size: 14px;
+    }
+
+    /* Sub Tabs In Group */
+    .group-sub-tabs {
+      display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+      padding-top: 5px;
+    }
+    .group-sub-tabs::-webkit-scrollbar { display: none; }
+    .sub-tab-btn {
+      padding: 7px 14px; border-radius: 18px; background: #1e1e26;
+      color: #cfd3dc; font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+    }
+    .sub-tab-btn.active { background: #dcae36; color: #111; }
+
+    /* Post Box Inside Group */
+    .group-create-post {
+      background: #141418; border: 1px solid #222228; border-radius: 14px;
+      padding: 14px; margin: 14px 16px;
+    }
+    .post-input-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .post-creator-avatar {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+    }
+    .post-fake-input {
+      flex: 1; background: #1c1c24; border: 1px solid #2a2a36;
+      border-radius: 25px; padding: 10px 16px; color: #8a8f9d;
+      font-size: 14px; cursor: pointer;
+    }
+    .post-media-trigger {
+      color: #2ed573; font-size: 22px; cursor: pointer; padding: 0 4px;
+    }
+
+    /* Post Card */
+    .group-post-card {
+      background: #141418; border: 1px solid #222228;
+      border-radius: 14px; margin: 0 16px 14px 16px; padding: 14px;
+    }
+    .g-post-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .g-post-avatar {
+      width: 42px; height: 42px; border-radius: 50%; object-fit: cover;
+    }
+    .g-post-author { font-size: 14px; font-weight: 700; color: #fff; }
+    .g-post-time { font-size: 11px; color: #7b8190; margin-top: 2px; }
+    .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 12px; }
+    .g-post-media { width: 100%; border-radius: 10px; max-height: 450px; object-fit: cover; }
+
+    /* Modals */
     .modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
       z-index: 9999; align-items: flex-end; justify-content: center;
     }
     .bottom-sheet {
@@ -113,62 +192,133 @@
 <body>
 
   <div class="groups-wrapper">
-    <!-- Header -->
-    <div class="groups-header">
-      <div class="header-left">
-        <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-        <h1 class="header-title">ჯგუფები</h1>
-      </div>
-      <div class="header-actions">
-        <button class="action-circle-btn" onclick="openCreateGroupModal()" title="ჯგუფის შექმნა">＋</button>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="groups-tabs">
-      <button class="tab-pill active" onclick="switchGroupTab('discover')">თქვენთვის</button>
-      <button class="tab-pill" onclick="switchGroupTab('my_groups')">თქვენი ჯგუფები</button>
-    </div>
-
-    <!-- 1. Discover / Feed View -->
-    <div id="tab-discover-view">
-      <div class="section-box">
-        <div class="section-head">
-          <span class="section-title">თქვენი ჯგუფები</span>
-          <span class="section-link" onclick="switchGroupTab('my_groups')">ყველას ნახვა</span>
+    
+    <!-- 1. ჯგუფების სია (Main Groups View) -->
+    <div id="groups-list-view">
+      <div class="groups-header">
+        <div class="header-left">
+          <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+          <h1 class="header-title">ჯგუფები</h1>
         </div>
-        <div id="quick-joined-groups">
+        <div class="header-actions">
+          <button class="action-circle-btn" onclick="openCreateGroupModal()" title="ახალი ჯგუფი">＋</button>
+        </div>
+      </div>
+
+      <div class="groups-tabs">
+        <button class="tab-pill active" onclick="switchGroupTab('discover')">თქვენთვის</button>
+        <button class="tab-pill" onclick="switchGroupTab('my_groups')">თქვენი ჯგუფები</button>
+      </div>
+
+      <!-- Tab 1: Discover -->
+      <div id="tab-discover-view">
+        <div class="section-box">
+          <div class="section-head">
+            <span class="section-title">თქვენი ჯგუფები</span>
+            <span class="section-link" onclick="switchGroupTab('my_groups')">ყველას ნახვა</span>
+          </div>
+          <div id="quick-joined-groups">
+            <div style="color: #666; font-size: 13px;">იტვირთება...</div>
+          </div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-head">
+            <span class="section-title">რეკომენდებული ჯგუფები</span>
+          </div>
+          <div id="discover-groups-list">
+            <div style="color: #666; font-size: 13px;">ჯგუფები იტვირთება...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: My Groups -->
+      <div id="tab-mygroups-view" style="display: none; padding: 16px;">
+        <div class="section-title" style="margin-bottom: 15px;">ჯგუფები რომლებშიც ხართ</div>
+        <div id="my-groups-full-list">
           <div style="color: #666; font-size: 13px;">იტვირთება...</div>
         </div>
       </div>
+    </div>
 
-      <div class="section-box">
-        <div class="section-head">
-          <span class="section-title">რეკომენდებული ჯგუფები</span>
+    <!-- 2. ჯგუფის შიდა სრული გვერდი (Single Group Page) -->
+    <div id="group-detail-view">
+      <div class="groups-header">
+        <div class="header-left">
+          <button class="back-btn" onclick="closeGroupDetailView()">←</button>
+          <h1 class="header-title" id="dg-header-name">ჯგუფი</h1>
         </div>
-        <div id="discover-groups-list">
-          <div style="color: #666; font-size: 13px;">ჯგუფები იტვირთება...</div>
+        <div class="header-actions">
+          <button class="action-circle-btn" onclick="shareGroupLink()">🔗</button>
         </div>
+      </div>
+
+      <!-- Group Cover -->
+      <div class="group-cover-wrapper">
+        <img id="dg-cover" src="" class="group-cover-img" alt="Cover">
+      </div>
+
+      <!-- Group Admin Ribbon -->
+      <div class="admin-ribbon-bar" id="dg-admin-bar">
+        <span>👑</span> <span id="dg-admin-text">ჯგუფის ადმინისტრატორი</span>
+      </div>
+
+      <!-- Group Header Info -->
+      <div class="group-detail-header">
+        <h2 class="group-detail-title" id="dg-title">...</h2>
+        <div class="group-detail-subtitle">
+          <span id="dg-privacy-badge">🌐 საჯარო ჯგუფი</span> · <span id="dg-members-count">0 წევრი</span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="group-actions-grid">
+          <button class="btn-joined" id="dg-btn-membership" onclick="toggleCurrentGroupMembership()">
+            👥 თქვენ გაწევრიანდით ▾
+          </button>
+          <button class="btn-invite" onclick="shareGroupLink()">
+            ➕ მოიწვიეთ
+          </button>
+        </div>
+
+        <!-- Sub Tabs -->
+        <div class="group-sub-tabs">
+          <button class="sub-tab-btn active">რჩეული</button>
+          <button class="sub-tab-btn">თქვენ</button>
+          <button class="sub-tab-btn">ფოტოები</button>
+          <button class="sub-tab-btn">ღონისძიებები</button>
+        </div>
+      </div>
+
+      <!-- Post Creation Box in Group -->
+      <div class="group-create-post">
+        <div class="post-input-row">
+          <img id="dg-user-avatar" src="logo.png" class="post-creator-avatar" alt="Avatar">
+          <div class="post-fake-input" onclick="openGroupPostModal()">დაწერეთ რამე ჯგუფში...</div>
+          <div class="post-media-trigger" onclick="openGroupPostModal()">🖼️</div>
+        </div>
+      </div>
+
+      <!-- Feed Header -->
+      <div style="padding: 6px 16px 10px 16px; font-weight: 700; font-size: 15px; color: #fff;">
+        ყველაზე რელევანტური
+      </div>
+
+      <!-- Posts Container -->
+      <div id="dg-posts-wall">
+        <div style="text-align: center; color: #888; padding: 25px;">პოსტები იტვირთება...</div>
       </div>
     </div>
 
-    <!-- 2. My Groups View -->
-    <div id="tab-mygroups-view" style="display: none; padding: 16px;">
-      <div class="section-title" style="margin-bottom: 15px;">ჯგუფები რომლებშიც გაწევრიანებული ხართ</div>
-      <div id="my-groups-full-list">
-        <div style="color: #666; font-size: 13px;">იტვირთება...</div>
-      </div>
-    </div>
   </div>
 
-  <!-- Create Group Modal -->
+  <!-- ახალი ჯგუფის შექმნის მოდალი -->
   <div class="modal-overlay" id="create-group-modal" onclick="closeCreateGroupModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
       <h2 class="sheet-title">ახალი ჯგუფის შექმნა</h2>
       
-      <input type="text" id="new-group-name" class="input-field" placeholder="ჯგუფის სახელი (მაგ. ემიგრანტები მილანში)">
-      <input type="text" id="new-group-category" class="input-field" placeholder="კატეგორია / ქვეყანა (მაგ. იტალია, სამუშაო)">
+      <input type="text" id="new-group-name" class="input-field" placeholder="ჯგუფის სახელი (მაგ. ემიგრანტები რომში)">
+      <input type="text" id="new-group-category" class="input-field" placeholder="კატეგორია / ქვეყანა (მაგ. იტალია)">
       <textarea id="new-group-desc" class="input-field" style="resize: none; height: 80px;" placeholder="ჯგუფის მოკლე აღწერა..."></textarea>
       
       <select id="new-group-privacy" class="input-field">
@@ -177,6 +327,19 @@
       </select>
 
       <button class="btn-gold" id="btn-submit-group" onclick="submitCreateGroup()">ჯგუფის შექმნა</button>
+    </div>
+  </div>
+
+  <!-- ჯგუფში პოსტის დაწერის მოდალი -->
+  <div class="modal-overlay" id="create-post-modal" onclick="closeGroupPostModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">პოსტის შექმნა ჯგუფში</h2>
+      
+      <textarea id="group-post-text" class="input-field" style="height: 100px; resize: none;" placeholder="რაზე ფიქრობთ?"></textarea>
+      <input type="file" id="group-post-file" accept="image/*,video/*" class="input-field">
+
+      <button class="btn-gold" id="btn-submit-post" onclick="submitGroupPost()">გამოქვეყნება</button>
     </div>
   </div>
 
@@ -195,11 +358,29 @@
     const db = firebase.firestore();
 
     let currentUser = null;
+    let userProfile = null;
+    let activeGroupId = null;
+    let activeGroupData = null;
 
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        loadAllGroups();
+        db.collection('profiles').doc(user.uid).get().then(doc => {
+          if (doc.exists) {
+            userProfile = doc.data();
+            const myAvatar = document.getElementById('dg-user-avatar');
+            if (myAvatar && userProfile.avatar_url) myAvatar.src = userProfile.avatar_url;
+          }
+        });
+
+        // URL-დან ID-ის ამოკითხვა (თუ პირდაპირ ლინკით შემოვიდა)
+        const urlParams = new URLSearchParams(window.location.search);
+        const gId = urlParams.get('id');
+        if (gId) {
+          openGroupDetailView(gId);
+        } else {
+          loadAllGroups();
+        }
       } else {
         window.location.href = "index.html";
       }
@@ -223,56 +404,8 @@
       }
     }
 
-    function openCreateGroupModal() {
-      document.getElementById('create-group-modal').style.display = 'flex';
-    }
-
-    function closeCreateGroupModal() {
-      document.getElementById('create-group-modal').style.display = 'none';
-    }
-
-    function submitCreateGroup() {
-      const name = document.getElementById('new-group-name').value.trim();
-      const category = document.getElementById('new-group-category').value.trim();
-      const desc = document.getElementById('new-group-desc').value.trim();
-      const privacy = document.getElementById('new-group-privacy').value;
-      const btn = document.getElementById('btn-submit-group');
-
-      if (!name) {
-        alert("გთხოვთ შეიყვანოთ ჯგუფის სახელი");
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerText = "იქმნება...";
-
-      db.collection('groups').add({
-        name: name,
-        category: category || "საერთო",
-        description: desc,
-        privacy: privacy,
-        creator_id: currentUser.uid,
-        members_count: 1,
-        members: [currentUser.uid],
-        cover_url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500&auto=format&fit=crop&q=60",
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        closeCreateGroupModal();
-        btn.disabled = false;
-        btn.innerText = "ჯგუფის შექმნა";
-        document.getElementById('new-group-name').value = "";
-        document.getElementById('new-group-category').value = "";
-        document.getElementById('new-group-desc').value = "";
-        loadAllGroups();
-      }).catch(err => {
-        alert("შეცდომა: " + err.message);
-        btn.disabled = false;
-        btn.innerText = "ჯგუფის შექმნა";
-      });
-    }
-
     function loadAllGroups() {
-      db.collection('groups').orderBy('created_at', 'desc').limit(20).get().then(snap => {
+      db.collection('groups').orderBy('created_at', 'desc').limit(30).get().then(snap => {
         const quickJoined = document.getElementById('quick-joined-groups');
         const discoverList = document.getElementById('discover-groups-list');
         const myGroupsFull = document.getElementById('my-groups-full-list');
@@ -295,13 +428,13 @@
           const membersCount = g.members_count || (g.members ? g.members.length : 1);
 
           const card = `
-            <div class="group-item-card">
-              <img src="${g.cover_url || 'logo.png'}" class="group-avatar" alt="Cover">
+            <div class="group-item-card" onclick="openGroupDetailView('${gId}')">
+              <img src="${g.cover_url || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500'}" class="group-avatar" alt="Cover">
               <div class="group-info">
                 <div class="group-name">${g.name}</div>
                 <div class="group-meta">${membersCount} წევრი · ${g.category || 'საერთო'}</div>
               </div>
-              <button onclick="toggleJoinGroup('${gId}', ${isMember}, event)" style="padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; border: none; ${isMember ? 'background:#24242e; color:#cfd3dc;' : 'background:#dcae36; color:#111;'}">
+              <button onclick="toggleJoinGroupList('${gId}', ${isMember}, event)" style="padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; border: none; ${isMember ? 'background:#24242e; color:#cfd3dc;' : 'background:#dcae36; color:#111;'}">
                 ${isMember ? 'წევრი' : 'შესვლა'}
               </button>
             </div>
@@ -321,7 +454,92 @@
       });
     }
 
-    function toggleJoinGroup(groupId, isMember, event) {
+    /* --- ჯგუფის შიდა გვერდის გახსნა --- */
+    function openGroupDetailView(groupId) {
+      activeGroupId = groupId;
+      window.history.pushState({ groupId: groupId }, "", "?id=" + groupId);
+
+      document.getElementById('groups-list-view').style.display = 'none';
+      document.getElementById('group-detail-view').style.display = 'block';
+      window.scrollTo(0, 0);
+
+      db.collection('groups').doc(groupId).get().then(doc => {
+        if (!doc.exists) {
+          alert("ჯგუფი ვერ მოიძებნა");
+          closeGroupDetailView();
+          return;
+        }
+
+        activeGroupData = doc.data();
+        document.getElementById('dg-header-name').innerText = activeGroupData.name;
+        document.getElementById('dg-title').innerText = activeGroupData.name;
+        document.getElementById('dg-cover').src = activeGroupData.cover_url || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600";
+        document.getElementById('dg-admin-text').innerText = "ჯგუფის ადმინისტრატორია: " + (activeGroupData.admin_name || "ადმინისტრატორი");
+        
+        const count = activeGroupData.members_count || (activeGroupData.members ? activeGroupData.members.length : 1);
+        document.getElementById('dg-members-count').innerText = count + " წევრი";
+        document.getElementById('dg-privacy-badge').innerText = (activeGroupData.privacy === 'private' ? "🔒 დახურული ჯგუფი" : "🌐 საჯარო ჯგუფი");
+
+        updateGroupMembershipUI();
+        loadGroupPosts(groupId);
+      });
+    }
+
+    function closeGroupDetailView() {
+      activeGroupId = null;
+      activeGroupData = null;
+      window.history.pushState({}, "", "groups.html");
+      document.getElementById('group-detail-view').style.display = 'none';
+      document.getElementById('groups-list-view').style.display = 'block';
+      loadAllGroups();
+    }
+
+    function updateGroupMembershipUI() {
+      const btn = document.getElementById('dg-btn-membership');
+      const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+
+      if (isMember) {
+        btn.style.background = "#24242e";
+        btn.style.color = "#ffffff";
+        btn.innerHTML = "👥 თქვენ გაწევრიანდით ▾";
+      } else {
+        btn.style.background = "#dcae36";
+        btn.style.color = "#111111";
+        btn.innerHTML = "➕ ჯგუფში გაწევრიანება";
+      }
+    }
+
+    function toggleCurrentGroupMembership() {
+      if (!activeGroupId) return;
+      const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+      const groupRef = db.collection('groups').doc(activeGroupId);
+
+      if (isMember) {
+        if (!confirm("ნამდვილად გსურთ ჯგუფის დატოვება?")) return;
+        groupRef.update({
+          members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+          members_count: firebase.firestore.FieldValue.increment(-1)
+        }).then(() => {
+          activeGroupData.members = activeGroupData.members.filter(id => id !== currentUser.uid);
+          activeGroupData.members_count = Math.max(0, (activeGroupData.members_count || 1) - 1);
+          updateGroupMembershipUI();
+          document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+        });
+      } else {
+        groupRef.update({
+          members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+          members_count: firebase.firestore.FieldValue.increment(1)
+        }).then(() => {
+          if (!activeGroupData.members) activeGroupData.members = [];
+          activeGroupData.members.push(currentUser.uid);
+          activeGroupData.members_count = (activeGroupData.members_count || 0) + 1;
+          updateGroupMembershipUI();
+          document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+        });
+      }
+    }
+
+    function toggleJoinGroupList(groupId, isMember, event) {
       event.stopPropagation();
       const groupRef = db.collection('groups').doc(groupId);
 
@@ -337,6 +555,171 @@
         }).then(loadAllGroups);
       }
     }
+
+    /* --- ჯგუფის პოსტების ჩატვირთვა --- */
+    function loadGroupPosts(groupId) {
+      const wall = document.getElementById('dg-posts-wall');
+      wall.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>პოსტები იტვირთება...</div>";
+
+      db.collection('group_posts')
+        .where('group_id', '==', groupId)
+        .orderBy('created_at', 'desc')
+        .limit(20)
+        .get()
+        .then(snap => {
+          if (snap.empty) {
+            wall.innerHTML = "<div style='text-align:center; color:#777; padding:35px;'>ამ ჯგუფში პოსტები ჯერ არ არის. იყავით პირველი!</div>";
+            return;
+          }
+
+          let postsHtml = "";
+          snap.forEach(doc => {
+            const p = doc.data();
+            const dateStr = p.created_at ? new Date(p.created_at.toDate ? p.created_at.toDate() : p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
+
+            let mediaElem = "";
+            if (p.media_url) {
+              mediaElem = (p.media_type === 'video') ? 
+                `<video src="${p.media_url}" controls class="g-post-media"></video>` : 
+                `<img src="${p.media_url}" class="g-post-media">`;
+            }
+
+            postsHtml += `
+              <div class="group-post-card">
+                <div class="g-post-head">
+                  <img src="${p.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-post-avatar">
+                  <div>
+                    <div class="g-post-author">${p.author_name || 'მომხმარებელი'}</div>
+                    <div class="g-post-time">${dateStr} · 🌐</div>
+                  </div>
+                </div>
+                <div class="g-post-content">${p.content || ''}</div>
+                ${mediaElem}
+              </div>
+            `;
+          });
+          wall.innerHTML = postsHtml;
+        }).catch(err => {
+          console.error("Posts error:", err);
+          wall.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>პოსტები ჯერ არ არის</div>";
+        });
+    }
+
+    /* --- ჯგუფში პოსტის დაწერა --- */
+    function openGroupPostModal() {
+      document.getElementById('create-post-modal').style.display = 'flex';
+    }
+    function closeGroupPostModal() {
+      document.getElementById('create-post-modal').style.display = 'none';
+    }
+
+    function submitGroupPost() {
+      const text = document.getElementById('group-post-text').value.trim();
+      const fileInput = document.getElementById('group-post-file');
+      const btn = document.getElementById('btn-submit-post');
+
+      if (!text && (!fileInput.files || fileInput.files.length === 0)) {
+        alert("შეიყვანეთ ტექსტი ან აირჩიეთ ფაილი");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "იგზავნება...";
+
+      const authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
+      const avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
+
+      db.collection('group_posts').add({
+        group_id: activeGroupId,
+        user_id: currentUser.uid,
+        author_name: authorName,
+        avatar_url: avatarUrl,
+        content: text,
+        media_url: null,
+        media_type: null,
+        likes_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        btn.disabled = false;
+        btn.innerText = "გამოქვეყნება";
+        document.getElementById('group-post-text').value = "";
+        closeGroupPostModal();
+        loadGroupPosts(activeGroupId);
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "გამოქვეყნება";
+      });
+    }
+
+    /* --- ახალი ჯგუფის შექმნა --- */
+    function openCreateGroupModal() {
+      document.getElementById('create-group-modal').style.display = 'flex';
+    }
+    function closeCreateGroupModal() {
+      document.getElementById('create-group-modal').style.display = 'none';
+    }
+
+    function submitCreateGroup() {
+      const name = document.getElementById('new-group-name').value.trim();
+      const category = document.getElementById('new-group-category').value.trim();
+      const desc = document.getElementById('new-group-desc').value.trim();
+      const privacy = document.getElementById('new-group-privacy').value;
+      const btn = document.getElementById('btn-submit-group');
+
+      if (!name) {
+        alert("გთხოვთ შეიყვანოთ ჯგუფის სახელი");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "იქმნება...";
+
+      const creatorName = (userProfile && userProfile.full_name) ? userProfile.full_name : "ადმინისტრატორი";
+
+      db.collection('groups').add({
+        name: name,
+        category: category || "საერთო",
+        description: desc,
+        privacy: privacy,
+        creator_id: currentUser.uid,
+        admin_name: creatorName,
+        members_count: 1,
+        members: [currentUser.uid],
+        cover_url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600",
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then((newDoc) => {
+        closeCreateGroupModal();
+        btn.disabled = false;
+        btn.innerText = "ჯგუფის შექმნა";
+        document.getElementById('new-group-name').value = "";
+        document.getElementById('new-group-category').value = "";
+        document.getElementById('new-group-desc').value = "";
+        openGroupDetailView(newDoc.id);
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "ჯგუფის შექმნა";
+      });
+    }
+
+    function shareGroupLink() {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href);
+        alert("ჯგუფის ბმული დაკოპირებულია!");
+      } else {
+        alert("ბმული: " + window.location.href);
+      }
+    }
+
+    // Android/Browser Back Button-ის მხარდაჭერა
+    window.onpopstate = function(e) {
+      if (e.state && e.state.groupId) {
+        openGroupDetailView(e.state.groupId);
+      } else {
+        closeGroupDetailView();
+      }
+    };
   </script>
 </body>
 </html>
