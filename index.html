@@ -4520,61 +4520,64 @@ function toggleAuthMode() {
     }
 
     function handleAuth() {
-      var emailEl = document.getElementById('email');
-      var passEl = document.getElementById('password');
-      var confirmPassEl = document.getElementById('confirm-password');
-      var nameEl = document.getElementById('fullname');
-      var errorDiv = document.getElementById('error-message');
+  var emailEl = document.getElementById('email');
+  var passEl = document.getElementById('password');
+  var confirmPassEl = document.getElementById('confirm-password');
+  var nameEl = document.getElementById('fullname');
+  var dobEl = document.getElementById('birthdate');
+  var errorDiv = document.getElementById('error-message');
 
-      var email = emailEl ? emailEl.value.trim() : "";
-      var password = passEl ? passEl.value.trim() : "";
-      var confirmPassword = confirmPassEl ? confirmPassEl.value.trim() : "";
-      var fullname = nameEl ? nameEl.value.trim() : "";
+  var email = emailEl ? emailEl.value.trim() : "";
+  var password = passEl ? passEl.value.trim() : "";
+  var confirmPassword = confirmPassEl ? confirmPassEl.value.trim() : "";
+  var fullname = nameEl ? nameEl.value.trim() : "";
+  var birthdate = dobEl ? dobEl.value : "";
 
-      if (errorDiv) errorDiv.style.display = 'none';
+  if (errorDiv) errorDiv.style.display = 'none';
 
-      if (!email || !password || (!isLoginMode && (!fullname || !confirmPassword))) {
-        if (errorDiv) {
-          errorDiv.innerText = "Fill all fields!";
-          errorDiv.style.display = 'block';
-        }
-        return;
-      }
-
-      if (isLoginMode) {
-        auth.signInWithEmailAndPassword(email, password).catch(function(error) {
-          if (errorDiv) {
-            errorDiv.innerText = error.message;
-            errorDiv.style.display = 'block';
-          }
-        });
-      } else {
-        if (password !== confirmPassword) {
-          if (errorDiv) {
-            errorDiv.innerText = "Passwords do not match!";
-            errorDiv.style.display = 'block';
-          }
-          return;
-        }
-
-        auth.createUserWithEmailAndPassword(email, password).then(function(result) {
-          var user = result.user;
-          return db.collection('profiles').doc(user.uid).set({
-            full_name: fullname,
-            language: currentLang || 'en',
-            balance: 0,
-            is_online: true,
-            last_seen: firebase.firestore.FieldValue.serverTimestamp(),
-            updated_at: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }).catch(function(error) {
-          if (errorDiv) {
-            errorDiv.innerText = error.message;
-            errorDiv.style.display = 'block';
-          }
-        });
-      }
+  if (!email || !password || (!isLoginMode && (!fullname || !confirmPassword || !birthdate))) {
+    if (errorDiv) {
+      errorDiv.innerText = "Fill all fields!";
+      errorDiv.style.display = 'block';
     }
+    return;
+  }
+
+  if (isLoginMode) {
+    auth.signInWithEmailAndPassword(email, password).catch(function(error) {
+      if (errorDiv) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+      }
+    });
+  } else {
+    if (password !== confirmPassword) {
+      if (errorDiv) {
+        errorDiv.innerText = "Passwords do not match!";
+        errorDiv.style.display = 'block';
+      }
+      return;
+    }
+
+    auth.createUserWithEmailAndPassword(email, password).then(function(result) {
+      var user = result.user;
+      return db.collection('profiles').doc(user.uid).set({
+        full_name: fullname,
+        birth_date: birthdate,
+        language: currentLang || 'en',
+        balance: 0,
+        is_online: true,
+        last_seen: firebase.firestore.FieldValue.serverTimestamp(),
+        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).catch(function(error) {
+      if (errorDiv) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+      }
+    });
+  }
+}
 
     function loadPosts() {
       if (!currentUser) return;
