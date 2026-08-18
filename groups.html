@@ -222,8 +222,8 @@
     .g-post-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
     .g-post-author { font-size: 14px; font-weight: 700; color: #fff; }
     .g-post-time { font-size: 11px; color: #7b8190; margin-top: 2px; }
-    .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 12px; }
-    .g-post-media { width: 100%; border-radius: 10px; max-height: 450px; object-fit: cover; }
+    .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+    .g-post-media { width: 100%; border-radius: 10px; max-height: 450px; object-fit: cover; margin-top: 6px; }
 
     /* Modals */
     .modal-overlay {
@@ -305,7 +305,7 @@
     <!-- 2. ჯგუფის შიდა სრული გვერდი (Facebook UI) -->
     <div id="group-detail-view" style="position: relative;">
       
-      <!-- ზედა მცურავი ნავიგაცია (< უკან, 🔍 ძებნა, ••• მეტი) -->
+      <!-- ზედა მცურავი ნავიგაცია -->
       <div class="group-top-floating-nav">
         <button class="nav-round-btn" onclick="closeGroupDetailView()">〈</button>
         <div style="display: flex; gap: 8px;">
@@ -492,7 +492,7 @@
     }
 
     function loadAllGroups() {
-      db.collection('groups').orderBy('created_at', 'desc').limit(30).get().then(snap => {
+      db.collection('groups').get().then(snap => {
         const quickJoined = document.getElementById('quick-joined-groups');
         const discoverList = document.getElementById('discover-groups-list');
         const myGroupsFull = document.getElementById('my-groups-full-list');
@@ -504,13 +504,20 @@
           return;
         }
 
+        let allGroups = [];
+        snap.forEach(doc => allGroups.push(Object.assign({ id: doc.id }, doc.data())));
+        allGroups.sort((a, b) => {
+          let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
+          let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
+          return tB - tA;
+        });
+
         let quickHtml = "";
         let discHtml = "";
         let myHtml = "";
 
-        snap.forEach(doc => {
-          const g = doc.data();
-          const gId = doc.id;
+        allGroups.forEach(g => {
+          const gId = g.id;
           const isAdmin = g.creator_id === currentUser.uid;
           const isMember = (g.members && g.members.includes(currentUser.uid)) || isAdmin;
           const isPending = g.pending_members && g.pending_members.includes(currentUser.uid);
@@ -575,7 +582,6 @@
 
         activeGroupData = doc.data();
         
-        // ადმინისტრატორის ავტომატური წევრობის სინქრონიზაცია ბაზასთან
         const isAdmin = activeGroupData.creator_id === currentUser.uid;
         if (isAdmin && (!activeGroupData.members || !activeGroupData.members.includes(currentUser.uid))) {
           if (!activeGroupData.members) activeGroupData.members = [];
@@ -670,7 +676,6 @@
       const isPrivate = activeGroupData.privacy === 'private';
       const groupRef = db.collection('groups').doc(activeGroupId);
 
-      // 1. უკვე წევრია -> გასვლა
       if (isMember) {
         if (!confirm("ნამდვილად გსურთ ჯგუფის დატოვება?")) return;
         groupRef.update({
@@ -686,7 +691,6 @@
         return;
       }
 
-      // 2. მოლოდინშია (დახურულ ჯგუფზე) -> მოთხოვნის გაუქმება
       if (isPending) {
         if (!confirm("გსურთ გაწევრიანების მოთხოვნის გაუქმება?")) return;
         groupRef.update({
@@ -698,7 +702,6 @@
         return;
       }
 
-      // 3. გაწევრიანება / მოთხოვნის გაგზავნა
       if (isPrivate) {
         groupRef.update({
           pending_members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
@@ -828,15 +831,14 @@
       });
     }
 
-    /* --- ჯგუფის პოსტების ჩატვირთვა --- */
+    /* --- ჯგუფის პოსტების ჩატვირთვა (გამართული დალაგებით) --- */
     function loadGroupPosts(groupId) {
       const wall = document.getElementById('dg-posts-wall');
+      if (!wall) return;
       wall.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>პოსტები იტვირთება...</div>";
 
       db.collection('group_posts')
         .where('group_id', '==', groupId)
-        .orderBy('created_at', 'desc')
-        .limit(20)
         .get()
         .then(snap => {
           if (snap.empty) {
@@ -844,16 +846,34 @@
             return;
           }
 
+          let postsList = [];
+          snap.forEach(doc => postsList.push(Object.assign({ id: doc.id }, doc.data())));
+          
+          postsList.sort((a, b) => {
+            let tA = 0;
+            if (a.created_at) {
+              tA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
+            }
+            let tB = 0;
+            if (b.created_at) {
+              tB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
+            }
+            return tB - tA;
+          });
+
           let postsHtml = "";
-          snap.forEach(doc => {
-            const p = doc.data();
-            const dateStr = p.created_at ? new Date(p.created_at.toDate ? p.created_at.toDate() : p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
+          postsList.forEach(p => {
+            let dateStr = "ახლახანს";
+            if (p.created_at) {
+              let d = p.created_at.toDate ? p.created_at.toDate() : new Date(p.created_at);
+              dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
 
             let mediaElem = "";
             if (p.media_url) {
               mediaElem = (p.media_type === 'video') ? 
-                `<video src="${p.media_url}" controls class="g-post-media"></video>` : 
-                `<img src="${p.media_url}" class="g-post-media">`;
+                `<video src="${p.media_url}" controls class="g-post-media" style="width:100%; border-radius:10px; margin-top:8px;"></video>` : 
+                `<img src="${p.media_url}" class="g-post-media" style="width:100%; border-radius:10px; margin-top:8px; object-fit:cover;">`;
             }
 
             postsHtml += `
@@ -872,9 +892,44 @@
           });
           wall.innerHTML = postsHtml;
         }).catch(err => {
-          console.error("Posts error:", err);
-          wall.innerHTML = "<div style='text-align:center; color:#777; padding:20px;'>პოსტები ჯერ არ არის</div>";
+          console.error("Posts loading error:", err);
+          wall.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>პოსტების ჩატვირთვის შეცდომა</div>";
         });
+    }
+
+    /* --- მედია ფაილის ატვირთვა R2-ზე --- */
+    function uploadMediaFile(file, callback) {
+      if (!file) { callback(null, null); return; }
+      var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+
+      var r2S3 = new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto'
+      });
+
+      var targetFolder = isVideo ? 'videos' : 'images';
+      var fileKey = targetFolder + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+      var contentType = file.type || (isVideo ? 'video/mp4' : 'image/jpeg');
+
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: contentType
+      };
+
+      r2S3.upload(params, function(err, data) {
+        if (err) {
+          console.error("R2 Upload Error:", err);
+          callback(null, null);
+        } else {
+          var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+          callback(publicUrl, isVideo ? 'video' : 'image');
+        }
+      });
     }
 
     /* --- ჯგუფში პოსტის დაწერა --- */
@@ -896,7 +951,8 @@
       const fileInput = document.getElementById('group-post-file');
       const btn = document.getElementById('btn-submit-post');
 
-      if (!text && (!fileInput.files || fileInput.files.length === 0)) {
+      const hasFile = fileInput.files && fileInput.files.length > 0;
+      if (!text && !hasFile) {
         alert("შეიყვანეთ ტექსტი ან აირჩიეთ ფაილი");
         return;
       }
@@ -907,27 +963,38 @@
       const authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
       const avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
 
-      db.collection('group_posts').add({
-        group_id: activeGroupId,
-        user_id: currentUser.uid,
-        author_name: authorName,
-        avatar_url: avatarUrl,
-        content: text,
-        media_url: null,
-        media_type: null,
-        likes_count: 0,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        btn.disabled = false;
-        btn.innerText = "გამოქვეყნება";
-        document.getElementById('group-post-text').value = "";
-        closeGroupPostModal();
-        loadGroupPosts(activeGroupId);
-      }).catch(err => {
-        alert("შეცდომა: " + err.message);
-        btn.disabled = false;
-        btn.innerText = "გამოქვეყნება";
-      });
+      const savePostDoc = (mediaUrl, mediaType) => {
+        db.collection('group_posts').add({
+          group_id: activeGroupId,
+          user_id: currentUser.uid,
+          author_name: authorName,
+          avatar_url: avatarUrl,
+          content: text,
+          media_url: mediaUrl || null,
+          media_type: mediaType || null,
+          likes_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          btn.disabled = false;
+          btn.innerText = "გამოქვეყნება";
+          document.getElementById('group-post-text').value = "";
+          fileInput.value = "";
+          closeGroupPostModal();
+          loadGroupPosts(activeGroupId);
+        }).catch(err => {
+          alert("შეცდომა: " + err.message);
+          btn.disabled = false;
+          btn.innerText = "გამოქვეყნება";
+        });
+      };
+
+      if (hasFile) {
+        uploadMediaFile(fileInput.files[0], function(mediaUrl, mediaType) {
+          savePostDoc(mediaUrl, mediaType);
+        });
+      } else {
+        savePostDoc(null, null);
+      }
     }
 
     /* --- ახალი ჯგუფის შექმნა --- */
