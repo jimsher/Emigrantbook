@@ -324,6 +324,65 @@
     .g-act-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
     .g-act-btn.liked { color: #ff4757; }
 
+    /* ----------------------------------------------------
+       3. ქვეტაბების დიზაინები (Photos, Events, Files)
+       ---------------------------------------------------- */
+    /* Photos Grid (3-სვეტიანი გალერეა) */
+    .group-photos-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+      padding: 4px 0;
+    }
+    .group-photo-cell {
+      position: relative; width: 100%; padding-top: 100%;
+      background: #181822; overflow: hidden; cursor: pointer;
+    }
+    .group-photo-cell img {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; transition: transform 0.2s;
+    }
+    .group-photo-cell:hover img { transform: scale(1.04); }
+
+    /* Events List & Cards */
+    .events-container { padding: 14px 16px; }
+    .create-event-banner {
+      background: #1a1a24; border: 1px dashed #dcae36; border-radius: 12px;
+      padding: 16px; text-align: center; margin-bottom: 16px; cursor: pointer;
+    }
+    .group-event-card {
+      background: #141418; border: 1px solid #222228; border-radius: 12px;
+      padding: 14px; margin-bottom: 12px; display: flex; gap: 14px; align-items: center;
+    }
+    .event-calendar-box {
+      width: 50px; height: 52px; background: #20202a; border-radius: 10px;
+      border: 1px solid #323242; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .event-cal-month { font-size: 10px; font-weight: 800; color: #ff4757; text-transform: uppercase; }
+    .event-cal-day { font-size: 18px; font-weight: 800; color: #ffffff; line-height: 1; margin-top: 2px; }
+    .event-info { flex: 1; min-width: 0; }
+    .event-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .event-time { font-size: 12px; color: #dcae36; }
+    .event-loc { font-size: 12px; color: #8a8f9d; margin-top: 2px; }
+
+    /* Files List & Cards */
+    .files-container { padding: 14px 16px; }
+    .group-file-card {
+      background: #141418; border: 1px solid #222228; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+    }
+    .file-icon-box {
+      width: 40px; height: 40px; border-radius: 8px; background: #202028;
+      border: 1px solid #333344; display: flex; align-items: center;
+      justify-content: center; font-size: 20px; flex-shrink: 0;
+    }
+    .file-details { flex: 1; min-width: 0; }
+    .file-name { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-meta { font-size: 11px; color: #8a8f9d; margin-top: 2px; }
+    .file-download-btn {
+      padding: 6px 12px; border-radius: 6px; background: #24242e; border: 1px solid #383848;
+      color: #dcae36; font-size: 12px; font-weight: bold; text-decoration: none;
+    }
+
     /* Modals */
     .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -466,13 +525,13 @@
           </button>
         </div>
 
-        <!-- ჰორიზონტალური ქვეტაბები -->
+        <!-- ჰორიზონტალური ქვეტაბები (მუშა ღილაკებით) -->
         <div class="group-sub-tabs">
-          <button class="sub-tab-btn active">რჩეული</button>
-          <button class="sub-tab-btn"><span>👤</span> თქვენ</button>
-          <button class="sub-tab-btn">ფოტოები</button>
-          <button class="sub-tab-btn">ღონისძიებები</button>
-          <button class="sub-tab-btn">ფაილები</button>
+          <button class="sub-tab-btn active" id="subtab-btn-featured" onclick="switchGroupSubTab('featured')">რჩეული</button>
+          <button class="sub-tab-btn" id="subtab-btn-you" onclick="switchGroupSubTab('you')"><span>👤</span> თქვენ</button>
+          <button class="sub-tab-btn" id="subtab-btn-photos" onclick="switchGroupSubTab('photos')">ფოტოები</button>
+          <button class="sub-tab-btn" id="subtab-btn-events" onclick="switchGroupSubTab('events')">ღონისძიებები</button>
+          <button class="sub-tab-btn" id="subtab-btn-files" onclick="switchGroupSubTab('files')">ფაილები</button>
         </div>
       </div>
 
@@ -485,59 +544,6 @@
         <div id="admin-requests-list"></div>
       </div>
 
-      <!-- პირდაპირი საწერი ველი (ანონიმურობის ტაბით, გალერეის ღილაკით და ლურჯი პროგრესბარით) -->
-      <div class="group-create-post" id="dg-create-post-box">
-        
-        <!-- Identity Pill / Dropdown Trigger -->
-        <div class="post-identity-pill" onclick="toggleIdentityDropdown(event)" title="აირჩიეთ პოსტის ავტორი">
-          <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
-          <span class="post-identity-arrow">▼</span>
-        </div>
-
-        <!-- Identity Select Dropdown -->
-        <div class="identity-dropdown-menu" id="dg-identity-dropdown">
-          <div class="identity-option active" id="opt-identity-real" onclick="selectPostingIdentity(false, event)">
-            <img id="opt-avatar-real" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar">
-            <div>
-              <div class="identity-option-title" id="opt-name-real">თქვენი პროფილი</div>
-              <div class="identity-option-sub">საჯარო გამოქვეყნება</div>
-            </div>
-          </div>
-          <div class="identity-option" id="opt-identity-anon" onclick="selectPostingIdentity(true, event)">
-            <img src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar" style="filter: grayscale(100%) contrast(150%);">
-            <div>
-              <div class="identity-option-title" style="color: #dcae36;">🕶️ ანონიმური წევრი</div>
-              <div class="identity-option-sub">სახელი და ფოტო დაიმალება</div>
-            </div>
-          </div>
-        </div>
-        
-        <input type="text" id="direct-group-post-text" class="post-real-input" placeholder="დაწერეთ რამე ჯგუფში..." onkeypress="if(event.key==='Enter') submitDirectGroupPost()">
-        
-        <input type="file" id="direct-group-file-input" accept="image/*,video/*" style="display: none;" onchange="handleDirectFileSelected()">
-        
-        <!-- ფოტოს აიკონი -->
-        <div class="post-media-trigger" id="dg-media-pick-btn" onclick="triggerDirectFilePick()" title="ფოტოს/ვიდეოს ატვირთვა">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="#45bd62"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>
-        </div>
-
-        <!-- Facebook Style Circular Progress Ring -->
-        <div class="upload-progress-wrapper" id="dg-upload-progress-box">
-          <svg class="progress-ring" width="30" height="30">
-            <circle class="progress-ring-circle-bg" stroke="#252632" stroke-width="3" fill="transparent" r="13" cx="15" cy="15"/>
-            <circle id="dg-progress-circle" class="progress-ring-circle" stroke="#1877f2" stroke-width="3" fill="transparent" r="13" cx="15" cy="15"/>
-          </svg>
-          <span class="progress-ring-text" id="dg-progress-percent">0%</span>
-        </div>
-
-      </div>
-
-      <!-- არჩეული ფაილის ინდიკატორი -->
-      <div id="direct-selected-file-badge" class="direct-file-preview-bar">
-        <span id="direct-file-name-txt">📎 ფაილი არჩეულია</span>
-        <span style="cursor: pointer; color: #ff4757; font-weight: bold; font-size: 14px;" onclick="clearDirectSelectedFile()">✕</span>
-      </div>
-
       <!-- დახურული ჯგუფის შეტყობინება -->
       <div class="private-locked-container" id="dg-private-locked-box" style="display: none;">
         <div class="private-locked-icon">🔒</div>
@@ -547,16 +553,105 @@
         </div>
       </div>
 
-      <!-- ფიდის სათაური / ფილტრი -->
-      <div class="group-feed-filter-bar" id="dg-feed-filter-bar">
-        <span class="filter-title">ყველაზე რელევანტური</span>
-        <button class="filter-icon-btn">⚙️</button>
+      <!-- ================= 1. SUBTAB: რჩეული (Main Feed) ================= -->
+      <div id="subtab-view-featured">
+        <!-- პირდაპირი საწერი ველი -->
+        <div class="group-create-post" id="dg-create-post-box">
+          <div class="post-identity-pill" onclick="toggleIdentityDropdown(event)" title="აირჩიეთ პოსტის ავტორი">
+            <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
+            <span class="post-identity-arrow">▼</span>
+          </div>
+
+          <div class="identity-dropdown-menu" id="dg-identity-dropdown">
+            <div class="identity-option active" id="opt-identity-real" onclick="selectPostingIdentity(false, event)">
+              <img id="opt-avatar-real" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar">
+              <div>
+                <div class="identity-option-title" id="opt-name-real">თქვენი პროფილი</div>
+                <div class="identity-option-sub">საჯარო გამოქვეყნება</div>
+              </div>
+            </div>
+            <div class="identity-option" id="opt-identity-anon" onclick="selectPostingIdentity(true, event)">
+              <img src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar" style="filter: grayscale(100%) contrast(150%);">
+              <div>
+                <div class="identity-option-title" style="color: #dcae36;">🕶️ ანონიმური წევრი</div>
+                <div class="identity-option-sub">სახელი და ფოტო დაიმალება</div>
+              </div>
+            </div>
+          </div>
+          
+          <input type="text" id="direct-group-post-text" class="post-real-input" placeholder="დაწერეთ რამე ჯგუფში..." onkeypress="if(event.key==='Enter') submitDirectGroupPost()">
+          <input type="file" id="direct-group-file-input" accept="image/*,video/*" style="display: none;" onchange="handleDirectFileSelected()">
+          
+          <div class="post-media-trigger" id="dg-media-pick-btn" onclick="triggerDirectFilePick()" title="ფოტოს/ვიდეოს ატვირთვა">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="#45bd62"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>
+          </div>
+
+          <div class="upload-progress-wrapper" id="dg-upload-progress-box">
+            <svg class="progress-ring" width="30" height="30">
+              <circle class="progress-ring-circle-bg" stroke="#252632" stroke-width="3" fill="transparent" r="13" cx="15" cy="15"/>
+              <circle id="dg-progress-circle" class="progress-ring-circle" stroke="#1877f2" stroke-width="3" fill="transparent" r="13" cx="15" cy="15"/>
+            </svg>
+            <span class="progress-ring-text" id="dg-progress-percent">0%</span>
+          </div>
+        </div>
+
+        <div id="direct-selected-file-badge" class="direct-file-preview-bar">
+          <span id="direct-file-name-txt">📎 ფაილი არჩეულია</span>
+          <span style="cursor: pointer; color: #ff4757; font-weight: bold; font-size: 14px;" onclick="clearDirectSelectedFile()">✕</span>
+        </div>
+
+        <div class="group-feed-filter-bar" id="dg-feed-filter-bar">
+          <span class="filter-title">ყველაზე რელევანტური</span>
+          <button class="filter-icon-btn">⚙️</button>
+        </div>
+
+        <div id="dg-posts-wall">
+          <div style="text-align: center; color: #888; padding: 25px;">პოსტები იტვირთება...</div>
+        </div>
       </div>
 
-      <!-- პოსტების კედელი -->
-      <div id="dg-posts-wall">
-        <div style="text-align: center; color: #888; padding: 25px;">პოსტები იტვირთება...</div>
+      <!-- ================= 2. SUBTAB: 👤 თქვენ (Your Posts) ================= -->
+      <div id="subtab-view-you" style="display: none;">
+        <div style="padding: 14px 16px 8px 16px; font-weight: 700; font-size: 15px; color: #dcae36;">
+          თქვენი აქტივობა ამ ჯგუფში
+        </div>
+        <div id="dg-your-posts-wall">
+          <div style="text-align: center; color: #888; padding: 25px;">იტვირთება...</div>
+        </div>
       </div>
+
+      <!-- ================= 3. SUBTAB: ფოტოები (Photos Gallery) ================= -->
+      <div id="subtab-view-photos" style="display: none;">
+        <div style="padding: 12px 16px 6px 16px; font-weight: 700; font-size: 15px; color: #fff;">
+          ჯგუფის ფოტოები
+        </div>
+        <div id="dg-photos-grid-box" class="group-photos-grid">
+          <div style="grid-column: span 3; text-align: center; color: #888; padding: 30px;">ფოტოები იტვირთება...</div>
+        </div>
+      </div>
+
+      <!-- ================= 4. SUBTAB: ღონისძიებები (Events) ================= -->
+      <div id="subtab-view-events" style="display: none;" class="events-container">
+        <div class="create-event-banner" onclick="openCreateEventModal()">
+          <div style="font-size: 24px; margin-bottom: 4px;">📅</div>
+          <div style="font-weight: 700; color: #dcae36; font-size: 14px;">+ ახალი ღონისძიების დაგეგმვა</div>
+          <div style="font-size: 11px; color: #8a8f9d; margin-top: 2px;">დაგეგმეთ შეხვედრა ან ივენთი ჯგუფის წევრებისთვის</div>
+        </div>
+        <div id="dg-events-list">
+          <div style="text-align: center; color: #888; padding: 20px;">ღონისძიებები იტვირთება...</div>
+        </div>
+      </div>
+
+      <!-- ================= 5. SUBTAB: ფაილები (Files & Media) ================= -->
+      <div id="subtab-view-files" style="display: none;" class="files-container">
+        <div style="font-weight: 700; font-size: 15px; color: #fff; margin-bottom: 12px;">
+          ჯგუფში გაზიარებული ფაილები
+        </div>
+        <div id="dg-files-list">
+          <div style="text-align: center; color: #888; padding: 20px;">ფაილები იტვირთება...</div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -580,6 +675,21 @@
     </div>
   </div>
 
+  <!-- ღონისძიების შექმნის მოდალი -->
+  <div class="modal-overlay" id="create-event-modal" onclick="closeCreateEventModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">ახალი ღონისძიების შექმნა</h2>
+      
+      <input type="text" id="new-event-title" class="input-field" placeholder="ღონისძიების სახელწოდება">
+      <input type="date" id="new-event-date" class="input-field">
+      <input type="text" id="new-event-location" class="input-field" placeholder="ადგილმდებარეობა / ქალაქი">
+      <textarea id="new-event-desc" class="input-field" style="resize: none; height: 80px;" placeholder="დამატებითი დეტალები..."></textarea>
+
+      <button class="btn-gold" id="btn-submit-event" onclick="submitCreateEvent()">ღონისძიების შექმნა</button>
+    </div>
+  </div>
+
   <!-- ჯგუფის კომენტარების მოდალი -->
   <div class="modal-overlay" id="group-comments-modal" onclick="closeGroupCommentsModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
@@ -590,7 +700,6 @@
         <div style="text-align: center; color: #888; padding: 20px;">იტვირთება...</div>
       </div>
 
-      <!-- პასუხის ინდიკატორი -->
       <div id="g-reply-active-bar" style="display: none; align-items: center; justify-content: space-between; background: #22222c; border: 1px solid #333344; padding: 6px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; color: #dcae36;">
         <span id="g-reply-active-text">პასუხი მომხმარებელს...</span>
         <span style="cursor: pointer; color: #ff4757; font-weight: bold;" onclick="cancelGroupReplyMode()">✕ გაუქმება</span>
@@ -626,6 +735,7 @@
     let activePostForComments = null;
     let activeCommentReplyId = null;
     let isAnonymousPosting = false;
+    let activeSubTab = 'featured';
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -660,6 +770,46 @@
       const idDropdown = document.getElementById('dg-identity-dropdown');
       if (idDropdown) idDropdown.style.display = 'none';
     });
+
+    /* --- ქვეტაბების გადართვა (Featured, You, Photos, Events, Files) --- */
+    function switchGroupSubTab(tabKey) {
+      activeSubTab = tabKey;
+      
+      const buttons = {
+        featured: document.getElementById('subtab-btn-featured'),
+        you: document.getElementById('subtab-btn-you'),
+        photos: document.getElementById('subtab-btn-photos'),
+        events: document.getElementById('subtab-btn-events'),
+        files: document.getElementById('subtab-btn-files')
+      };
+
+      const views = {
+        featured: document.getElementById('subtab-view-featured'),
+        you: document.getElementById('subtab-view-you'),
+        photos: document.getElementById('subtab-view-photos'),
+        events: document.getElementById('subtab-view-events'),
+        files: document.getElementById('subtab-view-files')
+      };
+
+      Object.keys(buttons).forEach(k => {
+        if (buttons[k]) buttons[k].classList.toggle('active', k === tabKey);
+        if (views[k]) views[k].style.display = (k === tabKey) ? 'block' : 'none';
+      });
+
+      if (!activeGroupId) return;
+
+      if (tabKey === 'featured') {
+        loadGroupPosts(activeGroupId);
+      } else if (tabKey === 'you') {
+        loadGroupYourPosts(activeGroupId);
+      } else if (tabKey === 'photos') {
+        loadGroupPhotos(activeGroupId);
+      } else if (tabKey === 'events') {
+        loadGroupEvents(activeGroupId);
+      } else if (tabKey === 'files') {
+        loadGroupFiles(activeGroupId);
+      }
+    }
 
     /* --- ანონიმურობის არჩევა --- */
     function toggleIdentityDropdown(event) {
@@ -830,22 +980,21 @@
         const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
         const isPrivate = activeGroupData.privacy === 'private';
 
-        const postBox = document.getElementById('dg-create-post-box');
         const lockedBox = document.getElementById('dg-private-locked-box');
-        const filterBar = document.getElementById('dg-feed-filter-bar');
-        const postsWall = document.getElementById('dg-posts-wall');
+        const subtabBtns = document.querySelector('.group-sub-tabs');
 
         if (isPrivate && !isMember) {
-          if (postBox) postBox.style.display = 'none';
-          if (filterBar) filterBar.style.display = 'none';
-          if (postsWall) postsWall.style.display = 'none';
           if (lockedBox) lockedBox.style.display = 'block';
+          if (subtabBtns) subtabBtns.style.display = 'none';
+          document.getElementById('subtab-view-featured').style.display = 'none';
+          document.getElementById('subtab-view-you').style.display = 'none';
+          document.getElementById('subtab-view-photos').style.display = 'none';
+          document.getElementById('subtab-view-events').style.display = 'none';
+          document.getElementById('subtab-view-files').style.display = 'none';
         } else {
-          if (postBox) postBox.style.display = 'flex';
-          if (filterBar) filterBar.style.display = 'flex';
-          if (postsWall) postsWall.style.display = 'block';
           if (lockedBox) lockedBox.style.display = 'none';
-          loadGroupPosts(groupId);
+          if (subtabBtns) subtabBtns.style.display = 'flex';
+          switchGroupSubTab('featured');
         }
       });
     }
@@ -1056,7 +1205,7 @@
       });
     }
 
-    /* --- ჯგუფის პოსტების ჩატვირთვა --- */
+    /* --- 1. რჩეული (Main Feed) ჩატვირთვა --- */
     function loadGroupPosts(groupId) {
       const wall = document.getElementById('dg-posts-wall');
       if (!wall) return;
@@ -1075,100 +1224,311 @@
           snap.forEach(doc => postsList.push(Object.assign({ id: doc.id }, doc.data())));
           
           postsList.sort((a, b) => {
-            let tA = 0;
-            if (a.created_at) {
-              tA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
-            }
-            let tB = 0;
-            if (b.created_at) {
-              tB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
-            }
+            let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime())) : 0;
+            let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime())) : 0;
             return tB - tA;
           });
 
-          let postsHtml = "";
-          const isGroupAdmin = activeGroupData.creator_id === currentUser.uid;
-
-          postsList.forEach(p => {
-            let dateStr = "ახლახანს";
-            if (p.created_at) {
-              let d = p.created_at.toDate ? p.created_at.toDate() : new Date(p.created_at);
-              dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            }
-
-            let mediaElem = "";
-            if (p.media_url) {
-              mediaElem = (p.media_type === 'video') ? 
-                `<video src="${p.media_url}" controls class="g-post-media"></video>` : 
-                `<img src="${p.media_url}" class="g-post-media">`;
-            }
-
-            const canManage = (p.user_id === currentUser.uid) || isGroupAdmin;
-            const isLiked = p.likes && p.likes.includes(currentUser.uid);
-            const likesCount = p.likes_count || (p.likes ? p.likes.length : 0);
-            const commentsCount = p.comments_count || 0;
-
-            const isAnon = p.is_anonymous === true;
-            const authorDisplayName = isAnon ? "🕶️ ანონიმური წევრი" : (p.author_name || "მომხმარებელი");
-            const authorDisplayAvatar = isAnon ? ANONYMOUS_AVATAR : (p.avatar_url || ANONYMOUS_AVATAR);
-            const avatarStyle = isAnon ? "style='filter: grayscale(100%) contrast(150%);'" : "";
-
-            const optionsHtml = canManage ? `
-              <div class="g-options-dropdown">
-                <button class="g-options-btn" onclick="toggleGroupPostMenu('${p.id}', event)">⋮</button>
-                <div class="g-options-menu" id="g-post-menu-${p.id}">
-                  <button onclick="editGroupPost('${p.id}', '${escapeHtml(p.content || '')}')">✏️ რედაქტირება</button>
-                  <button class="btn-danger" onclick="deleteGroupPost('${p.id}')">🗑️ წაშლა</button>
-                </div>
-              </div>
-            ` : '';
-
-            postsHtml += `
-              <div class="group-post-card" id="g-post-card-${p.id}">
-                <div class="g-post-header-row">
-                  <div class="g-post-head">
-                    <img src="${authorDisplayAvatar}" ${avatarStyle} class="g-post-avatar">
-                    <div>
-                      <div class="g-post-author">${authorDisplayName}</div>
-                      <div class="g-post-time">${dateStr} · 🌐</div>
-                    </div>
-                  </div>
-                  ${optionsHtml}
-                </div>
-
-                ${p.content ? `<div class="g-post-content" id="g-post-text-${p.id}">${escapeHtml(p.content)}</div>` : ''}
-                ${mediaElem}
-
-                <!-- Stats Row -->
-                <div class="g-post-stats-row">
-                  <div class="g-likes-count-badge" onclick="openGroupPostComments('${p.id}')">
-                    <span>❤️</span> <span id="g-like-count-${p.id}">${likesCount}</span>
-                  </div>
-                  <div class="g-comments-count-badge" onclick="openGroupPostComments('${p.id}')">
-                    <span id="g-comm-count-${p.id}">${commentsCount}</span> კომენტარი
-                  </div>
-                </div>
-
-                <!-- Actions Row -->
-                <div class="g-post-actions-row">
-                  <button class="g-act-btn ${isLiked ? 'liked' : ''}" id="g-like-btn-${p.id}" onclick="likeGroupPost('${p.id}')">
-                    <span>${isLiked ? '❤️' : '🤍'}</span> <span>მოწონება</span>
-                  </button>
-                  <button class="g-act-btn" onclick="openGroupPostComments('${p.id}')">
-                    <span>💬</span> <span>კომენტარი</span>
-                  </button>
-                  <button class="g-act-btn" onclick="shareGroupPost('${p.id}')">
-                    <span>↪️</span> <span>გაზიარება</span>
-                  </button>
-                </div>
-              </div>
-            `;
-          });
-          wall.innerHTML = postsHtml;
+          wall.innerHTML = renderPostsHTML(postsList);
         }).catch(err => {
           console.error("Posts loading error:", err);
           wall.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>პოსტების ჩატვირთვის შეცდომა</div>";
         });
+    }
+
+    /* --- 2. 👤 თქვენ (User's Posts) ჩატვირთვა --- */
+    function loadGroupYourPosts(groupId) {
+      const wall = document.getElementById('dg-your-posts-wall');
+      if (!wall) return;
+      wall.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>თქვენი პოსტები იტვირთება...</div>";
+
+      db.collection('group_posts')
+        .where('group_id', '==', groupId)
+        .where('user_id', '==', currentUser.uid)
+        .get()
+        .then(snap => {
+          if (snap.empty) {
+            wall.innerHTML = "<div style='text-align:center; color:#777; padding:35px;'>თქვენ ჯერ არ გამოგიქვეყნებიათ პოსტი ამ ჯგუფში.</div>";
+            return;
+          }
+
+          let postsList = [];
+          snap.forEach(doc => postsList.push(Object.assign({ id: doc.id }, doc.data())));
+          
+          postsList.sort((a, b) => {
+            let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime())) : 0;
+            let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime())) : 0;
+            return tB - tA;
+          });
+
+          wall.innerHTML = renderPostsHTML(postsList);
+        }).catch(err => {
+          console.error("Your posts loading error:", err);
+          wall.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ჩატვირთვის შეცდომა</div>";
+        });
+    }
+
+    /* --- 3. ფოტოები (Photos Gallery) ჩატვირთვა --- */
+    function loadGroupPhotos(groupId) {
+      const grid = document.getElementById('dg-photos-grid-box');
+      if (!grid) return;
+      grid.innerHTML = "<div style='grid-column: span 3; text-align:center; color:#888; padding:30px;'>ფოტოები იტვირთება...</div>";
+
+      db.collection('group_posts')
+        .where('group_id', '==', groupId)
+        .get()
+        .then(snap => {
+          let photos = [];
+          snap.forEach(doc => {
+            const p = doc.data();
+            if (p.media_url && p.media_type !== 'video') {
+              photos.push({ url: p.media_url, postId: doc.id });
+            }
+          });
+
+          if (photos.length === 0) {
+            grid.innerHTML = "<div style='grid-column: span 3; text-align:center; color:#777; padding:40px;'>ჯგუფში ფოტოები ჯერ არ არის ატვირთული.</div>";
+            return;
+          }
+
+          let html = "";
+          photos.forEach(ph => {
+            html += `
+              <div class="group-photo-cell" onclick="openGroupPostComments('${ph.postId}')">
+                <img src="${ph.url}" alt="Group Photo" loading="lazy">
+              </div>
+            `;
+          });
+          grid.innerHTML = html;
+        }).catch(err => {
+          console.error("Photos loading error:", err);
+          grid.innerHTML = "<div style='grid-column: span 3; text-align:center; color:#ff4d4f; padding:20px;'>ფოტოების ჩატვირთვის შეცდომა</div>";
+        });
+    }
+
+    /* --- 4. ღონისძიებები (Events) ჩატვირთვა --- */
+    function loadGroupEvents(groupId) {
+      const list = document.getElementById('dg-events-list');
+      if (!list) return;
+      list.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>ღონისძიებები იტვირთება...</div>";
+
+      db.collection('group_events')
+        .where('group_id', '==', groupId)
+        .get()
+        .then(snap => {
+          if (snap.empty) {
+            list.innerHTML = "<div style='text-align:center; color:#777; padding:30px;'>დაგეგმილი ღონისძიებები არ არის.</div>";
+            return;
+          }
+
+          let eventsList = [];
+          snap.forEach(doc => eventsList.push(Object.assign({ id: doc.id }, doc.data())));
+          eventsList.sort((a, b) => (new Date(a.date || 0)) - (new Date(b.date || 0)));
+
+          let html = "";
+          eventsList.forEach(ev => {
+            const dateObj = ev.date ? new Date(ev.date) : new Date();
+            const monthStr = dateObj.toLocaleDateString('ka-GE', { month: 'short' });
+            const dayStr = dateObj.getDate();
+
+            html += `
+              <div class="group-event-card">
+                <div class="event-calendar-box">
+                  <span class="event-cal-month">${monthStr}</span>
+                  <span class="event-cal-day">${dayStr}</span>
+                </div>
+                <div class="event-info">
+                  <div class="event-title">${escapeHtml(ev.title || 'ღონისძიება')}</div>
+                  <div class="event-time">🕒 ${ev.date || 'თარიღი უცნობია'}</div>
+                  ${ev.location ? `<div class="event-loc">📍 ${escapeHtml(ev.location)}</div>` : ''}
+                </div>
+              </div>
+            `;
+          });
+          list.innerHTML = html;
+        }).catch(err => {
+          console.error("Events loading error:", err);
+          list.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ღონისძიებების ჩატვირთვის შეცდომა</div>";
+        });
+    }
+
+    function openCreateEventModal() {
+      document.getElementById('create-event-modal').style.display = 'flex';
+    }
+    function closeCreateEventModal() {
+      document.getElementById('create-event-modal').style.display = 'none';
+    }
+
+    function submitCreateEvent() {
+      const title = document.getElementById('new-event-title').value.trim();
+      const date = document.getElementById('new-event-date').value;
+      const loc = document.getElementById('new-event-location').value.trim();
+      const desc = document.getElementById('new-event-desc').value.trim();
+      const btn = document.getElementById('btn-submit-event');
+
+      if (!title || !date) {
+        alert("გთხოვთ მიუთითოთ ღონისძიების სახელი და თარიღი");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "იქმნება...";
+
+      db.collection('group_events').add({
+        group_id: activeGroupId,
+        creator_id: currentUser.uid,
+        title: title,
+        date: date,
+        location: loc,
+        description: desc,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        btn.disabled = false;
+        btn.innerText = "ღონისძიების შექმნა";
+        document.getElementById('new-event-title').value = "";
+        document.getElementById('new-event-date').value = "";
+        document.getElementById('new-event-location').value = "";
+        document.getElementById('new-event-desc').value = "";
+        closeCreateEventModal();
+        loadGroupEvents(activeGroupId);
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "ღონისძიების შექმნა";
+      });
+    }
+
+    /* --- 5. ფაილები (Files & Media) ჩატვირთვა --- */
+    function loadGroupFiles(groupId) {
+      const list = document.getElementById('dg-files-list');
+      if (!list) return;
+      list.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>ფაილები იტვირთება...</div>";
+
+      db.collection('group_posts')
+        .where('group_id', '==', groupId)
+        .get()
+        .then(snap => {
+          let files = [];
+          snap.forEach(doc => {
+            const p = doc.data();
+            if (p.media_url) {
+              files.push({
+                url: p.media_url,
+                type: p.media_type || 'file',
+                author: p.author_name || 'მომხმარებელი',
+                date: p.created_at ? new Date(p.created_at.toDate ? p.created_at.toDate() : p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'დღეს'
+              });
+            }
+          });
+
+          if (files.length === 0) {
+            list.innerHTML = "<div style='text-align:center; color:#777; padding:30px;'>ჯგუფში გაზიარებული ფაილები არ არის.</div>";
+            return;
+          }
+
+          let html = "";
+          files.forEach(f => {
+            const icon = f.type === 'video' ? '🎬' : '🖼️';
+            const typeLabel = f.type === 'video' ? 'ვიდეო ფაილი' : 'ფოტო ფაილი';
+
+            html += `
+              <div class="group-file-card">
+                <div class="file-icon-box">${icon}</div>
+                <div class="file-details">
+                  <div class="file-name">${typeLabel}</div>
+                  <div class="file-meta">ატვირთა: ${f.author} · ${f.date}</div>
+                </div>
+                <a href="${f.url}" target="_blank" class="file-download-btn">ნახვა</a>
+              </div>
+            `;
+          });
+          list.innerHTML = html;
+        }).catch(err => {
+          console.error("Files loading error:", err);
+          list.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ფაილების ჩატვირთვის შეცდომა</div>";
+        });
+    }
+
+    /* --- დამხმარე ფუნქცია პოსტების რენდერისთვის --- */
+    function renderPostsHTML(postsList) {
+      let postsHtml = "";
+      const isGroupAdmin = activeGroupData.creator_id === currentUser.uid;
+
+      postsList.forEach(p => {
+        let dateStr = "ახლახანს";
+        if (p.created_at) {
+          let d = p.created_at.toDate ? p.created_at.toDate() : new Date(p.created_at);
+          dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        let mediaElem = "";
+        if (p.media_url) {
+          mediaElem = (p.media_type === 'video') ? 
+            `<video src="${p.media_url}" controls class="g-post-media"></video>` : 
+            `<img src="${p.media_url}" class="g-post-media">`;
+        }
+
+        const canManage = (p.user_id === currentUser.uid) || isGroupAdmin;
+        const isLiked = p.likes && p.likes.includes(currentUser.uid);
+        const likesCount = p.likes_count || (p.likes ? p.likes.length : 0);
+        const commentsCount = p.comments_count || 0;
+
+        const isAnon = p.is_anonymous === true;
+        const authorDisplayName = isAnon ? "🕶️ ანონიმური წევრი" : (p.author_name || "მომხმარებელი");
+        const authorDisplayAvatar = isAnon ? ANONYMOUS_AVATAR : (p.avatar_url || ANONYMOUS_AVATAR);
+        const avatarStyle = isAnon ? "style='filter: grayscale(100%) contrast(150%);'" : "";
+
+        const optionsHtml = canManage ? `
+          <div class="g-options-dropdown">
+            <button class="g-options-btn" onclick="toggleGroupPostMenu('${p.id}', event)">⋮</button>
+            <div class="g-options-menu" id="g-post-menu-${p.id}">
+              <button onclick="editGroupPost('${p.id}', '${escapeHtml(p.content || '')}')">✏️ რედაქტირება</button>
+              <button class="btn-danger" onclick="deleteGroupPost('${p.id}')">🗑️ წაშლა</button>
+            </div>
+          </div>
+        ` : '';
+
+        postsHtml += `
+          <div class="group-post-card" id="g-post-card-${p.id}">
+            <div class="g-post-header-row">
+              <div class="g-post-head">
+                <img src="${authorDisplayAvatar}" ${avatarStyle} class="g-post-avatar">
+                <div>
+                  <div class="g-post-author">${authorDisplayName}</div>
+                  <div class="g-post-time">${dateStr} · 🌐</div>
+                </div>
+              </div>
+              ${optionsHtml}
+            </div>
+
+            ${p.content ? `<div class="g-post-content" id="g-post-text-${p.id}">${escapeHtml(p.content)}</div>` : ''}
+            ${mediaElem}
+
+            <div class="g-post-stats-row">
+              <div class="g-likes-count-badge" onclick="openGroupPostComments('${p.id}')">
+                <span>❤️</span> <span id="g-like-count-${p.id}">${likesCount}</span>
+              </div>
+              <div class="g-comments-count-badge" onclick="openGroupPostComments('${p.id}')">
+                <span id="g-comm-count-${p.id}">${commentsCount}</span> კომენტარი
+              </div>
+            </div>
+
+            <div class="g-post-actions-row">
+              <button class="g-act-btn ${isLiked ? 'liked' : ''}" id="g-like-btn-${p.id}" onclick="likeGroupPost('${p.id}')">
+                <span>${isLiked ? '❤️' : '🤍'}</span> <span>მოწონება</span>
+              </button>
+              <button class="g-act-btn" onclick="openGroupPostComments('${p.id}')">
+                <span>💬</span> <span>კომენტარი</span>
+              </button>
+              <button class="g-act-btn" onclick="shareGroupPost('${p.id}')">
+                <span>↪️</span> <span>გაზიარება</span>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      return postsHtml;
     }
 
     /* --- 3 წერტილის მენიუს ფუნქციები --- */
@@ -1261,9 +1621,9 @@
         snap.forEach(d => allComments.push(Object.assign({ id: d.id }, d.data())));
 
         allComments.sort((a, b) => {
-          let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
-          let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
-          return tB - tA;
+          let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime())) : 0;
+          let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime())) : 0;
+          return tA - tB;
         });
 
         const mainComments = allComments.filter(c => !c.parent_id);
@@ -1479,7 +1839,7 @@
     function setUploadProgressRing(percent) {
       const circle = document.getElementById('dg-progress-circle');
       const text = document.getElementById('dg-progress-percent');
-      const circumference = 81.68; // 2 * PI * 13
+      const circumference = 81.68;
 
       const offset = circumference - (percent / 100) * circumference;
       if (circle) circle.style.strokeDashoffset = offset;
@@ -1516,7 +1876,6 @@
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const file = fileInput.files[0];
 
-        // 🚨 100MB ლიმიტის შემოწმება
         if (file.size > 100 * 1024 * 1024) {
           alert("⚠️ ფაილის ზომა აღემატება 100 MB-ს! გთხოვთ აირჩიოთ უფრო მცირე ზომის ვიდეო/ფოტო.");
           clearDirectSelectedFile();
@@ -1588,7 +1947,7 @@
             textInput.placeholder = isAnonymousPosting ? "დაწერეთ ანონიმურად..." : "დაწერეთ რამე ჯგუფში...";
           }
           clearDirectSelectedFile();
-          loadGroupPosts(activeGroupId);
+          switchGroupSubTab('featured');
         }).catch(err => {
           hideUploadProgressUI();
           alert("შეცდომა: " + err.message);
