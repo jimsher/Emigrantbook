@@ -328,7 +328,7 @@
     .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 10px; padding: 0 16px; white-space: pre-wrap; word-break: break-word; }
     .g-post-media { width: 100%; border-radius: 0; max-height: 550px; object-fit: cover; margin-top: 4px; display: block; }
 
-    /* სტატისტიკის ზოლი */
+    /* სტატისტიკის ზოლი (გულებით) */
     .g-post-stats-row {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 16px 8px 16px; font-size: 12px; color: #8a8f9d;
@@ -337,7 +337,7 @@
     .g-likes-count-badge { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .g-comments-count-badge { cursor: pointer; }
 
-    /* ქვედა მოქმედებების ღილაკები */
+    /* ქვედა მოქმედებების ღილაკები (Like გულით) */
     .g-post-actions-row {
       display: grid; grid-template-columns: repeat(3, 1fr);
       padding: 4px 8px; border-top: 1px solid rgba(255,255,255,0.03);
@@ -407,7 +407,7 @@
       color: #dcae36; font-size: 12px; font-weight: bold; text-decoration: none;
     }
 
-    /* Modals */
+    /* Modals & Invite Page */
     .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
       z-index: 9999; align-items: flex-end; justify-content: center;
@@ -429,6 +429,22 @@
       width: 100%; background: #dcae36; color: #111; font-weight: 700;
       padding: 13px; border-radius: 10px; border: none; cursor: pointer;
       font-size: 15px; margin-top: 8px;
+    }
+
+    /* მეგობრების მოწვევის ბარათები */
+    .invite-friend-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; background: #14141a; border: 1px solid #22222e;
+      border-radius: 10px; margin-bottom: 8px;
+    }
+    .invite-friend-info { display: flex; align-items: center; gap: 10px; }
+    .invite-friend-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .btn-invite-action {
+      background: #dcae36; color: #111; border: none; padding: 7px 14px;
+      border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    .btn-invite-action.invited {
+      background: #282834; color: #8a8f9d; cursor: default;
     }
 
     /* კომენტარების დიზაინი */
@@ -555,7 +571,7 @@
           <button class="btn-membership-stacked" id="dg-btn-membership" onclick="toggleCurrentGroupMembership()">
             <img src="icons/users.svg" class="g-svg-icon" alt="Joined"> თქვენ გაწევრიანდით ▾
           </button>
-          <button class="btn-invite-stacked" onclick="shareGroupLink()">
+          <button class="btn-invite-stacked" onclick="openInviteFriendsModal()">
             <img src="icons/user-round-plus.svg" class="g-svg-icon-dark" alt="Invite"> მოიწვიეთ
           </button>
         </div>
@@ -745,6 +761,20 @@
       <textarea id="new-event-desc" class="input-field" style="resize: none; height: 80px;" placeholder="დამატებითი დეტალები..."></textarea>
 
       <button class="btn-gold" id="btn-submit-event" onclick="submitCreateEvent()">ღონისძიების შექმნა</button>
+    </div>
+  </div>
+
+  <!-- 👥 მეგობრების მოწვევის მოდალი -->
+  <div class="modal-overlay" id="invite-friends-modal" onclick="closeInviteFriendsModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" style="margin-bottom: 12px;">მეგობრების მოწვევა ჯგუფში</h2>
+      
+      <div id="invite-friends-list-box" style="max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 10px;">
+        <div style="text-align: center; color: #888; padding: 25px;">მეგობრები იტვირთება...</div>
+      </div>
+
+      <button class="btn-gold" style="background: #24242e; color: #fff; margin-top: 6px;" onclick="closeInviteFriendsModal()">დახურვა</button>
     </div>
   </div>
 
@@ -1526,7 +1556,7 @@
         });
     }
 
-    /* --- დამხმარე ფუნქცია პოსტების რენდერისთვის --- */
+    /* --- დამხმარე ფუნქცია პოსტების რენდერისთვის (❤️ და 🤍 გულებით) --- */
     function renderPostsHTML(postsList) {
       let postsHtml = "";
       const isGroupAdmin = activeGroupData.creator_id === currentUser.uid;
@@ -1590,20 +1620,20 @@
             ${p.content ? `<div class="g-post-content" id="g-post-text-${p.id}">${escapeHtml(p.content)}</div>` : ''}
             ${mediaElem}
 
+            <!-- Stats Row -->
             <div class="g-post-stats-row">
               <div class="g-likes-count-badge" onclick="openGroupPostComments('${p.id}')">
-                <img src="icons/wand-sparkles.svg" class="g-svg-icon-gold" style="width:14px; height:14px;" alt="Likes">
-                <span id="g-like-count-${p.id}">${likesCount}</span>
+                <span>❤️</span> <span id="g-like-count-${p.id}">${likesCount}</span>
               </div>
               <div class="g-comments-count-badge" onclick="openGroupPostComments('${p.id}')">
                 <span id="g-comm-count-${p.id}">${commentsCount}</span> კომენტარი
               </div>
             </div>
 
+            <!-- Actions Row -->
             <div class="g-post-actions-row">
               <button class="g-act-btn ${isLiked ? 'liked' : ''}" id="g-like-btn-${p.id}" onclick="likeGroupPost('${p.id}')">
-                <img src="icons/wand-sparkles.svg" class="${isLiked ? 'g-svg-icon-red' : 'g-svg-icon'}" alt="Like">
-                <span>მოწონება</span>
+                <span>${isLiked ? '❤️' : '🤍'}</span> <span>მოწონება</span>
               </button>
               <button class="g-act-btn" onclick="openGroupPostComments('${p.id}')">
                 <img src="icons/message-circle-more.svg" class="g-svg-icon" alt="Comment">
@@ -1654,7 +1684,7 @@
       }).catch(err => alert("შეცდომა: " + err.message));
     }
 
-    /* --- ლაიქის ფუნქცია --- */
+    /* --- ლაიქის ფუნქცია (❤️ და 🤍) --- */
     function likeGroupPost(postId) {
       const postRef = db.collection('group_posts').doc(postId);
       const btn = document.getElementById(`g-like-btn-${postId}`);
@@ -1673,7 +1703,7 @@
           }).then(() => {
             if (btn) {
               btn.classList.remove('liked');
-              btn.innerHTML = `<img src="icons/wand-sparkles.svg" class="g-svg-icon" alt="Like"> <span>მოწონება</span>`;
+              btn.innerHTML = `<span>🤍</span> <span>მოწონება</span>`;
             }
             if (countEl) countEl.innerText = Math.max(0, parseInt(countEl.innerText || 1) - 1);
           });
@@ -1684,12 +1714,102 @@
           }).then(() => {
             if (btn) {
               btn.classList.add('liked');
-              btn.innerHTML = `<img src="icons/wand-sparkles.svg" class="g-svg-icon-red" alt="Like"> <span>მოწონება</span>`;
+              btn.innerHTML = `<span>❤️</span> <span>მოწონება</span>`;
             }
             if (countEl) countEl.innerText = parseInt(countEl.innerText || 0) + 1;
           });
         }
       });
+    }
+
+    /* --- 👥 მეგობრების მოწვევის სისტემა --- */
+    function openInviteFriendsModal() {
+      const modal = document.getElementById('invite-friends-modal');
+      const listBox = document.getElementById('invite-friends-list-box');
+      modal.style.display = 'flex';
+      listBox.innerHTML = "<div style='text-align:center; color:#888; padding:25px;'>მეგობრების სია იტვირთება...</div>";
+
+      // 1. მეგობრების წამოღება
+      Promise.all([
+        db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+        db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+      ]).then(results => {
+        let friendIds = [];
+        results[0].forEach(d => friendIds.push(d.data().receiver_id));
+        results[1].forEach(d => friendIds.push(d.data().sender_id));
+
+        if (friendIds.length === 0) {
+          listBox.innerHTML = "<div style='text-align:center; color:#777; padding:30px;'>მეგობრები არ გყავთ დასამატებლად.</div>";
+          return;
+        }
+
+        // 2. პროფილების ჩატვირთვა
+        let profilePromises = friendIds.map(fId => db.collection('profiles').doc(fId).get());
+        Promise.all(profilePromises).then(snaps => {
+          let html = "";
+          snaps.forEach(s => {
+            if (!s.exists) return;
+            const fData = s.data();
+            const fId = s.id;
+            const fName = fData.full_name || "მომხმარებელი";
+            const fAvatar = fData.avatar_url || "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+            const isAlreadyMember = activeGroupData.members && activeGroupData.members.includes(fId);
+
+            html += `
+              <div class="invite-friend-row">
+                <div class="invite-friend-info">
+                  <img src="${fAvatar}" class="invite-friend-avatar" alt="Avatar">
+                  <div>
+                    <div style="font-weight: 700; color: #fff; font-size: 14px;">${escapeHtml(fName)}</div>
+                    <div style="font-size: 11px; color: #8a8f9d;">${isAlreadyMember ? 'უკვე წევრია' : 'მეგობარი'}</div>
+                  </div>
+                </div>
+                ${isAlreadyMember ? 
+                  `<button class="btn-invite-action invited">წევრია</button>` : 
+                  `<button class="btn-invite-action" id="invite-btn-${fId}" onclick="sendGroupInviteToFriend('${fId}', '${escapeHtml(fName)}')">მოწვევა</button>`
+                }
+              </div>
+            `;
+          });
+          listBox.innerHTML = html || "<div style='text-align:center; color:#777; padding:30px;'>მეგობრები არ მოიძებნა</div>";
+        });
+      }).catch(err => {
+        console.error("Invite friends error:", err);
+        listBox.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ჩატვირთვის შეცდომა</div>";
+      });
+    }
+
+    function sendGroupInviteToFriend(friendId, friendName) {
+      const btn = document.getElementById(`invite-btn-${friendId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "იგზავნება...";
+      }
+
+      db.collection('group_invites').add({
+        group_id: activeGroupId,
+        group_name: activeGroupData.name,
+        inviter_id: currentUser.uid,
+        inviter_name: (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email,
+        invited_user_id: friendId,
+        status: 'pending',
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        if (btn) {
+          btn.classList.add('invited');
+          btn.innerText = "გაგზავნილია ✓";
+        }
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = "მოწვევა";
+        }
+      });
+    }
+
+    function closeInviteFriendsModal() {
+      document.getElementById('invite-friends-modal').style.display = 'none';
     }
 
     /* --- კომენტარების მოდალი --- */
