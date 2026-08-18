@@ -114,15 +114,29 @@
       background: rgba(20, 20, 26, 0.65); backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.15);
       color: #ffffff; display: flex; align-items: center;
-      justify-content: center; cursor: pointer;
+      justify-content: center; cursor: pointer; position: relative;
+    }
+    .admin-badge-dot {
+      position: absolute; top: 2px; right: 2px;
+      background: #ff4757; color: #fff; font-size: 10px; font-weight: 800;
+      width: 16px; height: 16px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; border: 2px solid #141418;
     }
 
-    /* Cover Wrapper */
+    /* Cover Wrapper with Camera Upload Button */
     .group-cover-wrapper {
       position: relative; width: 100%; height: 215px;
       background: #1c1c24; overflow: hidden;
     }
     .group-cover-img { width: 100%; height: 100%; object-fit: cover; }
+    .cover-upload-btn {
+      position: absolute; bottom: 12px; right: 12px;
+      background: rgba(20, 20, 26, 0.85); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px; padding: 6px 12px; display: flex;
+      align-items: center; gap: 6px; color: #fff; font-size: 12px;
+      font-weight: 600; cursor: pointer; z-index: 5;
+    }
     
     /* ადმინისტრატორის ზოლი */
     .admin-ribbon-bar {
@@ -328,7 +342,7 @@
     .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 10px; padding: 0 16px; white-space: pre-wrap; word-break: break-word; }
     .g-post-media { width: 100%; border-radius: 0; max-height: 550px; object-fit: cover; margin-top: 4px; display: block; }
 
-    /* სტატისტიკის ზოლი (გულებით) */
+    /* სტატისტიკის ზოლი */
     .g-post-stats-row {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 16px 8px 16px; font-size: 12px; color: #8a8f9d;
@@ -337,7 +351,7 @@
     .g-likes-count-badge { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .g-comments-count-badge { cursor: pointer; }
 
-    /* ქვედა მოქმედებების ღილაკები (Like გულით) */
+    /* ქვედა მოქმედებების ღილაკები */
     .g-post-actions-row {
       display: grid; grid-template-columns: repeat(3, 1fr);
       padding: 4px 8px; border-top: 1px solid rgba(255,255,255,0.03);
@@ -351,7 +365,7 @@
     .g-act-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
     .g-act-btn.liked { color: #ff4757; }
 
-    /* 3. ქვეტაბების დიზაინები (Photos, Events, Files) */
+    /* 3. ქვეტაბების დიზაინები */
     .group-photos-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
       padding: 4px 0;
@@ -447,6 +461,12 @@
       background: #282834; color: #8a8f9d; cursor: default;
     }
 
+    /* ადმინისტრატორის მოდერაციის მოდალის პოსტის ბარათები */
+    .admin-mod-post-card {
+      background: #14141a; border: 1px solid #2a2a38; border-radius: 12px;
+      padding: 12px; margin-bottom: 12px;
+    }
+
     /* კომენტარების დიზაინი */
     .g-comment-wrapper { margin-bottom: 12px; }
     .g-comment-item { display: flex; gap: 10px; align-items: flex-start; }
@@ -536,15 +556,24 @@
           <button class="nav-round-btn" onclick="alert('ძებნა მალე დაემატება')">
             <img src="icons/search.svg" class="g-svg-icon" alt="Search">
           </button>
-          <button class="nav-round-btn" onclick="shareGroupLink()">
-            <img src="icons/settings.svg" class="g-svg-icon" alt="Options">
+          
+          <!-- ადმინისტრატორის მართვის ღილაკი (ხრახნილი) -->
+          <button class="nav-round-btn" id="dg-admin-settings-btn" style="display: none;" onclick="openAdminModerationModal()" title="ადმინისტრატორის მართვა">
+            <img src="icons/settings.svg" class="g-svg-icon-gold" alt="Admin Settings">
+            <div class="admin-badge-dot" id="dg-admin-pending-badge" style="display: none;">0</div>
           </button>
         </div>
       </div>
 
-      <!-- Group Cover -->
+      <!-- Group Cover with Upload Trigger for Admin -->
       <div class="group-cover-wrapper">
         <img id="dg-cover" src="" class="group-cover-img" alt="Cover">
+        
+        <input type="file" id="group-cover-file-input" accept="image/*" style="display: none;" onchange="uploadGroupCoverFile()">
+        <button class="cover-upload-btn" id="dg-cover-upload-btn" style="display: none;" onclick="triggerGroupCoverPick()">
+          <img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera">
+          <span>ქავერის შეცვლა</span>
+        </button>
       </div>
 
       <!-- ადმინისტრატორის ზოლი -->
@@ -594,16 +623,6 @@
             <img src="icons/database.svg" class="g-svg-icon-sm" alt="Files"> ფაილები
           </button>
         </div>
-      </div>
-
-      <!-- ადმინისტრატორის მართვის პანელი -->
-      <div class="admin-requests-box" id="admin-requests-container">
-        <div class="admin-requests-header">
-          <img src="icons/megaphone.svg" class="g-svg-icon-gold" alt="Requests">
-          <span>გაწევრიანების მოთხოვნები</span>
-          <span id="admin-requests-count" style="background:#dcae36; color:#111; font-size:11px; padding:2px 6px; border-radius:10px;">0</span>
-        </div>
-        <div id="admin-requests-list"></div>
       </div>
 
       <!-- დახურული ჯგუფის შეტყობინება -->
@@ -775,6 +794,39 @@
       </div>
 
       <button class="btn-gold" style="background: #24242e; color: #fff; margin-top: 6px;" onclick="closeInviteFriendsModal()">დახურვა</button>
+    </div>
+  </div>
+
+  <!-- 👑 ადმინისტრატორის მოდერაციის მოდალი (ხრახნილზე დაჭერით) -->
+  <div class="modal-overlay" id="admin-moderation-modal" onclick="closeAdminModerationModal()">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" style="margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+        <img src="icons/settings.svg" class="g-svg-icon-gold" alt="Admin">
+        <span>ჯგუფის მართვა და მოდერაცია</span>
+      </h2>
+      
+      <!-- 1. მომლოდინე წევრები -->
+      <div style="margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 700; color: #dcae36; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <img src="icons/users.svg" class="g-svg-icon-gold" alt="Members"> გაწევრიანების მოთხოვნები
+        </div>
+        <div id="admin-mod-members-list">
+          <div style="color: #666; font-size: 12px;">მოთხოვნები არ არის</div>
+        </div>
+      </div>
+
+      <!-- 2. მომლოდინე პოსტები -->
+      <div style="margin-bottom: 12px;">
+        <div style="font-size: 13px; font-weight: 700; color: #dcae36; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <img src="icons/pen.svg" class="g-svg-icon-gold" alt="Posts"> დასადასტურებელი პოსტები
+        </div>
+        <div id="admin-mod-posts-list" style="max-height: 280px; overflow-y: auto;">
+          <div style="color: #666; font-size: 12px;">მომლოდინე პოსტები არ არის</div>
+        </div>
+      </div>
+
+      <button class="btn-gold" style="background: #24242e; color: #fff; margin-top: 8px;" onclick="closeAdminModerationModal()">დახურვა</button>
     </div>
   </div>
 
@@ -1073,8 +1125,14 @@
           ${isPriv ? "დახურული ჯგუფი" : "საჯარო ჯგუფი"}
         `;
 
+        // ადმინისტრატორის ღილაკები
+        const adminSettingsBtn = document.getElementById('dg-admin-settings-btn');
+        const coverUploadBtn = document.getElementById('dg-cover-upload-btn');
+        if (adminSettingsBtn) adminSettingsBtn.style.display = isAdmin ? 'flex' : 'none';
+        if (coverUploadBtn) coverUploadBtn.style.display = isAdmin ? 'flex' : 'none';
+
         updateGroupMembershipUI();
-        checkAdminPendingRequests();
+        checkAdminPendingCount();
 
         const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
         const isPrivate = activeGroupData.privacy === 'private';
@@ -1234,47 +1292,171 @@
       }
     }
 
-    /* --- ადმინისტრატორის მიერ მოთხოვნების მართვა --- */
-    function checkAdminPendingRequests() {
-      const container = document.getElementById('admin-requests-container');
-      const list = document.getElementById('admin-requests-list');
-      const countEl = document.getElementById('admin-requests-count');
+    /* --- ქავერ ფოტოს ატვირთვა (ადმინისთვის) --- */
+    function triggerGroupCoverPick() {
+      const fileInput = document.getElementById('group-cover-file-input');
+      if (fileInput) fileInput.click();
+    }
 
+    function uploadGroupCoverFile() {
+      const fileInput = document.getElementById('group-cover-file-input');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) return;
+      const file = fileInput.files[0];
+
+      const btn = document.getElementById('dg-cover-upload-btn');
+      if (btn) btn.innerText = "იტვირთება...";
+
+      uploadMediaFile(file, function(publicUrl) {
+        if (publicUrl) {
+          db.collection('groups').doc(activeGroupId).update({
+            cover_url: publicUrl
+          }).then(() => {
+            document.getElementById('dg-cover').src = publicUrl;
+            if (btn) btn.innerHTML = `<img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera"> <span>ქავერის შეცვლა</span>`;
+          });
+        }
+      });
+    }
+
+    /* --- 👑 ადმინისტრატორის მოდერაციის მოდალი (ხრახნილზე) --- */
+    function checkAdminPendingCount() {
       const isAdmin = activeGroupData.creator_id === currentUser.uid;
-      const pending = activeGroupData.pending_members || [];
+      const badge = document.getElementById('dg-admin-pending-badge');
+      if (!isAdmin || !badge) return;
 
-      if (!isAdmin || pending.length === 0) {
-        container.style.display = "none";
-        return;
+      const pendingMembersCount = (activeGroupData.pending_members || []).length;
+
+      db.collection('group_posts')
+        .where('group_id', '==', activeGroupId)
+        .where('status', '==', 'pending')
+        .get()
+        .then(snap => {
+          const pendingPostsCount = snap.size;
+          const totalCount = pendingMembersCount + pendingPostsCount;
+
+          if (totalCount > 0) {
+            badge.innerText = totalCount;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }).catch(() => {
+          if (pendingMembersCount > 0) {
+            badge.innerText = pendingMembersCount;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        });
+    }
+
+    function openAdminModerationModal() {
+      const modal = document.getElementById('admin-moderation-modal');
+      const membersList = document.getElementById('admin-mod-members-list');
+      const postsList = document.getElementById('admin-mod-posts-list');
+      modal.style.display = 'flex';
+
+      // 1. მომლოდინე წევრები
+      const pending = activeGroupData.pending_members || [];
+      if (pending.length === 0) {
+        membersList.innerHTML = "<div style='color:#666; font-size:12px; padding:6px 0;'>მოთხოვნები არ არის</div>";
+      } else {
+        membersList.innerHTML = "<div style='color:#888; font-size:12px;'>იტვირთება...</div>";
+        let promises = pending.map(uid => db.collection('profiles').doc(uid).get());
+        Promise.all(promises).then(snaps => {
+          let html = "";
+          snaps.forEach(s => {
+            const uData = s.exists ? s.data() : {};
+            const uId = s.id;
+            const name = uData.full_name || "მომხმარებელი";
+            const avatar = uData.avatar_url || ANONYMOUS_AVATAR;
+
+            html += `
+              <div class="pending-user-card" id="mod-member-${uId}">
+                <div class="pending-user-info">
+                  <img src="${avatar}" class="pending-user-avatar">
+                  <span style="font-size:13px; font-weight:600; color:#fff;">${escapeHtml(name)}</span>
+                </div>
+                <div class="pending-actions">
+                  <button class="btn-approve" onclick="approvePendingMember('${uId}')">✓</button>
+                  <button class="btn-reject" onclick="rejectPendingMember('${uId}')">✕</button>
+                </div>
+              </div>
+            `;
+          });
+          membersList.innerHTML = html;
+        });
       }
 
-      container.style.display = "block";
-      countEl.innerText = pending.length;
-      list.innerHTML = "<div style='color:#888; font-size:12px;'>მომხმარებლები იტვირთება...</div>";
+      // 2. მომლოდინე პოსტები
+      postsList.innerHTML = "<div style='color:#888; font-size:12px;'>პოსტები იტვირთება...</div>";
+      db.collection('group_posts')
+        .where('group_id', '==', activeGroupId)
+        .where('status', '==', 'pending')
+        .get()
+        .then(snap => {
+          if (snap.empty) {
+            postsList.innerHTML = "<div style='color:#666; font-size:12px; padding:6px 0;'>დასადასტურებელი პოსტები არ არის</div>";
+            return;
+          }
 
-      let promises = pending.map(uid => db.collection('profiles').doc(uid).get());
-      Promise.all(promises).then(snaps => {
-        let html = "";
-        snaps.forEach(s => {
-          const uData = s.exists ? s.data() : {};
-          const uId = s.id;
-          const name = uData.full_name || "მომხმარებელი";
-          const avatar = uData.avatar_url || "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+          let html = "";
+          snap.forEach(docSnap => {
+            const p = docSnap.data();
+            const pId = docSnap.id;
 
-          html += `
-            <div class="pending-user-card" id="pending-card-${uId}">
-              <div class="pending-user-info">
-                <img src="${avatar}" class="pending-user-avatar">
-                <span style="font-size:13px; font-weight:600; color:#fff;">${name}</span>
+            let mediaPreview = "";
+            if (p.media_url) {
+              mediaPreview = (p.media_type === 'video') ? 
+                `<div style="font-size:11px; color:#dcae36; margin-top:4px;">🎬 ვიდეო ფაილი მიმაგრებულია</div>` : 
+                `<img src="${p.media_url}" style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-top:6px;">`;
+            }
+
+            html += `
+              <div class="admin-mod-post-card" id="mod-post-${pId}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="${p.avatar_url || ANONYMOUS_AVATAR}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
+                    <span style="font-size:13px; font-weight:700; color:#fff;">${escapeHtml(p.author_name || 'მომხმარებელი')}</span>
+                  </div>
+                  <div class="pending-actions">
+                    <button class="btn-approve" onclick="approveGroupPost('${pId}')">დადასტურება</button>
+                    <button class="btn-reject" onclick="rejectGroupPost('${pId}')">უარყოფა</button>
+                  </div>
+                </div>
+                <div style="font-size:12px; color:#cfd3dc; line-height:1.4;">${escapeHtml(p.content || '')}</div>
+                ${mediaPreview}
               </div>
-              <div class="pending-actions">
-                <button class="btn-approve" onclick="approvePendingMember('${uId}')">დადასტურება</button>
-                <button class="btn-reject" onclick="rejectPendingMember('${uId}')">უარყოფა</button>
-              </div>
-            </div>
-          `;
+            `;
+          });
+          postsList.innerHTML = html;
+        }).catch(err => {
+          postsList.innerHTML = "<div style='color:#666; font-size:12px;'>დასადასტურებელი პოსტები არ არის</div>";
         });
-        list.innerHTML = html;
+    }
+
+    function closeAdminModerationModal() {
+      document.getElementById('admin-moderation-modal').style.display = 'none';
+      checkAdminPendingCount();
+    }
+
+    function approveGroupPost(postId) {
+      db.collection('group_posts').doc(postId).update({
+        status: 'approved'
+      }).then(() => {
+        const el = document.getElementById(`mod-post-${postId}`);
+        if (el) el.remove();
+        checkAdminPendingCount();
+        loadGroupPosts(activeGroupId);
+      });
+    }
+
+    function rejectGroupPost(postId) {
+      if (!confirm("გსურთ ამ პოსტის უარყოფა და წაშლა?")) return;
+      db.collection('group_posts').doc(postId).delete().then(() => {
+        const el = document.getElementById(`mod-post-${postId}`);
+        if (el) el.remove();
+        checkAdminPendingCount();
       });
     }
 
@@ -1290,7 +1472,9 @@
         activeGroupData.members.push(userId);
         activeGroupData.members_count = (activeGroupData.members_count || 0) + 1;
         document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
-        checkAdminPendingRequests();
+        const el = document.getElementById(`mod-member-${userId}`);
+        if (el) el.remove();
+        checkAdminPendingCount();
       });
     }
 
@@ -1300,7 +1484,9 @@
         pending_members: firebase.firestore.FieldValue.arrayRemove(userId)
       }).then(() => {
         activeGroupData.pending_members = (activeGroupData.pending_members || []).filter(id => id !== userId);
-        checkAdminPendingRequests();
+        const el = document.getElementById(`mod-member-${userId}`);
+        if (el) el.remove();
+        checkAdminPendingCount();
       });
     }
 
@@ -1314,13 +1500,21 @@
         .where('group_id', '==', groupId)
         .get()
         .then(snap => {
-          if (snap.empty) {
+          let postsList = [];
+          const isGroupAdmin = activeGroupData.creator_id === currentUser.uid;
+
+          snap.forEach(doc => {
+            const pData = Object.assign({ id: doc.id }, doc.data());
+            // ფიდში ჩანს დადასტურებული პოსტები, ავტორის საკუთარი პოსტები, ან ადმინის ხედვა
+            if (pData.status === 'approved' || !pData.status || pData.user_id === currentUser.uid || isGroupAdmin) {
+              postsList.push(pData);
+            }
+          });
+
+          if (postsList.length === 0) {
             wall.innerHTML = "<div style='text-align:center; color:#777; padding:35px;'>ამ ჯგუფში პოსტები ჯერ არ არის. იყავით პირველი!</div>";
             return;
           }
-
-          let postsList = [];
-          snap.forEach(doc => postsList.push(Object.assign({ id: doc.id }, doc.data())));
           
           postsList.sort((a, b) => {
             let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime())) : 0;
@@ -1380,7 +1574,7 @@
           let photos = [];
           snap.forEach(doc => {
             const p = doc.data();
-            if (p.media_url && p.media_type !== 'video') {
+            if (p.media_url && p.media_type !== 'video' && (p.status === 'approved' || !p.status)) {
               photos.push({ url: p.media_url, postId: doc.id });
             }
           });
@@ -1515,7 +1709,7 @@
           let files = [];
           snap.forEach(doc => {
             const p = doc.data();
-            if (p.media_url) {
+            if (p.media_url && (p.status === 'approved' || !p.status)) {
               files.push({
                 url: p.media_url,
                 type: p.media_type || 'file',
@@ -1588,6 +1782,9 @@
         const authorDisplayAvatar = isAnon ? ANONYMOUS_AVATAR : (p.avatar_url || ANONYMOUS_AVATAR);
         const avatarStyle = isAnon ? "style='filter: grayscale(100%) contrast(150%);'" : "";
 
+        const isPendingPost = p.status === 'pending';
+        const pendingBadge = isPendingPost ? `<span style="background: rgba(220, 174, 54, 0.2); color: #dcae36; font-size: 11px; padding: 2px 6px; border-radius: 6px; margin-left: 6px;">მოლოდინში ⏳</span>` : '';
+
         const optionsHtml = canManage ? `
           <div class="g-options-dropdown">
             <button class="g-options-btn" onclick="toggleGroupPostMenu('${p.id}', event)">⋮</button>
@@ -1608,7 +1805,7 @@
               <div class="g-post-head">
                 <img src="${authorDisplayAvatar}" ${avatarStyle} class="g-post-avatar">
                 <div>
-                  <div class="g-post-author">${authorDisplayName}</div>
+                  <div class="g-post-author">${authorDisplayName} ${pendingBadge}</div>
                   <div class="g-post-time">
                     <span>${dateStr}</span> · <img src="icons/globe.svg" class="g-svg-icon-xs" alt="Public">
                   </div>
@@ -1729,7 +1926,6 @@
       modal.style.display = 'flex';
       listBox.innerHTML = "<div style='text-align:center; color:#888; padding:25px;'>მეგობრების სია იტვირთება...</div>";
 
-      // 1. მეგობრების წამოღება
       Promise.all([
         db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
         db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
@@ -1743,7 +1939,6 @@
           return;
         }
 
-        // 2. პროფილების ჩატვირთვა
         let profilePromises = friendIds.map(fId => db.collection('profiles').doc(fId).get());
         Promise.all(profilePromises).then(snaps => {
           let html = "";
@@ -1752,7 +1947,7 @@
             const fData = s.data();
             const fId = s.id;
             const fName = fData.full_name || "მომხმარებელი";
-            const fAvatar = fData.avatar_url || "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+            const fAvatar = fData.avatar_url || ANONYMOUS_AVATAR;
             const isAlreadyMember = activeGroupData.members && activeGroupData.members.includes(fId);
 
             html += `
@@ -1854,7 +2049,7 @@
           html += `
             <div class="g-comment-wrapper" id="g-comment-wrap-${c.id}">
               <div class="g-comment-item">
-                <img src="${c.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-comment-avatar">
+                <img src="${c.avatar_url || ANONYMOUS_AVATAR}" class="g-comment-avatar">
                 <div class="g-comment-main">
                   <div class="g-comment-bubble">
                     <div class="g-comment-top-row">
@@ -1892,7 +2087,7 @@
 
             replyBox.innerHTML += `
               <div class="g-reply-item" id="g-reply-item-${r.id}">
-                <img src="${r.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-reply-avatar">
+                <img src="${r.avatar_url || ANONYMOUS_AVATAR}" class="g-reply-avatar">
                 <div class="g-comment-main">
                   <div class="g-reply-bubble">
                     <div class="g-comment-top-row">
@@ -2074,7 +2269,7 @@
       if (pickBtn) pickBtn.style.display = 'flex';
     }
 
-    /* --- პირდაპირი პოსტის შექმნა (გალერეა + Enter) --- */
+    /* --- პირდაპირი პოსტის შექმნა (Enter) --- */
     function triggerDirectFilePick() {
       const fileInput = document.getElementById('direct-group-file-input');
       if (fileInput) fileInput.click();
@@ -2137,6 +2332,9 @@
         avatarUrl = ANONYMOUS_AVATAR;
       }
 
+      // ადმინისტრატორის პოსტი ეგრევე მტკიცდება, წევრის პოსტი მიდის მოლოდინში (pending)
+      const postStatus = isAdmin ? 'approved' : 'pending';
+
       const savePostDoc = (mediaUrl, mediaType) => {
         db.collection('group_posts').add({
           group_id: activeGroupId,
@@ -2150,9 +2348,13 @@
           likes_count: 0,
           likes: [],
           comments_count: 0,
+          status: postStatus,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
           hideUploadProgressUI();
+          if (!isAdmin) {
+            alert("თქვენი პოსტი გაიგზავნა ჯგუფის ადმინისტრატორთან დასადასტურებლად!");
+          }
           if (textInput) {
             textInput.disabled = false;
             textInput.value = "";
@@ -2160,6 +2362,7 @@
           }
           clearDirectSelectedFile();
           switchGroupSubTab('featured');
+          checkAdminPendingCount();
         }).catch(err => {
           hideUploadProgressUI();
           alert("შეცდომა: " + err.message);
