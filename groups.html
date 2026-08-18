@@ -253,7 +253,7 @@
     .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 10px; padding: 0 16px; white-space: pre-wrap; word-break: break-word; }
     .g-post-media { width: 100%; border-radius: 0; max-height: 550px; object-fit: cover; margin-top: 4px; display: block; }
 
-    /* სტატისტიკის ზოლი (ლაიქები და კომენტარები) */
+    /* სტატისტიკის ზოლი */
     .g-post-stats-row {
       display: flex; justify-content: space-between; align-items: center;
       padding: 10px 16px 8px 16px; font-size: 12px; color: #8a8f9d;
@@ -262,7 +262,7 @@
     .g-likes-count-badge { display: flex; align-items: center; gap: 4px; cursor: pointer; }
     .g-comments-count-badge { cursor: pointer; }
 
-    /* ქვედა მოქმედებების ღილაკები (Like, Comment, Share) */
+    /* ქვედა მოქმედებების ღილაკები */
     .g-post-actions-row {
       display: grid; grid-template-columns: repeat(3, 1fr);
       padding: 4px 8px; border-top: 1px solid rgba(255,255,255,0.03);
@@ -300,16 +300,48 @@
       font-size: 15px; margin-top: 8px;
     }
 
-    /* კომენტარების ბარათები */
+    /* კომენტარების დიზაინი (დროით, პასუხით და წაშლით) */
+    .g-comment-wrapper {
+      margin-bottom: 12px;
+    }
     .g-comment-item {
-      display: flex; gap: 10px; margin-bottom: 12px;
+      display: flex; gap: 10px; align-items: flex-start;
     }
-    .g-comment-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    .g-comment-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .g-comment-main { flex: 1; min-width: 0; }
     .g-comment-bubble {
-      background: #24242e; padding: 8px 12px; border-radius: 12px; flex: 1;
+      background: #24242e; padding: 8px 12px; border-radius: 12px; position: relative;
     }
-    .g-comment-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
-    .g-comment-text { font-size: 13px; color: #e4e6eb; }
+    .g-comment-top-row {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;
+    }
+    .g-comment-name { font-size: 13px; font-weight: 700; color: #fff; }
+    .g-comment-delete-btn {
+      background: none; border: none; color: #8a8f9d; cursor: pointer; font-size: 12px; padding: 0 4px;
+    }
+    .g-comment-delete-btn:hover { color: #ff4757; }
+    .g-comment-text { font-size: 13px; color: #e4e6eb; white-space: pre-wrap; word-break: break-word; }
+    
+    .g-comment-meta-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-left: 4px;
+    }
+    .g-comment-time { font-size: 11px; color: #7b8190; }
+    .g-comment-reply-btn {
+      background: none; border: none; color: #dcae36; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0;
+    }
+    .g-comment-reply-btn:hover { text-decoration: underline; }
+
+    /* ქვე-კომენტარების (Replies) ბუდე */
+    .g-replies-container {
+      margin-left: 28px; margin-top: 8px; border-left: 2px solid #282834; padding-left: 10px;
+    }
+    .g-reply-item {
+      display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;
+    }
+    .g-reply-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .g-reply-bubble {
+      background: #1c1c24; padding: 6px 10px; border-radius: 10px; flex: 1; min-width: 0;
+    }
   </style>
 </head>
 <body>
@@ -497,14 +529,20 @@
   <div class="modal-overlay" id="group-comments-modal" onclick="closeGroupCommentsModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2 class="sheet-title" style="margin-bottom: 12px;">კომენტარები</h2>
+      <h2 class="sheet-title" style="margin-bottom: 10px;">კომენტარები</h2>
       
-      <div id="group-comments-list" style="max-height: 320px; overflow-y: auto; margin-bottom: 14px;">
+      <div id="group-comments-list" style="max-height: 340px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
         <div style="text-align: center; color: #888; padding: 20px;">იტვირთება...</div>
       </div>
 
+      <!-- პასუხის ინდიკატორი -->
+      <div id="g-reply-active-bar" style="display: none; align-items: center; justify-content: space-between; background: #22222c; border: 1px solid #333344; padding: 6px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; color: #dcae36;">
+        <span id="g-reply-active-text">პასუხი მომხმარებელს...</span>
+        <span style="cursor: pointer; color: #ff4757; font-weight: bold;" onclick="cancelGroupReplyMode()">✕ გაუქმება</span>
+      </div>
+
       <div style="display: flex; gap: 8px;">
-        <input type="text" id="group-comment-input" class="input-field" style="margin-bottom: 0;" placeholder="დაწერეთ კომენტარი...">
+        <input type="text" id="group-comment-input" class="input-field" style="margin-bottom: 0;" placeholder="დაწერეთ კომენტარი..." onkeypress="if(event.key==='Enter') submitGroupComment()">
         <button class="btn-gold" style="width: auto; padding: 0 18px; margin-top: 0;" onclick="submitGroupComment()">გაგზავნა</button>
       </div>
     </div>
@@ -529,6 +567,7 @@
     let activeGroupId = null;
     let activeGroupData = null;
     let activePostForComments = null;
+    let activeCommentReplyId = null;
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -553,7 +592,6 @@
       }
     });
 
-    // ეკრანზე დაკლიკებისას 3 წერტილის მენიუების დახურვა
     window.addEventListener('click', () => {
       document.querySelectorAll('.g-options-menu').forEach(m => m.style.display = 'none');
     });
@@ -1097,40 +1135,141 @@
       });
     }
 
-    /* --- კომენტარების მოდალი და გაგზავნა --- */
+    /* --- კომენტარების მოდალი (დროით, ქვე-კომენტარებით და წაშლით) --- */
     function openGroupPostComments(postId) {
       activePostForComments = postId;
+      cancelGroupReplyMode();
       const modal = document.getElementById('group-comments-modal');
       const list = document.getElementById('group-comments-list');
       modal.style.display = 'flex';
       list.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>იტვირთება...</div>";
 
-      db.collection('group_posts').doc(postId).collection('comments').orderBy('created_at', 'asc').get().then(snap => {
+      db.collection('group_posts').doc(postId).collection('comments').get().then(snap => {
         if (snap.empty) {
           list.innerHTML = "<div style='text-align:center; color:#666; padding:25px;'>კომენტარები არ არის. დაწერეთ პირველი!</div>";
           return;
         }
 
+        let allComments = [];
+        snap.forEach(d => allComments.push(Object.assign({ id: d.id }, d.data())));
+
+        allComments.sort((a, b) => {
+          let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
+          let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
+          return tA - tB;
+        });
+
+        const mainComments = allComments.filter(c => !c.parent_id);
+        const replies = allComments.filter(c => c.parent_id);
+        const isGroupAdmin = activeGroupData.creator_id === currentUser.uid;
+
         let html = "";
-        snap.forEach(d => {
-          const c = d.data();
+        mainComments.forEach(c => {
+          let timeStr = "ახლახანს";
+          if (c.created_at) {
+            let d = c.created_at.toDate ? c.created_at.toDate() : new Date(c.created_at);
+            timeStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          }
+
+          const canDelete = (c.user_id === currentUser.uid) || isGroupAdmin;
+          const deleteBtn = canDelete ? `<button class="g-comment-delete-btn" onclick="deleteGroupComment('${c.id}')" title="წაშლა">🗑️</button>` : '';
+
           html += `
-            <div class="g-comment-item">
-              <img src="${c.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-comment-avatar">
-              <div class="g-comment-bubble">
-                <div class="g-comment-name">${c.author_name || 'მომხმარებელი'}</div>
-                <div class="g-comment-text">${escapeHtml(c.text || '')}</div>
+            <div class="g-comment-wrapper" id="g-comment-wrap-${c.id}">
+              <div class="g-comment-item">
+                <img src="${c.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-comment-avatar">
+                <div class="g-comment-main">
+                  <div class="g-comment-bubble">
+                    <div class="g-comment-top-row">
+                      <span class="g-comment-name">${c.author_name || 'მომხმარებელი'}</span>
+                      ${deleteBtn}
+                    </div>
+                    <div class="g-comment-text">${escapeHtml(c.text || '')}</div>
+                  </div>
+                  <div class="g-comment-meta-row">
+                    <span class="g-comment-time">${timeStr}</span>
+                    <button class="g-comment-reply-btn" onclick="setReplyGroupComment('${c.id}', '${escapeHtml(c.author_name || 'მომხმარებელი')}')">↩️ პასუხი</button>
+                  </div>
+                </div>
               </div>
+              <div class="g-replies-container" id="g-replies-to-${c.id}"></div>
             </div>
           `;
         });
+
         list.innerHTML = html;
+
+        // ქვე-კომენტარების (Replies) ჩასმა შესაბამისი კომენტარის ქვეშ
+        replies.forEach(r => {
+          const replyBox = document.getElementById(`g-replies-to-${r.parent_id}`);
+          if (replyBox) {
+            let rTimeStr = "ახლახანს";
+            if (r.created_at) {
+              let rd = r.created_at.toDate ? r.created_at.toDate() : new Date(r.created_at);
+              rTimeStr = rd.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+
+            const canDeleteReply = (r.user_id === currentUser.uid) || isGroupAdmin;
+            const deleteReplyBtn = canDeleteReply ? `<button class="g-comment-delete-btn" onclick="deleteGroupComment('${r.id}')" title="წაშლა">🗑️</button>` : '';
+
+            replyBox.innerHTML += `
+              <div class="g-reply-item" id="g-reply-item-${r.id}">
+                <img src="${r.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-reply-avatar">
+                <div class="g-comment-main">
+                  <div class="g-reply-bubble">
+                    <div class="g-comment-top-row">
+                      <span class="g-comment-name" style="font-size: 12px;">${r.author_name || 'მომხმარებელი'}</span>
+                      ${deleteReplyBtn}
+                    </div>
+                    <div class="g-comment-text" style="font-size: 12px;">${escapeHtml(r.text || '')}</div>
+                  </div>
+                  <div class="g-comment-meta-row">
+                    <span class="g-comment-time">${rTimeStr}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        });
       });
+    }
+
+    function setReplyGroupComment(commentId, authorName) {
+      activeCommentReplyId = commentId;
+      const bar = document.getElementById('g-reply-active-bar');
+      const txt = document.getElementById('g-reply-active-text');
+      const input = document.getElementById('group-comment-input');
+      
+      txt.innerText = `პასუხი: ${authorName}`;
+      bar.style.display = "flex";
+      input.focus();
+    }
+
+    function cancelGroupReplyMode() {
+      activeCommentReplyId = null;
+      const bar = document.getElementById('g-reply-active-bar');
+      if (bar) bar.style.display = "none";
+    }
+
+    function deleteGroupComment(commentId) {
+      if (!confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) return;
+
+      db.collection('group_posts').doc(activePostForComments).collection('comments').doc(commentId).delete().then(() => {
+        db.collection('group_posts').doc(activePostForComments).update({
+          comments_count: firebase.firestore.FieldValue.increment(-1)
+        });
+
+        const countEl = document.getElementById(`g-comm-count-${activePostForComments}`);
+        if (countEl) countEl.innerText = Math.max(0, parseInt(countEl.innerText || 1) - 1);
+
+        openGroupPostComments(activePostForComments);
+      }).catch(err => alert("შეცდომა: " + err.message));
     }
 
     function closeGroupCommentsModal() {
       document.getElementById('group-comments-modal').style.display = 'none';
       activePostForComments = null;
+      cancelGroupReplyMode();
     }
 
     function submitGroupComment() {
@@ -1142,13 +1281,19 @@
       const authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
       const avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
 
-      db.collection('group_posts').doc(activePostForComments).collection('comments').add({
+      const commentData = {
         user_id: currentUser.uid,
         author_name: authorName,
         avatar_url: avatarUrl,
         text: text,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
+      };
+
+      if (activeCommentReplyId) {
+        commentData.parent_id = activeCommentReplyId;
+      }
+
+      db.collection('group_posts').doc(activePostForComments).collection('comments').add(commentData).then(() => {
         db.collection('group_posts').doc(activePostForComments).update({
           comments_count: firebase.firestore.FieldValue.increment(1)
         });
@@ -1157,7 +1302,9 @@
         if (countEl) countEl.innerText = parseInt(countEl.innerText || 0) + 1;
 
         input.value = "";
-        openGroupPostComments(activePostForComments);
+        const postIdToReload = activePostForComments;
+        cancelGroupReplyMode();
+        openGroupPostComments(postIdToReload);
       });
     }
 
