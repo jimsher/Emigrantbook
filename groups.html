@@ -136,7 +136,9 @@
       border-radius: 20px; padding: 6px 12px; display: flex;
       align-items: center; gap: 6px; color: #fff; font-size: 12px;
       font-weight: 600; cursor: pointer; z-index: 5;
+      transition: background 0.2s;
     }
+    .cover-upload-btn:hover { background: rgba(30, 30, 40, 0.95); }
     
     /* ადმინისტრატორის ზოლი */
     .admin-ribbon-bar {
@@ -567,7 +569,7 @@
 
       <!-- Group Cover with Upload Trigger for Admin -->
       <div class="group-cover-wrapper">
-        <img id="dg-cover" src="covergroups.png" class="group-cover-img" alt="Cover">
+        <img id="dg-cover" src="covergroups.png" class="group-cover-img" alt="Cover" onerror="this.onerror=null; this.src='covergroups.png';">
         
         <input type="file" id="group-cover-file-input" accept="image/*" style="display: none;" onchange="uploadGroupCoverFile()">
         <button class="cover-upload-btn" id="dg-cover-upload-btn" style="display: none;" onclick="triggerGroupCoverPick()">
@@ -878,6 +880,14 @@
     let isAnonymousPosting = false;
     let activeSubTab = 'featured';
 
+    /* დამხმარე ფუნქცია: ქავერის სურათის გაფილტვრა - ყოველთვის covergroups.png ძველი ბმულების ნაცვლად */
+    function getGroupCoverUrl(url) {
+      if (!url || typeof url !== 'string' || url.includes('unsplash.com') || url.trim() === '' || url === 'undefined' || url === 'null') {
+        return DEFAULT_COVER_IMAGE;
+      }
+      return url;
+    }
+
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
@@ -1054,10 +1064,11 @@
 
           const privacyIcon = g.privacy === 'private' ? 'icons/lock.svg' : 'icons/globe.svg';
           const privacyText = g.privacy === 'private' ? 'დახურული' : 'საჯარო';
+          const coverImgUrl = getGroupCoverUrl(g.cover_url);
 
           const card = `
             <div class="group-item-card" onclick="openGroupDetailView('${gId}')">
-              <img src="${g.cover_url || DEFAULT_COVER_IMAGE}" class="group-avatar" alt="Cover">
+              <img src="${coverImgUrl}" class="group-avatar" alt="Cover" onerror="this.onerror=null; this.src='${DEFAULT_COVER_IMAGE}';">
               <div class="group-info">
                 <div class="group-name">${g.name}</div>
                 <div class="group-meta">
@@ -1114,7 +1125,7 @@
         }
 
         document.getElementById('dg-title').innerText = activeGroupData.name;
-        document.getElementById('dg-cover').src = activeGroupData.cover_url || DEFAULT_COVER_IMAGE;
+        document.getElementById('dg-cover').src = getGroupCoverUrl(activeGroupData.cover_url);
         document.getElementById('dg-admin-text').innerText = activeGroupData.admin_name || "ადმინისტრატორი";
         
         const count = activeGroupData.members_count || (activeGroupData.members ? activeGroupData.members.length : 1);
@@ -1305,16 +1316,42 @@
       const file = fileInput.files[0];
 
       const btn = document.getElementById('dg-cover-upload-btn');
-      if (btn) btn.innerText = "იტვირთება...";
+      const originalBtnHtml = `<img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera"> <span>ქავერის შეცვლა</span>`;
 
-      uploadMediaFile(file, function(publicUrl) {
+      if (btn) {
+        btn.innerHTML = `<span style="font-size:11px;">იტვირთება...</span>`;
+        btn.style.pointerEvents = "none";
+      }
+
+      uploadMediaFile(file, function(publicUrl, mediaType) {
         if (publicUrl) {
           db.collection('groups').doc(activeGroupId).update({
             cover_url: publicUrl
           }).then(() => {
-            document.getElementById('dg-cover').src = publicUrl;
-            if (btn) btn.innerHTML = `<img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera"> <span>ქავერის შეცვლა</span>`;
+            activeGroupData.cover_url = publicUrl;
+            const coverEl = document.getElementById('dg-cover');
+            if (coverEl) coverEl.src = publicUrl;
+            if (btn) {
+              btn.innerHTML = originalBtnHtml;
+              btn.style.pointerEvents = "auto";
+            }
+            fileInput.value = "";
+            alert("ქავერ ფოტო წარმატებით განახლდა!");
+          }).catch(err => {
+            alert("შეცდომა ბაზაში შენახვისას: " + err.message);
+            if (btn) {
+              btn.innerHTML = originalBtnHtml;
+              btn.style.pointerEvents = "auto";
+            }
+            fileInput.value = "";
           });
+        } else {
+          alert("ფაილის ატვირთვა ვერ მოხერხდა. სცადეთ თავიდან.");
+          if (btn) {
+            btn.innerHTML = originalBtnHtml;
+            btn.style.pointerEvents = "auto";
+          }
+          fileInput.value = "";
         }
       });
     }
@@ -2028,7 +2065,7 @@
         allComments.sort((a, b) => {
           let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime())) : 0;
           let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime())) : 0;
-          return tB - tA;
+          return tA - tB;
         });
 
         const mainComments = allComments.filter(c => !c.parent_id);
