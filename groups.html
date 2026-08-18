@@ -175,13 +175,39 @@
       border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
     }
 
-    /* პოსტის პირდაპირი საწერი ველი */
+    /* პოსტის პირდაპირი საწერი ველი (ანონიმურობის ჩამოსაშლელით) */
     .group-create-post {
       background: #141418; border-top: 1px solid #222228; border-bottom: 1px solid #222228;
       padding: 12px 16px; margin: 10px 0 0 0;
-      display: flex; align-items: center; gap: 10px; width: 100%;
+      display: flex; align-items: center; gap: 10px; width: 100%; position: relative;
     }
-    .post-identity-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .post-identity-pill {
+      display: flex; align-items: center; gap: 4px;
+      background: #202028; border: 1px solid #323240;
+      border-radius: 20px; padding: 3px 8px 3px 4px;
+      cursor: pointer; flex-shrink: 0; transition: border-color 0.2s;
+    }
+    .post-identity-pill:hover { border-color: #dcae36; }
+    .post-identity-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    .post-identity-arrow { font-size: 10px; color: #8a8f9d; }
+
+    /* ანონიმურობის ჩამოსაშლელი მენიუ */
+    .identity-dropdown-menu {
+      display: none; position: absolute; left: 16px; top: 58px;
+      background: #1e1e24; border: 1px solid #333340; border-radius: 10px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.7); z-index: 60; min-width: 230px;
+      overflow: hidden;
+    }
+    .identity-option {
+      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      cursor: pointer; transition: background 0.15s; border-bottom: 1px solid #282834;
+    }
+    .identity-option:last-child { border-bottom: none; }
+    .identity-option:hover { background: #282834; }
+    .identity-option.active { background: rgba(220, 174, 54, 0.12); }
+    .identity-option-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .identity-option-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .identity-option-sub { font-size: 11px; color: #8a8f9d; margin-top: 1px; }
     
     .post-real-input {
       flex: 1; background: #1c1c24; border: 1px solid #282834;
@@ -237,7 +263,7 @@
     }
     .g-post-head { display: flex; align-items: center; gap: 10px; }
     .g-post-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
-    .g-post-author { font-size: 14px; font-weight: 700; color: #fff; }
+    .g-post-author { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
     .g-post-time { font-size: 11px; color: #7b8190; margin-top: 2px; }
     
     /* 3 წერტილის მენიუ */
@@ -448,9 +474,32 @@
         <div id="admin-requests-list"></div>
       </div>
 
-      <!-- პირდაპირი საწერი ველი (მოდალის გარეშე) -->
+      <!-- პირდაპირი საწერი ველი (ანონიმურობის ტაბით) -->
       <div class="group-create-post" id="dg-create-post-box">
-        <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
+        
+        <!-- Identity Pill / Dropdown Trigger -->
+        <div class="post-identity-pill" onclick="toggleIdentityDropdown(event)" title="აირჩიეთ პოსტის ავტორი">
+          <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
+          <span class="post-identity-arrow">▼</span>
+        </div>
+
+        <!-- Identity Select Dropdown -->
+        <div class="identity-dropdown-menu" id="dg-identity-dropdown">
+          <div class="identity-option active" id="opt-identity-real" onclick="selectPostingIdentity(false, event)">
+            <img id="opt-avatar-real" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar">
+            <div>
+              <div class="identity-option-title" id="opt-name-real">თქვენი პროფილი</div>
+              <div class="identity-option-sub">საჯარო გამოქვეყნება</div>
+            </div>
+          </div>
+          <div class="identity-option" id="opt-identity-anon" onclick="selectPostingIdentity(true, event)">
+            <img src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar" style="filter: grayscale(100%) contrast(150%);">
+            <div>
+              <div class="identity-option-title" style="color: #dcae36;">🕶️ ანონიმური წევრი</div>
+              <div class="identity-option-sub">სახელი და ფოტო დაიმალება</div>
+            </div>
+          </div>
+        </div>
         
         <input type="text" id="direct-group-post-text" class="post-real-input" placeholder="დაწერეთ რამე ჯგუფში..." onkeypress="if(event.key==='Enter') submitDirectGroupPost()">
         
@@ -548,12 +597,15 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    const ANONYMOUS_AVATAR = "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+
     let currentUser = null;
     let userProfile = null;
     let activeGroupId = null;
     let activeGroupData = null;
     let activePostForComments = null;
     let activeCommentReplyId = null;
+    let isAnonymousPosting = false;
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -562,7 +614,12 @@
           if (doc.exists) {
             userProfile = doc.data();
             const myAvatar = document.getElementById('dg-user-avatar');
+            const optAvatar = document.getElementById('opt-avatar-real');
+            const optName = document.getElementById('opt-name-real');
+            
             if (myAvatar && userProfile.avatar_url) myAvatar.src = userProfile.avatar_url;
+            if (optAvatar && userProfile.avatar_url) optAvatar.src = userProfile.avatar_url;
+            if (optName && userProfile.full_name) optName.innerText = userProfile.full_name;
           }
         });
 
@@ -580,7 +637,45 @@
 
     window.addEventListener('click', () => {
       document.querySelectorAll('.g-options-menu').forEach(m => m.style.display = 'none');
+      const idDropdown = document.getElementById('dg-identity-dropdown');
+      if (idDropdown) idDropdown.style.display = 'none';
     });
+
+    /* --- ანონიმურობის არჩევა --- */
+    function toggleIdentityDropdown(event) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('dg-identity-dropdown');
+      if (dropdown) {
+        dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+      }
+    }
+
+    function selectPostingIdentity(isAnon, event) {
+      if (event) event.stopPropagation();
+      isAnonymousPosting = isAnon;
+
+      const dropdown = document.getElementById('dg-identity-dropdown');
+      const avatarImg = document.getElementById('dg-user-avatar');
+      const inputField = document.getElementById('direct-group-post-text');
+      const optReal = document.getElementById('opt-identity-real');
+      const optAnon = document.getElementById('opt-identity-anon');
+
+      if (dropdown) dropdown.style.display = 'none';
+
+      if (isAnon) {
+        avatarImg.src = ANONYMOUS_AVATAR;
+        avatarImg.style.filter = "grayscale(100%) contrast(150%)";
+        inputField.placeholder = "დაწერეთ ანონიმურად...";
+        optReal.classList.remove('active');
+        optAnon.classList.add('active');
+      } else {
+        avatarImg.src = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : ANONYMOUS_AVATAR;
+        avatarImg.style.filter = "none";
+        inputField.placeholder = "დაწერეთ რამე ჯგუფში...";
+        optAnon.classList.remove('active');
+        optReal.classList.add('active');
+      }
+    }
 
     function switchGroupTab(tabName) {
       const pills = document.querySelectorAll('.tab-pill');
@@ -676,6 +771,7 @@
     /* --- ჯგუფის შიდა გვერდის გახსნა --- */
     function openGroupDetailView(groupId) {
       activeGroupId = groupId;
+      selectPostingIdentity(false);
       window.history.pushState({ groupId: groupId }, "", "?id=" + groupId);
 
       document.getElementById('groups-list-view').style.display = 'none';
@@ -992,6 +1088,11 @@
             const likesCount = p.likes_count || (p.likes ? p.likes.length : 0);
             const commentsCount = p.comments_count || 0;
 
+            const isAnon = p.is_anonymous === true;
+            const authorDisplayName = isAnon ? "🕶️ ანონიმური წევრი" : (p.author_name || "მომხმარებელი");
+            const authorDisplayAvatar = isAnon ? ANONYMOUS_AVATAR : (p.avatar_url || ANONYMOUS_AVATAR);
+            const avatarStyle = isAnon ? "style='filter: grayscale(100%) contrast(150%);'" : "";
+
             const optionsHtml = canManage ? `
               <div class="g-options-dropdown">
                 <button class="g-options-btn" onclick="toggleGroupPostMenu('${p.id}', event)">⋮</button>
@@ -1006,9 +1107,9 @@
               <div class="group-post-card" id="g-post-card-${p.id}">
                 <div class="g-post-header-row">
                   <div class="g-post-head">
-                    <img src="${p.avatar_url || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg'}" class="g-post-avatar">
+                    <img src="${authorDisplayAvatar}" ${avatarStyle} class="g-post-avatar">
                     <div>
-                      <div class="g-post-author">${p.author_name || 'მომხმარებელი'}</div>
+                      <div class="g-post-author">${authorDisplayName}</div>
                       <div class="g-post-time">${dateStr} · 🌐</div>
                     </div>
                   </div>
@@ -1388,8 +1489,13 @@
       btn.disabled = true;
       btn.innerText = "⏳";
 
-      const authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
-      const avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
+      let authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
+      let avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
+
+      if (isAnonymousPosting) {
+        authorName = "ანონიმური წევრი";
+        avatarUrl = ANONYMOUS_AVATAR;
+      }
 
       const savePostDoc = (mediaUrl, mediaType) => {
         db.collection('group_posts').add({
@@ -1397,6 +1503,7 @@
           user_id: currentUser.uid,
           author_name: authorName,
           avatar_url: avatarUrl,
+          is_anonymous: isAnonymousPosting,
           content: text,
           media_url: mediaUrl || null,
           media_type: mediaType || null,
