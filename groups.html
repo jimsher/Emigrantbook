@@ -567,7 +567,7 @@
 
       <!-- Group Cover with Upload Trigger for Admin -->
       <div class="group-cover-wrapper">
-        <img id="dg-cover" src="" class="group-cover-img" alt="Cover">
+        <img id="dg-cover" src="covergroups.png" class="group-cover-img" alt="Cover">
         
         <input type="file" id="group-cover-file-input" accept="image/*" style="display: none;" onchange="uploadGroupCoverFile()">
         <button class="cover-upload-btn" id="dg-cover-upload-btn" style="display: none;" onclick="triggerGroupCoverPick()">
@@ -866,6 +866,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    const DEFAULT_COVER_IMAGE = "covergroups.png";
     const ANONYMOUS_AVATAR = "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
 
     let currentUser = null;
@@ -1056,7 +1057,7 @@
 
           const card = `
             <div class="group-item-card" onclick="openGroupDetailView('${gId}')">
-              <img src="${g.cover_url || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500'}" class="group-avatar" alt="Cover">
+              <img src="${g.cover_url || DEFAULT_COVER_IMAGE}" class="group-avatar" alt="Cover">
               <div class="group-info">
                 <div class="group-name">${g.name}</div>
                 <div class="group-meta">
@@ -1113,7 +1114,7 @@
         }
 
         document.getElementById('dg-title').innerText = activeGroupData.name;
-        document.getElementById('dg-cover').src = activeGroupData.cover_url || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600";
+        document.getElementById('dg-cover').src = activeGroupData.cover_url || DEFAULT_COVER_IMAGE;
         document.getElementById('dg-admin-text').innerText = activeGroupData.admin_name || "ადმინისტრატორი";
         
         const count = activeGroupData.members_count || (activeGroupData.members ? activeGroupData.members.length : 1);
@@ -1505,7 +1506,6 @@
 
           snap.forEach(doc => {
             const pData = Object.assign({ id: doc.id }, doc.data());
-            // ფიდში ჩანს დადასტურებული პოსტები, ავტორის საკუთარი პოსტები, ან ადმინის ხედვა
             if (pData.status === 'approved' || !pData.status || pData.user_id === currentUser.uid || isGroupAdmin) {
               postsList.push(pData);
             }
@@ -2028,7 +2028,7 @@
         allComments.sort((a, b) => {
           let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime())) : 0;
           let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime())) : 0;
-          return tA - tB;
+          return tB - tA;
         });
 
         const mainComments = allComments.filter(c => !c.parent_id);
@@ -2420,7 +2420,7 @@
         members_count: 1,
         members: [currentUser.uid],
         pending_members: [],
-        cover_url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600",
+        cover_url: DEFAULT_COVER_IMAGE,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then((newDoc) => {
         closeCreateGroupModal();
