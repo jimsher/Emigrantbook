@@ -4,7 +4,7 @@ const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/logo.png',
+    '/logo1.png',
     '/supabase1.css'
 ];
 
@@ -35,8 +35,8 @@ messaging.onBackgroundMessage(function(payload) {
     const notificationTitle = payload.notification ? payload.notification.title : 'Emigrantbook';
     const notificationOptions = {
         body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
-        icon: '/logo.png',
-        badge: '/logo.png',
+        icon: '/logo1.png',
+        badge: '/logo1.png',
         vibrate: [200, 100, 200],
         tag: 'emigrantbook-msg', 
         renotify: true,
@@ -65,8 +65,8 @@ self.addEventListener('push', function(event) {
     const title = data.title || (data.notification ? data.notification.title : 'Emigrantbook');
     const options = {
         body: data.body || (data.notification ? data.notification.body : ''),
-        icon: '/logo.png',
-        badge: '/logo.png',
+        icon: '/logo1.png',
+        badge: '/logo1.png',
         data: { url: data.url || (data.data && data.data.url) || '/' }
     };
 
