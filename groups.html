@@ -175,27 +175,39 @@
       border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
     }
 
-    /* პოსტის დაწერის ველი */
+    /* პოსტის პირდაპირი საწერი ველი */
     .group-create-post {
       background: #141418; border-top: 1px solid #222228; border-bottom: 1px solid #222228;
-      border-left: none; border-right: none; border-radius: 0;
-      padding: 12px 16px; margin: 10px 0;
+      padding: 12px 16px; margin: 10px 0 0 0;
       display: flex; align-items: center; gap: 10px; width: 100%;
     }
-    .post-identity-pill {
-      display: flex; align-items: center; gap: 4px;
-      background: #202028; border: 1px solid #323240;
-      border-radius: 20px; padding: 3px 8px 3px 4px;
-      cursor: pointer; flex-shrink: 0;
-    }
-    .post-identity-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-    .post-identity-arrow { font-size: 10px; color: #8a8f9d; }
-    .post-fake-input {
+    .post-identity-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    
+    .post-real-input {
       flex: 1; background: #1c1c24; border: 1px solid #282834;
-      border-radius: 25px; padding: 10px 16px; color: #8a8f9d;
-      font-size: 14px; cursor: pointer;
+      border-radius: 25px; padding: 10px 16px; color: #e4e6eb;
+      font-size: 14px; outline: none; transition: border-color 0.2s;
     }
-    .post-media-trigger { display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 4px; }
+    .post-real-input:focus { border-color: #dcae36; }
+    
+    .post-media-trigger {
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 4px; flex-shrink: 0;
+    }
+    .direct-send-btn {
+      background: #dcae36; border: none; color: #111;
+      font-weight: bold; font-size: 15px; width: 36px; height: 36px;
+      border-radius: 50%; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: transform 0.15s;
+    }
+    .direct-send-btn:active { transform: scale(0.9); }
+
+    /* არჩეული მედია ფაილის ზოლი */
+    .direct-file-preview-bar {
+      display: none; align-items: center; justify-content: space-between;
+      padding: 6px 16px 10px 16px; background: #141418; border-bottom: 1px solid #222228;
+      font-size: 12px; color: #dcae36;
+    }
 
     /* დახურული ჯგუფის შეტყობინება */
     .private-locked-container {
@@ -208,16 +220,15 @@
 
     /* ფიდის სათაური / ფილტრი */
     .group-feed-filter-bar {
-      padding: 6px 16px 10px 16px; display: flex;
+      padding: 10px 16px 10px 16px; display: flex;
       justify-content: space-between; align-items: center;
     }
     .filter-title { font-size: 15px; font-weight: 700; color: #fff; }
     .filter-icon-btn { background: none; border: none; color: #8a8f9d; font-size: 18px; cursor: pointer; }
 
-    /* --- პოსტის ბარათი (Facebook Edge-to-Edge) --- */
+    /* პოსტის ბარათი */
     .group-post-card {
       background: #141418; border-top: 1px solid #222228; border-bottom: 1px solid #222228;
-      border-left: none; border-right: none; border-radius: 0;
       margin: 0 0 10px 0; padding: 12px 0 4px 0; width: 100%; position: relative;
     }
     .g-post-header-row {
@@ -300,48 +311,27 @@
       font-size: 15px; margin-top: 8px;
     }
 
-    /* კომენტარების დიზაინი (დროით, პასუხით და წაშლით) */
-    .g-comment-wrapper {
-      margin-bottom: 12px;
-    }
-    .g-comment-item {
-      display: flex; gap: 10px; align-items: flex-start;
-    }
+    /* კომენტარების დიზაინი */
+    .g-comment-wrapper { margin-bottom: 12px; }
+    .g-comment-item { display: flex; gap: 10px; align-items: flex-start; }
     .g-comment-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .g-comment-main { flex: 1; min-width: 0; }
-    .g-comment-bubble {
-      background: #24242e; padding: 8px 12px; border-radius: 12px; position: relative;
-    }
-    .g-comment-top-row {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;
-    }
+    .g-comment-bubble { background: #24242e; padding: 8px 12px; border-radius: 12px; position: relative; }
+    .g-comment-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
     .g-comment-name { font-size: 13px; font-weight: 700; color: #fff; }
-    .g-comment-delete-btn {
-      background: none; border: none; color: #8a8f9d; cursor: pointer; font-size: 12px; padding: 0 4px;
-    }
+    .g-comment-delete-btn { background: none; border: none; color: #8a8f9d; cursor: pointer; font-size: 12px; padding: 0 4px; }
     .g-comment-delete-btn:hover { color: #ff4757; }
     .g-comment-text { font-size: 13px; color: #e4e6eb; white-space: pre-wrap; word-break: break-word; }
     
-    .g-comment-meta-row {
-      display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-left: 4px;
-    }
+    .g-comment-meta-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-left: 4px; }
     .g-comment-time { font-size: 11px; color: #7b8190; }
-    .g-comment-reply-btn {
-      background: none; border: none; color: #dcae36; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0;
-    }
+    .g-comment-reply-btn { background: none; border: none; color: #dcae36; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; }
     .g-comment-reply-btn:hover { text-decoration: underline; }
 
-    /* ქვე-კომენტარების (Replies) ბუდე */
-    .g-replies-container {
-      margin-left: 28px; margin-top: 8px; border-left: 2px solid #282834; padding-left: 10px;
-    }
-    .g-reply-item {
-      display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;
-    }
+    .g-replies-container { margin-left: 28px; margin-top: 8px; border-left: 2px solid #282834; padding-left: 10px; }
+    .g-reply-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
     .g-reply-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .g-reply-bubble {
-      background: #1c1c24; padding: 6px 10px; border-radius: 10px; flex: 1; min-width: 0;
-    }
+    .g-reply-bubble { background: #1c1c24; padding: 6px 10px; border-radius: 10px; flex: 1; min-width: 0; }
   </style>
 </head>
 <body>
@@ -458,16 +448,25 @@
         <div id="admin-requests-list"></div>
       </div>
 
-      <!-- პოსტის დაწერის ველი (სრული სიგანით კიდეებამდე) -->
+      <!-- პირდაპირი საწერი ველი (მოდალის გარეშე) -->
       <div class="group-create-post" id="dg-create-post-box">
-        <div class="post-identity-pill" onclick="openGroupPostModal()">
-          <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
-          <span class="post-identity-arrow">▼</span>
+        <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
+        
+        <input type="text" id="direct-group-post-text" class="post-real-input" placeholder="დაწერეთ რამე ჯგუფში..." onkeypress="if(event.key==='Enter') submitDirectGroupPost()">
+        
+        <input type="file" id="direct-group-file-input" accept="image/*,video/*" style="display: none;" onchange="handleDirectFileSelected()">
+        
+        <div class="post-media-trigger" onclick="triggerDirectFilePick()" title="ფოტოს/ვიდეოს ატვირთვა">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="#45bd62"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>
         </div>
-        <div class="post-fake-input" onclick="openGroupPostModal()">დაწერეთ რამე...</div>
-        <div class="post-media-trigger" onclick="openGroupPostModal()">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="#45bd62"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>
-        </div>
+        
+        <button id="direct-post-send-btn" class="direct-send-btn" onclick="submitDirectGroupPost()" title="გამოქვეყნება">➔</button>
+      </div>
+
+      <!-- არჩეული ფაილის ინდიკატორი -->
+      <div id="direct-selected-file-badge" class="direct-file-preview-bar">
+        <span id="direct-file-name-txt">📎 ფაილი არჩეულია</span>
+        <span style="cursor: pointer; color: #ff4757; font-weight: bold; font-size: 14px;" onclick="clearDirectSelectedFile()">✕</span>
       </div>
 
       <!-- დახურული ჯგუფის შეტყობინება -->
@@ -509,19 +508,6 @@
       </select>
 
       <button class="btn-gold" id="btn-submit-group" onclick="submitCreateGroup()">ჯგუფის შექმნა</button>
-    </div>
-  </div>
-
-  <!-- ჯგუფში პოსტის დაწერის მოდალი -->
-  <div class="modal-overlay" id="create-post-modal" onclick="closeGroupPostModal()">
-    <div class="bottom-sheet" onclick="event.stopPropagation()">
-      <div class="sheet-handle"></div>
-      <h2 class="sheet-title">პოსტის შექმნა ჯგუფში</h2>
-      
-      <textarea id="group-post-text" class="input-field" style="height: 100px; resize: none;" placeholder="დაწერეთ რამე..."></textarea>
-      <input type="file" id="group-post-file" accept="image/*,video/*" class="input-field">
-
-      <button class="btn-gold" id="btn-submit-post" onclick="submitGroupPost()">გამოქვეყნება</button>
     </div>
   </div>
 
@@ -1135,7 +1121,7 @@
       });
     }
 
-    /* --- კომენტარების მოდალი (დროით, ქვე-კომენტარებით და წაშლით) --- */
+    /* --- კომენტარების მოდალი --- */
     function openGroupPostComments(postId) {
       activePostForComments = postId;
       cancelGroupReplyMode();
@@ -1199,7 +1185,6 @@
 
         list.innerHTML = html;
 
-        // ქვე-კომენტარების (Replies) ჩასმა შესაბამისი კომენტარის ქვეშ
         replies.forEach(r => {
           const replyBox = document.getElementById(`g-replies-to-${r.parent_id}`);
           if (replyBox) {
@@ -1357,33 +1342,51 @@
       });
     }
 
-    /* --- ჯგუფში პოსტის დაწერა --- */
-    function openGroupPostModal() {
+    /* --- პირდაპირი პოსტის შექმნა (გალერეა + Enter) --- */
+    function triggerDirectFilePick() {
+      const fileInput = document.getElementById('direct-group-file-input');
+      if (fileInput) fileInput.click();
+    }
+
+    function handleDirectFileSelected() {
+      const fileInput = document.getElementById('direct-group-file-input');
+      const badge = document.getElementById('direct-selected-file-badge');
+      const nameTxt = document.getElementById('direct-file-name-txt');
+      
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        nameTxt.innerText = `📎 ${fileInput.files[0].name}`;
+        badge.style.display = "flex";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
+    function clearDirectSelectedFile() {
+      const fileInput = document.getElementById('direct-group-file-input');
+      const badge = document.getElementById('direct-selected-file-badge');
+      if (fileInput) fileInput.value = "";
+      if (badge) badge.style.display = "none";
+    }
+
+    function submitDirectGroupPost() {
       const isAdmin = activeGroupData.creator_id === currentUser.uid;
       const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
       if (!isMember) {
         alert("პოსტის დასაწერად ჯერ უნდა გაწევრიანდეთ ჯგუფში");
         return;
       }
-      document.getElementById('create-post-modal').style.display = 'flex';
-    }
-    function closeGroupPostModal() {
-      document.getElementById('create-post-modal').style.display = 'none';
-    }
 
-    function submitGroupPost() {
-      const text = document.getElementById('group-post-text').value.trim();
-      const fileInput = document.getElementById('group-post-file');
-      const btn = document.getElementById('btn-submit-post');
+      const textInput = document.getElementById('direct-group-post-text');
+      const fileInput = document.getElementById('direct-group-file-input');
+      const btn = document.getElementById('direct-post-send-btn');
 
+      const text = textInput ? textInput.value.trim() : "";
       const hasFile = fileInput.files && fileInput.files.length > 0;
-      if (!text && !hasFile) {
-        alert("შეიყვანეთ ტექსტი ან აირჩიეთ ფაილი");
-        return;
-      }
+
+      if (!text && !hasFile) return;
 
       btn.disabled = true;
-      btn.innerText = "იგზავნება...";
+      btn.innerText = "⏳";
 
       const authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
       const avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
@@ -1403,15 +1406,14 @@
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
           btn.disabled = false;
-          btn.innerText = "გამოქვეყნება";
-          document.getElementById('group-post-text').value = "";
-          fileInput.value = "";
-          closeGroupPostModal();
+          btn.innerText = "➔";
+          if (textInput) textInput.value = "";
+          clearDirectSelectedFile();
           loadGroupPosts(activeGroupId);
         }).catch(err => {
           alert("შეცდომა: " + err.message);
           btn.disabled = false;
-          btn.innerText = "გამოქვეყნება";
+          btn.innerText = "➔";
         });
       };
 
