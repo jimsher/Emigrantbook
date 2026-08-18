@@ -175,7 +175,7 @@
       border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
     }
 
-    /* პოსტის პირდაპირი საწერი ველი (სუფთა, ღილაკის გარეშე) */
+    /* პოსტის პირდაპირი საწერი ველი */
     .group-create-post {
       background: #141418; border-top: 1px solid #222228; border-bottom: 1px solid #222228;
       padding: 12px 16px; margin: 10px 0 0 0;
@@ -219,6 +219,24 @@
     .post-media-trigger {
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; padding: 4px; flex-shrink: 0;
+    }
+
+    /* 🌀 Facebook Style Circular Progress Loader */
+    .upload-progress-wrapper {
+      display: none; position: relative; width: 32px; height: 32px;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .progress-ring { transform: rotate(-90deg); }
+    .progress-ring-circle-bg { stroke: #252632; }
+    .progress-ring-circle {
+      stroke: #1877f2;
+      stroke-dasharray: 81.68;
+      stroke-dashoffset: 81.68;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.15s ease-out;
+    }
+    .progress-ring-text {
+      position: absolute; font-size: 8px; font-weight: 800; color: #1877f2;
     }
 
     /* არჩეული მედია ფაილის ზოლი */
@@ -467,7 +485,7 @@
         <div id="admin-requests-list"></div>
       </div>
 
-      <!-- პირდაპირი საწერი ველი (ანონიმურობის ტაბით და გალერეის ღილაკით) -->
+      <!-- პირდაპირი საწერი ველი (ანონიმურობის ტაბით, გალერეის ღილაკით და ლურჯი პროგრესბარით) -->
       <div class="group-create-post" id="dg-create-post-box">
         
         <!-- Identity Pill / Dropdown Trigger -->
@@ -498,9 +516,20 @@
         
         <input type="file" id="direct-group-file-input" accept="image/*,video/*" style="display: none;" onchange="handleDirectFileSelected()">
         
-        <div class="post-media-trigger" onclick="triggerDirectFilePick()" title="ფოტოს/ვიდეოს ატვირთვა">
+        <!-- ფოტოს აიკონი -->
+        <div class="post-media-trigger" id="dg-media-pick-btn" onclick="triggerDirectFilePick()" title="ფოტოს/ვიდეოს ატვირთვა">
           <svg viewBox="0 0 24 24" width="26" height="26" fill="#45bd62"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/></svg>
         </div>
+
+        <!-- Facebook Style Circular Progress Ring -->
+        <div class="upload-progress-wrapper" id="dg-upload-progress-box">
+          <svg class="progress-ring" width="30" height="30">
+            <circle class="progress-ring-circle-bg" stroke="#252632" stroke-width="3" fill="transparent" r="13" cx="15" cy="15"/>
+            <circle id="dg-progress-circle" class="progress-ring-circle" stroke="#1877f2" stroke-width="3" fill="transparent" r="13" cx="15" cy="15"/>
+          </svg>
+          <span class="progress-ring-text" id="dg-progress-percent">0%</span>
+        </div>
+
       </div>
 
       <!-- არჩეული ფაილის ინდიკატორი -->
@@ -1234,7 +1263,7 @@
         allComments.sort((a, b) => {
           let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
           let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
-          return tA - tB;
+          return tB - tA;
         });
 
         const mainComments = allComments.filter(c => !c.parent_id);
@@ -1399,8 +1428,8 @@
       return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    /* --- მედია ფაილის ატვირთვა R2-ზე --- */
-    function uploadMediaFile(file, callback) {
+    /* --- მედია ფაილის ატვირთვა R2-ზე პროგრესბარით --- */
+    function uploadMediaFile(file, callback, progressCallback) {
       if (!file) { callback(null, null); return; }
       var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
@@ -1423,7 +1452,12 @@
         ContentType: contentType
       };
 
-      r2S3.upload(params, function(err, data) {
+      var options = {
+        partSize: 8 * 1024 * 1024,
+        queueSize: 1
+      };
+
+      var uploadObj = r2S3.upload(params, options, function(err, data) {
         if (err) {
           console.error("R2 Upload Error:", err);
           callback(null, null);
@@ -1432,6 +1466,40 @@
           callback(publicUrl, isVideo ? 'video' : 'image');
         }
       });
+
+      uploadObj.on('httpUploadProgress', function(evt) {
+        if (evt.total && progressCallback) {
+          var percent = Math.round((evt.loaded / evt.total) * 100);
+          progressCallback(percent);
+        }
+      });
+    }
+
+    /* --- წრიული პროგრესბარის მართვა --- */
+    function setUploadProgressRing(percent) {
+      const circle = document.getElementById('dg-progress-circle');
+      const text = document.getElementById('dg-progress-percent');
+      const circumference = 81.68; // 2 * PI * 13
+
+      const offset = circumference - (percent / 100) * circumference;
+      if (circle) circle.style.strokeDashoffset = offset;
+      if (text) text.innerText = percent + "%";
+    }
+
+    function showUploadProgressUI() {
+      const pBox = document.getElementById('dg-upload-progress-box');
+      const pickBtn = document.getElementById('dg-media-pick-btn');
+      setUploadProgressRing(0);
+      if (pickBtn) pickBtn.style.display = 'none';
+      if (pBox) pBox.style.display = 'flex';
+    }
+
+    function hideUploadProgressUI() {
+      const pBox = document.getElementById('dg-upload-progress-box');
+      const pickBtn = document.getElementById('dg-media-pick-btn');
+      setUploadProgressRing(0);
+      if (pBox) pBox.style.display = 'none';
+      if (pickBtn) pickBtn.style.display = 'flex';
     }
 
     /* --- პირდაპირი პოსტის შექმნა (გალერეა + Enter) --- */
@@ -1446,7 +1514,16 @@
       const nameTxt = document.getElementById('direct-file-name-txt');
       
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        nameTxt.innerText = `📎 ${fileInput.files[0].name} (გასაგზავნად დააჭირეთ Enter-ს)`;
+        const file = fileInput.files[0];
+
+        // 🚨 100MB ლიმიტის შემოწმება
+        if (file.size > 100 * 1024 * 1024) {
+          alert("⚠️ ფაილის ზომა აღემატება 100 MB-ს! გთხოვთ აირჩიოთ უფრო მცირე ზომის ვიდეო/ფოტო.");
+          clearDirectSelectedFile();
+          return;
+        }
+
+        nameTxt.innerText = `📎 ${file.name} (გასაგზავნად დააჭირეთ Enter-ს)`;
         badge.style.display = "flex";
       } else {
         badge.style.display = "none";
@@ -1504,6 +1581,7 @@
           comments_count: 0,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
+          hideUploadProgressUI();
           if (textInput) {
             textInput.disabled = false;
             textInput.value = "";
@@ -1512,6 +1590,7 @@
           clearDirectSelectedFile();
           loadGroupPosts(activeGroupId);
         }).catch(err => {
+          hideUploadProgressUI();
           alert("შეცდომა: " + err.message);
           if (textInput) {
             textInput.disabled = false;
@@ -1521,8 +1600,11 @@
       };
 
       if (hasFile) {
+        showUploadProgressUI();
         uploadMediaFile(fileInput.files[0], function(mediaUrl, mediaType) {
           savePostDoc(mediaUrl, mediaType);
+        }, function(percent) {
+          setUploadProgressRing(percent);
         });
       } else {
         savePostDoc(null, null);
