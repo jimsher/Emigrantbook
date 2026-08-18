@@ -76,7 +76,7 @@
        ---------------------------------------------------- */
     #group-detail-view { display: none; }
 
-    /* Floating Top Bar (ზედა გამჭვირვალე ნავიგაცია ქავერზე) */
+    /* Floating Top Bar */
     .group-top-floating-nav {
       position: absolute; top: 0; left: 0; right: 0; z-index: 10;
       display: flex; justify-content: space-between; align-items: center;
@@ -149,7 +149,33 @@
     }
     .sub-tab-btn.active { background: #dcae36; color: #111; }
 
-    /* პოსტის დაწერის ველი (ავატარი ▾ + ინფუთი + სურათის აიკონი) */
+    /* ადმინისტრატორის მოთხოვნების მართვის პანელი */
+    .admin-requests-box {
+      margin: 14px 16px 0 16px; background: #181822; border: 1px solid #dcae36;
+      border-radius: 12px; padding: 14px; display: none;
+    }
+    .admin-requests-header {
+      font-size: 14px; font-weight: 700; color: #dcae36; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pending-user-card {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #101016; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;
+      border: 1px solid #282834;
+    }
+    .pending-user-info { display: flex; align-items: center; gap: 10px; }
+    .pending-user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+    .pending-actions { display: flex; gap: 6px; }
+    .btn-approve {
+      background: #2ed573; color: #fff; border: none; padding: 6px 12px;
+      border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
+    }
+    .btn-reject {
+      background: #ff4757; color: #fff; border: none; padding: 6px 12px;
+      border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
+    }
+
+    /* პოსტის დაწერის ველი */
     .group-create-post {
       background: #141418; border: 1px solid #222228; border-radius: 12px;
       padding: 12px 14px; margin: 14px 16px;
@@ -161,23 +187,25 @@
       border-radius: 20px; padding: 3px 8px 3px 4px;
       cursor: pointer; flex-shrink: 0;
     }
-    .post-identity-avatar {
-      width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
-    }
-    .post-identity-arrow {
-      font-size: 10px; color: #8a8f9d;
-    }
+    .post-identity-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+    .post-identity-arrow { font-size: 10px; color: #8a8f9d; }
     .post-fake-input {
       flex: 1; background: #1c1c24; border: 1px solid #282834;
       border-radius: 25px; padding: 10px 16px; color: #8a8f9d;
       font-size: 14px; cursor: pointer;
     }
-    .post-media-trigger {
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; padding: 4px;
-    }
+    .post-media-trigger { display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 4px; }
 
-    /* ფიდის სათაური */
+    /* დახურული ჯგუფის დაბლოკვის შეტყობინება */
+    .private-locked-container {
+      background: #141418; border: 1px solid #252530; border-radius: 14px;
+      margin: 14px 16px; padding: 35px 20px; text-align: center;
+    }
+    .private-locked-icon { font-size: 40px; margin-bottom: 12px; }
+    .private-locked-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .private-locked-desc { font-size: 13px; color: #8a8f9d; line-height: 1.5; max-width: 400px; margin: 0 auto; }
+
+    /* ფიდის სათაური / ფილტრი */
     .group-feed-filter-bar {
       padding: 6px 16px 10px 16px; display: flex;
       justify-content: space-between; align-items: center;
@@ -190,12 +218,8 @@
       background: #141418; border: 1px solid #222228;
       border-radius: 14px; margin: 0 16px 14px 16px; padding: 14px;
     }
-    .g-post-head {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
-    }
-    .g-post-avatar {
-      width: 42px; height: 42px; border-radius: 50%; object-fit: cover;
-    }
+    .g-post-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .g-post-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
     .g-post-author { font-size: 14px; font-weight: 700; color: #fff; }
     .g-post-time { font-size: 11px; color: #7b8190; margin-top: 2px; }
     .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 12px; }
@@ -331,8 +355,17 @@
         </div>
       </div>
 
-      <!-- პოსტის დაწერის ველი (ავატარი ▾ + ინფუთი + 🖼️) -->
-      <div class="group-create-post">
+      <!-- ადმინისტრატორის მართვის პანელი: მომლოდინე წევრების დადასტურება -->
+      <div class="admin-requests-box" id="admin-requests-container">
+        <div class="admin-requests-header">
+          <span>🔔 გაწევრიანების მოთხოვნები</span>
+          <span id="admin-requests-count" style="background:#dcae36; color:#111; font-size:11px; padding:2px 6px; border-radius:10px;">0</span>
+        </div>
+        <div id="admin-requests-list"></div>
+      </div>
+
+      <!-- პოსტის დაწერის ველი (მხოლოდ წევრებისთვის) -->
+      <div class="group-create-post" id="dg-create-post-box">
         <div class="post-identity-pill" onclick="openGroupPostModal()">
           <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
           <span class="post-identity-arrow">▼</span>
@@ -343,8 +376,17 @@
         </div>
       </div>
 
+      <!-- დახურული ჯგუფის შეტყობინება (თუ მომხმარებელი არ არის წევრი) -->
+      <div class="private-locked-container" id="dg-private-locked-box" style="display: none;">
+        <div class="private-locked-icon">🔒</div>
+        <div class="private-locked-title">ეს ჯგუფი დახურულია</div>
+        <div class="private-locked-desc">
+          გააგზავნეთ გაწევრიანების მოთხოვნა და დაელოდეთ ადმინისტრატორის დადასტურებას, რათა იხილოთ ჯგუფის პოსტები და შიგთავსი.
+        </div>
+      </div>
+
       <!-- ფიდის სათაური / ფილტრი -->
-      <div class="group-feed-filter-bar">
+      <div class="group-feed-filter-bar" id="dg-feed-filter-bar">
         <span class="filter-title">ყველაზე რელევანტური</span>
         <button class="filter-icon-btn">⚙️</button>
       </div>
@@ -368,8 +410,8 @@
       <textarea id="new-group-desc" class="input-field" style="resize: none; height: 80px;" placeholder="ჯგუფის მოკლე აღწერა..."></textarea>
       
       <select id="new-group-privacy" class="input-field">
-        <option value="public">🌐 საჯარო (ყველას შეუძლია ნახვა)</option>
-        <option value="private">🔒 დახურული (მხოლოდ წევრებისთვის)</option>
+        <option value="public">🌐 საჯარო (ყველას შეუძლია ნახვა და შესვლა)</option>
+        <option value="private">🔒 დახურული (მოთხოვნის დადასტურებით)</option>
       </select>
 
       <button class="btn-gold" id="btn-submit-group" onclick="submitCreateGroup()">ჯგუფის შექმნა</button>
@@ -470,17 +512,29 @@
           const g = doc.data();
           const gId = doc.id;
           const isMember = g.members && g.members.includes(currentUser.uid);
+          const isPending = g.pending_members && g.pending_members.includes(currentUser.uid);
           const membersCount = g.members_count || (g.members ? g.members.length : 1);
+
+          let btnText = "შესვლა";
+          let btnStyle = "background:#dcae36; color:#111;";
+
+          if (isMember) {
+            btnText = "წევრი";
+            btnStyle = "background:#24242e; color:#cfd3dc;";
+          } else if (isPending) {
+            btnText = "მოლოდინში";
+            btnStyle = "background:#383848; color:#dcae36;";
+          }
 
           const card = `
             <div class="group-item-card" onclick="openGroupDetailView('${gId}')">
               <img src="${g.cover_url || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500'}" class="group-avatar" alt="Cover">
               <div class="group-info">
                 <div class="group-name">${g.name}</div>
-                <div class="group-meta">${membersCount} წევრი · ${g.category || 'საერთო'}</div>
+                <div class="group-meta">${membersCount} წევრი · ${g.privacy === 'private' ? '🔒 დახურული' : '🌐 საჯარო'}</div>
               </div>
-              <button onclick="toggleJoinGroupList('${gId}', ${isMember}, event)" style="padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; border: none; ${isMember ? 'background:#24242e; color:#cfd3dc;' : 'background:#dcae36; color:#111;'}">
-                ${isMember ? 'წევრი' : 'შესვლა'}
+              <button onclick="toggleJoinGroupList('${gId}', ${isMember}, ${isPending}, '${g.privacy}', event)" style="padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; border: none; ${btnStyle}">
+                ${btnText}
               </button>
             </div>
           `;
@@ -525,7 +579,28 @@
         document.getElementById('dg-privacy-badge').innerText = (activeGroupData.privacy === 'private' ? "🔒 დახურული ჯგუფი" : "🌐 საჯარო ჯგუფი");
 
         updateGroupMembershipUI();
-        loadGroupPosts(groupId);
+        checkAdminPendingRequests();
+
+        const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+        const isPrivate = activeGroupData.privacy === 'private';
+
+        const postBox = document.getElementById('dg-create-post-box');
+        const lockedBox = document.getElementById('dg-private-locked-box');
+        const filterBar = document.getElementById('dg-feed-filter-bar');
+        const postsWall = document.getElementById('dg-posts-wall');
+
+        if (isPrivate && !isMember) {
+          if (postBox) postBox.style.display = 'none';
+          if (filterBar) filterBar.style.display = 'none';
+          if (postsWall) postsWall.style.display = 'none';
+          if (lockedBox) lockedBox.style.display = 'block';
+        } else {
+          if (postBox) postBox.style.display = 'flex';
+          if (filterBar) filterBar.style.display = 'flex';
+          if (postsWall) postsWall.style.display = 'block';
+          if (lockedBox) lockedBox.style.display = 'none';
+          loadGroupPosts(groupId);
+        }
       });
     }
 
@@ -541,11 +616,16 @@
     function updateGroupMembershipUI() {
       const btn = document.getElementById('dg-btn-membership');
       const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+      const isPending = activeGroupData.pending_members && activeGroupData.pending_members.includes(currentUser.uid);
 
       if (isMember) {
         btn.style.background = "#252630";
         btn.style.color = "#ffffff";
         btn.innerHTML = "👥 თქვენ გაწევრიანდით ▾";
+      } else if (isPending) {
+        btn.style.background = "#383848";
+        btn.style.color = "#dcae36";
+        btn.innerHTML = "⏳ მოთხოვნა გაგზავნილია (მოლოდინში) ▾";
       } else {
         btn.style.background = "#dcae36";
         btn.style.color = "#111111";
@@ -556,8 +636,11 @@
     function toggleCurrentGroupMembership() {
       if (!activeGroupId) return;
       const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+      const isPending = activeGroupData.pending_members && activeGroupData.pending_members.includes(currentUser.uid);
+      const isPrivate = activeGroupData.privacy === 'private';
       const groupRef = db.collection('groups').doc(activeGroupId);
 
+      // 1. უკვე წევრია -> გასვლა
       if (isMember) {
         if (!confirm("ნამდვილად გსურთ ჯგუფის დატოვება?")) return;
         groupRef.update({
@@ -568,8 +651,36 @@
           activeGroupData.members_count = Math.max(0, (activeGroupData.members_count || 1) - 1);
           updateGroupMembershipUI();
           document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+          openGroupDetailView(activeGroupId);
+        });
+        return;
+      }
+
+      // 2. მოლოდინშია (დახურულ ჯგუფზე) -> მოთხოვნის გაუქმება
+      if (isPending) {
+        if (!confirm("გსურთ გაწევრიანების მოთხოვნის გაუქმება?")) return;
+        groupRef.update({
+          pending_members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+        }).then(() => {
+          activeGroupData.pending_members = (activeGroupData.pending_members || []).filter(id => id !== currentUser.uid);
+          updateGroupMembershipUI();
+        });
+        return;
+      }
+
+      // 3. გაწევრიანება / მოთხოვნის გაგზავნა
+      if (isPrivate) {
+        // დახურული ჯგუფი -> ემატება pending-ში
+        groupRef.update({
+          pending_members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+        }).then(() => {
+          if (!activeGroupData.pending_members) activeGroupData.pending_members = [];
+          activeGroupData.pending_members.push(currentUser.uid);
+          updateGroupMembershipUI();
+          alert("მოთხოვნა გაგზავნილია! დაელოდეთ ადმინისტრატორის დადასტურებას.");
         });
       } else {
+        // საჯარო ჯგუფი -> პირდაპირ ხდება წევრი
         groupRef.update({
           members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
           members_count: firebase.firestore.FieldValue.increment(1)
@@ -579,11 +690,12 @@
           activeGroupData.members_count = (activeGroupData.members_count || 0) + 1;
           updateGroupMembershipUI();
           document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+          openGroupDetailView(activeGroupId);
         });
       }
     }
 
-    function toggleJoinGroupList(groupId, isMember, event) {
+    function toggleJoinGroupList(groupId, isMember, isPending, privacy, event) {
       event.stopPropagation();
       const groupRef = db.collection('groups').doc(groupId);
 
@@ -592,12 +704,95 @@
           members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
           members_count: firebase.firestore.FieldValue.increment(-1)
         }).then(loadAllGroups);
-      } else {
+      } else if (isPending) {
         groupRef.update({
-          members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-          members_count: firebase.firestore.FieldValue.increment(1)
+          pending_members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
         }).then(loadAllGroups);
+      } else {
+        if (privacy === 'private') {
+          groupRef.update({
+            pending_members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+          }).then(() => {
+            alert("მოთხოვნა გაგზავნილია! დაელოდეთ ადმინისტრატორის დადასტურებას.");
+            loadAllGroups();
+          });
+        } else {
+          groupRef.update({
+            members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+            members_count: firebase.firestore.FieldValue.increment(1)
+          }).then(loadAllGroups);
+        }
       }
+    }
+
+    /* --- ადმინისტრატორის მიერ მოთხოვნების მართვა --- */
+    function checkAdminPendingRequests() {
+      const container = document.getElementById('admin-requests-container');
+      const list = document.getElementById('admin-requests-list');
+      const countEl = document.getElementById('admin-requests-count');
+
+      const isAdmin = activeGroupData.creator_id === currentUser.uid;
+      const pending = activeGroupData.pending_members || [];
+
+      if (!isAdmin || pending.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+
+      container.style.display = "block";
+      countEl.innerText = pending.length;
+      list.innerHTML = "<div style='color:#888; font-size:12px;'>მომხმარებლები იტვირთება...</div>";
+
+      let promises = pending.map(uid => db.collection('profiles').doc(uid).get());
+      Promise.all(promises).then(snaps => {
+        let html = "";
+        snaps.forEach(s => {
+          const uData = s.exists ? s.data() : {};
+          const uId = s.id;
+          const name = uData.full_name || "მომხმარებელი";
+          const avatar = uData.avatar_url || "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+
+          html += `
+            <div class="pending-user-card" id="pending-card-${uId}">
+              <div class="pending-user-info">
+                <img src="${avatar}" class="pending-user-avatar">
+                <span style="font-size:13px; font-weight:600; color:#fff;">${name}</span>
+              </div>
+              <div class="pending-actions">
+                <button class="btn-approve" onclick="approvePendingMember('${uId}')">✓ დადასტურება</button>
+                <button class="btn-reject" onclick="rejectPendingMember('${uId}')">✕ უარყოფა</button>
+              </div>
+            </div>
+          `;
+        });
+        list.innerHTML = html;
+      });
+    }
+
+    function approvePendingMember(userId) {
+      const groupRef = db.collection('groups').doc(activeGroupId);
+      groupRef.update({
+        pending_members: firebase.firestore.FieldValue.arrayRemove(userId),
+        members: firebase.firestore.FieldValue.arrayUnion(userId),
+        members_count: firebase.firestore.FieldValue.increment(1)
+      }).then(() => {
+        activeGroupData.pending_members = (activeGroupData.pending_members || []).filter(id => id !== userId);
+        if (!activeGroupData.members) activeGroupData.members = [];
+        activeGroupData.members.push(userId);
+        activeGroupData.members_count = (activeGroupData.members_count || 0) + 1;
+        document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+        checkAdminPendingRequests();
+      });
+    }
+
+    function rejectPendingMember(userId) {
+      const groupRef = db.collection('groups').doc(activeGroupId);
+      groupRef.update({
+        pending_members: firebase.firestore.FieldValue.arrayRemove(userId)
+      }).then(() => {
+        activeGroupData.pending_members = (activeGroupData.pending_members || []).filter(id => id !== userId);
+        checkAdminPendingRequests();
+      });
     }
 
     /* --- ჯგუფის პოსტების ჩატვირთვა --- */
@@ -651,6 +846,11 @@
 
     /* --- ჯგუფში პოსტის დაწერა --- */
     function openGroupPostModal() {
+      const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+      if (!isMember) {
+        alert("პოსტის დასაწერად ჯერ უნდა გაწევრიანდეთ ჯგუფში");
+        return;
+      }
       document.getElementById('create-post-modal').style.display = 'flex';
     }
     function closeGroupPostModal() {
@@ -730,6 +930,7 @@
         admin_name: creatorName,
         members_count: 1,
         members: [currentUser.uid],
+        pending_members: [],
         cover_url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600",
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then((newDoc) => {
@@ -756,7 +957,6 @@
       }
     }
 
-    // Android/Browser Back Button მხარდაჭერა
     window.onpopstate = function(e) {
       if (e.state && e.state.groupId) {
         openGroupDetailView(e.state.groupId);
