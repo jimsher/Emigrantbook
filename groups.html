@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ჯგუფები | Emigrantbook</title>
+  <title>Groups | Emigrantbook</title>
   <link rel="stylesheet" href="supabase.css">
   
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -191,32 +191,6 @@
     }
     .sub-tab-btn.active { background: #dcae36; color: #111; }
     .sub-tab-btn.active .g-svg-icon { filter: brightness(0); }
-
-    /* ადმინისტრატორის მოთხოვნების მართვის პანელი */
-    .admin-requests-box {
-      margin: 12px 0 0 0; background: #181822; border-top: 1px solid #dcae36;
-      border-bottom: 1px solid #dcae36; padding: 14px 16px; display: none;
-    }
-    .admin-requests-header {
-      font-size: 14px; font-weight: 700; color: #dcae36; margin-bottom: 10px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .pending-user-card {
-      display: flex; align-items: center; justify-content: space-between;
-      background: #101016; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;
-      border: 1px solid #282834;
-    }
-    .pending-user-info { display: flex; align-items: center; gap: 10px; }
-    .pending-user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-    .pending-actions { display: flex; gap: 6px; }
-    .btn-approve {
-      background: #2ed573; color: #fff; border: none; padding: 6px 12px;
-      border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
-    }
-    .btn-reject {
-      background: #ff4757; color: #fff; border: none; padding: 6px 12px;
-      border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
-    }
 
     /* პოსტის პირდაპირი საწერი ველი */
     .group-create-post {
@@ -501,47 +475,47 @@
       <div class="groups-header-main">
         <div class="header-left">
           <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-          <h1 class="header-title">ჯგუფები</h1>
+          <h1 class="header-title" id="txt-header-title">Groups</h1>
         </div>
         <div class="header-actions">
-          <button class="action-circle-btn" onclick="openCreateGroupModal()" title="ახალი ჯგუფი">
+          <button class="action-circle-btn" onclick="openCreateGroupModal()" title="Create Group">
             <img src="icons/user-round-plus.svg" class="g-svg-icon" alt="Create Group">
           </button>
         </div>
       </div>
 
       <div class="groups-tabs">
-        <button class="tab-pill active" onclick="switchGroupTab('discover')">თქვენთვის</button>
-        <button class="tab-pill" onclick="switchGroupTab('my_groups')">თქვენი ჯგუფები</button>
+        <button class="tab-pill active" id="tab-pill-discover" onclick="switchGroupTab('discover')">For you</button>
+        <button class="tab-pill" id="tab-pill-mygroups" onclick="switchGroupTab('my_groups')">Your groups</button>
       </div>
 
       <!-- Discover Tab -->
       <div id="tab-discover-view">
         <div class="section-box">
           <div class="section-head">
-            <span class="section-title">თქვენი ჯგუფები</span>
-            <span class="section-link" onclick="switchGroupTab('my_groups')">ყველას ნახვა</span>
+            <span class="section-title" id="txt-sec-your-groups">Your groups</span>
+            <span class="section-link" id="txt-sec-see-all" onclick="switchGroupTab('my_groups')">See all</span>
           </div>
           <div id="quick-joined-groups">
-            <div style="color: #666; font-size: 13px;">იტვირთება...</div>
+            <div style="color: #666; font-size: 13px;">Loading...</div>
           </div>
         </div>
 
         <div class="section-box">
           <div class="section-head">
-            <span class="section-title">რეკომენდებული ჯგუფები</span>
+            <span class="section-title" id="txt-sec-suggested">Suggested groups</span>
           </div>
           <div id="discover-groups-list">
-            <div style="color: #666; font-size: 13px;">ჯგუფები იტვირთება...</div>
+            <div style="color: #666; font-size: 13px;">Loading groups...</div>
           </div>
         </div>
       </div>
 
       <!-- My Groups Tab -->
       <div id="tab-mygroups-view" style="display: none; padding: 16px;">
-        <div class="section-title" style="margin-bottom: 15px;">ჯგუფები რომლებშიც ხართ</div>
+        <div class="section-title" id="txt-sec-joined-full" style="margin-bottom: 15px;">Groups you've joined</div>
         <div id="my-groups-full-list">
-          <div style="color: #666; font-size: 13px;">იტვირთება...</div>
+          <div style="color: #666; font-size: 13px;">Loading...</div>
         </div>
       </div>
     </div>
@@ -555,12 +529,12 @@
           <img src="icons/undo-2.svg" class="g-svg-icon" alt="Back">
         </button>
         <div style="display: flex; gap: 8px;">
-          <button class="nav-round-btn" onclick="alert('ძებნა მალე დაემატება')">
+          <button class="nav-round-btn" onclick="alert(t('search_coming_soon'))">
             <img src="icons/search.svg" class="g-svg-icon" alt="Search">
           </button>
           
           <!-- ადმინისტრატორის მართვის ღილაკი (ხრახნილი) -->
-          <button class="nav-round-btn" id="dg-admin-settings-btn" style="display: none;" onclick="openAdminModerationModal()" title="ადმინისტრატორის მართვა">
+          <button class="nav-round-btn" id="dg-admin-settings-btn" style="display: none;" onclick="openAdminModerationModal()" title="Admin Settings">
             <img src="icons/settings.svg" class="g-svg-icon-gold" alt="Admin Settings">
             <div class="admin-badge-dot" id="dg-admin-pending-badge" style="display: none;">0</div>
           </button>
@@ -574,14 +548,14 @@
         <input type="file" id="group-cover-file-input" accept="image/*" style="display: none;" onchange="uploadGroupCoverFile()">
         <button class="cover-upload-btn" id="dg-cover-upload-btn" style="display: none;" onclick="triggerGroupCoverPick()">
           <img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera">
-          <span>ქავერის შეცვლა</span>
+          <span id="txt-btn-change-cover">Change Cover</span>
         </button>
       </div>
 
       <!-- ადმინისტრატორის ზოლი -->
       <div class="admin-ribbon-bar" id="dg-admin-bar">
         <img src="icons/crown.svg" class="g-svg-icon-dark" alt="Admin">
-        <span>ჯგუფის ადმინისტრატორია:</span>
+        <span id="txt-admin-ribbon-label">Group admin is:</span>
         <span id="dg-admin-text" style="text-decoration: underline;">...</span>
       </div>
 
@@ -593,36 +567,36 @@
         
         <div class="group-detail-subtitle">
           <span id="dg-privacy-badge" style="display: inline-flex; align-items: center; gap: 4px;">
-            <img src="icons/globe.svg" class="g-svg-icon-xs" alt="Privacy"> საჯარო ჯგუფი
-          </span> · <span id="dg-members-count">0 წევრი</span>
+            <img src="icons/globe.svg" class="g-svg-icon-xs" alt="Privacy"> Public group
+          </span> · <span id="dg-members-count">0 members</span>
         </div>
 
         <!-- ერთმანეთის ქვეშ განლაგებული ღილაკები -->
         <div class="group-actions-stacked">
           <button class="btn-membership-stacked" id="dg-btn-membership" onclick="toggleCurrentGroupMembership()">
-            <img src="icons/users.svg" class="g-svg-icon" alt="Joined"> თქვენ გაწევრიანდით ▾
+            <img src="icons/users.svg" class="g-svg-icon" alt="Joined"> <span id="dg-btn-membership-txt">Joined ▾</span>
           </button>
           <button class="btn-invite-stacked" onclick="openInviteFriendsModal()">
-            <img src="icons/user-round-plus.svg" class="g-svg-icon-dark" alt="Invite"> მოიწვიეთ
+            <img src="icons/user-round-plus.svg" class="g-svg-icon-dark" alt="Invite"> <span id="txt-btn-invite-stack">Invite</span>
           </button>
         </div>
 
         <!-- ჰორიზონტალური ქვეტაბები -->
         <div class="group-sub-tabs">
           <button class="sub-tab-btn active" id="subtab-btn-featured" onclick="switchGroupSubTab('featured')">
-            <img src="icons/flag.svg" class="g-svg-icon-sm" alt="Featured"> რჩეული
+            <img src="icons/flag.svg" class="g-svg-icon-sm" alt="Featured"> <span id="txt-subtab-featured">Featured</span>
           </button>
           <button class="sub-tab-btn" id="subtab-btn-you" onclick="switchGroupSubTab('you')">
-            <img src="icons/circle-user-round.svg" class="g-svg-icon-sm" alt="You"> თქვენ
+            <img src="icons/circle-user-round.svg" class="g-svg-icon-sm" alt="You"> <span id="txt-subtab-you">You</span>
           </button>
           <button class="sub-tab-btn" id="subtab-btn-photos" onclick="switchGroupSubTab('photos')">
-            <img src="icons/image.svg" class="g-svg-icon-sm" alt="Photos"> ფოტოები
+            <img src="icons/image.svg" class="g-svg-icon-sm" alt="Photos"> <span id="txt-subtab-photos">Photos</span>
           </button>
           <button class="sub-tab-btn" id="subtab-btn-events" onclick="switchGroupSubTab('events')">
-            <img src="icons/bookmark.svg" class="g-svg-icon-sm" alt="Events"> ღონისძიებები
+            <img src="icons/bookmark.svg" class="g-svg-icon-sm" alt="Events"> <span id="txt-subtab-events">Events</span>
           </button>
           <button class="sub-tab-btn" id="subtab-btn-files" onclick="switchGroupSubTab('files')">
-            <img src="icons/database.svg" class="g-svg-icon-sm" alt="Files"> ფაილები
+            <img src="icons/database.svg" class="g-svg-icon-sm" alt="Files"> <span id="txt-subtab-files">Files</span>
           </button>
         </div>
       </div>
@@ -632,9 +606,9 @@
         <div class="private-locked-icon">
           <img src="icons/lock.svg" style="width: 44px; height: 44px; filter: brightness(0) invert(1); opacity: 0.85;" alt="Locked">
         </div>
-        <div class="private-locked-title">ეს ჯგუფი დახურულია</div>
-        <div class="private-locked-desc">
-          გააგზავნეთ გაწევრიანების მოთხოვნა და დაელოდეთ ადმინისტრატორის დადასტურებას, რათა იხილოთ ჯგუფის პოსტები და შიგთავსი.
+        <div class="private-locked-title" id="txt-private-locked-title">This group is private</div>
+        <div class="private-locked-desc" id="txt-private-locked-desc">
+          Send a request to join and wait for admin approval to view posts and content.
         </div>
       </div>
 
@@ -642,7 +616,7 @@
       <div id="subtab-view-featured">
         <!-- პირდაპირი საწერი ველი -->
         <div class="group-create-post" id="dg-create-post-box">
-          <div class="post-identity-pill" onclick="toggleIdentityDropdown(event)" title="აირჩიეთ პოსტის ავტორი">
+          <div class="post-identity-pill" onclick="toggleIdentityDropdown(event)" title="Choose author">
             <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
             <span class="post-identity-arrow">▼</span>
           </div>
@@ -652,26 +626,26 @@
               <img id="opt-avatar-real" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar">
               <div>
                 <div class="identity-option-title" id="opt-name-real">
-                  <img src="icons/circle-user-round.svg" class="g-svg-icon-sm" alt="User"> თქვენი პროფილი
+                  <img src="icons/circle-user-round.svg" class="g-svg-icon-sm" alt="User"> <span>Your Profile</span>
                 </div>
-                <div class="identity-option-sub">საჯარო გამოქვეყნება</div>
+                <div class="identity-option-sub" id="txt-id-opt-public">Public post</div>
               </div>
             </div>
             <div class="identity-option" id="opt-identity-anon" onclick="selectPostingIdentity(true, event)">
               <img src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="identity-option-avatar" style="filter: grayscale(100%) contrast(150%);">
               <div>
                 <div class="identity-option-title" style="color: #dcae36;">
-                  <img src="icons/hat-glasses.svg" class="g-svg-icon-gold" alt="Anon"> ანონიმური წევრი
+                  <img src="icons/hat-glasses.svg" class="g-svg-icon-gold" alt="Anon"> <span id="txt-id-opt-anon">Anonymous Member</span>
                 </div>
-                <div class="identity-option-sub">სახელი და ფოტო დაიმალება</div>
+                <div class="identity-option-sub" id="txt-id-opt-anon-sub">Name and photo will be hidden</div>
               </div>
             </div>
           </div>
           
-          <input type="text" id="direct-group-post-text" class="post-real-input" placeholder="დაწერეთ რამე ჯგუფში..." onkeypress="if(event.key==='Enter') submitDirectGroupPost()">
+          <input type="text" id="direct-group-post-text" class="post-real-input" placeholder="Write something in the group..." onkeypress="if(event.key==='Enter') submitDirectGroupPost()">
           <input type="file" id="direct-group-file-input" accept="image/*,video/*" style="display: none;" onchange="handleDirectFileSelected()">
           
-          <div class="post-media-trigger" id="dg-media-pick-btn" onclick="triggerDirectFilePick()" title="ფოტოს/ვიდეოს ატვირთვა">
+          <div class="post-media-trigger" id="dg-media-pick-btn" onclick="triggerDirectFilePick()" title="Upload Photo/Video">
             <img src="icons/image.svg" style="width: 24px; height: 24px; filter: invert(56%) sepia(85%) saturate(415%) hue-rotate(85deg) brightness(98%) contrast(92%);" alt="Media">
           </div>
 
@@ -686,40 +660,40 @@
 
         <div id="direct-selected-file-badge" class="direct-file-preview-bar">
           <span id="direct-file-name-txt">
-            <img src="icons/tag.svg" class="g-svg-icon-xs" alt="File"> ფაილი არჩეულია
+            <img src="icons/tag.svg" class="g-svg-icon-xs" alt="File"> File selected
           </span>
           <span style="cursor: pointer; color: #ff4757; font-weight: bold; font-size: 14px;" onclick="clearDirectSelectedFile()">✕</span>
         </div>
 
         <div class="group-feed-filter-bar" id="dg-feed-filter-bar">
-          <span class="filter-title">ყველაზე რელევანტური</span>
+          <span class="filter-title" id="txt-filter-title">Most Relevant</span>
           <button class="filter-icon-btn">
             <img src="icons/settings.svg" class="g-svg-icon-sm" alt="Filter">
           </button>
         </div>
 
         <div id="dg-posts-wall">
-          <div style="text-align: center; color: #888; padding: 25px;">პოსტები იტვირთება...</div>
+          <div style="text-align: center; color: #888; padding: 25px;">Loading posts...</div>
         </div>
       </div>
 
       <!-- ================= 2. SUBTAB: 👤 თქვენ (Your Posts) ================= -->
       <div id="subtab-view-you" style="display: none;">
         <div style="padding: 14px 16px 8px 16px; font-weight: 700; font-size: 15px; color: #dcae36; display: flex; align-items: center; gap: 6px;">
-          <img src="icons/circle-user-round.svg" class="g-svg-icon-gold" alt="You"> თქვენი აქტივობა ამ ჯგუფში
+          <img src="icons/circle-user-round.svg" class="g-svg-icon-gold" alt="You"> <span id="txt-you-activity-header">Your activity in this group</span>
         </div>
         <div id="dg-your-posts-wall">
-          <div style="text-align: center; color: #888; padding: 25px;">იტვირთება...</div>
+          <div style="text-align: center; color: #888; padding: 25px;">Loading...</div>
         </div>
       </div>
 
       <!-- ================= 3. SUBTAB: ფოტოები (Photos Gallery) ================= -->
       <div id="subtab-view-photos" style="display: none;">
         <div style="padding: 12px 16px 6px 16px; font-weight: 700; font-size: 15px; color: #fff; display: flex; align-items: center; gap: 6px;">
-          <img src="icons/image.svg" class="g-svg-icon" alt="Photos"> ჯგუფის ფოტოები
+          <img src="icons/image.svg" class="g-svg-icon" alt="Photos"> <span id="txt-photos-header">Group Photos</span>
         </div>
         <div id="dg-photos-grid-box" class="group-photos-grid">
-          <div style="grid-column: span 3; text-align: center; color: #888; padding: 30px;">ფოტოები იტვირთება...</div>
+          <div style="grid-column: span 3; text-align: center; color: #888; padding: 30px;">Loading photos...</div>
         </div>
       </div>
 
@@ -729,21 +703,21 @@
           <div style="margin-bottom: 4px;">
             <img src="icons/bookmark.svg" class="g-svg-icon-gold" style="width: 24px; height: 24px;" alt="Events">
           </div>
-          <div style="font-weight: 700; color: #dcae36; font-size: 14px;">+ ახალი ღონისძიების დაგეგმვა</div>
-          <div style="font-size: 11px; color: #8a8f9d; margin-top: 2px;">დაგეგმეთ შეხვედრა ან ივენთი ჯგუფის წევრებისთვის</div>
+          <div style="font-weight: 700; color: #dcae36; font-size: 14px;" id="txt-plan-event-btn">+ Plan New Event</div>
+          <div style="font-size: 11px; color: #8a8f9d; margin-top: 2px;" id="txt-plan-event-sub">Plan a meeting or event for group members</div>
         </div>
         <div id="dg-events-list">
-          <div style="text-align: center; color: #888; padding: 20px;">ღონისძიებები იტვირთება...</div>
+          <div style="text-align: center; color: #888; padding: 20px;">Loading events...</div>
         </div>
       </div>
 
       <!-- ================= 5. SUBTAB: ფაილები (Files & Media) ================= -->
       <div id="subtab-view-files" style="display: none;" class="files-container">
         <div style="font-weight: 700; font-size: 15px; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-          <img src="icons/database.svg" class="g-svg-icon" alt="Files"> ჯგუფში გაზიარებული ფაილები
+          <img src="icons/database.svg" class="g-svg-icon" alt="Files"> <span id="txt-files-header">Files Shared in Group</span>
         </div>
         <div id="dg-files-list">
-          <div style="text-align: center; color: #888; padding: 20px;">ფაილები იტვირთება...</div>
+          <div style="text-align: center; color: #888; padding: 20px;">Loading files...</div>
         </div>
       </div>
 
@@ -755,18 +729,18 @@
   <div class="modal-overlay" id="create-group-modal" onclick="closeCreateGroupModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2 class="sheet-title">ახალი ჯგუფის შექმნა</h2>
+      <h2 class="sheet-title" id="txt-modal-create-group-title">Create New Group</h2>
       
-      <input type="text" id="new-group-name" class="input-field" placeholder="ჯგუფის სახელი (მაგ. ემიგრანტები რომში)">
-      <input type="text" id="new-group-category" class="input-field" placeholder="კატეგორია / ქვეყანა (მაგ. იტალია)">
-      <textarea id="new-group-desc" class="input-field" style="resize: none; height: 80px;" placeholder="ჯგუფის მოკლე აღწერა..."></textarea>
+      <input type="text" id="new-group-name" class="input-field" placeholder="Group name (e.g. Rome Expats)">
+      <input type="text" id="new-group-category" class="input-field" placeholder="Category / Country (e.g. Italy)">
+      <textarea id="new-group-desc" class="input-field" style="resize: none; height: 80px;" placeholder="Short group description..."></textarea>
       
       <select id="new-group-privacy" class="input-field">
-        <option value="public">საჯარო ჯგუფი</option>
-        <option value="private">დახურული ჯგუფი</option>
+        <option value="public" id="opt-privacy-public">Public group</option>
+        <option value="private" id="opt-privacy-private">Private group</option>
       </select>
 
-      <button class="btn-gold" id="btn-submit-group" onclick="submitCreateGroup()">ჯგუფის შექმნა</button>
+      <button class="btn-gold" id="btn-submit-group" onclick="submitCreateGroup()">Create Group</button>
     </div>
   </div>
 
@@ -774,14 +748,14 @@
   <div class="modal-overlay" id="create-event-modal" onclick="closeCreateEventModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2 class="sheet-title">ახალი ღონისძიების შექმნა</h2>
+      <h2 class="sheet-title" id="txt-modal-create-event-title">Create New Event</h2>
       
-      <input type="text" id="new-event-title" class="input-field" placeholder="ღონისძიების სახელწოდება">
+      <input type="text" id="new-event-title" class="input-field" placeholder="Event title">
       <input type="date" id="new-event-date" class="input-field">
-      <input type="text" id="new-event-location" class="input-field" placeholder="ადგილმდებარეობა / ქალაქი">
-      <textarea id="new-event-desc" class="input-field" style="resize: none; height: 80px;" placeholder="დამატებითი დეტალები..."></textarea>
+      <input type="text" id="new-event-location" class="input-field" placeholder="Location / City">
+      <textarea id="new-event-desc" class="input-field" style="resize: none; height: 80px;" placeholder="Additional details..."></textarea>
 
-      <button class="btn-gold" id="btn-submit-event" onclick="submitCreateEvent()">ღონისძიების შექმნა</button>
+      <button class="btn-gold" id="btn-submit-event" onclick="submitCreateEvent()">Create Event</button>
     </div>
   </div>
 
@@ -789,13 +763,13 @@
   <div class="modal-overlay" id="invite-friends-modal" onclick="closeInviteFriendsModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2 class="sheet-title" style="margin-bottom: 12px;">მეგობრების მოწვევა ჯგუფში</h2>
+      <h2 class="sheet-title" id="txt-modal-invite-title" style="margin-bottom: 12px;">Invite Friends to Group</h2>
       
       <div id="invite-friends-list-box" style="max-height: 380px; overflow-y: auto; padding-right: 4px; margin-bottom: 10px;">
-        <div style="text-align: center; color: #888; padding: 25px;">მეგობრები იტვირთება...</div>
+        <div style="text-align: center; color: #888; padding: 25px;">Loading friends...</div>
       </div>
 
-      <button class="btn-gold" style="background: #24242e; color: #fff; margin-top: 6px;" onclick="closeInviteFriendsModal()">დახურვა</button>
+      <button class="btn-gold" id="txt-btn-close-invite" style="background: #24242e; color: #fff; margin-top: 6px;" onclick="closeInviteFriendsModal()">Close</button>
     </div>
   </div>
 
@@ -805,30 +779,30 @@
       <div class="sheet-handle"></div>
       <h2 class="sheet-title" style="margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
         <img src="icons/settings.svg" class="g-svg-icon-gold" alt="Admin">
-        <span>ჯგუფის მართვა და მოდერაცია</span>
+        <span id="txt-admin-mod-title">Group Management & Moderation</span>
       </h2>
       
       <!-- 1. მომლოდინე წევრები -->
       <div style="margin-bottom: 16px;">
         <div style="font-size: 13px; font-weight: 700; color: #dcae36; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-          <img src="icons/users.svg" class="g-svg-icon-gold" alt="Members"> გაწევრიანების მოთხოვნები
+          <img src="icons/users.svg" class="g-svg-icon-gold" alt="Members"> <span id="txt-admin-mod-members-req">Membership Requests</span>
         </div>
         <div id="admin-mod-members-list">
-          <div style="color: #666; font-size: 12px;">მოთხოვნები არ არის</div>
+          <div style="color: #666; font-size: 12px;">No requests</div>
         </div>
       </div>
 
       <!-- 2. მომლოდინე პოსტები -->
       <div style="margin-bottom: 12px;">
         <div style="font-size: 13px; font-weight: 700; color: #dcae36; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-          <img src="icons/pen.svg" class="g-svg-icon-gold" alt="Posts"> დასადასტურებელი პოსტები
+          <img src="icons/pen.svg" class="g-svg-icon-gold" alt="Posts"> <span id="txt-admin-mod-posts-req">Posts Pending Approval</span>
         </div>
         <div id="admin-mod-posts-list" style="max-height: 280px; overflow-y: auto;">
-          <div style="color: #666; font-size: 12px;">მომლოდინე პოსტები არ არის</div>
+          <div style="color: #666; font-size: 12px;">No pending posts</div>
         </div>
       </div>
 
-      <button class="btn-gold" style="background: #24242e; color: #fff; margin-top: 8px;" onclick="closeAdminModerationModal()">დახურვა</button>
+      <button class="btn-gold" id="txt-btn-close-mod" style="background: #24242e; color: #fff; margin-top: 8px;" onclick="closeAdminModerationModal()">Close</button>
     </div>
   </div>
 
@@ -836,20 +810,20 @@
   <div class="modal-overlay" id="group-comments-modal" onclick="closeGroupCommentsModal()">
     <div class="bottom-sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
-      <h2 class="sheet-title" style="margin-bottom: 10px;">კომენტარები</h2>
+      <h2 class="sheet-title" id="txt-modal-comments-title" style="margin-bottom: 10px;">Comments</h2>
       
       <div id="group-comments-list" style="max-height: 340px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
-        <div style="text-align: center; color: #888; padding: 20px;">იტვირთება...</div>
+        <div style="text-align: center; color: #888; padding: 20px;">Loading...</div>
       </div>
 
       <div id="g-reply-active-bar" style="display: none; align-items: center; justify-content: space-between; background: #22222c; border: 1px solid #333344; padding: 6px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 12px; color: #dcae36;">
-        <span id="g-reply-active-text">პასუხი მომხმარებელს...</span>
-        <span style="cursor: pointer; color: #ff4757; font-weight: bold;" onclick="cancelGroupReplyMode()">✕ გაუქმება</span>
+        <span id="g-reply-active-text">Replying...</span>
+        <span style="cursor: pointer; color: #ff4757; font-weight: bold;" id="txt-btn-cancel-reply" onclick="cancelGroupReplyMode()">✕ Cancel</span>
       </div>
 
       <div style="display: flex; gap: 8px;">
-        <input type="text" id="group-comment-input" class="input-field" style="margin-bottom: 0;" placeholder="დაწერეთ კომენტარი..." onkeypress="if(event.key==='Enter') submitGroupComment()">
-        <button class="btn-gold" style="width: auto; padding: 0 18px; margin-top: 0;" onclick="submitGroupComment()">გაგზავნა</button>
+        <input type="text" id="group-comment-input" class="input-field" style="margin-bottom: 0;" placeholder="Write a comment..." onkeypress="if(event.key==='Enter') submitGroupComment()">
+        <button class="btn-gold" id="txt-btn-submit-comment" style="width: auto; padding: 0 18px; margin-top: 0;" onclick="submitGroupComment()">Send</button>
       </div>
     </div>
   </div>
@@ -871,6 +845,318 @@
     const DEFAULT_COVER_IMAGE = "covergroups.png";
     const ANONYMOUS_AVATAR = "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
 
+    /* =========================================================================
+       🌐 მრავალენოვანი ლექსიკონი (i18n Localization Dictionary)
+       ========================================================================= */
+    const translations = {
+      en: {
+        groups: "Groups",
+        for_you: "For you",
+        your_groups: "Your groups",
+        see_all: "See all",
+        suggested_groups: "Suggested groups",
+        groups_joined: "Groups you've joined",
+        loading: "Loading...",
+        loading_groups: "Loading groups...",
+        loading_friends: "Loading friends...",
+        loading_photos: "Loading photos...",
+        loading_events: "Loading events...",
+        loading_files: "Loading files...",
+        no_groups_yet: "No groups yet",
+        create_first_group: "Create the first group!",
+        not_joined_any: "You haven't joined any groups yet",
+        other_not_found: "No other groups found",
+        members_count_label: "members",
+        member_badge: "Member",
+        admin_badge: "Admin",
+        pending_badge: "Pending",
+        join_btn: "Join",
+        joined_dropdown_btn: "Joined ▾",
+        invite_btn: "Invite",
+        join_group_action: "Join Group",
+        admin_action_btn: "Admin",
+        group_admin_is: "Group admin is:",
+        public_group: "Public group",
+        private_group: "Private group",
+        change_cover: "Change Cover",
+        cover_updated_success: "Cover photo updated successfully!",
+        featured: "Featured",
+        you: "You",
+        photos: "Photos",
+        events: "Events",
+        files: "Files",
+        requests: "Membership Requests",
+        group_is_private: "This group is private",
+        group_private_desc: "Send a request to join and wait for admin approval to view posts and content.",
+        write_something: "Write something in the group...",
+        write_anon: "Write anonymously...",
+        your_profile: "Your Profile",
+        public_post_desc: "Public post",
+        anon_member: "Anonymous Member",
+        anon_desc: "Name and photo will be hidden",
+        file_selected_msg: "File selected (Press Enter to post)",
+        most_relevant: "Most Relevant",
+        like: "Like",
+        comment: "Comment",
+        share: "Share",
+        comments_count_label: "comments",
+        edit: "Edit",
+        delete: "Delete",
+        enter_new_text: "Enter new text:",
+        delete_post_confirm: "Are you sure you want to delete this post?",
+        delete_comment_confirm: "Are you sure you want to delete this comment?",
+        leave_group_confirm: "Are you sure you want to leave the group?",
+        cancel_request_confirm: "Do you want to cancel your join request?",
+        request_sent_alert: "Request sent! Please wait for admin approval.",
+        group_not_found: "Group not found",
+        join_first_to_post: "You must join the group before posting",
+        sending: "Posting...",
+        post_pending_alert: "Your post has been sent to the group admin for approval!",
+        create_new_group: "Create New Group",
+        group_name_ph: "Group name (e.g. Rome Expats)",
+        group_cat_ph: "Category / Country (e.g. Italy)",
+        group_desc_ph: "Short group description...",
+        create_group_btn: "Create Group",
+        creating: "Creating...",
+        enter_group_name_alert: "Please enter a group name",
+        link_copied: "Group link copied!",
+        search_coming_soon: "Search feature coming soon",
+        plan_new_event: "+ Plan New Event",
+        plan_event_desc: "Plan a meeting or event for group members",
+        create_new_event: "Create New Event",
+        event_name_ph: "Event title",
+        event_loc_ph: "Location / City",
+        event_desc_ph: "Additional details...",
+        create_event_btn: "Create Event",
+        date_unknown: "Date unknown",
+        enter_event_fields_alert: "Please provide event title and date",
+        shared_files: "Files Shared in Group",
+        video_file: "Video file",
+        photo_file: "Photo file",
+        uploaded_by: "Uploaded by:",
+        view: "View",
+        today: "Today",
+        just_now: "Just now",
+        invite_friends_title: "Invite Friends to Group",
+        already_member: "Member",
+        sent_check: "Sent ✓",
+        close: "Close",
+        no_friends_to_add: "No friends available to invite.",
+        admin_mgmt_title: "Group Management & Moderation",
+        pending_posts_title: "Posts Pending Approval",
+        no_pending_req: "No requests",
+        no_pending_posts: "No pending posts",
+        approve: "Approve",
+        decline: "Decline",
+        reply_to_label: "Replying to:",
+        reply_btn: "Reply",
+        cancel_reply: "✕ Cancel",
+        write_comment_ph: "Write a comment...",
+        send_comment_btn: "Send",
+        no_comments_yet: "No comments yet. Be the first!",
+        no_posts_yet: "No posts in this group yet. Be the first!",
+        no_photos_yet: "No photos uploaded in this group yet.",
+        no_events_yet: "No scheduled events.",
+        no_files_yet: "No files shared in this group.",
+        your_activity: "Your activity in this group",
+        no_your_posts: "You haven't posted in this group yet."
+      },
+      ka: {
+        groups: "ჯგუფები",
+        for_you: "თქვენთვის",
+        your_groups: "თქვენი ჯგუფები",
+        see_all: "ყველას ნახვა",
+        suggested_groups: "რეკომენდებული ჯგუფები",
+        groups_joined: "ჯგუფები რომლებშიც ხართ",
+        loading: "იტვირთება...",
+        loading_groups: "ჯგუფები იტვირთება...",
+        loading_friends: "მეგობრები იტვირთება...",
+        loading_photos: "ფოტოები იტვირთება...",
+        loading_events: "ღონისძიებები იტვირთება...",
+        loading_files: "ფაილები იტვირთება...",
+        no_groups_yet: "ჯერ ჯგუფები არ არის",
+        create_first_group: "შექმენით პირველი ჯგუფი!",
+        not_joined_any: "თქვენ არ ხართ გაწევრიანებული ჯგუფებში",
+        other_not_found: "სხვა ჯგუფები არ მოიძებნა",
+        members_count_label: "წევრი",
+        member_badge: "წევრი",
+        admin_badge: "ადმინი",
+        pending_badge: "მოლოდინში",
+        join_btn: "შესვლა",
+        joined_dropdown_btn: "თქვენ გაწევრიანდით ▾",
+        invite_btn: "მოიწვიეთ",
+        join_group_action: "ჯგუფში გაწევრიანება",
+        admin_action_btn: "ადმინისტრატორი",
+        group_admin_is: "ჯგუფის ადმინისტრატორია:",
+        public_group: "საჯარო ჯგუფი",
+        private_group: "დახურული ჯგუფი",
+        change_cover: "ქავერის შეცვლა",
+        cover_updated_success: "ქავერ ფოტო წარმატებით განახლდა!",
+        featured: "რჩეული",
+        you: "თქვენ",
+        photos: "ფოტოები",
+        events: "ღონისძიებები",
+        files: "ფაილები",
+        requests: "გაწევრიანების მოთხოვნები",
+        group_is_private: "ეს ჯგუფი დახურულია",
+        group_private_desc: "გააგზავნეთ გაწევრიანების მოთხოვნა და დაელოდეთ ადმინისტრატორის დადასტურებას, რათა იხილოთ ჯგუფის პოსტები და შიგთავსი.",
+        write_something: "დაწერეთ რამე ჯგუფში...",
+        write_anon: "დაწერეთ ანონიმურად...",
+        your_profile: "თქვენი პროფილი",
+        public_post_desc: "საჯარო გამოქვეყნება",
+        anon_member: "ანონიმური წევრი",
+        anon_desc: "სახელი და ფოტო დაიმალება",
+        file_selected_msg: "ფაილი არჩეულია (გასაგზავნად დააჭირეთ Enter-ს)",
+        most_relevant: "ყველაზე რელევანტური",
+        like: "მოწონება",
+        comment: "კომენტარი",
+        share: "გაზიარება",
+        comments_count_label: "კომენტარი",
+        edit: "რედაქტირება",
+        delete: "წაშლა",
+        enter_new_text: "შეიყვანეთ ახალი ტექსტი:",
+        delete_post_confirm: "ნამდვილად გსურთ პოსტის წაშლა?",
+        delete_comment_confirm: "ნამდვილად გსურთ კომენტარის წაშლა?",
+        leave_group_confirm: "ნამდვილად გსურთ ჯგუფის დატოვება?",
+        cancel_request_confirm: "გსურთ გაწევრიანების მოთხოვნის გაუქმება?",
+        request_sent_alert: "მოთხოვნა გაგზავნილია! დაელოდეთ ადმინისტრატორის დადასტურებას.",
+        group_not_found: "ჯგუფი ვერ მოიძებნა",
+        join_first_to_post: "პოსტის დასაწერად ჯერ უნდა გაწევრიანდეთ ჯგუფში",
+        sending: "იგზავნება...",
+        post_pending_alert: "თქვენი პოსტი გაიგზავნა ჯგუფის ადმინისტრატორთან დასადასტურებლად!",
+        create_new_group: "ახალი ჯგუფის შექმნა",
+        group_name_ph: "ჯგუფის სახელი (მაგ. ემიგრანტები რომში)",
+        group_cat_ph: "კატეგორია / ქვეყანა (მაგ. იტალია)",
+        group_desc_ph: "ჯგუფის მოკლე აღწერა...",
+        create_group_btn: "ჯგუფის შექმნა",
+        creating: "იქმნება...",
+        enter_group_name_alert: "გთხოვთ შეიყვანოთ ჯგუფის სახელი",
+        link_copied: "ჯგუფის ბმული დაკოპირებულია!",
+        search_coming_soon: "ძებნის ფუნქცია მალე დაემატება",
+        plan_new_event: "+ ახალი ღონისძიების დაგეგმვა",
+        plan_event_desc: "დაგეგმეთ შეხვედრა ან ივენთი ჯგუფის წევრებისთვის",
+        create_new_event: "ახალი ღონისძიების შექმნა",
+        event_name_ph: "ღონისძიების სახელწოდება",
+        event_loc_ph: "ადგილმდებარეობა / ქალაქი",
+        event_desc_ph: "დამატებითი დეტალები...",
+        create_event_btn: "ღონისძიების შექმნა",
+        date_unknown: "თარიღი უცნობია",
+        enter_event_fields_alert: "გთხოვთ მიუთითოთ ღონისძიების სახელი და თარიღი",
+        shared_files: "ჯგუფში გაზიარებული ფაილები",
+        video_file: "ვიდეო ფაილი",
+        photo_file: "ფოტო ფაილი",
+        uploaded_by: "ატვირთა:",
+        view: "ნახვა",
+        today: "დღეს",
+        just_now: "ახლახანს",
+        invite_friends_title: "მეგობრების მოწვევა ჯგუფში",
+        invite_btn: "მოწვევა",
+        already_member: "წევრია",
+        sent_check: "გაგზავნილია ✓",
+        close: "დახურვა",
+        no_friends_to_add: "მეგობრები არ გყავთ დასამატებლად.",
+        admin_mgmt_title: "ჯგუფის მართვა და მოდერაცია",
+        pending_posts_title: "დასადასტურებელი პოსტები",
+        no_pending_req: "მოთხოვნები არ არის",
+        no_pending_posts: "დასადასტურებელი პოსტები არ არის",
+        approve: "დადასტურება",
+        decline: "უარყოფა",
+        reply_to_label: "პასუხი:",
+        reply_btn: "პასუხი",
+        cancel_reply: "✕ გაუქმება",
+        write_comment_ph: "დაწერეთ კომენტარი...",
+        send_comment_btn: "გაგზავნა",
+        no_comments_yet: "კომენტარები არ არის. დაწერეთ პირველი!",
+        no_posts_yet: "ამ ჯგუფში პოსტები ჯერ არ არის. იყავით პირველი!",
+        no_photos_yet: "ჯგუფში ფოტოები ჯერ არ არის ატვირთული.",
+        no_events_yet: "დაგეგმილი ღონისძიებები არ არის.",
+        no_files_yet: "ჯგუფში გაზიარებული ფაილები არ არის.",
+        your_activity: "თქვენი აქტივობა ამ ჯგუფში",
+        no_your_posts: "თქვენ ჯერ არ გამოგიქვეყნებიათ პოსტი ამ ჯგუფში."
+      }
+    };
+
+    let currentLang = "en"; // Default მთავარი ენა
+
+    function t(key) {
+      if (translations[currentLang] && translations[currentLang][key]) {
+        return translations[currentLang][key];
+      }
+      if (translations['en'] && translations['en'][key]) {
+        return translations['en'][key];
+      }
+      return key;
+    }
+
+    function applyStaticTranslations() {
+      document.documentElement.lang = currentLang;
+      document.title = (currentLang === 'ka') ? "ჯგუფები | Emigrantbook" : "Groups | Emigrantbook";
+
+      const setTxt = (id, key) => { const el = document.getElementById(id); if (el) el.innerText = t(key); };
+      const setPH = (id, key) => { const el = document.getElementById(id); if (el) el.placeholder = t(key); };
+
+      setTxt('txt-header-title', 'groups');
+      setTxt('tab-pill-discover', 'for_you');
+      setTxt('tab-pill-mygroups', 'your_groups');
+      setTxt('txt-sec-your-groups', 'your_groups');
+      setTxt('txt-sec-see-all', 'see_all');
+      setTxt('txt-sec-suggested', 'suggested_groups');
+      setTxt('txt-sec-joined-full', 'groups_joined');
+
+      setTxt('txt-btn-change-cover', 'change_cover');
+      setTxt('txt-admin-ribbon-label', 'group_admin_is');
+      setTxt('txt-btn-invite-stack', 'invite_btn');
+
+      setTxt('txt-subtab-featured', 'featured');
+      setTxt('txt-subtab-you', 'you');
+      setTxt('txt-subtab-photos', 'photos');
+      setTxt('txt-subtab-events', 'events');
+      setTxt('txt-subtab-files', 'files');
+
+      setTxt('txt-private-locked-title', 'group_is_private');
+      setTxt('txt-private-locked-desc', 'group_private_desc');
+
+      setPH('direct-group-post-text', isAnonymousPosting ? 'write_anon' : 'write_something');
+      setTxt('txt-id-opt-public', 'public_post_desc');
+      setTxt('txt-id-opt-anon', 'anon_member');
+      setTxt('txt-id-opt-anon-sub', 'anon_desc');
+      setTxt('txt-filter-title', 'most_relevant');
+
+      setTxt('txt-you-activity-header', 'your_activity');
+      setTxt('txt-photos-header', 'photos');
+      setTxt('txt-plan-event-btn', 'plan_new_event');
+      setTxt('txt-plan-event-sub', 'plan_event_desc');
+      setTxt('txt-files-header', 'shared_files');
+
+      // Modals
+      setTxt('txt-modal-create-group-title', 'create_new_group');
+      setPH('new-group-name', 'group_name_ph');
+      setPH('new-group-category', 'group_cat_ph');
+      setPH('new-group-desc', 'group_desc_ph');
+      setTxt('opt-privacy-public', 'public_group');
+      setTxt('opt-privacy-private', 'private_group');
+      setTxt('btn-submit-group', 'create_group_btn');
+
+      setTxt('txt-modal-create-event-title', 'create_new_event');
+      setPH('new-event-title', 'event_name_ph');
+      setPH('new-event-location', 'event_loc_ph');
+      setPH('new-event-desc', 'event_desc_ph');
+      setTxt('btn-submit-event', 'create_event_btn');
+
+      setTxt('txt-modal-invite-title', 'invite_friends_title');
+      setTxt('txt-btn-close-invite', 'close');
+
+      setTxt('txt-admin-mod-title', 'admin_mgmt_title');
+      setTxt('txt-admin-mod-members-req', 'requests');
+      setTxt('txt-admin-mod-posts-req', 'pending_posts_title');
+      setTxt('txt-btn-close-mod', 'close');
+
+      setTxt('txt-modal-comments-title', 'comments');
+      setTxt('txt-btn-cancel-reply', 'cancel_reply');
+      setPH('group-comment-input', 'write_comment_ph');
+      setTxt('txt-btn-submit-comment', 'send_comment_btn');
+    }
+
     let currentUser = null;
     let userProfile = null;
     let activeGroupId = null;
@@ -880,7 +1166,6 @@
     let isAnonymousPosting = false;
     let activeSubTab = 'featured';
 
-    /* დამხმარე ფუნქცია: ქავერის სურათის გაფილტვრა - ყოველთვის covergroups.png ძველი ბმულების ნაცვლად */
     function getGroupCoverUrl(url) {
       if (!url || typeof url !== 'string' || url.includes('unsplash.com') || url.trim() === '' || url === 'undefined' || url === 'null') {
         return DEFAULT_COVER_IMAGE;
@@ -894,14 +1179,26 @@
         db.collection('profiles').doc(user.uid).get().then(doc => {
           if (doc.exists) {
             userProfile = doc.data();
+
+            // 🌐 პროფილის ენის შემოწმება და მინიჭება
+            const profileLang = userProfile.language || userProfile.lang || localStorage.getItem('site_lang') || localStorage.getItem('language') || 'en';
+            currentLang = (profileLang === 'ka' || profileLang === 'ge') ? 'ka' : 'en';
+            applyStaticTranslations();
+
             const myAvatar = document.getElementById('dg-user-avatar');
             const optAvatar = document.getElementById('opt-avatar-real');
             const optName = document.getElementById('opt-name-real');
             
             if (myAvatar && userProfile.avatar_url) myAvatar.src = userProfile.avatar_url;
             if (optAvatar && userProfile.avatar_url) optAvatar.src = userProfile.avatar_url;
-            if (optName && userProfile.full_name) optName.innerText = userProfile.full_name;
+            if (optName && userProfile.full_name) {
+              optName.innerHTML = `<img src="icons/circle-user-round.svg" class="g-svg-icon-sm" alt="User"> <span>${escapeHtml(userProfile.full_name)}</span>`;
+            }
+          } else {
+            applyStaticTranslations();
           }
+        }).catch(() => {
+          applyStaticTranslations();
         });
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -986,13 +1283,13 @@
       if (isAnon) {
         avatarImg.src = ANONYMOUS_AVATAR;
         avatarImg.style.filter = "grayscale(100%) contrast(150%)";
-        inputField.placeholder = "დაწერეთ ანონიმურად...";
+        inputField.placeholder = t('write_anon');
         optReal.classList.remove('active');
         optAnon.classList.add('active');
       } else {
         avatarImg.src = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : ANONYMOUS_AVATAR;
         avatarImg.style.filter = "none";
-        inputField.placeholder = "დაწერეთ რამე ჯგუფში...";
+        inputField.placeholder = t('write_something');
         optAnon.classList.remove('active');
         optReal.classList.add('active');
       }
@@ -1023,9 +1320,9 @@
         const myGroupsFull = document.getElementById('my-groups-full-list');
 
         if (snap.empty) {
-          quickJoined.innerHTML = "<div style='color:#666; font-size:13px;'>ჯერ ჯგუფები არ არის</div>";
-          discoverList.innerHTML = "<div style='color:#666; font-size:13px;'>შექმენით პირველი ჯგუფი!</div>";
-          myGroupsFull.innerHTML = "<div style='color:#666; font-size:13px;'>თქვენ არ ხართ გაწევრიანებული ჯგუფებში</div>";
+          quickJoined.innerHTML = `<div style='color:#666; font-size:13px;'>${t('no_groups_yet')}</div>`;
+          discoverList.innerHTML = `<div style='color:#666; font-size:13px;'>${t('create_first_group')}</div>`;
+          myGroupsFull.innerHTML = `<div style='color:#666; font-size:13px;'>${t('not_joined_any')}</div>`;
           return;
         }
 
@@ -1048,31 +1345,31 @@
           const isPending = g.pending_members && g.pending_members.includes(currentUser.uid);
           const membersCount = g.members_count || (g.members ? g.members.length : 1);
 
-          let btnText = "შესვლა";
+          let btnText = t('join_btn');
           let btnStyle = "background:#dcae36; color:#111;";
 
           if (isAdmin) {
-            btnText = "ადმინი";
+            btnText = t('admin_badge');
             btnStyle = "background:#24242e; color:#dcae36; border:1px solid #dcae36;";
           } else if (isMember) {
-            btnText = "წევრი";
+            btnText = t('member_badge');
             btnStyle = "background:#24242e; color:#cfd3dc;";
           } else if (isPending) {
-            btnText = "მოლოდინში";
+            btnText = t('pending_badge');
             btnStyle = "background:#383848; color:#dcae36;";
           }
 
           const privacyIcon = g.privacy === 'private' ? 'icons/lock.svg' : 'icons/globe.svg';
-          const privacyText = g.privacy === 'private' ? 'დახურული' : 'საჯარო';
+          const privacyText = g.privacy === 'private' ? t('private_group') : t('public_group');
           const coverImgUrl = getGroupCoverUrl(g.cover_url);
 
           const card = `
             <div class="group-item-card" onclick="openGroupDetailView('${gId}')">
               <img src="${coverImgUrl}" class="group-avatar" alt="Cover" onerror="this.onerror=null; this.src='${DEFAULT_COVER_IMAGE}';">
               <div class="group-info">
-                <div class="group-name">${g.name}</div>
+                <div class="group-name">${escapeHtml(g.name)}</div>
                 <div class="group-meta">
-                  <span>${membersCount} წევრი</span> · 
+                  <span>${membersCount} ${t('members_count_label')}</span> · 
                   <img src="${privacyIcon}" class="g-svg-icon-xs" alt="Privacy"> <span>${privacyText}</span>
                 </div>
               </div>
@@ -1090,9 +1387,9 @@
           }
         });
 
-        quickJoined.innerHTML = quickHtml || "<div style='color:#666; font-size:13px;'>თქვენ ჯერ არ ხართ ჯგუფებში</div>";
-        discoverList.innerHTML = discHtml || "<div style='color:#666; font-size:13px;'>სხვა ჯგუფები არ მოიძებნა</div>";
-        myGroupsFull.innerHTML = myHtml || "<div style='color:#666; font-size:13px;'>ჯგუფები არ არის</div>";
+        quickJoined.innerHTML = quickHtml || `<div style='color:#666; font-size:13px;'>${t('not_joined_any')}</div>`;
+        discoverList.innerHTML = discHtml || `<div style='color:#666; font-size:13px;'>${t('other_not_found')}</div>`;
+        myGroupsFull.innerHTML = myHtml || `<div style='color:#666; font-size:13px;'>${t('no_groups_yet')}</div>`;
       });
     }
 
@@ -1108,7 +1405,7 @@
 
       db.collection('groups').doc(groupId).get().then(doc => {
         if (!doc.exists) {
-          alert("ჯგუფი ვერ მოიძებნა");
+          alert(t('group_not_found'));
           closeGroupDetailView();
           return;
         }
@@ -1126,15 +1423,15 @@
 
         document.getElementById('dg-title').innerText = activeGroupData.name;
         document.getElementById('dg-cover').src = getGroupCoverUrl(activeGroupData.cover_url);
-        document.getElementById('dg-admin-text').innerText = activeGroupData.admin_name || "ადმინისტრატორი";
+        document.getElementById('dg-admin-text').innerText = activeGroupData.admin_name || t('admin_badge');
         
         const count = activeGroupData.members_count || (activeGroupData.members ? activeGroupData.members.length : 1);
-        document.getElementById('dg-members-count').innerText = count + " წევრი";
+        document.getElementById('dg-members-count').innerText = `${count} ${t('members_count_label')}`;
         
         const isPriv = activeGroupData.privacy === 'private';
         document.getElementById('dg-privacy-badge').innerHTML = `
           <img src="${isPriv ? 'icons/lock.svg' : 'icons/globe.svg'}" class="g-svg-icon-xs" alt="Privacy"> 
-          ${isPriv ? "დახურული ჯგუფი" : "საჯარო ჯგუფი"}
+          ${isPriv ? t('private_group') : t('public_group')}
         `;
 
         // ადმინისტრატორის ღილაკები
@@ -1187,32 +1484,29 @@
         btn.style.background = "#252630";
         btn.style.color = "#dcae36";
         btn.style.borderColor = "#dcae36";
-        btn.innerHTML = `<img src="icons/crown.svg" class="g-svg-icon-gold" alt="Admin"> <span>ადმინისტრატორი</span>`;
+        btn.innerHTML = `<img src="icons/crown.svg" class="g-svg-icon-gold" alt="Admin"> <span>${t('admin_action_btn')}</span>`;
       } else if (isMember) {
         btn.style.background = "#252630";
         btn.style.color = "#ffffff";
         btn.style.borderColor = "#363746";
-        btn.innerHTML = `<img src="icons/users.svg" class="g-svg-icon" alt="Joined"> <span>თქვენ გაწევრიანდით ▾</span>`;
+        btn.innerHTML = `<img src="icons/users.svg" class="g-svg-icon" alt="Joined"> <span>${t('joined_dropdown_btn')}</span>`;
       } else if (isPending) {
         btn.style.background = "#383848";
         btn.style.color = "#dcae36";
         btn.style.borderColor = "#363746";
-        btn.innerHTML = `<img src="icons/clock-4.svg" class="g-svg-icon-gold" alt="Pending"> <span>მოთხოვნა გაგზავნილია ▾</span>`;
+        btn.innerHTML = `<img src="icons/clock-4.svg" class="g-svg-icon-gold" alt="Pending"> <span>${t('pending_badge')} ▾</span>`;
       } else {
         btn.style.background = "#dcae36";
         btn.style.color = "#111111";
         btn.style.borderColor = "transparent";
-        btn.innerHTML = `<img src="icons/user-round-plus.svg" class="g-svg-icon-dark" alt="Join"> <span>ჯგუფში გაწევრიანება</span>`;
+        btn.innerHTML = `<img src="icons/user-round-plus.svg" class="g-svg-icon-dark" alt="Join"> <span>${t('join_group_action')}</span>`;
       }
     }
 
     function toggleCurrentGroupMembership() {
       if (!activeGroupId) return;
       const isAdmin = activeGroupData.creator_id === currentUser.uid;
-      if (isAdmin) {
-        alert("თქვენ ხართ ამ ჯგუფის ადმინისტრატორი.");
-        return;
-      }
+      if (isAdmin) return;
 
       const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
       const isPending = activeGroupData.pending_members && activeGroupData.pending_members.includes(currentUser.uid);
@@ -1220,7 +1514,7 @@
       const groupRef = db.collection('groups').doc(activeGroupId);
 
       if (isMember) {
-        if (!confirm("ნამდვილად გსურთ ჯგუფის დატოვება?")) return;
+        if (!confirm(t('leave_group_confirm'))) return;
         groupRef.update({
           members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
           members_count: firebase.firestore.FieldValue.increment(-1)
@@ -1228,14 +1522,14 @@
           activeGroupData.members = activeGroupData.members.filter(id => id !== currentUser.uid);
           activeGroupData.members_count = Math.max(0, (activeGroupData.members_count || 1) - 1);
           updateGroupMembershipUI();
-          document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+          document.getElementById('dg-members-count').innerText = `${activeGroupData.members_count} ${t('members_count_label')}`;
           openGroupDetailView(activeGroupId);
         });
         return;
       }
 
       if (isPending) {
-        if (!confirm("გსურთ გაწევრიანების მოთხოვნის გაუქმება?")) return;
+        if (!confirm(t('cancel_request_confirm'))) return;
         groupRef.update({
           pending_members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
         }).then(() => {
@@ -1252,7 +1546,7 @@
           if (!activeGroupData.pending_members) activeGroupData.pending_members = [];
           activeGroupData.pending_members.push(currentUser.uid);
           updateGroupMembershipUI();
-          alert("მოთხოვნა გაგზავნილია! დაელოდეთ ადმინისტრატორის დადასტურებას.");
+          alert(t('request_sent_alert'));
         });
       } else {
         groupRef.update({
@@ -1263,7 +1557,7 @@
           activeGroupData.members.push(currentUser.uid);
           activeGroupData.members_count = (activeGroupData.members_count || 0) + 1;
           updateGroupMembershipUI();
-          document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+          document.getElementById('dg-members-count').innerText = `${activeGroupData.members_count} ${t('members_count_label')}`;
           openGroupDetailView(activeGroupId);
         });
       }
@@ -1292,7 +1586,7 @@
           groupRef.update({
             pending_members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
           }).then(() => {
-            alert("მოთხოვნა გაგზავნილია! დაელოდეთ ადმინისტრატორის დადასტურებას.");
+            alert(t('request_sent_alert'));
             loadAllGroups();
           });
         } else {
@@ -1316,10 +1610,10 @@
       const file = fileInput.files[0];
 
       const btn = document.getElementById('dg-cover-upload-btn');
-      const originalBtnHtml = `<img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera"> <span>ქავერის შეცვლა</span>`;
+      const originalBtnHtml = `<img src="icons/camera.svg" class="g-svg-icon-sm" alt="Camera"> <span>${t('change_cover')}</span>`;
 
       if (btn) {
-        btn.innerHTML = `<span style="font-size:11px;">იტვირთება...</span>`;
+        btn.innerHTML = `<span style="font-size:11px;">${t('loading')}</span>`;
         btn.style.pointerEvents = "none";
       }
 
@@ -1336,9 +1630,9 @@
               btn.style.pointerEvents = "auto";
             }
             fileInput.value = "";
-            alert("ქავერ ფოტო წარმატებით განახლდა!");
+            alert(t('cover_updated_success'));
           }).catch(err => {
-            alert("შეცდომა ბაზაში შენახვისას: " + err.message);
+            alert("Error: " + err.message);
             if (btn) {
               btn.innerHTML = originalBtnHtml;
               btn.style.pointerEvents = "auto";
@@ -1346,7 +1640,6 @@
             fileInput.value = "";
           });
         } else {
-          alert("ფაილის ატვირთვა ვერ მოხერხდა. სცადეთ თავიდან.");
           if (btn) {
             btn.innerHTML = originalBtnHtml;
             btn.style.pointerEvents = "auto";
@@ -1397,16 +1690,16 @@
       // 1. მომლოდინე წევრები
       const pending = activeGroupData.pending_members || [];
       if (pending.length === 0) {
-        membersList.innerHTML = "<div style='color:#666; font-size:12px; padding:6px 0;'>მოთხოვნები არ არის</div>";
+        membersList.innerHTML = `<div style='color:#666; font-size:12px; padding:6px 0;'>${t('no_pending_req')}</div>`;
       } else {
-        membersList.innerHTML = "<div style='color:#888; font-size:12px;'>იტვირთება...</div>";
+        membersList.innerHTML = `<div style='color:#888; font-size:12px;'>${t('loading')}</div>`;
         let promises = pending.map(uid => db.collection('profiles').doc(uid).get());
         Promise.all(promises).then(snaps => {
           let html = "";
           snaps.forEach(s => {
             const uData = s.exists ? s.data() : {};
             const uId = s.id;
-            const name = uData.full_name || "მომხმარებელი";
+            const name = uData.full_name || "User";
             const avatar = uData.avatar_url || ANONYMOUS_AVATAR;
 
             html += `
@@ -1427,14 +1720,14 @@
       }
 
       // 2. მომლოდინე პოსტები
-      postsList.innerHTML = "<div style='color:#888; font-size:12px;'>პოსტები იტვირთება...</div>";
+      postsList.innerHTML = `<div style='color:#888; font-size:12px;'>${t('loading')}</div>`;
       db.collection('group_posts')
         .where('group_id', '==', activeGroupId)
         .where('status', '==', 'pending')
         .get()
         .then(snap => {
           if (snap.empty) {
-            postsList.innerHTML = "<div style='color:#666; font-size:12px; padding:6px 0;'>დასადასტურებელი პოსტები არ არის</div>";
+            postsList.innerHTML = `<div style='color:#666; font-size:12px; padding:6px 0;'>${t('no_pending_posts')}</div>`;
             return;
           }
 
@@ -1446,7 +1739,7 @@
             let mediaPreview = "";
             if (p.media_url) {
               mediaPreview = (p.media_type === 'video') ? 
-                `<div style="font-size:11px; color:#dcae36; margin-top:4px;">🎬 ვიდეო ფაილი მიმაგრებულია</div>` : 
+                `<div style="font-size:11px; color:#dcae36; margin-top:4px;">🎬 ${t('video_file')}</div>` : 
                 `<img src="${p.media_url}" style="width:50px; height:50px; border-radius:6px; object-fit:cover; margin-top:6px;">`;
             }
 
@@ -1455,11 +1748,11 @@
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
                   <div style="display:flex; align-items:center; gap:8px;">
                     <img src="${p.avatar_url || ANONYMOUS_AVATAR}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;">
-                    <span style="font-size:13px; font-weight:700; color:#fff;">${escapeHtml(p.author_name || 'მომხმარებელი')}</span>
+                    <span style="font-size:13px; font-weight:700; color:#fff;">${escapeHtml(p.author_name || 'User')}</span>
                   </div>
                   <div class="pending-actions">
-                    <button class="btn-approve" onclick="approveGroupPost('${pId}')">დადასტურება</button>
-                    <button class="btn-reject" onclick="rejectGroupPost('${pId}')">უარყოფა</button>
+                    <button class="btn-approve" onclick="approveGroupPost('${pId}')">${t('approve')}</button>
+                    <button class="btn-reject" onclick="rejectGroupPost('${pId}')">${t('decline')}</button>
                   </div>
                 </div>
                 <div style="font-size:12px; color:#cfd3dc; line-height:1.4;">${escapeHtml(p.content || '')}</div>
@@ -1468,8 +1761,8 @@
             `;
           });
           postsList.innerHTML = html;
-        }).catch(err => {
-          postsList.innerHTML = "<div style='color:#666; font-size:12px;'>დასადასტურებელი პოსტები არ არის</div>";
+        }).catch(() => {
+          postsList.innerHTML = `<div style='color:#666; font-size:12px;'>${t('no_pending_posts')}</div>`;
         });
     }
 
@@ -1490,7 +1783,7 @@
     }
 
     function rejectGroupPost(postId) {
-      if (!confirm("გსურთ ამ პოსტის უარყოფა და წაშლა?")) return;
+      if (!confirm(t('delete_post_confirm'))) return;
       db.collection('group_posts').doc(postId).delete().then(() => {
         const el = document.getElementById(`mod-post-${postId}`);
         if (el) el.remove();
@@ -1509,7 +1802,7 @@
         if (!activeGroupData.members) activeGroupData.members = [];
         activeGroupData.members.push(userId);
         activeGroupData.members_count = (activeGroupData.members_count || 0) + 1;
-        document.getElementById('dg-members-count').innerText = activeGroupData.members_count + " წევრი";
+        document.getElementById('dg-members-count').innerText = `${activeGroupData.members_count} ${t('members_count_label')}`;
         const el = document.getElementById(`mod-member-${userId}`);
         if (el) el.remove();
         checkAdminPendingCount();
@@ -1532,7 +1825,7 @@
     function loadGroupPosts(groupId) {
       const wall = document.getElementById('dg-posts-wall');
       if (!wall) return;
-      wall.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>პოსტები იტვირთება...</div>";
+      wall.innerHTML = `<div style='text-align:center; color:#888; padding:20px;'>${t('loading')}</div>`;
 
       db.collection('group_posts')
         .where('group_id', '==', groupId)
@@ -1549,7 +1842,7 @@
           });
 
           if (postsList.length === 0) {
-            wall.innerHTML = "<div style='text-align:center; color:#777; padding:35px;'>ამ ჯგუფში პოსტები ჯერ არ არის. იყავით პირველი!</div>";
+            wall.innerHTML = `<div style='text-align:center; color:#777; padding:35px;'>${t('no_posts_yet')}</div>`;
             return;
           }
           
@@ -1562,7 +1855,7 @@
           wall.innerHTML = renderPostsHTML(postsList);
         }).catch(err => {
           console.error("Posts loading error:", err);
-          wall.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>პოსტების ჩატვირთვის შეცდომა</div>";
+          wall.innerHTML = `<div style='text-align:center; color:#ff4d4f; padding:20px;'>${t('loading')} error</div>`;
         });
     }
 
@@ -1570,7 +1863,7 @@
     function loadGroupYourPosts(groupId) {
       const wall = document.getElementById('dg-your-posts-wall');
       if (!wall) return;
-      wall.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>თქვენი პოსტები იტვირთება...</div>";
+      wall.innerHTML = `<div style='text-align:center; color:#888; padding:20px;'>${t('loading')}</div>`;
 
       db.collection('group_posts')
         .where('group_id', '==', groupId)
@@ -1578,7 +1871,7 @@
         .get()
         .then(snap => {
           if (snap.empty) {
-            wall.innerHTML = "<div style='text-align:center; color:#777; padding:35px;'>თქვენ ჯერ არ გამოგიქვეყნებიათ პოსტი ამ ჯგუფში.</div>";
+            wall.innerHTML = `<div style='text-align:center; color:#777; padding:35px;'>${t('no_your_posts')}</div>`;
             return;
           }
 
@@ -1594,7 +1887,7 @@
           wall.innerHTML = renderPostsHTML(postsList);
         }).catch(err => {
           console.error("Your posts loading error:", err);
-          wall.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ჩატვირთვის შეცდომა</div>";
+          wall.innerHTML = `<div style='text-align:center; color:#ff4d4f; padding:20px;'>${t('loading')} error</div>`;
         });
     }
 
@@ -1602,7 +1895,7 @@
     function loadGroupPhotos(groupId) {
       const grid = document.getElementById('dg-photos-grid-box');
       if (!grid) return;
-      grid.innerHTML = "<div style='grid-column: span 3; text-align:center; color:#888; padding:30px;'>ფოტოები იტვირთება...</div>";
+      grid.innerHTML = `<div style='grid-column: span 3; text-align:center; color:#888; padding:30px;'>${t('loading_photos')}</div>`;
 
       db.collection('group_posts')
         .where('group_id', '==', groupId)
@@ -1617,7 +1910,7 @@
           });
 
           if (photos.length === 0) {
-            grid.innerHTML = "<div style='grid-column: span 3; text-align:center; color:#777; padding:40px;'>ჯგუფში ფოტოები ჯერ არ არის ატვირთული.</div>";
+            grid.innerHTML = `<div style='grid-column: span 3; text-align:center; color:#777; padding:40px;'>${t('no_photos_yet')}</div>`;
             return;
           }
 
@@ -1632,7 +1925,7 @@
           grid.innerHTML = html;
         }).catch(err => {
           console.error("Photos loading error:", err);
-          grid.innerHTML = "<div style='grid-column: span 3; text-align:center; color:#ff4d4f; padding:20px;'>ფოტოების ჩატვირთვის შეცდომა</div>";
+          grid.innerHTML = `<div style='grid-column: span 3; text-align:center; color:#ff4d4f; padding:20px;'>${t('loading')} error</div>`;
         });
     }
 
@@ -1640,14 +1933,14 @@
     function loadGroupEvents(groupId) {
       const list = document.getElementById('dg-events-list');
       if (!list) return;
-      list.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>ღონისძიებები იტვირთება...</div>";
+      list.innerHTML = `<div style='text-align:center; color:#888; padding:20px;'>${t('loading_events')}</div>`;
 
       db.collection('group_events')
         .where('group_id', '==', groupId)
         .get()
         .then(snap => {
           if (snap.empty) {
-            list.innerHTML = "<div style='text-align:center; color:#777; padding:30px;'>დაგეგმილი ღონისძიებები არ არის.</div>";
+            list.innerHTML = `<div style='text-align:center; color:#777; padding:30px;'>${t('no_events_yet')}</div>`;
             return;
           }
 
@@ -1658,7 +1951,8 @@
           let html = "";
           eventsList.forEach(ev => {
             const dateObj = ev.date ? new Date(ev.date) : new Date();
-            const monthStr = dateObj.toLocaleDateString('ka-GE', { month: 'short' });
+            const localeStr = (currentLang === 'ka') ? 'ka-GE' : 'en-US';
+            const monthStr = dateObj.toLocaleDateString(localeStr, { month: 'short' });
             const dayStr = dateObj.getDate();
 
             html += `
@@ -1668,9 +1962,9 @@
                   <span class="event-cal-day">${dayStr}</span>
                 </div>
                 <div class="event-info">
-                  <div class="event-title">${escapeHtml(ev.title || 'ღონისძიება')}</div>
+                  <div class="event-title">${escapeHtml(ev.title || 'Event')}</div>
                   <div class="event-time">
-                    <img src="icons/clock-4.svg" class="g-svg-icon-xs" alt="Time"> ${ev.date || 'თარიღი უცნობია'}
+                    <img src="icons/clock-4.svg" class="g-svg-icon-xs" alt="Time"> ${ev.date || t('date_unknown')}
                   </div>
                   ${ev.location ? `
                     <div class="event-loc">
@@ -1683,7 +1977,7 @@
           list.innerHTML = html;
         }).catch(err => {
           console.error("Events loading error:", err);
-          list.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ღონისძიებების ჩატვირთვის შეცდომა</div>";
+          list.innerHTML = `<div style='text-align:center; color:#ff4d4f; padding:20px;'>${t('loading')} error</div>`;
         });
     }
 
@@ -1702,12 +1996,12 @@
       const btn = document.getElementById('btn-submit-event');
 
       if (!title || !date) {
-        alert("გთხოვთ მიუთითოთ ღონისძიების სახელი და თარიღი");
+        alert(t('enter_event_fields_alert'));
         return;
       }
 
       btn.disabled = true;
-      btn.innerText = "იქმნება...";
+      btn.innerText = t('creating');
 
       db.collection('group_events').add({
         group_id: activeGroupId,
@@ -1719,7 +2013,7 @@
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
         btn.disabled = false;
-        btn.innerText = "ღონისძიების შექმნა";
+        btn.innerText = t('create_event_btn');
         document.getElementById('new-event-title').value = "";
         document.getElementById('new-event-date').value = "";
         document.getElementById('new-event-location').value = "";
@@ -1727,9 +2021,9 @@
         closeCreateEventModal();
         loadGroupEvents(activeGroupId);
       }).catch(err => {
-        alert("შეცდომა: " + err.message);
+        alert("Error: " + err.message);
         btn.disabled = false;
-        btn.innerText = "ღონისძიების შექმნა";
+        btn.innerText = t('create_event_btn');
       });
     }
 
@@ -1737,7 +2031,7 @@
     function loadGroupFiles(groupId) {
       const list = document.getElementById('dg-files-list');
       if (!list) return;
-      list.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>ფაილები იტვირთება...</div>";
+      list.innerHTML = `<div style='text-align:center; color:#888; padding:20px;'>${t('loading_files')}</div>`;
 
       db.collection('group_posts')
         .where('group_id', '==', groupId)
@@ -1750,14 +2044,14 @@
               files.push({
                 url: p.media_url,
                 type: p.media_type || 'file',
-                author: p.author_name || 'მომხმარებელი',
-                date: p.created_at ? new Date(p.created_at.toDate ? p.created_at.toDate() : p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'დღეს'
+                author: p.author_name || 'User',
+                date: p.created_at ? new Date(p.created_at.toDate ? p.created_at.toDate() : p.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : t('today')
               });
             }
           });
 
           if (files.length === 0) {
-            list.innerHTML = "<div style='text-align:center; color:#777; padding:30px;'>ჯგუფში გაზიარებული ფაილები არ არის.</div>";
+            list.innerHTML = `<div style='text-align:center; color:#777; padding:30px;'>${t('no_files_yet')}</div>`;
             return;
           }
 
@@ -1765,7 +2059,7 @@
           files.forEach(f => {
             const isVid = f.type === 'video';
             const iconSvg = isVid ? 'icons/camera.svg' : 'icons/image.svg';
-            const typeLabel = isVid ? 'ვიდეო ფაილი' : 'ფოტო ფაილი';
+            const typeLabel = isVid ? t('video_file') : t('photo_file');
 
             html += `
               <div class="group-file-card">
@@ -1774,16 +2068,16 @@
                 </div>
                 <div class="file-details">
                   <div class="file-name">${typeLabel}</div>
-                  <div class="file-meta">ატვირთა: ${f.author} · ${f.date}</div>
+                  <div class="file-meta">${t('uploaded_by')} ${escapeHtml(f.author)} · ${f.date}</div>
                 </div>
-                <a href="${f.url}" target="_blank" class="file-download-btn">ნახვა</a>
+                <a href="${f.url}" target="_blank" class="file-download-btn">${t('view')}</a>
               </div>
             `;
           });
           list.innerHTML = html;
         }).catch(err => {
           console.error("Files loading error:", err);
-          list.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ფაილების ჩატვირთვის შეცდომა</div>";
+          list.innerHTML = `<div style='text-align:center; color:#ff4d4f; padding:20px;'>${t('loading')} error</div>`;
         });
     }
 
@@ -1793,7 +2087,7 @@
       const isGroupAdmin = activeGroupData.creator_id === currentUser.uid;
 
       postsList.forEach(p => {
-        let dateStr = "ახლახანს";
+        let dateStr = t('just_now');
         if (p.created_at) {
           let d = p.created_at.toDate ? p.created_at.toDate() : new Date(p.created_at);
           dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -1814,23 +2108,23 @@
         const isAnon = p.is_anonymous === true;
         const authorDisplayName = isAnon ? `
           <span style="display:inline-flex; align-items:center; gap:4px;">
-            <img src="icons/hat-glasses.svg" class="g-svg-icon-gold" alt="Anon"> ანონიმური წევრი
-          </span>` : (p.author_name || "მომხმარებელი");
+            <img src="icons/hat-glasses.svg" class="g-svg-icon-gold" alt="Anon"> ${t('anon_member')}
+          </span>` : (escapeHtml(p.author_name) || "User");
         const authorDisplayAvatar = isAnon ? ANONYMOUS_AVATAR : (p.avatar_url || ANONYMOUS_AVATAR);
         const avatarStyle = isAnon ? "style='filter: grayscale(100%) contrast(150%);'" : "";
 
         const isPendingPost = p.status === 'pending';
-        const pendingBadge = isPendingPost ? `<span style="background: rgba(220, 174, 54, 0.2); color: #dcae36; font-size: 11px; padding: 2px 6px; border-radius: 6px; margin-left: 6px;">მოლოდინში ⏳</span>` : '';
+        const pendingBadge = isPendingPost ? `<span style="background: rgba(220, 174, 54, 0.2); color: #dcae36; font-size: 11px; padding: 2px 6px; border-radius: 6px; margin-left: 6px;">${t('pending_badge')} ⏳</span>` : '';
 
         const optionsHtml = canManage ? `
           <div class="g-options-dropdown">
             <button class="g-options-btn" onclick="toggleGroupPostMenu('${p.id}', event)">⋮</button>
             <div class="g-options-menu" id="g-post-menu-${p.id}">
               <button onclick="editGroupPost('${p.id}', '${escapeHtml(p.content || '')}')">
-                <img src="icons/pen.svg" class="g-svg-icon-sm" alt="Edit"> <span>რედაქტირება</span>
+                <img src="icons/pen.svg" class="g-svg-icon-sm" alt="Edit"> <span>${t('edit')}</span>
               </button>
               <button class="btn-danger" onclick="deleteGroupPost('${p.id}')">
-                <img src="icons/undo-2.svg" class="g-svg-icon-red" alt="Delete"> <span>წაშლა</span>
+                <img src="icons/undo-2.svg" class="g-svg-icon-red" alt="Delete"> <span>${t('delete')}</span>
               </button>
             </div>
           </div>
@@ -1860,22 +2154,22 @@
                 <span>❤️</span> <span id="g-like-count-${p.id}">${likesCount}</span>
               </div>
               <div class="g-comments-count-badge" onclick="openGroupPostComments('${p.id}')">
-                <span id="g-comm-count-${p.id}">${commentsCount}</span> კომენტარი
+                <span id="g-comm-count-${p.id}">${commentsCount}</span> ${t('comments_count_label')}
               </div>
             </div>
 
             <!-- Actions Row -->
             <div class="g-post-actions-row">
               <button class="g-act-btn ${isLiked ? 'liked' : ''}" id="g-like-btn-${p.id}" onclick="likeGroupPost('${p.id}')">
-                <span>${isLiked ? '❤️' : '🤍'}</span> <span>მოწონება</span>
+                <span>${isLiked ? '❤️' : '🤍'}</span> <span>${t('like')}</span>
               </button>
               <button class="g-act-btn" onclick="openGroupPostComments('${p.id}')">
                 <img src="icons/message-circle-more.svg" class="g-svg-icon" alt="Comment">
-                <span>კომენტარი</span>
+                <span>${t('comment')}</span>
               </button>
               <button class="g-act-btn" onclick="shareGroupPost('${p.id}')">
                 <img src="icons/undo-2.svg" class="g-svg-icon" style="transform: scaleX(-1);" alt="Share">
-                <span>გაზიარება</span>
+                <span>${t('share')}</span>
               </button>
             </div>
           </div>
@@ -1898,7 +2192,7 @@
     }
 
     function editGroupPost(postId, currentText) {
-      const newText = prompt("შეიყვანეთ ახალი ტექსტი:", currentText);
+      const newText = prompt(t('enter_new_text'), currentText);
       if (newText === null) return;
 
       db.collection('group_posts').doc(postId).update({
@@ -1906,16 +2200,16 @@
       }).then(() => {
         const textEl = document.getElementById(`g-post-text-${postId}`);
         if (textEl) textEl.innerText = newText.trim();
-      }).catch(err => alert("შეცდომა: " + err.message));
+      }).catch(err => alert("Error: " + err.message));
     }
 
     function deleteGroupPost(postId) {
-      if (!confirm("ნამდვილად გსურთ პოსტის წაშლა?")) return;
+      if (!confirm(t('delete_post_confirm'))) return;
 
       db.collection('group_posts').doc(postId).delete().then(() => {
         const card = document.getElementById(`g-post-card-${postId}`);
         if (card) card.remove();
-      }).catch(err => alert("შეცდომა: " + err.message));
+      }).catch(err => alert("Error: " + err.message));
     }
 
     /* --- ლაიქის ფუნქცია (❤️ და 🤍) --- */
@@ -1937,7 +2231,7 @@
           }).then(() => {
             if (btn) {
               btn.classList.remove('liked');
-              btn.innerHTML = `<span>🤍</span> <span>მოწონება</span>`;
+              btn.innerHTML = `<span>🤍</span> <span>${t('like')}</span>`;
             }
             if (countEl) countEl.innerText = Math.max(0, parseInt(countEl.innerText || 1) - 1);
           });
@@ -1948,7 +2242,7 @@
           }).then(() => {
             if (btn) {
               btn.classList.add('liked');
-              btn.innerHTML = `<span>❤️</span> <span>მოწონება</span>`;
+              btn.innerHTML = `<span>❤️</span> <span>${t('like')}</span>`;
             }
             if (countEl) countEl.innerText = parseInt(countEl.innerText || 0) + 1;
           });
@@ -1961,7 +2255,7 @@
       const modal = document.getElementById('invite-friends-modal');
       const listBox = document.getElementById('invite-friends-list-box');
       modal.style.display = 'flex';
-      listBox.innerHTML = "<div style='text-align:center; color:#888; padding:25px;'>მეგობრების სია იტვირთება...</div>";
+      listBox.innerHTML = `<div style='text-align:center; color:#888; padding:25px;'>${t('loading_friends')}</div>`;
 
       Promise.all([
         db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
@@ -1972,7 +2266,7 @@
         results[1].forEach(d => friendIds.push(d.data().sender_id));
 
         if (friendIds.length === 0) {
-          listBox.innerHTML = "<div style='text-align:center; color:#777; padding:30px;'>მეგობრები არ გყავთ დასამატებლად.</div>";
+          listBox.innerHTML = `<div style='text-align:center; color:#777; padding:30px;'>${t('no_friends_to_add')}</div>`;
           return;
         }
 
@@ -1983,7 +2277,7 @@
             if (!s.exists) return;
             const fData = s.data();
             const fId = s.id;
-            const fName = fData.full_name || "მომხმარებელი";
+            const fName = fData.full_name || "User";
             const fAvatar = fData.avatar_url || ANONYMOUS_AVATAR;
             const isAlreadyMember = activeGroupData.members && activeGroupData.members.includes(fId);
 
@@ -1993,21 +2287,21 @@
                   <img src="${fAvatar}" class="invite-friend-avatar" alt="Avatar">
                   <div>
                     <div style="font-weight: 700; color: #fff; font-size: 14px;">${escapeHtml(fName)}</div>
-                    <div style="font-size: 11px; color: #8a8f9d;">${isAlreadyMember ? 'უკვე წევრია' : 'მეგობარი'}</div>
+                    <div style="font-size: 11px; color: #8a8f9d;">${isAlreadyMember ? t('already_member') : t('member_badge')}</div>
                   </div>
                 </div>
                 ${isAlreadyMember ? 
-                  `<button class="btn-invite-action invited">წევრია</button>` : 
-                  `<button class="btn-invite-action" id="invite-btn-${fId}" onclick="sendGroupInviteToFriend('${fId}', '${escapeHtml(fName)}')">მოწვევა</button>`
+                  `<button class="btn-invite-action invited">${t('already_member')}</button>` : 
+                  `<button class="btn-invite-action" id="invite-btn-${fId}" onclick="sendGroupInviteToFriend('${fId}', '${escapeHtml(fName)}')">${t('invite_btn')}</button>`
                 }
               </div>
             `;
           });
-          listBox.innerHTML = html || "<div style='text-align:center; color:#777; padding:30px;'>მეგობრები არ მოიძებნა</div>";
+          listBox.innerHTML = html || `<div style='text-align:center; color:#777; padding:30px;'>${t('no_friends_to_add')}</div>`;
         });
       }).catch(err => {
         console.error("Invite friends error:", err);
-        listBox.innerHTML = "<div style='text-align:center; color:#ff4d4f; padding:20px;'>ჩატვირთვის შეცდომა</div>";
+        listBox.innerHTML = `<div style='text-align:center; color:#ff4d4f; padding:20px;'>${t('loading')} error</div>`;
       });
     }
 
@@ -2015,7 +2309,7 @@
       const btn = document.getElementById(`invite-btn-${friendId}`);
       if (btn) {
         btn.disabled = true;
-        btn.innerText = "იგზავნება...";
+        btn.innerText = t('sending');
       }
 
       db.collection('group_invites').add({
@@ -2029,13 +2323,13 @@
       }).then(() => {
         if (btn) {
           btn.classList.add('invited');
-          btn.innerText = "გაგზავნილია ✓";
+          btn.innerText = t('sent_check');
         }
       }).catch(err => {
-        alert("შეცდომა: " + err.message);
+        alert("Error: " + err.message);
         if (btn) {
           btn.disabled = false;
-          btn.innerText = "მოწვევა";
+          btn.innerText = t('invite_btn');
         }
       });
     }
@@ -2051,11 +2345,11 @@
       const modal = document.getElementById('group-comments-modal');
       const list = document.getElementById('group-comments-list');
       modal.style.display = 'flex';
-      list.innerHTML = "<div style='text-align:center; color:#888; padding:20px;'>იტვირთება...</div>";
+      list.innerHTML = `<div style='text-align:center; color:#888; padding:20px;'>${t('loading')}</div>`;
 
       db.collection('group_posts').doc(postId).collection('comments').get().then(snap => {
         if (snap.empty) {
-          list.innerHTML = "<div style='text-align:center; color:#666; padding:25px;'>კომენტარები არ არის. დაწერეთ პირველი!</div>";
+          list.innerHTML = `<div style='text-align:center; color:#666; padding:25px;'>${t('no_comments_yet')}</div>`;
           return;
         }
 
@@ -2074,14 +2368,14 @@
 
         let html = "";
         mainComments.forEach(c => {
-          let timeStr = "ახლახანს";
+          let timeStr = t('just_now');
           if (c.created_at) {
             let d = c.created_at.toDate ? c.created_at.toDate() : new Date(c.created_at);
             timeStr = d.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
           }
 
           const canDelete = (c.user_id === currentUser.uid) || isGroupAdmin;
-          const deleteBtn = canDelete ? `<button class="g-comment-delete-btn" onclick="deleteGroupComment('${c.id}')" title="წაშლა"><img src="icons/undo-2.svg" class="g-svg-icon-red" style="width:12px;height:12px;" alt="Delete"></button>` : '';
+          const deleteBtn = canDelete ? `<button class="g-comment-delete-btn" onclick="deleteGroupComment('${c.id}')" title="${t('delete')}"><img src="icons/undo-2.svg" class="g-svg-icon-red" style="width:12px;height:12px;" alt="Delete"></button>` : '';
 
           html += `
             <div class="g-comment-wrapper" id="g-comment-wrap-${c.id}">
@@ -2090,15 +2384,15 @@
                 <div class="g-comment-main">
                   <div class="g-comment-bubble">
                     <div class="g-comment-top-row">
-                      <span class="g-comment-name">${c.author_name || 'მომხმარებელი'}</span>
+                      <span class="g-comment-name">${escapeHtml(c.author_name) || 'User'}</span>
                       ${deleteBtn}
                     </div>
                     <div class="g-comment-text">${escapeHtml(c.text || '')}</div>
                   </div>
                   <div class="g-comment-meta-row">
                     <span class="g-comment-time">${timeStr}</span>
-                    <button class="g-comment-reply-btn" onclick="setReplyGroupComment('${c.id}', '${escapeHtml(c.author_name || 'მომხმარებელი')}')">
-                      <img src="icons/undo-2.svg" class="g-svg-icon-gold" style="width:11px; height:11px;" alt="Reply"> პასუხი
+                    <button class="g-comment-reply-btn" onclick="setReplyGroupComment('${c.id}', '${escapeHtml(c.author_name || 'User')}')">
+                      <img src="icons/undo-2.svg" class="g-svg-icon-gold" style="width:11px; height:11px;" alt="Reply"> ${t('reply_btn')}
                     </button>
                   </div>
                 </div>
@@ -2113,14 +2407,14 @@
         replies.forEach(r => {
           const replyBox = document.getElementById(`g-replies-to-${r.parent_id}`);
           if (replyBox) {
-            let rTimeStr = "ახლახანს";
+            let rTimeStr = t('just_now');
             if (r.created_at) {
               let rd = r.created_at.toDate ? r.created_at.toDate() : new Date(r.created_at);
               rTimeStr = rd.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             }
 
             const canDeleteReply = (r.user_id === currentUser.uid) || isGroupAdmin;
-            const deleteReplyBtn = canDeleteReply ? `<button class="g-comment-delete-btn" onclick="deleteGroupComment('${r.id}')" title="წაშლა"><img src="icons/undo-2.svg" class="g-svg-icon-red" style="width:11px;height:11px;" alt="Delete"></button>` : '';
+            const deleteReplyBtn = canDeleteReply ? `<button class="g-comment-delete-btn" onclick="deleteGroupComment('${r.id}')" title="${t('delete')}"><img src="icons/undo-2.svg" class="g-svg-icon-red" style="width:11px;height:11px;" alt="Delete"></button>` : '';
 
             replyBox.innerHTML += `
               <div class="g-reply-item" id="g-reply-item-${r.id}">
@@ -2128,7 +2422,7 @@
                 <div class="g-comment-main">
                   <div class="g-reply-bubble">
                     <div class="g-comment-top-row">
-                      <span class="g-comment-name" style="font-size: 12px;">${r.author_name || 'მომხმარებელი'}</span>
+                      <span class="g-comment-name" style="font-size: 12px;">${escapeHtml(r.author_name) || 'User'}</span>
                       ${deleteReplyBtn}
                     </div>
                     <div class="g-comment-text" style="font-size: 12px;">${escapeHtml(r.text || '')}</div>
@@ -2150,7 +2444,7 @@
       const txt = document.getElementById('g-reply-active-text');
       const input = document.getElementById('group-comment-input');
       
-      txt.innerText = `პასუხი: ${authorName}`;
+      txt.innerText = `${t('reply_to_label')} ${authorName}`;
       bar.style.display = "flex";
       input.focus();
     }
@@ -2162,7 +2456,7 @@
     }
 
     function deleteGroupComment(commentId) {
-      if (!confirm("ნამდვილად გსურთ კომენტარის წაშლა?")) return;
+      if (!confirm(t('delete_comment_confirm'))) return;
 
       db.collection('group_posts').doc(activePostForComments).collection('comments').doc(commentId).delete().then(() => {
         db.collection('group_posts').doc(activePostForComments).update({
@@ -2173,7 +2467,7 @@
         if (countEl) countEl.innerText = Math.max(0, parseInt(countEl.innerText || 1) - 1);
 
         openGroupPostComments(activePostForComments);
-      }).catch(err => alert("შეცდომა: " + err.message));
+      }).catch(err => alert("Error: " + err.message));
     }
 
     function closeGroupCommentsModal() {
@@ -2221,9 +2515,9 @@
     function shareGroupPost(postId) {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(window.location.href);
-        alert("პოსტის ბმული დაკოპირებულია!");
+        alert(t('link_copied'));
       } else {
-        alert("ბმული: " + window.location.href);
+        alert("Link: " + window.location.href);
       }
     }
 
@@ -2321,12 +2615,12 @@
         const file = fileInput.files[0];
 
         if (file.size > 100 * 1024 * 1024) {
-          alert("⚠️ ფაილის ზომა აღემატება 100 MB-ს! გთხოვთ აირჩიოთ უფრო მცირე ზომის ვიდეო/ფოტო.");
+          alert("⚠️ File size exceeds 100 MB!");
           clearDirectSelectedFile();
           return;
         }
 
-        nameTxt.innerHTML = `<img src="icons/tag.svg" class="g-svg-icon-xs" alt="File"> ${file.name} (გასაგზავნად დააჭირეთ Enter-ს)`;
+        nameTxt.innerHTML = `<img src="icons/tag.svg" class="g-svg-icon-xs" alt="File"> ${escapeHtml(file.name)} (${t('file_selected_msg')})`;
         badge.style.display = "flex";
       } else {
         badge.style.display = "none";
@@ -2344,7 +2638,7 @@
       const isAdmin = activeGroupData.creator_id === currentUser.uid;
       const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
       if (!isMember) {
-        alert("პოსტის დასაწერად ჯერ უნდა გაწევრიანდეთ ჯგუფში");
+        alert(t('join_first_to_post'));
         return;
       }
 
@@ -2358,18 +2652,17 @@
 
       if (textInput) {
         textInput.disabled = true;
-        textInput.placeholder = "იგზავნება...";
+        textInput.placeholder = t('sending');
       }
 
       let authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : currentUser.email;
       let avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
 
       if (isAnonymousPosting) {
-        authorName = "ანონიმური წევრი";
+        authorName = t('anon_member');
         avatarUrl = ANONYMOUS_AVATAR;
       }
 
-      // ადმინისტრატორის პოსტი ეგრევე მტკიცდება, წევრის პოსტი მიდის მოლოდინში (pending)
       const postStatus = isAdmin ? 'approved' : 'pending';
 
       const savePostDoc = (mediaUrl, mediaType) => {
@@ -2390,22 +2683,22 @@
         }).then(() => {
           hideUploadProgressUI();
           if (!isAdmin) {
-            alert("თქვენი პოსტი გაიგზავნა ჯგუფის ადმინისტრატორთან დასადასტურებლად!");
+            alert(t('post_pending_alert'));
           }
           if (textInput) {
             textInput.disabled = false;
             textInput.value = "";
-            textInput.placeholder = isAnonymousPosting ? "დაწერეთ ანონიმურად..." : "დაწერეთ რამე ჯგუფში...";
+            textInput.placeholder = isAnonymousPosting ? t('write_anon') : t('write_something');
           }
           clearDirectSelectedFile();
           switchGroupSubTab('featured');
           checkAdminPendingCount();
         }).catch(err => {
           hideUploadProgressUI();
-          alert("შეცდომა: " + err.message);
+          alert("Error: " + err.message);
           if (textInput) {
             textInput.disabled = false;
-            textInput.placeholder = isAnonymousPosting ? "დაწერეთ ანონიმურად..." : "დაწერეთ რამე ჯგუფში...";
+            textInput.placeholder = isAnonymousPosting ? t('write_anon') : t('write_something');
           }
         });
       };
@@ -2438,18 +2731,18 @@
       const btn = document.getElementById('btn-submit-group');
 
       if (!name) {
-        alert("გთხოვთ შეიყვანოთ ჯგუფის სახელი");
+        alert(t('enter_group_name_alert'));
         return;
       }
 
       btn.disabled = true;
-      btn.innerText = "იქმნება...";
+      btn.innerText = t('creating');
 
-      const creatorName = (userProfile && userProfile.full_name) ? userProfile.full_name : "ადმინისტრატორი";
+      const creatorName = (userProfile && userProfile.full_name) ? userProfile.full_name : t('admin_badge');
 
       db.collection('groups').add({
         name: name,
-        category: category || "საერთო",
+        category: category || "General",
         description: desc,
         privacy: privacy,
         creator_id: currentUser.uid,
@@ -2462,24 +2755,24 @@
       }).then((newDoc) => {
         closeCreateGroupModal();
         btn.disabled = false;
-        btn.innerText = "ჯგუფის შექმნა";
+        btn.innerText = t('create_group_btn');
         document.getElementById('new-group-name').value = "";
         document.getElementById('new-group-category').value = "";
         document.getElementById('new-group-desc').value = "";
         openGroupDetailView(newDoc.id);
       }).catch(err => {
-        alert("შეცდომა: " + err.message);
+        alert("Error: " + err.message);
         btn.disabled = false;
-        btn.innerText = "ჯგუფის შექმნა";
+        btn.innerText = t('create_group_btn');
       });
     }
 
     function shareGroupLink() {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(window.location.href);
-        alert("ჯგუფის ბმული დაკოპირებულია!");
+        alert(t('link_copied'));
       } else {
-        alert("ბმული: " + window.location.href);
+        alert("Link: " + window.location.href);
       }
     }
 
