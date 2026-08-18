@@ -151,8 +151,8 @@
 
     /* ადმინისტრატორის მოთხოვნების მართვის პანელი */
     .admin-requests-box {
-      margin: 14px 16px 0 16px; background: #181822; border: 1px solid #dcae36;
-      border-radius: 12px; padding: 14px; display: none;
+      margin: 12px 0 0 0; background: #181822; border-top: 1px solid #dcae36;
+      border-bottom: 1px solid #dcae36; padding: 14px 16px; display: none;
     }
     .admin-requests-header {
       font-size: 14px; font-weight: 700; color: #dcae36; margin-bottom: 10px;
@@ -175,11 +175,12 @@
       border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
     }
 
-    /* პოსტის დაწერის ველი */
+    /* პოსტის დაწერის ველი (სრული სიგანით კიდეებამდე) */
     .group-create-post {
-      background: #141418; border: 1px solid #222228; border-radius: 12px;
-      padding: 12px 14px; margin: 14px 16px;
-      display: flex; align-items: center; gap: 10px;
+      background: #141418; border-top: 1px solid #222228; border-bottom: 1px solid #222228;
+      border-left: none; border-right: none; border-radius: 0;
+      padding: 12px 16px; margin: 10px 0;
+      display: flex; align-items: center; gap: 10px; width: 100%;
     }
     .post-identity-pill {
       display: flex; align-items: center; gap: 4px;
@@ -198,8 +199,8 @@
 
     /* დახურული ჯგუფის დაბლოკვის შეტყობინება */
     .private-locked-container {
-      background: #141418; border: 1px solid #252530; border-radius: 14px;
-      margin: 14px 16px; padding: 35px 20px; text-align: center;
+      background: #141418; border-top: 1px solid #252530; border-bottom: 1px solid #252530;
+      border-radius: 0; margin: 10px 0; padding: 35px 20px; text-align: center;
     }
     .private-locked-icon { font-size: 40px; margin-bottom: 12px; }
     .private-locked-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 6px; }
@@ -213,17 +214,18 @@
     .filter-title { font-size: 15px; font-weight: 700; color: #fff; }
     .filter-icon-btn { background: none; border: none; color: #8a8f9d; font-size: 18px; cursor: pointer; }
 
-    /* Post Card */
+    /* პოსტის ბარათი (სრული სიგანით კიდეებამდე) */
     .group-post-card {
-      background: #141418; border: 1px solid #222228;
-      border-radius: 14px; margin: 0 16px 14px 16px; padding: 14px;
+      background: #141418; border-top: 1px solid #222228; border-bottom: 1px solid #222228;
+      border-left: none; border-right: none; border-radius: 0;
+      margin: 0 0 10px 0; padding: 12px 0 0 0; width: 100%;
     }
-    .g-post-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .g-post-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 0 16px; }
     .g-post-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
     .g-post-author { font-size: 14px; font-weight: 700; color: #fff; }
     .g-post-time { font-size: 11px; color: #7b8190; margin-top: 2px; }
-    .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
-    .g-post-media { width: 100%; border-radius: 10px; max-height: 450px; object-fit: cover; margin-top: 6px; }
+    .g-post-content { font-size: 14px; line-height: 1.5; color: #e4e6eb; margin-bottom: 10px; padding: 0 16px; white-space: pre-wrap; word-break: break-word; }
+    .g-post-media { width: 100%; border-radius: 0; max-height: 550px; object-fit: cover; margin-top: 4px; display: block; }
 
     /* Modals */
     .modal-overlay {
@@ -364,7 +366,7 @@
         <div id="admin-requests-list"></div>
       </div>
 
-      <!-- პოსტის დაწერის ველი (მხოლოდ წევრებისთვის/ადმინისთვის) -->
+      <!-- პოსტის დაწერის ველი (სრული სიგანით კიდეებამდე) -->
       <div class="group-create-post" id="dg-create-post-box">
         <div class="post-identity-pill" onclick="openGroupPostModal()">
           <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
@@ -831,7 +833,7 @@
       });
     }
 
-    /* --- ჯგუფის პოსტების ჩატვირთვა (გამართული დალაგებით) --- */
+    /* --- ჯგუფის პოსტების ჩატვირთვა --- */
     function loadGroupPosts(groupId) {
       const wall = document.getElementById('dg-posts-wall');
       if (!wall) return;
@@ -872,8 +874,8 @@
             let mediaElem = "";
             if (p.media_url) {
               mediaElem = (p.media_type === 'video') ? 
-                `<video src="${p.media_url}" controls class="g-post-media" style="width:100%; border-radius:10px; margin-top:8px;"></video>` : 
-                `<img src="${p.media_url}" class="g-post-media" style="width:100%; border-radius:10px; margin-top:8px; object-fit:cover;">`;
+                `<video src="${p.media_url}" controls class="g-post-media"></video>` : 
+                `<img src="${p.media_url}" class="g-post-media">`;
             }
 
             postsHtml += `
@@ -885,7 +887,7 @@
                     <div class="g-post-time">${dateStr} · 🌐</div>
                   </div>
                 </div>
-                <div class="g-post-content">${p.content || ''}</div>
+                ${p.content ? `<div class="g-post-content">${p.content}</div>` : ''}
                 ${mediaElem}
               </div>
             `;
