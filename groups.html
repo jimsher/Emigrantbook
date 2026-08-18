@@ -364,7 +364,7 @@
         <div id="admin-requests-list"></div>
       </div>
 
-      <!-- პოსტის დაწერის ველი (მხოლოდ წევრებისთვის) -->
+      <!-- პოსტის დაწერის ველი (მხოლოდ წევრებისთვის/ადმინისთვის) -->
       <div class="group-create-post" id="dg-create-post-box">
         <div class="post-identity-pill" onclick="openGroupPostModal()">
           <img id="dg-user-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg" class="post-identity-avatar" alt="Avatar">
@@ -376,7 +376,7 @@
         </div>
       </div>
 
-      <!-- დახურული ჯგუფის შეტყობინება (თუ მომხმარებელი არ არის წევრი) -->
+      <!-- დახურული ჯგუფის შეტყობინება -->
       <div class="private-locked-container" id="dg-private-locked-box" style="display: none;">
         <div class="private-locked-icon">🔒</div>
         <div class="private-locked-title">ეს ჯგუფი დახურულია</div>
@@ -511,14 +511,18 @@
         snap.forEach(doc => {
           const g = doc.data();
           const gId = doc.id;
-          const isMember = g.members && g.members.includes(currentUser.uid);
+          const isAdmin = g.creator_id === currentUser.uid;
+          const isMember = (g.members && g.members.includes(currentUser.uid)) || isAdmin;
           const isPending = g.pending_members && g.pending_members.includes(currentUser.uid);
           const membersCount = g.members_count || (g.members ? g.members.length : 1);
 
           let btnText = "შესვლა";
           let btnStyle = "background:#dcae36; color:#111;";
 
-          if (isMember) {
+          if (isAdmin) {
+            btnText = "ადმინი";
+            btnStyle = "background:#24242e; color:#dcae36; border:1px solid #dcae36;";
+          } else if (isMember) {
             btnText = "წევრი";
             btnStyle = "background:#24242e; color:#cfd3dc;";
           } else if (isPending) {
@@ -533,7 +537,7 @@
                 <div class="group-name">${g.name}</div>
                 <div class="group-meta">${membersCount} წევრი · ${g.privacy === 'private' ? '🔒 დახურული' : '🌐 საჯარო'}</div>
               </div>
-              <button onclick="toggleJoinGroupList('${gId}', ${isMember}, ${isPending}, '${g.privacy}', event)" style="padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; border: none; ${btnStyle}">
+              <button onclick="toggleJoinGroupList('${gId}', ${isMember}, ${isPending}, '${g.privacy}', ${isAdmin}, event)" style="padding: 7px 14px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; ${btnStyle}">
                 ${btnText}
               </button>
             </div>
@@ -570,6 +574,17 @@
         }
 
         activeGroupData = doc.data();
+        
+        // ადმინისტრატორის ავტომატური წევრობის სინქრონიზაცია ბაზასთან
+        const isAdmin = activeGroupData.creator_id === currentUser.uid;
+        if (isAdmin && (!activeGroupData.members || !activeGroupData.members.includes(currentUser.uid))) {
+          if (!activeGroupData.members) activeGroupData.members = [];
+          activeGroupData.members.push(currentUser.uid);
+          db.collection('groups').doc(groupId).update({
+            members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+          });
+        }
+
         document.getElementById('dg-title').innerText = activeGroupData.name;
         document.getElementById('dg-cover').src = activeGroupData.cover_url || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600";
         document.getElementById('dg-admin-text').innerText = activeGroupData.admin_name || "ადმინისტრატორი";
@@ -581,7 +596,7 @@
         updateGroupMembershipUI();
         checkAdminPendingRequests();
 
-        const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+        const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
         const isPrivate = activeGroupData.privacy === 'private';
 
         const postBox = document.getElementById('dg-create-post-box');
@@ -615,26 +630,41 @@
 
     function updateGroupMembershipUI() {
       const btn = document.getElementById('dg-btn-membership');
-      const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+      const isAdmin = activeGroupData.creator_id === currentUser.uid;
+      const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
       const isPending = activeGroupData.pending_members && activeGroupData.pending_members.includes(currentUser.uid);
 
-      if (isMember) {
+      if (isAdmin) {
+        btn.style.background = "#252630";
+        btn.style.color = "#dcae36";
+        btn.style.borderColor = "#dcae36";
+        btn.innerHTML = "👑 ადმინისტრატორი";
+      } else if (isMember) {
         btn.style.background = "#252630";
         btn.style.color = "#ffffff";
+        btn.style.borderColor = "#363746";
         btn.innerHTML = "👥 თქვენ გაწევრიანდით ▾";
       } else if (isPending) {
         btn.style.background = "#383848";
         btn.style.color = "#dcae36";
+        btn.style.borderColor = "#363746";
         btn.innerHTML = "⏳ მოთხოვნა გაგზავნილია (მოლოდინში) ▾";
       } else {
         btn.style.background = "#dcae36";
         btn.style.color = "#111111";
+        btn.style.borderColor = "transparent";
         btn.innerHTML = "➕ ჯგუფში გაწევრიანება";
       }
     }
 
     function toggleCurrentGroupMembership() {
       if (!activeGroupId) return;
+      const isAdmin = activeGroupData.creator_id === currentUser.uid;
+      if (isAdmin) {
+        alert("თქვენ ხართ ამ ჯგუფის ადმინისტრატორი.");
+        return;
+      }
+
       const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
       const isPending = activeGroupData.pending_members && activeGroupData.pending_members.includes(currentUser.uid);
       const isPrivate = activeGroupData.privacy === 'private';
@@ -670,7 +700,6 @@
 
       // 3. გაწევრიანება / მოთხოვნის გაგზავნა
       if (isPrivate) {
-        // დახურული ჯგუფი -> ემატება pending-ში
         groupRef.update({
           pending_members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
         }).then(() => {
@@ -680,7 +709,6 @@
           alert("მოთხოვნა გაგზავნილია! დაელოდეთ ადმინისტრატორის დადასტურებას.");
         });
       } else {
-        // საჯარო ჯგუფი -> პირდაპირ ხდება წევრი
         groupRef.update({
           members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
           members_count: firebase.firestore.FieldValue.increment(1)
@@ -695,8 +723,13 @@
       }
     }
 
-    function toggleJoinGroupList(groupId, isMember, isPending, privacy, event) {
+    function toggleJoinGroupList(groupId, isMember, isPending, privacy, isAdmin, event) {
       event.stopPropagation();
+      if (isAdmin) {
+        openGroupDetailView(groupId);
+        return;
+      }
+
       const groupRef = db.collection('groups').doc(groupId);
 
       if (isMember) {
@@ -846,7 +879,8 @@
 
     /* --- ჯგუფში პოსტის დაწერა --- */
     function openGroupPostModal() {
-      const isMember = activeGroupData.members && activeGroupData.members.includes(currentUser.uid);
+      const isAdmin = activeGroupData.creator_id === currentUser.uid;
+      const isMember = (activeGroupData.members && activeGroupData.members.includes(currentUser.uid)) || isAdmin;
       if (!isMember) {
         alert("პოსტის დასაწერად ჯერ უნდა გაწევრიანდეთ ჯგუფში");
         return;
