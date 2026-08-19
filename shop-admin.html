@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shop Admin | Emigrantbook</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #0b0b0e; color: #e4e6eb; -webkit-tap-highlight-color: transparent; }
+
+    .admin-wrapper { width: 100%; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; position: relative; background: #0b0b0e; }
+
+    .admin-header {
+      position: sticky; top: 0; z-index: 100;
+      background: #141418; border-bottom: 1px solid #222228;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+    }
+    .back-btn { background: none; border: none; color: #dcae36; font-size: 22px; font-weight: bold; cursor: pointer; }
+    .admin-title { font-size: 18px; font-weight: 800; color: #ffffff; }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      padding: 16px;
+    }
+    .stat-box {
+      background: #141418; border: 1px solid #222228; border-radius: 10px;
+      padding: 12px; text-align: center;
+    }
+    .stat-num { font-size: 20px; font-weight: 900; color: #dcae36; }
+    .stat-label { font-size: 11px; color: #8a8f9d; margin-top: 2px; }
+
+    .card-block {
+      background: #141418; border: 1px solid #222228; border-radius: 12px;
+      margin: 0 16px 16px 16px; padding: 16px;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 12px; font-weight: 700; color: #8a8f9d; margin-bottom: 5px; }
+    .form-input {
+      width: 100%; background: #101014; border: 1px solid #282834;
+      border-radius: 8px; padding: 11px 12px; color: #fff; font-size: 14px; outline: none;
+    }
+    .form-input:focus { border-color: #dcae36; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn-submit {
+      width: 100%; background: #dcae36; color: #111; border: none;
+      padding: 13px; border-radius: 8px; font-size: 15px; font-weight: 900;
+      cursor: pointer; margin-top: 8px;
+    }
+    .btn-submit:hover { background: #e7bc44; }
+
+    /* Product Item in List */
+    .admin-prod-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px; background: #101014; border: 1px solid #24242e;
+      border-radius: 8px; margin-bottom: 8px;
+    }
+    .admin-prod-img { width: 50px; height: 50px; object-fit: contain; background: #fff; border-radius: 6px; padding: 2px; }
+    .btn-del { background: none; border: none; color: #e74c3c; font-size: 18px; cursor: pointer; padding: 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="admin-wrapper" id="admin-page-container" style="display: none;">
+    
+    <div class="admin-header">
+      <button class="back-btn" onclick="window.location.href='shop.html'">←</button>
+      <div class="admin-title">Shop Management</div>
+      <div style="width: 24px;"></div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="stat-products">0</div>
+        <div class="stat-label">Products</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Categories</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-orders">0</div>
+        <div class="stat-label">Orders</div>
+      </div>
+    </div>
+
+    <!-- Add Product Form -->
+    <div class="card-block">
+      <div class="card-title">➕ Add New Product</div>
+
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="p-cat" class="form-input">
+          <option value="MAN">MAN</option>
+          <option value="WOMAN">WOMAN</option>
+          <option value="BOY" selected>BOY</option>
+          <option value="GIRL">GIRL</option>
+        </select>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input type="text" id="p-brand" class="form-input" placeholder="e.g. U.S. POLO ASSN">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model / Title</label>
+          <input type="text" id="p-sub" class="form-input" placeholder="e.g. Sneakers Kids">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Strike Price 1 (€)</label>
+          <input type="text" id="p-strike1" class="form-input" placeholder="e.g. 70,00€">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Final Main Price (€)</label>
+          <input type="number" id="p-price" class="form-input" placeholder="e.g. 19.00" step="0.01">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Discount % (Badge)</label>
+        <input type="text" id="p-discount" class="form-input" placeholder="e.g. -71%">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Sizes (comma separated)</label>
+        <input type="text" id="p-sizes" class="form-input" placeholder="e.g. 28, 29, 30, 31, 32 or S, M, L, XL">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Product Image File</label>
+        <input type="file" id="p-file" class="form-input" accept="image/*">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="p-desc" class="form-input" style="height: 70px; resize: none;" placeholder="Product details and materials..."></textarea>
+      </div>
+
+      <button class="btn-submit" id="btn-add-product" onclick="submitNewProduct()">Upload & Save Product</button>
+    </div>
+
+    <!-- Product Catalog List -->
+    <div class="card-block">
+      <div class="card-title">📦 Active Shop Catalog</div>
+      <div id="admin-products-list">
+        <div style="text-align: center; color: #888; padding: 20px;">Loading catalog...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        db.collection('profiles').doc(user.uid).get().then(doc => {
+          if (doc.exists) {
+            const uData = doc.data();
+            const isAdmin = uData.role === 'admin' || uData.isAdmin === true || uData.is_admin === true;
+            if (!isAdmin) {
+              alert("Access Denied! Administrators only.");
+              window.location.href = "shop.html";
+              return;
+            }
+            document.getElementById('admin-page-container').style.display = 'block';
+            loadAdminProducts();
+          } else {
+            window.location.href = "shop.html";
+          }
+        }).catch(() => {
+          window.location.href = "shop.html";
+        });
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    function loadAdminProducts() {
+      db.collection('shop_products').get().then(snap => {
+        const list = document.getElementById('admin-products-list');
+        const countEl = document.getElementById('stat-products');
+        
+        countEl.innerText = snap.size;
+
+        if (snap.empty) {
+          list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No custom products yet. Default items active.</div>`;
+          return;
+        }
+
+        let html = "";
+        snap.forEach(docSnap => {
+          const p = docSnap.data();
+          html += `
+            <div class="admin-prod-card" id="p-card-${docSnap.id}">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${p.img}" class="admin-prod-img">
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:#fff;">${p.brand} ${p.sub}</div>
+                  <div style="font-size:11px; color:#8a8f9d;">${p.category} · ${p.mainPrice}</div>
+                </div>
+              </div>
+              <button class="btn-del" onclick="deleteShopProduct('${docSnap.id}')">✕</button>
+            </div>
+          `;
+        });
+        list.innerHTML = html;
+      });
+    }
+
+    function uploadMediaFile(file, callback) {
+      if (!file) { callback(null); return; }
+      var r2S3 = new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto'
+      });
+
+      var fileKey = 'shop/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: file.type || 'image/jpeg'
+      };
+
+      r2S3.upload(params, function(err, data) {
+        if (err) {
+          console.error(err);
+          callback(null);
+        } else {
+          var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+          callback(publicUrl);
+        }
+      });
+    }
+
+    function submitNewProduct() {
+      const cat = document.getElementById('p-cat').value;
+      const brand = document.getElementById('p-brand').value.trim();
+      const sub = document.getElementById('p-sub').value.trim();
+      const strike1 = document.getElementById('p-strike1').value.trim() || '70,00€';
+      const price = parseFloat(document.getElementById('p-price').value);
+      const discount = document.getElementById('p-discount').value.trim() || '-50%';
+      const sizesRaw = document.getElementById('p-sizes').value.trim();
+      const desc = document.getElementById('p-desc').value.trim();
+      const fileInput = document.getElementById('p-file');
+
+      if (!brand || !sub || isNaN(price)) {
+        alert("Please provide Brand, Model and Price!");
+        return;
+      }
+
+      const btn = document.getElementById('btn-add-product');
+      btn.disabled = true;
+      btn.innerText = "Uploading...";
+
+      const sizes = sizesRaw ? sizesRaw.split(',').map(s => s.trim()) : ["S", "M", "L", "XL"];
+
+      const saveDoc = (imgUrl) => {
+        db.collection('shop_products').add({
+          category: cat,
+          brand: brand,
+          sub: sub,
+          strike1: strike1,
+          strike2: (price * 1.5).toFixed(2) + '€',
+          mainPrice: price.toFixed(2) + '€',
+          numericPrice: price,
+          discount: discount,
+          sizes: sizes,
+          colors: [{ name: "Standard", img: imgUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700" }],
+          description: desc,
+          img: imgUrl || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700",
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          btn.disabled = false;
+          btn.innerText = "Upload & Save Product";
+          document.getElementById('p-brand').value = "";
+          document.getElementById('p-sub').value = "";
+          document.getElementById('p-price').value = "";
+          document.getElementById('p-desc').value = "";
+          document.getElementById('p-file').value = "";
+          loadAdminProducts();
+          alert("Product added successfully!");
+        }).catch(err => {
+          btn.disabled = false;
+          btn.innerText = "Upload & Save Product";
+          alert("Error: " + err.message);
+        });
+      };
+
+      if (fileInput.files && fileInput.files.length > 0) {
+        uploadMediaFile(fileInput.files[0], function(url) {
+          saveDoc(url);
+        });
+      } else {
+        saveDoc(null);
+      }
+    }
+
+    function deleteShopProduct(id) {
+      if (!confirm("Are you sure you want to delete this product?")) return;
+      db.collection('shop_products').doc(id).delete().then(() => {
+        const el = document.getElementById(`p-card-${id}`);
+        if (el) el.remove();
+      });
+    }
+  </script>
+</body>
+</html>
