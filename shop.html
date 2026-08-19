@@ -65,7 +65,41 @@
       background: #9b72cf; color: #ffffff;
     }
 
-    /* 3. Section Heading */
+    /* 3. Hero Intro Section */
+    .shop-hero-intro {
+      padding: 24px 16px 18px 16px; text-align: center;
+    }
+    .hero-title {
+      font-size: 20px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #ffffff; line-height: 1.25; margin-bottom: 8px;
+    }
+    .title-red-bar {
+      width: 45px; height: 2.5px; background: #e74c3c; margin: 0 auto 12px auto;
+    }
+    .hero-desc {
+      font-size: 13px; color: #8a8f9d; line-height: 1.5; max-width: 480px; margin: 0 auto;
+    }
+
+    /* 4. SALDI / SALE Banner */
+    .promo-saldi-banner {
+      width: 100%; position: relative; overflow: hidden;
+      background: linear-gradient(90deg, #ff007f 0%, #ff0055 50%, #ff5500 100%);
+      margin: 10px 0 20px 0;
+    }
+    .saldi-img-wrap {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      min-height: 105px; padding: 10px; position: relative;
+    }
+    .saldi-headline {
+      font-size: 42px; font-weight: 950; color: #fff; letter-spacing: 2px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3); text-transform: uppercase;
+    }
+    .saldi-ticker {
+      background: #111111; color: #ffffff; font-size: 11px; font-weight: 800;
+      text-align: center; padding: 6px 10px; letter-spacing: 0.5px;
+    }
+
+    /* 5. Section Heading */
     .section-title-wrap {
       text-align: center; margin: 22px 0 16px 0;
     }
@@ -73,11 +107,8 @@
       font-size: 21px; font-weight: 900; letter-spacing: 1px;
       text-transform: uppercase; color: #ffffff; margin-bottom: 6px;
     }
-    .title-red-bar {
-      width: 45px; height: 2.5px; background: #e74c3c; margin: 0 auto;
-    }
 
-    /* 4. Showcase Feed (Matching Screenshot) */
+    /* 6. Showcase Feed (Matching Screenshot) */
     .feed-container { padding: 0 16px; }
 
     .showcase-banner-card {
@@ -111,7 +142,7 @@
     .old-price { font-size: 13px; color: #666; text-decoration: line-through; margin-right: 6px; }
     .new-price { font-size: 16px; font-weight: 900; color: #e74c3c; }
 
-    /* 5. Floating Action Buttons */
+    /* 7. Floating Action Buttons */
     .floating-chat-widget {
       position: fixed; bottom: 20px; left: 20px; z-index: 120;
       width: 48px; height: 48px; border-radius: 12px; background: #181822;
@@ -126,7 +157,7 @@
       box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); transition: opacity 0.2s;
     }
 
-    /* 6. Product Detail / Quick View Modal */
+    /* 8. Product Detail / Quick View Modal */
     .shop-modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
       z-index: 999; align-items: flex-end; justify-content: center;
@@ -164,7 +195,7 @@
       cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
 
-    /* 7. Cart Drawer */
+    /* 9. Cart Drawer */
     .cart-item-row {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 0; border-bottom: 1px solid #24242e;
@@ -228,7 +259,7 @@
       </div>
     </header>
 
-    <!-- 2. Gender Navigation Tabs (BOY Active by default) -->
+    <!-- 2. Gender Navigation Tabs -->
     <nav class="gender-tabs">
       <button class="gender-tab" id="tab-man" onclick="selectGenderTab('MAN')">MAN</button>
       <button class="gender-tab" id="tab-woman" onclick="selectGenderTab('WOMAN')">WOMAN</button>
@@ -236,26 +267,43 @@
       <button class="gender-tab" id="tab-girl" onclick="selectGenderTab('GIRL')">GIRL</button>
     </nav>
 
-    <!-- 3. BEST SELECTION Heading with Red Bar -->
+    <!-- 3. Headline Hero Intro Section -->
+    <section class="shop-hero-intro">
+      <h1 class="hero-title" id="hero-category-title">DESIGNER BOYS CLOTHING ONLINE SHOP</h1>
+      <div class="title-red-bar"></div>
+      <p class="hero-desc" id="hero-category-desc">
+        EmigrantShop is an Italian designer fashion e-commerce, with a wide selection of international brands and fast shipping.
+      </p>
+    </section>
+
+    <!-- 4. Promo Saldi Banner -->
+    <section class="promo-saldi-banner">
+      <div class="saldi-img-wrap">
+        <div class="saldi-headline">SALDI</div>
+      </div>
+      <div class="saldi-ticker" id="txt-promo-ticker">
+        SPEDIZIONE IN 24 ORE - RESO GRATUITO
+      </div>
+    </section>
+
+    <!-- 5. BEST SELECTION Heading -->
     <div class="section-title-wrap">
       <h2 class="section-main-title" id="txt-best-selection">BEST SELECTION</h2>
       <div class="title-red-bar"></div>
     </div>
 
-    <!-- 4. Dynamic Feed (Renders exact cards from screenshot) -->
+    <!-- 6. Dynamic Feed -->
     <div class="feed-container" id="showcase-feed-container">
       <!-- Injected via JavaScript -->
     </div>
 
-    <!-- 5. Floating Widgets -->
-    <!-- Support Chat (Left) -->
+    <!-- 7. Floating Widgets -->
     <div class="floating-chat-widget" onclick="alert(t('support_msg'))" title="Support">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="#ffffff">
         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
       </svg>
     </div>
 
-    <!-- Scroll To Top (Right - Red Circle from Screenshot) -->
     <button class="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">
       ▲
     </button>
@@ -337,10 +385,10 @@
     const db = firebase.firestore();
 
     /* =========================================================================
-       📦 რეალური კოლექციის ბაზა (Real Products by Category)
+       📦 რეალური კოლექციის ბაზა
        ========================================================================= */
     const realProductsData = [
-      /* 👦 BOY COLLECTION (Exact match to screenshot) */
+      /* 👦 BOY COLLECTION */
       {
         id: "boy-1",
         category: "BOY",
@@ -465,6 +513,12 @@
     const shopTranslations = {
       en: {
         man: "MAN", woman: "WOMAN", boy: "BOY", girl: "GIRL",
+        title_boy: "DESIGNER BOYS CLOTHING ONLINE SHOP",
+        title_girl: "DESIGNER GIRLS CLOTHING ONLINE SHOP",
+        title_man: "DESIGNER MEN'S FASHION ONLINE SHOP",
+        title_woman: "DESIGNER WOMEN'S FASHION ONLINE SHOP",
+        hero_desc: "EmigrantShop is an Italian designer fashion e-commerce, with a wide selection of international brands and fast shipping.",
+        promo_ticker: "SPEDIZIONE IN 24 ORE - RESO GRATUITO",
         best_selection: "BEST SELECTION",
         add_to_cart: "Add to Cart",
         cart_title: "Shopping Cart",
@@ -481,6 +535,12 @@
       },
       ka: {
         man: "კაცი", woman: "ქალი", boy: "ბიჭი", girl: "გოგო",
+        title_boy: "ბავშვის (ბიჭის) ბრენდული ტანსაცმელი",
+        title_girl: "ბავშვის (გოგოს) ბრენდული ტანსაცმელი",
+        title_man: "მამაკაცის პრემიუმ ტანსაცმელი & ფეხსაცმელი",
+        title_woman: "ქალის პრემიუმ ტანსაცმელი & აქსესუარები",
+        hero_desc: "EmigrantShop არის იტალიური დიზაინერული ონლაინ მაღაზია საერთაშორისო ბრენდების უდიდესი არჩევანითა და სწრაფი მიწოდებით.",
+        promo_ticker: "უფასო მიწოდება 24 საათში - უფასო დაბრუნება",
         best_selection: "საუკეთესო არჩევანი",
         add_to_cart: "კალათაში დამატება",
         cart_title: "თქვენი კალათა",
@@ -497,6 +557,12 @@
       },
       it: {
         man: "UOMO", woman: "DONNA", boy: "BAMBINO", girl: "BAMBINA",
+        title_boy: "ABBIGLIAMENTO FIRMATO BAMBINO ONLINE",
+        title_girl: "ABBIGLIAMENTO FIRMATO BAMBINA ONLINE",
+        title_man: "MODA UOMO FIRMATA ONLINE SHOP",
+        title_woman: "MODA DONNA FIRMATA ONLINE SHOP",
+        hero_desc: "EmigrantShop è un e-commerce di moda firmata italiana, con un'ampia selezione di marchi internazionali e spedizione rapida.",
+        promo_ticker: "SPEDIZIONE IN 24 ORE - RESO GRATUITO",
         best_selection: "MIGLIORE SELEZIONE",
         add_to_cart: "Aggiungi al carrello",
         cart_title: "Il tuo carrello",
@@ -513,6 +579,12 @@
       },
       ru: {
         man: "МУЖЧИНЫ", woman: "ЖЕНЩИНЫ", boy: "МАЛЬЧИКИ", girl: "ДЕВОЧКИ",
+        title_boy: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ДЛЯ МАЛЬЧИКОВ",
+        title_girl: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ДЛЯ ДЕВОЧЕК",
+        title_man: "МУЖСКАЯ БРЕНДОВАЯ ОДЕЖДА И ОБУВЬ",
+        title_woman: "ЖЕНСКАЯ БРЕНДОВАЯ ОДЕЖДА И АКСЕССУАРЫ",
+        hero_desc: "EmigrantShop — итальянский интернет-магазин брендовой одежды с широким выбором и быстрой доставкой.",
+        promo_ticker: "ДОСТАВКА ЗА 24 ЧАСА - БЕСПЛАТНЫЙ ВОЗВРАТ",
         best_selection: "ЛУЧШИЙ ВЫБОР",
         add_to_cart: "В корзину",
         cart_title: "Ваша корзина",
@@ -529,6 +601,12 @@
       },
       de: {
         man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄDCHEN",
+        title_boy: "DESIGNER-KINDERMODE FÜR JUNGEN",
+        title_girl: "DESIGNER-KINDERMODE FÜR MÄDCHEN",
+        title_man: "DESIGNER-HERRENMODE ONLINE SHOP",
+        title_woman: "DESIGNER-DAMENMODE ONLINE SHOP",
+        hero_desc: "EmigrantShop ist ein italienischer Designer-Mode-E-Commerce mit einer großen Auswahl internationaler Marken und schnellem Versand.",
+        promo_ticker: "VERSAND IN 24 STUNDEN - KOSTENLOSE RÜCKSENDUNG",
         best_selection: "BESTE AUSWAHL",
         add_to_cart: "In den Warenkorb",
         cart_title: "Warenkorb",
@@ -558,7 +636,6 @@
       return shopTranslations['en'][key] || key;
     }
 
-    /* Auth & Profile Language Sync */
     auth.onAuthStateChanged(user => {
       if (user) {
         db.collection('profiles').doc(user.uid).get().then(doc => {
@@ -588,7 +665,10 @@
       document.getElementById('tab-boy').innerText = t('boy');
       document.getElementById('tab-girl').innerText = t('girl');
 
+      document.getElementById('txt-promo-ticker').innerText = t('promo_ticker');
       document.getElementById('txt-best-selection').innerText = t('best_selection');
+      document.getElementById('hero-category-desc').innerText = t('hero_desc');
+
       document.getElementById('txt-cart-title').innerText = t('cart_title');
       document.getElementById('txt-cart-empty').innerText = t('cart_empty');
       document.getElementById('txt-total').innerText = t('total');
@@ -599,7 +679,18 @@
       document.getElementById('txt-choose-size').innerText = t('choose_size');
       document.getElementById('txt-btn-add-to-cart').innerText = t('add_to_cart');
 
+      updateCategoryHeadline();
       updateCartUI();
+    }
+
+    function updateCategoryHeadline() {
+      const titles = {
+        BOY: t('title_boy'),
+        GIRL: t('title_girl'),
+        MAN: t('title_man'),
+        WOMAN: t('title_woman')
+      };
+      document.getElementById('hero-category-title').innerText = titles[activeCategory] || titles['BOY'];
     }
 
     function selectGenderTab(categoryKey) {
@@ -609,10 +700,11 @@
       const tabMap = { 'MAN': 'tab-man', 'WOMAN': 'tab-woman', 'BOY': 'tab-boy', 'GIRL': 'tab-girl' };
       if (tabMap[categoryKey]) document.getElementById(tabMap[categoryKey]).classList.add('active');
 
+      updateCategoryHeadline();
       renderCategoryFeed();
     }
 
-    /* Render Showcase Feed (Matches Screenshot Layout) */
+    /* Render Showcase Feed */
     function renderCategoryFeed() {
       const container = document.getElementById('showcase-feed-container');
       const filtered = realProductsData.filter(p => p.category === activeCategory);
