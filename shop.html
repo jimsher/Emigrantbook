@@ -1,1978 +1,692 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Online Store | Emigrantbook</title>
-
-    <!-- Google Fonts & Font Awesome Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Firebase SDKs (შენი ორიგინალური 10.8.0 ვერსიები) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
-
-    <style>
-        :root {
-            --bg-body: #060911;
-            --bg-card: #0d1322;
-            --bg-card-hover: #141c30;
-            --surface: #111827;
-            --surface-border: rgba(255, 255, 255, 0.08);
-            --primary: #dcae36;
-            --primary-glow: rgba(220, 174, 54, 0.35);
-            --primary-hover: #c79c2e;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --radius-md: 10px;
-            --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            touch-action: manipulation;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            padding-top: 70px;
-        }
-
-        /* Fixed Header */
-        header {
-            background: rgba(13, 19, 34, 0.95);
-            backdrop-filter: blur(16px);
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-            border-bottom: 1px solid var(--surface-border);
-        }
-
-        .nav-container {
-            width: 100%;
-            max-width: 100%;
-            margin: 0;
-            padding: 1rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 1.25rem;
-        }
-
-        .burger-trigger {
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            font-size: 1.2rem;
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .burger-trigger:hover {
-            border-color: var(--primary);
-            background: var(--bg-card-hover);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-main);
-            text-decoration: none;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .logo span {
-            color: var(--primary);
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .cart-trigger-btn {
-            background: var(--primary);
-            color: #111;
-            border: none;
-            padding: 0.65rem 1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
-
-        .cart-trigger-btn:hover {
-            background: var(--primary-hover);
-        }
-
-        .badge {
-            background: #111;
-            color: var(--primary);
-            font-size: 0.75rem;
-            font-weight: 800;
-            padding: 2px 7px;
-            border-radius: 20px;
-        }
-
-        /* Burger Menu Drawer */
-        .burger-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            z-index: 1001;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .burger-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .burger-sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 300px;
-            height: 100%;
-            background: var(--bg-card);
-            z-index: 1002;
-            transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            border-right: 1px solid var(--surface-border);
-        }
-
-        .burger-sidebar.active {
-            left: 0;
-        }
-
-        .burger-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--surface-border);
-        }
-
-        .menu-item-row {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            padding: 0.95rem 1.1rem;
-            border-radius: var(--radius-md);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            margin-bottom: 0.75rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-        .menu-item-row:hover {
-            background: var(--primary);
-            color: #111;
-            border-color: var(--primary);
-        }
-
-        .menu-item-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .menu-item-icon {
-            font-size: 1.2rem;
-        }
-
-        .menu-item-arrow {
-            font-size: 1.2rem;
-            color: var(--text-sub);
-        }
-
-        .menu-item-row:hover .menu-item-arrow {
-            color: #111;
-        }
-
-        /* Hero Banner */
-        .hero-banner {
-            background: linear-gradient(135deg, rgba(220, 174, 54, 0.15) 0%, rgba(13, 19, 34, 0.8) 100%);
-            border-bottom: 1px solid var(--surface-border);
-            margin: 0 0 1.5rem 0;
-            width: 100%;
-            padding: 2.5rem 1.25rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 2rem;
-        }
-
-        .hero-content h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            color: #ffffff;
-        }
-
-        .hero-content p {
-            color: var(--text-sub);
-            font-size: 1rem;
-        }
-
-        /* Main Content */
-        main {
-            width: 100%;
-            max-width: 100%;
-            margin: 0 0 3rem 0;
-            padding: 0;
-            flex: 1;
-        }
-
-        .shop-controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1.25rem;
-            margin-bottom: 1.5rem;
-            padding: 0 1rem;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 280px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 0.9rem 1rem 0.9rem 2.8rem;
-            border: 1px solid var(--surface-border);
-            border-radius: var(--radius-md);
-            outline: none;
-            font-size: 0.95rem;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: var(--transition);
-        }
-
-        .search-box input:focus {
-            border-color: var(--primary);
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-sub);
-        }
-
-        .control-group {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .sort-select {
-            background: var(--bg-card);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            padding: 0.85rem 1.2rem;
-            border-radius: var(--radius-md);
-            outline: none;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .filter-tags {
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-            padding-bottom: 4px;
-        }
-
-        .tag-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--surface-border);
-            color: var(--text-sub);
-            padding: 0.65rem 1.25rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            white-space: nowrap;
-            transition: var(--transition);
-        }
-
-        .tag-btn.active, .tag-btn:hover {
-            background: var(--primary);
-            color: #111;
-            border-color: var(--primary);
-        }
-
-        /* Products Grid */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-            width: 100%;
-            padding: 0 1rem;
-        }
-
-        .product-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--surface-border);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            transition: var(--transition);
-            width: 100%;
-        }
-
-        .product-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-card);
-        }
-
-        .wishlist-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 10;
-            background: rgba(6, 9, 17, 0.7);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--surface-border);
-            color: var(--text-sub);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .wishlist-btn.active {
-            color: var(--accent-red);
-            background: rgba(239, 68, 68, 0.15);
-            border-color: var(--accent-red);
-        }
-
-        .product-img-wrapper {
-            width: 100%;
-            height: 250px;
-            overflow: hidden;
-            background: #000;
-            position: relative;
-        }
-
-        .product-img-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .product-info {
-            padding: 1.25rem 1rem;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
-        .product-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .product-category {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--primary);
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .rating-stars {
-            color: #f59e0b;
-            font-size: 0.8rem;
-            font-weight: 700;
-        }
-
-        .product-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            color: var(--text-main);
-            transition: var(--transition);
-        }
-
-        .product-title:hover {
-            color: var(--primary);
-        }
-
-        .product-price {
-            font-size: 1.35rem;
-            font-weight: 800;
-            color: var(--accent-green);
-            margin-top: auto;
-            margin-bottom: 1.25rem;
-        }
-
-        .card-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .quick-view-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            padding: 0.8rem;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .quick-view-btn:hover {
-            background: var(--bg-card-hover);
-        }
-
-        .add-to-cart-btn {
-            flex: 1;
-            background: var(--primary);
-            border: none;
-            color: #111;
-            padding: 0.8rem;
-            border-radius: var(--radius-md);
-            font-weight: 800;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .add-to-cart-btn:hover {
-            background: var(--primary-hover);
-        }
-
-        /* Cart Drawer Slide */
-        .cart-drawer-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            z-index: 1001;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .cart-drawer-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .cart-drawer {
-            position: fixed;
-            top: 0;
-            right: -450px;
-            width: 100%;
-            max-width: 430px;
-            height: 100%;
-            background: var(--bg-card);
-            z-index: 1002;
-            box-shadow: -10px 0 35px rgba(0, 0, 0, 0.6);
-            transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid var(--surface-border);
-        }
-
-        .cart-drawer.active {
-            right: 0;
-        }
-
-        .cart-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--surface-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            color: var(--text-sub);
-            transition: var(--transition);
-        }
-
-        .close-btn:hover {
-            color: var(--text-main);
-        }
-
-        .cart-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-        }
-
-        .cart-item {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.2rem;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.9rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--surface-border);
-        }
-
-        .cart-item img {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .cart-item-details {
-            flex: 1;
-        }
-
-        .cart-item-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .cart-item-price {
-            font-size: 0.9rem;
-            color: var(--accent-green);
-            font-weight: 800;
-        }
-
-        .cart-item-qty {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .qty-btn {
-            background: var(--surface);
-            color: var(--text-main);
-            border: 1px solid var(--surface-border);
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .cart-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--surface-border);
-            background: rgba(0, 0, 0, 0.25);
-        }
-
-        .promo-box {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 1.25rem;
-        }
-
-        .promo-box input {
-            flex: 1;
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            padding: 0.6rem 0.9rem;
-            border-radius: var(--radius-md);
-            color: var(--text-main);
-            outline: none;
-            font-size: 0.85rem;
-        }
-
-        .promo-box button {
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            padding: 0.6rem 1rem;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .summary-line {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: var(--text-sub);
-            margin-bottom: 0.5rem;
-        }
-
-        .summary-line.total {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--text-main);
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px dashed var(--surface-border);
-        }
-
-        .checkout-btn {
-            width: 100%;
-            background: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 1rem;
-            transition: var(--transition);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .checkout-btn:hover {
-            opacity: 0.92;
-        }
-
-        /* Modals Base */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1005;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-            padding: 1.5rem;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-card {
-            background: var(--bg-card);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            width: 100%;
-            max-width: 680px;
-            border-radius: 16px;
-            padding: 2.25rem;
-            position: relative;
-            box-shadow: var(--shadow-card);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        /* Full Screen Admin Dashboard Modernized */
-        #adminModal {
-            padding: 0;
-        }
-
-        #adminModal .modal-card {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
-            border-radius: 0;
-            border: none;
-            background: var(--bg-body);
-            padding: 5rem 2.5rem 3rem;
-            display: block;
-            position: fixed;
-            inset: 0;
-            z-index: 2500;
-            overflow-y: auto;
-        }
-
-        .admin-header-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(13, 19, 34, 0.98);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--surface-border);
-            padding: 1rem 2.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .admin-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-        }
-
-        .admin-stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--surface-border);
-            border-radius: 14px;
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            box-shadow: var(--shadow-card);
-        }
-
-        .admin-stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 14px;
-            background: rgba(220, 174, 54, 0.15);
-            color: var(--primary);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .admin-stat-val {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--text-main);
-        }
-
-        .admin-stat-lbl {
-            font-size: 0.9rem;
-            color: var(--text-sub);
-        }
-
-        .admin-order-card {
-            background: var(--bg-card);
-            border: 1px solid var(--surface-border);
-            border-radius: 14px;
-            padding: 1.5rem;
-            margin-bottom: 1.2rem;
-            box-shadow: var(--shadow-card);
-        }
-
-        .admin-order-header {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--surface-border);
-            padding-bottom: 0.8rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .admin-order-status {
-            padding: 0.4rem 0.9rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-green);
-            border: 1px solid var(--accent-green);
-        }
-
-        /* Full Screen Product View */
-        #productModal {
-            padding: 0;
-        }
-
-        #productModal .modal-card {
-            width: 100vw;
-            height: 100vh;
-            max-width: 100vw;
-            max-height: 100vh;
-            border-radius: 0;
-            border: none;
-            background: var(--bg-body);
-            padding: 4.5rem 1.5rem 2rem;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 2.5rem;
-            flex-wrap: wrap;
-            position: fixed;
-            inset: 0;
-            z-index: 2000;
-        }
-
-        .product-media-col {
-            width: 100%;
-            max-width: 480px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .fullscreen-close-btn {
-            position: fixed;
-            top: 1.25rem;
-            left: 1.25rem;
-            background: var(--surface);
-            border: 1px solid var(--surface-border);
-            color: var(--text-main);
-            padding: 0.7rem 1.2rem;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-            z-index: 2010;
-        }
-
-        .fullscreen-close-btn:hover {
-            background: var(--primary);
-            color: #111;
-            border-color: var(--primary);
-        }
-
-        .fullscreen-product-img {
-            width: 100%;
-            height: 360px;
-            object-fit: cover;
-            border-radius: 16px;
-            border: 1px solid var(--surface-border);
-        }
-
-        .thumbnail-strip {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 6px 2px;
-            width: 100%;
-            scroll-behavior: smooth;
-        }
-
-        .thumb-img {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 10px;
-            border: 2px solid var(--surface-border);
-            cursor: pointer;
-            flex-shrink: 0;
-            transition: var(--transition);
-            opacity: 0.6;
-        }
-
-        .thumb-img:hover, .thumb-img.active {
-            border-color: var(--primary);
-            opacity: 1;
-        }
-
-        .fullscreen-product-details {
-            flex: 1;
-            min-width: 280px;
-            max-width: 580px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Form Controls */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.25rem;
-            margin-top: 1.5rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group.full {
-            grid-column: span 2;
-        }
-
-        .form-group label {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--text-sub);
-        }
-
-        .form-group input, .form-group select {
-            background: rgba(0, 0, 0, 0.45);
-            border: 1px solid var(--surface-border);
-            padding: 0.95rem 1.1rem;
-            border-radius: var(--radius-md);
-            color: var(--text-main);
-            font-size: 1rem;
-            outline: none;
-            transition: var(--transition);
-        }
-
-        .form-group input:focus {
-            border-color: var(--primary);
-        }
-
-        .receipt-card {
-            text-align: center;
-            padding: 1rem 0;
-        }
-
-        .receipt-icon {
-            font-size: 4rem;
-            color: var(--accent-green);
-            margin-bottom: 1rem;
-        }
-
-        .receipt-details {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px dashed var(--surface-border);
-            border-radius: var(--radius-md);
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            text-align: left;
-            font-size: 0.95rem;
-        }
-
-        .receipt-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.6rem;
-        }
-
-        @media(max-width: 768px) {
-            .products-grid { grid-template-columns: 1fr; padding: 0 0.5rem; }
-            .hero-banner { flex-direction: column; text-align: center; }
-            .form-grid { grid-template-columns: 1fr; }
-            .form-group.full { grid-column: span 1; }
-            #productModal .modal-card { padding: 4.5rem 1rem 2rem; }
-            #adminModal .modal-card { padding: 5.5rem 1rem 2rem; }
-            .fullscreen-product-img { height: 260px; }
-            .thumb-img { width: 60px; height: 60px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shop | Emigrantbook</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #ffffff; color: #111111; -webkit-tap-highlight-color: transparent; }
+    
+    .shop-wrapper { width: 100%; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; position: relative; background: #fff; }
+
+    /* 1. Header */
+    .shop-header {
+      position: sticky; top: 0; z-index: 100;
+      background: #ffffff; border-bottom: 1px solid #eaeaea;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+    }
+    .brand-logo {
+      font-size: 22px; font-weight: 900; letter-spacing: -0.5px;
+      color: #111; text-decoration: none; display: flex; align-items: center;
+    }
+    .brand-logo span { color: #a463f8; font-style: italic; font-weight: 800; }
+    
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .cart-btn {
+      background: none; border: none; cursor: pointer; padding: 6px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cart-badge {
+      position: absolute; top: 2px; right: 2px;
+      background: #e74c3c; color: #fff; font-size: 10px; font-weight: 800;
+      width: 16px; height: 16px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .search-btn-red {
+      width: 36px; height: 36px; background: #e74c3c; border: none;
+      border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .menu-btn-red {
+      width: 36px; height: 36px; background: #ffffff; border: 1.5px solid #e74c3c;
+      border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* 2. Top Categories Bar */
+    .gender-tabs {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid #e5e5e5; background: #fff;
+    }
+    .gender-tab {
+      padding: 12px 0; text-align: center; font-size: 13px; font-weight: 800;
+      text-transform: uppercase; color: #333; background: #fff; border: none;
+      border-right: 1px solid #f0f0f0; cursor: pointer; transition: all 0.2s;
+    }
+    .gender-tab:last-child { border-right: none; }
+    .gender-tab.active {
+      background: #9b72cf; color: #ffffff;
+    }
+
+    /* 3. Hero Intro Section */
+    .shop-hero-intro {
+      padding: 24px 16px 18px 16px; text-align: center;
+    }
+    .hero-title {
+      font-size: 20px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #111; line-height: 1.25; margin-bottom: 8px;
+    }
+    .title-red-bar {
+      width: 45px; height: 2.5px; background: #e74c3c; margin: 0 auto 12px auto;
+    }
+    .hero-desc {
+      font-size: 13px; color: #666; line-height: 1.5; max-width: 480px; margin: 0 auto;
+    }
+
+    /* 4. SALDI / SALE Banner */
+    .promo-saldi-banner {
+      width: 100%; position: relative; overflow: hidden;
+      background: linear-gradient(90deg, #ff007f 0%, #ff0055 50%, #ff5500 100%);
+      margin: 10px 0 20px 0;
+    }
+    .saldi-img-wrap {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      min-height: 105px; padding: 10px; position: relative;
+    }
+    .saldi-headline {
+      font-size: 42px; font-weight: 950; color: #fff; letter-spacing: 2px;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3); text-transform: uppercase;
+    }
+    .saldi-ticker {
+      background: #111111; color: #ffffff; font-size: 11px; font-weight: 800;
+      text-align: center; padding: 6px 10px; letter-spacing: 0.5px;
+    }
+
+    /* 5. Section Heading */
+    .section-title-wrap {
+      text-align: center; margin: 20px 0 16px 0;
+    }
+    .section-main-title {
+      font-size: 20px; font-weight: 900; letter-spacing: 1px;
+      text-transform: uppercase; color: #111; margin-bottom: 6px;
+    }
+
+    /* 6. Product Cards & Banners */
+    .feed-container { padding: 0 16px; }
+
+    .product-showcase-card {
+      background: #ffffff; border: 1px solid #f0f0f0; border-radius: 8px;
+      overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .product-img-box {
+      width: 100%; height: 180px; background: #fbfbfb; display: flex;
+      align-items: center; justify-content: center; overflow: hidden;
+    }
+    .product-img-box img { width: 100%; height: 100%; object-fit: contain; }
+    
+    .product-details {
+      padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .product-name-block { font-size: 14px; color: #111; }
+    .product-brand { font-weight: 900; }
+    .product-cat { color: #777; margin-left: 4px; }
+    
+    .product-price-block { text-align: right; }
+    .old-price { font-size: 13px; color: #888; text-decoration: line-through; margin-right: 6px; }
+    .new-price { font-size: 16px; font-weight: 900; color: #e74c3c; }
+
+    /* Big Brand Feature Banner */
+    .brand-feature-card {
+      width: 100%; height: 160px; border-radius: 8px; overflow: hidden;
+      margin-bottom: 20px; position: relative; background: #f4f4f4;
+      display: flex; align-items: center; justify-content: space-between;
+      border: 1px solid #eee;
+    }
+    .brand-feature-card img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* 7. Standard 2-Column Product Grid */
+    .products-2col-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+      margin-bottom: 25px;
+    }
+    .grid-item-card {
+      background: #fff; border: 1px solid #eee; border-radius: 8px;
+      overflow: hidden; padding: 10px; display: flex; flex-direction: column;
+      position: relative;
+    }
+    .grid-item-img {
+      width: 100%; height: 140px; object-fit: contain; margin-bottom: 8px;
+    }
+    .discount-badge {
+      position: absolute; top: 8px; left: 8px; background: #e74c3c; color: #fff;
+      font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;
+    }
+    .grid-item-title { font-size: 13px; font-weight: 700; color: #222; margin-bottom: 4px; height: 34px; overflow: hidden; }
+    .grid-item-prices { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .btn-add-cart {
+      background: #111; color: #fff; border: none; border-radius: 6px;
+      padding: 8px; font-weight: 700; font-size: 12px; cursor: pointer;
+      width: 100%; margin-top: auto;
+    }
+    .btn-add-cart:active { background: #e74c3c; }
+
+    /* 8. Floating Support Widget */
+    .floating-chat-widget {
+      position: fixed; bottom: 20px; left: 20px; z-index: 120;
+      width: 48px; height: 48px; border-radius: 12px; background: #111;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3); cursor: pointer;
+    }
+
+    /* 9. Search & Cart Drawers (Modals) */
+    .shop-modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 999; align-items: flex-end; justify-content: center;
+    }
+    .shop-drawer {
+      background: #fff; width: 100%; max-width: 600px;
+      border-radius: 16px 16px 0 0; padding: 20px; max-height: 85vh;
+      overflow-y: auto;
+    }
+    .drawer-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px;
+    }
+    .drawer-title { font-size: 17px; font-weight: 800; color: #111; }
+    .close-drawer-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: #777; }
+    
+    .cart-item-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .cart-item-img { width: 45px; height: 45px; object-fit: contain; border-radius: 6px; background: #fafafa; }
+    .cart-total-bar {
+      margin-top: 15px; display: flex; justify-content: space-between;
+      font-size: 16px; font-weight: 900;
+    }
+    .btn-checkout {
+      width: 100%; background: #e74c3c; color: #fff; border: none;
+      padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 800;
+      margin-top: 12px; cursor: pointer;
+    }
+
+    .search-input-field {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #ddd;
+      border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 12px;
+    }
+    .search-input-field:focus { border-color: #e74c3c; }
+  </style>
 </head>
 <body>
 
-    <!-- Header Navigation -->
-    <header>
-        <div class="nav-container">
-            <div class="nav-left">
-                <button class="burger-trigger" id="openBurgerBtn" aria-label="Menu">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <a href="index.html" class="logo">
-                    Emigrant<span>book</span>
-                </a>
-            </div>
-            <div class="nav-right">
-                <button class="cart-trigger-btn" id="openCartBtn" title="Cart">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    <span class="badge" id="cartBadge">0</span>
-                </button>
-            </div>
-        </div>
+  <div class="shop-wrapper">
+    
+    <!-- 1. Top Header -->
+    <header class="shop-header">
+      <a href="index.html" class="brand-logo">
+        EMIGRANT<span>SHOP</span>
+      </a>
+
+      <div class="header-actions">
+        <!-- Cart Button -->
+        <button class="cart-btn" onclick="openCartModal()" title="Cart">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="#111" stroke-width="2" fill="none">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span class="cart-badge" id="cart-count-badge">0</span>
+        </button>
+
+        <!-- Red Search Button -->
+        <button class="search-btn-red" onclick="openSearchModal()" title="Search">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="#fff" stroke-width="2.5" fill="none">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+
+        <!-- Red Outline Menu Button -->
+        <button class="menu-btn-red" onclick="window.location.href='index.html'" title="Return Home">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e74c3c" stroke-width="2.5" fill="none">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <!-- Burger Menu Sidebar -->
-    <div class="burger-overlay" id="burgerOverlay"></div>
-    <aside class="burger-sidebar" id="burgerSidebar">
-        <div class="burger-header">
-            <h3 data-i18n="menu" style="font-size: 1.15rem; font-weight: 700;">Menu</h3>
-            <button class="close-btn" id="closeBurgerBtn"><i class="fa-solid fa-xmark"></i></button>
-        </div>
+    <!-- 2. Gender Navigation Tabs -->
+    <nav class="gender-tabs">
+      <button class="gender-tab" id="tab-man" onclick="selectGenderTab('MAN')">MAN</button>
+      <button class="gender-tab" id="tab-woman" onclick="selectGenderTab('WOMAN')">WOMAN</button>
+      <button class="gender-tab active" id="tab-boy" onclick="selectGenderTab('BOY')">BOY</button>
+      <button class="gender-tab" id="tab-girl" onclick="selectGenderTab('GIRL')">GIRL</button>
+    </nav>
 
-        <button class="menu-item-row" onclick="window.location.href='index.html'">
-            <div class="menu-item-left">
-                <span class="menu-item-icon">🏠</span>
-                <span data-i18n="nav_home">Home Page</span>
-            </div>
-            <span class="menu-item-arrow">›</span>
-        </button>
+    <!-- 3. Headline Section -->
+    <section class="shop-hero-intro">
+      <h1 class="hero-title" id="hero-category-title">DESIGNER BOYS CLOTHING ONLINE SHOP</h1>
+      <div class="title-red-bar"></div>
+      <p class="hero-desc" id="hero-category-desc">
+        EmigrantShop is an Italian designer fashion e-commerce, with a wide selection of international brands and fast shipping.
+      </p>
+    </section>
 
-        <button class="menu-item-row" onclick="window.location.href='shop.html'">
-            <div class="menu-item-left">
-                <span class="menu-item-icon">🛍️</span>
-                <span data-i18n="nav_shop">Online Shopping</span>
-            </div>
-            <span class="menu-item-arrow">›</span>
-        </button>
+    <!-- 4. Promo Saldi Banner -->
+    <section class="promo-saldi-banner">
+      <div class="saldi-img-wrap">
+        <div class="saldi-headline">SALDI</div>
+      </div>
+      <div class="saldi-ticker" id="txt-promo-ticker">
+        SPEDIZIONE IN 24 ORE - RESO GRATUITO
+      </div>
+    </section>
 
-        <button class="menu-item-row" onclick="openWishlistModal()">
-            <div class="menu-item-left">
-                <span class="menu-item-icon">❤️</span>
-                <span data-i18n="nav_wishlist">Wishlist</span>
-            </div>
-            <span class="badge" id="menuWishlistBadge" style="background: var(--accent-red); color: white; margin-left: auto; margin-right: 8px;">0</span>
-            <span class="menu-item-arrow">›</span>
-        </button>
-
-        <!-- Admin Panel Menu Button -->
-        <button class="menu-item-row" onclick="openAdminModal()">
-            <div class="menu-item-left">
-                <span class="menu-item-icon">⚙️</span>
-                <span data-i18n="nav_admin">Admin Panel</span>
-            </div>
-            <span class="menu-item-arrow">›</span>
-        </button>
-
-        <button class="menu-item-row" onclick="window.location.href='offline-video.html'">
-            <div class="menu-item-left">
-                <span class="menu-item-icon">☁️</span>
-                <span>Offline Video</span>
-            </div>
-            <span class="menu-item-arrow">›</span>
-        </button>
-    </aside>
-
-    <!-- Main Content -->
-    <main>
-        <!-- Hero Banner -->
-        <div class="hero-banner">
-            <div class="hero-content">
-                <h1 data-i18n="hero_title">Official Online Store</h1>
-                <p data-i18n="hero_subtitle">Explore exclusive books, tech gadgets, and official merchandise.</p>
-            </div>
-        </div>
-
-        <!-- Controls Bar -->
-        <div class="shop-controls">
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Search products..." data-i18n-placeholder="search_placeholder">
-            </div>
-
-            <div class="control-group">
-                <select class="sort-select" id="sortSelect" onchange="sortProducts()">
-                    <option value="default" data-i18n="sort_default">Sort: Default</option>
-                    <option value="low-high" data-i18n="sort_low_high">Price: Low to High</option>
-                    <option value="high-low" data-i18n="sort_high_low">Price: High to Low</option>
-                </select>
-
-                <div class="filter-tags">
-                    <button class="tag-btn active" data-category="all" data-i18n="cat_all">All</button>
-                    <button class="tag-btn" data-category="books" data-i18n="cat_books">Books</button>
-                    <button class="tag-btn" data-category="electronics" data-i18n="cat_electronics">Electronics</button>
-                    <button class="tag-btn" data-category="merch" data-i18n="cat_merch">Merchandise</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="products-grid" id="productsGrid"></div>
-    </main>
-
-    <!-- Cart Drawer -->
-    <div class="cart-drawer-overlay" id="cartOverlay"></div>
-    <div class="cart-drawer" id="cartDrawer">
-        <div class="cart-header">
-            <h3 data-i18n="your_cart" style="font-weight: 800;">Your Cart</h3>
-            <button class="close-btn" id="closeCartBtn"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="cart-body" id="cartItemsContainer"></div>
-        <div class="cart-footer">
-            <div class="promo-box">
-                <input type="text" id="promoInput" placeholder="Promo code (e.g. EMIGRANT10)">
-                <button onclick="applyPromo()"><i class="fa-solid fa-check"></i></button>
-            </div>
-            <div class="summary-line">
-                <span data-i18n="subtotal">Subtotal:</span>
-                <span id="cartSubtotal">0.00 ₾</span>
-            </div>
-            <div class="summary-line" id="discountRow" style="display: none; color: var(--accent-green);">
-                <span>Discount (10%):</span>
-                <span id="cartDiscount">-0.00 ₾</span>
-            </div>
-            <div class="summary-line total">
-                <span data-i18n="total">Total:</span>
-                <span id="cartTotalSum">0.00 ₾</span>
-            </div>
-            <button class="checkout-btn" onclick="openCheckoutModal()">
-                <i class="fa-solid fa-shield-halved"></i> <span data-i18n="checkout_btn">Proceed to Checkout</span>
-            </button>
-        </div>
+    <!-- 5. Best Selection Title -->
+    <div class="section-title-wrap">
+      <h2 class="section-main-title" id="txt-best-selection">BEST SELECTION</h2>
+      <div class="title-red-bar"></div>
     </div>
 
-    <!-- Wishlist Modal -->
-    <div class="modal-overlay" id="wishlistModal">
-        <div class="modal-card">
-            <button class="close-btn" onclick="closeWishlistModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <h3 style="margin-bottom: 1rem; font-weight: 800;" data-i18n="nav_wishlist">Wishlist</h3>
-            <div id="wishlistItemsContainer"></div>
+    <!-- 6. Feed & Products Showcase -->
+    <div class="feed-container">
+      
+      <!-- Showcase Card: U.S. Polo Assn -->
+      <div class="product-showcase-card" onclick="addToCart('U.S. POLO ASSN Sneakers', 19, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400')">
+        <div class="product-img-box">
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600" alt="Sneakers">
         </div>
+        <div class="product-details">
+          <div class="product-name-block">
+            <span class="product-brand">U.S. POLO ASSN</span>
+            <span class="product-cat">Sneakers</span>
+          </div>
+          <div class="product-price-block">
+            <span class="old-price">70,00€</span>
+            <span class="new-price">19,00€</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Brand Banner: Timberland -->
+      <div class="brand-feature-card" onclick="selectGenderTab('MAN')">
+        <img src="https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=600" alt="Timberland">
+      </div>
+
+      <!-- 2-Column Dynamic Product Grid -->
+      <div class="products-2col-grid" id="dynamic-product-grid">
+        <!-- Injected via JavaScript based on chosen tab & language -->
+      </div>
+
     </div>
 
-    <!-- Full Screen Dedicated Admin Control Center Modal -->
-    <div class="modal-overlay" id="adminModal">
-        <div class="modal-card">
-            <div class="admin-header-bar">
-                <h2 style="font-weight: 800; font-size: 1.4rem; display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Emigrantbook - ადმინ პანელი
-                </h2>
-                <button class="fullscreen-close-btn" onclick="closeAdminModal()" style="top: auto; left: auto; position: static;">
-                    <i class="fa-solid fa-arrow-left"></i> გასვლა ადმინიდან
-                </button>
-            </div>
-
-            <!-- Stats Overview -->
-            <div class="admin-stats-grid">
-                <div class="admin-stat-card">
-                    <div class="admin-stat-icon"><i class="fa-solid fa-wallet"></i></div>
-                    <div>
-                        <div class="admin-stat-val" id="adminTotalRevenue">0.00 ₾</div>
-                        <div class="admin-stat-lbl">ჯამური შემოსავალი</div>
-                    </div>
-                </div>
-                <div class="admin-stat-card">
-                    <div class="admin-stat-icon" style="color: var(--accent-green); background: rgba(16, 185, 129, 0.15);"><i class="fa-solid fa-box-archive"></i></div>
-                    <div>
-                        <div class="admin-stat-val" id="adminOrdersCount">0</div>
-                        <div class="admin-stat-lbl">მიღებული შეკვეთები</div>
-                    </div>
-                </div>
-                <div class="admin-stat-card">
-                    <div class="admin-stat-icon" style="color: var(--primary); background: rgba(220, 174, 54, 0.15);"><i class="fa-solid fa-cart-flatbed"></i></div>
-                    <div>
-                        <div class="admin-stat-val" id="adminProductsCount">0</div>
-                        <div class="admin-stat-lbl">აქტიური პროდუქტები</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 12px; margin-bottom: 2rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 14px; overflow-x: auto;">
-                <button class="tag-btn active" id="adminTabOrdersBtn" onclick="switchAdminTab('orders')"><i class="fa-solid fa-box"></i> შეკვეთების მართვა</button>
-                <button class="tag-btn" id="adminTabAddBtn" onclick="switchAdminTab('add')"><i class="fa-solid fa-plus"></i> ახალი პროდუქტის დამატება</button>
-                <button class="tag-btn" id="adminTabManageBtn" onclick="switchAdminTab('manage')"><i class="fa-solid fa-list-check"></i> პროდუქტების სია და მართვა</button>
-            </div>
-
-            <!-- Admin Tab 1: Orders -->
-            <div id="adminTabOrders">
-                <div id="adminOrdersList"></div>
-            </div>
-
-            <!-- Admin Tab 2: Add Product -->
-            <div id="adminTabAdd" style="display: none;">
-                <form id="addProductForm" onsubmit="handleProductAdd(event)">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>დასახელება (ინგლისურად)</label>
-                            <input type="text" id="newTitleEn" required placeholder="e.g. Official Book">
-                        </div>
-                        <div class="form-group">
-                            <label>დასახელება (ქართულად)</label>
-                            <input type="text" id="newTitleKa" required placeholder="მაგ. ოფიციალური წიგნი">
-                        </div>
-                        <div class="form-group">
-                            <label>კატეგორია</label>
-                            <select id="newCategory">
-                                <option value="books">წიგნები (Books)</option>
-                                <option value="electronics">ტექნიკა (Electronics)</option>
-                                <option value="merch">აქსესუარები (Merchandise)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>ფასი (₾)</label>
-                            <input type="number" step="0.01" id="newPrice" required placeholder="59.00">
-                        </div>
-                        <div class="form-group full">
-                            <label>მთავარი ფოტო (ფაილის ატვირთვა)</label>
-                            <input type="file" id="newImageFile" accept="image/*" required>
-                        </div>
-                        <div class="form-group full">
-                            <label>დამატებითი გალერეის ფოტოები (მრავალი ფაილი)</label>
-                            <input type="file" id="newGalleryFiles" accept="image/*" multiple>
-                        </div>
-                        <div class="form-group full">
-                            <label>აღწერა (ინგლისურად)</label>
-                            <input type="text" id="newDescEn" required placeholder="Product description in English...">
-                        </div>
-                        <div class="form-group full">
-                            <label>აღწერა (ქართულად)</label>
-                            <input type="text" id="newDescKa" required placeholder="პროდუქტის აღწერა ქართულად...">
-                        </div>
-                    </div>
-                    <button type="submit" class="checkout-btn" id="saveProductBtn" style="margin-top: 2rem; max-width: 300px; background: var(--primary); color: #111;">
-                        <i class="fa-solid fa-plus"></i> პროდუქტის შენახვა და გამოქვეყნება
-                    </button>
-                </form>
-            </div>
-
-            <!-- Admin Tab 3: Manage Products -->
-            <div id="adminTabManage" style="display: none;">
-                <div id="adminProductsList"></div>
-            </div>
-        </div>
+    <!-- Floating Chat Widget -->
+    <div class="floating-chat-widget" onclick="alert(t('support_msg'))">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+      </svg>
     </div>
 
-    <!-- Full Screen Product View Modal -->
-    <div class="modal-overlay" id="productModal">
-        <div class="modal-card">
-            <button class="fullscreen-close-btn" onclick="closeProductModal()">
-                <i class="fa-solid fa-arrow-left"></i> <span data-i18n="back_to_shop">Back to Shop</span>
-            </button>
-            
-            <div class="product-media-col">
-                <img src="" id="modalImg" class="fullscreen-product-img" alt="">
-                <div class="thumbnail-strip" id="modalThumbnails"></div>
-            </div>
+  </div>
 
-            <div class="fullscreen-product-details">
-                <div id="modalCategory" class="product-category" style="margin-bottom: 0.5rem; font-size: 0.9rem;"></div>
-                <h1 id="modalTitle" style="margin-bottom: 1rem; font-size: 2rem; font-weight: 800;"></h1>
-                <p id="modalDescription" style="color: var(--text-sub); font-size: 1.05rem; margin-bottom: 2rem; line-height: 1.7;"></p>
-                <div id="modalPrice" class="product-price" style="font-size: 2.2rem; margin-bottom: 2rem;"></div>
-                <button class="add-to-cart-btn" id="modalAddBtn" style="padding: 1.1rem; font-size: 1.1rem; max-width: 320px;">
-                    <i class="fa-solid fa-cart-plus"></i> <span data-i18n="add_to_cart">Add to Cart</span>
-                </button>
-            </div>
-        </div>
+  <!-- Cart Modal / Drawer -->
+  <div class="shop-modal" id="cart-modal" onclick="closeCartModal()">
+    <div class="shop-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-head">
+        <span class="drawer-title" id="txt-cart-title">Your Cart</span>
+        <button class="close-drawer-btn" onclick="closeCartModal()">✕</button>
+      </div>
+      <div id="cart-items-container">
+        <div style="text-align: center; color: #888; padding: 20px;" id="txt-cart-empty">Your cart is empty</div>
+      </div>
+      <div class="cart-total-bar">
+        <span id="txt-total">Total:</span>
+        <span id="cart-total-sum">0.00 €</span>
+      </div>
+      <button class="btn-checkout" onclick="checkoutOrder()" id="txt-btn-checkout">Checkout</button>
     </div>
+  </div>
 
-    <!-- Real Checkout Modal -->
-    <div class="modal-overlay" id="checkoutModal">
-        <div class="modal-card">
-            <button class="close-btn" onclick="closeCheckoutModal()" style="position: absolute; top: 1rem; right: 1rem;"><i class="fa-solid fa-xmark"></i></button>
-            <h3 data-i18n="checkout_title" style="margin-bottom: 0.5rem; font-size: 1.3rem;">Card Payment</h3>
-            <p data-i18n="checkout_subtitle" style="color: var(--text-sub); font-size: 0.85rem; margin-bottom: 1rem;">Enter shipping and credit card details to finalize order.</p>
-
-            <form id="paymentForm" onsubmit="handlePaymentSubmit(event)">
-                <div class="form-grid">
-                    <div class="form-group full">
-                        <label data-i18n="full_name">Full Name</label>
-                        <input type="text" id="custNameInput" required placeholder="John Doe">
-                    </div>
-                    <div class="form-group full">
-                        <label data-i18n="address">Shipping Address</label>
-                        <input type="text" id="custAddressInput" required placeholder="123 Main Street, New York">
-                    </div>
-                    <div class="form-group full">
-                        <label>Phone Number</label>
-                        <input type="tel" id="custPhoneInput" required placeholder="+995 599 00 00 00">
-                    </div>
-                    <div class="form-group full">
-                        <label data-i18n="card_number">Card Number</label>
-                        <input type="text" id="cardNumInput" required placeholder="4532 •••• •••• 8901" maxlength="19" oninput="formatCardNumber(this)">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="card_expiry">Expiry (MM/YY)</label>
-                        <input type="text" id="cardExpInput" required placeholder="12/28" maxlength="5" oninput="formatExpiry(this)">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="card_cvc">CVC/CVV</label>
-                        <input type="password" required placeholder="•••" maxlength="3">
-                    </div>
-                </div>
-
-                <div style="margin-top: 1.75rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <span data-i18n="total_to_pay" style="font-size: 0.85rem; color: var(--text-sub);">Total to Pay:</span>
-                        <div id="checkoutTotalSum" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-green);">0.00 ₾</div>
-                    </div>
-                    <button type="submit" class="checkout-btn" id="paySubmitBtn" style="width: auto; padding: 0.85rem 2.2rem; margin-top: 0;">
-                        <i class="fa-solid fa-shield-halved"></i> <span data-i18n="pay_now">Pay Now</span>
-                    </button>
-                </div>
-            </form>
-        </div>
+  <!-- Search Modal / Drawer -->
+  <div class="shop-modal" id="search-modal" onclick="closeSearchModal()">
+    <div class="shop-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-head">
+        <span class="drawer-title" id="txt-search-title">Search Products</span>
+        <button class="close-drawer-btn" onclick="closeSearchModal()">✕</button>
+      </div>
+      <input type="text" id="shop-search-input" class="search-input-field" placeholder="Search brands, clothes, shoes..." oninput="handleSearchFilter()">
+      <div id="search-results-box" style="max-height: 250px; overflow-y: auto;"></div>
     </div>
+  </div>
 
-    <!-- Receipt Modal -->
-    <div class="modal-overlay" id="receiptModal">
-        <div class="modal-card">
-            <div class="receipt-card">
-                <i class="fa-solid fa-circle-check receipt-icon"></i>
-                <h2 data-i18n="payment_success" style="font-weight: 800;">Payment Successful!</h2>
-                <p data-i18n="order_processed" style="color: var(--text-sub); font-size: 0.95rem; margin-top: 0.3rem;">Your order has been verified and processed successfully.</p>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
 
-                <div class="receipt-details">
-                    <div class="receipt-row">
-                        <span data-i18n="order_number">Order #:</span>
-                        <strong id="receiptOrderId">#EB-00000</strong>
-                    </div>
-                    <div class="receipt-row">
-                        <span data-i18n="paid_amount">Paid Amount:</span>
-                        <strong id="receiptAmount">0.00 ₾</strong>
-                    </div>
-                    <div class="receipt-row">
-                        <span data-i18n="status">Status:</span>
-                        <span style="color: var(--accent-green); font-weight: 700;" data-i18n="confirmed">Confirmed</span>
-                    </div>
-                </div>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-                <button class="checkout-btn" onclick="closeReceiptModal()" style="background: var(--surface); border: 1px solid var(--surface-border); margin-top: 0;">
-                    <span data-i18n="close">Close</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    /* =========================================================================
+       🌐 i18n Localization (en, ka, it, ru, de)
+       ========================================================================= */
+    const shopTranslations = {
+      en: {
+        man: "MAN",
+        woman: "WOMAN",
+        boy: "BOY",
+        girl: "GIRL",
+        title_boy: "DESIGNER BOYS CLOTHING ONLINE SHOP",
+        title_girl: "DESIGNER GIRLS CLOTHING ONLINE SHOP",
+        title_man: "DESIGNER MEN'S FASHION ONLINE SHOP",
+        title_woman: "DESIGNER WOMEN'S FASHION ONLINE SHOP",
+        hero_desc: "EmigrantShop is an Italian designer fashion e-commerce, with a wide selection of international brands and fast shipping.",
+        promo_ticker: "SPEDIZIONE IN 24 ORE - RESO GRATUITO",
+        best_selection: "BEST SELECTION",
+        add_to_cart: "Add to Cart",
+        cart_title: "Shopping Cart",
+        cart_empty: "Your cart is empty",
+        total: "Total:",
+        checkout: "Checkout with WhatsApp / Order",
+        search_title: "Search Catalog",
+        search_ph: "Search brands, shoes, clothes...",
+        support_msg: "Customer Support is online 24/7",
+        added_alert: "Item added to cart!"
+      },
+      ka: {
+        man: "კაცი",
+        woman: "ქალი",
+        boy: "ბიჭი",
+        girl: "გოგო",
+        title_boy: "ბავშვის (ბიჭის) ბრენდული ტანსაცმელი",
+        title_girl: "ბავშვის (გოგოს) ბრენდული ტანსაცმელი",
+        title_man: "მამაკაცის პრემიუმ ტანსაცმელი & ფეხსაცმელი",
+        title_woman: "ქალის პრემიუმ ტანსაცმელი & აქსესუარები",
+        hero_desc: "EmigrantShop არის იტალიური დიზაინერული ონლაინ მაღაზია საერთაშორისო ბრენდების უდიდესი არჩევანითა და სწრაფი მიწოდებით.",
+        promo_ticker: "უფასო მიწოდება 24 საათში - უფასო დაბრუნება",
+        best_selection: "საუკეთესო არჩევანი",
+        add_to_cart: "კალათაში დამატება",
+        cart_title: "თქვენი კალათა",
+        cart_empty: "კალათა ცარიელია",
+        total: "სულ:",
+        checkout: "შეკვეთის გაფორმება",
+        search_title: "პროდუქციის ძებნა",
+        search_ph: "მოძებნეთ ბრენდი, ფეხსაცმელი, ტანსაცმელი...",
+        support_msg: "მომხმარებელთა მხარდაჭერა ხელმისაწვდომია 24/7",
+        added_alert: "პროდუქტი დაემატა კალათაში!"
+      },
+      it: {
+        man: "UOMO",
+        woman: "DONNA",
+        boy: "BAMBINO",
+        girl: "BAMBINA",
+        title_boy: "ABBIGLIAMENTO FIRMATO BAMBINO ONLINE",
+        title_girl: "ABBIGLIAMENTO FIRMATO BAMBINA ONLINE",
+        title_man: "MODA UOMO FIRMATA ONLINE SHOP",
+        title_woman: "MODA DONNA FIRMATA ONLINE SHOP",
+        hero_desc: "EmigrantShop è un e-commerce di moda firmata italiana, con un'ampia selezione di marchi internazionali e spedizione rapida.",
+        promo_ticker: "SPEDIZIONE IN 24 ORE - RESO GRATUITO",
+        best_selection: "MIGLIORE SELEZIONE",
+        add_to_cart: "Aggiungi al carrello",
+        cart_title: "Il tuo carrello",
+        cart_empty: "Il tuo carrello è vuoto",
+        total: "Totale:",
+        checkout: "Procedi all'ordine",
+        search_title: "Cerca nel catalogo",
+        search_ph: "Cerca marchi, scarpe, vestiti...",
+        support_msg: "Il servizio clienti è attivo 24/7",
+        added_alert: "Articolo aggiunto al carrello!"
+      },
+      ru: {
+        man: "МУЖЧИНЫ",
+        woman: "ЖЕНЩИНЫ",
+        boy: "МАЛЬЧИКИ",
+        girl: "ДЕВОЧКИ",
+        title_boy: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ДЛЯ МАЛЬЧИКОВ",
+        title_girl: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ДЛЯ ДЕВОЧЕК",
+        title_man: "МУЖСКАЯ БРЕНДОВАЯ ОДЕЖДА И ОБУВЬ",
+        title_woman: "ЖЕНСКАЯ БРЕНДОВАЯ ОДЕЖДА И АКСЕССУАРЫ",
+        hero_desc: "EmigrantShop — итальянский интернет-магазин брендовой одежды с широким выбором и быстрой доставкой.",
+        promo_ticker: "ДОСТАВКА ЗА 24 ЧАСА - БЕСПЛАТНЫЙ ВОЗВРАТ",
+        best_selection: "ЛУЧШИЙ ВЫБОР",
+        add_to_cart: "В корзину",
+        cart_title: "Ваша корзина",
+        cart_empty: "Корзина пуста",
+        total: "Итого:",
+        checkout: "Оформить заказ",
+        search_title: "Поиск товаров",
+        search_ph: "Поиск брендов, обуви, одежды...",
+        support_msg: "Служба поддержки работает 24/7",
+        added_alert: "Товар добавлен в корзину!"
+      },
+      de: {
+        man: "HERREN",
+        woman: "DAMEN",
+        boy: "JUNGEN",
+        girl: "MÄDCHEN",
+        title_boy: "DESIGNER-KINDERMODE FÜR JUNGEN",
+        title_girl: "DESIGNER-KINDERMODE FÜR MÄDCHEN",
+        title_man: "DESIGNER-HERRENMODE ONLINE SHOP",
+        title_woman: "DESIGNER-DAMENMODE ONLINE SHOP",
+        hero_desc: "EmigrantShop ist ein italienischer Designer-Mode-E-Commerce mit einer großen Auswahl internationaler Marken und schnellem Versand.",
+        promo_ticker: "VERSAND IN 24 STUNDEN - KOSTENLOSE RÜCKSENDUNG",
+        best_selection: "BESTE AUSWAHL",
+        add_to_cart: "In den Warenkorb",
+        cart_title: "Warenkorb",
+        cart_empty: "Dein Warenkorb ist leer",
+        total: "Gesamt:",
+        checkout: "Zur Kasse",
+        search_title: "Produkte suchen",
+        search_ph: "Marken, Schuhe, Kleidung suchen...",
+        support_msg: "Der Kundenservice ist 24/7 erreichbar",
+        added_alert: "Artikel zum Warenkorb hinzugefügt!"
+      }
+    };
 
-    <script>
-        // --- 1. FIREBASE SETUP ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
-            authDomain: "emigrantbook-4b7bd.firebaseapp.com",
-            projectId: "emigrantbook-4b7bd",
-            storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
-            messagingSenderId: "109907338554",
-            appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
-            measurementId: "G-MRPP7G4H30"
-        };
+    let currentLang = "en";
+    let activeCategory = "BOY";
+    let cart = JSON.parse(localStorage.getItem('emigrant_cart') || '[]');
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+    function t(key) {
+      if (shopTranslations[currentLang] && shopTranslations[currentLang][key]) {
+        return shopTranslations[currentLang][key];
+      }
+      return shopTranslations['en'][key] || key;
+    }
 
-        // --- 2. MULTILINGUAL DICTIONARY ---
-        const translations = {
-            en: {
-                cart: "Cart", menu: "Menu", nav_home: "Home Page", nav_shop: "Online Shopping", nav_wishlist: "Wishlist", nav_admin: "Admin Panel", back_to_shop: "Back to Shop",
-                hero_title: "Official Online Store", hero_subtitle: "Explore exclusive books, tech gadgets, and official merchandise.",
-                search_placeholder: "Search products...", sort_default: "Sort: Default", sort_low_high: "Price: Low to High", sort_high_low: "Price: High to Low",
-                cat_all: "All", cat_books: "Books", cat_electronics: "Electronics", cat_merch: "Merchandise",
-                your_cart: "Your Cart", subtotal: "Subtotal:", total: "Total:", checkout_btn: "Proceed to Checkout", add_to_cart: "Add to Cart",
-                checkout_title: "Card Payment", checkout_subtitle: "Enter shipping and credit card details to finalize order.",
-                full_name: "Full Name", address: "Shipping Address", card_number: "Card Number", card_expiry: "Expiry (MM/YY)", card_cvc: "CVC/CVV",
-                total_to_pay: "Total to Pay:", pay_now: "Pay Now", payment_success: "Payment Successful!", order_processed: "Your order has been verified and processed successfully.",
-                order_number: "Order #:", paid_amount: "Paid Amount:", status: "Status:", confirmed: "Confirmed", close: "Close", empty_cart: "Your cart is empty", empty_wishlist: "No saved items in wishlist."
-            },
-            ka: {
-                cart: "კალათა", menu: "მენიუ", nav_home: "მთავარი გვერდი", nav_shop: "ონლაინ შოპინგი", nav_wishlist: "ფავორიტები", nav_admin: "ადმინ პანელი", back_to_shop: "უკან დაბრუნება",
-                hero_title: "ოფიციალური ონლაინ მაღაზია", hero_subtitle: "აღმოაჩინეთ ექსკლუზიური წიგნები, ტექნიკა და ოფიციალური აქსესუარები.",
-                search_placeholder: "მოძებნეთ პროდუქტი...", sort_default: "სორტირება: სტანდარტული", sort_low_high: "ფასი: ზრდადობით", sort_high_low: "ფასი: კლებადობით",
-                cat_all: "ყველა", cat_books: "წიგნები", cat_electronics: "ტექნიკა", cat_merch: "აქსესუარები",
-                your_cart: "თქვენი კალათა", subtotal: "ჯამი:", total: "სულ:", checkout_btn: "გადახდაზე გადასვლა", add_to_cart: "კალათაში დამატება",
-                checkout_title: "ბარათით გადახდა", checkout_subtitle: "შეიყვანეთ მონაცემები შეკვეთის დასასრულებლად.",
-                full_name: "სრული სახელი", address: "მიწოდების მისამართი", card_number: "ბარათის ნომერი", card_expiry: "ვადა (MM/YY)", card_cvc: "CVC/CVV",
-                total_to_pay: "გადასახდელი თანხა:", pay_now: "გადახდა", payment_success: "გადახდა წარმატებულია!", order_processed: "თქვენი შეკვეთა მიღებულია და იგზავნება დამუშავებაზე.",
-                order_number: "შეკვეთის #:", paid_amount: "გადახდილი თანხა:", status: "სტატუსი:", confirmed: "დადასტურებულია", close: "დახურვა", empty_cart: "კალათა ცარიელია", empty_wishlist: "ფავორიტებში არაფერია შენახული."
-            }
-        };
+    // Sample catalogue items for demo
+    const sampleProducts = [
+      { id: '1', category: 'BOY', brand: 'TOMMY HILFIGER', name: 'Boys Navy T-Shirt', oldPrice: 45, price: 24, discount: '-45%', img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300' },
+      { id: '2', category: 'BOY', brand: 'NIKE', name: 'Kids Air Max Sneakers', oldPrice: 85, price: 49, discount: '-42%', img: 'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=300' },
+      { id: '3', category: 'MAN', brand: 'CALVIN KLEIN', name: 'Slim Fit Cotton Polo', oldPrice: 79, price: 39, discount: '-50%', img: 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=300' },
+      { id: '4', category: 'MAN', brand: 'LEVIS', name: '511 Slim Jeans Denim', oldPrice: 110, price: 59, discount: '-46%', img: 'https://images.unsplash.com/photo-1542272604-780c96856453?w=300' },
+      { id: '5', category: 'WOMAN', brand: 'GUESS', name: 'Floral Summer Dress', oldPrice: 139, price: 69, discount: '-50%', img: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=300' },
+      { id: '6', category: 'GIRL', brand: 'BENETTON', name: 'Girls Pink Hoodie', oldPrice: 49, price: 22, discount: '-55%', img: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=300' }
+    ];
 
-        let currentLang = localStorage.getItem('emigrantbook_lang') || localStorage.getItem('lang') || 'en';
-
-        function applyLanguage() {
-            const dict = translations[currentLang] || translations.en;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (dict[key]) el.textContent = dict[key];
-            });
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                if (dict[key]) el.placeholder = dict[key];
-            });
-        }
-
-        let currentUser = null;
-        let products = [];
-        let orders = [];
-        let cart = JSON.parse(localStorage.getItem('eb_shop_cart')) || [];
-        let wishlist = JSON.parse(localStorage.getItem('eb_shop_wishlist')) || [];
-        let appliedDiscount = 0;
-
-        auth.onAuthStateChanged(user => {
-            currentUser = user;
-            if (user) {
-                db.collection('profiles').doc(user.uid).get().then(doc => {
-                    if (doc.exists && doc.data().language) {
-                        currentLang = doc.data().language;
-                        localStorage.setItem('emigrantbook_lang', currentLang);
-                        applyLanguage();
-                    }
-                });
-            }
+    // Auth & Profile Listener for Lang sync
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        db.collection('profiles').doc(user.uid).get().then(doc => {
+          if (doc.exists) {
+            const uData = doc.data();
+            const rawLang = (uData.language || uData.lang || localStorage.getItem('site_lang') || 'en').toLowerCase();
+            if (['ka', 'ge'].includes(rawLang)) currentLang = 'ka';
+            else if (['it', 'ru', 'de', 'en'].includes(rawLang)) currentLang = rawLang;
+          }
+          applyTranslations();
+          renderProductsGrid();
+        }).catch(() => {
+          applyTranslations();
+          renderProductsGrid();
         });
-
-        function initFirebaseListeners() {
-            db.collection('shop_products').orderBy('created_at', 'desc').onSnapshot(snapshot => {
-                products = [];
-                snapshot.forEach(doc => {
-                    products.push({ id: doc.id, ...doc.data() });
-                });
-                renderProducts(products);
-                updateAdminStats();
-            }, err => console.error("Products sync error:", err));
-
-            db.collection('shop_orders').orderBy('created_at', 'desc').onSnapshot(snapshot => {
-                orders = [];
-                snapshot.forEach(doc => {
-                    orders.push({ id: doc.id, ...doc.data() });
-                });
-                updateAdminStats();
-                renderAdminOrders();
-            }, err => console.error("Orders sync error:", err));
-        }
-
-        function renderProducts(items) {
-            const grid = document.getElementById('productsGrid');
-            const lang = translations[currentLang] ? currentLang : 'en';
-
-            if(items.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; color: var(--text-sub);">No products available in store.</div>`;
-                return;
-            }
-
-            grid.innerHTML = items.map(p => {
-                const isWish = wishlist.includes(p.id);
-                const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
-                const imgMain = p.image || (p.images ? p.images[0] : '');
-
-                return `
-                <div class="product-card">
-                    <button class="wishlist-btn ${isWish ? 'active' : ''}" onclick="toggleWishlist('${p.id}')">
-                        <i class="fa-solid fa-heart"></i>
-                    </button>
-                    <div class="product-img-wrapper" onclick="openProductModal('${p.id}')" style="cursor: pointer;">
-                        <img src="${imgMain}" alt="${titleText}">
-                    </div>
-                    <div class="product-info">
-                        <div class="product-meta">
-                            <span class="product-category">${p.category || 'General'}</span>
-                            <span class="rating-stars"><i class="fa-solid fa-star"></i> ${p.rating || 5.0}</span>
-                        </div>
-                        <h3 class="product-title" onclick="openProductModal('${p.id}')">${titleText}</h3>
-                        <div class="product-price">${parseFloat(p.price).toFixed(2)} ₾</div>
-                        <div class="card-actions">
-                            <button class="quick-view-btn" onclick="openProductModal('${p.id}')" title="Quick View"><i class="fa-solid fa-eye"></i></button>
-                            <button class="add-to-cart-btn" onclick="addToCart('${p.id}')">
-                                <i class="fa-solid fa-cart-plus"></i> ${translations[lang].add_to_cart}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `}).join('');
-        }
-
-        function toggleWishlist(id) {
-            if (wishlist.includes(id)) {
-                wishlist = wishlist.filter(item => item !== id);
-            } else {
-                wishlist.push(id);
-            }
-            localStorage.setItem('eb_shop_wishlist', JSON.stringify(wishlist));
-            document.getElementById('menuWishlistBadge').textContent = wishlist.length;
-            renderProducts(products);
-        }
-
-        function openWishlistModal() {
-            document.getElementById('burgerSidebar').classList.remove('active');
-            document.getElementById('burgerOverlay').classList.remove('active');
-            renderWishlistItems();
-            document.getElementById('wishlistModal').classList.add('active');
-        }
-
-        function closeWishlistModal() {
-            document.getElementById('wishlistModal').classList.remove('active');
-        }
-
-        function renderWishlistItems() {
-            const container = document.getElementById('wishlistItemsContainer');
-            const lang = translations[currentLang] ? currentLang : 'en';
-            const wishProducts = products.filter(p => wishlist.includes(p.id));
-
-            if (wishProducts.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">${translations[lang].empty_wishlist}</p>`;
-            } else {
-                container.innerHTML = wishProducts.map(i => {
-                    const titleText = (typeof i.title === 'object') ? (i.title[lang] || i.title.en) : i.title;
-                    return `
-                    <div class="cart-item">
-                        <img src="${i.image}" alt="">
-                        <div class="cart-item-details">
-                            <div class="cart-item-title">${titleText}</div>
-                            <div class="cart-item-price">${parseFloat(i.price).toFixed(2)} ₾</div>
-                        </div>
-                        <button class="close-btn" onclick="toggleWishlist('${i.id}'); renderWishlistItems();" style="color: var(--accent-red);" title="Remove"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `}).join('');
-            }
-        }
-
-        function addToCart(id) {
-            const p = products.find(item => item.id === id);
-            const exist = cart.find(item => item.id === id);
-            if (exist) exist.qty++;
-            else cart.push({ ...p, qty: 1 });
-            
-            updateCartUI();
-            toggleCart(true);
-        }
-
-        function updateCartQty(id, delta) {
-            const item = cart.find(i => i.id === id);
-            if(item) {
-                item.qty += delta;
-                if(item.qty <= 0) cart = cart.filter(i => i.id !== id);
-            }
-            updateCartUI();
-        }
-
-        function updateCartUI() {
-            const lang = translations[currentLang] ? currentLang : 'en';
-            localStorage.setItem('eb_shop_cart', JSON.stringify(cart));
-            document.getElementById('cartBadge').textContent = cart.reduce((a, b) => a + b.qty, 0);
-
-            const container = document.getElementById('cartItemsContainer');
-            if(cart.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin-top: 2rem;">${translations[lang].empty_cart}</p>`;
-            } else {
-                container.innerHTML = cart.map(i => {
-                    const titleText = (typeof i.title === 'object') ? (i.title[lang] || i.title.en) : i.title;
-                    return `
-                    <div class="cart-item">
-                        <img src="${i.image}" alt="">
-                        <div class="cart-item-details">
-                            <div class="cart-item-title">${titleText}</div>
-                            <div class="cart-item-price">${parseFloat(i.price).toFixed(2)} ₾</div>
-                            <div class="cart-item-qty">
-                                <button class="qty-btn" onclick="updateCartQty('${i.id}', -1)">-</button>
-                                <span>${i.qty}</span>
-                                <button class="qty-btn" onclick="updateCartQty('${i.id}', 1)">+</button>
-                            </div>
-                        </div>
-                    </div>
-                `}).join('');
-            }
-
-            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-            const discountAmt = subtotal * appliedDiscount;
-            const finalTotal = subtotal - discountAmt;
-
-            document.getElementById('cartSubtotal').textContent = `${subtotal.toFixed(2)} ₾`;
-            document.getElementById('cartDiscount').textContent = `-${discountAmt.toFixed(2)} ₾`;
-            document.getElementById('cartTotalSum').textContent = `${finalTotal.toFixed(2)} ₾`;
-            document.getElementById('checkoutTotalSum').textContent = `${finalTotal.toFixed(2)} ₾`;
-        }
-
-        function applyPromo() {
-            const val = document.getElementById('promoInput').value.trim().toUpperCase();
-            if (val === 'EMIGRANT10') {
-                appliedDiscount = 0.10;
-                document.getElementById('discountRow').style.display = 'flex';
-                alert("Promo code applied! 10% discount.");
-            } else {
-                alert("Invalid promo code!");
-            }
-            updateCartUI();
-        }
-
-        function toggleCart(open) {
-            document.getElementById('cartDrawer').classList.toggle('active', open);
-            document.getElementById('cartOverlay').classList.toggle('active', open);
-        }
-
-        document.getElementById('openCartBtn').onclick = () => toggleCart(true);
-        document.getElementById('closeCartBtn').onclick = () => toggleCart(false);
-        document.getElementById('cartOverlay').onclick = () => toggleCart(false);
-
-        document.getElementById('openBurgerBtn').onclick = () => {
-            document.getElementById('burgerSidebar').classList.add('active');
-            document.getElementById('burgerOverlay').classList.add('active');
-        };
-        document.getElementById('closeBurgerBtn').onclick = () => {
-            document.getElementById('burgerSidebar').classList.remove('active');
-            document.getElementById('burgerOverlay').classList.remove('active');
-        };
-        document.getElementById('burgerOverlay').onclick = () => {
-            document.getElementById('burgerSidebar').classList.remove('active');
-            document.getElementById('burgerOverlay').classList.remove('active');
-        };
-
-        document.getElementById('searchInput').oninput = (e) => {
-            const term = e.target.value.toLowerCase();
-            const lang = translations[currentLang] ? currentLang : 'en';
-            renderProducts(products.filter(p => {
-                const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
-                return titleText.toLowerCase().includes(term);
-            }));
-        };
-
-        document.querySelectorAll('.tag-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                const cat = e.target.dataset.category;
-                renderProducts(cat === 'all' ? products : products.filter(p => p.category === cat));
-            };
-        });
-
-        function sortProducts() {
-            const val = document.getElementById('sortSelect').value;
-            let sorted = [...products];
-            if (val === 'low-high') sorted.sort((a,b) => a.price - b.price);
-            if (val === 'high-low') sorted.sort((a,b) => b.price - a.price);
-            renderProducts(sorted);
-        }
-
-        function openProductModal(id) {
-            const lang = translations[currentLang] ? currentLang : 'en';
-            const p = products.find(item => item.id === id);
-            if(!p) return;
-
-            const pImages = (p.images && p.images.length > 0) ? p.images : [p.image];
-            const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
-            const descText = (typeof p.description === 'object') ? (p.description[lang] || p.description.en) : p.description;
-
-            document.getElementById('modalImg').src = pImages[0];
-            document.getElementById('modalTitle').textContent = titleText;
-            document.getElementById('modalCategory').textContent = p.category || 'General';
-            document.getElementById('modalDescription').textContent = descText || '';
-            document.getElementById('modalPrice').textContent = `${parseFloat(p.price).toFixed(2)} ₾`;
-            document.getElementById('modalAddBtn').onclick = () => { addToCart(p.id); closeProductModal(); };
-
-            const thumbsContainer = document.getElementById('modalThumbnails');
-            thumbsContainer.innerHTML = pImages.map((imgUrl, index) => `
-                <img src="${imgUrl}" class="thumb-img ${index === 0 ? 'active' : ''}" onclick="changeModalMainImage('${imgUrl}', this)" alt="thumbnail">
-            `).join('');
-
-            document.getElementById('productModal').classList.add('active');
-        }
-
-        function changeModalMainImage(url, el) {
-            document.getElementById('modalImg').src = url;
-            document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function closeProductModal() { 
-            document.getElementById('productModal').classList.remove('active'); 
-        }
-
-        function openCheckoutModal() {
-            const lang = translations[currentLang] ? currentLang : 'en';
-            if(cart.length === 0) return alert(translations[lang].empty_cart);
-            toggleCart(false);
-            document.getElementById('checkoutModal').classList.add('active');
-        }
-        function closeCheckoutModal() { document.getElementById('checkoutModal').classList.remove('active'); }
-
-        function formatCardNumber(input) {
-            let val = input.value.replace(/\D/g, '');
-            input.value = val.replace(/(.{4})/g, '$1 ').trim();
-        }
-
-        function formatExpiry(input) {
-            let val = input.value.replace(/\D/g, '');
-            if (val.length >= 2) input.value = val.substring(0, 2) + '/' + val.substring(2, 4);
-            else input.value = val;
-        }
-
-        function handlePaymentSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById('paySubmitBtn');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
-
-            const subtotal = cart.reduce((a, b) => a + (b.price * b.qty), 0);
-            const finalTotal = subtotal - (subtotal * appliedDiscount);
-            const orderId = `#EB-${Math.floor(10000 + Math.random() * 90000)}`;
-
-            const lang = translations[currentLang] ? currentLang : 'en';
-            const newOrder = {
-                order_id: orderId,
-                customer_uid: currentUser ? currentUser.uid : 'guest',
-                customer_name: document.getElementById('custNameInput').value.trim() || 'Anonymous',
-                customer_address: document.getElementById('custAddressInput').value.trim() || 'Not specified',
-                customer_phone: document.getElementById('custPhoneInput').value.trim() || 'Not specified',
-                total_amount: finalTotal,
-                status: 'Processing',
-                items: cart.map(i => ({ 
-                    title: (typeof i.title === 'object') ? (i.title[lang] || i.title.en) : i.title, 
-                    qty: i.qty, 
-                    price: i.price 
-                })),
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection('shop_orders').add(newOrder).then(() => {
-                document.getElementById('receiptOrderId').textContent = orderId;
-                document.getElementById('receiptAmount').textContent = `${finalTotal.toFixed(2)} ₾`;
-
-                cart = [];
-                appliedDiscount = 0;
-                document.getElementById('discountRow').style.display = 'none';
-                updateCartUI();
-
-                closeCheckoutModal();
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${translations[currentLang] ? translations[currentLang].pay_now : 'Pay Now'}`;
-                document.getElementById('paymentForm').reset();
-                document.getElementById('receiptModal').classList.add('active');
-            }).catch(err => {
-                alert("Order error: " + err.message);
-                btn.disabled = false;
-            });
-        }
-
-        function closeReceiptModal() { document.getElementById('receiptModal').classList.remove('active'); }
-
-        // --- ADMIN CONTROL CENTER ---
-        const IMGBB_API_KEY = "20b1ff9fe9c8896477a6bf04c86bcc67";
-
-        function uploadImageForAdmin(file, callback) {
-            let formData = new FormData();
-            formData.append("image", file);
-
-            fetch("https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY, {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result && result.success) callback(result.data.url);
-                else {
-                    let fd = new FormData();
-                    fd.append("file", file);
-                    fd.append("upload_preset", "fhlkp9ld");
-                    fetch("https://api.cloudinary.com/v1_1/kim1albt/image/upload", {
-                        method: "POST",
-                        body: fd
-                    })
-                    .then(r => r.json())
-                    .then(d => {
-                        if (d.secure_url) callback(d.secure_url);
-                        else alert("Image upload failed.");
-                    });
-                }
-            })
-            .catch(() => alert("Image upload network error."));
-        }
-
-        function openAdminModal() {
-            document.getElementById('burgerSidebar').classList.remove('active');
-            document.getElementById('burgerOverlay').classList.remove('active');
-            updateAdminStats();
-            renderAdminOrders();
-            renderAdminProductsList();
-            document.getElementById('adminModal').classList.add('active');
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.remove('active');
-        }
-
-        function updateAdminStats() {
-            const totalRev = orders.reduce((acc, o) => acc + (o.total_amount || 0), 0);
-            document.getElementById('adminTotalRevenue').textContent = `${totalRev.toFixed(2)} ₾`;
-            document.getElementById('adminOrdersCount').textContent = orders.length;
-            document.getElementById('adminProductsCount').textContent = products.length;
-        }
-
-        function switchAdminTab(tab) {
-            document.getElementById('adminTabOrders').style.display = tab === 'orders' ? 'block' : 'none';
-            document.getElementById('adminTabAdd').style.display = tab === 'add' ? 'block' : 'none';
-            document.getElementById('adminTabManage').style.display = tab === 'manage' ? 'block' : 'none';
-
-            document.getElementById('adminTabOrdersBtn').classList.toggle('active', tab === 'orders');
-            document.getElementById('adminTabAddBtn').classList.toggle('active', tab === 'add');
-            document.getElementById('adminTabManageBtn').classList.toggle('active', tab === 'manage');
-        }
-
-        function renderAdminOrders() {
-            const container = document.getElementById('adminOrdersList');
-
-            if(orders.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 3rem 0; font-size: 1.1rem;">შეკვეთები ჯერ არ არის მიღებული.</p>`;
-            } else {
-                container.innerHTML = orders.map(o => {
-                    const orderTime = o.created_at ? new Date(o.created_at.toDate ? o.created_at.toDate() : o.created_at).toLocaleString() : 'Just now';
-                    return `
-                    <div class="admin-order-card">
-                        <div class="admin-order-header">
-                            <div>
-                                <strong style="color: var(--primary); font-size: 1.15rem;">${o.order_id || o.id}</strong>
-                                <span style="color: var(--text-sub); font-size: 0.85rem; margin-left: 12px;"><i class="fa-regular fa-clock"></i> ${orderTime}</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <span class="admin-order-status">${o.status || 'Processing'}</span>
-                                <strong style="color: var(--accent-green); font-size: 1.25rem;">${parseFloat(o.total_amount || 0).toFixed(2)} ₾</strong>
-                                <button onclick="deleteFirestoreOrder('${o.id}')" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1.1rem;" title="შეკვეთის წაშლა"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.95rem; margin-bottom: 0.4rem;">👤 მომხმარებელი: <strong>${o.customer_name}</strong> (${o.customer_phone})</div>
-                        <div style="font-size: 0.9rem; color: var(--text-sub); margin-bottom: 0.8rem;">📍 მისამართი: ${o.customer_address}</div>
-                        <div style="background: rgba(0,0,0,0.3); padding: 0.8rem 1rem; border-radius: 8px; font-size: 0.9rem;">
-                            <strong style="color: var(--text-main);">შეკვეთილი პროდუქტები:</strong>
-                            <ul style="margin-left: 1.2rem; margin-top: 0.4rem; color: var(--text-sub);">
-                                ${o.items.map(item => `<li><strong>${item.title}</strong> (რაოდენობა: ${item.qty}) - ${(item.price * item.qty).toFixed(2)} ₾</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                `}).join('');
-            }
-        }
-
-        function deleteFirestoreOrder(orderDocId) {
-            if(confirm("ნამდვილად გსურთ ამ შეკვეთის წაშლა?")) {
-                db.collection('shop_orders').doc(orderDocId).delete().catch(err => alert("Error: " + err.message));
-            }
-        }
-
-        function handleProductAdd(e) {
-            e.preventDefault();
-            const btn = document.getElementById('saveProductBtn');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> იტვირთება და ინახება...`;
-
-            const mainImgFile = document.getElementById('newImageFile').files[0];
-            const galleryFiles = Array.from(document.getElementById('newGalleryFiles').files);
-
-            if(!mainImgFile) {
-                alert("გთხოვთ აირჩიოთ მთავარი ფოტო!");
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-plus"></i> პროდუქტის შენახვა და გამოქვეყნება`;
-                return;
-            }
-
-            uploadImageForAdmin(mainImgFile, function(mainImgUrl) {
-                if(galleryFiles.length > 0) {
-                    let uploadedGalleryUrls = [];
-                    let uploadPromises = galleryFiles.map(file => {
-                        return new Promise(resolve => {
-                            uploadImageForAdmin(file, url => {
-                                uploadedGalleryUrls.push(url);
-                                resolve();
-                            });
-                        });
-                    });
-
-                    Promise.all(uploadPromises).then(() => {
-                        saveProductToFirestore(mainImgUrl, [mainImgUrl, ...uploadedGalleryUrls], btn);
-                    });
-                } else {
-                    saveProductToFirestore(mainImgUrl, [mainImgUrl], btn);
-                }
-            });
-        }
-
-        function saveProductToFirestore(mainImgUrl, galleryUrls, btn) {
-            const newProd = {
-                title: {
-                    en: document.getElementById('newTitleEn').value.trim(),
-                    ka: document.getElementById('newTitleKa').value.trim()
-                },
-                category: document.getElementById('newCategory').value,
-                price: parseFloat(document.getElementById('newPrice').value),
-                rating: 5.0,
-                image: mainImgUrl,
-                images: galleryUrls,
-                description: {
-                    en: document.getElementById('newDescEn').value.trim(),
-                    ka: document.getElementById('newDescKa').value.trim()
-                },
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection('shop_products').add(newProd).then(() => {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-plus"></i> პროდუქტის შენახვა და გამოქვეყნება`;
-                alert("პროდუქტი წარმატებით დაემატა მაღაზიაში!");
-                document.getElementById('addProductForm').reset();
-                switchAdminTab('manage');
-            }).catch(err => {
-                alert("ბაზის შეცდომა: " + err.message);
-                btn.disabled = false;
-            });
-        }
-
-        function renderAdminProductsList() {
-            const container = document.getElementById('adminProductsList');
-            const lang = translations[currentLang] ? currentLang : 'en';
-
-            if(products.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color: var(--text-sub); margin: 2rem 0;">პროდუქტები ვერ მოიძებნა.</p>`;
-                return;
-            }
-
-            container.innerHTML = products.map(p => {
-                const titleText = (typeof p.title === 'object') ? (p.title[lang] || p.title.en) : p.title;
-                return `
-                <div class="cart-item" style="margin-bottom: 0.8rem; background: var(--bg-card); padding: 1rem;">
-                    <img src="${p.image}" alt="" style="width: 80px; height: 80px; border-radius: 8px;">
-                    <div class="cart-item-details">
-                        <div class="cart-item-title" style="font-size: 1.05rem;">${titleText}</div>
-                        <div class="cart-item-price" style="font-size: 0.95rem; color: var(--accent-green); margin-top: 4px;">${parseFloat(p.price).toFixed(2)} ₾ &bull; <span style="color: var(--text-sub); text-transform: uppercase;">${p.category}</span></div>
-                    </div>
-                    <button class="close-btn" onclick="deleteFirestoreProduct('${p.id}')" style="color: var(--accent-red); font-size: 1.2rem; padding: 8px;" title="პროდუქტის წაშლა"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `}).join('');
-        }
-
-        function deleteFirestoreProduct(id) {
-            if(confirm("ნამდვილად გსურთ ამ პროდუქტის წაშლა?")) {
-                db.collection('shop_products').doc(id).delete().catch(err => alert("Error: " + err.message));
-            }
-        }
-
-        applyLanguage();
-        initFirebaseListeners();
-        updateCartUI();
-        document.getElementById('menuWishlistBadge').textContent = wishlist.length;
-    </script>
+      } else {
+        const localLang = (localStorage.getItem('site_lang') || 'en').toLowerCase();
+        if (['ka', 'it', 'ru', 'de'].includes(localLang)) currentLang = localLang;
+        applyTranslations();
+        renderProductsGrid();
+      }
+    });
+
+    function applyTranslations() {
+      document.getElementById('tab-man').innerText = t('man');
+      document.getElementById('tab-woman').innerText = t('woman');
+      document.getElementById('tab-boy').innerText = t('boy');
+      document.getElementById('tab-girl').innerText = t('girl');
+
+      document.getElementById('txt-promo-ticker').innerText = t('promo_ticker');
+      document.getElementById('txt-best-selection').innerText = t('best_selection');
+      document.getElementById('hero-category-desc').innerText = t('hero_desc');
+
+      document.getElementById('txt-cart-title').innerText = t('cart_title');
+      document.getElementById('txt-cart-empty').innerText = t('cart_empty');
+      document.getElementById('txt-total').innerText = t('total');
+      document.getElementById('txt-btn-checkout').innerText = t('checkout');
+      document.getElementById('txt-search-title').innerText = t('search_title');
+      document.getElementById('shop-search-input').placeholder = t('search_ph');
+
+      updateCategoryHeadline();
+      updateCartUI();
+    }
+
+    function updateCategoryHeadline() {
+      const titles = {
+        BOY: t('title_boy'),
+        GIRL: t('title_girl'),
+        MAN: t('title_man'),
+        WOMAN: t('title_woman')
+      };
+      document.getElementById('hero-category-title').innerText = titles[activeCategory] || titles['BOY'];
+    }
+
+    function selectGenderTab(categoryKey) {
+      activeCategory = categoryKey;
+      document.querySelectorAll('.gender-tab').forEach(b => b.classList.remove('active'));
+      
+      const tabMap = { 'MAN': 'tab-man', 'WOMAN': 'tab-woman', 'BOY': 'tab-boy', 'GIRL': 'tab-girl' };
+      if (tabMap[categoryKey]) document.getElementById(tabMap[categoryKey]).classList.add('active');
+
+      updateCategoryHeadline();
+      renderProductsGrid();
+    }
+
+    function renderProductsGrid() {
+      const grid = document.getElementById('dynamic-product-grid');
+      const filtered = sampleProducts.filter(p => p.category === activeCategory);
+      
+      let html = "";
+      filtered.forEach(p => {
+        html += `
+          <div class="grid-item-card">
+            <span class="discount-badge">${p.discount}</span>
+            <img src="${p.img}" class="grid-item-img" alt="${p.name}">
+            <div style="font-size:11px; font-weight:800; color:#e74c3c;">${p.brand}</div>
+            <div class="grid-item-title">${p.name}</div>
+            <div class="grid-item-prices">
+              <span class="old-price">${p.oldPrice},00€</span>
+              <span class="new-price">${p.price},00€</span>
+            </div>
+            <button class="btn-add-cart" onclick="addToCart('${p.name}', ${p.price}, '${p.img}')">
+              ${t('add_to_cart')}
+            </button>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+    }
+
+    /* Cart Management */
+    function addToCart(title, price, img) {
+      cart.push({ title, price, img, id: Date.now() });
+      localStorage.setItem('emigrant_cart', JSON.stringify(cart));
+      updateCartUI();
+      alert(t('added_alert'));
+    }
+
+    function updateCartUI() {
+      const badge = document.getElementById('cart-count-badge');
+      badge.innerText = cart.length;
+      
+      const container = document.getElementById('cart-items-container');
+      const totalSumEl = document.getElementById('cart-total-sum');
+
+      if (cart.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">${t('cart_empty')}</div>`;
+        totalSumEl.innerText = "0.00 €";
+        return;
+      }
+
+      let html = "";
+      let total = 0;
+      cart.forEach((item, idx) => {
+        total += item.price;
+        html += `
+          <div class="cart-item-row">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${item.img}" class="cart-item-img">
+              <div>
+                <div style="font-size:13px; font-weight:700;">${item.title}</div>
+                <div style="font-size:12px; color:#e74c3c; font-weight:800;">${item.price}.00 €</div>
+              </div>
+            </div>
+            <button onclick="removeFromCart(${idx})" style="background:none; border:none; color:#e74c3c; font-weight:bold; cursor:pointer;">✕</button>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+      totalSumEl.innerText = total.toFixed(2) + " €";
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      localStorage.setItem('emigrant_cart', JSON.stringify(cart));
+      updateCartUI();
+    }
+
+    function checkoutOrder() {
+      if (cart.length === 0) return;
+      let text = "Hello, I want to order from EmigrantShop:\n";
+      cart.forEach(item => text += `- ${item.title} (${item.price} €)\n`);
+      const total = document.getElementById('cart-total-sum').innerText;
+      text += `Total: ${total}`;
+      
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    /* Modal Triggers */
+    function openCartModal() { document.getElementById('cart-modal').style.display = 'flex'; }
+    function closeCartModal() { document.getElementById('cart-modal').style.display = 'none'; }
+    
+    function openSearchModal() { document.getElementById('search-modal').style.display = 'flex'; document.getElementById('shop-search-input').focus(); }
+    function closeSearchModal() { document.getElementById('search-modal').style.display = 'none'; }
+
+    function handleSearchFilter() {
+      const q = document.getElementById('shop-search-input').value.toLowerCase().trim();
+      const resultsBox = document.getElementById('search-results-box');
+      if (!q) { resultsBox.innerHTML = ""; return; }
+
+      const results = sampleProducts.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
+      if (results.length === 0) {
+        resultsBox.innerHTML = "<div style='padding:10px; color:#888;'>No products found</div>";
+        return;
+      }
+
+      let html = "";
+      results.forEach(r => {
+        html += `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #eee;">
+            <div style="font-size:13px; font-weight:700;">${r.brand} - ${r.name}</div>
+            <div style="color:#e74c3c; font-weight:800; font-size:13px;">${r.price} €</div>
+          </div>
+        `;
+      });
+      resultsBox.innerHTML = html;
+    }
+  </script>
 </body>
 </html>
