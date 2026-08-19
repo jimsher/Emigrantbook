@@ -33,6 +33,8 @@
       background: none; border: none; cursor: pointer; padding: 6px; position: relative;
       display: flex; align-items: center; justify-content: center;
     }
+    .cart-btn * { pointer-events: none; } /* უზრუნველყოფს კლიკის ზუსტ დაჭერას */
+    
     .cart-badge {
       position: absolute; top: 2px; right: 2px;
       background: #e74c3c; color: #fff; font-size: 10px; font-weight: 800;
@@ -44,11 +46,14 @@
       border-radius: 6px; display: flex; align-items: center; justify-content: center;
       cursor: pointer;
     }
+    .search-btn-red * { pointer-events: none; }
+
     .menu-btn-red {
       width: 36px; height: 36px; background: #141418; border: 1.5px solid #e74c3c;
       border-radius: 6px; display: flex; align-items: center; justify-content: center;
       cursor: pointer;
     }
+    .menu-btn-red * { pointer-events: none; }
 
     /* 2. Top Navigation Tabs (HOME + 4 Categories) */
     .gender-tabs {
@@ -371,7 +376,6 @@
        ========================================================================= */
     .cart-page-body { padding: 24px 16px; display: flex; flex-direction: column; min-height: calc(100vh - 65px); }
     
-    /* 🛒 Empty Cart UI (ზუსტად თქვენი სქრინშოტის მიხედვით) */
     .empty-cart-container {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       text-align: center; padding: 40px 20px; margin: auto 0;
@@ -463,10 +467,9 @@
     </nav>
 
     <!-- =========================================================================
-         🏠 HOME VIEW (მაღაზიის სრული საწყისი მთავარი გვერდი)
+         🏠 HOME VIEW
          ========================================================================= -->
     <div id="shop-home-view">
-      <!-- Hero Intro -->
       <section class="shop-hero-intro">
         <h1 class="hero-title" id="txt-home-hero-title">DESIGNER FASHION ONLINE SHOP</h1>
         <div class="title-red-bar"></div>
@@ -475,7 +478,6 @@
         </p>
       </section>
 
-      <!-- Promo Saldi Banner -->
       <section class="promo-saldi-banner">
         <div class="saldi-img-wrap">
           <div class="saldi-headline">SALDI</div>
@@ -485,15 +487,12 @@
         </div>
       </section>
 
-      <!-- BEST SELECTION Heading -->
       <div class="section-title-wrap">
         <h2 class="section-main-title" id="txt-best-selection-home">BEST SELECTION</h2>
         <div class="title-red-bar"></div>
       </div>
 
-      <!-- Home Feed Cards -->
       <div class="feed-container">
-        <!-- Showcase Card: U.S. Polo Assn -->
         <div class="showcase-banner-card" onclick="openProductPage('boy-1')">
           <div class="showcase-img-container">
             <span class="sale-badge-ribbon">SALE</span>
@@ -511,18 +510,16 @@
           </div>
         </div>
 
-        <!-- Feature Brand Banner: Timberland -->
         <div class="brand-feature-card" onclick="openProductPage('boy-2')">
           <img src="https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=700" alt="Timberland">
         </div>
 
-        <!-- 2-Column Product Grid -->
         <div class="products-2col-grid" id="home-featured-grid"></div>
       </div>
     </div>
 
     <!-- =========================================================================
-         📂 CATEGORY COLLECTION VIEW (MAN, WOMAN, BOY, GIRL)
+         📂 CATEGORY COLLECTION VIEW
          ========================================================================= -->
     <div id="shop-category-view" style="display: none;">
       <section class="shop-hero-intro">
@@ -546,7 +543,6 @@
       </svg>
     </div>
 
-    <!-- Scroll To Top Button -->
     <button class="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">
       ▲
     </button>
@@ -647,18 +643,9 @@
         <div class="fs-reviews-sub" id="txt-trustscore-sub">TrustScore 5 | 9959 reviews</div>
       </div>
 
-      <div class="fs-guarantee-row">
-        <span>🚚</span>
-        <span id="txt-express-courier">Delivery with Express Courier</span>
-      </div>
-      <div class="fs-guarantee-row">
-        <span>↩️</span>
-        <span id="txt-return-days">Return 30 days</span>
-      </div>
-      <div class="fs-guarantee-row">
-        <span>📏</span>
-        <span id="txt-find-size">Find your own size</span>
-      </div>
+      <div class="fs-guarantee-row"><span>🚚</span> <span id="txt-express-courier">Delivery with Express Courier</span></div>
+      <div class="fs-guarantee-row"><span>↩️</span> <span id="txt-return-days">Return 30 days</span></div>
+      <div class="fs-guarantee-row"><span>📏</span> <span id="txt-find-size">Find your own size</span></div>
 
       <div class="fs-section-header-title" id="txt-help-contact">HELP & CONTACT</div>
       <div style="margin-bottom: 14px;">
@@ -1190,7 +1177,7 @@
         brands_orig: "PRODUCTS 100% ORIGINAL"
       },
       de: {
-        home: "HOME", man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄДCHEN",
+        home: "HOME", man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄDCHEN",
         title_home: "DESIGNER-MODE ONLINE SHOP",
         title_boy: "DESIGNER-KINDERMODE FÜR JUNGEN",
         title_girl: "DESIGNER-KINDERMODE FÜR MÄDCHEN",
@@ -1651,7 +1638,7 @@
             <div style="display:flex; align-items:center; gap:12px;">
               <img src="${item.img}" class="cart-item-img">
               <div>
-                <div style="font-size:14px; font-weight:800; color:#fff;">${escapeHtml(item.title)}</div>
+                <div style="font-size:14px; font-weight:800; color:#fff;">${item.title}</div>
                 <div style="font-size:12px; color:#8a8f9d; margin-top:2px;">Size: ${item.size || 'Standard'} | Color: ${item.color || 'Standard'}</div>
                 <div style="font-size:13px; color:#e74c3c; font-weight:900; margin-top:4px;">${item.price.toFixed(2)} €</div>
               </div>
