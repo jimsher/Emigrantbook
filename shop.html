@@ -108,7 +108,7 @@
       text-transform: uppercase; color: #ffffff; margin-bottom: 6px;
     }
 
-    /* 6. Product Cards */
+    /* 6. Product Cards & Banners */
     .feed-container { padding: 0 16px; }
 
     .showcase-banner-card {
@@ -150,7 +150,7 @@
     }
     .brand-feature-card img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* 7. 2-Column Product Grid */
+    /* 7. Standard 2-Column Product Grid */
     .products-2col-grid {
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
       margin-bottom: 25px;
@@ -176,7 +176,7 @@
     }
     .btn-add-cart:hover { background: #e74c3c; border-color: #e74c3c; }
 
-    /* 8. Floating Buttons */
+    /* 8. Floating Action Buttons */
     .floating-chat-widget {
       position: fixed; bottom: 20px; left: 20px; z-index: 120;
       width: 48px; height: 48px; border-radius: 12px; background: #181822;
@@ -192,7 +192,7 @@
     }
 
     /* =========================================================================
-       📱 FULLSCREEN PRODUCT DETAILS (ზუსტად სქრინშოტის მიხედვით)
+       📱 FULLSCREEN PAGES (სრულეკრანიანი გვერდები)
        ========================================================================= */
     .fullscreen-page {
       display: none; position: fixed; inset: 0; width: 100%; height: 100vh;
@@ -366,8 +366,27 @@
       font-size: 11px; font-weight: 900; color: #111; display: flex; align-items: center; justify-content: center;
     }
 
-    /* Cart Fullscreen */
-    .cart-page-body { padding: 16px; display: flex; flex-direction: column; min-height: calc(100vh - 65px); }
+    /* =========================================================================
+       📱 FULLSCREEN CART (სრულეკრანიანი ცარიელი და სავსე კალათა)
+       ========================================================================= */
+    .cart-page-body { padding: 24px 16px; display: flex; flex-direction: column; min-height: calc(100vh - 65px); }
+    
+    /* 🛒 Empty Cart UI (ზუსტად თქვენი სქრინშოტის მიხედვით) */
+    .empty-cart-container {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 40px 20px; margin: auto 0;
+    }
+    .empty-cart-icon-wrap {
+      font-size: 64px; margin-bottom: 20px; color: #e4e6eb; display: flex; align-items: center; justify-content: center;
+    }
+    .empty-cart-title { font-size: 24px; font-weight: 900; color: #ffffff; margin-bottom: 10px; }
+    .empty-cart-subtitle { font-size: 16px; color: #8a8f9d; margin-bottom: 28px; }
+    .btn-back-to-shop {
+      background: #e74c3c; color: #ffffff; border: none; border-radius: 30px;
+      padding: 14px 32px; font-size: 15px; font-weight: 900; text-transform: uppercase;
+      cursor: pointer; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    }
+
     .cart-item-row {
       display: flex; align-items: center; justify-content: space-between;
       padding: 14px 12px; border: 1px solid #222228; border-radius: 10px;
@@ -717,7 +736,7 @@
   </div>
 
   <!-- =========================================================================
-       📱 FULLSCREEN CART (სრულეკრანიანი კალათა)
+       📱 FULLSCREEN CART (სრულეკრანიანი კალათა - ზუსტად სქრინშოტის დიზაინით)
        ========================================================================= -->
   <div class="fullscreen-page" id="fs-cart-page">
     <div class="fs-p-header">
@@ -726,19 +745,8 @@
       <div style="width: 24px;"></div>
     </div>
 
-    <div class="cart-page-body">
-      <div id="cart-items-container">
-        <div style="text-align: center; color: #888; padding: 50px 20px;" id="txt-cart-empty">Your cart is empty</div>
-      </div>
-
-      <div class="cart-total-bar">
-        <span id="txt-total">Total:</span>
-        <span id="cart-total-sum">0.00 €</span>
-      </div>
-
-      <button class="btn-checkout" onclick="checkoutOrder()" id="txt-btn-checkout">
-        <span>Order via WhatsApp</span>
-      </button>
+    <div class="cart-page-body" id="cart-body-content">
+      <!-- Injected via JavaScript based on whether cart is empty or not -->
     </div>
   </div>
 
@@ -773,7 +781,7 @@
     const db = firebase.firestore();
 
     /* =========================================================================
-       📦 REAL PRODUCTS CATALOG
+       📦 რეალური პროდუქციის კატალოგი
        ========================================================================= */
     const allProductsCatalog = [
       /* 👨 MAN COLLECTION */
@@ -1007,7 +1015,9 @@
         methods_payment: "METHODS OF PAYMENT",
         shipped_by: "SHIPPED BY",
         cart_title: "Shopping Cart",
-        cart_empty: "Your cart is empty",
+        cart_empty_title: "Your Cart is Still Empty",
+        cart_empty_sub: "Discover Our Offers",
+        back_to_shop: "Back To Shopping",
         total: "Total:",
         checkout: "Order via WhatsApp",
         search_title: "Search Products",
@@ -1015,7 +1025,15 @@
         support_msg: "Customer Support is online 24/7",
         added_alert: "Item added to bag!",
         choose_size: "Select Size:",
-        please_select_size: "Please choose a size first!"
+        please_select_size: "Please choose a size first!",
+        ship_24h: "SHIPMENTS IN 24 HOURS",
+        ship_24h_sub: "ORDER TODAY, SHIP TOMORROW",
+        free_return: "FREE RETURN",
+        money_back: "MONEY BACK GUARANTEE",
+        secure_payment: "SECURE PAYMENT",
+        secure_trans: "SECURE TRANSACTIONS",
+        brands_300: "OVER 300 FASHION BRANDS",
+        brands_orig: "PRODUCTS 100% ORIGINAL"
       },
       ka: {
         home: "მთავარი", man: "კაცი", woman: "ქალი", boy: "ბიჭი", girl: "გოგო",
@@ -1062,7 +1080,9 @@
         methods_payment: "გადახდის მეთოდები",
         shipped_by: "საკურიერო პარტნიორები",
         cart_title: "თქვენი კალათა",
-        cart_empty: "კალათა ცარიელია",
+        cart_empty_title: "თქვენი კალათა ცარიელია",
+        cart_empty_sub: "აღმოაჩინეთ ჩვენი შეთავაზებები",
+        back_to_shop: "შოპინგზე დაბრუნება",
         total: "სულ:",
         checkout: "შეკვეთა WhatsApp-ით",
         search_title: "პროდუქციის ძებნა",
@@ -1070,7 +1090,15 @@
         support_msg: "მომხმარებელთა მხარდაჭერა ხელმისაწვდომია 24/7",
         added_alert: "პროდუქტი დაემატა კალათაში!",
         choose_size: "აირჩიეთ ზომა:",
-        please_select_size: "გთხოვთ ჯერ აირჩიოთ ზომა!"
+        please_select_size: "გთხოვთ ჯერ აირჩიოთ ზომა!",
+        ship_24h: "მიწოდება 24 საათში",
+        ship_24h_sub: "შეუკვეთეთ დღეს, გაიგზავნება ხვალ",
+        free_return: "უფასო დაბრუნება",
+        money_back: "თანხის დაბრუნების გარანტია",
+        secure_payment: "უსაფრთხო გადახდა",
+        secure_trans: "დაცული ტრანზაქციები",
+        brands_300: "300-ზე მეტი ბრენდი",
+        brands_orig: "100% ორიგინალი პროდუქცია"
       },
       it: {
         home: "HOME", man: "UOMO", woman: "DONNA", boy: "BAMBINO", girl: "BAMBINA",
@@ -1117,7 +1145,9 @@
         methods_payment: "METODI DI PAGAMENTO",
         shipped_by: "SPEDITO DA",
         cart_title: "Il tuo carrello",
-        cart_empty: "Il tuo carrello è vuoto",
+        cart_empty_title: "Your Cart is Still Empty",
+        cart_empty_sub: "Discover Our Offers",
+        back_to_shop: "Back To Shopping",
         total: "Totale:",
         checkout: "Ordina via WhatsApp",
         search_title: "Cerca nel catalogo",
@@ -1125,7 +1155,15 @@
         support_msg: "Il servizio clienti è attivo 24/7",
         added_alert: "Articolo aggiunto al carrello!",
         choose_size: "Seleziona taglia:",
-        please_select_size: "Per favore seleziona prima una taglia!"
+        please_select_size: "Per favore seleziona prima una taglia!",
+        ship_24h: "SHIPMENTS IN 24 HOURS",
+        ship_24h_sub: "ORDER TODAY, SHIP TOMORROW",
+        free_return: "FREE RETURN",
+        money_back: "MONEY BACK GUARANTEE",
+        secure_payment: "SECURE PAYMENT",
+        secure_trans: "SECURE TRANSACTIONS",
+        brands_300: "OVER 300 FASHION BRANDS",
+        brands_orig: "PRODUCTS 100% ORIGINAL"
       },
       ru: {
         home: "ГЛАВНАЯ", man: "МУЖЧИНЫ", woman: "ЖЕНЩИНЫ", boy: "МАЛЬЧИКИ", girl: "ДЕВОЧКИ",
@@ -1172,7 +1210,9 @@
         methods_payment: "СПОСОБЫ ОПЛАТЫ",
         shipped_by: "СЛУЖБЫ ДОСТАВКИ",
         cart_title: "Ваша корзина",
-        cart_empty: "Корзина пуста",
+        cart_empty_title: "Your Cart is Still Empty",
+        cart_empty_sub: "Discover Our Offers",
+        back_to_shop: "Back To Shopping",
         total: "Итого:",
         checkout: "Заказать через WhatsApp",
         search_title: "Поиск товаров",
@@ -1180,7 +1220,15 @@
         support_msg: "Служба поддержки работает 24/7",
         added_alert: "Товар добавлен в корзину!",
         choose_size: "Выберите размер:",
-        please_select_size: "Пожалуйста, сначала выберите размер!"
+        please_select_size: "Пожалуйста, сначала выберите размер!",
+        ship_24h: "SHIPMENTS IN 24 HOURS",
+        ship_24h_sub: "ORDER TODAY, SHIP TOMORROW",
+        free_return: "FREE RETURN",
+        money_back: "MONEY BACK GUARANTEE",
+        secure_payment: "SECURE PAYMENT",
+        secure_trans: "SECURE TRANSACTIONS",
+        brands_300: "OVER 300 FASHION BRANDS",
+        brands_orig: "PRODUCTS 100% ORIGINAL"
       },
       de: {
         home: "HOME", man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄDCHEN",
@@ -1227,7 +1275,9 @@
         methods_payment: "ZAHLUNGSMETHODEN",
         shipped_by: "VERSAND DURCH",
         cart_title: "Warenkorb",
-        cart_empty: "Dein Warenkorb ist leer",
+        cart_empty_title: "Your Cart is Still Empty",
+        cart_empty_sub: "Discover Our Offers",
+        back_to_shop: "Back To Shopping",
         total: "Gesamt:",
         checkout: "Bestellen über WhatsApp",
         search_title: "Produkte suchen",
@@ -1235,7 +1285,15 @@
         support_msg: "Der Kundenservice ist 24/7 erreichbar",
         added_alert: "Artikel zum Warenkorb hinzugefügt!",
         choose_size: "Größe wählen:",
-        please_select_size: "Bitte wähle zuerst eine Größe aus!"
+        please_select_size: "Bitte wähle zuerst eine Größe aus!",
+        ship_24h: "SHIPMENTS IN 24 HOURS",
+        ship_24h_sub: "ORDER TODAY, SHIP TOMORROW",
+        free_return: "FREE RETURN",
+        money_back: "MONEY BACK GUARANTEE",
+        secure_payment: "SECURE PAYMENT",
+        secure_trans: "SECURE TRANSACTIONS",
+        brands_300: "OVER 300 FASHION BRANDS",
+        brands_orig: "PRODUCTS 100% ORIGINAL"
       }
     };
 
@@ -1326,11 +1384,8 @@
       document.getElementById('txt-methods-payment-sec').innerText = t('methods_payment');
       document.getElementById('txt-shipped-by-sec').innerText = t('shipped_by');
 
-      // Cart & Search
+      // Cart & Search Headers
       document.getElementById('txt-cart-title').innerText = t('cart_title');
-      document.getElementById('txt-cart-empty').innerText = t('cart_empty');
-      document.getElementById('txt-total').innerText = t('total');
-      document.getElementById('txt-btn-checkout').innerText = t('checkout');
       document.getElementById('txt-search-title').innerText = t('search_title');
       document.getElementById('shop-search-input').placeholder = t('search_ph');
 
@@ -1439,7 +1494,7 @@
     }
 
     /* =========================================================================
-       📱 FULLSCREEN PRODUCT DETAILS (Exact match to screenshot)
+       📱 FULLSCREEN PRODUCT DETAILS
        ========================================================================= */
     function openProductPage(productId) {
       const p = allProductsCatalog.find(item => item.id === productId);
@@ -1460,7 +1515,6 @@
 
       document.getElementById('p-detail-description').innerText = p.description;
 
-      // Render Sizes Box Tiles
       const sizesGrid = document.getElementById('p-detail-sizes-grid');
       let sizesHtml = "";
       p.sizes.forEach((s, idx) => {
@@ -1473,7 +1527,6 @@
       });
       sizesGrid.innerHTML = sizesHtml;
 
-      // Render Available Colors Row
       const colorsRow = document.getElementById('p-detail-colors-row');
       let colorsHtml = "";
       p.colors.forEach((c, idx) => {
@@ -1570,7 +1623,7 @@
       alert(t('added_alert'));
     }
 
-    /* Fullscreen Cart Page */
+    /* Fullscreen Cart Page (ზუსტად თქვენი სქრინშოტის ცარიელი კალათის დიზაინით) */
     function openCartPage() {
       updateCartUI();
       document.getElementById('fs-cart-page').style.display = 'flex';
@@ -1586,11 +1639,48 @@
       badge.innerText = cart.length;
       
       const container = document.getElementById('cart-items-container');
-      const totalSumEl = document.getElementById('cart-total-sum');
 
       if (cart.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#888; padding:50px 20px;">${t('cart_empty')}</div>`;
-        totalSumEl.innerText = "0.00 €";
+        container.innerHTML = `
+          <div class="empty-cart-container">
+            <div class="empty-cart-icon-wrap">
+              <svg viewBox="0 0 24 24" width="75" height="75" stroke="#e4e6eb" stroke-width="1.5" fill="none">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                <line x1="12" y1="9" x2="12" y2="15"></line>
+                <line x1="9" y1="12" x2="15" y2="12"></line>
+              </svg>
+            </div>
+            <div class="empty-cart-title">${t('cart_empty_title')}</div>
+            <div class="empty-cart-subtitle">${t('cart_empty_sub')}</div>
+            <button class="btn-back-to-shop" onclick="closeCartPage()">${t('back_to_shop')}</button>
+          </div>
+
+          <!-- 4 Guarantees Block as seen in screenshot -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 30px; border-top: 1px solid #222228; padding-top: 25px;">
+            <div style="text-align: center; padding: 12px; background: #141418; border-radius: 10px; border: 1px solid #222;">
+              <div style="font-size: 22px; margin-bottom: 6px;">🚚</div>
+              <div style="font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase;">${t('ship_24h')}</div>
+              <div style="font-size: 9px; color: #8a8f9d; margin-top: 3px;">${t('ship_24h_sub')}</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: #141418; border-radius: 10px; border: 1px solid #222;">
+              <div style="font-size: 22px; margin-bottom: 6px;">↩️</div>
+              <div style="font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase;">${t('free_return')}</div>
+              <div style="font-size: 9px; color: #8a8f9d; margin-top: 3px;">${t('money_back')}</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: #141418; border-radius: 10px; border: 1px solid #222;">
+              <div style="font-size: 22px; margin-bottom: 6px;">🔒</div>
+              <div style="font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase;">${t('secure_payment')}</div>
+              <div style="font-size: 9px; color: #8a8f9d; margin-top: 3px;">${t('secure_trans')}</div>
+            </div>
+            <div style="text-align: center; padding: 12px; background: #141418; border-radius: 10px; border: 1px solid #222;">
+              <div style="font-size: 22px; margin-bottom: 6px;">⭐</div>
+              <div style="font-size: 11px; font-weight: 900; color: #fff; text-transform: uppercase;">${t('brands_300')}</div>
+              <div style="font-size: 9px; color: #8a8f9d; margin-top: 3px;">${t('brands_orig')}</div>
+            </div>
+          </div>
+        `;
         return;
       }
 
@@ -1612,8 +1702,18 @@
           </div>
         `;
       });
+      
+      html += `
+        <div class="cart-total-bar">
+          <span id="txt-total">${t('total')}</span>
+          <span id="cart-total-sum">${total.toFixed(2)} €</span>
+        </div>
+        <button class="btn-checkout" onclick="checkoutOrder()" style="margin-top:15px;" id="txt-btn-checkout">
+          <span>${t('checkout')}</span>
+        </button>
+      `;
+
       container.innerHTML = html;
-      totalSumEl.innerText = total.toFixed(2) + " €";
     }
 
     function removeFromCart(index) {
