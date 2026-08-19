@@ -55,7 +55,7 @@
     }
     .menu-btn-admin * { pointer-events: none; }
 
-    /* 2. Navigation Tabs (HOME + 4 Categories) */
+    /* 2. Top Navigation Tabs (HOME + 4 Categories) */
     .gender-tabs {
       display: grid; grid-template-columns: repeat(5, 1fr);
       border-bottom: 1px solid #222228; background: #141418;
@@ -393,7 +393,7 @@
     .search-input-field:focus { border-color: #e74c3c; }
 
     /* =========================================================================
-       💬 8. FULLSCREEN CUSTOMER SUPPORT CHAT (Live Bidirectional)
+       💬 8. FULLSCREEN CUSTOMER SUPPORT CHAT
        ========================================================================= */
     .chat-page-body {
       display: flex; flex-direction: column; height: calc(100vh - 65px);
@@ -470,6 +470,10 @@
       background: #25d366; border: none; border-radius: 50%;
       width: 38px; height: 38px; display: flex; align-items: center;
       justify-content: center; cursor: pointer; flex-shrink: 0;
+    }
+    .btn-end-chat {
+      background: #282834; border: 1px solid #3e3e50; color: #e74c3c;
+      font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 6px; cursor: pointer;
     }
   </style>
 </head>
@@ -591,9 +595,12 @@
           EMIGRANT<span>SHOP</span>
         </div>
       </div>
-      <button class="fs-back-btn" onclick="closeSupportChatPage()" style="font-size: 18px; color: #fff;">
-        ▼
-      </button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="btn-end-chat" onclick="endUserChatSession()">ჩატის დასრულება</button>
+        <button class="fs-back-btn" onclick="closeSupportChatPage()" style="font-size: 18px; color: #fff;">
+          ▼
+        </button>
+      </div>
     </div>
 
     <div class="chat-page-body">
@@ -803,7 +810,7 @@
     let currentUser = null;
     let userProfile = null;
     let userChatSessionId = localStorage.getItem('shop_user_chat_id');
-    let userChatUnsubscribe = null; // ჩატის აქტიური მსმენელის ცვლადი
+    let userChatUnsubscribe = null;
 
     if (!userChatSessionId) {
       userChatSessionId = 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -1189,7 +1196,6 @@
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        userChatSessionId = user.uid;
         db.collection('profiles').doc(user.uid).get().then(doc => {
           if (doc.exists) {
             userProfile = doc.data();
@@ -1686,7 +1692,7 @@
     }
 
     /* =========================================================================
-       💬 8. REALTIME BIDIRECTIONAL CHAT WITH ADMIN & BOT (STRICT LISTENER)
+       💬 8. REALTIME CHAT WITH SESSION CONTROL (ISOLATED & RESETS ON CLOSE)
        ========================================================================= */
     const supportTopics = [
       { key: "articles_sizes", label_it: "Articoli e taglie", label_ka: "პროდუქცია და ზომები", label_en: "Articles and sizes", reply_en: "All our products are 100% original Italian designer items. Detailed size table is available on each product page.", reply_ka: "ჩვენი ყველა პროდუქტი არის 100% ორიგინალი იტალიური ბრენდი. ზომების ცხრილი მითითებულია თითოეულ პროდუქტზე.", reply_it: "Tutti i nostri articoli sono 100% originali. Puoi consultare la guida alle taglie nella scheda di ogni articolo." },
@@ -1700,19 +1706,45 @@
       { key: "shipping", label_it: "Spedizioni", label_ka: "მიწოდება", label_en: "Shipments", reply_en: "Fast express delivery in 24-48 hours across Europe with GLS, UPS & DHL.", reply_ka: "სწრაფი მიწოდება 24-48 საათში მთელ ევროპაში GLS, UPS და DHL კურიერებით.", reply_it: "Spedizione rapida in 24-48 ore in tutta Europa con corrieri GLS, UPS e DHL." }
     ];
 
-    // 🟢 ჩათის გახსნა: მხოლოდ აქ ირთვება onSnapshot მოსმენა
+    // ჩათის გახსნა - ამოწმებს ძველ სესიას და საჭიროების შემთხვევაში იწყებს სუფთა სესიას
     function openSupportChatPage() {
       document.getElementById('fs-support-chat-page').style.display = 'flex';
-      listenToUserChatMessages();
+      
+      const chatDocRef = db.collection('shop_support_chats').doc(userChatSessionId);
+      chatDocRef.get().then(doc => {
+        if (doc.exists && doc.data().status === 'closed') {
+          // თუ წინა ჩატი ადმინმა დახურა, ვქმნით ახალ სუფთა სესიას
+          userChatSessionId = 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          localStorage.setItem('shop_user_chat_id', userChatSessionId);
+        }
+        listenToUserChatMessages();
+      }).catch(() => {
+        listenToUserChatMessages();
+      });
+
       window.scrollTo(0, 0);
     }
 
-    // 🔴 ჩატის დახურვა: მომენტალურად ითიშება onSnapshot და წყდება Firestore-ის კითხვა
+    // ჩათის დახურვა - სრულად თიშავს მოსმენას და ასუფთავებს DOM-ს
     function closeSupportChatPage() {
       document.getElementById('fs-support-chat-page').style.display = 'none';
       if (userChatUnsubscribe) {
         userChatUnsubscribe();
         userChatUnsubscribe = null;
+      }
+      document.getElementById('chat-messages-box').innerHTML = "";
+    }
+
+    // ჩათის დასრულება მომხმარებლის მხრიდან (სუფთა სესია)
+    function endUserChatSession() {
+      if (confirm("ნამდვილად გსურთ საუბრის დასრულება და ჩათის განულება?")) {
+        const chatDocRef = db.collection('shop_support_chats').doc(userChatSessionId);
+        chatDocRef.update({ status: 'closed' }).catch(() => {});
+        
+        userChatSessionId = 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        localStorage.setItem('shop_user_chat_id', userChatSessionId);
+        
+        closeSupportChatPage();
       }
     }
 
@@ -1752,13 +1784,11 @@
 
       const chatDocRef = db.collection('shop_support_chats').doc(userChatSessionId);
 
-      // თუ ძველი მსმენელი არსებობს, ჯერ ვთიშავთ
       if (userChatUnsubscribe) {
         userChatUnsubscribe();
         userChatUnsubscribe = null;
       }
 
-      // ⚡ ახალი onSnapshot მსმენელი ჩაირთო
       userChatUnsubscribe = chatDocRef.collection('messages')
         .orderBy('created_at', 'asc')
         .onSnapshot(snap => {
