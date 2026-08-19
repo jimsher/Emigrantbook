@@ -50,13 +50,13 @@
       cursor: pointer;
     }
 
-    /* 2. Top Categories Bar */
+    /* 2. Top Navigation Tabs (5 Tabs: HOME + 4 Categories) */
     .gender-tabs {
-      display: grid; grid-template-columns: repeat(4, 1fr);
+      display: grid; grid-template-columns: repeat(5, 1fr);
       border-bottom: 1px solid #222228; background: #141418;
     }
     .gender-tab {
-      padding: 13px 0; text-align: center; font-size: 13px; font-weight: 800;
+      padding: 12px 0; text-align: center; font-size: 11.5px; font-weight: 800;
       text-transform: uppercase; color: #8a8f9d; background: #141418; border: none;
       border-right: 1px solid #222228; cursor: pointer; transition: all 0.2s;
     }
@@ -104,11 +104,11 @@
       text-align: center; margin: 22px 0 16px 0;
     }
     .section-main-title {
-      font-size: 21px; font-weight: 900; letter-spacing: 1px;
+      font-size: 20px; font-weight: 900; letter-spacing: 1px;
       text-transform: uppercase; color: #ffffff; margin-bottom: 6px;
     }
 
-    /* 6. Showcase Feed (Matching Screenshot) */
+    /* 6. Product Cards & Banners */
     .feed-container { padding: 0 16px; }
 
     .showcase-banner-card {
@@ -142,7 +142,41 @@
     .old-price { font-size: 13px; color: #666; text-decoration: line-through; margin-right: 6px; }
     .new-price { font-size: 16px; font-weight: 900; color: #e74c3c; }
 
-    /* 7. Floating Action Buttons */
+    .brand-feature-card {
+      width: 100%; height: 160px; border-radius: 12px; overflow: hidden;
+      margin-bottom: 20px; position: relative; background: #181822;
+      display: flex; align-items: center; justify-content: space-between;
+      border: 1px solid #222228; cursor: pointer;
+    }
+    .brand-feature-card img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* 7. Standard 2-Column Product Grid */
+    .products-2col-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+      margin-bottom: 25px;
+    }
+    .grid-item-card {
+      background: #141418; border: 1px solid #222228; border-radius: 12px;
+      overflow: hidden; padding: 10px; display: flex; flex-direction: column;
+      position: relative; cursor: pointer;
+    }
+    .grid-item-img {
+      width: 100%; height: 140px; object-fit: contain; margin-bottom: 8px; background: #fff; border-radius: 6px; padding: 4px;
+    }
+    .discount-badge {
+      position: absolute; top: 8px; left: 8px; background: #e74c3c; color: #fff;
+      font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; z-index: 2;
+    }
+    .grid-item-title { font-size: 13px; font-weight: 700; color: #e4e6eb; margin-bottom: 4px; height: 34px; overflow: hidden; }
+    .grid-item-prices { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .btn-add-cart {
+      background: #252630; color: #fff; border: 1px solid #363746; border-radius: 6px;
+      padding: 8px; font-weight: 700; font-size: 12px; cursor: pointer;
+      width: 100%; margin-top: auto; transition: background 0.2s;
+    }
+    .btn-add-cart:hover { background: #e74c3c; border-color: #e74c3c; }
+
+    /* 8. Floating Action Buttons */
     .floating-chat-widget {
       position: fixed; bottom: 20px; left: 20px; z-index: 120;
       width: 48px; height: 48px; border-radius: 12px; background: #181822;
@@ -154,10 +188,10 @@
       width: 44px; height: 44px; border-radius: 50%; background: #e74c3c;
       border: none; display: flex; align-items: center; justify-content: center;
       color: #ffffff; font-size: 18px; font-weight: 900; cursor: pointer;
-      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); transition: opacity 0.2s;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
     }
 
-    /* 8. Product Detail / Quick View Modal */
+    /* 9. Product Details Modal */
     .shop-modal {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
       z-index: 999; align-items: flex-end; justify-content: center;
@@ -195,7 +229,7 @@
       cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
 
-    /* 9. Cart Drawer */
+    /* 10. Cart Drawer */
     .cart-item-row {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 0; border-bottom: 1px solid #24242e;
@@ -240,7 +274,7 @@
           <span class="cart-badge" id="cart-count-badge">0</span>
         </button>
 
-        <!-- Red Search Button -->
+        <!-- Search Button -->
         <button class="search-btn-red" onclick="openSearchModal()" title="Search">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="#fff" stroke-width="2.5" fill="none">
             <circle cx="11" cy="11" r="8"></circle>
@@ -248,7 +282,7 @@
           </svg>
         </button>
 
-        <!-- Red Outline Menu Button (Back to Home) -->
+        <!-- Return Home Button -->
         <button class="menu-btn-red" onclick="window.location.href='index.html'" title="Return Home">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="#e74c3c" stroke-width="2.5" fill="none">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -259,58 +293,113 @@
       </div>
     </header>
 
-    <!-- 2. Gender Navigation Tabs -->
+    <!-- 2. Top Navigation Tabs: HOME + Categories -->
     <nav class="gender-tabs">
-      <button class="gender-tab" id="tab-man" onclick="selectGenderTab('MAN')">MAN</button>
-      <button class="gender-tab" id="tab-woman" onclick="selectGenderTab('WOMAN')">WOMAN</button>
-      <button class="gender-tab active" id="tab-boy" onclick="selectGenderTab('BOY')">BOY</button>
-      <button class="gender-tab" id="tab-girl" onclick="selectGenderTab('GIRL')">GIRL</button>
+      <button class="gender-tab active" id="tab-home" onclick="selectShopTab('HOME')">HOME</button>
+      <button class="gender-tab" id="tab-man" onclick="selectShopTab('MAN')">MAN</button>
+      <button class="gender-tab" id="tab-woman" onclick="selectShopTab('WOMAN')">WOMAN</button>
+      <button class="gender-tab" id="tab-boy" onclick="selectShopTab('BOY')">BOY</button>
+      <button class="gender-tab" id="tab-girl" onclick="selectShopTab('GIRL')">GIRL</button>
     </nav>
 
-    <!-- 3. Headline Hero Intro Section -->
-    <section class="shop-hero-intro">
-      <h1 class="hero-title" id="hero-category-title">DESIGNER BOYS CLOTHING ONLINE SHOP</h1>
-      <div class="title-red-bar"></div>
-      <p class="hero-desc" id="hero-category-desc">
-        EmigrantShop is an Italian designer fashion e-commerce, with a wide selection of international brands and fast shipping.
-      </p>
-    </section>
+    <!-- =========================================================================
+         🏠 HOME VIEW (მაღაზიის საწყისი სრული მთავარი გვერდი)
+         ========================================================================= -->
+    <div id="shop-home-view">
+      <!-- 3. Headline Hero Intro -->
+      <section class="shop-hero-intro">
+        <h1 class="hero-title" id="txt-home-hero-title">DESIGNER FASHION ONLINE SHOP</h1>
+        <div class="title-red-bar"></div>
+        <p class="hero-desc" id="txt-home-hero-desc">
+          EmigrantShop is an Italian designer fashion e-commerce, with a wide selection of international brands and fast shipping.
+        </p>
+      </section>
 
-    <!-- 4. Promo Saldi Banner -->
-    <section class="promo-saldi-banner">
-      <div class="saldi-img-wrap">
-        <div class="saldi-headline">SALDI</div>
-      </div>
-      <div class="saldi-ticker" id="txt-promo-ticker">
-        SPEDIZIONE IN 24 ORE - RESO GRATUITO
-      </div>
-    </section>
+      <!-- 4. Promo Saldi Banner -->
+      <section class="promo-saldi-banner">
+        <div class="saldi-img-wrap">
+          <div class="saldi-headline">SALDI</div>
+        </div>
+        <div class="saldi-ticker" id="txt-promo-ticker">
+          SPEDIZIONE IN 24 ORE - RESO GRATUITO
+        </div>
+      </section>
 
-    <!-- 5. BEST SELECTION Heading -->
-    <div class="section-title-wrap">
-      <h2 class="section-main-title" id="txt-best-selection">BEST SELECTION</h2>
-      <div class="title-red-bar"></div>
+      <!-- 5. BEST SELECTION Heading -->
+      <div class="section-title-wrap">
+        <h2 class="section-main-title" id="txt-best-selection-home">BEST SELECTION</h2>
+        <div class="title-red-bar"></div>
+      </div>
+
+      <!-- 6. Home Showcase & Grid -->
+      <div class="feed-container">
+        <!-- Showcase Card: U.S. Polo Assn -->
+        <div class="showcase-banner-card" onclick="openProductModal('boy-1')">
+          <div class="showcase-img-container">
+            <span class="sale-badge-ribbon">SALE</span>
+            <img src="https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=700" alt="U.S. POLO ASSN">
+          </div>
+          <div class="showcase-info-row">
+            <div class="showcase-brand-block">
+              <span class="showcase-brand-name">U.S. POLO ASSN</span>
+              <span class="showcase-category-name">Sneakers</span>
+            </div>
+            <div class="showcase-prices">
+              <span class="old-price">70,00€</span>
+              <span class="new-price">19,00€</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Brand Banner: Timberland -->
+        <div class="brand-feature-card" onclick="selectShopTab('BOY')">
+          <img src="https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=700" alt="Timberland">
+        </div>
+
+        <!-- 2-Column Product Grid -->
+        <div class="products-2col-grid" id="home-featured-grid">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
     </div>
 
-    <!-- 6. Dynamic Feed -->
-    <div class="feed-container" id="showcase-feed-container">
-      <!-- Injected via JavaScript -->
+    <!-- =========================================================================
+         📂 CATEGORY COLLECTION VIEW (MAN, WOMAN, BOY, GIRL)
+         ========================================================================= -->
+    <div id="shop-category-view" style="display: none;">
+      <!-- Category Header -->
+      <section class="shop-hero-intro">
+        <h1 class="hero-title" id="hero-category-title">COLLECTION</h1>
+        <div class="title-red-bar"></div>
+        <p class="hero-desc" id="hero-category-desc"></p>
+      </section>
+
+      <div class="section-title-wrap" style="margin-top: 0;">
+        <h2 class="section-main-title" id="txt-best-selection-cat">BEST SELECTION</h2>
+        <div class="title-red-bar"></div>
+      </div>
+
+      <!-- Category Feed Cards -->
+      <div class="feed-container" id="category-feed-container">
+        <!-- Injected dynamically on click -->
+      </div>
     </div>
 
-    <!-- 7. Floating Widgets -->
+    <!-- Floating Support Chat -->
     <div class="floating-chat-widget" onclick="alert(t('support_msg'))" title="Support">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="#ffffff">
         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
       </svg>
     </div>
 
+    <!-- Scroll To Top Button -->
     <button class="scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">
       ▲
     </button>
 
   </div>
 
-  <!-- Product Quick View & Order Modal -->
+  <!-- Product Details / Size Picker Modal -->
   <div class="shop-modal" id="product-view-modal" onclick="closeProductModal()">
     <div class="shop-drawer" onclick="event.stopPropagation()">
       <div class="drawer-head">
@@ -385,9 +474,9 @@
     const db = firebase.firestore();
 
     /* =========================================================================
-       📦 რეალური კოლექციის ბაზა
+       📦 რეალური პროდუქციის კატალოგი
        ========================================================================= */
-    const realProductsData = [
+    const allProductsCatalog = [
       /* 👦 BOY COLLECTION */
       {
         id: "boy-1",
@@ -397,6 +486,7 @@
         oldPrice: "70,00€",
         newPrice: "19,00€",
         numericPrice: 19.00,
+        discount: "-72%",
         sizes: ["28", "29", "30", "31", "32", "33", "34", "35"],
         img: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=700"
       },
@@ -408,6 +498,7 @@
         oldPrice: "130,00€",
         newPrice: "49,00€",
         numericPrice: 49.00,
+        discount: "-62%",
         sizes: ["30", "31", "32", "33", "34", "35", "36"],
         img: "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=700"
       },
@@ -419,6 +510,7 @@
         oldPrice: "50,00€",
         newPrice: "19,00€",
         numericPrice: 19.00,
+        discount: "-62%",
         sizes: ["28", "29", "30", "31", "32", "33", "34"],
         img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700"
       },
@@ -430,6 +522,7 @@
         oldPrice: "75,00€",
         newPrice: "34,00€",
         numericPrice: 34.00,
+        discount: "-54%",
         sizes: ["6Y", "8Y", "10Y", "12Y", "14Y"],
         img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=700"
       },
@@ -443,6 +536,7 @@
         oldPrice: "59,00€",
         newPrice: "24,00€",
         numericPrice: 24.00,
+        discount: "-59%",
         sizes: ["4Y", "6Y", "8Y", "10Y", "12Y"],
         img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=700"
       },
@@ -454,6 +548,7 @@
         oldPrice: "65,00€",
         newPrice: "29,00€",
         numericPrice: 29.00,
+        discount: "-55%",
         sizes: ["28", "29", "30", "31", "32", "33"],
         img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=700"
       },
@@ -467,6 +562,7 @@
         oldPrice: "89,00€",
         newPrice: "39,00€",
         numericPrice: 39.00,
+        discount: "-56%",
         sizes: ["S", "M", "L", "XL", "XXL"],
         img: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=700"
       },
@@ -478,6 +574,7 @@
         oldPrice: "115,00€",
         newPrice: "59,00€",
         numericPrice: 59.00,
+        discount: "-48%",
         sizes: ["30/32", "32/32", "34/32", "36/32"],
         img: "https://images.unsplash.com/photo-1542272604-780c96856453?w=700"
       },
@@ -491,6 +588,7 @@
         oldPrice: "140,00€",
         newPrice: "69,00€",
         numericPrice: 69.00,
+        discount: "-50%",
         sizes: ["One Size"],
         img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=700"
       },
@@ -502,6 +600,7 @@
         oldPrice: "160,00€",
         newPrice: "79,00€",
         numericPrice: 79.00,
+        discount: "-50%",
         sizes: ["36", "37", "38", "39", "40"],
         img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=700"
       }
@@ -512,7 +611,8 @@
        ========================================================================= */
     const shopTranslations = {
       en: {
-        man: "MAN", woman: "WOMAN", boy: "BOY", girl: "GIRL",
+        home: "HOME", man: "MAN", woman: "WOMAN", boy: "BOY", girl: "GIRL",
+        title_home: "DESIGNER FASHION ONLINE SHOP",
         title_boy: "DESIGNER BOYS CLOTHING ONLINE SHOP",
         title_girl: "DESIGNER GIRLS CLOTHING ONLINE SHOP",
         title_man: "DESIGNER MEN'S FASHION ONLINE SHOP",
@@ -534,7 +634,8 @@
         please_select_size: "Please choose a size first!"
       },
       ka: {
-        man: "კაცი", woman: "ქალი", boy: "ბიჭი", girl: "გოგო",
+        home: "მთავარი", man: "კაცი", woman: "ქალი", boy: "ბიჭი", girl: "გოგო",
+        title_home: "ბრენდული ტანსაცმლის ონლაინ მაღაზია",
         title_boy: "ბავშვის (ბიჭის) ბრენდული ტანსაცმელი",
         title_girl: "ბავშვის (გოგოს) ბრენდული ტანსაცმელი",
         title_man: "მამაკაცის პრემიუმ ტანსაცმელი & ფეხსაცმელი",
@@ -556,7 +657,8 @@
         please_select_size: "გთხოვთ ჯერ აირჩიოთ ზომა!"
       },
       it: {
-        man: "UOMO", woman: "DONNA", boy: "BAMBINO", girl: "BAMBINA",
+        home: "HOME", man: "UOMO", woman: "DONNA", boy: "BAMBINO", girl: "BAMBINA",
+        title_home: "MODA FIRMATA ONLINE SHOP",
         title_boy: "ABBIGLIAMENTO FIRMATO BAMBINO ONLINE",
         title_girl: "ABBIGLIAMENTO FIRMATO BAMBINA ONLINE",
         title_man: "MODA UOMO FIRMATA ONLINE SHOP",
@@ -578,7 +680,8 @@
         please_select_size: "Per favore seleziona prima una taglia!"
       },
       ru: {
-        man: "МУЖЧИНЫ", woman: "ЖЕНЩИНЫ", boy: "МАЛЬЧИКИ", girl: "ДЕВОЧКИ",
+        home: "ГЛАВНАЯ", man: "МУЖЧИНЫ", woman: "ЖЕНЩИНЫ", boy: "МАЛЬЧИКИ", girl: "ДЕВОЧКИ",
+        title_home: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ОНЛАЙН",
         title_boy: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ДЛЯ МАЛЬЧИКОВ",
         title_girl: "ДИЗАЙНЕРСКАЯ ОДЕЖДА ДЛЯ ДЕВОЧЕК",
         title_man: "МУЖСКАЯ БРЕНДОВАЯ ОДЕЖДА И ОБУВЬ",
@@ -600,7 +703,8 @@
         please_select_size: "Пожалуйста, сначала выберите размер!"
       },
       de: {
-        man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄDCHEN",
+        home: "HOME", man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄDCHEN",
+        title_home: "DESIGNER-MODE ONLINE SHOP",
         title_boy: "DESIGNER-KINDERMODE FÜR JUNGEN",
         title_girl: "DESIGNER-KINDERMODE FÜR MÄDCHEN",
         title_man: "DESIGNER-HERRENMODE ONLINE SHOP",
@@ -624,7 +728,7 @@
     };
 
     let currentLang = "en";
-    let activeCategory = "BOY";
+    let activeTab = "HOME";
     let cart = JSON.parse(localStorage.getItem('emigrant_cart') || '[]');
     let currentSelectedProduct = null;
     let currentSelectedSize = null;
@@ -646,28 +750,31 @@
             else if (['it', 'ru', 'de', 'en'].includes(rawLang)) currentLang = rawLang;
           }
           applyTranslations();
-          renderCategoryFeed();
+          renderActiveView();
         }).catch(() => {
           applyTranslations();
-          renderCategoryFeed();
+          renderActiveView();
         });
       } else {
         const localLang = (localStorage.getItem('site_lang') || 'en').toLowerCase();
         if (['ka', 'it', 'ru', 'de'].includes(localLang)) currentLang = localLang;
         applyTranslations();
-        renderCategoryFeed();
+        renderActiveView();
       }
     });
 
     function applyTranslations() {
+      document.getElementById('tab-home').innerText = t('home');
       document.getElementById('tab-man').innerText = t('man');
       document.getElementById('tab-woman').innerText = t('woman');
       document.getElementById('tab-boy').innerText = t('boy');
       document.getElementById('tab-girl').innerText = t('girl');
 
+      document.getElementById('txt-home-hero-title').innerText = t('title_home');
+      document.getElementById('txt-home-hero-desc').innerText = t('hero_desc');
       document.getElementById('txt-promo-ticker').innerText = t('promo_ticker');
-      document.getElementById('txt-best-selection').innerText = t('best_selection');
-      document.getElementById('hero-category-desc').innerText = t('hero_desc');
+      document.getElementById('txt-best-selection-home').innerText = t('best_selection');
+      document.getElementById('txt-best-selection-cat').innerText = t('best_selection');
 
       document.getElementById('txt-cart-title').innerText = t('cart_title');
       document.getElementById('txt-cart-empty').innerText = t('cart_empty');
@@ -679,35 +786,80 @@
       document.getElementById('txt-choose-size').innerText = t('choose_size');
       document.getElementById('txt-btn-add-to-cart').innerText = t('add_to_cart');
 
-      updateCategoryHeadline();
       updateCartUI();
     }
 
-    function updateCategoryHeadline() {
+    /* Tab Switcher: HOME vs Categories */
+    function selectShopTab(tabKey) {
+      activeTab = tabKey;
+      document.querySelectorAll('.gender-tab').forEach(b => b.classList.remove('active'));
+
+      const tabMap = { 'HOME': 'tab-home', 'MAN': 'tab-man', 'WOMAN': 'tab-woman', 'BOY': 'tab-boy', 'GIRL': 'tab-girl' };
+      if (tabMap[tabKey]) document.getElementById(tabMap[tabKey]).classList.add('active');
+
+      renderActiveView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderActiveView() {
+      const homeView = document.getElementById('shop-home-view');
+      const catView = document.getElementById('shop-category-view');
+
+      if (activeTab === 'HOME') {
+        homeView.style.display = 'block';
+        catView.style.display = 'none';
+        renderHomeFeaturedGrid();
+      } else {
+        homeView.style.display = 'none';
+        catView.style.display = 'block';
+        renderCategoryFeed(activeTab);
+      }
+    }
+
+    /* Render Home 2-Column Grid */
+    function renderHomeFeaturedGrid() {
+      const grid = document.getElementById('home-featured-grid');
+      // Mix of popular items from all collections
+      const featured = allProductsCatalog.filter(p => p.id === 'boy-2' || p.id === 'boy-3' || p.id === 'man-1' || p.id === 'woman-1');
+      
+      let html = "";
+      featured.forEach(p => {
+        html += `
+          <div class="grid-item-card" onclick="openProductModal('${p.id}')">
+            <span class="discount-badge">${p.discount}</span>
+            <img src="${p.img}" class="grid-item-img" alt="${p.brand}">
+            <div style="font-size:11px; font-weight:800; color:#e74c3c;">${p.brand}</div>
+            <div class="grid-item-title">${p.brand} ${p.sub}</div>
+            <div class="grid-item-prices">
+              <span class="old-price">${p.oldPrice}</span>
+              <span class="new-price">${p.newPrice}</span>
+            </div>
+            <button class="btn-add-cart" onclick="event.stopPropagation(); openProductModal('${p.id}')">
+              ${t('add_to_cart')}
+            </button>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+    }
+
+    /* Render Category Specific Feed (Matches Screenshot) */
+    function renderCategoryFeed(categoryKey) {
+      const container = document.getElementById('category-feed-container');
+      const titleEl = document.getElementById('hero-category-title');
+      const descEl = document.getElementById('hero-category-desc');
+
       const titles = {
         BOY: t('title_boy'),
         GIRL: t('title_girl'),
         MAN: t('title_man'),
         WOMAN: t('title_woman')
       };
-      document.getElementById('hero-category-title').innerText = titles[activeCategory] || titles['BOY'];
-    }
 
-    function selectGenderTab(categoryKey) {
-      activeCategory = categoryKey;
-      document.querySelectorAll('.gender-tab').forEach(b => b.classList.remove('active'));
-      
-      const tabMap = { 'MAN': 'tab-man', 'WOMAN': 'tab-woman', 'BOY': 'tab-boy', 'GIRL': 'tab-girl' };
-      if (tabMap[categoryKey]) document.getElementById(tabMap[categoryKey]).classList.add('active');
+      titleEl.innerText = titles[categoryKey] || titles['BOY'];
+      descEl.innerText = t('hero_desc');
 
-      updateCategoryHeadline();
-      renderCategoryFeed();
-    }
-
-    /* Render Showcase Feed */
-    function renderCategoryFeed() {
-      const container = document.getElementById('showcase-feed-container');
-      const filtered = realProductsData.filter(p => p.category === activeCategory);
+      const filtered = allProductsCatalog.filter(p => p.category === categoryKey);
 
       if (filtered.length === 0) {
         container.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">No items found in this collection</div>`;
@@ -741,7 +893,7 @@
 
     /* Product Detail Modal */
     function openProductModal(productId) {
-      const p = realProductsData.find(item => item.id === productId);
+      const p = allProductsCatalog.find(item => item.id === productId);
       if (!p) return;
 
       currentSelectedProduct = p;
@@ -863,7 +1015,7 @@
       const resultsBox = document.getElementById('search-results-box');
       if (!q) { resultsBox.innerHTML = ""; return; }
 
-      const results = realProductsData.filter(p => p.brand.toLowerCase().includes(q) || p.sub.toLowerCase().includes(q));
+      const results = allProductsCatalog.filter(p => p.brand.toLowerCase().includes(q) || p.sub.toLowerCase().includes(q));
       if (results.length === 0) {
         resultsBox.innerHTML = "<div style='padding:10px; color:#888;'>No products found</div>";
         return;
