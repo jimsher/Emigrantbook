@@ -48,7 +48,6 @@
     }
     .search-btn-red * { pointer-events: none; }
 
-    /* ადმინის 3-ხაზიანი ღილაკი */
     .menu-btn-admin {
       width: 36px; height: 36px; background: #141418; border: 1.5px solid #e74c3c;
       border-radius: 6px; display: none; align-items: center; justify-content: center;
@@ -147,14 +146,6 @@
     .showcase-prices { text-align: right; }
     .old-price { font-size: 13px; color: #666; text-decoration: line-through; margin-right: 6px; }
     .new-price { font-size: 16px; font-weight: 900; color: #e74c3c; }
-
-    .brand-feature-card {
-      width: 100%; height: 160px; border-radius: 12px; overflow: hidden;
-      margin-bottom: 20px; position: relative; background: #181822;
-      display: flex; align-items: center; justify-content: space-between;
-      border: 1px solid #222228; cursor: pointer;
-    }
-    .brand-feature-card img { width: 100%; height: 100%; object-fit: cover; }
 
     /* 7. Standard 2-Column Product Grid */
     .products-2col-grid {
@@ -477,29 +468,8 @@
         <div class="title-red-bar"></div>
       </div>
 
-      <div class="feed-container">
-        <div class="showcase-banner-card" onclick="openProductPage('boy-1')">
-          <div class="showcase-img-container">
-            <span class="sale-badge-ribbon">SALE</span>
-            <img src="https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=700" alt="U.S. POLO ASSN">
-          </div>
-          <div class="showcase-info-row">
-            <div class="showcase-brand-block">
-              <span class="showcase-brand-name">U.S. POLO ASSN</span>
-              <span class="showcase-category-name">Sneakers</span>
-            </div>
-            <div class="showcase-prices">
-              <span class="old-price">70,00€</span>
-              <span class="new-price">19,00€</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="brand-feature-card" onclick="openProductPage('boy-2')">
-          <img src="https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=700" alt="Timberland">
-        </div>
-
-        <div class="products-2col-grid" id="home-featured-grid"></div>
+      <div class="feed-container" id="home-feed-container">
+        <div style="text-align: center; color: #888; padding: 40px;" id="txt-home-loading">Loading collection...</div>
       </div>
     </div>
 
@@ -574,14 +544,14 @@
       <div id="p-detail-sub" class="fs-p-sub-title"></div>
 
       <div class="fs-price-breakdown">
-        <span class="fs-price-strikethrough-1" id="p-detail-strike1">52,29€</span>
-        <span class="fs-price-strikethrough-2" id="p-detail-strike2">29,05€</span>
-        <span class="fs-price-main-red" id="p-detail-mainprice">14,99€</span>
+        <span class="fs-price-strikethrough-1" id="p-detail-strike1"></span>
+        <span class="fs-price-strikethrough-2" id="p-detail-strike2"></span>
+        <span class="fs-price-main-red" id="p-detail-mainprice"></span>
       </div>
 
       <div class="fs-best-price-badge-row">
         <div class="fs-best-price-yellow" id="txt-best-price-tag">Best Price</div>
-        <div class="fs-best-price-black" id="p-detail-discount">-71%</div>
+        <div class="fs-best-price-black" id="p-detail-discount">-50%</div>
       </div>
 
       <div class="fs-sizes-title" id="txt-choose-size">Select Size:</div>
@@ -722,181 +692,8 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const allProductsCatalog = [
-      {
-        id: "man-1",
-        category: "MAN",
-        brand: "ACCADEMIA MILITARE",
-        sub: "Polo - Man - Blue",
-        strike1: "52,29€",
-        strike2: "29,05€",
-        mainPrice: "14,99€",
-        numericPrice: 14.99,
-        discount: "-71%",
-        sizes: ["S", "M", "L", "XL", "2XL", "3XL"],
-        colors: [
-          { name: "Blue", img: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=700" },
-          { name: "White", img: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=700" },
-          { name: "Black", img: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=700" }
-        ],
-        description: "Classic Italian designer polo shirt made of 100% fine cotton pique with custom embroidered military eagle crest. Features a 3-button placket and comfortable ribbed collar and cuffs.",
-        img: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=700"
-      },
-      {
-        id: "man-2",
-        category: "MAN",
-        brand: "LEVIS",
-        sub: "511 Slim Jeans Denim",
-        strike1: "115,00€",
-        strike2: "89,00€",
-        mainPrice: "59,00€",
-        numericPrice: 59.00,
-        discount: "-48%",
-        sizes: ["30/32", "32/32", "34/32", "36/32"],
-        colors: [
-          { name: "Blue Denim", img: "https://images.unsplash.com/photo-1542272604-780c96856453?w=700" }
-        ],
-        description: "The definitive slim fit jean with added stretch for all-day comfort. Cut close through the thigh with a slim leg opening.",
-        img: "https://images.unsplash.com/photo-1542272604-780c96856453?w=700"
-      },
-      {
-        id: "boy-1",
-        category: "BOY",
-        brand: "U.S. POLO ASSN",
-        sub: "Sneakers Kids",
-        strike1: "70,00€",
-        strike2: "45,00€",
-        mainPrice: "19,00€",
-        numericPrice: 19.00,
-        discount: "-72%",
-        sizes: ["28", "29", "30", "31", "32", "33", "34", "35"],
-        colors: [
-          { name: "Multi/Navy", img: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=700" },
-          { name: "Black/Yellow", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700" }
-        ],
-        description: "Lightweight, breathable kids sneakers with secure strap closure and cushioned outsole for active boys.",
-        img: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=700"
-      },
-      {
-        id: "boy-2",
-        category: "BOY",
-        brand: "TIMBERLAND",
-        sub: "Scarpe - Yellow Boot",
-        strike1: "130,00€",
-        strike2: "89,00€",
-        mainPrice: "49,00€",
-        numericPrice: 49.00,
-        discount: "-62%",
-        sizes: ["30", "31", "32", "33", "34", "35", "36"],
-        colors: [
-          { name: "Wheat Yellow", img: "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=700" }
-        ],
-        description: "Premium waterproof nubuck leather boots with rugged lug outsole and padded collar for unmatched durability.",
-        img: "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=700"
-      },
-      {
-        id: "boy-3",
-        category: "BOY",
-        brand: "SERGIO TACCHINI",
-        sub: "Sneakers Court",
-        strike1: "50,00€",
-        strike2: "35,00€",
-        mainPrice: "19,00€",
-        numericPrice: 19.00,
-        discount: "-62%",
-        sizes: ["28", "29", "30", "31", "32", "33", "34"],
-        colors: [
-          { name: "White/Red", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700" }
-        ],
-        description: "Heritage sport-inspired casual tennis sneakers with durable synthetic leather upper and non-slip rubber cupsole.",
-        img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=700"
-      },
-      {
-        id: "boy-4",
-        category: "BOY",
-        brand: "TOMMY HILFIGER",
-        sub: "Boys Hoodie",
-        strike1: "75,00€",
-        strike2: "55,00€",
-        mainPrice: "34,00€",
-        numericPrice: 34.00,
-        discount: "-54%",
-        sizes: ["6Y", "8Y", "10Y", "12Y", "14Y"],
-        colors: [
-          { name: "Navy", img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=700" }
-        ],
-        description: "Comfortable organic cotton blend fleece hoodie with classic Tommy Hilfiger chest flag branding.",
-        img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=700"
-      },
-      {
-        id: "girl-1",
-        category: "GIRL",
-        brand: "BENETTON",
-        sub: "Girls Dress",
-        strike1: "59,00€",
-        strike2: "39,00€",
-        mainPrice: "24,00€",
-        numericPrice: 24.00,
-        discount: "-59%",
-        sizes: ["4Y", "6Y", "8Y", "10Y", "12Y"],
-        colors: [
-          { name: "Pink", img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=700" }
-        ],
-        description: "Soft cotton jersey dress with flared skirt and delicate embroidery, perfect for everyday elegance.",
-        img: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=700"
-      },
-      {
-        id: "girl-2",
-        category: "GIRL",
-        brand: "GEOX",
-        sub: "Sneakers Breathable",
-        strike1: "65,00€",
-        strike2: "49,00€",
-        mainPrice: "29,00€",
-        numericPrice: 29.00,
-        discount: "-55%",
-        sizes: ["28", "29", "30", "31", "32", "33"],
-        colors: [
-          { name: "Silver/Pink", img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=700" }
-        ],
-        description: "Patented breathable sole technology keeps feet dry and fresh all day long. Lightweight with shock absorbing footbed.",
-        img: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=700"
-      },
-      {
-        id: "woman-1",
-        category: "WOMAN",
-        brand: "GUESS",
-        sub: "Handbag Luxury",
-        strike1: "140,00€",
-        strike2: "99,00€",
-        mainPrice: "69,00€",
-        numericPrice: 69.00,
-        discount: "-50%",
-        sizes: ["One Size"],
-        colors: [
-          { name: "Cognac", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=700" }
-        ],
-        description: "Elegant structured satchel with gold-tone hardware, multiple compartments and detachable crossbody shoulder strap.",
-        img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=700"
-      },
-      {
-        id: "woman-2",
-        category: "WOMAN",
-        brand: "ARMANI EXCHANGE",
-        sub: "Sneakers Designer",
-        strike1: "160,00€",
-        strike2: "119,00€",
-        mainPrice: "79,00€",
-        numericPrice: 79.00,
-        discount: "-50%",
-        sizes: ["36", "37", "38", "39", "40"],
-        colors: [
-          { name: "White/Gold", img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=700" }
-        ],
-        description: "Contemporary low-top sneakers with metallic accents and signature A|X logo detailing on the side.",
-        img: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=700"
-      }
-    ];
+    // 🚀 რეალური პროდუქტების მასივი (იტვირთება Firebase Firestore-იდან)
+    let allProductsCatalog = [];
 
     const shopTranslations = {
       en: {
@@ -962,7 +759,8 @@
         secure_payment: "SECURE PAYMENT",
         secure_trans: "SECURE TRANSACTIONS",
         brands_300: "OVER 300 FASHION BRANDS",
-        brands_orig: "PRODUCTS 100% ORIGINAL"
+        brands_orig: "PRODUCTS 100% ORIGINAL",
+        no_products_yet: "No products available in this section yet."
       },
       ka: {
         home: "მთავარი", man: "კაცი", woman: "ქალი", boy: "ბიჭი", girl: "გოგო",
@@ -1027,7 +825,8 @@
         secure_payment: "უსაფრთხო გადახდა",
         secure_trans: "დაცული ტრანზაქციები",
         brands_300: "300-ზე მეტი ბრენდი",
-        brands_orig: "100% ორიგინალი პროდუქცია"
+        brands_orig: "100% ორიგინალი პროდუქცია",
+        no_products_yet: "ამ სექციაში პროდუქტები ჯერ არ არის დამატებული."
       },
       it: {
         home: "HOME", man: "UOMO", woman: "DONNA", boy: "BAMBINO", girl: "BAMBINA",
@@ -1092,7 +891,8 @@
         secure_payment: "SECURE PAYMENT",
         secure_trans: "SECURE TRANSACTIONS",
         brands_300: "OVER 300 FASHION BRANDS",
-        brands_orig: "PRODUCTS 100% ORIGINAL"
+        brands_orig: "PRODUCTS 100% ORIGINAL",
+        no_products_yet: "Nessun prodotto disponibile in questa sezione."
       },
       ru: {
         home: "ГЛАВНАЯ", man: "МУЖЧИНЫ", woman: "ЖЕНЩИНЫ", boy: "МАЛЬЧИКИ", girl: "ДЕВОЧКИ",
@@ -1157,7 +957,8 @@
         secure_payment: "SECURE PAYMENT",
         secure_trans: "SECURE TRANSACTIONS",
         brands_300: "OVER 300 FASHION BRANDS",
-        brands_orig: "PRODUCTS 100% ORIGINAL"
+        brands_orig: "PRODUCTS 100% ORIGINAL",
+        no_products_yet: "В этом разделе пока нет добавленных товаров."
       },
       de: {
         home: "HOME", man: "HERREN", woman: "DAMEN", boy: "JUNGEN", girl: "MÄDCHEN",
@@ -1222,7 +1023,8 @@
         secure_payment: "SECURE PAYMENT",
         secure_trans: "SECURE TRANSACTIONS",
         brands_300: "OVER 300 FASHION BRANDS",
-        brands_orig: "PRODUCTS 100% ORIGINAL"
+        brands_orig: "PRODUCTS 100% ORIGINAL",
+        no_products_yet: "In diesem Bereich sind noch keine Produkte verfügbar."
       }
     };
 
@@ -1240,6 +1042,27 @@
       return shopTranslations['en'][key] || key;
     }
 
+    // 📡 რეალურ დროში Firestore პროდუქტების ჩატვირთვა
+    function initRealProductsListener() {
+      db.collection('shop_products').onSnapshot(snap => {
+        allProductsCatalog = [];
+        snap.forEach(docSnap => {
+          allProductsCatalog.push(Object.assign({ id: docSnap.id }, docSnap.data()));
+        });
+        
+        // თარიღით დალაგება
+        allProductsCatalog.sort((a, b) => {
+          let tA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
+          let tB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
+          return tB - tA;
+        });
+
+        renderActiveView();
+      }, err => {
+        console.error("Firestore loading error:", err);
+      });
+    }
+
     auth.onAuthStateChanged(user => {
       if (user) {
         db.collection('profiles').doc(user.uid).get().then(doc => {
@@ -1249,7 +1072,7 @@
             if (['ka', 'ge'].includes(rawLang)) currentLang = 'ka';
             else if (['it', 'ru', 'de', 'en'].includes(rawLang)) currentLang = rawLang;
 
-            // ✅ მხოლოდ საიტის ადმინისტრატორს გამოუჩნდეს 3-ხაზიანი სამართავი ღილაკი
+            // ადმინისტრატორის ღილაკის შემოწმება
             const isAdmin = uData.role === 'admin' || uData.isAdmin === true || uData.is_admin === true;
             const adminBtn = document.getElementById('shop-admin-btn');
             if (adminBtn) {
@@ -1257,17 +1080,16 @@
             }
           }
           applyTranslations();
-          renderActiveView();
         }).catch(() => {
           applyTranslations();
-          renderActiveView();
         });
       } else {
         const localLang = (localStorage.getItem('site_lang') || 'en').toLowerCase();
         if (['ka', 'it', 'ru', 'de'].includes(localLang)) currentLang = localLang;
         applyTranslations();
-        renderActiveView();
       }
+
+      initRealProductsListener();
     });
 
     function applyTranslations() {
@@ -1346,7 +1168,7 @@
       if (activeTab === 'HOME') {
         homeView.style.display = 'block';
         catView.style.display = 'none';
-        renderHomeFeaturedGrid();
+        renderHomeFeed();
       } else {
         homeView.style.display = 'none';
         catView.style.display = 'block';
@@ -1354,31 +1176,66 @@
       }
     }
 
-    function renderHomeFeaturedGrid() {
-      const grid = document.getElementById('home-featured-grid');
-      const featured = allProductsCatalog.filter(p => p.id === 'boy-2' || p.id === 'boy-3' || p.id === 'man-1' || p.id === 'woman-1');
-      
+    // 🏠 მთავარი გვერდის რენდერი (მხოლოდ რეალური პროდუქტები)
+    function renderHomeFeed() {
+      const feedBox = document.getElementById('home-feed-container');
+
+      if (allProductsCatalog.length === 0) {
+        feedBox.innerHTML = `<div style="text-align:center; color:#888; padding:50px 20px; font-size:14px;">${t('no_products_yet')}</div>`;
+        return;
+      }
+
       let html = "";
-      featured.forEach(p => {
-        html += `
-          <div class="grid-item-card" onclick="openProductPage('${p.id}')">
-            <span class="discount-badge">${p.discount}</span>
-            <img src="${p.img}" class="grid-item-img" alt="${p.brand}">
-            <div style="font-size:11px; font-weight:800; color:#e74c3c;">${p.brand}</div>
-            <div class="grid-item-title">${p.brand} ${p.sub}</div>
-            <div class="grid-item-prices">
-              <span class="old-price">${p.strike1}</span>
-              <span class="new-price">${p.mainPrice}</span>
-            </div>
-            <button class="btn-add-cart" onclick="event.stopPropagation(); openProductPage('${p.id}')">
-              ${t('add_to_bag')}
-            </button>
+      
+      // 1. პირველი პროდუქტი დიდი ბანერის სტილში
+      const topProduct = allProductsCatalog[0];
+      html += `
+        <div class="showcase-banner-card" onclick="openProductPage('${topProduct.id}')">
+          <div class="showcase-img-container">
+            <span class="sale-badge-ribbon">${topProduct.discount || 'SALE'}</span>
+            <img src="${topProduct.img}" alt="${topProduct.brand}">
           </div>
-        `;
-      });
-      grid.innerHTML = html;
+          <div class="showcase-info-row">
+            <div class="showcase-brand-block">
+              <span class="showcase-brand-name">${topProduct.brand}</span>
+              <span class="showcase-category-name">${topProduct.sub || ''}</span>
+            </div>
+            <div class="showcase-prices">
+              <span class="old-price">${topProduct.strike1 || ''}</span>
+              <span class="new-price">${topProduct.mainPrice}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 2. დანარჩენი პროდუქტები 2-სვეტიან ბადეში
+      if (allProductsCatalog.length > 1) {
+        html += `<div class="products-2col-grid">`;
+        for (let i = 1; i < allProductsCatalog.length; i++) {
+          const p = allProductsCatalog[i];
+          html += `
+            <div class="grid-item-card" onclick="openProductPage('${p.id}')">
+              <span class="discount-badge">${p.discount || 'SALE'}</span>
+              <img src="${p.img}" class="grid-item-img" alt="${p.brand}">
+              <div style="font-size:11px; font-weight:800; color:#e74c3c;">${p.brand}</div>
+              <div class="grid-item-title">${p.brand} ${p.sub || ''}</div>
+              <div class="grid-item-prices">
+                <span class="old-price">${p.strike1 || ''}</span>
+                <span class="new-price">${p.mainPrice}</span>
+              </div>
+              <button class="btn-add-cart" onclick="event.stopPropagation(); openProductPage('${p.id}')">
+                ${t('add_to_bag')}
+              </button>
+            </div>
+          `;
+        }
+        html += `</div>`;
+      }
+
+      feedBox.innerHTML = html;
     }
 
+    // 📂 კატეგორიების რენდერი (მხოლოდ რეალური პროდუქტები)
     function renderCategoryFeed(categoryKey) {
       const container = document.getElementById('category-feed-container');
       const titleEl = document.getElementById('hero-category-title');
@@ -1397,7 +1254,7 @@
       const filtered = allProductsCatalog.filter(p => p.category === categoryKey);
 
       if (filtered.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#888; padding:40px;">No items found in this collection</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:50px 20px; font-size:14px;">${t('no_products_yet')}</div>`;
         return;
       }
 
@@ -1406,16 +1263,16 @@
         html += `
           <div class="showcase-banner-card" onclick="openProductPage('${p.id}')">
             <div class="showcase-img-container">
-              <span class="sale-badge-ribbon">SALE</span>
+              <span class="sale-badge-ribbon">${p.discount || 'SALE'}</span>
               <img src="${p.img}" alt="${p.brand}">
             </div>
             <div class="showcase-info-row">
               <div class="showcase-brand-block">
                 <span class="showcase-brand-name">${p.brand}</span>
-                <span class="showcase-category-name">${p.sub}</span>
+                <span class="showcase-category-name">${p.sub || ''}</span>
               </div>
               <div class="showcase-prices">
-                <span class="old-price">${p.strike1}</span>
+                <span class="old-price">${p.strike1 || ''}</span>
                 <span class="new-price">${p.mainPrice}</span>
               </div>
             </div>
@@ -1426,28 +1283,30 @@
       container.innerHTML = html;
     }
 
+    // 📱 დეტალური პროდუქტის გვერდი
     function openProductPage(productId) {
       const p = allProductsCatalog.find(item => item.id === productId);
       if (!p) return;
 
       currentSelectedProduct = p;
-      currentSelectedSize = p.sizes[0] || null;
+      currentSelectedSize = (p.sizes && p.sizes.length > 0) ? p.sizes[0] : null;
       currentSelectedColorIdx = 0;
 
       document.getElementById('p-detail-img').src = p.img;
       document.getElementById('p-detail-brand').innerText = p.brand;
-      document.getElementById('p-detail-sub').innerText = p.sub;
+      document.getElementById('p-detail-sub').innerText = p.sub || '';
 
-      document.getElementById('p-detail-strike1').innerText = p.strike1;
-      document.getElementById('p-detail-strike2').innerText = p.strike2;
+      document.getElementById('p-detail-strike1').innerText = p.strike1 || '';
+      document.getElementById('p-detail-strike2').innerText = p.strike2 || '';
       document.getElementById('p-detail-mainprice').innerText = p.mainPrice;
-      document.getElementById('p-detail-discount').innerText = p.discount;
+      document.getElementById('p-detail-discount').innerText = p.discount || '-50%';
 
-      document.getElementById('p-detail-description').innerText = p.description;
+      document.getElementById('p-detail-description').innerText = p.description || '100% Authentic quality product from official distributor.';
 
       const sizesGrid = document.getElementById('p-detail-sizes-grid');
       let sizesHtml = "";
-      p.sizes.forEach((s, idx) => {
+      const pSizes = p.sizes || ["S", "M", "L", "XL"];
+      pSizes.forEach((s, idx) => {
         sizesHtml += `
           <div class="fs-size-tile ${idx === 0 ? 'selected' : ''}" onclick="selectProductSize('${s}', this)">
             <div class="fs-size-tile-name">${s}</div>
@@ -1459,7 +1318,8 @@
 
       const colorsRow = document.getElementById('p-detail-colors-row');
       let colorsHtml = "";
-      p.colors.forEach((c, idx) => {
+      const pColors = p.colors || [{ name: "Standard", img: p.img }];
+      pColors.forEach((c, idx) => {
         colorsHtml += `
           <div class="fs-color-thumb-card ${idx === 0 ? 'selected' : ''}" onclick="selectProductColor(${idx}, '${c.img}', this)">
             <img src="${c.img}" alt="${c.name}">
@@ -1487,7 +1347,7 @@
     }
 
     function nextProductImage() {
-      if (!currentSelectedProduct || !currentSelectedProduct.colors) return;
+      if (!currentSelectedProduct || !currentSelectedProduct.colors || currentSelectedProduct.colors.length === 0) return;
       currentSelectedColorIdx = (currentSelectedColorIdx + 1) % currentSelectedProduct.colors.length;
       const col = currentSelectedProduct.colors[currentSelectedColorIdx];
       document.getElementById('p-detail-img').src = col.img;
@@ -1495,7 +1355,7 @@
     }
 
     function prevProductImage() {
-      if (!currentSelectedProduct || !currentSelectedProduct.colors) return;
+      if (!currentSelectedProduct || !currentSelectedProduct.colors || currentSelectedProduct.colors.length === 0) return;
       currentSelectedColorIdx = (currentSelectedColorIdx - 1 + currentSelectedProduct.colors.length) % currentSelectedProduct.colors.length;
       const col = currentSelectedProduct.colors[currentSelectedColorIdx];
       document.getElementById('p-detail-img').src = col.img;
@@ -1530,20 +1390,22 @@
 
     function confirmAddToCart() {
       if (!currentSelectedProduct) return;
-      if (!currentSelectedSize && currentSelectedProduct.sizes.length > 0) {
+      if (!currentSelectedSize && currentSelectedProduct.sizes && currentSelectedProduct.sizes.length > 0) {
         alert(t('please_select_size'));
         return;
       }
 
-      const activeColor = currentSelectedProduct.colors[currentSelectedColorIdx] || { name: 'Default', img: currentSelectedProduct.img };
+      const activeColor = (currentSelectedProduct.colors && currentSelectedProduct.colors[currentSelectedColorIdx]) 
+        ? currentSelectedProduct.colors[currentSelectedColorIdx] 
+        : { name: 'Standard', img: currentSelectedProduct.img };
 
       cart.push({
         id: Date.now(),
         productId: currentSelectedProduct.id,
-        title: `${currentSelectedProduct.brand} ${currentSelectedProduct.sub}`,
-        size: currentSelectedSize,
+        title: `${currentSelectedProduct.brand} ${currentSelectedProduct.sub || ''}`,
+        size: currentSelectedSize || 'Standard',
         color: activeColor.name,
-        price: currentSelectedProduct.numericPrice,
+        price: parseFloat(currentSelectedProduct.numericPrice || 0),
         img: activeColor.img
       });
 
@@ -1682,7 +1544,7 @@
       const resultsBox = document.getElementById('search-results-box');
       if (!q) { resultsBox.innerHTML = ""; return; }
 
-      const results = allProductsCatalog.filter(p => p.brand.toLowerCase().includes(q) || p.sub.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+      const results = allProductsCatalog.filter(p => p.brand.toLowerCase().includes(q) || (p.sub && p.sub.toLowerCase().includes(q)) || p.category.toLowerCase().includes(q));
       if (results.length === 0) {
         resultsBox.innerHTML = `<div style='padding:20px; text-align:center; color:#888;'>No products found</div>`;
         return;
@@ -1695,7 +1557,7 @@
             <div style="display:flex; align-items:center; gap:10px;">
               <img src="${r.img}" style="width:40px; height:40px; object-fit:contain; background:#fff; border-radius:6px; padding:2px;">
               <div>
-                <div style="font-size:13px; font-weight:800; color:#fff;">${r.brand} - ${r.sub}</div>
+                <div style="font-size:13px; font-weight:800; color:#fff;">${r.brand} - ${r.sub || ''}</div>
                 <div style="font-size:11px; color:#8a8f9d;">${r.category}</div>
               </div>
             </div>
