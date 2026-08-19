@@ -25,14 +25,25 @@
     .back-btn { background: none; border: none; color: #dcae36; font-size: 22px; font-weight: bold; cursor: pointer; }
     .admin-title { font-size: 18px; font-weight: 800; color: #ffffff; }
 
-    .stats-row {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-      padding: 16px;
+    /* Admin Navigation Tabs */
+    .admin-tabs-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: #141418; border-bottom: 1px solid #222228;
     }
-    .stat-box {
-      background: #141418; border: 1px solid #222228; border-radius: 10px;
-      padding: 12px; text-align: center;
+    .admin-tab-btn {
+      padding: 14px 0; text-align: center; font-size: 13px; font-weight: 800;
+      color: #8a8f9d; background: transparent; border: none; cursor: pointer;
+      border-bottom: 2px solid transparent; transition: all 0.2s; position: relative;
     }
+    .admin-tab-btn.active { color: #dcae36; border-bottom-color: #dcae36; background: rgba(220, 174, 54, 0.05); }
+    .chat-unread-badge {
+      position: absolute; top: 8px; right: 20%; background: #e74c3c; color: #fff;
+      font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 10px; display: none;
+    }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; }
+    .stat-box { background: #141418; border: 1px solid #222228; border-radius: 10px; padding: 12px; text-align: center; }
     .stat-num { font-size: 20px; font-weight: 900; color: #dcae36; }
     .stat-label { font-size: 11px; color: #8a8f9d; margin-top: 2px; }
 
@@ -42,7 +53,7 @@
     }
     .card-title {
       font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; justify-content: space-between;
     }
 
     .form-group { margin-bottom: 12px; }
@@ -52,7 +63,6 @@
       border-radius: 8px; padding: 11px 12px; color: #fff; font-size: 14px; outline: none;
     }
     .form-input:focus { border-color: #dcae36; }
-
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .btn-submit {
@@ -60,7 +70,6 @@
       padding: 13px; border-radius: 8px; font-size: 15px; font-weight: 900;
       cursor: pointer; margin-top: 8px;
     }
-    .btn-submit:hover { background: #e7bc44; }
 
     /* Product Item in List */
     .admin-prod-card {
@@ -70,101 +79,214 @@
     }
     .admin-prod-img { width: 50px; height: 50px; object-fit: contain; background: #fff; border-radius: 6px; padding: 2px; }
     .btn-del { background: none; border: none; color: #e74c3c; font-size: 18px; cursor: pointer; padding: 6px; }
+
+    /* =========================================================================
+       💬 CHAT INBOX STYLES
+       ========================================================================= */
+    .inbox-container { padding: 16px; }
+    .inbox-user-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 12px; background: #141418; border: 1px solid #222228;
+      border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s;
+    }
+    .inbox-user-card:hover { border-color: #dcae36; background: #1a1a22; }
+    .inbox-user-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+    .inbox-avatar {
+      width: 42px; height: 42px; border-radius: 50%; background: #24242e;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .inbox-user-info { flex: 1; min-width: 0; }
+    .inbox-user-name { font-size: 14px; font-weight: 800; color: #ffffff; margin-bottom: 2px; }
+    .inbox-last-msg { font-size: 12px; color: #8a8f9d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .inbox-meta { text-align: right; margin-left: 8px; }
+    .inbox-time { font-size: 11px; color: #666; }
+    .inbox-unread-dot {
+      width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; display: inline-block; margin-top: 4px;
+    }
+
+    /* Live Chat Dialog Fullscreen */
+    .fs-chat-dialog {
+      display: none; position: fixed; inset: 0; width: 100%; height: 100vh;
+      max-width: 600px; margin: 0 auto; background: #0b0b0e; z-index: 1100;
+      flex-direction: column;
+    }
+    .chat-dialog-header {
+      padding: 12px 16px; background: #141418; border-bottom: 1px solid #222228;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .chat-dialog-body {
+      flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .msg-bubble-wrap { display: flex; flex-direction: column; max-width: 80%; }
+    .msg-bubble-wrap.user { align-self: flex-start; }
+    .msg-bubble-wrap.admin { align-self: flex-end; }
+    
+    .msg-sender-name { font-size: 11px; color: #8a8f9d; margin-bottom: 3px; font-weight: 700; }
+    .msg-bubble {
+      padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4; word-break: break-word;
+    }
+    .msg-bubble.user { background: #1c1c24; color: #fff; border: 1px solid #282836; border-bottom-left-radius: 2px; }
+    .msg-bubble.admin { background: #dcae36; color: #111; font-weight: 700; border-bottom-right-radius: 2px; }
+
+    .chat-dialog-footer {
+      padding: 12px 16px; background: #141418; border-top: 1px solid #222228;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .chat-admin-input {
+      flex: 1; background: #101014; border: 1px solid #282834; border-radius: 25px;
+      padding: 11px 16px; color: #fff; font-size: 14px; outline: none;
+    }
+    .chat-admin-input:focus { border-color: #dcae36; }
+    .btn-send-admin {
+      background: #dcae36; border: none; width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
 
   <div class="admin-wrapper" id="admin-page-container" style="display: none;">
     
+    <!-- Top Bar -->
     <div class="admin-header">
       <button class="back-btn" onclick="window.location.href='shop.html'">←</button>
       <div class="admin-title">Shop Management</div>
       <div style="width: 24px;"></div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-row">
-      <div class="stat-box">
-        <div class="stat-num" id="stat-products">0</div>
-        <div class="stat-label">Products</div>
+    <!-- Navigation Tabs -->
+    <div class="admin-tabs-row">
+      <button class="admin-tab-btn active" id="tab-btn-products" onclick="switchAdminTab('products')">
+        📦 Products Management
+      </button>
+      <button class="admin-tab-btn" id="tab-btn-inbox" onclick="switchAdminTab('inbox')">
+        💬 Support Chats
+        <span class="chat-unread-badge" id="inbox-unread-count">0</span>
+      </button>
+    </div>
+
+    <!-- =========================================================================
+         1. TAB: PRODUCTS MANAGEMENT
+         ========================================================================= -->
+    <div id="admin-view-products">
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num" id="stat-products">0</div>
+          <div class="stat-label">Products</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">4</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num" id="stat-chats-count">0</div>
+          <div class="stat-label">Open Chats</div>
+        </div>
       </div>
-      <div class="stat-box">
-        <div class="stat-num">4</div>
-        <div class="stat-label">Categories</div>
+
+      <!-- Add Product Form -->
+      <div class="card-block">
+        <div class="card-title">➕ Add New Product</div>
+
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="p-cat" class="form-input">
+            <option value="MAN">MAN</option>
+            <option value="WOMAN">WOMAN</option>
+            <option value="BOY" selected>BOY</option>
+            <option value="GIRL">GIRL</option>
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Brand</label>
+            <input type="text" id="p-brand" class="form-input" placeholder="e.g. U.S. POLO ASSN">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model / Title</label>
+            <input type="text" id="p-sub" class="form-input" placeholder="e.g. Sneakers Kids">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Strike Price 1 (€)</label>
+            <input type="text" id="p-strike1" class="form-input" placeholder="e.g. 70,00€">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Final Main Price (€)</label>
+            <input type="number" id="p-price" class="form-input" placeholder="e.g. 19.00" step="0.01">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Discount % (Badge)</label>
+          <input type="text" id="p-discount" class="form-input" placeholder="e.g. -71%">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sizes (comma separated)</label>
+          <input type="text" id="p-sizes" class="form-input" placeholder="e.g. 28, 29, 30, 31, 32 or S, M, L, XL">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Product Image File</label>
+          <input type="file" id="p-file" class="form-input" accept="image/*">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="p-desc" class="form-input" style="height: 70px; resize: none;" placeholder="Product details and materials..."></textarea>
+        </div>
+
+        <button class="btn-submit" id="btn-add-product" onclick="submitNewProduct()">Upload & Save Product</button>
       </div>
-      <div class="stat-box">
-        <div class="stat-num" id="stat-orders">0</div>
-        <div class="stat-label">Orders</div>
+
+      <!-- Product Catalog List -->
+      <div class="card-block">
+        <div class="card-title">📦 Active Shop Catalog</div>
+        <div id="admin-products-list">
+          <div style="text-align: center; color: #888; padding: 20px;">Loading catalog...</div>
+        </div>
       </div>
     </div>
 
-    <!-- Add Product Form -->
-    <div class="card-block">
-      <div class="card-title">➕ Add New Product</div>
-
-      <div class="form-group">
-        <label class="form-label">Category</label>
-        <select id="p-cat" class="form-input">
-          <option value="MAN">MAN</option>
-          <option value="WOMAN">WOMAN</option>
-          <option value="BOY" selected>BOY</option>
-          <option value="GIRL">GIRL</option>
-        </select>
-      </div>
-
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Brand</label>
-          <input type="text" id="p-brand" class="form-input" placeholder="e.g. U.S. POLO ASSN">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Model / Title</label>
-          <input type="text" id="p-sub" class="form-input" placeholder="e.g. Sneakers Kids">
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Strike Price 1 (€)</label>
-          <input type="text" id="p-strike1" class="form-input" placeholder="e.g. 70,00€">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Final Main Price (€)</label>
-          <input type="number" id="p-price" class="form-input" placeholder="e.g. 19.00" step="0.01">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Discount % (Badge)</label>
-        <input type="text" id="p-discount" class="form-input" placeholder="e.g. -71%">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Sizes (comma separated)</label>
-        <input type="text" id="p-sizes" class="form-input" placeholder="e.g. 28, 29, 30, 31, 32 or S, M, L, XL">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Product Image File</label>
-        <input type="file" id="p-file" class="form-input" accept="image/*">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea id="p-desc" class="form-input" style="height: 70px; resize: none;" placeholder="Product details and materials..."></textarea>
-      </div>
-
-      <button class="btn-submit" id="btn-add-product" onclick="submitNewProduct()">Upload & Save Product</button>
-    </div>
-
-    <!-- Product Catalog List -->
-    <div class="card-block">
-      <div class="card-title">📦 Active Shop Catalog</div>
-      <div id="admin-products-list">
-        <div style="text-align: center; color: #888; padding: 20px;">Loading catalog...</div>
+    <!-- =========================================================================
+         2. TAB: CUSTOMER SUPPORT CHATS INBOX
+         ========================================================================= -->
+    <div id="admin-view-inbox" style="display: none;" class="inbox-container">
+      <div style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 14px;">Customer Conversations</div>
+      <div id="admin-chats-list">
+        <div style="text-align: center; color: #888; padding: 30px;">Loading conversations...</div>
       </div>
     </div>
 
+  </div>
+
+  <!-- =========================================================================
+       📱 LIVE CHAT CONVERSATION DIALOG
+       ========================================================================= -->
+  <div class="fs-chat-dialog" id="fs-admin-chat-dialog">
+    <div class="chat-dialog-header">
+      <button class="back-btn" onclick="closeAdminChatDialog()">←</button>
+      <div>
+        <div style="font-size: 15px; font-weight: 800; color: #fff;" id="active-chat-username">User</div>
+        <div style="font-size: 11px; color: #25d366;" id="active-chat-status">● Live Customer</div>
+      </div>
+      <button onclick="resolveCurrentChat()" style="background: none; border: 1px solid #333; color: #8a8f9d; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;">Resolve</button>
+    </div>
+
+    <div class="chat-dialog-body" id="admin-chat-messages-box"></div>
+
+    <div class="chat-dialog-footer">
+      <input type="text" id="admin-reply-input" class="chat-admin-input" placeholder="Type a reply to customer..." onkeypress="if(event.key==='Enter') sendAdminReply()">
+      <button class="btn-send-admin" onclick="sendAdminReply()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#111">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <script>
@@ -182,6 +304,8 @@
     const db = firebase.firestore();
 
     let currentUser = null;
+    let activeChatId = null;
+    let activeChatUnsubscribe = null;
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -197,6 +321,7 @@
             }
             document.getElementById('admin-page-container').style.display = 'block';
             loadAdminProducts();
+            listenToSupportChatsInbox();
           } else {
             window.location.href = "shop.html";
           }
@@ -208,15 +333,33 @@
       }
     });
 
+    function switchAdminTab(tabName) {
+      const prodView = document.getElementById('admin-view-products');
+      const inboxView = document.getElementById('admin-view-inbox');
+      const btnProd = document.getElementById('tab-btn-products');
+      const btnInbox = document.getElementById('tab-btn-inbox');
+
+      if (tabName === 'products') {
+        prodView.style.display = 'block';
+        inboxView.style.display = 'none';
+        btnProd.classList.add('active');
+        btnInbox.classList.remove('active');
+      } else {
+        prodView.style.display = 'none';
+        inboxView.style.display = 'block';
+        btnInbox.classList.add('active');
+        btnProd.classList.remove('active');
+      }
+    }
+
     function loadAdminProducts() {
-      db.collection('shop_products').get().then(snap => {
+      db.collection('shop_products').onSnapshot(snap => {
         const list = document.getElementById('admin-products-list');
         const countEl = document.getElementById('stat-products');
-        
         countEl.innerText = snap.size;
 
         if (snap.empty) {
-          list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No custom products yet. Default items active.</div>`;
+          list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No products added yet. Add your first product above!</div>`;
           return;
         }
 
@@ -228,7 +371,7 @@
               <div style="display:flex; align-items:center; gap:10px;">
                 <img src="${p.img}" class="admin-prod-img">
                 <div>
-                  <div style="font-size:13px; font-weight:800; color:#fff;">${p.brand} ${p.sub}</div>
+                  <div style="font-size:13px; font-weight:800; color:#fff;">${p.brand} ${p.sub || ''}</div>
                   <div style="font-size:11px; color:#8a8f9d;">${p.category} · ${p.mainPrice}</div>
                 </div>
               </div>
@@ -280,14 +423,14 @@
       const desc = document.getElementById('p-desc').value.trim();
       const fileInput = document.getElementById('p-file');
 
-      if (!brand || !sub || isNaN(price)) {
-        alert("Please provide Brand, Model and Price!");
+      if (!brand || isNaN(price)) {
+        alert("Please provide Brand and Price!");
         return;
       }
 
       const btn = document.getElementById('btn-add-product');
       btn.disabled = true;
-      btn.innerText = "Uploading...";
+      btn.innerText = "Uploading to Cloudflare R2...";
 
       const sizes = sizesRaw ? sizesRaw.split(',').map(s => s.trim()) : ["S", "M", "L", "XL"];
 
@@ -314,7 +457,6 @@
           document.getElementById('p-price').value = "";
           document.getElementById('p-desc').value = "";
           document.getElementById('p-file').value = "";
-          loadAdminProducts();
           alert("Product added successfully!");
         }).catch(err => {
           btn.disabled = false;
@@ -338,6 +480,144 @@
         const el = document.getElementById(`p-card-${id}`);
         if (el) el.remove();
       });
+    }
+
+    /* Support Chats Inbox */
+    function listenToSupportChatsInbox() {
+      db.collection('shop_support_chats')
+        .orderBy('last_updated', 'desc')
+        .onSnapshot(snap => {
+          const container = document.getElementById('admin-chats-list');
+          const unreadBadge = document.getElementById('inbox-unread-count');
+          const statsChatEl = document.getElementById('stat-chats-count');
+
+          statsChatEl.innerText = snap.size;
+
+          let unreadTotal = 0;
+          if (snap.empty) {
+            container.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">No support messages yet.</div>`;
+            unreadBadge.style.display = 'none';
+            return;
+          }
+
+          let html = "";
+          snap.forEach(doc => {
+            const chat = doc.data();
+            const chatId = doc.id;
+            const hasUnread = chat.unread_admin === true;
+            if (hasUnread) unreadTotal++;
+
+            let timeStr = "Now";
+            if (chat.last_updated && chat.last_updated.toDate) {
+              timeStr = chat.last_updated.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            html += `
+              <div class="inbox-user-card" onclick="openAdminChatDialog('${chatId}', '${escapeHtml(chat.user_name || 'Customer')}')">
+                <div class="inbox-user-left">
+                  <div class="inbox-avatar">👤</div>
+                  <div class="inbox-user-info">
+                    <div class="inbox-user-name">${escapeHtml(chat.user_name || 'Customer')}</div>
+                    <div class="inbox-last-msg">${escapeHtml(chat.last_message || 'New question')}</div>
+                  </div>
+                </div>
+                <div class="inbox-meta">
+                  <div class="inbox-time">${timeStr}</div>
+                  ${hasUnread ? `<div class="inbox-unread-dot"></div>` : ''}
+                </div>
+              </div>
+            `;
+          });
+
+          container.innerHTML = html;
+
+          if (unreadTotal > 0) {
+            unreadBadge.innerText = unreadTotal;
+            unreadBadge.style.display = 'inline-block';
+          } else {
+            unreadBadge.style.display = 'none';
+          }
+        });
+    }
+
+    function openAdminChatDialog(chatId, userName) {
+      activeChatId = chatId;
+      document.getElementById('active-chat-username').innerText = userName;
+      document.getElementById('fs-admin-chat-dialog').style.display = 'flex';
+
+      db.collection('shop_support_chats').doc(chatId).update({
+        unread_admin: false
+      });
+
+      const msgBox = document.getElementById('admin-chat-messages-box');
+      msgBox.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">Loading chat...</div>`;
+
+      if (activeChatUnsubscribe) activeChatUnsubscribe();
+
+      activeChatUnsubscribe = db.collection('shop_support_chats').doc(chatId).collection('messages')
+        .orderBy('created_at', 'asc')
+        .onSnapshot(snap => {
+          let html = "";
+          snap.forEach(mDoc => {
+            const m = mDoc.data();
+            const isAdmin = m.sender === 'admin';
+            const senderLabel = isAdmin ? 'You (Admin)' : (m.sender_name || 'Customer');
+
+            html += `
+              <div class="msg-bubble-wrap ${isAdmin ? 'admin' : 'user'}">
+                <div class="msg-sender-name">${senderLabel}</div>
+                <div class="msg-bubble ${isAdmin ? 'admin' : 'user'}">${escapeHtml(m.text)}</div>
+              </div>
+            `;
+          });
+          msgBox.innerHTML = html;
+          msgBox.scrollTop = msgBox.scrollHeight;
+        });
+    }
+
+    function closeAdminChatDialog() {
+      document.getElementById('fs-admin-chat-dialog').style.display = 'none';
+      if (activeChatUnsubscribe) activeChatUnsubscribe();
+      activeChatId = null;
+    }
+
+    function sendAdminReply() {
+      if (!activeChatId) return;
+      const input = document.getElementById('admin-reply-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = "";
+
+      const chatRef = db.collection('shop_support_chats').doc(activeChatId);
+
+      chatRef.collection('messages').add({
+        sender: 'admin',
+        sender_name: 'Shop Operator',
+        text: text,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        chatRef.update({
+          last_message: "Admin: " + text,
+          last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+          unread_user: true
+        });
+      });
+    }
+
+    function resolveCurrentChat() {
+      if (!activeChatId) return;
+      if (!confirm("Mark this conversation as resolved?")) return;
+      db.collection('shop_support_chats').doc(activeChatId).update({
+        status: 'closed'
+      }).then(() => {
+        closeAdminChatDialog();
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
   </script>
 </body>
