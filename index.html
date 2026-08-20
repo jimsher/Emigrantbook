@@ -5892,6 +5892,7 @@ function openProfileViewsFromHeader() {
   }
 }
     // აქ მთავრდება
+    
 
 // პუშ ნოთიფიკაციები
          (function() {
@@ -5952,6 +5953,25 @@ function openProfileViewsFromHeader() {
         }
     }
 })();   
+// აქ მთავრდება
+
+    
+// ბეიჯის (წითელი ციფრის) წაშლის ფუნქცია
+function clearBadge() {
+    if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge().catch(e => console.log('Badge clear error:', e));
+    }
+}
+
+// 1. როცა აპლიკაცია პირველად იხსნება
+window.addEventListener('DOMContentLoaded', clearBadge);
+
+// 2. როცა მომხმარებელი სხვა აპლიკაციიდან ბრუნდება EmigrantBook-ში
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        clearBadge();
+    }
+});
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
