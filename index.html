@@ -2174,7 +2174,7 @@ video::-webkit-media-controls-play-button {
       lotteryCountdownInterval = setInterval(updateCountdown, 1000);
     }
 
-auth.onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
@@ -2224,14 +2224,12 @@ auth.onAuthStateChanged(function(user) {
     db.collection('profiles').doc(user.uid).get().then(function(doc) {
       var finalName = user.email;
       var avatarUrl = null;
-
       if (doc.exists) {
         userProfile = doc.data();
         cachedProfiles[user.uid] = userProfile;
         cachedOnlineStates[user.uid] = true;
         finalName = userProfile.full_name || user.email;
-        // ფოტოს წამოღება ბაზის ყველა შესაძლო ველიდან
-        avatarUrl = userProfile.avatar_url || userProfile.photo || userProfile.avatar || null;
+        avatarUrl = userProfile.avatar_url || null;
         
         if (userProfile.language) {
           currentLang = userProfile.language;
@@ -2239,21 +2237,15 @@ auth.onAuthStateChanged(function(user) {
         }
       }
         
-      // 1. ჰედერისა და პროფილის ავატარების ჩასმა
       renderAvatar('header-avatar-btn', avatarUrl, finalName, user.uid);
       renderAvatar('profile-big-avatar', avatarUrl, finalName, user.uid);
         
-      // 2. სთორის ბარათზე ავატარის გარანტირებული გამოჩენა
       var myStoryBg = document.getElementById('my-story-bg-avatar');
       if (myStoryBg) {
         if (avatarUrl) {
-          myStoryBg.style.backgroundImage = "url('" + avatarUrl + "')";
-          myStoryBg.style.backgroundSize = "cover";
-          myStoryBg.style.backgroundPosition = "center";
-          myStoryBg.innerHTML = "";
+          myStoryBg.style.backgroundImage = `url('${avatarUrl}')`;
         } else {
-          myStoryBg.style.backgroundImage = "none";
-          myStoryBg.style.backgroundColor = "#dcae36";
+          myStoryBg.style.backgroundColor = '#dcae36';
           myStoryBg.innerHTML = `<div style="color:#111111; font-size:40px; font-weight:bold; display:flex; align-items:center; justify-content:center; height:100%;">${finalName.charAt(0).toUpperCase()}</div>`;
         }
       }
@@ -2279,9 +2271,6 @@ auth.onAuthStateChanged(function(user) {
       subscribeTotalUsersCount();
       subscribeActiveLivesForFeed();
       
-      hidePreloader();
-    }).catch(function(err) {
-      console.error("Profile load error:", err);
       hidePreloader();
     });
   } else {
