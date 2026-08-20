@@ -5962,6 +5962,55 @@ function openProfileViewsFromHeader() {
         });
     });
 })();
+
+  // აქ იწყება
+    // გლობალური Push-გამგზავნი ყველა მოვლენისთვის
+async function sendGlobalPush({ targetUserIds, title, body, type, targetUrl }) {
+    if (!targetUserIds || targetUserIds.length === 0) return;
+
+    // თუ გადაეცა ერთი ID, გადავაქციოთ მასივად
+    const uids = Array.isArray(targetUserIds) ? targetUserIds : [targetUserIds];
+
+    try {
+        // 1. ვიღებთ მიმღები მომხმარებლების FCM ტოკენებს profiles ბაზიდან
+        const tokens = [];
+        for (let uid of uids) {
+            if (uid === currentUser.uid) continue; // საკუთარ თავს არ გაუგზავნოს
+            const userDoc = await db.collection('profiles').doc(uid).get();
+            if (userDoc.exists && userDoc.data().fcm_token) {
+                tokens.push(userDoc.data().fcm_token);
+            }
+        }
+
+        if (tokens.length === 0) return;
+
+        // 2. ვუგზავნით სიგნალს თითოეულ ტოკენს
+        for (let token of tokens) {
+            fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'key=AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4' // შენი Firebase Server Key
+                },
+                body: JSON.stringify({
+                    to: token,
+                    notification: {
+                        title: title || 'EmigrantBook',
+                        body: body,
+                        icon: '/logo1.png'
+                    },
+                    data: {
+                        type: type || 'general',
+                        unread_count: '1',
+                        url: targetUrl || '/'
+                    }
+                })
+            }).catch(e => console.error('Push error:', e));
+        }
+    } catch (err) {
+        console.error('Global Push dispatch error:', err);
+    }
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
