@@ -5873,7 +5873,8 @@ function openProfileViewsFromHeader() {
     
 
 // პუშ ნოთიფიკაციები
-      (function() {
+  // პუშ ნოთიფიკაციები
+(function() {
     const messaging = firebase.messaging();
 
     // 1. ბეიჯის გასუფთავება აპლიკაციაში შესვლისას
@@ -5887,20 +5888,35 @@ function openProfileViewsFromHeader() {
         if (document.visibilityState === 'visible') clearBadge();
     });
 
-    // 2. Service Worker-ის მიბმა და ტოკენის შემოწმება
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/firebase-messaging-sw.js').then((reg) => {
-            messaging.useServiceWorker(reg);
-            
-            if (Notification.permission === 'granted') {
-                messaging.getToken().then(token => {
-                    if (token) console.log('FCM Token:', token);
-                }).catch(() => {});
+    // 2. ტოკენის აღება და Firestore-ში (profiles) შენახვა
+    async function saveTokenToFirestore() {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            messaging.useServiceWorker(registration);
+            const currentToken = await messaging.getToken();
+
+            if (currentToken && currentUser) {
+                console.log('FCM ტოკენი მიღებულია:', currentToken);
+                await db.collection('profiles').doc(currentUser.uid).set({
+                    fcm_token: currentToken
+                }, { merge: true });
+                console.log('FCM Token შენახულია profiles ბაზაში!');
             }
-        });
+        } catch (err) {
+            console.error('FCM Token შეცდომა:', err);
+        }
     }
 
-    // 3. ბანერის ჩვენება და დაჭერის დამუშავება
+    // 3. Service Worker-ის რეგისტრაცია
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js').then((reg) => {
+            if (Notification.permission === 'granted') {
+                saveTokenToFirestore();
+            }
+        }).catch(err => console.error('SW Error:', err));
+    }
+
+    // 4. ბანერის მართვა
     const banner = document.getElementById('eb-push-banner');
     const acceptBtn = document.getElementById('eb-push-accept');
     const dismissBtn = document.getElementById('eb-push-dismiss');
@@ -5924,16 +5940,15 @@ function openProfileViewsFromHeader() {
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    const token = await messaging.getToken();
-                    if (token) console.log('FCM Token:', token);
+                    await saveTokenToFirestore();
                 }
             } catch (e) {
-                console.error(e);
+                console.error('Permission error:', e);
             }
         });
     }
 
-    // 4. შეტყობინების მიღება როცა ეკრანი გახსნილია
+    // 5. შეტყობინების ჩვენება, როცა აპლიკაცია გახსნილია
     messaging.onMessage((payload) => {
         const title = payload.notification ? payload.notification.title : 'EmigrantBook';
         const body = payload.notification ? payload.notification.body : 'ახალი შეტყობინება';
@@ -5946,8 +5961,7 @@ function openProfileViewsFromHeader() {
             });
         });
     });
-})();   
-        
+})();
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
