@@ -5882,83 +5882,81 @@ function openProfileViewsFromHeader() {
     
 
 // პუშ ნოთიფიკაციები
-         (function() {
-    // 1. ვამოწმებთ აქვს თუ არა ბრაუზერს მხარდაჭერა
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+      (function() {
+    const messaging = firebase.messaging();
 
+    // 1. ბეიჯის გასუფთავება აპლიკაციაში შესვლისას
+    function clearBadge() {
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(() => {});
+        }
+    }
+    clearBadge();
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') clearBadge();
+    });
+
+    // 2. Service Worker-ის მიბმა და ტოკენის შემოწმება
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js').then((reg) => {
+            messaging.useServiceWorker(reg);
+            
+            if (Notification.permission === 'granted') {
+                messaging.getToken().then(token => {
+                    if (token) console.log('FCM Token:', token);
+                }).catch(() => {});
+            }
+        });
+    }
+
+    // 3. ბანერის ჩვენება და დაჭერის დამუშავება
     const banner = document.getElementById('eb-push-banner');
     const acceptBtn = document.getElementById('eb-push-accept');
     const dismissBtn = document.getElementById('eb-push-dismiss');
 
-    // 2. თუ უკვე მიცემულია ნებართვა -> ჩუმად ვარეგისტრირებთ ფონში
-    if (Notification.permission === 'granted') {
-        registerSilentPush();
-        return;
-    }
-
-    // 3. თუ მომხმარებელს არც უარი უთქვამს და არც თანხმობა -> ვაჩვენებთ ბანერს 2 წამში
-    if (Notification.permission === 'default' && !sessionStorage.getItem('eb_push_dismissed')) {
+    if ('Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('eb_push_dismissed')) {
         setTimeout(() => {
-            banner.style.display = 'block';
+            if (banner) banner.style.display = 'block';
         }, 2000);
     }
 
-    // მოგვიანებით ღილაკი
-    dismissBtn.addEventListener('click', () => {
-        banner.style.display = 'none';
-        sessionStorage.setItem('eb_push_dismissed', 'true');
-    });
-
-    // ჩართვის ღილაკი
-    acceptBtn.addEventListener('click', async () => {
-        banner.style.display = 'none';
-        
-        try {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                registerSilentPush();
-            }
-        } catch (e) {
-            console.error('Push error:', e);
-        }
-    });
-
-    // ფონური რეგისტრაცია და ტოკენის აღება
-    async function registerSilentPush() {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            const messaging = firebase.messaging();
-            messaging.useServiceWorker(registration);
-            
-            const token = await messaging.getToken();
-            if (token) {
-                console.log('EmigrantBook FCM Token:', token);
-                // აქ ტოკენი მზადაა Firebase-დან შეტყობინებების მისაღებად
-            }
-        } catch (err) {
-            console.error('Token fetch failed:', err);
-        }
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            banner.style.display = 'none';
+            sessionStorage.setItem('eb_push_dismissed', 'true');
+        });
     }
+
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', async () => {
+            banner.style.display = 'none';
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    const token = await messaging.getToken();
+                    if (token) console.log('FCM Token:', token);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    }
+
+    // 4. შეტყობინების მიღება როცა ეკრანი გახსნილია
+    messaging.onMessage((payload) => {
+        const title = payload.notification ? payload.notification.title : 'EmigrantBook';
+        const body = payload.notification ? payload.notification.body : 'ახალი შეტყობინება';
+        navigator.serviceWorker.ready.then((reg) => {
+            reg.showNotification(title, {
+                body: body,
+                icon: '/logo1.png',
+                badge: '/logo1.png',
+                data: { url: (payload.data && payload.data.url) ? payload.data.url : '/' }
+            });
+        });
+    });
 })();   
-// აქ მთავრდება
-
-    
-// ბეიჯის (წითელი ციფრის) წაშლის ფუნქცია
-function clearBadge() {
-    if ('clearAppBadge' in navigator) {
-        navigator.clearAppBadge().catch(e => console.log('Badge clear error:', e));
-    }
-}
-
-// 1. როცა აპლიკაცია პირველად იხსნება
-window.addEventListener('DOMContentLoaded', clearBadge);
-
-// 2. როცა მომხმარებელი სხვა აპლიკაციიდან ბრუნდება EmigrantBook-ში
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        clearBadge();
-    }
-});
+        
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
