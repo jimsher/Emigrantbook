@@ -2420,7 +2420,6 @@
       handleInputTyping();
       hideEmojiPicker();
 
-      
       const myUid = auth.currentUser.uid;
       const chatId = getChatId(myUid, currentActiveChatUid);
 
@@ -2429,6 +2428,9 @@
         text: sendText,
         read: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        // აქ ხდება პუშ შეტყობინების გაგზავნა მეორე ადამიანის ტელეფონზე
+        sendMessengerPush(currentActiveChatUid, sendText);
       });
     }
 
@@ -3046,6 +3048,51 @@
     }
 
     applyTranslations();
+
+
+
+
+
+    // ერთიანი მესენჯერის პუშ ფუნქცია
+async function sendMessengerPush(receiverUid, messageText) {
+    if (!auth.currentUser || !receiverUid) return;
+    const senderUid = auth.currentUser.uid;
+
+    try {
+        // წამოვოღოთ მიმღების ტოკენი profiles კოლექციიდან
+        const receiverDoc = await db.collection('profiles').doc(receiverUid).get();
+        if (!receiverDoc.exists || !receiverDoc.data().fcm_token) return;
+        const recipientToken = receiverDoc.data().fcm_token;
+
+        // წამოვოღოთ გამგზავნის სახელი
+        const senderDoc = await db.collection('profiles').doc(senderUid).get();
+        const senderName = senderDoc.exists ? (senderDoc.data().full_name || 'მეგობარი') : 'EmigrantBook';
+
+        // გავაგზავნოთ მოთხოვნა Firebase Cloud Messaging-ის API-ზე
+        await fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'key=AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4'
+            },
+            body: JSON.stringify({
+                to: recipientToken,
+                notification: {
+                    title: senderName,
+                    body: messageText,
+                    icon: '/logo1.png'
+                },
+                data: {
+                    type: 'message',
+                    unread_count: '1',
+                    url: '/messenger.html?user=' + senderUid
+                }
+            })
+        });
+    } catch (err) {
+        console.error("Messenger push error:", err);
+    }
+}
   </script>
 </body>
 </html>
