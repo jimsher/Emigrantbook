@@ -259,6 +259,14 @@ video::-webkit-media-controls-play-button {
   
 </head>
 <body>
+<!-- შემოწმების ღილაკი მობილურისთვის -->
+<div style="text-align: center; margin: 20px;">
+    <button id="enable-push-btn" style="padding: 12px 20px; background: #007bff; color: #fff; border: none; border-radius: 8px; font-weight: bold;">
+        🔔 Push შეტყობინებების ჩართვა
+    </button>
+</div>
+
+  
 
     <!-- 1. Technical Maintenance Screen -->
     <div id="maintenance-overlay">
@@ -5863,6 +5871,18 @@ function openProfileViewsFromHeader() {
   }
 }
     // აქ მღავრდევა
+
+
+     type="module">
+    import { requestNotificationPermission } from './js/firebase-init.js';
+
+    document.getElementById('enable-push-btn').addEventListener('click', async () => {
+        const token = await requestNotificationPermission();
+        if (token) {
+            alert('✅ ნოთიფიკაციები წარმატებით ჩაირთო!');
+        }
+    });
+
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
