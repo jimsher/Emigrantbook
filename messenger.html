@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
 
   <style>
     * {
@@ -310,7 +311,7 @@
     }
 
     /* ----------------------------------------------------
-        1.5. ახალი: სტორიების სრული გვერდი (STORIES SCREEN)
+        1.5. სტორიების სრული გვერდი (STORIES SCREEN)
     ------------------------------------------------------- */
     #stories-screen {
       display: none;
@@ -437,7 +438,7 @@
     }
 
     /* ----------------------------------------------------
-        1.8. ახალი: შეტყობინებების ეკრანი (NOTIFICATIONS SCREEN)
+        1.8. შეტყობინებების ეკრანი (NOTIFICATIONS SCREEN)
     ------------------------------------------------------- */
     #notifications-screen {
       display: none;
@@ -821,7 +822,7 @@
       }
     }
 
-    /* Messenger Call Bubble Style (MISSED & FINISHED CALLS) */
+    /* Messenger Call Bubble Style */
     .msg-bubble.call-card-bubble {
       background: rgba(255, 255, 255, 0.08) !important;
       color: #ffffff !important;
@@ -882,7 +883,7 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
-    /* მხოლოდ სმაილების დიდი ზომა (Messenger Style) */
+    /* მხოლოდ სმაილების დიდი ზომა */
     .msg-bubble.big-emoji {
       font-size: 38px !important;
       background: transparent !important;
@@ -1005,7 +1006,7 @@
       transform: scale(1.15);
     }
 
-    /* DELETE MESSAGE MODAL (MESSENGER STYLE) */
+    /* DELETE MESSAGE MODAL */
     .delete-modal-overlay {
       display: none;
       position: fixed;
@@ -1335,7 +1336,6 @@
             </div>
             <span class="story-name" id="lbl-create-story">სტორის დამატება</span>
           </div>
-          <!-- დინამიურად ჩაიტვირთება მეგობრების სტორები -->
         </div>
       </div>
 
@@ -1344,7 +1344,7 @@
       </div>
     </div>
 
-    <!-- ================= 1.5. ახალი: სტორიების ცალკე ეკრანი ================= -->
+    <!-- ================= 1.5. სტორიების ცალკე ეკრანი ================= -->
     <div id="stories-screen">
       <div class="stories-header-top">
         <h1 id="lbl-stories-page-title">სტორიები</h1>
@@ -1357,17 +1357,15 @@
 
       <div class="stories-grid-container">
         <div class="stories-grid" id="stories-grid-target">
-          <!-- Create story card -->
           <div class="story-card story-card-create" onclick="triggerStoryUpload()">
             <div class="create-card-btn">+</div>
             <span class="story-card-name" id="lbl-create-story-card">სტორის დამატება</span>
           </div>
-          <!-- დინამიურად ჩაიტვირთება სტორების ბარათები -->
         </div>
       </div>
     </div>
 
-    <!-- ================= 1.8. ახალი: შეტყობინებების ეკრანი ================= -->
+    <!-- ================= 1.8. შეტყობინებების ეკრანი ================= -->
     <div id="notifications-screen">
       <div class="notifications-header-top">
         <h1 id="lbl-notifs-page-title">შეტყობინებები</h1>
@@ -1380,7 +1378,7 @@
 
     <input type="file" id="story-file-input" accept="image/*" style="display:none;" onchange="uploadStoryFile(event)">
 
-    <!-- ================= FOOTER NAV (საერთო ნავბარი) ================= -->
+    <!-- ================= FOOTER NAV ================= -->
     <div class="footer-nav" id="main-footer-nav">
       <button class="nav-tab active" id="nav-tab-chats" onclick="switchTab('chats')">
         <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -1439,7 +1437,7 @@
 
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;"></div>
 
-        <!-- Realtime Messenger 3 Dots Typing Indicator Row -->
+        <!-- Typing Indicator Row -->
         <div id="typing-indicator-row" class="typing-indicator-row">
           <img class="msg-bubble-avatar" id="typing-avatar" src="" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
           <div class="typing-indicator-bubble">
@@ -1490,7 +1488,7 @@
 
   </div>
 
-  <!-- DELETE MESSAGE MODAL (MESSENGER STYLE) -->
+  <!-- DELETE MESSAGE MODAL -->
   <div id="delete-msg-modal" class="delete-modal-overlay" onclick="closeDeleteModal(event)">
     <div class="delete-modal-content" onclick="event.stopPropagation()">
       <h3>შეტყობინების წაშლა</h3>
@@ -1501,7 +1499,7 @@
     </div>
   </div>
 
-  <!-- FACEBOOK STYLE TOP FLOATING INCOMING CALL BANNER -->
+  <!-- INCOMING CALL BANNER -->
   <div id="incoming-call-modal">
     <div class="incoming-banner-left">
       <div class="call-avatar-pulse">
@@ -1579,7 +1577,7 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის (GitHub Raw Links) ---
+    // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
     const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
     const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
 
@@ -1588,7 +1586,7 @@
     klaviaturaAudio.loop = true;
     klaviaturaAudio.volume = 0.8;
 
-    // --- აუდიო ფაილი შეტყობინების წაკითხვისთვის (SEEN SOUND - DIRECT RAW LINK) ---
+    // --- აუდიო ფაილი შეტყობინების წაკითხვისთვის ---
     const seenAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/seen.mp3");
     seenAudio.volume = 0.9;
     seenAudio.load();
@@ -1742,14 +1740,10 @@
     var threadProfileUnsubscribe = null;
     var storyTimer = null;
 
-    // Realtime typing variables
     var typingTimer = null;
     var unsubscribeTyping = null;
-
-    // Selected message for deletion
     var currentSelectedMsgId = null;
 
-    // TAB SWITCHING
     function switchTab(tabName) {
       currentActiveTab = tabName;
       document.getElementById('chats-screen').style.display = 'none';
@@ -1782,7 +1776,6 @@
       return u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
     }
 
-    // ფოტოს ამოღების ლოგიკა
     function extractPhotoUrl(uData) {
       if (!uData) return "";
       let photoCandidate = uData.photo || uData.photoURL || uData.avatar || uData.profile_pic || uData.image || uData.profilePic || uData.avatarUrl || uData.avatar_url || uData.userImg || uData.userPhoto || uData.cover;
@@ -1800,7 +1793,6 @@
       return "";
     }
 
-    // სახელის ამოღების ლოგიკა
     function extractName(uData, uid) {
       if (!uData) return "User_" + uid.substring(0, 5);
       let displayName = uData.full_name || uData.name || uData.username || uData.displayName || uData.first_name || uData.fullName;
@@ -1841,7 +1833,6 @@
       }
     }
 
-    // --- ONLINE / OFFLINE REALTIME STATUS TRACKER ---
     function setUserOnlineStatus(uid, isOnline) {
       db.collection('profiles').doc(uid).update({
         status: isOnline ? 'online' : 'offline',
@@ -1851,10 +1842,30 @@
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        // Set Online on Auth
         setUserOnlineStatus(user.uid, true);
 
-        // Window Close / Unload -> Offline
+        // ================= VAPID KEY და FCM ტოკენის რეგისტრაცია =================
+        if ('Notification' in window && 'serviceWorker' in navigator) {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              navigator.serviceWorker.ready.then(registration => {
+                const messaging = firebase.messaging();
+                messaging.getToken({
+                  serviceWorkerRegistration: registration,
+                  vapidKey: 'BLMMQbu7jZKtaV3GDt61acdvirnDxvfePE7Y7-BgF541FtLTeA9IuJSqHVkOfw0p_Yuglp8Kp8GRtac3IuD_Cbo'
+                }).then(currentToken => {
+                  if (currentToken) {
+                    db.collection('profiles').doc(user.uid).set({
+                      fcm_token: currentToken
+                    }, { merge: true });
+                  }
+                }).catch(err => console.log('FCM Token Error:', err));
+              });
+            }
+          });
+        }
+        // =========================================================================
+
         window.addEventListener('beforeunload', function() {
           setUserOnlineStatus(user.uid, false);
         });
@@ -1951,7 +1962,6 @@
           .onSnapshot(function(snapshot) {
             loadedCount++;
 
-            // FILTER OUT EMPTY CHATS (გამოჩნდება მხოლოდ ის ჩატები, სადაც რეალურად არის მესიჯი)
             if (!snapshot.empty) {
               const lastMsgDoc = snapshot.docs[0].data();
               let msgText = lastMsgDoc.text || "📷 Photo";
@@ -1968,7 +1978,6 @@
               user.lastMsgTimeStr = timeStr;
               user.isUnread = isUnread;
 
-              // Save or update in validChatsList
               let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
               if (existingIdx > -1) {
                 validChatsList[existingIdx] = user;
@@ -1976,7 +1985,6 @@
                 validChatsList.push(user);
               }
             } else {
-              // If empty, remove from list
               validChatsList = validChatsList.filter(u => u.uid !== user.uid);
             }
 
@@ -1986,7 +1994,6 @@
     }
 
     function redrawSortedChatsList(validUsers, currentUid, listTarget) {
-      // Sort users by lastMsgTimeMs descending (newest chat on top)
       let sortedUsers = [...validUsers].sort((a, b) => (b.lastMsgTimeMs || 0) - (a.lastMsgTimeMs || 0));
 
       listTarget.innerHTML = "";
@@ -2030,7 +2037,6 @@
       });
     }
 
-    // 2. ჩატის გახსნა, მიმოწერა და წაუკითხავების "წაკითხულად" მონიშვნა
     function openChat(username, avatarUrl, targetUid) {
       currentActiveChatUid = targetUid;
       const finalAvatar = avatarUrl ? avatarUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=2ed573&color=fff`;
@@ -2064,7 +2070,6 @@
 
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
 
-      // REALTIME ONLINE / OFFLINE STATUS IN CHAT THREAD HEADER
       threadProfileUnsubscribe = db.collection('profiles').doc(targetUid).onSnapshot(function(docSnap) {
         const statusEl = document.getElementById('active-thread-status');
         var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
@@ -2111,7 +2116,6 @@
       }
     }
 
-    // LONG PRESS DELETION LISTENER ATTACHMENT
     function attachLongPressListener(element, msgId, isMine) {
       let pressTimer = null;
 
@@ -2149,7 +2153,6 @@
         .orderBy('createdAt', 'asc')
         .onSnapshot(function(snapshot) {
           
-          // REALTIME SEEN SOUND TRIGGER ON MODIFIED STATUS
           snapshot.docChanges().forEach(change => {
             if (change.type === "modified") {
               const msgData = change.doc.data();
@@ -2163,7 +2166,6 @@
           let lastMsgDate = null;
           let lastSeenOutgoingMsgId = null;
 
-          // Auto mark received unread messages as read
           snapshot.forEach(docSnap => {
             const msgData = docSnap.data();
             if (msgData.senderId !== myUid && msgData.read === false) {
@@ -2232,7 +2234,6 @@
             attachLongPressListener(msgRow, msgId, isMine);
             msgBlock.appendChild(msgRow);
 
-            // RENDER SEEN READ AVATAR INDICATOR UNDER LAST SEEN OUTGOING MESSAGE
             if (isMine && msgId === lastSeenOutgoingMsgId) {
               const seenDiv = document.createElement('div');
               seenDiv.className = 'seen-indicator-row';
@@ -2246,7 +2247,6 @@
         });
     }
 
-    // --- DELETE MESSAGE FUNCTIONS ---
     function openDeleteModal(msgId, isMine) {
       currentSelectedMsgId = msgId;
       const modal = document.getElementById('delete-msg-modal');
@@ -2298,7 +2298,6 @@
       });
     }
 
-    // --- REALTIME TYPING INDICATOR LOGIC ---
     function sendTypingStatus(isTyping) {
       if (!currentActiveChatUid || !auth.currentUser) return;
       const myUid = auth.currentUser.uid;
@@ -2360,7 +2359,6 @@
         btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
         btn.dataset.mode = "send";
 
-        // Broadcast realtime typing state
         sendTypingStatus(true);
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => {
@@ -2429,12 +2427,10 @@
         read: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        // ახალი V1 პუშის გაგზავნა მიმღებთან
         sendModernPush(currentActiveChatUid, sendText);
       });
     }
 
-    // 3. STORIES - ატვირთვა და ნახვა
     function triggerStoryUpload() {
       document.getElementById('story-file-input').click();
     }
@@ -2583,7 +2579,6 @@
       document.getElementById('story-viewer-modal').style.display = 'none';
     }
 
-    // 4. NOTIFICATIONS LOGIC
     function fetchNotificationsOnce(currentUid) {
       const notifTarget = document.getElementById('notifications-list-target');
       if (!notifTarget) return;
@@ -2694,7 +2689,6 @@
       });
     }
 
-    // 5. WEBRTC VIDEO CALL LOGIC WITH GITHUB MP3 RINGTONES & CALL DURATION / MISSED CARDS
     const rtcServers = {
       iceServers: [
         { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
@@ -3049,13 +3043,11 @@
 
     applyTranslations();
 
-
-
-   // ახალი პუე ყლეობა
+    // V1 Push Dispatcher
     async function sendModernPush(recipientUid, messageText) {
-    if (!auth.currentUser) return;
+      if (!auth.currentUser) return;
 
-    try {
+      try {
         const userDoc = await db.collection('profiles').doc(recipientUid).get();
         if (!userDoc.exists || !userDoc.data().fcm_token) return;
         const recipientToken = userDoc.data().fcm_token;
@@ -3066,29 +3058,29 @@
         const accessToken = await auth.currentUser.getIdToken();
 
         await fetch(`https://fcm.googleapis.com/v1/projects/emigrantbook-4b7bd/messages:send`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${accessToken}`
-            },
-            body: JSON.stringify({
-                message: {
-                    token: recipientToken,
-                    notification: {
-                        title: senderName,
-                        body: messageText
-                    },
-                    data: {
-                        type: 'message',
-                        url: '/messenger.html?user=' + auth.currentUser.uid
-                    }
-                }
-            })
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({
+            message: {
+              token: recipientToken,
+              notification: {
+                title: senderName,
+                body: messageText
+              },
+              data: {
+                type: 'message',
+                url: '/messenger.html?user=' + auth.currentUser.uid
+              }
+            }
+          })
         });
-    } catch (err) {
+      } catch (err) {
         console.error("Modern push dispatch error:", err);
+      }
     }
-}
   </script>
 </body>
 </html>
