@@ -5984,24 +5984,34 @@ async function sendModernPush(recipientUid, messageText) {
   if (!auth.currentUser) return;
 
   try {
-    const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
     let senderName = 'EmigrantBook';
-    if (senderDoc.exists && senderDoc.data().full_name) {
-      senderName = senderDoc.data().full_name;
+    
+    // გამგზავნის სახელის ამოღება
+    if (typeof db !== 'undefined') {
+      const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
+      if (senderDoc.exists && senderDoc.data().full_name) {
+        senderName = senderDoc.data().full_name;
+      }
     }
 
     const payload = {
       app_id: "5b8f7b19-f368-418a-b87b-f7582d331fae",
+      target_channel: "push",
       include_aliases: {
         external_id: [recipientUid]
       },
-      target_channel: "push",
-      headings: { ka: senderName, en: senderName },
-      contents: { ka: messageText, en: messageText },
+      headings: {
+        en: senderName,
+        ka: senderName
+      },
+      contents: {
+        en: messageText,
+        ka: messageText
+      },
       url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
     };
 
-    await fetch("https://onesignal.com/api/v1/notifications", {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
@@ -6009,8 +6019,11 @@ async function sendModernPush(recipientUid, messageText) {
       },
       body: JSON.stringify(payload)
     });
+
+    const result = await response.json();
+    console.log("OneSignal გაგზავნის პასუხი:", result);
   } catch (err) {
-    console.error("OneSignal Error:", err);
+    console.error("OneSignal გაგზავნის შეცდომა:", err);
   }
 }
   </script>
