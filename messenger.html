@@ -12,6 +12,17 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js"></script>
 
+  <!-- OneSignal SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "5b8f7b19-f368-418a-b87b-f7582d331fae",
+      });
+    });
+  </script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -1844,27 +1855,11 @@
       if (user) {
         setUserOnlineStatus(user.uid, true);
 
-        // ================= VAPID KEY და FCM ტოკენის რეგისტრაცია =================
-        if ('Notification' in window && 'serviceWorker' in navigator) {
-          Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              navigator.serviceWorker.ready.then(registration => {
-                const messaging = firebase.messaging();
-                messaging.getToken({
-                  serviceWorkerRegistration: registration,
-                  vapidKey: 'BLMMQbu7jZKtaV3GDt61acdvirnDxvfePE7Y7-BgF541FtLTeA9IuJSqHVkOfw0p_Yuglp8Kp8GRtac3IuD_Cbo'
-                }).then(currentToken => {
-                  if (currentToken) {
-                    db.collection('profiles').doc(user.uid).set({
-                      fcm_token: currentToken
-                    }, { merge: true });
-                  }
-                }).catch(err => console.log('FCM Token Error:', err));
-              });
-            }
-          });
-        }
-        // =========================================================================
+        // OneSignal-ის მიბმა ავტორიზებულ მომხმარებელთან
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.login(user.uid);
+        });
 
         window.addEventListener('beforeunload', function() {
           setUserOnlineStatus(user.uid, false);
@@ -3043,42 +3038,45 @@
 
     applyTranslations();
 
-    // V1 Push Dispatcher
+    // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
     async function sendModernPush(recipientUid, messageText) {
       if (!auth.currentUser) return;
 
       try {
-        const userDoc = await db.collection('profiles').doc(recipientUid).get();
-        if (!userDoc.exists || !userDoc.data().fcm_token) return;
-        const recipientToken = userDoc.data().fcm_token;
-
         const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
-        const senderName = senderDoc.exists ? (senderDoc.data().full_name || 'მეგობარი') : 'EmigrantBook';
+        let senderName = 'EmigrantBook';
+        if (senderDoc.exists) {
+          const pData = senderDoc.data();
+          senderName = extractName(pData, auth.currentUser.uid);
+        }
 
-        const accessToken = await auth.currentUser.getIdToken();
+        const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
+        const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vzv4mz2abm4enhmpskzsyeqtwbx3a4n33clccezkigbl4hbkcsymizeka3o3lnnmbtwxqe4o3huynzy";
 
-        await fetch(`https://fcm.googleapis.com/v1/projects/emigrantbook-4b7bd/messages:send`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
+        const payload = {
+          app_id: ONE_SIGNAL_APP_ID,
+          include_aliases: {
+            external_id: [recipientUid]
           },
-          body: JSON.stringify({
-            message: {
-              token: recipientToken,
-              notification: {
-                title: senderName,
-                body: messageText
-              },
-              data: {
-                type: 'message',
-                url: '/messenger.html?user=' + auth.currentUser.uid
-              }
-            }
-          })
+          target_channel: "push",
+          headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
+          contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
+          url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
+          chrome_web_badge: "https://emigrantbook.com/icon-192.png",
+          ios_badgeType: "Increase",
+          ios_badgeCount: 1
+        };
+
+        await fetch("https://onesignal.com/api/v1/notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": `Key ${REST_API_KEY}`
+          },
+          body: JSON.stringify(payload)
         });
       } catch (err) {
-        console.error("Modern push dispatch error:", err);
+        console.error("OneSignal Push Dispatch Error:", err);
       }
     }
   </script>
