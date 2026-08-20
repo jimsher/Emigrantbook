@@ -5980,51 +5980,38 @@ function openProfileViewsFromHeader() {
 
   // აქ იწყება
     // გლობალური Push-გამგზავნი ყველა მოვლენისთვის
-async function sendGlobalPush({ targetUserIds, title, body, type, targetUrl }) {
-    if (!targetUserIds || targetUserIds.length === 0) return;
+async function sendModernPush(recipientUid, messageText) {
+  if (!auth.currentUser) return;
 
-    // თუ გადაეცა ერთი ID, გადავაქციოთ მასივად
-    const uids = Array.isArray(targetUserIds) ? targetUserIds : [targetUserIds];
-
-    try {
-        // 1. ვიღებთ მიმღები მომხმარებლების FCM ტოკენებს profiles ბაზიდან
-        const tokens = [];
-        for (let uid of uids) {
-            if (uid === currentUser.uid) continue; // საკუთარ თავს არ გაუგზავნოს
-            const userDoc = await db.collection('profiles').doc(uid).get();
-            if (userDoc.exists && userDoc.data().fcm_token) {
-                tokens.push(userDoc.data().fcm_token);
-            }
-        }
-
-        if (tokens.length === 0) return;
-
-        // 2. ვუგზავნით სიგნალს თითოეულ ტოკენს
-        for (let token of tokens) {
-            fetch('https://fcm.googleapis.com/fcm/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'key=AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4' // შენი Firebase Server Key
-                },
-                body: JSON.stringify({
-                    to: token,
-                    notification: {
-                        title: title || 'EmigrantBook',
-                        body: body,
-                        icon: '/logo1.png'
-                    },
-                    data: {
-                        type: type || 'general',
-                        unread_count: '1',
-                        url: targetUrl || '/'
-                    }
-                })
-            }).catch(e => console.error('Push error:', e));
-        }
-    } catch (err) {
-        console.error('Global Push dispatch error:', err);
+  try {
+    const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
+    let senderName = 'EmigrantBook';
+    if (senderDoc.exists && senderDoc.data().full_name) {
+      senderName = senderDoc.data().full_name;
     }
+
+    const payload = {
+      app_id: "5b8f7b19-f368-418a-b87b-f7582d331fae",
+      include_aliases: {
+        external_id: [recipientUid]
+      },
+      target_channel: "push",
+      headings: { ka: senderName, en: senderName },
+      contents: { ka: messageText, en: messageText },
+      url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
+    };
+
+    await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": "Key os_v2_app_lohxwgptnbayvod365mc2my7vzv4mz2abm4enhmpskzsyeqtwbx3a4n33clccezkigbl4hbkcsymizeka3o3lnnmbtwxqe4o3huynzy"
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("OneSignal Error:", err);
+  }
 }
   </script>
 
