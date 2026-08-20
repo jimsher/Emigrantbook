@@ -259,6 +259,36 @@ video::-webkit-media-controls-play-button {
   
 </head>
 <body>
+<!-- შეტყობინებების ბანერის ვიზუალი (მობილურზე მორგებული) -->
+<div id="eb-push-banner" style="
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 15px;
+    right: 15px;
+    background: #1e293b;
+    color: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    z-index: 999999;
+    font-family: sans-serif;
+">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <img src="/logo1.png" alt="Logo" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover;">
+        <div>
+            <div style="font-weight: bold; font-size: 15px;">EmigrantBook</div>
+            <div style="font-size: 13px; color: #94a3b8;">ჩართეთ შეტყობინებები, რომ არ გამოგრჩეთ სიახლეები</div>
+        </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button id="eb-push-accept" style="flex: 2; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">ჩართვა</button>
+        <button id="eb-push-dismiss" style="flex: 1; padding: 10px; background: #334155; color: #cbd5e1; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">მოგვიანებით</button>
+    </div>
+</div>
+
+
+  
     <!-- 1. Technical Maintenance Screen -->
     <div id="maintenance-overlay">
       <div style="font-size: 60px; margin-bottom: 20px;">🛠️</div>
@@ -5862,6 +5892,66 @@ function openProfileViewsFromHeader() {
   }
 }
     // აქ მთავრდება
+
+// პუშ ნოთიფიკაციები
+         (function() {
+    // 1. ვამოწმებთ აქვს თუ არა ბრაუზერს მხარდაჭერა
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+    const banner = document.getElementById('eb-push-banner');
+    const acceptBtn = document.getElementById('eb-push-accept');
+    const dismissBtn = document.getElementById('eb-push-dismiss');
+
+    // 2. თუ უკვე მიცემულია ნებართვა -> ჩუმად ვარეგისტრირებთ ფონში
+    if (Notification.permission === 'granted') {
+        registerSilentPush();
+        return;
+    }
+
+    // 3. თუ მომხმარებელს არც უარი უთქვამს და არც თანხმობა -> ვაჩვენებთ ბანერს 2 წამში
+    if (Notification.permission === 'default' && !sessionStorage.getItem('eb_push_dismissed')) {
+        setTimeout(() => {
+            banner.style.display = 'block';
+        }, 2000);
+    }
+
+    // მოგვიანებით ღილაკი
+    dismissBtn.addEventListener('click', () => {
+        banner.style.display = 'none';
+        sessionStorage.setItem('eb_push_dismissed', 'true');
+    });
+
+    // ჩართვის ღილაკი
+    acceptBtn.addEventListener('click', async () => {
+        banner.style.display = 'none';
+        
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                registerSilentPush();
+            }
+        } catch (e) {
+            console.error('Push error:', e);
+        }
+    });
+
+    // ფონური რეგისტრაცია და ტოკენის აღება
+    async function registerSilentPush() {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const messaging = firebase.messaging();
+            messaging.useServiceWorker(registration);
+            
+            const token = await messaging.getToken();
+            if (token) {
+                console.log('EmigrantBook FCM Token:', token);
+                // აქ ტოკენი მზადაა Firebase-დან შეტყობინებების მისაღებად
+            }
+        } catch (err) {
+            console.error('Token fetch failed:', err);
+        }
+    }
+})();   
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
