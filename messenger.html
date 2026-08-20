@@ -2420,6 +2420,7 @@
       handleInputTyping();
       hideEmojiPicker();
 
+      
       const myUid = auth.currentUser.uid;
       const chatId = getChatId(myUid, currentActiveChatUid);
 
@@ -2428,20 +2429,8 @@
         text: sendText,
         read: false,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        // წამოვოღოთ გამგზავნის სახელი და გავზავნოთ პუში
-        db.collection('profiles').doc(myUid).get().then(doc => {
-          const senderName = doc.exists ? (doc.data().full_name || auth.currentUser.email) : 'EmigrantBook';
-          
-          sendGlobalPush({
-            targetUserIds: [currentActiveChatUid],
-            title: senderName,
-            body: sendText,
-            type: 'message',
-            targetUrl: '/messenger.html?user=' + myUid
-          });
-        }
-      
+      });
+    }
 
     // 3. STORIES - ატვირთვა და ნახვა
     function triggerStoryUpload() {
