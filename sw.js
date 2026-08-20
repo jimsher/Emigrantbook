@@ -1,5 +1,5 @@
-// ქეშის ვერსია - ვცვლით v3-ზე, რომ ბრაუზერმა ძველი ქეში წაშალოს
-const CACHE_NAME = 'emigrantbook-cache-v3';
+// ქეშის ვერსია - განახლებულია v4-ზე, რომ ბრაუზერმა მომენტალურად განაახლოს SW
+const CACHE_NAME = 'emigrantbook-cache-v4';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -11,7 +11,7 @@ const ASSETS_TO_CACHE = [
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
-// განახლებული Firebase კონფიგურაცია (emigrantbook-4b7bd)
+// Firebase კონფიგურაცია (emigrantbook-4b7bd)
 firebase.initializeApp({
     apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
     authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -24,65 +24,96 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 1. Firebase ფონური შეტყობინებები
-messaging.onBackgroundMessage(function(payload) {
-    console.log('Firebase ფონური მესიჯი:', payload);
-
-    if (self.setAppBadge) {
-        self.setAppBadge(1).catch(e => {});
+// დამხმარე ფუნქცია: აპლიკაციის აიკონზე წითელი ციფრის (ბეიჯის) დაყენება
+function updateAppBadge(count) {
+    const badgeNumber = parseInt(count) || 1;
+    if (navigator.setAppBadge) {
+        navigator.setAppBadge(badgeNumber).catch(() => {});
+    } else if (self.setAppBadge) {
+        self.setAppBadge(badgeNumber).catch(() => {});
     }
+}
 
-    const notificationTitle = payload.notification ? payload.notification.title : 'Emigrantbook';
+// 1. Firebase ფონური შეტყობინებები (მესიჯები, პოსტები, ჯგუფები)
+messaging.onBackgroundMessage(function(payload) {
+    console.log('Firebase შემოსული მესიჯი:', payload);
+
+    const data = payload.data || {};
+    const notification = payload.notification || {};
+
+    // ბეიჯის რაოდენობის აღება (თუ სერვერი აგზავნის unread_count-ს)
+    const unreadCount = data.unread_count || data.badge || 1;
+    updateAppBadge(unreadCount);
+
+    const notificationTitle = notification.title || data.title || 'EmigrantBook';
+    const notificationBody = notification.body || data.body || 'ახალი შეტყობინება!';
+
+    // ტეგის დინამიკური მინიჭება (რომ მესიჯმა პოსტის ნოთიფიკაცია არ წაშალოს)
+    const notificationTag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
+
     const notificationOptions = {
-        body: payload.notification ? payload.notification.body : 'ახალი შეტყობინება',
+        body: notificationBody,
         icon: '/logo1.png',
         badge: '/logo1.png',
         vibrate: [200, 100, 200],
-        tag: 'emigrantbook-msg', 
+        tag: notificationTag,
         renotify: true,
-        data: { 
-            url: (payload.data && payload.data.url) ? payload.data.url : '/' 
+        data: {
+            url: data.url || '/'
         }
     };
+
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// 2. სტანდარტული Push
+// 2. სტანდარტული Web Push ივენთი
 self.addEventListener('push', function(event) {
-    if (self.setAppBadge) {
-        self.setAppBadge(1).catch(e => {});
-    }
-
-    let data = {};
+    let payload = {};
     if (event.data) {
         try {
-            data = event.data.json();
+            payload = event.data.json();
         } catch (e) {
-            data = { title: 'Emigrantbook', body: event.data.text() };
+            payload = { title: 'EmigrantBook', body: event.data.text() };
         }
     }
 
-    const title = data.title || (data.notification ? data.notification.title : 'Emigrantbook');
+    const data = payload.data || payload;
+    const notification = payload.notification || {};
+
+    const unreadCount = data.unread_count || data.badge || 1;
+    updateAppBadge(unreadCount);
+
+    const title = notification.title || data.title || 'EmigrantBook';
+    const body = notification.body || data.body || 'ახალი სიახლე EmigrantBook-ზე';
+    const targetUrl = data.url || (data.data && data.data.url) || '/';
+    const notificationTag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
+
     const options = {
-        body: data.body || (data.notification ? data.notification.body : ''),
+        body: body,
         icon: '/logo1.png',
         badge: '/logo1.png',
-        data: { url: data.url || (data.data && data.data.url) || '/' }
+        vibrate: [200, 100, 200],
+        tag: notificationTag,
+        renotify: true,
+        data: { url: targetUrl }
     };
 
     event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა
+// 3. ნოტიფიკაციაზე დაჭერის ლოგიკა (პირდაპირ იმ გვერდზე გადაყვანა)
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    
-    if (self.clearAppBadge) {
-        self.clearAppBadge().catch(e => {});
+
+    // ბეიჯის გასუფთავება
+    if (navigator.clearAppBadge) {
+        navigator.clearAppBadge().catch(() => {});
+    } else if (self.clearAppBadge) {
+        self.clearAppBadge().catch(() => {});
     }
 
     const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
-    
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
             for (let client of windowClients) {
@@ -95,7 +126,7 @@ self.addEventListener('notificationclick', function(event) {
     );
 });
 
-// 4. სერვის ვორკერის ინსტალაცია და ქეშირება
+// 4. სერვის ვორკერის ინსტალაცია
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
@@ -105,7 +136,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// 5. გააქტიურება და ძველი ქეშის წაშლა (წაშლის Impact-ის ძველ ქეშს)
+// 5. გააქტიურება და ძველი ქეშის (v3) წაშლა
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -120,7 +151,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// 6. ფაილების მიწოდება ქეშიდან
+// 6. ქეშიდან ფაილების მიწოდება
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
