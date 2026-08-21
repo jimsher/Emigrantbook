@@ -12,7 +12,8 @@ export default async function handler(req, res) {
   }
 
   const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
+  const RAW_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
+  const REST_API_KEY = RAW_KEY.trim();
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
@@ -22,36 +23,18 @@ export default async function handler(req, res) {
       ...bodyData
     };
 
-    // OneSignal-ის ვარიანტების ავტომატური გადარჩევა
-    const attempts = [
-      { url: "https://api.onesignal.com/notifications", auth: `Key ${REST_API_KEY}` },
-      { url: "https://api.onesignal.com/notifications", auth: `Bearer ${REST_API_KEY}` },
-      { url: "https://onesignal.com/api/v1/notifications", auth: `Key ${REST_API_KEY}` },
-      { url: "https://onesignal.com/api/v1/notifications", auth: `Basic ${REST_API_KEY}` }
-    ];
+    const response = await fetch("https://api.onesignal.com/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "accept": "application/json",
+        "Authorization": `Key ${REST_API_KEY}`
+      },
+      body: JSON.stringify(pushPayload)
+    });
 
-    let finalData = null;
-
-    for (const attempt of attempts) {
-      const response = await fetch(attempt.url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Authorization": attempt.auth
-        },
-        body: JSON.stringify(pushPayload)
-      });
-
-      const data = await response.json();
-      finalData = data;
-
-      // თუ ავტორიზაცია წარმატებით გაიარა (Access Denied აღარ არის), ვაბრუნებთ პასუხს
-      if (!data.errors || !JSON.stringify(data.errors).includes("Access denied")) {
-        return res.status(200).json(data);
-      }
-    }
-
-    return res.status(200).json(finalData);
+    const data = await response.json();
+    return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
