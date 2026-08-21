@@ -3047,48 +3047,47 @@
     applyTranslations();
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
-    // OneSignal Push Dispatcher — შეტყობინების გაგზავნა ადრესატთან
-async function sendModernPush(recipientUid, messageText) {
-  if (!auth.currentUser || !recipientUid) return;
+    async function sendModernPush(recipientUid, messageText) {
+      if (!auth.currentUser) return;
 
-  try {
-    const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
-    let senderName = 'EmigrantBook';
-    if (senderDoc.exists) {
-      const pData = senderDoc.data();
-      senderName = extractName(pData, auth.currentUser.uid);
+      try {
+        const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
+        let senderName = 'EmigrantBook';
+        if (senderDoc.exists) {
+          const pData = senderDoc.data();
+          senderName = extractName(pData, auth.currentUser.uid);
+        }
+
+        const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
+        const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vzv4mz2abm4enhmpskzsyeqtwbx3a4n33clccezkigbl4hbkcsymizeka3o3lnnmbtwxqe4o3huynzy";
+
+        const payload = {
+          app_id: ONE_SIGNAL_APP_ID,
+          include_external_user_ids: [recipientUid],
+          include_aliases: {
+            external_id: [recipientUid]
+          },
+          target_channel: "push",
+          headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
+          contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
+          url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
+        };
+
+        const res = await fetch("https://onesignal.com/api/v1/notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "Authorization": `Key ${REST_API_KEY}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        alert("პასუხი: " + JSON.stringify(data));
+      } catch (err) {
+        alert("გაგზავნის შეცდომა: " + err.message);
+      }
     }
-
-    const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-    const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vzv4mz2abm4enhmpskzsyeqtwbx3a4n33clccezkigbl4hbkcsymizeka3o3lnnmbtwxqe4o3huynzy";
-
-    const payload = {
-      app_id: ONE_SIGNAL_APP_ID,
-      include_external_user_ids: [recipientUid],
-      include_aliases: {
-        external_id: [recipientUid]
-      },
-      channel_for_external_user_ids: "push",
-      headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
-      contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
-      url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
-    };
-
-    const res = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Key ${REST_API_KEY}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    console.log("OneSignal გაგზავნის შედეგი:", data);
-  } catch (err) {
-    console.error("OneSignal Push Dispatch Error:", err);
-  }
-}
   </script>
 </body>
 </html>
