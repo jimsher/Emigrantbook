@@ -3058,11 +3058,8 @@
           senderName = extractName(pData, auth.currentUser.uid);
         }
 
-        const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-        const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vzv4mz2abm4enhmpskzsyeqtwbx3a4n33clccezkigbl4hbkcsymizeka3o3lnnmbtwxqe4o3huynzy";
-
         const payload = {
-          app_id: ONE_SIGNAL_APP_ID,
+          include_external_user_ids: [recipientUid],
           include_aliases: {
             external_id: [recipientUid]
           },
@@ -3072,21 +3069,16 @@
           url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
         };
 
-        // პირდაპირი CORS Proxy, რომელიც ბრაუზერის ბლოკს ხსნის
-        const targetUrl = "https://onesignal.com/api/v1/notifications";
-        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
-
-        const res = await fetch(proxyUrl, {
+        const res = await fetch("https://emigrantbook.com/api/send-push", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "Authorization": `Key ${REST_API_KEY}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(payload)
         });
 
         const data = await res.json();
-        alert("OneSignal პასუხი: " + JSON.stringify(data));
+        alert("Push პასუხი: " + JSON.stringify(data));
       } catch (err) {
         alert("შეცდომა: " + err.message);
       }
