@@ -17,23 +17,47 @@ export default async function handler(req, res) {
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
 
+    // სწორი და სუფთა Push Payload
     const pushPayload = {
       app_id: ONE_SIGNAL_APP_ID,
-      ...bodyData
+      include_aliases: bodyData.include_aliases || (bodyData.recipient_id ? { external_id: [bodyData.recipient_id] } : undefined),
+      include_external_user_ids: bodyData.include_external_user_ids,
+      target_channel: "push",
+      headings: bodyData.headings,
+      contents: bodyData.contents,
+      url: bodyData.url
     };
 
-    const response = await fetch("https://api.onesignal.com/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "accept": "application/json",
-        "Authorization": `Key ${REST_API_KEY.trim()}`
-      },
-      body: JSON.stringify(pushPayload)
-    });
+    // ავტორიზაციის ყველა შესაძლო ფორმატის ტესტირება
+    const authHeaders = [
+      `Key ${REST_API_KEY.trim()}`,
+      `Basic ${REST_API_KEY.trim()}`,
+      `Bearer ${REST_API_KEY.trim()}`
+    ];
 
-    const data = await response.json();
-    return res.status(response.status).json(data);
+    let lastResult = null;
+
+    for (const authHeader of authHeaders) {
+      const response = await fetch("https://api.onesignal.com/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "accept": "application/json",
+          "Authorization": authHeader
+        },
+        body: JSON.stringify(pushPayload)
+      });
+
+      const result = await response.json();
+      lastResult = result;
+
+      // თუ მოთხოვნა წარმატებულია (ან შეცდომა აღარ არის Access Denied)
+      if (result.id || (result.errors && !JSON.stringify(result.errors).includes("Access denied"))) {
+        return res.status(200).json(result);
+      }
+    }
+
+    return res.status(200).json(lastResult);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
