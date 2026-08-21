@@ -12,8 +12,7 @@ export default async function handler(req, res) {
   }
 
   const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const RAW_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
-  const REST_API_KEY = RAW_KEY.trim();
+  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
@@ -23,11 +22,10 @@ export default async function handler(req, res) {
       ...bodyData
     };
 
-    const response = await fetch("https://api.onesignal.com/notifications", {
+    const response = await fetch("https://api.onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
         "Authorization": `Key ${REST_API_KEY}`
       },
       body: JSON.stringify(pushPayload)
