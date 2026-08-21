@@ -22,20 +22,32 @@ export default async function handler(req, res) {
       url: body.url
     };
 
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+    // 1. ცდა Basic პრეფიქსით v1 სერვერზე
+    let response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Key ${REST_KEY.trim()}`
+        "Authorization": `Basic ${REST_KEY.trim()}`
       },
       body: JSON.stringify(payload)
     });
 
-    const data = await response.json();
-    return res.status(200).json({
-      status_code: response.status,
-      result: data
-    });
+    let data = await response.json();
+
+    // 2. თუ v1-მა დაიწუნა, ცდა Key პრეფიქსით ახალ api.onesignal.com-ზე
+    if (data.errors && JSON.stringify(data.errors).includes("Access denied")) {
+      response = await fetch("https://api.onesignal.com/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Authorization": `Key ${REST_KEY.trim()}`
+        },
+        body: JSON.stringify(payload)
+      });
+      data = await response.json();
+    }
+
+    return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
