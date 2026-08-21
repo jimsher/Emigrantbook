@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -12,12 +12,14 @@ export default async function handler(req, res) {
   }
 
   const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vzv4mz2abm4enhmpskzsyeqtwbx3a4n33clccezkigbl4hbkcsymizeka3o3lnnmbtwxqe4o3huynzy";
+  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vyfmsgkb22weezfzpaevpcc5tgdg57yiyorlzvmgvmmampwnh4vjkvcz2owkqkrf2qiqbjldwbmkr2i";
 
   try {
+    const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+
     const pushPayload = {
       app_id: ONE_SIGNAL_APP_ID,
-      ...req.body
+      ...bodyData
     };
 
     const response = await fetch("https://onesignal.com/api/v1/notifications", {
