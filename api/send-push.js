@@ -22,17 +22,36 @@ export default async function handler(req, res) {
       ...bodyData
     };
 
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Key ${REST_API_KEY}`
-      },
-      body: JSON.stringify(pushPayload)
-    });
+    // OneSignal-ის ვარიანტების ავტომატური გადარჩევა
+    const attempts = [
+      { url: "https://api.onesignal.com/notifications", auth: `Key ${REST_API_KEY}` },
+      { url: "https://api.onesignal.com/notifications", auth: `Bearer ${REST_API_KEY}` },
+      { url: "https://onesignal.com/api/v1/notifications", auth: `Key ${REST_API_KEY}` },
+      { url: "https://onesignal.com/api/v1/notifications", auth: `Basic ${REST_API_KEY}` }
+    ];
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    let finalData = null;
+
+    for (const attempt of attempts) {
+      const response = await fetch(attempt.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Authorization": attempt.auth
+        },
+        body: JSON.stringify(pushPayload)
+      });
+
+      const data = await response.json();
+      finalData = data;
+
+      // თუ ავტორიზაცია წარმატებით გაიარა (Access Denied აღარ არის), ვაბრუნებთ პასუხს
+      if (!data.errors || !JSON.stringify(data.errors).includes("Access denied")) {
+        return res.status(200).json(data);
+      }
+    }
+
+    return res.status(200).json(finalData);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
