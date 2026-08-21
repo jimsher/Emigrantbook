@@ -55,7 +55,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
 
     /* Success Toast Notification */
@@ -141,11 +141,65 @@
       fill: #888888;
     }
 
+    /* Currency Switcher & Live Rate Bar */
+    .currency-bar {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .curr-switch-group {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px;
+      border-radius: 12px;
+    }
+
+    .curr-btn {
+      background: transparent;
+      border: none;
+      color: #888888;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .curr-btn.active {
+      background: #ffffff;
+      color: #08080b;
+    }
+
+    .live-rate-display {
+      font-size: 12px;
+      color: #aaaaaa;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #2ed573;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #2ed573;
+      display: inline-block;
+    }
+
     /* Main Balance Section */
     .balance-display-section {
       text-align: center;
-      margin-top: 10px;
-      margin-bottom: 5px;
+      margin-top: 6px;
+      margin-bottom: 4px;
     }
 
     .balance-label-row {
@@ -155,7 +209,7 @@
       gap: 6px;
       color: #777777;
       font-size: 12px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 0.8px;
       font-weight: 700;
@@ -165,12 +219,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
     }
 
+    .balance-currency-sym {
+      font-size: 32px;
+      font-weight: 800;
+      color: #aaaaaa;
+    }
+
     .balance-amount {
-      font-size: 48px;
+      font-size: 46px;
       font-weight: 900;
       letter-spacing: -1.5px;
       color: #ffffff;
@@ -181,7 +241,14 @@
       color: #444444;
     }
 
-    /* Coin Pill Badge Card */
+    .secondary-converted-val {
+      font-size: 13px;
+      color: #777777;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Pill Badge Card */
     .akho-pill-card {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -511,7 +578,7 @@
       opacity: 0.25;
     }
 
-    /* AKHO WALLET TOP UP UI */
+    /* TOP UP UI */
     .wallet-sub-btn {
       width: 100%;
       background: rgba(255, 255, 255, 0.04);
@@ -591,7 +658,7 @@
       letter-spacing: 0.5px;
     }
 
-    /* Dynamic Cashout Box (Locked vs Unlocked) */
+    /* Dynamic Cashout Box */
     .cashout-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -601,7 +668,6 @@
       transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
     }
 
-    /* Green Frame state when balance >= 800 AKHO (€50) */
     .cashout-box.unlocked {
       border: 1px solid #2ed573;
       background: rgba(46, 213, 115, 0.05);
@@ -700,7 +766,7 @@
 
   <div class="bg-gradient"></div>
 
-  <!-- Toast Notification for Payment Success -->
+  <!-- Toast Notification -->
   <div class="toast-notification" id="successToast">
     <span>✅</span>
     <span id="toastText">ბალანსი წარმატებით შეივსო!</span>
@@ -722,24 +788,38 @@
       <button class="settings-btn" onclick="alert('პარამეტრები')">⚙️</button>
     </div>
 
-    <!-- Main Balance Display -->
-    <div class="balance-display-section">
-      <div class="balance-label-row">
-        <span id="lbl-expected-sum">სავარაუდო თანხა</span>
-        <span style="font-weight: bold; color: #fff;">AKHO</span>
-        <span>👁️</span>
+    <!-- Currency Switcher Bar & Live Rate -->
+    <div class="currency-bar">
+      <div class="curr-switch-group">
+        <button class="curr-btn active" id="btn-curr-eur" onclick="switchCurrency('EUR')">💶 EUR (€)</button>
+        <button class="curr-btn" id="btn-curr-gel" onclick="switchCurrency('GEL')">🇬🇪 GEL (₾)</button>
       </div>
-      <div class="balance-amount-row" onclick="openInfoUI()">
-        <span class="balance-amount" id="main-balance-val">0.00</span>
-        <span class="balance-arrow">›</span>
+      <div class="live-rate-display">
+        <span class="pulse-dot"></span>
+        <span>1 € = <strong id="live-rate-tag" style="color:#ffffff;">...</strong> ₾</span>
       </div>
     </div>
 
-    <!-- Akho Coins Badge -->
+    <!-- Main Balance Display -->
+    <div class="balance-display-section">
+      <div class="balance-label-row">
+        <span id="lbl-expected-sum">ხელმისაწვდომი ბალანსი</span>
+        <span id="curr-code-display" style="font-weight: bold; color: #fff;">EUR</span>
+        <span>👁️</span>
+      </div>
+      <div class="balance-amount-row" onclick="openTopUpModal()">
+        <span class="balance-currency-sym" id="main-curr-symbol">€</span>
+        <span class="balance-amount" id="main-balance-val">0.00</span>
+        <span class="balance-arrow">›</span>
+      </div>
+      <div class="secondary-converted-val" id="secondary-converted-val">≈ ₾ 0.00</div>
+    </div>
+
+    <!-- Wallet / TopUp Pill Card -->
     <div class="akho-pill-card" onclick="openTopUpModal()">
       <div class="akho-pill-left">
-        <div class="akho-icon-badge">A</div>
-        <span>აკჰო: <strong id="akho-coins-val">0</strong></span>
+        <div class="akho-icon-badge" id="pill-badge-icon">€</div>
+        <span>საფულე: <strong id="akho-coins-val">0.00 €</strong></span>
       </div>
       <div class="akho-pill-right">
         <span id="lbl-topup-btn">შევსება</span>
@@ -751,7 +831,7 @@
     <div class="section-card" onclick="openTransactionsModal()">
       <div class="section-card-title" id="lbl-transactions">ტრანზაქციები</div>
       <div class="section-card-right">
-        <span id="lbl-last-purchase">აკჰოს შეძენა</span>
+        <span id="lbl-last-purchase">ისტორია</span>
         <span>›</span>
       </div>
     </div>
@@ -798,81 +878,81 @@
     </div>
   </div>
 
-  <!-- TOP-UP OVERLAY PAGE / AKHO WALLET UI -->
+  <!-- TOP-UP OVERLAY PAGE / WALLET UI -->
   <div class="tx-modal-overlay" id="topUpModal">
     <div class="tx-modal-content">
       <div class="tx-header">
         <button class="tx-back-btn" onclick="closeTopUpModal()">‹</button>
-        <div class="tx-modal-title">AKHO WALLET</div>
+        <div class="tx-modal-title">EMIGRANT WALLET</div>
         <div style="width: 40px;"></div>
       </div>
 
       <div style="flex: 1; overflow-y: auto; padding-top: 10px;" id="walletMain">
         <p style="font-size:12px; color:#777777; text-transform:uppercase; letter-spacing:0.6px; font-weight:700;" data-key="wallet_desc">შეავსეთ ბალანსი Stripe გადახდით</p>
-        <p onclick="openInfoUI()" style="font-size:12px; color:#ffffff; cursor:pointer; margin-top:4px; text-decoration:underline; font-weight:600;" data-key="how_it_works">როგორ მუშაობს AKHO?</p>
+        <p onclick="openInfoUI()" style="font-size:12px; color:#ffffff; cursor:pointer; margin-top:4px; text-decoration:underline; font-weight:600;" data-key="how_it_works">როგორ მუშაობს საფულე?</p>
 
         <button class="wallet-sub-btn" onclick="openLeaderboard()">
           <span>🏆</span> <span data-key="view_leaderboard">ნახე რეიტინგი</span>
         </button>
 
-        <!-- STRIPE PACKAGES GRID WITH AKHO / EUR VALUES -->
-        <div class="package-grid">
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x26oI8PPdfldhy0Fq57W0f', 10, '1.00')">
-            <span class="pkg-price">€1.00</span>
-            <span class="pkg-label">10 AKHO</span>
+        <!-- STRIPE PACKAGES GRID -->
+        <div class="package-grid" id="packages-grid-container">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x26oI8PPdfldhy0Fq57W0f', 1)">
+            <span class="pkg-price" id="pkg-sub-1">≈ ₾ 2.96</span>
+            <span class="pkg-label">€ 1.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/7sY7sM5DD1wDb9q4VG57W0g', 60, '5.00')">
-            <span class="pkg-price">€5.00</span>
-            <span class="pkg-label">60 AKHO</span>
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/7sY7sM5DD1wDb9q4VG57W0g', 5)">
+            <span class="pkg-price" id="pkg-sub-5">≈ ₾ 14.80</span>
+            <span class="pkg-label">€ 5.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/4gMeVe6HH3EL1yQ3RC57W0h', 120, '10.00')">
-            <span class="pkg-price">€10.00</span>
-            <span class="pkg-label">120 AKHO</span>
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/4gMeVe6HH3EL1yQ3RC57W0h', 10)">
+            <span class="pkg-price" id="pkg-sub-10">≈ ₾ 29.60</span>
+            <span class="pkg-label">€ 10.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/aFa3cwc21fnt1yQag057W0j', 300, '25.00')">
-            <span class="pkg-price">€25.00</span>
-            <span class="pkg-label">300 AKHO</span>
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/aFa3cwc21fnt1yQag057W0j', 25)">
+            <span class="pkg-price" id="pkg-sub-25">≈ ₾ 74.00</span>
+            <span class="pkg-label">€ 25.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28E9AUaXX0sz4L287S57W0k', 700, '50.00')">
-            <span class="pkg-price">€50.00</span>
-            <span class="pkg-label">700 AKHO</span>
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28E9AUaXX0sz4L287S57W0k', 50)">
+            <span class="pkg-price" id="pkg-sub-50">≈ ₾ 148.00</span>
+            <span class="pkg-label">€ 50.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x25kEaXXfntfpG2Ny57W0l', 1400, '100.00')">
-            <span class="pkg-price">€100.00</span>
-            <span class="pkg-label">1400 AKHO</span>
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x25kEaXXfntfpG2Ny57W0l', 100)">
+            <span class="pkg-price" id="pkg-sub-100">≈ ₾ 296.00</span>
+            <span class="pkg-label">€ 100.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x28wQc218Z5fpG3RC57W0m', 2250, '150.00')">
-            <span class="pkg-price">€150.00</span>
-            <span class="pkg-label">2250 AKHO</span>
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/8x28wQc218Z5fpG3RC57W0m', 150)">
+            <span class="pkg-price" id="pkg-sub-150">≈ ₾ 444.00</span>
+            <span class="pkg-label">€ 150.00</span>
           </div>
 
-          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28EaEY3vva392CUewg57W0n', 8500, '500.00')" style="grid-column: span 2;">
+          <div class="pkg-btn" onclick="initStripePayment('https://buy.stripe.com/28EaEY3vva392CUewg57W0n', 500)" style="grid-column: span 2;">
             <span class="pkg-vip-badge">VIP</span>
-            <span class="pkg-price">€500.00</span>
-            <span class="pkg-label">8500 AKHO</span>
+            <span class="pkg-price" id="pkg-sub-500">≈ ₾ 1,480.00</span>
+            <span class="pkg-label">€ 500.00</span>
           </div>
         </div>
 
-        <!-- DYNAMIC CASHOUT BOX (Locked vs Green Unlocked Frame) -->
+        <!-- DYNAMIC CASHOUT BOX -->
         <div class="cashout-box" id="cashoutBox">
           <div class="cashout-header-row">
             <div class="cashout-title" data-key="cash_out">თანხის გატანა</div>
             <span class="cashout-status-badge locked" id="cashoutBadge">ჩაკეტილი</span>
           </div>
-          <div class="cashout-desc" data-key="min_withdraw">მინიმალური გატანა: 50.00 € (800 AKHO)</div>
+          <div class="cashout-desc" id="cashoutMinDesc" data-key="min_withdraw">მინიმალური გატანა: 50.00 € (≈ 148.00 ₾)</div>
           
           <div id="cashoutForm" style="display:none;">
             <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal" disabled>
             <button class="withdraw-btn" id="withdrawBtn" onclick="submitWithdraw()" disabled data-key="withdraw_req">გატანის მოთხოვნა</button>
           </div>
           <div id="cashoutStatus" style="color:#777777; font-size: 11px; margin-top: 10px; font-weight: 700;">
-            🔒 გატანისთვის გჭირდებათ მინიმუმ 800 AKHO (€50.00)
+            🔒 გატანისთვის გჭირდებათ მინიმუმ 50.00 € (≈ 148.00 ₾)
           </div>
         </div>
 
@@ -901,18 +981,20 @@
     const db = firebase.firestore();
 
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+    var selectedCurrency = localStorage.getItem('emigrantbook_currency') || 'EUR'; // 'EUR' or 'GEL'
+    var eurToGelRate = 2.96; // fallback rate
     var rawTransactions = [];
     var activeFilter = 'all';
-    var currentUserBalance = 0; // Store real numeric balance
+    var currentUserEurBalance = 0;
 
     var TRANSLATIONS = {
       ka: {
         title: "ბალანსი",
         protected: "დაცულია",
-        expectedSum: "მოსალოდნელი თანხა",
+        expectedSum: "ხელმისაწვდომი ბალანსი",
         topup: "შევსება",
         transactions: "ტრანზაქციები",
-        lastPurchase: "აკჰოს შეძენა",
+        lastPurchase: "ისტორია",
         services: "სერვისები",
         liveRewards: "გათამაშების ჯილდოები",
         monetization: "მონეტიზაცია",
@@ -928,22 +1010,22 @@
         defaultExpenseTitle: "გადახდა / ხარჯი",
         defaultRewardTitle: "მიღებული ჯილდო",
         wallet_desc: "შეავსეთ ბალანსი Stripe გადახდით",
-        how_it_works: "როგორ მუშაობს AKHO?",
+        how_it_works: "როგორ მუშაობს საფულე?",
         view_leaderboard: "ნახე რეიტინგი",
         cash_out: "თანხის გატანა",
-        min_withdraw: "მინიმალური გატანა: 50.00 € (800 AKHO)",
+        min_withdraw: "მინიმალური გატანა: 50.00 €",
         withdraw_req: "გატანის მოთხოვნა",
         thanks: "მადლობა!",
-        payment_msg: "გადახდა მიღებულია. AKHO თქვენს ბალანსზე აისახება მყისიერად.",
+        payment_msg: "გადახდა მიღებულია. თანხა თქვენს ბალანსზე აისახება მყისიერად.",
         check_balance: "ბალანსის გადამოწმება"
       },
       en: {
         title: "Balance",
         protected: "Protected",
-        expectedSum: "Estimated amount",
-        topup: "Get Coins",
+        expectedSum: "Available Balance",
+        topup: "Top Up",
         transactions: "Transactions",
-        lastPurchase: "Purchase Coins",
+        lastPurchase: "History",
         services: "Services",
         liveRewards: "LIVE Rewards",
         monetization: "Monetization",
@@ -959,26 +1041,26 @@
         defaultExpenseTitle: "Payment / Expense",
         defaultRewardTitle: "Received Reward",
         wallet_desc: "Top up your balance via Stripe",
-        how_it_works: "How AKHO works?",
+        how_it_works: "How does the wallet work?",
         view_leaderboard: "View Leaderboard",
         cash_out: "Cash Out",
-        min_withdraw: "Minimum withdrawal: €50.00 (800 AKHO)",
+        min_withdraw: "Minimum withdrawal: €50.00",
         withdraw_req: "Request Withdrawal",
         thanks: "Thank you!",
-        payment_msg: "Payment received. AKHO reflects in your balance instantly.",
+        payment_msg: "Payment received. Funds reflected in your balance instantly.",
         check_balance: "Check Balance"
       },
       ru: {
         title: "Баланс",
         protected: "Защищено",
-        expectedSum: "Ожидаемая сумма",
-        topup: "Приобрести Монеты",
+        expectedSum: "Доступный баланс",
+        topup: "Пополнить",
         transactions: "Транзакции",
-        lastPurchase: "Покупка Монет",
+        lastPurchase: "История",
         services: "Услуги",
-        liveRewards: "Награды из прямых...",
+        liveRewards: "Награды",
         monetization: "Монетизация",
-        subscriptions: "Управление суперподп...",
+        subscriptions: "Управление подписками",
         txHistoryTitle: "История транзакций",
         filterAll: "Все",
         filterIncome: "Пополнения",
@@ -990,35 +1072,98 @@
         defaultExpenseTitle: "Списание / Расход",
         defaultRewardTitle: "Награда",
         wallet_desc: "Пополните баланс через Stripe",
-        how_it_works: "Как работает AKHO?",
+        how_it_works: "Как работает кошелек?",
         view_leaderboard: "Рейтинг",
         cash_out: "Вывод средств",
-        min_withdraw: "Минимальный вывод: 50.00 € (800 AKHO)",
+        min_withdraw: "Минимальный вывод: 50.00 €",
         withdraw_req: "Запросить вывод",
         thanks: "Спасибо!",
-        payment_msg: "Оплата получена. AKHO зачисляется мгновенно.",
+        payment_msg: "Оплата получена. Баланс обновлен мгновенно.",
         check_balance: "Проверить баланс"
       }
     };
 
+    // რეალურ დროში კურსის წამოღება
+    async function fetchLiveExchangeRate() {
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/EUR');
+        const data = await res.json();
+        if (data && data.rates && data.rates.GEL) {
+          eurToGelRate = parseFloat(data.rates.GEL);
+        }
+      } catch (e) {
+        console.warn("Using fallback rate for EUR/GEL:", e);
+      }
+      const rateEl = document.getElementById('live-rate-tag');
+      if (rateEl) rateEl.innerText = eurToGelRate.toFixed(2);
+      updateConvertedValues();
+    }
+
+    // ვალუტის შეცვლა
+    function switchCurrency(curr) {
+      selectedCurrency = curr;
+      localStorage.setItem('emigrantbook_currency', curr);
+
+      document.getElementById('btn-curr-eur').classList.toggle('active', curr === 'EUR');
+      document.getElementById('btn-curr-gel').classList.toggle('active', curr === 'GEL');
+
+      updateConvertedValues();
+    }
+
+    function updateConvertedValues() {
+      const symEl = document.getElementById('main-curr-symbol');
+      const valEl = document.getElementById('main-balance-val');
+      const secEl = document.getElementById('secondary-converted-val');
+      const codeEl = document.getElementById('curr-code-display');
+      const pillValEl = document.getElementById('akho-coins-val');
+      const pillIconEl = document.getElementById('pill-badge-icon');
+
+      const gelVal = currentUserEurBalance * eurToGelRate;
+
+      if (selectedCurrency === 'EUR') {
+        if (symEl) symEl.innerText = '€';
+        if (valEl) valEl.innerText = currentUserEurBalance.toFixed(2);
+        if (secEl) secEl.innerText = `≈ ₾ ${gelVal.toFixed(2)}`;
+        if (codeEl) codeEl.innerText = 'EUR';
+        if (pillValEl) pillValEl.innerText = `${currentUserEurBalance.toFixed(2)} €`;
+        if (pillIconEl) pillIconEl.innerText = '€';
+      } else {
+        if (symEl) symEl.innerText = '₾';
+        if (valEl) valEl.innerText = gelVal.toFixed(2);
+        if (secEl) secEl.innerText = `≈ € ${currentUserEurBalance.toFixed(2)}`;
+        if (codeEl) codeEl.innerText = 'GEL';
+        if (pillValEl) pillValEl.innerText = `${gelVal.toFixed(2)} ₾`;
+        if (pillIconEl) pillIconEl.innerText = '₾';
+      }
+
+      // პაკეტების ქვეშ ლარის კურსის განახლება
+      const pkgValues = [1, 5, 10, 25, 50, 100, 150, 500];
+      pkgValues.forEach(v => {
+        const el = document.getElementById('pkg-sub-' + v);
+        if (el) el.innerText = `≈ ₾ ${(v * eurToGelRate).toFixed(2)}`;
+      });
+
+      updateCashoutUI(currentUserEurBalance);
+    }
+
     function applyTranslations() {
       var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
-      document.getElementById('lbl-balance-title').innerText = lang.title;
-      document.getElementById('lbl-protected').innerText = lang.protected;
-      document.getElementById('lbl-expected-sum').innerText = lang.expectedSum;
-      document.getElementById('lbl-topup-btn').innerText = lang.topup;
-      document.getElementById('lbl-transactions').innerText = lang.transactions;
-      document.getElementById('lbl-last-purchase').innerText = lang.lastPurchase;
-      document.getElementById('lbl-services').innerText = lang.services;
-      document.getElementById('lbl-live-rewards').innerText = lang.liveRewards;
-      document.getElementById('lbl-monetization').innerText = lang.monetization;
-      document.getElementById('lbl-subscriptions').innerText = lang.subscriptions;
+      if (document.getElementById('lbl-balance-title')) document.getElementById('lbl-balance-title').innerText = lang.title;
+      if (document.getElementById('lbl-protected')) document.getElementById('lbl-protected').innerText = lang.protected;
+      if (document.getElementById('lbl-expected-sum')) document.getElementById('lbl-expected-sum').innerText = lang.expectedSum;
+      if (document.getElementById('lbl-topup-btn')) document.getElementById('lbl-topup-btn').innerText = lang.topup;
+      if (document.getElementById('lbl-transactions')) document.getElementById('lbl-transactions').innerText = lang.transactions;
+      if (document.getElementById('lbl-last-purchase')) document.getElementById('lbl-last-purchase').innerText = lang.lastPurchase;
+      if (document.getElementById('lbl-services')) document.getElementById('lbl-services').innerText = lang.services;
+      if (document.getElementById('lbl-live-rewards')) document.getElementById('lbl-live-rewards').innerText = lang.liveRewards;
+      if (document.getElementById('lbl-monetization')) document.getElementById('lbl-monetization').innerText = lang.monetization;
+      if (document.getElementById('lbl-subscriptions')) document.getElementById('lbl-subscriptions').innerText = lang.subscriptions;
 
-      document.getElementById('lbl-tx-history-title').innerText = lang.txHistoryTitle;
-      document.getElementById('btn-filter-all').innerText = lang.filterAll;
-      document.getElementById('btn-filter-income').innerText = lang.filterIncome;
-      document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
-      document.getElementById('btn-filter-reward').innerText = lang.filterReward;
+      if (document.getElementById('lbl-tx-history-title')) document.getElementById('lbl-tx-history-title').innerText = lang.txHistoryTitle;
+      if (document.getElementById('btn-filter-all')) document.getElementById('btn-filter-all').innerText = lang.filterAll;
+      if (document.getElementById('btn-filter-income')) document.getElementById('btn-filter-income').innerText = lang.filterIncome;
+      if (document.getElementById('btn-filter-expense')) document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
+      if (document.getElementById('btn-filter-reward')) document.getElementById('btn-filter-reward').innerText = lang.filterReward;
 
       document.querySelectorAll('[data-key]').forEach(function(el) {
         var key = el.getAttribute('data-key');
@@ -1041,38 +1186,37 @@
       });
     }
 
-    /* REAL-TIME DYNAMIC CASHOUT UI CONTROL (800 AKHO = €50.00 threshold) */
-    function updateCashoutUI(balance) {
-      currentUserBalance = balance;
+    function updateCashoutUI(eurBalance) {
+      currentUserEurBalance = eurBalance;
       var cashoutBox = document.getElementById('cashoutBox');
       var cashoutForm = document.getElementById('cashoutForm');
       var cashoutBadge = document.getElementById('cashoutBadge');
       var cashoutStatus = document.getElementById('cashoutStatus');
+      var cashoutMinDesc = document.getElementById('cashoutMinDesc');
       var ibanInput = document.getElementById('ibanInput');
       var withdrawBtn = document.getElementById('withdrawBtn');
 
-      var MIN_LIMIT = 800; // 800 AKHO = €50.00
+      var MIN_EUR = 50.00;
+      var minGel = (MIN_EUR * eurToGelRate).toFixed(2);
 
-      if (balance >= MIN_LIMIT) {
-        // UNLOCKED STATE: Green border, form visible & editable
+      if (cashoutMinDesc) {
+        cashoutMinDesc.innerText = `მინიმალური გატანა: 50.00 € (≈ ${minGel} ₾)`;
+      }
+
+      if (eurBalance >= MIN_EUR) {
         if (cashoutBox) cashoutBox.classList.add('unlocked');
         if (cashoutForm) cashoutForm.style.display = 'block';
         if (cashoutBadge) {
           cashoutBadge.className = 'cashout-status-badge unlocked';
           cashoutBadge.innerText = 'ხელმისაწვდომია';
         }
-        if (ibanInput) {
-          ibanInput.disabled = false;
-        }
-        if (withdrawBtn) {
-          withdrawBtn.disabled = false;
-        }
+        if (ibanInput) ibanInput.disabled = false;
+        if (withdrawBtn) withdrawBtn.disabled = false;
         if (cashoutStatus) {
           cashoutStatus.style.color = '#2ed573';
-          cashoutStatus.innerText = '✓ გატანა ხელმისაწვდომია (ბალანსი > 50 €)';
+          cashoutStatus.innerText = '✓ გატანა ხელმისაწვდომია (ბალანსი > 50.00 €)';
         }
       } else {
-        // LOCKED STATE: Default border, form hidden, inputs disabled
         if (cashoutBox) cashoutBox.classList.remove('unlocked');
         if (cashoutForm) cashoutForm.style.display = 'none';
         if (cashoutBadge) {
@@ -1083,24 +1227,20 @@
           ibanInput.disabled = true;
           ibanInput.value = '';
         }
-        if (withdrawBtn) {
-          withdrawBtn.disabled = true;
-        }
+        if (withdrawBtn) withdrawBtn.disabled = true;
         if (cashoutStatus) {
           cashoutStatus.style.color = '#777777';
-          cashoutStatus.innerText = '🔒 გატანისთვის გჭირდებათ მინიმუმ 800 AKHO (€50.00)';
+          cashoutStatus.innerText = `🔒 გატანისთვის გჭირდებათ მინიმუმ 50.00 € (≈ ${minGel} ₾)`;
         }
       }
     }
 
-    /* AUTOMATIC STRIPE PAYMENT COMPLETION HANDLER */
     function checkStripePaymentReturn(user) {
       const urlParams = new URLSearchParams(window.location.search);
       const status = urlParams.get('status') || urlParams.get('payment');
-      const coins = parseInt(urlParams.get('coins'), 10);
-      const price = urlParams.get('price') || '';
+      const amount = parseFloat(urlParams.get('amount') || urlParams.get('coins') || 0);
 
-      if ((status === 'success' || status === 'completed') && coins > 0) {
+      if ((status === 'success' || status === 'completed') && amount > 0) {
         const txId = urlParams.get('session_id') || ('tx_' + Date.now());
         const processedKey = 'processed_stripe_tx_' + txId;
 
@@ -1112,21 +1252,21 @@
         var txRef = userRef.collection('transactions').doc();
 
         batch.update(userRef, {
-          balance: firebase.firestore.FieldValue.increment(coins)
+          balance: firebase.firestore.FieldValue.increment(amount)
         });
 
         batch.set(txRef, {
           type: 'income',
-          title: 'AKHO შევსება (Stripe)',
-          amount: '+ ' + coins + ' AKHO',
-          price: price ? ('€' + price) : '',
+          title: 'ბალანსის შევსება (Stripe)',
+          amount: '+ € ' + amount.toFixed(2),
+          price: '€ ' + amount.toFixed(2),
           timestamp: firebase.firestore.FieldValue.serverTimestamp(),
           status: 'წარმატებული'
         });
 
         batch.commit().then(function() {
           window.history.replaceState({}, document.title, window.location.pathname);
-          showToast("გილოცავთ! +" + coins + " AKHO ჩაირიცხა ანგარიშზე!");
+          showToast(`გილოცავთ! +€ ${amount.toFixed(2)} წარმატებით ჩაირიცხა!`);
         }).catch(function(err) {
           console.error("Stripe balance update error:", err);
         });
@@ -1149,16 +1289,11 @@
       if (user) {
         var userRef = db.collection('profiles').doc(user.uid);
 
-        // REAL-TIME FIRESTORE LISTENER
         userRef.onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
-            var balance = data.balance || 0;
-            document.getElementById('main-balance-val').innerText = parseFloat(balance).toFixed(2);
-            document.getElementById('akho-coins-val').innerText = Math.floor(balance);
-            
-            // Dynamic update for Cashout UI limits
-            updateCashoutUI(balance);
+            currentUserEurBalance = typeof data.balance === 'number' ? data.balance : parseFloat(data.balance || 0);
+            updateConvertedValues();
 
             if (data.language) {
               currentLang = data.language;
@@ -1167,29 +1302,25 @@
           }
         });
 
-        // Check if user just returned from Stripe Payment
         checkStripePaymentReturn(user);
-
         listenToTransactions(user.uid);
       } else {
         window.location.href = "index.html";
       }
     });
 
-    /* STRIPE PAYMENT DIRECT REDIRECT FUNCTION */
-    function initStripePayment(stripeUrl, coinsCount, eurPrice) {
+    function initStripePayment(stripeUrl, eurAmount) {
       var user = auth.currentUser;
       if (!user) {
         alert("ავტორიზაცია აუცილებელია!");
         return;
       }
-
-      var finalUrl = stripeUrl + "?client_reference_id=" + user.uid;
+      var finalUrl = stripeUrl + "?client_reference_id=" + user.uid + "&amount=" + eurAmount;
       window.location.href = finalUrl;
     }
 
     function openInfoUI() {
-      alert("აკჰო (AKHO) წარმოადგენს Emigrantbook-ის შიდა ციფრულ ვალუტას.");
+      alert("თქვენი ბალანსი ინახება უსაფრთხოდ ევროში (€) და ლარში (₾).");
     }
 
     function openLeaderboard() {
@@ -1197,12 +1328,12 @@
     }
 
     function submitWithdraw() {
-      if (currentUserBalance < 800) {
-        alert("თანხის გატანისთვის აუცილებელია მინიმუმ 800 AKHO (€50.00)!");
+      if (currentUserEurBalance < 50.00) {
+        alert("თანხის გატანისთვის აუცილებელია მინიმუმ 50.00 €!");
         return;
       }
 
-      var iban = document.getElementById('ibanInput').value;
+      var iban = document.getElementById('ibanInput').value.trim();
       if (!iban) {
         document.getElementById('cashoutStatus').innerText = "გთხოვთ მიუთითოთ IBAN ან PayPal!";
         return;
@@ -1224,7 +1355,6 @@
       setTimeout(() => modal.style.display = 'none', 300);
     }
 
-    /* TRANSACTIONS HISTORY MODAL LOGIC */
     function openTransactionsModal() {
       const modal = document.getElementById('txHistoryModal');
       modal.style.display = 'flex';
@@ -1289,7 +1419,7 @@
         var defaultTitle = lang.defaultIncomeTitle;
         var amountDisplay = '';
 
-        if (tx.type === 'expense') {
+        if (tx.type === 'expense' || tx.type === 'deduct') {
           iconChar = '↓';
           defaultTitle = lang.defaultExpenseTitle;
         } else if (tx.type === 'reward') {
@@ -1298,20 +1428,20 @@
         }
 
         if (typeof tx.amount === 'number') {
-          var prefix = tx.type === 'expense' ? '- ' : '+ ';
-          amountDisplay = prefix + Math.abs(tx.amount) + ' AKHO';
+          var prefix = (tx.type === 'expense' || tx.type === 'deduct') ? '- ' : '+ ';
+          amountDisplay = prefix + '€ ' + Math.abs(tx.amount).toFixed(2);
         } else {
-          amountDisplay = tx.amount || '0 AKHO';
+          amountDisplay = tx.amount || '€ 0.00';
         }
 
-        var formattedDate = formatTxDate(tx.timestamp || tx.date);
+        var formattedDate = formatTxDate(tx.timestamp || tx.created_at || tx.date);
 
         var itemHtml = `
           <div class="tx-item">
             <div class="tx-item-left">
               <div class="tx-icon-box">${iconChar}</div>
               <div class="tx-info">
-                <div class="tx-title">${tx.title || defaultTitle}</div>
+                <div class="tx-title">${tx.title || tx.note || defaultTitle}</div>
                 <div class="tx-date">${formattedDate}</div>
               </div>
             </div>
@@ -1325,7 +1455,11 @@
       });
     }
 
+    // ინიციალიზაცია
+    switchCurrency(selectedCurrency);
     applyTranslations();
+    fetchLiveExchangeRate();
+    setInterval(fetchLiveExchangeRate, 60000); // ლაივ კურსი განახლდება ყოველ 1 წუთში
   </script>
 </body>
 </html>
