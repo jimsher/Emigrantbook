@@ -5888,104 +5888,59 @@ function openProfileViewsFromHeader() {
     
 
 // პუშ ნოთიფიკაციები
-  // პუშ ნოთიფიკაციები
+  // OneSignal პუშ ნოთიფიკაციების ბანერი და ნებართვა
 (function() {
-    const messaging = firebase.messaging();
-
-    // 1. ბეიჯის გასუფთავება აპლიკაციაში შესვლისას
-    function clearBadge() {
-        if ('clearAppBadge' in navigator) {
-            navigator.clearAppBadge().catch(() => {});
-        }
+  // 1. ბეიჯის გასუფთავება აპლიკაციაში შესვლისას
+  function clearBadge() {
+    if ('clearAppBadge' in navigator) {
+      navigator.clearAppBadge().catch(() => {});
     }
-    clearBadge();
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') clearBadge();
+  }
+  clearBadge();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') clearBadge();
+  });
+
+  // 2. ბანერის მართვა
+  const banner = document.getElementById('eb-push-banner');
+  const acceptBtn = document.getElementById('eb-push-accept');
+  const dismissBtn = document.getElementById('eb-push-dismiss');
+
+  if ('Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('eb_push_dismissed')) {
+    setTimeout(() => {
+      if (banner) banner.style.display = 'block';
+    }, 2000);
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      if (banner) banner.style.display = 'none';
+      sessionStorage.setItem('eb_push_dismissed', 'true');
     });
+  }
 
-    // 2. ტოკენის აღება და Firestore-ში (profiles) შენახვა
-    async function saveTokenToFirestore() {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            messaging.useServiceWorker(registration);
-            const currentToken = await messaging.getToken();
-
-            if (currentToken && currentUser) {
-                console.log('FCM ტოკენი მიღებულია:', currentToken);
-                await db.collection('profiles').doc(currentUser.uid).set({
-                    fcm_token: currentToken
-                }, { merge: true });
-                console.log('FCM Token შენახულია profiles ბაზაში!');
-            }
-        } catch (err) {
-            console.error('FCM Token შეცდომა:', err);
-        }
-    }
-
-    // 3. Service Worker-ის რეგისტრაცია
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/firebase-messaging-sw.js').then((reg) => {
-            if (Notification.permission === 'granted') {
-                saveTokenToFirestore();
-            }
-        }).catch(err => console.error('SW Error:', err));
-    }
-
-    // 4. ბანერის მართვა
-    const banner = document.getElementById('eb-push-banner');
-    const acceptBtn = document.getElementById('eb-push-accept');
-    const dismissBtn = document.getElementById('eb-push-dismiss');
-
-    if ('Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('eb_push_dismissed')) {
-        setTimeout(() => {
-            if (banner) banner.style.display = 'block';
-        }, 2000);
-    }
-
-    if (dismissBtn) {
-        dismissBtn.addEventListener('click', () => {
-            banner.style.display = 'none';
-            sessionStorage.setItem('eb_push_dismissed', 'true');
+  if (acceptBtn) {
+    acceptBtn.addEventListener('click', async () => {
+      if (banner) banner.style.display = 'none';
+      try {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.Notifications.requestPermission();
         });
-    }
-
-    if (acceptBtn) {
-        acceptBtn.addEventListener('click', async () => {
-            banner.style.display = 'none';
-            try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    await saveTokenToFirestore();
-                }
-            } catch (e) {
-                console.error('Permission error:', e);
-            }
-        });
-    }
-
-    // 5. შეტყობინების ჩვენება, როცა აპლიკაცია გახსნილია
-    messaging.onMessage((payload) => {
-        const title = payload.notification ? payload.notification.title : 'EmigrantBook';
-        const body = payload.notification ? payload.notification.body : 'ახალი შეტყობინება';
-        navigator.serviceWorker.ready.then((reg) => {
-            reg.showNotification(title, {
-                body: body,
-                icon: '/logo1.png',
-                badge: '/logo1.png',
-                data: { url: (payload.data && payload.data.url) ? payload.data.url : '/' }
-            });
-        });
+      } catch (e) {
+        console.error('OneSignal permission error:', e);
+      }
     });
+  }
 })();
 
-  // აქ იწყება
-    // გლობალური Push-გამგზავნი ყველა მოვლენისთვის
+// გლობალური Push-გამგზავნი OneSignal-ის მეშვეობით
 async function sendModernPush(recipientUid, messageText) {
-  if (!auth.currentUser) return;
+  if (!auth.currentUser || !recipientUid) return;
 
   try {
     let senderName = 'EmigrantBook';
-    
+
     // გამგზავნის სახელის ამოღება
     if (typeof db !== 'undefined') {
       const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
@@ -6022,6 +5977,7 @@ async function sendModernPush(recipientUid, messageText) {
 
     const result = await response.json();
     console.log("OneSignal გაგზავნის პასუხი:", result);
+    return result;
   } catch (err) {
     console.error("OneSignal გაგზავნის შეცდომა:", err);
   }
