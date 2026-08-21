@@ -3061,10 +3061,11 @@ async function sendModernPush(recipientUid, messageText) {
 
     const payload = {
       app_id: ONE_SIGNAL_APP_ID,
+      include_external_user_ids: [recipientUid],
       include_aliases: {
         external_id: [recipientUid]
       },
-      target_channel: "push",
+      channel_for_external_user_ids: "push",
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
