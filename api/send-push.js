@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   }
 
   const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vyfmsgkb22weezfzpaevpcc5tgdg57yiyorlzvmgvmmampwnh4vjkvcz2owkqkrf2qiqbjldwbmkr2i";
+  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
@@ -22,8 +22,7 @@ export default async function handler(req, res) {
       ...bodyData
     };
 
-    // 1. ცდა Key პრეფიქსით
-    let response = await fetch("https://onesignal.com/api/v1/notifications", {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
@@ -32,21 +31,7 @@ export default async function handler(req, res) {
       body: JSON.stringify(pushPayload)
     });
 
-    let data = await response.json();
-
-    // 2. თუ OneSignal-მა წვდომა უარყო, ავტომატური ცდა Basic პრეფიქსით
-    if (data.errors && JSON.stringify(data.errors).includes("Access denied")) {
-      response = await fetch("https://onesignal.com/api/v1/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Basic ${REST_API_KEY}`
-        },
-        body: JSON.stringify(pushPayload)
-      });
-      data = await response.json();
-    }
-
+    const data = await response.json();
     return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
