@@ -1861,6 +1861,11 @@
           await OneSignal.login(user.uid);
         });
 
+        // Median Android აპლიკაციაში მომხმარებლის მიბმა
+        try {
+          window.location.href = "median://onesignal/setExternalUserId?externalId=" + encodeURIComponent(user.uid);
+        } catch (e) {}
+
         window.addEventListener('beforeunload', function() {
           setUserOnlineStatus(user.uid, false);
         });
