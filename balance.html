@@ -1235,40 +1235,76 @@
       }
     }
 
+    // STRIPE გადახდის დაბრუნების დაუყოვნებლივი და საიმედო ასახვა
     function checkStripePaymentReturn(user) {
       const urlParams = new URLSearchParams(window.location.search);
-      const status = urlParams.get('status') || urlParams.get('payment');
-      const amount = parseFloat(urlParams.get('amount') || urlParams.get('coins') || 0);
+      const redirectStatus = urlParams.get('redirect_status');
+      const statusParam = urlParams.get('status') || urlParams.get('payment') || redirectStatus;
+      const sessionId = urlParams.get('session_id') || urlParams.get('payment_intent') || urlParams.get('payment_intent_client_secret');
 
-      if ((status === 'success' || status === 'completed') && amount > 0) {
-        const txId = urlParams.get('session_id') || ('tx_' + Date.now());
-        const processedKey = 'processed_stripe_tx_' + txId;
+      let urlAmount = parseFloat(urlParams.get('amount') || urlParams.get('coins') || urlParams.get('price') || 0);
+      let pendingAmount = parseFloat(localStorage.getItem('pending_stripe_amount') || sessionStorage.getItem('pending_stripe_amount') || 0);
+      let pendingTime = parseInt(localStorage.getItem('pending_stripe_time') || '0', 10);
+      let isRecent = (Date.now() - pendingTime) < (2 * 60 * 60 * 1000); // 2 hours
 
-        if (sessionStorage.getItem(processedKey)) return;
-        sessionStorage.setItem(processedKey, 'true');
+      let finalAmount = urlAmount > 0 ? urlAmount : (isRecent && pendingAmount > 0 ? pendingAmount : 0);
 
-        var batch = db.batch();
-        var userRef = db.collection('profiles').doc(user.uid);
-        var txRef = userRef.collection('transactions').doc();
+      const isSuccess = statusParam === 'success' || statusParam === 'completed' || statusParam === 'succeeded' || redirectStatus === 'succeeded' || (sessionId && finalAmount > 0);
 
-        batch.update(userRef, {
-          balance: firebase.firestore.FieldValue.increment(amount)
-        });
+      if (isSuccess && finalAmount > 0) {
+        const txKey = 'processed_stripe_tx_' + (sessionId || ('t_' + pendingTime) || ('tx_' + Date.now()));
 
-        batch.set(txRef, {
-          type: 'income',
-          title: 'ბალანსის შევსება (Stripe)',
-          amount: '+ € ' + amount.toFixed(2),
-          price: '€ ' + amount.toFixed(2),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          status: 'წარმატებული'
-        });
+        if (sessionStorage.getItem(txKey) || localStorage.getItem(txKey)) {
+          localStorage.removeItem('pending_stripe_amount');
+          localStorage.removeItem('pending_stripe_time');
+          return;
+        }
 
-        batch.commit().then(function() {
-          window.history.replaceState({}, document.title, window.location.pathname);
-          showToast(`გილოცავთ! +€ ${amount.toFixed(2)} წარმატებით ჩაირიცხა!`);
+        sessionStorage.setItem(txKey, 'true');
+        localStorage.setItem(txKey, 'true');
+        localStorage.removeItem('pending_stripe_amount');
+        localStorage.removeItem('pending_stripe_time');
+
+        const userRef = db.collection('profiles').doc(user.uid);
+
+        userRef.get().then(function(docSnap) {
+          let currentBal = 0;
+          if (docSnap.exists) {
+            let d = docSnap.data();
+            currentBal = typeof d.balance === 'number' ? d.balance : parseFloat(d.balance || d.coins || 0);
+            if (isNaN(currentBal)) currentBal = 0;
+          }
+
+          let newBal = currentBal + finalAmount;
+
+          var batch = db.batch();
+          batch.set(userRef, {
+            balance: newBal,
+            last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+
+          var txRef = userRef.collection('transactions').doc();
+          batch.set(txRef, {
+            type: 'income',
+            title: 'ბალანსის შევსება (Stripe)',
+            amount: finalAmount,
+            price: '€ ' + finalAmount.toFixed(2),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            created_at: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'წარმატებული'
+          });
+
+          return batch.commit().then(function() {
+            currentUserEurBalance = newBal;
+            updateConvertedValues();
+            window.history.replaceState({}, document.title, window.location.pathname);
+            showToast(`გილოცავთ! +€ ${finalAmount.toFixed(2)} წარმატებით აისახა ბალანსზე!`);
+          });
         }).catch(function(err) {
           console.error("Stripe balance update error:", err);
+          userRef.set({
+            balance: firebase.firestore.FieldValue.increment(finalAmount)
+          }, { merge: true });
         });
       }
     }
@@ -1292,7 +1328,8 @@
         userRef.onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
-            currentUserEurBalance = typeof data.balance === 'number' ? data.balance : parseFloat(data.balance || 0);
+            currentUserEurBalance = typeof data.balance === 'number' ? data.balance : parseFloat(data.balance || data.coins || 0);
+            if (isNaN(currentUserEurBalance)) currentUserEurBalance = 0;
             updateConvertedValues();
 
             if (data.language) {
@@ -1309,12 +1346,19 @@
       }
     });
 
+    // STRIPE-ზე გადასვლის ფუნქცია
     function initStripePayment(stripeUrl, eurAmount) {
       var user = auth.currentUser;
       if (!user) {
         alert("ავტორიზაცია აუცილებელია!");
         return;
       }
+
+      // გადასვლამდე ვინახავთ თანხას და დროს
+      localStorage.setItem('pending_stripe_amount', eurAmount.toString());
+      localStorage.setItem('pending_stripe_time', Date.now().toString());
+      sessionStorage.setItem('pending_stripe_amount', eurAmount.toString());
+
       var finalUrl = stripeUrl + "?client_reference_id=" + user.uid + "&amount=" + eurAmount;
       window.location.href = finalUrl;
     }
@@ -1390,7 +1434,25 @@
             renderTransactions();
           }
         }, function(error) {
-          console.warn("Transactions query error:", error);
+          console.warn("Transactions query error, using fallback:", error);
+          db.collection('profiles').doc(uid).collection('transactions').onSnapshot(function(snap) {
+            rawTransactions = [];
+            snap.forEach(function(d) {
+              var it = d.data();
+              it.id = d.id;
+              rawTransactions.push(it);
+            });
+            rawTransactions.sort(function(a, b) {
+              var tA = a.timestamp || a.created_at || 0;
+              var tB = b.timestamp || b.created_at || 0;
+              var dA = tA.toDate ? tA.toDate().getTime() : (new Date(tA).getTime() || 0);
+              var dB = tB.toDate ? tB.toDate().getTime() : (new Date(tB).getTime() || 0);
+              return dB - dA;
+            });
+            if (document.getElementById('txHistoryModal').classList.contains('active')) {
+              renderTransactions();
+            }
+          });
         });
     }
 
@@ -1430,8 +1492,10 @@
         if (typeof tx.amount === 'number') {
           var prefix = (tx.type === 'expense' || tx.type === 'deduct') ? '- ' : '+ ';
           amountDisplay = prefix + '€ ' + Math.abs(tx.amount).toFixed(2);
+        } else if (typeof tx.amount === 'string') {
+          amountDisplay = tx.amount;
         } else {
-          amountDisplay = tx.amount || '€ 0.00';
+          amountDisplay = '€ 0.00';
         }
 
         var formattedDate = formatTxDate(tx.timestamp || tx.created_at || tx.date);
@@ -1459,7 +1523,7 @@
     switchCurrency(selectedCurrency);
     applyTranslations();
     fetchLiveExchangeRate();
-    setInterval(fetchLiveExchangeRate, 60000); // ლაივ კურსი განახლდება ყოველ 1 წუთში
+    setInterval(fetchLiveExchangeRate, 60000);
   </script>
 </body>
 </html>
