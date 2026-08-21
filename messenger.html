@@ -1855,14 +1855,17 @@
       if (user) {
         setUserOnlineStatus(user.uid, true);
 
-        // OneSignal-ის მიბმა ავტორიზებულ მომხმარებელთან
+        // 1. OneSignal Web ინტეგრაცია
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
           await OneSignal.login(user.uid);
         });
 
-        // Median Android აპლიკაციაში მომხმარებლის მიბმა
+        // 2. Median Android აპლიკაციაში User ID-ის მიბმა
         try {
+          if (window.median && window.median.onesignal) {
+            window.median.onesignal.setExternalUserId({ externalId: user.uid });
+          }
           window.location.href = "median://onesignal/setExternalUserId?externalId=" + encodeURIComponent(user.uid);
         } catch (e) {}
 
@@ -1899,7 +1902,7 @@
         window.location.href = "index.html";
       }
     });
-
+    
     function fetchFirestoreChatList(currentUid) {
       const listTarget = document.getElementById('chats-list-target');
       
