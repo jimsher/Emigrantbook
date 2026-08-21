@@ -4212,15 +4212,17 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function sendFriendRequest(targetUserId) {
-      db.collection('friend_requests').add({
-        sender_id: currentUser.uid,
-        receiver_id: targetUserId,
-        status: 'pending',
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(function() {
-        updateFriendshipButtons(targetUserId);
-      });
-    }
+  db.collection('friend_requests').add({
+    sender_id: currentUser.uid,
+    receiver_id: targetUserId,
+    status: 'pending',
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    updateFriendshipButtons(targetUserId);
+    // 🔔 პუშ ნოტიფიკაციის გაგზავნა
+    sendModernPush(targetUserId, "გამოგიგზავნათ მეგობრობის მოთხოვნა 👥");
+  });
+}
 
     function cancelFriendRequest(requestId, targetUserId) {
       db.collection('friend_requests').doc(requestId).delete().then(function() {
