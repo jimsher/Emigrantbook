@@ -11,48 +11,29 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const RAW_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
-  const API_KEY = RAW_KEY.trim();
+  const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
+  const REST_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2jxfbclw6suoivpksfc3dfejroalu2lsxuilihvkollgscmtcqf53lh6um2jjoqomnw4dxpvetiaki";
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
 
-    const payload = {
-      app_id: APP_ID,
-      ...body
+    const pushPayload = {
+      app_id: ONE_SIGNAL_APP_ID,
+      ...bodyData
     };
 
-    const configs = [
-      { url: "https://api.onesignal.com/notifications", auth: `Key ${API_KEY}` },
-      { url: "https://onesignal.com/api/v1/notifications", auth: `Basic ${API_KEY}` },
-      { url: "https://onesignal.com/api/v1/notifications", auth: `Key ${API_KEY}` },
-      { url: "https://api.onesignal.com/notifications", auth: `Basic ${API_KEY}` }
-    ];
+    const response = await fetch("https://api.onesignal.com/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "accept": "application/json",
+        "Authorization": `Key ${REST_API_KEY.trim()}`
+      },
+      body: JSON.stringify(pushPayload)
+    });
 
-    let lastResult = null;
-
-    for (const cfg of configs) {
-      const response = await fetch(cfg.url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "accept": "application/json",
-          "Authorization": cfg.auth
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-      lastResult = result;
-
-      // თუ შეტყობინება წარმატებით გაიგზავნა
-      if (result.id || (result.errors && !JSON.stringify(result.errors).includes("Access denied"))) {
-        return res.status(200).json(result);
-      }
-    }
-
-    return res.status(200).json(lastResult);
+    const data = await response.json();
+    return res.status(response.status).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
