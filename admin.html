@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimum-scale=1.0">
-  <title>ადმინ პანელი - Emigrantbook</title>
+  <title>ადმინ & მოდერატორ პანელი - Emigrantbook</title>
   <link rel="stylesheet" href="supabase1.css">
   <link rel="manifest" href="manifest.json">
 
@@ -38,7 +38,7 @@
       z-index: 100;
     }
     .logo-text {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: #dcae36;
       cursor: pointer;
@@ -66,7 +66,7 @@
     }
 
     .admin-container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 20px auto;
       padding: 0 15px;
     }
@@ -86,6 +86,7 @@
       margin-bottom: 20px;
       border-bottom: 1px solid #222222;
       padding-bottom: 10px;
+      overflow-x: auto;
     }
 
     .tab-btn {
@@ -101,6 +102,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
     }
 
     .tab-btn:hover {
@@ -241,7 +243,17 @@
       border: 1px solid rgba(220, 174, 54, 0.25);
     }
 
-    /* ფორმის სტილები მართვის გვერდისთვის */
+    .role-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .role-admin { background: rgba(220, 174, 54, 0.2); color: #dcae36; border: 1px solid #dcae36; }
+    .role-moderator { background: rgba(112, 186, 255, 0.2); color: #70baff; border: 1px solid #70baff; }
+    .role-user { background: #222222; color: #888888; border: 1px solid #333333; }
+
+    /* ფორმის სტილები */
     .form-group {
       margin-bottom: 18px;
     }
@@ -278,16 +290,25 @@
       background: #dcae36;
       color: #111111;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 16px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
       transition: background 0.2s;
     }
 
     .btn-action:hover {
       background: #e5bd4c;
+    }
+
+    .btn-secondary {
+      background: #282828;
+      color: #ffffff;
+      border: 1px solid #383838;
+    }
+    .btn-secondary:hover {
+      background: #333338;
     }
 
     .btn-danger {
@@ -301,7 +322,7 @@
 
     .action-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 20px;
     }
 
@@ -344,6 +365,19 @@
       margin-bottom: 15px;
     }
 
+    /* რეპორტების ბარათები */
+    .report-card {
+      background: #1c1c1e;
+      border: 1px solid #282828;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
     @media (max-width: 680px) {
       .admin-container {
         padding: 0 !important;
@@ -355,7 +389,10 @@
       }
       .admin-tabs {
         padding: 0 10px 10px 10px;
-        overflow-x: auto;
+      }
+      .report-card {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -365,9 +402,12 @@
   <div class="header">
     <a href="index.html" class="logo-text">
       <span>🛡️</span>
-      <span>Emigrantbook Admin</span>
+      <span id="header-panel-title">Emigrantbook Control Panel</span>
     </a>
-    <a href="index.html" class="btn-back-home">← მთავარზე</a>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span id="current-user-role-badge" class="role-badge role-user">იტვირთება...</span>
+      <a href="index.html" class="btn-back-home">← მთავარზე</a>
+    </div>
   </div>
 
   <div class="admin-container">
@@ -375,7 +415,8 @@
     <!-- ტაბების ნავიგაცია -->
     <div id="admin-tabs-nav" class="admin-tabs" style="display: none;">
       <button class="tab-btn active" onclick="switchTab('monitoring')">📊 მონიტორინგი</button>
-      <button class="tab-btn" onclick="switchTab('actions')">⚙️ მართვის ცენტრი</button>
+      <button class="tab-btn" onclick="switchTab('moderation')">🛡️ მოდერაცია & რეპორტები</button>
+      <button id="tab-btn-actions" class="tab-btn" onclick="switchTab('actions')" style="display: none;">⚙️ მართვის ცენტრი (Admin)</button>
     </div>
 
     <!-- ტაბი 1: მონიტორინგის გვერდი -->
@@ -384,7 +425,7 @@
         <span>📊</span>
         <span>მომხმარებლების IP და Geolocation მონიტორინგი</span>
       </div>
-      <div class="admin-subtitle">ადმინისტრატორის პანელი: საიტზე დარეგისტრირებული მომხმარებლების ქვეყნები და IP მისამართები</div>
+      <div class="admin-subtitle">საიტზე დარეგისტრირებული მომხმარებლების სია, ქვეყნები, როლები და IP მისამართები</div>
 
       <div class="stats-grid">
         <div class="stat-box">
@@ -395,7 +436,10 @@
           <span class="stat-box-lbl">დაფიქსირებული ქვეყნები</span>
           <span class="stat-box-val" id="stat-total-countries">0</span>
         </div>
-        <!-- ჩამატებული PWA სტატისტიკის ბლოკი -->
+        <div class="stat-box">
+          <span class="stat-box-lbl">🛡️ მოდერატორები</span>
+          <span class="stat-box-val" id="stat-total-mods">0</span>
+        </div>
         <div class="stat-box">
           <span class="stat-box-lbl">📲 PWA ინსტალაციები</span>
           <span class="stat-box-val" id="admin-pwa-counter-val">0</span>
@@ -407,37 +451,37 @@
           <thead>
             <tr>
               <th>მომხმარებელი</th>
+              <th>როლი</th>
               <th>Email</th>
               <th>IP მისამართი</th>
               <th>ქვეყანა</th>
-              <th>PWA აპი</th> <!-- 👈 ეს ჩასვი -->
               <th>მისამართი / ქალაქი</th>
               <th>რეგისტრაციის თარიღი</th>
             </tr>
           </thead>
           <tbody id="admin-user-table-body">
             <tr>
-              <td colspan="6" style="text-align: center; color: #aaaaaa; padding: 20px;">მონაცემები იტვირთება...</td>
+              <td colspan="7" style="text-align: center; color: #aaaaaa; padding: 20px;">მონაცემები იტვირთება...</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ტაბი 2: მართვის ცენტრი -->
-    <div id="tab-actions" class="admin-card" style="display: none;">
+    <!-- ტაბი 2: მოდერაციის ცენტრი (ხელმისაწვდომია ადმინისთვის და მოდერატორისთვის) -->
+    <div id="tab-moderation" class="admin-card" style="display: none;">
       <div class="admin-header-title">
-        <span>⚙️</span>
-        <span>მომხმარებლებისა და სისტემის მართვა</span>
+        <span>🛡️</span>
+        <span>კონტენტის მოდერაცია და რეპორტები</span>
       </div>
-      <div class="admin-subtitle">გაფრთხილებების გაგზავნა, მომხმარებლების დაბლოკვა და საიტის ტექნიკური შესვენების რეჟიმი</div>
+      <div class="admin-subtitle">მომხმარებლების საჩივრები, გაფრთხილებები და დროებითი შეზღუდვები</div>
 
       <div class="action-grid">
         
         <!-- 1. გაფრთხილების გაგზავნა -->
         <div class="maintenance-box">
-          <h3 style="color: #dcae36; font-size: 16px;">⚠️ გაფრთხილების გაგზავნა</h3>
-          <p style="font-size: 12px; color: #aaaaaa;">აირჩიეთ მომხმარებელი და გაუგზავნეთ ინდივიდუალური გაფრთხილება.</p>
+          <h3 style="color: #dcae36; font-size: 16px;">⚠️ გაფრთხილების მიცემა</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">გაუგზავნეთ მომხმარებელს ოფიციალური გაფრთხილება წესების დარღვევაზე.</p>
           
           <div class="form-group">
             <label>მომხმარებელი:</label>
@@ -454,10 +498,76 @@
           <button onclick="sendUserWarning()" class="btn-action">⚠️ გაფრთხილების გაგზავნა</button>
         </div>
 
-        <!-- 2. მომხმარებლის დაბლოკვა -->
+        <!-- 2. დროებითი შეზღუდვა (Mute) -->
+        <div class="maintenance-box">
+          <h3 style="color: #ff9900; font-size: 16px;">⏳ დროებითი შეზღუდვა (Mute)</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">შეუზღუდეთ მომხმარებელს პოსტების და კომენტარების დაწერა გარკვეული ვადით.</p>
+          
+          <div class="form-group">
+            <label>მომხმარებელი:</label>
+            <select id="mute-user-select" class="form-control">
+              <option value="">იტვირთება...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>შეზღუდვის ვადა:</label>
+            <select id="mute-duration-select" class="form-control">
+              <option value="24">24 საათი</option>
+              <option value="72">3 დღე</option>
+              <option value="168">7 დღე</option>
+              <option value="0">შეზღუდვის მოხსნა</option>
+            </select>
+          </div>
+
+          <button onclick="setUserMuteStatus()" class="btn-action" style="background:#ff9900; color:#111;">⏳ სტატუსის განახლება</button>
+        </div>
+
+        <!-- 3. აქტიური რეპორტების სია -->
+        <div class="maintenance-box" style="grid-column: 1 / -1;">
+          <h3 style="color: #dcae36; font-size: 16px;">🚩 შემოსული რეპორტები</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">მომხმარებლების მიერ დარეპორტებული პოსტები და კომენტარები.</p>
+          
+          <div id="reports-container" style="margin-top: 10px;">
+            <div style="text-align: center; color: #888; padding: 20px;">რეპორტები იტვირთება...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ტაბი 3: მართვის ცენტრი (მხოლოდ სისტემის ადმინისტრატორისთვის) -->
+    <div id="tab-actions" class="admin-card" style="display: none;">
+      <div class="admin-header-title">
+        <span>⚙️</span>
+        <span>სისტემური მართვის ცენტრი (Admin Only)</span>
+      </div>
+      <div class="admin-subtitle">მოდერატორების დანიშვნა, მომხმარებლების სრული დაბლოკვა და საიტის ტექნიკური შესვენება</div>
+
+      <div class="action-grid">
+        
+        <!-- 1. მოდერატორის როლის მინიჭება -->
+        <div class="maintenance-box">
+          <h3 style="color: #70baff; font-size: 16px;">🛡️ მოდერატორის დანიშვნა / მოხსნა</h3>
+          <p style="font-size: 12px; color: #aaaaaa;">მიანიჭეთ ან ჩამოართვით მომხმარებელს მოდერატორის უფლებები.</p>
+          
+          <div class="form-group">
+            <label>მომხმარებელი:</label>
+            <select id="role-user-select" class="form-control">
+              <option value="">იტვირთება...</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button onclick="setUserRole('moderator')" class="btn-action" style="background: #70baff; color: #111; flex: 1;">🛡️ მოდერატორად დანიშვნა</button>
+            <button onclick="setUserRole('user')" class="btn-action btn-secondary" style="flex: 1;">👤 ჩვეულებრივი მომხმარებელი</button>
+          </div>
+        </div>
+
+        <!-- 2. მომხმარებლის სრული დაბლოკვა -->
         <div class="maintenance-box">
           <h3 style="color: #ff4d4f; font-size: 16px;">🚫 მომხმარებლის დაბლოკვა</h3>
-          <p style="font-size: 12px; color: #aaaaaa;">დაბლოკეთ მომხმარებლის ანგარიში წესების დარღვევის გამო.</p>
+          <p style="font-size: 12px; color: #aaaaaa;">დაბლოკეთ მომხმარებლის ანგარიში სამუდამოდ.</p>
           
           <div class="form-group">
             <label>მომხმარებელი:</label>
@@ -468,12 +578,12 @@
 
           <div class="form-group">
             <label>დაბლოკვის მიზეზი:</label>
-            <input type="text" id="block-reason-text" class="form-control" placeholder="მაგ: წესების დარღვევა">
+            <input type="text" id="block-reason-text" class="form-control" placeholder="მაგ: წესების უხეში დარღვევა">
           </div>
 
           <div style="display: flex; gap: 10px;">
             <button onclick="setUserBlockStatus(true)" class="btn-action btn-danger" style="flex: 1;">🚫 დაბლოკვა</button>
-            <button onclick="setUserBlockStatus(false)" class="btn-action" style="background: #282828; color: #fff; flex: 1;">🔓 განბლოკვა</button>
+            <button onclick="setUserBlockStatus(false)" class="btn-action btn-secondary" style="flex: 1;">🔓 განბლოკვა</button>
           </div>
         </div>
 
@@ -481,7 +591,7 @@
         <div class="maintenance-box" style="grid-column: 1 / -1;">
           <h3 style="color: #dcae36; font-size: 16px;">🛠️ საიტის ტექნიკური შესვენება</h3>
           <p style="font-size: 12px; color: #aaaaaa;">
-            საიტის დროებით გათიშვა ტექნიკური სამუშაოების გამო. ჩართვის შემთხვევაში ჩვეულებრივი მომხმარებლები ვერ შეძლებენ საიტით სარგებლობას.
+            საიტის დროებით გათიშვა ტექნიკური სამუშაოების გამო. ჩართვის შემთხვევაში ჩვეულებრივი მომხმარებლები და მოდერატორები ვერ შეძლებენ საიტით სარგებლობას.
           </p>
 
           <div style="display: flex; align-items: center; justify-content: space-between; background: #141414; padding: 15px; border-radius: 8px; border: 1px solid #282828;">
@@ -503,7 +613,7 @@
     <div id="access-denied-card" class="admin-card access-denied" style="display: none;">
       <div class="access-denied-icon">🔒</div>
       <h2 style="color: #ff4d4f; margin-bottom: 10px;">წვდომა შეზღუდულია</h2>
-      <p style="color: #aaaaaa; font-size: 14px;">ამ გვერდის ნახვის უფლება აქვს მხოლოდ სისტემის ადმინისტრატორს.</p>
+      <p style="color: #aaaaaa; font-size: 14px;">ამ გვერდის ნახვის უფლება აქვთ მხოლოდ ადმინისტრატორებსა და მოდერატორებს.</p>
       <br>
       <a href="index.html" class="btn-back-home" style="display: inline-block;">მთავარ გვერდზე დაბრუნება</a>
     </div>
@@ -527,19 +637,43 @@
 
     let allUsersList = [];
     let isMaintenanceActive = false;
+    let currentUserRole = 'user'; // 'admin', 'moderator', 'user'
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
         db.collection('profiles').doc(user.uid).get().then(function(docSnap) {
           if (docSnap.exists) {
             var profile = docSnap.data();
-            // ადმინისტრატორის გადამოწმება
-            if (profile.is_admin === true || user.email === 'admin@emigrantbook.com') {
+            
+            // როლის გარკვევა
+            if (profile.is_admin === true || profile.role === 'admin' || user.email === 'admin@emigrantbook.com') {
+              currentUserRole = 'admin';
+            } else if (profile.is_moderator === true || profile.role === 'moderator') {
+              currentUserRole = 'moderator';
+            } else {
+              currentUserRole = 'user';
+            }
+
+            const roleBadgeEl = document.getElementById('current-user-role-badge');
+
+            if (currentUserRole === 'admin' || currentUserRole === 'moderator') {
               document.getElementById('admin-tabs-nav').style.display = 'flex';
               document.getElementById('tab-monitoring').style.display = 'block';
+
+              if (currentUserRole === 'admin') {
+                roleBadgeEl.className = "role-badge role-admin";
+                roleBadgeEl.innerText = "👑 ადმინისტრატორი";
+                document.getElementById('tab-btn-actions').style.display = 'flex';
+                loadMaintenanceState();
+              } else {
+                roleBadgeEl.className = "role-badge role-moderator";
+                roleBadgeEl.innerText = "🛡️ მოდერატორი";
+                document.getElementById('header-panel-title').innerText = "Emigrantbook Moderation Panel";
+              }
+
               loadUsersData();
-              loadMaintenanceState();
-              subscribePWAInstallCountAdmin(); // PWA დათვლის ფუნქციის გამოძახება
+              loadReportsData();
+              subscribePWAInstallCountAdmin();
             } else {
               document.getElementById('access-denied-card').style.display = 'block';
             }
@@ -547,7 +681,7 @@
             document.getElementById('access-denied-card').style.display = 'block';
           }
         }).catch(function(err) {
-          console.error("Admin check error:", err);
+          console.error("Auth check error:", err);
           document.getElementById('access-denied-card').style.display = 'block';
         });
       } else {
@@ -570,14 +704,19 @@
 
     // ტაბების გადართვა
     function switchTab(tabName) {
-      const tabs = ['monitoring', 'actions'];
+      const tabs = ['monitoring', 'moderation', 'actions'];
       tabs.forEach(t => {
-        document.getElementById('tab-' + t).style.display = (t === tabName) ? 'block' : 'none';
+        const el = document.getElementById('tab-' + t);
+        if (el) el.style.display = (t === tabName) ? 'block' : 'none';
       });
 
       const btns = document.querySelectorAll('.tab-btn');
       btns.forEach((btn, idx) => {
-        btn.classList.toggle('active', (idx === 0 && tabName === 'monitoring') || (idx === 1 && tabName === 'actions'));
+        btn.classList.toggle('active', 
+          (idx === 0 && tabName === 'monitoring') || 
+          (idx === 1 && tabName === 'moderation') || 
+          (idx === 2 && tabName === 'actions')
+        );
       });
     }
 
@@ -587,17 +726,20 @@
         var tableBody = document.getElementById('admin-user-table-body');
         var warnSelect = document.getElementById('warn-user-select');
         var blockSelect = document.getElementById('block-user-select');
+        var muteSelect = document.getElementById('mute-user-select');
+        var roleSelect = document.getElementById('role-user-select');
 
         if (!tableBody) return;
 
         if (snapshot.empty) {
-          tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #aaaaaa; padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
           return;
         }
 
         document.getElementById('stat-total-users').innerText = snapshot.size;
 
         var countrySet = new Set();
+        var modCount = 0;
         tableBody.innerHTML = "";
         allUsersList = [];
 
@@ -615,7 +757,18 @@
           var realAddress = data.real_ip_address || (data.real_ip_city ? (data.real_ip_city + ', ' + country) : "არ ფიქსირდება");
           var avatar = data.avatar_url;
 
+          // როლის განსაზღვრა
+          var userRoleTag = '<span class="role-badge role-user">User</span>';
+          if (data.is_admin || data.role === 'admin') {
+            userRoleTag = '<span class="role-badge role-admin">Admin</span>';
+          } else if (data.is_moderator || data.role === 'moderator') {
+            userRoleTag = '<span class="role-badge role-moderator">Mod</span>';
+            modCount++;
+          }
+
           var blockedTag = data.is_blocked ? ' <span style="color:#ff4d4f; font-size:11px;">(დაბლოკილი)</span>' : '';
+          var mutedTag = (data.muted_until && data.muted_until.toDate && data.muted_until.toDate() > new Date()) 
+            ? ' <span style="color:#ff9900; font-size:11px;">(Muted)</span>' : '';
 
           selectOptionsHtml += `<option value="${doc.id}">${name} (${email})</option>`;
 
@@ -640,9 +793,10 @@
               <td>
                 <div class="user-cell">
                   <div class="user-avatar-mini">${avatarHtml}</div>
-                  <span style="font-weight: 600;">${name}${blockedTag}</span>
+                  <span style="font-weight: 600;">${name}${blockedTag}${mutedTag}</span>
                 </div>
               </td>
+              <td>${userRoleTag}</td>
               <td style="color: #aaaaaa;">${email}</td>
               <td><span class="ip-code">${ip}</span></td>
               <td><span class="country-badge">🌍 ${country}</span></td>
@@ -656,31 +810,89 @@
 
         if (warnSelect) warnSelect.innerHTML = selectOptionsHtml;
         if (blockSelect) blockSelect.innerHTML = selectOptionsHtml;
+        if (muteSelect) muteSelect.innerHTML = selectOptionsHtml;
+        if (roleSelect) roleSelect.innerHTML = selectOptionsHtml;
 
         document.getElementById('stat-total-countries').innerText = countrySet.size;
+        document.getElementById('stat-total-mods').innerText = modCount;
       });
     }
 
-    // 1. გაფრთხილების გაგზავნა
+    // რეპორტების ჩატვირთვა
+    function loadReportsData() {
+      db.collection('reports').where('resolved', '==', false).onSnapshot(snapshot => {
+        const container = document.getElementById('reports-container');
+        if (!container) return;
+
+        if (snapshot.empty) {
+          container.innerHTML = '<div style="text-align: center; color: #52c41a; padding: 20px;">🎉 ახალი რეპორტები არ არის!</div>';
+          return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+          const report = doc.data();
+          html += `
+            <div class="report-card">
+              <div>
+                <div style="font-weight: bold; color: #ff4d4f; font-size: 14px;">🚩 მიზეზი: ${report.reason || 'წესების დარღვევა'}</div>
+                <div style="font-size: 12px; color: #aaaaaa; margin-top: 4px;">დაარეპორტა: ${report.reporter_name || 'ანონიმი'} | ობიექტი: ${report.target_type || 'პოსტი'}</div>
+                <div style="font-size: 13px; color: #e4e6eb; margin-top: 6px; background: #141414; padding: 8px; border-radius: 6px;">
+                  "${report.content_preview || 'კონტენტის ნახვა'}"
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                <button onclick="resolveReport('${doc.id}')" class="btn-action" style="background: #282828; color:#fff;">✓ დახურვა</button>
+                <button onclick="deleteReportedContent('${report.target_id}', '${report.target_type}', '${doc.id}')" class="btn-action btn-danger">🗑️ წაშლა</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      });
+    }
+
+    // რეპორტის მოგვარება
+    function resolveReport(reportId) {
+      db.collection('reports').doc(reportId).update({
+        resolved: true,
+        resolved_by: auth.currentUser.uid,
+        resolved_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("რეპორტი დახურულია!");
+      });
+    }
+
+    // რეპორტირებული კონტენტის წაშლა
+    function deleteReportedContent(targetId, targetType, reportId) {
+      if (!confirm("დარწმუნებული ხართ, რომ გსურთ ამ კონტენტის წაშლა?")) return;
+
+      const collectionName = (targetType === 'comment') ? 'comments' : 'posts';
+      db.collection(collectionName).doc(targetId).delete().then(() => {
+        return resolveReport(reportId);
+      }).then(() => {
+        alert("კონტენტი წარმატებით წაიშალა!");
+      }).catch(err => {
+        alert("შეცდომა წაშლისას: " + err.message);
+      });
+    }
+
+    // 1. გაფრთხილების გაგზავნა (მოდერატორი & ადმინი)
     function sendUserWarning() {
       const userId = document.getElementById('warn-user-select').value;
       const text = document.getElementById('warn-message-text').value.trim();
 
-      if (!userId) {
-        alert("გთხოვთ აირჩიოთ მომხმარებელი!");
-        return;
-      }
-      if (!text) {
-        alert("გთხოვთ ჩაწეროთ გაფრთხილების ტექსტი!");
+      if (!userId || !text) {
+        alert("გთხოვთ აირჩიოთ მომხმარებელი და ჩაწეროთ ტექსტი!");
         return;
       }
 
       db.collection('profiles').doc(userId).collection('warnings').add({
         message: text,
+        issued_by: auth.currentUser.uid,
         created_at: firebase.firestore.FieldValue.serverTimestamp(),
         read: false
       }).then(() => {
-        // ასევე ვინახავთ ძირითად პროფილში ბოლო გაფრთხილებას
         return db.collection('profiles').doc(userId).update({
           has_warning: true,
           last_warning_text: text
@@ -690,12 +902,67 @@
         document.getElementById('warn-message-text').value = "";
       }).catch(err => {
         console.error("Warning error:", err);
-        alert("შეცდომა გაფრთხილების გაგზავნისას: " + err.message);
+        alert("შეცდომა: " + err.message);
       });
     }
 
-    // 2. მომხმარებლის დაბლოკვა / განბლოკვა
+    // 2. დროებითი შეზღუდვა Mute (მოდერატორი & ადმინი)
+    function setUserMuteStatus() {
+      const userId = document.getElementById('mute-user-select').value;
+      const hours = parseInt(document.getElementById('mute-duration-select').value);
+
+      if (!userId) {
+        alert("გთხოვთ აირჩიოთ მომხმარებელი!");
+        return;
+      }
+
+      let muteUntilDate = null;
+      if (hours > 0) {
+        muteUntilDate = new Date();
+        muteUntilDate.setHours(muteUntilDate.getHours() + hours);
+      }
+
+      db.collection('profiles').doc(userId).update({
+        is_muted: hours > 0,
+        muted_until: muteUntilDate ? firebase.firestore.Timestamp.fromDate(muteUntilDate) : null
+      }).then(() => {
+        alert(hours > 0 ? `მომხმარებელს შეეზღუდა აქტივობა ${hours} საათით!` : "შეზღუდვა მოხსნილია!");
+      }).catch(err => {
+        alert("შეცდომა: " + err.message);
+      });
+    }
+
+    // 3. როლის მინიჭება (მხოლოდ ადმინისტრატორი)
+    function setUserRole(newRole) {
+      if (currentUserRole !== 'admin') {
+        alert("მხოლოდ ადმინისტრატორს შეუძლია როლების მართვა!");
+        return;
+      }
+
+      const userId = document.getElementById('role-user-select').value;
+      if (!userId) {
+        alert("გთხოვთ აირჩიოთ მომხმარებელი!");
+        return;
+      }
+
+      const isMod = (newRole === 'moderator');
+      db.collection('profiles').doc(userId).update({
+        role: newRole,
+        is_moderator: isMod
+      }).then(() => {
+        alert(`როლი წარმატებით შეიცვალა (${newRole})!`);
+      }).catch(err => {
+        alert("შეცდომა როლის შეცვლისას: " + err.message);
+      });
+    }
+
+    // 4. მომხმარებლის დაბლოკვა (მხოლოდ ადმინისტრატორი)
     function setUserBlockStatus(block) {
+      if (currentUserRole !== 'admin') {
+        alert("მხოლოდ ადმინისტრატორს შეუძლია ანგარიშის დაბლოკვა!");
+        return;
+      }
+
       const userId = document.getElementById('block-user-select').value;
       const reason = document.getElementById('block-reason-text').value.trim();
 
@@ -715,11 +982,11 @@
         document.getElementById('block-reason-text').value = "";
       }).catch(err => {
         console.error("Block error:", err);
-        alert("შეცდომა სტატუსის შეცვლისას: " + err.message);
+        alert("შეცდომა: " + err.message);
       });
     }
 
-    // 3. ტექნიკური შესვენების სტატუსის წაკითხვა
+    // 5. ტექნიკური შესვენების რეჟიმი (მხოლოდ ადმინისტრატორი)
     function loadMaintenanceState() {
       db.collection('system_settings').doc('maintenance').onSnapshot(doc => {
         const badge = document.getElementById('maintenance-status-badge');
@@ -741,11 +1008,15 @@
       });
     }
 
-    // ტექნიკური შესვენების ჩართვა / გამორთვა
     function toggleMaintenanceMode() {
+      if (currentUserRole !== 'admin') {
+        alert("მხოლოდ ადმინისტრატორს შეუძლია ტექნიკური რეჟიმის მართვა!");
+        return;
+      }
+
       const newStatus = !isMaintenanceActive;
       const confirmMsg = newStatus 
-        ? "დარწმუნებული ხართ, რომ გსურთ საიტის ტექნიკურ რეჟიმში გადაყვანა? ჩვეულებრივი მომხმარებლები ვერ შეძლებენ შესვლას!" 
+        ? "დარწმუნებული ხართ, რომ გსურთ საიტის ტექნიკურ რეჟიმში გადაყვანა?" 
         : "გსურთ ტექნიკური რეჟიმის გამორთვა და საიტის ჩვეულებრივ რეჟიმში დაბრუნება?";
 
       if (confirm(confirmMsg)) {
@@ -757,7 +1028,7 @@
           alert("სტატუსი წარმატებით განახლდა!");
         }).catch(err => {
           console.error("Maintenance toggle error:", err);
-          alert("შეცდომა სტატუსის განახლებისას: " + err.message);
+          alert("შეცდომა: " + err.message);
         });
       }
     }
