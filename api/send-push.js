@@ -22,17 +22,17 @@ export default async function handler(req, res) {
       ...bodyData
     };
 
-    const response = await fetch("https://api.onesignal.com/api/v1/notifications", {
+    const response = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
+        "Content-Type": "application/json",
         "Authorization": `Key ${REST_API_KEY}`
       },
       body: JSON.stringify(pushPayload)
     });
 
     const data = await response.json();
-    return res.status(200).json(data);
+    return res.status(response.status).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
