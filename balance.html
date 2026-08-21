@@ -1237,33 +1237,47 @@
 
     // STRIPE გადახდის დაბრუნების დაუყოვნებლივი და საიმედო ასახვა
     function checkStripePaymentReturn(user) {
+      if (!user) return;
+
       const urlParams = new URLSearchParams(window.location.search);
       const redirectStatus = urlParams.get('redirect_status');
       const statusParam = urlParams.get('status') || urlParams.get('payment') || redirectStatus;
-      const sessionId = urlParams.get('session_id') || urlParams.get('payment_intent') || urlParams.get('payment_intent_client_secret');
+      const sessionId = urlParams.get('session_id') || urlParams.get('payment_intent') || urlParams.get('setup_intent');
 
       let urlAmount = parseFloat(urlParams.get('amount') || urlParams.get('coins') || urlParams.get('price') || 0);
-      let pendingAmount = parseFloat(localStorage.getItem('pending_stripe_amount') || sessionStorage.getItem('pending_stripe_amount') || 0);
-      let pendingTime = parseInt(localStorage.getItem('pending_stripe_time') || '0', 10);
-      let isRecent = (Date.now() - pendingTime) < (2 * 60 * 60 * 1000); // 2 hours
+      let storedAmount = parseFloat(localStorage.getItem('pending_stripe_amount') || sessionStorage.getItem('pending_stripe_amount') || 0);
+      let pendingTime = parseInt(localStorage.getItem('pending_stripe_time') || sessionStorage.getItem('pending_stripe_time') || '0', 10);
+      let hasPendingFlag = localStorage.getItem('pending_stripe_active') === 'true' || sessionStorage.getItem('pending_stripe_active') === 'true';
 
-      let finalAmount = urlAmount > 0 ? urlAmount : (isRecent && pendingAmount > 0 ? pendingAmount : 0);
+      let isRecent = (Date.now() - pendingTime) < (4 * 60 * 60 * 1000); // 4 საათის ფარგლებში
 
-      const isSuccess = statusParam === 'success' || statusParam === 'completed' || statusParam === 'succeeded' || redirectStatus === 'succeeded' || (sessionId && finalAmount > 0);
+      let finalAmount = 0;
+      if (urlAmount > 0) {
+        finalAmount = urlAmount;
+      } else if (isRecent && storedAmount > 0) {
+        finalAmount = storedAmount;
+      }
+
+      const isSuccess = 
+        statusParam === 'success' || 
+        statusParam === 'succeeded' || 
+        statusParam === 'completed' || 
+        redirectStatus === 'succeeded' || 
+        (sessionId && finalAmount > 0) ||
+        (hasPendingFlag && isRecent && finalAmount > 0);
 
       if (isSuccess && finalAmount > 0) {
-        const txKey = 'processed_stripe_tx_' + (sessionId || ('t_' + pendingTime) || ('tx_' + Date.now()));
+        const txUniqueId = sessionId || ('stripe_' + (pendingTime || Date.now()) + '_' + finalAmount);
+        const processedKey = 'processed_tx_' + txUniqueId;
 
-        if (sessionStorage.getItem(txKey) || localStorage.getItem(txKey)) {
+        if (sessionStorage.getItem(processedKey) || localStorage.getItem(processedKey)) {
+          localStorage.removeItem('pending_stripe_active');
           localStorage.removeItem('pending_stripe_amount');
           localStorage.removeItem('pending_stripe_time');
+          sessionStorage.removeItem('pending_stripe_active');
+          sessionStorage.removeItem('pending_stripe_amount');
           return;
         }
-
-        sessionStorage.setItem(txKey, 'true');
-        localStorage.setItem(txKey, 'true');
-        localStorage.removeItem('pending_stripe_amount');
-        localStorage.removeItem('pending_stripe_time');
 
         const userRef = db.collection('profiles').doc(user.uid);
 
@@ -1271,18 +1285,21 @@
           let currentBal = 0;
           if (docSnap.exists) {
             let d = docSnap.data();
-            currentBal = typeof d.balance === 'number' ? d.balance : parseFloat(d.balance || d.coins || 0);
-            if (isNaN(currentBal)) currentBal = 0;
+            let rawB = d.balance !== undefined ? d.balance : d.coins;
+            currentBal = Number(rawB) || 0;
           }
 
-          let newBal = currentBal + finalAmount;
+          let newBal = Number((currentBal + finalAmount).toFixed(2));
 
           var batch = db.batch();
+
+          // 1. ბალანსის განახლება
           batch.set(userRef, {
             balance: newBal,
             last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
 
+          // 2. ტრანზაქციის ლოგი
           var txRef = userRef.collection('transactions').doc();
           batch.set(txRef, {
             type: 'income',
@@ -1295,16 +1312,32 @@
           });
 
           return batch.commit().then(function() {
+            sessionStorage.setItem(processedKey, 'true');
+            localStorage.setItem(processedKey, 'true');
+            localStorage.removeItem('pending_stripe_active');
+            localStorage.removeItem('pending_stripe_amount');
+            localStorage.removeItem('pending_stripe_time');
+            sessionStorage.removeItem('pending_stripe_active');
+            sessionStorage.removeItem('pending_stripe_amount');
+
             currentUserEurBalance = newBal;
             updateConvertedValues();
-            window.history.replaceState({}, document.title, window.location.pathname);
+
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
             showToast(`გილოცავთ! +€ ${finalAmount.toFixed(2)} წარმატებით აისახა ბალანსზე!`);
           });
         }).catch(function(err) {
           console.error("Stripe balance update error:", err);
           userRef.set({
             balance: firebase.firestore.FieldValue.increment(finalAmount)
-          }, { merge: true });
+          }, { merge: true }).then(function() {
+            sessionStorage.setItem(processedKey, 'true');
+            localStorage.setItem(processedKey, 'true');
+            showToast(`გილოცავთ! +€ ${finalAmount.toFixed(2)} წარმატებით აისახა ბალანსზე!`);
+          });
         });
       }
     }
@@ -1328,8 +1361,8 @@
         userRef.onSnapshot(function(doc) {
           if (doc.exists) {
             var data = doc.data();
-            currentUserEurBalance = typeof data.balance === 'number' ? data.balance : parseFloat(data.balance || data.coins || 0);
-            if (isNaN(currentUserEurBalance)) currentUserEurBalance = 0;
+            var rawVal = data.balance !== undefined ? data.balance : data.coins;
+            currentUserEurBalance = Number(rawVal) || 0;
             updateConvertedValues();
 
             if (data.language) {
@@ -1354,12 +1387,15 @@
         return;
       }
 
-      // გადასვლამდე ვინახავთ თანხას და დროს
+      // გადასვლამდე საიმედოდ ვინახავთ თანხას
       localStorage.setItem('pending_stripe_amount', eurAmount.toString());
       localStorage.setItem('pending_stripe_time', Date.now().toString());
+      localStorage.setItem('pending_stripe_active', 'true');
       sessionStorage.setItem('pending_stripe_amount', eurAmount.toString());
+      sessionStorage.setItem('pending_stripe_active', 'true');
 
-      var finalUrl = stripeUrl + "?client_reference_id=" + user.uid + "&amount=" + eurAmount;
+      var separator = stripeUrl.indexOf('?') !== -1 ? '&' : '?';
+      var finalUrl = stripeUrl + separator + "client_reference_id=" + user.uid + "&amount=" + eurAmount;
       window.location.href = finalUrl;
     }
 
