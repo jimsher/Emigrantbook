@@ -12,7 +12,8 @@ export default async function handler(req, res) {
   }
 
   const APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
+  const RAW_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7v2tssegoiobev7ea55o2ny4ed6235aeqqpnk7xfzkd4a7lcavv3dgsrgpjiaupczkm3llgp57d4esui";
+  const API_KEY = RAW_KEY.trim();
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
@@ -22,35 +23,36 @@ export default async function handler(req, res) {
       ...body
     };
 
-    // 1. ცდა ოფიციალურ v1 სერვერზე Key ავტორიზაციით
-    let onesignalRes = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Key ${API_KEY}`
-      },
-      body: JSON.stringify(payload)
-    });
+    const configs = [
+      { url: "https://api.onesignal.com/notifications", auth: `Key ${API_KEY}` },
+      { url: "https://onesignal.com/api/v1/notifications", auth: `Basic ${API_KEY}` },
+      { url: "https://onesignal.com/api/v1/notifications", auth: `Key ${API_KEY}` },
+      { url: "https://api.onesignal.com/notifications", auth: `Basic ${API_KEY}` }
+    ];
 
-    let result = await onesignalRes.json();
+    let lastResult = null;
 
-    // 2. თუ v1-მა დაიწუნა, ცდა api.onesignal.com-ზე Bearer-ით
-    if (result.errors && JSON.stringify(result.errors).includes("Access denied")) {
-      onesignalRes = await fetch("https://api.onesignal.com/notifications", {
+    for (const cfg of configs) {
+      const response = await fetch(cfg.url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
-          "Authorization": `Bearer ${API_KEY}`
+          "accept": "application/json",
+          "Authorization": cfg.auth
         },
         body: JSON.stringify(payload)
       });
-      result = await onesignalRes.json();
+
+      const result = await response.json();
+      lastResult = result;
+
+      // თუ შეტყობინება წარმატებით გაიგზავნა
+      if (result.id || (result.errors && !JSON.stringify(result.errors).includes("Access denied"))) {
+        return res.status(200).json(result);
+      }
     }
 
-    return res.status(200).json({
-      build: "v5_live",
-      ...result
-    });
+    return res.status(200).json(lastResult);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
