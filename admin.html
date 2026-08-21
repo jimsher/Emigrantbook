@@ -107,7 +107,7 @@
       padding: 0 12px;
     }
 
-    /* ტაბების ნავიგაცია (სქროლით და გადაფარვის გარეშე) */
+    /* ტაბების ნავიგაცია (სქროლით) */
     .admin-tabs-wrapper {
       width: 100%;
       overflow-x: auto;
@@ -131,7 +131,7 @@
     }
 
     .tab-btn {
-      flex: 0 0 auto; /* ხელს უშლის ტექსტის ჩაჭყლეტას და გადაფარვას */
+      flex: 0 0 auto;
       background: transparent;
       color: var(--text-muted);
       border: none;
@@ -309,6 +309,15 @@
     .role-moderator { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
     .role-user { background: #202026; color: var(--text-muted); border: 1px solid var(--card-border); }
 
+    .balance-tag {
+      font-weight: 700;
+      color: #52c41a;
+      background: rgba(82, 196, 26, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(82, 196, 26, 0.25);
+    }
+
     /* მოქმედებების გრიდი */
     .action-grid {
       display: grid;
@@ -426,6 +435,11 @@
       color: #ffffff;
     }
 
+    .btn-success {
+      background: var(--success-green);
+      color: #ffffff;
+    }
+
     .status-badge {
       padding: 4px 10px;
       border-radius: 12px;
@@ -506,7 +520,7 @@
       <div class="admin-tabs">
         <button class="tab-btn active" onclick="switchTab('monitoring')">📊 მონიტორინგი</button>
         <button class="tab-btn" onclick="switchTab('moderation')">🛡️ მოდერაცია</button>
-        <button id="tab-btn-actions" class="tab-btn" onclick="switchTab('actions')" style="display: none;">⚙️ მართვა</button>
+        <button id="tab-btn-actions" class="tab-btn" onclick="switchTab('actions')" style="display: none;">⚙️ მართვა & ფინანსები</button>
       </div>
     </div>
 
@@ -516,7 +530,7 @@
         <span>📊</span>
         <span>მომხმარებლების მონიტორინგი</span>
       </div>
-      <div class="admin-subtitle">მონაცემები, IP მისამართები და აქტივობა</div>
+      <div class="admin-subtitle">მონაცემები, ბალანსი, IP მისამართები და აქტივობა</div>
 
       <div class="stats-grid">
         <div class="stat-box">
@@ -542,17 +556,18 @@
           <thead>
             <tr>
               <th>მომხმარებელი</th>
+              <th>ბალანსი</th>
               <th>როლი</th>
               <th>Email</th>
               <th>IP მისამართი</th>
               <th>ქვეყანა</th>
-              <th>ქალაქი</th>
-              <th>თარიღი</th>
+              <th>მისამართი / ქალაქი</th>
+              <th>რეგისტრაციის თარიღი</th>
             </tr>
           </thead>
           <tbody id="admin-user-table-body">
             <tr>
-              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">მონაცემები იტვირთება...</td>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">მონაცემები იტვირთება...</td>
             </tr>
           </tbody>
         </table>
@@ -630,17 +645,51 @@
       </div>
     </div>
 
-    <!-- ტაბი 3: სისტემური მართვა (Admin) -->
+    <!-- ტაბი 3: სისტემური მართვა და ფინანსები (Admin Only) -->
     <div id="tab-actions" class="admin-card" style="display: none;">
       <div class="admin-header-title">
         <span>⚙️</span>
-        <span>სისტემური მართვა (Admin Only)</span>
+        <span>სისტემური მართვა & ფინანსები (Admin Only)</span>
       </div>
-      <div class="admin-subtitle">როლების მინიჭება, სრული დაბლოკვა და საიტის შესვენება</div>
+      <div class="admin-subtitle">თანხის დარიცხვა, როლების მინიჭება, სრული დაბლოკვა და საიტის შესვენება</div>
 
       <div class="action-grid">
         
-        <!-- 1. როლების მართვა -->
+        <!-- 1. თანხის დარიცხვა / ბალანსის მართვა (ახალი ფუნქცია) -->
+        <div class="maintenance-box" style="grid-column: 1 / -1; border-color: rgba(220, 174, 54, 0.4);">
+          <div>
+            <div class="box-header">
+              <h3 style="color: var(--accent-gold);">💰 მომხმარებლის ბალანსის მართვა / თანხის დარიცხვა</h3>
+              <p>მომხმარებლის ანგარიშზე თანხის დარიცხვა ან ჩამოჭრა (მხოლოდ ადმინისტრატორი)</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px;">
+              <div class="form-group">
+                <label>აირჩიეთ მომხმარებელი:</label>
+                <select id="balance-user-select" class="form-control">
+                  <option value="">იტვირთება...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>თანხის ოდენობა (GEL / EUR):</label>
+                <input type="number" step="0.01" min="0.01" id="balance-amount-input" class="form-control" placeholder="მაგ: 50.00">
+              </div>
+
+              <div class="form-group">
+                <label>კომენტარი / მიზეზი:</label>
+                <input type="text" id="balance-note-input" class="form-control" placeholder="მაგ: ბონუსი, ანაზღაურება, შევსება">
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-group" style="max-width: 400px;">
+            <button onclick="updateUserBalance('add')" class="btn-action btn-success">➕ თანხის დარიცხვა</button>
+            <button onclick="updateUserBalance('deduct')" class="btn-action btn-danger">➖ თანხის ჩამოჭრა</button>
+          </div>
+        </div>
+
+        <!-- 2. როლების მართვა -->
         <div class="maintenance-box">
           <div>
             <div class="box-header">
@@ -660,7 +709,7 @@
           </div>
         </div>
 
-        <!-- 2. სრული დაბლოკვა -->
+        <!-- 3. სრული დაბლოკვა -->
         <div class="maintenance-box">
           <div>
             <div class="box-header">
@@ -684,7 +733,7 @@
           </div>
         </div>
 
-        <!-- 3. ტექნიკური შესვენება -->
+        <!-- 4. ტექნიკური შესვენება -->
         <div class="maintenance-box" style="grid-column: 1 / -1;">
           <div class="box-header">
             <h3 style="color: var(--accent-gold);">🛠️ საიტის ტექნიკური რეჟიმი</h3>
@@ -819,11 +868,12 @@
         var blockSelect = document.getElementById('block-user-select');
         var muteSelect = document.getElementById('mute-user-select');
         var roleSelect = document.getElementById('role-user-select');
+        var balanceSelect = document.getElementById('balance-user-select');
 
         if (!tableBody) return;
 
         if (snapshot.empty) {
-          tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">მომხმარებლები ვერ მოიძებნა</td></tr>`;
           return;
         }
 
@@ -834,7 +884,7 @@
         tableBody.innerHTML = "";
         allUsersList = [];
 
-        var selectOptionsHtml = '<option value="">-- აირჩიეთ --</option>';
+        var selectOptionsHtml = '<option value="">-- აირჩიეთ მომხმარებელი --</option>';
 
         snapshot.forEach(function(doc) {
           var data = doc.data();
@@ -842,34 +892,39 @@
           allUsersList.push(data);
 
           var name = data.full_name || "მომხმარებელი";
-          var email = data.email || "-";
+          var email = data.email || data.user_email || "არ ფიქსირდება";
           var ip = data.user_ip || "არ ფიქსირდება";
           var country = data.real_ip_country || "უცნობი";
-          var realAddress = data.real_ip_address || (data.real_ip_city ? (data.real_ip_city + ', ' + country) : "-");
+          var realAddress = data.real_ip_address || (data.real_ip_city ? (data.real_ip_city + ', ' + country) : (data.city ? (data.city + ', ' + country) : "არ ფიქსირდება"));
           var avatar = data.avatar_url;
+          var balance = (typeof data.balance === 'number') ? data.balance.toFixed(2) : '0.00';
 
           var userRoleTag = '<span class="role-badge role-user">User</span>';
           if (data.is_admin || data.role === 'admin') {
-            userRoleTag = '<span class="role-badge role-admin">Admin</span>';
+            userRoleTag = '<span class="role-badge role-admin">👑 Admin</span>';
           } else if (data.is_moderator || data.role === 'moderator') {
-            userRoleTag = '<span class="role-badge role-moderator">Mod</span>';
+            userRoleTag = '<span class="role-badge role-moderator">🛡️ Mod</span>';
             modCount++;
           }
 
-          var blockedTag = data.is_blocked ? ' <span style="color:var(--danger-red); font-size:10px;">(Block)</span>' : '';
+          var blockedTag = data.is_blocked ? ' <span style="color:var(--danger-red); font-size:10px; font-weight:bold;">(Block)</span>' : '';
           var mutedTag = (data.muted_until && data.muted_until.toDate && data.muted_until.toDate() > new Date()) 
-            ? ' <span style="color:var(--warning-orange); font-size:10px;">(Mute)</span>' : '';
+            ? ' <span style="color:var(--warning-orange); font-size:10px; font-weight:bold;">(Mute)</span>' : '';
 
-          selectOptionsHtml += `<option value="${doc.id}">${name} (${email})</option>`;
+          selectOptionsHtml += `<option value="${doc.id}">${name} (${email}) - ბალანსი: ${balance}</option>`;
 
           if (country && country !== "უცნობი" && country !== "არ ფიქსირდება") {
             countrySet.add(country);
           }
 
+          // რეგისტრაციის სრული თარიღი და დრო
           var regDate = "-";
           if (data.created_at) {
             var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
-            regDate = d.toLocaleDateString('ka-GE');
+            regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          } else if (data.updated_at) {
+            var d = data.updated_at.toDate ? data.updated_at.toDate() : new Date(data.updated_at);
+            regDate = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           }
 
           var initial = name.charAt(0).toUpperCase();
@@ -883,11 +938,12 @@
                   <span style="font-weight: 600;">${name}${blockedTag}${mutedTag}</span>
                 </div>
               </td>
+              <td><span class="balance-tag">${balance}</span></td>
               <td>${userRoleTag}</td>
-              <td style="color: var(--text-muted);">${email}</td>
+              <td style="color: #70baff; font-weight: 500;">${email}</td>
               <td><span class="ip-code">${ip}</span></td>
               <td><span class="country-badge">🌍 ${country}</span></td>
-              <td style="color: var(--accent-gold); font-size: 12px;">${realAddress}</td>
+              <td style="color: var(--accent-gold); font-size: 12.5px;">📍 ${realAddress}</td>
               <td style="color: var(--text-muted); font-size: 12px;">${regDate}</td>
             </tr>
           `;
@@ -899,9 +955,63 @@
         if (blockSelect) blockSelect.innerHTML = selectOptionsHtml;
         if (muteSelect) muteSelect.innerHTML = selectOptionsHtml;
         if (roleSelect) roleSelect.innerHTML = selectOptionsHtml;
+        if (balanceSelect) balanceSelect.innerHTML = selectOptionsHtml;
 
         document.getElementById('stat-total-countries').innerText = countrySet.size;
         document.getElementById('stat-total-mods').innerText = modCount;
+      });
+    }
+
+    // 💰 თანხის მართვა / დარიცხვა (მხოლოდ ადმინისტრატორი)
+    function updateUserBalance(actionType) {
+      if (currentUserRole !== 'admin') {
+        alert("მხოლოდ სისტემის ადმინისტრატორს აქვს ბალანსის მართვის უფლება!");
+        return;
+      }
+
+      const userId = document.getElementById('balance-user-select').value;
+      const amountInput = document.getElementById('balance-amount-input').value;
+      const amount = parseFloat(amountInput);
+      const note = document.getElementById('balance-note-input').value.trim() || 'ადმინისტრატორის მიერ შევსება';
+
+      if (!userId) {
+        alert("გთხოვთ აირჩიოთ მომხმარებელი!");
+        return;
+      }
+
+      if (isNaN(amount) || amount <= 0) {
+        alert("გთხოვთ შეიყვანოთ სწორი თანხა (0-ზე მეტი)!");
+        return;
+      }
+
+      const changeAmount = (actionType === 'add') ? amount : -amount;
+      const confirmMsg = (actionType === 'add')
+        ? `დარწმუნებული ხართ, რომ გსურთ ${amount} თანხის დარიცხვა მომხმარებლისთვის?`
+        : `დარწმუნებული ხართ, რომ გსურთ ${amount} თანხის ჩამოჭრა მომხმარებლისთვის?`;
+
+      if (!confirm(confirmMsg)) return;
+
+      const userRef = db.collection('profiles').doc(userId);
+
+      userRef.update({
+        balance: firebase.firestore.FieldValue.increment(changeAmount),
+        last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        // ტრანზაქციის ლოგის შენახვა
+        return userRef.collection('transactions').add({
+          type: actionType,
+          amount: changeAmount,
+          note: note,
+          admin_id: auth.currentUser.uid,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(() => {
+        alert(actionType === 'add' ? `თანხა (${amount}) წარმატებით დაირიცხა!` : `თანხა (${amount}) წარმატებით ჩამოიჭრა!`);
+        document.getElementById('balance-amount-input').value = "";
+        document.getElementById('balance-note-input').value = "";
+      }).catch(err => {
+        console.error("Balance update error:", err);
+        alert("შეცდომა ბალანსის განახლებისას: " + err.message);
       });
     }
 
