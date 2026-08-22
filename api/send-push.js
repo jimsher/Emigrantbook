@@ -6,8 +6,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const ONE_SIGNAL_APP_ID = "62724a32-cffe-4878-bc5f-32118f487f1d";
-  const APP_API_KEY = "os_v2_org_d47bm2anxvaf3lzfgtqfp7qm22ilvb5ib6temwmva3z7wemahcacsj4eqakmsfb355gmdb46xkm5mavwhw2el7aiexumdhnhusadpzq";
+  const ONE_SIGNAL_APP_ID = "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2";
+  const APP_API_KEY = "YOUR_NEW_REST_API_KEY_HERE"; // ჩასვით Keys & IDs-დან აღებული ახალი გასაღები
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
