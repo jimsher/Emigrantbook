@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ONE_SIGNAL_APP_ID = "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2";
-  const APP_API_KEY = "os_v2_app_ohp72sw3wzgy5finrrq2mupfwkqzboq7qlieaqelmacyv3fkvf36hg7khhztdjdsnypxyvqh4bkds2igfv2vjdqqmjebwdksr4ewrdy";
+  const APP_API_KEY = "os_v2_app_ohp72sw3wzgy5finrrq2mupfwikzm7m7jvbup5fros7ucptpvnle2z7t65v7im6u7gfk7phrqkk22xxn27aaccwlboifxbhpydbjruq";
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Basic ${APP_API_KEY.trim()}`
+        "Authorization": `Key ${APP_API_KEY.trim()}`
       },
       body: JSON.stringify(pushPayload)
     });
