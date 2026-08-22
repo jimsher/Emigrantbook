@@ -271,12 +271,81 @@ video::-webkit-media-controls-play-button {
 
 
 
-/* ჯგუფისთვის */
+/* მესიჯის ბანერის დიზაინი */
+/* IN-APP FLOATING TOP BANNER (ზუსტად სქრინის დიზაინით) */
+.in-app-push-banner {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 440px;
+  background: rgba(22, 22, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 999999;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  transition: top 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+  opacity: 0;
+  cursor: pointer;
+}
 
+.in-app-push-banner.show {
+  top: 14px;
+  opacity: 1;
+}
+
+.in-app-push-ava {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #2ed573;
+  flex-shrink: 0;
+}
+
+.in-app-push-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.in-app-push-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.in-app-push-text {
+  font-size: 13px;
+  color: #a0a0ab;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
   </style>
   
 </head>
 <body>
+<!-- ეს არის ბანერი შეტყობინების -->
+<!-- FACEBOOK / IN-APP FLOATING TOP PUSH BANNER -->
+<div id="globalPush" class="in-app-push-banner" onclick="handleInAppPushClick()">
+  <img id="pushAva" src="" class="in-app-push-ava">
+  <div class="in-app-push-content">
+    <b id="pushName" class="in-app-push-name"></b>
+    <span id="pushTxt" class="in-app-push-text"></span>
+  </div>
+</div>
+<!-- აქ ნთავრდება-->
+
+  
 <!-- შეტყობინების მოთხოვნის ბანერი -->
 <div id="eb-push-banner" style="display: none; position: fixed; bottom: 20px; left: 15px; right: 15px; background: #1e293b; color: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 999999; font-family: sans-serif;">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
