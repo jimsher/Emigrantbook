@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const recipientId = String(bodyData.recipient_id || "");
+    const recipientId = String(bodyData.recipient_id || "").trim();
     const senderName = bodyData.sender_name || "EmigrantBook";
     const messageText = bodyData.message_text || "ახალი შეტყობინება";
     const senderUid = bodyData.sender_uid || "";
