@@ -3058,7 +3058,14 @@
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
     async function sendModernPush(recipientUid, messageText) {
-  if (!auth.currentUser || !recipientUid) return;
+  if (!auth.currentUser) {
+    alert("შეცდომა: მომხმარებელი არ არის ავტორიზებული");
+    return;
+  }
+  if (!recipientUid) {
+    alert("შეცდომა: მიმღების ID (recipientUid) არის ცარიელი");
+    return;
+  }
 
   try {
     const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
@@ -3082,9 +3089,9 @@
     });
 
     const resData = await res.json();
-    console.log("Push Dispatcher Result:", resData);
+    alert("სერვერის პასუხი: " + JSON.stringify(resData));
   } catch (err) {
-    console.error("Push send error:", err);
+    alert("გაგზავნის შეცდომა (Catch): " + err.message);
   }
 }
 
