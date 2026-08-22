@@ -3058,29 +3058,20 @@
           senderName = extractName(pData, auth.currentUser.uid);
         }
 
-        const payload = {
-          app_id: "5b8f7b19-f368-418a-b87b-f7582d331fae",
-          include_aliases: { external_id: [recipientUid] },
-          target_channel: "push",
-          headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
-          contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
-          url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`
-        };
-
-        const res = await fetch("https://api.onesignal.com/notifications", {
+        await fetch("/api/send-push", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "accept": "application/json",
-            "Authorization": "Key os_v2_app_lohxwgptnbayvod365mc2my7vy2fxnb5wspu2k4hf74jhsxjcrat6gi5kd5v62e3nvkl4nksxpkzzhj53cjpl4xzx7f2p3h45agofui"
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            recipient_id: recipientUid,
+            sender_name: senderName,
+            message_text: messageText,
+            sender_uid: auth.currentUser.uid
+          })
         });
-
-        const data = await res.json();
-        alert("OneSignal პასუხი: " + JSON.stringify(data));
       } catch (err) {
-        alert("შეცდომა: " + err.message);
+        console.error("Push send error:", err);
       }
     }
   </script>
