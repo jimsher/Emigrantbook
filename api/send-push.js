@@ -1,3 +1,5 @@
+import https from 'https';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -20,36 +22,53 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "recipient_id is required" });
     }
 
-    const pushPayload = {
+    const payload = JSON.stringify({
       app_id: ONE_SIGNAL_APP_ID,
+      target_channel: "push",
       include_aliases: {
         external_id: [recipientId]
       },
-      target_channel: "push",
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`,
       chrome_web_icon: "https://emigrantbook.com/icons/icon-192x192.png",
       chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
       priority: 10
-    };
-
-    // os_v2 გასაღებისთვის საჭიროა Bearer ჰედერი
-    const authHeader = APP_API_KEY.startsWith("os_v2_") 
-      ? `Bearer ${APP_API_KEY.trim()}` 
-      : `Basic ${APP_API_KEY.trim()}`;
-
-    const response = await fetch("https://api.onesignal.com/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": authHeader
-      },
-      body: JSON.stringify(pushPayload)
     });
 
-    const data = await response.json();
-    return res.status(response.status).json(data);
+    const options = {
+      hostname: 'api.onesignal.com',
+      port: 443,
+      path: '/notifications',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': `Key ${APP_API_KEY.trim()}`,
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+
+    const oneSignalRequest = new Promise((resolve, reject) => {
+      const request = https.request(options, (response) => {
+        let data = '';
+        response.on('data', (chunk) => { data += chunk; });
+        response.on('end', () => {
+          try {
+            resolve({ status: response.statusCode, body: JSON.parse(data) });
+          } catch (e) {
+            resolve({ status: response.statusCode, body: data });
+          }
+        });
+      });
+
+      request.on('error', (e) => reject(e));
+      request.write(payload);
+      request.end();
+    });
+
+    const result = await oneSignalRequest;
+    return res.status(result.status).json(result.body);
+
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
