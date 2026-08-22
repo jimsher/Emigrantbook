@@ -1854,56 +1854,64 @@
 
     // აქ იწყება 
    auth.onAuthStateChanged(function(user) {
-      if (user) {
-        setUserOnlineStatus(user.uid, true);
+  if (user) {
+    setUserOnlineStatus(user.uid, true);
 
-        // 1. OneSignal Web ინტეგრაცია
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.login(user.uid);
-        });
+    // 1. OneSignal Web ინტეგრაცია და Login
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        await OneSignal.login(user.uid);
+        // ნებართვის მოთხოვნა, თუ ჯერ არ აქვს მიცემული
+        if (OneSignal.Notifications && OneSignal.Notifications.permission !== true) {
+          await OneSignal.Notifications.requestPermission();
+        }
+      } catch (err) {
+        console.error("OneSignal login/permission error:", err);
+      }
+    });
 
-        // 2. Median Android აპლიკაციაში User ID-ის მიბმა
-        try {
-          if (window.median && window.median.onesignal) {
-            window.median.onesignal.setExternalUserId({ externalId: user.uid });
-          }
-          window.location.href = "median://onesignal/setExternalUserId?externalId=" + encodeURIComponent(user.uid);
-        } catch (e) {}
+    // 2. Median Android / iOS აპლიკაციაში User ID-ის მიბმა (სწორი სინტაქსი)
+    try {
+      if (window.median && window.median.onesignal && window.median.onesignal.externalUserId) {
+        window.median.onesignal.externalUserId.set({ externalId: user.uid });
+      }
+      window.location.href = "median://onesignal/externalUserId/set?externalId=" + encodeURIComponent(user.uid);
+    } catch (e) {}
 
-        window.addEventListener('beforeunload', function() {
-          setUserOnlineStatus(user.uid, false);
-        });
+    window.addEventListener('beforeunload', function() {
+      setUserOnlineStatus(user.uid, false);
+    });
 
-        document.addEventListener('visibilitychange', function() {
-          if (document.visibilityState === 'visible') {
-            setUserOnlineStatus(user.uid, true);
-          } else {
-            setUserOnlineStatus(user.uid, false);
-          }
-        });
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        setUserOnlineStatus(user.uid, true);
+      } else {
+        setUserOnlineStatus(user.uid, false);
+      }
+    });
 
-        db.collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
-          if (docSnap.exists) {
-            var data = docSnap.data();
-            if (data.language) {
-              currentLang = data.language;
-              localStorage.setItem('emigrantbook_lang', currentLang);
-              applyTranslations();
-            }
-            let myPic = extractPhotoUrl(data);
-            if (myPic) document.getElementById('my-story-avatar').src = myPic;
-          }
-        });
+    db.collection('profiles').doc(user.uid).onSnapshot(function(docSnap) {
+      if (docSnap.exists) {
+        var data = docSnap.data();
+        if (data.language) {
+          currentLang = data.language;
+          localStorage.setItem('emigrantbook_lang', currentLang);
+          applyTranslations();
+        }
+        let myPic = extractPhotoUrl(data);
+        if (myPic) document.getElementById('my-story-avatar').src = myPic;
+      }
+    });
 
-        fetchFirestoreChatList(user.uid);
-        listenToStories();
-        listenForIncomingCalls(user.uid);
-        checkUrlForDirectChat();
-      } else {
-        window.location.href = "index.html";
-      }
-    }); 
+    fetchFirestoreChatList(user.uid);
+    listenToStories();
+    listenForIncomingCalls(user.uid);
+    checkUrlForDirectChat();
+  } else {
+    window.location.href = "index.html";
+  }
+});
     // აქ მთავრდება
     
     function fetchFirestoreChatList(currentUid) {
