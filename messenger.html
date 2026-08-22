@@ -3087,6 +3087,33 @@
     console.error("Push send error:", err);
   }
 }
+
+
+//პუშის ნოთიფიკაციისბლიგიკა
+    function sendPushNotification(receiverId, senderName, messageText) {
+  const options = {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      app_id: '71dffd4a-dbb6-4d8e-950d-8c61a651e5b2',
+      include_aliases: {
+        external_id: [String(receiverId)] // მიმღების ID
+      },
+      target_channel: 'push',
+      headings: { en: senderName, ka: senderName },
+      contents: { en: messageText, ka: messageText },
+      url: 'https://emigrantbook.com' // დაკლიკებისას სად გადავიდეს
+    })
+  };
+
+  fetch('https://onesignal.com/api/v1/notifications', options)
+    .then(res => res.json())
+    .then(res => console.log('Push status:', res))
+    .catch(err => console.error('Push error:', err));
+}
   </script>
 </body>
 </html>
