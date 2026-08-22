@@ -2195,9 +2195,10 @@ auth.onAuthStateChanged(function(user) {
     activeViewingProfileId = user.uid;
     listenForIncomingCalls(user.uid);
 
-    OneSignalDeferred.push(async function(OneSignal) {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+   OneSignalDeferred.push(async function(OneSignal) {
   await OneSignal.login(user.uid);
-    });
+   });
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
 
