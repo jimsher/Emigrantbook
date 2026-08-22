@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -10,42 +10,27 @@ export default async function handler(req, res) {
   const APP_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vy2fxnb5wspu2k4hf74jhsxjcrat6gi5kd5v62e3nvkl4nksxpkzzhj53cjpl4xzx7f2p3h45agofui";
 
   try {
-    let bodyData = {};
-    if (typeof req.body === 'string') {
-      try { bodyData = JSON.parse(req.body); } catch (e) { bodyData = {}; }
-    } else if (req.body) {
-      bodyData = req.body;
-    }
+    const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const recipientId = bodyData.recipient_id;
+    const senderName = bodyData.sender_name || "EmigrantBook";
+    const messageText = bodyData.message_text || "ახალი შეტყობინება";
+    const senderUid = bodyData.sender_uid || "";
 
-    // მიმღების ID-ის ამოღება
-    let recipientId = bodyData.recipient_id;
-    if (!recipientId && bodyData.include_aliases && bodyData.include_aliases.external_id) {
-      recipientId = bodyData.include_aliases.external_id[0];
-    }
-    if (!recipientId && Array.isArray(bodyData.include_external_user_ids)) {
-      recipientId = bodyData.include_external_user_ids[0];
-    }
-
-    // OneSignal V2-ის სტანდარტის სუფთა Payload
     const pushPayload = {
       app_id: ONE_SIGNAL_APP_ID,
-      headings: bodyData.headings || { en: "ახალი შეტყობინება", ka: "ახალი შეტყობინება" },
-      contents: bodyData.contents || { en: "გაქვთ ახალი შეტყობინება", ka: "გაქვთ ახალი შეტყობინება" },
-      url: bodyData.url || "https://emigrantbook.com"
+      target_channel: "push",
+      include_aliases: {
+        external_id: [String(recipientId)]
+      },
+      headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
+      contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
+      url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`
     };
-
-    if (recipientId) {
-      pushPayload.include_aliases = { external_id: [String(recipientId)] };
-      pushPayload.target_channel = "push";
-    } else {
-      pushPayload.included_segments = ["Total Subscriptions"];
-    }
 
     const response = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "accept": "application/json",
         "Authorization": `Key ${APP_API_KEY.trim()}`
       },
       body: JSON.stringify(pushPayload)
