@@ -1,5 +1,3 @@
-import https from 'https';
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -17,12 +15,13 @@ export default async function handler(req, res) {
     const senderName = bodyData.sender_name || "EmigrantBook";
     const messageText = bodyData.message_text || "ახალი შეტყობინება";
     const senderUid = bodyData.sender_uid || "";
+    const senderAvatar = bodyData.sender_avatar || "https://emigrantbook.com/icons/icon-192x192.png";
 
     if (!recipientId) {
       return res.status(400).json({ error: "recipient_id is required" });
     }
 
-    const payload = JSON.stringify({
+    const pushPayload = {
       app_id: ONE_SIGNAL_APP_ID,
       target_channel: "push",
       include_aliases: {
@@ -31,44 +30,23 @@ export default async function handler(req, res) {
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`,
-      chrome_web_icon: "https://emigrantbook.com/icons/icon-192x192.png",
+      large_icon: senderAvatar,
+      chrome_web_icon: senderAvatar,
       chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
       priority: 10
-    });
-
-    const options = {
-      hostname: 'api.onesignal.com',
-      port: 443,
-      path: '/notifications',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Key ${APP_API_KEY.trim()}`,
-        'Content-Length': Buffer.byteLength(payload)
-      }
     };
 
-    const oneSignalRequest = new Promise((resolve, reject) => {
-      const request = https.request(options, (response) => {
-        let data = '';
-        response.on('data', (chunk) => { data += chunk; });
-        response.on('end', () => {
-          try {
-            resolve({ status: response.statusCode, body: JSON.parse(data) });
-          } catch (e) {
-            resolve({ status: response.statusCode, body: data });
-          }
-        });
-      });
-
-      request.on('error', (e) => reject(e));
-      request.write(payload);
-      request.end();
+    const response = await fetch("https://api.onesignal.com/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": `Key ${APP_API_KEY.trim()}`
+      },
+      body: JSON.stringify(pushPayload)
     });
 
-    const result = await oneSignalRequest;
-    return res.status(result.status).json(result.body);
-
+    const data = await response.json();
+    return res.status(response.status).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
