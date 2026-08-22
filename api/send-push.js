@@ -6,12 +6,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const ONE_SIGNAL_APP_ID = "5b8f7b19-f368-418a-b87b-f7582d331fae";
-  const APP_API_KEY = "os_v2_app_lohxwgptnbayvod365mc2my7vy2fxnb5wspu2k4hf74jhsxjcrat6gi5kd5v62e3nvkl4nksxpkzzhj53cjpl4xzx7f2p3h45agofui";
+  const ONE_SIGNAL_APP_ID = "62724a32-cffe-4878-bc5f-32118f487f1d";
+  const APP_API_KEY = "os_v2_org_d47bm2anxvaf3lzfgtqfp7qm22ilvb5ib6temwmva3z7wemahcacsj4eqakmsfb355gmdb46xkm5mavwhw2el7aiexumdhnhusadpzq";
 
   try {
     const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const recipientId = bodyData.recipient_id;
+    const recipientId = String(bodyData.recipient_id || "");
     const senderName = bodyData.sender_name || "EmigrantBook";
     const messageText = bodyData.message_text || "ახალი შეტყობინება";
     const senderUid = bodyData.sender_uid || "";
@@ -24,20 +24,13 @@ export default async function handler(req, res) {
       app_id: ONE_SIGNAL_APP_ID,
       target_channel: "push",
       include_aliases: {
-        external_id: [String(recipientId)]
+        external_id: [recipientId]
       },
-      include_external_user_ids: [String(recipientId)],
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`,
-      // ლოგოები და ბეიჯები ბრაუზერისა და მობილურისთვის
       chrome_web_icon: "https://emigrantbook.com/icons/icon-192x192.png",
       chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
-      firefox_icon: "https://emigrantbook.com/icons/icon-192x192.png",
-      ios_badgeType: "Increase",
-      ios_badgeCount: 1,
-      android_badge_type: "SetTo",
-      android_badge_count: 1,
       priority: 10
     };
 
@@ -51,10 +44,8 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    console.log("OneSignal API Response:", data);
     return res.status(response.status).json(data);
   } catch (err) {
-    console.error("API Route Error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
