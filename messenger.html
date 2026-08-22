@@ -3047,7 +3047,6 @@
     applyTranslations();
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
-    // OneSignal Push Dispatcher — პირდაპირი გაგზავნა ფრონტენდიდან
     async function sendModernPush(recipientUid, messageText) {
       if (!auth.currentUser || !recipientUid) return;
 
@@ -3061,7 +3060,6 @@
 
         const payload = {
           app_id: "5b8f7b19-f368-418a-b87b-f7582d331fae",
-          include_external_user_ids: [recipientUid],
           include_aliases: { external_id: [recipientUid] },
           target_channel: "push",
           headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
@@ -3080,12 +3078,9 @@
         });
 
         const data = await res.json();
-        // წარმატების შემთხვევაში alert აღარ ამოვარდება
-        if (data.errors) {
-          console.error("Push Error:", data);
-        }
+        alert("OneSignal პასუხი: " + JSON.stringify(data));
       } catch (err) {
-        console.error("Push Send Exception:", err);
+        alert("შეცდომა: " + err.message);
       }
     }
   </script>
