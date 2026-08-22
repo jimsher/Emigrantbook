@@ -272,7 +272,8 @@ video::-webkit-media-controls-play-button {
 
 
 /* ჯგუფისთვის */
-    .header-group-btn {
+    /* უფონო ღილაკი (როგორც ფეხების აიქონია) */
+.header-plain-btn {
   position: relative;
   background: transparent;
   border: none;
@@ -281,24 +282,35 @@ video::-webkit-media-controls-play-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  outline: none;
 }
 
-.header-group-icon {
+/* თეთრი აიქონი */
+.header-plain-icon {
   width: 24px;
   height: 24px;
+  filter: brightness(0) invert(1);
   display: block;
 }
 
-/* წითელი წერტილი (ბეიჯი) */
-.group-badge {
+/* წითელი ბეიჯი ციფრებისთვის */
+.header-count-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 9px;
-  height: 9px;
+  top: -2px;
+  right: -4px;
   background-color: #ff3b30;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border: 1.5px solid #18191a; /* ჰეადერის ფონის კანტი */
 }
   </style>
   
@@ -550,10 +562,10 @@ video::-webkit-media-controls-play-button {
           </svg>
         </button>
 
-        <button class="header-group-btn" onclick="window.location.href='groups.html'" title="ჯგუფები">
-        <img src="icons/users.svg" class="header-group-icon" alt="Groups">
-          <span id="group-badge" class="group-badge" style="display: none;"></span>
-       </button>
+        <button class="header-plain-btn" onclick="window.location.href='groups.html'" title="ჯგუფები">
+       <img src="icons/users.svg" class="header-plain-icon" alt="Groups">
+       <span id="group-badge" class="header-count-badge" style="display: none;">0</span>
+      </button>
         
 
         <!-- 👣 TikTok Style Profile Views Button / Avatar Badge -->
