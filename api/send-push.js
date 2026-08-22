@@ -16,15 +16,29 @@ export default async function handler(req, res) {
     const messageText = bodyData.message_text || "ახალი შეტყობინება";
     const senderUid = bodyData.sender_uid || "";
 
+    if (!recipientId) {
+      return res.status(400).json({ error: "recipient_id is required" });
+    }
+
     const pushPayload = {
       app_id: ONE_SIGNAL_APP_ID,
       target_channel: "push",
       include_aliases: {
         external_id: [String(recipientId)]
       },
+      include_external_user_ids: [String(recipientId)],
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
-      url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`
+      url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`,
+      // ლოგოები და ბეიჯები ბრაუზერისა და მობილურისთვის
+      chrome_web_icon: "https://emigrantbook.com/icons/icon-192x192.png",
+      chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+      firefox_icon: "https://emigrantbook.com/icons/icon-192x192.png",
+      ios_badgeType: "Increase",
+      ios_badgeCount: 1,
+      android_badge_type: "SetTo",
+      android_badge_count: 1,
+      priority: 10
     };
 
     const response = await fetch("https://api.onesignal.com/notifications", {
@@ -37,8 +51,10 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    return res.status(200).json(data);
+    console.log("OneSignal API Response:", data);
+    return res.status(response.status).json(data);
   } catch (err) {
+    console.error("API Route Error:", err);
     return res.status(500).json({ error: err.message });
   }
 }
