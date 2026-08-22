@@ -1854,22 +1854,55 @@
       }).catch(err => console.log("Status update error:", err));
     }
 
-    auth.onAuthStateChanged(function(user) {
+    
+   auth.onAuthStateChanged(function(user) {
       if (user) {
         setUserOnlineStatus(user.uid, true);
 
-        // 1. OneSignal Web ინტეგრაცია
+        // 1. OneSignal Web ინტეგრაცია და Login
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.login(user.uid);
+          try {
+            await OneSignal.login(user.uid);
+            if (OneSignal.User && typeof OneSignal.User.addAlias === 'function') {
+              await OneSignal.User.addAlias("external_id", user.uid);
+            }
+            if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
+              await OneSignal.Notifications.requestPermission();
+            }
+          } catch (err) {
+            console.log("OneSignal Web init error:", err);
+          }
         });
 
-        // 2. Median Android აპლიკაციაში User ID-ის მიბმა
+        // 2. Median / GoNative Android აპლიკაციაში User ID-ის 100%-იანი მიბმა
         try {
           if (window.median && window.median.onesignal) {
-            window.median.onesignal.setExternalUserId({ externalId: user.uid });
+            if (typeof window.median.onesignal.login === 'function') {
+              window.median.onesignal.login({ externalId: user.uid });
+            }
+            if (typeof window.median.onesignal.setExternalUserId === 'function') {
+              window.median.onesignal.setExternalUserId({ externalId: user.uid });
+            }
+            if (window.median.onesignal.externalUserId && typeof window.median.onesignal.externalUserId.set === 'function') {
+              window.median.onesignal.externalUserId.set({ externalId: user.uid });
+            }
           }
-          window.location.href = "median://onesignal/setExternalUserId?externalId=" + encodeURIComponent(user.uid);
+        } catch (e) {
+          console.error("Median bridge error:", e);
+        }
+
+        // Deep Link Bridge (უსაფრთხო iframe-ით, რომ გვერდის ჩატვირთვა არ შეწყდეს)
+        try {
+          const iframe1 = document.createElement('iframe');
+          iframe1.style.display = 'none';
+          iframe1.src = "median://onesignal/login?externalId=" + encodeURIComponent(user.uid);
+          document.body.appendChild(iframe1);
+
+          const iframe2 = document.createElement('iframe');
+          iframe2.style.display = 'none';
+          iframe2.src = "median://onesignal/setExternalUserId?externalId=" + encodeURIComponent(user.uid);
+          document.body.appendChild(iframe2);
         } catch (e) {}
 
         window.addEventListener('beforeunload', function() {
@@ -1905,6 +1938,7 @@
         window.location.href = "index.html";
       }
     });
+        
     
     function fetchFirestoreChatList(currentUid) {
       const listTarget = document.getElementById('chats-list-target');
