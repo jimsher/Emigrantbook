@@ -6035,6 +6035,66 @@ function openProfileViewsFromHeader() {
     badge.style.display = 'none';
   }
 }
+
+
+    // ეს არის მესიჯის ბანერის ლოგიკა
+    let activePushSenderUid = null;
+
+function showGlobalPush(senderName, senderPhoto, messageText, senderUid) {
+  const pushBox = document.getElementById('globalPush');
+  if (!pushBox) return;
+
+  activePushSenderUid = senderUid;
+  document.getElementById('pushName').innerText = senderName;
+  document.getElementById('pushAva').src = senderPhoto || "https://emigrantbook.com/icons/icon-192x192.png";
+  document.getElementById('pushTxt').innerText = messageText.substring(0, 45) + (messageText.length > 45 ? '...' : '');
+
+  // ხმა
+  if (typeof playSeenSound === 'function') playSeenSound();
+
+  pushBox.classList.add('show');
+
+  setTimeout(() => {
+    pushBox.classList.remove('show');
+  }, 4500);
+}
+
+function handleInAppPushClick() {
+  const pushBox = document.getElementById('globalPush');
+  if (pushBox) pushBox.classList.remove('show');
+
+  if (activePushSenderUid) {
+    db.collection('profiles').doc(activePushSenderUid).get().then(pSnap => {
+      let uData = pSnap.exists ? pSnap.data() : null;
+      let name = extractName(uData, activePushSenderUid);
+      let photo = extractPhotoUrl(uData);
+      openChat(name, photo, activePushSenderUid);
+    });
+  }
+}
+
+// რეალურ დროში მოსული მესიჯების მოსმენა Firestore-დან და ფანჯრის ამოგდება
+function listenToAllIncomingMessages(myUid) {
+  db.collectionGroup('messages')
+    .where('read', '==', false)
+    .onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const msg = change.doc.data();
+          // თუ მესიჯი სხვისია და ახლა ამ ჩატში არ ვართ გახსნილი
+          if (msg.senderId && msg.senderId !== myUid && currentActiveChatUid !== msg.senderId) {
+            db.collection('profiles').doc(msg.senderId).get().then(docSnap => {
+              const uData = docSnap.exists ? docSnap.data() : null;
+              const sName = extractName(uData, msg.senderId);
+              const sPhoto = extractPhotoUrl(uData);
+              showGlobalPush(sName, sPhoto, msg.text || "📷 Media", msg.senderId);
+            });
+          }
+        }
+      });
+    });
+}
+    // აქ მთავრდება
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
