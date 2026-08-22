@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Key ${APP_API_KEY.trim()}`
+        "Authorization": `Basic ${APP_API_KEY.trim()}`
       },
       body: JSON.stringify(pushPayload)
     });
