@@ -3059,32 +3059,35 @@
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
     async function sendModernPush(recipientUid, messageText) {
-      if (!auth.currentUser || !recipientUid) return;
+  if (!auth.currentUser || !recipientUid) return;
 
-      try {
-        const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
-        let senderName = 'EmigrantBook';
-        if (senderDoc.exists) {
-          const pData = senderDoc.data();
-          senderName = extractName(pData, auth.currentUser.uid);
-        }
-
-        await fetch("/api/send-push", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            recipient_id: recipientUid,
-            sender_name: senderName,
-            message_text: messageText,
-            sender_uid: auth.currentUser.uid
-          })
-        });
-      } catch (err) {
-        console.error("Push send error:", err);
-      }
+  try {
+    const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
+    let senderName = 'EmigrantBook';
+    if (senderDoc.exists) {
+      const pData = senderDoc.data();
+      senderName = extractName(pData, auth.currentUser.uid);
     }
+
+    const res = await fetch("/api/send-push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        recipient_id: recipientUid,
+        sender_name: senderName,
+        message_text: messageText,
+        sender_uid: auth.currentUser.uid
+      })
+    });
+
+    const resData = await res.json();
+    console.log("Push Dispatcher Result:", resData);
+  } catch (err) {
+    console.error("Push send error:", err);
+  }
+}
   </script>
 </body>
 </html>
