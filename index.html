@@ -2201,32 +2201,22 @@ video::-webkit-media-controls-play-button {
     }
     
     // აქ იწყება
-     auth.onAuthStateChanged(function(user) {
+      auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
     listenForIncomingCalls(user.uid);
 
-    // Median აპლიკაციის უსაფრთხო სინქრონიზაცია (შეცდომის გარეშე)
-    try {
-      if (window.median && window.median.onesignal && window.median.onesignal.externalId) {
-        window.median.onesignal.externalId.set({ externalId: String(user.uid).trim() });
-      }
-    } catch (e) {
-      console.warn("Median sync skipped:", e);
+    // Median App-ის სინქრონიზაცია OneSignal-თან
+    if (window.median && window.median.onesignal) {
+      window.median.onesignal.externalId.set({ externalId: user.uid });
     }
 
     // Web OneSignal-ის სინქრონიზაცია
-    try {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        if (OneSignal && OneSignal.login) {
-          await OneSignal.login(String(user.uid).trim());
-        }
-      });
-    } catch (e) {
-      console.warn("OneSignal web sync skipped:", e);
-    }
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.login(user.uid);
+    });
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
 
@@ -2322,28 +2312,22 @@ video::-webkit-media-controls-play-button {
       hidePreloader();
     });
   } else {
-    try {
-      if (window.median && window.median.onesignal && window.median.onesignal.externalId) {
-        window.median.onesignal.externalId.remove();
-      }
-    } catch (e) {}
-
-    try {
-      if (window.OneSignal) {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          if (OneSignal && OneSignal.logout) {
-            await OneSignal.logout();
-          }
-        });
-      }
-    } catch (e) {}
+    // Median App & Web გამოსვლის სუფთა ლოგიკა
+    if (window.median && window.median.onesignal) {
+      window.median.onesignal.externalId.remove();
+    }
+    if (window.OneSignal) {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.logout();
+      });
+    }
 
     applyLanguageDOM();
     showScreen('auth');
     hidePreloader();
   }
-});                 
+});           
     // აქ მთავრდება
 
     function toggleRequestsDropdown(event) {
