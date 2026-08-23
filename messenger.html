@@ -3062,27 +3062,13 @@
 
   try {
     const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
-    
-    // საწყისი მნიშვნელობები, თუ მომხმარებელს სახელი ან ფოტო არ აქვს
     let senderName = 'EmigrantBook';
-    
-    // შენი საიტის ლოგო - ეს იქნება "პატარა ბეიჯი" მარჯვნივ
-    const siteBadgeLogo = 'https://emigrantbook.com/icons/icon-192x192.png'; 
-    
-    // გამომგზავნის ფოტო - ეს იქნება "დიდი იკონი" წინ
-    // თუ ფოტო არ აქვს, გამოვიყენოთ საწყისი Site Icon
-    let senderPhoto = siteBadgeLogo;
+    let senderPhoto = 'https://emigrantbook.com/icons/icon-192x192.png';
 
     if (senderDoc.exists) {
       const pData = senderDoc.data();
-      
-      // ფუნქცია `extractName` და `extractPhotoUrl` შენს კოდში უკვე უნდა გქონდეს
-      senderName = extractName(pData, auth.currentUser.uid) || senderName;
-      
-      const userPhoto = extractPhotoUrl(pData);
-      if (userPhoto) {
-        senderPhoto = userPhoto; // თუ ფოტო აქვს, ჩავსვათ მომხმარებლის ფოტო
-      }
+      senderName = extractName(pData, auth.currentUser.uid);
+      senderPhoto = extractPhotoUrl(pData) || senderPhoto;
     }
 
     const payload = {
@@ -3094,27 +3080,15 @@
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
-      
-      // --- მთავარი ცვლილებები ვიზუალისთვის: ---
-      
-      // 1. Android - "დიდი იკონი" (მომხმარებლის ფოტო) წინ
       large_icon: senderPhoto,
-      
-      // 2. Android - "პატარა ბეიჯი" (საიტის ლოგო) მარჯვნივ
-      android_badge_type: "SetTo", // ეს მიუთითებს ბეიჯის ტიპს
-      android_badge_count: 0,     // რიცხვი არ დავაწეროთ
-      small_icon: "ic_stat_onesignal_default", // საწყისი, მაგრამ android_badge_icon-ით შევცვლით
-      android_badge_icon: siteBadgeLogo,     // ეს არის შენი საიტის ლოგო
-
-      // 3. Chrome Web - "დიდი იკონი" და "პატარა ბეიჯი"
-      chrome_web_icon: senderPhoto,   // მომხმარებლის ფოტო
-      chrome_web_badge: siteBadgeLogo, // საიტის ლოგო
-      
-      // --- დანარჩენი პარამეტრები: ---
-      priority: 10, // Urgent პრიორიტეტი
-      android_channel_id: "chat_messages", // შენს მიერ შექმნილი არხი
+      chrome_web_icon: senderPhoto,
+      chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+      priority: 10,
+      android_channel_id: "Chat Messages",
       ios_badgeType: "Increase",
-      ios_badgeCount: 1
+      ios_badgeCount: 1,
+      android_badge_type: "SetTo",
+      android_badge_count: 1
     };
 
     fetch("https://eopclzux9aznbnk.m.pipedream.net", {
