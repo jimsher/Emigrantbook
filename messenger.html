@@ -3058,12 +3058,7 @@
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
     async function sendModernPush(recipientUid, messageText) {
-  alert("1. ფუნქცია დაიწყო! მიმღები: " + recipientUid);
-  
-  if (!auth.currentUser || !recipientUid) {
-    alert("შეჩერდა: currentUser ან recipientUid ცარიელია");
-    return;
-  }
+  if (!auth.currentUser || !recipientUid) return;
 
   try {
     const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
@@ -3094,9 +3089,11 @@
       priority: 10
     };
 
-    alert("2. ვაგზავნი OneSignal-ში...");
+    // CORS პროქსი, რომელიც ბრაუზერის ბლოკს ხსნის
+    const targetUrl = "https://api.onesignal.com/notifications";
+    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
 
-    const response = await fetch("https://api.onesignal.com/notifications", {
+    const response = await fetch(proxyUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json; charset=utf-8",
@@ -3106,10 +3103,10 @@
     });
 
     const resData = await response.json();
-    alert("3. OneSignal პასუხი: " + JSON.stringify(resData));
+    alert("OneSignal პასუხი: " + JSON.stringify(resData));
 
   } catch (err) {
-    alert("ერორი გაგზავნისას: " + err.message);
+    alert("შეცდომა: " + err.message);
   }
 }
   </script>
