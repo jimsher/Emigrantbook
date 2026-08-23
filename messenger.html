@@ -3064,24 +3064,21 @@
     const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
     let senderName = 'EmigrantBook';
     let senderPhoto = 'https://emigrantbook.com/icons/icon-192x192.png';
-    
+
     if (senderDoc.exists) {
       const pData = senderDoc.data();
       senderName = extractName(pData, auth.currentUser.uid);
       senderPhoto = extractPhotoUrl(pData) || senderPhoto;
     }
 
-    const ONE_SIGNAL_APP_ID = "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2";
-    const APP_API_KEY = "os_v2_app_ohp72sw3wzgy5finrrq2mupfwkqzboq7qlieaqelmacyv3fkvf36hg7khhztdjdsnypxyvqh4bkds2igfv2vjdqqmjebwdksr4ewrdy";
-
-    const pushPayload = {
-      app_id: ONE_SIGNAL_APP_ID,
+    const payload = {
+      app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
       target_channel: "push",
       include_aliases: {
         external_id: [String(recipientUid).trim()]
       },
-      headings: { ka: senderName, en: senderName },
-      contents: { ka: messageText, en: messageText },
+      headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
+      contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
       large_icon: senderPhoto,
       chrome_web_icon: senderPhoto,
@@ -3089,24 +3086,16 @@
       priority: 10
     };
 
-    // CORS პროქსი, რომელიც ბრაუზერის ბლოკს ხსნის
-    const targetUrl = "https://api.onesignal.com/notifications";
-    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
-
-    const response = await fetch(proxyUrl, {
+    fetch("https://eopclzux9aznbnk.m.pipedream.net", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Authorization": `Key ${APP_API_KEY.trim()}`
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify(pushPayload)
-    });
-
-    const resData = await response.json();
-    alert("OneSignal პასუხი: " + JSON.stringify(resData));
+      body: JSON.stringify(payload)
+    }).catch(e => console.error("Push send error:", e));
 
   } catch (err) {
-    alert("შეცდომა: " + err.message);
+    console.error("Push error:", err);
   }
 }
   </script>
