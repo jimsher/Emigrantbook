@@ -3058,7 +3058,12 @@
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
     async function sendModernPush(recipientUid, messageText) {
-  if (!auth.currentUser || !recipientUid) return;
+  alert("1. ფუნქცია დაიწყო! მიმღები: " + recipientUid);
+  
+  if (!auth.currentUser || !recipientUid) {
+    alert("შეჩერდა: currentUser ან recipientUid ცარიელია");
+    return;
+  }
 
   try {
     const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
@@ -3080,14 +3085,16 @@
       include_aliases: {
         external_id: [String(recipientUid).trim()]
       },
-      headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
-      contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
+      headings: { ka: senderName, en: senderName },
+      contents: { ka: messageText, en: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
       large_icon: senderPhoto,
       chrome_web_icon: senderPhoto,
       chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
       priority: 10
     };
+
+    alert("2. ვაგზავნი OneSignal-ში...");
 
     const response = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",
@@ -3099,10 +3106,10 @@
     });
 
     const resData = await response.json();
-    console.log("OneSignal პასუხი:", resData);
+    alert("3. OneSignal პასუხი: " + JSON.stringify(resData));
 
   } catch (err) {
-    console.error("Push გაგზავნის შეცდომა:", err);
+    alert("ერორი გაგზავნისას: " + err.message);
   }
 }
   </script>
