@@ -23,10 +23,10 @@ export default async function handler(req, res) {
 
     const pushPayload = {
       app_id: ONE_SIGNAL_APP_ID,
-      target_channel: "push",
       include_aliases: {
         external_id: [recipientId]
       },
+      target_channel: "push",
       headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
       contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
       url: `https://emigrantbook.com/messenger.html?uid=${senderUid}`,
