@@ -2199,17 +2199,24 @@ video::-webkit-media-controls-play-button {
       updateCountdown();
       lotteryCountdownInterval = setInterval(updateCountdown, 1000);
     }
-
-auth.onAuthStateChanged(function(user) {
+    
+    // აქ იწყება
+      auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
     listenForIncomingCalls(user.uid);
 
+    // Median App-ის სინქრონიზაცია OneSignal-თან
+    if (window.median && window.median.onesignal) {
+      window.median.onesignal.externalId.set({ externalId: user.uid });
+    }
+
+    // Web OneSignal-ის სინქრონიზაცია
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-   OneSignalDeferred.push(async function(OneSignal) {
-  await OneSignal.login(user.uid);
-   });
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.login(user.uid);
+    });
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
 
@@ -2221,7 +2228,6 @@ auth.onAuthStateChanged(function(user) {
 
     initUserPresence(user.uid);
     requestNotificationPermission();
-    
 
     var todayStr = new Date().toISOString().slice(0, 10);
     var lastCheckDate = localStorage.getItem('last_ip_check_date');
@@ -2306,11 +2312,23 @@ auth.onAuthStateChanged(function(user) {
       hidePreloader();
     });
   } else {
+    // Median App & Web გამოსვლის სუფთა ლოგიკა
+    if (window.median && window.median.onesignal) {
+      window.median.onesignal.externalId.remove();
+    }
+    if (window.OneSignal) {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.logout();
+      });
+    }
+
     applyLanguageDOM();
     showScreen('auth');
     hidePreloader();
   }
 });
+    // აქ მთავრდება
 
     function toggleRequestsDropdown(event) {
       if(event) event.stopPropagation();
