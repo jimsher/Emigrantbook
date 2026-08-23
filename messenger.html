@@ -3058,7 +3058,12 @@
 
     // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
     async function sendModernPush(recipientUid, messageText) {
-  if (!auth.currentUser || !recipientUid) return;
+  console.log("Push დაწყება:", { currentUser: auth.currentUser?.uid, recipientUid, messageText });
+
+  if (!auth.currentUser || !recipientUid) {
+    console.warn("Push შეჩერდა: currentUser ან recipientUid ცარიელია");
+    return;
+  }
 
   try {
     const senderDoc = await db.collection('profiles').doc(auth.currentUser.uid).get();
@@ -3084,23 +3089,26 @@
       chrome_web_icon: senderPhoto,
       chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
       priority: 10,
-      android_channel_id: "Chat Messages",
+      android_channel_id: "chat_messages",
       ios_badgeType: "Increase",
       ios_badgeCount: 1,
       android_badge_type: "SetTo",
       android_badge_count: 1
     };
 
-    fetch("https://eopclzux9aznbnk.m.pipedream.net", {
+    const response = await fetch("https://eopclzux9aznbnk.m.pipedream.net", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
-    }).catch(e => console.error("Push send error:", e));
+    });
+
+    const resText = await response.text();
+    console.log("Pipedream პასუხი:", response.status, resText);
 
   } catch (err) {
-    console.error("Push error:", err);
+    console.error("Push გაგზავნის ერორი:", err);
   }
 }
   </script>
