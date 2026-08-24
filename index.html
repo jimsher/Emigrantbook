@@ -2201,24 +2201,35 @@ video::-webkit-media-controls-play-button {
     }
     
     // აქ იწყება
-      auth.onAuthStateChanged(function(user) {
+    // Median-ის OneSignal სინქრონიზაცია (ლოდინით)
+function syncMedianOneSignal(uid) {
+  function trySync() {
+    if (window.median && window.median.onesignal) {
+      try {
+        if (typeof window.median.onesignal.setExternalId === 'function') {
+          window.median.onesignal.setExternalId({ externalId: String(uid) });
+        } else if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.set === 'function') {
+          window.median.onesignal.externalId.set({ externalId: String(uid) });
+        }
+      } catch (e) {
+        console.warn("Median OneSignal Sync error:", e);
+      }
+    }
+  }
+
+  trySync();
+  setTimeout(trySync, 2000);
+  setTimeout(trySync, 5000);
+}
+
+auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
     listenForIncomingCalls(user.uid);
 
-    // Median App-ის სინქრონიზაცია OneSignal-თან (უსაფრთხო გამოძახება)
-    try {
-      if (window.median && window.median.onesignal) {
-        if (typeof window.median.onesignal.setExternalId === 'function') {
-          window.median.onesignal.setExternalId({ externalId: user.uid });
-        } else if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.set === 'function') {
-          window.median.onesignal.externalId.set({ externalId: user.uid });
-        }
-      }
-    } catch (e) {
-      console.warn("Median OneSignal Sync error:", e);
-    }
+    // Median App-ის სინქრონიზაცია OneSignal-თან
+    syncMedianOneSignal(user.uid);
 
     // Web OneSignal-ის სინქრონიზაცია
     try {
