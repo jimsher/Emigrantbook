@@ -2201,22 +2201,34 @@ video::-webkit-media-controls-play-button {
     }
     
     // აქ იწყება
-   auth.onAuthStateChanged(function(user) {
+      auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
     listenForIncomingCalls(user.uid);
 
-    // Median App-ის სინქრონიზაცია OneSignal-თან
-    if (window.median && window.median.onesignal) {
-      window.median.onesignal.externalId.set({ externalId: user.uid });
+    // Median App-ის სინქრონიზაცია OneSignal-თან (უსაფრთხო გამოძახება)
+    try {
+      if (window.median && window.median.onesignal) {
+        if (typeof window.median.onesignal.setExternalId === 'function') {
+          window.median.onesignal.setExternalId({ externalId: user.uid });
+        } else if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.set === 'function') {
+          window.median.onesignal.externalId.set({ externalId: user.uid });
+        }
+      }
+    } catch (e) {
+      console.warn("Median OneSignal Sync error:", e);
     }
 
     // Web OneSignal-ის სინქრონიზაცია
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.login(user.uid);
-    });
+    try {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.login(user.uid);
+      });
+    } catch (e) {
+      console.warn("Web OneSignal Sync error:", e);
+    }
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
 
@@ -2310,17 +2322,33 @@ video::-webkit-media-controls-play-button {
       subscribeActiveLivesForFeed();
       
       hidePreloader();
+    }).catch(function(err) {
+      console.error("Profile load error:", err);
+      hidePreloader();
     });
   } else {
     // Median App & Web გამოსვლის სუფთა ლოგიკა
-    if (window.median && window.median.onesignal) {
-      window.median.onesignal.externalId.remove();
+    try {
+      if (window.median && window.median.onesignal) {
+        if (typeof window.median.onesignal.removeExternalId === 'function') {
+          window.median.onesignal.removeExternalId();
+        } else if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.remove === 'function') {
+          window.median.onesignal.externalId.remove();
+        }
+      }
+    } catch (e) {
+      console.warn("Median logout error:", e);
     }
-    if (window.OneSignal) {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.logout();
-      });
+
+    try {
+      if (window.OneSignal) {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.logout();
+        });
+      }
+    } catch (e) {
+      console.warn("Web logout error:", e);
     }
 
     applyLanguageDOM();
