@@ -2202,24 +2202,42 @@ video::-webkit-media-controls-play-button {
     
     // აქ იწყება
     // Median-ის OneSignal სინქრონიზაცია (ლოდინით)
+   // Median ნატიური აპლიკაციის OneSignal სინქრონიზაცია
 function syncMedianOneSignal(uid) {
-  function trySync() {
-    if (window.median && window.median.onesignal) {
-      try {
+  if (!uid) return;
+  var userIdStr = String(uid).trim();
+
+  function runSync() {
+    // 1. Median JavaScript Bridge
+    try {
+      if (window.median && window.median.onesignal) {
         if (typeof window.median.onesignal.setExternalId === 'function') {
-          window.median.onesignal.setExternalId({ externalId: String(uid) });
+          window.median.onesignal.setExternalId({ externalId: userIdStr });
         } else if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.set === 'function') {
-          window.median.onesignal.externalId.set({ externalId: String(uid) });
+          window.median.onesignal.externalId.set({ externalId: userIdStr });
         }
-      } catch (e) {
-        console.warn("Median OneSignal Sync error:", e);
       }
+    } catch (e) {
+      console.warn("Median JS Bridge error:", e);
+    }
+
+    // 2. Median Direct Native Bridge URL (ყველა ვერსიისთვის)
+    try {
+      var iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "median://onesignal/externalId/set?externalId=" + encodeURIComponent(userIdStr));
+      iframe.setAttribute("style", "display: none;");
+      document.body.appendChild(iframe);
+      setTimeout(function() {
+        if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 1000);
+    } catch (e) {
+      console.warn("Median URL Bridge error:", e);
     }
   }
 
-  trySync();
-  setTimeout(trySync, 2000);
-  setTimeout(trySync, 5000);
+  runSync();
+  setTimeout(runSync, 2000);
+  setTimeout(runSync, 5000);
 }
 
 auth.onAuthStateChanged(function(user) {
