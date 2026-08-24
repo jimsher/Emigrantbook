@@ -3067,28 +3067,29 @@
 
     if (senderDoc.exists) {
       const pData = senderDoc.data();
-      senderName = extractName(pData, auth.currentUser.uid) || senderName;
+      senderName = extractName(pData, auth.currentUser.uid);
       senderPhoto = extractPhotoUrl(pData) || senderPhoto;
     }
 
     const payload = {
-  app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
-  target_channel: "push",
-  include_aliases: {
-    external_id: [String(recipientUid).trim()]
-  },
-  headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
-  contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
-  url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
-  large_icon: senderPhoto,
-  chrome_web_icon: senderPhoto,
-  chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
-  priority: 10,
-  ios_badgeType: "Increase",
-  ios_badgeCount: 1,
-  android_badge_type: "SetTo",
-  android_badge_count: 1
-};
+      app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+      target_channel: "push",
+      include_aliases: {
+        external_id: [String(recipientUid).trim()]
+      },
+      headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
+      contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
+      url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
+      large_icon: senderPhoto,
+      chrome_web_icon: senderPhoto,
+      chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+      priority: 10,
+      android_channel_id: "Chat Messages",
+      ios_badgeType: "Increase",
+      ios_badgeCount: 1,
+      android_badge_type: "SetTo",
+      android_badge_count: 1
+    };
 
     fetch("https://eopclzux9aznbnk.m.pipedream.net", {
       method: "POST",
