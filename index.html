@@ -2203,41 +2203,51 @@ video::-webkit-media-controls-play-button {
     // აქ იწყება
     // Median-ის OneSignal სინქრონიზაცია (ლოდინით)
    // Median ნატიური აპლიკაციის OneSignal სინქრონიზაცია
+// Median ნატიური აპლიკაციის სრული სინქრონიზაცია
 function syncMedianOneSignal(uid) {
   if (!uid) return;
   var userIdStr = String(uid).trim();
 
   function runSync() {
-    // 1. Median JavaScript Bridge
+    // 1. ნებართვის მოთხოვნა ნატიურ აპლიკაციაში (Push Prompt)
+    try {
+      if (window.median && window.median.onesignal && typeof window.median.onesignal.prompt === 'function') {
+        window.median.onesignal.prompt();
+      }
+    } catch (e) {}
+
+    // 2. Median External ID - ოფიციალური JavaScript API (ყველა ვერსიის მხარდაჭერით)
     try {
       if (window.median && window.median.onesignal) {
+        // ვერსია A
+        if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.set === 'function') {
+          window.median.onesignal.externalId.set({ externalId: userIdStr });
+        }
+        // ვერსია B
         if (typeof window.median.onesignal.setExternalId === 'function') {
           window.median.onesignal.setExternalId({ externalId: userIdStr });
-        } else if (window.median.onesignal.externalId && typeof window.median.onesignal.externalId.set === 'function') {
-          window.median.onesignal.externalId.set({ externalId: userIdStr });
+        }
+        // ვერსია C (OneSignal Native Registration)
+        if (typeof window.median.onesignal.register === 'function') {
+          window.median.onesignal.register({ externalId: userIdStr });
         }
       }
     } catch (e) {
-      console.warn("Median JS Bridge error:", e);
+      console.warn("Median JS Sync error:", e);
     }
 
-    // 2. Median Direct Native Bridge URL (ყველა ვერსიისთვის)
+    // 3. Median Native Bridge Command (App Deep-Link)
     try {
-      var iframe = document.createElement("iframe");
-      iframe.setAttribute("src", "median://onesignal/externalId/set?externalId=" + encodeURIComponent(userIdStr));
-      iframe.setAttribute("style", "display: none;");
-      document.body.appendChild(iframe);
-      setTimeout(function() {
-        if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      }, 1000);
+      window.location.href = "median://onesignal/externalId/set?externalId=" + encodeURIComponent(userIdStr);
     } catch (e) {
-      console.warn("Median URL Bridge error:", e);
+      console.warn("Median location Bridge error:", e);
     }
   }
 
+  // ვუშვებთ რამდენჯერმე, რომ აპლიკაციის ჩატვირთვას 100%-ით მოერგოს
   runSync();
   setTimeout(runSync, 2000);
-  setTimeout(runSync, 5000);
+  setTimeout(runSync, 4000);
 }
 
 auth.onAuthStateChanged(function(user) {
