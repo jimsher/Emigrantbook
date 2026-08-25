@@ -716,8 +716,7 @@ function makeElementDraggable(elmnt) {
 }
 
 // 5. საბოლოო გამოქვეყნება FIREBASE-ში
-// 5. საბოლოო გამოქვეყნება Cloudflare R2-ში და Firestore-ში
-// 5. საბოლოო გამოქვეყნება შენი ორიგინალი uploadImageToImgBB ფუნქციით
+// 5. პირდაპირი გარანტირებული ატვირთვა CLOUDFLARE R2-ში
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ გაიაროთ ავტორიზაცია');
@@ -731,18 +730,57 @@ function publishCreatedStory() {
   }
 
   var isVideo = selectedStoryMediaType === 'video';
+  var targetFolder = isVideo ? 'videos' : 'images';
+  var fileKey = targetFolder + '/' + Date.now() + '_' + selectedStoryFile.name.replace(/\s+/g, '_');
 
-  uploadImageToImgBB(selectedStoryFile, function(downloadUrl) {
+  var r2S3 = new AWS.S3({
+    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+    signatureVersion: 'v4',
+    region: 'auto'
+  });
+
+  var contentType = selectedStoryFile.type;
+  if (!contentType || contentType === "") {
+    contentType = isVideo ? 'video/mp4' : 'image/jpeg';
+  }
+
+  var params = {
+    Bucket: 'emigrantbook-videos',
+    Key: fileKey,
+    Body: selectedStoryFile,
+    ContentType: contentType
+  };
+
+  var options = {
+    partSize: 10 * 1024 * 1024,
+    queueSize: 1
+  };
+
+  var uploadObj = r2S3.upload(params, options, function(err, data) {
+    if (err) {
+      console.error("Cloudflare R2 Direct Upload Error:", err);
+      alert("Cloudflare-ზე ატვირთვის შეცდომა: " + err.message);
+      if (btn) {
+        btn.innerText = 'გაზიარება';
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+
     db.collection('stories').add({
       user_id: currentUser.uid,
-      media_url: downloadUrl,
+      media_url: publicUrl,
       media_type: isVideo ? "video" : "image",
       music_title: storyAttachedMusic,
       filter: currentAppliedFilter,
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function() {
-      alert('სიუჟეტი წარმატებით გამოქვეყნდა!');
+      alert('სიუჟეტი წარმატებით აიტვირთა Cloudflare R2-ში!');
       closeStoryCreator();
       if (btn) {
         btn.innerText = 'გაზიარება';
@@ -751,13 +789,20 @@ function publishCreatedStory() {
       if (typeof loadStories === 'function') {
         loadStories();
       }
-    }).catch(function(err) {
-      console.error("Firestore Save Error:", err);
-      alert("ბაზაში შენახვის შეცდომა: " + err.message);
+    }).catch(function(dbErr) {
+      console.error("Firestore Save Error:", dbErr);
+      alert("ბაზაში შენახვის შეცდომა: " + dbErr.message);
       if (btn) {
         btn.innerText = 'გაზიარება';
         btn.disabled = false;
       }
     });
+  });
+
+  uploadObj.on('httpUploadProgress', function(evt) {
+    if (evt.total && btn) {
+      var percent = Math.round((evt.loaded / evt.total) * 100);
+      btn.innerText = percent + '%';
+    }
   });
 }
