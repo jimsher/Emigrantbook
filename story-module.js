@@ -717,6 +717,7 @@ function makeElementDraggable(elmnt) {
 
 // 5. საბოლოო გამოქვეყნება FIREBASE-ში
 // 5. პირდაპირი გარანტირებული ატვირთვა CLOUDFLARE R2-ში
+// 5. სთორის გარანტირებული ატვირთვა პირდაპირ CLOUDFLARE R2-ში
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ გაიაროთ ავტორიზაცია');
@@ -733,6 +734,7 @@ function publishCreatedStory() {
   var targetFolder = isVideo ? 'videos' : 'images';
   var fileKey = targetFolder + '/' + Date.now() + '_' + selectedStoryFile.name.replace(/\s+/g, '_');
 
+  // Cloudflare R2 S3 კონფიგურაცია
   var r2S3 = new AWS.S3({
     endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
     accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
@@ -753,14 +755,10 @@ function publishCreatedStory() {
     ContentType: contentType
   };
 
-  var options = {
-    partSize: 10 * 1024 * 1024,
-    queueSize: 1
-  };
-
-  var uploadObj = r2S3.upload(params, options, function(err, data) {
+  // პირდაპირი putObject ატვირთვა R2-ზე
+  r2S3.putObject(params, function(err, data) {
     if (err) {
-      console.error("Cloudflare R2 Direct Upload Error:", err);
+      console.error("Cloudflare R2 Story Error:", err);
       alert("Cloudflare-ზე ატვირთვის შეცდომა: " + err.message);
       if (btn) {
         btn.innerText = 'გაზიარება';
@@ -797,12 +795,5 @@ function publishCreatedStory() {
         btn.disabled = false;
       }
     });
-  });
-
-  uploadObj.on('httpUploadProgress', function(evt) {
-    if (evt.total && btn) {
-      var percent = Math.round((evt.loaded / evt.total) * 100);
-      btn.innerText = percent + '%';
-    }
   });
 }
