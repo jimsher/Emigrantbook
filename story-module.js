@@ -717,7 +717,7 @@ function makeElementDraggable(elmnt) {
 
 // 5. საბოლოო გამოქვეყნება FIREBASE-ში
 // 5. საბოლოო გამოქვეყნება Cloudflare R2-ში და Firestore-ში
-// 5. გამოქვეყნება პირდაპირ CLOUDFLARE R2-ში
+// 5. საბოლოო გამოქვეყნება შენი ორიგინალი uploadImageToImgBB ფუნქციით
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ გაიაროთ ავტორიზაცია');
@@ -732,18 +732,17 @@ function publishCreatedStory() {
 
   var isVideo = selectedStoryMediaType === 'video';
 
-  // ვიყენებთ შენს Cloudflare R2-ის ფუნქციას (uploadMediaToFirebase)
-  uploadMediaToFirebase(selectedStoryFile, 'stories', function(cloudflareUrl) {
+  uploadImageToImgBB(selectedStoryFile, function(downloadUrl) {
     db.collection('stories').add({
       user_id: currentUser.uid,
-      media_url: cloudflareUrl,
+      media_url: downloadUrl,
       media_type: isVideo ? "video" : "image",
       music_title: storyAttachedMusic,
       filter: currentAppliedFilter,
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function() {
-      alert('სიუჟეტი წარმატებით აიტვირთა Cloudflare-ზე და გამოქვეყნდა!');
+      alert('სიუჟეტი წარმატებით გამოქვეყნდა!');
       closeStoryCreator();
       if (btn) {
         btn.innerText = 'გაზიარება';
@@ -754,13 +753,11 @@ function publishCreatedStory() {
       }
     }).catch(function(err) {
       console.error("Firestore Save Error:", err);
-      alert("შეცდომა ბაზაში შენახვისას: " + err.message);
+      alert("ბაზაში შენახვის შეცდომა: " + err.message);
       if (btn) {
         btn.innerText = 'გაზიარება';
         btn.disabled = false;
       }
     });
-  }, function(percent) {
-    if (btn) btn.innerText = percent + '%';
   });
 }
