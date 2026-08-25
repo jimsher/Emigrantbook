@@ -4468,10 +4468,15 @@ auth.onAuthStateChanged(function(user) {
 
     // აქ იწყება
     // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
-     function uploadMediaToFirebase(file, folder, callback, progressCallback) {
+     
+  // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო)
+function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   if (!currentUser) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+  var targetFolder = folder || (isVideo ? 'videos' : 'images');
+  var fileName = Date.now() + '_' + file.name.replace(/\s+/g, '_');
+  var fileKey = targetFolder + '/' + fileName;
 
   var r2S3 = new AWS.S3({
     endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
@@ -4481,14 +4486,7 @@ auth.onAuthStateChanged(function(user) {
     region: 'auto'
   });
 
-  var targetFolder = folder || (isVideo ? 'videos' : 'images');
-  var fileKey = targetFolder + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
-
-  // MIME ტიპის ავტომატური განსაზღვრა, რომ ტელეფონებმა არ დაბლოკონ
-  var contentType = file.type;
-  if (!contentType || contentType === "") {
-    contentType = isVideo ? 'video/mp4' : 'image/jpeg';
-  }
+  var contentType = file.type || (isVideo ? 'video/mp4' : 'image/jpeg');
 
   var params = {
     Bucket: 'emigrantbook-videos',
@@ -4497,34 +4495,19 @@ auth.onAuthStateChanged(function(user) {
     ContentType: contentType
   };
 
-  var options = {
-    partSize: 10 * 1024 * 1024,
-    queueSize: 1
-  };
-
-  var uploadObj = r2S3.upload(params, options, function(err, data) {
+  r2S3.putObject(params, function(err, data) {
     if (err) {
-      console.error("R2 Upload Error:", err);
+      console.error("Cloudflare R2 Post Upload Error:", err);
       alert("ატვირთვის შეცდომა: " + err.message);
     } else {
       var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
       callback(publicUrl);
     }
   });
-
-  uploadObj.on('httpUploadProgress', function(evt) {
-    if (evt.total && progressCallback) {
-      var percent = Math.round((evt.loaded / evt.total) * 100);
-      progressCallback(percent);
-    }
-  });
 }
 
+// პოსტის ფოტო პირდაპირ გაუშვას Cloudflare R2-ის 'images/' ფოლდერში
 function uploadImageToImgBB(file, callback) {
-  if (file.type.startsWith('video/')) {
-    uploadMediaToFirebase(file, 'videos', callback);
-    return;
-  }
   uploadMediaToFirebase(file, 'images', callback);
 }
   
