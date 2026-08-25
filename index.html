@@ -5161,7 +5161,7 @@ function unhidePostFromFeed(postId) {
 
                         
 
-    function createPost() {
+function createPost() {
   var txtEl = document.getElementById('post-text-input');
   var fileInput = document.getElementById('post-media-file');
   var publishBtn = document.getElementById('publish-submit-btn');
@@ -5182,7 +5182,6 @@ function unhidePostFromFeed(postId) {
     if (isVideo) {
       var file = files[0];
 
-      // თუ ფაილის ზომა 100 MB-ზე მეტია -> ვაჩვენებთ ჩვენს ლამაზ მოდალს
       if (file.size > 100 * 1024 * 1024) {
         showSizeLimitModal();
         if (publishBtn) {
@@ -5204,7 +5203,7 @@ function unhidePostFromFeed(postId) {
 
       files.forEach(function(file) {
         let p = new Promise(function(resolve, reject) {
-          uploadImageToImgBB(file, function(url) {
+          uploadMediaToFirebase(file, 'images', function(url) {
             uploadedUrls.push(url);
             resolve();
           });
@@ -5226,6 +5225,7 @@ function unhidePostFromFeed(postId) {
     savePostToDatabase(authorName, text, null, null, publishBtn);
   }
 }
+    
 
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
       db.collection('posts').add({
