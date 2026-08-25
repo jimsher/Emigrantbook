@@ -5362,30 +5362,7 @@ function unhidePostFromFeed(postId) {
       if (input) input.click();
     }
 
-    function uploadStory() {
-      var fileInput = document.getElementById('story-file-input');
-      if (!fileInput || fileInput.files.length === 0) return;
-      var file = fileInput.files[0];
-      var isVideo = file.type.startsWith('video/');
-
-      var saveStoryFn = function(downloadURL) {
-        db.collection('stories').add({
-          user_id: currentUser.uid,
-          media_url: downloadURL,
-          media_type: isVideo ? "video" : "image",
-          likes_count: 0,
-          created_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function() {
-          loadStories();
-        });
-      };
-
-      if (isVideo) {
-        uploadMediaToFirebase(file, 'stories', saveStoryFn);
-      } else {
-        uploadImageToImgBB(file, saveStoryFn);
-      }
-    }
+    
 
     function loadStories() {
       var listDiv = document.getElementById('friends-stories-list');
