@@ -1,343 +1,252 @@
 /* ===================================================
-   📱 FB STORY MODULE: STYLES, HTML & LOGIC (ALL IN ONE)
+   📱 FULL FB STORY CREATOR & VIEWER MODULE (ALL IN ONE)
    =================================================== */
 
-// 1. CSS სტილების ავტომატური ინექცია
+// 1. სრული CSS სტილების ინექცია
 (function injectStoryStyles() {
   const css = `
-    /* VIEWER STYLES */
+    /* VIEWER */
     .story-viewer-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(25px);
-      z-index: 999999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(25px);
+      z-index: 999999; display: flex; align-items: center; justify-content: center;
     }
     .fb-story-frame {
-      position: relative;
-      width: 100%;
-      max-width: 440px;
-      height: 100%;
-      max-height: 92vh;
-      background: #000000;
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      position: relative; width: 100%; max-width: 440px; height: 100%;
+      max-height: 92vh; background: #000; border-radius: 16px;
+      overflow: hidden; display: flex; flex-direction: column;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
     }
-    @media (max-width: 600px) {
-      .fb-story-frame { max-height: 100vh; border-radius: 0; }
-    }
+    @media (max-width: 600px) { .fb-story-frame { max-height: 100vh; border-radius: 0; } }
     .fb-story-progress-container {
-      position: absolute;
-      top: 10px; left: 12px; right: 12px;
-      height: 2.5px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 4px;
-      overflow: hidden;
-      z-index: 20;
+      position: absolute; top: 10px; left: 12px; right: 12px; height: 2.5px;
+      background: rgba(255, 255, 255, 0.3); border-radius: 4px; overflow: hidden; z-index: 20;
     }
-    .fb-story-progress-bar {
-      height: 100%; width: 0%;
-      background: #ffffff;
-      transition: width 0.1s linear;
-    }
+    .fb-story-progress-bar { height: 100%; width: 0%; background: #fff; transition: width 0.1s linear; }
     .fb-story-header {
-      position: absolute;
-      top: 20px; left: 12px; right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 20;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      position: absolute; top: 20px; left: 12px; right: 12px; display: flex;
+      align-items: center; justify-content: space-between; z-index: 20; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
     .fb-story-user-left { display: flex; align-items: center; gap: 10px; }
-    .fb-story-avatar-holder {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      border: 2px solid #1877f2;
-      overflow: hidden;
-      background: #2a2a2a;
-    }
+    .fb-story-avatar-holder { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1877f2; overflow: hidden; background: #2a2a2a; }
     .fb-story-avatar-holder img { width: 100%; height: 100%; object-fit: cover; }
     .fb-story-info-meta { display: flex; flex-direction: column; gap: 2px; }
     .fb-story-user-row { display: flex; align-items: center; gap: 8px; }
-    .fb-story-username { color: #ffffff; font-size: 14.5px; font-weight: 700; }
+    .fb-story-username { color: #fff; font-size: 14.5px; font-weight: 700; }
     .fb-story-timestamp { color: rgba(255, 255, 255, 0.75); font-size: 12px; }
     .fb-story-music-pill {
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(8px);
-      padding: 2px 8px;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      width: fit-content;
+      background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); padding: 2px 8px;
+      border-radius: 12px; color: #fff; font-size: 11px; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 4px; width: fit-content;
     }
     .fb-story-actions-right { display: flex; align-items: center; gap: 8px; }
     .fb-story-head-btn {
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(6px);
-      border: none;
-      color: #ffffff;
-      font-size: 16px;
-      font-weight: bold;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(6px); border: none;
+      color: #fff; font-size: 16px; font-weight: bold; width: 32px; height: 32px;
+      border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .fb-story-media-view {
-      width: 100%; height: 100%;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .fb-story-media-view img, .fb-story-media-view video {
-      width: 100%; height: 100%; object-fit: contain;
-    }
-    .story-floating-reactions {
-      position: absolute;
-      bottom: 80px; right: 20px;
-      pointer-events: none;
-      z-index: 25;
-    }
-    .flying-story-emoji {
-      position: absolute; bottom: 0; right: 0;
-      font-size: 32px;
-      animation: flyUpAndFade 1.4s ease-out forwards;
-    }
+    .fb-story-media-view { width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
+    .fb-story-media-view img, .fb-story-media-view video { width: 100%; height: 100%; object-fit: contain; }
+    .story-floating-reactions { position: absolute; bottom: 80px; right: 20px; pointer-events: none; z-index: 25; }
+    .flying-story-emoji { position: absolute; bottom: 0; right: 0; font-size: 32px; animation: flyUpAndFade 1.4s ease-out forwards; }
     @keyframes flyUpAndFade {
       0% { transform: translateY(0) scale(0.6); opacity: 1; }
       50% { transform: translateY(-120px) scale(1.3) rotate(-15deg); opacity: 0.9; }
       100% { transform: translateY(-240px) scale(1) rotate(15deg); opacity: 0; }
     }
     .fb-story-footer {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
+      position: absolute; bottom: 0; left: 0; right: 0;
       padding: 12px 14px max(14px, env(safe-area-inset-bottom));
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
-      z-index: 20;
+      display: flex; align-items: center; gap: 10px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); z-index: 20;
     }
     .fb-story-circle-btn {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 50%; background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
     }
     .fb-story-circle-btn:active { transform: scale(0.92); }
     .fb-story-input-box {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 25px;
-      padding: 0 16px;
-      height: 44px;
-      display: flex;
-      align-items: center;
+      flex: 1; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 25px; padding: 0 16px;
+      height: 44px; display: flex; align-items: center;
     }
-    .fb-story-input-box input {
-      width: 100%; background: transparent;
-      border: none; color: #fff;
-      font-size: 14px; outline: none; font-family: inherit;
-    }
+    .fb-story-input-box input { width: 100%; background: transparent; border: none; color: #fff; font-size: 14px; outline: none; font-family: inherit; }
     .fb-story-input-box input::placeholder { color: rgba(255, 255, 255, 0.7); }
     .fb-story-reactions-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .fb-story-react-circle {
-      width: 42px; height: 42px;
-      border-radius: 50%; border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      width: 42px; height: 42px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .fb-story-react-circle:active { transform: scale(1.3); }
     .heart-react { background: #ff2d55; }
     .thumb-react { background: #1877f2; }
     .laugh-react { background: #f7b125; }
 
-    /* CREATOR STYLES */
+    /* 🎨 CREATOR STYLES (MATCHING SCREENSHOT) */
     .fb-story-creator-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #000000;
-      z-index: 1000000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #000; z-index: 1000000; display: flex; align-items: center; justify-content: center;
     }
     .fb-creator-frame {
-      position: relative;
-      width: 100%;
-      max-width: 440px;
-      height: 100%;
-      max-height: 100vh;
-      background: #111;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      overflow: hidden;
+      position: relative; width: 100%; max-width: 440px; height: 100%;
+      max-height: 100vh; background: #0a0a0a; display: flex; flex-direction: column;
+      justify-content: space-between; overflow: hidden;
     }
     .fb-creator-top-bar {
-      position: absolute;
-      top: 15px; left: 12px; right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 30;
+      position: absolute; top: 18px; left: 14px; right: 14px;
+      display: flex; align-items: center; justify-content: space-between; z-index: 30;
     }
     .fb-creator-icon-btn {
-      background: rgba(0, 0, 0, 0.4);
-      border: none; color: #ffffff;
-      width: 40px; height: 40px;
-      border-radius: 50%; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(8px); font-size: 18px;
+      background: rgba(0, 0, 0, 0.45); border: none; color: #fff;
+      width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);
     }
     .fb-creator-music-pill {
-      display: flex; align-items: center; gap: 10px;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(12px);
-      padding: 6px 14px; border-radius: 25px;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      max-width: 65%;
+      display: flex; align-items: center; gap: 8px; background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(14px); padding: 6px 14px; border-radius: 25px;
+      cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.15); max-width: 65%;
     }
-    .fb-music-icon { font-size: 16px; }
-    .fb-music-texts { display: flex; flex-direction: column; overflow: hidden; }
-    .fb-music-title {
-      color: #fff; font-size: 13px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .fb-music-icon {
+      width: 28px; height: 28px; background: #262626; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
     }
-    .fb-music-sub { color: rgba(255, 255, 255, 0.65); font-size: 11px; }
+    .fb-music-texts { display: flex; flex-direction: column; overflow: hidden; text-align: left; }
+    .fb-music-title { color: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fb-music-sub { color: rgba(255, 255, 255, 0.65); font-size: 10.5px; }
+
     .fb-creator-media-zone {
-      position: relative; width: 100%; height: 100%;
-      background: #000;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
+      position: relative; width: 100%; height: 100%; background: #000;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
-    .fb-creator-preview-box {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .fb-creator-preview-box img, .fb-creator-preview-box video {
-      width: 100%; height: 100%; object-fit: contain;
-    }
-    .fb-creator-overlay-layer {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: 20;
+    .fb-creator-preview-box { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .fb-creator-preview-box img, .fb-creator-preview-box video { width: 100%; height: 100%; object-fit: contain; transition: filter 0.3s ease; }
+    .fb-creator-overlay-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: auto; }
+    
+    .creator-movable-element {
+      position: absolute; cursor: move; user-select: none;
+      padding: 6px 12px; border-radius: 8px;
     }
     .creator-text-element {
-      position: absolute; color: #fff;
-      font-size: 24px; font-weight: bold;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
-      padding: 6px 12px; border-radius: 8px;
-      user-select: none;
+      color: #fff; font-size: 24px; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+      background: rgba(0,0,0,0.25); border-radius: 8px; backdrop-filter: blur(4px);
     }
+    .creator-sticker-element { font-size: 54px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+
+    /* TOOLS (BOTTOM SCREENSHOT REPLICA) */
     .fb-creator-tools-bar {
-      position: absolute;
-      bottom: 75px; left: 0; right: 0;
+      position: absolute; bottom: 78px; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-around;
-      padding: 0 10px; z-index: 30;
+      padding: 0 8px; z-index: 30;
     }
     .fb-creator-tool-item {
       display: flex; flex-direction: column; align-items: center;
-      gap: 6px; cursor: pointer;
+      gap: 6px; cursor: pointer; min-width: 60px;
     }
     .fb-creator-tool-item span {
-      color: #fff; font-size: 12px; font-weight: 500;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      color: #fff; font-size: 11.5px; font-weight: 500; text-shadow: 0 1px 4px rgba(0,0,0,0.9);
     }
     .fb-tool-icon-circle {
-      width: 46px; height: 46px; border-radius: 50%;
-      background: rgba(30, 30, 30, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(35, 35, 35, 0.65); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 18px; font-weight: bold;
-      transition: transform 0.1s;
+      color: #fff; font-size: 18px; font-weight: bold; transition: transform 0.12s;
     }
     .fb-creator-tool-item:active .fb-tool-icon-circle { transform: scale(0.9); }
+
+    /* BOTTOM CONTROLS */
     .fb-creator-bottom-bar {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
+      position: absolute; bottom: 0; left: 0; right: 0;
       padding: 12px 14px max(14px, env(safe-area-inset-bottom));
-      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 8px; z-index: 30;
+      background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; z-index: 30;
     }
     .fb-creator-privacy-btn {
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(10px);
-      padding: 10px 14px; border-radius: 20px;
-      color: #fff; font-size: 13px; font-weight: 600;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(12px); padding: 10px 14px; border-radius: 22px;
+      color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;
     }
     .fb-creator-share-btn {
-      background: #1877f2; color: #ffffff;
-      border: none; padding: 10px 24px;
-      border-radius: 20px; font-size: 14px; font-weight: 700;
-      cursor: pointer; flex: 1; max-width: 140px; text-align: center;
+      background: #1877f2; color: #fff; border: none; padding: 11px 24px;
+      border-radius: 22px; font-size: 14px; font-weight: 700; cursor: pointer;
+      flex: 1; max-width: 140px; text-align: center;
     }
     .fb-creator-share-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* TOOL MODALS (MUSIC, STICKERS, FILTERS) */
+    .fb-sheet-modal {
+      position: absolute; bottom: 0; left: 0; right: 0; max-height: 65vh;
+      background: #18191a; border-radius: 20px 20px 0 0; z-index: 50;
+      padding: 16px; display: none; flex-direction: column; gap: 12px;
+      box-shadow: 0 -5px 25px rgba(0,0,0,0.8);
+    }
+    .fb-sheet-header {
+      display: flex; justify-content: space-between; align-items: center;
+      color: #fff; font-size: 16px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 10px;
+    }
+    .fb-sheet-close { background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; }
+    .fb-sheet-list { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .fb-music-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px;
+      background: #242526; border-radius: 10px; cursor: pointer;
+    }
+    .fb-music-item:hover { background: #3a3b3c; }
+    .fb-music-item-info { display: flex; flex-direction: column; color: #fff; font-size: 13.5px; }
+    .fb-music-item-info span:last-child { font-size: 11px; color: #b0b3b8; }
+    
+    .fb-stickers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 10px 0; }
+    .fb-sticker-btn { background: #242526; border: none; border-radius: 12px; font-size: 32px; padding: 10px; cursor: pointer; }
+    .fb-sticker-btn:hover { background: #3a3b3c; }
+
+    .fb-filters-grid { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; }
+    .fb-filter-pill {
+      background: #242526; color: #fff; border: 1px solid #444;
+      padding: 8px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 13px;
+    }
   `;
   const styleEl = document.createElement('style');
   styleEl.innerHTML = css;
   document.head.appendChild(styleEl);
 })();
 
-// 2. HTML სტრუქტურის ავტომატური ინექცია Body-ში
+// 2. სრული HTML სტრუქტურის ინექცია
 (function injectStoryHTML() {
   const container = document.createElement('div');
   container.id = 'story-system-root';
   container.innerHTML = `
-    <!-- ფარული File Input -->
+    <!-- ფაილის ასარჩევი ფარული ინფუთი -->
     <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="handleStoryFileSelected(event)">
 
-    <!-- 🎨 1. STORY CREATOR / EDITOR MODAL -->
+    <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
+        
+        <!-- TOP BAR -->
         <div class="fb-creator-top-bar">
           <button class="fb-creator-icon-btn" onclick="closeStoryCreator()">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
           </button>
+
           <div class="fb-creator-music-pill" onclick="openStoryTool('music')">
-            <span class="fb-music-icon">🎵</span>
+            <div class="fb-music-icon">🎵</div>
             <div class="fb-music-texts">
               <span class="fb-music-title" id="creator-music-name">მუსიკის დამატება</span>
               <span class="fb-music-sub">შემოთავაზებები</span>
             </div>
           </div>
-          <button class="fb-creator-icon-btn" onclick="alert('დამატებითი პარამეტრები')">•••</button>
+
+          <button class="fb-creator-icon-btn" onclick="resetStoryEdits()" title="გასუფთავება">✕</button>
         </div>
 
+        <!-- MEDIA DISPLAY & OVERLAYS -->
         <div class="fb-creator-media-zone" id="creator-media-zone">
           <div id="creator-media-preview" class="fb-creator-preview-box"></div>
           <div id="creator-overlay-layer" class="fb-creator-overlay-layer"></div>
         </div>
 
+        <!-- TOOLS BAR -->
         <div class="fb-creator-tools-bar">
           <div class="fb-creator-tool-item" onclick="openStoryTool('music')">
             <div class="fb-tool-icon-circle">🎵</div>
@@ -365,6 +274,7 @@
           </div>
         </div>
 
+        <!-- BOTTOM CONTROLS -->
         <div class="fb-creator-bottom-bar">
           <div class="fb-creator-privacy-btn">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
@@ -376,6 +286,66 @@
           </div>
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
+
+        <!-- 🎵 1. MUSIC SELECTOR SHEET -->
+        <div id="sheet-music" class="fb-sheet-modal">
+          <div class="fb-sheet-header">
+            <span>მუსიკის არჩევა</span>
+            <button class="fb-sheet-close" onclick="closeSheet('sheet-music')">✕</button>
+          </div>
+          <div class="fb-sheet-list">
+            <div class="fb-music-item" onclick="selectMusic('Lady Gaga, Bruno Mars - Die With A Smile')">
+              <span>🎵</span>
+              <div class="fb-music-item-info"><span>Die With A Smile</span><span>Lady Gaga, Bruno Mars</span></div>
+            </div>
+            <div class="fb-music-item" onclick="selectMusic('Billie Eilish - BIRDS OF A FEATHER')">
+              <span>🎵</span>
+              <div class="fb-music-item-info"><span>BIRDS OF A FEATHER</span><span>Billie Eilish</span></div>
+            </div>
+            <div class="fb-music-item" onclick="selectMusic('Sabrina Carpenter - Espresso')">
+              <span>🎵</span>
+              <div class="fb-music-item-info"><span>Espresso</span><span>Sabrina Carpenter</span></div>
+            </div>
+            <div class="fb-music-item" onclick="selectMusic('The Weeknd - Blinding Lights')">
+              <span>🎵</span>
+              <div class="fb-music-item-info"><span>Blinding Lights</span><span>The Weeknd</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 😃 2. STICKERS SHEET -->
+        <div id="sheet-stickers" class="fb-sheet-modal">
+          <div class="fb-sheet-header">
+            <span>სტიკერები</span>
+            <button class="fb-sheet-close" onclick="closeSheet('sheet-stickers')">✕</button>
+          </div>
+          <div class="fb-stickers-grid">
+            <button class="fb-sticker-btn" onclick="addSticker('🔥')">🔥</button>
+            <button class="fb-sticker-btn" onclick="addSticker('❤️')">❤️</button>
+            <button class="fb-sticker-btn" onclick="addSticker('🎉')">🎉</button>
+            <button class="fb-sticker-btn" onclick="addSticker('✨')">✨</button>
+            <button class="fb-sticker-btn" onclick="addSticker('👑')">👑</button>
+            <button class="fb-sticker-btn" onclick="addSticker('🚀')">🚀</button>
+            <button class="fb-sticker-btn" onclick="addSticker('💯')">💯</button>
+            <button class="fb-sticker-btn" onclick="addSticker('⭐')">⭐</button>
+          </div>
+        </div>
+
+        <!-- 🎨 3. EFFECTS / FILTERS SHEET -->
+        <div id="sheet-effects" class="fb-sheet-modal">
+          <div class="fb-sheet-header">
+            <span>ფილტრები & ეფექტები</span>
+            <button class="fb-sheet-close" onclick="closeSheet('sheet-effects')">✕</button>
+          </div>
+          <div class="fb-filters-grid">
+            <button class="fb-filter-pill" onclick="applyMediaFilter('none')">ორიგინალი</button>
+            <button class="fb-filter-pill" onclick="applyMediaFilter('grayscale(100%)')">B & W</button>
+            <button class="fb-filter-pill" onclick="applyMediaFilter('sepia(60%) contrast(110%)')">Vintage</button>
+            <button class="fb-filter-pill" onclick="applyMediaFilter('saturate(180%) contrast(110%)')">Vibrant</button>
+            <button class="fb-filter-pill" onclick="applyMediaFilter('brightness(120%) contrast(90%)')">Soft Glow</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -424,15 +394,11 @@
       </div>
     </div>
   `;
-  document.addEventListener('DOMContentLoaded', function() {
-    document.body.appendChild(container);
-  });
-  if (document.body) {
-    document.body.appendChild(container);
-  }
+  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(container));
+  if (document.body) document.body.appendChild(container);
 })();
 
-// 3. STORY VIEWER ლოგიკა
+// 3. STORY VIEWER LOGIC
 var storyTimer = null;
 var storyProgressInterval = null;
 var storyProgressPct = 0;
@@ -446,9 +412,11 @@ function openStoryViewer(story, username, avatarUrl) {
   var timeSpan = document.getElementById('sv-time');
   var avatarDiv = document.getElementById('sv-avatar');
   var mediaContainer = document.getElementById('sv-media-container');
+  var musicTitle = document.getElementById('sv-music-title');
 
   if (userSpan) userSpan.innerText = username;
-  
+  if (musicTitle) musicTitle.innerText = story.music_title || "Original Audio";
+
   if (timeSpan && story.created_at) {
     var createdDate = story.created_at.toDate ? story.created_at.toDate() : new Date(story.created_at);
     var diffHours = Math.floor((new Date() - createdDate) / (1000 * 60 * 60));
@@ -465,9 +433,9 @@ function openStoryViewer(story, username, avatarUrl) {
 
   if (mediaContainer) {
     if (story.media_type === 'video') {
-      mediaContainer.innerHTML = `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
+      mediaContainer.innerHTML = `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};"></video>`;
     } else {
-      mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:cover;">`;
+      mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};">`;
     }
   }
 
@@ -486,7 +454,6 @@ function startStoryProgressBar(durationMs) {
     if (!isStoryPaused) {
       storyProgressPct += stepPct;
       if (fill) fill.style.width = Math.min(storyProgressPct, 100) + '%';
-
       if (storyProgressPct >= 100) {
         clearInterval(storyProgressInterval);
         closeStoryViewer();
@@ -530,9 +497,7 @@ function reactToStoryFacebook(emoji) {
   }
 
   var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
-  db.collection('stories').doc(currentViewingStoryObj.id).update({
-    likes_count: newLikes
-  }).catch(function(){});
+  db.collection('stories').doc(currentViewingStoryObj.id).update({ likes_count: newLikes }).catch(function(){});
 
   if (currentViewingStoryObj.user_id !== currentUser.uid) {
     var chatId = currentUser.uid < currentViewingStoryObj.user_id ? currentUser.uid + '_' + currentViewingStoryObj.user_id : currentViewingStoryObj.user_id + '_' + currentUser.uid;
@@ -565,22 +530,29 @@ function handleStoryCommentKeyPress(event) {
   }
 }
 
-// 4. STORY CREATOR & UPLOAD ლოგიკა
+// 4. STORY CREATOR & INTERACTIVE TOOLS LOGIC
 var selectedStoryFile = null;
 var selectedStoryMediaType = null;
 var storyAttachedMusic = "Original Audio";
+var currentAppliedFilter = "none";
 
 function triggerStoryUpload() {
   var fileInput = document.getElementById('story-file-input');
   if (fileInput) fileInput.click();
 }
 
+// როდესაც ფაილი აირჩევა -> იხსნება ედიტორი
 function handleStoryFileSelected(event) {
   var file = event.target.files[0];
   if (!file) return;
 
   selectedStoryFile = file;
   selectedStoryMediaType = file.type.startsWith('video') ? 'video' : 'image';
+  currentAppliedFilter = "none";
+  storyAttachedMusic = "Original Audio";
+
+  var titleEl = document.getElementById('creator-music-name');
+  if (titleEl) titleEl.innerText = "მუსიკის დამატება";
 
   var previewZone = document.getElementById('creator-media-preview');
   var overlayLayer = document.getElementById('creator-overlay-layer');
@@ -590,9 +562,9 @@ function handleStoryFileSelected(event) {
 
   if (previewZone) {
     if (selectedStoryMediaType === 'video') {
-      previewZone.innerHTML = `<video src="${fileUrl}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>`;
+      previewZone.innerHTML = `<video id="creator-target-media" src="${fileUrl}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>`;
     } else {
-      previewZone.innerHTML = `<img src="${fileUrl}" style="width:100%; height:100%; object-fit:contain;">`;
+      previewZone.innerHTML = `<img id="creator-target-media" src="${fileUrl}" style="width:100%; height:100%; object-fit:contain;">`;
     }
   }
 
@@ -609,47 +581,141 @@ function closeStoryCreator() {
   if (creatorModal) creatorModal.style.display = 'none';
   selectedStoryFile = null;
   selectedStoryMediaType = null;
+  closeAllSheets();
 }
 
+function resetStoryEdits() {
+  var overlayLayer = document.getElementById('creator-overlay-layer');
+  if (overlayLayer) overlayLayer.innerHTML = '';
+  applyMediaFilter('none');
+  storyAttachedMusic = "Original Audio";
+  var titleEl = document.getElementById('creator-music-name');
+  if (titleEl) titleEl.innerText = "მუსიკის დამატება";
+}
+
+// ხელსაწყოების გახსნა
 function openStoryTool(toolType) {
+  closeAllSheets();
+
   if (toolType === 'text') {
-    var userText = prompt('შეიყვანეთ ტექსტი სიუჟეტისთვის:');
-    if (userText) {
-      var layer = document.getElementById('creator-overlay-layer');
-      var el = document.createElement('div');
-      el.className = 'creator-text-element';
-      el.style.top = '45%';
-      el.style.left = '50%';
-      el.style.transform = 'translate(-50%, -50%)';
-      el.innerText = userText;
-      layer.appendChild(el);
-    }
+    var userText = prompt('შეიყვანეთ ტექსტი:');
+    if (userText) makeDraggableText(userText);
   } else if (toolType === 'music') {
-    var musicName = prompt('შეიყვანეთ სიმღერის სახელი:', 'Lady Gaga - Die With A Smile');
-    if (musicName) {
-      storyAttachedMusic = musicName;
-      var titleEl = document.getElementById('creator-music-name');
-      if (titleEl) titleEl.innerText = musicName;
-    }
+    var sheet = document.getElementById('sheet-music');
+    if (sheet) sheet.style.display = 'flex';
   } else if (toolType === 'stickers') {
-    alert('სტიკერების არჩევა');
+    var sheet = document.getElementById('sheet-stickers');
+    if (sheet) sheet.style.display = 'flex';
   } else if (toolType === 'effects') {
-    alert('ეფექტების ფილტრი');
+    var sheet = document.getElementById('sheet-effects');
+    if (sheet) sheet.style.display = 'flex';
   } else if (toolType === 'mention') {
-    var userTag = prompt('ვინ გსურთ მონიშნოთ? (@username):');
-    if (userTag) {
-      var layer = document.getElementById('creator-overlay-layer');
-      var el = document.createElement('div');
-      el.className = 'creator-text-element';
-      el.style.top = '55%';
-      el.style.left = '50%';
-      el.style.transform = 'translate(-50%, -50%)';
-      el.innerText = '@' + userTag.replace('@', '');
-      layer.appendChild(el);
-    }
+    var userTag = prompt('მონიშნეთ მომხმარებელი: @');
+    if (userTag) makeDraggableText('@' + userTag.replace('@', ''));
   }
 }
 
+function closeSheet(id) {
+  var sheet = document.getElementById(id);
+  if (sheet) sheet.style.display = 'none';
+}
+
+function closeAllSheets() {
+  document.querySelectorAll('.fb-sheet-modal').forEach(el => el.style.display = 'none');
+}
+
+// მუსიკის არჩევა
+function selectMusic(musicTitle) {
+  storyAttachedMusic = musicTitle;
+  var titleEl = document.getElementById('creator-music-name');
+  if (titleEl) titleEl.innerText = musicTitle;
+  closeAllSheets();
+}
+
+// სტიკერის დამატება
+function addSticker(emoji) {
+  var layer = document.getElementById('creator-overlay-layer');
+  var el = document.createElement('div');
+  el.className = 'creator-movable-element creator-sticker-element';
+  el.innerText = emoji;
+  el.style.top = '40%';
+  el.style.left = '42%';
+  layer.appendChild(el);
+  makeElementDraggable(el);
+  closeAllSheets();
+}
+
+// ტექსტის დადება
+function makeDraggableText(text) {
+  var layer = document.getElementById('creator-overlay-layer');
+  var el = document.createElement('div');
+  el.className = 'creator-movable-element creator-text-element';
+  el.innerText = text;
+  el.style.top = '45%';
+  el.style.left = '35%';
+  layer.appendChild(el);
+  makeElementDraggable(el);
+}
+
+// ფილტრის დადება
+function applyMediaFilter(filterValue) {
+  currentAppliedFilter = filterValue;
+  var media = document.getElementById('creator-target-media');
+  if (media) media.style.filter = filterValue;
+  closeAllSheets();
+}
+
+// Drag & Drop ელემენტების გადასაადგილებლად
+function makeElementDraggable(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  elmnt.onmousedown = dragMouseDown;
+  elmnt.ontouchstart = dragTouchStart;
+
+  function dragMouseDown(e) {
+    e.preventDefault();
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e.preventDefault();
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function dragTouchStart(e) {
+    var touch = e.touches[0];
+    pos3 = touch.clientX;
+    pos4 = touch.clientY;
+    document.ontouchend = closeDragElement;
+    document.ontouchmove = elementTouchDrag;
+  }
+
+  function elementTouchDrag(e) {
+    var touch = e.touches[0];
+    pos1 = pos3 - touch.clientX;
+    pos2 = pos4 - touch.clientY;
+    pos3 = touch.clientX;
+    pos4 = touch.clientY;
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+  }
+
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+    document.ontouchend = null;
+    document.ontouchmove = null;
+  }
+}
+
+// 5. საბოლოო გამოქვეყნება FIREBASE-ში
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ გაიაროთ ავტორიზაცია');
@@ -673,6 +739,7 @@ function publishCreatedStory() {
       media_url: downloadUrl,
       media_type: selectedStoryMediaType,
       music_title: storyAttachedMusic,
+      filter: currentAppliedFilter,
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
     });
