@@ -4484,7 +4484,8 @@ function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   });
 
   var targetFolder = folder || (isVideo ? 'videos' : 'images');
-  var fileKey = targetFolder + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
+  var safeFileName = file.name ? file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') : (isVideo ? 'video.mp4' : 'image.jpg');
+  var fileKey = targetFolder + '/' + Date.now() + '_' + safeFileName;
 
   var contentType = file.type;
   if (!contentType || contentType === "") {
@@ -5171,7 +5172,7 @@ function unhidePostFromFeed(postId) {
     
 
                         
-   function createPost() {
+function createPost() {
   var txtEl = document.getElementById('post-text-input');
   var fileInput = document.getElementById('post-media-file');
   var publishBtn = document.getElementById('publish-submit-btn');
@@ -5187,7 +5188,7 @@ function unhidePostFromFeed(postId) {
 
   if (fileInput && fileInput.files.length > 0) {
     var files = Array.from(fileInput.files).slice(0, 6);
-    var isVideo = files[0].type && files[0].type.startsWith('video/');
+    var isVideo = files[0].type.startsWith('video/') || (files[0].name && files[0].name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
     if (isVideo) {
       var file = files[0];
@@ -5221,7 +5222,6 @@ function unhidePostFromFeed(postId) {
 
       files.forEach(function(file) {
         let p = new Promise(function(resolve, reject) {
-          // ფოტოები პირდაპირ იგზავნება Cloudflare-ის images ფოლდერში
           uploadMediaToFirebase(file, 'images', function(url) {
             if (url) {
               uploadedUrls.push(url);
