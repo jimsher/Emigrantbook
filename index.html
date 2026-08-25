@@ -5177,7 +5177,7 @@ function unhidePostFromFeed(postId) {
   var publishBtn = document.getElementById('publish-submit-btn');
 
   var text = txtEl ? txtEl.value.trim() : "";
-  if (!text && fileInput.files.length === 0) return;
+  if (!text && (!fileInput || fileInput.files.length === 0)) return;
 
   if (publishBtn) {
     publishBtn.disabled = true;
@@ -5187,12 +5187,11 @@ function unhidePostFromFeed(postId) {
 
   if (fileInput && fileInput.files.length > 0) {
     var files = Array.from(fileInput.files).slice(0, 6);
-    var isVideo = files[0].type.startsWith('video/');
+    var isVideo = files[0].type && files[0].type.startsWith('video/');
 
     if (isVideo) {
       var file = files[0];
 
-      // თუ ფაილის ზომა 100 MB-ზე მეტია -> ვაჩვენებთ ჩვენს ლამაზ მოდალს
       if (file.size > 100 * 1024 * 1024) {
         showSizeLimitModal();
         if (publishBtn) {
@@ -5204,6 +5203,14 @@ function unhidePostFromFeed(postId) {
       }
 
       uploadMediaToFirebase(files[0], 'videos', function(videoUrl) {
+        if (!videoUrl) {
+          if (publishBtn) {
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = 'Publish';
+            if (typeof applyLanguageDOM === 'function') applyLanguageDOM();
+          }
+          return;
+        }
         savePostToDatabase(authorName, text, videoUrl, "video", publishBtn);
       }, function(percent) {
         if (publishBtn) publishBtn.innerText = percent + '%';
@@ -5214,22 +5221,31 @@ function unhidePostFromFeed(postId) {
 
       files.forEach(function(file) {
         let p = new Promise(function(resolve, reject) {
-          // აქ ძველი uploadImageToImgBB-ს ნაცვლად პირდაპირ ვუშვებთ ატვირთვას 'images' ფოლდერში
+          // ფოტოები პირდაპირ იგზავნება Cloudflare-ის images ფოლდერში
           uploadMediaToFirebase(file, 'images', function(url) {
-            uploadedUrls.push(url);
-            resolve();
+            if (url) {
+              uploadedUrls.push(url);
+              resolve();
+            } else {
+              reject("URL დაკარგულია");
+            }
           });
         });
         promises.push(p);
       });
 
       Promise.all(promises).then(function() {
+        if (uploadedUrls.length === 0) {
+          throw new Error("ფოტოები ვერ აიტვირთა");
+        }
         var mediaUrlsJoined = uploadedUrls.join(",");
         savePostToDatabase(authorName, text, mediaUrlsJoined, "image", publishBtn);
-      }).catch(function() {
+      }).catch(function(err) {
+        console.error("Photos upload error:", err);
         if (publishBtn) {
           publishBtn.disabled = false;
-          applyLanguageDOM();
+          publishBtn.innerHTML = 'Publish';
+          if (typeof applyLanguageDOM === 'function') applyLanguageDOM();
         }
       });
     }
