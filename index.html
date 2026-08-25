@@ -5161,7 +5161,7 @@ function unhidePostFromFeed(postId) {
 
                         
 
-function createPost() {
+ function createPost() {
   var txtEl = document.getElementById('post-text-input');
   var fileInput = document.getElementById('post-media-file');
   var publishBtn = document.getElementById('publish-submit-btn');
@@ -5182,6 +5182,7 @@ function createPost() {
     if (isVideo) {
       var file = files[0];
 
+      // თუ ფაილის ზომა 100 MB-ზე მეტია -> ვაჩვენებთ ჩვენს ლამაზ მოდალს
       if (file.size > 100 * 1024 * 1024) {
         showSizeLimitModal();
         if (publishBtn) {
@@ -5203,8 +5204,7 @@ function createPost() {
 
       files.forEach(function(file) {
         let p = new Promise(function(resolve, reject) {
-          // აქ ძველი ფუნქციის ნაცვლად პირდაპირ Cloudflare-ის uploadMediaToFirebase იძახებს 'images' ფოლდერით
-          uploadMediaToFirebase(file, 'images', function(url) {
+          uploadImageToImgBB(file, function(url) {
             uploadedUrls.push(url);
             resolve();
           });
@@ -5226,6 +5226,7 @@ function createPost() {
     savePostToDatabase(authorName, text, null, null, publishBtn);
   }
 }
+
     
 
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
