@@ -6055,6 +6055,190 @@ function openProfileViewsFromHeader() {
     badge.style.display = 'none';
   }
 }
+
+
+
+
+    /* 📤 FACEBOOK SHARE BOTTOM SHEET SYSTEM */
+var activePostForShare = null;
+
+function openShareModal(postId) {
+  if (!currentUser) return;
+  
+  db.collection('posts').doc(postId).get().then(function(docSnap) {
+    if (!docSnap.exists) return;
+    
+    activePostForShare = Object.assign({ id: docSnap.id }, docSnap.data());
+    
+    var modal = document.getElementById('eb-share-modal');
+    var thoughtInput = document.getElementById('share-custom-thought');
+    if (thoughtInput) thoughtInput.value = "";
+
+    // ავატარი & სახელი
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
+    var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
+    
+    var nameEl = document.getElementById('share-modal-user-name');
+    var avEl = document.getElementById('share-modal-user-avatar');
+    if (nameEl) nameEl.innerText = myName;
+    if (avEl) {
+      if (myAvatar) {
+        avEl.innerHTML = `<img src="${myAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      } else {
+        avEl.innerHTML = myName.charAt(0).toUpperCase();
+      }
+    }
+
+    if (modal) modal.style.display = "flex";
+    loadShareFriendsList();
+  });
+}
+
+function closeShareModal() {
+  var modal = document.getElementById('eb-share-modal');
+  if (modal) modal.style.display = "none";
+  activePostForShare = null;
+}
+
+// მეგობრების ჩატვირთვა მესინჯერში პირდაპირ გასაზიარებლად
+function loadShareFriendsList() {
+  var list = document.getElementById('share-friends-horizontal-list');
+  if (!list || !currentUser) return;
+
+  list.innerHTML = `<div style="color:#777; font-size:12px; padding:10px;">იტვირთება...</div>`;
+
+  Promise.all([
+    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+  ]).then(function(results) {
+    var fIds = [];
+    results[0].forEach(d => fIds.push(d.data().receiver_id));
+    results[1].forEach(d => fIds.push(d.data().sender_id));
+
+    if (fIds.length === 0) {
+      list.innerHTML = `<div style="color:#666; font-size:12px; padding:10px;">მეგობრები არ მოიძებნა</div>`;
+      return;
+    }
+
+    fetchMultipleProfilesCached(fIds, function() {
+      var html = "";
+      fIds.forEach(function(fId) {
+        var p = cachedProfiles[fId] || {};
+        var name = p.full_name || "User";
+        var avatar = p.avatar_url;
+        var initial = name.charAt(0).toUpperCase();
+        var avHtml = avatar ? `<img src="${avatar}" alt="Avatar">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;">${initial}</div>`;
+
+        html += `
+          <div class="share-friend-card" onclick="sharePostToFriendDirectly('${fId}', '${name}')">
+            <div class="share-friend-avatar-box">${avHtml}</div>
+            <span class="share-friend-name">${name}</span>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
+    });
+  });
+}
+
+// მეგობართან პირად ჩატში გაგზავნა
+function sharePostToFriendDirectly(friendId, friendName) {
+  if (!activePostForShare || !currentUser) return;
+  
+  var chatId = currentUser.uid < friendId ? currentUser.uid + '_' + friendId : friendId + '_' + currentUser.uid;
+  var postLink = `https://emigrantbook.com?post=${activePostForShare.id}`;
+
+  db.collection('chats').doc(chatId).collection('messages').add({
+    senderId: currentUser.uid,
+    text: `გაგიზიარათ პოსტი: ${postLink}`,
+    created_at: firebase.firestore.FieldValue.serverTimestamp(),
+    read: false
+  }).then(function() {
+    closeShareModal();
+    alert(`პოსტი გაეგზავნა ${friendName}-ს მესინჯერში!`);
+  });
+}
+
+// 1. კედელზე გაზიარება
+function submitFeedShare() {
+  if (!activePostForShare || !currentUser) return;
+
+  var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
+  var thought = document.getElementById('share-custom-thought').value.trim();
+  var submitBtn = document.getElementById('share-submit-btn');
+
+  if (submitBtn) submitBtn.disabled = true;
+
+  var sharedContent = thought ? (thought + "\n\n" + (activePostForShare.content || "")) : (activePostForShare.content || "");
+
+  db.collection('posts').add({
+    user_id: currentUser.uid,
+    author_name: myName,
+    content: sharedContent,
+    media_url: activePostForShare.media_url || null,
+    media_type: activePostForShare.media_type || null,
+    original_author_name: activePostForShare.author_name || null,
+    original_post_id: activePostForShare.id,
+    likes_count: 0,
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    if (submitBtn) submitBtn.disabled = false;
+    closeShareModal();
+    alert("პოსტი წარმატებით გაზიარდა თქვენს კედელზე!");
+    loadPosts();
+  }).catch(function(err) {
+    if (submitBtn) submitBtn.disabled = false;
+    alert("შეცდომა: " + err.message);
+  });
+}
+
+// 2. სიუჟეტში (Story) გაზიარება
+function shareToMyStory() {
+  if (!activePostForShare || !currentUser) return;
+  
+  if (!activePostForShare.media_url) {
+    alert("სიუჟეტში გაზიარება შესაძლებელია მხოლოდ ფოტოს ან ვიდეოს მქონე პოსტებისთვის.");
+    return;
+  }
+
+  var firstMedia = activePostForShare.media_url.split(',')[0].trim();
+  var isVideo = activePostForShare.media_type === 'video';
+
+  db.collection('stories').add({
+    user_id: currentUser.uid,
+    media_url: firstMedia,
+    media_type: isVideo ? "video" : "image",
+    likes_count: 0,
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function() {
+    closeShareModal();
+    alert("გაზიარდა თქვენს სიუჟეტში!");
+    loadStories();
+  });
+}
+
+// 3. WhatsApp-ში გაზიარება
+function shareViaWhatsApp() {
+  if (!activePostForShare) return;
+  var link = `https://emigrantbook.com?post=${activePostForShare.id}`;
+  var text = encodeURIComponent(`ნახეთ პოსტი Emigrantbook-ზე: ${link}`);
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+// 4. ბმულის პირდაპირ კოპირება
+function copyPostDirectLink() {
+  if (!activePostForShare) return;
+  var link = `https://emigrantbook.com?post=${activePostForShare.id}`;
+  
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => {
+      alert("პოსტის ბმული დაკოპირებულია!");
+      closeShareModal();
+    });
+  } else {
+    prompt("დააკოპირეთ ბმული:", link);
+  }
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
@@ -6112,6 +6296,86 @@ function openProfileViewsFromHeader() {
       ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.
     </p>
     <button class="btn" onclick="closeSizeModal()" style="width: 100%; background: #dcae36; color: #111; font-weight: bold; padding: 10px; border-radius: 8px; border: none; cursor: pointer;">Understood</button>
+  </div>
+</div>
+
+
+  <!-- 📤 FACEBOOK STYLE SHARE BOTTOM SHEET MODAL -->
+<div id="eb-share-modal" class="custom-lang-modal-overlay" onclick="closeShareModal()" style="display: none; align-items: flex-end; z-index: 100000;">
+  <div class="eb-share-sheet" onclick="event.stopPropagation()">
+    <div class="share-drag-bar"></div>
+    
+    <!-- მომხმარებლის ჰედერი და კონტროლები -->
+    <div class="share-user-row">
+      <div id="share-modal-user-avatar" class="share-user-avatar">?</div>
+      <div class="share-user-meta">
+        <div id="share-modal-user-name" class="share-user-name">User</div>
+        <div class="share-badges-row">
+          <span class="share-badge-btn">
+            <img src="icons/house.svg" class="post-action-icon" style="width:12px;height:12px;"> სიახლეების ზოლი ▾
+          </span>
+          <span class="share-badge-btn">
+            <img src="icons/globe.svg" class="post-action-icon" style="width:12px;height:12px;"> საჯარო ▾
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- საკუთარი ტექსტის ველი -->
+    <textarea id="share-custom-thought" class="share-input-thought" placeholder="თქვით რამე..."></textarea>
+
+    <!-- გაზიარების ღილაკი -->
+    <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+      <button id="share-submit-btn" class="share-btn-primary" onclick="submitFeedShare()">ახლავე გაზიარება</button>
+    </div>
+
+    <div class="share-sheet-divider"></div>
+
+    <!-- მეგობრების ჰორიზონტალური სია -->
+    <div class="share-section-title">გაგზავნა მეგობრებთან</div>
+    <div id="share-friends-horizontal-list" class="share-friends-row">
+      <div style="color: #777; font-size: 13px;">იტვირთება...</div>
+    </div>
+
+    <div class="share-sheet-divider"></div>
+
+    <!-- ქვედა სწრაფი აპლიკაციების ზოლი -->
+    <div class="share-apps-row">
+      <div class="share-app-item" onclick="shareToMyStory()">
+        <div class="share-app-icon-box" style="background: #2a2a2a;">
+          <img src="icons/bookmark.svg" class="post-action-icon" style="width: 22px; height: 22px;">
+        </div>
+        <span>თქვენი სიუჟეტი</span>
+      </div>
+
+      <div class="share-app-item" onclick="window.location.href='messenger.html'">
+        <div class="share-app-icon-box" style="background: #0084ff;">
+          <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.91 1.45 5.51 3.7 7.14.18.13.29.35.29.57l-.02 1.62c-.01.5.49.88.97.71l1.87-.66c.2-.07.41-.05.59.05 1.15.63 2.47.97 3.87.97 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1 12.25l-2.5-2.67-4.5 2.67 5-5.33 2.5 2.67 4.5-2.67-5 5.33z"/></svg>
+        </div>
+        <span>Messenger</span>
+      </div>
+
+      <div class="share-app-item" onclick="shareViaWhatsApp()">
+        <div class="share-app-icon-box" style="background: #25D366;">
+          <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/></svg>
+        </div>
+        <span>WhatsApp</span>
+      </div>
+
+      <div class="share-app-item" onclick="window.location.href='groups.html'">
+        <div class="share-app-icon-box" style="background: #2a2a2a;">
+          <img src="icons/users.svg" class="post-action-icon" style="width: 22px; height: 22px;">
+        </div>
+        <span>ჯგუფი</span>
+      </div>
+
+      <div class="share-app-item" onclick="copyPostDirectLink()">
+        <div class="share-app-icon-box" style="background: #333333;">
+          <img src="icons/tag.svg" class="post-action-icon" style="width: 20px; height: 20px;">
+        </div>
+        <span>ბმულის კოპირება</span>
+      </div>
+    </div>
   </div>
 </div>
   <script src="app.js"></script>
