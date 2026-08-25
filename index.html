@@ -5067,7 +5067,7 @@ function unhidePostFromFeed(postId) {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
           <div>
             <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: bold; background: linear-gradient(135deg, #dcae36, #f3cf7a); color: #111; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-              👑 Studio Business
+              <img src="icons/crown.svg" class="post-action-icon" style="width:12px;height:12px;filter:brightness(0);" alt="Crown"> Studio Business
             </span>
             <div style="font-size: 11px; color: #8a8f9d; margin-top: 5px;">კატეგორია: <strong style="color: #cfd3dc;">${srvCat}</strong></div>
           </div>
@@ -5091,16 +5091,16 @@ function unhidePostFromFeed(postId) {
     var showText = t.showPost || "მთავარზე გამოჩენა";
 
     var hideOptionBtn = isHidden 
-      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/eye.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Show"> <span>${showText}</span></button>`
-      : `<button onclick="hidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/eye-off.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Hide"> <span>${hideText}</span></button>`;
+      ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/bookmark.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Show"> <span>${showText}</span></button>`
+      : `<button onclick="hidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/bookmark.svg" class="post-action-icon" style="width:16px;height:16px;opacity:0.6;" alt="Hide"> <span>${hideText}</span></button>`;
 
     optionsMenuHtml = `
       <div class="post-options-dropdown" style="position: relative; display: inline-block;">
         <button class="post-options-btn" onclick="togglePostMenu('${post.id}', event)" style="background: transparent; border: none; color: #aaaaaa; font-size: 22px; cursor: pointer; padding: 0 8px; line-height: 1;">⋮</button>
         <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999; min-width: 200px; overflow: hidden;">
-          <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/pencil.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Edit"> <span>${editText}</span></button>
+          <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/pen.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Edit"> <span>${editText}</span></button>
           ${hideOptionBtn}
-          <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a; display:flex; align-items:center; gap:8px;"><img src="icons/trash-2.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Delete"> <span>${t.delete}</span></button>
+          <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a; display:flex; align-items:center; gap:8px;"><span>🗑️</span> <span>${t.delete}</span></button>
         </div>
       </div>
     `;
@@ -5131,9 +5131,12 @@ function unhidePostFromFeed(postId) {
           <div class="post-author-info">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
-              ${isStudio ? `<span style="font-size: 13px;">👑</span>` : ''}
+              ${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;" alt="Crown">` : ''}
             </div>
-            <span class="post-time">${date}</span>
+            <span class="post-time" style="display:flex; align-items:center; gap:4px;">
+              <img src="icons/clock-4.svg" class="post-action-icon" style="width:12px;height:12px;opacity:0.7;" alt="Time">
+              ${date}
+            </span>
           </div>
         </div>
         <div class="post-header-right">
@@ -5155,19 +5158,25 @@ function unhidePostFromFeed(postId) {
         <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">${currentCommentsNum} ${t.commentsCount}</span>
       </div>
 
-      <div class="post-actions" id="actions-row-${post.id}">
-        <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)">
-          <span id="like-btn-emoji-icon-${post.id}">❤️ </span>
+      <div class="post-actions" id="actions-row-${post.id}" style="display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222222; padding: 6px 0;">
+        <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <span id="like-btn-emoji-icon-${post.id}" style="font-size:16px;">❤️</span>
           <span id="like-btn-text-label-${post.id}">${t.like}</span>
         </button>
-        <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
-          <svg class="action-btn-svg" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-          ${t.comment}
+        <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Comment">
+          <span>${t.comment}</span>
+        </button>
+        <button class="action-btn" onclick="alert('Link copied!')" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+          <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px; transform: scaleX(-1);" alt="Share">
+          <span>${t.share}</span>
         </button>
       </div>
     </div>
   `;
-}       
+}
+    
+
                         
 
     function createPost() {
