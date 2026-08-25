@@ -4486,7 +4486,6 @@ function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   var targetFolder = folder || (isVideo ? 'videos' : 'images');
   var fileKey = targetFolder + '/' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
 
-  // MIME ტიპის ავტომატური განსაზღვრა, რომ ტელეფონებმა არ დაბლოკონ
   var contentType = file.type;
   if (!contentType || contentType === "") {
     contentType = isVideo ? 'video/mp4' : 'image/jpeg';
@@ -4508,6 +4507,7 @@ function uploadMediaToFirebase(file, folder, callback, progressCallback) {
     if (err) {
       console.error("R2 Upload Error:", err);
       alert("ატვირთვის შეცდომა: " + err.message);
+      if (typeof callback === 'function') callback(null);
     } else {
       var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
       callback(publicUrl);
