@@ -4525,24 +4525,26 @@ function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
+   function uploadAvatar() {
+  var fileInput = document.getElementById('avatar-file-input');
+  if (!fileInput || fileInput.files.length === 0) return;
+  var file = fileInput.files[0];
 
-    function uploadAvatar() {
-      var fileInput = document.getElementById('avatar-file-input');
-      if (!fileInput || fileInput.files.length === 0) return;
-      var file = fileInput.files[0];
-
-      uploadImageToImgBB(file, function(downloadURL) {
-        db.collection('profiles').doc(currentUser.uid)
-          .update({ avatar_url: downloadURL })
-          .then(function() {
-            if (userProfile) userProfile.avatar_url = downloadURL;
-            if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
-            auth.currentUser.reload().then(function() {
-              showMyProfile();
-            });
-          });
+  // პირდაპირ ვუშვებთ Cloudflare-ის images ფოლდერში
+  uploadMediaToFirebase(file, 'images', function(downloadURL) {
+    if (!downloadURL) return;
+    db.collection('profiles').doc(currentUser.uid)
+      .update({ avatar_url: downloadURL })
+      .then(function() {
+        if (userProfile) userProfile.avatar_url = downloadURL;
+        if (cachedProfiles[currentUser.uid]) cachedProfiles[currentUser.uid].avatar_url = downloadURL;
+        auth.currentUser.reload().then(function() {
+          showMyProfile();
+        });
       });
-    }
+  });
+}
+    
 
     function triggerCoverUpload() {
       var input = document.getElementById('cover-file-input');
@@ -4550,19 +4552,21 @@ function uploadMediaToFirebase(file, folder, callback, progressCallback) {
     }
 
     function uploadCover() {
-      var fileInput = document.getElementById('cover-file-input');
-      if (!fileInput || fileInput.files.length === 0) return;
-      var file = fileInput.files[0];
+  var fileInput = document.getElementById('cover-file-input');
+  if (!fileInput || fileInput.files.length === 0) return;
+  var file = fileInput.files[0];
 
-      uploadImageToImgBB(file, function(downloadURL) {
-        db.collection('profiles').doc(currentUser.uid)
-          .update({ cover_url: downloadURL })
-          .then(function() {
-            if (userProfile) userProfile.cover_url = downloadURL;
-            showMyProfile();
-          });
+  // პირდაპირ ვუშვებთ Cloudflare-ის images ფოლდერში
+  uploadMediaToFirebase(file, 'images', function(downloadURL) {
+    if (!downloadURL) return;
+    db.collection('profiles').doc(currentUser.uid)
+      .update({ cover_url: downloadURL })
+      .then(function() {
+        if (userProfile) userProfile.cover_url = downloadURL;
+        showMyProfile();
       });
-    }
+  });
+}
 
     var isLoginMode = true;
 function toggleAuthMode() {
