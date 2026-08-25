@@ -5171,8 +5171,7 @@ function unhidePostFromFeed(postId) {
     
 
                         
-
- function createPost() {
+   function createPost() {
   var txtEl = document.getElementById('post-text-input');
   var fileInput = document.getElementById('post-media-file');
   var publishBtn = document.getElementById('publish-submit-btn');
@@ -5215,7 +5214,8 @@ function unhidePostFromFeed(postId) {
 
       files.forEach(function(file) {
         let p = new Promise(function(resolve, reject) {
-          uploadImageToImgBB(file, function(url) {
+          // აქ ძველი uploadImageToImgBB-ს ნაცვლად პირდაპირ ვუშვებთ ატვირთვას 'images' ფოლდერში
+          uploadMediaToFirebase(file, 'images', function(url) {
             uploadedUrls.push(url);
             resolve();
           });
@@ -5237,7 +5237,6 @@ function unhidePostFromFeed(postId) {
     savePostToDatabase(authorName, text, null, null, publishBtn);
   }
 }
-
     
 
     function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
