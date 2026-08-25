@@ -716,6 +716,7 @@ function makeElementDraggable(elmnt) {
 }
 
 // 5. საბოლოო გამოქვეყნება FIREBASE-ში
+// 5. საბოლოო გამოქვეყნება Cloudflare R2-ში და Firestore-ში
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ გაიაროთ ავტორიზაცია');
@@ -728,34 +729,67 @@ function publishCreatedStory() {
     btn.disabled = true;
   }
 
-  var fileName = 'stories/' + currentUser.uid + '_' + Date.now() + '_' + selectedStoryFile.name;
-  var storageRef = firebase.storage().ref().child(fileName);
+  var isVideo = selectedStoryMediaType === 'video';
+  var fileKey = 'stories/' + currentUser.uid + '_' + Date.now() + '_' + selectedStoryFile.name.replace(/\s+/g, '_');
 
-  storageRef.put(selectedStoryFile).then(function(snapshot) {
-    return snapshot.ref.getDownloadURL();
-  }).then(function(downloadUrl) {
-    return db.collection('stories').add({
+  var r2S3 = new AWS.S3({
+    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+    signatureVersion: 'v4',
+    region: 'auto'
+  });
+
+  var contentType = selectedStoryFile.type;
+  if (!contentType || contentType === "") {
+    contentType = isVideo ? 'video/mp4' : 'image/jpeg';
+  }
+
+  var params = {
+    Bucket: 'emigrantbook-videos',
+    Key: fileKey,
+    Body: selectedStoryFile,
+    ContentType: contentType
+  };
+
+  r2S3.upload(params, { partSize: 10 * 1024 * 1024, queueSize: 1 }, function(err, data) {
+    if (err) {
+      console.error("Cloudflare R2 Story Upload Error:", err);
+      alert("ატვირთვის შეცდომა Cloudflare-ზე: " + err.message);
+      if (btn) {
+        btn.innerText = 'გაზიარება';
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+
+    db.collection('stories').add({
       user_id: currentUser.uid,
-      media_url: downloadUrl,
+      media_url: publicUrl,
       media_type: selectedStoryMediaType,
       music_title: storyAttachedMusic,
       filter: currentAppliedFilter,
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      alert('სიუჟეტი წარმატებით აიტვირთა Cloudflare-ზე და გამოქვეყნდა!');
+      closeStoryCreator();
+      if (btn) {
+        btn.innerText = 'გაზიარება';
+        btn.disabled = false;
+      }
+      if (typeof loadStories === 'function') {
+        loadStories();
+      }
+    }).catch(function(firestoreErr) {
+      console.error("Firestore Save Error:", firestoreErr);
+      alert("ბაზაში შენახვის შეცდომა: " + firestoreErr.message);
+      if (btn) {
+        btn.innerText = 'გაზიარება';
+        btn.disabled = false;
+      }
     });
-  }).then(function() {
-    alert('სიუჟეტი წარმატებით გამოქვეყნდა!');
-    closeStoryCreator();
-    if (btn) {
-      btn.innerText = 'გაზიარება';
-      btn.disabled = false;
-    }
-  }).catch(function(err) {
-    console.error(err);
-    alert('შეცდომა ატვირთვისას');
-    if (btn) {
-      btn.innerText = 'გაზიარება';
-      btn.disabled = false;
-    }
   });
 }
