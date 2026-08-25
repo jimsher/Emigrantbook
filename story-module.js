@@ -716,9 +716,10 @@ function makeElementDraggable(elmnt) {
 }
 
 // 5. საბოლოო გამოქვეყნება FIREBASE-ში
+// 5. სთორის გარანტირებული ატვირთვა Cloudflare R2-ში
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
-    alert('გთხოვთ გაიაროთ ავტორიზაცია');
+    alert('გთხოვთ აირჩიოთ ფაილი და გაიაროთ ავტორიზაცია');
     return;
   }
 
@@ -728,19 +729,23 @@ function publishCreatedStory() {
     btn.disabled = true;
   }
 
-  var isVideo = selectedStoryFile.type.startsWith('video/');
+  var isVideo = selectedStoryMediaType === 'video' || selectedStoryFile.type.startsWith('video/');
+  var targetFolder = isVideo ? 'videos' : 'images';
 
-  var saveStoryFn = function(downloadURL) {
+  // 1. ჯერ ფაილს ვტვირთავთ Cloudflare R2-ში
+  uploadMediaToFirebase(selectedStoryFile, targetFolder, function(cloudflarePublicUrl) {
+    
+    // 2. მხოლოდ წარმატებული ატვირთვის შემდეგ იწერება Firestore-ში Cloudflare-ის URL
     db.collection('stories').add({
       user_id: currentUser.uid,
-      media_url: downloadURL,
+      media_url: cloudflarePublicUrl,
       media_type: isVideo ? "video" : "image",
-      music_title: storyAttachedMusic,
-      filter: currentAppliedFilter,
+      music_title: storyAttachedMusic || "Original Audio",
+      filter: currentAppliedFilter || "none",
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function() {
-      alert('სიუჟეტი წარმატებით გამოქვეყნდა!');
+      alert('სიუჟეტი წარმატებით აიტვირთა Cloudflare R2-ში!');
       closeStoryCreator();
       if (btn) {
         btn.innerText = 'გაზიარება';
@@ -750,19 +755,15 @@ function publishCreatedStory() {
         loadStories();
       }
     }).catch(function(err) {
-      console.error("Firestore Error:", err);
-      alert("შეცდომა ბაზაში: " + err.message);
+      console.error("Firestore Save Error:", err);
+      alert("ბაზაში შენახვის შეცდომა: " + err.message);
       if (btn) {
         btn.innerText = 'გაზიარება';
         btn.disabled = false;
       }
     });
-  };
 
-  // ზუსტად შენი ძველი, მუშა ლოგიკა:
-  if (isVideo) {
-    uploadMediaToFirebase(selectedStoryFile, 'stories', saveStoryFn);
-  } else {
-    uploadImageToImgBB(selectedStoryFile, saveStoryFn);
-  }
+  }, function(percent) {
+    if (btn) btn.innerText = percent + '%';
+  });
 }
