@@ -3174,119 +3174,120 @@ auth.onAuthStateChanged(function(user) {
       if(bar) bar.style.display = "none";
     }
 
-    function loadCommentsIntoModal(postId) {
-      var container = document.getElementById('modal-comments-container');
-      if (!postId || !container) return;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+     function loadCommentsIntoModal(postId) {
+  var container = document.getElementById('modal-comments-container');
+  if (!postId || !container) return;
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  
+  db.collection('post_comments')
+    .where('post_id', '==', postId)
+    .get()
+    .then(function(snapshot) {
+      if (snapshot.empty) {
+        container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">No comments yet. Write the first one!</div>`;
+        return;
+      }
+
+      var allItems = [];
+      snapshot.forEach(function(doc) {
+        allItems.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+
+      allItems.sort(function(a, b) {
+        var timeA = 0;
+        if (a.created_at) {
+          timeA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
+        }
+        var timeB = 0;
+        if (b.created_at) {
+          timeB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
+        }
+        return timeA - timeB;
+      });
       
-      db.collection('post_comments')
-        .where('post_id', '==', postId)
-        .get()
-        .then(function(snapshot) {
-          if (snapshot.empty) {
-            container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">No comments yet. Write the first one!</div>`;
-            return;
-          }
+      var mainComments = allItems.filter(function(c) { return !c.parent_id; });
+      var replies = allItems.filter(function(c) { return c.parent_id; });
 
-          var allItems = [];
-          snapshot.forEach(function(doc) {
-            allItems.push(Object.assign({ id: doc.id }, doc.data()));
-          });
+      container.innerHTML = "";
+      mainComments.forEach(function(comment) {
+        var name = comment.author_name || "User";
+        var isOnline = cachedOnlineStates[comment.user_id] === true;
+        var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+        var cAvatar = comment.avatar_url || DEFAULT_AVATAR_URL;
+        var avatarHtml = `<div class="avatar-has-online"><img src="${cAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
+        
+        var timeObj = comment.created_at ? (comment.created_at.toDate ? comment.created_at.toDate() : new Date(comment.created_at)) : new Date();
+        var timeString = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-          allItems.sort(function(a, b) {
-            var timeA = 0;
-            if (a.created_at) {
-              timeA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
-            }
-            var timeB = 0;
-            if (b.created_at) {
-              timeB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
-            }
-            return timeA - timeB;
-          });
-          
-          var mainComments = allItems.filter(function(c) { return !c.parent_id; });
-          var replies = allItems.filter(function(c) { return c.parent_id; });
+        var cLikes = comment.likes_count || 0;
+        var hasLikedComment = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + comment.id)) ? "comment-liked" : "";
 
-          container.innerHTML = "";
-          mainComments.forEach(function(comment) {
-            var name = comment.author_name || "User";
-            var initial = name.charAt(0).toUpperCase();
-            var isOnline = cachedOnlineStates[comment.user_id] === true;
-            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-            var avatarHtml = comment.avatar_url ? `<div class="avatar-has-online"><img src="${comment.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-            
-            var timeObj = comment.created_at ? (comment.created_at.toDate ? comment.created_at.toDate() : new Date(comment.created_at)) : new Date();
-            var timeString = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            var cLikes = comment.likes_count || 0;
-            var hasLikedComment = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + comment.id)) ? "comment-liked" : "";
-
-            var commentHtml = `
-              <div class="fb-comment-wrapper" id="comment-block-${comment.id}">
-                <div class="fb-comment-card">
-                  <div class="fb-comment-avatar">${avatarHtml}</div>
-                  <div class="fb-comment-main">
-                    <div class="fb-comment-bubble">
-                      <div class="fb-comment-user-row">
-                        <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
-                        <span class="fb-comment-time">${timeString}</span>
-                      </div>
-                      <span class="fb-comment-text">${comment.content || ""}</span>
-                    </div>
-                    <div class="fb-comment-actions-row">
-                      <button class="fb-comment-action-btn ${hasLikedComment}" onclick="likeComment('${comment.id}', ${cLikes})">❤️ ${t.like} (${cLikes})</button>
-                      <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')">↩️ ${t.reply}</button>
-                    </div>
+        var commentHtml = `
+          <div class="fb-comment-wrapper" id="comment-block-${comment.id}">
+            <div class="fb-comment-card">
+              <div class="fb-comment-avatar">${avatarHtml}</div>
+              <div class="fb-comment-main">
+                <div class="fb-comment-bubble">
+                  <div class="fb-comment-user-row">
+                    <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
+                    <span class="fb-comment-time">${timeString}</span>
                   </div>
+                  <span class="fb-comment-text">${comment.content || ""}</span>
                 </div>
-                
-                <div class="fb-replies-container" id="replies-to-${comment.id}"></div>
+                <div class="fb-comment-actions-row">
+                  <button class="fb-comment-action-btn ${hasLikedComment}" onclick="likeComment('${comment.id}', ${cLikes})">❤️ ${t.like} (${cLikes})</button>
+                  <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')">↩️ ${t.reply}</button>
+                </div>
               </div>
-            `;
+            </div>
+            
+            <div class="fb-replies-container" id="replies-to-${comment.id}"></div>
+          </div>
+        `;
 
-            container.innerHTML += commentHtml;
-          });
+        container.innerHTML += commentHtml;
+      });
 
-          replies.forEach(function(reply) {
-            var replyTargetContainer = document.getElementById(`replies-to-${reply.parent_id}`);
-            if (replyTargetContainer) {
-              var rName = reply.author_name || "User";
-              var rInitial = rName.charAt(0).toUpperCase();
-              var rIsOnline = cachedOnlineStates[reply.user_id] === true;
-              var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-              var rAvatarHtml = reply.avatar_url ? `<div class="avatar-has-online"><img src="${reply.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${rDotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${rInitial}${rDotHtml}</div>`;
-              
-              var rTimeObj = reply.created_at ? (reply.created_at.toDate ? reply.created_at.toDate() : new Date(reply.created_at)) : new Date();
-              var rTimeString = rTimeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              
-              var rLikes = reply.likes_count || 0;
-              var hasLikedReply = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + reply.id)) ? "comment-liked" : "";
+      replies.forEach(function(reply) {
+        var replyTargetContainer = document.getElementById(`replies-to-${reply.parent_id}`);
+        if (replyTargetContainer) {
+          var rName = reply.author_name || "User";
+          var rIsOnline = cachedOnlineStates[reply.user_id] === true;
+          var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var rAvatar = reply.avatar_url || DEFAULT_AVATAR_URL;
+          var rAvatarHtml = `<div class="avatar-has-online"><img src="${rAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${rDotHtml}</div>`;
+          
+          var rTimeObj = reply.created_at ? (reply.created_at.toDate ? reply.created_at.toDate() : new Date(reply.created_at)) : new Date();
+          var rTimeString = rTimeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          
+          var rLikes = reply.likes_count || 0;
+          var hasLikedReply = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + reply.id)) ? "comment-liked" : "";
 
-              replyTargetContainer.innerHTML += `
-                <div class="fb-comment-card" style="margin-top: 6px;">
-                  <div class="fb-comment-avatar" style="width:28px; height:28px; font-size:12px;">${rAvatarHtml}</div>
-                  <div class="fb-comment-main">
-                    <div class="fb-comment-bubble" style="padding: 6px 10px;">
-                      <div class="fb-comment-user-row">
-                        <span class="fb-comment-name" style="font-size:13px;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
-                        <span class="fb-comment-time" style="font-size:11px;">${rTimeString}</span>
-                      </div>
-                      <span class="fb-comment-text" style="font-size:13px;">${reply.content || ""}</span>
-                    </div>
-                    <div class="fb-comment-actions-row">
-                      <button class="fb-comment-action-btn ${hasLikedReply}" style="font-size:11px;" onclick="likeComment('${reply.id}', ${rLikes})">❤️ ${t.like} (${rLikes})</button>
-                    </div>
+          replyTargetContainer.innerHTML += `
+            <div class="fb-comment-card" style="margin-top: 6px;">
+              <div class="fb-comment-avatar" style="width:28px; height:28px; font-size:12px;">${rAvatarHtml}</div>
+              <div class="fb-comment-main">
+                <div class="fb-comment-bubble" style="padding: 6px 10px;">
+                  <div class="fb-comment-user-row">
+                    <span class="fb-comment-name" style="font-size:13px;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
+                    <span class="fb-comment-time" style="font-size:11px;">${rTimeString}</span>
                   </div>
+                  <span class="fb-comment-text" style="font-size:13px;">${reply.content || ""}</span>
                 </div>
-              `;
-            }
-          });
-        }).catch(function(error) {
-          console.error("Comments error:", error);
-          container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">Error loading comments: ${error.message}</div>`;
-        });
-    }
+                <div class="fb-comment-actions-row">
+                  <button class="fb-comment-action-btn ${hasLikedReply}" style="font-size:11px;" onclick="likeComment('${reply.id}', ${rLikes})">❤️ ${t.like} (${rLikes})</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      });
+    }).catch(function(error) {
+      console.error("Comments error:", error);
+      container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">Error loading comments: ${error.message}</div>`;
+    });
+}             
+              
 
     function likeComment(commentId, currentLikes) {
       var key = currentUser.uid + '_liked_comment_' + commentId;
