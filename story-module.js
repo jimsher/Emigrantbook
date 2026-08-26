@@ -718,6 +718,7 @@ function makeElementDraggable(elmnt) {
 // 5. საბოლოო გამოქვეყნება FIREBASE-ში
 // 5. სთორის გარანტირებული ატვირთვა Cloudflare R2-ში
 // სთორის ატვირთვა Cloudflare R2-ში პირდაპირ 'stories/' საქაღალდეში
+// 5. სთორის გაერთიანება (Merge) და Cloudflare R2-ში ატვირთვა
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ აირჩიოთ ფაილი და გაიაროთ ავტორიზაცია');
@@ -726,14 +727,108 @@ function publishCreatedStory() {
 
   var btn = document.getElementById('story-publish-btn');
   if (btn) {
-    btn.innerText = 'იტვირთება...';
+    btn.innerText = 'მუშავდება...';
     btn.disabled = true;
   }
 
   var isVideo = selectedStoryMediaType === 'video' || selectedStoryFile.type.startsWith('video/');
-  var fileName = Date.now() + '_' + selectedStoryFile.name.replace(/\s+/g, '_');
-  
-  // პირდაპირ იქმნება stories/ ფოლდერი
+
+  // თუ ფოტოა, ვაერთიანებთ ტექსტს, სტიკერებს და ფოტოს ერთიან სურათად Canvas-ით
+  if (!isVideo) {
+    processStoryImageWithOverlays(function(finalBlob) {
+      uploadStoryToR2(finalBlob, false, btn);
+    });
+  } else {
+    // ვიდეოს შემთხვევაში პირდაპირ იტვირთება
+    uploadStoryToR2(selectedStoryFile, true, btn);
+  }
+}
+
+// ფოტოს, წარწერების და სტიკერების გაერთიანება
+function processStoryImageWithOverlays(callback) {
+  var mediaZone = document.getElementById('creator-media-zone');
+  var imgElement = document.getElementById('creator-target-media');
+  var overlayLayer = document.getElementById('creator-overlay-layer');
+
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+
+  var img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = imgElement.src;
+
+  img.onload = function() {
+    var zoneWidth = mediaZone.offsetWidth;
+    var zoneHeight = mediaZone.offsetHeight;
+
+    canvas.width = 1080;
+    canvas.height = 1920;
+
+    // შავი ფონი (სთორის სტანდარტული ფორმატი)
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // ფილტრის დადება
+    if (currentAppliedFilter && currentAppliedFilter !== 'none') {
+      ctx.filter = currentAppliedFilter;
+    }
+
+    // ფოტოს ჩახატვა ცენტრში (object-fit: contain პროპორციით)
+    var hRatio = canvas.width / img.width;
+    var vRatio = canvas.height / img.height;
+    var ratio = Math.min(hRatio, vRatio);
+    var centerShiftX = (canvas.width - img.width * ratio) / 2;
+    var centerShiftY = (canvas.height - img.height * ratio) / 2;
+
+    ctx.drawImage(img, 0, 0, img.width, img.height, centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+    ctx.filter = 'none';
+
+    // ზედ დადებული წარწერების და სტიკერების ჩახატვა
+    var elements = overlayLayer.querySelectorAll('.creator-movable-element');
+    var scaleX = canvas.width / zoneWidth;
+    var scaleY = canvas.height / zoneHeight;
+
+    elements.forEach(function(el) {
+      var rect = el.getBoundingClientRect();
+      var zoneRect = mediaZone.getBoundingClientRect();
+
+      var relX = (rect.left - zoneRect.left) * scaleX;
+      var relY = (rect.top - zoneRect.top) * scaleY;
+
+      if (el.classList.contains('creator-sticker-element')) {
+        ctx.font = `${54 * scaleX}px sans-serif`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText(el.innerText, relX, relY);
+      } else if (el.classList.contains('creator-text-element')) {
+        ctx.font = `bold ${24 * scaleX}px sans-serif`;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+
+        // ტექსტის ჩრდილი
+        ctx.shadowColor = "rgba(0,0,0,0.9)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(el.innerText, relX, relY);
+
+        ctx.shadowColor = "transparent";
+      }
+    });
+
+    canvas.toBlob(function(blob) {
+      callback(blob);
+    }, 'image/jpeg', 0.95);
+  };
+}
+
+// უშუალოდ Cloudflare R2-ში stories/ ფოლდერში ატვირთვა
+function uploadStoryToR2(fileBlob, isVideo, btn) {
+  if (btn) btn.innerText = 'იტვირთება...';
+
+  var fileName = Date.now() + '_' + Math.random().toString(36).substring(2, 6) + (isVideo ? '.mp4' : '.jpg');
   var fileKey = 'stories/' + fileName;
 
   var r2S3 = new AWS.S3({
@@ -744,12 +839,12 @@ function publishCreatedStory() {
     region: 'auto'
   });
 
-  var contentType = selectedStoryFile.type || (isVideo ? 'video/mp4' : 'image/jpeg');
+  var contentType = isVideo ? 'video/mp4' : 'image/jpeg';
 
   var params = {
     Bucket: 'emigrantbook-videos',
     Key: fileKey,
-    Body: selectedStoryFile,
+    Body: fileBlob,
     ContentType: contentType
   };
 
