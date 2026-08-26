@@ -3037,61 +3037,60 @@ auth.onAuthStateChanged(function(user) {
 }                
 
     function handleConnectionsResult(snapshot, targetIdKey, listWrapper, countLabel, blockedSet) {
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      if (snapshot.empty) {
-        listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
-        countLabel.innerText = "0 " + t.userUnit;
-        return;
-      }
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  if (snapshot.empty) {
+    listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
+    countLabel.innerText = "0 " + t.userUnit;
+    return;
+  }
 
-      var targetIds = [];
-      var connList = [];
+  var targetIds = [];
+  var connList = [];
 
-      snapshot.forEach(function(docSnap) {
-        var conn = docSnap.data();
-        var targetUserId = conn[targetIdKey];
-        if (!blockedSet || !blockedSet.has(targetUserId)) {
-          targetIds.push(targetUserId);
-          connList.push({ requestId: docSnap.id, targetUserId: targetUserId });
-        }
-      });
-
-      if (connList.length === 0) {
-        listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
-        countLabel.innerText = "0 " + t.userUnit;
-        return;
-      }
-
-      countLabel.innerText = connList.length + " " + t.userUnit;
-
-      fetchMultipleProfilesCached(targetIds, function() {
-        var listHtml = "";
-        connList.forEach(function(item) {
-          var profile = cachedProfiles[item.targetUserId] || {};
-          var finalName = profile.full_name || "User";
-          var avatarUrl = profile.avatar_url;
-          var isOnline = isUserOnline(profile);
-          var initial = finalName.charAt(0).toUpperCase();
-
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-          var showDeleteButton = activeConnectionsUserId === currentUser.uid;
-          var deleteBtnHtml = showDeleteButton ? 
-            `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${item.requestId}', event)">${t.delete}</button>` : '';
-
-          listHtml += `
-            <div class="connection-row">
-              <div class="connection-user-info" onclick="viewUserProfile('${item.targetUserId}')">
-                <div class="connection-avatar">${avatarContent}</div>
-                <span class="connection-name">${finalName}</span>
-              </div>
-              ${deleteBtnHtml}
-            </div>
-          `;
-        });
-        listWrapper.innerHTML = listHtml;
-      });
+  snapshot.forEach(function(docSnap) {
+    var conn = docSnap.data();
+    var targetUserId = conn[targetIdKey];
+    if (!blockedSet || !blockedSet.has(targetUserId)) {
+      targetIds.push(targetUserId);
+      connList.push({ requestId: docSnap.id, targetUserId: targetUserId });
     }
+  });
+
+  if (connList.length === 0) {
+    listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
+    countLabel.innerText = "0 " + t.userUnit;
+    return;
+  }
+
+  countLabel.innerText = connList.length + " " + t.userUnit;
+
+  fetchMultipleProfilesCached(targetIds, function() {
+    var listHtml = "";
+    connList.forEach(function(item) {
+      var profile = cachedProfiles[item.targetUserId] || {};
+      var finalName = profile.full_name || "User";
+      var avatarUrl = profile.avatar_url || DEFAULT_AVATAR_URL;
+      var isOnline = isUserOnline(profile);
+
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+      var avatarContent = `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
+      var showDeleteButton = activeConnectionsUserId === currentUser.uid;
+      var deleteBtnHtml = showDeleteButton ? 
+        `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${item.requestId}', event)">${t.delete}</button>` : '';
+
+      listHtml += `
+        <div class="connection-row">
+          <div class="connection-user-info" onclick="viewUserProfile('${item.targetUserId}')">
+            <div class="connection-avatar">${avatarContent}</div>
+            <span class="connection-name">${finalName}</span>
+          </div>
+          ${deleteBtnHtml}
+        </div>
+      `;
+    });
+    listWrapper.innerHTML = listHtml;
+  });
+}
 
     function deleteConnectionFromList(requestId, event) {
       if (event) event.stopPropagation();
