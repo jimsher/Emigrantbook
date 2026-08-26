@@ -3368,46 +3368,47 @@ auth.onAuthStateChanged(function(user) {
       cancelReplyMode();
     }
 
-    function openLikersListModal() {
-      if (!activePostForComments) return;
-      var container = document.getElementById('likers-list-container');
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      if (!container) return;
-      container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
-      var likersModal = document.getElementById('likers-list-modal');
-      if (likersModal) likersModal.style.display = "flex";
+   function openLikersListModal() {
+  if (!activePostForComments) return;
+  var container = document.getElementById('likers-list-container');
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  if (!container) return;
+  container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
+  var likersModal = document.getElementById('likers-list-modal');
+  if (likersModal) likersModal.style.display = "flex";
 
-      db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
-        if (snapshot.empty) {
-          container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
-          return;
-        }
-
-        container.innerHTML = "";
-        snapshot.forEach(function(doc) {
-          var p = doc.data();
-          var likerId = doc.id;
-          var finalName = p.full_name || "User";
-          var isOnline = isUserOnline(p);
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarHtml = p.avatar_url ? `<div class="avatar-has-online"><img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${finalName.charAt(0).toUpperCase()}${dotHtml}</div>`;
-          
-          container.innerHTML += `
-            <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${likerId}');">
-              <div class="liker-avatar-container">
-                <div class="liker-avatar">${avatarHtml}</div>
-                <div class="liker-reaction-badge">❤️</div>
-              </div>
-              <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
-            </div>
-          `;
-        });
-      }).catch(function(err) {
-        console.error("Likers load error:", err);
-        container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">Error loading data</div>`;
-      });
+  db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
+    if (snapshot.empty) {
+      container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
+      return;
     }
 
+    container.innerHTML = "";
+    snapshot.forEach(function(doc) {
+      var p = doc.data();
+      var likerId = doc.id;
+      var finalName = p.full_name || "User";
+      var isOnline = isUserOnline(p);
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+      var likerAvatar = p.avatar_url || DEFAULT_AVATAR_URL;
+      var avatarHtml = `<div class="avatar-has-online"><img src="${likerAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
+      
+      container.innerHTML += `
+        <div class="liker-row" onclick="closeLikersModal(); closeCommentsModal(); viewUserProfile('${likerId}');">
+          <div class="liker-avatar-container">
+            <div class="liker-avatar">${avatarHtml}</div>
+            <div class="liker-reaction-badge">❤️</div>
+          </div>
+          <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">${finalName}</span>
+        </div>
+      `;
+    });
+  }).catch(function(err) {
+    console.error("Likers load error:", err);
+    container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">Error loading data</div>`;
+  });
+}
+    
     function closeLikersModal() {
       var likersModal = document.getElementById('likers-list-modal');
       if (likersModal) likersModal.style.display = "none";
