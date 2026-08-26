@@ -18,11 +18,20 @@
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
     }
     @media (max-width: 600px) { .fb-story-frame { max-height: 100vh; border-radius: 0; } }
+    
+    /* MULTI-STORY PROGRESS BARS */
     .fb-story-progress-container {
       position: absolute; top: 10px; left: 12px; right: 12px; height: 2.5px;
-      background: rgba(255, 255, 255, 0.3); border-radius: 4px; overflow: hidden; z-index: 20;
+      display: flex; gap: 4px; z-index: 20;
     }
-    .fb-story-progress-bar { height: 100%; width: 0%; background: #fff; transition: width 0.1s linear; }
+    .fb-story-segment {
+      flex: 1; height: 100%; background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px; overflow: hidden; position: relative;
+    }
+    .fb-story-segment-fill {
+      height: 100%; width: 0%; background: #fff;
+    }
+
     .fb-story-header {
       position: absolute; top: 20px; left: 12px; right: 12px; display: flex;
       align-items: center; justify-content: space-between; z-index: 20; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
@@ -45,8 +54,13 @@
       color: #fff; font-size: 16px; font-weight: bold; width: 32px; height: 32px;
       border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
-    .fb-story-media-view { width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
+    .fb-story-media-view { width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
     .fb-story-media-view img, .fb-story-media-view video { width: 100%; height: 100%; object-fit: contain; }
+    
+    /* TAP NAVIGATION ZONES */
+    .story-tap-zone-left { position: absolute; top: 60px; bottom: 80px; left: 0; width: 35%; z-index: 15; }
+    .story-tap-zone-right { position: absolute; top: 60px; bottom: 80px; right: 0; width: 65%; z-index: 15; }
+
     .story-floating-reactions { position: absolute; bottom: 80px; right: 20px; pointer-events: none; z-index: 25; }
     .flying-story-emoji { position: absolute; bottom: 0; right: 0; font-size: 32px; animation: flyUpAndFade 1.4s ease-out forwards; }
     @keyframes flyUpAndFade {
@@ -84,7 +98,7 @@
     .thumb-react { background: #1877f2; }
     .laugh-react { background: #f7b125; }
 
-    /* 🎨 CREATOR STYLES (MATCHING SCREENSHOT) */
+    /* CREATOR STYLES */
     .fb-story-creator-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #000; z-index: 1000000; display: flex; align-items: center; justify-content: center;
@@ -134,7 +148,7 @@
     }
     .creator-sticker-element { font-size: 54px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
 
-    /* TOOLS (BOTTOM SCREENSHOT REPLICA) */
+    /* TOOLS */
     .fb-creator-tools-bar {
       position: absolute; bottom: 78px; left: 0; right: 0;
       display: flex; align-items: center; justify-content: space-around;
@@ -175,7 +189,7 @@
     }
     .fb-creator-share-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    /* TOOL MODALS (MUSIC, STICKERS, FILTERS) */
+    /* TOOL MODALS */
     .fb-sheet-modal {
       position: absolute; bottom: 0; left: 0; right: 0; max-height: 65vh;
       background: #18191a; border-radius: 20px 20px 0 0; z-index: 50;
@@ -211,7 +225,7 @@
   document.head.appendChild(styleEl);
 })();
 
-// 2. სრული HTML სტრუქტურის ინექცია
+// 2. HTML სტრუქტურის ინექცია
 (function injectStoryHTML() {
   const container = document.createElement('div');
   container.id = 'story-system-root';
@@ -222,13 +236,10 @@
     <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
-        
-        <!-- TOP BAR -->
         <div class="fb-creator-top-bar">
           <button class="fb-creator-icon-btn" onclick="closeStoryCreator()">
             <svg viewBox="0 0 24 24" width="24" height="24" fill="#fff"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
           </button>
-
           <div class="fb-creator-music-pill" onclick="openStoryTool('music')">
             <div class="fb-music-icon">🎵</div>
             <div class="fb-music-texts">
@@ -236,17 +247,14 @@
               <span class="fb-music-sub">შემოთავაზებები</span>
             </div>
           </div>
-
           <button class="fb-creator-icon-btn" onclick="resetStoryEdits()" title="გასუფთავება">✕</button>
         </div>
 
-        <!-- MEDIA DISPLAY & OVERLAYS -->
         <div class="fb-creator-media-zone" id="creator-media-zone">
           <div id="creator-media-preview" class="fb-creator-preview-box"></div>
           <div id="creator-overlay-layer" class="fb-creator-overlay-layer"></div>
         </div>
 
-        <!-- TOOLS BAR -->
         <div class="fb-creator-tools-bar">
           <div class="fb-creator-tool-item" onclick="openStoryTool('music')">
             <div class="fb-tool-icon-circle">🎵</div>
@@ -274,7 +282,6 @@
           </div>
         </div>
 
-        <!-- BOTTOM CONTROLS -->
         <div class="fb-creator-bottom-bar">
           <div class="fb-creator-privacy-btn">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
@@ -294,19 +301,19 @@
             <button class="fb-sheet-close" onclick="closeSheet('sheet-music')">✕</button>
           </div>
           <div class="fb-sheet-list">
-            <div class="fb-music-item" onclick="selectMusic('Lady Gaga, Bruno Mars - Die With A Smile')">
+            <div class="fb-music-item" onclick="selectMusic('Die With A Smile', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/die-with-a-smile.mp3')">
               <span>🎵</span>
               <div class="fb-music-item-info"><span>Die With A Smile</span><span>Lady Gaga, Bruno Mars</span></div>
             </div>
-            <div class="fb-music-item" onclick="selectMusic('Billie Eilish - BIRDS OF A FEATHER')">
+            <div class="fb-music-item" onclick="selectMusic('BIRDS OF A FEATHER', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/birds-of-a-feather.mp3')">
               <span>🎵</span>
               <div class="fb-music-item-info"><span>BIRDS OF A FEATHER</span><span>Billie Eilish</span></div>
             </div>
-            <div class="fb-music-item" onclick="selectMusic('Sabrina Carpenter - Espresso')">
+            <div class="fb-music-item" onclick="selectMusic('Espresso', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/espresso.mp3')">
               <span>🎵</span>
               <div class="fb-music-item-info"><span>Espresso</span><span>Sabrina Carpenter</span></div>
             </div>
-            <div class="fb-music-item" onclick="selectMusic('The Weeknd - Blinding Lights')">
+            <div class="fb-music-item" onclick="selectMusic('Blinding Lights', 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/music/blinding-lights.mp3')">
               <span>🎵</span>
               <div class="fb-music-item-info"><span>Blinding Lights</span><span>The Weeknd</span></div>
             </div>
@@ -345,16 +352,14 @@
             <button class="fb-filter-pill" onclick="applyMediaFilter('brightness(120%) contrast(90%)')">Soft Glow</button>
           </div>
         </div>
-
       </div>
     </div>
 
     <!-- 📱 2. STORY VIEWER MODAL -->
     <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
       <div class="fb-story-frame" onclick="event.stopPropagation()">
-        <div class="fb-story-progress-container">
-          <div class="fb-story-progress-bar" id="story-progress-fill"></div>
-        </div>
+        <!-- Multi segments progress bar -->
+        <div class="fb-story-progress-container" id="story-progress-container"></div>
 
         <div class="fb-story-header">
           <div class="fb-story-user-left">
@@ -375,12 +380,17 @@
           </div>
         </div>
 
-        <div class="fb-story-media-view" id="sv-media-container" onmousedown="pauseStoryTimer()" onmouseup="resumeStoryTimer()" ontouchstart="pauseStoryTimer()" ontouchend="resumeStoryTimer()"></div>
+        <div class="fb-story-media-view" id="sv-media-container" onmousedown="pauseStoryTimer()" onmouseup="resumeStoryTimer()" ontouchstart="pauseStoryTimer()" ontouchend="resumeStoryTimer()">
+          <div class="story-tap-zone-left" onclick="goToPrevStoryItem(event)"></div>
+          <div class="story-tap-zone-right" onclick="goToNextStoryItem(event)"></div>
+        </div>
+        
         <div id="story-floating-reactions-zone" class="story-floating-reactions"></div>
 
         <div class="fb-story-footer">
-          <button class="fb-story-circle-btn" onclick="triggerStoryUpload()" title="Create Story">
-            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <!-- ➕ დამატების პლიუსის ღილაკი -->
+          <button class="fb-story-circle-btn" onclick="addNewStoryFromViewer()" title="ახალი სთორის დამატება">
+            <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </button>
           <div class="fb-story-input-box">
             <input type="text" id="story-comment-field" placeholder="შეტყობინების გაგზავნა..." onkeypress="handleStoryCommentKeyPress(event)">
@@ -398,24 +408,74 @@
   if (document.body) document.body.appendChild(container);
 })();
 
-// 3. STORY VIEWER LOGIC
-var storyTimer = null;
+// 3. MULTI-STORY VIEWER LOGIC
+var activeUserStoryGroup = [];
+var activeStoryIndex = 0;
 var storyProgressInterval = null;
 var storyProgressPct = 0;
 var isStoryPaused = false;
-var currentViewingStoryObj = null;
+var storyAudioPlayer = new Audio();
 
-function openStoryViewer(story, username, avatarUrl) {
-  currentViewingStoryObj = story;
+function openStoryGroupViewer(userStories, startIndex, username, avatarUrl) {
+  if (!userStories || userStories.length === 0) return;
+  activeUserStoryGroup = userStories;
+  activeStoryIndex = startIndex || 0;
+
   var modal = document.getElementById('story-viewer-modal');
+  if (modal) modal.style.display = "flex";
+
+  renderProgressBarsUI();
+  displayActiveStoryItem(username, avatarUrl);
+}
+
+// პროგრეს-ბარების დაყოფა სთორების რაოდენობის მიხედვით
+function renderProgressBarsUI() {
+  var container = document.getElementById('story-progress-container');
+  if (!container) return;
+  var html = "";
+  for (var i = 0; i < activeUserStoryGroup.length; i++) {
+    html += `
+      <div class="fb-story-segment">
+        <div class="fb-story-segment-fill" id="story-seg-fill-${i}"></div>
+      </div>
+    `;
+  }
+  container.innerHTML = html;
+}
+
+// კონკრეტული სთორის ჩვენება
+function displayActiveStoryItem(username, avatarUrl) {
+  var story = activeUserStoryGroup[activeStoryIndex];
+  if (!story) {
+    closeStoryViewer();
+    return;
+  }
+
+  for (var i = 0; i < activeUserStoryGroup.length; i++) {
+    var seg = document.getElementById('story-seg-fill-' + i);
+    if (seg) {
+      if (i < activeStoryIndex) seg.style.width = '100%';
+      else seg.style.width = '0%';
+    }
+  }
+
   var userSpan = document.getElementById('sv-username');
   var timeSpan = document.getElementById('sv-time');
   var avatarDiv = document.getElementById('sv-avatar');
   var mediaContainer = document.getElementById('sv-media-container');
+  var musicTag = document.getElementById('sv-music-tag');
   var musicTitle = document.getElementById('sv-music-title');
 
-  if (userSpan) userSpan.innerText = username;
-  if (musicTitle) musicTitle.innerText = story.music_title || "Original Audio";
+  if (userSpan) userSpan.innerText = username || "User";
+
+  if (musicTitle && musicTag) {
+    if (story.music_title && story.music_title !== "Original Audio") {
+      musicTag.style.display = "inline-flex";
+      musicTitle.innerText = story.music_title;
+    } else {
+      musicTag.style.display = "none";
+    }
+  }
 
   if (timeSpan && story.created_at) {
     var createdDate = story.created_at.toDate ? story.created_at.toDate() : new Date(story.created_at);
@@ -427,26 +487,39 @@ function openStoryViewer(story, username, avatarUrl) {
     if (avatarUrl) {
       avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
     } else {
-      avatarDiv.innerHTML = `<div style="background:#dcae36;color:#111;font-weight:bold;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${username.charAt(0).toUpperCase()}</div>`;
+      avatarDiv.innerHTML = `<div style="background:#dcae36;color:#111;font-weight:bold;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">${(username || "U").charAt(0).toUpperCase()}</div>`;
     }
   }
 
   if (mediaContainer) {
+    var tapZones = `
+      <div class="story-tap-zone-left" onclick="goToPrevStoryItem(event)"></div>
+      <div class="story-tap-zone-right" onclick="goToNextStoryItem(event)"></div>
+    `;
     if (story.media_type === 'video') {
-      mediaContainer.innerHTML = `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};"></video>`;
+      mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};"></video>`;
     } else {
-      mediaContainer.innerHTML = `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};">`;
+      mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};">`;
     }
   }
 
-  if (modal) modal.style.display = "flex";
-  startStoryProgressBar(story.media_type === 'video' ? 12000 : 6000);
+  // 🎵 მუსიკის გაშვება
+  if (story.music_url && story.media_type !== 'video') {
+    storyAudioPlayer.src = story.music_url;
+    storyAudioPlayer.currentTime = 0;
+    storyAudioPlayer.play().catch(function(){});
+  } else {
+    storyAudioPlayer.pause();
+    storyAudioPlayer.src = "";
+  }
+
+  startStoryProgressBar(story.media_type === 'video' ? 12000 : 6000, username, avatarUrl);
 }
 
-function startStoryProgressBar(durationMs) {
+function startStoryProgressBar(durationMs, username, avatarUrl) {
   clearInterval(storyProgressInterval);
   storyProgressPct = 0;
-  var fill = document.getElementById('story-progress-fill');
+  var fill = document.getElementById('story-seg-fill-' + activeStoryIndex);
   var stepMs = 50;
   var stepPct = (stepMs / durationMs) * 100;
 
@@ -456,36 +529,82 @@ function startStoryProgressBar(durationMs) {
       if (fill) fill.style.width = Math.min(storyProgressPct, 100) + '%';
       if (storyProgressPct >= 100) {
         clearInterval(storyProgressInterval);
-        closeStoryViewer();
+        if (activeStoryIndex < activeUserStoryGroup.length - 1) {
+          activeStoryIndex++;
+          displayActiveStoryItem(username, avatarUrl);
+        } else {
+          closeStoryViewer();
+        }
       }
     }
   }, stepMs);
+}
+
+function goToNextStoryItem(event) {
+  if (event) event.stopPropagation();
+  var uName = document.getElementById('sv-username').innerText;
+  var avImg = document.querySelector('#sv-avatar img');
+  var avUrl = avImg ? avImg.src : null;
+
+  if (activeStoryIndex < activeUserStoryGroup.length - 1) {
+    activeStoryIndex++;
+    displayActiveStoryItem(uName, avUrl);
+  } else {
+    closeStoryViewer();
+  }
+}
+
+function goToPrevStoryItem(event) {
+  if (event) event.stopPropagation();
+  var uName = document.getElementById('sv-username').innerText;
+  var avImg = document.querySelector('#sv-avatar img');
+  var avUrl = avImg ? avImg.src : null;
+
+  if (activeStoryIndex > 0) {
+    activeStoryIndex--;
+    displayActiveStoryItem(uName, avUrl);
+  }
+}
+
+// ➕ სთორის ყურებისას პლიუსზე დაჭერა -> Viewer იხურება და იხსნება ფაილის არჩევა
+function addNewStoryFromViewer() {
+  closeStoryViewer();
+  triggerStoryUpload();
 }
 
 function pauseStoryTimer() {
   isStoryPaused = true;
   var vid = document.getElementById('active-story-video');
   if (vid) vid.pause();
+  storyAudioPlayer.pause();
 }
 
 function resumeStoryTimer() {
   isStoryPaused = false;
   var vid = document.getElementById('active-story-video');
   if (vid) vid.play().catch(function(){});
+  var story = activeUserStoryGroup[activeStoryIndex];
+  if (story && story.music_url && story.media_type !== 'video') {
+    storyAudioPlayer.play().catch(function(){});
+  }
 }
 
 function closeStoryViewer() {
   clearInterval(storyProgressInterval);
+  storyAudioPlayer.pause();
+  storyAudioPlayer.src = "";
   var modal = document.getElementById('story-viewer-modal');
   var mediaContainer = document.getElementById('sv-media-container');
   if (mediaContainer) mediaContainer.innerHTML = "";
   if (modal) modal.style.display = "none";
-  currentViewingStoryObj = null;
+  activeUserStoryGroup = [];
+  activeStoryIndex = 0;
   isStoryPaused = false;
 }
 
 function reactToStoryFacebook(emoji) {
-  if (!currentViewingStoryObj || !currentUser) return;
+  var story = activeUserStoryGroup[activeStoryIndex];
+  if (!story || !currentUser) return;
 
   var zone = document.getElementById('story-floating-reactions-zone');
   if (zone) {
@@ -496,11 +615,11 @@ function reactToStoryFacebook(emoji) {
     setTimeout(() => el.remove(), 1400);
   }
 
-  var newLikes = (currentViewingStoryObj.likes_count || 0) + 1;
-  db.collection('stories').doc(currentViewingStoryObj.id).update({ likes_count: newLikes }).catch(function(){});
+  var newLikes = (story.likes_count || 0) + 1;
+  db.collection('stories').doc(story.id).update({ likes_count: newLikes }).catch(function(){});
 
-  if (currentViewingStoryObj.user_id !== currentUser.uid) {
-    var chatId = currentUser.uid < currentViewingStoryObj.user_id ? currentUser.uid + '_' + currentViewingStoryObj.user_id : currentViewingStoryObj.user_id + '_' + currentUser.uid;
+  if (story.user_id !== currentUser.uid) {
+    var chatId = currentUser.uid < story.user_id ? currentUser.uid + '_' + story.user_id : story.user_id + '_' + currentUser.uid;
     db.collection('chats').doc(chatId).collection('messages').add({
       senderId: currentUser.uid,
       text: `რეაქცია თქვენს სიუჟეტზე: ${emoji}`,
@@ -513,11 +632,12 @@ function reactToStoryFacebook(emoji) {
 function handleStoryCommentKeyPress(event) {
   if (event.key === 'Enter') {
     var input = document.getElementById('story-comment-field');
-    if (!input || !currentViewingStoryObj || !currentUser) return;
+    var story = activeUserStoryGroup[activeStoryIndex];
+    if (!input || !story || !currentUser) return;
     var text = input.value.trim();
     if (!text) return;
 
-    var chatId = currentUser.uid < currentViewingStoryObj.user_id ? currentUser.uid + '_' + currentViewingStoryObj.user_id : currentViewingStoryObj.user_id + '_' + currentUser.uid;
+    var chatId = currentUser.uid < story.user_id ? currentUser.uid + '_' + story.user_id : story.user_id + '_' + currentUser.uid;
     db.collection('chats').doc(chatId).collection('messages').add({
       senderId: currentUser.uid,
       text: `პასუხი სიუჟეტზე: "${text}"`,
@@ -530,10 +650,11 @@ function handleStoryCommentKeyPress(event) {
   }
 }
 
-// 4. STORY CREATOR & INTERACTIVE TOOLS LOGIC
+// 4. CREATOR LOGIC & MERGE
 var selectedStoryFile = null;
 var selectedStoryMediaType = null;
 var storyAttachedMusic = "Original Audio";
+var selectedStoryMusicUrl = null;
 var currentAppliedFilter = "none";
 
 function triggerStoryUpload() {
@@ -541,7 +662,6 @@ function triggerStoryUpload() {
   if (fileInput) fileInput.click();
 }
 
-// როდესაც ფაილი აირჩევა -> იხსნება ედიტორი
 function handleStoryFileSelected(event) {
   var file = event.target.files[0];
   if (!file) return;
@@ -550,6 +670,7 @@ function handleStoryFileSelected(event) {
   selectedStoryMediaType = file.type.startsWith('video') ? 'video' : 'image';
   currentAppliedFilter = "none";
   storyAttachedMusic = "Original Audio";
+  selectedStoryMusicUrl = null;
 
   var titleEl = document.getElementById('creator-music-name');
   if (titleEl) titleEl.innerText = "მუსიკის დამატება";
@@ -589,14 +710,13 @@ function resetStoryEdits() {
   if (overlayLayer) overlayLayer.innerHTML = '';
   applyMediaFilter('none');
   storyAttachedMusic = "Original Audio";
+  selectedStoryMusicUrl = null;
   var titleEl = document.getElementById('creator-music-name');
   if (titleEl) titleEl.innerText = "მუსიკის დამატება";
 }
 
-// ხელსაწყოების გახსნა
 function openStoryTool(toolType) {
   closeAllSheets();
-
   if (toolType === 'text') {
     var userText = prompt('შეიყვანეთ ტექსტი:');
     if (userText) makeDraggableText(userText);
@@ -624,15 +744,14 @@ function closeAllSheets() {
   document.querySelectorAll('.fb-sheet-modal').forEach(el => el.style.display = 'none');
 }
 
-// მუსიკის არჩევა
-function selectMusic(musicTitle) {
-  storyAttachedMusic = musicTitle;
+function selectMusic(title, musicUrl) {
+  storyAttachedMusic = title;
+  selectedStoryMusicUrl = musicUrl;
   var titleEl = document.getElementById('creator-music-name');
-  if (titleEl) titleEl.innerText = musicTitle;
+  if (titleEl) titleEl.innerText = title;
   closeAllSheets();
 }
 
-// სტიკერის დამატება
 function addSticker(emoji) {
   var layer = document.getElementById('creator-overlay-layer');
   var el = document.createElement('div');
@@ -645,7 +764,6 @@ function addSticker(emoji) {
   closeAllSheets();
 }
 
-// ტექსტის დადება
 function makeDraggableText(text) {
   var layer = document.getElementById('creator-overlay-layer');
   var el = document.createElement('div');
@@ -657,7 +775,6 @@ function makeDraggableText(text) {
   makeElementDraggable(el);
 }
 
-// ფილტრის დადება
 function applyMediaFilter(filterValue) {
   currentAppliedFilter = filterValue;
   var media = document.getElementById('creator-target-media');
@@ -665,7 +782,6 @@ function applyMediaFilter(filterValue) {
   closeAllSheets();
 }
 
-// Drag & Drop ელემენტების გადასაადგილებლად
 function makeElementDraggable(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   elmnt.onmousedown = dragMouseDown;
@@ -715,10 +831,7 @@ function makeElementDraggable(elmnt) {
   }
 }
 
-// 5. საბოლოო გამოქვეყნება FIREBASE-ში
-// 5. სთორის გარანტირებული ატვირთვა Cloudflare R2-ში
-// სთორის ატვირთვა Cloudflare R2-ში პირდაპირ 'stories/' საქაღალდეში
-// 5. სთორის გაერთიანება (Merge) და Cloudflare R2-ში ატვირთვა
+// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ აირჩიოთ ფაილი და გაიაროთ ავტორიზაცია');
@@ -733,18 +846,15 @@ function publishCreatedStory() {
 
   var isVideo = selectedStoryMediaType === 'video' || selectedStoryFile.type.startsWith('video/');
 
-  // თუ ფოტოა, ვაერთიანებთ ტექსტს, სტიკერებს და ფოტოს ერთიან სურათად Canvas-ით
   if (!isVideo) {
     processStoryImageWithOverlays(function(finalBlob) {
       uploadStoryToR2(finalBlob, false, btn);
     });
   } else {
-    // ვიდეოს შემთხვევაში პირდაპირ იტვირთება
     uploadStoryToR2(selectedStoryFile, true, btn);
   }
 }
 
-// ფოტოს, წარწერების და სტიკერების გაერთიანება
 function processStoryImageWithOverlays(callback) {
   var mediaZone = document.getElementById('creator-media-zone');
   var imgElement = document.getElementById('creator-target-media');
@@ -764,16 +874,13 @@ function processStoryImageWithOverlays(callback) {
     canvas.width = 1080;
     canvas.height = 1920;
 
-    // შავი ფონი (სთორის სტანდარტული ფორმატი)
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // ფილტრის დადება
     if (currentAppliedFilter && currentAppliedFilter !== 'none') {
       ctx.filter = currentAppliedFilter;
     }
 
-    // ფოტოს ჩახატვა ცენტრში (object-fit: contain პროპორციით)
     var hRatio = canvas.width / img.width;
     var vRatio = canvas.height / img.height;
     var ratio = Math.min(hRatio, vRatio);
@@ -783,7 +890,6 @@ function processStoryImageWithOverlays(callback) {
     ctx.drawImage(img, 0, 0, img.width, img.height, centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
     ctx.filter = 'none';
 
-    // ზედ დადებული წარწერების და სტიკერების ჩახატვა
     var elements = overlayLayer.querySelectorAll('.creator-movable-element');
     var scaleX = canvas.width / zoneWidth;
     var scaleY = canvas.height / zoneHeight;
@@ -804,16 +910,12 @@ function processStoryImageWithOverlays(callback) {
         ctx.font = `bold ${24 * scaleX}px sans-serif`;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
-
-        // ტექსტის ჩრდილი
         ctx.shadowColor = "rgba(0,0,0,0.9)";
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 2;
-
         ctx.fillStyle = "#ffffff";
         ctx.fillText(el.innerText, relX, relY);
-
         ctx.shadowColor = "transparent";
       }
     });
@@ -824,7 +926,6 @@ function processStoryImageWithOverlays(callback) {
   };
 }
 
-// უშუალოდ Cloudflare R2-ში stories/ ფოლდერში ატვირთვა
 function uploadStoryToR2(fileBlob, isVideo, btn) {
   if (btn) btn.innerText = 'იტვირთება...';
 
@@ -866,6 +967,7 @@ function uploadStoryToR2(fileBlob, isVideo, btn) {
       media_url: publicUrl,
       media_type: isVideo ? "video" : "image",
       music_title: storyAttachedMusic || "Original Audio",
+      music_url: selectedStoryMusicUrl || null,
       filter: currentAppliedFilter || "none",
       likes_count: 0,
       created_at: firebase.firestore.FieldValue.serverTimestamp()
@@ -888,4 +990,76 @@ function uploadStoryToR2(fileBlob, isVideo, btn) {
       }
     });
   });
+}
+
+// 6. MULTI-STORY ჩატვირთვა და დაჯგუფება მთავარ გვერდზე
+function fetchStoriesForUsers(userIdsList, listDiv) {
+  if (!userIdsList || userIdsList.length === 0) return;
+  var oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  db.collection('stories')
+    .where('created_at', '>=', oneDayAgo)
+    .orderBy('created_at', 'asc')
+    .get()
+    .then(function(snapshot) {
+      var userStoriesMap = {};
+      var authorIds = [];
+
+      snapshot.forEach(function(doc) {
+        var data = Object.assign({ id: doc.id }, doc.data());
+        if (userIdsList.includes(data.user_id)) {
+          if (!userStoriesMap[data.user_id]) {
+            userStoriesMap[data.user_id] = [];
+            authorIds.push(data.user_id);
+          }
+          userStoriesMap[data.user_id].push(data);
+        }
+      });
+
+      var profileAvatar = document.getElementById('profile-big-avatar');
+      if (profileAvatar) {
+        var targetId = activeViewingProfileId || (currentUser ? currentUser.uid : null);
+        if (userStoriesMap[targetId] && userStoriesMap[targetId].length > 0) {
+          profileAvatar.style.border = "4px solid #dcae36";
+        } else {
+          profileAvatar.style.border = "4px solid #141414";
+        }
+      }
+
+      if (authorIds.length === 0) return;
+
+      fetchMultipleProfilesCached(authorIds, function() {
+        authorIds.forEach(function(userId) {
+          var stories = userStoriesMap[userId];
+          var latestStory = stories[stories.length - 1];
+          var author = cachedProfiles[userId] || {};
+          var authorName = author.full_name || "User";
+          var authorAvatar = author.avatar_url || null;
+          var isOnline = isUserOnline(author);
+          var initial = authorName ? authorName.charAt(0).toUpperCase() : "?";
+
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarHtml = authorAvatar ? `<div class="avatar-has-online"><img src="${authorAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+          
+          var backgroundHtml = latestStory.media_type === 'video' ? 
+            `<video class="story-card-video-preview" src="${latestStory.media_url}#t=0.5" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="metadata" playsinline webkit-playsinline muted></video>` : 
+            `<div style="width:100%; height:100%; background-image: url('${latestStory.media_url}'); background-size: cover; background-position: center;"></div>`;
+
+          var card = document.createElement('div');
+          card.className = "story-card friend-story-card";
+          card.onclick = function() { 
+            openStoryGroupViewer(stories, 0, authorName, authorAvatar); 
+          };
+
+          card.innerHTML = `
+            <div class="story-badge-avatar">${avatarHtml}</div>
+            ${backgroundHtml}
+            <span class="story-username-label">${authorName}</span>
+          `;
+          listDiv.appendChild(card);
+        });
+      });
+    }).catch(function(error) {
+      console.error("Error loading stories: ", error);
+    });
 }
