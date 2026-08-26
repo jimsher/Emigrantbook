@@ -442,6 +442,8 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    const DEFAULT_AVATAR_URL = "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+
     var currentUser = null;
     var allUsersData = [];
     var friendRequestsMap = {}; // Maps targetUserId -> { reqId, status, sender_id }
@@ -600,15 +602,12 @@
 
       filtered.forEach(function(user) {
         var fullName = user.full_name || "User";
-        var avatarUrl = user.avatar_url;
-        var initial = fullName.charAt(0).toUpperCase();
+        var avatarUrl = user.avatar_url || DEFAULT_AVATAR_URL;
 
         var onlineState = isUserOnline(user);
         var onlineDotHtml = onlineState ? `<div class="online-status-dot"></div>` : ``;
 
-        var avatarContent = avatarUrl 
-          ? `<img src="${avatarUrl}" alt="Avatar">${onlineDotHtml}` 
-          : `<span>${initial}</span>${onlineDotHtml}`;
+        var avatarContent = `<img src="${avatarUrl}" alt="Avatar">${onlineDotHtml}`;
 
         // FRIEND ACTION BUTTON STATE
         var reqInfo = friendRequestsMap[user.id];
