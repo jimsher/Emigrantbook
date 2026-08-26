@@ -2899,12 +2899,12 @@ auth.onAuthStateChanged(function(user) {
             var profile = cachedProfiles[targetId] || {};
             if (profile.full_name || profile.avatar_url) {
               var finalName = profile.full_name || "User";
-              var avatarUrl = profile.avatar_url;
+              var avatarUrl = profile.avatar_url || DEFAULT_AVATAR_URL;
               var isOnline = isUserOnline(profile);
               var initial = finalName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-              var avatarHtml = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
+              var avatarHtml = `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
 
               gridHtml += `
                 <div class="friend-grid-item" onclick="viewUserProfile('${targetId}')">
