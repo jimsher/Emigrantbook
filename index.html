@@ -2943,99 +2943,98 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function loadConnectionsData() {
-      var listWrapper = document.getElementById('connections-list-wrapper');
-      var countLabel = document.getElementById('connections-count');
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      if (!listWrapper || !countLabel) return;
-      listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
+  var listWrapper = document.getElementById('connections-list-wrapper');
+  var countLabel = document.getElementById('connections-count');
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  if (!listWrapper || !countLabel) return;
+  listWrapper.innerHTML = `<div class="connections-empty">${t.loading}</div>`;
 
-      fetchBlockedUserIds(function(blockedSet) {
-        if (activeConnectionsType === 'followers') {
-          db.collection('friend_requests')
-            .where('receiver_id', '==', activeConnectionsUserId)
-            .where('status', '==', 'accepted')
-            .get()
-            .then(function(snapshot) {
-              handleConnectionsResult(snapshot, 'sender_id', listWrapper, countLabel, blockedSet);
-            });
-        } else if (activeConnectionsType === 'following') {
-          db.collection('friend_requests')
-            .where('sender_id', '==', activeConnectionsUserId)
-            .where('status', '==', 'accepted')
-            .get()
-            .then(function(snapshot) {
-              handleConnectionsResult(snapshot, 'receiver_id', listWrapper, countLabel, blockedSet);
-            });
-        } else if (activeConnectionsType === 'all') {
-          Promise.all([
-            db.collection('friend_requests').where('receiver_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get(),
-            db.collection('friend_requests').where('sender_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get()
-          ]).then(function(results) {
-            var followersSnap = results[0];
-            var followingSnap = results[1];
-            
-            var combinedMap = new Map();
-            
-            followersSnap.forEach(function(docSnap) {
-              var conn = docSnap.data();
-              if (!blockedSet.has(conn.sender_id)) {
-                combinedMap.set(conn.sender_id, { docId: docSnap.id, targetUserId: conn.sender_id });
-              }
-            });
-            
-            followingSnap.forEach(function(docSnap) {
-              var conn = docSnap.data();
-              if (!blockedSet.has(conn.receiver_id) && !combinedMap.has(conn.receiver_id)) {
-                combinedMap.set(conn.receiver_id, { docId: docSnap.id, targetUserId: conn.receiver_id });
-              }
-            });
+  fetchBlockedUserIds(function(blockedSet) {
+    if (activeConnectionsType === 'followers') {
+      db.collection('friend_requests')
+        .where('receiver_id', '==', activeConnectionsUserId)
+        .where('status', '==', 'accepted')
+        .get()
+        .then(function(snapshot) {
+          handleConnectionsResult(snapshot, 'sender_id', listWrapper, countLabel, blockedSet);
+        });
+    } else if (activeConnectionsType === 'following') {
+      db.collection('friend_requests')
+        .where('sender_id', '==', activeConnectionsUserId)
+        .where('status', '==', 'accepted')
+        .get()
+        .then(function(snapshot) {
+          handleConnectionsResult(snapshot, 'receiver_id', listWrapper, countLabel, blockedSet);
+        });
+    } else if (activeConnectionsType === 'all') {
+      Promise.all([
+        db.collection('friend_requests').where('receiver_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get(),
+        db.collection('friend_requests').where('sender_id', '==', activeConnectionsUserId).where('status', '==', 'accepted').get()
+      ]).then(function(results) {
+        var followersSnap = results[0];
+        var followingSnap = results[1];
+        
+        var combinedMap = new Map();
+        
+        followersSnap.forEach(function(docSnap) {
+          var conn = docSnap.data();
+          if (!blockedSet.has(conn.sender_id)) {
+            combinedMap.set(conn.sender_id, { docId: docSnap.id, targetUserId: conn.sender_id });
+          }
+        });
+        
+        followingSnap.forEach(function(docSnap) {
+          var conn = docSnap.data();
+          if (!blockedSet.has(conn.receiver_id) && !combinedMap.has(conn.receiver_id)) {
+            combinedMap.set(conn.receiver_id, { docId: docSnap.id, targetUserId: conn.receiver_id });
+          }
+        });
 
-            if (combinedMap.size === 0) {
-              listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
-              countLabel.innerText = "0 " + t.userUnit;
-              return;
-            }
-
-            countLabel.innerText = combinedMap.size + " " + t.userUnit;
-            
-            var targetIds = Array.from(combinedMap.keys());
-            fetchMultipleProfilesCached(targetIds, function() {
-              var listHtml = "";
-              combinedMap.forEach(function(item) {
-                var requestId = item.docId;
-                var targetUserId = item.targetUserId;
-                var profile = cachedProfiles[targetUserId] || {};
-
-                var finalName = profile.full_name || "User";
-                var avatarUrl = profile.avatar_url;
-                var isOnline = isUserOnline(profile);
-                var initial = finalName.charAt(0).toUpperCase();
-
-                var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-                var avatarContent = avatarUrl ? `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-                var showDeleteButton = activeConnectionsUserId === currentUser.uid;
-                var deleteBtnHtml = showDeleteButton ? 
-                  `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
-
-                listHtml += `
-                  <div class="connection-row">
-                    <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
-                      <div class="connection-avatar">${avatarContent}</div>
-                      <span class="connection-name">${finalName}</span>
-                    </div>
-                    ${deleteBtnHtml}
-                  </div>
-                `;
-              });
-              listWrapper.innerHTML = listHtml;
-            });
-          }).catch(function(error) {
-            console.error("Error loading combined connections:", error);
-            listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
-          });
+        if (combinedMap.size === 0) {
+          listWrapper.innerHTML = `<div class="connections-empty">Empty</div>`;
+          countLabel.innerText = "0 " + t.userUnit;
+          return;
         }
+
+        countLabel.innerText = combinedMap.size + " " + t.userUnit;
+        
+        var targetIds = Array.from(combinedMap.keys());
+        fetchMultipleProfilesCached(targetIds, function() {
+          var listHtml = "";
+          combinedMap.forEach(function(item) {
+            var requestId = item.docId;
+            var targetUserId = item.targetUserId;
+            var profile = cachedProfiles[targetUserId] || {};
+
+            var finalName = profile.full_name || "User";
+            var avatarUrl = profile.avatar_url || DEFAULT_AVATAR_URL;
+            var isOnline = isUserOnline(profile);
+
+            var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+            var avatarContent = `<div class="avatar-has-online"><img src="${avatarUrl}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
+            var showDeleteButton = activeConnectionsUserId === currentUser.uid;
+            var deleteBtnHtml = showDeleteButton ? 
+              `<button class="btn-remove-connection" onclick="deleteConnectionFromList('${requestId}', event)">${t.delete}</button>` : '';
+
+            listHtml += `
+              <div class="connection-row">
+                <div class="connection-user-info" onclick="viewUserProfile('${targetUserId}')">
+                  <div class="connection-avatar">${avatarContent}</div>
+                  <span class="connection-name">${finalName}</span>
+                </div>
+                ${deleteBtnHtml}
+              </div>
+            `;
+          });
+          listWrapper.innerHTML = listHtml;
+        });
+      }).catch(function(error) {
+        console.error("Error loading combined connections:", error);
+        listWrapper.innerHTML = `<div class="connections-empty">Error loading data</div>`;
       });
     }
+  });
+}                
 
     function handleConnectionsResult(snapshot, targetIdKey, listWrapper, countLabel, blockedSet) {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
