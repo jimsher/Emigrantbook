@@ -2740,13 +2740,12 @@ auth.onAuthStateChanged(function(user) {
             reqList.forEach(function(reqItem) {
               var pData = cachedProfiles[reqItem.sender_id] || {};
               var senderName = pData.full_name || "User";
-              var senderAvatar = pData.avatar_url || null;
+              var senderAvatar = pData.avatar_url || DEFAULT_AVATAR_URL;
               var isOnline = isUserOnline(pData);
               var initial = senderName.charAt(0).toUpperCase();
 
               var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-              var avatarContent = senderAvatar ? `<div class="avatar-has-online"><img src="${senderAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
-
+              var avatarContent = `<div class="avatar-has-online"><img src="${senderAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
               itemsHtml += `
                 <div class="request-item">
                   <div class="request-item-avatar" onclick="viewUserProfile('${reqItem.sender_id}')">${avatarContent}</div>
