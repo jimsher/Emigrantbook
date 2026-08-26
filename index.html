@@ -4123,83 +4123,79 @@ auth.onAuthStateChanged(function(user) {
 
     // აქ იწყება
     function updateGalleryViewData() {
-      if(galleryPhotoUrls.length === 0) return;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      
-      var currentUrl = galleryPhotoUrls[galleryCurrentIndex];
-      var currentPost = galleryPostsReference[galleryCurrentIndex];
-      
-      var fullImg = document.getElementById('gallery-fullscreen-img');
-      var counter = document.getElementById('gallery-photo-counter');
-      var authorName = document.getElementById('gallery-post-author-name');
-      var contentTxt = document.getElementById('gallery-post-content-text');
-      var timeLbl = document.getElementById('gallery-post-time-label');
+  if(galleryPhotoUrls.length === 0) return;
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  
+  var currentUrl = galleryPhotoUrls[galleryCurrentIndex];
+  var currentPost = galleryPostsReference[galleryCurrentIndex];
+  
+  var fullImg = document.getElementById('gallery-fullscreen-img');
+  var counter = document.getElementById('gallery-photo-counter');
+  var authorName = document.getElementById('gallery-post-author-name');
+  var contentTxt = document.getElementById('gallery-post-content-text');
+  var timeLbl = document.getElementById('gallery-post-time-label');
 
-      if (fullImg) fullImg.src = currentUrl;
-      if (counter) counter.innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
-      if (authorName) authorName.innerText = currentPost.author_name || "Emigrantbook User";
-      if (contentTxt) contentTxt.innerText = currentPost.content || t.descPlaceholder;
-      
-      var postDate = currentPost.created_at ? new Date(currentPost.created_at.toDate ? currentPost.created_at.toDate() : currentPost.created_at).toLocaleDateString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : "";
-      if (timeLbl) timeLbl.innerText = postDate;
-      
-      var authorAvatarUrl = cachedProfiles[currentPost.user_id] ? cachedProfiles[currentPost.user_id].avatar_url : null;
-      var avatarPlaceholder = document.getElementById('gallery-user-avatar-placeholder');
-      if (avatarPlaceholder) {
-        if (authorAvatarUrl) {
-          avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-        } else {
-          avatarPlaceholder.innerText = (currentPost.author_name || "M").charAt(0).toUpperCase();
-        }
-      }
+  if (fullImg) fullImg.src = currentUrl;
+  if (counter) counter.innerText = (galleryCurrentIndex + 1) + " of " + galleryPhotoUrls.length;
+  if (authorName) authorName.innerText = currentPost.author_name || "Emigrantbook User";
+  if (contentTxt) contentTxt.innerText = currentPost.content || t.descPlaceholder;
+  
+  var postDate = currentPost.created_at ? new Date(currentPost.created_at.toDate ? currentPost.created_at.toDate() : currentPost.created_at).toLocaleDateString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : "";
+  if (timeLbl) timeLbl.innerText = postDate;
+  
+  var authorAvatarUrl = (cachedProfiles[currentPost.user_id] && cachedProfiles[currentPost.user_id].avatar_url) ? cachedProfiles[currentPost.user_id].avatar_url : DEFAULT_AVATAR_URL;
+  var avatarPlaceholder = document.getElementById('gallery-user-avatar-placeholder');
+  if (avatarPlaceholder) {
+    avatarPlaceholder.innerHTML = `<img src="${authorAvatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+  }
 
-      var totalLikes = currentPost.likes_count || 0;
-      var likesCounter = document.getElementById('gallery-total-likes-counter');
-      if (likesCounter) likesCounter.innerText = totalLikes;
-      
-      db.collection('post_comments').where('post_id', '==', currentPost.id).get().then(function(snapshot) {
-        var commLbl = document.getElementById('gallery-comments-counter-label');
-        if (commLbl) commLbl.innerText = snapshot.size + " " + t.commentsCount;
-      });
+  var totalLikes = currentPost.likes_count || 0;
+  var likesCounter = document.getElementById('gallery-total-likes-counter');
+  if (likesCounter) likesCounter.innerText = totalLikes;
+  
+  db.collection('post_comments').where('post_id', '==', currentPost.id).get().then(function(snapshot) {
+    var commLbl = document.getElementById('gallery-comments-counter-label');
+    if (commLbl) commLbl.innerText = snapshot.size + " " + t.commentsCount;
+  });
 
-      var likeBtn = document.getElementById('gallery-like-main-action-btn');
-      var hasLiked = likedPosts.includes(currentPost.id);
-      if (likeBtn) {
-        if (hasLiked) {
-          likeBtn.classList.add('liked-active');
-        } else {
-          likeBtn.classList.remove('liked-active');
-        }
-
-        likeBtn.onclick = function() {
-          likePost(currentPost.id, false);
-          setTimeout(updateGalleryViewData, 200);
-        };
-      }
-
-      var commBtn = document.getElementById('gallery-comment-main-action-btn');
-      if (commBtn) {
-        commBtn.onclick = function() {
-          openCommentsModal(currentPost.id, currentPost.likes_count || 0);
-        };
-      }
-
-      // 📤 გაზიარების მუშა ფუნქციის მიბმა
-      var shareBtn = document.getElementById('gallery-share-main-action-btn');
-      if (shareBtn) {
-        shareBtn.onclick = function() {
-          openShareModal(currentPost.id);
-        };
-      }
-      
-      var likesTrig = document.getElementById('gallery-likes-trigger-area');
-      if (likesTrig) {
-        likesTrig.onclick = function() {
-          activePostForComments = currentPost.id;
-          openLikersListModal();
-        };
-      }
+  var likeBtn = document.getElementById('gallery-like-main-action-btn');
+  var hasLiked = likedPosts.includes(currentPost.id);
+  if (likeBtn) {
+    if (hasLiked) {
+      likeBtn.classList.add('liked-active');
+    } else {
+      likeBtn.classList.remove('liked-active');
     }
+
+    likeBtn.onclick = function() {
+      likePost(currentPost.id, false);
+      setTimeout(updateGalleryViewData, 200);
+    };
+  }
+
+  var commBtn = document.getElementById('gallery-comment-main-action-btn');
+  if (commBtn) {
+    commBtn.onclick = function() {
+      openCommentsModal(currentPost.id, currentPost.likes_count || 0);
+    };
+  }
+
+  // 📤 გაზიარების მუშა ფუნქციის მიბმა
+  var shareBtn = document.getElementById('gallery-share-main-action-btn');
+  if (shareBtn) {
+    shareBtn.onclick = function() {
+      openShareModal(currentPost.id);
+    };
+  }
+  
+  var likesTrig = document.getElementById('gallery-likes-trigger-area');
+  if (likesTrig) {
+    likesTrig.onclick = function() {
+      activePostForComments = currentPost.id;
+      openLikersListModal();
+    };
+  }
+}
     // აქ მთავრდება
 
     function initGallerySwipeEvents() {
