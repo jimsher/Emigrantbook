@@ -275,6 +275,8 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    const DEFAULT_AVATAR_URL = "https://raw.githubusercontent.com/jimsher/Emigrantbook/main/default-avatar.jpg";
+
     var currentUser = null;
     var cachedProfiles = {};
     var friendshipStatusMap = {};
@@ -460,13 +462,10 @@
       viewsList.forEach(function(v) {
         var profile = cachedProfiles[v.viewer_id] || {};
         var name = profile.full_name || "Emigrantbook User";
-        var avatarUrl = profile.avatar_url || "";
+        var avatarUrl = profile.avatar_url || DEFAULT_AVATAR_URL;
         var isOnline = (profile.is_online === true);
-        var initial = name.charAt(0).toUpperCase();
 
-        var avatarHtml = avatarUrl 
-          ? `<img src="${avatarUrl}" class="avatar-img" alt="Avatar">`
-          : `<div class="avatar-fallback">${initial}</div>`;
+        var avatarHtml = `<img src="${avatarUrl}" class="avatar-img" alt="Avatar">`;
 
         var fState = friendshipStatusMap[v.viewer_id];
         var btnText = t.follow;
