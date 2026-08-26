@@ -498,6 +498,8 @@ function displayActiveStoryItem(username, avatarUrl) {
     `;
     if (story.media_type === 'video') {
       mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};"></video>`;
+      var activeVid = document.getElementById('active-story-video');
+      if (activeVid) activeVid.muted = false;
     } else {
       mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};">`;
     }
@@ -595,7 +597,14 @@ function closeStoryViewer() {
   storyAudioPlayer.src = "";
   var modal = document.getElementById('story-viewer-modal');
   var mediaContainer = document.getElementById('sv-media-container');
-  if (mediaContainer) mediaContainer.innerHTML = "";
+  if (mediaContainer) {
+    var v = mediaContainer.querySelector('video');
+    if (v) {
+      v.pause();
+      v.src = "";
+    }
+    mediaContainer.innerHTML = "";
+  }
   if (modal) modal.style.display = "none";
   activeUserStoryGroup = [];
   activeStoryIndex = 0;
@@ -1042,7 +1051,7 @@ function fetchStoriesForUsers(userIdsList, listDiv) {
           var avatarHtml = authorAvatar ? `<div class="avatar-has-online"><img src="${authorAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${initial}${dotHtml}</div>`;
           
           var backgroundHtml = latestStory.media_type === 'video' ? 
-            `<video class="story-card-video-preview" src="${latestStory.media_url}#t=0.5" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="metadata" playsinline webkit-playsinline muted></video>` : 
+            `<video class="story-card-video-preview" src="${latestStory.media_url}#t=0.5" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="metadata" playsinline webkit-playsinline muted onvolumechange="this.muted=true"></video>` : 
             `<div style="width:100%; height:100%; background-image: url('${latestStory.media_url}'); background-size: cover; background-position: center;"></div>`;
 
           var card = document.createElement('div');
