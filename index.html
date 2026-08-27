@@ -6204,6 +6204,37 @@ function copyPostDirectLink() {
     prompt("დააკოპირეთ ბმული:", link);
   }
 }
+
+
+    // ქვედა ნევბარის ლოგიკა
+    let lastScrollTop = 0;
+const bottomNav = document.getElementById('bottomNav');
+const scrollDelta = 10; // მინიმალური სქროლის მანძილი რეაგირებისთვის
+
+window.addEventListener('scroll', () => {
+  const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+
+  // საიტის თავში ნავბარი ყოველთვის ჩანდეს
+  if (currentScroll <= 0) {
+    bottomNav.classList.remove('nav-hidden');
+    lastScrollTop = 0;
+    return;
+  }
+
+  // მცირე სქროლზე უმოქმედობა (ლაგების თავიდან ასაცილებლად)
+  if (Math.abs(currentScroll - lastScrollTop) <= scrollDelta) {
+    return;
+  }
+
+  // ქვემოთ სქროლვა -> გაქრობა; ზემოთ სქროლვა -> გამოჩენა
+  if (currentScroll > lastScrollTop) {
+    bottomNav.classList.add('nav-hidden');
+  } else {
+    bottomNav.classList.remove('nav-hidden');
+  }
+
+  lastScrollTop = currentScroll;
+});
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
