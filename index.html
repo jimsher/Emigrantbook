@@ -2614,9 +2614,13 @@ auth.onAuthStateChanged(function(user) {
     }
 
     var targetUserId = sessionStorage.getItem('target_view_user_id');
+    var targetScreen = sessionStorage.getItem('target_screen');
 
     if (targetUserId) {
       showScreen('profile');
+    } else if (targetScreen) {
+      sessionStorage.removeItem('target_screen');
+      showScreen(targetScreen);
     } else {
       showScreen('home');
     }
