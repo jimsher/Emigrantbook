@@ -269,7 +269,52 @@ video::-webkit-media-controls-play-button {
 
 
 
-    /* აქ იწყება */
+    /* ქვედა ნევბარის სტილი */
+    .bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #e4e6eb;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
+}
+
+.bottom-nav.nav-hidden {
+  transform: translateY(100%);
+}
+
+.bottom-nav .nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  text-decoration: none;
+}
+
+/* SVG აიქონის ზომა და სტანდარტული (რუხი) ფილტრი */
+.bottom-nav .nav-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: invert(44%) sepia(8%) saturate(347%) hue-rotate(182deg) brightness(92%) contrast(87%);
+  transition: filter 0.2s ease, transform 0.1s ease;
+}
+
+/* აქტიური ღილაკის ფერი (ლურჯი) */
+.bottom-nav .nav-item.active .nav-icon {
+  filter: invert(36%) sepia(89%) saturate(2466%) hue-rotate(206deg) brightness(98%) contrast(93%);
+}
+
+body {
+  padding-bottom: 60px;
+}
   </style>
   
 </head>
@@ -6298,6 +6343,29 @@ function copyPostDirectLink() {
     </div>
   </div>
 </div>
+
+  <!-- ქვედა ნევბარი -->
+ <nav class="bottom-nav" id="bottomNav">
+  <a href="#" class="nav-item active">
+    <img src="icons/house.svg" alt="მთავარი" class="nav-icon">
+  </a>
+  <a href="#" class="nav-item">
+    <img src="icons/globe.svg" alt="გლობალური" class="nav-icon">
+  </a>
+  <a href="#" class="nav-item">
+    <img src="icons/users.svg" alt="მეგობრები" class="nav-icon">
+  </a>
+  <a href="#" class="nav-item">
+    <img src="icons/user-round-plus.svg" alt="მოთხოვნები" class="nav-icon">
+  </a>
+  <a href="#" class="nav-item">
+    <img src="icons/message-circle-more.svg" alt="შეტყობინებები" class="nav-icon">
+  </a>
+  <a href="#" class="nav-item">
+    <img src="icons/circle-user-round.svg" alt="პროფილი" class="nav-icon">
+  </a>
+</nav>
+  
   <script src="story-module.js"></script>
   <script src="app.js"></script>
 </body>
