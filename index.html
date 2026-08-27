@@ -6716,6 +6716,177 @@ function formatTimeAgo(timestamp) {
   if (diffSec < 86400) return Math.floor(diffSec / 3600) + " სთ";
   return Math.floor(diffSec / 86400) + " დღე";
 }
+
+
+   /* 1. მოთხოვნების რაოდენობის ერთჯერადი შემოწმება (.get-ით) */
+function checkPendingRequestsCountOnce() {
+  if (!currentUser) return;
+  db.collection('friend_requests')
+    .where('receiver_id', '==', currentUser.uid)
+    .where('status', '==', 'pending')
+    .get()
+    .then(function(snapshot) {
+      var badge = document.getElementById('bottom-requests-badge');
+      var pill = document.getElementById('friends-req-count-pill');
+      var count = snapshot.size;
+
+      if (badge) {
+        if (count > 0) {
+          badge.innerText = count > 99 ? '99+' : count;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      if (pill) {
+        pill.innerText = count > 0 ? count : '';
+      }
+    }).catch(function(err) {
+      console.warn("Requests count get error:", err);
+    });
+}
+
+/* 2. მეგობრების სრული გვერდის ჩატვირთვა (.get-ით) */
+function loadFullFriendsPage() {
+  if (!currentUser) return;
+  var reqContainer = document.getElementById('full-friend-requests-list');
+  var sugContainer = document.getElementById('friends-suggestions-list');
+
+  if (reqContainer) reqContainer.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">იტვირთება...</div>';
+  if (sugContainer) sugContainer.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">იტვირთება...</div>';
+
+  checkPendingRequestsCountOnce();
+
+  // შემოსული მოთხოვნები
+  db.collection('friend_requests')
+    .where('receiver_id', '==', currentUser.uid)
+    .where('status', '==', 'pending')
+    .get()
+    .then(function(snapshot) {
+      if (snapshot.empty) {
+        if (reqContainer) reqContainer.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">მეგობრობის მოთხოვნები არ არის</div>';
+        loadFriendSuggestions([]);
+        return;
+      }
+
+      var senderIds = [];
+      var reqList = [];
+
+      snapshot.forEach(function(docSnap) {
+        var req = docSnap.data();
+        senderIds.push(req.sender_id);
+        reqList.push({ id: docSnap.id, sender_id: req.sender_id, created_at: req.created_at });
+      });
+
+      fetchMultipleProfilesCached(senderIds, function() {
+        var html = "";
+        reqList.forEach(function(item) {
+          var pData = cachedProfiles[item.sender_id] || {};
+          var name = pData.full_name || "მომხმარებელი";
+          var avatar = pData.avatar_url || DEFAULT_AVATAR_URL;
+          var timeStr = formatTimeAgo(item.created_at);
+
+          html += `
+            <div class="friend-req-card" id="friend-req-card-${item.id}">
+              <img src="${avatar}" class="friend-req-avatar" onclick="viewUserProfile('${item.sender_id}')" alt="avatar">
+              <div class="friend-req-info">
+                <div class="friend-req-name-row">
+                  <span class="friend-req-name" onclick="viewUserProfile('${item.sender_id}')">${name}</span>
+                  <span class="friend-req-time">${timeStr}</span>
+                </div>
+                <div class="friend-req-buttons">
+                  <button class="btn-confirm-req" onclick="acceptFriendReqFromPage('${item.id}', '${item.sender_id}', event)">დადასტურება</button>
+                  <button class="btn-delete-req" onclick="deleteFriendReqFromPage('${item.id}', event)">წაშლა</button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        if (reqContainer) reqContainer.innerHTML = html;
+        loadFriendSuggestions(senderIds);
+      });
+    }).catch(function(err) {
+      console.error("Friends page error:", err);
+      if (reqContainer) reqContainer.innerHTML = '<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა ჩატვირთვისას</div>';
+      loadFriendSuggestions([]);
+    });
+}
+
+/* 3. მეგობრების შეთავაზებების ჩატვირთვა (.get-ით) */
+function loadFriendSuggestions(excludedIds) {
+  var sugContainer = document.getElementById('friends-suggestions-list');
+  if (!sugContainer) return;
+
+  db.collection('profiles')
+    .limit(15)
+    .get()
+    .then(function(snapshot) {
+      var html = "";
+      snapshot.forEach(function(docSnap) {
+        var userId = docSnap.id;
+        var p = docSnap.data();
+
+        if (userId !== currentUser.uid && !excludedIds.includes(userId)) {
+          var name = p.full_name || "მომხმარებელი";
+          var avatar = p.avatar_url || DEFAULT_AVATAR_URL;
+
+          html += `
+            <div class="friend-req-card">
+              <img src="${avatar}" class="friend-req-avatar" onclick="viewUserProfile('${userId}')" alt="avatar">
+              <div class="friend-req-info">
+                <span class="friend-req-name" onclick="viewUserProfile('${userId}')">${name}</span>
+                <div class="friend-req-buttons">
+                  <button class="btn-confirm-req" onclick="sendFriendReqFromPage('${userId}', this, event)">დამატება</button>
+                  <button class="btn-delete-req" onclick="this.closest('.friend-req-card').remove();">წაშლა</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      sugContainer.innerHTML = html || '<div style="text-align: center; color: #8a8f9d; padding: 20px;">შეთავაზებები არ არის</div>';
+    }).catch(function(err) {
+      console.warn("Suggestions error:", err);
+      sugContainer.innerHTML = '';
+    });
+}
+
+function acceptFriendReqFromPage(reqId, senderId, event) {
+  if (event) event.stopPropagation();
+  db.collection('friend_requests').doc(reqId).update({ status: 'accepted' }).then(function() {
+    var card = document.getElementById('friend-req-card-' + reqId);
+    if (card) {
+      card.innerHTML = '<div style="padding: 10px; color: #2ed573; font-weight: 700;">მოთხოვნა მიღებულია ✔</div>';
+      setTimeout(function() { card.remove(); checkPendingRequestsCountOnce(); }, 1200);
+    }
+  });
+}
+
+function deleteFriendReqFromPage(reqId, event) {
+  if (event) event.stopPropagation();
+  db.collection('friend_requests').doc(reqId).delete().then(function() {
+    var card = document.getElementById('friend-req-card-' + reqId);
+    if (card) {
+      card.remove();
+      checkPendingRequestsCountOnce();
+    }
+  });
+}
+
+function sendFriendReqFromPage(targetUserId, btn, event) {
+  if (event) event.stopPropagation();
+  btn.disabled = true;
+  btn.innerText = "გაგზავნილია";
+  btn.style.background = "#242526";
+
+  db.collection('friend_requests').add({
+    sender_id: currentUser.uid,
+    receiver_id: targetUserId,
+    status: 'pending',
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+  });
+} 
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
