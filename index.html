@@ -6211,24 +6211,16 @@ function copyPostDirectLink() {
   const bottomNav = document.getElementById('bottomNav');
   if (!bottomNav) return;
 
-  let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
-
   const handleScroll = () => {
     const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-    if (currentScrollY <= 0) {
+    // ჩნდება მხოლოდ მაშინ, როცა გვერდის სულ თავში ხართ (<= 10px)
+    if (currentScrollY <= 10) {
       bottomNav.classList.remove('nav-hidden');
-      lastScrollY = 0;
-      return;
-    }
-
-    if (currentScrollY > lastScrollY && currentScrollY > 30) {
+    } else {
+      // ნებისმიერ სხვა დროს სქროლვისას რჩება დამალული
       bottomNav.classList.add('nav-hidden');
-    } else if (currentScrollY < lastScrollY) {
-      bottomNav.classList.remove('nav-hidden');
     }
-
-    lastScrollY = currentScrollY;
   };
 
   window.addEventListener('scroll', handleScroll, { passive: true });
