@@ -2801,18 +2801,14 @@ auth.onAuthStateChanged(function(user) {
     'connections-screen', 
     'privacy-screen', 
     'blocked-users-screen',
-    'notifications-screen'
+    'notifications-screen',
+    'friends-screen'
   ];
   
   screens.forEach(s => {
     var el = document.getElementById(s);
     if (el) el.style.display = 'none';
   });
-
-  var dropdownHome = document.getElementById('requests-dropdown-home');
-  var dropdownProfile = document.getElementById('requests-dropdown-profile');
-  if (dropdownHome) dropdownHome.style.display = 'none';
-  if (dropdownProfile) dropdownProfile.style.display = 'none';
 
   var bottomNav = document.getElementById('bottomNav');
   document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
@@ -2831,17 +2827,23 @@ auth.onAuthStateChanged(function(user) {
       if (btnHome) btnHome.classList.add('active');
       loadPosts();
       loadStories();
-    } else if (screenName === 'profile') {
-      var profEl = document.getElementById('profile-screen');
-      if (profEl) profEl.style.display = 'block';
-      var btnProf = document.getElementById('nav-btn-profile');
-      if (btnProf) btnProf.classList.add('active');
+    } else if (screenName === 'friends') {
+      var friendsEl = document.getElementById('friends-screen');
+      if (friendsEl) friendsEl.style.display = 'block';
+      var btnFriends = document.getElementById('nav-btn-friends');
+      if (btnFriends) btnFriends.classList.add('active');
+      loadFullFriendsPage();
     } else if (screenName === 'notifications') {
       var notifEl = document.getElementById('notifications-screen');
       if (notifEl) notifEl.style.display = 'block';
       var btnNotif = document.getElementById('nav-btn-notifications');
       if (btnNotif) btnNotif.classList.add('active');
       loadFullNotificationsPage();
+    } else if (screenName === 'profile') {
+      var profEl = document.getElementById('profile-screen');
+      if (profEl) profEl.style.display = 'block';
+      var btnProf = document.getElementById('nav-btn-profile');
+      if (btnProf) btnProf.classList.add('active');
     } else if (screenName === 'connections') {
       var connEl = document.getElementById('connections-screen');
       if (connEl) connEl.style.display = 'block';
@@ -2858,11 +2860,11 @@ auth.onAuthStateChanged(function(user) {
   }
 
   if (currentUser && screenName !== 'auth') {
-    checkPendingRequestsCount();
+    checkPendingRequestsCountOnce();
     checkNotificationsCountOnce();
   }
   applyLanguageDOM();
-}
+} 
 
     function renderAvatar(elementId, avatarUrl, name, userId = null) {
   var el = document.getElementById(elementId);
