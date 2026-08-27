@@ -29,6 +29,17 @@
       overflow: hidden;
     }
 
+    /* WebView-ის შიდა Play ღილაკის უსაფრთხო გათიშვა */
+    video::-webkit-media-controls-overlay-play-button,
+    video::-webkit-media-controls-start-playback-button,
+    video::-webkit-media-controls-play-button {
+      display: none !important;
+      -webkit-appearance: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
     /* ზედა ჰედერ-ზოლი */
     .reels-top-bar {
       position: fixed;
@@ -677,7 +688,6 @@
 
           snapshot.forEach(doc => {
             const data = doc.data();
-            // ვამოწმებთ არის თუ არა პოსტში ვიდეო
             const isVideo = data.media_type === 'video' || (data.media_url && (data.media_url.includes('.mp4') || data.media_url.includes('video') || data.media_url.includes('emigrantbook-videos')));
             
             if (isVideo && data.media_url) {
@@ -705,7 +715,6 @@
             return;
           }
 
-          // ჩავტვირთოთ ავტორების რეალური პროფილები (ავატარი, სახელი)
           fetchMultipleProfilesCached(userIds, () => {
             renderReelsUI(videoPosts);
           });
@@ -732,7 +741,7 @@
         return `
           <section class="reel-card" data-post-id="${post.id}" data-author-id="${post.user_id}" data-index="${index}">
             <div class="video-wrapper">
-              <video class="reel-video" src="${post.media_url}" loop playsinline preload="${index === 0 ? 'auto' : 'metadata'}" muted></video>
+              <video class="reel-video" src="${post.media_url}#t=0.001" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" loop playsinline webkit-playsinline preload="${index === 0 ? 'auto' : 'metadata'}" muted></video>
               
               <div class="play-state-icon">
                 <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -894,7 +903,6 @@
       if (!currentUser) return;
 
       posts.forEach(post => {
-        // ლაიქის შემოწმება
         db.collection('posts').doc(post.id).collection('post_likes').doc(currentUser.uid).get().then(doc => {
           if (doc.exists) {
             const btn = document.getElementById(`like-btn-${post.id}`);
@@ -902,7 +910,6 @@
           }
         });
 
-        // გამოწერის (Friend Request) შემოწმება
         if (post.user_id && post.user_id !== currentUser.uid) {
           db.collection('friend_requests')
             .where('sender_id', '==', currentUser.uid)
@@ -970,7 +977,6 @@
       if (btnElem.classList.contains('following')) {
         btnElem.classList.remove('following');
         btnElem.textContent = 'გამოწერა';
-        // მოთხოვნის წაშლა
         db.collection('friend_requests')
           .where('sender_id', '==', currentUser.uid)
           .where('receiver_id', '==', authorId)
@@ -981,7 +987,6 @@
       } else {
         btnElem.classList.add('following');
         btnElem.textContent = 'გაგზავნილია';
-        // მოთხოვნის გაგზავნა
         db.collection('friend_requests').add({
           sender_id: currentUser.uid,
           receiver_id: authorId,
@@ -1040,7 +1045,6 @@
             if (data.user_id) userIds.push(data.user_id);
           });
 
-          // თარიღის მიხედვით სორტირება
           comments.sort((a, b) => {
             const timeA = a.created_at ? (a.created_at.toMillis ? a.created_at.toMillis() : new Date(a.created_at).getTime()) : 0;
             const timeB = b.created_at ? (b.created_at.toMillis ? b.created_at.toMillis() : new Date(b.created_at).getTime()) : 0;
@@ -1103,12 +1107,10 @@
         likes_count: 0,
         created_at: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        // პოსტის კომენტარების მთვლელის გაზრდა Firestore-ში
         db.collection('posts').doc(targetPostId).update({
           comments_count: firebase.firestore.FieldValue.increment(1)
         });
 
-        // ეკრანზე ციფრის განახლება
         const commentCountLabel = document.getElementById(`comments-count-${targetPostId}`);
         updateCounterUI(commentCountLabel, 1);
 
@@ -1121,7 +1123,6 @@
       });
     }
 
-    // დამხმარე მთვლელი
     function updateCounterUI(labelElem, change) {
       if (!labelElem) return;
       let count = parseInt(labelElem.innerText.replace(/[^0-9]/g, '')) || 0;
