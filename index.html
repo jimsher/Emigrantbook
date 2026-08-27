@@ -6428,6 +6428,155 @@ function copyPostDirectLink() {
   window.addEventListener('scroll', handleScroll, { passive: true });
   document.addEventListener('scroll', handleScroll, { passive: true });
 });
+
+
+    // ახალი ქვედა ნევბარის ნოთიფიკაციები
+    /* ერთჯერადი შემოწმება წითელი ბეიჯისთვის (.get-ით) */
+function checkNotificationsCountOnce() {
+  if (!currentUser) return;
+
+  var lastSeen = Number(localStorage.getItem('eb_last_notif_seen_time_' + currentUser.uid) || 0);
+
+  db.collection('posts')
+    .orderBy('created_at', 'desc')
+    .limit(10)
+    .get()
+    .then(function(snapshot) {
+      var count = 0;
+      snapshot.forEach(function(doc) {
+        var p = doc.data();
+        if (p.user_id !== currentUser.uid) {
+          var pTime = p.created_at ? (p.created_at.toMillis ? p.created_at.toMillis() : new Date(p.created_at).getTime()) : 0;
+          if (pTime > lastSeen) {
+            count++;
+          }
+        }
+      });
+      updateBottomNotificationBadge(count);
+    }).catch(function(err) {
+      console.warn("Notifications count get error:", err);
+    });
+}
+
+function updateBottomNotificationBadge(count) {
+  var badge = document.getElementById('bottom-notifications-badge');
+  if (!badge) return;
+
+  if (count > 0) {
+    badge.innerText = count > 99 ? '99+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* სრული სიის ჩატვირთვა (.get-ით) */
+function loadFullNotificationsPage() {
+  if (!currentUser) return;
+  var container = document.getElementById('full-notifications-list');
+  if (!container) return;
+
+  localStorage.setItem('eb_last_notif_seen_time_' + currentUser.uid, Date.now().toString());
+  updateBottomNotificationBadge(0);
+
+  container.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">იტვირთება...</div>';
+
+  db.collection('posts')
+    .orderBy('created_at', 'desc')
+    .limit(20)
+    .get()
+    .then(function(snapshot) {
+      if (snapshot.empty) {
+        container.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 30px;">სიახლეები არ არის</div>';
+        return;
+      }
+
+      var authorIds = [];
+      var notifDataList = [];
+
+      snapshot.forEach(function(doc) {
+        var post = doc.data();
+        if (post.user_id !== currentUser.uid) {
+          authorIds.push(post.user_id);
+          notifDataList.push(Object.assign({ id: doc.id }, post));
+        }
+      });
+
+      if (notifDataList.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 30px;">სიახლეები არ არის</div>';
+        return;
+      }
+
+      fetchMultipleProfilesCached(authorIds, function() {
+        var html = "";
+        notifDataList.forEach(function(item) {
+          var profile = cachedProfiles[item.user_id] || {};
+          var name = profile.full_name || item.author_name || "მომხმარებელი";
+          var avatar = profile.avatar_url || DEFAULT_AVATAR_URL;
+          
+          var actionText = "შექმნა ახალი პოსტი.";
+          var badgeClass = "post";
+          var badgeIcon = '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>';
+
+          if (item.media_type === 'video') {
+            actionText = "დაამატა ახალი ვიდეო ფირებში.";
+            badgeClass = "video";
+            badgeIcon = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          } else if (item.media_url) {
+            actionText = "ატვირთა ახალი ფოტო.";
+            badgeClass = "comment";
+            badgeIcon = '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+          }
+
+          var timeAgo = formatTimeAgo(item.created_at);
+
+          html += `
+            <div class="notif-item-card" onclick="openNotificationTarget('${item.id}', '${item.user_id}')">
+              <div class="notif-avatar-wrapper">
+                <img src="${avatar}" class="notif-avatar-img" alt="avatar">
+                <div class="notif-type-badge ${badgeClass}">
+                  ${badgeIcon}
+                </div>
+              </div>
+              <div class="notif-body">
+                <div class="notif-text"><strong>${name}</strong> ${actionText}</div>
+                <div class="notif-time">${timeAgo}</div>
+              </div>
+              <button class="notif-item-options" onclick="event.stopPropagation();">•••</button>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      });
+    }).catch(function(err) {
+      console.error("Notifications fetch error:", err);
+      container.innerHTML = '<div style="text-align: center; color: #ff4d4f; padding: 25px;">შეცდომა ცნობების ჩატვირთვისას</div>';
+    });
+}
+
+function openNotificationTarget(postId, userId) {
+  showScreen('home');
+  setTimeout(function() {
+    var postEl = document.getElementById('post-card-' + postId);
+    if (postEl) {
+      postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      postEl.style.border = '1px solid #dcae36';
+      setTimeout(function() { postEl.style.border = ''; }, 2000);
+    }
+  }, 400);
+}
+
+function formatTimeAgo(timestamp) {
+  if (!timestamp) return "ახლახანს";
+  var date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  var diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (diffSec < 60) return "ახლახანს";
+  if (diffSec < 3600) return Math.floor(diffSec / 60) + " წთ";
+  if (diffSec < 86400) return Math.floor(diffSec / 3600) + " სთ";
+  return Math.floor(diffSec / 86400) + " დღე";
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
