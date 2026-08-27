@@ -2484,49 +2484,56 @@ auth.onAuthStateChanged(function(user) {
       }
     }
 
+    
     function showScreen(screenName) {
-      exitPhotoSelectionMode();
-      var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen', 'blocked-users-screen'];
-      screens.forEach(s => {
-        var el = document.getElementById(s);
-        if (el) el.style.display = 'none';
-      });
+  exitPhotoSelectionMode();
+  var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen', 'blocked-users-screen'];
+  screens.forEach(s => {
+    var el = document.getElementById(s);
+    if (el) el.style.display = 'none';
+  });
 
-      var dropdownHome = document.getElementById('requests-dropdown-home');
-      var dropdownProfile = document.getElementById('requests-dropdown-profile');
-      if (dropdownHome) dropdownHome.style.display = 'none';
-      if (dropdownProfile) dropdownProfile.style.display = 'none';
+  var dropdownHome = document.getElementById('requests-dropdown-home');
+  var dropdownProfile = document.getElementById('requests-dropdown-profile');
+  if (dropdownHome) dropdownHome.style.display = 'none';
+  if (dropdownProfile) dropdownProfile.style.display = 'none';
 
-      if (screenName === 'auth') {
-        var authEl = document.getElementById('auth-screen');
-        if (authEl) authEl.style.display = 'flex';
-      } else if (screenName === 'home') {
-        var homeEl = document.getElementById('home-screen');
-        if (homeEl) homeEl.style.display = 'block';
-        loadPosts();
-        loadStories();
-      } else if (screenName === 'profile') {
-        var profEl = document.getElementById('profile-screen');
-        if (profEl) profEl.style.display = 'block';
-      } else if (screenName === 'connections') {
-        var connEl = document.getElementById('connections-screen');
-        if (connEl) connEl.style.display = 'block';
-      } else if (screenName === 'edit-profile') {
-        var editEl = document.getElementById('edit-profile-screen');
-        if (editEl) editEl.style.display = 'block';
-      } else if (screenName === 'privacy') {
-        var privEl = document.getElementById('privacy-screen');
-        if (privEl) privEl.style.display = 'block';
-      } else if (screenName === 'blocked-users') {
-        var blockEl = document.getElementById('blocked-users-screen');
-        if (blockEl) blockEl.style.display = 'block';
-      }
-        
-      if (currentUser) {
-        checkPendingRequestsCount();
-      }
-      applyLanguageDOM();
+  var bottomNav = document.getElementById('bottomNav');
+
+  if (screenName === 'auth') {
+    var authEl = document.getElementById('auth-screen');
+    if (authEl) authEl.style.display = 'flex';
+    if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
+  } else {
+    if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
+    if (screenName === 'home') {
+      var homeEl = document.getElementById('home-screen');
+      if (homeEl) homeEl.style.display = 'block';
+      loadPosts();
+      loadStories();
+    } else if (screenName === 'profile') {
+      var profEl = document.getElementById('profile-screen');
+      if (profEl) profEl.style.display = 'block';
+    } else if (screenName === 'connections') {
+      var connEl = document.getElementById('connections-screen');
+      if (connEl) connEl.style.display = 'block';
+    } else if (screenName === 'edit-profile') {
+      var editEl = document.getElementById('edit-profile-screen');
+      if (editEl) editEl.style.display = 'block';
+    } else if (screenName === 'privacy') {
+      var privEl = document.getElementById('privacy-screen');
+      if (privEl) privEl.style.display = 'block';
+    } else if (screenName === 'blocked-users') {
+      var blockEl = document.getElementById('blocked-users-screen');
+      if (blockEl) blockEl.style.display = 'block';
     }
+  }
+    
+  if (currentUser) {
+    checkPendingRequestsCount();
+  }
+  applyLanguageDOM();
+}
 
     function renderAvatar(elementId, avatarUrl, name, userId = null) {
   var el = document.getElementById(elementId);
