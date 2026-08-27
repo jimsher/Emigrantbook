@@ -270,7 +270,8 @@ video::-webkit-media-controls-play-button {
 
 
     /* ქვედა ნევბარის სტილი */
-    .bottom-nav {
+    /* ფიქსირებული ქვედა ზოლი */
+.bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -281,12 +282,17 @@ video::-webkit-media-controls-play-button {
   justify-content: space-around;
   align-items: center;
   border-top: 1px solid #e4e6eb;
-  z-index: 1000;
-  transition: transform 0.3s ease-in-out;
+  z-index: 9999;
+  
+  /* ანიმაცია გამოჩენა/დამალვისთვის */
+  transform: translateY(0);
+  transition: transform 0.25s ease-in-out;
+  will-change: transform;
 }
 
+/* დამალვის მდგომარეობა: ეკრანის ქვემოთ გატანა */
 .bottom-nav.nav-hidden {
-  transform: translateY(100%);
+  transform: translateY(100%) !important;
 }
 
 .bottom-nav .nav-item {
@@ -298,22 +304,20 @@ video::-webkit-media-controls-play-button {
   text-decoration: none;
 }
 
-/* SVG აიქონის ზომა და სტანდარტული (რუხი) ფილტრი */
 .bottom-nav .nav-icon {
   width: 24px;
   height: 24px;
   object-fit: contain;
   filter: invert(44%) sepia(8%) saturate(347%) hue-rotate(182deg) brightness(92%) contrast(87%);
-  transition: filter 0.2s ease, transform 0.1s ease;
 }
 
-/* აქტიური ღილაკის ფერი (ლურჯი) */
 .bottom-nav .nav-item.active .nav-icon {
   filter: invert(36%) sepia(89%) saturate(2466%) hue-rotate(206deg) brightness(98%) contrast(93%);
 }
 
+/* ძირითადი გვერდის ქვედა სივრცე */
 body {
-  padding-bottom: 60px;
+  padding-bottom: 65px;
 }
   </style>
   
