@@ -6211,34 +6211,30 @@ function copyPostDirectLink() {
 
 
     // ქვედა ნევბარის ლოგიკა
-    let lastScrollTop = 0;
-const bottomNav = document.getElementById('bottomNav');
-const scrollDelta = 10; // მინიმალური სქროლის მანძილი რეაგირებისთვის
+    const bottomNav = document.getElementById('bottomNav');
+let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
 
 window.addEventListener('scroll', () => {
-  const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+  const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-  // საიტის თავში ნავბარი ყოველთვის ჩანდეს
-  if (currentScroll <= 0) {
+  // 1. თუ გვერდის სულ თავში ვართ — ყოველთვის გამოჩნდეს
+  if (currentScrollY <= 0) {
     bottomNav.classList.remove('nav-hidden');
-    lastScrollTop = 0;
+    lastScrollY = 0;
     return;
   }
 
-  // მცირე სქროლზე უმოქმედობა (ლაგების თავიდან ასაცილებლად)
-  if (Math.abs(currentScroll - lastScrollTop) <= scrollDelta) {
-    return;
-  }
-
-  // ქვემოთ სქროლვა -> გაქრობა; ზემოთ სქროლვა -> გამოჩენა
-  if (currentScroll > lastScrollTop) {
+  // 2. ქვევით სქროლვა (Scroll Down) -> იმალება ქვემოთ
+  if (currentScrollY > lastScrollY && currentScrollY > 40) {
     bottomNav.classList.add('nav-hidden');
-  } else {
+  } 
+  // 3. ზევით სქროლვა (Scroll Up) -> ამოდის და ჩნდება
+  else if (currentScrollY < lastScrollY) {
     bottomNav.classList.remove('nav-hidden');
   }
 
-  lastScrollTop = currentScroll;
-});
+  lastScrollY = currentScrollY;
+}, { passive: true });
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
