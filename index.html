@@ -2656,7 +2656,17 @@ auth.onAuthStateChanged(function(user) {
     
     function showScreen(screenName) {
   exitPhotoSelectionMode();
-  var screens = ['auth-screen', 'home-screen', 'profile-screen', 'edit-profile-screen', 'connections-screen', 'privacy-screen', 'blocked-users-screen'];
+  var screens = [
+    'auth-screen', 
+    'home-screen', 
+    'profile-screen', 
+    'edit-profile-screen', 
+    'connections-screen', 
+    'privacy-screen', 
+    'blocked-users-screen',
+    'notifications-screen'
+  ];
+  
   screens.forEach(s => {
     var el = document.getElementById(s);
     if (el) el.style.display = 'none';
@@ -2668,6 +2678,7 @@ auth.onAuthStateChanged(function(user) {
   if (dropdownProfile) dropdownProfile.style.display = 'none';
 
   var bottomNav = document.getElementById('bottomNav');
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(item => item.classList.remove('active'));
 
   if (screenName === 'auth') {
     var authEl = document.getElementById('auth-screen');
@@ -2675,14 +2686,25 @@ auth.onAuthStateChanged(function(user) {
     if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
   } else {
     if (bottomNav) bottomNav.style.setProperty('display', 'flex', 'important');
+
     if (screenName === 'home') {
       var homeEl = document.getElementById('home-screen');
       if (homeEl) homeEl.style.display = 'block';
+      var btnHome = document.getElementById('nav-btn-home');
+      if (btnHome) btnHome.classList.add('active');
       loadPosts();
       loadStories();
     } else if (screenName === 'profile') {
       var profEl = document.getElementById('profile-screen');
       if (profEl) profEl.style.display = 'block';
+      var btnProf = document.getElementById('nav-btn-profile');
+      if (btnProf) btnProf.classList.add('active');
+    } else if (screenName === 'notifications') {
+      var notifEl = document.getElementById('notifications-screen');
+      if (notifEl) notifEl.style.display = 'block';
+      var btnNotif = document.getElementById('nav-btn-notifications');
+      if (btnNotif) btnNotif.classList.add('active');
+      loadFullNotificationsPage();
     } else if (screenName === 'connections') {
       var connEl = document.getElementById('connections-screen');
       if (connEl) connEl.style.display = 'block';
@@ -2697,9 +2719,10 @@ auth.onAuthStateChanged(function(user) {
       if (blockEl) blockEl.style.display = 'block';
     }
   }
-    
-  if (currentUser) {
+
+  if (currentUser && screenName !== 'auth') {
     checkPendingRequestsCount();
+    checkNotificationsCountOnce();
   }
   applyLanguageDOM();
 }
