@@ -6207,30 +6207,33 @@ function copyPostDirectLink() {
 
 
     // ქვედა ნევბარის ლოგიკა
-    const bottomNav = document.getElementById('bottomNav');
-let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
+    document.addEventListener('DOMContentLoaded', () => {
+  const bottomNav = document.getElementById('bottomNav');
+  if (!bottomNav) return;
 
-window.addEventListener('scroll', () => {
-  const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+  let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-  // 1. თუ გვერდის სულ თავში ვართ — ყოველთვის გამოჩნდეს
-  if (currentScrollY <= 0) {
-    bottomNav.classList.remove('nav-hidden');
-    lastScrollY = 0;
-    return;
-  }
+  const handleScroll = () => {
+    const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-  // 2. ქვევით სქროლვა (Scroll Down) -> იმალება ქვემოთ
-  if (currentScrollY > lastScrollY && currentScrollY > 40) {
-    bottomNav.classList.add('nav-hidden');
-  } 
-  // 3. ზევით სქროლვა (Scroll Up) -> ამოდის და ჩნდება
-  else if (currentScrollY < lastScrollY) {
-    bottomNav.classList.remove('nav-hidden');
-  }
+    if (currentScrollY <= 0) {
+      bottomNav.classList.remove('nav-hidden');
+      lastScrollY = 0;
+      return;
+    }
 
-  lastScrollY = currentScrollY;
-}, { passive: true });
+    if (currentScrollY > lastScrollY && currentScrollY > 30) {
+      bottomNav.classList.add('nav-hidden');
+    } else if (currentScrollY < lastScrollY) {
+      bottomNav.classList.remove('nav-hidden');
+    }
+
+    lastScrollY = currentScrollY;
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  document.addEventListener('scroll', handleScroll, { passive: true });
+});
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
