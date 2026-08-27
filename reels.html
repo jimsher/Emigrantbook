@@ -27,8 +27,6 @@
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
     }
 
     /* WebView-ის და ნატიური ფლეიერის ყველა შიდა Play ღილაკის სრული დაბლოკვა */
@@ -45,14 +43,12 @@
       pointer-events: none !important;
     }
 
-    /* ზედა ჰედერ-ზოლი */
+    /* ზედა ჰედერ-ზოლი (მობილური) */
     .reels-top-bar {
       position: fixed;
       top: 0;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
       width: 100%;
-      max-width: 480px;
       height: 52px;
       padding: 0 16px;
       display: flex;
@@ -97,10 +93,9 @@
       filter: brightness(0) invert(1);
     }
 
-    /* ვერტიკალური Snap სქროლერის კონტეინერი (კომპიუტერზე ცენტრირებული და შეზღუდული) */
+    /* ვერტიკალური Snap სქროლერის კონტეინერი */
     .reels-container {
       width: 100%;
-      max-width: 480px;
       height: 100%;
       overflow-y: scroll;
       scroll-snap-type: y mandatory;
@@ -108,7 +103,6 @@
       -ms-overflow-style: none;
       position: relative;
       background: #000000;
-      margin: 0 auto;
     }
 
     .reels-container::-webkit-scrollbar {
@@ -120,6 +114,7 @@
       position: relative;
       width: 100%;
       height: 100vh;
+      height: 100dvh;
       scroll-snap-align: start;
       scroll-snap-stop: always;
       background: #000000;
@@ -350,10 +345,8 @@
     /* ვიდეოს პროგრესის ხაზი */
     .progress-bar-wrap {
       width: 100%;
-      max-width: 480px;
       position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
       bottom: 56px;
       height: 2px;
       background: rgba(255, 255, 255, 0.2);
@@ -370,10 +363,8 @@
     .bottom-nav {
       position: fixed !important;
       bottom: 0 !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
+      left: 0 !important;
       width: 100% !important;
-      max-width: 480px !important;
       height: 56px !important;
       background-color: #000000 !important;
       display: flex !important;
@@ -421,7 +412,7 @@
 
     .comments-sheet-content {
       width: 100%;
-      max-width: 480px;
+      max-width: 500px;
       height: 65vh;
       background: #18191a;
       border-radius: 16px 16px 0 0;
@@ -540,6 +531,76 @@
       font-size: 13px;
       cursor: pointer;
     }
+
+    /* ==========================================
+       🖥️ კომპიუტერის / Desktop ვერსიის სტილები (9:16 ზუსტი პროპორცია)
+       ========================================== */
+    @media (min-width: 600px) {
+      body, html {
+        display: flex;
+        justify-content: center;
+        background-color: #0b0b0e;
+      }
+
+      .reels-container {
+        width: auto;
+        height: 100vh;
+        height: 100dvh;
+        max-width: 100vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: transparent;
+      }
+
+      .reel-card {
+        height: min(calc(100vh - 40px), 820px);
+        width: calc(min(calc(100vh - 40px), 820px) * 9 / 16);
+        aspect-ratio: 9 / 16;
+        margin: 20px auto;
+        border-radius: 16px;
+        scroll-snap-align: center;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7);
+        border: 1px solid #1f1f24;
+      }
+
+      .video-wrapper, .reel-video {
+        border-radius: 16px;
+      }
+
+      .reels-top-bar {
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(min(calc(100vh - 40px), 820px) * 9 / 16);
+        border-radius: 16px 16px 0 0;
+      }
+
+      .progress-bar-wrap {
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(min(calc(100vh - 40px), 820px) * 9 / 16);
+        bottom: 20px;
+        border-radius: 0 0 16px 16px;
+      }
+
+      .bottom-nav {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: calc(min(calc(100vh - 40px), 820px) * 9 / 16) !important;
+        border-radius: 0 0 16px 16px;
+        bottom: 20px !important;
+      }
+
+      .comments-sheet-modal {
+        align-items: center;
+      }
+
+      .comments-sheet-content {
+        max-width: 450px;
+        border-radius: 16px;
+        height: 70vh;
+      }
+    }
   </style>
 </head>
 <body>
@@ -588,7 +649,7 @@
     </div>
   </div>
 
-  <!-- ქვედა ნავბარი -->
+  <!-- ქვედა ნავბარი (reels.html-ისთვის) -->
   <nav class="bottom-nav" id="bottomNav">
     <a href="index.html" class="nav-item" id="nav-btn-home">
       <img src="icons/house.svg" alt="მთავარი" class="nav-icon">
