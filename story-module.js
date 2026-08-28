@@ -627,46 +627,41 @@ function closeStoryViewer() {
 }
 
 // 💬 დამხმარე უნივერსალური ფუნქცია მესინჯერში ჩასაწერად
+ // 💬 დამხმარე ფუნქცია: მესინჯერში ჩაწერა ზუსტად messenger.html-ის სტრუქტურით
 function sendStoryInteractionToMessenger(storyAuthorId, textContent) {
-  var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
-  if (!user || !storyAuthorId || user.uid === storyAuthorId) return;
+  var myUid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : (firebase.auth().currentUser ? firebase.auth().currentUser.uid : null);
+  
+  if (!myUid) {
+    alert("გთხოვთ გაიაროთ ავტორიზაცია");
+    return;
+  }
+  if (!storyAuthorId) {
+    console.error("სთორის ავტორი ვერ მოიძებნა");
+    return;
+  }
 
-  var chatId = user.uid < storyAuthorId ? user.uid + '_' + storyAuthorId : storyAuthorId + '_' + user.uid;
-  var now = firebase.firestore.FieldValue.serverTimestamp();
+  // chatId ზუსტად ისე, როგორც messenger.html-ში (getChatId)
+  var chatId = myUid < storyAuthorId ? (myUid + '_' + storyAuthorId) : (storyAuthorId + '_' + myUid);
+  var serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
 
-  // მთავარი ჩათის დოკუმენტის შექმნა/განახლება ყველა შესაძლო ველით (რომ მესინჯერმა 100% ამოიკითხოს)
-  var chatPayload = {
-    participants: [user.uid, storyAuthorId],
-    members: [user.uid, storyAuthorId],
-    users: [user.uid, storyAuthorId],
-    last_message: textContent,
-    lastMessage: textContent,
-    last_sender_id: user.uid,
-    lastSenderId: user.uid,
-    updated_at: now,
-    updatedAt: now,
-    timestamp: now
-  };
-
-  db.collection('chats').doc(chatId).set(chatPayload, { merge: true }).then(function() {
-    return db.collection('chats').doc(chatId).collection('messages').add({
-      senderId: user.uid,
-      sender_id: user.uid,
-      text: textContent,
-      created_at: now,
-      createdAt: now,
-      timestamp: now,
-      read: false
-    });
+  // მესინჯერის messages ქვეკოლექციაში ჩაწერა ზუსტი ველებით
+  db.collection('chats').doc(chatId).collection('messages').add({
+    senderId: myUid,
+    text: textContent,
+    read: false,
+    createdAt: serverTimestamp, // ზუსტად ის სახელი, რასაც messenger.html-ის orderBy('createdAt') ითხოვს
+    created_at: serverTimestamp
+  }).then(function() {
+    console.log("მესინჯერში წარმატებით ჩაიწერა:", textContent);
   }).catch(function(err) {
-    console.error("Messenger write error:", err);
+    console.error("მესინჯერის შეცდომა:", err);
   });
 }
 
+// 1. სთორის რეაქცია (დაგულება / სმაილი)
 function reactToStoryFacebook(emoji) {
   var story = activeUserStoryGroup[activeStoryIndex];
-  var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
-  if (!story || !user) return;
+  if (!story) return;
 
   var zone = document.getElementById('story-floating-reactions-zone');
   if (zone) {
@@ -674,33 +669,41 @@ function reactToStoryFacebook(emoji) {
     el.className = 'flying-story-emoji';
     el.innerText = emoji;
     zone.appendChild(el);
-    setTimeout(() => el.remove(), 1400);
+    setTimeout(function() { el.remove(); }, 1400);
   }
 
   var newLikes = (story.likes_count || 0) + 1;
   db.collection('stories').doc(story.id).update({ likes_count: newLikes }).catch(function(){});
 
-  // გაგზავნა მესინჯერში
-  sendStoryInteractionToMessenger(story.user_id, `რეაქცია თქვენს სიუჟეტზე: ${emoji}`);
+  // სთორის ავტორის ამოღება user_id ველიდან
+  var authorId = story.user_id;
+  if (authorId) {
+    sendStoryInteractionToMessenger(authorId, `რეაქცია თქვენს სიუჟეტზე: ${emoji}`);
+  }
 }
 
+// 2. სთორის ქვედა ველიდან ტექსტური პასუხის გაგზავნა
 function handleStoryCommentKeyPress(event) {
   if (event.key === 'Enter') {
     var input = document.getElementById('story-comment-field');
     var story = activeUserStoryGroup[activeStoryIndex];
     if (!input || !story) return;
+
     var text = input.value.trim();
     if (!text) return;
 
-    // გაგზავნა მესინჯერში
-    sendStoryInteractionToMessenger(story.user_id, `პასუხი სიუჟეტზე: "${text}"`);
-    
+    var authorId = story.user_id;
+    if (authorId) {
+      sendStoryInteractionToMessenger(authorId, `პასუხი სიუჟეტზე: "${text}"`);
+    }
+
     input.value = "";
     input.blur();
     resumeStoryTimer();
     alert("შეტყობინება გაიგზავნა მესინჯერში!");
   }
 }
+ 
 
 // 4. CREATOR LOGIC & MERGE
 var selectedStoryFile = null;
