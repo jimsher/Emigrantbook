@@ -242,10 +242,8 @@
   const container = document.createElement('div');
   container.id = 'story-system-root';
   container.innerHTML = `
-    <!-- ფაილის ასარჩევი ფარული ინფუთი -->
     <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="handleStoryFileSelected(event)">
 
-    <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
         <div class="fb-creator-top-bar">
@@ -306,7 +304,6 @@
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
 
-        <!-- 🎵 1. MUSIC SELECTOR SHEET -->
         <div id="sheet-music" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>მუსიკის არჩევა</span>
@@ -332,7 +329,6 @@
           </div>
         </div>
 
-        <!-- 😃 2. STICKERS SHEET -->
         <div id="sheet-stickers" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>სტიკერები</span>
@@ -350,7 +346,6 @@
           </div>
         </div>
 
-        <!-- 🎨 3. EFFECTS / FILTERS SHEET -->
         <div id="sheet-effects" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>ფილტრები & ეფექტები</span>
@@ -367,10 +362,8 @@
       </div>
     </div>
 
-    <!-- 📱 2. STORY VIEWER MODAL -->
     <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
       <div class="fb-story-frame" onclick="event.stopPropagation()">
-        <!-- Multi segments progress bar -->
         <div class="fb-story-progress-container" id="story-progress-container"></div>
 
         <div class="fb-story-header">
@@ -400,7 +393,6 @@
         <div id="story-floating-reactions-zone" class="story-floating-reactions"></div>
 
         <div class="fb-story-footer">
-          <!-- ➕ დამატების პლიუსის ღილაკი -->
           <button class="fb-story-circle-btn" onclick="addNewStoryFromViewer()" title="ახალი სთორის დამატება">
             <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </button>
@@ -626,33 +618,30 @@ function closeStoryViewer() {
   isStoryPaused = false;
 }
 
-// 💬 დამხმარე უნივერსალური ფუნქცია მესინჯერში ჩასაწერად
- // 💬 დამხმარე ფუნქცია: მესინჯერში ჩაწერა ზუსტად messenger.html-ის სტრუქტურით
-function sendStoryInteractionToMessenger(storyAuthorId, textContent) {
+// 💬 დამხმარე ფუნქცია: მესინჯერში სთორის ბარათით გაგზავნა
+function sendStoryInteractionToMessenger(story, textContent) {
   var myUid = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : (firebase.auth().currentUser ? firebase.auth().currentUser.uid : null);
-  
-  if (!myUid) {
-    alert("გთხოვთ გაიაროთ ავტორიზაცია");
-    return;
-  }
-  if (!storyAuthorId) {
-    console.error("სთორის ავტორი ვერ მოიძებნა");
-    return;
-  }
+  if (!myUid || !story || !story.user_id) return;
 
-  // chatId ზუსტად ისე, როგორც messenger.html-ში (getChatId)
-  var chatId = myUid < storyAuthorId ? (myUid + '_' + storyAuthorId) : (storyAuthorId + '_' + myUid);
+  var authorId = story.user_id;
+  var chatId = myUid < authorId ? (myUid + '_' + authorId) : (authorId + '_' + myUid);
   var serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
 
-  // მესინჯერის messages ქვეკოლექციაში ჩაწერა ზუსტი ველებით
+  var storyCreatedMs = story.created_at && story.created_at.toMillis ? story.created_at.toMillis() : (story.created_at && story.created_at.seconds ? story.created_at.seconds * 1000 : Date.now());
+
   db.collection('chats').doc(chatId).collection('messages').add({
     senderId: myUid,
     text: textContent,
     read: false,
-    createdAt: serverTimestamp, // ზუსტად ის სახელი, რასაც messenger.html-ის orderBy('createdAt') ითხოვს
+    type: 'story_reply',
+    story_id: story.id || null,
+    story_media_url: story.media_url || null,
+    story_media_type: story.media_type || 'image',
+    story_created_ms: storyCreatedMs,
+    createdAt: serverTimestamp,
     created_at: serverTimestamp
   }).then(function() {
-    console.log("მესინჯერში წარმატებით ჩაიწერა:", textContent);
+    console.log("სთორის პასუხი წარმატებით ჩაიწერა მესინჯერში");
   }).catch(function(err) {
     console.error("მესინჯერის შეცდომა:", err);
   });
@@ -669,17 +658,14 @@ function reactToStoryFacebook(emoji) {
     el.className = 'flying-story-emoji';
     el.innerText = emoji;
     zone.appendChild(el);
-    setTimeout(function() { el.remove(); }, 1400);
+    setTimeout(() => el.remove(), 1400);
   }
 
   var newLikes = (story.likes_count || 0) + 1;
   db.collection('stories').doc(story.id).update({ likes_count: newLikes }).catch(function(){});
 
-  // სთორის ავტორის ამოღება user_id ველიდან
-  var authorId = story.user_id;
-  if (authorId) {
-    sendStoryInteractionToMessenger(authorId, `რეაქცია თქვენს სიუჟეტზე: ${emoji}`);
-  }
+  // სთორის მინიატურისა და სმაილის გაგზავნა მესინჯერში
+  sendStoryInteractionToMessenger(story, emoji);
 }
 
 // 2. სთორის ქვედა ველიდან ტექსტური პასუხის გაგზავნა
@@ -692,10 +678,8 @@ function handleStoryCommentKeyPress(event) {
     var text = input.value.trim();
     if (!text) return;
 
-    var authorId = story.user_id;
-    if (authorId) {
-      sendStoryInteractionToMessenger(authorId, `პასუხი სიუჟეტზე: "${text}"`);
-    }
+    // სთორის მინიატურისა და ტექსტის გაგზავნა მესინჯერში
+    sendStoryInteractionToMessenger(story, text);
 
     input.value = "";
     input.blur();
@@ -703,7 +687,6 @@ function handleStoryCommentKeyPress(event) {
     alert("შეტყობინება გაიგზავნა მესინჯერში!");
   }
 }
- 
 
 // 4. CREATOR LOGIC & MERGE
 var selectedStoryFile = null;
