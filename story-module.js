@@ -219,6 +219,22 @@
       background: #242526; color: #fff; border: 1px solid #444;
       padding: 8px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 13px;
     }
+    
+    /* საწერი ველების სრული განბლოკვა კლავიატურისთვის */
+input, 
+textarea, 
+[contenteditable="true"],
+.create-post-input,
+.comments-input,
+.fb-live-input,
+#story-comment-field {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
   `;
   const styleEl = document.createElement('style');
   styleEl.innerHTML = css;
