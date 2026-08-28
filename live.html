@@ -547,6 +547,25 @@
         </div>
     </div>
 
+    <!-- 🎬 ლაივის ჩანაწერის შენახვის / განთავსების არჩევანის მოდალი -->
+    <div id="saveLivePostModal" class="lives-modal-overlay" style="z-index: 200001;">
+        <div class="lives-modal-box" style="text-align: center; padding: 24px; max-width: 380px;">
+            <div style="font-size: 42px; margin-bottom: 12px;">🔴</div>
+            <h3 id="lbl-post-live-title" style="margin-bottom: 10px; font-size: 18px; color: #ffffff; font-weight: bold;">პირდაპირი ეთერი დასრულდა</h3>
+            <p id="lbl-post-live-desc" style="color: #cfd3dc; font-size: 14px; margin-bottom: 22px; line-height: 1.5;">
+                გსურთ შეინახოთ და განათავსოთ ლაივის ჩანაწერი საიტზე?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="lbl-btn-publish-recording" onclick="confirmAndPublishLiveRecording()" style="background: #1877f2; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">
+                    დიახ, განთავსება
+                </button>
+                <button id="lbl-btn-discard-recording" onclick="discardLiveRecording()" style="background: #3a3b3c; color: #e4e6eb; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
+                    წაშლა და გამოსვლა
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- R2 ატვირთვის ეკრანი -->
     <div id="uploadingOverlay">
         <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 12px; color: #1877f2;"></i>
@@ -579,7 +598,11 @@
                 cameraErr: "კამერის ჩართვა ვერ მოხერხდა!",
                 liveEnded: "ლაივი დასრულდა!",
                 defaultTitle: "პირდაპირი ეთერი",
-                defaultUser: "მომხმარებელი"
+                defaultUser: "მომხმარებელი",
+                postLiveTitle: "პირდაპირი ეთერი დასრულდა",
+                postLiveDesc: "გსურთ შეინახოთ და განათავსოთ ლაივის ჩანაწერი საიტზე?",
+                publishBtn: "დიახ, განთავსება",
+                discardBtn: "წაშლა და გამოსვლა"
             },
             en: {
                 liveBtn: "Go LIVE",
@@ -598,7 +621,11 @@
                 cameraErr: "Failed to access camera!",
                 liveEnded: "Live stream ended!",
                 defaultTitle: "Live Stream",
-                defaultUser: "User"
+                defaultUser: "User",
+                postLiveTitle: "Live Video Ended",
+                postLiveDesc: "Do you want to save and post this live replay to the feed?",
+                publishBtn: "Post to Feed",
+                discardBtn: "Delete & Exit"
             },
             it: {
                 liveBtn: "In diretta (LIVE)",
@@ -617,7 +644,11 @@
                 cameraErr: "Impossibile accedere alla fotocamera!",
                 liveEnded: "La diretta è terminata!",
                 defaultTitle: "Diretta streaming",
-                defaultUser: "Utente"
+                defaultUser: "Utente",
+                postLiveTitle: "Diretta terminata",
+                postLiveDesc: "Vuoi salvare e pubblicare la registrazione della diretta sul sito?",
+                publishBtn: "Pubblica",
+                discardBtn: "Elimina ed esci"
             },
             ru: {
                 liveBtn: "Прямой эфир (LIVE)",
@@ -636,7 +667,11 @@
                 cameraErr: "Не удалось включить камеру!",
                 liveEnded: "Эфир завершен!",
                 defaultTitle: "Прямой эфир",
-                defaultUser: "Пользователь"
+                defaultUser: "Пользователь",
+                postLiveTitle: "Прямой эфир завершен",
+                postLiveDesc: "Хотите сохранить и опубликовать запись прямого эфира на сайте?",
+                publishBtn: "Опубликовать",
+                discardBtn: "Удалить и выйти"
             },
             fr: {
                 liveBtn: "En direct (LIVE)",
@@ -655,7 +690,11 @@
                 cameraErr: "Impossible d'accéder à la caméra!",
                 liveEnded: "Le direct est terminé!",
                 defaultTitle: "Diffusion en direct",
-                defaultUser: "Utilisateur"
+                defaultUser: "Utilisateur",
+                postLiveTitle: "Direct terminé",
+                postLiveDesc: "Voulez-vous enregistrer et publier le replay du direct sur le site?",
+                publishBtn: "Publier",
+                discardBtn: "Supprimer et quitter"
             },
             de: {
                 liveBtn: "LIVE gehen",
@@ -674,7 +713,11 @@
                 cameraErr: "Kamera konnte nicht aktiviert werden!",
                 liveEnded: "Live-Stream beendet!",
                 defaultTitle: "Live-Stream",
-                defaultUser: "Benutzer"
+                defaultUser: "Benutzer",
+                postLiveTitle: "Live-Stream beendet",
+                postLiveDesc: "Möchten Sie die Aufzeichnung dieses Live-Streams auf der Website veröffentlichen?",
+                publishBtn: "Veröffentlichen",
+                discardBtn: "Löschen & Verlassen"
             }
         };
 
@@ -694,6 +737,10 @@
             if(document.getElementById('liveMsgInp')) document.getElementById('liveMsgInp').placeholder = t.commentPlaceholder;
             if(document.getElementById('lbl-modal-active-title')) document.getElementById('lbl-modal-active-title').innerText = t.activeModalTitle;
             if(document.getElementById('lbl-viewers-title')) document.getElementById('lbl-viewers-title').innerText = t.viewersTitle;
+            if(document.getElementById('lbl-post-live-title')) document.getElementById('lbl-post-live-title').innerText = t.postLiveTitle;
+            if(document.getElementById('lbl-post-live-desc')) document.getElementById('lbl-post-live-desc').innerText = t.postLiveDesc;
+            if(document.getElementById('lbl-btn-publish-recording')) document.getElementById('lbl-btn-publish-recording').innerText = t.publishBtn;
+            if(document.getElementById('lbl-btn-discard-recording')) document.getElementById('lbl-btn-discard-recording').innerText = t.discardBtn;
         }
 
         const firebaseConfig = {
@@ -724,6 +771,7 @@
 
         let mediaRecorder = null;
         let recordedChunks = [];
+        let endedLiveDocData = null;
 
         let currentCameraIndex = 0;
         let availableCameras = [];
@@ -1020,50 +1068,78 @@
             if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
             if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
 
+            let isHost = false;
+
             if (currentLiveDocId && auth.currentUser) {
                 const docRef = db.collection('lives').doc(currentLiveDocId);
                 const docSnap = await docRef.get();
                 
                 if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
+                    isHost = true;
+                    endedLiveDocData = docSnap.data();
                     await docRef.update({ status: "ended" });
-
-                    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                        document.getElementById('uploadingOverlay').style.display = 'flex';
-                        
-                        mediaRecorder.stop();
-                        await new Promise(r => setTimeout(r, 500));
-
-                        try {
-                            const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
-                            const recordedVideoUrl = await uploadLiveRecordingToR2(blob);
-
-                            await db.collection('posts').add({
-                                user_id: auth.currentUser.uid,
-                                author_name: window.myName || "User",
-                                author_avatar: window.myPhoto || "https://via.placeholder.com/150",
-                                content: "🔴 LIVE : " + (docSnap.data().title || ""),
-                                media_url: recordedVideoUrl,
-                                media_type: "video",
-                                is_live_replay: true,
-                                live_doc_id: currentLiveDocId,
-                                likes_count: 0,
-                                created_at: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        } catch (err) {
-                            console.error("R2 live recording upload failed:", err);
-                        }
-                        
-                        document.getElementById('uploadingOverlay').style.display = 'none';
-                    }
                 }
             }
 
+            // Agora კლიენტის და ტრეკების გათიშვა
             if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
             if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
-
             await liveClient.leave();
+
             document.getElementById('liveUI').style.display = 'none';
 
+            // თუ ჰოსტია და ჩანაწერი არსებობს -> ვეკითხებით სურს თუ არა გამოქვეყნება
+            if (isHost && mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+                await new Promise(r => setTimeout(r, 500));
+                
+                applyLiveTranslations();
+                document.getElementById('saveLivePostModal').style.display = 'flex';
+            } else {
+                window.location.href = "index.html";
+            }
+        };
+
+        /* ✅ მომხმარებლის დასტური: ჩანაწერის ატვირთვა და საიტზე განთავსება */
+        window.confirmAndPublishLiveRecording = async function() {
+            document.getElementById('saveLivePostModal').style.display = 'none';
+
+            if (recordedChunks.length > 0) {
+                document.getElementById('uploadingOverlay').style.display = 'flex';
+
+                try {
+                    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
+                    const recordedVideoUrl = await uploadLiveRecordingToR2(blob);
+
+                    const title = (endedLiveDocData && endedLiveDocData.title) ? endedLiveDocData.title : "";
+
+                    await db.collection('posts').add({
+                        user_id: auth.currentUser.uid,
+                        author_name: window.myName || "User",
+                        author_avatar: window.myPhoto || "https://via.placeholder.com/150",
+                        content: "🔴 LIVE : " + title,
+                        media_url: recordedVideoUrl,
+                        media_type: "video",
+                        is_live_replay: true,
+                        live_doc_id: currentLiveDocId,
+                        likes_count: 0,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (err) {
+                    console.error("R2 live recording upload failed:", err);
+                    alert("ჩანაწერის ატვირთვა ვერ მოხერხდა.");
+                }
+
+                document.getElementById('uploadingOverlay').style.display = 'none';
+            }
+
+            window.location.href = "index.html";
+        };
+
+        /* ❌ მომხმარებლის უარი: ჩანაწერის წაშლა და გამოსვლა */
+        window.discardLiveRecording = function() {
+            document.getElementById('saveLivePostModal').style.display = 'none';
+            recordedChunks = [];
             window.location.href = "index.html";
         };
 
