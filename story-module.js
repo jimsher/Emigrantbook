@@ -242,8 +242,10 @@
   const container = document.createElement('div');
   container.id = 'story-system-root';
   container.innerHTML = `
+    <!-- ფაილის ასარჩევი ფარული ინფუთი -->
     <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="handleStoryFileSelected(event)">
 
+    <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
         <div class="fb-creator-top-bar">
@@ -304,6 +306,7 @@
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
 
+        <!-- 🎵 1. MUSIC SELECTOR SHEET -->
         <div id="sheet-music" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>მუსიკის არჩევა</span>
@@ -329,6 +332,7 @@
           </div>
         </div>
 
+        <!-- 😃 2. STICKERS SHEET -->
         <div id="sheet-stickers" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>სტიკერები</span>
@@ -346,6 +350,7 @@
           </div>
         </div>
 
+        <!-- 🎨 3. EFFECTS / FILTERS SHEET -->
         <div id="sheet-effects" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>ფილტრები & ეფექტები</span>
@@ -362,8 +367,10 @@
       </div>
     </div>
 
+    <!-- 📱 2. STORY VIEWER MODAL -->
     <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
       <div class="fb-story-frame" onclick="event.stopPropagation()">
+        <!-- Multi segments progress bar -->
         <div class="fb-story-progress-container" id="story-progress-container"></div>
 
         <div class="fb-story-header">
@@ -393,6 +400,7 @@
         <div id="story-floating-reactions-zone" class="story-floating-reactions"></div>
 
         <div class="fb-story-footer">
+          <!-- ➕ დამატების პლიუსის ღილაკი -->
           <button class="fb-story-circle-btn" onclick="addNewStoryFromViewer()" title="ახალი სთორის დამატება">
             <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </button>
@@ -618,7 +626,43 @@ function closeStoryViewer() {
   isStoryPaused = false;
 }
 
-// 1. სთორის რეაქციის გაგზავნა მესინჯერში
+// 💬 დამხმარე უნივერსალური ფუნქცია მესინჯერში ჩასაწერად
+function sendStoryInteractionToMessenger(storyAuthorId, textContent) {
+  var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
+  if (!user || !storyAuthorId || user.uid === storyAuthorId) return;
+
+  var chatId = user.uid < storyAuthorId ? user.uid + '_' + storyAuthorId : storyAuthorId + '_' + user.uid;
+  var now = firebase.firestore.FieldValue.serverTimestamp();
+
+  // მთავარი ჩათის დოკუმენტის შექმნა/განახლება ყველა შესაძლო ველით (რომ მესინჯერმა 100% ამოიკითხოს)
+  var chatPayload = {
+    participants: [user.uid, storyAuthorId],
+    members: [user.uid, storyAuthorId],
+    users: [user.uid, storyAuthorId],
+    last_message: textContent,
+    lastMessage: textContent,
+    last_sender_id: user.uid,
+    lastSenderId: user.uid,
+    updated_at: now,
+    updatedAt: now,
+    timestamp: now
+  };
+
+  db.collection('chats').doc(chatId).set(chatPayload, { merge: true }).then(function() {
+    return db.collection('chats').doc(chatId).collection('messages').add({
+      senderId: user.uid,
+      sender_id: user.uid,
+      text: textContent,
+      created_at: now,
+      createdAt: now,
+      timestamp: now,
+      read: false
+    });
+  }).catch(function(err) {
+    console.error("Messenger write error:", err);
+  });
+}
+
 function reactToStoryFacebook(emoji) {
   var story = activeUserStoryGroup[activeStoryIndex];
   var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
@@ -636,68 +680,25 @@ function reactToStoryFacebook(emoji) {
   var newLikes = (story.likes_count || 0) + 1;
   db.collection('stories').doc(story.id).update({ likes_count: newLikes }).catch(function(){});
 
-  // თუ სხვისი სთორია -> იგზავნება მესინჯერში
-  if (story.user_id && story.user_id !== user.uid) {
-    var chatId = user.uid < story.user_id ? user.uid + '_' + story.user_id : story.user_id + '_' + user.uid;
-    var messageText = `რეაქცია თქვენს სიუჟეტზე: ${emoji}`;
-
-    // ა) მთავარი ჩათის დოკუმენტის შექმნა/განახლება (რათა მესინჯერის სიაში გამოჩნდეს)
-    db.collection('chats').doc(chatId).set({
-      participants: [user.uid, story.user_id],
-      users: [user.uid, story.user_id],
-      last_message: messageText,
-      last_sender_id: user.uid,
-      updated_at: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).then(function() {
-      // ბ) შეტყობინების ჩაწერა მესიჯების სიაში
-      return db.collection('chats').doc(chatId).collection('messages').add({
-        senderId: user.uid,
-        text: messageText,
-        created_at: firebase.firestore.FieldValue.serverTimestamp(),
-        read: false
-      });
-    }).catch(function(err) {
-      console.error("Story React Messenger Error:", err);
-    });
-  }
+  // გაგზავნა მესინჯერში
+  sendStoryInteractionToMessenger(story.user_id, `რეაქცია თქვენს სიუჟეტზე: ${emoji}`);
 }
 
-// 2. სთორის პასუხის (ტექსტის) გაგზავნა მესინჯერში
 function handleStoryCommentKeyPress(event) {
   if (event.key === 'Enter') {
     var input = document.getElementById('story-comment-field');
     var story = activeUserStoryGroup[activeStoryIndex];
-    var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
-    
-    if (!input || !story || !user) return;
+    if (!input || !story) return;
     var text = input.value.trim();
     if (!text) return;
 
-    var chatId = user.uid < story.user_id ? user.uid + '_' + story.user_id : story.user_id + '_' + user.uid;
-    var messageText = `პასუხი სიუჟეტზე: "${text}"`;
-
-    // ა) მთავარი ჩათის დოკუმენტის შექმნა/განახლება
-    db.collection('chats').doc(chatId).set({
-      participants: [user.uid, story.user_id],
-      users: [user.uid, story.user_id],
-      last_message: messageText,
-      last_sender_id: user.uid,
-      updated_at: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).then(function() {
-      // ბ) შეტყობინების ჩაწერა
-      return db.collection('chats').doc(chatId).collection('messages').add({
-        senderId: user.uid,
-        text: messageText,
-        created_at: firebase.firestore.FieldValue.serverTimestamp(),
-        read: false
-      });
-    }).then(function() {
-      input.value = "";
-      input.blur();
-      resumeStoryTimer();
-    }).catch(function(err) {
-      console.error("Story Comment Messenger Error:", err);
-    });
+    // გაგზავნა მესინჯერში
+    sendStoryInteractionToMessenger(story.user_id, `პასუხი სიუჟეტზე: "${text}"`);
+    
+    input.value = "";
+    input.blur();
+    resumeStoryTimer();
+    alert("შეტყობინება გაიგზავნა მესინჯერში!");
   }
 }
 
