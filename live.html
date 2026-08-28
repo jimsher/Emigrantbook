@@ -437,7 +437,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.85);
-            z-index: 200000;
+            z-index: 200005;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -548,7 +548,7 @@
     </div>
 
     <!-- 🎬 ლაივის ჩანაწერის შენახვის / განთავსების არჩევანის მოდალი -->
-    <div id="saveLivePostModal" class="lives-modal-overlay" style="z-index: 200001;">
+    <div id="saveLivePostModal" class="lives-modal-overlay" style="z-index: 200000; display: none;">
         <div class="lives-modal-box" style="text-align: center; padding: 24px; max-width: 380px;">
             <div style="font-size: 42px; margin-bottom: 12px;">🔴</div>
             <h3 id="lbl-post-live-title" style="margin-bottom: 10px; font-size: 18px; color: #ffffff; font-weight: bold;">პირდაპირი ეთერი დასრულდა</h3>
@@ -690,11 +690,7 @@
                 cameraErr: "Impossible d'accéder à la caméra!",
                 liveEnded: "Le direct est terminé!",
                 defaultTitle: "Diffusion en direct",
-                defaultUser: "Utilisateur",
-                postLiveTitle: "Direct terminé",
-                postLiveDesc: "Voulez-vous enregistrer et publier le replay du direct sur le site?",
-                publishBtn: "Publier",
-                discardBtn: "Supprimer et quitter"
+                defaultUser: "Utilisateur"
             },
             de: {
                 liveBtn: "LIVE gehen",
@@ -771,7 +767,8 @@
 
         let mediaRecorder = null;
         let recordedChunks = [];
-        let endedLiveDocData = null;
+        let isHostUser = false;
+        let streamSavedTitle = "";
 
         let currentCameraIndex = 0;
         let availableCameras = [];
@@ -888,6 +885,9 @@
             if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
             const t = liveTranslations[getLang()] || liveTranslations['ka'];
             const title = document.getElementById('streamTitleInput').value.trim() || t.defaultTitle;
+            streamSavedTitle = title;
+            isHostUser = true;
+
             const uid = auth.currentUser.uid;
             const appId = "258897e8fb5f4dd089b761eca6568b24";
 
@@ -938,15 +938,21 @@
         function startRecordingStream() {
             recordedChunks = [];
             try {
-                const videoTrack = localTracks.video.getMediaStreamTrack();
-                const audioTrack = localTracks.audio.getMediaStreamTrack();
-                const combinedStream = new MediaStream([videoTrack, audioTrack]);
+                const tracks = [];
+                if (localTracks.video) tracks.push(localTracks.video.getMediaStreamTrack());
+                if (localTracks.audio) tracks.push(localTracks.audio.getMediaStreamTrack());
 
-                let options = { videoBitsPerSecond: 1000000 };
-                if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
-                    options.mimeType = 'video/webm;codecs=vp8,opus';
-                } else if (MediaRecorder.isTypeSupported('video/mp4')) {
-                    options.mimeType = 'video/mp4';
+                const combinedStream = new MediaStream(tracks);
+
+                let options = {};
+                if (typeof MediaRecorder.isTypeSupported === 'function') {
+                    if (MediaRecorder.isTypeSupported('video/mp4')) {
+                        options = { mimeType: 'video/mp4' };
+                    } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
+                        options = { mimeType: 'video/webm;codecs=vp8,opus' };
+                    } else if (MediaRecorder.isTypeSupported('video/webm')) {
+                        options = { mimeType: 'video/webm' };
+                    }
                 }
 
                 mediaRecorder = new MediaRecorder(combinedStream, options);
@@ -957,9 +963,9 @@
                     }
                 };
 
-                mediaRecorder.start();
+                mediaRecorder.start(1000);
             } catch (e) {
-                console.error("MediaRecorder start error:", e);
+                console.warn("MediaRecorder start warning:", e);
             }
         }
 
@@ -1004,6 +1010,7 @@
         window.joinLive = async function(docId) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
             currentLiveDocId = docId;
+            isHostUser = false;
 
             closeActiveLivesModal();
             document.getElementById('liveUI').style.display = 'flex';
@@ -1068,31 +1075,33 @@
             if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
             if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
 
-            let isHost = false;
+            const wasHost = isHostUser;
 
-            if (currentLiveDocId && auth.currentUser) {
-                const docRef = db.collection('lives').doc(currentLiveDocId);
-                const docSnap = await docRef.get();
-                
-                if (docSnap.exists && docSnap.data().host_id === auth.currentUser.uid) {
-                    isHost = true;
-                    endedLiveDocData = docSnap.data();
-                    await docRef.update({ status: "ended" });
-                }
+            if (currentLiveDocId && wasHost) {
+                db.collection('lives').doc(currentLiveDocId).update({ status: "ended" }).catch(e => console.warn(e));
             }
 
-            // Agora კლიენტის და ტრეკების გათიშვა
+            // 1. ჯერ ჩამწერის სუფთა გაჩერება (ვიდრე ტრეკები ცოცხალია)
+            if (wasHost && mediaRecorder && mediaRecorder.state !== "inactive") {
+                await new Promise(resolve => {
+                    mediaRecorder.onstop = () => resolve();
+                    try {
+                        mediaRecorder.stop();
+                    } catch(err) {
+                        resolve();
+                    }
+                });
+            }
+
+            // 2. ტრეკების და Agora-ს გათიშვა
             if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
             if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
-            await liveClient.leave();
+            try { await liveClient.leave(); } catch(e){}
 
             document.getElementById('liveUI').style.display = 'none';
 
-            // თუ ჰოსტია და ჩანაწერი არსებობს -> ვეკითხებით სურს თუ არა გამოქვეყნება
-            if (isHost && mediaRecorder && mediaRecorder.state !== "inactive") {
-                mediaRecorder.stop();
-                await new Promise(r => setTimeout(r, 500));
-                
+            // 3. თუ ჰოსტია -> არჩევანის მოდალის ჩვენება
+            if (wasHost) {
                 applyLiveTranslations();
                 document.getElementById('saveLivePostModal').style.display = 'flex';
             } else {
@@ -1104,30 +1113,29 @@
         window.confirmAndPublishLiveRecording = async function() {
             document.getElementById('saveLivePostModal').style.display = 'none';
 
-            if (recordedChunks.length > 0) {
+            if (recordedChunks && recordedChunks.length > 0) {
                 document.getElementById('uploadingOverlay').style.display = 'flex';
 
                 try {
-                    const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
+                    const mimeType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'video/mp4';
+                    const blob = new Blob(recordedChunks, { type: mimeType });
                     const recordedVideoUrl = await uploadLiveRecordingToR2(blob);
-
-                    const title = (endedLiveDocData && endedLiveDocData.title) ? endedLiveDocData.title : "";
 
                     await db.collection('posts').add({
                         user_id: auth.currentUser.uid,
                         author_name: window.myName || "User",
                         author_avatar: window.myPhoto || "https://via.placeholder.com/150",
-                        content: "🔴 LIVE : " + title,
+                        content: "🔴 LIVE : " + (streamSavedTitle || "პირდაპირი ეთერი"),
                         media_url: recordedVideoUrl,
                         media_type: "video",
                         is_live_replay: true,
-                        live_doc_id: currentLiveDocId,
+                        live_doc_id: currentLiveDocId || null,
                         likes_count: 0,
                         created_at: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } catch (err) {
                     console.error("R2 live recording upload failed:", err);
-                    alert("ჩანაწერის ატვირთვა ვერ მოხერხდა.");
+                    alert("ჩანაწერის ატვირთვა ვერ მოხერხდა: " + err.message);
                 }
 
                 document.getElementById('uploadingOverlay').style.display = 'none';
