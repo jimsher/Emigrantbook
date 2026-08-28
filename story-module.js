@@ -85,7 +85,19 @@
       border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 25px; padding: 0 16px;
       height: 44px; display: flex; align-items: center;
     }
-    .fb-story-input-box input { width: 100%; background: transparent; border: none; color: #fff; font-size: 14px; outline: none; font-family: inherit; }
+    .fb-story-input-box input { 
+      width: 100%; 
+      background: transparent; 
+      border: none; 
+      color: #fff; 
+      font-size: 14px; 
+      outline: none; 
+      font-family: inherit;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      touch-action: auto !important;
+      pointer-events: auto !important;
+    }
     .fb-story-input-box input::placeholder { color: rgba(255, 255, 255, 0.7); }
     .fb-story-reactions-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .fb-story-react-circle {
@@ -219,22 +231,6 @@
       background: #242526; color: #fff; border: 1px solid #444;
       padding: 8px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 13px;
     }
-    
-    /* საწერი ველების სრული განბლოკვა კლავიატურისთვის */
-input, 
-textarea, 
-[contenteditable="true"],
-.create-post-input,
-.comments-input,
-.fb-live-input,
-#story-comment-field {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-}
   `;
   const styleEl = document.createElement('style');
   styleEl.innerHTML = css;
@@ -246,8 +242,10 @@ textarea,
   const container = document.createElement('div');
   container.id = 'story-system-root';
   container.innerHTML = `
+    <!-- ფაილის ასარჩევი ფარული ინფუთი -->
     <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="handleStoryFileSelected(event)">
 
+    <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
         <div class="fb-creator-top-bar">
@@ -308,6 +306,7 @@ textarea,
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
 
+        <!-- 🎵 1. MUSIC SELECTOR SHEET -->
         <div id="sheet-music" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>მუსიკის არჩევა</span>
@@ -333,6 +332,7 @@ textarea,
           </div>
         </div>
 
+        <!-- 😃 2. STICKERS SHEET -->
         <div id="sheet-stickers" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>სტიკერები</span>
@@ -350,6 +350,7 @@ textarea,
           </div>
         </div>
 
+        <!-- 🎨 3. EFFECTS / FILTERS SHEET -->
         <div id="sheet-effects" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>ფილტრები & ეფექტები</span>
@@ -366,8 +367,10 @@ textarea,
       </div>
     </div>
 
+    <!-- 📱 2. STORY VIEWER MODAL -->
     <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
       <div class="fb-story-frame" onclick="event.stopPropagation()">
+        <!-- Multi segments progress bar -->
         <div class="fb-story-progress-container" id="story-progress-container"></div>
 
         <div class="fb-story-header">
@@ -396,12 +399,17 @@ textarea,
         
         <div id="story-floating-reactions-zone" class="story-floating-reactions"></div>
 
-        <div class="fb-story-footer">
+        <div class="fb-story-footer" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+          <!-- ➕ დამატების პლიუსის ღილაკი -->
           <button class="fb-story-circle-btn" onclick="addNewStoryFromViewer()" title="ახალი სთორის დამატება">
             <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </button>
-          <div class="fb-story-input-box">
-            <input type="text" id="story-comment-field" placeholder="შეტყობინების გაგზავნა..." onkeypress="handleStoryCommentKeyPress(event)">
+          <div class="fb-story-input-box" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+            <input type="text" id="story-comment-field" placeholder="შეტყობინების გაგზავნა..." 
+                   autocomplete="off" autocorrect="off" autocapitalize="sentences"
+                   onfocus="pauseStoryTimer()" onblur="resumeStoryTimer()"
+                   onkeydown="handleStoryCommentKeyPress(event)"
+                   onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
           </div>
           <div class="fb-story-reactions-group">
             <button class="fb-story-react-circle heart-react" onclick="reactToStoryFacebook('❤️')"><span>❤️</span></button>
@@ -436,6 +444,7 @@ function openStoryGroupViewer(userStories, startIndex, username, avatarUrl) {
   displayActiveStoryItem(username, avatarUrl);
 }
 
+// პროგრეს-ბარების დაყოფა სთორების რაოდენობის მიხედვით
 function renderProgressBarsUI() {
   var container = document.getElementById('story-progress-container');
   if (!container) return;
@@ -450,6 +459,7 @@ function renderProgressBarsUI() {
   container.innerHTML = html;
 }
 
+// კონკრეტული სთორის ჩვენება
 function displayActiveStoryItem(username, avatarUrl) {
   var story = activeUserStoryGroup[activeStoryIndex];
   if (!story) {
@@ -574,6 +584,7 @@ function goToPrevStoryItem(event) {
   }
 }
 
+// ➕ სთორის ყურებისას პლიუსზე დაჭერა -> Viewer იხურება და იხსნება ფაილის არჩევა
 function addNewStoryFromViewer() {
   closeStoryViewer();
   triggerStoryUpload();
@@ -659,6 +670,8 @@ function handleStoryCommentKeyPress(event) {
       read: false
     }).then(function() {
       input.value = "";
+      input.blur();
+      resumeStoryTimer();
       alert("შეტყობინება გაიგზავნა მესინჯერში!");
     });
   }
