@@ -96,11 +96,43 @@
             object-fit: cover;
         }
 
-        /* 🪞 სარკისებური ეფექტი ლაივის ვიდეოზე */
+        /* 🪞 სარკისებური ეფექტი წინა კამერაზე */
         #localCameraPreview video, #remote-live-video video {
             transform: scaleX(-1) !important;
             -webkit-transform: scaleX(-1) !important;
             object-fit: cover !important;
+        }
+
+        /* უკანა კამერაზე სარკის გამორთვა */
+        #localCameraPreview.no-mirror video, #remote-live-video.no-mirror video {
+            transform: none !important;
+            -webkit-transform: none !important;
+        }
+
+        /* 🔄 კამერის შეტრიალების ღილაკი */
+        .btn-flip-camera {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 46px;
+            height: 46px;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            transition: transform 0.25s ease, background 0.2s ease;
+        }
+
+        .btn-flip-camera:active {
+            transform: scale(0.9) rotate(180deg);
+            background: rgba(24, 119, 242, 0.85);
         }
 
         .setup-controls-overlay {
@@ -242,6 +274,20 @@
             backdrop-filter: blur(8px);
             cursor: pointer;
             user-select: none;
+        }
+
+        .fb-flip-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .fb-close-btn {
@@ -414,10 +460,16 @@
     <div id="preLiveSetupModal">
         <div class="setup-header">
             <span style="font-weight: bold;" id="lbl-setup-title">პირდაპირი ეთერის პარამეტრები</span>
-            <button onclick="closeLiveSetup()" style="background:none; border:none; color:white; font-size:22px;">&times;</button>
+            <button onclick="closeLiveSetup()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
         </div>
         <div class="setup-preview-zone">
             <div id="localCameraPreview"></div>
+
+            <!-- 🔄 კამერის შეტრიალების ღილაკი ლაივის დაწყებამდე -->
+            <button class="btn-flip-camera" onclick="switchLiveCamera()" title="კამერის გადართვა">
+                <i class="fas fa-camera-rotate"></i>
+            </button>
+
             <div class="setup-controls-overlay">
                 <input type="text" id="streamTitleInput" class="setup-input" placeholder="დაწერეთ ლაივის აღწერა ან სათაური...">
                 <button class="btn-fb-go-live" onclick="launchLiveStream()">
@@ -453,6 +505,12 @@
                     <i class="fas fa-eye" style="color: #1877f2;"></i>
                     <span id="vCount">0</span>
                 </div>
+                
+                <!-- ლაივის დროსაც კამერის გადართვა ჰოსტისთვის -->
+                <button class="fb-flip-btn" id="liveFlipBtn" onclick="switchLiveCamera()" title="კამერის შეტრიალება">
+                    <i class="fas fa-camera-rotate"></i>
+                </button>
+
                 <button class="fb-close-btn" onclick="endLive()">&times;</button>
             </div>
         </div>
@@ -471,7 +529,7 @@
         <div class="lives-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 id="lbl-modal-active-title">მიმდინარე პირდაპირი ეთერები</h3>
-                <button onclick="closeActiveLivesModal()" style="background:none; border:none; color:white; font-size:20px;">&times;</button>
+                <button onclick="closeActiveLivesModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
             </div>
             <div id="activeLivesList"></div>
         </div>
@@ -481,7 +539,7 @@
         <div class="viewers-sheet" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <h3><span id="lbl-viewers-title">მაყურებლები</span> (<span id="sheetViewerCount">0</span>)</h3>
-                <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px;">&times;</button>
+                <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px; cursor:pointer;">&times;</button>
             </div>
             <div id="viewersListContainer" style="overflow-y:auto;"></div>
         </div>
@@ -665,6 +723,9 @@
         let mediaRecorder = null;
         let recordedChunks = [];
 
+        let currentCameraIndex = 0;
+        let availableCameras = [];
+
         window.myName = "";
         window.myPhoto = "";
 
@@ -719,6 +780,9 @@
             }
             document.getElementById('preLiveSetupModal').style.display = 'flex';
             try {
+                availableCameras = await AgoraRTC.getCameras();
+                currentCameraIndex = 0;
+
                 localTracks.video = await AgoraRTC.createCameraVideoTrack({
                     encoderConfig: "480p_1",
                     optimizationMode: "motion"
@@ -726,6 +790,39 @@
                 localTracks.video.play("localCameraPreview", { mirror: true });
             } catch (e) {
                 alert(t.cameraErr);
+            }
+        };
+
+        /* 🔄 კამერის გადართვის ფუნქცია (წინა/უკანა) */
+        window.switchLiveCamera = async function() {
+            if (!localTracks.video) return;
+            try {
+                availableCameras = await AgoraRTC.getCameras();
+                if (availableCameras.length < 2) {
+                    alert("სხვა კამერა არ მოიძებნა!");
+                    return;
+                }
+
+                currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+                const nextCamera = availableCameras[currentCameraIndex];
+                await localTracks.video.setDevice(nextCamera.deviceId);
+
+                // სარკისებური ეფექტის მართვა უკანა კამერისთვის
+                const label = (nextCamera.label || "").toLowerCase();
+                const isBackCamera = label.includes('back') || label.includes('rear') || label.includes('environment');
+
+                const previewElem = document.getElementById('localCameraPreview');
+                const liveElem = document.getElementById('remote-live-video');
+
+                if (isBackCamera) {
+                    if (previewElem) previewElem.classList.add('no-mirror');
+                    if (liveElem) liveElem.classList.add('no-mirror');
+                } else {
+                    if (previewElem) previewElem.classList.remove('no-mirror');
+                    if (liveElem) liveElem.classList.remove('no-mirror');
+                }
+            } catch (e) {
+                console.error("Camera switch error:", e);
             }
         };
 
@@ -752,6 +849,9 @@
             document.getElementById('liveHostAva').src = window.myPhoto;
             document.getElementById('liveChatBox').innerHTML = "";
 
+            const flipBtn = document.getElementById('liveFlipBtn');
+            if (flipBtn) flipBtn.style.display = 'flex';
+
             try {
                 const liveDoc = await db.collection('lives').add({
                     host_id: uid,
@@ -772,7 +872,7 @@
                     localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
                 }
 
-                localTracks.video.play("remote-live-video", { mirror: true });
+                localTracks.video.play("remote-live-video");
                 await liveClient.publish([localTracks.audio, localTracks.video]);
 
                 startRecordingStream();
@@ -842,6 +942,9 @@
             closeActiveLivesModal();
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveChatBox').innerHTML = "";
+
+            const flipBtn = document.getElementById('liveFlipBtn');
+            if (flipBtn) flipBtn.style.display = 'none';
 
             if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
 
@@ -916,7 +1019,6 @@
                             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
                             const recordedVideoUrl = await uploadVideoToCloudinary(blob);
 
-                            // 🔴 პოსტის შექმნა 'is_live_replay: true' და 'live_doc_id' ველებით
                             await db.collection('posts').add({
                                 user_id: auth.currentUser.uid,
                                 author_name: window.myName || "User",
@@ -990,7 +1092,6 @@
             inp.value = "";
 
             try {
-                // ⏱️ იწერება stream_sec (მერამდენე წამზე დაიწერა კომენტარი)
                 await db.collection('lives').doc(currentLiveDocId)
                     .collection('comments')
                     .add({
