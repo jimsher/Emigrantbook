@@ -55,7 +55,7 @@
       border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .fb-story-media-view { width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
-    .fb-story-media-view img, .fb-story-media-view video { width: 100%; height: 100%; object-fit: contain; }
+    .fb-story-media-view img, .fb-story-media-view video { width: 100%; height: 100%; object-fit: cover !important; }
     
     /* TAP NAVIGATION ZONES */
     .story-tap-zone-left { position: absolute; top: 60px; bottom: 80px; left: 0; width: 35%; z-index: 15; }
@@ -135,7 +135,7 @@
       display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
     .fb-creator-preview-box { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-    .fb-creator-preview-box img, .fb-creator-preview-box video { width: 100%; height: 100%; object-fit: contain; transition: filter 0.3s ease; }
+    .fb-creator-preview-box img, .fb-creator-preview-box video { width: 100%; height: 100%; object-fit: cover !important; transition: filter 0.3s ease; }
     .fb-creator-overlay-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: auto; }
     
     .creator-movable-element {
@@ -230,10 +230,8 @@
   const container = document.createElement('div');
   container.id = 'story-system-root';
   container.innerHTML = `
-    <!-- ფაილის ასარჩევი ფარული ინფუთი -->
     <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="handleStoryFileSelected(event)">
 
-    <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
         <div class="fb-creator-top-bar">
@@ -294,7 +292,6 @@
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
 
-        <!-- 🎵 1. MUSIC SELECTOR SHEET -->
         <div id="sheet-music" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>მუსიკის არჩევა</span>
@@ -320,7 +317,6 @@
           </div>
         </div>
 
-        <!-- 😃 2. STICKERS SHEET -->
         <div id="sheet-stickers" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>სტიკერები</span>
@@ -338,7 +334,6 @@
           </div>
         </div>
 
-        <!-- 🎨 3. EFFECTS / FILTERS SHEET -->
         <div id="sheet-effects" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>ფილტრები & ეფექტები</span>
@@ -355,10 +350,8 @@
       </div>
     </div>
 
-    <!-- 📱 2. STORY VIEWER MODAL -->
     <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
       <div class="fb-story-frame" onclick="event.stopPropagation()">
-        <!-- Multi segments progress bar -->
         <div class="fb-story-progress-container" id="story-progress-container"></div>
 
         <div class="fb-story-header">
@@ -388,7 +381,6 @@
         <div id="story-floating-reactions-zone" class="story-floating-reactions"></div>
 
         <div class="fb-story-footer">
-          <!-- ➕ დამატების პლიუსის ღილაკი -->
           <button class="fb-story-circle-btn" onclick="addNewStoryFromViewer()" title="ახალი სთორის დამატება">
             <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </button>
@@ -428,7 +420,6 @@ function openStoryGroupViewer(userStories, startIndex, username, avatarUrl) {
   displayActiveStoryItem(username, avatarUrl);
 }
 
-// პროგრეს-ბარების დაყოფა სთორების რაოდენობის მიხედვით
 function renderProgressBarsUI() {
   var container = document.getElementById('story-progress-container');
   if (!container) return;
@@ -443,7 +434,6 @@ function renderProgressBarsUI() {
   container.innerHTML = html;
 }
 
-// კონკრეტული სთორის ჩვენება
 function displayActiveStoryItem(username, avatarUrl) {
   var story = activeUserStoryGroup[activeStoryIndex];
   if (!story) {
@@ -497,11 +487,11 @@ function displayActiveStoryItem(username, avatarUrl) {
       <div class="story-tap-zone-right" onclick="goToNextStoryItem(event)"></div>
     `;
     if (story.media_type === 'video') {
-      mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};"></video>`;
+      mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};"></video>`;
       var activeVid = document.getElementById('active-story-video');
       if (activeVid) activeVid.muted = false;
     } else {
-      mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:contain; filter: ${story.filter || 'none'};">`;
+      mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};">`;
     }
   }
 
@@ -568,7 +558,6 @@ function goToPrevStoryItem(event) {
   }
 }
 
-// ➕ სთორის ყურებისას პლიუსზე დაჭერა -> Viewer იხურება და იხსნება ფაილის არჩევა
 function addNewStoryFromViewer() {
   closeStoryViewer();
   triggerStoryUpload();
@@ -692,9 +681,9 @@ function handleStoryFileSelected(event) {
 
   if (previewZone) {
     if (selectedStoryMediaType === 'video') {
-      previewZone.innerHTML = `<video id="creator-target-media" src="${fileUrl}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:contain;"></video>`;
+      previewZone.innerHTML = `<video id="creator-target-media" src="${fileUrl}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover !important;"></video>`;
     } else {
-      previewZone.innerHTML = `<img id="creator-target-media" src="${fileUrl}" style="width:100%; height:100%; object-fit:contain;">`;
+      previewZone.innerHTML = `<img id="creator-target-media" src="${fileUrl}" style="width:100%; height:100%; object-fit:cover !important;">`;
     }
   }
 
@@ -840,7 +829,7 @@ function makeElementDraggable(elmnt) {
   }
 }
 
-// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება
+// 5. გაერთიანება და Cloudflare R2-ში გამოქვეყნება (Full Cover Canvas)
 function publishCreatedStory() {
   if (!selectedStoryFile || !currentUser) {
     alert('გთხოვთ აირჩიოთ ფაილი და გაიაროთ ავტორიზაცია');
@@ -890,13 +879,14 @@ function processStoryImageWithOverlays(callback) {
       ctx.filter = currentAppliedFilter;
     }
 
-    var hRatio = canvas.width / img.width;
-    var vRatio = canvas.height / img.height;
-    var ratio = Math.min(hRatio, vRatio);
-    var centerShiftX = (canvas.width - img.width * ratio) / 2;
-    var centerShiftY = (canvas.height - img.height * ratio) / 2;
+    // Cover ალგორითმი სრული ეკრანისთვის
+    var ratio = Math.max(canvas.width / img.width, canvas.height / img.height);
+    var renderWidth = img.width * ratio;
+    var renderHeight = img.height * ratio;
+    var centerShiftX = (canvas.width - renderWidth) / 2;
+    var centerShiftY = (canvas.height - renderHeight) / 2;
 
-    ctx.drawImage(img, 0, 0, img.width, img.height, centerShiftX, centerShiftY, img.width * ratio, img.height * ratio);
+    ctx.drawImage(img, 0, 0, img.width, img.height, centerShiftX, centerShiftY, renderWidth, renderHeight);
     ctx.filter = 'none';
 
     var elements = overlayLayer.querySelectorAll('.creator-movable-element');
