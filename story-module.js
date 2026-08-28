@@ -242,10 +242,8 @@
   const container = document.createElement('div');
   container.id = 'story-system-root';
   container.innerHTML = `
-    <!-- ფაილის ასარჩევი ფარული ინფუთი -->
     <input type="file" id="story-file-input" accept="image/*,video/*" style="display: none;" onchange="handleStoryFileSelected(event)">
 
-    <!-- 🎨 1. STORY CREATOR MODAL -->
     <div id="story-creator-modal" class="fb-story-creator-overlay" style="display: none;">
       <div class="fb-creator-frame">
         <div class="fb-creator-top-bar">
@@ -306,7 +304,6 @@
           <button class="fb-creator-share-btn" id="story-publish-btn" onclick="publishCreatedStory()">გაზიარება</button>
         </div>
 
-        <!-- 🎵 1. MUSIC SELECTOR SHEET -->
         <div id="sheet-music" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>მუსიკის არჩევა</span>
@@ -332,7 +329,6 @@
           </div>
         </div>
 
-        <!-- 😃 2. STICKERS SHEET -->
         <div id="sheet-stickers" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>სტიკერები</span>
@@ -350,7 +346,6 @@
           </div>
         </div>
 
-        <!-- 🎨 3. EFFECTS / FILTERS SHEET -->
         <div id="sheet-effects" class="fb-sheet-modal">
           <div class="fb-sheet-header">
             <span>ფილტრები & ეფექტები</span>
@@ -367,10 +362,8 @@
       </div>
     </div>
 
-    <!-- 📱 2. STORY VIEWER MODAL -->
     <div id="story-viewer-modal" class="story-viewer-overlay" style="display: none;" onclick="closeStoryViewer()">
       <div class="fb-story-frame" onclick="event.stopPropagation()">
-        <!-- Multi segments progress bar -->
         <div class="fb-story-progress-container" id="story-progress-container"></div>
 
         <div class="fb-story-header">
@@ -399,17 +392,15 @@
         
         <div id="story-floating-reactions-zone" class="story-floating-reactions"></div>
 
-        <div class="fb-story-footer" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
-          <!-- ➕ დამატების პლიუსის ღილაკი -->
+        <div class="fb-story-footer">
           <button class="fb-story-circle-btn" onclick="addNewStoryFromViewer()" title="ახალი სთორის დამატება">
             <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:#fff;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </button>
-          <div class="fb-story-input-box" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+          <div class="fb-story-input-box">
             <input type="text" id="story-comment-field" placeholder="შეტყობინების გაგზავნა..." 
                    autocomplete="off" autocorrect="off" autocapitalize="sentences"
                    onfocus="pauseStoryTimer()" onblur="resumeStoryTimer()"
-                   onkeydown="handleStoryCommentKeyPress(event)"
-                   onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+                   onkeydown="handleStoryCommentKeyPress(event)">
           </div>
           <div class="fb-story-reactions-group">
             <button class="fb-story-react-circle heart-react" onclick="reactToStoryFacebook('❤️')"><span>❤️</span></button>
