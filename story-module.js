@@ -618,9 +618,11 @@ function closeStoryViewer() {
   isStoryPaused = false;
 }
 
+// 1. სთორის რეაქციის გაგზავნა მესინჯერში
 function reactToStoryFacebook(emoji) {
   var story = activeUserStoryGroup[activeStoryIndex];
-  if (!story || !currentUser) return;
+  var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
+  if (!story || !user) return;
 
   var zone = document.getElementById('story-floating-reactions-zone');
   if (zone) {
@@ -634,36 +636,67 @@ function reactToStoryFacebook(emoji) {
   var newLikes = (story.likes_count || 0) + 1;
   db.collection('stories').doc(story.id).update({ likes_count: newLikes }).catch(function(){});
 
-  if (story.user_id !== currentUser.uid) {
-    var chatId = currentUser.uid < story.user_id ? currentUser.uid + '_' + story.user_id : story.user_id + '_' + currentUser.uid;
-    db.collection('chats').doc(chatId).collection('messages').add({
-      senderId: currentUser.uid,
-      text: `რეაქცია თქვენს სიუჟეტზე: ${emoji}`,
-      created_at: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false
-    }).catch(function(){});
+  // თუ სხვისი სთორია -> იგზავნება მესინჯერში
+  if (story.user_id && story.user_id !== user.uid) {
+    var chatId = user.uid < story.user_id ? user.uid + '_' + story.user_id : story.user_id + '_' + user.uid;
+    var messageText = `რეაქცია თქვენს სიუჟეტზე: ${emoji}`;
+
+    // ა) მთავარი ჩათის დოკუმენტის შექმნა/განახლება (რათა მესინჯერის სიაში გამოჩნდეს)
+    db.collection('chats').doc(chatId).set({
+      participants: [user.uid, story.user_id],
+      users: [user.uid, story.user_id],
+      last_message: messageText,
+      last_sender_id: user.uid,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(function() {
+      // ბ) შეტყობინების ჩაწერა მესიჯების სიაში
+      return db.collection('chats').doc(chatId).collection('messages').add({
+        senderId: user.uid,
+        text: messageText,
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      });
+    }).catch(function(err) {
+      console.error("Story React Messenger Error:", err);
+    });
   }
 }
 
+// 2. სთორის პასუხის (ტექსტის) გაგზავნა მესინჯერში
 function handleStoryCommentKeyPress(event) {
   if (event.key === 'Enter') {
     var input = document.getElementById('story-comment-field');
     var story = activeUserStoryGroup[activeStoryIndex];
-    if (!input || !story || !currentUser) return;
+    var user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (firebase.auth().currentUser || null);
+    
+    if (!input || !story || !user) return;
     var text = input.value.trim();
     if (!text) return;
 
-    var chatId = currentUser.uid < story.user_id ? currentUser.uid + '_' + story.user_id : story.user_id + '_' + currentUser.uid;
-    db.collection('chats').doc(chatId).collection('messages').add({
-      senderId: currentUser.uid,
-      text: `პასუხი სიუჟეტზე: "${text}"`,
-      created_at: firebase.firestore.FieldValue.serverTimestamp(),
-      read: false
+    var chatId = user.uid < story.user_id ? user.uid + '_' + story.user_id : story.user_id + '_' + user.uid;
+    var messageText = `პასუხი სიუჟეტზე: "${text}"`;
+
+    // ა) მთავარი ჩათის დოკუმენტის შექმნა/განახლება
+    db.collection('chats').doc(chatId).set({
+      participants: [user.uid, story.user_id],
+      users: [user.uid, story.user_id],
+      last_message: messageText,
+      last_sender_id: user.uid,
+      updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(function() {
+      // ბ) შეტყობინების ჩაწერა
+      return db.collection('chats').doc(chatId).collection('messages').add({
+        senderId: user.uid,
+        text: messageText,
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      });
     }).then(function() {
       input.value = "";
       input.blur();
       resumeStoryTimer();
-      alert("შეტყობინება გაიგზავნა მესინჯერში!");
+    }).catch(function(err) {
+      console.error("Story Comment Messenger Error:", err);
     });
   }
 }
