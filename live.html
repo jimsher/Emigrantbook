@@ -8,6 +8,8 @@
     <!-- FontAwesome & Agora RTC SDK -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+    <!-- Cloudflare R2 AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
 
     <style>
         * {
@@ -545,7 +547,7 @@
         </div>
     </div>
 
-    <!-- Cloudinary ატვირთვის ეკრანი -->
+    <!-- R2 ატვირთვის ეკრანი -->
     <div id="uploadingOverlay">
         <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 12px; color: #1877f2;"></i>
         <div>ინახება და იტვირთება ლაივის ჩანაწერი...</div>
@@ -807,7 +809,6 @@
                 const nextCamera = availableCameras[currentCameraIndex];
                 await localTracks.video.setDevice(nextCamera.deviceId);
 
-                // სარკისებური ეფექტის მართვა უკანა კამერისთვის
                 const label = (nextCamera.label || "").toLowerCase();
                 const isBackCamera = label.includes('back') || label.includes('rear') || label.includes('environment');
 
@@ -914,25 +915,42 @@
             }
         }
 
-        async function uploadVideoToCloudinary(blob) {
-            var CLOUD_NAME = "kim1albt";
-            var UPLOAD_PRESET = "fhlkp9ld";
+        /* ☁️ Cloudflare R2 ატვირთვა ლაივის ჩანაწერისთვის */
+        function uploadLiveRecordingToR2(blob) {
+            return new Promise((resolve, reject) => {
+                const r2S3 = new AWS.S3({
+                    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+                    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+                    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+                    signatureVersion: 'v4',
+                    region: 'auto'
+                });
 
-            var formData = new FormData();
-            formData.append("file", blob, "live_stream.mp4");
-            formData.append("upload_preset", UPLOAD_PRESET);
+                const fileKey = 'videos/' + Date.now() + '_live_stream.mp4';
+                const contentType = blob.type || 'video/mp4';
 
-            const res = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/video/upload", {
-                method: "POST",
-                body: formData
+                const params = {
+                    Bucket: 'emigrantbook-videos',
+                    Key: fileKey,
+                    Body: blob,
+                    ContentType: contentType
+                };
+
+                const options = {
+                    partSize: 10 * 1024 * 1024,
+                    queueSize: 1
+                };
+
+                r2S3.upload(params, options, function(err, data) {
+                    if (err) {
+                        console.error("R2 Live Upload Error:", err);
+                        reject(err);
+                    } else {
+                        const publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+                        resolve(publicUrl);
+                    }
+                });
             });
-
-            const data = await res.json();
-            if (data.secure_url) {
-                return data.secure_url;
-            } else {
-                throw new Error("Upload error: " + (data.error ? data.error.message : "Unknown error"));
-            }
         }
 
         window.joinLive = async function(docId) {
@@ -1017,7 +1035,7 @@
 
                         try {
                             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
-                            const recordedVideoUrl = await uploadVideoToCloudinary(blob);
+                            const recordedVideoUrl = await uploadLiveRecordingToR2(blob);
 
                             await db.collection('posts').add({
                                 user_id: auth.currentUser.uid,
@@ -1032,7 +1050,7 @@
                                 created_at: firebase.firestore.FieldValue.serverTimestamp()
                             });
                         } catch (err) {
-                            console.error("Cloudinary upload failed:", err);
+                            console.error("R2 live recording upload failed:", err);
                         }
                         
                         document.getElementById('uploadingOverlay').style.display = 'none';
