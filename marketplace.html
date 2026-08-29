@@ -166,6 +166,9 @@
       background: #242526;
       position: relative;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .product-img-box img {
       width: 100%;
@@ -199,7 +202,7 @@
     }
 
     /* ========================================================
-       📱 1. FB MARKETPLACE PRODUCT DETAILS FULLSCREEN VIEW
+       📱 1. FB MARKETPLACE DETAILS FULLSCREEN VIEW
     ======================================================== */
     #product-details-screen {
       display: none;
@@ -245,6 +248,9 @@
       background: #141414;
       position: relative;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .pd-image-holder img {
       width: 100%;
@@ -485,7 +491,7 @@
     }
 
     /* ========================================================
-       📱 2. SELL PRODUCT FULLSCREEN SCREEN (ნივთის დამატება)
+       📱 2. FULLSCREEN SELL PRODUCT SCREEN (ნივთის დამატება)
     ======================================================== */
     #sell-fullscreen-screen {
       display: none;
@@ -565,6 +571,8 @@
       gap: 10px;
       cursor: pointer;
       background: rgba(255, 255, 255, 0.03);
+      position: relative;
+      overflow: hidden;
     }
     .upload-image-box svg { width: 36px; height: 36px; fill: #2ed573; }
     .upload-image-preview {
@@ -646,7 +654,8 @@
 
     <!-- სურათი -->
     <div class="pd-image-holder">
-      <img id="pd-view-image" src="" alt="Product">
+      <img id="pd-view-image" src="" style="display: none;">
+      <div id="pd-view-no-image" style="display: none; color: #8e8e93; font-size: 14px;">ფოტო არ არის</div>
       <div class="pd-pagination-dots">
         <div class="pd-dot active"></div>
         <div class="pd-dot"></div>
@@ -714,7 +723,7 @@
         <div class="pd-section-header">გამყიდველი ›</div>
         <div class="pd-seller-box">
           <div class="pd-seller-left">
-            <img id="pd-seller-avatar" class="pd-seller-avatar" src="" alt="Seller">
+            <img id="pd-seller-avatar" class="pd-seller-avatar" src="" alt="">
             <div class="pd-seller-meta">
               <span class="pd-seller-name" id="pd-seller-name">მომხმარებელი</span>
               <span class="pd-seller-sub" id="pd-seller-sub">EmigrantBook-ზე დარეგისტრირებულია 2024 წლიდან</span>
@@ -759,8 +768,10 @@
       <div class="form-group">
         <label>ფოტო</label>
         <div class="upload-image-box" onclick="document.getElementById('product-file').click()">
-          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          <span id="upload-hint" style="font-weight: 600; font-size: 14px; color: #e4e6eb;">ატვირთეთ ფოტო</span>
+          <div id="upload-hint-box" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">ატვირთეთ ფოტო</span>
+          </div>
           <img id="upload-preview" class="upload-image-preview">
         </div>
         <input type="file" id="product-file" accept="image/*" style="display: none;" onchange="previewProductImage(event)">
@@ -840,6 +851,7 @@
     }
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     let allProducts = [];
     let selectedCategory = 'all';
@@ -849,6 +861,12 @@
     auth.onAuthStateChanged(user => {
       loadProducts();
     });
+
+    function getValidImageUrl(prod) {
+      if (!prod) return '';
+      let url = prod.image_url || prod.imageUrl || prod.media_url || prod.url || prod.photo || '';
+      return (typeof url === 'string' && url.startsWith('http')) ? url : '';
+    }
 
     function formatPriceDisplay(prod) {
       if (!prod || !prod.price) return 'შეთანხმებით';
@@ -865,8 +883,7 @@
         allProducts = [];
         snapshot.forEach(doc => {
           const data = doc.data();
-          // იტვირთება მხოლოდ რეალური პროდუქტები
-          if (data && (data.title || data.image_url)) {
+          if (data && (data.title || data.image_url || data.price)) {
             allProducts.push({ id: doc.id, ...data });
           }
         });
@@ -897,12 +914,16 @@
         card.className = 'product-card';
         card.onclick = () => openProductDetails(prod);
 
-        const imgUrl = prod.image_url || prod.imageUrl || prod.media_url || '';
+        const imgUrl = getValidImageUrl(prod);
         const priceText = formatPriceDisplay(prod);
+
+        const imageElementHtml = imgUrl ? 
+          `<img src="${imgUrl}" alt="" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div style="display:none;width:100%;height:100%;background:#222;align-items:center;justify-content:center;color:#666;font-size:13px;">ფოტო არ არის</div>` : 
+          `<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;">ფოტო არ არის</div>`;
 
         card.innerHTML = `
           <div class="product-img-box">
-            ${imgUrl ? `<img src="${imgUrl}" alt="Product" loading="lazy">` : `<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;color:#666;">ფოტო არ არის</div>`}
+            ${imageElementHtml}
           </div>
           <div class="product-info">
             <span class="product-price">${priceText}</span>
@@ -931,9 +952,22 @@
       const screen = document.getElementById('product-details-screen');
       if (!screen) return;
 
-      const imgUrl = prod.image_url || prod.imageUrl || prod.media_url || '';
+      const imgUrl = getValidImageUrl(prod);
       const viewImg = document.getElementById('pd-view-image');
-      viewImg.src = imgUrl;
+      const noImg = document.getElementById('pd-view-no-image');
+
+      if (imgUrl) {
+        viewImg.src = imgUrl;
+        viewImg.style.display = 'block';
+        if (noImg) noImg.style.display = 'none';
+        viewImg.onerror = function() {
+          viewImg.style.display = 'none';
+          if (noImg) noImg.style.display = 'flex';
+        };
+      } else {
+        viewImg.style.display = 'none';
+        if (noImg) noImg.style.display = 'flex';
+      }
 
       document.getElementById('pd-view-title').innerText = prod.title || 'უსათაურო';
       document.getElementById('pd-view-price').innerText = formatPriceDisplay(prod);
@@ -948,6 +982,7 @@
 
       // გამყიდველის მონაცემები
       const sellerId = prod.user_id;
+      const avatarEl = document.getElementById('pd-seller-avatar');
       if (sellerId) {
         db.collection('profiles').doc(sellerId).get().then(pSnap => {
           if (pSnap.exists) {
@@ -958,7 +993,7 @@
               sPhoto = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sName) + '&background=2ed573&color=fff';
             }
             document.getElementById('pd-seller-name').innerText = sName;
-            document.getElementById('pd-seller-avatar').src = sPhoto;
+            avatarEl.src = sPhoto;
           }
         }).catch(() => {});
       }
@@ -1023,8 +1058,21 @@
     function closeSellScreen() {
       document.getElementById('sell-fullscreen-screen').style.display = 'none';
       selectedFile = null;
-      document.getElementById('upload-preview').style.display = 'none';
-      document.getElementById('upload-hint').style.display = 'block';
+      
+      const preview = document.getElementById('upload-preview');
+      preview.src = '';
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      
+      const hint = document.getElementById('upload-hint-box');
+      if (hint) hint.style.display = 'flex';
+      
+      document.getElementById('product-file').value = '';
+      document.getElementById('prod-title').value = '';
+      document.getElementById('prod-price').value = '';
+      document.getElementById('prod-location').value = '';
+      document.getElementById('prod-whatsapp').value = '';
+      document.getElementById('prod-desc').value = '';
     }
 
     function previewProductImage(event) {
@@ -1032,12 +1080,13 @@
       if (!file) return;
       selectedFile = file;
       const preview = document.getElementById('upload-preview');
+      const hint = document.getElementById('upload-hint-box');
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
-      document.getElementById('upload-hint').style.display = 'none';
+      if (hint) hint.style.display = 'none';
     }
 
-    // ფოტოს ოპტიმიზაცია და R2-ზე გარანტირებული ატვირთვა
+    // ფოტოს ოპტიმიზაცია და Cloudflare R2-ზე გარანტირებული ატვირთვა
     function compressImageToBlob(file, callback) {
       const reader = new FileReader();
       reader.onload = function(e) {
