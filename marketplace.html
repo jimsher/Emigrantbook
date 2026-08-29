@@ -12,6 +12,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
   <!-- AWS SDK Cloudflare R2-სთვის -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.1580.0/aws-sdk.min.js"></script>
+  <!-- HEIC/HEIF ფოტოების ავტომატური კონვერტაცია -->
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 
   <style>
     * {
@@ -1076,6 +1078,30 @@
       document.getElementById('prod-desc').value = '';
     }
 
+    // HEIC/HEIF ფოტოს შემოწმება და JPEG-ში კონვერტაცია
+    function convertHeicToJpegIfNeeded(file, callback) {
+      if (!file) {
+        callback(null);
+        return;
+      }
+      var isHeic = file.type === "image/heic" || file.type === "image/heif" || (file.name && file.name.match(/\.(heic|heif)$/i));
+      if (isHeic && typeof heic2any !== "undefined") {
+        heic2any({
+          blob: file,
+          toType: "image/jpeg",
+          quality: 0.90
+        }).then(function(convertedBlob) {
+          var resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          callback(resultBlob);
+        }).catch(function(err) {
+          console.warn("HEIC conversion fallback:", err);
+          callback(file);
+        });
+      } else {
+        callback(file);
+      }
+    }
+
     function previewProductImage(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -1083,49 +1109,64 @@
       
       const preview = document.getElementById('upload-preview');
       const hint = document.getElementById('upload-hint-box');
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-        if (hint) hint.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
+
+      convertHeicToJpegIfNeeded(file, function(processedBlob) {
+        if (!processedBlob) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          if (hint) hint.style.display = 'none';
+        };
+        reader.readAsDataURL(processedBlob);
+      });
     }
 
     // ფოტოს ოპტიმიზაცია და Cloudflare R2-ზე გარანტირებული ატვირთვა
     function compressImageToBlob(file, callback) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          const maxDim = 1280;
+      convertHeicToJpegIfNeeded(file, function(validFile) {
+        if (!validFile) {
+          callback(file);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 1920;
 
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
             }
-          }
 
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
 
-          canvas.toBlob(function(blob) {
-            callback(blob);
-          }, 'image/jpeg', 0.85);
+            canvas.toBlob(function(blob) {
+              callback(blob || validFile);
+            }, 'image/jpeg', 0.88);
+          };
+          img.onerror = function() {
+            callback(validFile);
+          };
+          img.src = e.target.result;
         };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+        reader.onerror = function() {
+          callback(validFile);
+        };
+        reader.readAsDataURL(validFile);
+      });
     }
 
     function publishProduct() {
@@ -1155,7 +1196,8 @@
           accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
           secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
           signatureVersion: 'v4',
-          region: 'auto'
+          region: 'auto',
+          s3ForcePathStyle: true
         });
 
         var params = {
