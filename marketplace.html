@@ -44,6 +44,16 @@
       position: relative;
     }
 
+    /* აიქონების სტილი */
+    .post-action-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
     /* ჰედერი */
     .market-header {
       position: sticky;
@@ -76,7 +86,6 @@
       align-items: center;
       padding: 4px;
     }
-    .back-btn svg { width: 24px; height: 24px; fill: currentColor; }
     .market-title {
       font-size: 24px;
       font-weight: 800;
@@ -108,7 +117,6 @@
       align-items: center;
       gap: 10px;
     }
-    .market-search-box svg { width: 18px; height: 18px; fill: #8e8e93; flex-shrink: 0; }
     .market-search-box input {
       background: none;
       border: none;
@@ -119,7 +127,7 @@
     }
     .market-search-box input::placeholder { color: #8e8e93; }
 
-    /* კატეგორიები */
+    /* კატეგორიები (სუფთა ტექსტური სტილი) */
     .categories-row {
       display: flex;
       gap: 8px;
@@ -137,6 +145,7 @@
       font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
+      transition: background 0.2s, color 0.2s;
     }
     .cat-chip.active {
       background: #2ed573;
@@ -201,6 +210,9 @@
       font-size: 11.5px;
       color: #8e8e93;
       margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     /* ========================================================
@@ -240,7 +252,6 @@
       cursor: pointer;
       color: #fff;
     }
-    .pd-circle-btn svg { width: 20px; height: 20px; fill: #fff; }
     .pd-top-right-actions { display: flex; gap: 8px; }
 
     .pd-image-holder {
@@ -326,7 +337,6 @@
       cursor: pointer;
     }
     .pd-btn-messenger:active { background: #166fe5; }
-    .pd-btn-messenger svg { width: 20px; height: 20px; fill: #fff; }
 
     .pd-btn-whatsapp {
       background: rgba(255, 255, 255, 0.08);
@@ -343,7 +353,6 @@
       cursor: pointer;
     }
     .pd-btn-whatsapp:active { background: rgba(255, 255, 255, 0.15); }
-    .pd-btn-whatsapp svg { width: 20px; height: 20px; fill: #25D366; }
 
     /* 3 მრგვალი მოქმედების ღილაკი */
     .pd-actions-row {
@@ -368,7 +377,6 @@
       align-items: center;
       justify-content: center;
     }
-    .pd-action-circle svg { width: 20px; height: 20px; fill: #fff; }
     .pd-action-label {
       font-size: 12px;
       color: #e4e6eb;
@@ -577,7 +585,6 @@
       overflow: hidden;
       min-height: 140px;
     }
-    .upload-image-box svg { width: 36px; height: 36px; fill: #2ed573; }
     .upload-image-preview {
       width: 100%;
       max-height: 240px;
@@ -608,30 +615,31 @@
       <div class="market-header-top">
         <div class="market-header-left">
           <button class="back-btn" onclick="window.location.href='index.html'">
-            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <img src="icons/undo-2.svg" class="post-action-icon" style="width: 22px; height: 22px;" alt="Back">
           </button>
           <h1 class="market-title">Marketplace</h1>
         </div>
         <button class="sell-btn" onclick="openSellScreen()">
-          <span>+</span> გაყიდვა
+          <img src="icons/wand-sparkles.svg" class="post-action-icon" style="width: 15px; height: 15px;" alt="">
+          <span>გაყიდვა</span>
         </button>
       </div>
 
       <div class="market-search-box">
-        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <img src="icons/search.svg" class="post-action-icon" style="width: 18px; height: 18px; opacity: 0.6;" alt="Search">
         <input type="text" id="market-search" placeholder="ძებნა Marketplace-ზე..." oninput="handleSearch()">
       </div>
     </div>
 
-    <!-- კატეგორიები -->
+    <!-- კატეგორიები (სუფთა, ემოჯიების გარეშე) -->
     <div class="categories-row">
       <div class="cat-chip active" onclick="filterCategory('all', this)">ყველა</div>
-      <div class="cat-chip" onclick="filterCategory('auto', this)">🚗 ავტომობილები</div>
-      <div class="cat-chip" onclick="filterCategory('real_estate', this)">🏠 უძრავი ქონება</div>
-      <div class="cat-chip" onclick="filterCategory('electronics', this)">📱 ტექნიკა</div>
-      <div class="cat-chip" onclick="filterCategory('jobs', this)">💼 სამუშაო</div>
-      <div class="cat-chip" onclick="filterCategory('clothes', this)">👕 ტანსაცმელი</div>
-      <div class="cat-chip" onclick="filterCategory('other', this)">📦 სხვადასხვა</div>
+      <div class="cat-chip" onclick="filterCategory('auto', this)">ავტომობილები</div>
+      <div class="cat-chip" onclick="filterCategory('real_estate', this)">უძრავი ქონება</div>
+      <div class="cat-chip" onclick="filterCategory('electronics', this)">ტექნიკა</div>
+      <div class="cat-chip" onclick="filterCategory('jobs', this)">სამუშაო</div>
+      <div class="cat-chip" onclick="filterCategory('clothes', this)">ტანსაცმელი</div>
+      <div class="cat-chip" onclick="filterCategory('other', this)">სხვადასხვა</div>
     </div>
 
     <!-- ნივთების ჩამონათვალი -->
@@ -646,15 +654,15 @@
   <div id="product-details-screen">
     <div class="pd-top-floating-bar">
       <button class="pd-circle-btn" onclick="closeProductDetails()">
-        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Back">
       </button>
       <div class="pd-top-right-actions">
         <!-- მფლობელის წაშლის ღილაკი -->
         <button class="pd-circle-btn" id="pd-btn-delete-item" style="display: none; background: rgba(255, 71, 87, 0.75); border-color: rgba(255, 71, 87, 0.5);" onclick="deleteCurrentProduct()" title="განცხადების წაშლა">
-          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          <img src="icons/bookmark.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Delete">
         </button>
         <button class="pd-circle-btn" onclick="shareCurrentProduct()">
-          <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+          <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px; transform: scaleX(-1);" alt="Share">
         </button>
       </div>
     </div>
@@ -678,17 +686,18 @@
       </div>
 
       <div class="pd-nearby-tag" id="pd-view-nearby">
-        <span>🚶 ახლომდებარე · 1 კმ</span>
+        <img src="icons/globe.svg" class="post-action-icon" style="width: 14px; height: 14px; opacity: 0.7;" alt="">
+        <span>ახლომდებარე · 1 კმ</span>
       </div>
 
       <!-- CTA ღილაკები -->
       <div class="pd-cta-buttons">
         <button class="pd-btn-messenger" id="pd-btn-send-msg">
-          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Message">
           <span>მისწერეთ გამყიდველს</span>
         </button>
         <button class="pd-btn-whatsapp" id="pd-btn-whatsapp" onclick="openSellerWhatsApp()">
-          <svg viewBox="0 0 24 24"><path d="M16.75 13.96c.25.13.41.2.46.3.06.11.04.61-.21 1.18-.2.56-1.24 1.1-1.7 1.12-.46.02-.47.36-2.96-.73-2.49-1.09-3.99-3.75-4.11-3.92-.12-.17-.99-1.32-.99-2.51 0-1.2.63-1.79.85-2.04.23-.25.5-.31.66-.31.17 0 .33.01.48.01.15 0 .37-.06.57.42.21.5.72 1.75.78 1.88.06.12.1.28.02.44-.08.17-.13.27-.25.41-.13.15-.27.33-.38.44-.13.12-.26.25-.11.51.15.25.67 1.1 1.45 1.78.99.88 1.83 1.15 2.09 1.28.26.13.41.11.56-.06.16-.18.67-.78.85-1.05.18-.27.36-.22.61-.13zM12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.34 5L2 22l5.23-1.33A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+          <img src="icons/megaphone.svg" class="post-action-icon" style="width: 18px; height: 18px; filter: invert(56%) sepia(85%) saturate(415%) hue-rotate(86deg) brightness(98%) contrast(92%);" alt="WhatsApp">
           <span>Message on WhatsApp</span>
         </button>
       </div>
@@ -697,19 +706,19 @@
       <div class="pd-actions-row">
         <div class="pd-action-item" onclick="alert('გაფრთხილებები ჩართულია')">
           <div class="pd-action-circle">
-            <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <img src="icons/megaphone.svg" class="post-action-icon" style="width: 19px; height: 19px;" alt="Alerts">
           </div>
           <span class="pd-action-label">გაფრთხილებები</span>
         </div>
         <div class="pd-action-item" onclick="shareCurrentProduct()">
           <div class="pd-action-circle">
-            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+            <img src="icons/undo-2.svg" class="post-action-icon" style="width: 19px; height: 19px; transform: scaleX(-1);" alt="Share">
           </div>
           <span class="pd-action-label">გაზიარება</span>
         </div>
         <div class="pd-action-item" onclick="toggleSaveProduct()">
           <div class="pd-action-circle" id="pd-save-circle">
-            <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+            <img src="icons/bookmark.svg" class="post-action-icon" style="width: 19px; height: 19px;" alt="Save">
           </div>
           <span class="pd-action-label">შენახვა</span>
         </div>
@@ -776,7 +785,7 @@
         <label>ფოტო</label>
         <div class="upload-image-box" onclick="document.getElementById('product-file').click()">
           <div id="upload-hint-box" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <img src="icons/image.svg" class="post-action-icon" style="width: 38px; height: 38px; filter: brightness(0) invert(1);" alt="Upload">
             <span style="font-weight: 600; font-size: 14px; color: #e4e6eb;">ატვირთეთ ფოტო</span>
           </div>
           <img id="upload-preview" class="upload-image-preview">
@@ -935,7 +944,10 @@
           <div class="product-info">
             <span class="product-price">${priceText}</span>
             <span class="product-title">${prod.title || 'უსათაურო'}</span>
-            <span class="product-location">📍 ${prod.location || 'უცნობი'}</span>
+            <span class="product-location">
+              <img src="icons/house.svg" class="post-action-icon" style="width: 12px; height: 12px; opacity: 0.6;" alt="">
+              <span>${prod.location || 'უცნობი'}</span>
+            </span>
           </div>
         `;
         grid.appendChild(card);
@@ -987,7 +999,10 @@
       document.getElementById('pd-view-price').innerText = formatPriceDisplay(prod);
       
       const loc = prod.location || 'მდებარეობა უცნობია';
-      document.getElementById('pd-view-nearby').innerHTML = `<span>🚶 ${loc}</span>`;
+      document.getElementById('pd-view-nearby').innerHTML = `
+        <img src="icons/globe.svg" class="post-action-icon" style="width: 14px; height: 14px; opacity: 0.7;" alt="">
+        <span>${loc}</span>
+      `;
       document.getElementById('pd-map-city-label').innerText = loc;
       document.getElementById('pd-map-sub-label').innerText = `${loc} · მდებარეობა მიახლოებითია`;
 
