@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  
   <!-- AWS SDK Cloudflare R2-სთვის -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.1580.0/aws-sdk.min.js"></script>
 
@@ -42,7 +43,7 @@
       position: relative;
     }
 
-    /* ზედა ჰედერი */
+    /* ჰედერი */
     .market-header {
       position: sticky;
       top: 0;
@@ -72,8 +73,9 @@
       cursor: pointer;
       display: flex;
       align-items: center;
+      padding: 4px;
     }
-    .back-btn svg { width: 26px; height: 26px; fill: currentColor; }
+    .back-btn svg { width: 24px; height: 24px; fill: currentColor; }
     .market-title {
       font-size: 24px;
       font-weight: 800;
@@ -116,7 +118,7 @@
     }
     .market-search-box input::placeholder { color: #8e8e93; }
 
-    /* კატეგორიების ზოლი */
+    /* კატეგორიები */
     .categories-row {
       display: flex;
       gap: 8px;
@@ -195,13 +197,10 @@
       font-size: 11.5px;
       color: #8e8e93;
       margin-top: 2px;
-      display: flex;
-      align-items: center;
-      gap: 3px;
     }
 
     /* ========================================================
-       📱 FB MARKETPLACE PRODUCT DETAILS FULLSCREEN VIEW
+       📱 FB MARKETPLACE PRODUCT DETAILS FULLSCREEN OVERLAY
     ======================================================== */
     #product-details-screen {
       display: none;
@@ -213,14 +212,16 @@
       flex-direction: column;
     }
     .pd-top-floating-bar {
-      position: absolute;
+      position: fixed;
       top: 14px;
       left: 14px;
       right: 14px;
+      max-width: 452px;
+      margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      z-index: 20;
+      z-index: 30;
     }
     .pd-circle-btn {
       width: 38px;
@@ -241,7 +242,7 @@
     .pd-image-holder {
       width: 100%;
       height: 380px;
-      background: #141414;
+      background: #000;
       position: relative;
       overflow: hidden;
     }
@@ -285,12 +286,7 @@
     .pd-price-main {
       font-size: 20px;
       font-weight: 800;
-      color: #fff;
-    }
-    .pd-price-old {
-      font-size: 15px;
-      color: #8e8e93;
-      text-decoration: line-through;
+      color: #2ed573;
     }
     .pd-nearby-tag {
       font-size: 13.5px;
@@ -341,7 +337,7 @@
     .pd-btn-whatsapp:active { background: rgba(255, 255, 255, 0.15); }
     .pd-btn-whatsapp svg { width: 20px; height: 20px; fill: #25D366; }
 
-    /* 3 მრგვალი მოქმედების ღილაკი */
+    /* 3 მრგვალი ღილაკი */
     .pd-actions-row {
       display: flex;
       justify-content: space-around;
@@ -403,7 +399,7 @@
       white-space: pre-line;
     }
 
-    /* გამყიდველი (ავატარის ზუსტი პროპორცია) */
+    /* გამყიდველი (ავატარის ზუსტი 48x48 პროპორცია) */
     .pd-seller-box {
       display: flex;
       align-items: center;
@@ -417,17 +413,18 @@
       min-width: 0;
     }
     .pd-seller-avatar {
-      width: 48px;
-      height: 48px;
-      min-width: 48px;
-      min-height: 48px;
-      max-width: 48px;
-      max-height: 48px;
-      border-radius: 50%;
+      width: 48px !important;
+      height: 48px !important;
+      min-width: 48px !important;
+      min-height: 48px !important;
+      max-width: 48px !important;
+      max-height: 48px !important;
+      border-radius: 50% !important;
       object-fit: cover !important;
       background: #242526;
       flex-shrink: 0;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: block;
     }
     .pd-seller-meta {
       display: flex;
@@ -457,7 +454,7 @@
     .pd-detail-label { color: #8e8e93; }
     .pd-detail-val { color: #fff; font-weight: 600; }
 
-    /* Map Box */
+    /* რუკა */
     .pd-map-card {
       width: 100%;
       height: 140px;
@@ -543,6 +540,10 @@
     .form-input:focus, .form-select:focus, .form-textarea:focus {
       border-color: #1877f2;
     }
+    .price-input-row {
+      display: flex;
+      gap: 8px;
+    }
     .upload-image-box {
       border: 2px dashed rgba(255,255,255,0.2);
       border-radius: 12px;
@@ -556,7 +557,7 @@
     }
     .upload-image-preview {
       width: 100%;
-      max-height: 180px;
+      max-height: 200px;
       object-fit: cover;
       border-radius: 10px;
       display: none;
@@ -635,7 +636,7 @@
 
     <!-- სურათი -->
     <div class="pd-image-holder">
-      <img id="pd-view-image" src="" alt="Product" onerror="this.src='https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png'">
+      <img id="pd-view-image" src="" alt="Product" onerror="this.src='https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/logo.png'">
       <div class="pd-pagination-dots">
         <div class="pd-dot active"></div>
         <div class="pd-dot"></div>
@@ -648,7 +649,6 @@
       
       <div class="pd-price-row">
         <span class="pd-price-main" id="pd-view-price">0 €</span>
-        <span class="pd-price-old" id="pd-view-old-price"></span>
       </div>
 
       <div class="pd-nearby-tag" id="pd-view-nearby">
@@ -704,7 +704,7 @@
         <div class="pd-section-header">გამყიდველი ›</div>
         <div class="pd-seller-box">
           <div class="pd-seller-left">
-            <img id="pd-seller-avatar" class="pd-seller-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png" alt="Seller" onerror="this.src='https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png'">
+            <img id="pd-seller-avatar" class="pd-seller-avatar" src="https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/logo.png" alt="Seller" onerror="this.src='https://ui-avatars.com/api/?name=User&background=2ed573&color=fff'">
             <div class="pd-seller-meta">
               <span class="pd-seller-name" id="pd-seller-name">მომხმარებელი</span>
               <span class="pd-seller-sub" id="pd-seller-sub">EmigrantBook-ზე დარეგისტრირებულია 2024 წლიდან</span>
@@ -758,8 +758,15 @@
       </div>
 
       <div class="form-group">
-        <label>ფასი (€ / $ / ₾)</label>
-        <input type="text" id="prod-price" class="form-input" placeholder="მაგ: 150 €">
+        <label>ფასი და ვალუტა</label>
+        <div class="price-input-row">
+          <input type="number" id="prod-price" class="form-input" placeholder="150" style="flex: 2;">
+          <select id="prod-currency" class="form-select" style="flex: 1;">
+            <option value="€" selected>€ (EUR)</option>
+            <option value="$">$ (USD)</option>
+            <option value="₾">₾ (GEL)</option>
+          </select>
+        </div>
       </div>
 
       <div class="form-group">
@@ -824,8 +831,18 @@
     });
 
     function getValidImageUrl(prod) {
-      if (!prod) return 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png';
-      return prod.image_url || prod.imageUrl || prod.media_url || prod.url || prod.photo || prod.image || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png';
+      if (!prod) return 'https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/logo.png';
+      return prod.image_url || prod.imageUrl || prod.media_url || prod.url || prod.photo || prod.image || 'https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/logo.png';
+    }
+
+    function formatPriceDisplay(prod) {
+      if (!prod.price) return 'შეთანხმებით';
+      var curr = prod.currency || '€';
+      var pStr = String(prod.price).trim();
+      if (pStr.includes('€') || pStr.includes('$') || pStr.includes('₾')) {
+        return pStr;
+      }
+      return pStr + ' ' + curr;
     }
 
     function loadProducts() {
@@ -862,12 +879,14 @@
         card.onclick = () => openProductDetails(prod);
 
         const imgUrl = getValidImageUrl(prod);
+        const priceText = formatPriceDisplay(prod);
+
         card.innerHTML = `
           <div class="product-img-box">
-            <img src="${imgUrl}" alt="${prod.title || 'Product'}" onerror="this.src='https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png'">
+            <img src="${imgUrl}" alt="Product" onerror="this.src='https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/logo.png'">
           </div>
           <div class="product-info">
-            <span class="product-price">${prod.price || 'შეთანხმებით'}</span>
+            <span class="product-price">${priceText}</span>
             <span class="product-title">${prod.title || 'უსათაურო'}</span>
             <span class="product-location">📍 ${prod.location || 'უცნობი'}</span>
           </div>
@@ -898,7 +917,7 @@
       viewImg.src = imgUrl;
 
       document.getElementById('pd-view-title').innerText = prod.title || 'უსათაურო';
-      document.getElementById('pd-view-price').innerText = prod.price || 'შეთანხმებით';
+      document.getElementById('pd-view-price').innerText = formatPriceDisplay(prod);
       
       const loc = prod.location || 'მდებარეობა უცნობია';
       document.getElementById('pd-view-nearby').innerHTML = `<span>🚶 ${loc}</span>`;
@@ -920,7 +939,7 @@
             document.getElementById('pd-seller-name').innerText = sName;
             document.getElementById('pd-seller-avatar').src = sPhoto;
           }
-        });
+        }).catch(() => {});
       }
 
       // მესინჯერში მიწერის ღილაკი
@@ -991,16 +1010,18 @@
       document.getElementById('upload-hint').style.display = 'none';
     }
 
-    async function publishProduct() {
+    // Cloudflare R2 Upload
+    function publishProduct() {
       const title = document.getElementById('prod-title').value.trim();
-      const price = document.getElementById('prod-price').value.trim();
+      const priceVal = document.getElementById('prod-price').value.trim();
+      const currency = document.getElementById('prod-currency').value;
       const category = document.getElementById('prod-category').value;
       const condition = document.getElementById('prod-condition').value;
       const location = document.getElementById('prod-location').value.trim();
       const desc = document.getElementById('prod-desc').value.trim();
       const btn = document.getElementById('btn-save-product');
 
-      if (!title || !price || !selectedFile) {
+      if (!title || !priceVal || !selectedFile) {
         alert("გთხოვთ ატვირთოთ ფოტო, მიუთითოთ სათაური და ფასი");
         return;
       }
@@ -1008,46 +1029,57 @@
       btn.disabled = true;
       btn.innerText = "იტვირთება...";
 
-      try {
-        const fileKey = 'marketplace/' + Date.now() + '_' + Math.random().toString(36).substring(2, 6) + '.jpg';
-        const r2S3 = new AWS.S3({
-          endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
-          accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
-          secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
-          signatureVersion: 'v4',
-          region: 'auto'
-        });
+      var fileKey = 'marketplace/' + Date.now() + '_' + Math.random().toString(36).substring(2, 6) + '.jpg';
+      var r2S3 = new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto'
+      });
 
-        await r2S3.putObject({
-          Bucket: 'emigrantbook-videos',
-          Key: fileKey,
-          Body: selectedFile,
-          ContentType: selectedFile.type || 'image/jpeg'
-        }).promise();
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: selectedFile,
+        ContentType: selectedFile.type || 'image/jpeg'
+      };
 
-        const publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+      r2S3.putObject(params, function(err, data) {
+        if (err) {
+          console.error("R2 Upload Error:", err);
+          alert("ფოტოს ატვირთვის შეცდომა: " + err.message);
+          btn.disabled = false;
+          btn.innerText = "განთავსება";
+          return;
+        }
 
-        await db.collection('shop_products').add({
+        var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+
+        db.collection('shop_products').add({
           user_id: auth.currentUser.uid,
           title: title,
-          price: price,
+          price: priceVal,
+          currency: currency,
           category: category,
           condition: condition,
           location: location,
           description: desc,
           image_url: publicUrl,
+          imageUrl: publicUrl,
+          media_url: publicUrl,
           created_at: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+          alert("განცხადება წარმატებით განთავსდა!");
+          closeSellModal();
+        }).catch(function(dbErr) {
+          console.error("Firestore Error:", dbErr);
+          alert("ბაზაში შენახვის შეცდომა: " + dbErr.message);
+        }).finally(function() {
+          btn.disabled = false;
+          btn.innerText = "განთავსება";
         });
-
-        alert("განცხადება წარმატებით განთავსდა!");
-        closeSellModal();
-      } catch (err) {
-        console.error("Publish error:", err);
-        alert("შეცდომა: " + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "განთავსება";
-      }
+      });
     }
   </script>
 </body>
