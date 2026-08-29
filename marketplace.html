@@ -105,7 +105,7 @@
       align-items: center;
       gap: 10px;
     }
-    .market-search-box svg { width: 18px; height: 18px; fill: #8e8e93; }
+    .market-search-box svg { width: 18px; height: 18px; fill: #8e8e93; flex-shrink: 0; }
     .market-search-box input {
       background: none;
       border: none;
@@ -164,11 +164,13 @@
       aspect-ratio: 1 / 1;
       background: #242526;
       position: relative;
+      overflow: hidden;
     }
     .product-img-box img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: cover !important;
+      display: block;
     }
     .product-info {
       padding: 10px;
@@ -193,10 +195,13 @@
       font-size: 11.5px;
       color: #8e8e93;
       margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
 
     /* ========================================================
-       📱 1. FB MARKETPLACE PRODUCT DETAILS FULLSCREEN VIEW
+       📱 FB MARKETPLACE PRODUCT DETAILS FULLSCREEN VIEW
     ======================================================== */
     #product-details-screen {
       display: none;
@@ -209,9 +214,9 @@
     }
     .pd-top-floating-bar {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
+      top: 14px;
+      left: 14px;
+      right: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -221,9 +226,9 @@
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.65);
       backdrop-filter: blur(10px);
-      border: none;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -236,13 +241,15 @@
     .pd-image-holder {
       width: 100%;
       height: 380px;
-      background: #000;
+      background: #141414;
       position: relative;
+      overflow: hidden;
     }
     .pd-image-holder img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: cover !important;
+      display: block;
     }
     .pd-pagination-dots {
       position: absolute;
@@ -293,7 +300,7 @@
       gap: 6px;
     }
 
-    /* ლურჯი და თეთრი CTA ღილაკები */
+    /* CTA ღილაკები */
     .pd-cta-buttons {
       display: flex;
       flex-direction: column;
@@ -313,15 +320,14 @@
       justify-content: center;
       gap: 8px;
       cursor: pointer;
-      transition: background 0.2s;
     }
     .pd-btn-messenger:active { background: #166fe5; }
     .pd-btn-messenger svg { width: 20px; height: 20px; fill: #fff; }
 
     .pd-btn-whatsapp {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 10px;
       padding: 12px;
       font-size: 15px;
@@ -332,7 +338,7 @@
       gap: 8px;
       cursor: pointer;
     }
-    .pd-btn-whatsapp:active { background: rgba(255, 255, 255, 0.18); }
+    .pd-btn-whatsapp:active { background: rgba(255, 255, 255, 0.15); }
     .pd-btn-whatsapp svg { width: 20px; height: 20px; fill: #25D366; }
 
     /* 3 მრგვალი მოქმედების ღილაკი */
@@ -374,7 +380,7 @@
     }
     .pd-disclaimer-text a { color: #1877f2; text-decoration: none; font-weight: 600; }
 
-    /* სექციები: აღწერილობა, გამყიდველი, დეტალები */
+    /* სექციები */
     .pd-section {
       display: flex;
       flex-direction: column;
@@ -397,6 +403,7 @@
       white-space: pre-line;
     }
 
+    /* გამყიდველი (ავატარის ზუსტი პროპორცია) */
     .pd-seller-box {
       display: flex;
       align-items: center;
@@ -407,20 +414,28 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
     }
     .pd-seller-avatar {
       width: 48px;
       height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+      max-width: 48px;
+      max-height: 48px;
       border-radius: 50%;
-      object-fit: cover;
+      object-fit: cover !important;
       background: #242526;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .pd-seller-meta {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      min-width: 0;
     }
-    .pd-seller-name { font-size: 15px; font-weight: 700; color: #fff; }
+    .pd-seller-name { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pd-seller-sub { font-size: 12px; color: #8e8e93; }
     .pd-btn-follow {
       background: rgba(255, 255, 255, 0.1);
@@ -431,6 +446,7 @@
       padding: 8px 16px;
       border-radius: 8px;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .pd-detail-row {
@@ -600,7 +616,7 @@
   </div>
 
   <!-- ========================================================
-       📱 2. FB MARKETPLACE DETAILS FULLSCREEN OVERLAY
+       📱 FB MARKETPLACE DETAILS FULLSCREEN OVERLAY
   ======================================================== -->
   <div id="product-details-screen">
     <div class="pd-top-floating-bar">
@@ -619,7 +635,7 @@
 
     <!-- სურათი -->
     <div class="pd-image-holder">
-      <img id="pd-view-image" src="" alt="Product">
+      <img id="pd-view-image" src="" alt="Product" onerror="this.src='https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png'">
       <div class="pd-pagination-dots">
         <div class="pd-dot active"></div>
         <div class="pd-dot"></div>
@@ -688,7 +704,7 @@
         <div class="pd-section-header">გამყიდველი ›</div>
         <div class="pd-seller-box">
           <div class="pd-seller-left">
-            <img id="pd-seller-avatar" class="pd-seller-avatar" src="https://emigrantbook.com/logo.png" alt="Seller">
+            <img id="pd-seller-avatar" class="pd-seller-avatar" src="https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png" alt="Seller" onerror="this.src='https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png'">
             <div class="pd-seller-meta">
               <span class="pd-seller-name" id="pd-seller-name">მომხმარებელი</span>
               <span class="pd-seller-sub" id="pd-seller-sub">EmigrantBook-ზე დარეგისტრირებულია 2024 წლიდან</span>
@@ -807,6 +823,11 @@
       loadProducts();
     });
 
+    function getValidImageUrl(prod) {
+      if (!prod) return 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png';
+      return prod.image_url || prod.imageUrl || prod.media_url || prod.url || prod.photo || prod.image || 'https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png';
+    }
+
     function loadProducts() {
       db.collection('shop_products').orderBy('created_at', 'desc').onSnapshot(snapshot => {
         allProducts = [];
@@ -840,10 +861,10 @@
         card.className = 'product-card';
         card.onclick = () => openProductDetails(prod);
 
-        const imgUrl = prod.image_url || 'https://emigrantbook.com/logo.png';
+        const imgUrl = getValidImageUrl(prod);
         card.innerHTML = `
           <div class="product-img-box">
-            <img src="${imgUrl}" alt="Product">
+            <img src="${imgUrl}" alt="${prod.title || 'Product'}" onerror="this.src='https://raw.githubusercontent.com/jimsher/Emigrantbook/main/logo.png'">
           </div>
           <div class="product-info">
             <span class="product-price">${prod.price || 'შეთანხმებით'}</span>
@@ -872,7 +893,10 @@
       const screen = document.getElementById('product-details-screen');
       if (!screen) return;
 
-      document.getElementById('pd-view-image').src = prod.image_url || 'https://emigrantbook.com/logo.png';
+      const imgUrl = getValidImageUrl(prod);
+      const viewImg = document.getElementById('pd-view-image');
+      viewImg.src = imgUrl;
+
       document.getElementById('pd-view-title').innerText = prod.title || 'უსათაურო';
       document.getElementById('pd-view-price').innerText = prod.price || 'შეთანხმებით';
       
