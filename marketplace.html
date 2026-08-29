@@ -30,7 +30,7 @@
     body {
       display: flex;
       justify-content: center;
-      padding-bottom: 40px;
+      padding-bottom: 30px;
     }
     .market-wrapper {
       width: 100%;
@@ -195,12 +195,288 @@
       margin-top: 2px;
     }
 
+    /* ========================================================
+       📱 1. FB MARKETPLACE PRODUCT DETAILS FULLSCREEN VIEW
+    ======================================================== */
+    #product-details-screen {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #0d0d11;
+      z-index: 500;
+      overflow-y: auto;
+      flex-direction: column;
+    }
+    .pd-top-floating-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+    .pd-circle-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+    }
+    .pd-circle-btn svg { width: 20px; height: 20px; fill: #fff; }
+    .pd-top-right-actions { display: flex; gap: 8px; }
+
+    .pd-image-holder {
+      width: 100%;
+      height: 380px;
+      background: #000;
+      position: relative;
+    }
+    .pd-image-holder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .pd-pagination-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      background: rgba(0,0,0,0.5);
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+    .pd-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); }
+    .pd-dot.active { background: #fff; }
+
+    .pd-body-content {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .pd-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.25;
+    }
+    .pd-price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .pd-price-main {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .pd-price-old {
+      font-size: 15px;
+      color: #8e8e93;
+      text-decoration: line-through;
+    }
+    .pd-nearby-tag {
+      font-size: 13.5px;
+      color: #8e8e93;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ლურჯი და თეთრი CTA ღილაკები */
+    .pd-cta-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .pd-btn-messenger {
+      background: #1877f2;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .pd-btn-messenger:active { background: #166fe5; }
+    .pd-btn-messenger svg { width: 20px; height: 20px; fill: #fff; }
+
+    .pd-btn-whatsapp {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .pd-btn-whatsapp:active { background: rgba(255, 255, 255, 0.18); }
+    .pd-btn-whatsapp svg { width: 20px; height: 20px; fill: #25D366; }
+
+    /* 3 მრგვალი მოქმედების ღილაკი */
+    .pd-actions-row {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pd-action-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .pd-action-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pd-action-circle svg { width: 20px; height: 20px; fill: #fff; }
+    .pd-action-label {
+      font-size: 12px;
+      color: #e4e6eb;
+      font-weight: 500;
+    }
+
+    .pd-disclaimer-text {
+      font-size: 12px;
+      color: #8e8e93;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 14px;
+    }
+    .pd-disclaimer-text a { color: #1877f2; text-decoration: none; font-weight: 600; }
+
+    /* სექციები: აღწერილობა, გამყიდველი, დეტალები */
+    .pd-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 14px;
+    }
+    .pd-section-header {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pd-desc-body {
+      font-size: 14px;
+      color: #d1d5db;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .pd-seller-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pd-seller-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pd-seller-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #242526;
+    }
+    .pd-seller-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .pd-seller-name { font-size: 15px; font-weight: 700; color: #fff; }
+    .pd-seller-sub { font-size: 12px; color: #8e8e93; }
+    .pd-btn-follow {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .pd-detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    .pd-detail-label { color: #8e8e93; }
+    .pd-detail-val { color: #fff; font-weight: 600; }
+
+    /* Map Box */
+    .pd-map-card {
+      width: 100%;
+      height: 140px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1b3848, #0e212b);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .pd-map-radar {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(46, 213, 115, 0.25);
+      border: 2px solid rgba(46, 213, 115, 0.6);
+    }
+    .pd-map-city {
+      position: relative;
+      z-index: 2;
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+    }
+
     /* ნივთის დამატების მოდალი */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       backdrop-filter: blur(15px);
       z-index: 1000;
       align-items: flex-end;
@@ -323,6 +599,126 @@
     </div>
   </div>
 
+  <!-- ========================================================
+       📱 2. FB MARKETPLACE DETAILS FULLSCREEN OVERLAY
+  ======================================================== -->
+  <div id="product-details-screen">
+    <div class="pd-top-floating-bar">
+      <button class="pd-circle-btn" onclick="closeProductDetails()">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+      <div class="pd-top-right-actions">
+        <button class="pd-circle-btn" onclick="alert('ძებნა')">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
+        <button class="pd-circle-btn" onclick="alert('მეტი')">
+          <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- სურათი -->
+    <div class="pd-image-holder">
+      <img id="pd-view-image" src="" alt="Product">
+      <div class="pd-pagination-dots">
+        <div class="pd-dot active"></div>
+        <div class="pd-dot"></div>
+      </div>
+    </div>
+
+    <!-- დეტალების ტექსტური ნაწილი -->
+    <div class="pd-body-content">
+      <h1 class="pd-title" id="pd-view-title">...</h1>
+      
+      <div class="pd-price-row">
+        <span class="pd-price-main" id="pd-view-price">0 €</span>
+        <span class="pd-price-old" id="pd-view-old-price"></span>
+      </div>
+
+      <div class="pd-nearby-tag" id="pd-view-nearby">
+        <span>🚶 ახლომდებარე · 1 კმ</span>
+      </div>
+
+      <!-- CTA ღილაკები -->
+      <div class="pd-cta-buttons">
+        <button class="pd-btn-messenger" id="pd-btn-send-msg">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          <span>მისწერეთ გამყიდველს</span>
+        </button>
+        <button class="pd-btn-whatsapp" id="pd-btn-whatsapp" onclick="openSellerWhatsApp()">
+          <svg viewBox="0 0 24 24"><path d="M16.75 13.96c.25.13.41.2.46.3.06.11.04.61-.21 1.18-.2.56-1.24 1.1-1.7 1.12-.46.02-.47.36-2.96-.73-2.49-1.09-3.99-3.75-4.11-3.92-.12-.17-.99-1.32-.99-2.51 0-1.2.63-1.79.85-2.04.23-.25.5-.31.66-.31.17 0 .33.01.48.01.15 0 .37-.06.57.42.21.5.72 1.75.78 1.88.06.12.1.28.02.44-.08.17-.13.27-.25.41-.13.15-.27.33-.38.44-.13.12-.26.25-.11.51.15.25.67 1.1 1.45 1.78.99.88 1.83 1.15 2.09 1.28.26.13.41.11.56-.06.16-.18.67-.78.85-1.05.18-.27.36-.22.61-.13zM12 2C6.48 2 2 6.48 2 12c0 1.82.49 3.53 1.34 5L2 22l5.23-1.33A9.957 9.957 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+          <span>Message on WhatsApp</span>
+        </button>
+      </div>
+
+      <!-- 3 მრგვალი ღილაკი -->
+      <div class="pd-actions-row">
+        <div class="pd-action-item" onclick="alert('გაფრთხილებები ჩართულია')">
+          <div class="pd-action-circle">
+            <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          </div>
+          <span class="pd-action-label">გაფრთხილებები</span>
+        </div>
+        <div class="pd-action-item" onclick="shareCurrentProduct()">
+          <div class="pd-action-circle">
+            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+          </div>
+          <span class="pd-action-label">გაზიარება</span>
+        </div>
+        <div class="pd-action-item" onclick="toggleSaveProduct()">
+          <div class="pd-action-circle" id="pd-save-circle">
+            <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+          </div>
+          <span class="pd-action-label">შენახვა</span>
+        </div>
+      </div>
+
+      <div class="pd-disclaimer-text">
+        <a href="#">შეიტყვეთ მეტი</a> მომხმარებლებისგან შეძენის შესახებ, მათ შორის, თქვენი შეზღუდული სამომხმარებლო უფლებები და EmigrantBook-ის, როგორც შუამავლის როლი.
+      </div>
+
+      <!-- აღწერილობა -->
+      <div class="pd-section">
+        <div class="pd-section-header">აღწერილობა</div>
+        <div class="pd-desc-body" id="pd-view-desc">არ არის მითითებული</div>
+      </div>
+
+      <!-- გამყიდველი -->
+      <div class="pd-section">
+        <div class="pd-section-header">გამყიდველი ›</div>
+        <div class="pd-seller-box">
+          <div class="pd-seller-left">
+            <img id="pd-seller-avatar" class="pd-seller-avatar" src="https://emigrantbook.com/logo.png" alt="Seller">
+            <div class="pd-seller-meta">
+              <span class="pd-seller-name" id="pd-seller-name">მომხმარებელი</span>
+              <span class="pd-seller-sub" id="pd-seller-sub">EmigrantBook-ზე დარეგისტრირებულია 2024 წლიდან</span>
+            </div>
+          </div>
+          <button class="pd-btn-follow" onclick="alert('გამოწერილია!')">გამოწერა</button>
+        </div>
+      </div>
+
+      <!-- დეტალები -->
+      <div class="pd-section">
+        <div class="pd-section-header">დეტალები</div>
+        <div class="pd-detail-row">
+          <span class="pd-detail-label">მდგომარეობა</span>
+          <span class="pd-detail-val" id="pd-view-condition">მეორადი — ახალივით</span>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="pd-section" style="border-bottom: none;">
+        <div class="pd-section-header">Location</div>
+        <div class="pd-map-card">
+          <div class="pd-map-radar"></div>
+          <span class="pd-map-city" id="pd-map-city-label">რომი, იტალია</span>
+        </div>
+        <span class="pd-detail-label" id="pd-map-sub-label" style="font-size: 13px; margin-top: 4px;">მდებარეობა მიახლოებითია</span>
+      </div>
+    </div>
+  </div>
+
   <!-- ნივთის დამატების მოდალი -->
   <div id="sell-modal" class="modal-overlay">
     <div class="modal-content">
@@ -347,7 +743,7 @@
 
       <div class="form-group">
         <label>ფასი (€ / $ / ₾)</label>
-        <input type="text" id="prod-price" class="form-input" placeholder="მაგ: 500 €">
+        <input type="text" id="prod-price" class="form-input" placeholder="მაგ: 150 €">
       </div>
 
       <div class="form-group">
@@ -363,8 +759,17 @@
       </div>
 
       <div class="form-group">
+        <label>მდგომარეობა</label>
+        <select id="prod-condition" class="form-select">
+          <option value="ახალი">ახალი</option>
+          <option value="მეორადი — ახალივით" selected>მეორადი — ახალივით</option>
+          <option value="მეორადი — კარგ მდგომარეობაში">მეორადი — კარგ მდგომარეობაში</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label>მდებარეობა (ქალაქი / ქვეყანა)</label>
-        <input type="text" id="prod-location" class="form-input" placeholder="მაგ: რომი, იტალია">
+        <input type="text" id="prod-location" class="form-input" placeholder="მაგ: Reggio di Calabria, Italia">
       </div>
 
       <div class="form-group">
@@ -396,6 +801,7 @@
     let allProducts = [];
     let selectedCategory = 'all';
     let selectedFile = null;
+    let currentViewingProduct = null;
 
     auth.onAuthStateChanged(user => {
       loadProducts();
@@ -460,6 +866,82 @@
       renderProducts();
     }
 
+    // ================= 📱 FULLSCREEN PRODUCT DETAILS LOGIC =================
+    function openProductDetails(prod) {
+      currentViewingProduct = prod;
+      const screen = document.getElementById('product-details-screen');
+      if (!screen) return;
+
+      document.getElementById('pd-view-image').src = prod.image_url || 'https://emigrantbook.com/logo.png';
+      document.getElementById('pd-view-title').innerText = prod.title || 'უსათაურო';
+      document.getElementById('pd-view-price').innerText = prod.price || 'შეთანხმებით';
+      
+      const loc = prod.location || 'მდებარეობა უცნობია';
+      document.getElementById('pd-view-nearby').innerHTML = `<span>🚶 ${loc}</span>`;
+      document.getElementById('pd-map-city-label').innerText = loc;
+      document.getElementById('pd-map-sub-label').innerText = `${loc} · მდებარეობა მიახლოებითია`;
+
+      document.getElementById('pd-view-desc').innerText = prod.description || 'აღწერა არ არის მითითებული';
+      document.getElementById('pd-view-condition').innerText = prod.condition || 'მეორადი — ახალივით';
+
+      // გამყიდველის პროფილის ჩატვირთვა
+      const sellerId = prod.user_id;
+      if (sellerId) {
+        db.collection('profiles').doc(sellerId).get().then(pSnap => {
+          if (pSnap.exists) {
+            const pData = pSnap.data();
+            const sName = pData.full_name || pData.name || 'მომხმარებელი';
+            const sPhoto = pData.photo || pData.avatar || pData.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(sName) + '&background=2ed573&color=fff';
+            
+            document.getElementById('pd-seller-name').innerText = sName;
+            document.getElementById('pd-seller-avatar').src = sPhoto;
+          }
+        });
+      }
+
+      // მესინჯერში მიწერის ღილაკი
+      const msgBtn = document.getElementById('pd-btn-send-msg');
+      msgBtn.onclick = function() {
+        if (!auth.currentUser) {
+          alert("გთხოვთ გაიაროთ ავტორიზაცია");
+          return;
+        }
+        if (prod.user_id === auth.currentUser.uid) {
+          alert("ეს თქვენი განცხადებაა");
+          return;
+        }
+        window.location.href = `messenger.html?uid=${prod.user_id}`;
+      };
+
+      screen.style.display = 'flex';
+      screen.scrollTop = 0;
+    }
+
+    function closeProductDetails() {
+      document.getElementById('product-details-screen').style.display = 'none';
+      currentViewingProduct = null;
+    }
+
+    function openSellerWhatsApp() {
+      alert("WhatsApp კონტაქტი არ არის მითითებული. გთხოვთ მისწეროთ მესინჯერში.");
+    }
+
+    function shareCurrentProduct() {
+      if (navigator.share) {
+        navigator.share({
+          title: currentViewingProduct ? currentViewingProduct.title : 'Marketplace',
+          url: window.location.href
+        }).catch(() => {});
+      } else {
+        alert("ბმული დაკოპირებულია!");
+      }
+    }
+
+    function toggleSaveProduct() {
+      alert("ნივთი შენახულია თქვენს სიაში!");
+    }
+
+    // ================= 🛒 SELL PRODUCT MODAL LOGIC =================
     function openSellModal() {
       if (!auth.currentUser) {
         alert("გთხოვთ გაიაროთ ავტორიზაცია");
@@ -489,6 +971,7 @@
       const title = document.getElementById('prod-title').value.trim();
       const price = document.getElementById('prod-price').value.trim();
       const category = document.getElementById('prod-category').value;
+      const condition = document.getElementById('prod-condition').value;
       const location = document.getElementById('prod-location').value.trim();
       const desc = document.getElementById('prod-desc').value.trim();
       const btn = document.getElementById('btn-save-product');
@@ -525,6 +1008,7 @@
           title: title,
           price: price,
           category: category,
+          condition: condition,
           location: location,
           description: desc,
           image_url: publicUrl,
@@ -539,16 +1023,6 @@
       } finally {
         btn.disabled = false;
         btn.innerText = "განთავსება";
-      }
-    }
-
-    function openProductDetails(prod) {
-      if (prod.user_id && prod.user_id !== (auth.currentUser ? auth.currentUser.uid : null)) {
-        if (confirm(`გსურთ მესინჯერში მიწეროთ გამყიდველს ნივთზე: "${prod.title}"?`)) {
-          window.location.href = `messenger.html?uid=${prod.user_id}`;
-        }
-      } else {
-        alert(`${prod.title}\nფასი: ${prod.price}\nმდებარეობა: ${prod.location}\nაღწერა: ${prod.description || 'არ არის'}`);
       }
     }
   </script>
