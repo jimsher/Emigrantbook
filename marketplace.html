@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Marketplace | EmigrantBook</title>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+  <!-- AWS SDK Cloudflare R2-სთვის -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aws-sdk/2.1580.0/aws-sdk.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      background-color: #0d0d11;
+      color: #ffffff;
+      min-height: 100%;
+      width: 100%;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      padding-bottom: 40px;
+    }
+    .market-wrapper {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: #0d0d11;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ზედა ჰედერი */
+    .market-header {
+      position: sticky;
+      top: 0;
+      background: rgba(13, 13, 17, 0.95);
+      backdrop-filter: blur(15px);
+      z-index: 100;
+      padding: 12px 16px 8px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .market-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .market-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      background: none;
+      border: none;
+      color: #2ed573;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    .back-btn svg { width: 26px; height: 26px; fill: currentColor; }
+    .market-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .sell-btn {
+      background: #1877f2;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+    }
+    .sell-btn:active { transform: scale(0.95); }
+
+    /* ძებნა */
+    .market-search-box {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .market-search-box svg { width: 18px; height: 18px; fill: #8e8e93; }
+    .market-search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 15px;
+      width: 100%;
+    }
+    .market-search-box input::placeholder { color: #8e8e93; }
+
+    /* კატეგორიების ზოლი */
+    .categories-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px 16px;
+    }
+    .categories-row::-webkit-scrollbar { display: none; }
+    .cat-chip {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e4e6eb;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .cat-chip.active {
+      background: #2ed573;
+      color: #000;
+      border-color: #2ed573;
+    }
+
+    /* პროდუქტების გრიდი */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .product-card {
+      background: #18191a;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+    .product-card:active { transform: scale(0.98); }
+    .product-img-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #242526;
+      position: relative;
+    }
+    .product-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-info {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .product-price {
+      font-size: 16px;
+      font-weight: 800;
+      color: #2ed573;
+    }
+    .product-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #e4e6eb;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .product-location {
+      font-size: 11.5px;
+      color: #8e8e93;
+      margin-top: 2px;
+    }
+
+    /* ნივთის დამატების მოდალი */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(15px);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #18191a;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      border-radius: 20px 20px 0 0;
+      padding: 18px 16px 30px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 10px;
+    }
+    .modal-header h3 { font-size: 18px; font-weight: 700; }
+    .close-modal-btn { background: none; border: none; color: #8e8e93; font-size: 22px; cursor: pointer; }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group label {
+      font-size: 13px;
+      color: #b0b3b8;
+      font-weight: 600;
+    }
+    .form-input, .form-select, .form-textarea {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: #1877f2;
+    }
+    .upload-image-box {
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .upload-image-preview {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+      display: none;
+    }
+    .submit-btn {
+      background: #2ed573;
+      color: #000;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .submit-btn:disabled { opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+  <div class="market-wrapper">
+    <!-- Header -->
+    <div class="market-header">
+      <div class="market-header-top">
+        <div class="market-header-left">
+          <button class="back-btn" onclick="window.location.href='index.html'">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          </button>
+          <h1 class="market-title">Marketplace</h1>
+        </div>
+        <button class="sell-btn" onclick="openSellModal()">
+          <span>+</span> გაყიდვა
+        </button>
+      </div>
+
+      <div class="market-search-box">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="market-search" placeholder="ძებნა Marketplace-ზე..." oninput="handleSearch()">
+      </div>
+    </div>
+
+    <!-- კატეგორიები -->
+    <div class="categories-row">
+      <div class="cat-chip active" onclick="filterCategory('all', this)">ყველა</div>
+      <div class="cat-chip" onclick="filterCategory('auto', this)">🚗 ავტომობილები</div>
+      <div class="cat-chip" onclick="filterCategory('real_estate', this)">🏠 უძრავი ქონება</div>
+      <div class="cat-chip" onclick="filterCategory('electronics', this)">📱 ტექნიკა</div>
+      <div class="cat-chip" onclick="filterCategory('jobs', this)">💼 სამუშაო</div>
+      <div class="cat-chip" onclick="filterCategory('clothes', this)">👕 ტანსაცმელი</div>
+      <div class="cat-chip" onclick="filterCategory('other', this)">📦 სხვადასხვა</div>
+    </div>
+
+    <!-- ნივთების ჩამონათვალი -->
+    <div class="products-grid" id="products-grid-target">
+      <p style="grid-column: span 2; text-align: center; color: #8e8e93; padding: 40px 0;">იტვირთება...</p>
+    </div>
+  </div>
+
+  <!-- ნივთის დამატების მოდალი -->
+  <div id="sell-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>ნივთის განთავსება</h3>
+        <button class="close-modal-btn" onclick="closeSellModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label>ფოტო</label>
+        <div class="upload-image-box" onclick="document.getElementById('product-file').click()">
+          <span id="upload-hint">📷 ატვირთეთ ფოტო</span>
+          <img id="upload-preview" class="upload-image-preview">
+        </div>
+        <input type="file" id="product-file" accept="image/*" style="display: none;" onchange="previewProductImage(event)">
+      </div>
+
+      <div class="form-group">
+        <label>სათაური</label>
+        <input type="text" id="prod-title" class="form-input" placeholder="მაგ: iPhone 14 Pro Max">
+      </div>
+
+      <div class="form-group">
+        <label>ფასი (€ / $ / ₾)</label>
+        <input type="text" id="prod-price" class="form-input" placeholder="მაგ: 500 €">
+      </div>
+
+      <div class="form-group">
+        <label>კატეგორია</label>
+        <select id="prod-category" class="form-select">
+          <option value="auto">ავტომობილები</option>
+          <option value="real_estate">უძრავი ქონება</option>
+          <option value="electronics">ტექნიკა</option>
+          <option value="jobs">სამუშაო</option>
+          <option value="clothes">ტანსაცმელი</option>
+          <option value="other">სხვადასხვა</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>მდებარეობა (ქალაქი / ქვეყანა)</label>
+        <input type="text" id="prod-location" class="form-input" placeholder="მაგ: რომი, იტალია">
+      </div>
+
+      <div class="form-group">
+        <label>აღწერა</label>
+        <textarea id="prod-desc" class="form-textarea" rows="3" placeholder="დეტალური აღწერა..."></textarea>
+      </div>
+
+      <button id="btn-save-product" class="submit-btn" onclick="publishProduct()">განთავსება</button>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+      measurementId: "G-MRPP7G4H30"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let allProducts = [];
+    let selectedCategory = 'all';
+    let selectedFile = null;
+
+    auth.onAuthStateChanged(user => {
+      loadProducts();
+    });
+
+    function loadProducts() {
+      db.collection('shop_products').orderBy('created_at', 'desc').onSnapshot(snapshot => {
+        allProducts = [];
+        snapshot.forEach(doc => {
+          allProducts.push({ id: doc.id, ...doc.data() });
+        });
+        renderProducts();
+      }, err => {
+        console.error("Products load error:", err);
+      });
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('products-grid-target');
+      const searchQuery = document.getElementById('market-search').value.toLowerCase().trim();
+
+      let filtered = allProducts.filter(p => {
+        const matchesCat = selectedCategory === 'all' || p.category === selectedCategory;
+        const matchesSearch = !searchQuery || (p.title && p.title.toLowerCase().includes(searchQuery)) || (p.location && p.location.toLowerCase().includes(searchQuery));
+        return matchesCat && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p style="grid-column: span 2; text-align: center; color: #8e8e93; padding: 40px 0;">განცხადებები არ მოიძებნა</p>`;
+        return;
+      }
+
+      grid.innerHTML = "";
+      filtered.forEach(prod => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.onclick = () => openProductDetails(prod);
+
+        const imgUrl = prod.image_url || 'https://emigrantbook.com/logo.png';
+        card.innerHTML = `
+          <div class="product-img-box">
+            <img src="${imgUrl}" alt="Product">
+          </div>
+          <div class="product-info">
+            <span class="product-price">${prod.price || 'შეთანხმებით'}</span>
+            <span class="product-title">${prod.title || 'უსათაურო'}</span>
+            <span class="product-location">📍 ${prod.location || 'უცნობი'}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat, el) {
+      selectedCategory = cat;
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderProducts();
+    }
+
+    function handleSearch() {
+      renderProducts();
+    }
+
+    function openSellModal() {
+      if (!auth.currentUser) {
+        alert("გთხოვთ გაიაროთ ავტორიზაცია");
+        return;
+      }
+      document.getElementById('sell-modal').style.display = 'flex';
+    }
+
+    function closeSellModal() {
+      document.getElementById('sell-modal').style.display = 'none';
+      selectedFile = null;
+      document.getElementById('upload-preview').style.display = 'none';
+      document.getElementById('upload-hint').style.display = 'block';
+    }
+
+    function previewProductImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      selectedFile = file;
+      const preview = document.getElementById('upload-preview');
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+      document.getElementById('upload-hint').style.display = 'none';
+    }
+
+    async function publishProduct() {
+      const title = document.getElementById('prod-title').value.trim();
+      const price = document.getElementById('prod-price').value.trim();
+      const category = document.getElementById('prod-category').value;
+      const location = document.getElementById('prod-location').value.trim();
+      const desc = document.getElementById('prod-desc').value.trim();
+      const btn = document.getElementById('btn-save-product');
+
+      if (!title || !price || !selectedFile) {
+        alert("გთხოვთ ატვირთოთ ფოტო, მიუთითოთ სათაური და ფასი");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "იტვირთება...";
+
+      try {
+        const fileKey = 'marketplace/' + Date.now() + '_' + Math.random().toString(36).substring(2, 6) + '.jpg';
+        const r2S3 = new AWS.S3({
+          endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+          accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+          secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+          signatureVersion: 'v4',
+          region: 'auto'
+        });
+
+        await r2S3.putObject({
+          Bucket: 'emigrantbook-videos',
+          Key: fileKey,
+          Body: selectedFile,
+          ContentType: selectedFile.type || 'image/jpeg'
+        }).promise();
+
+        const publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+
+        await db.collection('shop_products').add({
+          user_id: auth.currentUser.uid,
+          title: title,
+          price: price,
+          category: category,
+          location: location,
+          description: desc,
+          image_url: publicUrl,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("განცხადება წარმატებით განთავსდა!");
+        closeSellModal();
+      } catch (err) {
+        console.error("Publish error:", err);
+        alert("შეცდომა: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "განთავსება";
+      }
+    }
+
+    function openProductDetails(prod) {
+      if (prod.user_id && prod.user_id !== (auth.currentUser ? auth.currentUser.uid : null)) {
+        if (confirm(`გსურთ მესინჯერში მიწეროთ გამყიდველს ნივთზე: "${prod.title}"?`)) {
+          window.location.href = `messenger.html?uid=${prod.user_id}`;
+        }
+      } else {
+        alert(`${prod.title}\nფასი: ${prod.price}\nმდებარეობა: ${prod.location}\nაღწერა: ${prod.description || 'არ არის'}`);
+      }
+    }
+  </script>
+</body>
+</html>
