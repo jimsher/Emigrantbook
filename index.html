@@ -4867,31 +4867,36 @@ auth.onAuthStateChanged(function(user) {
     // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
      
   // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო)
-  function uploadMediaToFirebase(file, folder, callback, progressCallback) {
-  if (!currentUser) return;
+  // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო) - ორიგინალი სახელითა და სტრუქტურით
+function uploadMediaToFirebase(file, folder, callback, progressCallback) {
+  if (!currentUser || !file) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
-  optimizeImageBeforeUpload(file, function(processedFile) {
-    var r2S3 = new AWS.S3({
-      endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
-      accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
-      secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
-      signatureVersion: 'v4',
-      region: 'auto'
-    });
+  var r2S3 = new AWS.S3({
+    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+    signatureVersion: 'v4',
+    region: 'auto',
+    s3ForcePathStyle: true
+  });
 
-    var targetFolder = folder || (isVideo ? 'videos' : 'images');
-    var fileKey = targetFolder + '/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + (isVideo ? '.mp4' : '.jpg');
+  var targetFolder = folder || (isVideo ? 'videos' : 'images');
+  var extension = isVideo ? '.mp4' : '.jpg';
+  var safeFileName = file.name ? file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') : (isVideo ? 'video.mp4' : 'image.jpg');
+  var fileKey = targetFolder + '/' + Date.now() + '_' + safeFileName.replace(/\.[^/.]+$/, "") + extension;
 
+  // თუ ვიდეოა - იტვირთება ჩვეულებრივად პროგრესით
+  if (isVideo) {
     var params = {
       Bucket: 'emigrantbook-videos',
       Key: fileKey,
-      Body: processedFile,
-      ContentType: isVideo ? 'video/mp4' : 'image/jpeg'
+      Body: file,
+      ContentType: file.type || 'video/mp4'
     };
 
-    var uploadObj = r2S3.upload(params, function(err, data) {
+    var uploadObj = r2S3.upload(params, { partSize: 10 * 1024 * 1024, queueSize: 1 }, function(err, data) {
       if (err) {
         console.error("R2 Upload Error:", err);
         alert("ატვირთვის შეცდომა: " + err.message);
@@ -4908,7 +4913,83 @@ auth.onAuthStateChanged(function(user) {
         progressCallback(percent);
       }
     });
-  });
+    return;
+  }
+
+  // თუ ფოტოა - კამერის მძიმე კადრი გადამუშავდება, რომ ატვირთვა არ გაიყინოს
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var width = img.width;
+      var height = img.height;
+      var maxDim = 2560; // ინარჩუნებს მაქსიმალურ მაღალ ხარისხს
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(function(blob) {
+        var uploadBlob = blob || file;
+        var params = {
+          Bucket: 'emigrantbook-videos',
+          Key: fileKey,
+          Body: uploadBlob,
+          ContentType: 'image/jpeg'
+        };
+
+        r2S3.putObject(params, function(err, data) {
+          if (err) {
+            console.error("R2 Upload Error:", err);
+            alert("ატვირთვის შეცდომა: " + err.message);
+            if (typeof callback === 'function') callback(null);
+          } else {
+            var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+            callback(publicUrl);
+          }
+        });
+      }, 'image/jpeg', 0.90);
+    };
+
+    img.onerror = function() {
+      // თუ Canvas-მა ვერ წაიკითხა, პირდაპირ იტვირთება ორიგინალი ფაილი
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: file.type || 'image/jpeg'
+      };
+      r2S3.putObject(params, function(err, data) {
+        if (err) {
+          alert("ატვირთვის შეცდომა: " + err.message);
+          if (typeof callback === 'function') callback(null);
+        } else {
+          callback("https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey);
+        }
+      });
+    };
+
+    img.src = e.target.result;
+  };
+
+  reader.onerror = function() {
+    alert("ფაილის წაკითხვა ვერ მოხერხდა");
+    if (typeof callback === 'function') callback(null);
+  };
+
+  reader.readAsDataURL(file);
 }
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
