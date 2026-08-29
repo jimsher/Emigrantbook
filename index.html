@@ -4867,38 +4867,57 @@ auth.onAuthStateChanged(function(user) {
 
     // აქ იწყება
     // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
-     
-  // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო)
-  // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო) - ორიგინალი სახელითა და სტრუქტურით
-function uploadMediaToFirebase(file, folder, callback, progressCallback) {
+    // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო)
+     function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   if (!currentUser || !file) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
-  var r2S3 = new AWS.S3({
-    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
-    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
-    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
-    signatureVersion: 'v4',
-    region: 'auto',
-    s3ForcePathStyle: true
-  });
-
-  var targetFolder = folder || (isVideo ? 'videos' : 'images');
-  var extension = isVideo ? '.mp4' : '.jpg';
-  var safeFileName = file.name ? file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') : (isVideo ? 'video.mp4' : 'image.jpg');
-  var fileKey = targetFolder + '/' + Date.now() + '_' + safeFileName.replace(/\.[^/.]+$/, "") + extension;
-
-  // თუ ვიდეოა - იტვირთება ჩვეულებრივად პროგრესით
+  // თუ ვიდეოა - პირდაპირ იტვირთება
   if (isVideo) {
+    proceedUpload(file, 'videos', '.mp4', file.type || 'video/mp4');
+    return;
+  }
+
+  // თუ ფოტო HEIC/HEIF ფორმატშია, გადაგვყავს სტანდარტულ JPEG-ში
+  var isHeic = file.type === "image/heic" || file.type === "image/heif" || (file.name && file.name.match(/\.(heic|heif)$/i));
+
+  if (isHeic && typeof heic2any !== "undefined") {
+    heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9
+    }).then(function(convertedBlob) {
+      var resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+      proceedUpload(resultBlob, 'images', '.jpg', 'image/jpeg');
+    }).catch(function(err) {
+      console.warn("HEIC conversion error, uploading raw:", err);
+      proceedUpload(file, 'images', '.jpg', 'image/jpeg');
+    });
+  } else {
+    proceedUpload(file, 'images', '.jpg', 'image/jpeg');
+  }
+
+  function proceedUpload(uploadFile, targetFolder, extension, contentType) {
+    var r2S3 = new AWS.S3({
+      endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+      accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+      secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+      signatureVersion: 'v4',
+      region: 'auto',
+      s3ForcePathStyle: true
+    });
+
+    var fileKey = targetFolder + '/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + extension;
+
     var params = {
       Bucket: 'emigrantbook-videos',
       Key: fileKey,
-      Body: file,
-      ContentType: file.type || 'video/mp4'
+      Body: uploadFile,
+      ContentType: contentType
     };
 
-    var uploadObj = r2S3.upload(params, { partSize: 10 * 1024 * 1024, queueSize: 1 }, function(err, data) {
+    r2S3.putObject(params, function(err, data) {
       if (err) {
         console.error("R2 Upload Error:", err);
         alert("ატვირთვის შეცდომა: " + err.message);
@@ -4908,90 +4927,7 @@ function uploadMediaToFirebase(file, folder, callback, progressCallback) {
         callback(publicUrl);
       }
     });
-
-    uploadObj.on('httpUploadProgress', function(evt) {
-      if (evt.total && progressCallback) {
-        var percent = Math.round((evt.loaded / evt.total) * 100);
-        progressCallback(percent);
-      }
-    });
-    return;
   }
-
-  // თუ ფოტოა - კამერის მძიმე კადრი გადამუშავდება, რომ ატვირთვა არ გაიყინოს
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var img = new Image();
-    img.onload = function() {
-      var canvas = document.createElement('canvas');
-      var width = img.width;
-      var height = img.height;
-      var maxDim = 2560; // ინარჩუნებს მაქსიმალურ მაღალ ხარისხს
-
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob(function(blob) {
-        var uploadBlob = blob || file;
-        var params = {
-          Bucket: 'emigrantbook-videos',
-          Key: fileKey,
-          Body: uploadBlob,
-          ContentType: 'image/jpeg'
-        };
-
-        r2S3.putObject(params, function(err, data) {
-          if (err) {
-            console.error("R2 Upload Error:", err);
-            alert("ატვირთვის შეცდომა: " + err.message);
-            if (typeof callback === 'function') callback(null);
-          } else {
-            var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
-            callback(publicUrl);
-          }
-        });
-      }, 'image/jpeg', 0.90);
-    };
-
-    img.onerror = function() {
-      // თუ Canvas-მა ვერ წაიკითხა, პირდაპირ იტვირთება ორიგინალი ფაილი
-      var params = {
-        Bucket: 'emigrantbook-videos',
-        Key: fileKey,
-        Body: file,
-        ContentType: file.type || 'image/jpeg'
-      };
-      r2S3.putObject(params, function(err, data) {
-        if (err) {
-          alert("ატვირთვის შეცდომა: " + err.message);
-          if (typeof callback === 'function') callback(null);
-        } else {
-          callback("https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey);
-        }
-      });
-    };
-
-    img.src = e.target.result;
-  };
-
-  reader.onerror = function() {
-    alert("ფაილის წაკითხვა ვერ მოხერხდა");
-    if (typeof callback === 'function') callback(null);
-  };
-
-  reader.readAsDataURL(file);
 }
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
