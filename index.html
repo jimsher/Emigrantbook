@@ -6903,6 +6903,49 @@ function sendFriendReqFromPage(targetUserId, btn, event) {
     created_at: firebase.firestore.FieldValue.serverTimestamp()
   });
 } 
+
+
+    // ნებისმიერი ხარისხისა და ფორმატის ფოტოს ოპტიმიზაცია ატვირთვამდე
+function optimizeImageBeforeUpload(file, callback) {
+  // თუ ვიდეოა, პირდაპირ ვაბრუნებთ
+  if (file.type.startsWith('video/')) {
+    callback(file);
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var width = img.width;
+      var height = img.height;
+      var maxDim = 1920; // Full HD ზომა (სრულიად საკმარისია უმაღლესი ხარისხისთვის)
+
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(function(blob) {
+        // ბრაუზერს ვაწვდით სუფთა JPEG ბლოობს
+        callback(blob);
+      }, 'image/jpeg', 0.88);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
