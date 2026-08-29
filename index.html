@@ -4867,59 +4867,49 @@ auth.onAuthStateChanged(function(user) {
     // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
      
   // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო)
-function uploadMediaToFirebase(file, folder, callback, progressCallback) {
+  function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   if (!currentUser) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
-  var r2S3 = new AWS.S3({
-    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
-    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
-    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
-    signatureVersion: 'v4',
-    region: 'auto'
-  });
+  optimizeImageBeforeUpload(file, function(processedFile) {
+    var r2S3 = new AWS.S3({
+      endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+      accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+      secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+      signatureVersion: 'v4',
+      region: 'auto'
+    });
 
-  var targetFolder = folder || (isVideo ? 'videos' : 'images');
-  var safeFileName = file.name ? file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '') : (isVideo ? 'video.mp4' : 'image.jpg');
-  var fileKey = targetFolder + '/' + Date.now() + '_' + safeFileName;
+    var targetFolder = folder || (isVideo ? 'videos' : 'images');
+    var fileKey = targetFolder + '/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + (isVideo ? '.mp4' : '.jpg');
 
-  var contentType = file.type;
-  if (!contentType || contentType === "") {
-    contentType = isVideo ? 'video/mp4' : 'image/jpeg';
-  }
+    var params = {
+      Bucket: 'emigrantbook-videos',
+      Key: fileKey,
+      Body: processedFile,
+      ContentType: isVideo ? 'video/mp4' : 'image/jpeg'
+    };
 
-  var params = {
-    Bucket: 'emigrantbook-videos',
-    Key: fileKey,
-    Body: file,
-    ContentType: contentType
-  };
+    var uploadObj = r2S3.upload(params, function(err, data) {
+      if (err) {
+        console.error("R2 Upload Error:", err);
+        alert("ატვირთვის შეცდომა: " + err.message);
+        if (typeof callback === 'function') callback(null);
+      } else {
+        var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+        callback(publicUrl);
+      }
+    });
 
-  var options = {
-    partSize: 10 * 1024 * 1024,
-    queueSize: 1
-  };
-
-  var uploadObj = r2S3.upload(params, options, function(err, data) {
-    if (err) {
-      console.error("R2 Upload Error:", err);
-      alert("ატვირთვის შეცდომა: " + err.message);
-      if (typeof callback === 'function') callback(null);
-    } else {
-      var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
-      callback(publicUrl);
-    }
-  });
-
-  uploadObj.on('httpUploadProgress', function(evt) {
-    if (evt.total && progressCallback) {
-      var percent = Math.round((evt.loaded / evt.total) * 100);
-      progressCallback(percent);
-    }
+    uploadObj.on('httpUploadProgress', function(evt) {
+      if (evt.total && progressCallback) {
+        var percent = Math.round((evt.loaded / evt.total) * 100);
+        progressCallback(percent);
+      }
+    });
   });
 }
-  
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
    function uploadAvatar() {
