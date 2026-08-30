@@ -2347,84 +2347,55 @@ body {
       }
     }
 
-    
-  // აქ იწყება
     var likedPosts = [];
     var postReactionMap = {};
 
-    var activeFeedSlot = null;
+    var currentPlayingVideo = null;
 
-var videoObserver = new IntersectionObserver(function(entries) {
-  entries.forEach(function(entry) {
-    var slot = entry.target;
-    var videoSrc = slot.getAttribute('data-src');
+    var videoObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        var video = entry.target;
 
-    if (entry.isIntersecting) {
-      if (activeFeedSlot && activeFeedSlot !== slot) {
-        destroyVideoInSlot(activeFeedSlot);
-      }
-      activeFeedSlot = slot;
-      createAndPlayVideo(slot, videoSrc);
-    } else {
-      if (activeFeedSlot === slot) {
-        destroyVideoInSlot(slot);
-        activeFeedSlot = null;
-      }
+        if (entry.isIntersecting) {
+          // სხვა ვიდეოს ვაჩერებთ
+          if (currentPlayingVideo && currentPlayingVideo !== video) {
+            currentPlayingVideo.pause();
+          }
+
+          currentPlayingVideo = video;
+          video.muted = false; // ხმა ჩართულია
+          
+          var playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(function(err) {
+              console.log("Autoplay error:", err);
+            });
+          }
+        } else {
+          // ეკრანს გაცდა -> ვაჩერებთ
+          if (!video.paused) {
+            video.pause();
+          }
+          if (currentPlayingVideo === video) {
+            currentPlayingVideo = null;
+          }
+        }
+      });
+    }, { 
+      threshold: 0.5 
+    });
+
+    function observeVideos() {
+      videoObserver.disconnect();
+      var videos = document.querySelectorAll('video');
+      videos.forEach(function(video) {
+        if (!video.classList.contains('tiktok-slide-video') && video.id !== 'remote-video' && video.id !== 'local-video') {
+          video.muted = false; // ხმა ჩართულია
+          videoObserver.observe(video);
+        }
+      });
     }
-  });
-}, { 
-  threshold: 0.6 
-});
 
-function createAndPlayVideo(slot, src) {
-  if (slot.querySelector('video')) return;
-
-  var video = document.createElement('video');
-  video.className = 'post-media';
-  video.src = src;
-  video.setAttribute('playsinline', '');
-  video.setAttribute('webkit-playsinline', '');
-  video.loop = true;
-  video.muted = false;
-  video.style.cssText = 'width:100%; height:100%; max-height:550px; object-fit:cover; display:block;';
-  
-  video.onclick = function(e) {
-    e.stopPropagation();
-    if (video.paused) video.play(); else video.pause();
-  };
-
-  var icon = slot.querySelector('.video-placeholder-icon');
-  if (icon) icon.style.display = 'none';
-
-  slot.appendChild(video);
-  var playPromise = video.play();
-  if (playPromise !== undefined) {
-    playPromise.catch(function(e) { console.log("Play error:", e); });
-  }
-}
-
-function destroyVideoInSlot(slot) {
-  if (!slot) return;
-  var video = slot.querySelector('video');
-  if (video) {
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-    video.remove();
-  }
-  var icon = slot.querySelector('.video-placeholder-icon');
-  if (icon) icon.style.display = 'flex';
-}
-
-function observeVideos() {
-  videoObserver.disconnect();
-  var slots = document.querySelectorAll('.feed-video-slot');
-  slots.forEach(function(slot) {
-    videoObserver.observe(slot);
-  });
-}
-// აქ მთავრდება
-    
     function toggleSideMenu(event) {
       if(event) event.stopPropagation();
       var menu = document.getElementById('side-menu-content');
@@ -5262,8 +5233,8 @@ function toggleAuthMode() {
                     renderCommentsCountOnly(postData);
                     
                     if (postData.media_type === 'video') {
-                     startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
-                   }
+                      startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
+                    }
                   }
                 });
                 observeVideos();
@@ -5394,22 +5365,14 @@ function subscribeActiveLivesForFeed() {
       });
     }
 
-   
-    function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
+   function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
   if (!urlsString) return "";
   
-  // ვიდეოს მსუბუქი სლოტი (DOM-ს არ ტვირთავს)
   if (mediaType === 'video') {
     return `
-      <div class="video-container-rel" style="width:100%; background:#000; overflow:hidden;">
-        <video class="post-media" 
-               src="${urlsString}" 
-               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
-               preload="metadata" 
-               playsinline 
-               webkit-playsinline 
-               loop 
-               onclick="toggleVideoPlay(this)"></video>
+      <div class="video-container-rel">
+        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="none" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
+        <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
       </div>
     `;
   }
@@ -5442,6 +5405,7 @@ function subscribeActiveLivesForFeed() {
   html += '</div></div>';
   return html;
 }
+    
 
 function openCollagePostGallery(postId, clickedIndex) {
   db.collection('posts').doc(postId).get().then(function(docSnap) {
