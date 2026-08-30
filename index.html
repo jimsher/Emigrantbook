@@ -5364,7 +5364,7 @@ function subscribeActiveLivesForFeed() {
   if (mediaType === 'video') {
     return `
       <div class="video-container-rel">
-        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="metadata" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
+        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="none" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
         <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
       </div>
     `;
@@ -5379,7 +5379,7 @@ function subscribeActiveLivesForFeed() {
 
   if (urls.length === 1) {
     var url = urls[0];
-    return '<img class="post-media" src="' + url + '" alt="Media">';
+    return '<img class="post-media" src="' + url + '" loading="lazy" decoding="async" alt="Media">';
   }
 
   var total = urls.length;
@@ -5394,11 +5394,11 @@ function subscribeActiveLivesForFeed() {
 
     if (isLastCell && moreCount > 0) {
       html += '<div class="collage-overlay">';
-      html += '<img class="collage-item" src="' + url + '">';
+      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
       html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
       html += '</div>';
     } else {
-      html += '<img class="collage-item" src="' + url + '">';
+      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
     }
   }
   html += '</div></div>';
