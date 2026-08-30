@@ -2347,55 +2347,84 @@ body {
       }
     }
 
+    
+  // აქ იწყება
     var likedPosts = [];
     var postReactionMap = {};
 
-    var currentPlayingVideo = null;
+    var activeFeedSlot = null;
 
-    var videoObserver = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        var video = entry.target;
+var videoObserver = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    var slot = entry.target;
+    var videoSrc = slot.getAttribute('data-src');
 
-        if (entry.isIntersecting) {
-          // სხვა ვიდეოს ვაჩერებთ
-          if (currentPlayingVideo && currentPlayingVideo !== video) {
-            currentPlayingVideo.pause();
-          }
-
-          currentPlayingVideo = video;
-          video.muted = false; // ხმა ჩართულია
-          
-          var playPromise = video.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(function(err) {
-              console.log("Autoplay error:", err);
-            });
-          }
-        } else {
-          // ეკრანს გაცდა -> ვაჩერებთ
-          if (!video.paused) {
-            video.pause();
-          }
-          if (currentPlayingVideo === video) {
-            currentPlayingVideo = null;
-          }
-        }
-      });
-    }, { 
-      threshold: 0.5 
-    });
-
-    function observeVideos() {
-      videoObserver.disconnect();
-      var videos = document.querySelectorAll('video');
-      videos.forEach(function(video) {
-        if (!video.classList.contains('tiktok-slide-video') && video.id !== 'remote-video' && video.id !== 'local-video') {
-          video.muted = false; // ხმა ჩართულია
-          videoObserver.observe(video);
-        }
-      });
+    if (entry.isIntersecting) {
+      if (activeFeedSlot && activeFeedSlot !== slot) {
+        destroyVideoInSlot(activeFeedSlot);
+      }
+      activeFeedSlot = slot;
+      createAndPlayVideo(slot, videoSrc);
+    } else {
+      if (activeFeedSlot === slot) {
+        destroyVideoInSlot(slot);
+        activeFeedSlot = null;
+      }
     }
+  });
+}, { 
+  threshold: 0.6 
+});
 
+function createAndPlayVideo(slot, src) {
+  if (slot.querySelector('video')) return;
+
+  var video = document.createElement('video');
+  video.className = 'post-media';
+  video.src = src;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  video.loop = true;
+  video.muted = false;
+  video.style.cssText = 'width:100%; height:100%; max-height:550px; object-fit:cover; display:block;';
+  
+  video.onclick = function(e) {
+    e.stopPropagation();
+    if (video.paused) video.play(); else video.pause();
+  };
+
+  var icon = slot.querySelector('.video-placeholder-icon');
+  if (icon) icon.style.display = 'none';
+
+  slot.appendChild(video);
+  var playPromise = video.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(function(e) { console.log("Play error:", e); });
+  }
+}
+
+function destroyVideoInSlot(slot) {
+  if (!slot) return;
+  var video = slot.querySelector('video');
+  if (video) {
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    video.remove();
+  }
+  var icon = slot.querySelector('.video-placeholder-icon');
+  if (icon) icon.style.display = 'flex';
+}
+
+function observeVideos() {
+  videoObserver.disconnect();
+  var slots = document.querySelectorAll('.feed-video-slot');
+  slots.forEach(function(slot) {
+    videoObserver.observe(slot);
+  });
+}
+// აქ მთავრდება
+    
     function toggleSideMenu(event) {
       if(event) event.stopPropagation();
       var menu = document.getElementById('side-menu-content');
