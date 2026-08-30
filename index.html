@@ -5377,16 +5377,10 @@ function subscribeActiveLivesForFeed() {
     `;
   }
 
-  var urls = [];
-  if (urlsString.includes(",")) {
-    urls = urlsString.split(",");
-  } else {
-    urls = [urlsString];
-  }
+  var urls = urlsString.includes(",") ? urlsString.split(",").map(function(u){ return u.trim(); }) : [urlsString.trim()];
 
   if (urls.length === 1) {
-    var url = urls[0];
-    return '<img class="post-media" src="' + url + '" loading="lazy" decoding="async" alt="Media">';
+    return `<img class="post-media" src="${urls[0]}" loading="lazy" decoding="async" fetchpriority="low" alt="Media" onclick="openSingleImageGallery('${urls[0]}', '${postId}')">`;
   }
 
   var total = urls.length;
@@ -5394,20 +5388,28 @@ function subscribeActiveLivesForFeed() {
   var gridClass = "collage-" + showLimit;
 
   var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
+  
   for (var i = 0; i < showLimit; i++) {
     var url = urls[i];
     var isLastCell = (i === showLimit - 1);
     var moreCount = total - showLimit;
 
     if (isLastCell && moreCount > 0) {
-      html += '<div class="collage-overlay">';
-      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
-      html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
-      html += '</div>';
+      html += `
+        <div class="collage-overlay" onclick="openCollagePostGallery('${postId}', ${i})">
+          <img class="collage-item" src="${url}" loading="lazy" decoding="async" fetchpriority="low" alt="Media">
+          <div class="collage-overlay-text">+${moreCount + 1}</div>
+        </div>
+      `;
     } else {
-      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
+      html += `
+        <div style="width:100%; height:100%; overflow:hidden;" onclick="openCollagePostGallery('${postId}', ${i})">
+          <img class="collage-item" src="${url}" loading="lazy" decoding="async" fetchpriority="low" alt="Media">
+        </div>
+      `;
     }
   }
+  
   html += '</div></div>';
   return html;
 }
