@@ -5365,7 +5365,7 @@ function subscribeActiveLivesForFeed() {
       });
     }
 
-    function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
+   function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
   if (!urlsString) return "";
   
   if (mediaType === 'video') {
@@ -5380,7 +5380,7 @@ function subscribeActiveLivesForFeed() {
   var urls = urlsString.includes(",") ? urlsString.split(",").map(function(u){ return u.trim(); }) : [urlsString.trim()];
 
   if (urls.length === 1) {
-    return `<img class="post-media" src="${urls[0]}" loading="lazy" decoding="async" fetchpriority="low" alt="Media" onclick="openSingleImageGallery('${urls[0]}', '${postId}')">`;
+    return '<img class="post-media" src="' + urls[0] + '" loading="lazy" decoding="async" alt="Media" onclick="openCollagePostGallery(\'' + postId + '\', 0)">';
   }
 
   var total = urls.length;
@@ -5388,31 +5388,24 @@ function subscribeActiveLivesForFeed() {
   var gridClass = "collage-" + showLimit;
 
   var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
-  
   for (var i = 0; i < showLimit; i++) {
     var url = urls[i];
     var isLastCell = (i === showLimit - 1);
     var moreCount = total - showLimit;
 
     if (isLastCell && moreCount > 0) {
-      html += `
-        <div class="collage-overlay" onclick="openCollagePostGallery('${postId}', ${i})">
-          <img class="collage-item" src="${url}" loading="lazy" decoding="async" fetchpriority="low" alt="Media">
-          <div class="collage-overlay-text">+${moreCount + 1}</div>
-        </div>
-      `;
+      html += '<div class="collage-overlay" onclick="openCollagePostGallery(\'' + postId + '\', ' + i + ')">';
+      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
+      html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
+      html += '</div>';
     } else {
-      html += `
-        <div style="width:100%; height:100%; overflow:hidden;" onclick="openCollagePostGallery('${postId}', ${i})">
-          <img class="collage-item" src="${url}" loading="lazy" decoding="async" fetchpriority="low" alt="Media">
-        </div>
-      `;
+      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async" onclick="openCollagePostGallery(\'' + postId + '\', ' + i + ')">';
     }
   }
-  
   html += '</div></div>';
   return html;
 }
+    
 
 function openCollagePostGallery(postId, clickedIndex) {
   db.collection('posts').doc(postId).get().then(function(docSnap) {
