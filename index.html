@@ -5414,6 +5414,25 @@ function subscribeActiveLivesForFeed() {
   return html;
 }
 
+function openCollagePostGallery(postId, clickedIndex) {
+  db.collection('posts').doc(postId).get().then(function(docSnap) {
+    if (!docSnap.exists) return;
+    var post = Object.assign({ id: docSnap.id }, docSnap.data());
+    if (!post.media_url) return;
+    
+    var urls = post.media_url.split(',').map(function(u){ return u.trim(); });
+    galleryPhotoUrls = urls;
+    galleryPostsReference = urls.map(function(){ return post; });
+    
+    openFullGalleryModal(clickedIndex || 0);
+  });
+}
+
+function openSingleImageGallery(url, postId) {
+  openCollagePostGallery(postId, 0);
+}
+    
+
     function deletePost(postId) {
       if (!confirm("Are you sure?")) return;
 
