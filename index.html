@@ -4879,7 +4879,7 @@ auth.onAuthStateChanged(function(user) {
     return;
   }
 
-  // თუ ფოტო HEIC/HEIF ფორმატშია, გადაგვყავს სტანდარტულ JPEG-ში
+  // თუ ფოტო HEIC/HEIF ფორმატშია, გადაგვყავს სტანდარტულ JPEG-ში და შემდეგ ვპატარავებთ
   var isHeic = file.type === "image/heic" || file.type === "image/heif" || (file.name && file.name.match(/\.(heic|heif)$/i));
 
   if (isHeic && typeof heic2any !== "undefined") {
@@ -4889,13 +4889,63 @@ auth.onAuthStateChanged(function(user) {
       quality: 0.9
     }).then(function(convertedBlob) {
       var resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-      proceedUpload(resultBlob, 'images', '.jpg', 'image/jpeg');
+      compressImageWithCanvas(resultBlob, function(optimizedBlob) {
+        proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg');
+      });
     }).catch(function(err) {
       console.warn("HEIC conversion error, uploading raw:", err);
-      proceedUpload(file, 'images', '.jpg', 'image/jpeg');
+      compressImageWithCanvas(file, function(optimizedBlob) {
+        proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg');
+      });
     });
   } else {
-    proceedUpload(file, 'images', '.jpg', 'image/jpeg');
+    // სტანდარტული ფოტოს Canvas-ით შემცირება
+    compressImageWithCanvas(file, function(optimizedBlob) {
+      proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg');
+    });
+  }
+
+  // Canvas ოპტიმიზატორი: 8MB-იან ფოტოს ხდის ~180KB-ს ხარისხის შენარჩუნებით
+  function compressImageWithCanvas(sourceBlob, doneCallback) {
+    var reader = new FileReader();
+    reader.readAsDataURL(sourceBlob);
+    reader.onload = function(e) {
+      var img = new Image();
+      img.src = e.target.result;
+      img.onload = function() {
+        var maxDimension = 1440;
+        var width = img.width;
+        var height = img.height;
+
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          }
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(function(blob) {
+          doneCallback(blob || sourceBlob);
+        }, 'image/jpeg', 0.80);
+      };
+      img.onerror = function() {
+        doneCallback(sourceBlob);
+      };
+    };
+    reader.onerror = function() {
+      doneCallback(sourceBlob);
+    };
   }
 
   function proceedUpload(uploadFile, targetFolder, extension, contentType) {
@@ -4914,7 +4964,8 @@ auth.onAuthStateChanged(function(user) {
       Bucket: 'emigrantbook-videos',
       Key: fileKey,
       Body: uploadFile,
-      ContentType: contentType
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable'
     };
 
     r2S3.putObject(params, function(err, data) {
@@ -4928,7 +4979,7 @@ auth.onAuthStateChanged(function(user) {
       }
     });
   }
-}
+} 
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
    function uploadAvatar() {
