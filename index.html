@@ -5365,14 +5365,15 @@ function subscribeActiveLivesForFeed() {
       });
     }
 
-   function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
+   
+    function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
   if (!urlsString) return "";
   
+  // ვიდეოს მსუბუქი სლოტი (DOM-ს არ ტვირთავს)
   if (mediaType === 'video') {
     return `
-      <div class="video-container-rel">
-        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="none" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
-        <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
+      <div class="video-container-rel feed-video-slot" data-src="${urlsString}" style="width:100%; min-height:280px; max-height:550px; background:#000000; border-radius:8px; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+        <div class="video-placeholder-icon" style="width:48px; height:48px; border-radius:50%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; color:#ffffff; font-size:20px; z-index:2; pointer-events:none;">▶</div>
       </div>
     `;
   }
@@ -5405,7 +5406,6 @@ function subscribeActiveLivesForFeed() {
   html += '</div></div>';
   return html;
 }
-    
 
 function openCollagePostGallery(postId, clickedIndex) {
   db.collection('posts').doc(postId).get().then(function(docSnap) {
