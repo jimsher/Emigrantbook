@@ -4,7 +4,7 @@ const ASSETS_TO_CACHE = [
     '/index.html',
     '/manifest.json',
     '/logo2.png',
-    '/supabase1.css'
+    '/supabase.css'
 ];
 
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
