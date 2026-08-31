@@ -43,11 +43,10 @@ messaging.onBackgroundMessage(function(payload) {
     const body = notification.body || data.body || 'ახალი შეტყობინება!';
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
     const targetUrl = data.url || (data.data && data.data.url) || '/';
-    const notificationIcon = data.icon || data.avatar || notification.icon || '/logo2.png';
 
     const options = {
         body: body,
-        icon: notificationIcon,
+        icon: '/logo2.png',
         badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
@@ -79,11 +78,10 @@ self.addEventListener('push', function(event) {
     const body = notification.body || data.body || 'ახალი შეტყობინება!';
     const targetUrl = data.url || (data.data && data.data.url) || '/';
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
-    const notificationIcon = data.icon || data.avatar || notification.icon || '/logo2.png';
 
     const options = {
         body: body,
-        icon: notificationIcon,
+        icon: '/logo2.png',
         badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
