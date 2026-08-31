@@ -7008,17 +7008,17 @@ function sendFriendReqFromPage(targetUserId, btn, event) {
     status: 'pending',
     created_at: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function() {
-    // 🔔 OneSignal პუშის გაგზავნა Worker/API-ს გავლით
     var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
     var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
 
+    // შენი ორიგინალი API-ს გამოძახება ზუსტი პარამეტრებით
     fetch('/api/send-push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        type: 'friend_request',
         recipient_id: targetUserId,
         sender_name: myName,
+        message_text: "გამოგიგზავნათ მეგობრობის მოთხოვნა 👥",
         sender_uid: currentUser.uid,
         sender_avatar: myAvatar
       })
