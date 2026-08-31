@@ -44,9 +44,12 @@ messaging.onBackgroundMessage(function(payload) {
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
     const targetUrl = data.url || (data.data && data.data.url) || '/';
 
+    // მომხმარებლის ავატარი (თუ არ მოვიდა, ნაგულისხმევად გამოიყენებს საიტის ლოგოს)
+    const userAvatar = notification.icon || data.avatar || data.senderAvatar || data.image || '/logo2.png';
+
     const options = {
         body: body,
-        icon: '/logo2.png',
+        icon: userAvatar,
         badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
@@ -79,9 +82,12 @@ self.addEventListener('push', function(event) {
     const targetUrl = data.url || (data.data && data.data.url) || '/';
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
 
+    // მომხმარებლის ავატარი (თუ არ მოვიდა, ნაგულისხმევად გამოიყენებს საიტის ლოგოს)
+    const userAvatar = notification.icon || data.avatar || data.senderAvatar || data.image || '/logo2.png';
+
     const options = {
         body: body,
-        icon: '/logo2.png',
+        icon: userAvatar,
         badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
