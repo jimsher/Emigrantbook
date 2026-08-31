@@ -6994,6 +6994,8 @@ function deleteFriendReqFromPage(reqId, event) {
   });
 }
 
+
+// დამეგობრების გაგზავნა სიიდან + პუშ შეტყობინება
 function sendFriendReqFromPage(targetUserId, btn, event) {
   if (event) event.stopPropagation();
   btn.disabled = true;
@@ -7005,9 +7007,26 @@ function sendFriendReqFromPage(targetUserId, btn, event) {
     receiver_id: targetUserId,
     status: 'pending',
     created_at: firebase.firestore.FieldValue.serverTimestamp()
-  });
-} 
+  }).then(function() {
+    // 🔔 OneSignal პუშის გაგზავნა Worker/API-ს გავლით
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
+    var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
 
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'friend_request',
+        recipient_id: targetUserId,
+        sender_name: myName,
+        sender_uid: currentUser.uid,
+        sender_avatar: myAvatar
+      })
+    }).catch(function(err) {
+      console.warn("Push error:", err);
+    });
+  });
+}
 
     // ნებისმიერი ხარისხისა და ფორმატის ფოტოს ოპტიმიზაცია ატვირთვამდე
 function optimizeImageBeforeUpload(file, callback) {
