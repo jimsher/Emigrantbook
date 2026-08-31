@@ -3,7 +3,7 @@ const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/logo1.png',
+    '/logo2.png',
     '/supabase1.css'
 ];
 
@@ -46,8 +46,8 @@ messaging.onBackgroundMessage(function(payload) {
 
     const options = {
         body: body,
-        icon: '/logo1.png',
-        badge: '/logo1.png',
+        icon: '/logo2.png',
+        badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
         renotify: true,
@@ -81,8 +81,8 @@ self.addEventListener('push', function(event) {
 
     const options = {
         body: body,
-        icon: '/logo1.png',
-        badge: '/logo1.png',
+        icon: '/logo2.png',
+        badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
         renotify: true,
