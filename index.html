@@ -4720,7 +4720,8 @@ auth.onAuthStateChanged(function(user) {
       }
     }
 
-    function sendFriendRequest(targetUserId) {
+    // დამეგობრების გაგზავნა პროფილიდან + პუშ შეტყობინება
+function sendFriendRequest(targetUserId) {
   db.collection('friend_requests').add({
     sender_id: currentUser.uid,
     receiver_id: targetUserId,
@@ -4728,8 +4729,24 @@ auth.onAuthStateChanged(function(user) {
     created_at: firebase.firestore.FieldValue.serverTimestamp()
   }).then(function() {
     updateFriendshipButtons(targetUserId);
-    // 🔔 პუშ ნოტიფიკაციის გაგზავნა
-    sendModernPush(targetUserId, "გამოგიგზავნათ მეგობრობის მოთხოვნა 👥");
+
+    // 🔔 OneSignal პუშის გაგზავნა Worker/API-ს გავლით
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
+    var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
+
+    fetch('/api/send-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'friend_request',
+        recipient_id: targetUserId,
+        sender_name: myName,
+        sender_uid: currentUser.uid,
+        sender_avatar: myAvatar
+      })
+    }).catch(function(err) {
+      console.warn("Push error:", err);
+    });
   });
 }
 
