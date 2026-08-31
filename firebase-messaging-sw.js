@@ -4,7 +4,7 @@ const ASSETS_TO_CACHE = [
     '/index.html',
     '/manifest.json',
     '/logo2.png',
-    '/supabase.css'
+    '/supabase1.css'
 ];
 
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
@@ -43,13 +43,11 @@ messaging.onBackgroundMessage(function(payload) {
     const body = notification.body || data.body || 'ახალი შეტყობინება!';
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
     const targetUrl = data.url || (data.data && data.data.url) || '/';
-
-    // მომხმარებლის ავატარი (თუ არ მოვიდა, ნაგულისხმევად გამოიყენებს საიტის ლოგოს)
-    const userAvatar = notification.icon || data.avatar || data.senderAvatar || data.image || '/logo2.png';
+    const notificationIcon = data.icon || data.avatar || notification.icon || '/logo2.png';
 
     const options = {
         body: body,
-        icon: userAvatar,
+        icon: notificationIcon,
         badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
@@ -81,13 +79,11 @@ self.addEventListener('push', function(event) {
     const body = notification.body || data.body || 'ახალი შეტყობინება!';
     const targetUrl = data.url || (data.data && data.data.url) || '/';
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
-
-    // მომხმარებლის ავატარი (თუ არ მოვიდა, ნაგულისხმევად გამოიყენებს საიტის ლოგოს)
-    const userAvatar = notification.icon || data.avatar || data.senderAvatar || data.image || '/logo2.png';
+    const notificationIcon = data.icon || data.avatar || notification.icon || '/logo2.png';
 
     const options = {
         body: body,
-        icon: userAvatar,
+        icon: notificationIcon,
         badge: '/logo2.png',
         vibrate: [200, 100, 200],
         tag: tag,
