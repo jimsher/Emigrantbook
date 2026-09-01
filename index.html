@@ -5388,7 +5388,69 @@ function toggleAuthMode() {
 }
     
 // ლოად პოსტი აქ იწყება
-  var lastVisiblePostDoc = null;
+ // ----------------------------------------------------
+// ჭკვიანი რანჟირების ალგორითმი (Session + Ranking)
+// ----------------------------------------------------
+function getSeenPostIds() {
+  try {
+    return JSON.parse(sessionStorage.getItem('eb_seen_posts')) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function markPostAsSeen(postId) {
+  var seen = getSeenPostIds();
+  if (!seen.includes(postId)) {
+    seen.push(postId);
+    sessionStorage.setItem('eb_seen_posts', JSON.stringify(seen));
+  }
+}
+
+function smartRankPosts(postsList) {
+  var seenPosts = getSeenPostIds();
+  var now = Date.now();
+
+  return postsList.map(function(post) {
+    var score = 0;
+
+    // 1. ინტერაქციები: ლაიქი (+2), კომენტარი (+3)
+    var likes = post.likes_count || 0;
+    var comments = post.comments_count || 0;
+    score += (likes * 2) + (comments * 3);
+
+    // 2. სიახლე (დროის მიხედვით)
+    var postTime = post.created_at ? (post.created_at.toDate ? post.created_at.toDate().getTime() : new Date(post.created_at).getTime()) : now;
+    var diffHours = (now - postTime) / (1000 * 60 * 60);
+
+    if (diffHours < 2) {
+      score += 20; // უახლესი (2 სთ-მდე)
+    } else if (diffHours < 6) {
+      score += 10; // 6 სთ-მდე
+    } else if (diffHours < 24) {
+      score += 5;  // 1 დღემდე
+    }
+
+    // 3. ნანახი პოსტების დაწევა (70%-ით უმცირდება ქულა და ვარდება ქვემოთ)
+    if (seenPosts.includes(post.id)) {
+      score = score * 0.3;
+    }
+
+    // 4. შემთხვევითი მუხტი (ყოველ რეფრეშზე რომ იცვლებოდეს თანაბარქულიანი პოსტები)
+    score += Math.random() * 6;
+
+    return { postData: post, rankingScore: score };
+  })
+  .sort(function(a, b) {
+    return b.rankingScore - a.rankingScore;
+  })
+  .map(function(item) {
+    return item.postData;
+  });
+}
+
+// ლოად პოსტი აქ იწყება
+var lastVisiblePostDoc = null;
 var isLoadingMorePosts = false;
 var hasMorePosts = true;
 var isFeedScrollAttached = false;
@@ -5420,7 +5482,6 @@ function loadPosts(isNextPage) {
       });
 
     fetchFriendsPromise.then(function(myFriendsSet) {
-      // 20 პოსტის წამოღება (ახალი გვერდისას იწყებს ბოლო ნანახი პოსტიდან)
       var query = db.collection('posts').orderBy('created_at', 'desc');
       if (isNextPage && lastVisiblePostDoc) {
         query = query.startAfter(lastVisiblePostDoc);
@@ -5448,7 +5509,6 @@ function loadPosts(isNextPage) {
           return;
         }
 
-        // ვინახავთ ბოლო დოკუმენტს შემდეგი 20-ისთვის
         lastVisiblePostDoc = snapshot.docs[snapshot.docs.length - 1];
         if (snapshot.docs.length < 20) {
           hasMorePosts = false;
@@ -5461,6 +5521,12 @@ function loadPosts(isNextPage) {
           posts.push(postData);
           if (postData.user_id) authorIds.push(postData.user_id);
         });
+
+        // 🌟 რეფრეშისას ალგორითმით რანჟირება და ნანახად მონიშვნა
+        if (!isNextPage) {
+          posts = smartRankPosts(posts);
+          posts.slice(0, 5).forEach(function(p) { markPostAsSeen(p.id); });
+        }
 
         fetchMultipleProfilesCached(authorIds, function() {
           posts.forEach(function(postData) {
@@ -5486,14 +5552,12 @@ function loadPosts(isNextPage) {
           observeVideos();
           isLoadingMorePosts = false;
 
-          // ავტომატური ჩასქროლვის მოსმენა (ერთხელ ემატება)
           if (!isFeedScrollAttached) {
             isFeedScrollAttached = true;
             window.addEventListener('scroll', function() {
               var homeScr = document.getElementById('home-screen');
               if (!homeScr || homeScr.style.display !== 'block') return;
 
-              // თუ მომხმარებელი ჩავიდა ბოლოდან 400px-ის დაშორებაზე, ტვირთავს შემდეგ 20-ს
               if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
                 if (!isLoadingMorePosts && hasMorePosts) {
                   loadPosts(true);
@@ -5511,7 +5575,8 @@ function loadPosts(isNextPage) {
       console.error("Error fetching friends:", err);
     });
   });
-}  
+}
+// და აქ მთავრდება 
 // და აქ მთავრდება
     
 // აქტიური ლაივების მოსმენა Feed-ისთვის
