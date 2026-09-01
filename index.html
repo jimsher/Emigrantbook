@@ -6905,7 +6905,7 @@ function loadFullNotificationsPage() {
   localStorage.setItem('eb_last_notif_seen_time_' + currentUser.uid, Date.now().toString());
   updateBottomNotificationBadge(0);
 
-  container.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 25px;">${t.loading || 'იტვირთება...'}</div>`;
+  container.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 25px;">${t.loading}</div>`;
 
   db.collection('posts')
     .orderBy('created_at', 'desc')
@@ -6913,7 +6913,7 @@ function loadFullNotificationsPage() {
     .get()
     .then(function(snapshot) {
       if (snapshot.empty) {
-        container.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 30px;">${t.noNotifications || t.noReqs || 'სიახლეები არ არის'}</div>`;
+        container.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 30px;">${t.noNotifications || t.noReqs}</div>`;
         return;
       }
 
@@ -6929,7 +6929,7 @@ function loadFullNotificationsPage() {
       });
 
       if (notifDataList.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 30px;">${t.noNotifications || t.noReqs || 'სიახლეები არ არის'}</div>`;
+        container.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 30px;">${t.noNotifications || t.noReqs}</div>`;
         return;
       }
 
@@ -6937,19 +6937,19 @@ function loadFullNotificationsPage() {
         var html = "";
         notifDataList.forEach(function(item) {
           var profile = cachedProfiles[item.user_id] || {};
-          var name = profile.full_name || item.author_name || (t.userUnit || "მომხმარებელი");
+          var name = profile.full_name || item.author_name || t.userUnit;
           var avatar = profile.avatar_url || DEFAULT_AVATAR_URL;
           
-          var actionText = t.notifCreatedPost || (currentLang === 'ka' ? "შექმნა ახალი პოსტი." : "created a new post.");
+          var actionText = t.notifCreatedPost;
           var badgeClass = "post";
           var badgeIcon = '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>';
 
           if (item.media_type === 'video') {
-            actionText = t.notifAddedVideo || (currentLang === 'ka' ? "დაამატა ახალი ვიდეო ფირებში." : "added a new video.");
+            actionText = t.notifAddedVideo;
             badgeClass = "video";
             badgeIcon = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
           } else if (item.media_url) {
-            actionText = t.notifUploadedPhoto || (currentLang === 'ka' ? "ატვირთა ახალი ფოტო." : "uploaded a new photo.");
+            actionText = t.notifUploadedPhoto;
             badgeClass = "comment";
             badgeIcon = '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
           }
@@ -6977,7 +6977,7 @@ function loadFullNotificationsPage() {
       });
     }).catch(function(err) {
       console.error("Notifications fetch error:", err);
-      container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 25px;">${t.notifError || (currentLang === 'ka' ? 'შეცდომა ცნობების ჩატვირთვისას' : 'Error loading notifications')}</div>`;
+      container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 25px;">${t.notifError || t.loading}</div>`;
     });
 }
 
