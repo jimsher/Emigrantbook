@@ -7091,6 +7091,7 @@ function checkPendingRequestsCountOnce() {
 function loadFriendSuggestions(excludedIds) {
   var sugContainer = document.getElementById('friends-suggestions-list');
   if (!sugContainer) return;
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
   db.collection('profiles')
     .limit(15)
@@ -7102,7 +7103,7 @@ function loadFriendSuggestions(excludedIds) {
         var p = docSnap.data();
 
         if (userId !== currentUser.uid && !excludedIds.includes(userId)) {
-          var name = p.full_name || "მომხმარებელი";
+          var name = p.full_name || "User";
           var avatar = p.avatar_url || DEFAULT_AVATAR_URL;
 
           html += `
@@ -7111,8 +7112,8 @@ function loadFriendSuggestions(excludedIds) {
               <div class="friend-req-info">
                 <span class="friend-req-name" onclick="viewUserProfile('${userId}')">${name}</span>
                 <div class="friend-req-buttons">
-                  <button class="btn-confirm-req" onclick="sendFriendReqFromPage('${userId}', this, event)">დამატება</button>
-                  <button class="btn-delete-req" onclick="this.closest('.friend-req-card').remove();">წაშლა</button>
+                  <button class="btn-confirm-req" onclick="sendFriendReqFromPage('${userId}', this, event)">${t.addFriend || 'დამატება'}</button>
+                  <button class="btn-delete-req" onclick="this.closest('.friend-req-card').remove();">${t.delete || t.reject || 'წაშლა'}</button>
                 </div>
               </div>
             </div>
@@ -7120,7 +7121,7 @@ function loadFriendSuggestions(excludedIds) {
         }
       });
 
-      sugContainer.innerHTML = html || '<div style="text-align: center; color: #8a8f9d; padding: 20px;">შეთავაზებები არ არის</div>';
+      sugContainer.innerHTML = html || `<div style="text-align: center; color: #8a8f9d; padding: 20px;">${t.noSuggestions || t.noReqs || 'შეთავაზებები არ არის'}</div>`;
     }).catch(function(err) {
       console.warn("Suggestions error:", err);
       sugContainer.innerHTML = '';
