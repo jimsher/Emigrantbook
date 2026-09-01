@@ -2374,23 +2374,74 @@ body {
 }     
 
     function changeSiteLanguage(newLang) {
-      currentLang = newLang;
-      localStorage.setItem('emigrantbook_lang', newLang);
-      applyLanguageDOM();
-      
-      if (currentUser) {
-        db.collection('profiles').doc(currentUser.uid).update({ language: newLang });
-          
-        var homeScr = document.getElementById('home-screen');
-        var profScr = document.getElementById('profile-screen');
-        if (homeScr && homeScr.style.display === 'block') {
-          loadPosts();
-        } else if (profScr && profScr.style.display === 'block') {
-          var targetUserId = activeViewingProfileId || currentUser.uid;
-          loadUserPosts(targetUserId);
-        }
+  currentLang = newLang;
+  localStorage.setItem('emigrantbook_lang', newLang);
+  applyLanguageDOM();
+
+  if (currentUser) {
+    db.collection('profiles').doc(currentUser.uid).update({ language: newLang }).catch(function(err) {
+      console.warn("Language update in profile warning:", err);
+    });
+
+    var homeScr = document.getElementById('home-screen');
+    var profScr = document.getElementById('profile-screen');
+    var friendsScr = document.getElementById('friends-screen');
+    var notifScr = document.getElementById('notifications-screen');
+    var connScr = document.getElementById('connections-screen');
+    var blockedScr = document.getElementById('blocked-users-screen');
+
+    // 1. მთავარი გვერდი
+    if (homeScr && homeScr.style.display === 'block') {
+      loadPosts();
+    } 
+    // 2. პროფილის გვერდი (აქტიური ტაბის მიხედვით)
+    else if (profScr && profScr.style.display === 'block') {
+      var targetUserId = activeViewingProfileId || currentUser.uid;
+      var btnPhotos = document.getElementById('tab-btn-photos');
+      var btnVideos = document.getElementById('tab-btn-videos');
+
+      if (btnPhotos && btnPhotos.classList.contains('active')) {
+        loadUserPhotos(targetUserId);
+      } else if (btnVideos && btnVideos.classList.contains('active')) {
+        loadUserVideos(targetUserId);
+      } else {
+        loadUserPosts(targetUserId);
       }
+
+      if (targetUserId !== currentUser.uid && typeof updateFriendshipButtons === 'function') {
+        updateFriendshipButtons(targetUserId);
+      }
+    } 
+    // 3. მეგობრების სრული გვერდი
+    else if (friendsScr && friendsScr.style.display === 'block') {
+      if (typeof loadFullFriendsPage === 'function') loadFullFriendsPage();
+    } 
+    // 4. ცნობების (Notifications) სრული გვერდი
+    else if (notifScr && notifScr.style.display === 'block') {
+      if (typeof loadFullNotificationsPage === 'function') loadFullNotificationsPage();
+    } 
+    // 5. გამომწერები/მეგობრები (Connections) ეკრანი
+    else if (connScr && connScr.style.display === 'block') {
+      if (typeof loadConnectionsData === 'function') loadConnectionsData();
+    } 
+    // 6. დაბლოკილი მომხმარებლების ეკრანი
+    else if (blockedScr && blockedScr.style.display === 'block') {
+      if (typeof loadBlockedUsersData === 'function') loadBlockedUsersData();
     }
+
+    // 7. გახსნილი მოდალების მომენტალური გადათარგმნა
+    var commentsModal = document.getElementById('comments-sheet-modal');
+    if (commentsModal && commentsModal.style.display === 'flex' && typeof activePostForComments !== 'undefined' && activePostForComments) {
+      if (typeof loadCommentsIntoModal === 'function') loadCommentsIntoModal(activePostForComments);
+    }
+
+    var customGal = document.getElementById('custom-gallery-modal');
+    if (customGal && customGal.style.display === 'flex' && typeof updateGalleryViewData === 'function') {
+      updateGalleryViewData();
+    }
+  }
+}
+    
 
     var likedPosts = [];
     var postReactionMap = {};
