@@ -6732,8 +6732,7 @@ function openProfileViewsFromHeader() {
 
 function openShareModal(postId) {
   if (!currentUser) return;
-  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
-  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
   
   db.collection('posts').doc(postId).get().then(function(docSnap) {
     if (!docSnap.exists) return;
@@ -6741,59 +6740,14 @@ function openShareModal(postId) {
     activePostForShare = Object.assign({ id: docSnap.id }, docSnap.data());
     
     var modal = document.getElementById('eb-share-modal');
-    if (!modal) return;
-
-    // 1. ტექსტის ველი (ინპუტი)
     var thoughtInput = document.getElementById('share-custom-thought');
     if (thoughtInput) {
       thoughtInput.value = "";
-      if (t.saySomething) thoughtInput.placeholder = t.saySomething;
+      thoughtInput.placeholder = t.saySomething;
     }
 
-    // 2. გაზიარების მთავარი ღილაკი
-    var submitBtn = document.getElementById('share-submit-btn');
-    if (submitBtn && t.shareNow) {
-      submitBtn.innerText = t.shareNow;
-    }
-
-    // 3. სექციის სათაური ("გაგზავნა მეგობრებთან")
-    var sectionTitle = modal.querySelector('.share-section-title') || document.getElementById('share-section-title');
-    if (sectionTitle && t.sendToFriends) {
-      sectionTitle.innerText = t.sendToFriends;
-    }
-
-    // 4. მოდალის ყველა ღილაკისა და ბეიჯის გარანტირებული გადათარგმნა
-    var allTextNodes = modal.querySelectorAll('span, button, a, div');
-    allTextNodes.forEach(function(el) {
-      if (el.children.length === 0) {
-        var txt = el.innerText.trim();
-        
-        // სიახლეების ზოლი
-        if (txt.includes('სიახლეების ზოლი') || txt.includes('News Feed') || txt.includes('Лента новостей') || txt.includes('Neuigkeiten') || txt.includes('Feed notizie') || txt.includes("Fil d'actualit")) {
-          if (t.shareNewsFeed) el.innerText = t.shareNewsFeed;
-        }
-        // საჯარო
-        else if (txt.includes('საჯარო') || txt.includes('Public') || txt.includes('Публично') || txt.includes('Öffentlich') || txt.includes('Pubblico')) {
-          if (t.sharePublic) el.innerText = t.sharePublic;
-        }
-        // თქვენი სიუჟეტი
-        else if (txt.includes('თქვენი სიუჟეტი') || txt.includes('Your Story') || txt.includes('Ваша история') || txt.includes('Deine Story') || txt.includes('La tua storia') || txt.includes('Votre story')) {
-          if (t.shareYourStory) el.innerText = t.shareYourStory;
-        }
-        // ჯგუფი
-        else if (txt === 'ჯგუფი' || txt === 'Group' || txt === 'Группа' || txt === 'Gruppe' || txt === 'Gruppo' || txt === 'Groupe') {
-          if (t.shareGroup) el.innerText = t.shareGroup;
-        }
-        // ბმულის კოპირება
-        else if (txt.includes('ბმულის კოპირება') || txt.includes('Copy link') || txt.includes('Скопировать ссылку') || txt.includes('Link kopieren') || txt.includes('Copia link') || txt.includes('Copier le lien')) {
-          if (t.shareCopyLink) el.innerText = t.shareCopyLink;
-        }
-      }
-    });
-
-    // 5. მომხმარებლის სახელი და ავატარი
-    var defaultUser = t.userUnit || "User";
-    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || defaultUser);
+    // ავატარი & სახელი
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || t.userUnit);
     var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
     
     var nameEl = document.getElementById('share-modal-user-name');
@@ -6803,10 +6757,10 @@ function openShareModal(postId) {
       avEl.innerHTML = `<img src="${myAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
     }
 
-    modal.style.display = "flex";
+    if (modal) modal.style.display = "flex";
     loadShareFriendsList();
   });
-}
+} 
   
 
 function closeShareModal() {
