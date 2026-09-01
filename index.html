@@ -6994,14 +6994,16 @@ function openNotificationTarget(postId, userId) {
 }
 
 function formatTimeAgo(timestamp) {
-  if (!timestamp) return "ახლახანს";
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+  if (!timestamp) return t.justNow;
   var date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   var diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
 
-  if (diffSec < 60) return "ახლახანს";
-  if (diffSec < 3600) return Math.floor(diffSec / 60) + " წთ";
-  if (diffSec < 86400) return Math.floor(diffSec / 3600) + " სთ";
-  return Math.floor(diffSec / 86400) + " დღე";
+  if (diffSec < 60) return t.justNow;
+  if (diffSec < 3600) return Math.floor(diffSec / 60) + t.timeMin;
+  if (diffSec < 86400) return Math.floor(diffSec / 3600) + t.timeHour;
+  return Math.floor(diffSec / 86400) + t.timeDay;
 }
 
 
