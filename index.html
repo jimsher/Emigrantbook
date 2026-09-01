@@ -5679,9 +5679,10 @@ function unhidePostFromFeed(postId) {
     alert("შეცდომა: " + err.message);
   });
 }
+// აქ მთავრდება
     
-    // აქ მთავრდება
-   function createPostCardHtml(post, isProfilePage) {
+   // აქ იწყება  
+ function createPostCardHtml(post, isProfilePage) {
   // ავტომატური შემოწმება: პროფილის გვერდზე ვართ თუ მთავარზე
   var isProfile = isProfilePage === true || 
                   (document.getElementById('profile-screen') && document.getElementById('profile-screen').style.display === 'block') || 
@@ -5711,10 +5712,12 @@ function unhidePostFromFeed(postId) {
   var isStudio = post.is_studio_service === true;
 
   if (isStudio) {
-    var srvTitle = post.service_title || "სერვისი / მომსახურება";
-    var srvCat = post.service_category || "მომსახურება";
-    var srvPrice = post.service_price || "შეთანხმებით";
+    var srvTitle = post.service_title || (t.studioService || "სერვისი / მომსახურება");
+    var srvCat = post.service_category || (t.studioCategory || "მომსახურება");
+    var srvPrice = post.service_price || (t.studioNegotiable || "შეთანხმებით");
     var srvPhone = post.service_whatsapp || "";
+    var srvCatLabel = t.studioCategoryLabel || (currentLang === 'ka' ? "კატეგორია:" : "Category:");
+    var srvWhatsAppText = t.studioWhatsAppBtn || (currentLang === 'ka' ? "WhatsApp-ით დაკავშირება" : "Contact via WhatsApp");
 
     studioServiceCardHtml = `
       <div style="margin: 12px 0 8px 0; background: #18181b; border: 1px solid #2d2a22; border-radius: 12px; padding: 14px; position: relative;">
@@ -5723,7 +5726,7 @@ function unhidePostFromFeed(postId) {
             <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: bold; background: linear-gradient(135deg, #dcae36, #f3cf7a); color: #111; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
               <img src="icons/crown.svg" class="post-action-icon" style="width:12px;height:12px;filter:brightness(0);" alt="Crown"> Studio Business
             </span>
-            <div style="font-size: 11px; color: #8a8f9d; margin-top: 5px;">კატეგორია: <strong style="color: #cfd3dc;">${srvCat}</strong></div>
+            <div style="font-size: 11px; color: #8a8f9d; margin-top: 5px;">${srvCatLabel} <strong style="color: #cfd3dc;">${srvCat}</strong></div>
           </div>
           <div style="background: #232018; border: 1px solid #dcae36; color: #f3cf7a; font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 8px; white-space: nowrap;">
             💰 ${srvPrice}
@@ -5732,7 +5735,7 @@ function unhidePostFromFeed(postId) {
         
         <a href="https://wa.me/${srvPhone}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #25D366; color: #ffffff; text-decoration: none; padding: 11px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; margin-top: 12px; box-shadow: 0 4px 12px rgba(37,211,102,0.25);">
           <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:#fff;"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/></svg>
-          <span>WhatsApp-ით დაკავშირება</span>
+          <span>${srvWhatsAppText}</span>
         </a>
       </div>
     `;
@@ -5740,9 +5743,10 @@ function unhidePostFromFeed(postId) {
 
   var optionsMenuHtml = "";
   if (currentUser && post.user_id === currentUser.uid) {
-    var editText = t.edit || "რედაქტირება";
-    var hideText = t.hidePost || "პოსტის დამალვა";
-    var showText = t.showPost || "მთავარზე გამოჩენა";
+    var editText = t.edit || (currentLang === 'ka' ? "რედაქტირება" : "Edit");
+    var hideText = t.hidePost || (currentLang === 'ka' ? "პოსტის დამალვა" : "Hide post");
+    var showText = t.showPost || (currentLang === 'ka' ? "მთავარზე გამოჩენა" : "Show post");
+    var deleteText = t.delete || (currentLang === 'ka' ? "წაშლა" : "Delete");
 
     var hideOptionBtn = isHidden 
       ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/bookmark.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Show"> <span>${showText}</span></button>`
@@ -5754,7 +5758,7 @@ function unhidePostFromFeed(postId) {
         <div class="post-options-menu" id="options-menu-${post.id}" style="display: none; position: absolute; right: 0; top: 25px; background: #1e1e1e; border: 1px solid #333333; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999; min-width: 200px; overflow: hidden;">
           <button onclick="editPost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/pen.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Edit"> <span>${editText}</span></button>
           ${hideOptionBtn}
-          <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a; display:flex; align-items:center; gap:8px;"><span>🗑️</span> <span>${t.delete}</span></button>
+          <button onclick="deletePost('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#ff4d4f; font-size:13px; text-align:left; cursor:pointer; border-top: 1px solid #2a2a2a; display:flex; align-items:center; gap:8px;"><span>🗑️</span> <span>${deleteText}</span></button>
         </div>
       </div>
     `;
@@ -5809,27 +5813,27 @@ function unhidePostFromFeed(postId) {
           </div>
           <span class="post-likes-count-label" data-post-id="${post.id}">${currentLikesNum}</span>
         </div>
-        <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">${currentCommentsNum} ${t.commentsCount}</span>
+        <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">${currentCommentsNum} ${t.commentsCount || 'comments'}</span>
       </div>
 
       <div class="post-actions" id="actions-row-${post.id}" style="display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222222; padding: 6px 0;">
         <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
           <span id="like-btn-emoji-icon-${post.id}" style="font-size:16px;">❤️</span>
-          <span id="like-btn-text-label-${post.id}">${t.like}</span>
+          <span id="like-btn-text-label-${post.id}">${t.like || 'Like'}</span>
         </button>
         <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
           <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Comment">
-          <span>${t.comment}</span>
+          <span>${t.comment || 'Comment'}</span>
         </button>
         <button class="action-btn" onclick="openShareModal('${post.id}')" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
         <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px; transform: scaleX(-1);" alt="Share">
-        <span>${t.share}</span>
+        <span>${t.share || 'Share'}</span>
        </button>
       </div>
     </div>
   `;
 }
-    
+// აქ მთავრდება    
 
                         
 function createPost() {
