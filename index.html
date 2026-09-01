@@ -6728,7 +6728,7 @@ function openProfileViewsFromHeader() {
 
 
  /* 📤 FACEBOOK SHARE BOTTOM SHEET SYSTEM */
-  var activePostForShare = null;
+ var activePostForShare = null;
 
 function openShareModal(postId) {
   if (!currentUser) return;
@@ -6740,25 +6740,48 @@ function openShareModal(postId) {
     activePostForShare = Object.assign({ id: docSnap.id }, docSnap.data());
     
     var modal = document.getElementById('eb-share-modal');
+    if (!modal) return;
+
+    // 1. ტექსტის ველი, ღილაკი და სექციის სათაური
     var thoughtInput = document.getElementById('share-custom-thought');
     if (thoughtInput) {
       thoughtInput.value = "";
-      if (t.saySomething) thoughtInput.placeholder = t.saySomething;
+      thoughtInput.placeholder = t.saySomething || "Say something...";
     }
 
     var submitBtn = document.getElementById('share-submit-btn');
-    if (submitBtn && t.shareNow) {
-      submitBtn.innerText = t.shareNow;
+    if (submitBtn) {
+      submitBtn.innerText = t.shareNow || "Share Now";
     }
 
-    var sectionTitle = modal ? modal.querySelector('.share-section-title') : null;
-    if (sectionTitle && t.sendToFriends) {
-      sectionTitle.innerText = t.sendToFriends;
+    var sectionTitle = modal.querySelector('.share-section-title');
+    if (sectionTitle) {
+      sectionTitle.innerText = t.sendToFriends || "Send to Friends";
     }
 
-    // ავატარი & სახელი
-    var defaultUser = t.userUnit || "User";
-    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || defaultUser);
+    // 2. ზედა ბეიჯები (სიახლეების ზოლი / საჯარო)
+    var badgeFeed = modal.querySelector('.share-badges-row span:nth-child(1)');
+    if (badgeFeed) {
+      badgeFeed.innerHTML = `<img src="icons/house.svg" class="post-action-icon" style="width:12px;height:12px;"> ${t.shareNewsFeed || "News Feed ▾"}`;
+    }
+
+    var badgePublic = modal.querySelector('.share-badges-row span:nth-child(2)');
+    if (badgePublic) {
+      badgePublic.innerHTML = `<img src="icons/globe.svg" class="post-action-icon" style="width:12px;height:12px;"> ${t.sharePublic || "Public ▾"}`;
+    }
+
+    // 3. ქვედა ღილაკები (სიუჟეტი, ჯგუფი, ბმულის კოპირება)
+    var appSpans = modal.querySelectorAll('.share-apps-row .share-app-item span');
+    if (appSpans.length >= 5) {
+      appSpans[0].innerText = t.shareYourStory || "Your Story";
+      // appSpans[1] -> Messenger
+      // appSpans[2] -> WhatsApp
+      appSpans[3].innerText = t.shareGroup || "Group";
+      appSpans[4].innerText = t.shareCopyLink || "Copy link";
+    }
+
+    // 4. მომხმარებლის სახელი და ავატარი
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || (t.userUnit || "User"));
     var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
     
     var nameEl = document.getElementById('share-modal-user-name');
@@ -6768,10 +6791,10 @@ function openShareModal(postId) {
       avEl.innerHTML = `<img src="${myAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
     }
 
-    if (modal) modal.style.display = "flex";
+    modal.style.display = "flex";
     loadShareFriendsList();
   });
-}
+}     
 
 function closeShareModal() {
   var modal = document.getElementById('eb-share-modal');
