@@ -3777,17 +3777,20 @@ auth.onAuthStateChanged(function(user) {
       if(bar) bar.style.display = "none";
     }
 
-     function loadCommentsIntoModal(postId) {
+    // აქ იწყება
+    function loadCommentsIntoModal(postId) {
   var container = document.getElementById('modal-comments-container');
   if (!postId || !container) return;
-  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
   
   db.collection('post_comments')
     .where('post_id', '==', postId)
     .get()
     .then(function(snapshot) {
       if (snapshot.empty) {
-        container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">No comments yet. Write the first one!</div>`;
+        var emptyText = t.emptyWall || 'No comments yet. Write the first one!';
+        container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">${emptyText}</div>`;
         return;
       }
 
@@ -3813,7 +3816,7 @@ auth.onAuthStateChanged(function(user) {
 
       container.innerHTML = "";
       mainComments.forEach(function(comment) {
-        var name = comment.author_name || "User";
+        var name = comment.author_name || (t.userUnit || "User");
         var isOnline = cachedOnlineStates[comment.user_id] === true;
         var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
         var cAvatar = comment.avatar_url || DEFAULT_AVATAR_URL;
@@ -3838,8 +3841,8 @@ auth.onAuthStateChanged(function(user) {
                   <span class="fb-comment-text">${comment.content || ""}</span>
                 </div>
                 <div class="fb-comment-actions-row">
-                  <button class="fb-comment-action-btn ${hasLikedComment}" onclick="likeComment('${comment.id}', ${cLikes})">❤️ ${t.like} (${cLikes})</button>
-                  <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')">↩️ ${t.reply}</button>
+                  <button class="fb-comment-action-btn ${hasLikedComment}" onclick="likeComment('${comment.id}', ${cLikes})">❤️ ${t.like || 'Like'} (${cLikes})</button>
+                  <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')">↩️ ${t.reply || 'Reply'}</button>
                 </div>
               </div>
             </div>
@@ -3854,7 +3857,7 @@ auth.onAuthStateChanged(function(user) {
       replies.forEach(function(reply) {
         var replyTargetContainer = document.getElementById(`replies-to-${reply.parent_id}`);
         if (replyTargetContainer) {
-          var rName = reply.author_name || "User";
+          var rName = reply.author_name || (t.userUnit || "User");
           var rIsOnline = cachedOnlineStates[reply.user_id] === true;
           var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
           var rAvatar = reply.avatar_url || DEFAULT_AVATAR_URL;
@@ -3878,7 +3881,7 @@ auth.onAuthStateChanged(function(user) {
                   <span class="fb-comment-text" style="font-size:13px;">${reply.content || ""}</span>
                 </div>
                 <div class="fb-comment-actions-row">
-                  <button class="fb-comment-action-btn ${hasLikedReply}" style="font-size:11px;" onclick="likeComment('${reply.id}', ${rLikes})">❤️ ${t.like} (${rLikes})</button>
+                  <button class="fb-comment-action-btn ${hasLikedReply}" style="font-size:11px;" onclick="likeComment('${reply.id}', ${rLikes})">❤️ ${t.like || 'Like'} (${rLikes})</button>
                 </div>
               </div>
             </div>
@@ -3887,10 +3890,10 @@ auth.onAuthStateChanged(function(user) {
       });
     }).catch(function(error) {
       console.error("Comments error:", error);
-      container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">Error loading comments: ${error.message}</div>`;
+      container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">${t.notifError || 'Error loading comments'}: ${error.message}</div>`;
     });
-}             
-              
+}
+ // აქ მთავრდება             
 
     function likeComment(commentId, currentLikes) {
       var key = currentUser.uid + '_liked_comment_' + commentId;
