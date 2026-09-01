@@ -6780,68 +6780,24 @@ function closeShareModal() {
 }
 
 // მეგობრების ჩატვირთვა მესინჯერში პირდაპირ გასაზიარებლად
-function loadShareFriendsList() {
-  var list = document.getElementById('share-friends-horizontal-list');
-  if (!list || !currentUser) return;
-  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+ function loadShareFriendsList() {
+  var list = document.getElementById('share-friends-horizontal-list');
+  if (!list || !currentUser) return;
 
-  list.innerHTML = `<div style="color:#777; font-size:12px; padding:10px;">${t.loading || 'Loading...'}</div>`;
+  list.innerHTML = `<div style="color:#777; font-size:12px; padding:10px;">იტვირთება...</div>`;
 
-  Promise.all([
-    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
-    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
-  ]).then(function(results) {
-    var fIds = [];
-    results[0].forEach(d => fIds.push(d.data().receiver_id));
-    results[1].forEach(d => fIds.push(d.data().sender_id));
+  Promise.all([
+    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+  ]).then(function(results) {
+    var fIds = [];
+    results[0].forEach(d => fIds.push(d.data().receiver_id));
+    results[1].forEach(d => fIds.push(d.data().sender_id));
 
-    if (fIds.length === 0) {
-      list.innerHTML = `<div style="color:#666; font-size:12px; padding:10px;">${t.noFriendsFound || t.noReqs || 'No friends found'}</div>`;
-      return;
-    }
-
-    fetchMultipleProfilesCached(fIds, function() {
-      var html = "";
-      fIds.forEach(function(fId) {
-        var p = cachedProfiles[fId] || {};
-        var name = p.full_name || (t.userUnit || "User");
-        var avatar = p.avatar_url || DEFAULT_AVATAR_URL;
-        var avHtml = `<img src="${avatar}" alt="Avatar">`;
-
-        html += `
-          <div class="share-friend-card" onclick="sharePostToFriendDirectly('${fId}', '${name}')">
-            <div class="share-friend-avatar-box">${avHtml}</div>
-            <span class="share-friend-name">${name}</span>
-          </div>
-        `;
-      });
-      list.innerHTML = html;
-    });
-  }).catch(function(err) {
-    console.error("Error loading share friends list:", err);
-    list.innerHTML = `<div style="color:#666; font-size:12px; padding:10px;">${t.loading || 'Error loading'}</div>`;
-  });
-}
-
-    fetchMultipleProfilesCached(fIds, function() {
-      var html = "";
-      fIds.forEach(function(fId) {
-        var p = cachedProfiles[fId] || {};
-        var name = p.full_name || "User";
-        var avatar = p.avatar_url || DEFAULT_AVATAR_URL;
-        var avHtml = `<img src="${avatar}" alt="Avatar">`;
-
-        html += `
-          <div class="share-friend-card" onclick="sharePostToFriendDirectly('${fId}', '${name}')">
-            <div class="share-friend-avatar-box">${avHtml}</div>
-            <span class="share-friend-name">${name}</span>
-          </div>
-        `;
-      });
-      list.innerHTML = html;
-    });
-  });
-}
+    if (fIds.length === 0) {
+      list.innerHTML = `<div style="color:#666; font-size:12px; padding:10px;">მეგობრები არ მოიძებნა</div>`;
+      return;
+    }         
 
 // მეგობართან პირად ჩატში გაგზავნა
 function sharePostToFriendDirectly(friendId, friendName) {
