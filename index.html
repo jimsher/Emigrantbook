@@ -5689,7 +5689,7 @@ function unhidePostFromFeed(postId) {
 // აქ მთავრდება
     
    // აქ იწყება  
- function createPostCardHtml(post, isProfilePage) {
+   function createPostCardHtml(post, isProfilePage) {
   // ავტომატური შემოწმება: პროფილის გვერდზე ვართ თუ მთავარზე
   var isProfile = isProfilePage === true || 
                   (document.getElementById('profile-screen') && document.getElementById('profile-screen').style.display === 'block') || 
@@ -5719,12 +5719,12 @@ function unhidePostFromFeed(postId) {
   var isStudio = post.is_studio_service === true;
 
   if (isStudio) {
-    var srvTitle = post.service_title || (t.studioService || "სერვისი / მომსახურება");
-    var srvCat = post.service_category || (t.studioCategory || "მომსახურება");
-    var srvPrice = post.service_price || (t.studioNegotiable || "შეთანხმებით");
+    var srvTitle = post.service_title || t.studioService;
+    var srvCat = post.service_category || t.studioCategory;
+    var srvPrice = post.service_price || t.studioNegotiable;
     var srvPhone = post.service_whatsapp || "";
-    var srvCatLabel = t.studioCategoryLabel || (currentLang === 'ka' ? "კატეგორია:" : "Category:");
-    var srvWhatsAppText = t.studioWhatsAppBtn || (currentLang === 'ka' ? "WhatsApp-ით დაკავშირება" : "Contact via WhatsApp");
+    var srvCatLabel = t.studioCategoryLabel;
+    var srvWhatsAppText = t.studioWhatsAppBtn;
 
     studioServiceCardHtml = `
       <div style="margin: 12px 0 8px 0; background: #18181b; border: 1px solid #2d2a22; border-radius: 12px; padding: 14px; position: relative;">
@@ -5750,10 +5750,10 @@ function unhidePostFromFeed(postId) {
 
   var optionsMenuHtml = "";
   if (currentUser && post.user_id === currentUser.uid) {
-    var editText = t.edit || (currentLang === 'ka' ? "რედაქტირება" : "Edit");
-    var hideText = t.hidePost || (currentLang === 'ka' ? "პოსტის დამალვა" : "Hide post");
-    var showText = t.showPost || (currentLang === 'ka' ? "მთავარზე გამოჩენა" : "Show post");
-    var deleteText = t.delete || (currentLang === 'ka' ? "წაშლა" : "Delete");
+    var editText = t.edit;
+    var hideText = t.hidePost;
+    var showText = t.showPost;
+    var deleteText = t.delete;
 
     var hideOptionBtn = isHidden 
       ? `<button onclick="unhidePostFromFeed('${post.id}')" style="width:100%; padding:10px 14px; background:transparent; border:none; color:#e4e6eb; font-size:13px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:8px;"><img src="icons/bookmark.svg" class="post-action-icon" style="width:16px;height:16px;" alt="Show"> <span>${showText}</span></button>`
@@ -5820,21 +5820,21 @@ function unhidePostFromFeed(postId) {
           </div>
           <span class="post-likes-count-label" data-post-id="${post.id}">${currentLikesNum}</span>
         </div>
-        <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">${currentCommentsNum} ${t.commentsCount || 'comments'}</span>
+        <span class="comment-count-label" data-post-id="${post.id}" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">${currentCommentsNum} ${t.commentsCount}</span>
       </div>
 
       <div class="post-actions" id="actions-row-${post.id}" style="display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222222; padding: 6px 0;">
         <button class="action-btn like-btn-standard ${likedClass}" id="like-btn-main-${post.id}" data-post-id="${post.id}" onclick="likePost('${post.id}', false)" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
           <span id="like-btn-emoji-icon-${post.id}" style="font-size:16px;">❤️</span>
-          <span id="like-btn-text-label-${post.id}">${t.like || 'Like'}</span>
+          <span id="like-btn-text-label-${post.id}">${t.like}</span>
         </button>
         <button class="action-btn" onclick="openCommentsModal('${post.id}', ${currentLikesNum})" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
           <img src="icons/message-circle-more.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Comment">
-          <span>${t.comment || 'Comment'}</span>
+          <span>${t.comment}</span>
         </button>
         <button class="action-btn" onclick="openShareModal('${post.id}')" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
         <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px; transform: scaleX(-1);" alt="Share">
-        <span>${t.share || 'Share'}</span>
+        <span>${t.share}</span>
        </button>
       </div>
     </div>
