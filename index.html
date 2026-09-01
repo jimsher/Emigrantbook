@@ -7021,13 +7021,14 @@ function checkPendingRequestsCountOnce() {
 }
 
 /* 2. მეგობრების სრული გვერდის ჩატვირთვა (.get-ით) */
-function loadFullFriendsPage() {
+ function loadFullFriendsPage() {
   if (!currentUser) return;
   var reqContainer = document.getElementById('full-friend-requests-list');
   var sugContainer = document.getElementById('friends-suggestions-list');
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-  if (reqContainer) reqContainer.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">იტვირთება...</div>';
-  if (sugContainer) sugContainer.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">იტვირთება...</div>';
+  if (reqContainer) reqContainer.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 25px;">${t.loading || 'იტვირთება...'}</div>`;
+  if (sugContainer) sugContainer.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 25px;">${t.loading || 'იტვირთება...'}</div>`;
 
   checkPendingRequestsCountOnce();
 
@@ -7038,7 +7039,7 @@ function loadFullFriendsPage() {
     .get()
     .then(function(snapshot) {
       if (snapshot.empty) {
-        if (reqContainer) reqContainer.innerHTML = '<div style="text-align: center; color: #8a8f9d; padding: 25px;">მეგობრობის მოთხოვნები არ არის</div>';
+        if (reqContainer) reqContainer.innerHTML = `<div style="text-align: center; color: #8a8f9d; padding: 25px;">${t.noReqs || 'ახალი მოთხოვნები არ არის'}</div>`;
         loadFriendSuggestions([]);
         return;
       }
@@ -7056,7 +7057,7 @@ function loadFullFriendsPage() {
         var html = "";
         reqList.forEach(function(item) {
           var pData = cachedProfiles[item.sender_id] || {};
-          var name = pData.full_name || "მომხმარებელი";
+          var name = pData.full_name || "User";
           var avatar = pData.avatar_url || DEFAULT_AVATAR_URL;
           var timeStr = formatTimeAgo(item.created_at);
 
@@ -7069,8 +7070,8 @@ function loadFullFriendsPage() {
                   <span class="friend-req-time">${timeStr}</span>
                 </div>
                 <div class="friend-req-buttons">
-                  <button class="btn-confirm-req" onclick="acceptFriendReqFromPage('${item.id}', '${item.sender_id}', event)">დადასტურება</button>
-                  <button class="btn-delete-req" onclick="deleteFriendReqFromPage('${item.id}', event)">წაშლა</button>
+                  <button class="btn-confirm-req" onclick="acceptFriendReqFromPage('${item.id}', '${item.sender_id}', event)">${t.accept || 'დადასტურება'}</button>
+                  <button class="btn-delete-req" onclick="deleteFriendReqFromPage('${item.id}', event)">${t.reject || t.delete || 'წაშლა'}</button>
                 </div>
               </div>
             </div>
@@ -7081,10 +7082,10 @@ function loadFullFriendsPage() {
       });
     }).catch(function(err) {
       console.error("Friends page error:", err);
-      if (reqContainer) reqContainer.innerHTML = '<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა ჩატვირთვისას</div>';
+      if (reqContainer) reqContainer.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">${t.loading || 'Error loading'}</div>`;
       loadFriendSuggestions([]);
     });
-}
+}         
 
 /* 3. მეგობრების შეთავაზებების ჩატვირთვა (.get-ით) */
 function loadFriendSuggestions(excludedIds) {
