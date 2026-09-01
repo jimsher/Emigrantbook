@@ -2144,137 +2144,145 @@ body {
 };
     // აქ მთავრდება
 
-    function applyLanguageDOM() {
+   function applyLanguageDOM() {
   var lang = currentLang || 'en';
   var t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
 
+  // 1. ავტორიზაციის ეკრანი (Auth Screen)
   var authSubtitle = document.getElementById('auth-subtitle');
-  if(authSubtitle) authSubtitle.innerText = isLoginMode ? t.authSubtitle : t.authSubtitleReg;
+  if (authSubtitle) authSubtitle.innerText = isLoginMode ? t.authSubtitle : t.authSubtitleReg;
   var lblFullname = document.getElementById('lbl-fullname');
-  if(lblFullname) lblFullname.innerHTML = t.fullname;
+  if (lblFullname) lblFullname.innerHTML = t.fullname;
   var authBtn = document.getElementById('auth-btn');
-  if(authBtn) authBtn.innerText = isLoginMode ? "Login" : "Register";
+  if (authBtn) authBtn.innerText = isLoginMode ? (t.authBtn || "Login") : (t.authBtnReg || "Register");
   var forgotPassBtn = document.getElementById('forgot-pass-btn');
-  if(forgotPassBtn) forgotPassBtn.innerText = t.forgotPass;
+  if (forgotPassBtn) forgotPassBtn.innerText = t.forgotPass;
   var toggleLink = document.getElementById('toggle-link');
-  if(toggleLink) toggleLink.innerText = isLoginMode ? "Create Account" : "Already have an account? Login";
-  
+  if (toggleLink) toggleLink.innerText = isLoginMode ? (t.authSubtitleReg || "Create Account") : (t.authSubtitle || "Already have an account? Login");
+
+  // PWA ინსტალაციის ბანერი
   var pwaTitle = document.getElementById('lbl-pwa-title');
-  if(pwaTitle) pwaTitle.innerText = t.pwaTitle;
+  if (pwaTitle) pwaTitle.innerText = t.pwaTitle;
   var pwaSub = document.getElementById('lbl-pwa-sub');
-  if(pwaSub) pwaSub.innerText = t.pwaSub;
+  if (pwaSub) pwaSub.innerText = t.pwaSub;
   var pwaBtnText = document.getElementById('lbl-pwa-btn-text');
-  if(pwaBtnText) pwaBtnText.innerText = t.pwaBtn;
-
+  if (pwaBtnText) pwaBtnText.innerText = t.pwaBtn;
   var authFooter = document.getElementById('lbl-auth-footer');
-  if(authFooter) authFooter.innerText = t.authFooter;
+  if (authFooter) authFooter.innerText = t.authFooter;
 
+  // 2. პოსტის შექმნა და მთავარი არხი (Feed & Create Post)
   var postInput = document.getElementById('post-text-input');
-  if(postInput) postInput.placeholder = t.think;
+  if (postInput) postInput.placeholder = t.think;
   var photoVidBtn = document.getElementById('lbl-photo-video');
-      if(photoVidBtn) {
-        photoVidBtn.innerHTML = `
-          <img src="icons/camera.svg" alt="Photo" class="post-action-icon"> Photo / 
-          <img src="icons/video.svg" alt="Video" class="post-action-icon"> Video
-        `;
-      }
+  if (photoVidBtn) {
+    photoVidBtn.innerHTML = `
+      <img src="icons/camera.svg" alt="Photo" class="post-action-icon"> ${t.photoVideo || 'Photo / Video'}
+    `;
+  }
   var pubBtn = document.getElementById('publish-submit-btn');
-  if(pubBtn) pubBtn.innerText = t.publish;
+  if (pubBtn) pubBtn.innerText = t.publish;
   var crStory = document.getElementById('lbl-create-story');
-  if(crStory) crStory.innerText = t.createStory;
+  if (crStory) crStory.innerText = t.createStory;
   var drTitleHome = document.getElementById('dr-title-home');
-  if(drTitleHome) drTitleHome.innerText = t.friendReqTitle;
-
-  var selectLangLbl = document.getElementById('lbl-select-lang');
-  if(selectLangLbl) selectLangLbl.innerText = t.selectLang;
-  var logoutBtn = document.getElementById('lbl-logout-btn');
-  if(logoutBtn) logoutBtn.innerText = t.logout;
+  if (drTitleHome) drTitleHome.innerText = t.friendReqTitle;
   var drTitleProfile = document.getElementById('dr-title-profile');
-  if(drTitleProfile) drTitleProfile.innerText = t.friendReqTitle;
-
+  if (drTitleProfile) drTitleProfile.innerText = t.friendReqTitle;
   var liveBtnLbl = document.getElementById('lbl-live-btn');
-  if(liveBtnLbl) liveBtnLbl.innerText = t.liveBtn;
+  if (liveBtnLbl) liveBtnLbl.innerText = t.liveBtn;
 
+  // 3. გვერდითი მენიუ და ენის არჩევა (Side Menu)
+  var selectLangLbl = document.getElementById('lbl-select-lang');
+  if (selectLangLbl) selectLangLbl.innerText = t.selectLang;
+  var logoutBtn = document.getElementById('lbl-logout-btn');
+  if (logoutBtn) logoutBtn.innerText = t.logout;
+  var blockedMenuBtn = document.getElementById('lbl-blocked-users-menu');
+  if (blockedMenuBtn) blockedMenuBtn.innerText = t.blockedUsers;
+  var privacyMenuBtn = document.getElementById('lbl-privacy-menu-btn');
+  if (privacyMenuBtn) privacyMenuBtn.innerText = t.privacyMenuBtn;
+
+  // 4. პროფილის ეკრანი (Profile Screen)
   var folTitle = document.getElementById('lbl-followers-title');
-  if(folTitle) folTitle.innerText = t.friendsTitle;
+  if (folTitle) folTitle.innerText = t.friendsTitle;
   var seeAllBtn = document.getElementById('lbl-see-all');
-  if(seeAllBtn) seeAllBtn.innerText = t.seeAll;
+  if (seeAllBtn) seeAllBtn.innerText = t.seeAll;
   var btnTabPosts = document.getElementById('tab-btn-posts');
-  if(btnTabPosts) btnTabPosts.innerText = t.tabPosts;
+  if (btnTabPosts) btnTabPosts.innerText = t.tabPosts;
   var btnTabPhotos = document.getElementById('tab-btn-photos');
-  if(btnTabPhotos) btnTabPhotos.innerText = t.tabPhotos;
+  if (btnTabPhotos) btnTabPhotos.innerText = t.tabPhotos;
   var btnTabVideos = document.getElementById('tab-btn-videos');
-  if(btnTabVideos) btnTabVideos.innerText = t.tabVideos;
+  if (btnTabVideos) btnTabVideos.innerText = t.tabVideos;
 
   var lblStatPost = document.getElementById('lbl-stat-post');
-  if(lblStatPost) lblStatPost.innerText = t.postUnit;
+  if (lblStatPost) lblStatPost.innerText = t.postUnit;
   var lblStatFollowers = document.getElementById('lbl-stat-followers');
-  if(lblStatFollowers) lblStatFollowers.innerText = t.followersTitle;
+  if (lblStatFollowers) lblStatFollowers.innerText = t.followersTitle;
   var lblStatFollowing = document.getElementById('lbl-stat-following');
-  if(lblStatFollowing) lblStatFollowing.innerText = t.followingTitle;
+  if (lblStatFollowing) lblStatFollowing.innerText = t.followingTitle;
 
+  var lockedTitle = document.getElementById('lbl-locked-title');
+  if (lockedTitle) lockedTitle.innerText = t.lockedProfileTitle;
+  var lockedSub = document.getElementById('lbl-locked-sub');
+  if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
+
+  // 5. პროფილის რედაქტირება (Edit Profile Screen)
   var bProfile = document.getElementById('lbl-back-to-profile');
-  if(bProfile) bProfile.innerText = t.backToProfile;
+  if (bProfile) bProfile.innerText = t.backToProfile;
   var eHeader = document.getElementById('lbl-edit-header');
-  if(eHeader) eHeader.innerText = t.updateInfo;
+  if (eHeader) eHeader.innerText = t.updateInfo;
   var eFn = document.getElementById('lbl-edit-fullname');
-  if(eFn) eFn.innerHTML = t.fullname;
+  if (eFn) eFn.innerHTML = t.fullname;
+  var eGender = document.getElementById('lbl-edit-gender');
+  if (eGender) eGender.innerText = t.gender || "Gender";
   var eAge = document.getElementById('lbl-edit-age');
-  if(eAge) eAge.innerText = t.age;
+  if (eAge) eAge.innerText = t.age;
   var eJob = document.getElementById('lbl-edit-job');
-  if(eJob) eJob.innerText = t.job;
+  if (eJob) eJob.innerText = t.job;
   var eCity = document.getElementById('lbl-edit-city');
-  if(eCity) eCity.innerText = t.city;
+  if (eCity) eCity.innerText = t.city;
   var eCountry = document.getElementById('lbl-edit-country');
-  if(eCountry) eCountry.innerText = t.country;
+  if (eCountry) eCountry.innerText = t.country;
   var eRel = document.getElementById('lbl-edit-relationship');
-  if(eRel) eRel.innerText = t.relStatus;
+  if (eRel) eRel.innerText = t.relStatus;
   var eEv = document.getElementById('lbl-edit-events');
-  if(eEv) eEv.innerText = t.lifeEvents;
+  if (eEv) eEv.innerText = t.lifeEvents;
   var sCh = document.getElementById('lbl-save-changes');
-  if(sCh) sCh.innerText = t.saveChanges;
+  if (sCh) sCh.innerText = t.saveChanges;
   var cCh = document.getElementById('lbl-cancel-changes');
-  if(cCh) cCh.innerText = t.cancel;
+  if (cCh) cCh.innerText = t.cancel;
+  var lblDob = document.getElementById('lbl-dob');
+  if (lblDob) lblDob.innerText = t.dob || "Date of Birth";
 
-  var bProfileConn = document.getElementById('lbl-back-to-profile-conn');
-  if(bProfileConn) bProfileConn.innerText = t.backToProfile;
-  var connTitle = document.getElementById('connections-title');
-  if(connTitle) connTitle.innerText = (activeConnectionsType === 'all') ? t.friendsTitle : ((activeConnectionsType === 'followers') ? t.followersTitle : t.followingTitle);
+  // ურთიერთობის სტატუსის ოპციები
+  var optRel1 = document.getElementById('opt-rel-1');
+  if (optRel1) optRel1.innerText = t.notSpecified || "Not specified";
+  var optRel2 = document.getElementById('opt-rel-2');
+  if (optRel2) optRel2.innerText = t.relSingle || "Single";
+  var optRel3 = document.getElementById('opt-rel-3');
+  if (optRel3) optRel3.innerText = t.relInRelationship || "In a relationship";
+  var optRel4 = document.getElementById('opt-rel-4');
+  if (optRel4) optRel4.innerText = t.relEngaged || "Engaged";
+  var optRel5 = document.getElementById('opt-rel-5');
+  if (optRel5) optRel5.innerText = t.relMarried || "Married";
+  var optRel6 = document.getElementById('opt-rel-6');
+  if (optRel6) optRel6.innerText = t.relComplicated || "It's complicated";
 
-  var stFooter = document.getElementById('lbl-stories-footer');
-  if(stFooter) stFooter.innerText = t.stories;
-  var likersTitle = document.getElementById('lbl-likers-title');
-  if(likersTitle) likersTitle.innerText = t.likers;
-  
-  var gLike = document.getElementById('lbl-gallery-like');
-  if(gLike) gLike.innerText = t.like;
-  var gComm = document.getElementById('lbl-gallery-comment');
-  if(gComm) gComm.innerText = t.comment;
-  var gShare = document.getElementById('lbl-gallery-share');
-  if(gShare) gShare.innerText = t.share;
-
+  // 6. კონფიდენციალურობის ეკრანი (Privacy Screen)
   var bProfilePrivacy = document.getElementById('lbl-back-to-profile-privacy');
   if (bProfilePrivacy) bProfilePrivacy.innerText = t.backToProfile;
-
-  var lblDob = document.getElementById('lbl-dob');
-  if (lblDob) lblDob.innerText = t.dob || "Date of Birth";    
-
   var privacyHeader = document.getElementById('lbl-privacy-header');
   if (privacyHeader) {
     privacyHeader.innerHTML = `
       <img src="icons/blend.svg" class="post-action-icon" style="width: 18px; height: 18px;" alt="Settings"> 
-      <span>Settings & Privacy</span>
+      <span>${t.privacyHeader || "Settings & Privacy"}</span>
     `;
   }
-
   var privacyOptTitle = document.getElementById('lbl-privacy-opt-title');
   if (privacyOptTitle) {
     privacyOptTitle.innerHTML = `
       <img src="icons/database.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Privacy"> 
-      <span>Profile Privacy</span>
+      <span>${t.privacyOptTitle || "Profile Privacy"}</span>
     `;
   }
-
   var privacyOptDesc = document.getElementById('lbl-privacy-opt-desc');
   if (privacyOptDesc) privacyOptDesc.innerText = t.privacyOptDesc;
 
@@ -2282,51 +2290,88 @@ body {
   if (optPublic) {
     optPublic.innerHTML = `
       <img src="icons/award.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Public"> 
-      <span>Everyone (Public)</span>
+      <span>${t.optPublic || "Everyone (Public)"}</span>
     `;
   }
-
   var optFriends = document.getElementById('lbl-opt-friends');
   if (optFriends) {
     optFriends.innerHTML = `
       <img src="icons/users.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Friends"> 
-      <span>Friends Only</span>
+      <span>${t.optFriends || "Friends Only"}</span>
     `;
   }
-
   var optPrivate = document.getElementById('lbl-opt-private');
   if (optPrivate) {
     optPrivate.innerHTML = `
       <img src="icons/circle-user-round.svg" class="post-action-icon" style="width: 16px; height: 16px;" alt="Private"> 
-      <span>Only Me (Private)</span>
+      <span>${t.optPrivate || "Only Me (Private)"}</span>
     `;
   }
-
   var savePrivacyBtn = document.getElementById('lbl-save-privacy');
   if (savePrivacyBtn) savePrivacyBtn.innerText = t.saveChanges;
-
   var cancelPrivacyBtn = document.getElementById('lbl-cancel-privacy');
   if (cancelPrivacyBtn) cancelPrivacyBtn.innerText = t.cancel;
 
-  var privacyMenuBtn = document.getElementById('lbl-privacy-menu-btn');
-  if (privacyMenuBtn) privacyMenuBtn.innerText = t.privacyMenuBtn;
-
-  var lockedTitle = document.getElementById('lbl-locked-title');
-  if (lockedTitle) lockedTitle.innerText = t.lockedProfileTitle;
-
-  var lockedSub = document.getElementById('lbl-locked-sub');
-  if (lockedSub) lockedSub.innerText = t.lockedProfileSub;
-
-  var blockedMenuBtn = document.getElementById('lbl-blocked-users-menu');
-  if (blockedMenuBtn) blockedMenuBtn.innerText = t.blockedUsers;
+  // 7. კავშირებისა და დაბლოკილების ეკრანები (Connections & Blocked)
+  var bProfileConn = document.getElementById('lbl-back-to-profile-conn');
+  if (bProfileConn) bProfileConn.innerText = t.backToProfile;
+  var connTitle = document.getElementById('connections-title');
+  if (connTitle) {
+    connTitle.innerText = (typeof activeConnectionsType !== 'undefined' && activeConnectionsType === 'all') 
+      ? t.friendsTitle 
+      : ((typeof activeConnectionsType !== 'undefined' && activeConnectionsType === 'followers') ? t.followersTitle : t.followingTitle);
+  }
   var bProfileBlocked = document.getElementById('lbl-back-to-profile-blocked');
   if (bProfileBlocked) bProfileBlocked.innerText = t.backToProfile;
   var blockedTitle = document.getElementById('blocked-users-title');
   if (blockedTitle) blockedTitle.innerText = "🚫 " + t.blockedUsers;
 
+  // 8. გალერეა და მოდალები (Gallery & Likers Modal)
+  var stFooter = document.getElementById('lbl-stories-footer');
+  if (stFooter) stFooter.innerText = t.stories;
+  var likersTitle = document.getElementById('lbl-likers-title');
+  if (likersTitle) likersTitle.innerText = t.likers;
+  var gLike = document.getElementById('lbl-gallery-like');
+  if (gLike) gLike.innerText = t.like;
+  var gComm = document.getElementById('lbl-gallery-comment');
+  if (gComm) gComm.innerText = t.comment;
+  var gShare = document.getElementById('lbl-gallery-share');
+  if (gShare) gShare.innerText = t.share;
+
+  // 9. კომენტარების მოდალი (Comments Modal)
+  var commentInput = document.getElementById('modal-comment-input-field');
+  if (commentInput) commentInput.placeholder = t.commentPlaceholder || "Write a comment...";
+  var commentSubmitBtn = document.getElementById('modal-comment-submit-btn');
+  if (commentSubmitBtn) commentSubmitBtn.innerText = t.send || "Send";
+  var replyCancelBtn = document.getElementById('lbl-reply-cancel');
+  if (replyCancelBtn) replyCancelBtn.innerText = t.cancel || "Cancel";
+
+  // 10. სრული ეკრანის ცნობები (Full Notifications Screen)
+  var notifScreenTitle = document.querySelector('#notifications-screen .notif-header-title');
+  if (notifScreenTitle) notifScreenTitle.innerText = t.notificationsTitle || "ცნობები";
+  var notifScreenSection = document.querySelector('#notifications-screen .notif-section-label');
+  if (notifScreenSection) notifScreenSection.innerText = t.earlierNotifications || "უფრო ადრინდელი";
+
+  // 11. სრული ეკრანის მეგობრები (Full Friends Screen)
+  var friendsScreenTitle = document.querySelector('#friends-screen .notif-header-title');
+  if (friendsScreenTitle) friendsScreenTitle.innerText = t.friendsTitle || "მეგობრები";
+  var friendsSectionTitles = document.querySelectorAll('#friends-screen .friends-section-title');
+  if (friendsSectionTitles && friendsSectionTitles.length >= 2) {
+    friendsSectionTitles[0].innerText = t.friendReqTitle || "მეგობრობის მოთხოვნები";
+    friendsSectionTitles[1].innerText = t.friendSuggestions || "ხალხი ვისაც შეიძლება იცნობდეთ";
+  }
+
+  // 12. გაზიარების მოდალი (Share Modal)
+  var shareThoughtInput = document.getElementById('share-custom-thought');
+  if (shareThoughtInput) shareThoughtInput.placeholder = t.saySomething || "თქვით რამე...";
+  var shareSubmitBtn = document.getElementById('share-submit-btn');
+  if (shareSubmitBtn) shareSubmitBtn.innerText = t.shareNow || "ახლავე გაზიარება";
+  var shareSectionTitle = document.querySelector('#eb-share-modal .share-section-title');
+  if (shareSectionTitle) shareSectionTitle.innerText = t.sendToFriends || "გაგზავნა მეგობრებთან";
+
   var siteLangSelect = document.getElementById('site-language-select');
   if (siteLangSelect) siteLangSelect.value = lang;
-}
+}     
 
     function changeSiteLanguage(newLang) {
       currentLang = newLang;
