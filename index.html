@@ -6732,8 +6732,7 @@ function openProfileViewsFromHeader() {
 
 function openShareModal(postId) {
   if (!currentUser) return;
-  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
-  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
 
   db.collection('posts').doc(postId).get().then(function(docSnap) {
     if (!docSnap.exists) return;
@@ -6741,9 +6740,8 @@ function openShareModal(postId) {
     activePostForShare = Object.assign({ id: docSnap.id }, docSnap.data());
 
     var modal = document.getElementById('eb-share-modal');
-    if (!modal) return;
 
-    // 1. ტექსტის ველი (Placeholder)
+    // 1. ტექსტის ველი
     var thoughtInput = document.getElementById('share-custom-thought');
     if (thoughtInput) {
       thoughtInput.value = "";
@@ -6757,33 +6755,31 @@ function openShareModal(postId) {
     }
 
     // 3. სექციის სათაური ("გაგზავნა მეგობრებთან")
-    var sectionTitle = modal.querySelector('.share-section-title') || document.getElementById('share-section-title');
+    var sectionTitle = modal ? modal.querySelector('.share-section-title') : null;
     if (sectionTitle && t.sendToFriends) {
       sectionTitle.innerText = t.sendToFriends;
     }
 
-    // 4. ზედა ბეიჯები (სიახლეების ზოლი & საჯარო)
-    var badgeSpans = modal.querySelectorAll('.share-badges-row span, .share-badges-row > *');
-    if (badgeSpans.length >= 2) {
-      if (t.shareNewsFeed) {
-        badgeSpans[0].innerHTML = `<img src="icons/house.svg" class="post-action-icon" style="width:12px;height:12px;" alt=""> ${t.shareNewsFeed}`;
-      }
-      if (t.sharePublic) {
-        badgeSpans[1].innerHTML = `<img src="icons/globe.svg" class="post-action-icon" style="width:12px;height:12px;" alt=""> ${t.sharePublic}`;
-      }
+    // 4. ზედა ბეიჯები
+    var badgeFeed = modal ? modal.querySelector('.share-badges-row .share-badge-btn:nth-child(1)') : null;
+    if (badgeFeed && t.shareNewsFeed) {
+      badgeFeed.innerHTML = `<img src="icons/house.svg" class="post-action-icon" style="width:12px;height:12px;"> ${t.shareNewsFeed}`;
+    }
+
+    var badgePublic = modal ? modal.querySelector('.share-badges-row .share-badge-btn:nth-child(2)') : null;
+    if (badgePublic && t.sharePublic) {
+      badgePublic.innerHTML = `<img src="icons/globe.svg" class="post-action-icon" style="width:12px;height:12px;"> ${t.sharePublic}`;
     }
 
     // 5. ქვედა ღილაკები (სიუჟეტი, ჯგუფი, ბმულის კოპირება)
-    var appSpans = modal.querySelectorAll('.share-apps-row span, .share-app-item span');
+    var appSpans = modal ? modal.querySelectorAll('.share-apps-row .share-app-item span') : [];
     if (appSpans.length >= 5) {
       if (t.shareYourStory) appSpans[0].innerText = t.shareYourStory;
-      // appSpans[1] -> Messenger
-      // appSpans[2] -> WhatsApp
       if (t.shareGroup) appSpans[3].innerText = t.shareGroup;
       if (t.shareCopyLink) appSpans[4].innerText = t.shareCopyLink;
     }
 
-    // 6. მომხმარებლის სახელი და ავატარი
+    // 6. ავატარი & სახელი
     var defaultUser = t.userUnit || "User";
     var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || defaultUser);
     var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
@@ -6795,7 +6791,7 @@ function openShareModal(postId) {
       avEl.innerHTML = `<img src="${myAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
     }
 
-    modal.style.display = "flex";
+    if (modal) modal.style.display = "flex";
     loadShareFriendsList();
   });
 }
