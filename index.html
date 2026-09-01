@@ -5193,76 +5193,134 @@ function toggleAuthMode() {
     });
   }
 }
+    
+// ლოად პოსტი აქ იწყება
+  var lastVisiblePostDoc = null;
+var isLoadingMorePosts = false;
+var hasMorePosts = true;
+var isFeedScrollAttached = false;
 
-    function loadPosts() {
-      if (!currentUser) return;
+function loadPosts(isNextPage) {
+  if (!currentUser) return;
 
-      fetchBlockedUserIds(function(blockedSet) {
-        var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) : 
-          Promise.all([
-            db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
-            db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
-          ]).then(function(results) {
-            var myFriendsSet = new Set();
-            results[0].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().receiver_id); });
-            results[1].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().sender_id); });
-            cachedFriendsSet = myFriendsSet;
-            return myFriendsSet;
+  if (!isNextPage) {
+    lastVisiblePostDoc = null;
+    hasMorePosts = true;
+    isLoadingMorePosts = false;
+  } else {
+    if (isLoadingMorePosts || !hasMorePosts) return;
+  }
+
+  isLoadingMorePosts = true;
+
+  fetchBlockedUserIds(function(blockedSet) {
+    var fetchFriendsPromise = cachedFriendsSet ? Promise.resolve(cachedFriendsSet) : 
+      Promise.all([
+        db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+        db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+      ]).then(function(results) {
+        var myFriendsSet = new Set();
+        results[0].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().receiver_id); });
+        results[1].forEach(function(docSnap) { myFriendsSet.add(docSnap.data().sender_id); });
+        cachedFriendsSet = myFriendsSet;
+        return myFriendsSet;
+      });
+
+    fetchFriendsPromise.then(function(myFriendsSet) {
+      // 20 პოსტის წამოღება (ახალი გვერდისას იწყებს ბოლო ნანახი პოსტიდან)
+      var query = db.collection('posts').orderBy('created_at', 'desc');
+      if (isNextPage && lastVisiblePostDoc) {
+        query = query.startAfter(lastVisiblePostDoc);
+      }
+      query = query.limit(20);
+
+      query.get().then(function(snapshot) {
+        var postsWall = document.getElementById('posts-wall');
+        var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+        if (!postsWall) {
+          isLoadingMorePosts = false;
+          return;
+        }
+
+        if (!isNextPage) {
+          postsWall.innerHTML = "";
+        }
+
+        if (snapshot.empty) {
+          hasMorePosts = false;
+          isLoadingMorePosts = false;
+          if (!isNextPage) {
+            postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
+          }
+          return;
+        }
+
+        // ვინახავთ ბოლო დოკუმენტს შემდეგი 20-ისთვის
+        lastVisiblePostDoc = snapshot.docs[snapshot.docs.length - 1];
+        if (snapshot.docs.length < 20) {
+          hasMorePosts = false;
+        }
+
+        var posts = [];
+        var authorIds = [];
+        snapshot.forEach(function(doc) {
+          var postData = Object.assign({ id: doc.id }, doc.data());
+          posts.push(postData);
+          if (postData.user_id) authorIds.push(postData.user_id);
+        });
+
+        fetchMultipleProfilesCached(authorIds, function() {
+          posts.forEach(function(postData) {
+            var authorId = postData.user_id;
+            var pData = cachedProfiles[authorId] || {};
+            var privacy = pData.privacy_setting || 'public';
+            var isMyOwnPost = (authorId === currentUser.uid);
+            var isFriend = myFriendsSet.has(authorId);
+            var isBlocked = blockedSet.has(authorId);
+
+            var shouldShow = !isBlocked && (isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend));
+
+            if (shouldShow) {
+              postsWall.innerHTML += createPostCardHtml(postData);
+              renderCommentsCountOnly(postData);
+              
+              if (postData.media_type === 'video') {
+                startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
+              }
+            }
           });
 
-        fetchFriendsPromise.then(function(myFriendsSet) {
-          db.collection('posts')
-            .orderBy('created_at', 'desc')
-            .limit(50)
-            .get()
-            .then(function(snapshot) {
-              var postsWall = document.getElementById('posts-wall');
-              var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-              if (!postsWall) return;
-              postsWall.innerHTML = "";
+          observeVideos();
+          isLoadingMorePosts = false;
 
-              if (snapshot.empty) {
-                postsWall.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.emptyWall}</div>`;
-                return;
+          // ავტომატური ჩასქროლვის მოსმენა (ერთხელ ემატება)
+          if (!isFeedScrollAttached) {
+            isFeedScrollAttached = true;
+            window.addEventListener('scroll', function() {
+              var homeScr = document.getElementById('home-screen');
+              if (!homeScr || homeScr.style.display !== 'block') return;
+
+              // თუ მომხმარებელი ჩავიდა ბოლოდან 400px-ის დაშორებაზე, ტვირთავს შემდეგ 20-ს
+              if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
+                if (!isLoadingMorePosts && hasMorePosts) {
+                  loadPosts(true);
+                }
               }
-
-              var posts = [];
-              var authorIds = [];
-              snapshot.forEach(function(doc) {
-                var postData = Object.assign({ id: doc.id }, doc.data());
-                posts.push(postData);
-                if (postData.user_id) authorIds.push(postData.user_id);
-              });
-
-              fetchMultipleProfilesCached(authorIds, function() {
-                posts.forEach(function(postData) {
-                  var authorId = postData.user_id;
-                  var pData = cachedProfiles[authorId] || {};
-                  var privacy = pData.privacy_setting || 'public';
-                  var isMyOwnPost = (authorId === currentUser.uid);
-                  var isFriend = myFriendsSet.has(authorId);
-                  var isBlocked = blockedSet.has(authorId);
-
-                  var shouldShow = !isBlocked && (isMyOwnPost || (privacy === 'public') || (privacy === 'friends' && isFriend));
-
-                  if (shouldShow) {
-                    postsWall.innerHTML += createPostCardHtml(postData);
-                    renderCommentsCountOnly(postData);
-                    
-                    if (postData.media_type === 'video') {
-                      startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
-                    }
-                  }
-                });
-                observeVideos();
-              });
-            });
-        }).catch(function(err) {
-          console.error("Error loading posts with privacy filter:", err);
+            }, { passive: true });
+          }
         });
+      }).catch(function(err) {
+        isLoadingMorePosts = false;
+        console.error("Error loading posts with pagination:", err);
       });
-    }
-
+    }).catch(function(err) {
+      isLoadingMorePosts = false;
+      console.error("Error fetching friends:", err);
+    });
+  });
+}  
+// და აქ მთავრდება
+    
 // აქტიური ლაივების მოსმენა Feed-ისთვის
 function subscribeActiveLivesForFeed() {
   db.collection('lives')
