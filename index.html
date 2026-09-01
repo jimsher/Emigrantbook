@@ -3977,15 +3977,18 @@ auth.onAuthStateChanged(function(user) {
    function openLikersListModal() {
   if (!activePostForComments) return;
   var container = document.getElementById('likers-list-container');
-  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
   if (!container) return;
-  container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading}</div>`;
+  
+  container.innerHTML = `<div style="text-align: center; padding: 20px; color: #aaaaaa;">${t.loading || 'Loading...'}</div>`;
   var likersModal = document.getElementById('likers-list-modal');
   if (likersModal) likersModal.style.display = "flex";
 
   db.collection('posts').doc(activePostForComments).collection('post_likes').get().then(function(snapshot) {
     if (snapshot.empty) {
-      container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">No likes yet</div>`;
+      var noLikesText = t.noLikes || "No likes yet";
+      container.innerHTML = `<div style="color: #aaaaaa; text-align: center; padding: 20px;">${noLikesText}</div>`;
       return;
     }
 
@@ -3993,7 +3996,7 @@ auth.onAuthStateChanged(function(user) {
     snapshot.forEach(function(doc) {
       var p = doc.data();
       var likerId = doc.id;
-      var finalName = p.full_name || "User";
+      var finalName = p.full_name || (t.userUnit || "User");
       var isOnline = isUserOnline(p);
       var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
       var likerAvatar = p.avatar_url || DEFAULT_AVATAR_URL;
@@ -4011,7 +4014,7 @@ auth.onAuthStateChanged(function(user) {
     });
   }).catch(function(err) {
     console.error("Likers load error:", err);
-    container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">Error loading data</div>`;
+    container.innerHTML = `<div style="color: #ff4d4f; text-align: center; padding: 20px;">${t.notifError || 'Error loading data'}</div>`;
   });
 }
     
