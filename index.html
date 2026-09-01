@@ -6732,6 +6732,7 @@ function openProfileViewsFromHeader() {
 
 function openShareModal(postId) {
   if (!currentUser) return;
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
   
   db.collection('posts').doc(postId).get().then(function(docSnap) {
     if (!docSnap.exists) return;
@@ -6740,10 +6741,24 @@ function openShareModal(postId) {
     
     var modal = document.getElementById('eb-share-modal');
     var thoughtInput = document.getElementById('share-custom-thought');
-    if (thoughtInput) thoughtInput.value = "";
+    if (thoughtInput) {
+      thoughtInput.value = "";
+      if (t.saySomething) thoughtInput.placeholder = t.saySomething;
+    }
+
+    var submitBtn = document.getElementById('share-submit-btn');
+    if (submitBtn && t.shareNow) {
+      submitBtn.innerText = t.shareNow;
+    }
+
+    var sectionTitle = modal ? modal.querySelector('.share-section-title') : null;
+    if (sectionTitle && t.sendToFriends) {
+      sectionTitle.innerText = t.sendToFriends;
+    }
 
     // ავატარი & სახელი
-    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
+    var defaultUser = t.userUnit || "User";
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || defaultUser);
     var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
     
     var nameEl = document.getElementById('share-modal-user-name');
