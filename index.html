@@ -6732,7 +6732,8 @@ function openProfileViewsFromHeader() {
 
 function openShareModal(postId) {
   if (!currentUser) return;
-  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
   
   db.collection('posts').doc(postId).get().then(function(docSnap) {
     if (!docSnap.exists) return;
@@ -6742,46 +6743,57 @@ function openShareModal(postId) {
     var modal = document.getElementById('eb-share-modal');
     if (!modal) return;
 
-    // 1. ტექსტის ველი, ღილაკი და სექციის სათაური
+    // 1. ტექსტის ველი (ინპუტი)
     var thoughtInput = document.getElementById('share-custom-thought');
     if (thoughtInput) {
       thoughtInput.value = "";
-      thoughtInput.placeholder = t.saySomething || "Say something...";
+      if (t.saySomething) thoughtInput.placeholder = t.saySomething;
     }
 
+    // 2. გაზიარების მთავარი ღილაკი
     var submitBtn = document.getElementById('share-submit-btn');
-    if (submitBtn) {
-      submitBtn.innerText = t.shareNow || "Share Now";
+    if (submitBtn && t.shareNow) {
+      submitBtn.innerText = t.shareNow;
     }
 
-    var sectionTitle = modal.querySelector('.share-section-title');
-    if (sectionTitle) {
-      sectionTitle.innerText = t.sendToFriends || "Send to Friends";
+    // 3. სექციის სათაური ("გაგზავნა მეგობრებთან")
+    var sectionTitle = modal.querySelector('.share-section-title') || document.getElementById('share-section-title');
+    if (sectionTitle && t.sendToFriends) {
+      sectionTitle.innerText = t.sendToFriends;
     }
 
-    // 2. ზედა ბეიჯები (სიახლეების ზოლი / საჯარო)
-    var badgeFeed = modal.querySelector('.share-badges-row span:nth-child(1)');
-    if (badgeFeed) {
-      badgeFeed.innerHTML = `<img src="icons/house.svg" class="post-action-icon" style="width:12px;height:12px;"> ${t.shareNewsFeed || "News Feed ▾"}`;
-    }
+    // 4. მოდალის ყველა ღილაკისა და ბეიჯის გარანტირებული გადათარგმნა
+    var allTextNodes = modal.querySelectorAll('span, button, a, div');
+    allTextNodes.forEach(function(el) {
+      if (el.children.length === 0) {
+        var txt = el.innerText.trim();
+        
+        // სიახლეების ზოლი
+        if (txt.includes('სიახლეების ზოლი') || txt.includes('News Feed') || txt.includes('Лента новостей') || txt.includes('Neuigkeiten') || txt.includes('Feed notizie') || txt.includes("Fil d'actualit")) {
+          if (t.shareNewsFeed) el.innerText = t.shareNewsFeed;
+        }
+        // საჯარო
+        else if (txt.includes('საჯარო') || txt.includes('Public') || txt.includes('Публично') || txt.includes('Öffentlich') || txt.includes('Pubblico')) {
+          if (t.sharePublic) el.innerText = t.sharePublic;
+        }
+        // თქვენი სიუჟეტი
+        else if (txt.includes('თქვენი სიუჟეტი') || txt.includes('Your Story') || txt.includes('Ваша история') || txt.includes('Deine Story') || txt.includes('La tua storia') || txt.includes('Votre story')) {
+          if (t.shareYourStory) el.innerText = t.shareYourStory;
+        }
+        // ჯგუფი
+        else if (txt === 'ჯგუფი' || txt === 'Group' || txt === 'Группа' || txt === 'Gruppe' || txt === 'Gruppo' || txt === 'Groupe') {
+          if (t.shareGroup) el.innerText = t.shareGroup;
+        }
+        // ბმულის კოპირება
+        else if (txt.includes('ბმულის კოპირება') || txt.includes('Copy link') || txt.includes('Скопировать ссылку') || txt.includes('Link kopieren') || txt.includes('Copia link') || txt.includes('Copier le lien')) {
+          if (t.shareCopyLink) el.innerText = t.shareCopyLink;
+        }
+      }
+    });
 
-    var badgePublic = modal.querySelector('.share-badges-row span:nth-child(2)');
-    if (badgePublic) {
-      badgePublic.innerHTML = `<img src="icons/globe.svg" class="post-action-icon" style="width:12px;height:12px;"> ${t.sharePublic || "Public ▾"}`;
-    }
-
-    // 3. ქვედა ღილაკები (სიუჟეტი, ჯგუფი, ბმულის კოპირება)
-    var appSpans = modal.querySelectorAll('.share-apps-row .share-app-item span');
-    if (appSpans.length >= 5) {
-      appSpans[0].innerText = t.shareYourStory || "Your Story";
-      // appSpans[1] -> Messenger
-      // appSpans[2] -> WhatsApp
-      appSpans[3].innerText = t.shareGroup || "Group";
-      appSpans[4].innerText = t.shareCopyLink || "Copy link";
-    }
-
-    // 4. მომხმარებლის სახელი და ავატარი
-    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || (t.userUnit || "User"));
+    // 5. მომხმარებლის სახელი და ავატარი
+    var defaultUser = t.userUnit || "User";
+    var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || defaultUser);
     var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
     
     var nameEl = document.getElementById('share-modal-user-name');
@@ -6794,7 +6806,8 @@ function openShareModal(postId) {
     modal.style.display = "flex";
     loadShareFriendsList();
   });
-}     
+}
+  
 
 function closeShareModal() {
   var modal = document.getElementById('eb-share-modal');
