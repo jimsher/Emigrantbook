@@ -4357,57 +4357,58 @@ auth.onAuthStateChanged(function(user) {
 
     /* 📸 PHOTO GRID RENDERER WITH SELECTION MODE SUPPORT */
     function renderPhotoGridUI() {
-      var photosWall = document.getElementById('profile-photos-wall');
-      if (!photosWall) return;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var photosWall = document.getElementById('profile-photos-wall');
+  if (!photosWall) return;
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
 
-      if (galleryPhotoUrls.length === 0) {
-        photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noPhotos}</div>`;
-        return;
-      }
+  if (galleryPhotoUrls.length === 0) {
+    photosWall.innerHTML = `<div style="text-align: center; padding: 40px; color: #aaaaaa;">${t.noPhotos || 'No photos uploaded.'}</div>`;
+    return;
+  }
 
-      var isOwnProfile = (activeViewingProfileId === currentUser.uid);
-      var barClass = isPhotoSelectionMode ? 'photo-selection-bar active' : 'photo-selection-bar';
-      
-      var selectionBarHtml = '';
-      if (isOwnProfile) {
-        selectionBarHtml = `
-          <div id="photo-selection-bar" class="${barClass}">
-            <span style="color:#ffffff; font-weight:bold; font-size:14px;" id="selected-photos-count">${selectedPhotoIndices.size} ${t.selected || 'selected'}</span>
-            <div style="display:flex; gap:8px;">
-              <button onclick="deleteSelectedPhotos()" style="background:#ff4d4f; color:#ffffff; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🗑️ ${t.delete || 'Delete'}</button>
-              <button onclick="exitPhotoSelectionMode()" style="background:#3a3b3c; color:#ffffff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">${t.cancel || 'Cancel'}</button>
-            </div>
-          </div>
-        `;
-      }
+  var isOwnProfile = (activeViewingProfileId === currentUser.uid);
+  var barClass = isPhotoSelectionMode ? 'photo-selection-bar active' : 'photo-selection-bar';
+  
+  var selectionBarHtml = '';
+  if (isOwnProfile) {
+    selectionBarHtml = `
+      <div id="photo-selection-bar" class="${barClass}">
+        <span style="color:#ffffff; font-weight:bold; font-size:14px;" id="selected-photos-count">${selectedPhotoIndices.size} ${t.selected || 'selected'}</span>
+        <div style="display:flex; gap:8px;">
+          <button onclick="deleteSelectedPhotos()" style="background:#ff4d4f; color:#ffffff; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">🗑️ ${t.delete || 'Delete'}</button>
+          <button onclick="exitPhotoSelectionMode()" style="background:#3a3b3c; color:#ffffff; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px;">${t.cancel || 'Cancel'}</button>
+        </div>
+      </div>
+    `;
+  }
 
-      var gridClass = isPhotoSelectionMode ? 'photo-grid-full selection-mode-active' : 'photo-grid-full';
-      var collageHtml = `<div class="${gridClass}">`;
+  var gridClass = isPhotoSelectionMode ? 'photo-grid-full selection-mode-active' : 'photo-grid-full';
+  var collageHtml = `<div class="${gridClass}">`;
 
-      galleryPhotoUrls.forEach(function(url, index) {
-        var isSelected = selectedPhotoIndices.has(index);
-        var containerClass = isSelected ? 'photo-item-container selected' : 'photo-item-container';
+  galleryPhotoUrls.forEach(function(url, index) {
+    var isSelected = selectedPhotoIndices.has(index);
+    var containerClass = isSelected ? 'photo-item-container selected' : 'photo-item-container';
 
-        collageHtml += `
-          <div class="${containerClass}" 
-               data-index="${index}"
-               ontouchstart="handlePhotoTouchStart(event, ${index})"
-               ontouchend="handlePhotoTouchEnd(event, ${index})"
-               ontouchmove="handlePhotoTouchMove(event)"
-               onmousedown="handlePhotoMouseDown(event, ${index})"
-               onmouseup="handlePhotoMouseUp(event, ${index})"
-               onmouseleave="handlePhotoMouseLeave(event)"
-               onclick="handlePhotoClick(event, ${index})">
-            <img src="${url}" alt="Media">
-            <div class="photo-select-checkbox">${isSelected ? '✓' : ''}</div>
-          </div>
-        `;
-      });
-      collageHtml += '</div>';
+    collageHtml += `
+      <div class="${containerClass}" 
+           data-index="${index}"
+           ontouchstart="handlePhotoTouchStart(event, ${index})"
+           ontouchend="handlePhotoTouchEnd(event, ${index})"
+           ontouchmove="handlePhotoTouchMove(event)"
+           onmousedown="handlePhotoMouseDown(event, ${index})"
+           onmouseup="handlePhotoMouseUp(event, ${index})"
+           onmouseleave="handlePhotoMouseLeave(event)"
+           onclick="handlePhotoClick(event, ${index})">
+        <img src="${url}" alt="Media">
+        <div class="photo-select-checkbox">${isSelected ? '✓' : ''}</div>
+      </div>
+    `;
+  });
+  collageHtml += '</div>';
 
-      photosWall.innerHTML = `<div style="padding: 10px 0;">${selectionBarHtml}${collageHtml}</div>`;
-    }
+  photosWall.innerHTML = `<div style="padding: 10px 0;">${selectionBarHtml}${collageHtml}</div>`;
+}
 
     /* 📸 PHOTO TOUCH & SELECTION HANDLERS */
     function handlePhotoTouchStart(e, index) {
