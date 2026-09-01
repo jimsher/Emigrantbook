@@ -7378,6 +7378,36 @@ function optimizeImageBeforeUpload(file, callback) {
   };
   reader.readAsDataURL(file);
 }
+
+
+
+    // აქ იწყება საიტის ფანჯარები
+    function showCustomConfirm(message, onConfirm) {
+  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+
+  var modal = document.getElementById('eb-custom-confirm-modal');
+  var textEl = document.getElementById('eb-confirm-text');
+  var cancelBtn = document.getElementById('eb-confirm-cancel-btn');
+  var okBtn = document.getElementById('eb-confirm-ok-btn');
+
+  if (!modal || !textEl || !cancelBtn || !okBtn) return;
+
+  textEl.innerText = message;
+  cancelBtn.innerText = t.cancel || "Cancel";
+  okBtn.innerText = t.delete || "Delete";
+
+  modal.style.display = 'flex';
+
+  cancelBtn.onclick = function() {
+    modal.style.display = 'none';
+  };
+
+  okBtn.onclick = function() {
+    modal.style.display = 'none';
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
