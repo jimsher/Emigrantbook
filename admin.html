@@ -519,8 +519,56 @@
     <div id="admin-tabs-nav" class="admin-tabs-wrapper" style="display: none;">
       <div class="admin-tabs">
         <button class="tab-btn active" onclick="switchTab('monitoring')">📊 მონიტორინგი</button>
+        <button id="tab-btn-withdrawals" class="tab-btn" onclick="switchTab('withdrawals')" style="display: none;">
+          💳 გატანის მოთხოვნები <span id="withdraw-badge-counter" style="background:var(--danger-red);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px;margin-left:4px;display:none;">0</span>
+        </button>
         <button class="tab-btn" onclick="switchTab('moderation')">🛡️ მოდერაცია</button>
         <button id="tab-btn-actions" class="tab-btn" onclick="switchTab('actions')" style="display: none;">⚙️ მართვა & ფინანსები</button>
+      </div>
+    </div>
+
+    <!-- ტაბი: თანხის გატანის მოთხოვნები (ახალი სრული ეკრანიანი მოდული) -->
+    <div id="tab-withdrawals" class="admin-card" style="display: none;">
+      <div class="admin-header-title">
+        <span>💳</span>
+        <span>თანხის გატანის მოთხოვნები</span>
+      </div>
+      <div class="admin-subtitle">მომხმარებელთა საბანკო რეკვიზიტები, ბანკის მონაცემები და გადარიცხვის დადასტურება</div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-box-lbl">მოლოდინში (Pending)</span>
+          <span class="stat-box-val" id="stat-pending-withdrawals" style="color: var(--warning-orange);">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">ჩარიცხული თანხა</span>
+          <span class="stat-box-val" id="stat-completed-sum" style="color: var(--success-green);">€ 0.00</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">სულ მოთხოვნა</span>
+          <span class="stat-box-val" id="stat-total-withdrawals">0</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>მომხმარებელი</th>
+              <th>თანხა (€ / ₾)</th>
+              <th>IBAN / რეკვიზიტი</th>
+              <th>ქვეყანა & ბანკი</th>
+              <th>დღე, რიცხვი, საათი</th>
+              <th>სტატუსი</th>
+              <th>მოქმედება</th>
+            </tr>
+          </thead>
+          <tbody id="admin-withdrawals-table-body">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">მოთხოვნები იტვირთება...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -655,7 +703,7 @@
 
       <div class="action-grid">
         
-        <!-- 1. თანხის დარიცხვა / ბალანსის მართვა (ახალი ფუნქცია) -->
+        <!-- 1. თანხის დარიცხვა / ბალანსის მართვა -->
         <div class="maintenance-box" style="grid-column: 1 / -1; border-color: rgba(220, 174, 54, 0.4);">
           <div>
             <div class="box-header">
@@ -782,6 +830,13 @@
     let allUsersList = [];
     let isMaintenanceActive = false;
     let currentUserRole = 'user';
+    let currentEurRate = 2.96;
+
+    // კურსის ამოღება
+    fetch('https://open.er-api.com/v6/latest/EUR')
+      .then(res => res.json())
+      .then(data => { if (data && data.rates && data.rates.GEL) currentEurRate = parseFloat(data.rates.GEL); })
+      .catch(() => {});
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
@@ -807,7 +862,9 @@
                 roleBadgeEl.className = "role-badge role-admin";
                 roleBadgeEl.innerHTML = "👑 Admin";
                 document.getElementById('tab-btn-actions').style.display = 'inline-flex';
+                document.getElementById('tab-btn-withdrawals').style.display = 'inline-flex';
                 loadMaintenanceState();
+                loadWithdrawalsData();
               } else {
                 roleBadgeEl.className = "role-badge role-moderator";
                 roleBadgeEl.innerHTML = "🛡️ Mod";
@@ -845,19 +902,255 @@
     }
 
     function switchTab(tabName) {
-      const tabs = ['monitoring', 'moderation', 'actions'];
+      const tabs = ['monitoring', 'moderation', 'actions', 'withdrawals'];
       tabs.forEach(t => {
         const el = document.getElementById('tab-' + t);
         if (el) el.style.display = (t === tabName) ? 'block' : 'none';
       });
 
       const btns = document.querySelectorAll('.tab-btn');
-      btns.forEach((btn, idx) => {
-        btn.classList.toggle('active', 
-          (idx === 0 && tabName === 'monitoring') || 
-          (idx === 1 && tabName === 'moderation') || 
-          (idx === 2 && tabName === 'actions')
-        );
+      btns.forEach((btn) => {
+        const isTarget = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabName);
+        btn.classList.toggle('active', !!isTarget);
+      });
+    }
+
+    // 💳 IBAN-ის ქვეყნის და ბანკის ჭკვიანი ამოცნობა
+    function parseIbanDetails(iban) {
+      if (!iban) return { country: 'უცნობი', bank: 'უცნობი', flag: '🏳️' };
+      var clean = iban.replace(/\s+/g, '').toUpperCase();
+
+      if (clean.includes('@') || !clean.match(/^[A-Z]{2}/)) {
+        return { country: 'PayPal / ელ-ფოსტა', bank: 'PayPal Account', flag: '🌐' };
+      }
+
+      var cCode = clean.substring(0, 2);
+      var countryMap = {
+        'GE': { name: 'საქართველო', flag: '🇬🇪' },
+        'IT': { name: 'იტალია', flag: '🇮🇹' },
+        'DE': { name: 'გერმანია', flag: '🇩🇪' },
+        'FR': { name: 'საფრანგეთი', flag: '🇫🇷' },
+        'ES': { name: 'ესპანეთი', flag: '🇪🇸' },
+        'GR': { name: 'საბერძნეთი', flag: '🇬🇷' },
+        'GB': { name: 'დიდი ბრიტანეთი', flag: '🇬🇧' },
+        'PL': { name: 'პოლონეთი', flag: '🇵🇱' },
+        'US': { name: 'აშშ', flag: '🇺🇸' },
+        'CY': { name: 'კვიპროსი', flag: '🇨🇾' },
+        'PT': { name: 'პორტუგალია', flag: '🇵🇹' },
+        'AT': { name: 'ავსტრია', flag: '🇦🇹' },
+        'BE': { name: 'ბელგია', flag: '🇧🇪' },
+        'NL': { name: 'ნიდერლანდები', flag: '🇳🇱' },
+        'IE': { name: 'ირლანდია', flag: '🇮🇪' },
+        'TR': { name: 'თურქეთი', flag: '🇹🇷' }
+      };
+
+      var cInfo = countryMap[cCode] || { name: cCode, flag: '🌍' };
+      var bankName = 'საბანკო ანგარიში (' + cCode + ')';
+
+      if (cCode === 'GE' && clean.length >= 6) {
+        var bCode = clean.substring(4, 6);
+        var geBanks = {
+          'TB': 'თიბისი ბანკი (TBC)',
+          'BG': 'საქართველოს ბანკი (BOG)',
+          'LB': 'ლიბერთი ბანკი (Liberty)',
+          'BA': 'ბაზისბანკი (BasisBank)',
+          'CR': 'კრედო ბანკი (Credo)',
+          'PC': 'პროკრედიტ ბანკი (ProCredit)',
+          'TE': 'ტერაბანკი (TeraBank)',
+          'KS': 'ქართუ ბანკი (Cartu)',
+          'HU': 'ჰალიკ ბანკი (Halyk)',
+          'PA': 'პაშა ბანკი (Pasha)'
+        };
+        bankName = geBanks[bCode] || ('ქართული ბანკი (' + bCode + ')');
+      } else if (cCode === 'IT') {
+        bankName = 'იტალიური საბანკო ანგარიში';
+      }
+
+      return { country: cInfo.name, bank: bankName, flag: cInfo.flag };
+    }
+
+    // 💳 თანხის გატანის მოთხოვნების ჩატვირთვა რეალურ დროში
+    function loadWithdrawalsData() {
+      db.collection('withdrawal_requests')
+        .orderBy('created_at', 'desc')
+        .onSnapshot(function(snapshot) {
+          var tbody = document.getElementById('admin-withdrawals-table-body');
+          var badgeCounter = document.getElementById('withdraw-badge-counter');
+          var statPending = document.getElementById('stat-pending-withdrawals');
+          var statCompleted = document.getElementById('stat-completed-sum');
+          var statTotal = document.getElementById('stat-total-withdrawals');
+
+          if (!tbody) return;
+
+          if (snapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">თანხის გატანის მოთხოვნები არ არის</td></tr>`;
+            if (badgeCounter) badgeCounter.style.display = 'none';
+            if (statPending) statPending.innerText = '0';
+            if (statTotal) statTotal.innerText = '0';
+            return;
+          }
+
+          var pendingCount = 0;
+          var totalCompletedEur = 0;
+          tbody.innerHTML = "";
+
+          snapshot.forEach(function(docSnap) {
+            var item = docSnap.data();
+            var reqId = docSnap.id;
+            var amount = parseFloat(item.amount) || 0;
+            var iban = item.iban || '-';
+            var status = item.status || 'pending';
+
+            if (status === 'pending') pendingCount++;
+            if (status === 'completed') totalCompletedEur += amount;
+
+            var userObj = allUsersList.find(u => u.uid === item.user_id) || {};
+            var userName = userObj.full_name || item.user_name || "მომხმარებელი";
+            var userEmail = item.user_email || userObj.email || "-";
+            var avatar = userObj.avatar_url;
+            var avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : userName.charAt(0).toUpperCase();
+
+            // თარიღი და დრო
+            var dateStr = "-";
+            if (item.created_at) {
+              var d = item.created_at.toDate ? item.created_at.toDate() : new Date(item.created_at);
+              dateStr = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            var bankInfo = parseIbanDetails(iban);
+            var gelEquiv = (amount * currentEurRate).toFixed(2);
+
+            // სტატუსის ბეიჯი
+            var statusBadge = `<span style="background:rgba(245, 158, 11, 0.15); color:var(--warning-orange); border:1px solid rgba(245, 158, 11, 0.3); padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">⏳ განხილვაში</span>`;
+            var actionBtns = `
+              <div style="display:flex; gap:6px;">
+                <button onclick="approveWithdrawal('${reqId}', '${item.user_id}', '${item.request_id}', ${amount})" class="btn-action btn-success" style="height:30px; font-size:11.5px; padding:0 10px;">✓ ჩარიცხულია</button>
+                <button onclick="rejectWithdrawal('${reqId}', '${item.user_id}', '${item.request_id}', ${amount})" class="btn-action btn-danger" style="height:30px; font-size:11.5px; padding:0 10px;">✕ უარყოფა</button>
+              </div>
+            `;
+
+            if (status === 'completed') {
+              statusBadge = `<span style="background:rgba(16, 185, 129, 0.15); color:var(--success-green); border:1px solid rgba(16, 185, 129, 0.3); padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">✅ ჩარიცხულია</span>`;
+              actionBtns = `<span style="color:var(--text-muted); font-size:12px;">შესრულებულია</span>`;
+            } else if (status === 'rejected') {
+              statusBadge = `<span style="background:rgba(239, 68, 68, 0.15); color:var(--danger-red); border:1px solid rgba(239, 68, 68, 0.3); padding:4px 8px; border-radius:6px; font-weight:700; font-size:11px;">❌ უარყოფილია</span>`;
+              actionBtns = `<span style="color:var(--text-muted); font-size:12px;">დაბრუნებულია</span>`;
+            }
+
+            var row = `
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar-mini">${avatarHtml}</div>
+                    <div>
+                      <div style="font-weight:700; color:#ffffff;">${userName}</div>
+                      <div style="font-size:11px; color:#70baff;">${userEmail}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight:900; color:#52c41a; font-size:14px;">€ ${amount.toFixed(2)}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">≈ ₾ ${gelEquiv}</div>
+                </td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span class="ip-code" style="color:#ffffff; font-size:12.5px; font-weight:600;">${iban}</span>
+                    <button onclick="navigator.clipboard.writeText('${iban}'); alert('IBAN დაკოპირდა!');" style="background:#202026; border:1px solid var(--card-border); color:var(--accent-gold); padding:2px 6px; border-radius:4px; cursor:pointer; font-size:11px;">📋</button>
+                  </div>
+                </td>
+                <td>
+                  <div><span class="country-badge">${bankInfo.flag} ${bankInfo.country}</span></div>
+                  <div style="font-size:11.5px; color:#cfd3dc; margin-top:2px;">${bankInfo.bank}</div>
+                </td>
+                <td style="color:var(--text-muted); font-size:12px;">${dateStr}</td>
+                <td>${statusBadge}</td>
+                <td>${actionBtns}</td>
+              </tr>
+            `;
+
+            tbody.innerHTML += row;
+          });
+
+          if (badgeCounter) {
+            badgeCounter.innerText = pendingCount;
+            badgeCounter.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+          }
+          if (statPending) statPending.innerText = pendingCount;
+          if (statCompleted) statCompleted.innerText = '€ ' + totalCompletedEur.toFixed(2);
+          if (statTotal) statTotal.innerText = snapshot.size;
+        });
+    }
+
+    // ✅ ადმინის მიერ გადარიცხვის დადასტურება (მომხმარებლის ისტორიაში სტატუსი ხდება წარმატებული)
+    function approveWithdrawal(reqDocId, userId, txId, amount) {
+      if (!confirm(`დარწმუნებული ხართ, რომ გადარიცხეთ € ${amount.toFixed(2)} და გსურთ დადასტურება?`)) return;
+
+      var batch = db.batch();
+
+      // 1. მოთხოვნის დადასტურება
+      var reqRef = db.collection('withdrawal_requests').doc(reqDocId);
+      batch.update(reqRef, {
+        status: 'completed',
+        processed_at: firebase.firestore.FieldValue.serverTimestamp(),
+        processed_by: auth.currentUser.uid
+      });
+
+      // 2. მომხმარებლის ტრანზაქციის სტატუსის განახლება წარმატებულზე
+      if (userId && txId) {
+        var userTxRef = db.collection('profiles').doc(userId).collection('transactions').doc(txId);
+        batch.update(userTxRef, {
+          status: 'წარმატებული',
+          processed_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      batch.commit().then(() => {
+        alert("გადარიცხვა წარმატებით დადასტურდა! მომხმარებლის ისტორია განახლდა.");
+      }).catch(err => {
+        console.error("Approve error:", err);
+        alert("შეცდომა: " + err.message);
+      });
+    }
+
+    // ❌ მოთხოვნის უარყოფა და თანხის დაბრუნება მომხმარებლის ბალანსზე
+    function rejectWithdrawal(reqDocId, userId, txId, amount) {
+      var reason = prompt("გთხოვთ მიუთითოთ უარყოფის მიზეზი (მაგ: არასწორი IBAN):", "არასწორი რეკვიზიტები");
+      if (reason === null) return;
+
+      var batch = db.batch();
+
+      // 1. მოთხოვნის უარყოფა
+      var reqRef = db.collection('withdrawal_requests').doc(reqDocId);
+      batch.update(reqRef, {
+        status: 'rejected',
+        reject_reason: reason,
+        processed_at: firebase.firestore.FieldValue.serverTimestamp(),
+        processed_by: auth.currentUser.uid
+      });
+
+      // 2. თანხის უკან დაბრუნება ბალანსზე
+      if (userId) {
+        var userRef = db.collection('profiles').doc(userId);
+        batch.update(userRef, {
+          balance: firebase.firestore.FieldValue.increment(amount),
+          last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 3. ტრანზაქციის სტატუსის უარყოფა
+        if (txId) {
+          var userTxRef = userRef.collection('transactions').doc(txId);
+          batch.update(userTxRef, {
+            status: 'უარყოფილია (' + reason + ')',
+            processed_at: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      }
+
+      batch.commit().then(() => {
+        alert("მოთხოვნა უარყოფილია და თანხა დაბრუნდა მომხმარებლის ბალანსზე!");
+      }).catch(err => {
+        console.error("Reject error:", err);
+        alert("შეცდომა: " + err.message);
       });
     }
 
@@ -917,7 +1210,6 @@
             countrySet.add(country);
           }
 
-          // რეგისტრაციის სრული თარიღი და დრო
           var regDate = "-";
           if (data.created_at) {
             var d = data.created_at.toDate ? data.created_at.toDate() : new Date(data.created_at);
@@ -997,7 +1289,6 @@
         balance: firebase.firestore.FieldValue.increment(changeAmount),
         last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        // ტრანზაქციის ლოგის შენახვა
         return userRef.collection('transactions').add({
           type: actionType,
           amount: changeAmount,
