@@ -948,7 +948,8 @@
           <div class="cashout-desc" id="cashoutMinDesc" data-key="min_withdraw">მინიმალური გატანა: 50.00 € (≈ 148.00 ₾)</div>
           
           <div id="cashoutForm" style="display:none;">
-            <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal" disabled>
+            <input type="number" id="withdrawAmountInput" class="auth-input" placeholder="გასატანი თანხა (€)" min="50" step="any" disabled style="margin-top: 12px; margin-bottom: 0;">
+            <input type="text" id="ibanInput" class="auth-input" placeholder="IBAN / PayPal" disabled style="margin-top: 8px;">
             <button class="withdraw-btn" id="withdrawBtn" onclick="submitWithdraw()" disabled data-key="withdraw_req">გატანის მოთხოვნა</button>
           </div>
           <div id="cashoutStatus" style="color:#777777; font-size: 11px; margin-top: 10px; font-weight: 700;">
@@ -981,8 +982,8 @@
     const db = firebase.firestore();
 
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
-    var selectedCurrency = localStorage.getItem('emigrantbook_currency') || 'EUR'; // 'EUR' or 'GEL'
-    var eurToGelRate = 2.96; // fallback rate
+    var selectedCurrency = localStorage.getItem('emigrantbook_currency') || 'EUR';
+    var eurToGelRate = 2.96;
     var rawTransactions = [];
     var activeFilter = 'all';
     var currentUserEurBalance = 0;
@@ -1017,7 +1018,10 @@
         withdraw_req: "გატანის მოთხოვნა",
         thanks: "მადლობა!",
         payment_msg: "გადახდა მიღებულია. თანხა თქვენს ბალანსზე აისახება მყისიერად.",
-        check_balance: "ბალანსის გადამოწმება"
+        check_balance: "ბალანსის გადამოწმება",
+        withdraw_amount_ph: "გასატანი თანხა (€)",
+        withdraw_pending: "განხილვაში",
+        withdraw_tx_title: "თანხის გატანის მოთხოვნა"
       },
       en: {
         title: "Balance",
@@ -1048,7 +1052,10 @@
         withdraw_req: "Request Withdrawal",
         thanks: "Thank you!",
         payment_msg: "Payment received. Funds reflected in your balance instantly.",
-        check_balance: "Check Balance"
+        check_balance: "Check Balance",
+        withdraw_amount_ph: "Amount to withdraw (€)",
+        withdraw_pending: "Pending",
+        withdraw_tx_title: "Withdrawal Request"
       },
       ru: {
         title: "Баланс",
@@ -1079,11 +1086,13 @@
         withdraw_req: "Запросить вывод",
         thanks: "Спасибо!",
         payment_msg: "Оплата получена. Баланс обновлен мгновенно.",
-        check_balance: "Проверить баланс"
+        check_balance: "Проверить баланс",
+        withdraw_amount_ph: "Сумма вывода (€)",
+        withdraw_pending: "В обработке",
+        withdraw_tx_title: "Запрос на вывод"
       }
     };
 
-    // რეალურ დროში კურსის წამოღება
     async function fetchLiveExchangeRate() {
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/EUR');
@@ -1099,7 +1108,6 @@
       updateConvertedValues();
     }
 
-    // ვალუტის შეცვლა
     function switchCurrency(curr) {
       selectedCurrency = curr;
       localStorage.setItem('emigrantbook_currency', curr);
@@ -1136,7 +1144,6 @@
         if (pillIconEl) pillIconEl.innerText = '₾';
       }
 
-      // პაკეტების ქვეშ ლარის კურსის განახლება
       const pkgValues = [1, 5, 10, 25, 50, 100, 150, 500];
       pkgValues.forEach(v => {
         const el = document.getElementById('pkg-sub-' + v);
@@ -1164,6 +1171,11 @@
       if (document.getElementById('btn-filter-income')) document.getElementById('btn-filter-income').innerText = lang.filterIncome;
       if (document.getElementById('btn-filter-expense')) document.getElementById('btn-filter-expense').innerText = lang.filterExpense;
       if (document.getElementById('btn-filter-reward')) document.getElementById('btn-filter-reward').innerText = lang.filterReward;
+
+      var withdrawAmountInput = document.getElementById('withdrawAmountInput');
+      if (withdrawAmountInput && lang.withdraw_amount_ph) {
+        withdrawAmountInput.placeholder = lang.withdraw_amount_ph;
+      }
 
       document.querySelectorAll('[data-key]').forEach(function(el) {
         var key = el.getAttribute('data-key');
@@ -1193,6 +1205,7 @@
       var cashoutBadge = document.getElementById('cashoutBadge');
       var cashoutStatus = document.getElementById('cashoutStatus');
       var cashoutMinDesc = document.getElementById('cashoutMinDesc');
+      var withdrawAmountInput = document.getElementById('withdrawAmountInput');
       var ibanInput = document.getElementById('ibanInput');
       var withdrawBtn = document.getElementById('withdrawBtn');
 
@@ -1210,6 +1223,10 @@
           cashoutBadge.className = 'cashout-status-badge unlocked';
           cashoutBadge.innerText = 'ხელმისაწვდომია';
         }
+        if (withdrawAmountInput) {
+          withdrawAmountInput.disabled = false;
+          withdrawAmountInput.max = eurBalance;
+        }
         if (ibanInput) ibanInput.disabled = false;
         if (withdrawBtn) withdrawBtn.disabled = false;
         if (cashoutStatus) {
@@ -1223,6 +1240,10 @@
           cashoutBadge.className = 'cashout-status-badge locked';
           cashoutBadge.innerText = 'ჩაკეტილი';
         }
+        if (withdrawAmountInput) {
+          withdrawAmountInput.disabled = true;
+          withdrawAmountInput.value = '';
+        }
         if (ibanInput) {
           ibanInput.disabled = true;
           ibanInput.value = '';
@@ -1235,7 +1256,6 @@
       }
     }
 
-    // STRIPE გადახდის დაბრუნების დაუყოვნებლივი და საიმედო ასახვა
     function checkStripePaymentReturn(user) {
       if (!user) return;
 
@@ -1249,7 +1269,7 @@
       let pendingTime = parseInt(localStorage.getItem('pending_stripe_time') || sessionStorage.getItem('pending_stripe_time') || '0', 10);
       let hasPendingFlag = localStorage.getItem('pending_stripe_active') === 'true' || sessionStorage.getItem('pending_stripe_active') === 'true';
 
-      let isRecent = (Date.now() - pendingTime) < (4 * 60 * 60 * 1000); // 4 საათის ფარგლებში
+      let isRecent = (Date.now() - pendingTime) < (4 * 60 * 60 * 1000);
 
       let finalAmount = 0;
       if (urlAmount > 0) {
@@ -1293,13 +1313,11 @@
 
           var batch = db.batch();
 
-          // 1. ბალანსის განახლება
           batch.set(userRef, {
             balance: newBal,
             last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
 
-          // 2. ტრანზაქციის ლოგი
           var txRef = userRef.collection('transactions').doc();
           batch.set(txRef, {
             type: 'income',
@@ -1379,7 +1397,6 @@
       }
     });
 
-    // STRIPE-ზე გადასვლის ფუნქცია
     function initStripePayment(stripeUrl, eurAmount) {
       var user = auth.currentUser;
       if (!user) {
@@ -1387,7 +1404,6 @@
         return;
       }
 
-      // გადასვლამდე საიმედოდ ვინახავთ თანხას
       localStorage.setItem('pending_stripe_amount', eurAmount.toString());
       localStorage.setItem('pending_stripe_time', Date.now().toString());
       localStorage.setItem('pending_stripe_active', 'true');
@@ -1407,20 +1423,115 @@
       alert("რეიტინგის გვერდი მალე დაემატება!");
     }
 
+    /* თანხის გატანის ფუნქცია - თანხის ჩამოჭრით და განხილვაში ჩაწერით */
     function submitWithdraw() {
-      if (currentUserEurBalance < 50.00) {
+      var user = auth.currentUser;
+      if (!user) {
+        alert("ავტორიზაცია აუცილებელია!");
+        return;
+      }
+
+      var MIN_EUR = 50.00;
+      if (currentUserEurBalance < MIN_EUR) {
         alert("თანხის გატანისთვის აუცილებელია მინიმუმ 50.00 €!");
         return;
       }
 
-      var iban = document.getElementById('ibanInput').value.trim();
-      if (!iban) {
-        document.getElementById('cashoutStatus').innerText = "გთხოვთ მიუთითოთ IBAN ან PayPal!";
+      var amountInput = document.getElementById('withdrawAmountInput');
+      var ibanInput = document.getElementById('ibanInput');
+      var statusEl = document.getElementById('cashoutStatus');
+      var withdrawBtn = document.getElementById('withdrawBtn');
+
+      var withdrawAmount = parseFloat(amountInput ? amountInput.value : 0);
+      var iban = ibanInput ? ibanInput.value.trim() : "";
+
+      if (!withdrawAmount || isNaN(withdrawAmount) || withdrawAmount < MIN_EUR) {
+        if (statusEl) {
+          statusEl.style.color = '#ff4757';
+          statusEl.innerText = "მინიმალური გასატანი თანხაა 50.00 €!";
+        }
+        alert("გთხოვთ მიუთითოთ ვალიდური თანხა (მინიმუმ 50.00 €)!");
         return;
       }
 
-      alert("გატანის მოთხოვნა მიღებულია! გადამოწმება მოხდება 24 საათში.");
-      document.getElementById('ibanInput').value = '';
+      if (withdrawAmount > currentUserEurBalance) {
+        if (statusEl) {
+          statusEl.style.color = '#ff4757';
+          statusEl.innerText = "თქვენ არ გაქვთ საკმარისი ბალანსი!";
+        }
+        alert("მითითებული თანხა აღემატება თქვენს ხელმისაწვდომ ბალანსს!");
+        return;
+      }
+
+      if (!iban) {
+        if (statusEl) {
+          statusEl.style.color = '#ff4757';
+          statusEl.innerText = "გთხოვთ მიუთითოთ IBAN ან PayPal!";
+        }
+        alert("გთხოვთ მიუთითოთ IBAN ან PayPal!");
+        return;
+      }
+
+      withdrawBtn.disabled = true;
+      withdrawBtn.innerText = "მუშავდება...";
+
+      var userRef = db.collection('profiles').doc(user.uid);
+      var lang = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+      var txTitle = (lang.withdraw_tx_title || "თანხის გატანის მოთხოვნა") + " (" + iban + ")";
+      var txStatus = lang.withdraw_pending || "განხილვაში";
+
+      var batch = db.batch();
+
+      // 1. მითითებული თანხის ჩამოჭრა ბალანსიდან
+      batch.set(userRef, {
+        balance: firebase.firestore.FieldValue.increment(-withdrawAmount),
+        last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // 2. ტრანზაქციების ისტორიაში ჩაწერა სტატუსით "განხილვაში"
+      var txRef = userRef.collection('transactions').doc();
+      batch.set(txRef, {
+        type: 'expense',
+        title: txTitle,
+        amount: withdrawAmount,
+        price: '€ ' + withdrawAmount.toFixed(2),
+        iban: iban,
+        status: txStatus,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // 3. ადმინისტრაციისთვის მოთხოვნის დაფიქსირება
+      var adminReqRef = db.collection('withdrawal_requests').doc();
+      batch.set(adminReqRef, {
+        request_id: txRef.id,
+        user_id: user.uid,
+        user_email: user.email || '',
+        amount: withdrawAmount,
+        iban: iban,
+        status: 'pending',
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      batch.commit().then(function() {
+        withdrawBtn.disabled = false;
+        withdrawBtn.innerText = lang.withdraw_req || "გატანის მოთხოვნა";
+
+        if (amountInput) amountInput.value = '';
+        if (ibanInput) ibanInput.value = '';
+
+        if (statusEl) {
+          statusEl.style.color = '#2ed573';
+          statusEl.innerText = "✓ გატანის მოთხოვნა მიღებულია (განხილვაშია)!";
+        }
+
+        showToast("გატანის მოთხოვნა მიღებულია! თანხა ჩამოიჭრა და გადამოწმდება 24 საათში.");
+      }).catch(function(err) {
+        console.error("Withdraw error:", err);
+        withdrawBtn.disabled = false;
+        withdrawBtn.innerText = lang.withdraw_req || "გატანის მოთხოვნა";
+        alert("შეცდომა: " + err.message);
+      });
     }
 
     function openTopUpModal() {
@@ -1555,7 +1666,6 @@
       });
     }
 
-    // ინიციალიზაცია
     switchCurrency(selectedCurrency);
     applyTranslations();
     fetchLiveExchangeRate();
