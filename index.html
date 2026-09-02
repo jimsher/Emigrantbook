@@ -5091,14 +5091,14 @@ auth.onAuthStateChanged(function(user) {
     // აქ იწყება
     // ვიდეოს ატვირტვა გაგზავა და ფუნქცია
     // მთავარი Cloudflare R2 ატვირთვა (პოსტების ფოტო და ვიდეო)
-     function uploadMediaToFirebase(file, folder, callback, progressCallback) {
+      function uploadMediaToFirebase(file, folder, callback, progressCallback) {
   if (!currentUser || !file) return;
 
   var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
 
-  // თუ ვიდეოა - პირდაპირ იტვირთება
+  // თუ ვიდეოა - პირდაპირ იტვირთება და გადაეცემა პროგრესის ფუნქცია
   if (isVideo) {
-    proceedUpload(file, 'videos', '.mp4', file.type || 'video/mp4');
+    proceedUpload(file, 'videos', '.mp4', file.type || 'video/mp4', progressCallback);
     return;
   }
 
@@ -5113,18 +5113,18 @@ auth.onAuthStateChanged(function(user) {
     }).then(function(convertedBlob) {
       var resultBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
       compressImageWithCanvas(resultBlob, function(optimizedBlob) {
-        proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg');
+        proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg', progressCallback);
       });
     }).catch(function(err) {
       console.warn("HEIC conversion error, uploading raw:", err);
       compressImageWithCanvas(file, function(optimizedBlob) {
-        proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg');
+        proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg', progressCallback);
       });
     });
   } else {
     // სტანდარტული ფოტოს Canvas-ით შემცირება
     compressImageWithCanvas(file, function(optimizedBlob) {
-      proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg');
+      proceedUpload(optimizedBlob, 'images', '.jpg', 'image/jpeg', progressCallback);
     });
   }
 
@@ -5171,7 +5171,7 @@ auth.onAuthStateChanged(function(user) {
     };
   }
 
-  function proceedUpload(uploadFile, targetFolder, extension, contentType) {
+  function proceedUpload(uploadFile, targetFolder, extension, contentType, onProgress) {
     var r2S3 = new AWS.S3({
       endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
       accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
@@ -5191,7 +5191,17 @@ auth.onAuthStateChanged(function(user) {
       CacheControl: 'public, max-age=31536000, immutable'
     };
 
-    r2S3.putObject(params, function(err, data) {
+    // putObject ჩანაცვლებულია upload-ით პროგრესის მოსასმენად
+    var uploader = r2S3.upload(params);
+
+    uploader.on('httpUploadProgress', function(evt) {
+      if (evt.total && typeof onProgress === 'function') {
+        var percent = Math.round((evt.loaded / evt.total) * 100);
+        onProgress(percent);
+      }
+    });
+
+    uploader.send(function(err, data) {
       if (err) {
         console.error("R2 Upload Error:", err);
         alert("ატვირთვის შეცდომა: " + err.message);
@@ -5202,7 +5212,7 @@ auth.onAuthStateChanged(function(user) {
       }
     });
   }
-} 
+}      
     // აქ მთავრდება
     // აქ მთავრდება იმაგე
    function uploadAvatar() {
