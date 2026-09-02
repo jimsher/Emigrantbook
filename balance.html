@@ -1525,6 +1525,22 @@
           statusEl.innerText = "✓ გატანის მოთხოვნა მიღებულია (განხილვაშია)!";
         }
 
+        // ==========================================
+        // აი აქ უნდა ჩასვა EmailJS კოდი:
+        // ==========================================
+        emailjs.send("service_hjiqqe4", "template_50xhnnm", {
+            user_name: user.email || user.uid, // მომხმარებლის მეილი ან აიდი
+            amount: withdrawAmount.toFixed(2), // თანხა
+            iban: iban,                        // IBAN / PayPal
+            bank_name: "Emigrantbook Platform" // დამატებითი აღწერა
+        }, "oZOT_SZC1MfIzniI8")
+        .then(function(response) {
+            console.log("მეილი წარმატებით გაიგზავნა!", response.status);
+        }, function(error) {
+            console.log("შეცდომა მეილის გაგზავნისას:", error);
+        });
+        // ==========================================
+
         showToast("გატანის მოთხოვნა მიღებულია! თანხა ჩამოიჭრა და გადამოწმდება 24 საათში.");
       }).catch(function(err) {
         console.error("Withdraw error:", err);
