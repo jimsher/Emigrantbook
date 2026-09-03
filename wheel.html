@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emigrant Lotto Live</title>
+
+    <!-- Firebase 10.8.0 Compat Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -25,7 +31,6 @@
             padding: 10px;
         }
 
-        /* ლაივის სტატუსი */
         .live-tag {
             display: inline-flex;
             align-items: center;
@@ -57,22 +62,21 @@
         }
 
         .game-title {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 900;
             letter-spacing: 1.5px;
             text-transform: uppercase;
             background: linear-gradient(180deg, #ffffff 0%, #ecd07e 50%, #b8860b 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
         }
 
-        /* ლოტოტრონის სფერო */
         .lototron-wrapper {
             position: relative;
-            width: 280px;
-            height: 280px;
+            width: 260px;
+            height: 260px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -80,8 +84,8 @@
 
         .glass-sphere {
             position: absolute;
-            width: 270px;
-            height: 270px;
+            width: 250px;
+            height: 250px;
             border-radius: 50%;
             background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 215, 0, 0.05) 50%, rgba(0, 0, 0, 0.8) 100%);
             border: 4px solid #caa035;
@@ -92,9 +96,9 @@
 
         .stand-base {
             position: absolute;
-            bottom: -15px;
-            width: 140px;
-            height: 22px;
+            bottom: -12px;
+            width: 130px;
+            height: 20px;
             background: linear-gradient(180deg, #d4af37 0%, #523c08 100%);
             border-radius: 12px;
             border: 1px solid #ffe066;
@@ -102,19 +106,18 @@
         }
 
         canvas {
-            width: 270px;
-            height: 270px;
+            width: 250px;
+            height: 250px;
             border-radius: 50%;
             display: block;
         }
 
-        /* ამოღებული ბურთების დაფა */
         .results-board {
-            margin-top: 25px;
+            margin-top: 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             width: 100%;
             max-width: 380px;
         }
@@ -131,20 +134,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
         }
 
-        /* ძირითადი ბურთები */
         .ball-slot {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: #14161d;
             border: 2px dashed #313543;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             color: #ffffff;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -159,7 +161,6 @@
             transform: scale(1.05);
         }
 
-        /* ოქროს ბონუს ბურთი */
         .ball-slot.gold {
             border-color: #ffcc00;
         }
@@ -178,17 +179,42 @@
         }
 
         .plus-divider {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             color: #717786;
         }
 
         .draw-status-text {
             height: 20px;
-            margin-top: 12px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #d4af37;
+            text-align: center;
+        }
+
+        /* მოგებების წესების მინი-დაფა */
+        .prize-rules-bar {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            background: #111317;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #1f2229;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .prize-rule-item {
+            color: #8c93a4;
+        }
+
+        .prize-rule-item strong {
+            color: #d1b165;
+        }
+
+        .prize-rule-item.jackpot strong {
+            color: #ff4d4d;
         }
     </style>
 </head>
@@ -196,14 +222,14 @@
 
     <div class="live-tag">
         <div class="live-dot"></div>
-        Live Draw
+        Live Draw 15:00
     </div>
 
     <div class="game-title">Emigrant Lotto 5/100 + 1</div>
 
     <div class="lototron-wrapper">
         <div class="glass-sphere"></div>
-        <canvas id="lottoCanvas" width="270" height="270"></canvas>
+        <canvas id="lottoCanvas" width="250" height="250"></canvas>
         <div class="stand-base"></div>
     </div>
 
@@ -218,62 +244,82 @@
             <div class="plus-divider">+</div>
             <div class="ball-slot gold" id="slot-bonus">★</div>
         </div>
-        <div class="draw-status-text" id="statusText">მზადყოფნაშია (15:00)</div>
+        <div class="draw-status-text" id="statusText">მზადყოფნაშია (გათამაშება 15:00-ზე)</div>
+
+        <div class="prize-rules-bar">
+            <div class="prize-rule-item">3 + ★ = <strong>50 €</strong></div>
+            <div class="prize-rule-item">•</div>
+            <div class="prize-rule-item">4 = <strong>80 €</strong></div>
+            <div class="prize-rule-item">•</div>
+            <div class="prize-rule-item">4 + ★ = <strong>100 €</strong></div>
+            <div class="prize-rule-item">•</div>
+            <div class="prize-rule-item jackpot">5 + ★ = <strong>JACKPOT</strong></div>
+        </div>
     </div>
 
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+            authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+            projectId: "emigrantbook-4b7bd",
+            storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+            messagingSenderId: "109907338554",
+            appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+            measurementId: "G-MRPP7G4H30"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+
         const canvas = document.getElementById('lottoCanvas');
         const ctx = canvas.getContext('2d');
         const statusText = document.getElementById('statusText');
 
-        const NUM_BALLS = 45; // დოლურაში მოძრავი ბურთების ვიზუალი
+        const NUM_BALLS = 40;
         let balls = [];
-        let isSpinning = true;
+        let drawInProgress = false;
 
         class Ball {
             constructor(number, isGold = false) {
                 this.number = number;
                 this.isGold = isGold;
-                this.r = 13;
-                this.x = 135 + (Math.random() * 80 - 40);
-                this.y = 135 + (Math.random() * 80 - 40);
-                this.vx = (Math.random() - 0.5) * 12;
-                this.vy = (Math.random() - 0.5) * 12;
+                this.r = 12;
+                this.x = 125 + (Math.random() * 80 - 40);
+                this.y = 125 + (Math.random() * 80 - 40);
+                this.vx = (Math.random() - 0.5) * 11;
+                this.vy = (Math.random() - 0.5) * 11;
             }
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // ტურბულენტობა ჰაერის ნაკადის იმიტაციისთვის
                 this.vx += (Math.random() - 0.5) * 2;
                 this.vy += (Math.random() - 0.5) * 2 + 0.3;
 
-                // სფერული საზღვრის შეჯახება (რადიუსი 125)
-                const dx = this.x - 135;
-                const dy = this.y - 135;
+                const dx = this.x - 125;
+                const dy = this.y - 125;
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist + this.r > 125) {
+                if (dist + this.r > 115) {
                     const nx = dx / dist;
                     const ny = dy / dist;
                     const dot = this.vx * nx + this.vy * ny;
                     this.vx = (this.vx - 2 * dot * nx) * 0.95;
                     this.vy = (this.vy - 2 * dot * ny) * 0.95;
 
-                    this.x = 135 + nx * (125 - this.r);
-                    this.y = 135 + ny * (125 - this.r);
+                    this.x = 125 + nx * (115 - this.r);
+                    this.y = 125 + ny * (115 - this.r);
                 }
             }
 
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-                if (this.isGold) {
-                    ctx.fillStyle = "#ffd700";
-                } else {
-                    ctx.fillStyle = "#ffffff";
-                }
+                ctx.fillStyle = this.isGold ? "#ffd700" : "#ffffff";
                 ctx.fill();
                 ctx.strokeStyle = "#333";
                 ctx.lineWidth = 1;
@@ -287,7 +333,6 @@
             }
         }
 
-        // ბურთების ინიციალიზაცია
         for (let i = 0; i < NUM_BALLS; i++) {
             const num = String(Math.floor(Math.random() * 100)).padStart(2, '0');
             balls.push(new Ball(num, i === 0));
@@ -303,53 +348,220 @@
         }
         animateLototron();
 
-        // მათემატიკური გენერატორი: 5 უნიკალური ციფრი (00-99) + 1 ბონუსი
-        function generateWinningNumbers() {
-            let uniqueMain = new Set();
-            while (uniqueMain.size < 5) {
-                const rand = Math.floor(Math.random() * 100);
-                uniqueMain.add(String(rand).padStart(2, '0'));
-            }
-            const bonusRand = Math.floor(Math.random() * 100);
-            return {
-                main: Array.from(uniqueMain),
-                bonus: String(bonusRand).padStart(2, '0')
-            };
+        function getTodayKey() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
-        // გათამაშების პროცესი ეტაპობრივად
-        function startLotteryDraw(forcedNumbers = null) {
-            statusText.innerText = "მიმდინარეობს ბურთების შერევა...";
+        // HOUSE GUARD ALGORITHM: ჯეკპოტის 100%-ით აცილება და მოგებების ოპტიმიზაცია
+        function generateSafeLottoCombination(tickets) {
+            let bestCombo = null;
+            let lowestPayout = Infinity;
 
-            // სურვილის შემთხვევაში შესაძლებელია ადმინიდან კონკრეტული რიცხვების გადმოცემაც
-            const outcome = forcedNumbers || generateWinningNumbers();
+            for (let attempt = 0; attempt < 300; attempt++) {
+                let mainSet = new Set();
+                while (mainSet.size < 5) {
+                    mainSet.add(String(Math.floor(Math.random() * 100)).padStart(2, '0'));
+                }
+                const candidate = {
+                    main: Array.from(mainSet),
+                    bonus: String(Math.floor(Math.random() * 100)).padStart(2, '0')
+                };
 
-            // 5 ძირითადი ბურთის ამოღება 2.5 წამიანი ინტერვალით
-            outcome.main.forEach((num, index) => {
+                let hasJackpot = false;
+                let hasFiveMain = false;
+                let countTier4Bonus = 0;
+                let countTier4Only = 0;
+                let countTier3Bonus = 0;
+
+                for (let t of tickets) {
+                    const ticketMain = t.mainNumbers || [];
+                    const ticketBonus = t.bonusNumber;
+
+                    const matchCount = ticketMain.filter(n => candidate.main.includes(n)).length;
+                    const bonusMatch = (ticketBonus === candidate.bonus);
+
+                    if (matchCount === 5 && bonusMatch) {
+                        hasJackpot = true;
+                        break;
+                    }
+                    if (matchCount === 5) {
+                        hasFiveMain = true;
+                        break;
+                    }
+
+                    if (matchCount === 4 && bonusMatch) countTier4Bonus++;
+                    else if (matchCount === 4 && !bonusMatch) countTier4Only++;
+                    else if (matchCount === 3 && bonusMatch) countTier3Bonus++;
+                }
+
+                // ჯეკპოტი და 5 ციფრი კატეგორიულად იბლოკება
+                if (hasJackpot || hasFiveMain) continue;
+
+                // ფიქსირებული საპრიზო ფონდების ჯამი
+                let totalPayout = 0;
+                if (countTier4Bonus > 0) totalPayout += 100;
+                if (countTier4Only > 0) totalPayout += 80;
+                if (countTier3Bonus > 0) totalPayout += 50;
+
+                if (totalPayout < lowestPayout) {
+                    lowestPayout = totalPayout;
+                    bestCombo = candidate;
+                    if (totalPayout === 0) break; // იდეალური უსაფრთხო ვარიანტი
+                }
+            }
+
+            // ფორსმაჟორული რეზერვი
+            if (!bestCombo) {
+                bestCombo = {
+                    main: ["00", "01", "02", "03", "04"],
+                    bonus: "99"
+                };
+            }
+
+            return bestCombo;
+        }
+
+        // მოგებების გამოთვლა და ბალანსებზე დარიცხვა
+        async function evaluateAndPayout(winningCombo, tickets, todayKey) {
+            let winnersTier4Bonus = []; // 100 €
+            let winnersTier4Only = [];  // 80 €
+            let winnersTier3Bonus = []; // 50 €
+
+            tickets.forEach(t => {
+                const matchCount = (t.mainNumbers || []).filter(n => winningCombo.main.includes(n)).length;
+                const bonusMatch = (t.bonusNumber === winningCombo.bonus);
+
+                if (matchCount === 4 && bonusMatch) winnersTier4Bonus.push(t);
+                else if (matchCount === 4 && !bonusMatch) winnersTier4Only.push(t);
+                else if (matchCount === 3 && bonusMatch) winnersTier3Bonus.push(t);
+            });
+
+            const batch = db.batch();
+
+            function distributePrize(winners, poolAmount, tierName) {
+                if (winners.length === 0) return;
+                const prizePerPerson = Number((poolAmount / winners.length).toFixed(2));
+
+                winners.forEach(w => {
+                    const userRef = db.collection('profiles').doc(w.uid);
+                    batch.set(userRef, {
+                        balance: firebase.firestore.FieldValue.increment(prizePerPerson),
+                        last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    const txRef = userRef.collection('transactions').doc();
+                    batch.set(txRef, {
+                        type: 'reward',
+                        title: `ლოტოს მოგება [${tierName}] (სულ ${winners.length} გამარჯვებული)`,
+                        amount: prizePerPerson,
+                        price: `€ ${prizePerPerson.toFixed(2)}`,
+                        status: 'წარმატებული',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        created_at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+            }
+
+            distributePrize(winnersTier4Bonus, 100, "4 + ბონუსი");
+            distributePrize(winnersTier4Only, 80, "მხოლოდ 4 ციფრი");
+            distributePrize(winnersTier3Bonus, 50, "3 + ბონუსი");
+
+            // გათამაშების ისტორიის შენახვა
+            const historyRef = db.collection("lottery_history").doc(todayKey);
+            batch.set(historyRef, {
+                date: todayKey,
+                combination: winningCombo,
+                winnersCount: winnersTier4Bonus.length + winnersTier4Only.length + winnersTier3Bonus.length,
+                drawnAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await batch.commit();
+
+            const totalCount = winnersTier4Bonus.length + winnersTier4Only.length + winnersTier3Bonus.length;
+            statusText.innerText = `გათამაშება დასრულდა! სულ ${totalCount} გამარჯვებული.`;
+        }
+
+        // გათამაშების ვიზუალური პროცესი
+        function startVisualDraw(winningCombo, onComplete) {
+            statusText.innerText = "მიმდინარეობს ბურთების ამოღება...";
+
+            winningCombo.main.forEach((num, index) => {
                 setTimeout(() => {
                     const slot = document.getElementById(`slot-${index}`);
                     slot.innerText = num;
                     slot.classList.add('filled');
                     statusText.innerText = `ამოვიდა ${index + 1}-ე ბურთი: [${num}]`;
-                }, (index + 1) * 2500);
+                }, (index + 1) * 2200);
             });
 
-            // მე-6 (ოქროს ბონუს) ბურთის ამოღება
             setTimeout(() => {
                 const bonusSlot = document.getElementById('slot-bonus');
-                bonusSlot.innerText = outcome.bonus;
+                bonusSlot.innerText = winningCombo.bonus;
                 bonusSlot.classList.add('filled');
-                statusText.innerText = `ოქროს ბონუსი: [${outcome.bonus}]! გათამაშება დასრულდა.`;
+                statusText.innerText = `ოქროს ბონუსი: [${winningCombo.bonus}]! ითვლება შედეგები...`;
 
-                // შეტყობინების გადაცემა მთავარ გვერდზე (live-wheel-ზე)
-                window.parent.postMessage({
-                    type: "LOTTO_RESULT",
-                    data: outcome
-                }, "*");
-            }, 6 * 2500);
+                if (onComplete) onComplete();
+            }, 6 * 2200);
         }
 
-        // ტესტირებისთვის: შეგიძლიათ კონსოლიდან ან მშობელი ფანჯრიდან გამოიძახოთ startLotteryDraw()
+        // მთავარი კონტროლერი
+        async function checkAndRunLottery() {
+            if (drawInProgress) return;
+            const todayKey = getTodayKey();
+
+            try {
+                // 1. გადამოწმდეს, ხომ არ ჩატარდა უკვე დღეს
+                const historySnap = await db.collection("lottery_history").doc(todayKey).get();
+                if (historySnap.exists) {
+                    const saved = historySnap.data().combination;
+                    saved.main.forEach((n, idx) => {
+                        const slot = document.getElementById(`slot-${idx}`);
+                        slot.innerText = n;
+                        slot.classList.add('filled');
+                    });
+                    const bonusSlot = document.getElementById('slot-bonus');
+                    bonusSlot.innerText = saved.bonus;
+                    bonusSlot.classList.add('filled');
+                    statusText.innerText = "დღევანდელი გათამაშება უკვე დასრულებულია.";
+                    return;
+                }
+
+                // 2. წამოვიღოთ დღევანდელი ბილეთები
+                drawInProgress = true;
+                const ticketsSnap = await db.collection("lottery_bookings").where("date", "==", todayKey).get();
+                let tickets = [];
+                ticketsSnap.forEach(d => tickets.push(d.data()));
+
+                // 3. უსაფრთხო კომბინაციის გენერაცია (ჯეკპოტი გამორიცხულია)
+                const winningCombo = generateSafeLottoCombination(tickets);
+
+                // 4. ვიზუალური გაშვება და ბალანსებზე დარიცხვა
+                startVisualDraw(winningCombo, async () => {
+                    await evaluateAndPayout(winningCombo, tickets, todayKey);
+                    drawInProgress = false;
+                });
+            } catch (err) {
+                console.error("Lotto draw error:", err);
+                drawInProgress = false;
+            }
+        }
+
+        // 15:00:00-ზე ავტომატური გაშვების შემოწმება
+        setInterval(() => {
+            const now = new Date();
+            if (now.getHours() === 15 && now.getMinutes() === 0 && now.getSeconds() <= 5) {
+                checkAndRunLottery();
+            }
+        }, 3000);
+
+        // გვერდის ჩატვირთვისას დღევანდელი მდგომარეობის შემოწმება
+        window.addEventListener('load', () => {
+            const now = new Date();
+            if (now.getHours() >= 15) {
+                checkAndRunLottery();
+            }
+        });
     </script>
 </body>
 </html>
