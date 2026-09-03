@@ -672,7 +672,7 @@
 
     <main class="main-wrapper">
 
-        <!-- პროფილი & ბალანსი -->
+        <!-- პროფილი & ბალანსი + საინფორმაციო ღილაკი მის წინ -->
         <div class="user-balance-card">
             <div class="user-left-profile">
                 <div class="user-avatar-img" id="userAvatarContainer">
@@ -683,9 +683,15 @@
                     <div class="user-uid" id="displayUserUid">ID: ...</div>
                 </div>
             </div>
-            <div class="user-balance-box" onclick="window.location.href='balance.html'">
-                <div class="label">ბალანსი (შევსება ➔)</div>
-                <div class="value" id="displayBalance">0.00 €</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <!-- პატარა საინფორმაციო (i) ღილაკი -->
+                <button type="button" onclick="openRulesModal()" title="გათამაშების წესები" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(209, 177, 101, 0.1); border: 1px solid rgba(209, 177, 101, 0.35); color: #d1b165; font-size: 13px; font-weight: 800; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; flex-shrink: 0;" onmouseover="this.style.background='rgba(209, 177, 101, 0.2)'; this.style.borderColor='#d1b165';" onmouseout="this.style.background='rgba(209, 177, 101, 0.1)'; this.style.borderColor='rgba(209, 177, 101, 0.35)';">
+                    i
+                </button>
+                <div class="user-balance-box" onclick="window.location.href='balance.html'">
+                    <div class="label">ბალანსი (შევსება ➔)</div>
+                    <div class="value" id="displayBalance">0.00 €</div>
+                </div>
             </div>
         </div>
 
@@ -786,6 +792,86 @@
 
     </main>
 
+    <!-- წესების ამომხტარი მოდალი (Modal) -->
+    <div id="rulesModalOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 16px;">
+        <div style="background: #111317; border: 1px solid #252a36; border-radius: 16px; width: 100%; max-width: 460px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.85);">
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1f232e; background: #15181f;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px; font-weight: 800; color: #ffffff;">გათამაშების წესები</span>
+                    <span style="background: rgba(255, 77, 77, 0.15); border: 1px solid rgba(255, 77, 77, 0.4); color: #ff4d4d; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px;">18+</span>
+                </div>
+                <button type="button" onclick="closeRulesModal()" style="background: transparent; border: none; color: #8c93a4; font-size: 20px; font-weight: 700; cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%;" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#8c93a4';">✕</button>
+            </div>
+
+            <div style="padding: 16px; overflow-y: auto; color: #cbd1db; font-size: 12.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ ბილეთები და ღირებულება</div>
+                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                        <li><strong>1-ლი ბილეთი უფასოა:</strong> ყოველ 24 საათში 1 ბილეთი ყველასთვის უფასოა.</li>
+                        <li><strong>დამატებითი ბილეთი:</strong> ღირს <strong>2.00 €</strong> (თანხა ჩამოიჭრება ბალანსიდან).</li>
+                        <li><strong>არასაკმარისი ბალანსი:</strong> სისტემა გადაგამისამართებთ ბალანსის შევსებაზე.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ დრო და 10-წუთიანი ბლოკი</div>
+                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                        <li><strong>გათამაშება:</strong> ყოველდღე, ზუსტად <strong>15:00:00</strong> საათზე.</li>
+                        <li><strong>14:50 - 15:00:</strong> გათამაშებამდე 10 წუთით ადრე ციფრების შევსება და რედაქტირება იბლოკება.</li>
+                        <li><strong>განბლოკვა:</strong> გათამაშების დასრულებისთანავე სისტემა იხსნება მომდევნო დღისთვის.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 6px;">💰 მომგებიანი კატეგორიები</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; background: #0c0e12; border-radius: 6px; overflow: hidden; border: 1px solid #1a1e26;">
+                        <tr style="border-bottom: 1px solid #1a1e26; background: #161921; color: #8c93a4;">
+                            <th style="padding: 6px 8px; text-align: left;">დამთხვევა</th>
+                            <th style="padding: 6px 8px; text-align: right;">თანხა</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #14171e;">
+                            <td style="padding: 6px 8px;">3 ციფრი + ბონუსი (★)</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">50.00 €</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #14171e;">
+                            <td style="padding: 6px 8px;">მხოლოდ 4 ციფრი</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">80.00 €</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #14171e;">
+                            <td style="padding: 6px 8px;">4 ციფრი + ბონუსი (★)</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">100.00 €</td>
+                        </tr>
+                        <tr style="background: rgba(209, 177, 101, 0.08);">
+                            <td style="padding: 6px 8px; color: #ffd700; font-weight: 800;">5 ციფრი + ბონუსი (★)</td>
+                            <td style="padding: 6px 8px; text-align: right; color: #ffd700; font-weight: 900;">1,000 € + (JACKPOT)</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div>
+                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⚖️ მოგების გაყოფა და დარიცხვა</div>
+                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                        <li><strong>თანაბარი გაყოფა:</strong> თუ კატეგორიაში რამდენიმე გამარჯვებულია, თანხა ზუსტად და თანაბრად იყოფა მათ რაოდენობაზე.</li>
+                        <li><strong>მომენტალური დარიცხვა:</strong> მოგებული თანხა მომენტალურად ჯდება გამარჯვებულის პირად ბალანსზე.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🔥 მზარდი ჯეკპოტი</div>
+                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                        <li>ჯეკპოტი იწყება 1,000 €-დან და თუ არ გათამაშდა, ყოველ 24 საათში ერთხელ იზრდება.</li>
+                        <li>შედეგები და მოგებულთა სია ინახება 24 საათი („შედეგები 🏆“ ჩანართში).</li>
+                    </ul>
+                </div>
+
+                <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                    ⚠️ <strong>ასაკობრივი შეზღუდვა:</strong> 18 წლამდე პირების მონაწილეობა კატეგორიულად აკრძალულია.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -810,6 +896,24 @@
         let userTicketsList = [];
         let isTenMinLocked = false;
         let latestDrawData = null; // ბოლო 24 საათის შედეგები
+
+        // წესების მოდალის კონტროლი
+        function openRulesModal() {
+            const modal = document.getElementById('rulesModalOverlay');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeRulesModal() {
+            const modal = document.getElementById('rulesModalOverlay');
+            if (modal) modal.style.display = 'none';
+        }
+
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('rulesModalOverlay');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
 
         function getTodayKey() {
             const d = new Date();
@@ -1163,7 +1267,6 @@
             const container = document.getElementById('publicWinnersList');
             const countElem = document.getElementById('publicWinnersCount');
 
-            // თუ ისტორიაში პირდაპირ არის ჩაწერილი გამარჯვებულები
             if (drawData.winners && Array.isArray(drawData.winners)) {
                 countElem.innerText = `${drawData.winners.length} მოგებული`;
                 if (drawData.winners.length === 0) {
@@ -1174,7 +1277,6 @@
                 return;
             }
 
-            // თუ ისტორიაში არ იყო, გადავამოწმოთ იმ დღის ყველა ბილეთი
             const drawDate = drawData.date || getTodayKey();
             const combo = drawData.combination;
 
