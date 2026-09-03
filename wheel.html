@@ -137,42 +137,15 @@
             line-height: 1.1;
         }
 
-        /* ოქროსფერი ღილაკი */
-        .spin-btn {
-            margin-top: 25px;
-            background: linear-gradient(180deg, #ffe066 0%, #d4af37 40%, #996515 100%);
-            color: #1f1401;
-            font-size: 16px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 14px 45px;
-            border: 2px solid #fff2a3;
-            border-radius: 40px;
-            cursor: pointer;
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4), inset 0 2px 4px #ffffff;
-            transition: transform 0.15s ease, filter 0.15s ease;
-        }
-
-        .spin-btn:active {
-            transform: scale(0.96);
-            filter: brightness(0.9);
-        }
-
-        .spin-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            filter: grayscale(0.5);
-        }
-
         /* მოგების შედეგი */
         .result-box {
-            margin-top: 15px;
+            margin-top: 20px;
             height: 24px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             color: #ffd700;
             text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            text-align: center;
         }
     </style>
 </head>
@@ -197,12 +170,9 @@
 
     <div class="result-box" id="resultText"></div>
 
-    <button class="spin-btn" id="spinBtn" onclick="spinWheel()">დაატრიალე</button>
-
     <script>
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
-        const spinBtn = document.getElementById('spinBtn');
         const resultText = document.getElementById('resultText');
 
         // სექტორები და მათემატიკური ალბათობა (weight: რაც მეტია, მით ხშირად ჯდება)
@@ -214,7 +184,7 @@
             { label: "5.000 €", color: "#141724", weight: 2 },
             { label: "300 €",   color: "#0c0e15", weight: 20 },
             { label: "100 €",   color: "#141724", weight: 35 },
-            { label: "9.000 €", color: "#0c0e15", weight: 1 }  // ჯეკპოტი (უმცირესი შანსი)
+            { label: "9.000 €", color: "#0c0e15", weight: 1 }
         ];
 
         const numSectors = sectors.length;
@@ -274,20 +244,17 @@
             return 0;
         }
 
-        // დატრიალების ლოგიკა
+        // დატრიალების ძრავი (გამოძახება შესაძლებელია გარედან/ტაიმერით/Firebase-ით)
         function spinWheel() {
             if (isSpinning) return;
             isSpinning = true;
-            spinBtn.disabled = true;
             resultText.innerText = "მიმდინარეობს გათამაშება...";
 
             const selectedIndex = getWeightedSectorIndex();
 
-            // მათემატიკა: 360 გრადუსის შესაბამისობა ისართან (ზედა ცენტრი = 270 გრადუსი)
             const sectorDegrees = 360 / numSectors;
             const targetSectorCenter = (selectedIndex * sectorDegrees) + (sectorDegrees / 2);
             
-            // მინიმუმ 6 სრული ბრუნი + ზუსტი სექტორის კუთხე
             const fullSpins = 360 * 6;
             const finalAngle = fullSpins + (270 - targetSectorCenter);
 
@@ -296,8 +263,7 @@
 
             setTimeout(() => {
                 isSpinning = false;
-                spinBtn.disabled = false;
-                resultText.innerText = `გილოცავთ! მოგება: ${sectors[selectedIndex].label}`;
+                resultText.innerText = `შედეგი: ${sectors[selectedIndex].label}`;
             }, 5000);
         }
 
