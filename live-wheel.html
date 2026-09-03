@@ -3,289 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Draw & Booking | Emigrantbook Casino</title>
+    <title>Live გათამაშება | Emigrantbook</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: #070709;
-            color: #f1f1f1;
+            background-color: #0b0c0e;
+            color: #e6e8ec;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        /* ზედა ჰედერი */
-        .live-header {
+        /* ჰედერი */
+        .top-navbar {
             width: 100%;
-            max-width: 520px;
+            max-width: 480px;
             padding: 14px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #111115;
-            border-bottom: 1px solid #222228;
+            background: #111317;
+            border-bottom: 1px solid #1f2229;
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 50;
         }
 
-        .back-btn {
-            color: #ffd700;
+        .nav-back {
+            color: #d1b165;
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
         }
 
-        .viewer-count {
-            font-size: 12px;
-            color: #888;
-            display: flex;
+        .live-tag {
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #e54d42;
+            text-transform: uppercase;
         }
 
-        .viewer-count span {
-            color: #00ff66;
-            font-weight: 800;
+        .live-tag-dot {
+            width: 7px;
+            height: 7px;
+            background: #e54d42;
+            border-radius: 50%;
+            box-shadow: 0 0 6px rgba(229, 77, 66, 0.8);
+            animation: pulse 1.2s infinite ease-in-out;
         }
 
-        .main-container {
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.85); }
+        }
+
+        .main-wrapper {
             width: 100%;
-            max-width: 520px;
-            padding: 16px;
+            max-width: 480px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
-        /* ტაბების ნავიგაცია */
-        .tab-switch {
-            display: flex;
-            background: #15151a;
-            padding: 4px;
+        /* ავტორიზებული მომხმარებლის და ბალანსის ბარათი */
+        .user-balance-card {
+            background: #13161c;
+            border: 1px solid #20242e;
             border-radius: 12px;
-            border: 1px solid #282830;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .tab-btn {
+        .user-meta .user-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .user-meta .user-uid {
+            font-size: 11px;
+            color: #717786;
+            margin-top: 2px;
+            font-family: monospace;
+        }
+
+        .user-balance-box {
+            text-align: right;
+        }
+
+        .user-balance-box .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8c93a4;
+        }
+
+        .user-balance-box .value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #d1b165;
+            margin-top: 2px;
+        }
+
+        /* ტაიმერის ბლოკი */
+        .schedule-card {
+            background: #13161c;
+            border: 1px solid #20242e;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .schedule-card .title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8c93a4;
+            margin-bottom: 6px;
+        }
+
+        .schedule-card .timer {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #ffffff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .schedule-card .subtitle {
+            font-size: 11px;
+            color: #555b6a;
+            margin-top: 4px;
+        }
+
+        /* ნავიგაციის ტაბები */
+        .view-switcher {
+            display: flex;
+            background: #111317;
+            padding: 3px;
+            border-radius: 10px;
+            border: 1px solid #1f2229;
+        }
+
+        .tab-button {
             flex: 1;
             padding: 10px;
             background: transparent;
             border: none;
-            color: #888;
+            color: #717786;
+            font-size: 12px;
             font-weight: 700;
-            font-size: 13px;
-            border-radius: 9px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: 0.15s ease;
         }
 
-        .tab-btn.active {
-            background: #d4af37;
-            color: #0d0a02;
-            box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
-        }
-
-        /* ტაიმერის ბლოკი */
-        .countdown-card {
-            background: radial-gradient(circle at center, #1b170c 0%, #100e07 100%);
-            border: 1px solid #3d3319;
-            border-radius: 16px;
-            padding: 18px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-
-        .countdown-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #d4af37;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            margin-bottom: 8px;
-        }
-
-        .timer-display {
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: 3px;
+        .tab-button.active {
+            background: #1f242e;
             color: #ffffff;
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
 
-        .timer-subtext {
-            font-size: 11px;
-            color: #888;
-            margin-top: 5px;
+        /* დაჯავშნის ღილაკი */
+        .action-card {
+            background: #13161c;
+            border: 1px solid #20242e;
+            border-radius: 12px;
+            padding: 16px;
         }
 
-        /* დაჯავშნის ფორმა */
-        .booking-card {
-            background: #131318;
-            border: 1px solid #22222a;
-            border-radius: 16px;
-            padding: 20px;
-        }
-
-        .booking-card h3 {
-            font-size: 16px;
-            margin-bottom: 14px;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            color: #aaa;
-            margin-bottom: 5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            background: #1c1c24;
-            border: 1px solid #2e2e3a;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: #d4af37;
-        }
-
-        .book-btn {
+        .primary-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(180deg, #ffe066 0%, #caa035 100%);
+            background: #d1b165;
+            color: #0b0c0e;
             border: none;
-            border-radius: 10px;
-            color: #120b00;
-            font-size: 14px;
+            border-radius: 8px;
+            font-size: 13px;
             font-weight: 800;
-            cursor: pointer;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 6px;
-            box-shadow: 0 4px 15px rgba(202, 160, 53, 0.3);
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
         }
 
-        /* დაჯავშნილთა სია */
-        .participants-card {
-            background: #131318;
-            border: 1px solid #22222a;
-            border-radius: 16px;
-            padding: 18px;
+        .primary-btn:active {
+            opacity: 0.85;
         }
 
-        .participants-header {
+        .primary-btn:disabled {
+            background: #252933;
+            color: #555b6a;
+            cursor: not-allowed;
+        }
+
+        /* მონაწილეთა რეალური სია */
+        .list-card {
+            background: #13161c;
+            border: 1px solid #20242e;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .list-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1c2028;
         }
 
-        .participants-header span {
+        .list-header .title {
             font-size: 12px;
-            background: #201b10;
-            color: #ffd700;
-            border: 1px solid #4a3e1b;
-            padding: 3px 9px;
-            border-radius: 12px;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8c93a4;
         }
 
-        .participants-list {
+        .list-header .count {
+            font-size: 11px;
+            font-weight: 700;
+            color: #d1b165;
+        }
+
+        .participants-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            max-height: 240px;
+            gap: 6px;
+            max-height: 280px;
             overflow-y: auto;
         }
 
-        .participant-item {
+        .empty-state {
+            text-align: center;
+            padding: 25px 0;
+            font-size: 12px;
+            color: #555b6a;
+        }
+
+        .participant-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #1a1a22;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid #262632;
+            padding: 10px 12px;
+            background: #0e1014;
+            border: 1px solid #1a1e26;
+            border-radius: 8px;
         }
 
-        .user-info {
+        .participant-row .meta {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
         }
 
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: #2c2514;
-            color: #ffd700;
-            font-size: 12px;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #574519;
-        }
-
-        .user-details .name {
+        .participant-row .name {
             font-size: 13px;
-            font-weight: 700;
-            color: #fff;
+            font-weight: 600;
+            color: #e6e8ec;
         }
 
-        .user-details .ticket-id {
-            font-size: 11px;
-            color: #777;
+        .participant-row .uid-text {
+            font-size: 10px;
+            color: #555b6a;
+            font-family: monospace;
+            margin-top: 2px;
         }
 
-        .status-badge {
-            font-size: 11px;
+        .participant-row .badge {
+            font-size: 10px;
             font-weight: 700;
-            color: #00ff66;
-            background: rgba(0, 255, 102, 0.1);
+            color: #38cb89;
+            background: rgba(56, 203, 137, 0.1);
+            border: 1px solid rgba(56, 203, 137, 0.2);
             padding: 3px 8px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
 
-        /* ლაივ ეკრანის კონტეინერი (iframe) */
-        .stream-wrapper {
+        /* ლაივის ეკრანი */
+        .live-stream-box {
             width: 100%;
-            height: 560px;
+            height: 580px;
             background: #000;
-            border-radius: 16px;
+            border: 1px solid #1f2229;
+            border-radius: 12px;
             overflow: hidden;
-            border: 1.5px solid #332709;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
             display: none;
         }
 
-        iframe {
+        .live-stream-box iframe {
             width: 100%;
             height: 100%;
             border: none;
@@ -294,167 +323,258 @@
 </head>
 <body>
 
-    <header class="live-header">
-        <a href="index.html" class="back-btn">‹ Emigrantbook</a>
-        <div class="viewer-count">
-            მაყურებელი: <span id="viewers">1,248</span>
+    <header class="top-navbar">
+        <a href="index.html" class="nav-back">‹ მთავარი</a>
+        <div class="live-tag">
+            <div class="live-tag-dot"></div>
+            Live 15:00
         </div>
     </header>
 
-    <div class="main-container">
-        
-        <!-- ნავიგაციის ტაბები -->
-        <div class="tab-switch">
-            <button class="tab-btn active" id="btnTabBooking" onclick="switchTab('booking')">დაჯავშნა & სია</button>
-            <button class="tab-btn" id="btnTabStream" onclick="switchTab('stream')">ლაივ გათამაშება 🔴</button>
+    <main class="main-wrapper">
+
+        <!-- ავტორიზაციის და ბალანსის რეალური მონაცემი -->
+        <div class="user-balance-card" id="userCard">
+            <div class="user-meta">
+                <div class="user-name" id="displayUserName">მოწმდება ავტორიზაცია...</div>
+                <div class="user-uid" id="displayUserUid">—</div>
+            </div>
+            <div class="user-balance-box">
+                <div class="label">ანგარიში</div>
+                <div class="value" id="displayBalance">0.00 €</div>
+            </div>
         </div>
 
-        <!-- ტაიმერის ბარათი -->
-        <div class="countdown-card">
-            <div class="countdown-title">გათამაშება იწყება ყოველდღე 15:00-ზე</div>
-            <div class="timer-display" id="lotteryTimer">00:00:00</div>
-            <div class="timer-subtext">დარჩენილი დრო დღის 3 საათამდე</div>
+        <!-- ტაიმერი -->
+        <div class="schedule-card">
+            <div class="title">გათამაშება იწყება ყოველდღე 15:00-ზე</div>
+            <div class="timer" id="countdownTimer">00:00:00</div>
+            <div class="subtitle">დარჩენილი დრო პირდაპირ ეთერამდე</div>
         </div>
 
-        <!-- 1. დაჯავშნის და სიის სექცია -->
-        <div id="bookingSection" style="display: flex; flex-direction: column; gap: 16px;">
-            
-            <div class="booking-card">
-                <h3>🎟️ გათამაშებაში ჩაწერა</h3>
-                <div class="form-group">
-                    <label>მომხმარებლის სახელი ან მეილი:</label>
-                    <input type="text" id="participantName" placeholder="მაგ: გიორგი / user@gmail.com">
-                </div>
-                <div class="form-group">
-                    <label>მომხმარებლის ID:</label>
-                    <input type="text" id="participantId" placeholder="მაგ: EB-9842">
-                </div>
-                <button class="book-btn" onclick="bookSpot()">დაჯავშნე მონაწილეობა</button>
+        <!-- ტაბები -->
+        <div class="view-switcher">
+            <button class="tab-button active" id="tabBtnRegister" onclick="switchView('register')">დაჯავშნა და სია</button>
+            <button class="tab-button" id="tabBtnStream" onclick="switchView('stream')">პირდაპირი ეთერი</button>
+        </div>
+
+        <!-- სექცია 1: რეგისტრაცია & სია -->
+        <div id="bookingSection" style="display: flex; flex-direction: column; gap: 14px;">
+            <div class="action-card">
+                <button class="primary-btn" id="bookBtn" onclick="bookLotterySpot()" disabled>ადგილის დაჯავშნა</button>
             </div>
 
-            <div class="participants-card">
-                <div class="participants-header">
-                    <strong>დაჯავშნილი მონაწილეები</strong>
-                    <span id="registeredCount">3 მონაწილე</span>
+            <div class="list-card">
+                <div class="list-header">
+                    <span class="title">დაჯავშნილი მონაწილეები</span>
+                    <span class="count" id="participantsCount">0</span>
                 </div>
-                <div class="participants-list" id="participantsList">
-                    <!-- მონაწილეები ჩაიტვირთება დინამიკურად -->
+                <div class="participants-container" id="participantsContainer">
+                    <div class="empty-state">იტვირთება სია...</div>
                 </div>
             </div>
-
         </div>
 
-        <!-- 2. ლაივ გათამაშების ეკრანი (ბორბალი) -->
-        <div class="stream-wrapper" id="streamWrapper">
+        <!-- სექცია 2: გათამაშების ეკრანი (ძრავი) -->
+        <div class="live-stream-box" id="streamContainer">
             <iframe src="wheel.html" scrolling="no"></iframe>
         </div>
 
-    </div>
+    </main>
 
     <script>
-        // 1. ყოველდღიური 15:00 საათის უკუთვლის ტაიმერი
-        function updateDailyTimer() {
+        // Firebase ინიციალიზაცია
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxQ",
+            authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+            projectId: "emigrantbook-4b7bd",
+            storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+            messagingSenderId: "109907338554",
+            appId: "1:109907338554:web:fde6c296d9",
+            measurementId: "G-MRPP7G4H30"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let alreadyBooked = false;
+
+        // დღევანდელი თარიღი ფორმატში YYYY-MM-DD
+        function getTodayKey() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // მომხმარებლის ავტორიზაცია და ბალანსის ჩატვირთვა Firestore-იდან
+        auth.onAuthStateChanged((user) => {
+            const btn = document.getElementById('bookBtn');
+
+            if (user) {
+                currentUser = user;
+                document.getElementById('displayUserName').innerText = user.displayName || user.email;
+                document.getElementById('displayUserUid').innerText = `ID: ${user.uid.slice(0, 8)}...`;
+
+                // ბალანსის რეალური წაკითხვა
+                db.collection("users").doc(user.uid).onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const balance = data.balance !== undefined ? data.balance : (data.eurBalance || 0);
+                        document.getElementById('displayBalance').innerText = `${parseFloat(balance).toFixed(2)} €`;
+                    } else {
+                        document.getElementById('displayBalance').innerText = "0.00 €";
+                    }
+                }, (error) => {
+                    console.log("ბალანსის წაკითხვის შეცდომა:", error);
+                });
+
+                checkUserBookingStatus();
+            } else {
+                currentUser = null;
+                document.getElementById('displayUserName').innerText = "ავტორიზაცია არ გაქვთ";
+                document.getElementById('displayUserUid').innerText = "გთხოვთ გაიაროთ ავტორიზაცია";
+                document.getElementById('displayBalance').innerText = "—";
+                btn.disabled = true;
+                btn.innerText = "გაიარეთ ავტორიზაცია";
+            }
+        });
+
+        // შემოწმება: უკვე დაჯავშნა თუ არა მომხმარებელმა დღეს
+        function checkUserBookingStatus() {
+            if (!currentUser) return;
+
+            const todayKey = getTodayKey();
+            const bookingDocId = `${todayKey}_${currentUser.uid}`;
+
+            db.collection("lottery_bookings").doc(bookingDocId).onSnapshot((doc) => {
+                const btn = document.getElementById('bookBtn');
+                if (doc.exists) {
+                    alreadyBooked = true;
+                    btn.disabled = true;
+                    btn.innerText = "თქვენ უკვე დაჯავშნილი გაქვთ ✓";
+                } else {
+                    alreadyBooked = false;
+                    btn.disabled = false;
+                    btn.innerText = "ადგილის დაჯავშნა";
+                }
+            });
+        }
+
+        // მონაწილეობის დაჯავშნა და Firestore-ში ჩაწერა
+        function bookLotterySpot() {
+            if (!currentUser || alreadyBooked) return;
+
+            const btn = document.getElementById('bookBtn');
+            btn.disabled = true;
+            btn.innerText = "იჯავშნება...";
+
+            const todayKey = getTodayKey();
+            const bookingDocId = `${todayKey}_${currentUser.uid}`;
+
+            db.collection("lottery_bookings").doc(bookingDocId).set({
+                uid: currentUser.uid,
+                email: currentUser.email || "",
+                name: currentUser.displayName || currentUser.email.split('@')[0],
+                date: todayKey,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                btn.innerText = "დაჯავშნილია ✓";
+            }).catch((err) => {
+                alert("შეცდომა დაჯავშნისას: " + err.message);
+                btn.disabled = false;
+                btn.innerText = "ადგილის დაჯავშნა";
+            });
+        }
+
+        // დღევანდელი დაჯავშნილი მომხმარებლების სია Firestore-იდან (რეალურ დროში)
+        function listenToParticipants() {
+            const todayKey = getTodayKey();
+
+            db.collection("lottery_bookings")
+                .where("date", "==", todayKey)
+                .orderBy("createdAt", "desc")
+                .onSnapshot((snapshot) => {
+                    const container = document.getElementById('participantsContainer');
+                    const countElem = document.getElementById('participantsCount');
+
+                    countElem.innerText = `${snapshot.size} მონაწილე`;
+
+                    if (snapshot.empty) {
+                        container.innerHTML = '<div class="empty-state">დღეს ჯერ არავინ ჩაწერილა</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const maskedUid = data.uid ? `ID: ${data.uid.slice(0, 6)}...` : '';
+                        const name = data.name || data.email || 'მომხმარებელი';
+
+                        html += `
+                            <div class="participant-row">
+                                <div class="meta">
+                                    <span class="name">${name}</span>
+                                    <span class="uid-text">${maskedUid}</span>
+                                </div>
+                                <span class="badge">დაჯავშნილია</span>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                }, (error) => {
+                    document.getElementById('participantsContainer').innerHTML = '<div class="empty-state">მონაცემები ვერ ჩაიტვირთა</div>';
+                });
+        }
+
+        listenToParticipants();
+
+        // 15:00-ის ტაიმერი
+        function updateLotteryTimer() {
             const now = new Date();
             let target = new Date();
             target.setHours(15, 0, 0, 0);
 
-            // თუ დღევანდელი 15:00 უკვე გავიდა, ტაიმერი გადადის ხვალინდელ 15:00-ზე
             if (now >= target) {
                 target.setDate(target.getDate() + 1);
             }
 
             const diff = target - now;
-            const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
-            const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-            const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+            const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+            const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+            const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
 
-            document.getElementById('lotteryTimer').innerText = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('countdownTimer').innerText = `${h}:${m}:${s}`;
         }
-        setInterval(updateDailyTimer, 1000);
-        updateDailyTimer();
+        setInterval(updateLotteryTimer, 1000);
+        updateLotteryTimer();
 
-        // 2. ტაბების გადართვა (დაჯავშნა <-> ლაივის ეკრანი)
-        function switchTab(tab) {
+        // ტაბების გადამრთველი
+        function switchView(tab) {
             const bookingSec = document.getElementById('bookingSection');
-            const streamWrap = document.getElementById('streamWrapper');
-            const btnBooking = document.getElementById('btnTabBooking');
-            const btnStream = document.getElementById('btnTabStream');
+            const streamSec = document.getElementById('streamContainer');
+            const btnReg = document.getElementById('tabBtnRegister');
+            const btnStr = document.getElementById('tabBtnStream');
 
             if (tab === 'stream') {
                 bookingSec.style.display = 'none';
-                streamWrap.style.display = 'block';
-                btnStream.classList.add('active');
-                btnBooking.classList.remove('active');
+                streamSec.style.display = 'block';
+                btnStr.classList.add('active');
+                btnReg.classList.remove('active');
             } else {
                 bookingSec.style.display = 'flex';
-                streamWrap.style.display = 'none';
-                btnBooking.classList.add('active');
-                btnStream.classList.remove('active');
+                streamSec.style.display = 'none';
+                btnReg.classList.add('active');
+                btnStr.classList.remove('active');
             }
         }
-
-        // 3. მონაწილეთა საწყისი მონაცემები & ლოგიკა
-        let participants = [
-            { name: "დავით მ.", uid: "EB-7124", ticket: "#001" },
-            { name: "ლევან ბ.", uid: "EB-3291", ticket: "#002" },
-            { name: "ნინო ქ.", uid: "EB-8402", ticket: "#003" }
-        ];
-
-        function renderParticipants() {
-            const list = document.getElementById('participantsList');
-            const countBadge = document.getElementById('registeredCount');
-            list.innerHTML = "";
-            countBadge.innerText = `${participants.length} მონაწილე`;
-
-            participants.forEach((item) => {
-                const initial = item.name.charAt(0).toUpperCase();
-                const html = `
-                    <div class="participant-item">
-                        <div class="user-info">
-                            <div class="user-avatar">${initial}</div>
-                            <div class="user-details">
-                                <div class="name">${item.name}</div>
-                                <div class="ticket-id">${item.uid} • ${item.ticket}</div>
-                            </div>
-                        </div>
-                        <div class="status-badge">დაჯავშნილია ✓</div>
-                    </div>
-                `;
-                list.insertAdjacentHTML('beforeend', html);
-            });
-        }
-
-        function bookSpot() {
-            const nameInput = document.getElementById('participantName');
-            const idInput = document.getElementById('participantId');
-            const name = nameInput.value.trim();
-            const uid = idInput.value.trim();
-
-            if (!name || !uid) {
-                alert("გთხოვთ მიუთითოთ სახელი და მომხმარებლის ID!");
-                return;
-            }
-
-            const nextNum = String(participants.length + 1).padStart(3, '0');
-            participants.unshift({
-                name: name,
-                uid: uid,
-                ticket: `#${nextNum}`
-            });
-
-            renderParticipants();
-            nameInput.value = "";
-            idInput.value = "";
-            alert("თქვენ წარმატებით დაჯავშნეთ ადგილი დღევანდელ გათამაშებაში!");
-        }
-
-        renderParticipants();
-
-        // 4. ლაივის მაყურებლების რყევა
-        setInterval(() => {
-            const count = 1200 + Math.floor(Math.random() * 85);
-            document.getElementById('viewers').innerText = count.toLocaleString();
-        }, 4000);
     </script>
 </body>
 </html>
