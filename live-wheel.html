@@ -333,15 +333,15 @@
 
     <main class="main-wrapper">
 
-        <!-- ავტორიზაციის და ბალანსის რეალური მონაცემი -->
+        <!-- ავტორიზებული მომხმარებლის და ბალანსის ბარათი -->
         <div class="user-balance-card" id="userCard">
             <div class="user-meta">
-                <div class="user-name" id="displayUserName">მოწმდება ავტორიზაცია...</div>
-                <div class="user-uid" id="displayUserUid">—</div>
+                <div class="user-name" id="displayUserName">იტვირთება...</div>
+                <div class="user-uid" id="displayUserUid">ID: ...</div>
             </div>
             <div class="user-balance-box">
                 <div class="label">ანგარიში</div>
-                <div class="value" id="displayBalance">0.00 €</div>
+                <div class="value" id="displayBalance">... €</div>
             </div>
         </div>
 
@@ -375,7 +375,7 @@
             </div>
         </div>
 
-        <!-- სექცია 2: გათამაშების ეკრანი (ძრავი) -->
+        <!-- სექცია 2: გათამაშების ეკრანი -->
         <div class="live-stream-box" id="streamContainer">
             <iframe src="wheel.html" scrolling="no"></iframe>
         </div>
@@ -383,14 +383,14 @@
     </main>
 
     <script>
-        // Firebase ინიციალიზაცია
+        // ჩასვი შენი balance.html-ის ზუსტი და სრული firebaseConfig
         const firebaseConfig = {
-            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxQ",
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxQc...", // გადაამოწმე და ჩასვი შენი სრული apiKey balance.html-დან
             authDomain: "emigrantbook-4b7bd.firebaseapp.com",
             projectId: "emigrantbook-4b7bd",
             storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
             messagingSenderId: "109907338554",
-            appId: "1:109907338554:web:fde6c296d9",
+            appId: "1:109907338554:web:fde6c296d9...", // გადაამოწმე და ჩასვი შენი სრული appId balance.html-დან
             measurementId: "G-MRPP7G4H30"
         };
 
@@ -404,7 +404,6 @@
         let currentUser = null;
         let alreadyBooked = false;
 
-        // დღევანდელი თარიღი ფორმატში YYYY-MM-DD
         function getTodayKey() {
             const d = new Date();
             const year = d.getFullYear();
@@ -413,40 +412,40 @@
             return `${year}-${month}-${day}`;
         }
 
-        // მომხმარებლის ავტორიზაცია და ბალანსის ჩატვირთვა Firestore-იდან
+        // ავტორიზაციის და ბალანსის რეალური წაკითხვა
         auth.onAuthStateChanged((user) => {
             const btn = document.getElementById('bookBtn');
 
             if (user) {
                 currentUser = user;
-                document.getElementById('displayUserName').innerText = user.displayName || user.email;
+                const displayName = user.displayName || (user.email ? user.email.split('@')[0] : "მომხმარებელი");
+                document.getElementById('displayUserName').innerText = displayName;
                 document.getElementById('displayUserUid').innerText = `ID: ${user.uid.slice(0, 8)}...`;
 
-                // ბალანსის რეალური წაკითხვა
+                // ბალანსის წაკითხვა Firestore users კოლექციიდან
                 db.collection("users").doc(user.uid).onSnapshot((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
-                        const balance = data.balance !== undefined ? data.balance : (data.eurBalance || 0);
+                        const balance = data.balance !== undefined ? data.balance : (data.eurBalance !== undefined ? data.eurBalance : 0);
                         document.getElementById('displayBalance').innerText = `${parseFloat(balance).toFixed(2)} €`;
                     } else {
                         document.getElementById('displayBalance').innerText = "0.00 €";
                     }
                 }, (error) => {
-                    console.log("ბალანსის წაკითხვის შეცდომა:", error);
+                    console.error("ბალანსის წაკითხვის შეცდომა:", error);
                 });
 
                 checkUserBookingStatus();
             } else {
                 currentUser = null;
-                document.getElementById('displayUserName').innerText = "ავტორიზაცია არ გაქვთ";
-                document.getElementById('displayUserUid').innerText = "გთხოვთ გაიაროთ ავტორიზაცია";
-                document.getElementById('displayBalance').innerText = "—";
+                document.getElementById('displayUserName').innerText = "სესია მოწმდება...";
+                document.getElementById('displayUserUid').innerText = "გთხოვთ დაიცადოთ";
+                document.getElementById('displayBalance').innerText = "0.00 €";
                 btn.disabled = true;
-                btn.innerText = "გაიარეთ ავტორიზაცია";
             }
         });
 
-        // შემოწმება: უკვე დაჯავშნა თუ არა მომხმარებელმა დღეს
+        // დღევანდელი დაჯავშნის სტატუსი
         function checkUserBookingStatus() {
             if (!currentUser) return;
 
@@ -467,7 +466,7 @@
             });
         }
 
-        // მონაწილეობის დაჯავშნა და Firestore-ში ჩაწერა
+        // დაჯავშნა
         function bookLotterySpot() {
             if (!currentUser || alreadyBooked) return;
 
@@ -477,11 +476,12 @@
 
             const todayKey = getTodayKey();
             const bookingDocId = `${todayKey}_${currentUser.uid}`;
+            const userName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "მომხმარებელი");
 
             db.collection("lottery_bookings").doc(bookingDocId).set({
                 uid: currentUser.uid,
                 email: currentUser.email || "",
-                name: currentUser.displayName || currentUser.email.split('@')[0],
+                name: userName,
                 date: todayKey,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
@@ -493,7 +493,7 @@
             });
         }
 
-        // დღევანდელი დაჯავშნილი მომხმარებლების სია Firestore-იდან (რეალურ დროში)
+        // მონაწილეთა რეალური სია
         function listenToParticipants() {
             const todayKey = getTodayKey();
 
@@ -515,7 +515,7 @@
                     snapshot.forEach((doc) => {
                         const data = doc.data();
                         const maskedUid = data.uid ? `ID: ${data.uid.slice(0, 6)}...` : '';
-                        const name = data.name || data.email || 'მომხმარებელი';
+                        const name = data.name || (data.email ? data.email.split('@')[0] : 'მომხმარებელი');
 
                         html += `
                             <div class="participant-row">
@@ -536,7 +536,7 @@
 
         listenToParticipants();
 
-        // 15:00-ის ტაიმერი
+        // ტაიმერი 15:00
         function updateLotteryTimer() {
             const now = new Date();
             let target = new Date();
@@ -556,7 +556,7 @@
         setInterval(updateLotteryTimer, 1000);
         updateLotteryTimer();
 
-        // ტაბების გადამრთველი
+        // ტაბების გადართვა
         function switchView(tab) {
             const bookingSec = document.getElementById('bookingSection');
             const streamSec = document.getElementById('streamContainer');
