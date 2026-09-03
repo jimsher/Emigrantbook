@@ -353,6 +353,23 @@
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
 
+        // სლოტების გასუფთავება (1 წუთის შემდეგ ამოღებული ბურთები ქრება)
+        function resetDrawnSlots() {
+            for (let i = 0; i < 5; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                if (slot) {
+                    slot.innerText = "—";
+                    slot.classList.remove('filled');
+                }
+            }
+            const bonusSlot = document.getElementById('slot-bonus');
+            if (bonusSlot) {
+                bonusSlot.innerText = "★";
+                bonusSlot.classList.remove('filled');
+            }
+            statusText.innerText = "მზადყოფნაშია (გათამაშება იწყება 15:00-ზე)";
+        }
+
         // HOUSE GUARD ALGORITHM (ჯეკპოტი 100%-ით იბლოკება)
         function generateSafeLottoCombination(tickets) {
             let bestCombo = null;
@@ -410,7 +427,7 @@
             return bestCombo;
         }
 
-        // ბურთების ვიზუალური ამოღება ეკრანზე
+        // ბურთების ვიზუალური ამოღება ეკრანზე (1 წუთში გაქრობით)
         function runLiveBallDrop(winningCombo, onFinish) {
             animationStarted = true;
             statusText.innerText = "🔴 პირდაპირი ეთერი: ბურთების ამოღება...";
@@ -431,10 +448,15 @@
                 statusText.innerText = `ოქროს ბონუსი: [${winningCombo.bonus}]! გათამაშება დასრულდა.`;
 
                 if (onFinish) onFinish();
+
+                // ამოღების დასრულებიდან ზუსტად 1 წუთში (60 წამში) ბურთები ქრება
+                setTimeout(() => {
+                    resetDrawnSlots();
+                }, 60000);
             }, 6 * 2200);
         }
 
-        // რეალურ დროში გათამაშების შედეგის მოსმენა (ყველა მაყურებლისთვის სინქრონულად)
+        // რეალურ დროში გათამაშების შედეგის მოსმენა
         function listenTodayDraw() {
             const todayKey = getTodayKey();
 
@@ -443,27 +465,18 @@
                     const data = doc.data();
                     const combo = data.combination;
 
-                    // თუ უკვე ანიმაცია არ გასულა
                     if (!animationStarted) {
                         const drawnTime = data.drawnAt ? (data.drawnAt.toMillis ? data.drawnAt.toMillis() : data.drawnAt.toDate().getTime()) : Date.now();
                         const secondsAgo = (Date.now() - drawnTime) / 1000;
 
-                        // თუ გათამაშება ბოლო 90 წამში მოხდა, გაუშვას ცოცხალი ანიმაცია
-                        if (secondsAgo < 90) {
+                        // ცოცხალი ანიმაცია ეშვება მხოლოდ გათამაშების დროს (პირველ 60 წამში)
+                        if (secondsAgo < 60) {
                             runLiveBallDrop(combo, () => {
                                 statusText.innerText = `გათამაშება დასრულდა! სულ ${data.winnersCount || 0} მოგებული.`;
                             });
                         } else {
-                            // თუ უფრო ძველია, უბრალოდ გამოაჩინოს შედეგი
-                            combo.main.forEach((n, idx) => {
-                                const slot = document.getElementById(`slot-${idx}`);
-                                slot.innerText = n;
-                                slot.classList.add('filled');
-                            });
-                            const bonusSlot = document.getElementById('slot-bonus');
-                            bonusSlot.innerText = combo.bonus;
-                            bonusSlot.classList.add('filled');
-                            statusText.innerText = `დღევანდელი გათამაშება დასრულებულია (${data.winnersCount || 0} მოგებული).`;
+                            // 1 წუთზე მეტი თუა გასული, ბურთები აქ აღარ ინახება
+                            resetDrawnSlots();
                         }
                     }
                 }
