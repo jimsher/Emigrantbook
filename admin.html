@@ -482,6 +482,32 @@
       margin-bottom: 12px;
     }
 
+    /* ლოტოტრონის მინი ბურთების სტილი */
+    .lotto-mini-ball {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #202026;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid #383844;
+      margin: 0 1.5px;
+    }
+    .lotto-mini-ball.gold {
+      background: #dcae36;
+      color: #111;
+      border-color: #ffd700;
+    }
+    .lotto-mini-ball.matched {
+      border-color: #10b981;
+      color: #10b981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+    }
+
     @media (max-width: 600px) {
       .header-inner {
         flex-direction: column;
@@ -521,6 +547,9 @@
         <button class="tab-btn active" onclick="switchTab('monitoring')">📊 მონიტორინგი</button>
         <button id="tab-btn-withdrawals" class="tab-btn" onclick="switchTab('withdrawals')" style="display: none;">
           💳 გატანის მოთხოვნები <span id="withdraw-badge-counter" style="background:var(--danger-red);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px;margin-left:4px;display:none;">0</span>
+        </button>
+        <button id="tab-btn-lotto" class="tab-btn" onclick="switchTab('lotto')" style="display: none;">
+          🎰 ლოტოტრონი
         </button>
         <button class="tab-btn" onclick="switchTab('moderation')">🛡️ მოდერაცია</button>
         <button id="tab-btn-actions" class="tab-btn" onclick="switchTab('actions')" style="display: none;">⚙️ მართვა & ფინანსები</button>
@@ -566,6 +595,76 @@
           <tbody id="admin-withdrawals-table-body">
             <tr>
               <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">მოთხოვნები იტვირთება...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ტაბი: ლოტოტრონის სრული მონიტორინგი და გათამაშებები (ახალი სრული ეკრანიანი მოდული) -->
+    <div id="tab-lotto" class="admin-card" style="display: none;">
+      <div class="admin-header-title">
+        <span>🎰</span>
+        <span>ლოტოტრონის მონიტორინგი & გათამაშებები</span>
+      </div>
+      <div class="admin-subtitle">შევსებული ბილეთები, უფასო/ფასიანი სტატისტიკა, მოგებულები და მილოცვის წერილების გაგზავნა</div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-box-lbl">სულ ბილეთი</span>
+          <span class="stat-box-val" id="stat-lotto-total">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">🎁 უფასო ბილეთი</span>
+          <span class="stat-box-val" id="stat-lotto-free" style="color: var(--success-green);">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">💳 ფასიანი (2 €)</span>
+          <span class="stat-box-val" id="stat-lotto-paid" style="color: var(--accent-gold);">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">💰 შემოსავალი</span>
+          <span class="stat-box-val" id="stat-lotto-revenue" style="color: #52c41a;">€ 0.00</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-box-lbl">🏆 მოგებულები</span>
+          <span class="stat-box-val" id="stat-lotto-winners" style="color: #ffd700;">0</span>
+        </div>
+      </div>
+
+      <!-- ბოლო გათამაშებული ციფრები -->
+      <div style="background: var(--card-inner); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">ბოლო გათამაშებული კომბინაცია:</div>
+          <div id="admin-lotto-drawn-date" style="font-size: 12px; color: var(--accent-gold); margin-top: 2px;">თარიღი: იტვირთება...</div>
+        </div>
+        <div id="admin-lotto-drawn-balls" style="display: flex; align-items: center; gap: 4px;">
+          <span class="lotto-mini-ball">—</span>
+          <span class="lotto-mini-ball">—</span>
+          <span class="lotto-mini-ball">—</span>
+          <span class="lotto-mini-ball">—</span>
+          <span class="lotto-mini-ball">—</span>
+          <span style="color: var(--text-muted); font-weight: 900; margin: 0 4px;">+</span>
+          <span class="lotto-mini-ball gold">★</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>მომხმარებელი</th>
+              <th>თარიღი</th>
+              <th>ბილეთის ტიპი</th>
+              <th>არჩეული ციფრები</th>
+              <th>შედეგი / მოგება</th>
+              <th>შევსების დრო</th>
+              <th>მოქმედება</th>
+            </tr>
+          </thead>
+          <tbody id="admin-lotto-table-body">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">ლოტოტრონის ბილეთები იტვირთება...</td>
             </tr>
           </tbody>
         </table>
@@ -812,6 +911,49 @@
 
   </div>
 
+  <!-- ✉️ მილოცვის / მეილის გაგზავნის მოდალური ფანჯარა -->
+  <div id="lotto-email-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: #141417; border: 1px solid var(--card-border); border-radius: 14px; width: 100%; max-width: 520px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.85);">
+      
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--card-border); background: var(--card-inner);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 16px;">🏆</span>
+          <span style="font-size: 15px; font-weight: 800; color: var(--accent-gold);">მილოცვის წერილის გაგზავნა</span>
+        </div>
+        <button type="button" onclick="closeLottoEmailModal()" style="background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+        <input type="hidden" id="lotto-mail-user-id">
+        
+        <div class="form-group">
+          <label>ადრესატი (მომხმარებელი & Email):</label>
+          <input type="text" id="lotto-mail-recipient" class="form-control" readonly style="background: #1c1c24; color: #70baff; font-weight: 600;">
+        </div>
+
+        <div class="form-group">
+          <label>წერილის თემა:</label>
+          <input type="text" id="lotto-mail-subject" class="form-control" value="გილოცავთ! თქვენ გაიმარჯვეთ Emigrant Lotto-ში 🏆">
+        </div>
+
+        <div class="form-group">
+          <label>მილოცვის ტექსტი:</label>
+          <textarea id="lotto-mail-body" class="form-control" style="min-height: 140px; font-size: 13px; line-height: 1.5;"></textarea>
+        </div>
+
+        <div class="btn-group" style="margin-top: 6px;">
+          <button onclick="sendLottoEmailMailto()" class="btn-action btn-success">
+            ✉️ მეილის გახსნა (Email)
+          </button>
+          <button onclick="sendLottoInAppNotification()" class="btn-action btn-info">
+            💬 საიტის შეტყობინება
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -863,8 +1005,10 @@
                 roleBadgeEl.innerHTML = "👑 Admin";
                 document.getElementById('tab-btn-actions').style.display = 'inline-flex';
                 document.getElementById('tab-btn-withdrawals').style.display = 'inline-flex';
+                document.getElementById('tab-btn-lotto').style.display = 'inline-flex';
                 loadMaintenanceState();
                 loadWithdrawalsData();
+                loadLottoAdminData();
               } else {
                 roleBadgeEl.className = "role-badge role-moderator";
                 roleBadgeEl.innerHTML = "🛡️ Mod";
@@ -902,7 +1046,7 @@
     }
 
     function switchTab(tabName) {
-      const tabs = ['monitoring', 'moderation', 'actions', 'withdrawals'];
+      const tabs = ['monitoring', 'moderation', 'actions', 'withdrawals', 'lotto'];
       tabs.forEach(t => {
         const el = document.getElementById('tab-' + t);
         if (el) el.style.display = (t === tabName) ? 'block' : 'none';
@@ -1508,6 +1652,243 @@
           alert("შეცდომა: " + err.message);
         });
       }
+    }
+
+    // ========================================================
+    // 🎰 ლოტოტრონის სრული მონაცემების მართვა & მილოცვის წერილები
+    // ========================================================
+    let lottoHistoryMap = {};
+
+    function loadLottoAdminData() {
+      // 1. ჯერ ავიღოთ გათამაშებების შედეგები
+      db.collection("lottery_history").onSnapshot(function(histSnap) {
+        lottoHistoryMap = {};
+        let latestHistory = null;
+
+        histSnap.forEach(function(hDoc) {
+          const hData = hDoc.data();
+          lottoHistoryMap[hData.date] = hData;
+          if (!latestHistory || (hData.drawnAt && (!latestHistory.drawnAt || hData.drawnAt.toMillis() > latestHistory.drawnAt.toMillis()))) {
+            latestHistory = hData;
+          }
+        });
+
+        // ბოლო გათამაშებული ციფრების ჩვენება
+        if (latestHistory && latestHistory.combination) {
+          document.getElementById('admin-lotto-drawn-date').innerText = `თარიღი: ${latestHistory.date || '-'}`;
+          const c = latestHistory.combination;
+          const mainBallsHtml = (c.main || []).map(n => `<span class="lotto-mini-ball">${n}</span>`).join('');
+          document.getElementById('admin-lotto-drawn-balls').innerHTML = `
+            ${mainBallsHtml}
+            <span style="color: var(--text-muted); font-weight: 900; margin: 0 4px;">+</span>
+            <span class="lotto-mini-ball gold">${c.bonus || '★'}</span>
+          `;
+        }
+
+        // 2. წამოვიღოთ ყველა ბილეთი რეალურ დროში
+        db.collection("lottery_bookings").orderBy("createdAt", "desc").onSnapshot(function(bookingsSnap) {
+          const tbody = document.getElementById('admin-lotto-table-body');
+          if (!tbody) return;
+
+          if (bookingsSnap.empty) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 25px;">ლოტოტრონის ბილეთები ჯერ არ შევსებულა</td></tr>`;
+            document.getElementById('stat-lotto-total').innerText = "0";
+            document.getElementById('stat-lotto-free').innerText = "0";
+            document.getElementById('stat-lotto-paid').innerText = "0";
+            document.getElementById('stat-lotto-revenue').innerText = "€ 0.00";
+            document.getElementById('stat-lotto-winners').innerText = "0";
+            return;
+          }
+
+          let totalTickets = bookingsSnap.size;
+          let freeCount = 0;
+          let paidCount = 0;
+          let winnersCount = 0;
+          let rowsHtml = '';
+
+          bookingsSnap.forEach(function(bDoc) {
+            const ticket = bDoc.data();
+            const ticketId = bDoc.id;
+
+            const isFree = ticket.isFree === true || ticket.cost === 0;
+            if (isFree) freeCount++; else paidCount++;
+
+            // მომხმარებლის პროფილი
+            const userObj = allUsersList.find(u => u.uid === ticket.uid) || {};
+            const userName = userObj.full_name || ticket.name || "მომხმარებელი";
+            const userEmail = ticket.email || userObj.email || "არ ფიქსირდება";
+            const avatar = userObj.avatar_url;
+            const avatarHtml = avatar ? `<img src="${avatar}" alt="avatar">` : userName.charAt(0).toUpperCase();
+
+            // შევსების დრო
+            let timeStr = "-";
+            if (ticket.createdAt) {
+              const d = ticket.createdAt.toDate ? ticket.createdAt.toDate() : new Date(ticket.createdAt);
+              timeStr = d.toLocaleDateString('ka-GE') + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            // ტიპის ბეიჯი
+            const typeBadge = isFree
+              ? `<span style="background: rgba(16, 185, 129, 0.15); color: var(--success-green); border: 1px solid rgba(16, 185, 129, 0.3); padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">🎁 უფასო</span>`
+              : `<span style="background: rgba(220, 174, 54, 0.15); color: var(--accent-gold); border: 1px solid rgba(220, 174, 54, 0.4); padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">💳 ფასიანი (2.00 €)</span>`;
+
+            // ციფრები და მოგების შემოწმება
+            const mainNums = ticket.mainNumbers || ['--', '--', '--', '--', '--'];
+            const bonusNum = ticket.bonusNumber || '--';
+
+            const drawHist = lottoHistoryMap[ticket.date];
+            let outcomeBadge = `<span style="color: var(--text-muted); font-size: 11.5px;">⏳ ელოდება 15:00-ს</span>`;
+            let isWinner = false;
+            let wonTier = "";
+            let wonAmount = "";
+            let matchedMain = [];
+            let matchedBonus = false;
+
+            if (drawHist && drawHist.combination) {
+              const combo = drawHist.combination;
+              matchedMain = mainNums.filter(n => combo.main && combo.main.includes(n));
+              matchedBonus = (bonusNum === combo.bonus);
+
+              if (matchedMain.length === 5 && matchedBonus) {
+                isWinner = true;
+                wonTier = "5 ციფრი + ბონუსი (ჯეკპოტი)";
+                wonAmount = "1,000.00 € +";
+                outcomeBadge = `<span style="background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700; padding: 3px 8px; border-radius: 6px; font-weight: 900; font-size: 11px;">🏆 JACKPOT</span>`;
+              } else if (matchedMain.length === 4 && matchedBonus) {
+                isWinner = true;
+                wonTier = "4 ციფრი + ბონუსი";
+                wonAmount = "100.00 €";
+                outcomeBadge = `<span style="background: rgba(16, 185, 129, 0.2); color: #00ff66; border: 1px solid #00ff66; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;">🎉 მოიგო 100 €</span>`;
+              } else if (matchedMain.length === 4) {
+                isWinner = true;
+                wonTier = "4 ციფრი";
+                wonAmount = "80.00 €";
+                outcomeBadge = `<span style="background: rgba(16, 185, 129, 0.2); color: #00ff66; border: 1px solid #00ff66; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;">🎉 მოიგო 80 €</span>`;
+              } else if (matchedMain.length === 3 && matchedBonus) {
+                isWinner = true;
+                wonTier = "3 ციფრი + ბონუსი";
+                wonAmount = "50.00 €";
+                outcomeBadge = `<span style="background: rgba(16, 185, 129, 0.2); color: #00ff66; border: 1px solid #00ff66; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 11px;">🎉 მოიგო 50 €</span>`;
+              } else {
+                outcomeBadge = `<span style="color: var(--text-muted); font-size: 11.5px;">არ მოუგია</span>`;
+              }
+            }
+
+            if (isWinner) winnersCount++;
+
+            // ბურთების HTML
+            const ballsHtml = mainNums.map(n => {
+              const isM = matchedMain.includes(n);
+              return `<span class="lotto-mini-ball ${isM ? 'matched' : ''}">${n}</span>`;
+            }).join('') + `<span style="color: var(--text-muted); font-weight: 900; margin: 0 3px;">+</span>` +
+            `<span class="lotto-mini-ball gold ${matchedBonus ? 'matched' : ''}">${bonusNum}</span>`;
+
+            // მილოცვის / წერილის ღილაკი
+            const numbersStr = mainNums.join(', ') + ' + ' + bonusNum;
+            const actionBtn = `
+              <button onclick="openLottoEmailModal('${userEmail}', '${userName}', '${ticket.uid}', '${wonTier || 'მონაწილეობა'}', '${wonAmount || '0.00 €'}', '${numbersStr}')" class="btn-action ${isWinner ? 'btn-success' : 'btn-secondary'}" style="height: 30px; font-size: 11.5px; padding: 0 10px; width: auto;">
+                ✉️ ${isWinner ? 'მილოცვა' : 'წერილი'}
+              </button>
+            `;
+
+            rowsHtml += `
+              <tr>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar-mini">${avatarHtml}</div>
+                    <div>
+                      <div style="font-weight:700; color:#ffffff;">${userName}</div>
+                      <div style="font-size:11px; color:#70baff;">${userEmail}</div>
+                      <div style="font-size:10px; color:var(--text-muted); font-family:monospace;">ID: ${ticket.uid ? ticket.uid.slice(0, 8) + '...' : '-'}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="color: var(--accent-gold); font-weight: 600;">${ticket.date || '-'}</td>
+                <td>${typeBadge}</td>
+                <td><div style="display: flex; align-items: center;">${ballsHtml}</div></td>
+                <td>${outcomeBadge}</td>
+                <td style="color: var(--text-muted); font-size: 12px;">${timeStr}</td>
+                <td>${actionBtn}</td>
+              </tr>
+            `;
+          });
+
+          tbody.innerHTML = rowsHtml;
+
+          // სტატისტიკების განახლება
+          document.getElementById('stat-lotto-total').innerText = totalTickets;
+          document.getElementById('stat-lotto-free').innerText = freeCount;
+          document.getElementById('stat-lotto-paid').innerText = paidCount;
+          document.getElementById('stat-lotto-revenue').innerText = '€ ' + (paidCount * 2).toFixed(2);
+          document.getElementById('stat-lotto-winners').innerText = winnersCount;
+        });
+      });
+    }
+
+    // მილოცვის მოდალის გახსნა
+    function openLottoEmailModal(email, name, uid, tier, amount, numbersStr) {
+      document.getElementById('lotto-mail-user-id').value = uid;
+      document.getElementById('lotto-mail-recipient').value = `${name} <${email}>`;
+      document.getElementById('lotto-mail-subject').value = (amount && amount !== "0.00 €")
+        ? `გილოცავთ! თქვენ მოიგეთ ${amount} Emigrant Lotto-ში 🏆`
+        : `შეტყობინება Emigrant Lotto-ს შესახებ 🎰`;
+
+      const defaultMessage = (amount && amount !== "0.00 €")
+        ? `გამარჯობა ${name},\n\nგილოცავთ! თქვენმა დაჯავშნილმა ბილეთმა ციფრებით [${numbersStr}] წარმატებით გაიმარჯვა კატეგორიაში "${tier}" და მოიგო ${amount}!\n\nთანხა მომენტალურად ჩაირიცხა თქვენს Emigrantbook-ის ბალანსზე.\n\nგისურვებთ შემდგომ წარმატებებს,\nEmigrantbook-ის ადმინისტრაცია.`
+        : `გამარჯობა ${name},\n\nმადლობას გიხდით Emigrant Lotto-ს გათამაშებაში მონაწილეობისთვის!\nთქვენი ბილეთის ციფრები იყო: [${numbersStr}].\n\nგისურვებთ წარმატებას მომდევნო გათამაშებაში,\nEmigrantbook-ის ადმინისტრაცია.`;
+
+      document.getElementById('lotto-mail-body').value = defaultMessage;
+      document.getElementById('lotto-email-modal').style.display = 'flex';
+    }
+
+    function closeLottoEmailModal() {
+      document.getElementById('lotto-email-modal').style.display = 'none';
+    }
+
+    // 1. პირდაპირი მეილის გაგზავნა (Mailto)
+    function sendLottoEmailMailto() {
+      const recipientStr = document.getElementById('lotto-mail-recipient').value;
+      const emailMatch = recipientStr.match(/<(.+)>/);
+      const email = emailMatch ? emailMatch[1] : recipientStr;
+      const subject = encodeURIComponent(document.getElementById('lotto-mail-subject').value);
+      const body = encodeURIComponent(document.getElementById('lotto-mail-body').value);
+
+      if (!email || email.includes('არ ფიქსირდება')) {
+        alert("მომხმარებლის Email მისამართი ვერ მოიძებნა!");
+        return;
+      }
+
+      window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
+    }
+
+    // 2. სისტემური შეტყობინების გაგზავნა საიტზე (User Profile Warnings / Notifications)
+    function sendLottoInAppNotification() {
+      const uid = document.getElementById('lotto-mail-user-id').value;
+      const text = document.getElementById('lotto-mail-body').value.trim();
+
+      if (!uid) {
+        alert("მომხმარებლის ID ვერ მოიძებნა!");
+        return;
+      }
+
+      if (!text) {
+        alert("გთხოვთ ჩაწეროთ შეტყობინების ტექსტი!");
+        return;
+      }
+
+      db.collection('profiles').doc(uid).collection('warnings').add({
+        message: text,
+        title: document.getElementById('lotto-mail-subject').value,
+        type: 'lotto_congratulations',
+        issued_by: auth.currentUser.uid,
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      }).then(() => {
+        alert("შეტყობინება წარმატებით გაეგზავნა მომხმარებელს საიტზე!");
+        closeLottoEmailModal();
+      }).catch(err => {
+        alert("შეცდომა შეტყობინების გაგზავნისას: " + err.message);
+      });
     }
   </script>
 </body>
