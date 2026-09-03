@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live გათამაშება | Emigrantbook</title>
     
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Firebase 10.8.0 Compat Scripts (ზუსტად ისე, როგორც balance.html-ში) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         * {
@@ -90,22 +90,51 @@
             background: #13161c;
             border: 1px solid #20242e;
             border-radius: 12px;
-            padding: 16px;
+            padding: 14px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+        }
+
+        .user-left-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar-img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #1e222b;
+            border: 1px solid #2d3340;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 800;
+            color: #d1b165;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .user-meta .user-name {
             font-size: 14px;
             font-weight: 700;
             color: #ffffff;
+            line-height: 1.2;
         }
 
         .user-meta .user-uid {
             font-size: 11px;
             color: #717786;
-            margin-top: 2px;
+            margin-top: 3px;
             font-family: monospace;
         }
 
@@ -219,7 +248,7 @@
             cursor: not-allowed;
         }
 
-        /* მონაწილეთა რეალური სია */
+        /* მონაწილეთა სია */
         .list-card {
             background: #13161c;
             border: 1px solid #20242e;
@@ -333,15 +362,20 @@
 
     <main class="main-wrapper">
 
-        <!-- ავტორიზებული მომხმარებლის და ბალანსის ბარათი -->
+        <!-- მომხმარებლის პროფილი, ავატარი და ბალანსი -->
         <div class="user-balance-card" id="userCard">
-            <div class="user-meta">
-                <div class="user-name" id="displayUserName">იტვირთება...</div>
-                <div class="user-uid" id="displayUserUid">ID: ...</div>
+            <div class="user-left-profile">
+                <div class="user-avatar-img" id="userAvatarContainer">
+                    <span id="userAvatarLetter">EB</span>
+                </div>
+                <div class="user-meta">
+                    <div class="user-name" id="displayUserName">იტვირთება...</div>
+                    <div class="user-uid" id="displayUserUid">ID: ...</div>
+                </div>
             </div>
             <div class="user-balance-box">
-                <div class="label">ანგარიში</div>
-                <div class="value" id="displayBalance">... €</div>
+                <div class="label">ბალანსი</div>
+                <div class="value" id="displayBalance">0.00 €</div>
             </div>
         </div>
 
@@ -383,14 +417,14 @@
     </main>
 
     <script>
-        // ჩასვი შენი balance.html-ის ზუსტი და სრული firebaseConfig
+        // ზუსტი Firebase კონფიგურაცია balance.html-დან
         const firebaseConfig = {
-            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxQc...", // გადაამოწმე და ჩასვი შენი სრული apiKey balance.html-დან
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
             authDomain: "emigrantbook-4b7bd.firebaseapp.com",
             projectId: "emigrantbook-4b7bd",
             storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
             messagingSenderId: "109907338554",
-            appId: "1:109907338554:web:fde6c296d9...", // გადაამოწმე და ჩასვი შენი სრული appId balance.html-დან
+            appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
             measurementId: "G-MRPP7G4H30"
         };
 
@@ -402,6 +436,7 @@
         const db = firebase.firestore();
 
         let currentUser = null;
+        let userResolvedName = "";
         let alreadyBooked = false;
 
         function getTodayKey() {
@@ -412,47 +447,63 @@
             return `${year}-${month}-${day}`;
         }
 
-        // ავტორიზაციის და ბალანსის რეალური წაკითხვა
-        auth.onAuthStateChanged((user) => {
+        // ავტორიზაცია და რეალური მონაცემების ამოღება 'profiles'-დან
+        auth.onAuthStateChanged(function(user) {
             const btn = document.getElementById('bookBtn');
 
             if (user) {
                 currentUser = user;
-                const displayName = user.displayName || (user.email ? user.email.split('@')[0] : "მომხმარებელი");
-                document.getElementById('displayUserName').innerText = displayName;
                 document.getElementById('displayUserUid').innerText = `ID: ${user.uid.slice(0, 8)}...`;
 
-                // ბალანსის წაკითხვა Firestore users კოლექციიდან
-                db.collection("users").doc(user.uid).onSnapshot((doc) => {
+                // ბაზიდან პროფილის და ბალანსის წაკითხვა (როგორც balance.html-შია)
+                const userRef = db.collection('profiles').doc(user.uid);
+
+                userRef.onSnapshot(function(doc) {
                     if (doc.exists) {
                         const data = doc.data();
-                        const balance = data.balance !== undefined ? data.balance : (data.eurBalance !== undefined ? data.eurBalance : 0);
-                        document.getElementById('displayBalance').innerText = `${parseFloat(balance).toFixed(2)} €`;
+
+                        // 1. ბალანსი
+                        const rawBalance = data.balance !== undefined ? data.balance : (data.coins !== undefined ? data.coins : 0);
+                        const numBalance = Number(rawBalance) || 0;
+                        document.getElementById('displayBalance').innerText = `${numBalance.toFixed(2)} €`;
+
+                        // 2. სახელი
+                        userResolvedName = data.full_name || data.name || data.username || user.displayName || (user.email ? user.email.split('@')[0] : "მომხმარებელი");
+                        document.getElementById('displayUserName').innerText = userResolvedName;
+
+                        // 3. ავატარი
+                        const avatarUrl = data.avatar_url || data.photo_url || data.avatar || user.photoURL;
+                        const avatarContainer = document.getElementById('userAvatarContainer');
+                        if (avatarUrl) {
+                            avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+                        } else {
+                            avatarContainer.innerHTML = `<span>${userResolvedName.charAt(0).toUpperCase()}</span>`;
+                        }
                     } else {
+                        userResolvedName = user.displayName || (user.email ? user.email.split('@')[0] : "მომხმარებელი");
+                        document.getElementById('displayUserName').innerText = userResolvedName;
                         document.getElementById('displayBalance').innerText = "0.00 €";
+                        document.getElementById('userAvatarContainer').innerHTML = `<span>${userResolvedName.charAt(0).toUpperCase()}</span>`;
                     }
-                }, (error) => {
-                    console.error("ბალანსის წაკითხვის შეცდომა:", error);
+                }, function(error) {
+                    console.error("პროფილის წაკითხვის შეცდომა:", error);
                 });
 
                 checkUserBookingStatus();
             } else {
-                currentUser = null;
-                document.getElementById('displayUserName').innerText = "სესია მოწმდება...";
-                document.getElementById('displayUserUid').innerText = "გთხოვთ დაიცადოთ";
-                document.getElementById('displayBalance').innerText = "0.00 €";
-                btn.disabled = true;
+                // თუ მომხმარებელი საერთოდ არ არის დალოგინებული, გადადის მთავარზე
+                window.location.href = "index.html";
             }
         });
 
-        // დღევანდელი დაჯავშნის სტატუსი
+        // შემოწმება: უკვე დაჯავშნილი აქვს თუ არა
         function checkUserBookingStatus() {
             if (!currentUser) return;
 
             const todayKey = getTodayKey();
             const bookingDocId = `${todayKey}_${currentUser.uid}`;
 
-            db.collection("lottery_bookings").doc(bookingDocId).onSnapshot((doc) => {
+            db.collection("lottery_bookings").doc(bookingDocId).onSnapshot(function(doc) {
                 const btn = document.getElementById('bookBtn');
                 if (doc.exists) {
                     alreadyBooked = true;
@@ -466,7 +517,7 @@
             });
         }
 
-        // დაჯავშნა
+        // მონაწილეობის დაჯავშნა
         function bookLotterySpot() {
             if (!currentUser || alreadyBooked) return;
 
@@ -476,31 +527,30 @@
 
             const todayKey = getTodayKey();
             const bookingDocId = `${todayKey}_${currentUser.uid}`;
-            const userName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "მომხმარებელი");
 
             db.collection("lottery_bookings").doc(bookingDocId).set({
                 uid: currentUser.uid,
                 email: currentUser.email || "",
-                name: userName,
+                name: userResolvedName || "მომხმარებელი",
                 date: todayKey,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
+            }).then(function() {
                 btn.innerText = "დაჯავშნილია ✓";
-            }).catch((err) => {
+            }).catch(function(err) {
                 alert("შეცდომა დაჯავშნისას: " + err.message);
                 btn.disabled = false;
                 btn.innerText = "ადგილის დაჯავშნა";
             });
         }
 
-        // მონაწილეთა რეალური სია
+        // დაჯავშნილი მომხმარებლების სია
         function listenToParticipants() {
             const todayKey = getTodayKey();
 
             db.collection("lottery_bookings")
                 .where("date", "==", todayKey)
                 .orderBy("createdAt", "desc")
-                .onSnapshot((snapshot) => {
+                .onSnapshot(function(snapshot) {
                     const container = document.getElementById('participantsContainer');
                     const countElem = document.getElementById('participantsCount');
 
@@ -512,7 +562,7 @@
                     }
 
                     let html = '';
-                    snapshot.forEach((doc) => {
+                    snapshot.forEach(function(doc) {
                         const data = doc.data();
                         const maskedUid = data.uid ? `ID: ${data.uid.slice(0, 6)}...` : '';
                         const name = data.name || (data.email ? data.email.split('@')[0] : 'მომხმარებელი');
@@ -529,7 +579,7 @@
                     });
 
                     container.innerHTML = html;
-                }, (error) => {
+                }, function(error) {
                     document.getElementById('participantsContainer').innerHTML = '<div class="empty-state">მონაცემები ვერ ჩაიტვირთა</div>';
                 });
         }
