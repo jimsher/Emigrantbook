@@ -138,6 +138,7 @@
 
         .user-balance-box {
             text-align: right;
+            cursor: pointer;
         }
 
         .user-balance-box .label {
@@ -154,7 +155,7 @@
             margin-top: 2px;
         }
 
-        /* ტაიმერი და დაბლოკვის გაფრთხილება */
+        /* ტაიმერი */
         .schedule-card {
             background: #13161c;
             border: 1px solid #20242e;
@@ -241,10 +242,26 @@
             margin-bottom: 14px;
         }
 
+        .pick-header .title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .pick-header .title {
             font-size: 13px;
             font-weight: 700;
             color: #ffffff;
+        }
+
+        .ticket-price-tag {
+            font-size: 11px;
+            font-weight: 700;
+            color: #38cb89;
+        }
+
+        .ticket-price-tag.paid {
+            color: #d1b165;
         }
 
         .random-pick-btn {
@@ -331,7 +348,7 @@
             cursor: not-allowed;
         }
 
-        /* მხოლოდ საკუთარი ბილეთის ბარათი */
+        /* მხოლოდ საკუთარი ბილეთების ბარათი */
         .list-card {
             background: #13161c;
             border: 1px solid #20242e;
@@ -366,6 +383,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
         }
 
         .empty-state {
@@ -405,6 +424,12 @@
             border: 1px solid rgba(56, 203, 137, 0.2);
             padding: 2px 7px;
             border-radius: 4px;
+        }
+
+        .participant-row .badge.paid {
+            color: #d1b165;
+            background: rgba(209, 177, 101, 0.1);
+            border-color: rgba(209, 177, 101, 0.25);
         }
 
         .participant-row .numbers-row {
@@ -474,13 +499,13 @@
                     <div class="user-uid" id="displayUserUid">ID: ...</div>
                 </div>
             </div>
-            <div class="user-balance-box">
-                <div class="label">ბალანსი</div>
+            <div class="user-balance-box" onclick="window.location.href='balance.html'">
+                <div class="label">ბალანსი (შევსება ➔)</div>
                 <div class="value" id="displayBalance">0.00 €</div>
             </div>
         </div>
 
-        <!-- ტაიმერი და დაბლოკვის გაფრთხილება -->
+        <!-- ტაიმერი -->
         <div class="schedule-card">
             <div class="title">გათამაშება იწყება ყოველდღე 15:00-ზე</div>
             <div class="timer" id="countdownTimer">00:00:00</div>
@@ -498,7 +523,10 @@
         <div id="bookingSection" style="display: flex; flex-direction: column; gap: 14px;">
             <div class="lotto-pick-card">
                 <div class="pick-header">
-                    <span class="title">აირჩიეთ 5 + 1 ციფრი (00-99):</span>
+                    <div class="title-box">
+                        <span class="title">აირჩიეთ 5 + 1 ციფრი (00-99):</span>
+                        <span class="ticket-price-tag" id="ticketPriceLabel">🎁 1-ლი ბილეთი: უფასო</span>
+                    </div>
                     <button type="button" class="random-pick-btn" id="luckyBtn" onclick="generateLuckyPick()">🎲 შემთხვევითი</button>
                 </div>
 
@@ -512,13 +540,13 @@
                     <input type="number" class="lotto-input bonus-input" id="nBonus" min="0" max="99" placeholder="★">
                 </div>
 
-                <button class="primary-btn" id="bookBtn" onclick="saveLotteryTicket()" disabled>ციფრების დამახსოვრება</button>
+                <button class="primary-btn" id="bookBtn" onclick="saveLotteryTicket()" disabled>უფასო ბილეთის დაჯავშნა</button>
             </div>
 
-            <!-- მხოლოდ მიმდინარე მომხმარებლის ბილეთი -->
+            <!-- მხოლოდ მიმდინარე მომხმარებლის ბილეთები -->
             <div class="list-card">
                 <div class="list-header">
-                    <span class="title">ჩემი დაჯავშნილი ბილეთი</span>
+                    <span class="title">ჩემი დაჯავშნილი ბილეთები</span>
                     <span class="count" id="participantsCount">0 ბილეთი</span>
                 </div>
                 <div class="participants-container" id="participantsContainer">
@@ -554,7 +582,8 @@
 
         let currentUser = null;
         let userResolvedName = "";
-        let alreadyBooked = false;
+        let currentUserBalance = 0;
+        let userTicketsList = [];
         let isTenMinLocked = false;
 
         function getTodayKey() {
@@ -566,17 +595,17 @@
         }
 
         auth.onAuthStateChanged(function(user) {
-            const btn = document.getElementById('bookBtn');
-
             if (user) {
                 currentUser = user;
                 document.getElementById('displayUserUid').innerText = `ID: ${user.uid.slice(0, 8)}...`;
 
+                // ბალანსისა და პროფილის რეალურ დროში წაკითხვა
                 db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
                     if (doc.exists) {
                         const data = doc.data();
                         const rawBalance = data.balance !== undefined ? data.balance : (data.coins !== undefined ? data.coins : 0);
-                        document.getElementById('displayBalance').innerText = `${Number(rawBalance).toFixed(2)} €`;
+                        currentUserBalance = Number(rawBalance) || 0;
+                        document.getElementById('displayBalance').innerText = `${currentUserBalance.toFixed(2)} €`;
 
                         userResolvedName = data.full_name || data.name || data.username || user.displayName || (user.email ? user.email.split('@')[0] : "მომხმარებელი");
                         document.getElementById('displayUserName').innerText = userResolvedName;
@@ -591,7 +620,7 @@
                     }
                 });
 
-                listenUserBookingAndTicket();
+                listenUserTickets();
             } else {
                 window.location.href = "index.html";
             }
@@ -613,80 +642,96 @@
             document.getElementById('nBonus').value = Math.floor(Math.random() * 100);
         }
 
-        // მხოლოდ საკუთარი ბილეთის მონაცემების მოსმენა (სხვისი ბილეთი არ ჩანს)
-        function listenUserBookingAndTicket() {
+        // მხოლოდ საკუთარი ბილეთების მოსმენა (1-ლი უფასო, შემდეგი 2.00 €)
+        function listenUserTickets() {
             if (!currentUser) return;
 
             const todayKey = getTodayKey();
-            const bookingDocId = `${todayKey}_${currentUser.uid}`;
 
-            db.collection("lottery_bookings").doc(bookingDocId).onSnapshot(function(doc) {
-                const btn = document.getElementById('bookBtn');
-                const container = document.getElementById('participantsContainer');
-                const countElem = document.getElementById('participantsCount');
+            db.collection("lottery_bookings")
+                .where("date", "==", todayKey)
+                .where("uid", "==", currentUser.uid)
+                .onSnapshot(function(snapshot) {
+                    userTicketsList = [];
+                    snapshot.forEach(function(doc) {
+                        const data = doc.data();
+                        data.id = doc.id;
+                        userTicketsList.push(data);
+                    });
 
-                if (doc.exists) {
-                    alreadyBooked = true;
-                    countElem.innerText = "1 ბილეთი";
-                    const data = doc.data();
-                    
-                    if (data.mainNumbers && data.mainNumbers.length === 5) {
-                        document.getElementById('n1').value = parseInt(data.mainNumbers[0]);
-                        document.getElementById('n2').value = parseInt(data.mainNumbers[1]);
-                        document.getElementById('n3').value = parseInt(data.mainNumbers[2]);
-                        document.getElementById('n4').value = parseInt(data.mainNumbers[3]);
-                        document.getElementById('n5').value = parseInt(data.mainNumbers[4]);
-                        document.getElementById('nBonus').value = parseInt(data.bonusNumber);
-                    }
+                    // დალაგება თარიღის მიხედვით
+                    userTicketsList.sort((a, b) => {
+                        const tA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt) : 0;
+                        const tB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt) : 0;
+                        return tB - tA;
+                    });
 
-                    // გამოსახვა მხოლოდ საკუთარი ბილეთის ბლოკში
-                    const nums = data.mainNumbers || ['--', '--', '--', '--', '--'];
-                    const bonus = data.bonusNumber || '--';
-
-                    container.innerHTML = `
-                        <div class="participant-row">
-                            <div class="meta-row">
-                                <span class="name">${userResolvedName || 'თქვენი ბილეთი'}</span>
-                                <span class="badge">დაფიქსირებულია ✓</span>
-                            </div>
-                            <div class="numbers-row">
-                                ${nums.map(n => `<span class="mini-ball">${n}</span>`).join('')}
-                                <span style="color:#717786; font-size:11px; margin:0 2px;">+</span>
-                                <span class="mini-ball gold">${bonus}</span>
-                            </div>
-                        </div>
-                    `;
-
-                    if (isTenMinLocked) {
-                        btn.disabled = true;
-                        btn.innerText = "🔒 ბილეთი დაფიქსირებულია (გათიშულია)";
-                        lockAllInputs(true);
-                    } else {
-                        btn.disabled = false;
-                        btn.innerText = "ციფრების განახლება ✓";
-                        lockAllInputs(false);
-                    }
-                } else {
-                    alreadyBooked = false;
-                    countElem.innerText = "0 ბილეთი";
-                    container.innerHTML = '<div class="empty-state">თქვენ ჯერ არ გაქვთ დამახსოვრებული ციფრები</div>';
-
-                    if (isTenMinLocked) {
-                        btn.disabled = true;
-                        btn.innerText = "🔒 მიღება დასრულებულია";
-                        lockAllInputs(true);
-                    } else {
-                        btn.disabled = false;
-                        btn.innerText = "ციფრების დამახსოვრება";
-                        lockAllInputs(false);
-                    }
-                }
-            });
+                    updateUIWithTickets();
+                });
         }
 
-        function lockAllInputs(lock) {
-            document.querySelectorAll('.lotto-input').forEach(el => el.disabled = lock);
-            document.getElementById('luckyBtn').disabled = lock;
+        function updateUIWithTickets() {
+            const btn = document.getElementById('bookBtn');
+            const container = document.getElementById('participantsContainer');
+            const countElem = document.getElementById('participantsCount');
+            const priceLabel = document.getElementById('ticketPriceLabel');
+
+            countElem.innerText = `${userTicketsList.length} ბილეთი`;
+
+            // ღილაკისა და ფასის ტეგის განახლება
+            if (userTicketsList.length === 0) {
+                priceLabel.className = "ticket-price-tag";
+                priceLabel.innerText = "🎁 1-ლი ბილეთი: უფასო";
+                if (!isTenMinLocked) {
+                    btn.disabled = false;
+                    btn.innerText = "უფასო ბილეთის დაჯავშნა";
+                }
+            } else {
+                priceLabel.className = "ticket-price-tag paid";
+                priceLabel.innerText = "💳 დამატებითი ბილეთი: 2.00 €";
+                if (!isTenMinLocked) {
+                    btn.disabled = false;
+                    btn.innerText = "ბილეთის შეძენა (2.00 €)";
+                }
+            }
+
+            if (isTenMinLocked) {
+                btn.disabled = true;
+                btn.innerText = "🔒 მიღება დასრულებულია";
+                return;
+            }
+
+            // სიის რენდერი
+            if (userTicketsList.length === 0) {
+                container.innerHTML = '<div class="empty-state">თქვენ ჯერ არ გაქვთ დამახსოვრებული ციფრები</div>';
+                return;
+            }
+
+            let html = '';
+            userTicketsList.forEach(function(t, idx) {
+                const nums = t.mainNumbers || ['--', '--', '--', '--', '--'];
+                const bonus = t.bonusNumber || '--';
+                const isFree = t.isFree === true || t.cost === 0;
+                const statusBadge = isFree 
+                    ? '<span class="badge">უფასო ✓</span>' 
+                    : '<span class="badge paid">2.00 € ✓</span>';
+
+                html += `
+                    <div class="participant-row">
+                        <div class="meta-row">
+                            <span class="name">ბილეთი #${userTicketsList.length - idx}</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="numbers-row">
+                            ${nums.map(n => `<span class="mini-ball">${n}</span>`).join('')}
+                            <span style="color:#717786; font-size:11px; margin:0 2px;">+</span>
+                            <span class="mini-ball gold">${bonus}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
         }
 
         function saveLotteryTicket() {
@@ -723,33 +768,80 @@
                 return;
             }
 
+            const isFreeTicket = userTicketsList.length === 0;
+            const ticketCost = isFreeTicket ? 0 : 2.00;
+
+            // თანხის გადამოწმება და გადამისამართება
+            if (!isFreeTicket && currentUserBalance < ticketCost) {
+                alert("თქვენს ანგარიშზე არ არის საკმარისი თანხა (საჭიროა 2.00 €). გადამისამართება ბალანსის შევსების გვერდზე...");
+                window.location.href = "balance.html";
+                return;
+            }
+
             const btn = document.getElementById('bookBtn');
             btn.disabled = true;
-            btn.innerText = "ინახება...";
+            btn.innerText = "მუშავდება...";
 
             const todayKey = getTodayKey();
-            const bookingDocId = `${todayKey}_${currentUser.uid}`;
+            const batch = db.batch();
+            const newTicketRef = db.collection("lottery_bookings").doc();
+            const userProfileRef = db.collection('profiles').doc(currentUser.uid);
 
-            db.collection("lottery_bookings").doc(bookingDocId).set({
+            // ბილეთის მონაცემები
+            batch.set(newTicketRef, {
                 uid: currentUser.uid,
                 name: userResolvedName || "მომხმარებელი",
                 email: currentUser.email || "",
                 date: todayKey,
                 mainNumbers: mainNums.map(n => String(n).padStart(2, '0')),
                 bonusNumber: String(bonusNum).padStart(2, '0'),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).then(function() {
+                cost: ticketCost,
+                isFree: isFreeTicket,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // თუ ფასიანია (2 €), ჩამოვაჭრათ ბალანსიდან და ჩავწეროთ ტრანზაქცია
+            if (!isFreeTicket) {
+                batch.set(userProfileRef, {
+                    balance: firebase.firestore.FieldValue.increment(-ticketCost),
+                    last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                const txRef = userProfileRef.collection('transactions').doc();
+                batch.set(txRef, {
+                    type: 'expense',
+                    title: 'ლოტოს ბილეთის შეძენა (Live 15:00)',
+                    amount: ticketCost,
+                    price: '€ ' + ticketCost.toFixed(2),
+                    status: 'წარმატებული',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
+            batch.commit().then(function() {
+                // ინფუთების გასუფთავება შემდეგი ბილეთისთვის
+                document.getElementById('n1').value = '';
+                document.getElementById('n2').value = '';
+                document.getElementById('n3').value = '';
+                document.getElementById('n4').value = '';
+                document.getElementById('n5').value = '';
+                document.getElementById('nBonus').value = '';
+
                 btn.disabled = false;
-                btn.innerText = "შენახულია ✓";
-                alert("თქვენი ციფრები წარმატებით დამახსოვრდა!");
+                if (isFreeTicket) {
+                    alert("უფასო ბილეთი წარმატებით დაფიქსირდა!");
+                } else {
+                    alert("ბილეთი წარმატებით შეიძინეთ (-2.00 €)! შეგიძლიათ შეიძინოთ კიდევ.");
+                }
             }).catch(function(err) {
                 alert("შეცდომა: " + err.message);
                 btn.disabled = false;
-                btn.innerText = "ციფრების დამახსოვრება";
+                updateUIWithTickets();
             });
         }
 
-        // ტაიმერი და 14:50:00-ზე 10 წუთით ადრე გათიშვა
+        // ტაიმერი & 14:50:00-ზე 10 წუთით ადრე გათიშვა
         function updateLotteryTimer() {
             const now = new Date();
             let targetDraw = new Date();
@@ -767,24 +859,23 @@
 
             document.getElementById('countdownTimer').innerText = `${h}:${m}:${s}`;
 
-            const btn = document.getElementById('bookBtn');
             const lockNotice = document.getElementById('lockNotice');
 
             if (!isDrawPastToday && diff <= 10 * 60 * 1000 && diff > 0) {
                 if (!isTenMinLocked) {
                     isTenMinLocked = true;
                     lockNotice.style.display = "block";
-                    lockAllInputs(true);
-                    btn.disabled = true;
-                    btn.innerText = "🔒 მიღება შეჩერებულია 15:00-მდე";
+                    document.querySelectorAll('.lotto-input').forEach(el => el.disabled = true);
+                    document.getElementById('luckyBtn').disabled = true;
+                    updateUIWithTickets();
                 }
             } else {
                 if (isTenMinLocked) {
                     isTenMinLocked = false;
                     lockNotice.style.display = "none";
-                    lockAllInputs(false);
-                    btn.disabled = false;
-                    btn.innerText = alreadyBooked ? "ციფრების განახლება ✓" : "ციფრების დამახსოვრება";
+                    document.querySelectorAll('.lotto-input').forEach(el => el.disabled = false);
+                    document.getElementById('luckyBtn').disabled = false;
+                    updateUIWithTickets();
                 }
             }
         }
