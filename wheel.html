@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortune Wheel Live</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1b160b 0%, #080705 70%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* ლაივის ინდიკატორი */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff3333;
+            color: #ff4d4d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff3333;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff3333;
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .game-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: linear-gradient(180deg, #fff2a3 0%, #d4af37 50%, #aa771c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+        }
+
+        /* ბორბლის კონტეინერი */
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ზედა ოქროსფერი ისარი */
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 36px;
+            background: linear-gradient(180deg, #ffe066 0%, #d4af37 60%, #805300 100%);
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
+            z-index: 20;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8));
+        }
+
+        /* გარე ოქროსფერი მანათობელი ჩარჩო */
+        .outer-rim {
+            position: absolute;
+            width: 318px;
+            height: 318px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fff1a8 0%, #caa035 30%, #543905 70%, #d4af37 100%);
+            padding: 9px;
+            box-shadow: 0 0 35px rgba(212, 175, 55, 0.45), inset 0 0 15px rgba(0,0,0,0.9);
+            z-index: 2;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+            transition: transform 5s cubic-bezier(0.12, 0.8, 0.15, 1);
+        }
+
+        /* ცენტრალური ოქროსფერი გული */
+        .center-hub {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffe680 0%, #caa035 45%, #2a1b02 95%);
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 18px rgba(0,0,0,0.9), inset 0 0 8px #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .center-hub span {
+            font-size: 10px;
+            font-weight: 900;
+            color: #1a1002;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+        }
+
+        /* ოქროსფერი ღილაკი */
+        .spin-btn {
+            margin-top: 25px;
+            background: linear-gradient(180deg, #ffe066 0%, #d4af37 40%, #996515 100%);
+            color: #1f1401;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 14px 45px;
+            border: 2px solid #fff2a3;
+            border-radius: 40px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4), inset 0 2px 4px #ffffff;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+
+        .spin-btn:active {
+            transform: scale(0.96);
+            filter: brightness(0.9);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
+        /* მოგების შედეგი */
+        .result-box {
+            margin-top: 15px;
+            height: 24px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="live-badge">
+        <div class="live-dot"></div>
+        Live Draw
+    </div>
+
+    <div class="game-title">Emigrant Fortune</div>
+
+    <div class="wheel-container">
+        <div class="wheel-pointer"></div>
+        <div class="outer-rim">
+            <canvas id="wheelCanvas" width="600" height="600"></canvas>
+        </div>
+        <div class="center-hub">
+            <span>BONUS<br>SEGRETO</span>
+        </div>
+    </div>
+
+    <div class="result-box" id="resultText"></div>
+
+    <button class="spin-btn" id="spinBtn" onclick="spinWheel()">დაატრიალე</button>
+
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultText = document.getElementById('resultText');
+
+        // სექტორები და მათემატიკური ალბათობა (weight: რაც მეტია, მით ხშირად ჯდება)
+        const sectors = [
+            { label: "1.000 €", color: "#141724", weight: 5 },
+            { label: "500 €",   color: "#0c0e15", weight: 12 },
+            { label: "50 €",    color: "#141724", weight: 45 },
+            { label: "3.000 €", color: "#0c0e15", weight: 3 },
+            { label: "5.000 €", color: "#141724", weight: 2 },
+            { label: "300 €",   color: "#0c0e15", weight: 20 },
+            { label: "100 €",   color: "#141724", weight: 35 },
+            { label: "9.000 €", color: "#0c0e15", weight: 1 }  // ჯეკპოტი (უმცირესი შანსი)
+        ];
+
+        const numSectors = sectors.length;
+        const arc = 2 * Math.PI / numSectors;
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        // ბორბლის დახატვა
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numSectors; i++) {
+                const angle = i * arc;
+
+                // სექტორის ფონი
+                ctx.beginPath();
+                ctx.fillStyle = sectors[i].color;
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle, angle + arc);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+
+                // ოქროსფერი გამყოფი ხაზები
+                ctx.strokeStyle = "#caa035";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // ტექსტი
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffdf79";
+                ctx.font = "bold 26px 'Segoe UI', Arial";
+                ctx.shadowColor = "rgba(0,0,0,0.8)";
+                ctx.shadowBlur = 4;
+                ctx.fillText(sectors[i].label, radius - 35, 10);
+                ctx.restore();
+            }
+        }
+
+        // ალბათობის მათემატიკური არჩევა
+        function getWeightedSectorIndex() {
+            const totalWeight = sectors.reduce((sum, s) => sum + s.weight, 0);
+            let random = Math.random() * totalWeight;
+
+            for (let i = 0; i < sectors.length; i++) {
+                if (random < sectors[i].weight) {
+                    return i;
+                }
+                random -= sectors[i].weight;
+            }
+            return 0;
+        }
+
+        // დატრიალების ლოგიკა
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            resultText.innerText = "მიმდინარეობს გათამაშება...";
+
+            const selectedIndex = getWeightedSectorIndex();
+
+            // მათემატიკა: 360 გრადუსის შესაბამისობა ისართან (ზედა ცენტრი = 270 გრადუსი)
+            const sectorDegrees = 360 / numSectors;
+            const targetSectorCenter = (selectedIndex * sectorDegrees) + (sectorDegrees / 2);
+            
+            // მინიმუმ 6 სრული ბრუნი + ზუსტი სექტორის კუთხე
+            const fullSpins = 360 * 6;
+            const finalAngle = fullSpins + (270 - targetSectorCenter);
+
+            currentRotation += finalAngle + (360 - (currentRotation % 360));
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
+                resultText.innerText = `გილოცავთ! მოგება: ${sectors[selectedIndex].label}`;
+            }, 5000);
+        }
+
+        drawWheel();
+    </script>
+</body>
+</html>
