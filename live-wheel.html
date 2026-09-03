@@ -664,15 +664,22 @@
 
     <header class="top-navbar">
         <a href="index.html" class="nav-back">‹ მთავარი</a>
-        <div class="live-tag">
-            <div class="live-tag-dot"></div>
-            Live 15:00
+        
+        <!-- საინფორმაციო (i) ღილაკი და Live ტეგი გვერდიგვერდ -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="openRulesModal()" title="გათამაშების წესები" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(209, 177, 101, 0.12); border: 1px solid rgba(209, 177, 101, 0.4); color: #d1b165; font-size: 12px; font-weight: 800; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; flex-shrink: 0;" onmouseover="this.style.background='rgba(209, 177, 101, 0.25)'; this.style.borderColor='#d1b165';" onmouseout="this.style.background='rgba(209, 177, 101, 0.12)'; this.style.borderColor='rgba(209, 177, 101, 0.4)';">
+                i
+            </button>
+            <div class="live-tag">
+                <div class="live-tag-dot"></div>
+                Live 15:00
+            </div>
         </div>
     </header>
 
     <main class="main-wrapper">
 
-        <!-- პროფილი & ბალანსი + საინფორმაციო ღილაკი მის წინ -->
+        <!-- პროფილი & ბალანსი -->
         <div class="user-balance-card">
             <div class="user-left-profile">
                 <div class="user-avatar-img" id="userAvatarContainer">
@@ -683,15 +690,9 @@
                     <div class="user-uid" id="displayUserUid">ID: ...</div>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <!-- პატარა საინფორმაციო (i) ღილაკი -->
-                <button type="button" onclick="openRulesModal()" title="გათამაშების წესები" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(209, 177, 101, 0.1); border: 1px solid rgba(209, 177, 101, 0.35); color: #d1b165; font-size: 13px; font-weight: 800; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; flex-shrink: 0;" onmouseover="this.style.background='rgba(209, 177, 101, 0.2)'; this.style.borderColor='#d1b165';" onmouseout="this.style.background='rgba(209, 177, 101, 0.1)'; this.style.borderColor='rgba(209, 177, 101, 0.35)';">
-                    i
-                </button>
-                <div class="user-balance-box" onclick="window.location.href='balance.html'">
-                    <div class="label">ბალანსი (შევსება ➔)</div>
-                    <div class="value" id="displayBalance">0.00 €</div>
-                </div>
+            <div class="user-balance-box" onclick="window.location.href='balance.html'">
+                <div class="label">ბალანსი (შევსება ➔)</div>
+                <div class="value" id="displayBalance">0.00 €</div>
             </div>
         </div>
 
@@ -1043,7 +1044,6 @@
                     ? '<span class="badge">უფასო ✓</span>' 
                     : '<span class="badge paid">2.00 € ✓</span>';
 
-                // თუ შედეგები უკვე არსებობს, შევამოწმოთ მოგება
                 let matchedMain = [];
                 let matchedBonus = false;
 
@@ -1224,7 +1224,6 @@
                     const now = Date.now();
                     const hoursPassed = (now - drawnTime) / (1000 * 60 * 60);
 
-                    // 24 საათის შემდეგ შედეგი ქრება ახალ გათამაშებამდე
                     if (hoursPassed > 24) {
                         dateLabel.innerText = "გასული გათამაშების ვადა ამოიწურა";
                         ballsBox.innerHTML = `
@@ -1250,19 +1249,16 @@
                     const combo = data.combination || { main: ['--', '--', '--', '--', '--'], bonus: '--' };
                     dateLabel.innerText = `გათამაშების თარიღი: ${data.date || getTodayKey()}`;
 
-                    // ბურთების გამოსახვა
                     ballsBox.innerHTML = `
                         ${combo.main.map(n => `<div class="big-lotto-ball">${n}</div>`).join('')}
                         <span style="font-size: 18px; font-weight: 900; color: #717786; margin: 0 3px;">+</span>
                         <div class="big-lotto-ball gold">${combo.bonus}</div>
                     `;
 
-                    // საჯარო გამარჯვებულების გამოტანა
                     renderPublicWinners(data);
                 });
         }
 
-        // გამარჯვებულების სიის აწყობა ავატარით და მოგებული თანხით
         function renderPublicWinners(drawData) {
             const container = document.getElementById('publicWinnersList');
             const countElem = document.getElementById('publicWinnersCount');
