@@ -2350,7 +2350,7 @@ body {
 };                            
     // აქ მთავრდება
 
-   function applyLanguageDOM() {
+  function applyLanguageDOM() {
   var lang = currentLang || 'en';
   var t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
 
@@ -2576,8 +2576,18 @@ body {
   if (shareSectionTitle) shareSectionTitle.innerText = t.sendToFriends || "გაგზავნა მეგობრებთან";
 
   var siteLangSelect = document.getElementById('site-language-select');
-  if (siteLangSelect) siteLangSelect.value = lang;
-}     
+  if (siteLangSelect) {
+    // თუ ბერძნული (el) ოპცია ჯერ არ არის select-ში, ავტომატურად ამატებს
+    if (!siteLangSelect.querySelector('option[value="el"]')) {
+      var elOption = document.createElement('option');
+      elOption.value = 'el';
+      elOption.text = 'Ελληνικά (Greek)';
+      siteLangSelect.appendChild(elOption);
+    }
+    siteLangSelect.value = lang;
+  }
+}
+
 
     function changeSiteLanguage(newLang) {
   currentLang = newLang;
