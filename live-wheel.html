@@ -469,7 +469,7 @@
         .participant-row .badge.waiting {
             color: #60a5fa;
             background: rgba(59, 130, 246, 0.15);
-            border-color: rgba(59, 130, 246, 0.35);
+            border: 1px solid rgba(59, 130, 246, 0.35);
         }
 
         .participant-row .badge.win {
@@ -577,6 +577,7 @@
             color: #717786;
         }
 
+        /* საჯარო გამარჯვებულების სია */
         .public-winners-card {
             background: #13161c;
             border: 1px solid #20242e;
@@ -666,7 +667,7 @@
 <body>
 
     <header class="top-navbar">
-        <a href="index.html" class="nav-back">‹ მთავარი</a>
+        <a href="index.html" class="nav-back" id="navBackBtn">‹ მთავარი</a>
         <div style="display: flex; align-items: center; gap: 8px;">
             <button type="button" onclick="openRulesModal()" title="გათამაშების წესები" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(209, 177, 101, 0.12); border: 1px solid rgba(209, 177, 101, 0.4); color: #d1b165; font-size: 12px; font-weight: 800; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; outline: none; flex-shrink: 0;" onmouseover="this.style.background='rgba(209, 177, 101, 0.25)'; this.style.borderColor='#d1b165';" onmouseout="this.style.background='rgba(209, 177, 101, 0.12)'; this.style.borderColor='rgba(209, 177, 101, 0.4)';">
                 i
@@ -692,7 +693,7 @@
                 </div>
             </div>
             <div class="user-balance-box" onclick="window.location.href='balance.html'">
-                <div class="label">ბალანსი (შევსება ➔)</div>
+                <div class="label" id="balanceLabelText">ბალანსი (შევსება ➔)</div>
                 <div class="value" id="displayBalance">0.00 €</div>
             </div>
         </div>
@@ -716,14 +717,14 @@
         <div id="bookingSection" style="display: flex; flex-direction: column; gap: 14px;">
             
             <div class="results-nav-banner" onclick="switchView('results')">
-                <span class="text">🏆 ბოლო გათამაშების შედეგები & მოგებულები</span>
+                <span class="text" id="resultsBannerText">🏆 ბოლო გათამაშების შედეგები & მოგებულები</span>
                 <span class="arrow">➔</span>
             </div>
 
             <div class="lotto-pick-card">
                 <div class="pick-header">
                     <div class="title-box">
-                        <span class="title">აირჩიეთ 5 + 1 ციფრი (00-99):</span>
+                        <span class="title" id="pickNumbersTitle">აირჩიეთ 5 + 1 ციფრი (00-99):</span>
                         <span class="ticket-price-tag" id="ticketPriceLabel">🎁 1-ლი ბილეთი: უფასო</span>
                     </div>
                     <button type="button" class="random-pick-btn" id="luckyBtn" onclick="generateLuckyPick()">🎲 შემთხვევითი</button>
@@ -745,11 +746,11 @@
             <!-- მხოლოდ მიმდინარე მომხმარებლის ბილეთები -->
             <div class="list-card">
                 <div class="list-header">
-                    <span class="title">ჩემი დაჯავშნილი ბილეთები</span>
+                    <span class="title" id="myTicketsListTitle">ჩემი დაჯავშნილი ბილეთები</span>
                     <span class="count" id="participantsCount">0 ბილეთი</span>
                 </div>
                 <div class="participants-container" id="participantsContainer">
-                    <div class="empty-state">თქვენ ჯერ არ გაქვთ დამახსოვრებული ციფრები</div>
+                    <div class="empty-state" id="emptyTicketsStateText">თქვენ ჯერ არ გაქვთ დამახსოვრებული ციფრები</div>
                 </div>
             </div>
         </div>
@@ -758,7 +759,7 @@
         <div id="resultsSection" class="results-page-section" style="display: none;">
             
             <div class="drawn-numbers-card" id="drawnCard">
-                <div class="drawn-card-title">ამოღებული ციფრები</div>
+                <div class="drawn-card-title" id="drawnCardMainTitle">ამოღებული ციფრები</div>
                 <div class="drawn-card-date" id="drawDateLabel">მოწმდება შედეგები...</div>
                 
                 <div class="drawn-balls-display" id="drawnBallsBox">
@@ -776,11 +777,11 @@
 
             <div class="public-winners-card">
                 <div class="list-header">
-                    <span class="title">გამარჯვებულები</span>
+                    <span class="title" id="winnersListCardTitle">გამარჯვებულები</span>
                     <span class="count" id="publicWinnersCount">0 მოგებული</span>
                 </div>
                 <div id="publicWinnersList">
-                    <div class="empty-state">იტვირთება მონაცემები...</div>
+                    <div class="empty-state" id="winnersListEmptyStateText">იტვირთება მონაცემები...</div>
                 </div>
             </div>
 
@@ -788,7 +789,7 @@
 
         <!-- სექცია 3: ლოტოტრონის ლაივი -->
         <div class="live-stream-box" id="streamContainer">
-            <iframe src="wheel.html" scrolling="no"></iframe>
+            <iframe id="lototronIframe" src="wheel.html" scrolling="no"></iframe>
         </div>
 
     </main>
@@ -799,76 +800,14 @@
             
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #1f232e; background: #15181f;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 15px; font-weight: 800; color: #ffffff;">გათამაშების წესები</span>
+                    <span style="font-size: 15px; font-weight: 800; color: #ffffff;" id="rulesModalMainHeader">გათამაშების წესები</span>
                     <span style="background: rgba(255, 77, 77, 0.15); border: 1px solid rgba(255, 77, 77, 0.4); color: #ff4d4d; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px;">18+</span>
                 </div>
                 <button type="button" onclick="closeRulesModal()" style="background: transparent; border: none; color: #8c93a4; font-size: 20px; font-weight: 700; cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">✕</button>
             </div>
 
-            <div style="padding: 16px; overflow-y: auto; color: #cbd1db; font-size: 12.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 14px;">
-                <div>
-                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ ბილეთები და ღირებულება</div>
-                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
-                        <li><strong>1-ლი ბილეთი უფასოა:</strong> ყოველ 24 საათში 1 ბილეთი ყველასთვის უფასოა.</li>
-                        <li><strong>დამატებითი ბილეთი:</strong> ღირს <strong>2.00 €</strong> (თანხა ჩამოიჭრება ბალანსიდან).</li>
-                        <li><strong>არასაკმარისი ბალანსი:</strong> სისტემა გადაგამისამართებთ ბალანსის შევსებაზე.</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ დრო და 10-წუთიანი ბლოკი</div>
-                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
-                        <li><strong>გათამაშება:</strong> ყოველდღე, ზუსტად <strong>15:00:00</strong> საათზე (იტალიის ცენტრალური დროით).</li>
-                        <li><strong>10-წუთიანი ბლოკი:</strong> გათამაშებამდე 10 წუთით ადრე ციფრების შევსება და რედაქტირება იბლოკება.</li>
-                        <li><strong>განბლოკვა:</strong> გათამაშების დასრულებისთანავე სისტემა იხსნება მომდევნო დღისთვის.</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 6px;">💰 მომგებიანი კატეგორიები</div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; background: #0c0e12; border-radius: 6px; overflow: hidden; border: 1px solid #1a1e26;">
-                        <tr style="border-bottom: 1px solid #1a1e26; background: #161921; color: #8c93a4;">
-                            <th style="padding: 6px 8px; text-align: left;">დამთხვევა</th>
-                            <th style="padding: 6px 8px; text-align: right;">თანხა</th>
-                        </tr>
-                        <tr style="border-bottom: 1px solid #14171e;">
-                            <td style="padding: 6px 8px;">3 ციფრი + ბონუსი (★)</td>
-                            <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">50.00 €</td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid #14171e;">
-                            <td style="padding: 6px 8px;">მხოლოდ 4 ციფრი</td>
-                            <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">80.00 €</td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid #14171e;">
-                            <td style="padding: 6px 8px;">4 ციფრი + ბონუსი (★)</td>
-                            <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">100.00 €</td>
-                        </tr>
-                        <tr style="background: rgba(209, 177, 101, 0.08);">
-                            <td style="padding: 6px 8px; color: #ffd700; font-weight: 800;">5 ციფრი + ბონუსი (★)</td>
-                            <td style="padding: 6px 8px; text-align: right; color: #ffd700; font-weight: 900;">1,000 € + (JACKPOT)</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div>
-                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⚖️ მოგების გაყოფა და დარიცხვა</div>
-                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
-                        <li><strong>თანაბარი გაყოფა:</strong> თუ კატეგორიაში რამდენიმე გამარჯვებულია, თანხა ზუსტად და თანაბრად იყოფა მათ რაოდენობაზე.</li>
-                        <li><strong>მომენტალური დარიცხვა:</strong> მოგებული თანხა მომენტალურად ჯდება გამარჯვებულის პირად ბალანსზე.</li>
-                    </ul>
-                </div>
-
-                <div>
-                    <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🔥 მზარდი ჯეკპოტი</div>
-                    <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
-                        <li>ჯეკპოტი იწყება 1,000 €-დან და თუ არ გათამაშდა, ყოველ 24 საათში ერთხელ იზრდება.</li>
-                        <li>შედეგები და მოგებულთა სია ინახება 24 საათი („შედეგები 🏆“ ჩანართში).</li>
-                    </ul>
-                </div>
-
-                <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
-                    ⚠️ <strong>ასაკობრივი შეზღუდვა:</strong> 18 წლამდე პირების მონაწილეობა კატეგორიულად აკრძალულია.
-                </div>
+            <div id="rulesModalContentBody" style="padding: 16px; overflow-y: auto; color: #cbd1db; font-size: 12.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 14px;">
+                <!-- ტექსტი დინამიურად ივსება ენის მიხედვით -->
             </div>
         </div>
     </div>
@@ -897,6 +836,639 @@
         let userTicketsList = [];
         let isTenMinLocked = false;
         let latestDrawData = null;
+
+        // ==========================================
+        // 🌐 ენების სისტემა (6 ენა მთავარი საიტიდან)
+        // ==========================================
+        const LOTTO_TRANSLATIONS = {
+            ka: {
+                navBack: "‹ მთავარი",
+                loading: "იტვირთება...",
+                balanceLabel: "ბალანსი (შევსება ➔)",
+                scheduleTitleLocal: (time) => `გათამაშება იწყება ყოველდღე ${time}-ზე (თქვენი დროით) / 15:00 (იტალია)`,
+                scheduleTitleRome: `გათამაშება იწყება ყოველდღე 15:00-ზე (იტალიის დროით)`,
+                timerSubtitle: "დარჩენილი დრო პირდაპირ ეთერამდე",
+                lockNotice: "🔒 მიღება დასრულებულია (გათამაშებამდე 10 წუთით ადრე). ციფრების შეცვლა დაბლოკილია!",
+                tabBook: "დაჯავშნა",
+                tabResults: "შედეგები 🏆",
+                tabStream: "პირდაპირი ეთერი",
+                resultsBanner: "🏆 ბოლო გათამაშების შედეგები & მოგებულები",
+                pickTitle: "აირჩიეთ 5 + 1 ციფრი (00-99):",
+                freeTag: "🎁 1-ლი ბილეთი: უფასო",
+                paidTag: "💳 დამატებითი ბილეთი: 2.00 €",
+                luckyBtn: "🎲 შემთხვევითი",
+                bookFreeBtn: "უფასო ბილეთის დაჯავშნა",
+                bookPaidBtn: "ბილეთის შეძენა (2.00 €)",
+                bookLockedBtn: "🔒 მიღება დასრულებულია",
+                bookProcessing: "მუშავდება...",
+                myTicketsTitle: "ჩემი დაჯავშნილი ბილეთები",
+                ticketCountUnit: "ბილეთი",
+                emptyTickets: "თქვენ ჯერ არ გაქვთ დამახსოვრებული ციფრები",
+                ticketPrefix: "ბილეთი #",
+                freeBadge: "უფასო ✓",
+                paidBadge: "2.00 € ✓",
+                waitingBadge: (time) => `⏳ ელოდება ${time}-ს`,
+                wonBadge: (amt) => `🎉 მოგებულია: ${amt} €`,
+                lostBadge: "არ მოუგია",
+                drawnTitle: "ამოღებული ციფრები",
+                checkingResults: "მოწმდება შედეგები...",
+                drawDateLabel: (d) => `გათამაშების თარიღი: ${d}`,
+                drawExpired: "გასული გათამაშების ვადა ამოიწურა",
+                drawNoteActive: "შედეგი აქტიურია 24 საათი მომდევნო გათამაშებამდე",
+                drawNoteNewSoon: "ახალი გათამაშება მალე დაიწყება",
+                winnersCardTitle: "გამარჯვებულები",
+                winnersCountUnit: "მოგებული",
+                winnersEmptyWait: "მონაცემები გამოჩნდება გათამაშების შემდეგ",
+                winnersNone: "ამ გათამაშებაში გამარჯვებული არ გამოვლენილა",
+                rulesModalTitle: "გათამაშების წესები",
+                alertLocked: "გათამაშების დაწყებამდე დარჩენილია 10 წუთზე ნაკლები, მიღება შეჩერებულია!",
+                alertFillAll: "გთხოვთ შეავსოთ ყველა (5 ძირითადი და 1 ბონუს) ციფრი 0-დან 99-მდე!",
+                alert0to99: "ყველა ციფრი უნდა იყოს 00-დან 99-ის ჩათვლით!",
+                alertUnique: "5 ძირითადი ციფრი ერთმანეთისგან განსხვავებული უნდა იყოს!",
+                alertNoBalance: "თქვენს ანგარიშზე არ არის საკმარისი თანხა (საჭიროა 2.00 €). გადამისამართება ბალანსის შევსების გვერდზე...",
+                alertFreeSuccess: "უფასო ბილეთი წარმატებით დაფიქსირდა!",
+                alertPaidSuccess: "ბილეთი წარმატებით შეიძინეთ (-2.00 €)! შეგიძლიათ შეიძინოთ კიდევ."
+            },
+            en: {
+                navBack: "‹ Home",
+                loading: "Loading...",
+                balanceLabel: "Balance (Top up ➔)",
+                scheduleTitleLocal: (time) => `Draw starts daily at ${time} (Your time) / 15:00 (Italy)`,
+                scheduleTitleRome: `Draw starts daily at 15:00 (Italy time)`,
+                timerSubtitle: "Time remaining until live stream",
+                lockNotice: "🔒 Submissions closed (10 minutes before draw). Ticket editing locked!",
+                tabBook: "Tickets",
+                tabResults: "Results 🏆",
+                tabStream: "Live Stream",
+                resultsBanner: "🏆 Latest Draw Results & Winners",
+                pickTitle: "Pick 5 + 1 numbers (00-99):",
+                freeTag: "🎁 1st Ticket: FREE",
+                paidTag: "💳 Extra Ticket: 2.00 €",
+                luckyBtn: "🎲 Quick Pick",
+                bookFreeBtn: "Claim Free Ticket",
+                bookPaidBtn: "Buy Ticket (2.00 €)",
+                bookLockedBtn: "🔒 Submissions Closed",
+                bookProcessing: "Processing...",
+                myTicketsTitle: "My Booked Tickets",
+                ticketCountUnit: "ticket(s)",
+                emptyTickets: "You have not picked any numbers yet",
+                ticketPrefix: "Ticket #",
+                freeBadge: "Free ✓",
+                paidBadge: "2.00 € ✓",
+                waitingBadge: (time) => `⏳ Waiting for ${time}`,
+                wonBadge: (amt) => `🎉 Won: ${amt} €`,
+                lostBadge: "Not won",
+                drawnTitle: "Drawn Numbers",
+                checkingResults: "Checking results...",
+                drawDateLabel: (d) => `Draw date: ${d}`,
+                drawExpired: "Previous draw has expired",
+                drawNoteActive: "Results remain active for 24 hours until next draw",
+                drawNoteNewSoon: "Next draw will start soon",
+                winnersCardTitle: "Winners",
+                winnersCountUnit: "winner(s)",
+                winnersEmptyWait: "Data will appear after the draw",
+                winnersNone: "No winners in this draw",
+                rulesModalTitle: "Game Rules",
+                alertLocked: "Less than 10 minutes until draw. Submissions locked!",
+                alertFillAll: "Please fill all 5 main numbers and 1 bonus number (00-99)!",
+                alert0to99: "All numbers must be between 00 and 99!",
+                alertUnique: "All 5 main numbers must be unique!",
+                alertNoBalance: "Insufficient balance (2.00 € required). Redirecting to balance page...",
+                alertFreeSuccess: "Free ticket registered successfully!",
+                alertPaidSuccess: "Ticket purchased successfully (-2.00 €)! You can buy more."
+            },
+            it: {
+                navBack: "‹ Home",
+                loading: "Caricamento...",
+                balanceLabel: "Saldo (Ricarica ➔)",
+                scheduleTitleLocal: (time) => `L'estrazione inizia alle ${time} (Tuo orario) / 15:00 (Italia)`,
+                scheduleTitleRome: `L'estrazione inizia ogni giorno alle 15:00 (Ora italiana)`,
+                timerSubtitle: "Tempo rimanente alla diretta",
+                lockNotice: "🔒 Ricezione chiusa (10 minuti prima dell'estrazione). Modifiche bloccate!",
+                tabBook: "Prenota",
+                tabResults: "Risultati 🏆",
+                tabStream: "Diretta Live",
+                resultsBanner: "🏆 Ultimi risultati & Vincitori",
+                pickTitle: "Scegli 5 + 1 numeri (00-99):",
+                freeTag: "🎁 1° Biglietto: GRATIS",
+                paidTag: "💳 Biglietto extra: 2.00 €",
+                luckyBtn: "🎲 Casuale",
+                bookFreeBtn: "Prenota biglietto gratis",
+                bookPaidBtn: "Acquista biglietto (2.00 €)",
+                bookLockedBtn: "🔒 Ricezione Chiusa",
+                bookProcessing: "Elaborazione...",
+                myTicketsTitle: "I miei biglietti prenotati",
+                ticketCountUnit: "biglietti",
+                emptyTickets: "Non hai ancora memorizzato nessun numero",
+                ticketPrefix: "Biglietto #",
+                freeBadge: "Gratis ✓",
+                paidBadge: "2.00 € ✓",
+                waitingBadge: (time) => `⏳ In attesa delle ${time}`,
+                wonBadge: (amt) => `🎉 Vinto: ${amt} €`,
+                lostBadge: "Non vincente",
+                drawnTitle: "Numeri Estratti",
+                checkingResults: "Verifica risultati...",
+                drawDateLabel: (d) => `Data estrazione: ${d}`,
+                drawExpired: "L'estrazione precedente è scaduta",
+                drawNoteActive: "I risultati restano attivi 24 ore fino alla prossima estrazione",
+                drawNoteNewSoon: "La nuova estrazione inizierà presto",
+                winnersCardTitle: "Vincitori",
+                winnersCountUnit: "vincitore/i",
+                winnersEmptyWait: "I dati appariranno dopo l'estrazione",
+                winnersNone: "Nessun vincitore in questa estrazione",
+                rulesModalTitle: "Regole del Gioco",
+                alertLocked: "Mancano meno di 10 minuti all'estrazione, ricezione bloccata!",
+                alertFillAll: "Compila tutti i 5 numeri principali e 1 bonus (00-99)!",
+                alert0to99: "Tutti i numeri devono essere compresi tra 00 e 99!",
+                alertUnique: "I 5 numeri principali devono essere tutti diversi!",
+                alertNoBalance: "Saldo insufficiente (richiesti 2.00 €). Reindirizzamento al saldo...",
+                alertFreeSuccess: "Biglietto gratuito registrato con successo!",
+                alertPaidSuccess: "Biglietto acquistato con successo (-2.00 €)! Puoi acquistarne altri."
+            },
+            ru: {
+                navBack: "‹ Главная",
+                loading: "Загрузка...",
+                balanceLabel: "Баланс (Пополнить ➔)",
+                scheduleTitleLocal: (time) => `Розыгрыш ежедневно в ${time} (Ваше время) / 15:00 (Италия)`,
+                scheduleTitleRome: `Розыгрыш ежедневно в 15:00 (время Италии)`,
+                timerSubtitle: "Осталось времени до прямого эфира",
+                lockNotice: "🔒 Прием закрыт (за 10 минут до эфира). Изменение чисел заблокировано!",
+                tabBook: "Билеты",
+                tabResults: "Результаты 🏆",
+                tabStream: "Прямой эфир",
+                resultsBanner: "🏆 Результаты последнего тиража и победители",
+                pickTitle: "Выберите 5 + 1 чисел (00-99):",
+                freeTag: "🎁 1-й билет: БЕСПЛАТНО",
+                paidTag: "💳 Доп. билет: 2.00 €",
+                luckyBtn: "🎲 Случайно",
+                bookFreeBtn: "Получить бесплатный билет",
+                bookPaidBtn: "Купить билет (2.00 €)",
+                bookLockedBtn: "🔒 Прием закрыт",
+                bookProcessing: "Обработка...",
+                myTicketsTitle: "Мои забронированные билеты",
+                ticketCountUnit: "билет(ов)",
+                emptyTickets: "Вы еще не выбрали ни одного числа",
+                ticketPrefix: "Билет #",
+                freeBadge: "Бесплатно ✓",
+                paidBadge: "2.00 € ✓",
+                waitingBadge: (time) => `⏳ Ожидание ${time}`,
+                wonBadge: (amt) => `🎉 Выигрыш: ${amt} €`,
+                lostBadge: "Не выиграл",
+                drawnTitle: "Выпавшие числа",
+                checkingResults: "Проверка результатов...",
+                drawDateLabel: (d) => `Дата тиража: ${d}`,
+                drawExpired: "Срок действия предыдущего тиража истек",
+                drawNoteActive: "Результаты активны 24 часа до следующего тиража",
+                drawNoteNewSoon: "Новый тираж начнется скоро",
+                winnersCardTitle: "Победители",
+                winnersCountUnit: "победитель(ей)",
+                winnersEmptyWait: "Данные появятся после проведения розыгрыша",
+                winnersNone: "В этом тираже победителей нет",
+                rulesModalTitle: "Правила розыгрыша",
+                alertLocked: "До розыгрыша менее 10 минут, прием остановлен!",
+                alertFillAll: "Пожалуйста, заполните все 5 основных и 1 бонусное число (00-99)!",
+                alert0to99: "Все числа должны быть от 00 до 99!",
+                alertUnique: "Все 5 основных чисел должны быть разными!",
+                alertNoBalance: "Недостаточно средств (требуется 2.00 €). Перенаправление на страницу баланса...",
+                alertFreeSuccess: "Бесплатный билет успешно зафиксирован!",
+                alertPaidSuccess: "Билет успешно куплен (-2.00 €)! Вы можете купить еще."
+            },
+            fr: {
+                navBack: "‹ Accueil",
+                loading: "Chargement...",
+                balanceLabel: "Solde (Recharger ➔)",
+                scheduleTitleLocal: (time) => `Tirage tous les jours à ${time} (Votre heure) / 15:00 (Italie)`,
+                scheduleTitleRome: `Tirage tous les jours à 15:00 (Heure d'Italie)`,
+                timerSubtitle: "Temps restant avant le direct",
+                lockNotice: "🔒 Inscription fermée (10 minutes avant le tirage). Modifications bloquées !",
+                tabBook: "Tickets",
+                tabResults: "Résultats 🏆",
+                tabStream: "En direct",
+                resultsBanner: "🏆 Résultats du dernier tirage & Gagnants",
+                pickTitle: "Choisissez 5 + 1 numéros (00-99) :",
+                freeTag: "🎁 1er Ticket : GRATUIT",
+                paidTag: "💳 Ticket suppl. : 2.00 €",
+                luckyBtn: "🎲 Aléatoire",
+                bookFreeBtn: "Réserver le ticket gratuit",
+                bookPaidBtn: "Acheter un ticket (2.00 €)",
+                bookLockedBtn: "🔒 Inscriptions closes",
+                bookProcessing: "Traitement...",
+                myTicketsTitle: "Mes tickets réservés",
+                ticketCountUnit: "ticket(s)",
+                emptyTickets: "Vous n'avez pas encore choisi de numéros",
+                ticketPrefix: "Ticket #",
+                freeBadge: "Gratuit ✓",
+                paidBadge: "2.00 € ✓",
+                waitingBadge: (time) => `⏳ En attente de ${time}`,
+                wonBadge: (amt) => `🎉 Gagné : ${amt} €`,
+                lostBadge: "Non gagnant",
+                drawnTitle: "Numéros Tirés",
+                checkingResults: "Vérification des résultats...",
+                drawDateLabel: (d) => `Date du tirage : ${d}`,
+                drawExpired: "Le tirage précédent a expiré",
+                drawNoteActive: "Résultats actifs 24h jusqu'au prochain tirage",
+                drawNoteNewSoon: "Le prochain tirage commencera bientôt",
+                winnersCardTitle: "Gagnants",
+                winnersCountUnit: "gagnant(s)",
+                winnersEmptyWait: "Les données apparaîtront après le tirage",
+                winnersNone: "Aucun gagnant pour ce tirage",
+                rulesModalTitle: "Règles du Jeu",
+                alertLocked: "Moins de 10 minutes avant le tirage, inscriptions fermées !",
+                alertFillAll: "Veuillez remplir les 5 numéros et 1 bonus (00-99) !",
+                alert0to99: "Tous les numéros doivent être compris entre 00 et 99 !",
+                alertUnique: "Les 5 numéros principaux doivent être différents !",
+                alertNoBalance: "Solde insuffisant (2.00 € requis). Redirection vers le solde...",
+                alertFreeSuccess: "Ticket gratuit validé avec succès !",
+                alertPaidSuccess: "Ticket acheté avec succès (-2.00 €) ! Vous pouvez en acheter d'autres."
+            },
+            de: {
+                navBack: "‹ Startseite",
+                loading: "Wird geladen...",
+                balanceLabel: "Guthaben (Aufladen ➔)",
+                scheduleTitleLocal: (time) => `Ziehung täglich um ${time} (Ihre Zeit) / 15:00 (Italien)`,
+                scheduleTitleRome: `Ziehung täglich um 15:00 (Italienische Zeit)`,
+                timerSubtitle: "Verbleibende Zeit bis zum Livestream",
+                lockNotice: "🔒 Annahme geschlossen (10 Minuten vor Ziehung). Bearbeitung gesperrt!",
+                tabBook: "Tickets",
+                tabResults: "Ergebnisse 🏆",
+                tabStream: "Live-Stream",
+                resultsBanner: "🏆 Letzte Ziehungsergebnisse & Gewinner",
+                pickTitle: "Wählen Sie 5 + 1 Zahlen (00-99):",
+                freeTag: "🎁 1. Ticket: GRATIS",
+                paidTag: "💳 Zusatzticket: 2.00 €",
+                luckyBtn: "🎲 Zufall",
+                bookFreeBtn: "Gratis-Ticket buchen",
+                bookPaidBtn: "Ticket kaufen (2.00 €)",
+                bookLockedBtn: "🔒 Annahme Geschlossen",
+                bookProcessing: "Wird verarbeitet...",
+                myTicketsTitle: "Meine gebuchten Tickets",
+                ticketCountUnit: "Ticket(s)",
+                emptyTickets: "Sie haben noch keine Zahlen gewählt",
+                ticketPrefix: "Ticket #",
+                freeBadge: "Gratis ✓",
+                paidBadge: "2.00 € ✓",
+                waitingBadge: (time) => `⏳ Warten auf ${time}`,
+                wonBadge: (amt) => `🎉 Gewonnen: ${amt} €`,
+                lostBadge: "Nicht gewonnen",
+                drawnTitle: "Gezogene Zahlen",
+                checkingResults: "Ergebnisse werden geprüft...",
+                drawDateLabel: (d) => `Ziehungstag: ${d}`,
+                drawExpired: "Die vorherige Ziehung ist abgelaufen",
+                drawNoteActive: "Ergebnisse bleiben 24 Stunden bis zur nächsten Ziehung aktiv",
+                drawNoteNewSoon: "Die nächste Ziehung beginnt in Kürze",
+                winnersCardTitle: "Gewinner",
+                winnersCountUnit: "Gewinner",
+                winnersEmptyWait: "Daten erscheinen nach der Ziehung",
+                winnersNone: "Keine Gewinner bei dieser Ziehung",
+                rulesModalTitle: "Spielregeln",
+                alertLocked: "Weniger als 10 Minuten bis zur Ziehung. Teilnahme gesperrt!",
+                alertFillAll: "Bitte alle 5 Hauptzahlen und 1 Bonuszahl (00-99) ausfüllen!",
+                alert0to99: "Alle Zahlen müssen zwischen 00 und 99 liegen!",
+                alertUnique: "Die 5 Hauptzahlen müssen alle unterschiedlich sein!",
+                alertNoBalance: "Unzureichendes Guthaben (2.00 € erforderlich). Weiterleitung zum Guthaben...",
+                alertFreeSuccess: "Gratis-Ticket erfolgreich registriert!",
+                alertPaidSuccess: "Ticket erfolgreich gekauft (-2.00 €)! Sie können weitere kaufen."
+            }
+        };
+
+        let currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+
+        function getLangText() {
+            return LOTTO_TRANSLATIONS[currentLang] || LOTTO_TRANSLATIONS['ka'];
+        }
+
+        function applyLanguageDOM() {
+            const t = getLangText();
+
+            const navBackBtn = document.getElementById('navBackBtn');
+            if (navBackBtn) navBackBtn.innerText = t.navBack;
+
+            const balanceLabelText = document.getElementById('balanceLabelText');
+            if (balanceLabelText) balanceLabelText.innerText = t.balanceLabel;
+
+            const timerSubtitle = document.getElementById('timerSubtitle');
+            if (timerSubtitle) timerSubtitle.innerText = t.timerSubtitle;
+
+            const lockNotice = document.getElementById('lockNotice');
+            if (lockNotice) lockNotice.innerText = t.lockNotice;
+
+            const tabBtnRegister = document.getElementById('tabBtnRegister');
+            if (tabBtnRegister) tabBtnRegister.innerText = t.tabBook;
+
+            const tabBtnResults = document.getElementById('tabBtnResults');
+            if (tabBtnResults) tabBtnResults.innerText = t.tabResults;
+
+            const tabBtnStream = document.getElementById('tabBtnStream');
+            if (tabBtnStream) tabBtnStream.innerText = t.tabStream;
+
+            const resultsBannerText = document.getElementById('resultsBannerText');
+            if (resultsBannerText) resultsBannerText.innerText = t.resultsBanner;
+
+            const pickNumbersTitle = document.getElementById('pickNumbersTitle');
+            if (pickNumbersTitle) pickNumbersTitle.innerText = t.pickTitle;
+
+            const luckyBtn = document.getElementById('luckyBtn');
+            if (luckyBtn) luckyBtn.innerText = t.luckyBtn;
+
+            const myTicketsListTitle = document.getElementById('myTicketsListTitle');
+            if (myTicketsListTitle) myTicketsListTitle.innerText = t.myTicketsTitle;
+
+            const drawnCardMainTitle = document.getElementById('drawnCardMainTitle');
+            if (drawnCardMainTitle) drawnCardMainTitle.innerText = t.drawnTitle;
+
+            const winnersListCardTitle = document.getElementById('winnersListCardTitle');
+            if (winnersListCardTitle) winnersListCardTitle.innerText = t.winnersCardTitle;
+
+            const rulesModalMainHeader = document.getElementById('rulesModalMainHeader');
+            if (rulesModalMainHeader) rulesModalMainHeader.innerText = t.rulesModalTitle;
+
+            renderRulesModalBodyHTML();
+            updateUIWithTickets();
+            updateLotteryTimer();
+        }
+
+        function renderRulesModalBodyHTML() {
+            const body = document.getElementById('rulesModalContentBody');
+            if (!body) return;
+
+            if (currentLang === 'en') {
+                body.innerHTML = `
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ Tickets & Cost</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>1st ticket is free:</strong> 1 free ticket for everyone every 24 hours.</li>
+                            <li><strong>Extra ticket:</strong> Costs <strong>2.00 €</strong> (deducted from balance).</li>
+                            <li><strong>Insufficient balance:</strong> System redirects to top up balance.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ Time & 10-Minute Lock</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Daily Draw:</strong> Exactly at <strong>15:00:00</strong> Italy time.</li>
+                            <li><strong>14:50 - 15:00:</strong> 10 minutes prior to draw, picking numbers is locked.</li>
+                            <li><strong>Unlock:</strong> System reopens for next day right after draw ends.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 6px;">💰 Winning Tiers</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; background: #0c0e12; border-radius: 6px; overflow: hidden; border: 1px solid #1a1e26;">
+                            <tr style="border-bottom: 1px solid #1a1e26; background: #161921; color: #8c93a4;">
+                                <th style="padding: 6px 8px; text-align: left;">Match</th>
+                                <th style="padding: 6px 8px; text-align: right;">Prize</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">3 Numbers + Bonus (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">50.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">4 Numbers only</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">80.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">4 Numbers + Bonus (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">100.00 €</td>
+                            </tr>
+                            <tr style="background: rgba(209, 177, 101, 0.08);">
+                                <td style="padding: 6px 8px; color: #ffd700; font-weight: 800;">5 Numbers + Bonus (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #ffd700; font-weight: 900;">1,000 € + (JACKPOT)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⚖️ Split & Instant Payout</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Equal split:</strong> If multiple winners in tier, prize is equally split.</li>
+                            <li><strong>Instant:</strong> Winnings immediately credited to user balance.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🔥 Progressive Jackpot</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li>Jackpot starts at 1,000 € and grows every 24 hours if not won.</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                        ⚠️ <strong>Age Restriction:</strong> Strictly prohibited for individuals under 18 years old.
+                    </div>
+                `;
+            } else if (currentLang === 'it') {
+                body.innerHTML = `
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ Biglietti e Costi</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>1° biglietto gratis:</strong> 1 biglietto gratuito per tutti ogni 24 ore.</li>
+                            <li><strong>Biglietto extra:</strong> Costa <strong>2.00 €</strong> (scalati dal saldo).</li>
+                            <li><strong>Saldo insufficiente:</strong> Il sistema reindirizza alla ricarica.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ Orari e Blocco 10 Minuti</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Estrazione:</strong> Ogni giorno alle <strong>15:00:00</strong> ora italiana.</li>
+                            <li><strong>14:50 - 15:00:</strong> 10 minuti prima dell'estrazione la selezione viene bloccata.</li>
+                            <li><strong>Riapertura:</strong> Il sistema riapre per il giorno dopo a fine estrazione.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 6px;">💰 Categorie di Vincita</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; background: #0c0e12; border-radius: 6px; overflow: hidden; border: 1px solid #1a1e26;">
+                            <tr style="border-bottom: 1px solid #1a1e26; background: #161921; color: #8c93a4;">
+                                <th style="padding: 6px 8px; text-align: left;">Combinazione</th>
+                                <th style="padding: 6px 8px; text-align: right;">Premio</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">3 Numeri + Bonus (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">50.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">4 Numeri singoli</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">80.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">4 Numeri + Bonus (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">100.00 €</td>
+                            </tr>
+                            <tr style="background: rgba(209, 177, 101, 0.08);">
+                                <td style="padding: 6px 8px; color: #ffd700; font-weight: 800;">5 Numeri + Bonus (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #ffd700; font-weight: 900;">1,000 € + (JACKPOT)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⚖️ Divisione ed Accredito Immediato</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Divisione equa:</strong> Se più vincitori nella stessa categoria, la somma viene divisa equamente.</li>
+                            <li><strong>Accredito istantaneo:</strong> La vincita viene accreditata subito sul saldo personale.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🔥 Jackpot Progressivo</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li>Il Jackpot parte da 1.000 € e aumenta ogni 24 ore se non viene vinto.</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                        ⚠️ <strong>Restrizione di età:</strong> Vietato ai minori di 18 anni.
+                    </div>
+                `;
+            } else if (currentLang === 'ru') {
+                body.innerHTML = `
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ Билеты и стоимость</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>1-й билет бесплатный:</strong> Каждые 24 часа 1 билет бесплатно для всех.</li>
+                            <li><strong>Дополнительный билет:</strong> Стоит <strong>2.00 €</strong> (списывается с баланса).</li>
+                            <li><strong>Недостаточно средств:</strong> Перенаправление на пополнение баланса.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ Время и 10-минутная блокировка</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Тираж:</strong> Ежедневно ровно в <strong>15:00:00</strong> по времени Италии.</li>
+                            <li><strong>14:50 - 15:00:</strong> За 10 минут до розыгрыша выбор чисел блокируется.</li>
+                            <li><strong>Открытие:</strong> Система открывается на следующий день сразу после тиража.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 6px;">💰 Выигрышные категории</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; background: #0c0e12; border-radius: 6px; overflow: hidden; border: 1px solid #1a1e26;">
+                            <tr style="border-bottom: 1px solid #1a1e26; background: #161921; color: #8c93a4;">
+                                <th style="padding: 6px 8px; text-align: left;">Совпадение</th>
+                                <th style="padding: 6px 8px; text-align: right;">Сумма</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">3 числа + Бонус (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">50.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">Только 4 числа</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">80.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">4 числа + Бонус (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">100.00 €</td>
+                            </tr>
+                            <tr style="background: rgba(209, 177, 101, 0.08);">
+                                <td style="padding: 6px 8px; color: #ffd700; font-weight: 800;">5 чисел + Бонус (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #ffd700; font-weight: 900;">1,000 € + (ДЖЕКПОТ)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⚖️ Разделение и выплата</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Поровну:</strong> При нескольких победителях сумма делится поровну.</li>
+                            <li><strong>Мгновенно:</strong> Выигрыш сразу поступает на личный баланс.</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                        ⚠️ <strong>Ограничение:</strong> Лицам младше 18 лет участие строго запрещено.
+                    </div>
+                `;
+            } else if (currentLang === 'fr') {
+                body.innerHTML = `
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ Tickets et Coût</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>1er ticket gratuit :</strong> 1 ticket gratuit toutes les 24 heures.</li>
+                            <li><strong>Ticket supplémentaire :</strong> Coûte <strong>2.00 €</strong> (déduit du solde).</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ Tirage et Blocage</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Tirage :</strong> Tous les jours à <strong>15:00:00</strong> heure d'Italie.</li>
+                            <li><strong>14:50 - 15:00 :</strong> Remplissage bloqué 10 min avant.</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                        ⚠️ <strong>Âge limite :</strong> Interdit aux moins de 18 ans.
+                    </div>
+                `;
+            } else if (currentLang === 'de') {
+                body.innerHTML = `
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ Tickets und Kosten</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>1. Ticket gratis:</strong> Alle 24 Stunden 1 Gratis-Ticket für alle.</li>
+                            <li><strong>Zusatzticket:</strong> Kostet <strong>2.00 €</strong> (wird vom Guthaben abgebucht).</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ Ziehung & 10-Minuten-Sperre</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>Ziehung:</strong> Jeden Tag um <strong>15:00:00</strong> Uhr italienischer Zeit.</li>
+                            <li><strong>14:50 - 15:00:</strong> 10 Minuten vor Ziehung gesperrt.</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                        ⚠️ <strong>Altersbeschränkung:</strong> Unter 18 Jahren strengstens untersagt.
+                    </div>
+                `;
+            } else {
+                // ka (სტანდარტული ქართული)
+                body.innerHTML = `
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🎟️ ბილეთები და ღირებულება</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>1-ლი ბილეთი უფასოა:</strong> ყოველ 24 საათში 1 ბილეთი ყველასთვის უფასოა.</li>
+                            <li><strong>დამატებითი ბილეთი:</strong> ღირს <strong>2.00 €</strong> (თანხა ჩამოიჭრება ბალანსიდან).</li>
+                            <li><strong>არასაკმარისი ბალანსი:</strong> სისტემა გადაგამისამართებთ ბალანსის შევსებაზე.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ დრო და 10-წუთიანი ბლოკი</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>გათამაშება:</strong> ყოველდღე, ზუსტად <strong>15:00:00</strong> საათზე (იტალიის ცენტრალური დროით).</li>
+                            <li><strong>10-წუთიანი ბლოკი:</strong> გათამაშებამდე 10 წუთით ადრე ციფრების შევსება და რედაქტირება იბლოკება.</li>
+                            <li><strong>განბლოკვა:</strong> გათამაშების დასრულებისთანავე სისტემა იხსნება მომდევნო დღისთვის.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 6px;">💰 მომგებიანი კატეგორიები</div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; background: #0c0e12; border-radius: 6px; overflow: hidden; border: 1px solid #1a1e26;">
+                            <tr style="border-bottom: 1px solid #1a1e26; background: #161921; color: #8c93a4;">
+                                <th style="padding: 6px 8px; text-align: left;">დამთხვევა</th>
+                                <th style="padding: 6px 8px; text-align: right;">თანხა</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">3 ციფრი + ბონუსი (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">50.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">მხოლოდ 4 ციფრი</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">80.00 €</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #14171e;">
+                                <td style="padding: 6px 8px;">4 ციფრი + ბონუსი (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #00ff66; font-weight: 800;">100.00 €</td>
+                            </tr>
+                            <tr style="background: rgba(209, 177, 101, 0.08);">
+                                <td style="padding: 6px 8px; color: #ffd700; font-weight: 800;">5 ციფრი + ბონუსი (★)</td>
+                                <td style="padding: 6px 8px; text-align: right; color: #ffd700; font-weight: 900;">1,000 € + (JACKPOT)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⚖️ მოგების გაყოფა და დარიცხვა</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li><strong>თანაბარი გაყოფა:</strong> თუ კატეგორიაში რამდენიმე გამარჯვებულია, თანხა ზუსტად და თანაბრად იყოფა მათ რაოდენობაზე.</li>
+                            <li><strong>მომენტალური დარიცხვა:</strong> მოგებული თანხა მომენტალურად ჯდება გამარჯვებულის პირად ბალანსზე.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">🔥 მზარდი ჯეკპოტი</div>
+                        <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
+                            <li>ჯეკპოტი იწყება 1,000 €-დან და თუ არ გათამაშდა, ყოველ 24 საათში ერთხელ იზრდება.</li>
+                            <li>შედეგები და მოგებულთა სია ინახება 24 საათი („შედეგები 🏆“ ჩანართში).</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255, 77, 77, 0.08); border-left: 3px solid #ff4d4d; padding: 7px 10px; border-radius: 4px; color: #ff8585; font-size: 11px;">
+                        ⚠️ <strong>ასაკობრივი შეზღუდვა:</strong> 18 წლამდე პირების მონაწილეობა კატეგორიულად აკრძალულია.
+                    </div>
+                `;
+            }
+        }
 
         // წესების მოდალის კონტროლი
         function openRulesModal() {
@@ -950,7 +1522,6 @@
             let targetMonth = rome.month;
             let targetDay = rome.day;
 
-            // თუ იტალიაში უკვე 15:00:00-ია ან მეტი, სამიზნე ხვალინდელი დღეა
             if (rome.hour > 15 || (rome.hour === 15 && (rome.minute > 0 || rome.second > 0))) {
                 const nextDayUtc = new Date(Date.UTC(targetYear, targetMonth - 1, targetDay + 1));
                 targetYear = nextDayUtc.getUTCFullYear();
@@ -963,7 +1534,6 @@
             const dStr = String(targetDay).padStart(2, '0');
             const targetDateKey = `${yStr}-${mStr}-${dStr}`;
 
-            // იტალიაში 15:00-ის ზუსტი UTC დრო (ზაფხული UTC+2 -> 13:00 UTC, ზამთარი UTC+1 -> 14:00 UTC)
             let targetEpoch = 0;
             for (let utcHour of [13, 14, 12]) {
                 const testDate = new Date(Date.UTC(targetYear, targetMonth - 1, targetDay, utcHour, 0, 0));
@@ -981,7 +1551,7 @@
             return { targetEpoch, targetDateKey };
         }
 
-        // 🎯 მომხმარებლის ლოკალური დროის განსაზღვრა (მაგ. საქართველოში 17:00)
+        // 🎯 მომხმარებლის ლოკალური დროის განსაზღვრა
         function getUserLocalDrawTimeString() {
             try {
                 const info = getNextRome1500Info();
@@ -1020,6 +1590,13 @@
                             avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
                         } else {
                             avatarContainer.innerHTML = `<span>${userResolvedName.charAt(0).toUpperCase()}</span>`;
+                        }
+
+                        // 🌐 პროფილის ენის წაკითხვა და სინქრონიზაცია
+                        if (data.language && data.language !== currentLang) {
+                            currentLang = data.language;
+                            localStorage.setItem('emigrantbook_lang', currentLang);
+                            applyLanguageDOM();
                         }
                     }
                 });
@@ -1076,54 +1653,55 @@
 
         // პირადი ბილეთების გამოსახვა (მკაცრი დაცვა: არანაირი მწვანე ფერი გათამაშებამდე!)
         function updateUIWithTickets() {
+            const t = getLangText();
             const btn = document.getElementById('bookBtn');
             const container = document.getElementById('participantsContainer');
             const countElem = document.getElementById('participantsCount');
             const priceLabel = document.getElementById('ticketPriceLabel');
 
-            countElem.innerText = `${userTicketsList.length} ბილეთი`;
+            countElem.innerText = `${userTicketsList.length} ${t.ticketCountUnit}`;
 
             if (userTicketsList.length === 0) {
                 priceLabel.className = "ticket-price-tag";
-                priceLabel.innerText = "🎁 1-ლი ბილეთი: უფასო";
+                priceLabel.innerText = t.freeTag;
                 if (!isTenMinLocked) {
                     btn.disabled = false;
-                    btn.innerText = "უფასო ბილეთის დაჯავშნა";
+                    btn.innerText = t.bookFreeBtn;
                 }
             } else {
                 priceLabel.className = "ticket-price-tag paid";
-                priceLabel.innerText = "💳 დამატებითი ბილეთი: 2.00 €";
+                priceLabel.innerText = t.paidTag;
                 if (!isTenMinLocked) {
                     btn.disabled = false;
-                    btn.innerText = "ბილეთის შეძენა (2.00 €)";
+                    btn.innerText = t.bookPaidBtn;
                 }
             }
 
             if (isTenMinLocked) {
                 btn.disabled = true;
-                btn.innerText = "🔒 მიღება დასრულებულია";
+                btn.innerText = t.bookLockedBtn;
             }
 
             if (userTicketsList.length === 0) {
-                container.innerHTML = '<div class="empty-state">თქვენ ჯერ არ გაქვთ დამახსოვრებული ციფრები</div>';
+                container.innerHTML = `<div class="empty-state">${t.emptyTickets}</div>`;
                 return;
             }
 
             const localDrawTime = getUserLocalDrawTimeString();
             let html = '';
 
-            userTicketsList.forEach(function(t, idx) {
-                const nums = t.mainNumbers || ['--', '--', '--', '--', '--'];
-                const bonus = t.bonusNumber || '--';
+            userTicketsList.forEach(function(ticket, idx) {
+                const nums = ticket.mainNumbers || ['--', '--', '--', '--', '--'];
+                const bonus = ticket.bonusNumber || '--';
+                const isFree = ticket.isFree === true || ticket.cost === 0;
 
-                // სანამ ამ ბილეთის გათამაშება არ ჩატარებულა, სტატუსია მომხმარებლის დროით: "ელოდება 17:00-ს"
-                let badgeHtml = `<span class="badge waiting">⏳ ელოდება ${localDrawTime}-ს</span>`;
+                let badgeHtml = `<span class="badge waiting">${t.waitingBadge(localDrawTime)}</span>`;
                 let matchedMain = [];
                 let matchedBonus = false;
 
                 // 🛑 ციფრები შემოწმდება მხოლოდ მაშინ, როდესაც გათამაშება ჩატარდება ბილეთის თარიღისთვის
-                if (latestDrawData && latestDrawData.combination && t.date === latestDrawData.date) {
-                    const ticketTime = t.createdAt ? (t.createdAt.toMillis ? t.createdAt.toMillis() : (t.createdAt.toDate ? t.createdAt.toDate().getTime() : 0)) : 0;
+                if (latestDrawData && latestDrawData.combination && ticket.date === latestDrawData.date) {
+                    const ticketTime = ticket.createdAt ? (ticket.createdAt.toMillis ? ticket.createdAt.toMillis() : (ticket.createdAt.toDate ? ticket.createdAt.toDate().getTime() : 0)) : 0;
                     const drawnTime = latestDrawData.drawnAt ? (latestDrawData.drawnAt.toMillis ? latestDrawData.drawnAt.toMillis() : (latestDrawData.drawnAt.toDate ? latestDrawData.drawnAt.toDate().getTime() : 0)) : 0;
 
                     if (ticketTime > 0 && drawnTime > 0 && ticketTime < drawnTime) {
@@ -1132,25 +1710,25 @@
                         matchedBonus = (bonus === combo.bonus);
 
                         if (matchedMain.length === 4 && matchedBonus) {
-                            badgeHtml = '<span class="badge win">🎉 მოგებულია: 100.00 € (4+★)</span>';
+                            badgeHtml = `<span class="badge win">${t.wonBadge("100.00")} (4+★)</span>`;
                         } else if (matchedMain.length === 4) {
-                            badgeHtml = '<span class="badge win">🎉 მოგებულია: 80.00 € (4)</span>';
+                            badgeHtml = `<span class="badge win">${t.wonBadge("80.00")} (4)</span>`;
                         } else if (matchedMain.length === 3 && matchedBonus) {
-                            badgeHtml = '<span class="badge win">🎉 მოგებულია: 50.00 € (3+★)</span>';
+                            badgeHtml = `<span class="badge win">${t.wonBadge("50.00")} (3+★)</span>`;
                         } else {
-                            badgeHtml = '<span class="badge" style="background:#202026; color:#888; border-color:#333;">არ მოუგია</span>';
+                            badgeHtml = `<span class="badge" style="background:#202026; color:#888; border-color:#333;">${t.lostBadge}</span>`;
                         }
                     } else {
-                        badgeHtml = `<span class="badge waiting">⏳ ელოდება ${localDrawTime}-ს</span>`;
+                        badgeHtml = `<span class="badge waiting">${t.waitingBadge(localDrawTime)}</span>`;
                     }
                 } else {
-                    badgeHtml = `<span class="badge waiting">⏳ ელოდება ${localDrawTime}-ს</span>`;
+                    badgeHtml = `<span class="badge waiting">${t.waitingBadge(localDrawTime)}</span>`;
                 }
 
                 html += `
                     <div class="participant-row">
                         <div class="meta-row">
-                            <span class="name">ბილეთი #${userTicketsList.length - idx}</span>
+                            <span class="name">${t.ticketPrefix}${userTicketsList.length - idx}</span>
                             ${badgeHtml}
                         </div>
                         <div class="numbers-row">
@@ -1170,8 +1748,10 @@
 
         // ბილეთის შენახვა
         function saveLotteryTicket() {
+            const t = getLangText();
+
             if (!currentUser || isTenMinLocked) {
-                if (isTenMinLocked) alert("გათამაშების დაწყებამდე დარჩენილია 10 წუთზე ნაკლები, მიღება შეჩერებულია!");
+                if (isTenMinLocked) alert(t.alertLocked);
                 return;
             }
 
@@ -1183,7 +1763,7 @@
             const nBonus = document.getElementById('nBonus').value.trim();
 
             if (!n1 || !n2 || !n3 || !n4 || !n5 || !nBonus) {
-                alert("გთხოვთ შეავსოთ ყველა (5 ძირითადი და 1 ბონუს) ციფრი 0-დან 99-მდე!");
+                alert(t.alertFillAll);
                 return;
             }
 
@@ -1192,14 +1772,14 @@
 
             for (let num of [...mainNums, bonusNum]) {
                 if (isNaN(num) || num < 0 || num > 99) {
-                    alert("ყველა ციფრი უნდა იყოს 00-დან 99-ის ჩათვლით!");
+                    alert(t.alert0to99);
                     return;
                 }
             }
 
             const uniqueSet = new Set(mainNums);
             if (uniqueSet.size < 5) {
-                alert("5 ძირითადი ციფრი ერთმანეთისგან განსხვავებული უნდა იყოს!");
+                alert(t.alertUnique);
                 return;
             }
 
@@ -1207,16 +1787,15 @@
             const ticketCost = isFreeTicket ? 0 : 2.00;
 
             if (!isFreeTicket && currentUserBalance < ticketCost) {
-                alert("თქვენს ანგარიშზე არ არის საკმარისი თანხა (საჭიროა 2.00 €). გადამისამართება ბალანსის შევსების გვერდზე...");
+                alert(t.alertNoBalance);
                 window.location.href = "balance.html";
                 return;
             }
 
             const btn = document.getElementById('bookBtn');
             btn.disabled = true;
-            btn.innerText = "მუშავდება...";
+            btn.innerText = t.bookProcessing;
 
-            // 🎯 თარიღი მიენიჭება იტალიის ცენტრალური დროის მიხედვით
             const todayKey = getTodayKey();
             const batch = db.batch();
             const newTicketRef = db.collection("lottery_bookings").doc();
@@ -1262,12 +1841,12 @@
 
                 btn.disabled = false;
                 if (isFreeTicket) {
-                    alert("უფასო ბილეთი წარმატებით დაფიქსირდა!");
+                    alert(t.alertFreeSuccess);
                 } else {
-                    alert("ბილეთი წარმატებით შეიძინეთ (-2.00 €)! შეგიძლიათ შეიძინოთ კიდევ.");
+                    alert(t.alertPaidSuccess);
                 }
             }).catch(function(err) {
-                alert("შეცდომა: " + err.message);
+                alert("Error: " + err.message);
                 btn.disabled = false;
                 updateUIWithTickets();
             });
@@ -1281,6 +1860,7 @@
                 .orderBy("drawnAt", "desc")
                 .limit(1)
                 .onSnapshot(function(snapshot) {
+                    const t = getLangText();
                     const dateLabel = document.getElementById('drawDateLabel');
                     const ballsBox = document.getElementById('drawnBallsBox');
                     const winnersList = document.getElementById('publicWinnersList');
@@ -1288,7 +1868,7 @@
                     const expireNote = document.getElementById('drawExpireNote');
 
                     if (snapshot.empty) {
-                        dateLabel.innerText = "გათამაშება ჯერ არ ჩატარებულა";
+                        dateLabel.innerText = t.checkingResults;
                         ballsBox.innerHTML = `
                             <div class="big-lotto-ball">—</div>
                             <div class="big-lotto-ball">—</div>
@@ -1298,8 +1878,8 @@
                             <span style="font-size: 18px; font-weight: 900; color: #717786; margin: 0 3px;">+</span>
                             <div class="big-lotto-ball gold">★</div>
                         `;
-                        winnersList.innerHTML = '<div class="empty-state">მონაცემები გამოჩნდება გათამაშების შემდეგ</div>';
-                        winnersCount.innerText = "0 მოგებული";
+                        winnersList.innerHTML = `<div class="empty-state">${t.winnersEmptyWait}</div>`;
+                        winnersCount.innerText = `0 ${t.winnersCountUnit}`;
                         latestDrawData = null;
                         updateUIWithTickets();
                         return;
@@ -1312,7 +1892,7 @@
                     const hoursPassed = (now - drawnTime) / (1000 * 60 * 60);
 
                     if (hoursPassed > 24) {
-                        dateLabel.innerText = "გასული გათამაშების ვადა ამოიწურა";
+                        dateLabel.innerText = t.drawExpired;
                         ballsBox.innerHTML = `
                             <div class="big-lotto-ball">—</div>
                             <div class="big-lotto-ball">—</div>
@@ -1322,9 +1902,9 @@
                             <span style="font-size: 18px; font-weight: 900; color: #717786; margin: 0 3px;">+</span>
                             <div class="big-lotto-ball gold">★</div>
                         `;
-                        expireNote.innerText = "ახალი გათამაშება მალე დაიწყება";
-                        winnersList.innerHTML = '<div class="empty-state">შედეგები განახლდება ახალი გათამაშების დასრულებისთანავე</div>';
-                        winnersCount.innerText = "0 მოგებული";
+                        expireNote.innerText = t.drawNoteNewSoon;
+                        winnersList.innerHTML = `<div class="empty-state">${t.winnersEmptyWait}</div>`;
+                        winnersCount.innerText = `0 ${t.winnersCountUnit}`;
                         latestDrawData = null;
                         updateUIWithTickets();
                         return;
@@ -1334,28 +1914,28 @@
                     updateUIWithTickets();
 
                     const combo = data.combination || { main: ['--', '--', '--', '--', '--'], bonus: '--' };
-                    dateLabel.innerText = `გათამაშების თარიღი: ${data.date || '-'}`;
+                    dateLabel.innerText = t.drawDateLabel(data.date || '-');
+                    expireNote.innerText = t.drawNoteActive;
 
-                    // ბურთების გამოსახვა
                     ballsBox.innerHTML = `
                         ${combo.main.map(n => `<div class="big-lotto-ball">${n}</div>`).join('')}
                         <span style="font-size: 18px; font-weight: 900; color: #717786; margin: 0 3px;">+</span>
                         <div class="big-lotto-ball gold">${combo.bonus}</div>
                     `;
 
-                    // საჯარო გამარჯვებულების გამოტანა
                     renderPublicWinners(data);
                 });
         }
 
         function renderPublicWinners(drawData) {
+            const t = getLangText();
             const container = document.getElementById('publicWinnersList');
             const countElem = document.getElementById('publicWinnersCount');
 
             if (drawData.winners && Array.isArray(drawData.winners)) {
-                countElem.innerText = `${drawData.winners.length} მოგებული`;
+                countElem.innerText = `${drawData.winners.length} ${t.winnersCountUnit}`;
                 if (drawData.winners.length === 0) {
-                    container.innerHTML = '<div class="empty-state">ამ გათამაშებაში გამარჯვებული არ გამოვლენილა</div>';
+                    container.innerHTML = `<div class="empty-state">${t.winnersNone}</div>`;
                     return;
                 }
                 displayWinnersRows(drawData.winners);
@@ -1366,8 +1946,8 @@
             const combo = drawData.combination;
 
             if (!combo || !combo.main) {
-                container.innerHTML = '<div class="empty-state">გამარჯვებული არ გამოვლენილა</div>';
-                countElem.innerText = "0 მოგებული";
+                container.innerHTML = `<div class="empty-state">${t.winnersNone}</div>`;
+                countElem.innerText = `0 ${t.winnersCountUnit}`;
                 return;
             }
 
@@ -1375,32 +1955,32 @@
                 let winners = [];
 
                 snap.forEach(function(d) {
-                    const t = d.data();
-                    const nums = t.mainNumbers || [];
-                    const bonus = t.bonusNumber;
+                    const ticket = d.data();
+                    const nums = ticket.mainNumbers || [];
+                    const bonus = ticket.bonusNumber;
 
                     const matchMain = nums.filter(n => combo.main.includes(n)).length;
                     const matchBonus = (bonus === combo.bonus);
 
                     if (matchMain === 4 && matchBonus) {
-                        winners.push({ name: t.name || 'მომხმარებელი', prize: "100.00 €", tier: "4 ციფრი + ბონუსი" });
+                        winners.push({ name: ticket.name || 'User', prize: "100.00 €", tier: "4 + ★" });
                     } else if (matchMain === 4) {
-                        winners.push({ name: t.name || 'მომხმარებელი', prize: "80.00 €", tier: "4 ციფრი" });
+                        winners.push({ name: ticket.name || 'User', prize: "80.00 €", tier: "4" });
                     } else if (matchMain === 3 && matchBonus) {
-                        winners.push({ name: t.name || 'მომხმარებელი', prize: "50.00 €", tier: "3 ციფრი + ბონუსი" });
+                        winners.push({ name: ticket.name || 'User', prize: "50.00 €", tier: "3 + ★" });
                     }
                 });
 
-                countElem.innerText = `${winners.length} მოგებული`;
+                countElem.innerText = `${winners.length} ${t.winnersCountUnit}`;
 
                 if (winners.length === 0) {
-                    container.innerHTML = '<div class="empty-state">ამ გათამაშებაში გამარჯვებული არ გამოვლენილა</div>';
+                    container.innerHTML = `<div class="empty-state">${t.winnersNone}</div>`;
                     return;
                 }
 
                 displayWinnersRows(winners);
             }).catch(function() {
-                container.innerHTML = '<div class="empty-state">შედეგები ვერ ჩაიტვირთა</div>';
+                container.innerHTML = `<div class="empty-state">${t.winnersEmptyWait}</div>`;
             });
         }
 
@@ -1414,8 +1994,8 @@
                         <div class="public-winner-left">
                             <div class="winner-avatar">${initial}</div>
                             <div class="winner-meta">
-                                <div class="w-name">${w.name || 'მომხმარებელი'}</div>
-                                <div class="w-category">${w.tier || 'მოგებული კატეგორია'}</div>
+                                <div class="w-name">${w.name || 'User'}</div>
+                                <div class="w-category">${w.tier || ''}</div>
                             </div>
                         </div>
                         <div class="winner-prize-tag">+${w.prize || w.amount + ' €'}</div>
@@ -1427,27 +2007,27 @@
 
         // 🎯 ტაიმერი & 10-წუთიანი ბლოკი (სინქრონული ყველასთვის)
         function updateLotteryTimer() {
+            const t = getLangText();
             const nowMs = Date.now();
-            const { targetEpoch, targetDateKey } = getNextRome1500Info();
+            const { targetEpoch } = getNextRome1500Info();
             const diff = targetEpoch - nowMs;
 
             const localDrawTime = getUserLocalDrawTimeString();
 
-            // სათაურებისა და წარწერების მორგება მომხმარებლის დროის სარტყელზე
             const scheduleTitle = document.getElementById('scheduleCardTitle');
             const headerLiveText = document.getElementById('headerLiveTimeText');
 
             if (scheduleTitle) {
                 if (localDrawTime !== "15:00") {
-                    scheduleTitle.innerText = `გათამაშება იწყება ყოველდღე ${localDrawTime}-ზე (თქვენი დროით) / 15:00 (იტალია)`;
+                    scheduleTitle.innerText = t.scheduleTitleLocal(localDrawTime);
                 } else {
-                    scheduleTitle.innerText = `გათამაშება იწყება ყოველდღე 15:00-ზე (იტალიის დროით)`;
+                    scheduleTitle.innerText = t.scheduleTitleRome;
                 }
             }
 
             if (headerLiveText) {
                 if (localDrawTime !== "15:00") {
-                    headerLiveText.innerText = `Live ${localDrawTime} (იტალია 15:00)`;
+                    headerLiveText.innerText = `Live ${localDrawTime} (15:00 IT)`;
                 } else {
                     headerLiveText.innerText = `Live 15:00`;
                 }
@@ -1517,6 +2097,9 @@
                 btnReg.classList.add('active');
             }
         }
+
+        // საწყისი ენის დაყენება ჩატვირთვისას
+        applyLanguageDOM();
     </script>
 </body>
 </html>
