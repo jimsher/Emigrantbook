@@ -233,7 +233,7 @@
     </div>
 
     <div class="results-board">
-        <div class="board-label">ამოღებული მომგებიანი კომბინაცია</div>
+        <div class="board-label" id="boardLabel">ამოღებული მომგებიანი კომბინაცია</div>
         <div class="balls-row">
             <div class="ball-slot" id="slot-0">—</div>
             <div class="ball-slot" id="slot-1">—</div>
@@ -273,6 +273,120 @@
 
         const db = firebase.firestore();
 
+        // ==========================================
+        // 🌐 ენების სისტემა (6 ენა მთავარი საიტიდან)
+        // ==========================================
+        const WHEEL_TRANSLATIONS = {
+            ka: {
+                boardLabel: "ამოღებული მომგებიანი კომბინაცია",
+                readyLocal: (time) => `მზადყოფნაშია (გათამაშება იწყება ${time}-ზე თქვენი დროით / 15:00 იტალია)`,
+                readyRome: "მზადყოფნაშია (გათამაშება იწყება 15:00-ზე)",
+                liveTagLocal: (time) => `Live Draw ${time} (იტალია 15:00)`,
+                liveTagRome: "Live Draw 15:00",
+                liveDrawing: "🔴 პირდაპირი ეთერი: ბურთების ამოღება...",
+                ballDrawn: (i, num) => `ამოვიდა ${i}-ე ბურთი: [${num}]`,
+                bonusDrawn: (bonus) => `ოქროს ბონუსი: [${bonus}]! გათამაშება დასრულდა.`,
+                drawFinishedWithWinners: (count) => `გათამაშება დასრულდა! სულ ${count} მოგებული.`,
+                todayFinished: (count) => `დღევანდელი გათამაშება დასრულებულია (${count} მოგებული).`
+            },
+            en: {
+                boardLabel: "Drawn Winning Combination",
+                readyLocal: (time) => `Ready (Draw starts at ${time} your time / 15:00 Italy)`,
+                readyRome: "Ready (Draw starts at 15:00 Italy time)",
+                liveTagLocal: (time) => `Live Draw ${time} (15:00 IT)`,
+                liveTagRome: "Live Draw 15:00",
+                liveDrawing: "🔴 Live: Drawing balls...",
+                ballDrawn: (i, num) => `Ball ${i} drawn: [${num}]`,
+                bonusDrawn: (bonus) => `Golden Bonus: [${bonus}]! Draw finished.`,
+                drawFinishedWithWinners: (count) => `Draw finished! Total ${count} winner(s).`,
+                todayFinished: (count) => `Today's draw has ended (${count} winner(s)).`
+            },
+            it: {
+                boardLabel: "Combinazione Vincente Estratta",
+                readyLocal: (time) => `Pronto (L'estrazione inizia alle ${time} tuo orario / 15:00 Italia)`,
+                readyRome: "Pronto (L'estrazione inizia alle 15:00)",
+                liveTagLocal: (time) => `Estrazione Live ${time} (15:00 IT)`,
+                liveTagRome: "Estrazione Live 15:00",
+                liveDrawing: "🔴 Diretta: Estrazione palline...",
+                ballDrawn: (i, num) => `Estratta pallina ${i}: [${num}]`,
+                bonusDrawn: (bonus) => `Bonus Dorato: [${bonus}]! Estrazione completata.`,
+                drawFinishedWithWinners: (count) => `Estrazione completata! Totale ${count} vincitori.`,
+                todayFinished: (count) => `L'estrazione odierna è terminata (${count} vincitori).`
+            },
+            ru: {
+                boardLabel: "Выпавшая выигрышная комбинация",
+                readyLocal: (time) => `В ожидании (Тираж начнется в ${time} по вашему времени / 15:00 Италия)`,
+                readyRome: "В ожидании (Тираж начнется в 15:00 по времени Италии)",
+                liveTagLocal: (time) => `Прямой эфир ${time} (15:00 Италия)`,
+                liveTagRome: "Прямой эфир 15:00",
+                liveDrawing: "🔴 Прямой эфир: Извлечение шаров...",
+                ballDrawn: (i, num) => `Выпал ${i}-й шар: [${num}]`,
+                bonusDrawn: (bonus) => `Золотой бонус: [${bonus}]! Розыгрыш завершен.`,
+                drawFinishedWithWinners: (count) => `Розыгрыш завершен! Всего ${count} победителей.`,
+                todayFinished: (count) => `Сегодняшний розыгрыш завершен (${count} победителей).`
+            },
+            fr: {
+                boardLabel: "Combinaison Gagnante Tirée",
+                readyLocal: (time) => `Prêt (Le tirage commence à ${time} votre heure / 15:00 Italie)`,
+                readyRome: "Prêt (Le tirage commence à 15:00 heure d'Italie)",
+                liveTagLocal: (time) => `Tirage en direct ${time} (15:00 IT)`,
+                liveTagRome: "Tirage en direct 15:00",
+                liveDrawing: "🔴 En direct : Tirage des boules...",
+                ballDrawn: (i, num) => `Boule ${i} tirée : [${num}]`,
+                bonusDrawn: (bonus) => `Bonus d'or : [${bonus}] ! Tirage terminé.`,
+                drawFinishedWithWinners: (count) => `Tirage terminé ! Total de ${count} gagnant(s).`,
+                todayFinished: (count) => `Le tirage d'aujourd'hui est terminé (${count} gagnant(s)).`
+            },
+            de: {
+                boardLabel: "Gezogene Gewinnkombination",
+                readyLocal: (time) => `Bereit (Ziehung beginnt um ${time} Ihrer Zeit / 15:00 Italien)`,
+                readyRome: "Bereit (Ziehung beginnt um 15:00 italienischer Zeit)",
+                liveTagLocal: (time) => `Live-Ziehung ${time} (15:00 IT)`,
+                liveTagRome: "Live-Ziehung 15:00",
+                liveDrawing: "🔴 Live: Bälle werden gezogen...",
+                ballDrawn: (i, num) => `Ball ${i} gezogen: [${num}]`,
+                bonusDrawn: (bonus) => `Goldener Bonus: [${bonus}]! Ziehung beendet.`,
+                drawFinishedWithWinners: (count) => `Ziehung beendet! Insgesamt ${count} Gewinner.`,
+                todayFinished: (count) => `Die heutige Ziehung ist beendet (${count} Gewinner).`
+            }
+        };
+
+        let currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
+
+        function getLang() {
+            return WHEEL_TRANSLATIONS[currentLang] || WHEEL_TRANSLATIONS['ka'];
+        }
+
+        // ენის ცვლილების მოსმენა მომხმარებლის პროფილიდან ან მეხსიერებიდან
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                db.collection('profiles').doc(user.uid).onSnapshot(function(doc) {
+                    if (doc.exists && doc.data().language) {
+                        const newL = doc.data().language;
+                        if (newL !== currentLang) {
+                            currentLang = newL;
+                            localStorage.setItem('emigrantbook_lang', currentLang);
+                            applyWheelLanguage();
+                        }
+                    }
+                });
+            }
+        });
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'emigrantbook_lang' && e.newValue) {
+                currentLang = e.newValue;
+                applyWheelLanguage();
+            }
+        });
+
+        function applyWheelLanguage() {
+            const t = getLang();
+            const bLabel = document.getElementById('boardLabel');
+            if (bLabel) bLabel.innerText = t.boardLabel;
+            updateScheduleDisplays();
+        }
+
         const canvas = document.getElementById('lottoCanvas');
         const ctx = canvas.getContext('2d');
         const statusText = document.getElementById('statusText');
@@ -309,7 +423,7 @@
             };
         }
 
-        // მომხმარებლის ადგილობრივი დროის გამოთვლა (როდის უწევს მათ ტელეფონში იტალიის 15:00)
+        // მომხმარებლის ადგილობრივი დროის გამოთვლა
         function getLocalDrawTimeDisplay() {
             try {
                 const rome = getRomeTimeParts();
@@ -330,22 +444,25 @@
             }
         }
 
-        // ეკრანზე დროის განახლება მომხმარებლის დროის მიხედვით
+        // ეკრანზე დროის განახლება მომხმარებლის დროისა და ენის მიხედვით
         function updateScheduleDisplays() {
+            const t = getLang();
             const localTime = getLocalDrawTimeDisplay();
             const tagText = document.getElementById('liveTagText');
+
             if (tagText) {
                 if (localTime !== "15:00") {
-                    tagText.innerText = `Live Draw ${localTime} (იტალია 15:00)`;
+                    tagText.innerText = t.liveTagLocal(localTime);
                 } else {
-                    tagText.innerText = `Live Draw 15:00`;
+                    tagText.innerText = t.liveTagRome;
                 }
             }
-            if (statusText && !animationStarted && statusText.innerText.includes("მზადყოფნაშია")) {
+
+            if (statusText && !animationStarted) {
                 if (localTime !== "15:00") {
-                    statusText.innerText = `მზადყოფნაშია (გათამაშება იწყება ${localTime}-ზე თქვენი დროით / 15:00 იტალია)`;
+                    statusText.innerText = t.readyLocal(localTime);
                 } else {
-                    statusText.innerText = `მზადყოფნაშია (გათამაშება იწყება 15:00-ზე)`;
+                    statusText.innerText = t.readyRome;
                 }
             }
         }
@@ -478,17 +595,18 @@
             return bestCombo;
         }
 
-        // ბურთების ვიზუალური ამოღება ეკრანზე
+        // ბურთების ვიზუალური ამოღება ეკრანზე (გადათარგმნილი ტექსტებით)
         function runLiveBallDrop(winningCombo, onFinish) {
+            const t = getLang();
             animationStarted = true;
-            statusText.innerText = "🔴 პირდაპირი ეთერი: ბურთების ამოღება...";
+            statusText.innerText = t.liveDrawing;
 
             winningCombo.main.forEach((num, index) => {
                 setTimeout(() => {
                     const slot = document.getElementById(`slot-${index}`);
                     slot.innerText = num;
                     slot.classList.add('filled');
-                    statusText.innerText = `ამოვიდა ${index + 1}-ე ბურთი: [${num}]`;
+                    statusText.innerText = t.ballDrawn(index + 1, num);
                 }, (index + 1) * 2200);
             });
 
@@ -496,7 +614,7 @@
                 const bonusSlot = document.getElementById('slot-bonus');
                 bonusSlot.innerText = winningCombo.bonus;
                 bonusSlot.classList.add('filled');
-                statusText.innerText = `ოქროს ბონუსი: [${winningCombo.bonus}]! გათამაშება დასრულდა.`;
+                statusText.innerText = t.bonusDrawn(winningCombo.bonus);
 
                 if (onFinish) onFinish();
             }, 6 * 2200);
@@ -510,19 +628,17 @@
                 if (doc.exists) {
                     const data = doc.data();
                     const combo = data.combination;
+                    const t = getLang();
 
-                    // თუ უკვე ანიმაცია არ გასულა
                     if (!animationStarted) {
                         const drawnTime = data.drawnAt ? (data.drawnAt.toMillis ? data.drawnAt.toMillis() : data.drawnAt.toDate().getTime()) : Date.now();
                         const secondsAgo = (Date.now() - drawnTime) / 1000;
 
-                        // თუ გათამაშება ბოლო 90 წამში მოხდა, გაუშვას ცოცხალი ანიმაცია
                         if (secondsAgo < 90) {
                             runLiveBallDrop(combo, () => {
-                                statusText.innerText = `გათამაშება დასრულდა! სულ ${data.winnersCount || 0} მოგებული.`;
+                                statusText.innerText = t.drawFinishedWithWinners(data.winnersCount || 0);
                             });
                         } else {
-                            // თუ უფრო ძველია, უბრალოდ გამოაჩინოს შედეგი
                             combo.main.forEach((n, idx) => {
                                 const slot = document.getElementById(`slot-${idx}`);
                                 slot.innerText = n;
@@ -531,14 +647,14 @@
                             const bonusSlot = document.getElementById('slot-bonus');
                             bonusSlot.innerText = combo.bonus;
                             bonusSlot.classList.add('filled');
-                            statusText.innerText = `დღევანდელი გათამაშება დასრულებულია (${data.winnersCount || 0} მოგებული).`;
+                            statusText.innerText = t.todayFinished(data.winnersCount || 0);
                         }
                     }
                 }
             });
         }
 
-        updateScheduleDisplays();
+        applyWheelLanguage();
         listenTodayDraw();
 
         // 🎯 15:00:00 იტალიის დროით (Europe/Rome) ავტომატური გაშვების ძრავი
