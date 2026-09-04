@@ -221,7 +221,7 @@
 
     <div class="live-tag">
         <div class="live-dot"></div>
-        Live Draw 15:00
+        <span id="liveTagText">Live Draw 15:00</span>
     </div>
 
     <div class="game-title">Emigrant Lotto 5/100 + 1</div>
@@ -281,6 +281,74 @@
         let balls = [];
         let isExecuting = false;
         let animationStarted = false;
+
+        // იტალიის (ცენტრალური) დროის ზუსტი გამოთვლა
+        function getRomeTimeParts() {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Europe/Rome',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const parts = formatter.formatToParts(now);
+            const p = {};
+            parts.forEach(part => p[part.type] = part.value);
+            return {
+                year: p.year,
+                month: p.month,
+                day: p.day,
+                hour: parseInt(p.hour, 10),
+                minute: parseInt(p.minute, 10),
+                second: parseInt(p.second, 10),
+                dateKey: `${p.year}-${p.month}-${p.day}`
+            };
+        }
+
+        // მომხმარებლის ადგილობრივი დროის გამოთვლა (როდის უწევს მათ ტელეფონში იტალიის 15:00)
+        function getLocalDrawTimeDisplay() {
+            try {
+                const rome = getRomeTimeParts();
+                let utcHour = 13;
+                const dSummer = new Date(`${rome.year}-${rome.month}-${rome.day}T13:00:00Z`);
+                const romeH = parseInt(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hour12: false }).format(dSummer), 10);
+                if (romeH === 15) {
+                    utcHour = 13;
+                } else {
+                    utcHour = 14;
+                }
+                const drawUtc = new Date(`${rome.year}-${rome.month}-${rome.day}T${utcHour}:00:00Z`);
+                const lh = String(drawUtc.getHours()).padStart(2, '0');
+                const lm = String(drawUtc.getMinutes()).padStart(2, '0');
+                return `${lh}:${lm}`;
+            } catch (e) {
+                return "15:00";
+            }
+        }
+
+        // ეკრანზე დროის განახლება მომხმარებლის დროის მიხედვით
+        function updateScheduleDisplays() {
+            const localTime = getLocalDrawTimeDisplay();
+            const tagText = document.getElementById('liveTagText');
+            if (tagText) {
+                if (localTime !== "15:00") {
+                    tagText.innerText = `Live Draw ${localTime} (იტალია 15:00)`;
+                } else {
+                    tagText.innerText = `Live Draw 15:00`;
+                }
+            }
+            if (statusText && !animationStarted && statusText.innerText.includes("მზადყოფნაშია")) {
+                if (localTime !== "15:00") {
+                    statusText.innerText = `მზადყოფნაშია (გათამაშება იწყება ${localTime}-ზე თქვენი დროით / 15:00 იტალია)`;
+                } else {
+                    statusText.innerText = `მზადყოფნაშია (გათამაშება იწყება 15:00-ზე)`;
+                }
+            }
+        }
 
         class Ball {
             constructor(number, isGold = false) {
@@ -348,26 +416,9 @@
         }
         animateLototron();
 
+        // 🎯 თარიღი მკაცრად იტალიის კალენდრით
         function getTodayKey() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        }
-
-        // სლოტების გასუფთავება (1 წუთის შემდეგ ამოღებული ბურთები ქრება)
-        function resetDrawnSlots() {
-            for (let i = 0; i < 5; i++) {
-                const slot = document.getElementById(`slot-${i}`);
-                if (slot) {
-                    slot.innerText = "—";
-                    slot.classList.remove('filled');
-                }
-            }
-            const bonusSlot = document.getElementById('slot-bonus');
-            if (bonusSlot) {
-                bonusSlot.innerText = "★";
-                bonusSlot.classList.remove('filled');
-            }
-            statusText.innerText = "მზადყოფნაშია (გათამაშება იწყება 15:00-ზე)";
+            return getRomeTimeParts().dateKey;
         }
 
         // HOUSE GUARD ALGORITHM (ჯეკპოტი 100%-ით იბლოკება)
@@ -427,7 +478,7 @@
             return bestCombo;
         }
 
-        // ბურთების ვიზუალური ამოღება ეკრანზე (1 წუთში გაქრობით)
+        // ბურთების ვიზუალური ამოღება ეკრანზე
         function runLiveBallDrop(winningCombo, onFinish) {
             animationStarted = true;
             statusText.innerText = "🔴 პირდაპირი ეთერი: ბურთების ამოღება...";
@@ -448,15 +499,10 @@
                 statusText.innerText = `ოქროს ბონუსი: [${winningCombo.bonus}]! გათამაშება დასრულდა.`;
 
                 if (onFinish) onFinish();
-
-                // ამოღების დასრულებიდან ზუსტად 1 წუთში (60 წამში) ბურთები ქრება
-                setTimeout(() => {
-                    resetDrawnSlots();
-                }, 60000);
             }, 6 * 2200);
         }
 
-        // რეალურ დროში გათამაშების შედეგის მოსმენა
+        // რეალურ დროში გათამაშების შედეგის მოსმენა (ყველა მაყურებლისთვის სინქრონულად)
         function listenTodayDraw() {
             const todayKey = getTodayKey();
 
@@ -465,27 +511,37 @@
                     const data = doc.data();
                     const combo = data.combination;
 
+                    // თუ უკვე ანიმაცია არ გასულა
                     if (!animationStarted) {
                         const drawnTime = data.drawnAt ? (data.drawnAt.toMillis ? data.drawnAt.toMillis() : data.drawnAt.toDate().getTime()) : Date.now();
                         const secondsAgo = (Date.now() - drawnTime) / 1000;
 
-                        // ცოცხალი ანიმაცია ეშვება მხოლოდ გათამაშების დროს (პირველ 60 წამში)
-                        if (secondsAgo < 60) {
+                        // თუ გათამაშება ბოლო 90 წამში მოხდა, გაუშვას ცოცხალი ანიმაცია
+                        if (secondsAgo < 90) {
                             runLiveBallDrop(combo, () => {
                                 statusText.innerText = `გათამაშება დასრულდა! სულ ${data.winnersCount || 0} მოგებული.`;
                             });
                         } else {
-                            // 1 წუთზე მეტი თუა გასული, ბურთები აქ აღარ ინახება
-                            resetDrawnSlots();
+                            // თუ უფრო ძველია, უბრალოდ გამოაჩინოს შედეგი
+                            combo.main.forEach((n, idx) => {
+                                const slot = document.getElementById(`slot-${idx}`);
+                                slot.innerText = n;
+                                slot.classList.add('filled');
+                            });
+                            const bonusSlot = document.getElementById('slot-bonus');
+                            bonusSlot.innerText = combo.bonus;
+                            bonusSlot.classList.add('filled');
+                            statusText.innerText = `დღევანდელი გათამაშება დასრულებულია (${data.winnersCount || 0} მოგებული).`;
                         }
                     }
                 }
             });
         }
 
+        updateScheduleDisplays();
         listenTodayDraw();
 
-        // 15:00:00-ზე ავტომატური გაშვების ძრავი
+        // 🎯 15:00:00 იტალიის დროით (Europe/Rome) ავტომატური გაშვების ძრავი
         async function executeDailyDrawAuto() {
             if (isExecuting) return;
             const todayKey = getTodayKey();
@@ -577,11 +633,11 @@
             }
         }
 
-        // საათის კონტროლი: ყოველ წამს ამოწმებს დროს
-        // გათამაშება დაიწყება მხოლოდ მაშინ, როცა რეალური საათი გახდება ზუსტად 15:00:00
+        // 🎯 საათის კონტროლი: ყოველ წამს ამოწმებს იტალიის (Europe/Rome) დროს!
+        // გათამაშება დაიწყება მხოლოდ მაშინ, როდესაც იტალიაში გახდება ზუსტად 15:00:00
         setInterval(() => {
-            const now = new Date();
-            if (now.getHours() === 15 && now.getMinutes() === 0 && now.getSeconds() <= 3) {
+            const rome = getRomeTimeParts();
+            if (rome.hour === 15 && rome.minute === 0 && rome.second <= 3) {
                 executeDailyDrawAuto();
             }
         }, 1000);
