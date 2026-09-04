@@ -504,7 +504,7 @@ function displayActiveStoryItem(username, avatarUrl) {
       <div class="story-tap-zone-right" onclick="goToNextStoryItem(event)"></div>
     `;
     if (story.media_type === 'video') {
-      mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};"></video>`;
+      mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline webkit-playsinline style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};"></video>`;
       var activeVid = document.getElementById('active-story-video');
       if (activeVid) activeVid.muted = false;
     } else {
