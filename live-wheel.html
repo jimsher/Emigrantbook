@@ -577,7 +577,6 @@
             color: #717786;
         }
 
-        /* საჯარო გამარჯვებულების სია */
         .public-winners-card {
             background: #13161c;
             border: 1px solid #20242e;
@@ -674,7 +673,7 @@
             </button>
             <div class="live-tag">
                 <div class="live-tag-dot"></div>
-                Live 15:00
+                <span id="headerLiveTimeText">Live 15:00</span>
             </div>
         </div>
     </header>
@@ -698,12 +697,12 @@
             </div>
         </div>
 
-        <!-- ტაიმერი -->
+        <!-- ტაიმერი (დროის სინქრონიზაციით) -->
         <div class="schedule-card">
-            <div class="title">გათამაშება იწყება ყოველდღე 15:00-ზე</div>
+            <div class="title" id="scheduleCardTitle">გათამაშება იწყება ყოველდღე 15:00-ზე</div>
             <div class="timer" id="countdownTimer">00:00:00</div>
             <div class="subtitle" id="timerSubtitle">დარჩენილი დრო პირდაპირ ეთერამდე</div>
-            <div class="lock-warning-bar" id="lockNotice">🔒 მიღება დასრულებულია (14:50 - 15:00). ციფრების შეცვლა დაბლოკილია!</div>
+            <div class="lock-warning-bar" id="lockNotice">🔒 მიღება დასრულებულია (გათამაშებამდე 10 წუთით ადრე). ციფრების შეცვლა დაბლოკილია!</div>
         </div>
 
         <!-- ტაბები -->
@@ -803,7 +802,7 @@
                     <span style="font-size: 15px; font-weight: 800; color: #ffffff;">გათამაშების წესები</span>
                     <span style="background: rgba(255, 77, 77, 0.15); border: 1px solid rgba(255, 77, 77, 0.4); color: #ff4d4d; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px;">18+</span>
                 </div>
-                <button type="button" onclick="closeRulesModal()" style="background: transparent; border: none; color: #8c93a4; font-size: 20px; font-weight: 700; cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%;" onmouseover="this.style.color='#fff';" onmouseout="this.style.color='#8c93a4';">✕</button>
+                <button type="button" onclick="closeRulesModal()" style="background: transparent; border: none; color: #8c93a4; font-size: 20px; font-weight: 700; cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">✕</button>
             </div>
 
             <div style="padding: 16px; overflow-y: auto; color: #cbd1db; font-size: 12.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 14px;">
@@ -819,8 +818,8 @@
                 <div>
                     <div style="color: #d1b165; font-weight: 800; margin-bottom: 4px;">⏰ დრო და 10-წუთიანი ბლოკი</div>
                     <ul style="padding-left: 16px; margin: 0; color: #9aa1b0;">
-                        <li><strong>გათამაშება:</strong> ყოველდღე, ზუსტად <strong>15:00:00</strong> საათზე.</li>
-                        <li><strong>14:50 - 15:00:</strong> გათამაშებამდე 10 წუთით ადრე ციფრების შევსება და რედაქტირება იბლოკება.</li>
+                        <li><strong>გათამაშება:</strong> ყოველდღე, ზუსტად <strong>15:00:00</strong> საათზე (იტალიის ცენტრალური დროით).</li>
+                        <li><strong>10-წუთიანი ბლოკი:</strong> გათამაშებამდე 10 წუთით ადრე ციფრების შევსება და რედაქტირება იბლოკება.</li>
                         <li><strong>განბლოკვა:</strong> გათამაშების დასრულებისთანავე სისტემა იხსნება მომდევნო დღისთვის.</li>
                     </ul>
                 </div>
@@ -897,7 +896,7 @@
         let currentUserBalance = 0;
         let userTicketsList = [];
         let isTenMinLocked = false;
-        let latestDrawData = null; // ბოლო 24 საათის შედეგები
+        let latestDrawData = null;
 
         // წესების მოდალის კონტროლი
         function openRulesModal() {
@@ -917,21 +916,87 @@
             }
         });
 
-        // 🎯 24-საათიანი ციკლის სწორი ალგორითმი:
-        // თუ დღევანდელ 15:00-ს გადაცდა, სისტემა ბილეთს ავტომატურად უწერს ხვალინდელ თარიღს!
-        function getTodayKey() {
+        // 🎯 იტალიის (Europe/Rome) დროის კომპონენტები
+        function getRomeTimeParts() {
             const now = new Date();
-            const drawTimeToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0, 0);
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'Europe/Rome',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const parts = formatter.formatToParts(now);
+            const p = {};
+            parts.forEach(part => p[part.type] = part.value);
+            return {
+                year: parseInt(p.year, 10),
+                month: parseInt(p.month, 10),
+                day: parseInt(p.day, 10),
+                hour: parseInt(p.hour, 10),
+                minute: parseInt(p.minute, 10),
+                second: parseInt(p.second, 10),
+                dateKey: `${p.year}-${p.month}-${p.day}`
+            };
+        }
 
-            const targetDate = new Date(now);
-            if (now >= drawTimeToday) {
-                targetDate.setDate(targetDate.getDate() + 1);
+        // 🎯 მომდევნო 15:00:00 (იტალია) ზუსტი მილიწამები და სამიზნე თარიღი
+        function getNextRome1500Info() {
+            const rome = getRomeTimeParts();
+            let targetYear = rome.year;
+            let targetMonth = rome.month;
+            let targetDay = rome.day;
+
+            // თუ იტალიაში უკვე 15:00:00-ია ან მეტი, სამიზნე ხვალინდელი დღეა
+            if (rome.hour > 15 || (rome.hour === 15 && (rome.minute > 0 || rome.second > 0))) {
+                const nextDayUtc = new Date(Date.UTC(targetYear, targetMonth - 1, targetDay + 1));
+                targetYear = nextDayUtc.getUTCFullYear();
+                targetMonth = nextDayUtc.getUTCMonth() + 1;
+                targetDay = nextDayUtc.getUTCDate();
             }
 
-            const year = targetDate.getFullYear();
-            const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-            const day = String(targetDate.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            const yStr = String(targetYear);
+            const mStr = String(targetMonth).padStart(2, '0');
+            const dStr = String(targetDay).padStart(2, '0');
+            const targetDateKey = `${yStr}-${mStr}-${dStr}`;
+
+            // იტალიაში 15:00-ის ზუსტი UTC დრო (ზაფხული UTC+2 -> 13:00 UTC, ზამთარი UTC+1 -> 14:00 UTC)
+            let targetEpoch = 0;
+            for (let utcHour of [13, 14, 12]) {
+                const testDate = new Date(Date.UTC(targetYear, targetMonth - 1, targetDay, utcHour, 0, 0));
+                const testRomeHour = parseInt(new Intl.DateTimeFormat('en-GB', {
+                    timeZone: 'Europe/Rome',
+                    hour: '2-digit',
+                    hour12: false
+                }).format(testDate), 10);
+                if (testRomeHour === 15) {
+                    targetEpoch = testDate.getTime();
+                    break;
+                }
+            }
+
+            return { targetEpoch, targetDateKey };
+        }
+
+        // 🎯 მომხმარებლის ლოკალური დროის განსაზღვრა (მაგ. საქართველოში 17:00)
+        function getUserLocalDrawTimeString() {
+            try {
+                const info = getNextRome1500Info();
+                const d = new Date(info.targetEpoch);
+                const lh = String(d.getHours()).padStart(2, '0');
+                const lm = String(d.getMinutes()).padStart(2, '0');
+                return `${lh}:${lm}`;
+            } catch (e) {
+                return "15:00";
+            }
+        }
+
+        // 🎯 ბილეთის სწორი თარიღის გასაღები (იტალიის ციკლით)
+        function getTodayKey() {
+            return getNextRome1500Info().targetDateKey;
         }
 
         auth.onAuthStateChanged(function(user) {
@@ -1044,21 +1109,19 @@
                 return;
             }
 
+            const localDrawTime = getUserLocalDrawTimeString();
             let html = '';
+
             userTicketsList.forEach(function(t, idx) {
                 const nums = t.mainNumbers || ['--', '--', '--', '--', '--'];
                 const bonus = t.bonusNumber || '--';
-                const isFree = t.isFree === true || t.cost === 0;
 
-                let badgeHtml = isFree 
-                    ? '<span class="badge">უფასო ✓</span>' 
-                    : '<span class="badge paid">2.00 € ✓</span>';
-
+                // სანამ ამ ბილეთის გათამაშება არ ჩატარებულა, სტატუსია მომხმარებლის დროით: "ელოდება 17:00-ს"
+                let badgeHtml = `<span class="badge waiting">⏳ ელოდება ${localDrawTime}-ს</span>`;
                 let matchedMain = [];
                 let matchedBonus = false;
 
-                // 🛑 მკაცრი შემოწმება: ციფრები გათამაშდება და გამწვანდება მხოლოდ მაშინ,
-                // როდესაც ლაივ გათამაშება რეალურად ჩატარდება და შედეგი ჩაიწერება ბაზაში ამ ბილეთის თარიღისთვის!
+                // 🛑 ციფრები შემოწმდება მხოლოდ მაშინ, როდესაც გათამაშება ჩატარდება ბილეთის თარიღისთვის
                 if (latestDrawData && latestDrawData.combination && t.date === latestDrawData.date) {
                     const ticketTime = t.createdAt ? (t.createdAt.toMillis ? t.createdAt.toMillis() : (t.createdAt.toDate ? t.createdAt.toDate().getTime() : 0)) : 0;
                     const drawnTime = latestDrawData.drawnAt ? (latestDrawData.drawnAt.toMillis ? latestDrawData.drawnAt.toMillis() : (latestDrawData.drawnAt.toDate ? latestDrawData.drawnAt.toDate().getTime() : 0)) : 0;
@@ -1078,12 +1141,10 @@
                             badgeHtml = '<span class="badge" style="background:#202026; color:#888; border-color:#333;">არ მოუგია</span>';
                         }
                     } else {
-                        // თუ გათამაშება ჯერ არ ჩატარებულა ამ ბილეთისთვის
-                        badgeHtml = '<span class="badge waiting">⏳ ელოდება 15:00-ს</span>';
+                        badgeHtml = `<span class="badge waiting">⏳ ელოდება ${localDrawTime}-ს</span>`;
                     }
                 } else {
-                    // თუ ისტორიაში შედეგი არ მოიძებნა
-                    badgeHtml = '<span class="badge waiting">⏳ ელოდება 15:00-ს</span>';
+                    badgeHtml = `<span class="badge waiting">⏳ ელოდება ${localDrawTime}-ს</span>`;
                 }
 
                 html += `
@@ -1155,6 +1216,7 @@
             btn.disabled = true;
             btn.innerText = "მუშავდება...";
 
+            // 🎯 თარიღი მიენიჭება იტალიის ცენტრალური დროის მიხედვით
             const todayKey = getTodayKey();
             const batch = db.batch();
             const newTicketRef = db.collection("lottery_bookings").doc();
@@ -1236,7 +1298,7 @@
                             <span style="font-size: 18px; font-weight: 900; color: #717786; margin: 0 3px;">+</span>
                             <div class="big-lotto-ball gold">★</div>
                         `;
-                        winnersList.innerHTML = '<div class="empty-state">მონაცემები გამოჩნდება 15:00 გათამაშების შემდეგ</div>';
+                        winnersList.innerHTML = '<div class="empty-state">მონაცემები გამოჩნდება გათამაშების შემდეგ</div>';
                         winnersCount.innerText = "0 მოგებული";
                         latestDrawData = null;
                         updateUIWithTickets();
@@ -1249,7 +1311,6 @@
                     const now = Date.now();
                     const hoursPassed = (now - drawnTime) / (1000 * 60 * 60);
 
-                    // 24 საათის შემდეგ შედეგი ქრება ახალ გათამაშებამდე
                     if (hoursPassed > 24) {
                         dateLabel.innerText = "გასული გათამაშების ვადა ამოიწურა";
                         ballsBox.innerHTML = `
@@ -1261,7 +1322,7 @@
                             <span style="font-size: 18px; font-weight: 900; color: #717786; margin: 0 3px;">+</span>
                             <div class="big-lotto-ball gold">★</div>
                         `;
-                        expireNote.innerText = "ახალი გათამაშება დაიწყება დღეს 15:00-ზე";
+                        expireNote.innerText = "ახალი გათამაშება მალე დაიწყება";
                         winnersList.innerHTML = '<div class="empty-state">შედეგები განახლდება ახალი გათამაშების დასრულებისთანავე</div>';
                         winnersCount.innerText = "0 მოგებული";
                         latestDrawData = null;
@@ -1273,7 +1334,7 @@
                     updateUIWithTickets();
 
                     const combo = data.combination || { main: ['--', '--', '--', '--', '--'], bonus: '--' };
-                    dateLabel.innerText = `გათამაშების თარიღი: ${data.date || getTodayKey()}`;
+                    dateLabel.innerText = `გათამაშების თარიღი: ${data.date || '-'}`;
 
                     // ბურთების გამოსახვა
                     ballsBox.innerHTML = `
@@ -1287,7 +1348,6 @@
                 });
         }
 
-        // გამარჯვებულების სიის აწყობა ავატარით და მოგებული თანხით
         function renderPublicWinners(drawData) {
             const container = document.getElementById('publicWinnersList');
             const countElem = document.getElementById('publicWinnersCount');
@@ -1302,7 +1362,7 @@
                 return;
             }
 
-            const drawDate = drawData.date || getTodayKey();
+            const drawDate = drawData.date;
             const combo = drawData.combination;
 
             if (!combo || !combo.main) {
@@ -1365,18 +1425,39 @@
             container.innerHTML = html;
         }
 
-        // ტაიმერი & 14:50:00-ზე გათიშვა
+        // 🎯 ტაიმერი & 10-წუთიანი ბლოკი (სინქრონული ყველასთვის)
         function updateLotteryTimer() {
-            const now = new Date();
-            let targetDraw = new Date();
-            targetDraw.setHours(15, 0, 0, 0);
+            const nowMs = Date.now();
+            const { targetEpoch, targetDateKey } = getNextRome1500Info();
+            const diff = targetEpoch - nowMs;
 
-            const isDrawPastToday = now >= targetDraw;
-            if (isDrawPastToday) {
-                targetDraw.setDate(targetDraw.getDate() + 1);
+            const localDrawTime = getUserLocalDrawTimeString();
+
+            // სათაურებისა და წარწერების მორგება მომხმარებლის დროის სარტყელზე
+            const scheduleTitle = document.getElementById('scheduleCardTitle');
+            const headerLiveText = document.getElementById('headerLiveTimeText');
+
+            if (scheduleTitle) {
+                if (localDrawTime !== "15:00") {
+                    scheduleTitle.innerText = `გათამაშება იწყება ყოველდღე ${localDrawTime}-ზე (თქვენი დროით) / 15:00 (იტალია)`;
+                } else {
+                    scheduleTitle.innerText = `გათამაშება იწყება ყოველდღე 15:00-ზე (იტალიის დროით)`;
+                }
             }
 
-            const diff = targetDraw - now;
+            if (headerLiveText) {
+                if (localDrawTime !== "15:00") {
+                    headerLiveText.innerText = `Live ${localDrawTime} (იტალია 15:00)`;
+                } else {
+                    headerLiveText.innerText = `Live 15:00`;
+                }
+            }
+
+            if (diff <= 0) {
+                document.getElementById('countdownTimer').innerText = "00:00:00";
+                return;
+            }
+
             const h = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
             const m = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
             const s = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
@@ -1385,7 +1466,8 @@
 
             const lockNotice = document.getElementById('lockNotice');
 
-            if (!isDrawPastToday && diff <= 10 * 60 * 1000 && diff > 0) {
+            // 10-წუთიანი ბლოკი იტალიის 15:00-მდე (ყველა ქვეყანაში ერთდროულად)
+            if (diff <= 10 * 60 * 1000 && diff > 0) {
                 if (!isTenMinLocked) {
                     isTenMinLocked = true;
                     lockNotice.style.display = "block";
