@@ -161,7 +161,7 @@
       letter-spacing: -0.3px;
     }
 
-    /* 🎟️ 1. ბილეთის შეძენის სადა ეკრანი */
+    /* 🎟️ 1. ბილეთის შეძენის ეკრანი */
     #buy-ticket-screen {
       width: 100%;
       max-width: 420px;
@@ -392,6 +392,7 @@
       transform: scale(1.08);
     }
 
+    /* PREMIO კონტეინერი */
     .premio-wrapper {
       margin-left: auto;
       position: relative;
@@ -533,7 +534,7 @@
   <span id="toastText">შეტყობინება</span>
 </div>
 
-<!-- 👤 მომხმარებლის პროფილი და რეალური ბალანსი (€) -->
+<!-- 👤 პროფილი და ბალანსი -->
 <div class="user-profile-bar">
   <div class="user-meta-left">
     <div class="user-avatar-slot" id="top-user-avatar">
@@ -717,13 +718,11 @@
     const userRef = db.collection('profiles').doc(currentFirebaseUser.uid);
     const batch = db.batch();
 
-    // 1. ბალანსიდან 5 ევროს ჩამოჭრა
     batch.set(userRef, {
       balance: firebase.firestore.FieldValue.increment(-TICKET_PRICE),
       last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    // 2. ტრანზაქციების ისტორიაში ჩაწერა
     const txRef = userRef.collection('transactions').doc();
     batch.set(txRef, {
       type: 'expense',
@@ -797,7 +796,6 @@
     scratchCanvases = [];
     hasWonThisTicket = false;
 
-    // 1. მომგებიანი 24 ციფრი
     const totalCoins = LADDER_PATTERN.reduce((a, b) => a + b, 0);
     winningNumbers = getRandomUnique(totalCoins);
 
@@ -806,7 +804,6 @@
       if (!winningNumbers.includes(i)) losingPool.push(i);
     }
 
-    // მოგების კონტროლი
     let roll = Math.random();
     let winningRowIndex = -1;
 
@@ -814,7 +811,6 @@
     else if (roll > 0.90 && roll <= 0.97) winningRowIndex = 1; // €20
     else if (roll > 0.97) winningRowIndex = 2;                 // €50
 
-    // მარცხენა კიბე
     const ladderMount = document.getElementById('ladder-grid-mount');
     ladderMount.innerHTML = '';
     let winPtr = 0;
@@ -841,7 +837,6 @@
       ladderMount.appendChild(row);
     });
 
-    // მარჯვენა 12 რიგის გენერაცია
     const giocataMount = document.getElementById('giocata-list-mount');
     giocataMount.innerHTML = '';
     giocataRows = [];
@@ -897,7 +892,6 @@
       drawPremioCanvas(pCanvas);
     });
 
-    // ბონუსები (ყოველ ჯერზე ახალი Canvas იქმნება)
     for (let i = 0; i < 3; i++) {
       const box = document.getElementById(`bonus-box-${i}`);
       if (box) {
@@ -916,57 +910,73 @@
     }
   }
 
-  // 🪙 მონეტის Canvas
+  // 🪙 HD ოქროსფერი 3D მეტალის მონეტა (€)
   function drawCoinCanvas(canvas, num) {
     scratchCanvases.push(canvas);
     const ctx = canvas.getContext('2d');
     const w = canvas.width;
     const h = canvas.height;
 
-    let grad = ctx.createRadialGradient(w * 0.4, h * 0.35, 3, w * 0.5, h * 0.5, w * 0.5);
-    grad.addColorStop(0, '#3a3a45');
-    grad.addColorStop(0.6, '#22222a');
-    grad.addColorStop(1, '#141418');
+    // ოქროსფერი მეტალის HD რადიალური გრადიენტი
+    let goldGrad = ctx.createRadialGradient(w * 0.35, h * 0.35, 3, w * 0.5, h * 0.5, w * 0.5);
+    goldGrad.addColorStop(0, '#fff49e');
+    goldGrad.addColorStop(0.25, '#f7be16');
+    goldGrad.addColorStop(0.65, '#c28500');
+    goldGrad.addColorStop(1, '#694600');
 
-    ctx.fillStyle = grad;
+    ctx.fillStyle = goldGrad;
     ctx.beginPath();
     ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = 1.5;
+    // ოქროს რგოლის კიდე
+    ctx.strokeStyle = '#ffe570';
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
     ctx.arc(w / 2, h / 2, w / 2 - 2, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.font = '700 20px -apple-system, sans-serif';
+    // რელიეფური € სიმბოლო
+    ctx.font = '900 24px -apple-system, Impact, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fillStyle = 'rgba(60, 40, 0, 0.45)';
+    ctx.fillText('€', w / 2 + 1, h / 2 + 2); // ჩრდილი
+    ctx.fillStyle = '#ffffff';
     ctx.fillText('€', w / 2, h / 2);
 
     attachScratchEvents(canvas, () => onNumberRevealed(num));
   }
 
-  // PREMIO გადასაფხეკი
+  // 🍷 ღია შინდისფერი (Ruby/Burgundy) PREMIO
   function drawPremioCanvas(canvas) {
     scratchCanvases.push(canvas);
     const ctx = canvas.getContext('2d');
     const w = canvas.width;
     const h = canvas.height;
 
-    ctx.fillStyle = '#1e1e24';
+    // ღია შინდისფერი გრადიენტი
+    let rubyGrad = ctx.createLinearGradient(0, 0, 0, h);
+    rubyGrad.addColorStop(0, '#ab203b');
+    rubyGrad.addColorStop(0.5, '#87142b');
+    rubyGrad.addColorStop(1, '#5e0b1c');
+    ctx.fillStyle = rubyGrad;
     ctx.fillRect(0, 0, w, h);
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 1;
+    // პრიალა კიდე
+    ctx.strokeStyle = 'rgba(255, 170, 190, 0.4)';
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(1, 1, w - 2, h - 2);
 
+    // PREMIO ტექსტი
     ctx.font = '800 13px -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#aaaaaa';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 3;
     ctx.fillText('PREMIO', w / 2, h / 2);
+    ctx.shadowBlur = 0;
 
     attachScratchEvents(canvas, null);
   }
@@ -1072,13 +1082,11 @@
     const userRef = db.collection('profiles').doc(currentFirebaseUser.uid);
     const batch = db.batch();
 
-    // 1. მოგებული თანხის დამატება ბალანსზე
     batch.set(userRef, {
       balance: firebase.firestore.FieldValue.increment(amount),
       last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    // 2. ტრანზაქციებში მოგების ჩაწერა
     const txRef = userRef.collection('transactions').doc();
     batch.set(txRef, {
       type: 'reward',
@@ -1091,7 +1099,7 @@
     });
 
     batch.commit().then(() => {
-      showToast("🎉", `გილოცავთ! თქვენ მოიგეთ +${prizeLabel}! თანხა დაერიცხა თქვენს ბალანსს.`);
+      showToast("🎉", `გილოცავთ! თქვენ მოიგეთ +${prizeLabel}!`);
     }).catch(err => {
       console.error("Credit win error:", err);
     });
