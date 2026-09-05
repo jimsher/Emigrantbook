@@ -31,6 +31,32 @@
       overflow-x: hidden;
     }
 
+    /* შეტყობინების ტოსტი */
+    .toast-popup {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #ffffff;
+      color: #08080b;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-size: 13.5px;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .toast-popup.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
     /* 👤 მომხმარებლის პროფილი და ბალანსი */
     .user-profile-bar {
       width: 100%;
@@ -96,7 +122,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* რეალური ბალანსის ბლოკი მარჯვნივ */
     .user-balance-right {
       display: flex;
       flex-direction: column;
@@ -136,10 +161,81 @@
       letter-spacing: -0.3px;
     }
 
-    /* ბილეთის სადა, ოფიციალური ჩარჩო */
-    .ticket-wrapper {
+    /* 🎟️ 1. ბილეთის შეძენის სადა ეკრანი */
+    #buy-ticket-screen {
       width: 100%;
       max-width: 420px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    }
+
+    .ticket-preview-box {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 16px;
+      padding: 20px 16px;
+      margin: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ticket-info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #aaaaaa;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 8px;
+    }
+
+    .ticket-info-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .ticket-info-row strong {
+      color: #ffffff;
+      font-size: 14px;
+    }
+
+    .btn-buy-ticket {
+      width: 100%;
+      background: #ffffff;
+      color: #08080b;
+      border: none;
+      padding: 15px;
+      border-radius: 14px;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-buy-ticket:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+
+    /* 🎮 2. სათამაშო ბილეთის კონტეინერი */
+    #game-play-area {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .ticket-wrapper {
+      width: 100%;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 20px;
@@ -149,7 +245,6 @@
       position: relative;
     }
 
-    /* ჰედერი */
     .logo-container {
       text-align: center;
       margin-bottom: 8px;
@@ -173,7 +268,6 @@
       text-transform: uppercase;
     }
 
-    /* სათამაშო დაფა */
     .play-arena {
       display: flex;
       gap: 8px;
@@ -181,7 +275,6 @@
       margin-top: 8px;
     }
 
-    /* მარცხენა კიბისებური სვეტი */
     .left-ladder-col {
       display: flex;
       flex-direction: column;
@@ -213,7 +306,6 @@
       height: 27px;
     }
 
-    /* მონეტის სლოტი */
     .coin-slot {
       position: relative;
       width: 27px;
@@ -246,7 +338,6 @@
       touch-action: none;
     }
 
-    /* ცენტრალური სვეტი: 12 GIOCATA */
     .center-giocata-col {
       flex: 1;
       display: flex;
@@ -266,11 +357,10 @@
       transition: all 0.25s ease;
     }
 
-    /* მოგებული რიგი */
     .giocata-capsule.row-winner {
-      background: rgba(46, 213, 115, 0.12) !important;
+      background: rgba(46, 213, 115, 0.15) !important;
       border-color: #2ed573 !important;
-      box-shadow: 0 0 14px rgba(46, 213, 115, 0.3) !important;
+      box-shadow: 0 0 14px rgba(46, 213, 115, 0.35) !important;
     }
 
     .balls-group {
@@ -279,7 +369,6 @@
       gap: 3px;
     }
 
-    /* ბურთულა */
     .sphere-ball {
       width: 22px;
       height: 22px;
@@ -295,7 +384,6 @@
       transition: all 0.2s ease;
     }
 
-    /* ემთხვევა: სუფთა მწვანე */
     .sphere-ball.ball-hit {
       background: #2ed573 !important;
       color: #08080b !important;
@@ -304,7 +392,6 @@
       transform: scale(1.08);
     }
 
-    /* გადასაფხეკი PREMIO */
     .premio-wrapper {
       margin-left: auto;
       position: relative;
@@ -338,7 +425,6 @@
       touch-action: none;
     }
 
-    /* ვერტიკალური GIOCATA ტეგი */
     .vertical-tag {
       background: transparent;
       color: #555555;
@@ -353,7 +439,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* ქვედა GIOCO BONUS */
     .bonus-bar {
       margin-top: 10px;
       background: rgba(255, 255, 255, 0.02);
@@ -407,11 +492,9 @@
       touch-action: none;
     }
 
-    /* მართვის ღილაკები */
     .actions-panel {
       margin-top: 12px;
       width: 100%;
-      max-width: 420px;
       display: flex;
       gap: 10px;
     }
@@ -427,9 +510,7 @@
       transition: all 0.2s ease;
     }
 
-    .panel-btn:active {
-      transform: scale(0.98);
-    }
+    .panel-btn:active { transform: scale(0.98); }
 
     .btn-scratch {
       background: #ffffff;
@@ -445,6 +526,12 @@
   </style>
 </head>
 <body>
+
+<!-- შეტყობინების ტოსტი -->
+<div class="toast-popup" id="toastBox">
+  <span id="toastIcon">✨</span>
+  <span id="toastText">შეტყობინება</span>
+</div>
 
 <!-- 👤 მომხმარებლის პროფილი და რეალური ბალანსი (€) -->
 <div class="user-profile-bar">
@@ -466,52 +553,75 @@
   </div>
 </div>
 
-<div class="ticket-wrapper">
-  <!-- ჰედერი -->
-  <div class="logo-container">
-    <span class="ultra-ribbon">ULTRA</span>
-    <div class="numerissimi-logo">NUMERISSIMI</div>
+<!-- 🎟️ 1. ბილეთის შეძენის საწყისი ეკრანი -->
+<div id="buy-ticket-screen">
+  <span class="ultra-ribbon">EMIGRANTBOOK LOTTERY</span>
+  <div class="numerissimi-logo" style="margin-bottom: 4px;">ULTRA NUMERISSIMI</div>
+  <p style="font-size: 12.5px; color: #777777; margin-top: 2px;">გადაფხიკეთ და მოიგეთ მომენტალურად</p>
+
+  <div class="ticket-preview-box">
+    <div class="ticket-info-row">
+      <span>ბილეთის ფასი</span>
+      <strong>5.00 €</strong>
+    </div>
+    <div class="ticket-info-row">
+      <span>მაქსიმალური პრიზი</span>
+      <strong style="color: #2ed573;">100,000 €</strong>
+    </div>
+    <div class="ticket-info-row">
+      <span>სათამაშო რიგები</span>
+      <strong>12 GIOCATA</strong>
+    </div>
   </div>
 
-  <!-- სათამაშო ზონა -->
-  <div class="play-arena">
-    <!-- 1. მარცხენა: NUMERI VINCENTI -->
-    <div class="left-ladder-col">
-      <div class="ladder-header-badge">NUMERI VINCENTI</div>
-      <div id="ladder-grid-mount" style="display: flex; flex-direction: column; gap: 3px;"></div>
-    </div>
-
-    <!-- 2. ცენტრი: 12 GIOCATA -->
-    <div class="center-giocata-col" id="giocata-list-mount"></div>
-  </div>
-
-  <!-- 3. GIOCO BONUS -->
-  <div class="bonus-bar">
-    <div class="bonus-side-tag">BONUS</div>
-    <div class="bonus-circle-medallion">
-      <span class="bonus-cash-text">€100</span>
-      <canvas class="bonus-canvas-layer" id="bonus-canvas-0"></canvas>
-    </div>
-    <div class="bonus-circle-medallion">
-      <span class="bonus-cash-text">€300</span>
-      <canvas class="bonus-canvas-layer" id="bonus-canvas-1"></canvas>
-    </div>
-    <div class="bonus-circle-medallion">
-      <span class="bonus-cash-text">€500</span>
-      <canvas class="bonus-canvas-layer" id="bonus-canvas-2"></canvas>
-    </div>
-  </div>
+  <button class="btn-buy-ticket" id="btn-buy-ticket-action" onclick="purchaseTicket()">
+    ბილეთის შეძენა (5.00 €)
+  </button>
 </div>
 
-<!-- ღილაკები -->
-<div class="actions-panel">
-  <button class="panel-btn btn-scratch" onclick="scratchAll()">ყველას გადაფხეკა</button>
-  <button class="panel-btn btn-reset" onclick="initGame()">ახალი ბილეთი</button>
+<!-- 🎮 2. სათამაშო დაფა (ჩნდება მხოლოდ შეძენის შემდეგ) -->
+<div id="game-play-area">
+  <div class="ticket-wrapper">
+    <div class="logo-container">
+      <span class="ultra-ribbon">ULTRA</span>
+      <div class="numerissimi-logo">NUMERISSIMI</div>
+    </div>
+
+    <div class="play-arena">
+      <div class="left-ladder-col">
+        <div class="ladder-header-badge">NUMERI VINCENTI</div>
+        <div id="ladder-grid-mount" style="display: flex; flex-direction: column; gap: 3px;"></div>
+      </div>
+
+      <div class="center-giocata-col" id="giocata-list-mount"></div>
+    </div>
+
+    <div class="bonus-bar">
+      <div class="bonus-side-tag">BONUS</div>
+      <div class="bonus-circle-medallion">
+        <span class="bonus-cash-text">€100</span>
+        <canvas class="bonus-canvas-layer" id="bonus-canvas-0"></canvas>
+      </div>
+      <div class="bonus-circle-medallion">
+        <span class="bonus-cash-text">€300</span>
+        <canvas class="bonus-canvas-layer" id="bonus-canvas-1"></canvas>
+      </div>
+      <div class="bonus-circle-medallion">
+        <span class="bonus-cash-text">€500</span>
+        <canvas class="bonus-canvas-layer" id="bonus-canvas-2"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-panel">
+    <button class="panel-btn btn-scratch" onclick="scratchAll()">ყველას გადაფხეკა</button>
+    <button class="panel-btn btn-reset" onclick="returnToBuyScreen()">ახალი ბილეთი</button>
+  </div>
 </div>
 
 <script>
   // ==========================================
-  //  🔥 FIREBASE რეალური პროფილის და ბალანსის ჩატვირთვა
+  //  🔥 FIREBASE ავტორიზაცია და ბალანსის მოსმენა
   // ==========================================
   const firebaseConfig = {
     apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -529,12 +639,16 @@
 
   const auth = firebase.auth();
   const db = firebase.firestore();
+  let currentFirebaseUser = null;
+  let currentUserEurBalance = 0;
   let profileUnsubscribe = null;
 
   auth.onAuthStateChanged(user => {
     if (user) {
+      currentFirebaseUser = user;
       listenUserProfile(user);
     } else {
+      currentFirebaseUser = null;
       if (profileUnsubscribe) profileUnsubscribe();
       renderDefaultUser();
     }
@@ -548,13 +662,13 @@
         const data = doc.data();
         const fullName = data.full_name || user.displayName || user.email || "მომხმარებელი";
         const avatarUrl = data.avatar_url || user.photoURL || null;
-        
+
         const rawBalance = (data.balance !== undefined) ? data.balance : (data.coins !== undefined ? data.coins : 0);
-        const euroBalance = Number(rawBalance) || 0;
+        currentUserEurBalance = Number(rawBalance) || 0;
 
         document.getElementById('top-user-name').innerText = fullName;
         document.getElementById('top-user-id').innerText = `ID: #${user.uid.substring(0, 8).toUpperCase()}`;
-        document.getElementById('top-user-balance').innerText = euroBalance.toFixed(2);
+        document.getElementById('top-user-balance').innerText = currentUserEurBalance.toFixed(2);
 
         const avatarSlot = document.getElementById('top-user-avatar');
         if (avatarUrl) {
@@ -575,30 +689,102 @@
     document.getElementById('top-user-avatar').innerHTML = `<span style="font-size: 15px; font-weight: 700; color: #777777;">?</span>`;
   }
 
+  function showToast(icon, message) {
+    const toast = document.getElementById('toastBox');
+    document.getElementById('toastIcon').innerText = icon;
+    document.getElementById('toastText').innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  // ==========================================
+  //  💳 ბილეთის შეძენა (5.00 € ჩამოჭრა)
+  // ==========================================
+  const TICKET_PRICE = 5.00;
+
+  function purchaseTicket() {
+    if (!currentFirebaseUser) {
+      alert("გთხოვთ გაიაროთ ავტორიზაცია თამაშისთვის!");
+      return;
+    }
+
+    if (currentUserEurBalance < TICKET_PRICE) {
+      alert(`ბალანსზე არ გაქვთ საკმარისი თანხა! საჭიროა: ${TICKET_PRICE.toFixed(2)} €, გაქვთ: ${currentUserEurBalance.toFixed(2)} €`);
+      return;
+    }
+
+    const buyBtn = document.getElementById('btn-buy-ticket-action');
+    buyBtn.disabled = true;
+    buyBtn.innerText = "მუშავდება...";
+
+    const userRef = db.collection('profiles').doc(currentFirebaseUser.uid);
+    const batch = db.batch();
+
+    // 1. ბალანსიდან 5 ევროს ჩამოჭრა
+    batch.set(userRef, {
+      balance: firebase.firestore.FieldValue.increment(-TICKET_PRICE),
+      last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // 2. ტრანზაქციების ისტორიაში ჩაწერა
+    const txRef = userRef.collection('transactions').doc();
+    batch.set(txRef, {
+      type: 'expense',
+      title: 'ბილეთის შეძენა (Ultra Numerissimi)',
+      amount: TICKET_PRICE,
+      price: '€ ' + TICKET_PRICE.toFixed(2),
+      status: 'წარმატებული',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    batch.commit().then(() => {
+      buyBtn.disabled = false;
+      buyBtn.innerText = "ბილეთის შეძენა (5.00 €)";
+
+      showToast("🎟️", "ბილეთი შეძენილია! -5.00 €");
+      document.getElementById('buy-ticket-screen').style.display = 'none';
+      document.getElementById('game-play-area').style.display = 'block';
+
+      initGame();
+    }).catch(err => {
+      console.error("Purchase error:", err);
+      buyBtn.disabled = false;
+      buyBtn.innerText = "ბილეთის შეძენა (5.00 €)";
+      alert("შეცდომა ბილეთის შეძენისას: " + err.message);
+    });
+  }
+
+  function returnToBuyScreen() {
+    document.getElementById('game-play-area').style.display = 'none';
+    document.getElementById('buy-ticket-screen').style.display = 'flex';
+  }
+
   // ==========================================
   //  🎰 ULTRA NUMERISSIMI სათამაშო ლოგიკა
   // ==========================================
   const LADDER_PATTERN = [4, 3, 2, 1, 1, 1, 1, 1, 1, 2, 3, 4];
 
   const GIOCATA_CONFIG = [
-    { count: 1, prize: "€ 10" },
-    { count: 2, prize: "€ 20" },
-    { count: 2, prize: "€ 50" },
-    { count: 3, prize: "€ 100" },
-    { count: 4, prize: "€ 200" },
-    { count: 5, prize: "€ 500" },
-    { count: 5, prize: "€ 1.000" },
-    { count: 4, prize: "€ 5.000" },
-    { count: 3, prize: "€ 10.000" },
-    { count: 2, prize: "€ 20.000" },
-    { count: 2, prize: "€ 50.000" },
-    { count: 1, prize: "€ 100.000" }
+    { count: 1, prize: "€ 10", winVal: 10 },
+    { count: 2, prize: "€ 20", winVal: 20 },
+    { count: 2, prize: "€ 50", winVal: 50 },
+    { count: 3, prize: "€ 100", winVal: 100 },
+    { count: 4, prize: "€ 200", winVal: 200 },
+    { count: 5, prize: "€ 500", winVal: 500 },
+    { count: 5, prize: "€ 1.000", winVal: 1000 },
+    { count: 4, prize: "€ 5.000", winVal: 5000 },
+    { count: 3, prize: "€ 10.000", winVal: 10000 },
+    { count: 2, prize: "€ 20.000", winVal: 20000 },
+    { count: 2, prize: "€ 50.000", winVal: 50000 },
+    { count: 1, prize: "€ 100.000", winVal: 100000 }
   ];
 
   let winningNumbers = [];
   let revealedWinningSet = new Set();
   let giocataRows = [];
   let scratchCanvases = [];
+  let hasWonThisTicket = false;
 
   function getRandomUnique(count, poolExclude = []) {
     let res = [];
@@ -612,17 +798,20 @@
   function initGame() {
     revealedWinningSet.clear();
     scratchCanvases = [];
+    hasWonThisTicket = false;
 
+    // 1. მომგებიანი 24 ციფრი
     const totalCoins = LADDER_PATTERN.reduce((a, b) => a + b, 0);
     winningNumbers = getRandomUnique(totalCoins);
 
+    // ციფრები, რომლებიც არ შედის მომგებიანებში (ბლოკავს დიდ მოგებებს)
     const losingPool = [];
     for (let i = 1; i <= 90; i++) {
       if (!winningNumbers.includes(i)) losingPool.push(i);
     }
 
     // მოგების კონტროლი:
-    // 75% წაგება, 15% €10, 7% €20, 3% €50 (დიდი თანხები დაბლოკილია)
+    // 75% წაგება, 15% €10, 7% €20, 3% €50 (დიდი თანხები 100% დაბლოკილია)
     let roll = Math.random();
     let winningRowIndex = -1;
 
@@ -657,7 +846,7 @@
       ladderMount.appendChild(row);
     });
 
-    // მარჯვენა 12 რიგი
+    // მარჯვენა 12 რიგის გენერაცია
     const giocataMount = document.getElementById('giocata-list-mount');
     giocataMount.innerHTML = '';
     giocataRows = [];
@@ -689,7 +878,7 @@
       }
 
       rowBalls.sort(() => Math.random() - 0.5);
-      giocataRows.push({ id: idx, numbers: rowBalls, prize: cfg.prize });
+      giocataRows.push({ id: idx, numbers: rowBalls, prize: cfg.prize, winVal: cfg.winVal });
 
       const capsule = document.createElement('div');
       capsule.className = 'giocata-capsule';
@@ -722,7 +911,7 @@
     }
   }
 
-  // 🪙 სადა ვერცხლისფერი/მეტალის მონეტა
+  // 🪙 მონეტის Canvas
   function drawCoinCanvas(canvas, num) {
     scratchCanvases.push(canvas);
     const ctx = canvas.getContext('2d');
@@ -846,6 +1035,9 @@
     checkGiocataWins();
   }
 
+  // ==========================================
+  //  🏆 მოგების შემოწმება & ბალანსზე დარიცხვა
+  // ==========================================
   function checkGiocataWins() {
     giocataRows.forEach(row => {
       const capsule = document.getElementById(`giocata-row-${row.id}`);
@@ -853,13 +1045,52 @@
 
       if (isWon && !capsule.classList.contains('row-winner')) {
         capsule.classList.add('row-winner');
+
+        // PREMIO-ს გადასაფხეკი ფენის მოხსნა
         const pCanvas = document.getElementById(`premio-canvas-${row.id}`);
         if (pCanvas) {
           pCanvas.style.transition = 'opacity 0.3s';
           pCanvas.style.opacity = '0';
           setTimeout(() => pCanvas.remove(), 300);
         }
+
+        // მოგებული თანხის ბალანსზე ავტომატური დარიცხვა (მხოლოდ 1-ხელ ბილეთზე)
+        if (!hasWonThisTicket && row.winVal > 0) {
+          hasWonThisTicket = true;
+          creditWinningPrize(row.winVal, row.prize);
+        }
       }
+    });
+  }
+
+  function creditWinningPrize(amount, prizeLabel) {
+    if (!currentFirebaseUser) return;
+
+    const userRef = db.collection('profiles').doc(currentFirebaseUser.uid);
+    const batch = db.batch();
+
+    // 1. მოგებული თანხის დამატება ბალანსზე
+    batch.set(userRef, {
+      balance: firebase.firestore.FieldValue.increment(amount),
+      last_balance_update: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    // 2. ტრანზაქციებში მოგების ჩაწერა
+    const txRef = userRef.collection('transactions').doc();
+    batch.set(txRef, {
+      type: 'reward',
+      title: `მოგება (Ultra Numerissimi - ${prizeLabel})`,
+      amount: amount,
+      price: prizeLabel,
+      status: 'წარმატებული',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      created_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    batch.commit().then(() => {
+      showToast("🎉", `გილოცავთ! თქვენ მოიგეთ +${prizeLabel}! თანხა დაერიცხა თქვენს ბალანსს.`);
+    }).catch(err => {
+      console.error("Credit win error:", err);
     });
   }
 
@@ -871,8 +1102,6 @@
     });
     winningNumbers.forEach(n => onNumberRevealed(n));
   }
-
-  window.onload = initGame;
 </script>
 
 </body>
