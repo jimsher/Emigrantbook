@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Ultra Numerissimi - EmigrantBook Edition</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -22,6 +28,114 @@
       align-items: center;
       padding: 8px 4px 30px 4px;
       color: #e4e6eb;
+    }
+
+    /* მომხმარებლის პროფილის და ბალანსის ზოლი */
+    .user-profile-bar {
+      width: 100%;
+      max-width: 420px;
+      background: #141418;
+      border: 1px solid #2a2a35;
+      border-radius: 14px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    }
+
+    .user-meta-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .user-avatar-slot {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #dcae36;
+      background: #242526;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .user-avatar-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .user-info-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    .user-id-badge {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 10.5px;
+      color: #8a8f9d;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .user-balance-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .balance-title {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 10px;
+      color: #8a8f9d;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .balance-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #1c1a14;
+      border: 1px solid #dcae36;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .balance-badge span#top-user-balance {
+      font-size: 14px;
+      font-weight: 900;
+      color: #ffd000;
+      font-family: 'Impact', sans-serif;
+      letter-spacing: 0.5px;
+    }
+
+    .balance-badge .currency-label {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: #dcae36;
     }
 
     /* EmigrantBook-ის სტილის პრემიუმ ჩარჩო */
@@ -161,7 +275,6 @@
       transition: all 0.3s;
     }
 
-    /* როცა რიგმა მოიგო */
     .giocata-capsule.row-winner {
       background: linear-gradient(180deg, #1f4222 0%, #0f2b12 100%) !important;
       border-color: #2ed573 !important;
@@ -197,7 +310,6 @@
       transition: all 0.25s ease;
     }
 
-    /* ემთხვევა: ნეონისფერი მწვანე */
     .sphere-ball.ball-hit {
       background: radial-gradient(circle at 35% 30%, #5dff97 0%, #2ed573 50%, #0d6e2e 100%) !important;
       color: #ffffff !important;
@@ -350,6 +462,27 @@
 </head>
 <body>
 
+<!-- 👤 მომხმარებლის პროფილის და ბალანსის ზოლი -->
+<div class="user-profile-bar">
+  <div class="user-meta-left">
+    <div class="user-avatar-slot" id="top-user-avatar">
+      <span style="font-size: 16px; font-weight: bold; color: #dcae36;">?</span>
+    </div>
+    <div class="user-info-text">
+      <span class="user-name" id="top-user-name">იტვირთება...</span>
+      <span class="user-id-badge" id="top-user-id">ID: ------</span>
+    </div>
+  </div>
+  <div class="user-balance-right">
+    <span class="balance-title">ბალანსი</span>
+    <div class="balance-badge">
+      <span style="font-size: 13px;">💎</span>
+      <span id="top-user-balance">0</span>
+      <span class="currency-label">Akho</span>
+    </div>
+  </div>
+</div>
+
 <div class="ticket-wrapper">
   <!-- ჰედერი -->
   <div class="logo-container">
@@ -394,6 +527,77 @@
 </div>
 
 <script>
+  // ==========================================
+  //  🔥 FIREBASE ინიციალიზაცია & პროფილი
+  // ==========================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+    authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+    projectId: "emigrantbook-4b7bd",
+    storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+    messagingSenderId: "109907338554",
+    appId: "1:109907338554:web:fde6c296d9ff56f6305c03",
+    measurementId: "G-MRPP7G4H30"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  let currentAppUser = null;
+  let profileUnsubscribe = null;
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentAppUser = user;
+      listenUserProfile(user.uid);
+    } else {
+      currentAppUser = null;
+      if (profileUnsubscribe) profileUnsubscribe();
+      renderGuestProfile();
+    }
+  });
+
+  // რეალური პროფილის და ბალანსის მოსმენა (Real-time)
+  function listenUserProfile(uid) {
+    if (profileUnsubscribe) profileUnsubscribe();
+
+    profileUnsubscribe = db.collection('profiles').doc(uid).onSnapshot(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        const fullName = data.full_name || currentAppUser.displayName || currentAppUser.email || "მომხმარებელი";
+        const avatarUrl = data.avatar_url || currentAppUser.photoURL || null;
+        const balance = (typeof data.balance !== 'undefined') ? data.balance : 0;
+        const shortId = uid.substring(0, 6).toUpperCase();
+
+        document.getElementById('top-user-name').innerText = fullName;
+        document.getElementById('top-user-id').innerText = `ID: #${shortId}`;
+        document.getElementById('top-user-balance').innerText = balance;
+
+        const avatarSlot = document.getElementById('top-user-avatar');
+        if (avatarUrl) {
+          avatarSlot.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+        } else {
+          avatarSlot.innerHTML = `<span style="font-size: 16px; font-weight: bold; color: #dcae36;">${fullName.charAt(0).toUpperCase()}</span>`;
+        }
+      }
+    }, err => {
+      console.warn("Profile listen error:", err);
+    });
+  }
+
+  function renderGuestProfile() {
+    document.getElementById('top-user-name').innerText = "სტუმარი";
+    document.getElementById('top-user-id').innerText = "ID: #GUEST";
+    document.getElementById('top-user-balance').innerText = "0";
+    document.getElementById('top-user-avatar').innerHTML = `<span style="font-size: 16px; font-weight: bold; color: #8a8f9d;">?</span>`;
+  }
+
+  // ==========================================
+  //  🎰 ULTRA NUMERISSIMI სათამაშო ლოგიკა
+  // ==========================================
   const LADDER_PATTERN = [4, 3, 2, 1, 1, 1, 1, 1, 1, 2, 3, 4];
 
   const GIOCATA_CONFIG = [
@@ -439,8 +643,7 @@
       if (!winningNumbers.includes(i)) losingPool.push(i);
     }
 
-    // მოგების მკაცრი კონტროლი:
-    // 75% წაგება, 15% €10, 7% €20, 3% €50 (დიდი თანხები ყოველთვის 0%)
+    // მოგების მკაცრი ალბათობა (დიდი თანხები ყოველთვის 0%)
     let roll = Math.random();
     let winningRowIndex = -1;
 
@@ -491,7 +694,6 @@
           rowBalls.push(poolCopy.splice(pickIdx, 1)[0]);
         }
       } else {
-        // გარანტირებულად აგებს (ჩაჯდება მინიმუმ 1 უცხო ციფრი)
         let guaranteedLosingBall = losingPool[Math.floor(Math.random() * losingPool.length)];
         rowBalls.push(guaranteedLosingBall);
 
