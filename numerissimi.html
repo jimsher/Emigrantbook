@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ultra Numerissimi - EmigrantBook Edition</title>
+  <title>Ultra Numerissimi - EmigrantBook</title>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -30,7 +30,7 @@
       color: #e4e6eb;
     }
 
-    /* მომხმარებლის პროფილის და ბალანსის ზოლი */
+    /* 👤 მომხმარებლის რეალური პროფილის და ბალანსის ზოლი */
     .user-profile-bar {
       width: 100%;
       max-width: 420px;
@@ -91,12 +91,13 @@
 
     .user-id-badge {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 10.5px;
+      font-size: 11px;
       color: #8a8f9d;
       font-weight: 600;
       letter-spacing: 0.3px;
     }
 
+    /* რეალური ბალანსის ბლოკი მარჯვნივ */
     .user-balance-right {
       display: flex;
       flex-direction: column;
@@ -109,36 +110,36 @@
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 10px;
       color: #8a8f9d;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .balance-badge {
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       background: #1c1a14;
       border: 1px solid #dcae36;
       padding: 4px 10px;
       border-radius: 8px;
     }
 
-    .balance-badge span#top-user-balance {
+    .balance-currency-sym {
       font-size: 14px;
       font-weight: 900;
-      color: #ffd000;
+      color: #dcae36;
+    }
+
+    .balance-amount {
+      font-size: 15px;
+      font-weight: 900;
+      color: #ffffff;
       font-family: 'Impact', sans-serif;
       letter-spacing: 0.5px;
     }
 
-    .balance-badge .currency-label {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 10px;
-      font-weight: 700;
-      color: #dcae36;
-    }
-
-    /* EmigrantBook-ის სტილის პრემიუმ ჩარჩო */
+    /* ბილეთის ჩარჩო */
     .ticket-wrapper {
       width: 100%;
       max-width: 420px;
@@ -181,7 +182,7 @@
          0 3px 0 #dcae36, 0 6px 12px rgba(0,0,0,0.9);
     }
 
-    /* სათამაშო დაფა (2 სვეტი) */
+    /* სათამაშო დაფა */
     .play-arena {
       display: flex;
       gap: 6px;
@@ -462,23 +463,22 @@
 </head>
 <body>
 
-<!-- 👤 მომხმარებლის პროფილის და ბალანსის ზოლი -->
+<!-- 👤 მომხმარებლის პროფილი და რეალური ბალანსი (€) -->
 <div class="user-profile-bar">
   <div class="user-meta-left">
     <div class="user-avatar-slot" id="top-user-avatar">
       <span style="font-size: 16px; font-weight: bold; color: #dcae36;">?</span>
     </div>
     <div class="user-info-text">
-      <span class="user-name" id="top-user-name">იტვირთება...</span>
+      <span class="user-name" id="top-user-name">მომხმარებელი</span>
       <span class="user-id-badge" id="top-user-id">ID: ------</span>
     </div>
   </div>
   <div class="user-balance-right">
     <span class="balance-title">ბალანსი</span>
     <div class="balance-badge">
-      <span style="font-size: 13px;">💎</span>
-      <span id="top-user-balance">0</span>
-      <span class="currency-label">Akho</span>
+      <span class="balance-currency-sym">€</span>
+      <span class="balance-amount" id="top-user-balance">0.00</span>
     </div>
   </div>
 </div>
@@ -528,7 +528,7 @@
 
 <script>
   // ==========================================
-  //  🔥 FIREBASE ინიციალიზაცია & პროფილი
+  //  🔥 FIREBASE რეალური პროფილის და ბალანსის ჩატვირთვა
   // ==========================================
   const firebaseConfig = {
     apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
@@ -546,35 +546,34 @@
 
   const auth = firebase.auth();
   const db = firebase.firestore();
-  let currentAppUser = null;
   let profileUnsubscribe = null;
 
   auth.onAuthStateChanged(user => {
     if (user) {
-      currentAppUser = user;
-      listenUserProfile(user.uid);
+      listenUserProfile(user);
     } else {
-      currentAppUser = null;
       if (profileUnsubscribe) profileUnsubscribe();
-      renderGuestProfile();
+      renderDefaultUser();
     }
   });
 
-  // რეალური პროფილის და ბალანსის მოსმენა (Real-time)
-  function listenUserProfile(uid) {
+  // რეალური პროფილის და ევროს ბალანსის მოსმენა ბაზიდან
+  function listenUserProfile(user) {
     if (profileUnsubscribe) profileUnsubscribe();
 
-    profileUnsubscribe = db.collection('profiles').doc(uid).onSnapshot(doc => {
+    profileUnsubscribe = db.collection('profiles').doc(user.uid).onSnapshot(doc => {
       if (doc.exists) {
         const data = doc.data();
-        const fullName = data.full_name || currentAppUser.displayName || currentAppUser.email || "მომხმარებელი";
-        const avatarUrl = data.avatar_url || currentAppUser.photoURL || null;
-        const balance = (typeof data.balance !== 'undefined') ? data.balance : 0;
-        const shortId = uid.substring(0, 6).toUpperCase();
+        const fullName = data.full_name || user.displayName || user.email || "მომხმარებელი";
+        const avatarUrl = data.avatar_url || user.photoURL || null;
+        
+        // რეალური ბალანსი ევროში (ზუსტად ისე, როგორც balance.html-შია)
+        const rawBalance = (data.balance !== undefined) ? data.balance : (data.coins !== undefined ? data.coins : 0);
+        const euroBalance = Number(rawBalance) || 0;
 
         document.getElementById('top-user-name').innerText = fullName;
-        document.getElementById('top-user-id').innerText = `ID: #${shortId}`;
-        document.getElementById('top-user-balance').innerText = balance;
+        document.getElementById('top-user-id').innerText = `ID: #${user.uid.substring(0, 8).toUpperCase()}`;
+        document.getElementById('top-user-balance').innerText = euroBalance.toFixed(2);
 
         const avatarSlot = document.getElementById('top-user-avatar');
         if (avatarUrl) {
@@ -584,14 +583,14 @@
         }
       }
     }, err => {
-      console.warn("Profile listen error:", err);
+      console.warn("Profile fetch error:", err);
     });
   }
 
-  function renderGuestProfile() {
+  function renderDefaultUser() {
     document.getElementById('top-user-name').innerText = "სტუმარი";
     document.getElementById('top-user-id').innerText = "ID: #GUEST";
-    document.getElementById('top-user-balance').innerText = "0";
+    document.getElementById('top-user-balance').innerText = "0.00";
     document.getElementById('top-user-avatar').innerHTML = `<span style="font-size: 16px; font-weight: bold; color: #8a8f9d;">?</span>`;
   }
 
@@ -643,7 +642,8 @@
       if (!winningNumbers.includes(i)) losingPool.push(i);
     }
 
-    // მოგების მკაცრი ალბათობა (დიდი თანხები ყოველთვის 0%)
+    // მოგების კონტროლი:
+    // 75% წაგება, 15% €10, 7% €20, 3% €50 (დიდი თანხები ყოველთვის 0%)
     let roll = Math.random();
     let winningRowIndex = -1;
 
