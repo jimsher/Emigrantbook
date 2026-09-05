@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ultra Numerissimi</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle, #0099ff 0%, #0055b3 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      color: #fff;
+    }
+
+    .ticket-container {
+      width: 100%;
+      max-width: 480px;
+      background: #0088ea;
+      border: 4px solid #fff;
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ჰედერი */
+    .ticket-header {
+      text-align: center;
+      background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .ticket-header h1 {
+      color: #e61919;
+      font-size: 22px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+
+    .ticket-header h2 {
+      color: #004c99;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-top: -4px;
+    }
+
+    /* მთავარი დაფა (2 სვეტი) */
+    .game-board {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* მარცხენა მხარე: მომგებიანი ციფრები */
+    .left-col {
+      width: 40%;
+      background: #0066cc;
+      border: 2px solid #55aaff;
+      border-radius: 14px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      background: #ffcc00;
+      color: #000;
+      padding: 4px 6px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .coins-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      width: 100%;
+    }
+
+    .scratch-coin-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .coin-under-number {
+      font-size: 18px;
+      font-weight: 900;
+      color: #111;
+    }
+
+    .scratch-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    /* მარჯვენა მხარე: რიგები */
+    .right-col {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .game-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, #ffe066 0%, #ffcc00 100%);
+      border: 2px solid #fff;
+      border-radius: 25px;
+      padding: 3px 6px;
+      gap: 4px;
+    }
+
+    .game-row.row-won {
+      background: linear-gradient(180deg, #2ed573 0%, #10ac84 100%);
+      border-color: #fffa65;
+      animation: pulseWin 1s infinite alternate;
+    }
+
+    @keyframes pulseWin {
+      from { transform: scale(1); }
+      to { transform: scale(1.02); }
+    }
+
+    .row-numbers {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .badge-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0055cc;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1.5px solid #fff;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    /* როცა ციფრი ემთხვევა: მწვანდება */
+    .badge-num.matched {
+      background: #2ed573 !important;
+      color: #fff !important;
+      transform: scale(1.15);
+      border-color: #ffffff;
+      box-shadow: 0 0 8px #2ed573;
+    }
+
+    .premio-box {
+      background: radial-gradient(circle, #e61919 0%, #990000 100%);
+      color: #fff;
+      border: 1.5px solid #fff;
+      border-radius: 12px;
+      padding: 4px 6px;
+      font-size: 10px;
+      font-weight: 800;
+      text-align: center;
+      white-space: nowrap;
+      min-width: 55px;
+    }
+
+    .premio-box.won {
+      background: #ffcc00;
+      color: #000;
+      border-color: #fff;
+    }
+
+    /* ქვედა ღილაკი */
+    .btn-auto-scratch {
+      background: #ffcc00;
+      color: #111;
+      font-size: 14px;
+      font-weight: 800;
+      border: 2px solid #fff;
+      border-radius: 12px;
+      padding: 10px;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .btn-auto-scratch:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+<div class="ticket-container">
+  <!-- სათაური -->
+  <div class="ticket-header">
+    <h1>ULTRA</h1>
+    <h2>NUMERISSIMI</h2>
+  </div>
+
+  <!-- სათამაშო დაფა -->
+  <div class="game-board">
+    <!-- მარცხენა: NUMERI VINCENTI (გადასაფხეკი მონეტები) -->
+    <div class="left-col">
+      <div class="section-title">NUMERI VINCENTI</div>
+      <div class="coins-grid" id="winning-coins-grid"></div>
+    </div>
+
+    <!-- მარჯვენა: სათამაშო რიგები (PREMIO) -->
+    <div class="right-col" id="game-rows-container"></div>
+  </div>
+
+  <!-- მართვის ღილაკი -->
+  <button class="btn-auto-scratch" onclick="scratchAll()">ყველას გადაფხეკა / ახალი ბილეთი</button>
+</div>
+
+<script>
+  // 1. ბილეთის გენერაციის მონაცემები
+  const TOTAL_WINNING_NUMS = 10;
+  const ROWS_CONFIG = [
+    { count: 1, prize: "€ 10" },
+    { count: 2, prize: "€ 25" },
+    { count: 2, prize: "€ 50" },
+    { count: 3, prize: "€ 100" },
+    { count: 4, prize: "€ 200" },
+    { count: 5, prize: "€ 500" },
+    { count: 4, prize: "€ 1.000" },
+    { count: 3, prize: "€ 5.000" },
+    { count: 2, prize: "€ 50.000" }
+  ];
+
+  let winningNumbers = [];
+  let revealedWinningNumbers = new Set();
+  let rowData = [];
+
+  // შემთხვევითი რიცხვი 1-დან 90-მდე
+  function getRandomNumbers(count, exclude = []) {
+    let nums = [];
+    while (nums.length < count) {
+      let r = Math.floor(Math.random() * 90) + 1;
+      if (!nums.includes(r) && !exclude.includes(r)) {
+        nums.push(r);
+      }
+    }
+    return nums;
+  }
+
+  // 2. ახალი ბილეთის აწყობა
+  function initNewGame() {
+    revealedWinningNumbers.clear();
+    winningNumbers = getRandomNumbers(TOTAL_WINNING_NUMS);
+
+    // მარცხენა მონეტების ჩახატვა
+    const coinsContainer = document.getElementById('winning-coins-grid');
+    coinsContainer.innerHTML = '';
+
+    winningNumbers.forEach((num, index) => {
+      const box = document.createElement('div');
+      box.className = 'scratch-coin-box';
+      box.innerHTML = `<span class="coin-under-number">${num}</span>`;
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'scratch-canvas';
+      canvas.width = 70;
+      canvas.height = 70;
+      box.appendChild(canvas);
+      coinsContainer.appendChild(box);
+
+      initScratchCanvas(canvas, num);
+    });
+
+    // მარჯვენა რიგების ჩახატვა
+    const rowsContainer = document.getElementById('game-rows-container');
+    rowsContainer.innerHTML = '';
+    rowData = [];
+
+    ROWS_CONFIG.forEach((cfg, rIdx) => {
+      // თითოეულ რიგში ციფრები (ზოგი ემთხვევა მარცხენა ციფრებს)
+      let rNums = getRandomNumbers(cfg.count);
+
+      // გარანტირებული დამთხვევისთვის შემთხვევით ჩავსვათ რამდენიმე მომგებიანი ციფრი
+      if (rIdx === 0 || rIdx === 1) {
+        rNums[0] = winningNumbers[rIdx];
+      }
+
+      rowData.push({
+        id: rIdx,
+        numbers: rNums,
+        prize: cfg.prize
+      });
+
+      const rowEl = document.createElement('div');
+      rowEl.className = 'game-row';
+      rowEl.id = `row-${rIdx}`;
+
+      let badgesHtml = rNums.map(n => `<div class="badge-num" data-num="${n}">${n}</div>`).join('');
+
+      rowEl.innerHTML = `
+        <div class="row-numbers">${badgesHtml}</div>
+        <div class="premio-box" id="premio-${rIdx}">${cfg.prize}</div>
+      `;
+
+      rowsContainer.appendChild(rowEl);
+    });
+  }
+
+  // 3. ოქროს მონეტის გადაფხეკის ლოგიკა (Canvas)
+  function initScratchCanvas(canvas, numberVal) {
+    const ctx = canvas.getContext('2d');
+    let isScratching = false;
+    let isCleared = false;
+
+    // ოქროსფერი ზედაპირის დახატვა (€ სიმბოლოთი)
+    function drawGoldSurface() {
+      let grad = ctx.createRadialGradient(35, 35, 5, 35, 35, 35);
+      grad.addColorStop(0, '#ffe57f');
+      grad.addColorStop(0.5, '#f5b000');
+      grad.addColorStop(1, '#c68a00');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(35, 35, 35, 0, Math.PI * 2);
+      ctx.fill();
+
+      // შიდა რკალი და €
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(35, 35, 30, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#6b4800';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('€', 35, 35);
+    }
+
+    drawGoldSurface();
+
+    function scratch(e) {
+      if (!isScratching || isCleared) return;
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = (clientX - rect.left) * (canvas.width / rect.width);
+      const y = (clientY - rect.top) * (canvas.height / rect.height);
+
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      checkCleared();
+    }
+
+    // გადამოწმება: თუ 40%-ზე მეტი გადაიფხიკა -> მთლიანად გაიხსნას
+    function checkCleared() {
+      if (isCleared) return;
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let clearPixels = 0;
+      for (let i = 3; i < imgData.data.length; i += 16) {
+        if (imgData.data[i] === 0) clearPixels++;
+      }
+
+      if (clearPixels > (imgData.data.length / 16) * 0.35) {
+        isCleared = true;
+        canvas.style.transition = 'opacity 0.3s';
+        canvas.style.opacity = '0';
+        setTimeout(() => canvas.remove(), 300);
+        onNumberRevealed(numberVal);
+      }
+    }
+
+    canvas.addEventListener('mousedown', () => isScratching = true);
+    window.addEventListener('mouseup', () => isScratching = false);
+    canvas.addEventListener('mousemove', scratch);
+
+    canvas.addEventListener('touchstart', (e) => {
+      isScratching = true;
+      scratch(e);
+      e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      scratch(e);
+      e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => isScratching = false);
+  }
+
+  // 4. როცა ციფრი გადაიფხიკება: მარჯვენა მხარეს პოვნა და გამწვანება
+  function onNumberRevealed(num) {
+    if (revealedWinningNumbers.has(num)) return;
+    revealedWinningNumbers.add(num);
+
+    // მოვძებნოთ მარჯვენა მხარეს ყველა ბეიჯი ამ ციფრით და გავამწვანოთ
+    const badges = document.querySelectorAll(`.badge-num[data-num="${num}"]`);
+    badges.forEach(badge => {
+      badge.classList.add('matched');
+    });
+
+    // შევამოწმოთ რომელიმე რიგმა ხომ არ მოიგო
+    checkRowWins();
+  }
+
+  // 5. რიგების მოგების გადამოწმება
+  function checkRowWins() {
+    rowData.forEach(row => {
+      const rowElement = document.getElementById(`row-${row.id}`);
+      const premioEl = document.getElementById(`premio-${row.id}`);
+
+      // რიგში ყველა ციფრი უნდა იყოს გადაფხეკილ სიაში
+      const isComplete = row.numbers.every(n => revealedWinningNumbers.has(n));
+
+      if (isComplete && !rowElement.classList.contains('row-won')) {
+        rowElement.classList.add('row-won');
+        premioEl.classList.add('won');
+        premioEl.innerText = 'მოგება! ' + row.prize;
+      }
+    });
+  }
+
+  // ყველას გადაფხეკა ღილაკზე დაჭერისას
+  function scratchAll() {
+    const canvases = document.querySelectorAll('.scratch-canvas');
+    if (canvases.length === 0) {
+      initNewGame();
+      return;
+    }
+    canvases.forEach(c => {
+      c.style.opacity = '0';
+      setTimeout(() => c.remove(), 250);
+    });
+    winningNumbers.forEach(n => onNumberRevealed(n));
+  }
+
+  // პირველი ჩატვირთვა
+  window.onload = initNewGame;
+</script>
+
+</body>
+</html>
