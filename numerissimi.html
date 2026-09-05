@@ -227,7 +227,7 @@
       opacity: 0.9;
     }
 
-    /* 🎮 2. სათამაშო ბილეთის კონტეინერი */
+    /* 🎮 2. სათამაშო დაფა */
     #game-play-area {
       display: none;
       width: 100%;
@@ -579,7 +579,7 @@
   </button>
 </div>
 
-<!-- 🎮 2. სათამაშო დაფა (ჩნდება მხოლოდ შეძენის შემდეგ) -->
+<!-- 🎮 2. სათამაშო დაფა -->
 <div id="game-play-area">
   <div class="ticket-wrapper">
     <div class="logo-container">
@@ -598,17 +598,14 @@
 
     <div class="bonus-bar">
       <div class="bonus-side-tag">BONUS</div>
-      <div class="bonus-circle-medallion">
+      <div class="bonus-circle-medallion" id="bonus-box-0">
         <span class="bonus-cash-text">€100</span>
-        <canvas class="bonus-canvas-layer" id="bonus-canvas-0"></canvas>
       </div>
-      <div class="bonus-circle-medallion">
+      <div class="bonus-circle-medallion" id="bonus-box-1">
         <span class="bonus-cash-text">€300</span>
-        <canvas class="bonus-canvas-layer" id="bonus-canvas-1"></canvas>
       </div>
-      <div class="bonus-circle-medallion">
+      <div class="bonus-circle-medallion" id="bonus-box-2">
         <span class="bonus-cash-text">€500</span>
-        <canvas class="bonus-canvas-layer" id="bonus-canvas-2"></canvas>
       </div>
     </div>
   </div>
@@ -804,14 +801,12 @@
     const totalCoins = LADDER_PATTERN.reduce((a, b) => a + b, 0);
     winningNumbers = getRandomUnique(totalCoins);
 
-    // ციფრები, რომლებიც არ შედის მომგებიანებში (ბლოკავს დიდ მოგებებს)
     const losingPool = [];
     for (let i = 1; i <= 90; i++) {
       if (!winningNumbers.includes(i)) losingPool.push(i);
     }
 
-    // მოგების კონტროლი:
-    // 75% წაგება, 15% €10, 7% €20, 3% €50 (დიდი თანხები 100% დაბლოკილია)
+    // მოგების კონტროლი
     let roll = Math.random();
     let winningRowIndex = -1;
 
@@ -902,12 +897,22 @@
       drawPremioCanvas(pCanvas);
     });
 
-    // ბონუსები
+    // ბონუსები (ყოველ ჯერზე ახალი Canvas იქმნება)
     for (let i = 0; i < 3; i++) {
-      const bCvs = document.getElementById(`bonus-canvas-${i}`);
-      bCvs.width = 164;
-      bCvs.height = 72;
-      drawBonusCanvas(bCvs);
+      const box = document.getElementById(`bonus-box-${i}`);
+      if (box) {
+        const oldCvs = box.querySelector('.bonus-canvas-layer');
+        if (oldCvs) oldCvs.remove();
+
+        const bCvs = document.createElement('canvas');
+        bCvs.className = 'bonus-canvas-layer';
+        bCvs.id = `bonus-canvas-${i}`;
+        bCvs.width = 164;
+        bCvs.height = 72;
+        box.appendChild(bCvs);
+
+        drawBonusCanvas(bCvs);
+      }
     }
   }
 
@@ -1046,7 +1051,6 @@
       if (isWon && !capsule.classList.contains('row-winner')) {
         capsule.classList.add('row-winner');
 
-        // PREMIO-ს გადასაფხეკი ფენის მოხსნა
         const pCanvas = document.getElementById(`premio-canvas-${row.id}`);
         if (pCanvas) {
           pCanvas.style.transition = 'opacity 0.3s';
@@ -1054,7 +1058,6 @@
           setTimeout(() => pCanvas.remove(), 300);
         }
 
-        // მოგებული თანხის ბალანსზე ავტომატური დარიცხვა (მხოლოდ 1-ხელ ბილეთზე)
         if (!hasWonThisTicket && row.winVal > 0) {
           hasWonThisTicket = true;
           creditWinningPrize(row.winVal, row.prize);
