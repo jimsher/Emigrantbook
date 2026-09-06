@@ -5761,13 +5761,15 @@ function loadPosts(isNextPage) {
 // და აქ მთავრდება
     
 // აქტიური ლაივების მოსმენა Feed-ისთვის
+// 🔴 TikTok-ის სტილის პირდაპირი ეთერის პლეიერი მთავარ გვერდზე
+var inlineAgoraClients = {};
+
 function subscribeActiveLivesForFeed() {
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
   db.collection('lives')
     .where('status', '==', 'active')
-    .get()
-    .then(function(snapshot) {
+    .onSnapshot(function(snapshot) {
       var liveContainer = document.getElementById('active-lives-feed-zone');
       if (!liveContainer) {
         var postsWall = document.getElementById('posts-wall');
@@ -5779,47 +5781,102 @@ function subscribeActiveLivesForFeed() {
       }
 
       if (!liveContainer) return;
+
+      if (!snapshot || snapshot.empty) {
+        liveContainer.innerHTML = "";
+        // ძველი კლიენტების გათიშვა
+        Object.keys(inlineAgoraClients).forEach(function(id) {
+          try { inlineAgoraClients[id].leave(); } catch(e){}
+        });
+        inlineAgoraClients = {};
+        return;
+      }
+
       liveContainer.innerHTML = "";
-
-      if (snapshot.empty) return;
-
-      var defaultHostName = t.userUnit;
-      var defaultLiveTitle = t.liveStreamDefault;
-      var watchLiveBtnText = t.watchLive;
 
       snapshot.forEach(function(docSnap) {
         var liveData = docSnap.data();
         var liveId = docSnap.id;
         var hostPhoto = liveData.host_photo || DEFAULT_AVATAR_URL;
+        var hostName = liveData.host_name || (t.userUnit || "User");
+        var liveTitle = liveData.title || (t.liveStreamDefault || "Live Video");
+        var viewersCount = (liveData.viewers && liveData.viewers.length) ? liveData.viewers.length : 1;
 
         var liveCardHtml = `
-          <div class="live-feed-card">
-            <div class="live-feed-header">
+          <div class="live-tiktok-card">
+            <div class="live-tiktok-header">
               <div style="display:flex; align-items:center; gap:10px;">
-                <div class="live-avatar-ring">
-                  <img src="${hostPhoto}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; display:block;">
-                  <span class="live-badge-overlay">LIVE</span>
-                </div>
+                <img src="${hostPhoto}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #e41e3f;">
                 <div>
-                  <div style="font-weight:bold; color:#fff; font-size:14px;">${liveData.host_name || defaultHostName}</div>
-                  <div style="font-size:12px; color:#aaa;">${liveData.title || defaultLiveTitle}</div>
+                  <div style="font-weight:700; color:#fff; font-size:14px;">${hostName}</div>
+                  <div style="font-size:11.5px; color:#aaa;">${t.lottoSub || "პირდაპირი ეთერი"}</div>
                 </div>
               </div>
+              <span class="live-pulse-badge">LIVE</span>
             </div>
 
-            <div class="live-watch-banner" onclick="window.location.href='live.html?join=${liveId}'">
-              <img src="${hostPhoto}" style="width:100%; height:100%; object-fit:cover; opacity:0.4;">
-              <button class="live-watch-btn">
-                <span>▶</span> ${watchLiveBtnText}
-              </button>
+            <div class="live-tiktok-video-box" onclick="window.location.href='live.html?join=${liveId}'">
+              <div id="inline-agora-video-${liveId}" class="live-agora-stream-player"></div>
+
+              <div class="live-tiktok-overlay">
+                <div class="live-tiktok-top-pills">
+                  <div class="live-viewers-pill">
+                    <svg viewBox="0 0 24 24" style="width:13px; height:13px; fill:#fff;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    <span>${viewersCount}</span>
+                  </div>
+                </div>
+
+                <div class="live-tiktok-bottom-info">
+                  <div class="live-stream-headline">${liveTitle}</div>
+                  <div class="live-enter-btn-bubble">უყურე ეთერს ➔</div>
+                </div>
+              </div>
             </div>
           </div>
         `;
         liveContainer.innerHTML += liveCardHtml;
+
+        // Agora RTC ვიდეოს დაკავშირება
+        startInlineAgoraStream(liveId);
       });
-    }).catch(function(err) {
-      console.error("Active lives get error:", err);
+    }, function(err) {
+      console.error("Active lives error:", err);
     });
+}
+
+// Agora-ს ვიდეოს გაშვება ფიდში (Muted რეჟიმში, რათა ბრაუზერმა არ დაბლოკოს)
+async function startInlineAgoraStream(liveId) {
+  if (typeof AgoraRTC === "undefined") return;
+  
+  if (inlineAgoraClients[liveId]) {
+    try { await inlineAgoraClients[liveId].leave(); } catch(e){}
+  }
+
+  var client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+  inlineAgoraClients[liveId] = client;
+
+  var appId = "258897e8fb5f4dd089b761eca6568b24";
+  var myUid = (currentUser ? currentUser.uid : "viewer_" + Math.floor(Math.random() * 10000));
+
+  try {
+    await client.setClientRole("audience");
+    await client.join(appId, liveId, null, myUid);
+
+    client.on("user-published", async function(user, mediaType) {
+      await client.subscribe(user, mediaType);
+      if (mediaType === "video") {
+        var containerId = "inline-agora-video-" + liveId;
+        var containerEl = document.getElementById(containerId);
+        if (containerEl) {
+          containerEl.innerHTML = "";
+          user.videoTrack.play(containerId, { fit: "cover" });
+        }
+      }
+      // აუდიო რჩება დადუმებული, რათა ფიდში სქროლვას ხელი არ შეუშალოს
+    });
+  } catch (err) {
+    console.warn("Inline Agora Stream join warning:", err);
+  }
 }
 // აქ მთავრდება
 
