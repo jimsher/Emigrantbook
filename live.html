@@ -320,6 +320,170 @@
             padding: 6px 12px;
         }
 
+        /* 👥 1.5. INVITE FRIENDS BOTTOM SHEET (სქრინის იდენტური) */
+        .invite-sheet-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 100005;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .invite-sheet-box {
+            background: #242526;
+            width: 100%;
+            max-width: 480px;
+            max-height: 72vh;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 16px max(14px, env(safe-area-inset-bottom)) 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            animation: slideUpInvite 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUpInvite {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .invite-drag-handle {
+            width: 42px;
+            height: 4px;
+            background: #4e4f50;
+            border-radius: 3px;
+            margin: 0 auto 12px auto;
+            cursor: pointer;
+        }
+
+        .invite-sheet-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.35;
+        }
+
+        .invite-sheet-subtitle {
+            font-size: 13.5px;
+            color: #b0b3b8;
+            line-height: 1.4;
+            margin-top: 4px;
+            margin-bottom: 12px;
+        }
+
+        .invite-search-box {
+            background: #3a3b3c;
+            border-radius: 20px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .invite-search-box i {
+            color: #b0b3b8;
+            font-size: 15px;
+        }
+
+        .invite-search-box input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 14.5px;
+            width: 100%;
+        }
+
+        .invite-search-box input::placeholder {
+            color: #b0b3b8;
+        }
+
+        .invite-section-header {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .invite-friends-list {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            max-height: 38vh;
+        }
+
+        .invite-friends-list::-webkit-scrollbar { display: none; }
+
+        .invite-friend-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 0;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .invite-friend-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .invite-friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #333;
+            flex-shrink: 0;
+        }
+
+        .invite-friend-name {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #e4e6eb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Facebook Style Checkbox */
+        .invite-checkbox {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            border: 2px solid #8e8e93;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .invite-friend-row.selected .invite-checkbox {
+            background: #1877f2;
+            border-color: #1877f2;
+        }
+
+        .invite-checkbox i {
+            color: #ffffff;
+            font-size: 12px;
+            display: none;
+        }
+
+        .invite-friend-row.selected .invite-checkbox i {
+            display: block;
+        }
+
         /* 🔴 2. LIVE BROADCASTING ACTIVE UI */
         #liveUI {
             display: none;
@@ -705,11 +869,35 @@
 
             <!-- ქვედა მენიუს ზოლი -->
             <div class="fb-pre-bottom-dock">
-                <div class="fb-dock-icon" onclick="alert('მეგობრების მოწვევა')"><i class="fas fa-user-plus"></i></div>
+                <!-- 👥 მეგობრების მოწვევის ღილაკი -->
+                <div class="fb-dock-icon" onclick="openInviteFriendsSheet()" title="მეგობრების მოწვევა">
+                    <i class="fas fa-user-plus"></i>
+                </div>
                 <div class="fb-dock-icon" onclick="alert('თანამასპინძელი')"><i class="fas fa-handshake"></i></div>
                 <div class="fb-dock-icon" onclick="alert('გამოკითხვა')"><i class="fas fa-chart-simple"></i></div>
                 <div class="fb-dock-icon" onclick="alert('ნიღბები და რეაქციები')"><i class="far fa-heart"></i></div>
                 <div class="fb-dock-icon" onclick="openActiveLivesModal()"><i class="fas fa-bars"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👥 1.5. FACEBOOK STYLE INVITE FRIENDS BOTTOM SHEET -->
+    <div id="inviteFriendsSheetOverlay" class="invite-sheet-overlay" onclick="closeInviteFriendsSheet()">
+        <div class="invite-sheet-box" onclick="event.stopPropagation()">
+            <div class="invite-drag-handle" onclick="closeInviteFriendsSheet()"></div>
+            
+            <h3 class="invite-sheet-title">მოიწვიეთ სტუმრები ვიდეოში ჩასართავად.</h3>
+            <p class="invite-sheet-subtitle">ისინი მოწვეული იქნებიან, მას შემდეგ, რაც პირდაპირ ეთერში გახვალთ.</p>
+            
+            <div class="invite-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="inviteSearchInput" placeholder="ძიება" oninput="filterInviteFriends()">
+            </div>
+
+            <div class="invite-section-header">მეგობრები და გამომწერები</div>
+
+            <div class="invite-friends-list" id="inviteFriendsListTarget">
+                <div style="color: #8e8e93; font-size: 13.5px; text-align: center; padding: 20px;">იტვირთება...</div>
             </div>
         </div>
     </div>
@@ -839,6 +1027,10 @@
         let availableCameras = [];
         let isMicMuted = false;
 
+        // მეგობრების მოწვევის სია
+        let cachedFriendsList = [];
+        let selectedInvitedFriends = new Set();
+
         window.myName = "";
         window.myPhoto = "";
 
@@ -949,6 +1141,122 @@
             alert("განათების რეჟიმი დამოკიდებულია მოწყობილობის ბრაუზერზე.");
         };
 
+        // 👥 მეგობრების მოწვევის Bottom Sheet ფუნქციონალი
+        window.openInviteFriendsSheet = function() {
+            document.getElementById('inviteFriendsSheetOverlay').style.display = 'flex';
+            loadFriendsForInvite();
+        };
+
+        window.closeInviteFriendsSheet = function() {
+            document.getElementById('inviteFriendsSheetOverlay').style.display = 'none';
+        };
+
+        function loadFriendsForInvite() {
+            const listTarget = document.getElementById('inviteFriendsListTarget');
+            if (!auth.currentUser) return;
+            const currentUid = auth.currentUser.uid;
+
+            // 1. ჯერ ვამოწმებთ მიღებულ მეგობრებს
+            db.collection('friend_requests')
+                .where('status', '==', 'accepted')
+                .get()
+                .then(snap => {
+                    let friendUids = new Set();
+                    snap.forEach(doc => {
+                        const req = doc.data();
+                        if (req.sender_id === currentUid) friendUids.add(req.receiver_id);
+                        else if (req.receiver_id === currentUid) friendUids.add(req.sender_id);
+                    });
+
+                    // თუ მეგობრები მოიძებნა, ვტვირთავთ პროფილებს
+                    if (friendUids.size > 0) {
+                        fetchProfilesForInvite(Array.from(friendUids));
+                    } else {
+                        // სარეზერვო: ტვირთავს პროფილებს ბაზიდან
+                        db.collection('profiles').limit(20).get().then(pSnap => {
+                            let pList = [];
+                            pSnap.forEach(pDoc => {
+                                if (pDoc.id !== currentUid) {
+                                    const d = pDoc.data();
+                                    pList.push({
+                                        uid: pDoc.id,
+                                        name: d.full_name || d.name || "მომხმარებელი",
+                                        photo: d.avatar_url || d.avatar || d.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.full_name || 'U')}&background=2ed573&color=fff`
+                                    });
+                                }
+                            });
+                            cachedFriendsList = pList;
+                            renderInviteFriendsList(cachedFriendsList);
+                        });
+                    }
+                }).catch(() => {
+                    listTarget.innerHTML = `<div style="color: #8e8e93; font-size: 13.5px; text-align: center; padding: 20px;">მეგობრები არ მოიძებნა</div>`;
+                });
+        }
+
+        function fetchProfilesForInvite(uids) {
+            let promises = uids.map(uid => db.collection('profiles').doc(uid).get());
+            Promise.all(promises).then(docs => {
+                let friends = [];
+                docs.forEach(docSnap => {
+                    if (docSnap.exists) {
+                        const d = docSnap.data();
+                        friends.push({
+                            uid: docSnap.id,
+                            name: d.full_name || d.name || "მომხმარებელი",
+                            photo: d.avatar_url || d.avatar || d.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(d.full_name || 'U')}&background=2ed573&color=fff`
+                        });
+                    }
+                });
+                cachedFriendsList = friends;
+                renderInviteFriendsList(cachedFriendsList);
+            });
+        }
+
+        function renderInviteFriendsList(list) {
+            const listTarget = document.getElementById('inviteFriendsListTarget');
+            listTarget.innerHTML = "";
+
+            if (!list || list.length === 0) {
+                listTarget.innerHTML = `<div style="color: #8e8e93; font-size: 13.5px; text-align: center; padding: 20px;">მეგობრები არ მოიძებნა</div>`;
+                return;
+            }
+
+            list.forEach(friend => {
+                const isSelected = selectedInvitedFriends.has(friend.uid);
+                const row = document.createElement('div');
+                row.className = `invite-friend-row ${isSelected ? 'selected' : ''}`;
+                row.onclick = () => toggleFriendInvite(friend.uid, row);
+
+                row.innerHTML = `
+                    <div class="invite-friend-left">
+                        <img class="invite-friend-avatar" src="${friend.photo}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(friend.name)}&background=2ed573&color=fff';">
+                        <span class="invite-friend-name">${friend.name}</span>
+                    </div>
+                    <div class="invite-checkbox">
+                        <i class="fas fa-check"></i>
+                    </div>
+                `;
+                listTarget.appendChild(row);
+            });
+        }
+
+        function toggleFriendInvite(uid, rowEl) {
+            if (selectedInvitedFriends.has(uid)) {
+                selectedInvitedFriends.delete(uid);
+                rowEl.classList.remove('selected');
+            } else {
+                selectedInvitedFriends.add(uid);
+                rowEl.classList.add('selected');
+            }
+        }
+
+        function filterInviteFriends() {
+            const val = document.getElementById('inviteSearchInput').value.toLowerCase().trim();
+            const filtered = cachedFriendsList.filter(f => f.name.toLowerCase().includes(val));
+            renderInviteFriendsList(filtered);
+        }
+
         // 🚀 ლაივის დაწყება
         window.launchLiveStream = async function() {
             const title = document.getElementById('streamTitleInput').value.trim() || "პირდაპირი ეთერი";
@@ -972,6 +1280,7 @@
                     host_photo: window.myPhoto,
                     title: title,
                     status: "active",
+                    invited_users: Array.from(selectedInvitedFriends), // მონიშნული მოწვეული მეგობრები
                     created_at: firebase.firestore.FieldValue.serverTimestamp(),
                     viewers: []
                 });
