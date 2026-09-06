@@ -2,8 +2,8 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Emigrantbook - Facebook LIVE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Facebook LIVE | EmigrantBook</title>
 
     <!-- FontAwesome & Agora RTC SDK -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,85 +11,51 @@
     <!-- Cloudflare R2 AWS SDK -->
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
 
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            background-color: #0b0b0b;
+        html, body {
+            background-color: #000000;
             color: #ffffff;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
         }
 
-        .top-action-bar {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .fb-live-badge {
-            background-color: #e41e3f;
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .fb-live-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background-color: #ffffff;
-            border-radius: 50%;
-            display: inline-block;
-            animation: fb-blink 1s infinite;
-        }
-
-        @keyframes fb-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        #preLiveSetupModal {
+        /* 📱 1. FB LIVE SETUP SCREEN (სქრინის იდენტური) */
+        #preLiveSetupScreen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #18191a;
-            z-index: 100000;
-            display: none;
+            background: #000;
+            z-index: 1000;
+            display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow: hidden;
         }
 
-        .setup-header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #3a3b3c;
-        }
-
-        .setup-preview-zone {
-            flex: 1;
-            position: relative;
+        .camera-background-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
             background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         #localCameraPreview {
@@ -98,85 +64,263 @@
             object-fit: cover;
         }
 
-        /* 🪞 სარკისებური ეფექტი წინა კამერაზე */
         #localCameraPreview video, #remote-live-video video {
             transform: scaleX(-1) !important;
             -webkit-transform: scaleX(-1) !important;
             object-fit: cover !important;
         }
 
-        /* უკანა კამერაზე სარკის გამორთვა */
         #localCameraPreview.no-mirror video, #remote-live-video.no-mirror video {
             transform: none !important;
             -webkit-transform: none !important;
         }
 
-        /* 🔄 კამერის შეტრიალების ღილაკი */
-        .btn-flip-camera {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 46px;
-            height: 46px;
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+        /* ზედა ზოლი */
+        .fb-pre-top-bar {
+            position: relative;
+            z-index: 20;
+            padding: max(14px, env(safe-area-inset-top)) 16px 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fb-pre-top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fb-pre-back-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+        }
+
+        .fb-user-badge-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fb-pre-user-avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            background: #333;
+        }
+
+        .fb-pre-user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .fb-pre-username {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .fb-privacy-pill {
+            background: #ffffff;
+            color: #000000;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 9px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: fit-content;
+            cursor: pointer;
+        }
+
+        .fb-pre-help-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* მარჯვენა ვერტიკალური ხელსაწყოები (Right Action Rail) */
+        .fb-pre-right-rail {
+            position: absolute;
+            right: 16px;
+            top: 36%;
+            transform: translateY(-50%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .fb-rail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .fb-rail-label {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.9);
+            white-space: nowrap;
+        }
+
+        .fb-rail-icon-btn {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 20px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+        }
+
+        .fb-rail-collapse-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        /* ქვედა კონტროლები (Overlay) */
+        .fb-pre-bottom-area {
+            position: relative;
+            z-index: 20;
+            padding: 0 16px max(10px, env(safe-area-inset-bottom)) 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 60%, transparent 100%);
+        }
+
+        .fb-desc-input-box {
+            width: 100%;
+        }
+
+        .fb-desc-input-box input {
+            width: 100%;
+            background: none;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 500;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .fb-desc-input-box input::placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .fb-share-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+            cursor: pointer;
+        }
+
+        .fb-share-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fb-share-arrow-icon {
+            font-size: 18px;
+            color: #ffffff;
+            transform: scaleX(-1);
+        }
+
+        .fb-share-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .fb-share-text span:first-child {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .fb-share-text span:last-child {
+            font-size: 12px;
+            color: #b0b3b8;
+        }
+
+        .fb-share-right-chevron {
+            color: #b0b3b8;
+            font-size: 16px;
+        }
+
+        .fb-go-live-big-btn {
+            width: 100%;
+            background: #1877f2;
+            color: #ffffff;
+            border: none;
+            padding: 13px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4);
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .fb-go-live-big-btn:active {
+            transform: scale(0.98);
+            background: #166fe5;
+        }
+
+        /* ქვედა ნავბარი / Dock */
+        .fb-pre-bottom-dock {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-top: 10px;
+            padding-bottom: 4px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .fb-dock-icon {
             color: #ffffff;
             font-size: 20px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            transition: transform 0.25s ease, background 0.2s ease;
+            padding: 6px 12px;
         }
 
-        .btn-flip-camera:active {
-            transform: scale(0.9) rotate(180deg);
-            background: rgba(24, 119, 242, 0.85);
-        }
-
-        .setup-controls-overlay {
-            position: absolute;
-            bottom: 20px;
-            left: 15px;
-            right: 15px;
-            background: rgba(24, 25, 26, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .setup-input {
-            width: 100%;
-            background: #242526;
-            border: 1px solid #3a3b3c;
-            border-radius: 8px;
-            padding: 12px;
-            color: #fff;
-            font-size: 15px;
-            margin-bottom: 12px;
-            outline: none;
-        }
-
-        .btn-fb-go-live {
-            width: 100%;
-            background: #1877f2;
-            color: #fff;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
+        /* 🔴 2. LIVE BROADCASTING ACTIVE UI */
         #liveUI {
             display: none;
             position: fixed;
@@ -185,7 +329,7 @@
             width: 100%;
             height: 100%;
             background: #000;
-            z-index: 99999;
+            z-index: 2000;
             flex-direction: column;
         }
 
@@ -206,7 +350,7 @@
 
         .fb-live-top-bar {
             position: absolute;
-            top: 15px;
+            top: max(14px, env(safe-area-inset-top));
             left: 15px;
             right: 15px;
             display: flex;
@@ -248,6 +392,34 @@
             margin-left: 2px;
         }
 
+        .fb-live-badge {
+            background-color: #e41e3f;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .fb-live-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            display: inline-block;
+            animation: fb-blink 1s infinite;
+        }
+
+        @keyframes fb-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
         .fb-stream-time {
             background: rgba(0, 0, 0, 0.65);
             color: #ffffff;
@@ -275,7 +447,6 @@
             gap: 6px;
             backdrop-filter: blur(8px);
             cursor: pointer;
-            user-select: none;
         }
 
         .fb-flip-btn {
@@ -346,7 +517,7 @@
 
         .fb-bottom-bar {
             position: absolute;
-            bottom: 15px;
+            bottom: max(14px, env(safe-area-inset-bottom));
             left: 15px;
             right: 15px;
             display: flex;
@@ -354,8 +525,6 @@
             gap: 8px;
             z-index: 1000;
         }
-
-        .fb-input-wrapper { flex: 1; }
 
         .fb-live-input {
             width: 100%;
@@ -369,6 +538,7 @@
             backdrop-filter: blur(10px);
         }
 
+        /* მოდალები */
         .lives-modal-overlay, .viewers-sheet-overlay {
             display: none;
             position: fixed;
@@ -388,7 +558,7 @@
             background: #242526;
             width: 90%;
             max-width: 420px;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 20px;
             border: 1px solid #3a3b3c;
         }
@@ -446,58 +616,105 @@
             font-weight: bold;
         }
 
-        /* საწერი ველების სრული განბლოკვა კლავიატურისთვის */
-input, 
-textarea, 
-[contenteditable="true"],
-.create-post-input,
-.comments-input,
-.fb-live-input,
-#story-comment-field {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-}
+        input, textarea {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+        }
     </style>
 </head>
 <body>
 
-    <div class="top-action-bar" id="topActionBar">
-        <button onclick="startLiveSetup()" style="background: #e41e3f; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
-            <i class="fas fa-video"></i> <span id="lbl-live-btn">პირდაპირი ეთერი (LIVE)</span>
-        </button>
-        <button onclick="openActiveLivesModal()" style="background: #242526; color: white; border: 1px solid #3a3b3c; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer;">
-            <i class="fas fa-play-circle"></i> <span id="lbl-active-lives-btn">აქტიური ლაივები</span>
-        </button>
-    </div>
-
-    <!-- Pre-Live Modal -->
-    <div id="preLiveSetupModal">
-        <div class="setup-header">
-            <span style="font-weight: bold;" id="lbl-setup-title">პირდაპირი ეთერის პარამეტრები</span>
-            <button onclick="closeLiveSetup()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
-        </div>
-        <div class="setup-preview-zone">
+    <!-- 📱 1. FACEBOOK LIVE SETUP SCREEN (სქრინის იდენტური) -->
+    <div id="preLiveSetupScreen">
+        <!-- კამერის ფონი -->
+        <div class="camera-background-box">
             <div id="localCameraPreview"></div>
+        </div>
 
-            <!-- 🔄 კამერის შეტრიალების ღილაკი ლაივის დაწყებამდე -->
-            <button class="btn-flip-camera" onclick="switchLiveCamera()" title="კამერის გადართვა">
-                <i class="fas fa-camera-rotate"></i>
+        <!-- ზედა ზოლი -->
+        <div class="fb-pre-top-bar">
+            <div class="fb-pre-top-left">
+                <button class="fb-pre-back-btn" onclick="window.location.href='index.html'">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="fb-user-badge-wrap">
+                    <img id="preUserAva" class="fb-pre-user-avatar" src="https://ui-avatars.com/api/?name=User&background=2ed573&color=fff" alt="">
+                    <div class="fb-pre-user-info">
+                        <span id="preUserName" class="fb-pre-username">Gabo JI</span>
+                        <div class="fb-privacy-pill" onclick="alert('კონფიდენციალურობა: საჯარო')">
+                            <i class="fas fa-globe-americas"></i>
+                            <span>საჯარო</span>
+                            <i class="fas fa-caret-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fb-pre-help-btn" onclick="openActiveLivesModal()" title="აქტიური ლაივები">
+                <i class="fas fa-question"></i>
+            </div>
+        </div>
+
+        <!-- მარჯვენა ვერტიკალური ინსტრუმენტები -->
+        <div class="fb-pre-right-rail">
+            <div class="fb-rail-item" onclick="toggleFlashlight()">
+                <span class="fb-rail-label">განათება გამორთულია</span>
+                <div class="fb-rail-icon-btn"><i class="fas fa-bolt-slash"></i></div>
+            </div>
+            <div class="fb-rail-item" onclick="switchLiveCamera()">
+                <span class="fb-rail-label">შეტრიალება</span>
+                <div class="fb-rail-icon-btn"><i class="fas fa-camera-rotate"></i></div>
+            </div>
+            <div class="fb-rail-item" onclick="alert('სტიკერები მალე დაემატება')">
+                <span class="fb-rail-label">სტიკერები</span>
+                <div class="fb-rail-icon-btn"><i class="far fa-face-smile"></i></div>
+            </div>
+            <div class="fb-rail-item" onclick="toggleMuteMicSetup()">
+                <span class="fb-rail-label" id="lbl-mic-state">მიკროფონის დადუმება</span>
+                <div class="fb-rail-icon-btn"><i class="fas fa-microphone" id="ico-mic-state"></i></div>
+            </div>
+            <div class="fb-rail-item" onclick="alert('ეფექტები მალე დაემატება')">
+                <span class="fb-rail-label">ეფექტები</span>
+                <div class="fb-rail-icon-btn"><i class="fas fa-wand-magic-sparkles"></i></div>
+            </div>
+            <div class="fb-rail-collapse-btn">
+                <i class="fas fa-chevron-up"></i>
+            </div>
+        </div>
+
+        <!-- ქვედა კონტროლები -->
+        <div class="fb-pre-bottom-area">
+            <div class="fb-desc-input-box">
+                <input type="text" id="streamTitleInput" placeholder="დააჭირეთ აღწერის დასამატებლად...">
+            </div>
+
+            <div class="fb-share-row" onclick="alert('გაზიარების პარამეტრები')">
+                <div class="fb-share-left">
+                    <i class="fas fa-share fb-share-arrow-icon"></i>
+                    <div class="fb-share-text">
+                        <span>ვისთან გაზიარდეს</span>
+                        <span>სიუჟეტი: ჩართულია</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right fb-share-right-chevron"></i>
+            </div>
+
+            <button class="fb-go-live-big-btn" onclick="launchLiveStream()">
+                პირდაპირ ეთერში გასვლა
             </button>
 
-            <div class="setup-controls-overlay">
-                <input type="text" id="streamTitleInput" class="setup-input" placeholder="დაწერეთ ლაივის აღწერა ან სათაური...">
-                <button class="btn-fb-go-live" onclick="launchLiveStream()">
-                    <i class="fas fa-broadcast-tower"></i> <span id="lbl-start-stream-btn">პირდაპირი ეთერის დაწყება</span>
-                </button>
+            <!-- ქვედა მენიუს ზოლი -->
+            <div class="fb-pre-bottom-dock">
+                <div class="fb-dock-icon" onclick="alert('მეგობრების მოწვევა')"><i class="fas fa-user-plus"></i></div>
+                <div class="fb-dock-icon" onclick="alert('თანამასპინძელი')"><i class="fas fa-handshake"></i></div>
+                <div class="fb-dock-icon" onclick="alert('გამოკითხვა')"><i class="fas fa-chart-simple"></i></div>
+                <div class="fb-dock-icon" onclick="alert('ნიღბები და რეაქციები')"><i class="far fa-heart"></i></div>
+                <div class="fb-dock-icon" onclick="openActiveLivesModal()"><i class="fas fa-bars"></i></div>
             </div>
         </div>
     </div>
 
-    <!-- Main Live UI -->
+    <!-- 🔴 2. LIVE BROADCASTING SCREEN (აქტიური ეთერი) -->
     <div id="liveUI">
         <div id="live-video-container">
             <div id="remote-live-video"></div>
@@ -506,7 +723,7 @@ textarea,
         <div class="fb-live-top-bar">
             <div class="fb-top-left">
                 <div class="fb-host-card">
-                    <img id="liveHostAva" class="fb-host-avatar" src="https://via.placeholder.com/150">
+                    <img id="liveHostAva" class="fb-host-avatar" src="https://ui-avatars.com/api/?name=User&background=2ed573&color=fff">
                     <div>
                         <div id="liveHostName" style="font-weight: bold; font-size: 14px;">Host</div>
                         <div id="liveStreamTitle" style="font-size: 11px; color: #d0d0d0;">Live Video</div>
@@ -523,12 +740,9 @@ textarea,
                     <i class="fas fa-eye" style="color: #1877f2;"></i>
                     <span id="vCount">0</span>
                 </div>
-                
-                <!-- ლაივის დროსაც კამერის გადართვა ჰოსტისთვის -->
                 <button class="fb-flip-btn" id="liveFlipBtn" onclick="switchLiveCamera()" title="კამერის შეტრიალება">
                     <i class="fas fa-camera-rotate"></i>
                 </button>
-
                 <button class="fb-close-btn" onclick="endLive()">&times;</button>
             </div>
         </div>
@@ -536,46 +750,47 @@ textarea,
         <div id="liveChatBox"></div>
 
         <div class="fb-bottom-bar">
-            <div class="fb-input-wrapper">
+            <div style="flex: 1;">
                 <input type="text" id="liveMsgInp" class="fb-live-input" placeholder="დაწერეთ კომენტარი..." onkeypress="if(event.key==='Enter') sendLiveComment()">
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- აქტიური ლაივების მოდალი -->
     <div id="activeLivesModal" class="lives-modal-overlay">
         <div class="lives-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 id="lbl-modal-active-title">მიმდინარე პირდაპირი ეთერები</h3>
+                <h3>მიმდინარე პირდაპირი ეთერები</h3>
                 <button onclick="closeActiveLivesModal()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">&times;</button>
             </div>
             <div id="activeLivesList"></div>
         </div>
     </div>
 
+    <!-- მაყურებლების მოდალი -->
     <div id="viewersSheetOverlay" class="viewers-sheet-overlay" onclick="closeViewersSheet()">
         <div class="viewers-sheet" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h3><span id="lbl-viewers-title">მაყურებლები</span> (<span id="sheetViewerCount">0</span>)</h3>
+                <h3>მაყურებლები (<span id="sheetViewerCount">0</span>)</h3>
                 <button onclick="closeViewersSheet()" style="background:none; border:none; color:#aaa; font-size:22px; cursor:pointer;">&times;</button>
             </div>
             <div id="viewersListContainer" style="overflow-y:auto;"></div>
         </div>
     </div>
 
-    <!-- 🎬 ლაივის ჩანაწერის შენახვის / განთავსების არჩევანის მოდალი -->
+    <!-- ჩანაწერის შენახვის მოდალი -->
     <div id="saveLivePostModal" class="lives-modal-overlay" style="z-index: 200000; display: none;">
         <div class="lives-modal-box" style="text-align: center; padding: 24px; max-width: 380px;">
             <div style="font-size: 42px; margin-bottom: 12px;">🔴</div>
-            <h3 id="lbl-post-live-title" style="margin-bottom: 10px; font-size: 18px; color: #ffffff; font-weight: bold;">პირდაპირი ეთერი დასრულდა</h3>
-            <p id="lbl-post-live-desc" style="color: #cfd3dc; font-size: 14px; margin-bottom: 22px; line-height: 1.5;">
+            <h3 style="margin-bottom: 10px; font-size: 18px; color: #ffffff; font-weight: bold;">პირდაპირი ეთერი დასრულდა</h3>
+            <p style="color: #cfd3dc; font-size: 14px; margin-bottom: 22px; line-height: 1.5;">
                 გსურთ შეინახოთ და განათავსოთ ლაივის ჩანაწერი საიტზე?
             </p>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="lbl-btn-publish-recording" onclick="confirmAndPublishLiveRecording()" style="background: #1877f2; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">
+                <button onclick="confirmAndPublishLiveRecording()" style="background: #1877f2; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">
                     დიახ, განთავსება
                 </button>
-                <button id="lbl-btn-discard-recording" onclick="discardLiveRecording()" style="background: #3a3b3c; color: #e4e6eb; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
+                <button onclick="discardLiveRecording()" style="background: #3a3b3c; color: #e4e6eb; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
                     წაშლა და გამოსვლა
                 </button>
             </div>
@@ -588,173 +803,7 @@ textarea,
         <div>ინახება და იტვირთება ლაივის ჩანაწერი...</div>
     </div>
 
-    <!-- Firebase SDK Compat -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <script>
-        window.currentSiteLang = 'ka';
-
-        const liveTranslations = {
-            ka: {
-                liveBtn: "პირდაპირი ეთერი (LIVE)",
-                activeLivesBtn: "აქტიური ლაივები",
-                setupTitle: "პირდაპირი ეთერის პარამეტრები",
-                inputPlaceholder: "დაწერეთ ლაივის აღწერა ან სათაური...",
-                startStreamBtn: "პირდაპირი ეთერის დაწყება",
-                commentPlaceholder: "დაწერეთ კომენტარი...",
-                activeModalTitle: "მიმდინარე პირდაპირი ეთერები",
-                viewersTitle: "მაყურებლები",
-                noViewers: "ჯერ მაყურებლები არ არიან.",
-                loading: "იტვირთება...",
-                noActiveLives: "აქტიური ლაივები არ არის.",
-                watchBtn: "უყურე",
-                authAlert: "გთხოვთ გაიაროთ ავტორიზაცია!",
-                cameraErr: "კამერის ჩართვა ვერ მოხერხდა!",
-                liveEnded: "ლაივი დასრულდა!",
-                defaultTitle: "პირდაპირი ეთერი",
-                defaultUser: "მომხმარებელი",
-                postLiveTitle: "პირდაპირი ეთერი დასრულდა",
-                postLiveDesc: "გსურთ შეინახოთ და განათავსოთ ლაივის ჩანაწერი საიტზე?",
-                publishBtn: "დიახ, განთავსება",
-                discardBtn: "წაშლა და გამოსვლა"
-            },
-            en: {
-                liveBtn: "Go LIVE",
-                activeLivesBtn: "Active Lives",
-                setupTitle: "Live Stream Settings",
-                inputPlaceholder: "Write live description or title...",
-                startStreamBtn: "Start Live Stream",
-                commentPlaceholder: "Write a comment...",
-                activeModalTitle: "Current Live Streams",
-                viewersTitle: "Viewers",
-                noViewers: "No viewers yet.",
-                loading: "Loading...",
-                noActiveLives: "No active live streams.",
-                watchBtn: "Watch",
-                authAlert: "Please log in!",
-                cameraErr: "Failed to access camera!",
-                liveEnded: "Live stream ended!",
-                defaultTitle: "Live Stream",
-                defaultUser: "User",
-                postLiveTitle: "Live Video Ended",
-                postLiveDesc: "Do you want to save and post this live replay to the feed?",
-                publishBtn: "Post to Feed",
-                discardBtn: "Delete & Exit"
-            },
-            it: {
-                liveBtn: "In diretta (LIVE)",
-                activeLivesBtn: "Dirette attive",
-                setupTitle: "Impostazioni diretta streaming",
-                inputPlaceholder: "Scrivi una descrizione o un titolo per la diretta...",
-                startStreamBtn: "Avvia diretta streaming",
-                commentPlaceholder: "Scrivi un commento...",
-                activeModalTitle: "Dirette streaming attuali",
-                viewersTitle: "Spettatori",
-                noViewers: "Nessun spettatore al momento.",
-                loading: "Caricamento...",
-                noActiveLives: "Nessuna diretta attiva.",
-                watchBtn: "Guarda",
-                authAlert: "Per favore, effettua l'accesso!",
-                cameraErr: "Impossibile accedere alla fotocamera!",
-                liveEnded: "La diretta è terminata!",
-                defaultTitle: "Diretta streaming",
-                defaultUser: "Utente",
-                postLiveTitle: "Diretta terminata",
-                postLiveDesc: "Vuoi salvare e pubblicare la registrazione della diretta sul sito?",
-                publishBtn: "Pubblica",
-                discardBtn: "Elimina ed esci"
-            },
-            ru: {
-                liveBtn: "Прямой эфир (LIVE)",
-                activeLivesBtn: "Активные эфиры",
-                setupTitle: "Настройки прямого эфира",
-                inputPlaceholder: "Напишите описание или название эфира...",
-                startStreamBtn: "Начать прямой эфир",
-                commentPlaceholder: "Напишите комментарий...",
-                activeModalTitle: "Текущие прямые эфиры",
-                viewersTitle: "Зрители",
-                noViewers: "Пока нет зрителей.",
-                loading: "Загрузка...",
-                noActiveLives: "Нет активных эфиров.",
-                watchBtn: "Смотреть",
-                authAlert: "Пожалуйста, авторизуйтесь!",
-                cameraErr: "Не удалось включить камеру!",
-                liveEnded: "Эфир завершен!",
-                defaultTitle: "Прямой эфир",
-                defaultUser: "Пользователь",
-                postLiveTitle: "Прямой эфир завершен",
-                postLiveDesc: "Хотите сохранить и опубликовать запись прямого эфира на сайте?",
-                publishBtn: "Опубликовать",
-                discardBtn: "Удалить и выйти"
-            },
-            fr: {
-                liveBtn: "En direct (LIVE)",
-                activeLivesBtn: "En direct actifs",
-                setupTitle: "Paramètres du direct",
-                inputPlaceholder: "Écrivez la description ou le titre...",
-                startStreamBtn: "Démarrer le direct",
-                commentPlaceholder: "Écrire un commentaire...",
-                activeModalTitle: "Diffusions en direct actuelles",
-                viewersTitle: "Spectateurs",
-                noViewers: "Pas encore de spectateurs.",
-                loading: "Chargement...",
-                noActiveLives: "Aucun direct actif.",
-                watchBtn: "Regarder",
-                authAlert: "Veuillez vous connecter!",
-                cameraErr: "Impossible d'accéder à la caméra!",
-                liveEnded: "Le direct est terminé!",
-                defaultTitle: "Diffusion en direct",
-                defaultUser: "Utilisateur"
-            },
-            de: {
-                liveBtn: "LIVE gehen",
-                activeLivesBtn: "Aktive Streams",
-                setupTitle: "Live-Stream-Einstellungen",
-                inputPlaceholder: "Beschreibung oder Titel eingeben...",
-                startStreamBtn: "Live-Stream starten",
-                commentPlaceholder: "Kommentar schreiben...",
-                activeModalTitle: "Aktuelle Live-Streams",
-                viewersTitle: "Zuschauer",
-                noViewers: "Noch keine Zuschauer.",
-                loading: "Laden...",
-                noActiveLives: "Keine aktiven Streams.",
-                watchBtn: "Ansehen",
-                authAlert: "Bitte anmelden!",
-                cameraErr: "Kamera konnte nicht aktiviert werden!",
-                liveEnded: "Live-Stream beendet!",
-                defaultTitle: "Live-Stream",
-                defaultUser: "Benutzer",
-                postLiveTitle: "Live-Stream beendet",
-                postLiveDesc: "Möchten Sie die Aufzeichnung dieses Live-Streams auf der Website veröffentlichen?",
-                publishBtn: "Veröffentlichen",
-                discardBtn: "Löschen & Verlassen"
-            }
-        };
-
-        function getLang() {
-            return window.currentSiteLang || 'ka';
-        }
-
-        function applyLiveTranslations() {
-            const lang = getLang();
-            const t = liveTranslations[lang] || liveTranslations['ka'];
-
-            if(document.getElementById('lbl-live-btn')) document.getElementById('lbl-live-btn').innerText = t.liveBtn;
-            if(document.getElementById('lbl-active-lives-btn')) document.getElementById('lbl-active-lives-btn').innerText = t.activeLivesBtn;
-            if(document.getElementById('lbl-setup-title')) document.getElementById('lbl-setup-title').innerText = t.setupTitle;
-            if(document.getElementById('streamTitleInput')) document.getElementById('streamTitleInput').placeholder = t.inputPlaceholder;
-            if(document.getElementById('lbl-start-stream-btn')) document.getElementById('lbl-start-stream-btn').innerText = t.startStreamBtn;
-            if(document.getElementById('liveMsgInp')) document.getElementById('liveMsgInp').placeholder = t.commentPlaceholder;
-            if(document.getElementById('lbl-modal-active-title')) document.getElementById('lbl-modal-active-title').innerText = t.activeModalTitle;
-            if(document.getElementById('lbl-viewers-title')) document.getElementById('lbl-viewers-title').innerText = t.viewersTitle;
-            if(document.getElementById('lbl-post-live-title')) document.getElementById('lbl-post-live-title').innerText = t.postLiveTitle;
-            if(document.getElementById('lbl-post-live-desc')) document.getElementById('lbl-post-live-desc').innerText = t.postLiveDesc;
-            if(document.getElementById('lbl-btn-publish-recording')) document.getElementById('lbl-btn-publish-recording').innerText = t.publishBtn;
-            if(document.getElementById('lbl-btn-discard-recording')) document.getElementById('lbl-btn-discard-recording').innerText = t.discardBtn;
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
             authDomain: "emigrantbook-4b7bd.firebaseapp.com",
@@ -788,6 +837,7 @@ textarea,
 
         let currentCameraIndex = 0;
         let availableCameras = [];
+        let isMicMuted = false;
 
         window.myName = "";
         window.myPhoto = "";
@@ -798,26 +848,22 @@ textarea,
                 const docSnap = await db.collection('profiles').doc(uid).get();
                 if (docSnap.exists) {
                     const data = docSnap.data();
-                    if (data.language) {
-                        window.currentSiteLang = data.language;
-                        applyLiveTranslations();
-                    }
-                    const t = liveTranslations[getLang()] || liveTranslations['ka'];
-                    window.myName = data.full_name || data.fullName || auth.currentUser?.email || t.defaultUser;
-                    window.myPhoto = data.avatar_url || data.avatar || "https://via.placeholder.com/150";
+                    window.myName = data.full_name || data.fullName || data.name || auth.currentUser?.email || "მომხმარებელი";
+                    window.myPhoto = data.avatar_url || data.avatar || data.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(window.myName) + "&background=2ed573&color=fff";
                 } else {
-                    const t = liveTranslations[getLang()] || liveTranslations['ka'];
-                    window.myName = auth.currentUser?.displayName || auth.currentUser?.email || t.defaultUser;
-                    window.myPhoto = auth.currentUser?.photoURL || "https://via.placeholder.com/150";
+                    window.myName = auth.currentUser?.displayName || auth.currentUser?.email || "მომხმარებელი";
+                    window.myPhoto = auth.currentUser?.photoURL || "https://ui-avatars.com/api/?name=User&background=2ed573&color=fff";
                 }
             } catch (e) {
-                console.error("Profile load error:", e);
-                const t = liveTranslations[getLang()] || liveTranslations['ka'];
-                window.myName = auth.currentUser?.email || t.defaultUser;
-                window.myPhoto = "https://via.placeholder.com/150";
+                window.myName = auth.currentUser?.email || "მომხმარებელი";
+                window.myPhoto = "https://ui-avatars.com/api/?name=User&background=2ed573&color=fff";
             }
+
+            document.getElementById('preUserName').innerText = window.myName;
+            document.getElementById('preUserAva').src = window.myPhoto;
         }
 
+        // გვერდის გახსნისთანავე კამერის ავტომატური გაშვება
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 await fetchUserProfile(user.uid);
@@ -825,23 +871,17 @@ textarea,
                 const urlParams = new URLSearchParams(window.location.search);
                 const joinId = urlParams.get('join');
                 if (joinId) {
-                    const topBar = document.getElementById('topActionBar');
-                    if (topBar) topBar.style.display = 'none';
                     joinLive(joinId);
+                } else {
+                    initCameraPreview();
                 }
             } else {
-                applyLiveTranslations();
+                alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+                window.location.href = "index.html";
             }
         });
 
-        window.startLiveSetup = async function() {
-            if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
-            const t = liveTranslations[getLang()] || liveTranslations['ka'];
-            if (!auth.currentUser) {
-                alert(t.authAlert);
-                return;
-            }
-            document.getElementById('preLiveSetupModal').style.display = 'flex';
+        async function initCameraPreview() {
             try {
                 availableCameras = await AgoraRTC.getCameras();
                 currentCameraIndex = 0;
@@ -852,11 +892,12 @@ textarea,
                 });
                 localTracks.video.play("localCameraPreview", { mirror: true });
             } catch (e) {
-                alert(t.cameraErr);
+                console.error("Camera preview error:", e);
+                alert("კამერის ჩართვა ვერ მოხერხდა!");
             }
-        };
+        }
 
-        /* 🔄 კამერის გადართვის ფუნქცია (წინა/უკანა) */
+        // 🔄 კამერის შეტრიალება (წინა/უკანა)
         window.switchLiveCamera = async function() {
             if (!localTracks.video) return;
             try {
@@ -888,34 +929,41 @@ textarea,
             }
         };
 
-        window.closeLiveSetup = function() {
-            if (localTracks.video) {
-                localTracks.video.stop();
-                localTracks.video.close();
-                localTracks.video = null;
+        // მიკროფონის ჩართვა/გამორთვა
+        window.toggleMuteMicSetup = function() {
+            isMicMuted = !isMicMuted;
+            const lbl = document.getElementById('lbl-mic-state');
+            const ico = document.getElementById('ico-mic-state');
+            if (isMicMuted) {
+                lbl.innerText = "მიკროფონი დადუმებულია";
+                ico.className = "fas fa-microphone-slash";
+                if (localTracks.audio) localTracks.audio.setEnabled(false);
+            } else {
+                lbl.innerText = "მიკროფონის დადუმება";
+                ico.className = "fas fa-microphone";
+                if (localTracks.audio) localTracks.audio.setEnabled(true);
             }
-            document.getElementById('preLiveSetupModal').style.display = 'none';
         };
 
+        window.toggleFlashlight = function() {
+            alert("განათების რეჟიმი დამოკიდებულია მოწყობილობის ბრაუზერზე.");
+        };
+
+        // 🚀 ლაივის დაწყება
         window.launchLiveStream = async function() {
-            if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
-            const t = liveTranslations[getLang()] || liveTranslations['ka'];
-            const title = document.getElementById('streamTitleInput').value.trim() || t.defaultTitle;
+            const title = document.getElementById('streamTitleInput').value.trim() || "პირდაპირი ეთერი";
             streamSavedTitle = title;
             isHostUser = true;
 
             const uid = auth.currentUser.uid;
             const appId = "258897e8fb5f4dd089b761eca6568b24";
 
-            document.getElementById('preLiveSetupModal').style.display = 'none';
+            document.getElementById('preLiveSetupScreen').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveHostName').innerText = window.myName;
             document.getElementById('liveStreamTitle').innerText = title;
             document.getElementById('liveHostAva').src = window.myPhoto;
             document.getElementById('liveChatBox').innerHTML = "";
-
-            const flipBtn = document.getElementById('liveFlipBtn');
-            if (flipBtn) flipBtn.style.display = 'flex';
 
             try {
                 const liveDoc = await db.collection('lives').add({
@@ -935,6 +983,7 @@ textarea,
 
                 if (!localTracks.audio) {
                     localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+                    if (isMicMuted) localTracks.audio.setEnabled(false);
                 }
 
                 localTracks.video.play("remote-live-video");
@@ -947,7 +996,7 @@ textarea,
 
             } catch (e) {
                 console.error("Stream Start Error:", e);
-                alert("Error: " + e.message);
+                alert("შეცდომა: " + e.message);
             }
         };
 
@@ -959,33 +1008,27 @@ textarea,
                 if (localTracks.audio) tracks.push(localTracks.audio.getMediaStreamTrack());
 
                 const combinedStream = new MediaStream(tracks);
-
                 let options = {};
                 if (typeof MediaRecorder.isTypeSupported === 'function') {
                     if (MediaRecorder.isTypeSupported('video/mp4')) {
                         options = { mimeType: 'video/mp4' };
                     } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')) {
                         options = { mimeType: 'video/webm;codecs=vp8,opus' };
-                    } else if (MediaRecorder.isTypeSupported('video/webm')) {
-                        options = { mimeType: 'video/webm' };
                     }
                 }
 
                 mediaRecorder = new MediaRecorder(combinedStream, options);
-
                 mediaRecorder.ondataavailable = (event) => {
                     if (event.data && event.data.size > 0) {
                         recordedChunks.push(event.data);
                     }
                 };
-
                 mediaRecorder.start(1000);
             } catch (e) {
                 console.warn("MediaRecorder start warning:", e);
             }
         }
 
-        /* ☁️ Cloudflare R2 ატვირთვა ლაივის ჩანაწერისთვის */
         function uploadLiveRecordingToR2(blob) {
             return new Promise((resolve, reject) => {
                 const r2S3 = new AWS.S3({
@@ -997,27 +1040,18 @@ textarea,
                 });
 
                 const fileKey = 'videos/' + Date.now() + '_live_stream.mp4';
-                const contentType = blob.type || 'video/mp4';
-
                 const params = {
                     Bucket: 'emigrantbook-videos',
                     Key: fileKey,
                     Body: blob,
-                    ContentType: contentType
+                    ContentType: blob.type || 'video/mp4'
                 };
 
-                const options = {
-                    partSize: 10 * 1024 * 1024,
-                    queueSize: 1
-                };
-
-                r2S3.upload(params, options, function(err, data) {
+                r2S3.upload(params, function(err, data) {
                     if (err) {
-                        console.error("R2 Live Upload Error:", err);
                         reject(err);
                     } else {
-                        const publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
-                        resolve(publicUrl);
+                        resolve("https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey);
                     }
                 });
             });
@@ -1029,11 +1063,10 @@ textarea,
             isHostUser = false;
 
             closeActiveLivesModal();
+            document.getElementById('preLiveSetupScreen').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveChatBox').innerHTML = "";
-
-            const flipBtn = document.getElementById('liveFlipBtn');
-            if (flipBtn) flipBtn.style.display = 'none';
+            document.getElementById('liveFlipBtn').style.display = 'none';
 
             if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
 
@@ -1067,8 +1100,7 @@ textarea,
             });
 
             liveClient.on("user-left", () => {
-                const t = liveTranslations[getLang()] || liveTranslations['ka'];
-                alert(t.liveEnded);
+                alert("ლაივი დასრულდა!");
                 endLive();
             });
         };
@@ -1087,51 +1119,40 @@ textarea,
 
         window.endLive = async function() {
             if (timerInterval) clearInterval(timerInterval);
-
             if (liveDocUnsubscribe) { liveDocUnsubscribe(); liveDocUnsubscribe = null; }
             if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
 
             const wasHost = isHostUser;
 
             if (currentLiveDocId && wasHost) {
-                db.collection('lives').doc(currentLiveDocId).update({ status: "ended" }).catch(e => console.warn(e));
+                db.collection('lives').doc(currentLiveDocId).update({ status: "ended" }).catch(() => {});
             }
 
-            // 1. ჯერ ჩამწერის სუფთა გაჩერება (ვიდრე ტრეკები ცოცხალია)
             if (wasHost && mediaRecorder && mediaRecorder.state !== "inactive") {
                 await new Promise(resolve => {
                     mediaRecorder.onstop = () => resolve();
-                    try {
-                        mediaRecorder.stop();
-                    } catch(err) {
-                        resolve();
-                    }
+                    try { mediaRecorder.stop(); } catch(err) { resolve(); }
                 });
             }
 
-            // 2. ტრეკების და Agora-ს გათიშვა
             if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); localTracks.video = null; }
             if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); localTracks.audio = null; }
             try { await liveClient.leave(); } catch(e){}
 
             document.getElementById('liveUI').style.display = 'none';
 
-            // 3. თუ ჰოსტია -> არჩევანის მოდალის ჩვენება
             if (wasHost) {
-                applyLiveTranslations();
                 document.getElementById('saveLivePostModal').style.display = 'flex';
             } else {
                 window.location.href = "index.html";
             }
         };
 
-        /* ✅ მომხმარებლის დასტური: ჩანაწერის ატვირთვა და საიტზე განთავსება */
         window.confirmAndPublishLiveRecording = async function() {
             document.getElementById('saveLivePostModal').style.display = 'none';
 
             if (recordedChunks && recordedChunks.length > 0) {
                 document.getElementById('uploadingOverlay').style.display = 'flex';
-
                 try {
                     const mimeType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'video/mp4';
                     const blob = new Blob(recordedChunks, { type: mimeType });
@@ -1140,7 +1161,7 @@ textarea,
                     await db.collection('posts').add({
                         user_id: auth.currentUser.uid,
                         author_name: window.myName || "User",
-                        author_avatar: window.myPhoto || "https://via.placeholder.com/150",
+                        author_avatar: window.myPhoto,
                         content: "🔴 LIVE : " + (streamSavedTitle || "პირდაპირი ეთერი"),
                         media_url: recordedVideoUrl,
                         media_type: "video",
@@ -1150,17 +1171,13 @@ textarea,
                         created_at: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } catch (err) {
-                    console.error("R2 live recording upload failed:", err);
                     alert("ჩანაწერის ატვირთვა ვერ მოხერხდა: " + err.message);
                 }
-
                 document.getElementById('uploadingOverlay').style.display = 'none';
             }
-
             window.location.href = "index.html";
         };
 
-        /* ❌ მომხმარებლის უარი: ჩანაწერის წაშლა და გამოსვლა */
         window.discardLiveRecording = function() {
             document.getElementById('saveLivePostModal').style.display = 'none';
             recordedChunks = [];
@@ -1169,7 +1186,6 @@ textarea,
 
         function listenToLiveDoc(docId) {
             if (liveDocUnsubscribe) liveDocUnsubscribe();
-
             liveDocUnsubscribe = db.collection('lives').doc(docId).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
@@ -1184,7 +1200,6 @@ textarea,
         function listenToLiveChat(docId) {
             const chatBox = document.getElementById('liveChatBox');
             if (chatUnsubscribe) chatUnsubscribe();
-
             chatUnsubscribe = db.collection('lives').doc(docId)
                 .collection('comments')
                 .orderBy('ts', 'asc')
@@ -1206,7 +1221,6 @@ textarea,
             const inp = document.getElementById('liveMsgInp');
             const commentText = inp.value.trim();
             if (!commentText || !currentLiveDocId) return;
-
             inp.value = "";
 
             try {
@@ -1224,11 +1238,10 @@ textarea,
         };
 
         window.openViewersSheet = function() {
-            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             const container = document.getElementById('viewersListContainer');
             container.innerHTML = "";
             if (currentViewersList.length === 0) {
-                container.innerHTML = `<div style='color:#aaa; padding:10px;'>${t.noViewers}</div>`;
+                container.innerHTML = `<div style='color:#aaa; padding:10px;'>ჯერ მაყურებლები არ არიან.</div>`;
             } else {
                 currentViewersList.forEach(v => {
                     container.innerHTML += `
@@ -1247,15 +1260,14 @@ textarea,
         };
 
         window.openActiveLivesModal = function() {
-            const t = liveTranslations[getLang()] || liveTranslations['ka'];
             document.getElementById('activeLivesModal').style.display = 'flex';
             const container = document.getElementById('activeLivesList');
-            container.innerHTML = t.loading;
+            container.innerHTML = "იტვირთება...";
 
             db.collection('lives').where('status', '==', 'active').get().then(snap => {
                 container.innerHTML = "";
                 if (snap.empty) {
-                    container.innerHTML = t.noActiveLives;
+                    container.innerHTML = "აქტიური ლაივები არ არის.";
                     return;
                 }
                 snap.forEach(doc => {
@@ -1269,7 +1281,7 @@ textarea,
                                     <div style="font-size:12px; color:#aaa;">${live.title}</div>
                                 </div>
                             </div>
-                            <span class="fb-live-badge">${t.watchBtn}</span>
+                            <span class="fb-live-badge">უყურე</span>
                         </div>
                     `;
                 });
