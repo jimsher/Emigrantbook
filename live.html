@@ -320,7 +320,7 @@
             padding: 6px 12px;
         }
 
-        /* 👥 1.5. INVITE FRIENDS BOTTOM SHEET (სქრინის იდენტური) */
+        /* 👥 1.5. INVITE FRIENDS BOTTOM SHEET */
         .invite-sheet-overlay {
             display: none;
             position: fixed;
@@ -456,7 +456,6 @@
             text-overflow: ellipsis;
         }
 
-        /* Facebook Style Checkbox */
         .invite-checkbox {
             width: 22px;
             height: 22px;
@@ -788,7 +787,7 @@
 </head>
 <body>
 
-    <!-- 📱 1. FACEBOOK LIVE SETUP SCREEN (სქრინის იდენტური) -->
+    <!-- 📱 1. FACEBOOK LIVE SETUP SCREEN -->
     <div id="preLiveSetupScreen">
         <!-- კამერის ფონი -->
         <div class="camera-background-box">
@@ -798,7 +797,7 @@
         <!-- ზედა ზოლი -->
         <div class="fb-pre-top-bar">
             <div class="fb-pre-top-left">
-                <button class="fb-pre-back-btn" onclick="window.location.href='index.html'">
+                <button class="fb-pre-back-btn" onclick="cleanupAndExitToHome()">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <div class="fb-user-badge-wrap">
@@ -869,7 +868,6 @@
 
             <!-- ქვედა მენიუს ზოლი -->
             <div class="fb-pre-bottom-dock">
-                <!-- 👥 მეგობრების მოწვევის ღილაკი -->
                 <div class="fb-dock-icon" onclick="openInviteFriendsSheet()" title="მეგობრების მოწვევა">
                     <i class="fas fa-user-plus"></i>
                 </div>
@@ -898,6 +896,26 @@
 
             <div class="invite-friends-list" id="inviteFriendsListTarget">
                 <div style="color: #8e8e93; font-size: 13.5px; text-align: center; padding: 20px;">იტვირთება...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚡ 1.6. არსებული მიმდინარე ეთერის აღმოჩენის მოდალი (RESUME MODAL) -->
+    <div id="resumeLiveModal" class="lives-modal-overlay" style="z-index: 200010; display: none;">
+        <div class="lives-modal-box" style="text-align: center; padding: 24px; max-width: 400px;">
+            <div style="font-size: 40px; margin-bottom: 12px;">📡</div>
+            <h3 style="margin-bottom: 10px; font-size: 18px; color: #ffffff; font-weight: bold;">თქვენ გაქვთ აქტიური ეთერი</h3>
+            <p id="resumeLiveDocTitle" style="color: #2ed573; font-weight: bold; font-size: 15px; margin-bottom: 8px;"></p>
+            <p style="color: #cfd3dc; font-size: 13.5px; margin-bottom: 20px; line-height: 1.5;">
+                თქვენ უკვე დაწყებული გაქვთ პირდაპირი ეთერი. გსურთ ეთერის გაგრძელება თუ მისი დასრულება?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="resumeExistingHostLive()" style="background: #1877f2; color: #fff; border: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;">
+                    <i class="fas fa-play" style="margin-right: 6px;"></i> ეთერის გაგრძელება
+                </button>
+                <button onclick="terminateExistingGhostLive()" style="background: #e41e3f; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
+                    <i class="fas fa-stop" style="margin-right: 6px;"></i> ეთერის დასრულება და ახლის დაწყება
+                </button>
             </div>
         </div>
     </div>
@@ -1027,9 +1045,9 @@
         let availableCameras = [];
         let isMicMuted = false;
 
-        // მეგობრების მოწვევის სია
         let cachedFriendsList = [];
         let selectedInvitedFriends = new Set();
+        let detectedExistingLiveDoc = null;
 
         window.myName = "";
         window.myPhoto = "";
@@ -1055,7 +1073,7 @@
             document.getElementById('preUserAva').src = window.myPhoto;
         }
 
-        // გვერდის გახსნისთანავე კამერის ავტომატური გაშვება
+        // გვერდის გახსნისთანავე ავტორიზაცია და არსებული ლაივის შემოწმება
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 await fetchUserProfile(user.uid);
@@ -1065,7 +1083,8 @@
                 if (joinId) {
                     joinLive(joinId);
                 } else {
-                    initCameraPreview();
+                    // შემოწმება: ხომ არ აქვს ჰოსტს უკვე დაწყებული მიმდინარე ლაივი
+                    checkForExistingActiveLive(user.uid);
                 }
             } else {
                 alert("გთხოვთ გაიაროთ ავტორიზაცია!");
@@ -1073,7 +1092,108 @@
             }
         });
 
+        // 🔍 ჰოსტის არსებული აქტიური ლაივის შემოწმება
+        async function checkForExistingActiveLive(uid) {
+            try {
+                const snap = await db.collection('lives')
+                    .where('host_id', '==', uid)
+                    .where('status', '==', 'active')
+                    .limit(1)
+                    .get();
+
+                if (!snap.empty) {
+                    detectedExistingLiveDoc = snap.docs[0];
+                    const data = detectedExistingLiveDoc.data();
+                    
+                    document.getElementById('resumeLiveDocTitle').innerText = data.title || "პირდაპირი ეთერი";
+                    document.getElementById('resumeLiveModal').style.display = 'flex';
+                } else {
+                    initCameraPreview();
+                }
+            } catch (e) {
+                console.error("Check active live error:", e);
+                initCameraPreview();
+            }
+        }
+
+        // 🔄 არსებულ ეთერში დაბრუნება (ჰოსტის გაგრძელება)
+        window.resumeExistingHostLive = async function() {
+            if (!detectedExistingLiveDoc) return;
+            document.getElementById('resumeLiveModal').style.display = 'none';
+
+            const docId = detectedExistingLiveDoc.id;
+            const data = detectedExistingLiveDoc.data();
+
+            currentLiveDocId = docId;
+            streamSavedTitle = data.title || "პირდაპირი ეთერი";
+            isHostUser = true;
+
+            document.getElementById('preLiveSetupScreen').style.display = 'none';
+            document.getElementById('liveUI').style.display = 'flex';
+            document.getElementById('liveHostName').innerText = data.host_name || window.myName;
+            document.getElementById('liveStreamTitle').innerText = streamSavedTitle;
+            document.getElementById('liveHostAva').src = data.host_photo || window.myPhoto;
+            document.getElementById('liveChatBox').innerHTML = "";
+
+            const flipBtn = document.getElementById('liveFlipBtn');
+            if (flipBtn) flipBtn.style.display = 'flex';
+
+            const uid = auth.currentUser.uid;
+            const appId = "258897e8fb5f4dd089b761eca6568b24";
+
+            try {
+                await liveClient.setClientRole("host");
+                await liveClient.join(appId, docId, null, uid);
+
+                if (!localTracks.video) {
+                    localTracks.video = await AgoraRTC.createCameraVideoTrack({
+                        encoderConfig: "480p_1",
+                        optimizationMode: "motion"
+                    });
+                }
+                if (!localTracks.audio) {
+                    localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+                }
+
+                localTracks.video.play("remote-live-video");
+                await liveClient.publish([localTracks.audio, localTracks.video]);
+
+                // დროის გათვლა შექმნის წამიდან
+                if (data.created_at && data.created_at.seconds) {
+                    const elapsed = Math.floor(Date.now() / 1000 - data.created_at.seconds);
+                    streamSeconds = Math.max(0, elapsed);
+                } else {
+                    streamSeconds = 0;
+                }
+
+                startRecordingStream();
+                startStreamTimer();
+                listenToLiveDoc(docId);
+                listenToLiveChat(docId);
+
+            } catch (e) {
+                console.error("Resume live error:", e);
+                alert("ეთერის აღდგენა ვერ მოხერხდა: " + e.message);
+                terminateExistingGhostLive();
+            }
+        };
+
+        // ❌ ძველი გაჭედილი ეთერის დასრულება და გასუფთავება
+        window.terminateExistingGhostLive = async function() {
+            if (detectedExistingLiveDoc) {
+                try {
+                    await db.collection('lives').doc(detectedExistingLiveDoc.id).update({ status: "ended" });
+                } catch (e) {
+                    console.error("Terminate live error:", e);
+                }
+                detectedExistingLiveDoc = null;
+            }
+            document.getElementById('resumeLiveModal').style.display = 'none';
+            initCameraPreview();
+        };
+
         async function initCameraPreview() {
+            if (localTracks.video) return;
             try {
                 availableCameras = await AgoraRTC.getCameras();
                 currentCameraIndex = 0;
@@ -1141,7 +1261,21 @@
             alert("განათების რეჟიმი დამოკიდებულია მოწყობილობის ბრაუზერზე.");
         };
 
-        // 👥 მეგობრების მოწვევის Bottom Sheet ფუნქციონალი
+        window.cleanupAndExitToHome = function() {
+            if (localTracks.video) {
+                localTracks.video.stop();
+                localTracks.video.close();
+                localTracks.video = null;
+            }
+            if (localTracks.audio) {
+                localTracks.audio.stop();
+                localTracks.audio.close();
+                localTracks.audio = null;
+            }
+            window.location.href = "index.html";
+        };
+
+        // 👥 მეგობრების მოწვევის Bottom Sheet
         window.openInviteFriendsSheet = function() {
             document.getElementById('inviteFriendsSheetOverlay').style.display = 'flex';
             loadFriendsForInvite();
@@ -1156,7 +1290,6 @@
             if (!auth.currentUser) return;
             const currentUid = auth.currentUser.uid;
 
-            // 1. ჯერ ვამოწმებთ მიღებულ მეგობრებს
             db.collection('friend_requests')
                 .where('status', '==', 'accepted')
                 .get()
@@ -1168,11 +1301,9 @@
                         else if (req.receiver_id === currentUid) friendUids.add(req.sender_id);
                     });
 
-                    // თუ მეგობრები მოიძებნა, ვტვირთავთ პროფილებს
                     if (friendUids.size > 0) {
                         fetchProfilesForInvite(Array.from(friendUids));
                     } else {
-                        // სარეზერვო: ტვირთავს პროფილებს ბაზიდან
                         db.collection('profiles').limit(20).get().then(pSnap => {
                             let pList = [];
                             pSnap.forEach(pDoc => {
@@ -1280,7 +1411,7 @@
                     host_photo: window.myPhoto,
                     title: title,
                     status: "active",
-                    invited_users: Array.from(selectedInvitedFriends), // მონიშნული მოწვეული მეგობრები
+                    invited_users: Array.from(selectedInvitedFriends),
                     created_at: firebase.firestore.FieldValue.serverTimestamp(),
                     viewers: []
                 });
@@ -1366,57 +1497,95 @@
             });
         }
 
+        // 🔗 ეთერში შესვლა (ბანერიდან ან სიიდან)
         window.joinLive = async function(docId) {
             const appId = "258897e8fb5f4dd089b761eca6568b24";
             currentLiveDocId = docId;
-            isHostUser = false;
 
             closeActiveLivesModal();
             document.getElementById('preLiveSetupScreen').style.display = 'none';
             document.getElementById('liveUI').style.display = 'flex';
             document.getElementById('liveChatBox').innerHTML = "";
-            document.getElementById('liveFlipBtn').style.display = 'none';
 
             if (auth.currentUser) await fetchUserProfile(auth.currentUser.uid);
 
             const docSnap = await db.collection('lives').doc(docId).get();
-            if (docSnap.exists) {
-                const data = docSnap.data();
-                document.getElementById('liveHostName').innerText = data.host_name;
-                document.getElementById('liveStreamTitle').innerText = data.title;
-                document.getElementById('liveHostAva').src = data.host_photo;
+            if (!docSnap.exists) {
+                alert("პირდაპირი ეთერი ვერ მოიძებნა!");
+                window.location.href = "index.html";
+                return;
             }
 
-            await liveClient.setClientRole("audience");
-            await liveClient.join(appId, docId, null, auth.currentUser.uid);
+            const data = docSnap.data();
+            document.getElementById('liveHostName').innerText = data.host_name;
+            document.getElementById('liveStreamTitle').innerText = data.title;
+            document.getElementById('liveHostAva').src = data.host_photo;
 
-            db.collection('lives').doc(docId).update({
-                viewers: firebase.firestore.FieldValue.arrayUnion({
-                    uid: auth.currentUser.uid,
-                    name: window.myName,
-                    photo: window.myPhoto
-                })
-            });
+            // ✅ მთავარი გასწორება: თუ შემსვლელი თავად ჰოსტია, რთავს ჰოსტის რეჟიმში!
+            if (data.host_id === auth.currentUser.uid) {
+                isHostUser = true;
+                streamSavedTitle = data.title;
+                document.getElementById('liveFlipBtn').style.display = 'flex';
+
+                await liveClient.setClientRole("host");
+                await liveClient.join(appId, docId, null, auth.currentUser.uid);
+
+                if (!localTracks.video) {
+                    localTracks.video = await AgoraRTC.createCameraVideoTrack({
+                        encoderConfig: "480p_1",
+                        optimizationMode: "motion"
+                    });
+                }
+                if (!localTracks.audio) {
+                    localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+                }
+
+                localTracks.video.play("remote-live-video");
+                await liveClient.publish([localTracks.audio, localTracks.video]);
+                startRecordingStream();
+            } else {
+                // მაყურებლის რეჟიმი
+                isHostUser = false;
+                document.getElementById('liveFlipBtn').style.display = 'none';
+
+                await liveClient.setClientRole("audience");
+                await liveClient.join(appId, docId, null, auth.currentUser.uid);
+
+                db.collection('lives').doc(docId).update({
+                    viewers: firebase.firestore.FieldValue.arrayUnion({
+                        uid: auth.currentUser.uid,
+                        name: window.myName,
+                        photo: window.myPhoto
+                    })
+                });
+
+                liveClient.on("user-published", async (user, mediaType) => {
+                    await liveClient.subscribe(user, mediaType);
+                    if (mediaType === "video") user.videoTrack.play("remote-live-video");
+                    if (mediaType === "audio") user.audioTrack.play();
+                });
+
+                liveClient.on("user-left", () => {
+                    alert("ლაივი დასრულდა!");
+                    endLive();
+                });
+            }
+
+            // ტაიმერის გათვლა
+            if (data.created_at && data.created_at.seconds) {
+                const elapsed = Math.floor(Date.now() / 1000 - data.created_at.seconds);
+                streamSeconds = Math.max(0, elapsed);
+            } else {
+                streamSeconds = 0;
+            }
 
             startStreamTimer();
             listenToLiveDoc(docId);
             listenToLiveChat(docId);
-
-            liveClient.on("user-published", async (user, mediaType) => {
-                await liveClient.subscribe(user, mediaType);
-                if (mediaType === "video") user.videoTrack.play("remote-live-video");
-                if (mediaType === "audio") user.audioTrack.play();
-            });
-
-            liveClient.on("user-left", () => {
-                alert("ლაივი დასრულდა!");
-                endLive();
-            });
         };
 
         function startStreamTimer() {
             if (timerInterval) clearInterval(timerInterval);
-            streamSeconds = 0;
             document.getElementById('streamTimer').innerText = "00:00";
             timerInterval = setInterval(() => {
                 streamSeconds++;
@@ -1600,6 +1769,18 @@
         window.closeActiveLivesModal = function() {
             document.getElementById('activeLivesModal').style.display = 'none';
         };
+
+        // ბრაუზერის/ტაბის უეცარი დახურვისას კამერის სუფთა გათიშვა
+        window.addEventListener('beforeunload', () => {
+            if (localTracks.video) {
+                localTracks.video.stop();
+                localTracks.video.close();
+            }
+            if (localTracks.audio) {
+                localTracks.audio.stop();
+                localTracks.audio.close();
+            }
+        });
     </script>
 </body>
 </html>
