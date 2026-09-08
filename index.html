@@ -8017,5 +8017,17 @@ function optimizeImageBeforeUpload(file, callback) {
   
   <script src="story-module.js"></script>
   <script src="app.js"></script>
+
+
+  <!-- ცალკე დამცავი ბლოკი მხოლოდ Apple-სთვის (Android-ს საერთოდ არ ეხება) -->
+<script>
+  (function() {
+    var isApple = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isApple) {
+      // Apple-ის მოწყობილობებზე Safari-სთვის ვთიშავთ ამ ფუნქციას, რომ შეცდომა არ ამოაგდოს
+      window.syncMedianOneSignal = function() {};
+    }
+  })();
+</script>
 </body>
 </html>
