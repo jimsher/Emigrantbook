@@ -7895,6 +7895,60 @@ function optimizeImageBeforeUpload(file, callback) {
     if (typeof onConfirm === 'function') onConfirm();
   };
 }
+
+
+
+
+
+    // ფეისბუქის თეთრი ფონი 
+    function openThemeModal() {
+  var modal = document.getElementById('customThemeModal');
+  if (modal) modal.style.display = 'flex';
+  highlightCurrentTheme();
+}
+
+function closeThemeModal() {
+  var modal = document.getElementById('customThemeModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function setTheme(themeMode) {
+  closeThemeModal();
+  if (themeMode === 'light') {
+    document.body.classList.add('light-mode');
+    localStorage.setItem('eb_theme', 'light');
+    document.getElementById('currentThemeDisplay').innerText = 'Light Mode';
+  } else {
+    document.body.classList.remove('light-mode');
+    localStorage.setItem('eb_theme', 'dark');
+    document.getElementById('currentThemeDisplay').innerText = 'Dark Mode';
+  }
+}
+
+function highlightCurrentTheme() {
+  var current = localStorage.getItem('eb_theme') || 'dark';
+  var darkCheck = document.getElementById('check-dark');
+  var lightCheck = document.getElementById('check-light');
+  var display = document.getElementById('currentThemeDisplay');
+
+  if (current === 'light') {
+    if (darkCheck) darkCheck.style.display = 'none';
+    if (lightCheck) lightCheck.style.display = 'inline';
+    if (display) display.innerText = 'Light Mode';
+  } else {
+    if (darkCheck) darkCheck.style.display = 'inline';
+    if (lightCheck) lightCheck.style.display = 'none';
+    if (display) display.innerText = 'Dark Mode';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var savedTheme = localStorage.getItem('eb_theme') || 'dark';
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+  }
+  highlightCurrentTheme();
+});
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
