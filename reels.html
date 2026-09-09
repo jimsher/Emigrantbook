@@ -543,9 +543,104 @@
       font-size: 13px;
       cursor: pointer;
     }
+
+
+    /* ==========================================================================
+   ☀️ EMIGRANTBOOK REELS — LIGHT MODE (Facebook Clean Theme)
+   Dark Mode რჩება 100% ხელუხლებელი — ვრცელდება მხოლოდ body.light-mode-ზე
+   ========================================================================== */
+
+/* 1. ძირითადი ფონი (კომპიუტერსა და ფართო ეკრანებზე) */
+body.light-mode {
+  background-color: #f0f2f5 !important;
+}
+
+/* 2. ავატარებისა და ვიდეოების სრული დაცვა */
+body.light-mode img:not(.top-icon):not(.nav-icon):not(.action-icon),
+body.light-mode video {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* 3. ქვედა ნავბარი (Facebook-ის სუფთა თეთრი ზოლი) */
+body.light-mode .bottom-nav {
+  background-color: #ffffff !important;
+  border-top: 1px solid #dadde1 !important;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-mode .bottom-nav .nav-icon {
+  filter: brightness(0) opacity(0.6) !important;
+  stroke: #050505 !important;
+}
+
+body.light-mode .bottom-nav .nav-item.active .nav-icon {
+  filter: invert(36%) sepia(93%) saturate(2400%) hue-rotate(206deg) brightness(98%) contrast(96%) !important;
+  stroke: #1877f2 !important;
+}
+
+/* 4. კომენტარების მოდალი (Bottom Sheet) */
+body.light-mode .comments-sheet-content {
+  background: #ffffff !important;
+  border-top: 1px solid #dadde1 !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.light-mode .comments-sheet-header {
+  border-bottom: 1px solid #dadde1 !important;
+}
+
+body.light-mode .comments-sheet-header span {
+  color: #050505 !important;
+}
+
+body.light-mode .comments-close-btn {
+  color: #65676b !important;
+}
+
+body.light-mode .comment-bubble {
+  background: #f0f2f5 !important;
+}
+
+body.light-mode .comment-user-name {
+  color: #050505 !important;
+}
+
+body.light-mode .comment-text {
+  color: #050505 !important;
+}
+
+body.light-mode .comment-time {
+  color: #65676b !important;
+}
+
+body.light-mode .comments-sheet-footer {
+  background: #ffffff !important;
+  border-top: 1px solid #dadde1 !important;
+}
+
+body.light-mode .comments-input {
+  background: #f0f2f5 !important;
+  border: 1px solid #ccd0d5 !important;
+  color: #050505 !important;
+}
+
+body.light-mode .comments-input::placeholder {
+  color: #65676b !important;
+}
+
+/* 5. ვიდეოს პროგრესის ხაზი */
+body.light-mode .progress-bar-wrap {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
   </style>
 </head>
 <body>
+  <script>
+    if (localStorage.getItem('eb_theme') === 'light' || new URLSearchParams(window.location.search).get('theme') === 'light') {
+      document.body.classList.add('light-mode');
+    }
+  </script>
 
   <!-- ზედა ზოლი -->
   <header class="reels-top-bar">
