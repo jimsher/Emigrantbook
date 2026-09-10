@@ -7519,21 +7519,28 @@ function openNotificationTarget(postId, userId) {
 }
 
 // აქ იწყება
+/* ==========================================================================
+   👥 FACEBOOK STYLE მეგობრების გვერდის ლოგიკა + საერთო მეგობრები რეალურად
+   ========================================================================== */
+
+// 1. დროის ფორმატირება (Facebook-ის სტილი: 3 სთ, 9 კვ, 4 დღ, 10 წთ)
 function formatTimeAgo(timestamp) {
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-
-  if (!timestamp) return t.justNow;
+  if (!timestamp) return t.justNow || "ახლახანს";
   var date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   var diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
 
-  if (diffSec < 60) return t.justNow;
-  if (diffSec < 3600) return Math.floor(diffSec / 60) + t.timeMin;
-  if (diffSec < 86400) return Math.floor(diffSec / 3600) + t.timeHour;
-  return Math.floor(diffSec / 86400) + t.timeDay;
+  if (diffSec < 60) return t.justNow || "ახლახანს";
+  if (diffSec < 3600) return Math.floor(diffSec / 60) + (currentLang === 'ka' ? " წთ" : (t.timeMin || " min"));
+  if (diffSec < 86400) return Math.floor(diffSec / 3600) + (currentLang === 'ka' ? " სთ" : (t.timeHour || " h"));
+  var diffDays = Math.floor(diffSec / 86400);
+  if (diffDays < 7) return diffDays + (currentLang === 'ka' ? " დღ" : (t.timeDay || " d"));
+  var diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 52) return diffWeeks + (currentLang === 'ka' ? " კვ" : " w");
+  return Math.floor(diffDays / 365) + (currentLang === 'ka' ? " წ" : " y");
 }
 
-
-   /* 1. მოთხოვნების რაოდენობის ერთჯერადი შემოწმება (.get-ით) */
+// 2. მოთხოვნების რაოდენობის შემოწმება ბეიჯისთვის
 function checkPendingRequestsCountOnce() {
   if (!currentUser) return;
   db.collection('friend_requests')
@@ -7561,8 +7568,106 @@ function checkPendingRequestsCountOnce() {
     });
 }
 
-/* 2. მეგობრების სრული გვერდის ჩატვირთვა (.get-ით) */
- function loadFullFriendsPage() {
+// 3. ჩემი მეგობრების სია (საერთო მეგობრების დასათვლელად)
+function getMyFriendIds(callback) {
+  if (cachedFriendsSet && cachedFriendsSet.size > 0) {
+    callback(cachedFriendsSet);
+    return;
+  }
+  Promise.all([
+    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+  ]).then(function(results) {
+    var set = new Set();
+    results[0].forEach(d => set.add(d.data().receiver_id));
+    results[1].forEach(d => set.add(d.data().sender_id));
+    cachedFriendsSet = set;
+    callback(set);
+  }).catch(function(err) {
+    console.error("Error fetching my friends set:", err);
+    callback(new Set());
+  });
+}
+
+// 4. მეორე მომხმარებლის მეგობრების სია
+var cachedTargetFriendsMap = {};
+function getTargetUserFriendIds(targetUserId, callback) {
+  if (cachedTargetFriendsMap[targetUserId]) {
+    callback(cachedTargetFriendsMap[targetUserId]);
+    return;
+  }
+  Promise.all([
+    db.collection('friend_requests').where('sender_id', '==', targetUserId).where('status', '==', 'accepted').get(),
+    db.collection('friend_requests').where('receiver_id', '==', targetUserId).where('status', '==', 'accepted').get()
+  ]).then(function(results) {
+    var friends = [];
+    results[0].forEach(d => friends.push(d.data().receiver_id));
+    results[1].forEach(d => friends.push(d.data().sender_id));
+    cachedTargetFriendsMap[targetUserId] = friends;
+    callback(friends);
+  }).catch(function(err) {
+    console.error("Error fetching target user friends:", err);
+    callback([]);
+  });
+}
+
+// 5. საერთო მეგობრების რეალური გამოთვლა და ავატარების გამოჩენა
+function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
+  if (!currentUser || targetUserId === currentUser.uid) return;
+  var container = document.getElementById(containerId);
+  if (!container) return;
+
+  getMyFriendIds(function(myFriendsSet) {
+    if (myFriendsSet.size === 0) {
+      if (timeAgoStr) {
+        container.innerHTML = `<span class="friend-req-time">${timeAgoStr}</span>`;
+      } else {
+        container.innerHTML = '';
+      }
+      return;
+    }
+
+    getTargetUserFriendIds(targetUserId, function(targetFriends) {
+      var mutualIds = targetFriends.filter(function(fid) {
+        return myFriendsSet.has(fid) && fid !== currentUser.uid;
+      });
+
+      var mutualCount = mutualIds.length;
+
+      if (mutualCount === 0) {
+        if (timeAgoStr) {
+          container.innerHTML = `<span class="friend-req-time">${timeAgoStr}</span>`;
+        } else {
+          container.innerHTML = '';
+        }
+        return;
+      }
+
+      var previewIds = mutualIds.slice(0, 2);
+      fetchMultipleProfilesCached(previewIds, function() {
+        var avatarsHtml = '';
+        previewIds.forEach(function(pid) {
+          var p = cachedProfiles[pid] || {};
+          var av = p.avatar_url || DEFAULT_AVATAR_URL;
+          avatarsHtml += `<img src="${av}" class="mutual-avatar-mini" alt="mutual">`;
+        });
+
+        var textLabel = mutualCount + " საერთო მეგობარი";
+        if (timeAgoStr) {
+          textLabel += " · " + timeAgoStr;
+        }
+
+        container.innerHTML = `
+          <div class="mutual-avatars-cluster">${avatarsHtml}</div>
+          <span class="mutual-friends-text">${textLabel}</span>
+        `;
+      });
+    });
+  });
+}
+
+// 6. მეგობრობის მოთხოვნების ჩატვირთვა
+function loadFullFriendsPage() {
   if (!currentUser) return;
   var reqContainer = document.getElementById('full-friend-requests-list');
   var sugContainer = document.getElementById('friends-suggestions-list');
@@ -7573,7 +7678,6 @@ function checkPendingRequestsCountOnce() {
 
   checkPendingRequestsCountOnce();
 
-  // შემოსული მოთხოვნები
   db.collection('friend_requests')
     .where('receiver_id', '==', currentUser.uid)
     .where('status', '==', 'pending')
@@ -7608,17 +7712,26 @@ function checkPendingRequestsCountOnce() {
               <div class="friend-req-info">
                 <div class="friend-req-name-row">
                   <span class="friend-req-name" onclick="viewUserProfile('${item.sender_id}')">${name}</span>
+                </div>
+                <div class="friend-req-meta" id="req-meta-${item.id}">
                   <span class="friend-req-time">${timeStr}</span>
                 </div>
                 <div class="friend-req-buttons">
                   <button class="btn-confirm-req" onclick="acceptFriendReqFromPage('${item.id}', '${item.sender_id}', event)">${t.accept || 'დადასტურება'}</button>
-                  <button class="btn-delete-req" onclick="deleteFriendReqFromPage('${item.id}', event)">${t.reject || t.delete || 'წაშლა'}</button>
+                  <button class="btn-delete-req" onclick="deleteFriendReqFromPage('${item.id}', event)">ამოშლა</button>
                 </div>
               </div>
             </div>
           `;
         });
+
         if (reqContainer) reqContainer.innerHTML = html;
+
+        reqList.forEach(function(item) {
+          var timeStr = formatTimeAgo(item.created_at);
+          loadMutualFriendsUI(item.sender_id, 'req-meta-' + item.id, timeStr);
+        });
+
         loadFriendSuggestions(senderIds);
       });
     }).catch(function(err) {
@@ -7626,35 +7739,41 @@ function checkPendingRequestsCountOnce() {
       if (reqContainer) reqContainer.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">${t.loading || 'Error loading'}</div>`;
       loadFriendSuggestions([]);
     });
-}         
+}
 
-/* 3. მეგობრების შეთავაზებების ჩატვირთვა (.get-ით) */
+// 7. ხალხი ვისაც შეიძლება იცნობდეთ (შეთავაზებები)
 function loadFriendSuggestions(excludedIds) {
   var sugContainer = document.getElementById('friends-suggestions-list');
   if (!sugContainer) return;
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
   db.collection('profiles')
-    .limit(15)
+    .limit(20)
     .get()
     .then(function(snapshot) {
       var html = "";
+      var suggestionUserIds = [];
+
       snapshot.forEach(function(docSnap) {
         var userId = docSnap.id;
         var p = docSnap.data();
 
         if (userId !== currentUser.uid && !excludedIds.includes(userId)) {
+          suggestionUserIds.push(userId);
           var name = p.full_name || "User";
           var avatar = p.avatar_url || DEFAULT_AVATAR_URL;
 
           html += `
-            <div class="friend-req-card">
+            <div class="friend-req-card" id="sug-card-${userId}">
               <img src="${avatar}" class="friend-req-avatar" onclick="viewUserProfile('${userId}')" alt="avatar">
               <div class="friend-req-info">
-                <span class="friend-req-name" onclick="viewUserProfile('${userId}')">${name}</span>
+                <div class="friend-req-name-row">
+                  <span class="friend-req-name" onclick="viewUserProfile('${userId}')">${name}</span>
+                </div>
+                <div class="friend-req-meta" id="sug-meta-${userId}"></div>
                 <div class="friend-req-buttons">
-                  <button class="btn-confirm-req" onclick="sendFriendReqFromPage('${userId}', this, event)">${t.addFriend || 'დამატება'}</button>
-                  <button class="btn-delete-req" onclick="this.closest('.friend-req-card').remove();">${t.delete || t.reject || 'წაშლა'}</button>
+                  <button class="btn-confirm-req" onclick="sendFriendReqFromPage('${userId}', this, event)">${t.addFriend || 'მეგობრის დამატება'}</button>
+                  <button class="btn-delete-req" onclick="this.closest('.friend-req-card').remove();">ამოშლა</button>
                 </div>
               </div>
             </div>
@@ -7663,6 +7782,10 @@ function loadFriendSuggestions(excludedIds) {
       });
 
       sugContainer.innerHTML = html || `<div style="text-align: center; color: #8a8f9d; padding: 20px;">${t.noSuggestions || t.noReqs || 'შეთავაზებები არ არის'}</div>`;
+
+      suggestionUserIds.forEach(function(uId) {
+        loadMutualFriendsUI(uId, 'sug-meta-' + uId, null);
+      });
     }).catch(function(err) {
       console.warn("Suggestions error:", err);
       sugContainer.innerHTML = '';
