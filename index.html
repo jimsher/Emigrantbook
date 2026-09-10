@@ -6231,19 +6231,44 @@ function unhidePostFromFeed(postId) {
     return "";
   }
 
+  // 📢 რეკლამის შემოწმება (მხოლოდ რეკლამებზე იმოქმედებს!)
+  var isSponsored = post.is_sponsored === true;
+
   var date = post.created_at ? new Date(post.created_at.toDate ? post.created_at.toDate() : post.created_at).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' }) : "";
-  var initial = post.author_name ? post.author_name.charAt(0).toUpperCase() : "?";
-  var authorAvatarUrl = cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null;
+  
+  // სახელი: ჩვეულებრივ პოსტებზე რჩება ზუსტად იგივე post.author_name
+  var displayAuthorName = isSponsored ? (post.ad_brand_name || post.author_name) : post.author_name;
+  var initial = displayAuthorName ? displayAuthorName.charAt(0).toUpperCase() : "?";
+
+  // ავატარი: ჩვეულებრივ პოსტებზე რჩება ზუსტად იგივე
+  var authorAvatarUrl = isSponsored && post.ad_avatar_url ? post.ad_avatar_url : (cachedProfiles[post.user_id] ? cachedProfiles[post.user_id].avatar_url : null);
   var isOnline = cachedOnlineStates[post.user_id] === true;
-  var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+  var dotHtml = (isOnline && !isSponsored) ? `<div class="online-status-dot-sm"></div>` : ``;
 
   var finalAvatar = authorAvatarUrl || DEFAULT_AVATAR_URL;
   var avatarContent = `<div class="avatar-has-online"><img src="${finalAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
   var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
+  // დრო და სტატუსი: ჩვეულებრივ პოსტზე გამოჩნდება საათი და თარიღი, რეკლამაზე კი "დაფინანსებული"
+  var metaTimeOrSponsoredHtml = "";
+  if (isSponsored) {
+    metaTimeOrSponsoredHtml = `
+      <span style="color: #8a8f9d; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+        <span>დაფინანსებული</span> · <img src="icons/globe.svg" class="post-action-icon" style="width: 11px; height: 11px; opacity: 0.7;" alt="Public">
+      </span>
+    `;
+  } else {
+    metaTimeOrSponsoredHtml = `
+      <span class="post-time" style="display:flex; align-items:center; gap:4px;">
+        <img src="icons/clock-4.svg" class="post-action-icon" style="width:12px;height:12px;opacity:0.7;" alt="Time">
+        ${date}
+      </span>
+    `;
+  }
+
   var mediaHtml = buildCollageHtml(post.media_url, post.id, post.likes_count || 0, post.media_type);
 
-  // ⭐ STUDIO SERVICE PREMIUM ბარათის დიზაინი (გარე ოქროს ხაზების გარეშე) ⭐
+  // ⭐ STUDIO SERVICE PREMIUM ბარათის დიზაინი (ხელუხლებელი) ⭐
   var studioServiceCardHtml = "";
   var isStudio = post.is_studio_service === true;
 
@@ -6273,6 +6298,32 @@ function unhidePostFromFeed(postId) {
           <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:#fff;"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/></svg>
           <span>${srvWhatsAppText}</span>
         </a>
+      </div>
+    `;
+  }
+
+  // 📢 სარეკლამო CTA ზოლი (მხოლოდ და მხოლოდ რეკლამებზე გამოჩნდება!)
+  var sponsoredCtaBarHtml = "";
+  if (isSponsored) {
+    var adHeadline = post.ad_headline || "გაიგეთ მეტი ჩვენს შესახებ";
+    var adTarget = post.ad_target_url || "https://emigrantbook.com";
+    var adCta = post.ad_cta_text || "შეიტყვეთ მეტი";
+    var adDomain = "emigrantbook.com";
+    try {
+      if (adTarget) {
+        adDomain = new URL(adTarget.startsWith('http') ? adTarget : 'https://' + adTarget).hostname;
+      }
+    } catch(e) {
+      adDomain = adTarget.replace(/https?:\/\//i, '').split('/')[0] || "emigrantbook.com";
+    }
+
+    sponsoredCtaBarHtml = `
+      <div class="sponsored-cta-bar" onclick="window.open('${adTarget}', '_blank')">
+        <div class="sponsored-cta-text">
+          <div class="sponsored-cta-headline">${adHeadline}</div>
+          <div class="sponsored-cta-domain">${adDomain}</div>
+        </div>
+        <button class="sponsored-cta-btn">${adCta}</button>
       </div>
     `;
   }
@@ -6324,13 +6375,10 @@ function unhidePostFromFeed(postId) {
           <div class="post-avatar" onclick="viewUserProfile('${post.user_id}')">${avatarContent}</div>
           <div class="post-author-info">
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${post.author_name}</span>
+              <span class="post-author" onclick="viewUserProfile('${post.user_id}')">${displayAuthorName}</span>
               ${isStudio ? `<img src="icons/crown.svg" class="post-action-icon" style="width:14px;height:14px;" alt="Crown">` : ''}
             </div>
-            <span class="post-time" style="display:flex; align-items:center; gap:4px;">
-              <img src="icons/clock-4.svg" class="post-action-icon" style="width:12px;height:12px;opacity:0.7;" alt="Time">
-              ${date}
-            </span>
+            ${metaTimeOrSponsoredHtml}
           </div>
         </div>
         <div class="post-header-right">
@@ -6341,6 +6389,7 @@ function unhidePostFromFeed(postId) {
       
       ${studioServiceCardHtml}
       ${mediaHtml}
+      ${sponsoredCtaBarHtml}
       
       <div class="post-stats">
         <div class="fb-stats-left" onclick="openCommentsModal('${post.id}', ${currentLikesNum})">
@@ -6362,13 +6411,13 @@ function unhidePostFromFeed(postId) {
           <span>${t.comment}</span>
         </button>
         <button class="action-btn" onclick="openShareModal('${post.id}')" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-        <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px; transform: scaleX(-1);" alt="Share">
-        <span>${t.share}</span>
-       </button>
+          <img src="icons/undo-2.svg" class="post-action-icon" style="width: 18px; height: 18px; transform: scaleX(-1);" alt="Share">
+          <span>${t.share}</span>
+        </button>
       </div>
     </div>
   `;
-}
+}      
 // აქ მთავრდება    
 
                         
