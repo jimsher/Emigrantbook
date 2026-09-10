@@ -1,1 +1,512 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>რეკლამის შექმნა | Emigrantbook</title>
+  <link rel="stylesheet" href="supabase.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
 
+  <style>
+    body {
+      background-color: #0b0b0e;
+      color: #e4e6eb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding-bottom: 50px;
+    }
+
+    .ads-header {
+      background: #141416;
+      border-bottom: 1px solid #222226;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .ads-header-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #dcae36;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ads-container {
+      max-width: 650px;
+      margin: 15px auto;
+      padding: 0 15px;
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, #1f1a10 0%, #141416 100%);
+      border: 1px solid #dcae36;
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(220, 174, 54, 0.15);
+    }
+
+    .balance-info div:first-child {
+      font-size: 13px;
+      color: #aaaaaa;
+      margin-bottom: 4px;
+    }
+
+    .balance-amount {
+      font-size: 22px;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .balance-amount span {
+      color: #dcae36;
+    }
+
+    .form-card {
+      background: #141416;
+      border: 1px solid #262629;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #222226;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      background: #1e1e24;
+      border: 1px solid #33333a;
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: #dcae36;
+    }
+
+    textarea.input-field {
+      height: 90px;
+      resize: none;
+    }
+
+    .file-drop-box {
+      border: 2px dashed #3a3a44;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background: #18181c;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .file-drop-box:hover {
+      border-color: #dcae36;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .pricing-card {
+      background: #1c1c22;
+      border: 1.5px solid #2e2e38;
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pricing-card.selected {
+      border-color: #dcae36;
+      background: rgba(220, 174, 54, 0.12);
+    }
+
+    .pricing-card .days {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .pricing-card .cost {
+      font-size: 13px;
+      color: #dcae36;
+      font-weight: 800;
+    }
+
+    .submit-ad-btn {
+      width: 100%;
+      background: #dcae36;
+      color: #111111;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .submit-ad-btn:hover {
+      background: #c2982e;
+    }
+
+    .submit-ad-btn:disabled {
+      background: #33333a;
+      color: #777777;
+      cursor: not-allowed;
+    }
+
+    /* 📱 Live Preview სტილები */
+    .preview-box {
+      background: #141416;
+      border: 1px solid #262629;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ads-header">
+    <div class="ads-header-title" onclick="window.location.href='index.html'" style="cursor: pointer;">
+      <span>←</span>
+      <span>რეკლამის შეკვეთა</span>
+    </div>
+    <div style="font-size: 12px; color: #8a8f9d;">სარეკლამო ცენტრი</div>
+  </div>
+
+  <div class="ads-container">
+
+    <!-- ბალანსის ბარათი -->
+    <div class="balance-card">
+      <div class="balance-info">
+        <div>ხელმისაწვდომი ბალანსი</div>
+        <div class="balance-amount"><span id="user-balance-val">0</span> Akho</div>
+      </div>
+      <button onclick="window.location.href='balance.html'" style="background:#222; border:1px solid #dcae36; color:#dcae36; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;">+ შევსება</button>
+    </div>
+
+    <!-- შევსების ფორმა -->
+    <div class="form-card">
+      <div class="form-section-title">1. ბრენდის / კომპანიის მონაცემები</div>
+      
+      <input type="text" id="ad-brand-name" class="input-field" placeholder="ბრენდის ან გვერდის სახელი (მაგ. CellMind)" oninput="updatePreview()">
+
+      <!-- ლოგოს ატვირთვა -->
+      <div class="file-drop-box" onclick="document.getElementById('brand-logo-file').click()">
+        <div id="brand-logo-status" style="font-size: 13px; color: #aaaaaa;">
+          📷 ატვირთეთ ბრენდის ლოგო (ავატარი)
+        </div>
+        <input type="file" id="brand-logo-file" accept="image/*" style="display: none;" onchange="handleLogoSelect(event)">
+      </div>
+
+      <div class="form-section-title">2. რეკლამის შინაარსი</div>
+      
+      <textarea id="ad-text" class="input-field" placeholder="რეკლამის ძირითადი ტექსტი / შეთავაზება..." oninput="updatePreview()"></textarea>
+
+      <!-- მედიის ატვირთვა -->
+      <div class="file-drop-box" onclick="document.getElementById('ad-media-file').click()">
+        <div id="ad-media-status" style="font-size: 13px; color: #aaaaaa;">
+          🖼️ ატვირთეთ სარეკლამო ფოტო ან ვიდეო
+        </div>
+        <input type="file" id="ad-media-file" accept="image/*,video/*" style="display: none;" onchange="handleMediaSelect(event)">
+      </div>
+
+      <div class="form-section-title">3. მოქმედების ღილაკი და ბმული (Call To Action)</div>
+
+      <input type="text" id="ad-headline" class="input-field" placeholder="შეთავაზების სათაური (მაგ. 20% ფასდაკლება შეზღუდული დროით)" oninput="updatePreview()">
+
+      <input type="url" id="ad-link" class="input-field" placeholder="გადასასვლელი ბმული (მაგ. https://mysite.com ან WhatsApp-ის ლინკი)" oninput="updatePreview()">
+
+      <select id="ad-cta-btn-text" class="input-field" onchange="updatePreview()">
+        <option value="შეიტყვეთ მეტი">შეიტყვეთ მეტი</option>
+        <option value="იხილეთ დეტალები">იხილეთ დეტალები</option>
+        <option value="შეკვეთა ახლავე">შეკვეთა ახლავე</option>
+        <option value="დაგვიკავშირდით">დაგვიკავშირდით</option>
+        <option value="ყიდვა">ყიდვა</option>
+      </select>
+
+      <div class="form-section-title">4. ხანგრძლივობა და საფასური</div>
+
+      <div class="pricing-grid">
+        <div class="pricing-card selected" onclick="selectPricing(this, 3, 30)">
+          <div class="days">3 დღე</div>
+          <div class="cost">30 Akho</div>
+        </div>
+        <div class="pricing-card" onclick="selectPricing(this, 7, 60)">
+          <div class="days">7 დღე</div>
+          <div class="cost">60 Akho</div>
+        </div>
+        <div class="pricing-card" onclick="selectPricing(this, 30, 200)">
+          <div class="days">30 დღე</div>
+          <div class="cost">200 Akho</div>
+        </div>
+      </div>
+
+      <button id="submit-ad-btn" class="submit-ad-btn" onclick="publishSponsoredAd()">გადახდა და რეკლამის გაშვება (30 Akho)</button>
+    </div>
+
+    <!-- რეალური ლაივ პრევიუ -->
+    <div style="font-size: 14px; font-weight: 700; color: #8a8f9d; margin: 15px 0 8px 4px;">👁️ ასე გამოჩნდება რეკლამა მთავარ გვერდზე:</div>
+    <div class="preview-box">
+      <div style="padding: 12px 15px; display: flex; align-items: center; gap: 10px;">
+        <div id="prev-avatar" style="width: 42px; height: 42px; border-radius: 50%; background: #2a2a2e; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #dcae36;">📢</div>
+        <div>
+          <div id="prev-brand-name" style="font-weight: 700; color: #fff; font-size: 15px;">თქვენი ბრენდი</div>
+          <div style="font-size: 11.5px; color: #8a8f9d; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+            <span>დაფინანსებული</span> · <span>🌐</span>
+          </div>
+        </div>
+      </div>
+      <div id="prev-content" style="padding: 0 15px 12px 15px; font-size: 14px; color: #e4e6eb; line-height: 1.4;">თქვენი სარეკლამო ტექსტი გამოჩნდება აქ...</div>
+      
+      <!-- მედიის პრევიუ -->
+      <div id="prev-media-box" style="width: 100%; background: #000; min-height: 200px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;">
+        ფოტო / ვიდეო არ არის არჩეული
+      </div>
+
+      <!-- სარეკლამო CTA ბარი (Facebook-ის სტილი) -->
+      <div style="background: #1c1c20; border-top: 1px solid #26262a; border-bottom: 1px solid #26262a; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="flex: 1; min-width: 0; padding-right: 10px;">
+          <div id="prev-headline" style="font-size: 13.5px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">სარეკლამო სათაური</div>
+          <div id="prev-domain" style="font-size: 11px; color: #8a8f9d; margin-top: 2px;">emigrantbook.com</div>
+        </div>
+        <button id="prev-cta-btn" style="background: #2b2b32; color: #ffffff; border: 1px solid #3d3d46; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; white-space: nowrap;">შეიტყვეთ მეტი</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+      authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+      projectId: "emigrantbook-4b7bd",
+      storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+      messagingSenderId: "109907338554",
+      appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    var currentUser = null;
+    var userBalance = 0;
+    var selectedDays = 3;
+    var selectedCost = 30;
+
+    var uploadedLogoFile = null;
+    var uploadedMediaFile = null;
+    var mediaType = 'image';
+
+    // ავტორიზაცია და ბალანსის წამოღება
+    auth.onAuthStateChanged(function(user) {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+      db.collection('profiles').doc(user.uid).get().then(function(doc) {
+        if (doc.exists) {
+          userBalance = doc.data().balance || 0;
+          document.getElementById('user-balance-val').innerText = userBalance;
+        }
+      });
+    });
+
+    // ფასის პაკეტის არჩევა
+    function selectPricing(elem, days, cost) {
+      document.querySelectorAll('.pricing-card').forEach(c => c.classList.remove('selected'));
+      elem.classList.add('selected');
+      selectedDays = days;
+      selectedCost = cost;
+      document.getElementById('submit-ad-btn').innerText = `გადახდა და რეკლამის გაშვება (${cost} Akho)`;
+    }
+
+    // ლაივ პრევიუს განახლება
+    function updatePreview() {
+      var name = document.getElementById('ad-brand-name').value.trim() || "თქვენი ბრენდი";
+      var text = document.getElementById('ad-text').value.trim() || "თქვენი სარეკლამო ტექსტი გამოჩნდება აქ...";
+      var headline = document.getElementById('ad-headline').value.trim() || "სარეკლამო სათაური";
+      var link = document.getElementById('ad-link').value.trim();
+      var btnText = document.getElementById('ad-cta-btn-text').value;
+
+      document.getElementById('prev-brand-name').innerText = name;
+      document.getElementById('prev-content').innerText = text;
+      document.getElementById('prev-headline').innerText = headline;
+      document.getElementById('prev-cta-btn').innerText = btnText;
+
+      try {
+        if (link) {
+          var domain = new URL(link.startsWith('http') ? link : 'https://' + link).hostname;
+          document.getElementById('prev-domain').innerText = domain;
+        } else {
+          document.getElementById('prev-domain').innerText = "emigrantbook.com";
+        }
+      } catch(e) {
+        document.getElementById('prev-domain').innerText = "emigrantbook.com";
+      }
+    }
+
+    function handleLogoSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        uploadedLogoFile = e.target.files[0];
+        document.getElementById('brand-logo-status').innerText = "✓ ლოგო არჩეულია: " + uploadedLogoFile.name;
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('prev-avatar').innerHTML = `<img src="${evt.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+        };
+        reader.readAsDataURL(uploadedLogoFile);
+      }
+    }
+
+    function handleMediaSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        uploadedMediaFile = e.target.files[0];
+        mediaType = uploadedMediaFile.type.startsWith('video/') ? 'video' : 'image';
+        document.getElementById('ad-media-status').innerText = "✓ მედია არჩეულია: " + uploadedMediaFile.name;
+
+        var reader = new FileReader();
+        reader.onload = function(evt) {
+          var box = document.getElementById('prev-media-box');
+          if (mediaType === 'video') {
+            box.innerHTML = `<video src="${evt.target.result}" style="width:100%; max-height:350px; object-fit:contain;" controls muted></video>`;
+          } else {
+            box.innerHTML = `<img src="${evt.target.result}" style="width:100%; max-height:350px; object-fit:contain;">`;
+          }
+        };
+        reader.readAsDataURL(uploadedMediaFile);
+      }
+    }
+
+    // Cloudflare R2 ატვირთვა
+    function uploadToR2(file, folder) {
+      return new Promise(function(resolve, reject) {
+        var r2 = new AWS.S3({
+          endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+          accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+          secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+          signatureVersion: 'v4',
+          region: 'auto',
+          s3ForcePathStyle: true
+        });
+
+        var ext = file.name ? file.name.split('.').pop() : (mediaType === 'video' ? 'mp4' : 'jpg');
+        var key = folder + '/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + '.' + ext;
+
+        r2.upload({
+          Bucket: 'emigrantbook-videos',
+          Key: key,
+          Body: file,
+          ContentType: file.type || 'image/jpeg',
+          CacheControl: 'public, max-age=31536000'
+        }, function(err, data) {
+          if (err) reject(err);
+          else resolve("https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + key);
+        });
+      });
+    }
+
+    // რეკლამის გამოქვეყნება
+    async function publishSponsoredAd() {
+      var brandName = document.getElementById('ad-brand-name').value.trim();
+      var adText = document.getElementById('ad-text').value.trim();
+      var headline = document.getElementById('ad-headline').value.trim();
+      var link = document.getElementById('ad-link').value.trim();
+      var ctaText = document.getElementById('ad-cta-btn-text').value;
+
+      if (!brandName || !adText || !uploadedMediaFile) {
+        alert("გთხოვთ შეავსოთ ბრენდის სახელი, ტექსტი და ატვირთოთ ფოტო/ვიდეო!");
+        return;
+      }
+
+      if (userBalance < selectedCost) {
+        alert(`თქვენს ბალანსზე არ არის საკმარისი თანხა (${selectedCost} Akho). გთხოვთ შეავსოთ ბალანსი!`);
+        return;
+      }
+
+      var btn = document.getElementById('submit-ad-btn');
+      btn.disabled = true;
+      btn.innerText = "რეკლამა იტვირთება, გთხოვთ დაიცადოთ...";
+
+      try {
+        // 1. მედიის ატვირთვა
+        var mediaUrl = await uploadToR2(uploadedMediaFile, mediaType === 'video' ? 'videos' : 'images');
+        
+        // 2. ლოგოს ატვირთვა (თუ აირჩია)
+        var logoUrl = null;
+        if (uploadedLogoFile) {
+          logoUrl = await uploadToR2(uploadedLogoFile, 'images');
+        }
+
+        // 3. ბალანსის ჩამოჭრა
+        await db.collection('profiles').doc(currentUser.uid).update({
+          balance: firebase.firestore.FieldValue.increment(-selectedCost)
+        });
+
+        // 4. რეკლამის შექმნა posts კოლექციაში
+        var expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() + selectedDays);
+
+        await db.collection('posts').add({
+          user_id: currentUser.uid,
+          author_name: brandName,
+          content: adText,
+          media_url: mediaUrl,
+          media_type: mediaType,
+          is_sponsored: true,
+          ad_brand_name: brandName,
+          ad_avatar_url: logoUrl,
+          ad_headline: headline,
+          ad_target_url: link.startsWith('http') ? link : (link ? 'https://' + link : 'https://emigrantbook.com'),
+          ad_cta_text: ctaText,
+          ad_expires_at: expireDate,
+          likes_count: 0,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("🎉 რეკლამა წარმატებით განთავსდა მთავარ გვერდზე!");
+        window.location.href = "index.html";
+
+      } catch (err) {
+        console.error("Ad publish error:", err);
+        alert("შეცდომა: " + err.message);
+        btn.disabled = false;
+        btn.innerText = `გადახდა და რეკლამის გაშვება (${selectedCost} Akho)`;
+      }
+    }
+  </script>
+</body>
+</html>
