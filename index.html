@@ -4037,52 +4037,66 @@ auth.onAuthStateChanged(function(user) {
 }
 
     function openCommentsModal(postId, totalLikes) {
-      activePostForComments = postId;
-      cancelReplyMode();
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      
-      var containerDisplay = document.getElementById('modal-reactions-display');
-      if (containerDisplay) containerDisplay.innerHTML = `❤️ <span id="modal-total-likes">${totalLikes}</span>`;
+  activePostForComments = postId;
+  cancelReplyMode();
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-      var container = document.getElementById('modal-comments-container');
-      if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">${t.loading}</div>`;
-      
-      var sheetModal = document.getElementById('comments-sheet-modal');
-      if (sheetModal) sheetModal.style.display = "flex";
+  var trigger = document.getElementById('modal-likes-count-btn');
+  var textEl = document.getElementById('modal-likes-text');
 
-      var submitBtn = document.getElementById('modal-comment-submit-btn');
-      var inputField = document.getElementById('modal-comment-input-field');
-
-      if (submitBtn) {
-        submitBtn.onclick = function() { submitCommentFromModal(postId); };
-        submitBtn.innerText = t.send;
+  if (totalLikes > 0) {
+    if (trigger) trigger.style.display = 'flex';
+    db.collection('posts').doc(postId).collection('post_likes').limit(1).get().then(function(snap) {
+      if (!snap.empty && textEl) {
+        var firstLiker = snap.docs[0].data().full_name || (t.userUnit || "User");
+        textEl.innerText = totalLikes > 1 ? (firstLiker + " და " + (totalLikes - 1)) : firstLiker;
+      } else if (textEl) {
+        textEl.innerText = totalLikes;
       }
-      if (inputField) {
-        inputField.placeholder = t.commentPlaceholder;
-        inputField.onkeypress = function(e) {
-          if (e.key === 'Enter') submitCommentFromModal(postId);
-        };
-      }
+    }).catch(function() {
+      if (textEl) textEl.innerText = totalLikes;
+    });
+  } else {
+    if (trigger) trigger.style.display = 'none';
+  }
 
-      loadCommentsIntoModal(postId);
-    }
+  var container = document.getElementById('modal-comments-container');
+  if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">${t.loading}</div>`;
 
-    function setReplyMode(commentId, authorName) {
-      activeCommentReplyId = commentId;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      var bar = document.getElementById('reply-active-bar');
-      var txt = document.getElementById('reply-active-text');
-      if (txt) txt.innerText = t.replyTo + authorName;
-      if (bar) bar.style.display = "flex";
-      var inputField = document.getElementById('modal-comment-input-field');
-      if (inputField) inputField.focus();
-    }
+  var sheetModal = document.getElementById('comments-sheet-modal');
+  if (sheetModal) sheetModal.style.display = "flex";
 
-    function cancelReplyMode() {
-      activeCommentReplyId = null;
-      var bar = document.getElementById('reply-active-bar');
-      if(bar) bar.style.display = "none";
-    }
+  var submitBtn = document.getElementById('modal-comment-submit-btn');
+  var inputField = document.getElementById('modal-comment-input-field');
+
+  if (submitBtn) {
+    submitBtn.onclick = function() { submitCommentFromModal(postId); };
+    submitBtn.innerText = t.send;
+  }
+  if (inputField) {
+    inputField.placeholder = t.commentPlaceholder;
+    inputField.onkeypress = function(e) {
+      if (e.key === 'Enter') submitCommentFromModal(postId);
+    };
+  }
+
+  loadCommentsIntoModal(postId);
+}
+
+function toggleRepliesContainer(commentId) {
+  var box = document.getElementById('replies-to-' + commentId);
+  var btn = document.getElementById('toggle-btn-' + commentId);
+  if (!box) return;
+
+  if (box.style.display === 'none' || box.style.display === '') {
+    box.style.display = 'flex';
+    if (btn) btn.innerHTML = '<span>∧</span> პასუხების დამალვა';
+  } else {
+    box.style.display = 'none';
+    var count = box.querySelectorAll('.fb-comment-card').length;
+    if (btn) btn.innerHTML = `<span>∨</span> ${count} პასუხის ნახვა`;
+  }
+}
 
     // აქ იწყება
     function loadCommentsIntoModal(postId) {
