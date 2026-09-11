@@ -707,6 +707,12 @@ body.light-mode .sponsored-cta-btn:hover {
   
 </head>
 <body>
+  <script>
+    if (localStorage.getItem('eb_theme') !== 'dark') {
+      document.body.classList.add('light-mode');
+    }
+  </script>
+  
 <!-- შეტყობინების მოთხოვნის ბანერი -->
 <div id="eb-push-banner" style="display: none; position: fixed; bottom: 20px; left: 15px; right: 15px; background: #1e293b; color: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 999999; font-family: sans-serif;">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
@@ -8053,8 +8059,8 @@ function optimizeImageBeforeUpload(file, callback) {
 
 
 
-    // ფეისბუქის თეთრი ფონი 
-    function openThemeModal() {
+   // ფეისბუქის თეთრი ფონი (Default: Light Mode)
+function openThemeModal() {
   var modal = document.getElementById('customThemeModal');
   if (modal) modal.style.display = 'flex';
   highlightCurrentTheme();
@@ -8070,16 +8076,19 @@ function setTheme(themeMode) {
   if (themeMode === 'light') {
     document.body.classList.add('light-mode');
     localStorage.setItem('eb_theme', 'light');
-    document.getElementById('currentThemeDisplay').innerText = 'Light Mode';
+    var display = document.getElementById('currentThemeDisplay');
+    if (display) display.innerText = 'Light Mode';
   } else {
     document.body.classList.remove('light-mode');
     localStorage.setItem('eb_theme', 'dark');
-    document.getElementById('currentThemeDisplay').innerText = 'Dark Mode';
+    var display = document.getElementById('currentThemeDisplay');
+    if (display) display.innerText = 'Dark Mode';
   }
 }
 
 function highlightCurrentTheme() {
-  var current = localStorage.getItem('eb_theme') || 'dark';
+  // ნაგულისხმევად ვიღებთ 'light'-ს 'dark'-ის ნაცვლად
+  var current = localStorage.getItem('eb_theme') || 'light';
   var darkCheck = document.getElementById('check-dark');
   var lightCheck = document.getElementById('check-light');
   var display = document.getElementById('currentThemeDisplay');
@@ -8096,12 +8105,15 @@ function highlightCurrentTheme() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  var savedTheme = localStorage.getItem('eb_theme') || 'dark';
+  // პირველად შემოსულზე ირთვება Light Mode
+  var savedTheme = localStorage.getItem('eb_theme') || 'light';
   if (savedTheme === 'light') {
     document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
   }
   highlightCurrentTheme();
-});
+}); 
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
