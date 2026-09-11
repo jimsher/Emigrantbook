@@ -4047,208 +4047,322 @@ auth.onAuthStateChanged(function(user) {
 }
 
   //აქ იწყება სრული კომენტარების ვერსია
-    function openCommentsModal(postId, totalLikes) {
-  activePostForComments = postId;
-  cancelReplyMode();
-  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+   function openCommentsModal(postId, totalLikes) {
+      activePostForComments = postId;
+      cancelReplyMode();
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-  var trigger = document.getElementById('modal-likes-count-btn');
-  var textEl = document.getElementById('modal-likes-text');
+      var totalLikesNum = Number(totalLikes) || 0;
+      var likesBtn = document.getElementById('modal-likes-count-btn');
+      var likesCountSpan = document.getElementById('modal-total-likes');
 
-  if (totalLikes > 0) {
-    if (trigger) trigger.style.display = 'flex';
-    db.collection('posts').doc(postId).collection('post_likes').limit(1).get().then(function(snap) {
-      if (!snap.empty && textEl) {
-        var firstLiker = snap.docs[0].data().full_name || (t.userUnit || "User");
-        textEl.innerText = totalLikes > 1 ? (firstLiker + " და " + (totalLikes - 1)) : firstLiker;
-      } else if (textEl) {
-        textEl.innerText = totalLikes;
+      if (likesCountSpan) likesCountSpan.innerText = totalLikesNum;
+      if (likesBtn) {
+        likesBtn.style.display = (totalLikesNum > 0) ? "flex" : "none";
       }
-    }).catch(function() {
-      if (textEl) textEl.innerText = totalLikes;
-    });
-  } else {
-    if (trigger) trigger.style.display = 'none';
-  }
 
-  var container = document.getElementById('modal-comments-container');
-  if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">${t.loading}</div>`;
+      var container = document.getElementById('modal-comments-container');
+      if (container) container.innerHTML = `<div style="text-align: center; color: #aaaaaa; padding: 20px;">${t.loading || 'იტვირთება...'}</div>`;
 
-  var sheetModal = document.getElementById('comments-sheet-modal');
-  if (sheetModal) sheetModal.style.display = "flex";
+      // გარანტირებული გახსნა !important-ით
+      var sheetModal = document.getElementById('comments-sheet-modal');
+      if (sheetModal) {
+        sheetModal.style.setProperty('display', 'flex', 'important');
+      }
 
-  var submitBtn = document.getElementById('modal-comment-submit-btn');
-  var inputField = document.getElementById('modal-comment-input-field');
+      var submitBtn = document.getElementById('modal-comment-submit-btn');
+      var inputField = document.getElementById('modal-comment-input-field');
 
-  if (submitBtn) {
-    submitBtn.onclick = function() { submitCommentFromModal(postId); };
-    submitBtn.innerText = t.send;
-  }
-  if (inputField) {
-    inputField.placeholder = t.commentPlaceholder;
-    inputField.onkeypress = function(e) {
-      if (e.key === 'Enter') submitCommentFromModal(postId);
-    };
-  }
+      if (submitBtn) {
+        submitBtn.onclick = function() { submitCommentFromModal(postId); };
+        submitBtn.innerText = t.send || "გაგზავნა";
+      }
+      if (inputField) {
+        inputField.value = "";
+        inputField.placeholder = t.commentPlaceholder || "დაწერეთ კომენტარი...";
+        inputField.onkeypress = function(e) {
+          if (e.key === 'Enter') submitCommentFromModal(postId);
+        };
+      }
 
-  loadCommentsIntoModal(postId);
-}
+      loadCommentsIntoModal(postId);
+    }
 
-function toggleRepliesContainer(commentId) {
-  var box = document.getElementById('replies-to-' + commentId);
-  var btn = document.getElementById('toggle-btn-' + commentId);
-  if (!box) return;
+    function closeCommentsModal() {
+      var sheetModal = document.getElementById('comments-sheet-modal');
+      if (sheetModal) {
+        sheetModal.style.setProperty('display', 'none', 'important');
+      }
+      activePostForComments = null;
+      cancelReplyMode();
+    }
 
-  if (box.style.display === 'none' || box.style.display === '') {
-    box.style.display = 'flex';
-    if (btn) btn.innerHTML = '<span>∧</span> პასუხების დამალვა';
-  } else {
-    box.style.display = 'none';
-    var count = box.querySelectorAll('.fb-comment-card').length;
-    if (btn) btn.innerHTML = `<span>∨</span> ${count} პასუხის ნახვა`;
-  }
-}
+    function setReplyMode(commentId, authorName) {
+      activeCommentReplyId = commentId;
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+      var bar = document.getElementById('reply-active-bar');
+      var txt = document.getElementById('reply-active-text');
+      if (txt) txt.innerText = (t.replyTo || "პასუხი მომხმარებელს: ") + authorName;
+      if (bar) bar.style.display = "flex";
+      var inputField = document.getElementById('modal-comment-input-field');
+      if (inputField) inputField.focus();
+    }
 
-function loadCommentsIntoModal(postId) {
-  var container = document.getElementById('modal-comments-container');
-  if (!postId || !container) return;
-  var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
-  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+    function cancelReplyMode() {
+      activeCommentReplyId = null;
+      var bar = document.getElementById('reply-active-bar');
+      if (bar) bar.style.display = "none";
+    }
 
-  db.collection('posts').doc(postId).get().then(function(postSnap) {
-    var postAuthorId = postSnap.exists ? postSnap.data().user_id : "";
+    function toggleRepliesBox(commentId) {
+      var box = document.getElementById('replies-box-' + commentId);
+      var btn = document.getElementById('toggle-replies-btn-' + commentId);
+      if (!box) return;
 
-    db.collection('post_comments')
-      .where('post_id', '==', postId)
-      .get()
-      .then(function(snapshot) {
-        if (snapshot.empty) {
-          var emptyText = t.emptyWall || 'No comments yet. Write the first one!';
-          container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">${emptyText}</div>`;
-          return;
-        }
+      if (box.style.display === 'none' || box.style.display === '') {
+        box.style.display = 'flex';
+        if (btn) btn.innerHTML = '<span>∧</span> პასუხების დამალვა';
+      } else {
+        box.style.display = 'none';
+        var count = box.querySelectorAll('.fb-comment-card').length;
+        if (btn) btn.innerHTML = `<span>∨</span> ${count} პასუხის ნახვა`;
+      }
+    }
 
-        var allItems = [];
-        snapshot.forEach(function(doc) {
-          allItems.push(Object.assign({ id: doc.id }, doc.data()));
-        });
+    function loadCommentsIntoModal(postId) {
+      var container = document.getElementById('modal-comments-container');
+      if (!postId || !container) return;
+      var lang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : 'en';
+      var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang]) ? TRANSLATIONS[lang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
 
-        allItems.sort(function(a, b) {
-          var timeA = a.created_at ? (a.created_at.toDate ? a.created_at.toDate().getTime() : new Date(a.created_at).getTime()) : 0;
-          var timeB = b.created_at ? (b.created_at.toDate ? b.created_at.toDate().getTime() : new Date(b.created_at).getTime()) : 0;
-          return timeA - timeB;
-        });
+      // ვიგებთ პოსტის ავტორის ID-ს "❤️ by author" ნიშნისთვის
+      db.collection('posts').doc(postId).get().then(function(postSnap) {
+        var postAuthorId = postSnap.exists ? postSnap.data().user_id : "";
 
-        var mainComments = allItems.filter(function(c) { return !c.parent_id; });
-        var replies = allItems.filter(function(c) { return c.parent_id; });
+        db.collection('post_comments')
+          .where('post_id', '==', postId)
+          .get()
+          .then(function(snapshot) {
+            if (snapshot.empty) {
+              var emptyText = t.emptyWall || 'კომენტარები არ არის. დაწერეთ პირველი!';
+              container.innerHTML = `<div style="text-align: center; color: #666666; padding: 30px;">${emptyText}</div>`;
+              return;
+            }
 
-        container.innerHTML = "";
-        mainComments.forEach(function(comment) {
-          var name = comment.author_name || (t.userUnit || "User");
-          var isOnline = cachedOnlineStates[comment.user_id] === true;
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var cAvatar = comment.avatar_url || DEFAULT_AVATAR_URL;
-          var avatarHtml = `<div class="avatar-has-online"><img src="${cAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
+            var allItems = [];
+            snapshot.forEach(function(doc) {
+              allItems.push(Object.assign({ id: doc.id }, doc.data()));
+            });
 
-          var timeString = formatTimeAgo(comment.created_at);
-          var isAuthor = (comment.user_id === postAuthorId);
-          var authorBadgeHtml = isAuthor ? `<span class="fb-author-badge"><span style="color:#e41e3f;">❤️</span> by author</span>` : ``;
+            allItems.sort(function(a, b) {
+              var timeA = 0;
+              if (a.created_at) {
+                timeA = a.created_at.toDate ? a.created_at.toDate().getTime() : (typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime());
+              }
+              var timeB = 0;
+              if (b.created_at) {
+                timeB = b.created_at.toDate ? b.created_at.toDate().getTime() : (typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime());
+              }
+              return timeA - timeB;
+            });
 
-          var cLikes = comment.likes_count || 0;
-          var hasLikedComment = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + comment.id)) || false;
+            var mainComments = allItems.filter(function(c) { return !c.parent_id; });
+            var replies = allItems.filter(function(c) { return c.parent_id; });
 
-          var likesPillHtml = cLikes > 0 ? `
-            <div class="fb-comment-likes-pill" onclick="likeComment('${comment.id}', ${cLikes})">
-              <span>❤️</span> <span>${cLikes}</span>
-            </div>
-          ` : '';
+            container.innerHTML = "";
+            mainComments.forEach(function(comment) {
+              var name = comment.author_name || (t.userUnit || "User");
+              var isOnline = cachedOnlineStates[comment.user_id] === true;
+              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+              var cAvatar = comment.avatar_url || DEFAULT_AVATAR_URL;
+              var avatarHtml = `<div class="avatar-has-online"><img src="${cAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
 
-          var commentReplies = replies.filter(function(r) { return r.parent_id === comment.id; });
-          var toggleBtnHtml = commentReplies.length > 0 ? `
-            <button class="fb-replies-toggle-btn" id="toggle-btn-${comment.id}" onclick="toggleRepliesContainer('${comment.id}')">
-              <span>∨</span> ${commentReplies.length} პასუხის ნახვა
-            </button>
-          ` : '';
+              var timeString = (typeof formatTimeAgo === 'function') ? formatTimeAgo(comment.created_at) : "";
+              var isAuthor = (comment.user_id === postAuthorId);
+              var authorBadgeHtml = isAuthor ? `<span style="color:#e41e3f; font-size:11.5px; font-weight:600; margin-left:4px;">❤️ by author</span>` : ``;
 
-          var commentHtml = `
-            <div class="fb-comment-wrapper" id="comment-block-${comment.id}">
-              <div class="fb-comment-card">
-                <div class="fb-comment-avatar" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${avatarHtml}</div>
-                <div class="fb-comment-main">
-                  <div class="fb-comment-bubble">
-                    <div class="fb-comment-user-row">
-                      <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
-                      <span class="fb-comment-time">${timeString}</span>
-                      ${authorBadgeHtml}
+              var cLikes = Number(comment.likes_count) || 0;
+              var myUid = currentUser ? currentUser.uid : "";
+              var hasLiked = false;
+              try {
+                hasLiked = JSON.parse(localStorage.getItem(myUid + '_liked_comment_' + comment.id)) || false;
+              } catch(e) {}
+
+              var likesPillHtml = cLikes > 0 ? `
+                <span style="font-size: 11.5px; color: #65676b; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;" onclick="likeComment('${comment.id}', ${cLikes})">
+                  <span>❤️</span> <span>${cLikes}</span>
+                </span>
+              ` : '';
+
+              var commentReplies = replies.filter(function(r) { return r.parent_id === comment.id; });
+              var toggleRepliesHtml = commentReplies.length > 0 ? `
+                <button class="fb-replies-toggle-btn" id="toggle-replies-btn-${comment.id}" onclick="toggleRepliesBox('${comment.id}')" style="background:none; border:none; color:#65676b; font-size:12.5px; font-weight:700; cursor:pointer; margin-top:6px; padding:0; display:inline-flex; align-items:center; gap:4px;">
+                  <span>∨</span> ${commentReplies.length} პასუხის ნახვა
+                </button>
+              ` : '';
+
+              var heartColor = hasLiked ? "#e41e3f" : "#65676b";
+
+              var commentHtml = `
+                <div class="fb-comment-wrapper" id="comment-block-${comment.id}" style="display:flex; flex-direction:column; gap:6px; width:100%;">
+                  <div class="fb-comment-card" style="display:flex; gap:10px; align-items:flex-start; width:100%;">
+                    <div class="fb-comment-avatar" style="width:36px; height:36px; border-radius:50%; flex-shrink:0; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${avatarHtml}</div>
+                    <div class="fb-comment-main" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                      <div class="fb-comment-bubble" style="background:transparent; padding:0; width:100%;">
+                        <div class="fb-comment-user-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+                          <span class="fb-comment-name" style="font-size:13.5px; font-weight:700; color:#050505; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
+                          <span class="fb-comment-time" style="font-size:12px; color:#65676b;">${timeString}</span>
+                          ${authorBadgeHtml}
+                        </div>
+                        <div class="fb-comment-text" style="font-size:14.5px; color:#050505; line-height:1.35; word-break:break-word;">${comment.content || ""}</div>
+                      </div>
+                      
+                      <!-- ქვედა ზოლი: მარცხნივ პასუხი/რაოდენობა, მარჯვნივ მხოლოდ გული ❤️ -->
+                      <div class="fb-comment-actions-row" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px; min-height:22px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                          <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')" style="background:none; border:none; color:#65676b; font-size:12px; font-weight:700; cursor:pointer; padding:0;">${t.reply || 'პასუხის გაცემა'}</button>
+                          ${likesPillHtml}
+                        </div>
+                        
+                        <!-- მხოლოდ წითელი გული -->
+                        <button onclick="likeComment('${comment.id}', ${cLikes})" style="background:none; border:none; cursor:pointer; padding:2px; font-size:16px; color:${heartColor};" title="Love">
+                          ${hasLiked ? '❤️' : '🤍'}
+                        </button>
+                      </div>
+
+                      ${toggleRepliesHtml}
                     </div>
-                    <div class="fb-comment-text">${comment.content || ""}</div>
                   </div>
-                  <div class="fb-comment-actions-row">
-                    <div class="fb-actions-left">
-                      <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')">${t.reply || 'პასუხის გაცემა'}</button>
-                      ${likesPillHtml}
-                    </div>
-                    <button class="fb-comment-heart-btn ${hasLikedComment ? 'liked' : ''}" onclick="likeComment('${comment.id}', ${cLikes})" title="Love">
-                      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    </button>
-                  </div>
-                  ${toggleBtnHtml}
+
+                  <!-- ჩაშენებული პასუხების ყუთი -->
+                  <div class="fb-replies-container" id="replies-box-${comment.id}" style="display:none; margin-left:46px; flex-direction:column; gap:10px; width:calc(100% - 46px); margin-top:6px;"></div>
                 </div>
-              </div>
+              `;
 
-              <div class="fb-replies-container" id="replies-to-${comment.id}" style="display: none;"></div>
-            </div>
-          `;
+              container.innerHTML += commentHtml;
+            });
 
-          container.innerHTML += commentHtml;
-        });
+            // პასუხების ჩასმა
+            replies.forEach(function(reply) {
+              var targetBox = document.getElementById('replies-box-' + reply.parent_id);
+              if (targetBox) {
+                var rName = reply.author_name || (t.userUnit || "User");
+                var rIsOnline = cachedOnlineStates[reply.user_id] === true;
+                var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+                var rAvatar = reply.avatar_url || DEFAULT_AVATAR_URL;
+                var rAvatarHtml = `<div class="avatar-has-online"><img src="${rAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${rDotHtml}</div>`;
 
-        // პასუხების ჩასმა
-        replies.forEach(function(reply) {
-          var targetBox = document.getElementById('replies-to-' + reply.parent_id);
-          if (targetBox) {
-            var rName = reply.author_name || (t.userUnit || "User");
-            var rIsOnline = cachedOnlineStates[reply.user_id] === true;
-            var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-            var rAvatar = reply.avatar_url || DEFAULT_AVATAR_URL;
-            var rAvatarHtml = `<div class="avatar-has-online"><img src="${rAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${rDotHtml}</div>`;
+                var rTimeString = (typeof formatTimeAgo === 'function') ? formatTimeAgo(reply.created_at) : "";
+                var isReplyAuthor = (reply.user_id === postAuthorId);
+                var rAuthorBadge = isReplyAuthor ? `<span style="color:#1877f2; font-size:11.5px; font-weight:700; margin-left:4px;">✍️ ავტორი</span>` : ``;
 
-            var rTimeString = formatTimeAgo(reply.created_at);
-            var isReplyAuthor = (reply.user_id === postAuthorId);
-            var rAuthorBadge = isReplyAuthor ? `<span class="fb-author-badge">✍️ ავტორი</span>` : ``;
+                var rLikes = Number(reply.likes_count) || 0;
+                var myUid = currentUser ? currentUser.uid : "";
+                var hasLikedReply = false;
+                try {
+                  hasLikedReply = JSON.parse(localStorage.getItem(myUid + '_liked_comment_' + reply.id)) || false;
+                } catch(e) {}
 
-            var rLikes = reply.likes_count || 0;
-            var hasLikedReply = JSON.parse(localStorage.getItem(currentUser.uid + '_liked_comment_' + reply.id)) || false;
+                var rHeartColor = hasLikedReply ? "#e41e3f" : "#65676b";
 
-            targetBox.innerHTML += `
-              <div class="fb-comment-card">
-                <div class="fb-comment-avatar" style="width: 30px; height: 30px;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rAvatarHtml}</div>
-                <div class="fb-comment-main">
-                  <div class="fb-comment-bubble">
-                    <div class="fb-comment-user-row">
-                      <span class="fb-comment-name" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
-                      <span class="fb-comment-time">${rTimeString}</span>
-                      ${rAuthorBadge}
+                targetBox.innerHTML += `
+                  <div class="fb-comment-card" style="display:flex; gap:8px; align-items:flex-start; width:100%;">
+                    <div class="fb-comment-avatar" style="width:30px; height:30px; border-radius:50%; flex-shrink:0; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rAvatarHtml}</div>
+                    <div class="fb-comment-main" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                      <div class="fb-comment-bubble" style="background:transparent; padding:0; width:100%;">
+                        <div class="fb-comment-user-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+                          <span class="fb-comment-name" style="font-size:13px; font-weight:700; color:#050505; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
+                          <span class="fb-comment-time" style="font-size:11.5px; color:#65676b;">${rTimeString}</span>
+                          ${rAuthorBadge}
+                        </div>
+                        <div class="fb-comment-text" style="font-size:14px; color:#050505; line-height:1.35; word-break:break-word;">${reply.content || ""}</div>
+                      </div>
+                      <div class="fb-comment-actions-row" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
+                        <button class="fb-comment-action-btn" onclick="setReplyMode('${reply.parent_id}', '${rName}')" style="background:none; border:none; color:#65676b; font-size:11.5px; font-weight:700; cursor:pointer; padding:0;">${t.reply || 'პასუხის გაცემა'}</button>
+                        <button onclick="likeComment('${reply.id}', ${rLikes})" style="background:none; border:none; cursor:pointer; padding:2px; font-size:15px; color:${rHeartColor};" title="Love">
+                          ${hasLikedReply ? '❤️' : '🤍'}
+                        </button>
+                      </div>
                     </div>
-                    <div class="fb-comment-text">${reply.content || ""}</div>
                   </div>
-                  <div class="fb-comment-actions-row">
-                    <button class="fb-comment-action-btn" onclick="setReplyMode('${reply.parent_id}', '${rName}')">${t.reply || 'პასუხის გაცემა'}</button>
-                    <button class="fb-comment-heart-btn ${hasLikedReply ? 'liked' : ''}" onclick="likeComment('${reply.id}', ${rLikes})" title="Love">
-                      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }
+                `;
+              }
+            });
+          }).catch(function(err) {
+            console.error("Comments query error:", err);
+            container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">შეცდომა კომენტარების ჩატვირთვისას</div>`;
+          });
+      }).catch(function(err) {
+        console.error("Post fetch error:", err);
+      });
+    }
+
+    function likeComment(commentId, currentLikes) {
+      if (!currentUser) return;
+      var key = currentUser.uid + '_liked_comment_' + commentId;
+      var hasLiked = false;
+      try {
+        hasLiked = JSON.parse(localStorage.getItem(key)) || false;
+      } catch(e) {}
+
+      var currentLikesNum = Number(currentLikes) || 0;
+      var newLikes = hasLiked ? (currentLikesNum > 0 ? currentLikesNum - 1 : 0) : currentLikesNum + 1;
+      
+      localStorage.setItem(key, JSON.stringify(!hasLiked));
+
+      db.collection('post_comments').doc(commentId)
+        .update({ likes_count: newLikes })
+        .then(function() {
+          loadCommentsIntoModal(activePostForComments);
+        }).catch(function(err) {
+          console.error("Error updating comment like:", err);
+        });
+    }
+
+    function submitCommentFromModal(postId) {
+      var input = document.getElementById('modal-comment-input-field');
+      if (!input || !currentUser) return;
+      var text = input.value.trim();
+      if (!text) return;
+
+      var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
+      var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
+
+      var insertObj = {
+        post_id: postId,
+        user_id: currentUser.uid,
+        author_name: authorName,
+        avatar_url: avatarUrl,
+        content: text,
+        likes_count: 0,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if (activeCommentReplyId) {
+        insertObj.parent_id = activeCommentReplyId;
+      }
+
+      db.collection('post_comments').add(insertObj).then(function() {
+        input.value = "";
+        cancelReplyMode();
+        loadCommentsIntoModal(postId);
+        
+        db.collection('posts').doc(postId).update({
+          comments_count: firebase.firestore.FieldValue.increment(1)
+        }).catch(function(){});
+
+        db.collection('post_comments').where('post_id', '==', postId).get().then(function(snapshot) {
+          var count = snapshot.size;
+          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+          var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
+          countLabels.forEach(function(lbl) {
+            lbl.innerText = count + " " + (t.commentsCount || "კომენტარი");
+          });
         });
       }).catch(function(err) {
-        console.error("Comments load error:", err);
-        container.innerHTML = `<div style="text-align: center; color: #ff4d4f; padding: 20px;">Error loading comments</div>`;
+        alert("კომენტარის გაგზავნის შეცდომა: " + err.message);
       });
-  });
-}
+    } 
    // აქ მთავრდება             
 
     function likeComment(commentId, currentLikes) {
