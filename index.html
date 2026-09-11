@@ -4115,19 +4115,21 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function toggleRepliesBox(commentId) {
-      var box = document.getElementById('replies-box-' + commentId);
-      var btn = document.getElementById('toggle-replies-btn-' + commentId);
-      if (!box) return;
+  var box = document.getElementById('replies-box-' + commentId);
+  var btn = document.getElementById('toggle-replies-btn-' + commentId);
+  if (!box) return;
 
-      if (box.style.display === 'none' || box.style.display === '') {
-        box.style.display = 'flex';
-        if (btn) btn.innerHTML = '<span>∧</span> პასუხების დამალვა';
-      } else {
-        box.style.display = 'none';
-        var count = box.querySelectorAll('.fb-comment-card').length;
-        if (btn) btn.innerHTML = `<span>∨</span> ${count} პასუხის ნახვა`;
-      }
-    }
+  var isCurrentlyHidden = (box.style.display === 'none' || window.getComputedStyle(box).display === 'none');
+
+  if (isCurrentlyHidden) {
+    box.style.setProperty('display', 'flex', 'important');
+    if (btn) btn.innerHTML = '<span>∧</span> პასუხების დამალვა';
+  } else {
+    box.style.setProperty('display', 'none', 'important');
+    var count = box.querySelectorAll('.fb-comment-card').length;
+    if (btn) btn.innerHTML = `<span>∨</span> ${count} პასუხის ნახვა`;
+  }
+}
 
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
