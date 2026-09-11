@@ -1534,34 +1534,42 @@ body.light-mode .sponsored-cta-btn:hover {
  <!-- 📱 FULL FACEBOOK STYLE STORY VIEWER MODAL -->
 
 <!-- აქ მთავრდება -->
-  <div id="comments-sheet-modal" class="comments-modal-overlay" onclick="closeCommentsModal()">
+ <!-- 💬 COMMENTS MODAL (ONLY HEARTS ❤️) -->
+  <div id="comments-sheet-modal" class="comments-modal-overlay" onclick="closeCommentsModal()" style="display: none !important;">
     <div class="comments-modal-content" onclick="event.stopPropagation()">
       <div class="comments-modal-drag"></div>
+      
+      <!-- ზედა ზოლი: მხოლოდ წითელი გული და რაოდენობა -->
       <div class="comments-modal-header">
-        <div class="modal-likes-trigger" id="modal-likes-count-btn" onclick="openLikersListModal()" style="display: none;">
+        <div class="modal-likes-trigger" id="modal-likes-count-btn" onclick="openLikersListModal()" style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
           <span style="font-size: 16px;">❤️</span>
-          <span id="modal-likes-text"><span id="modal-total-likes">0</span></span>
+          <span id="modal-total-likes" style="font-weight: bold; color: #050505;">0</span>
           <span style="color: #65676b; font-size: 15px; margin-left: 2px;">›</span>
         </div>
-        <button class="comments-modal-close" onclick="closeCommentsModal()">×</button>
+        <button class="comments-modal-close" onclick="closeCommentsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #65676b;">×</button>
       </div>
+
+      <!-- კომენტარების სია -->
       <div class="comments-modal-body" id="modal-comments-container"></div>
       
-      <div id="reply-active-bar" class="reply-input-active-bar">
+      <!-- პასუხის გაცემის რეჟიმი -->
+      <div id="reply-active-bar" class="reply-input-active-bar" style="display: none;">
         <span id="reply-active-text">Replying to user...</span>
         <span style="cursor:pointer;color:#ff4d4f;font-weight:bold;" id="lbl-reply-cancel" onclick="cancelReplyMode()">Cancel</span>
       </div>
 
+      <!-- ქვედა საწერი ველი (სრულიად განბლოკილი კლავიატურისთვის) -->
       <div class="comments-modal-footer">
         <div class="modal-footer-input-row">
           <div class="modal-input-holder">
-            <input type="text" id="modal-comment-input-field" placeholder="Write a comment...">
+            <input type="text" id="modal-comment-input-field" placeholder="დაწერეთ კომენტარი..." autocomplete="off" style="-webkit-user-select: text !important; user-select: text !important; pointer-events: auto !important;">
           </div>
-          <button class="comment-submit-button" id="modal-comment-submit-btn">Send</button>
+          <button class="comment-submit-button" id="modal-comment-submit-btn">გაგზავნა</button>
         </div>
       </div>
     </div>
-  </div>
+  </div> 
+  
   
 
   <div id="likers-list-modal" class="likers-modal-overlay" onclick="closeLikersModal()">
