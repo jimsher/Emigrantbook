@@ -8068,6 +8068,7 @@ function optimizeImageBeforeUpload(file, callback) {
 
 
    // ფეისბუქის თეთრი ფონი (Default: Light Mode)
+// ფეისბუქის თეთრი ფონი 
 function openThemeModal() {
   var modal = document.getElementById('customThemeModal');
   if (modal) modal.style.display = 'flex';
@@ -8092,6 +8093,7 @@ function setTheme(themeMode) {
     var display = document.getElementById('currentThemeDisplay');
     if (display) display.innerText = 'Dark Mode';
   }
+  highlightCurrentTheme();
 }
 
 function highlightCurrentTheme() {
@@ -8100,20 +8102,20 @@ function highlightCurrentTheme() {
   var lightCheck = document.getElementById('check-light');
   var display = document.getElementById('currentThemeDisplay');
 
-  if (current === 'dark') {
-    if (darkCheck) darkCheck.style.display = 'inline';
-    if (lightCheck) lightCheck.style.display = 'none';
-    if (display) display.innerText = 'Dark Mode';
-  } else {
+  if (current === 'light') {
     if (darkCheck) darkCheck.style.display = 'none';
     if (lightCheck) lightCheck.style.display = 'inline';
     if (display) display.innerText = 'Light Mode';
+  } else {
+    if (darkCheck) darkCheck.style.display = 'inline';
+    if (lightCheck) lightCheck.style.display = 'none';
+    if (display) display.innerText = 'Dark Mode';
   }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
   var savedTheme = localStorage.getItem('eb_theme') || 'light';
-  if (savedTheme !== 'dark') {
+  if (savedTheme === 'light') {
     document.body.classList.add('light-mode');
   } else {
     document.body.classList.remove('light-mode');
