@@ -3204,6 +3204,7 @@ function syncMedianOneSignal(uid) {
   }
 
   // ვუშვებთ რამდენჯერმე, რომ აპლიკაციის ჩატვირთვას 100%-ით მოერგოს
+ // ვუშვებთ რამდენჯერმე, რომ აპლიკაციის ჩატვირთვას 100%-ით მოერგოს
   runSync();
   setTimeout(runSync, 2000);
   setTimeout(runSync, 4000);
@@ -3213,6 +3214,33 @@ auth.onAuthStateChanged(function(user) {
   if (user) {
     currentUser = user;
     activeViewingProfileId = user.uid;
+
+    // 🌟 1. მყისიერი ლოკალური ქეში: რამდენიმე საათის შემდეგ შემოსვლისას სახელი და ავატარი 0.01 წამში გამოჩნდეს
+    try {
+      var localProfileRaw = localStorage.getItem('eb_cached_profile_' + user.uid);
+      if (localProfileRaw) {
+        var localData = JSON.parse(localProfileRaw);
+        if (localData && (localData.full_name || localData.avatar_url)) {
+          userProfile = localData;
+          cachedProfiles[user.uid] = localData;
+          cachedOnlineStates[user.uid] = true;
+
+          var initName = localData.full_name || user.email;
+          var initAvatar = localData.avatar_url || null;
+
+          renderAvatar('header-avatar-btn', initAvatar, initName, user.uid);
+          renderAvatar('profile-big-avatar', initAvatar, initName, user.uid);
+
+          var pNameInit = document.getElementById('profile-user-name');
+          var pSubInit = document.getElementById('profile-user-subtitle');
+          if (pNameInit) pNameInit.innerText = initName;
+          if (pSubInit) pSubInit.innerText = user.email;
+        }
+      }
+    } catch(e) {
+      console.warn("Profile cache load error:", e);
+    }
+
     listenForIncomingCalls(user.uid);
 
     // Median App-ის სინქრონიზაცია OneSignal-თან
@@ -3283,6 +3311,11 @@ auth.onAuthStateChanged(function(user) {
         finalName = userProfile.full_name || user.email;
         avatarUrl = userProfile.avatar_url || null;
         
+        // 🌟 2. ვინახავთ ლოკალურ მეხსიერებაში, რომ შემდეგ შემოსვლაზე არ დაიკარგოს
+        try {
+          localStorage.setItem('eb_cached_profile_' + user.uid, JSON.stringify(userProfile));
+        } catch(e) {}
+
         if (userProfile.language) {
           currentLang = userProfile.language;
           localStorage.setItem('emigrantbook_lang', currentLang);
@@ -3328,7 +3361,7 @@ auth.onAuthStateChanged(function(user) {
       hidePreloader();
     });
   } else {
-     // ნავბარის დამალვა გამოსვლისას
+    // ნავბარის დამალვა გამოსვლისას
     var bottomNav = document.getElementById('bottomNav');
     if (bottomNav) bottomNav.style.setProperty('display', 'none', 'important');
     
@@ -3348,7 +3381,7 @@ auth.onAuthStateChanged(function(user) {
     try {
       if (window.OneSignal) {
         window.OneSignalDeferred = window.OneSignalDeferred || [];
-        window.OneSignalDeferred.push(async function(OneSignal) {
+        OneSignalDeferred.push(async function(OneSignal) {
           await OneSignal.logout();
         });
       }
@@ -3356,11 +3389,14 @@ auth.onAuthStateChanged(function(user) {
       console.warn("Web logout error:", e);
     }
 
+    currentUser = null;
+    userProfile = null;
+
     applyLanguageDOM();
     showScreen('auth');
     hidePreloader();
   }
-});
+});     
     // აქ მთავრდება
 
     function toggleRequestsDropdown(event) {
