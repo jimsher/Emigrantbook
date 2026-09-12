@@ -2981,6 +2981,65 @@ body.light-mode .sponsored-cta-btn:hover {
       });
     }
 
+    // აქ იწყება
+    // ⚠️ ანგარიშის, პოსტებისა და პროფილის სამუდამო წაშლა
+async function deleteUserAccountPermanently() {
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : null;
+
+  var msg1 = (t && t.deleteAccConfirm1) ? t.deleteAccConfirm1 : "ნამდვილად გსურთ ანგარიშის წაშლა? ეს მოქმედება შეუქცევადია!";
+  var msg2 = (t && t.deleteAccConfirm2) ? t.deleteAccConfirm2 : "საბოლოო გაფრთხილება: თქვენი პროფილი, ფოტოები და პოსტები სამუდამოდ წაიშლება. გავაგრძელოთ?";
+
+  if (!confirm(msg1)) return;
+  if (!confirm(msg2)) return;
+
+  var user = auth.currentUser;
+  if (!user) {
+    alert("მომხმარებელი ვერ მოიძებნა.");
+    return;
+  }
+
+  var uid = user.uid;
+
+  try {
+    // 1. მომხმარებლის ყველა პოსტის წაშლა Firestore-იდან
+    var postsSnap = await db.collection('posts').where('user_id', '==', uid).get();
+    var batch = db.batch();
+    postsSnap.forEach(function(doc) {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    // 2. პროფილის დოკუმენტის წაშლა Firestore-იდან
+    await db.collection('profiles').doc(uid).delete();
+
+    // 3. ავტორიზაციის ექაუნთის წაშლა Firebase Auth-იდან
+    await user.delete();
+
+    // 4. მეხსიერების გასუფთავება
+    localStorage.clear();
+    sessionStorage.clear();
+
+    var successMsg = (t && t.deleteAccSuccess) ? t.deleteAccSuccess : "თქვენი ანგარიში წარმატებით წაიშალა.";
+    alert(successMsg);
+
+    window.location.href = "index.html";
+
+  } catch (error) {
+    console.error("Account delete error:", error);
+
+    // უსაფრთხოების დაცვა: თუ შესვლიდან დიდი დროა გასული, Firebase ითხოვს ხელახალ შესვლას
+    if (error.code === 'auth/requires-recent-login') {
+      var reloginMsg = (t && t.deleteAccRelogin) 
+        ? t.deleteAccRelogin 
+        : "უსაფრთხოების მიზნით, ანგარიშის წასაშლელად საჭიროა ხელახალი შესვლა. გთხოვთ გამოხვიდეთ, თავიდან შეხვიდეთ და სცადოთ წაშლა.";
+      alert(reloginMsg);
+    } else {
+      alert("შეცდომა: " + error.message);
+    }
+  }
+}
+    // აქ მთავრდება ექაუნთისბწაშლის ფუნქცია
+
     function subscribeToLiveLotteryPost() {
       var card = document.getElementById('live-lottery-post-card');
       if (!card) return;
