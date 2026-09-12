@@ -4256,6 +4256,7 @@ auth.onAuthStateChanged(function(user) {
   }
 }
 
+
     function loadCommentsIntoModal(postId) {
       var container = document.getElementById('modal-comments-container');
       if (!postId || !container) return;
@@ -4277,8 +4278,13 @@ auth.onAuthStateChanged(function(user) {
             }
 
             var allItems = [];
+            var commentUserIds = [];
             snapshot.forEach(function(doc) {
-              allItems.push(Object.assign({ id: doc.id }, doc.data()));
+              var cData = Object.assign({ id: doc.id }, doc.data());
+              allItems.push(cData);
+              if (cData.user_id && !commentUserIds.includes(cData.user_id)) {
+                commentUserIds.push(cData.user_id);
+              }
             });
 
             allItems.sort(function(a, b) {
@@ -4296,124 +4302,128 @@ auth.onAuthStateChanged(function(user) {
             var mainComments = allItems.filter(function(c) { return !c.parent_id; });
             var replies = allItems.filter(function(c) { return c.parent_id; });
 
-            container.innerHTML = "";
-            mainComments.forEach(function(comment) {
-              var name = comment.author_name || (t.userUnit || "User");
-              var isOnline = cachedOnlineStates[comment.user_id] === true;
-              var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-              var cAvatar = comment.avatar_url || DEFAULT_AVATAR_URL;
-              var avatarHtml = `<div class="avatar-has-online"><img src="${cAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
+            fetchMultipleProfilesCached(commentUserIds, function() {
+              container.innerHTML = "";
+              mainComments.forEach(function(comment) {
+                var pProfile = cachedProfiles[comment.user_id] || {};
+                var name = pProfile.full_name || ((comment.author_name && !comment.author_name.includes('@')) ? comment.author_name : (comment.author_name ? comment.author_name.split('@')[0] : (t.userUnit || "User")));
+                var isOnline = (cachedOnlineStates[comment.user_id] === true) || (typeof isUserOnline === 'function' && isUserOnline(pProfile));
+                var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+                var cAvatar = pProfile.avatar_url || comment.avatar_url || DEFAULT_AVATAR_URL;
+                var avatarHtml = `<div class="avatar-has-online"><img src="${cAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>`;
 
-              var timeString = (typeof formatTimeAgo === 'function') ? formatTimeAgo(comment.created_at) : "";
-              var isAuthor = (comment.user_id === postAuthorId);
-              var authorBadgeHtml = isAuthor ? `<span style="color:#e41e3f; font-size:11.5px; font-weight:600; margin-left:4px;">❤️ by author</span>` : ``;
+                var timeString = (typeof formatTimeAgo === 'function') ? formatTimeAgo(comment.created_at) : "";
+                var isAuthor = (comment.user_id === postAuthorId);
+                var authorBadgeHtml = isAuthor ? `<span style="color:#e41e3f; font-size:11.5px; font-weight:600; margin-left:4px;">❤️ by author</span>` : ``;
 
-              var cLikes = Number(comment.likes_count) || 0;
-              var myUid = currentUser ? currentUser.uid : "";
-              var hasLiked = false;
-              try {
-                hasLiked = JSON.parse(localStorage.getItem(myUid + '_liked_comment_' + comment.id)) || false;
-              } catch(e) {}
-
-              var likesPillHtml = cLikes > 0 ? `
-                <span style="font-size: 11.5px; color: #65676b; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;" onclick="likeComment('${comment.id}', ${cLikes})">
-                  <span>❤️</span> <span>${cLikes}</span>
-                </span>
-              ` : '';
-
-              var commentReplies = replies.filter(function(r) { return r.parent_id === comment.id; });
-              var toggleRepliesHtml = commentReplies.length > 0 ? `
-                <button class="fb-replies-toggle-btn" id="toggle-replies-btn-${comment.id}" onclick="toggleRepliesBox('${comment.id}')" style="background:none; border:none; color:#65676b; font-size:12.5px; font-weight:700; cursor:pointer; margin-top:6px; padding:0; display:inline-flex; align-items:center; gap:4px;">
-                  <span>∨</span> ${commentReplies.length} პასუხის ნახვა
-                </button>
-              ` : '';
-
-              var heartColor = hasLiked ? "#e41e3f" : "#65676b";
-
-              var commentHtml = `
-                <div class="fb-comment-wrapper" id="comment-block-${comment.id}" style="display:flex; flex-direction:column; gap:6px; width:100%;">
-                  <div class="fb-comment-card" style="display:flex; gap:10px; align-items:flex-start; width:100%;">
-                    <div class="fb-comment-avatar" style="width:36px; height:36px; border-radius:50%; flex-shrink:0; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${avatarHtml}</div>
-                    <div class="fb-comment-main" style="flex:1; min-width:0; display:flex; flex-direction:column;">
-                      <div class="fb-comment-bubble" style="background:transparent; padding:0; width:100%;">
-                        <div class="fb-comment-user-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
-                          <span class="fb-comment-name" style="font-size:13.5px; font-weight:700; color:#050505; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
-                          <span class="fb-comment-time" style="font-size:12px; color:#65676b;">${timeString}</span>
-                          ${authorBadgeHtml}
-                        </div>
-                        <div class="fb-comment-text" style="font-size:14.5px; color:#050505; line-height:1.35; word-break:break-word;">${comment.content || ""}</div>
-                      </div>
-                      
-                      <!-- ქვედა ზოლი: მარცხნივ პასუხი/რაოდენობა, მარჯვნივ მხოლოდ გული ❤️ -->
-                      <div class="fb-comment-actions-row" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px; min-height:22px;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                          <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')" style="background:none; border:none; color:#65676b; font-size:12px; font-weight:700; cursor:pointer; padding:0;">${t.reply || 'პასუხის გაცემა'}</button>
-                          ${likesPillHtml}
-                        </div>
-                        
-                        <!-- მხოლოდ წითელი გული -->
-                        <button onclick="likeComment('${comment.id}', ${cLikes})" style="background:none; border:none; cursor:pointer; padding:2px; font-size:16px; color:${heartColor};" title="Love">
-                          ${hasLiked ? '❤️' : '🤍'}
-                        </button>
-                      </div>
-
-                      ${toggleRepliesHtml}
-                    </div>
-                  </div>
-
-                  <!-- ჩაშენებული პასუხების ყუთი -->
-                  <div class="fb-replies-container" id="replies-box-${comment.id}" style="display:none; margin-left:46px; flex-direction:column; gap:10px; width:calc(100% - 46px); margin-top:6px;"></div>
-                </div>
-              `;
-
-              container.innerHTML += commentHtml;
-            });
-
-            // პასუხების ჩასმა
-            replies.forEach(function(reply) {
-              var targetBox = document.getElementById('replies-box-' + reply.parent_id);
-              if (targetBox) {
-                var rName = reply.author_name || (t.userUnit || "User");
-                var rIsOnline = cachedOnlineStates[reply.user_id] === true;
-                var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-                var rAvatar = reply.avatar_url || DEFAULT_AVATAR_URL;
-                var rAvatarHtml = `<div class="avatar-has-online"><img src="${rAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${rDotHtml}</div>`;
-
-                var rTimeString = (typeof formatTimeAgo === 'function') ? formatTimeAgo(reply.created_at) : "";
-                var isReplyAuthor = (reply.user_id === postAuthorId);
-                var rAuthorBadge = isReplyAuthor ? `<span style="color:#1877f2; font-size:11.5px; font-weight:700; margin-left:4px;">✍️ ავტორი</span>` : ``;
-
-                var rLikes = Number(reply.likes_count) || 0;
+                var cLikes = Number(comment.likes_count) || 0;
                 var myUid = currentUser ? currentUser.uid : "";
-                var hasLikedReply = false;
+                var hasLiked = false;
                 try {
-                  hasLikedReply = JSON.parse(localStorage.getItem(myUid + '_liked_comment_' + reply.id)) || false;
+                  hasLiked = JSON.parse(localStorage.getItem(myUid + '_liked_comment_' + comment.id)) || false;
                 } catch(e) {}
 
-                var rHeartColor = hasLikedReply ? "#e41e3f" : "#65676b";
+                var likesPillHtml = cLikes > 0 ? `
+                  <span style="font-size: 11.5px; color: #65676b; display: inline-flex; align-items: center; gap: 3px; cursor: pointer;" onclick="likeComment('${comment.id}', ${cLikes})">
+                    <span>❤️</span> <span>${cLikes}</span>
+                  </span>
+                ` : '';
 
-                targetBox.innerHTML += `
-                  <div class="fb-comment-card" style="display:flex; gap:8px; align-items:flex-start; width:100%;">
-                    <div class="fb-comment-avatar" style="width:30px; height:30px; border-radius:50%; flex-shrink:0; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rAvatarHtml}</div>
-                    <div class="fb-comment-main" style="flex:1; min-width:0; display:flex; flex-direction:column;">
-                      <div class="fb-comment-bubble" style="background:transparent; padding:0; width:100%;">
-                        <div class="fb-comment-user-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
-                          <span class="fb-comment-name" style="font-size:13px; font-weight:700; color:#050505; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
-                          <span class="fb-comment-time" style="font-size:11.5px; color:#65676b;">${rTimeString}</span>
-                          ${rAuthorBadge}
+                var commentReplies = replies.filter(function(r) { return r.parent_id === comment.id; });
+                var toggleRepliesHtml = commentReplies.length > 0 ? `
+                  <button class="fb-replies-toggle-btn" id="toggle-replies-btn-${comment.id}" onclick="toggleRepliesBox('${comment.id}')" style="background:none; border:none; color:#65676b; font-size:12.5px; font-weight:700; cursor:pointer; margin-top:6px; padding:0; display:inline-flex; align-items:center; gap:4px;">
+                    <span>∨</span> ${commentReplies.length} პასუხის ნახვა
+                  </button>
+                ` : '';
+
+                var heartColor = hasLiked ? "#e41e3f" : "#65676b";
+
+                var commentHtml = `
+                  <div class="fb-comment-wrapper" id="comment-block-${comment.id}" style="display:flex; flex-direction:column; gap:6px; width:100%;">
+                    <div class="fb-comment-card" style="display:flex; gap:10px; align-items:flex-start; width:100%;">
+                      <div class="fb-comment-avatar" style="width:36px; height:36px; border-radius:50%; flex-shrink:0; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${avatarHtml}</div>
+                      <div class="fb-comment-main" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                        <div class="fb-comment-bubble" style="background:transparent; padding:0; width:100%;">
+                          <div class="fb-comment-user-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+                            <span class="fb-comment-name" style="font-size:13.5px; font-weight:700; color:#050505; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${comment.user_id}');">${name}</span>
+                            <span class="fb-comment-time" style="font-size:12px; color:#65676b;">${timeString}</span>
+                            ${authorBadgeHtml}
+                          </div>
+                          <div class="fb-comment-text" style="font-size:14.5px; color:#050505; line-height:1.35; word-break:break-word;">${comment.content || ""}</div>
                         </div>
-                        <div class="fb-comment-text" style="font-size:14px; color:#050505; line-height:1.35; word-break:break-word;">${reply.content || ""}</div>
-                      </div>
-                      <div class="fb-comment-actions-row" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
-                        <button class="fb-comment-action-btn" onclick="setReplyMode('${reply.parent_id}', '${rName}')" style="background:none; border:none; color:#65676b; font-size:11.5px; font-weight:700; cursor:pointer; padding:0;">${t.reply || 'პასუხის გაცემა'}</button>
-                        <button onclick="likeComment('${reply.id}', ${rLikes})" style="background:none; border:none; cursor:pointer; padding:2px; font-size:15px; color:${rHeartColor};" title="Love">
-                          ${hasLikedReply ? '❤️' : '🤍'}
-                        </button>
+                        
+                        <!-- ქვედა ზოლი: მარცხნივ პასუხი/რაოდენობა, მარჯვნივ მხოლოდ გული ❤️ -->
+                        <div class="fb-comment-actions-row" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px; min-height:22px;">
+                          <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="fb-comment-action-btn" onclick="setReplyMode('${comment.id}', '${name}')" style="background:none; border:none; color:#65676b; font-size:12px; font-weight:700; cursor:pointer; padding:0;">${t.reply || 'პასუხის გაცემა'}</button>
+                            ${likesPillHtml}
+                          </div>
+                          
+                          <!-- მხოლოდ წითელი გული -->
+                          <button onclick="likeComment('${comment.id}', ${cLikes})" style="background:none; border:none; cursor:pointer; padding:2px; font-size:16px; color:${heartColor};" title="Love">
+                            ${hasLiked ? '❤️' : '🤍'}
+                          </button>
+                        </div>
+
+                        ${toggleRepliesHtml}
                       </div>
                     </div>
+
+                    <!-- ჩაშენებული პასუხების ყუთი -->
+                    <div class="fb-replies-container" id="replies-box-${comment.id}" style="display:none; margin-left:46px; flex-direction:column; gap:10px; width:calc(100% - 46px); margin-top:6px;"></div>
                   </div>
                 `;
-              }
+
+                container.innerHTML += commentHtml;
+              });
+
+              // პასუხების ჩასმა
+              replies.forEach(function(reply) {
+                var targetBox = document.getElementById('replies-box-' + reply.parent_id);
+                if (targetBox) {
+                  var rpProfile = cachedProfiles[reply.user_id] || {};
+                  var rName = rpProfile.full_name || ((reply.author_name && !reply.author_name.includes('@')) ? reply.author_name : (reply.author_name ? reply.author_name.split('@')[0] : (t.userUnit || "User")));
+                  var rIsOnline = (cachedOnlineStates[reply.user_id] === true) || (typeof isUserOnline === 'function' && isUserOnline(rpProfile));
+                  var rDotHtml = rIsOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+                  var rAvatar = rpProfile.avatar_url || reply.avatar_url || DEFAULT_AVATAR_URL;
+                  var rAvatarHtml = `<div class="avatar-has-online"><img src="${rAvatar}" alt="Avatar" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${rDotHtml}</div>`;
+
+                  var rTimeString = (typeof formatTimeAgo === 'function') ? formatTimeAgo(reply.created_at) : "";
+                  var isReplyAuthor = (reply.user_id === postAuthorId);
+                  var rAuthorBadge = isReplyAuthor ? `<span style="color:#1877f2; font-size:11.5px; font-weight:700; margin-left:4px;">✍️ ავტორი</span>` : ``;
+
+                  var rLikes = Number(reply.likes_count) || 0;
+                  var myUid = currentUser ? currentUser.uid : "";
+                  var hasLikedReply = false;
+                  try {
+                    hasLikedReply = JSON.parse(localStorage.getItem(myUid + '_liked_comment_' + reply.id)) || false;
+                  } catch(e) {}
+
+                  var rHeartColor = hasLikedReply ? "#e41e3f" : "#65676b";
+
+                  targetBox.innerHTML += `
+                    <div class="fb-comment-card" style="display:flex; gap:8px; align-items:flex-start; width:100%;">
+                      <div class="fb-comment-avatar" style="width:30px; height:30px; border-radius:50%; flex-shrink:0; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rAvatarHtml}</div>
+                      <div class="fb-comment-main" style="flex:1; min-width:0; display:flex; flex-direction:column;">
+                        <div class="fb-comment-bubble" style="background:transparent; padding:0; width:100%;">
+                          <div class="fb-comment-user-row" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px;">
+                            <span class="fb-comment-name" style="font-size:13px; font-weight:700; color:#050505; cursor:pointer;" onclick="closeCommentsModal(); viewUserProfile('${reply.user_id}');">${rName}</span>
+                            <span class="fb-comment-time" style="font-size:11.5px; color:#65676b;">${rTimeString}</span>
+                            ${rAuthorBadge}
+                          </div>
+                          <div class="fb-comment-text" style="font-size:14px; color:#050505; line-height:1.35; word-break:break-word;">${reply.content || ""}</div>
+                        </div>
+                        <div class="fb-comment-actions-row" style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
+                          <button class="fb-comment-action-btn" onclick="setReplyMode('${reply.parent_id}', '${rName}')" style="background:none; border:none; color:#65676b; font-size:11.5px; font-weight:700; cursor:pointer; padding:0;">${t.reply || 'პასუხის გაცემა'}</button>
+                          <button onclick="likeComment('${reply.id}', ${rLikes})" style="background:none; border:none; cursor:pointer; padding:2px; font-size:15px; color:${rHeartColor};" title="Love">
+                            ${hasLikedReply ? '❤️' : '🤍'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }
+              });
             });
           }).catch(function(err) {
             console.error("Comments query error:", err);
