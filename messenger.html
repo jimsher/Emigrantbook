@@ -3560,6 +3560,276 @@ textarea,
         console.error("Push error:", err);
       }
     }
+
+    // აქ იწყება ახალი ფოტო ხმოვანის ფუნქციები
+   // ==========================================================================
+    // ☁️ CLOUDFLARE R2 ინტეგრაცია (messenger_photos / messenger_audio)
+    // ==========================================================================
+    function getR2Client() {
+      return new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto',
+        s3ForcePathStyle: true
+      });
+    }
+
+    function uploadFileToR2(file, folder, extension, contentType, callback) {
+      var r2 = getR2Client();
+      var fileKey = folder + '/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + extension;
+
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: contentType,
+        CacheControl: 'public, max-age=31536000, immutable'
+      };
+
+      r2.upload(params, function(err, data) {
+        if (err) {
+          console.error("R2 Upload Error:", err);
+          alert("ატვირთვის შეცდომა: " + err.message);
+          callback(null);
+        } else {
+          var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+          callback(publicUrl);
+        }
+      });
+    }
+
+    // 📸 ფოტოების ოპტიმიზაცია Canvas-ით და R2-ზე ატვირთვა
+    function compressImageForChat(file, done) {
+      var reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = function(e) {
+        var img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+          var maxDim = 1200;
+          var w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
+          else if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob) { done(blob || file); }, 'image/jpeg', 0.82);
+        };
+        img.onerror = function() { done(file); };
+      };
+      reader.onerror = function() { done(file); };
+    }
+
+    function uploadMessengerPhotosR2(event) {
+      var files = Array.from(event.target.files);
+      if (files.length === 0 || !currentActiveChatUid || !auth.currentUser) return;
+
+      var myUid = auth.currentUser.uid;
+      var chatId = getChatId(myUid, currentActiveChatUid);
+      var uploadedUrls = [];
+      var completed = 0;
+
+      // ფაილის ველის გასუფთავება
+      event.target.value = "";
+
+      files.forEach(function(file) {
+        compressImageForChat(file, function(optimizedBlob) {
+          uploadFileToR2(optimizedBlob, 'messenger_photos', '.jpg', 'image/jpeg', function(url) {
+            completed++;
+            if (url) uploadedUrls.push(url);
+
+            if (completed === files.length && uploadedUrls.length > 0) {
+              db.collection('chats').doc(chatId).collection('messages').add({
+                senderId: myUid,
+                type: 'photos',
+                photos: uploadedUrls,
+                read: false,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+              }).then(function() {
+                sendModernPush(currentActiveChatUid, "📷 გამოგიგზავნათ ფოტო(ები)");
+              });
+            }
+          });
+        });
+      });
+    }
+
+    // 🎙️ ხმის ჩაწერის ლოგიკა (MediaRecorder)
+    var mediaRecorder = null;
+    var audioChunks = [];
+    var recTimerInterval = null;
+    var recSeconds = 0;
+
+    function toggleVoiceRecording() {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        stopAndSendVoiceRecording();
+      } else {
+        startVoiceRecording();
+      }
+    }
+
+    function startVoiceRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("თქვენს მოწყობილობას არ აქვს მიკროფონის მხარდაჭერა.");
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = function(e) {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.start();
+
+        // UI-ს ჩვენება
+        var bar = document.getElementById('voice-recording-bar');
+        if (bar) bar.style.display = 'flex';
+        recSeconds = 0;
+        document.getElementById('voice-rec-timer').innerText = "0:00";
+
+        recTimerInterval = setInterval(function() {
+          recSeconds++;
+          var m = Math.floor(recSeconds / 60);
+          var s = recSeconds % 60;
+          document.getElementById('voice-rec-timer').innerText = m + ":" + (s < 10 ? "0" + s : s);
+        }, 1000);
+      }).catch(function(err) {
+        console.error("Mic access error:", err);
+        alert("მიკროფონზე წვდომა უარყოფილია.");
+      });
+    }
+
+    function cancelVoiceRecording() {
+      if (recTimerInterval) clearInterval(recTimerInterval);
+      if (mediaRecorder) {
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        mediaRecorder = null;
+      }
+      audioChunks = [];
+      var bar = document.getElementById('voice-recording-bar');
+      if (bar) bar.style.display = 'none';
+    }
+
+    function stopAndSendVoiceRecording() {
+      if (!mediaRecorder || mediaRecorder.state !== "recording") return;
+
+      if (recTimerInterval) clearInterval(recTimerInterval);
+      var durationText = document.getElementById('voice-rec-timer').innerText;
+
+      mediaRecorder.onstop = function() {
+        var audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        mediaRecorder = null;
+        audioChunks = [];
+
+        var bar = document.getElementById('voice-recording-bar');
+        if (bar) bar.style.display = 'none';
+
+        if (!currentActiveChatUid || !auth.currentUser) return;
+        var myUid = auth.currentUser.uid;
+        var chatId = getChatId(myUid, currentActiveChatUid);
+
+        // ატვირთვა R2-ზე (messenger_audio პაპკაში)
+        uploadFileToR2(audioBlob, 'messenger_audio', '.webm', 'audio/webm', function(audioUrl) {
+          if (!audioUrl) return;
+
+          db.collection('chats').doc(chatId).collection('messages').add({
+            senderId: myUid,
+            type: 'voice',
+            audioUrl: audioUrl,
+            duration: durationText,
+            read: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(function() {
+            sendModernPush(currentActiveChatUid, "🎤 ხმოვანი შეტყობინება (" + durationText + ")");
+          });
+        });
+      };
+
+      mediaRecorder.stop();
+    }
+
+    // 🎵 ხმოვანი შეტყობინების დაკვრა/გაჩერება
+    var currentPlayingAudio = null;
+    var currentPlayingBtn = null;
+
+    function playVoiceNote(audioUrl, btnElem) {
+      if (currentPlayingAudio && !currentPlayingAudio.paused) {
+        currentPlayingAudio.pause();
+        if (currentPlayingBtn) currentPlayingBtn.innerText = "▶";
+        if (currentPlayingAudio.src === audioUrl) {
+          currentPlayingAudio = null;
+          return;
+        }
+      }
+
+      var audio = new Audio(audioUrl);
+      currentPlayingAudio = audio;
+      currentPlayingBtn = btnElem;
+      btnElem.innerText = "⏸";
+
+      audio.play();
+      audio.onended = function() {
+        btnElem.innerText = "▶";
+        currentPlayingAudio = null;
+      };
+    }
+
+    // 🖼️ კოლაჟის აგება ფოტოების რაოდენობის მიხედვით
+    function renderMessengerPhotoCollage(photos) {
+      if (!photos || photos.length === 0) return "";
+
+      // 1 ფოტო
+      if (photos.length === 1) {
+        return `<img src="${photos[0]}" class="msg-photo-single" onclick="window.open('${photos[0]}', '_blank')">`;
+      }
+
+      // 2 ფოტო
+      if (photos.length === 2) {
+        return `
+          <div class="msg-photo-grid-2">
+            <img src="${photos[0]}" onclick="window.open('${photos[0]}', '_blank')">
+            <img src="${photos[1]}" onclick="window.open('${photos[1]}', '_blank')">
+          </div>
+        `;
+      }
+
+      // 🌟 3 ფოტო (ზუსტად Messenger-ის სტილი შენი სქრინშოტიდან)
+      if (photos.length === 3) {
+        return `
+          <div class="msg-photo-cluster-3">
+            <img src="${photos[0]}" class="msg-cluster-img" onclick="window.open('${photos[0]}', '_blank')">
+            <img src="${photos[1]}" class="msg-cluster-img" onclick="window.open('${photos[1]}', '_blank')">
+            <img src="${photos[2]}" class="msg-cluster-img" onclick="window.open('${photos[2]}', '_blank')">
+          </div>
+        `;
+      }
+
+      // 4 და მეტი ფოტო (კუბიკები, მე-4-ზე +N overlay)
+      var showCount = 4;
+      var remaining = photos.length - showCount;
+      var html = '<div class="msg-photo-grid-multi">';
+
+      for (var i = 0; i < showCount; i++) {
+        var isLast = (i === showCount - 1 && remaining > 0);
+        html += `
+          <div class="msg-grid-item" onclick="window.open('${photos[i]}', '_blank')">
+            <img src="${photos[i]}">
+            ${isLast ? `<div class="msg-more-overlay">+${remaining + 1}</div>` : ''}
+          </div>
+        `;
+      }
+
+      html += '</div>';
+      return html;
+    } 
   </script>
 </body>
 </html>
