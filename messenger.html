@@ -2559,6 +2559,7 @@ textarea,
             msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
             // 1. ზარების ბარათი
+            // 1. ზარების ბარათი
             if (msg.type === 'missed_call' || msg.type === 'finished_call') {
               let titleText = msg.type === 'missed_call' ? 'გამოტოვებული ვიდეო ზარი' : 'ვიდეო ზარი';
               let durationText = msg.type === 'finished_call' ? (msg.duration || '0 წმ') : new Date(msgDateObj).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -2634,7 +2635,43 @@ textarea,
                 `;
               }
 
-            // 3. ჩვეულებრივი ტექსტი / სმაილები
+            // 3. 📸 ფოტოების კოლაჟი (R2 - messenger_photos)
+            } else if (msg.type === 'photos' && msg.photos) {
+              const collageContent = (typeof renderMessengerPhotoCollage === 'function') 
+                ? renderMessengerPhotoCollage(msg.photos) 
+                : '';
+                
+              if (isMine) {
+                msgRow.innerHTML = collageContent;
+              } else {
+                msgRow.innerHTML = `
+                  <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
+                  ${collageContent}
+                `;
+              }
+
+            // 4. 🎙️ ხმოვანი შეტყობინება (R2 - messenger_audio)
+            } else if (msg.type === 'voice' && msg.audioUrl) {
+              const voiceHtml = `
+                <div class="msg-bubble voice-msg-bubble">
+                  <button class="voice-play-btn" onclick="playVoiceNote('${msg.audioUrl}', this)">▶</button>
+                  <div class="voice-wave-line">
+                    <div class="voice-wave-progress"></div>
+                  </div>
+                  <span class="voice-duration">${msg.duration || '0:00'}</span>
+                </div>
+              `;
+              
+              if (isMine) {
+                msgRow.innerHTML = voiceHtml;
+              } else {
+                msgRow.innerHTML = `
+                  <img class="msg-bubble-avatar" src="${targetAvatar}" onerror="this.src='https://ui-avatars.com/api/?name=U&background=2ed573&color=fff';">
+                  ${voiceHtml}
+                `;
+              }
+
+            // 5. ჩვეულებრივი ტექსტი / სმაილები
             } else {
               const isEmojiOnly = isOnlyEmoji(msg.text);
               const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
