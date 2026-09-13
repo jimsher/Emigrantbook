@@ -1795,8 +1795,14 @@ textarea,
       </div>
 
       <div class="thread-footer">
+        <input type="file" id="chat-photo-input" accept="image/*" multiple style="display:none;" onchange="uploadMessengerPhotosR2(event)">
+
         <div class="footer-left-actions">
-          <svg viewBox="0 0 24 24" onclick="alert('გალერეა')"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          <svg viewBox="0 0 24 24" onclick="document.getElementById('chat-photo-input').click()"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          
+          <button type="button" class="chat-mic-btn" id="mic-btn-main" onclick="toggleVoiceRecording()">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
+          </button>
         </div>
 
         <div class="input-wrapper">
@@ -1828,10 +1834,20 @@ textarea,
         <button class="like-action-btn" id="send-action-btn" data-mode="like" onclick="sendLikeOrMessage()">
           <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
         </button>
-      </div>
-    </div>
 
-  </div>
+        <div id="voice-recording-bar">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="voice-rec-dot"></div>
+            <span id="voice-rec-timer" style="font-weight:700; font-size:14px; color:#ff4757;">0:00</span>
+          </div>
+          <div style="display:flex; gap:12px;">
+            <button onclick="cancelVoiceRecording()" style="background:none; border:none; color:#888; font-size:13px; font-weight:600; cursor:pointer;">გაუქმება</button>
+            <button onclick="stopAndSendVoiceRecording()" style="background:#2ed573; border:none; color:#000; padding:6px 14px; border-radius:14px; font-size:13px; font-weight:700; cursor:pointer;">გაგზავნა</button>
+          </div>
+        </div>
+      </div>
+      
+  
 
   <div id="delete-msg-modal" class="delete-modal-overlay" onclick="closeDeleteModal(event)">
     <div class="delete-modal-content" onclick="event.stopPropagation()">
