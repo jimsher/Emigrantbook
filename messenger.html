@@ -1477,6 +1477,182 @@ textarea,
   color: #8e8e93;
   font-style: italic;
 }
+
+
+  /* ==========================================================================
+   📸 MESSENGER MULTI-PHOTO COLLAGE & 🎙️ VOICE MESSAGES
+   ========================================================================== */
+
+/* 1 ფოტო */
+.msg-photo-single {
+  max-width: 260px;
+  max-height: 320px;
+  border-radius: 16px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+
+/* 2 ფოტო */
+.msg-photo-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  max-width: 260px;
+}
+.msg-photo-grid-2 img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* 🌟 3 ფოტო: ზუსტად Messenger-ის ასიმეტრიული გადაფარვა სქრინშოტიდან */
+.msg-photo-cluster-3 {
+  position: relative;
+  width: 260px;
+  height: 320px;
+}
+.msg-cluster-img {
+  position: absolute;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 2px solid #0d0d11;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+.msg-cluster-img:nth-child(1) {
+  top: 0; right: 0; width: 155px; height: 160px; z-index: 1;
+}
+.msg-cluster-img:nth-child(2) {
+  top: 80px; left: 0; width: 150px; height: 150px; z-index: 2;
+}
+.msg-cluster-img:nth-child(3) {
+  bottom: 0; right: 20px; width: 140px; height: 135px; z-index: 3;
+}
+
+/* 4 და მეტი ფოტო (კუბიკების ბადე) */
+.msg-photo-grid-multi {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  max-width: 260px;
+}
+.msg-grid-item {
+  position: relative;
+  width: 100%;
+  height: 110px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.msg-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+.msg-more-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* 🎙️ მიკროფონის ღილაკი და ჩაწერის ზოლი */
+.chat-mic-btn {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px;
+  color: #2ed573;
+}
+.chat-mic-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+.chat-mic-btn.recording {
+  color: #ff4757;
+  animation: micPulse 1s infinite alternate;
+}
+@keyframes micPulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.25); }
+}
+
+/* ჩაწერის აქტიური პანელი */
+#voice-recording-bar {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: #0d0d11;
+  padding: 0 16px;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 150;
+}
+.voice-rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff4757;
+  animation: recBlink 1s infinite;
+}
+@keyframes recBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* 🎵 ხმოვანი შეტყობინების ბაბლი ჩატში */
+.voice-msg-bubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  min-width: 170px;
+}
+.voice-play-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #2ed573;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.voice-wave-line {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.voice-wave-progress {
+  width: 0%;
+  height: 100%;
+  background: #2ed573;
+}
+.voice-duration {
+  font-size: 11px;
+  color: #aaa;
+  flex-shrink: 0;
+}  
   </style>
 </head>
 <body>
