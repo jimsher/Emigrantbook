@@ -67,7 +67,22 @@
     lottoSub: "Sponsored • Live Stream",
     lottoTitle: "LIVE LOTTO DRAW",
     lottoJackpot: "JACKPOT",
-    lottoJoinBtn: "Join the Draw"
+    lottoJoinBtn: "Join the Draw",
+
+    backHome: "← Emigrantbook",
+    headerTitle: "🕒 Activity Center",
+    mainTitle: "Your Activity",
+    mainSub: "Track your statistics in real time",
+    timeTitle: "Total Time Spent on Site",
+    unitDays: "Days",
+    unitHours: "Hours",
+    unitMinutes: "Mins",
+    unitSeconds: "Secs",
+    statsHeader: "Interaction Statistics",
+    statLikes: "Liked Posts",
+    statComments: "Comments Written",
+    statStories: "Stories Uploaded",
+    statPosts: "Posts Published"
   },
   it: {
     authSubtitle: "Accedi al tuo profilo", authSubtitleReg: "Crea un nuovo account",
