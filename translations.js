@@ -205,7 +205,22 @@
     lottoSub: "სპონსორირებული • პირდაპირი ეთერი",
     lottoTitle: "LIVE ლოტოს გათამაშება",
     lottoJackpot: "ჯექპოტი",
-    lottoJoinBtn: "მიიღე მონაწილეობა გათამაშებაში"
+    lottoJoinBtn: "მიიღე მონაწილეობა გათამაშებაში",
+      
+    backHome: "← Emigrantbook",
+    headerTitle: "🕒 აქტივობის ცენტრი",
+    mainTitle: "შენი აქტივობა",
+    mainSub: "თვალყური ადევნე შენს სტატისტიკას რეალურ დროში",
+    timeTitle: "საიტზე გატარებული სრული დრო",
+    unitDays: "დღე",
+    unitHours: "საათი",
+    unitMinutes: "წუთი",
+    unitSeconds: "წამი",
+    statsHeader: "ინტერაქციების სტატისტიკა",
+    statLikes: "მოწონებული პოსტები",
+    statComments: "დაწერილი კომენტარები",
+    statStories: "ატვირთული სთორები",
+    statPosts: "გამოქვეყნებული პოსტები"
   },
   ru: {
     authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
