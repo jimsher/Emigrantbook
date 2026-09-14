@@ -2769,6 +2769,7 @@ auth.onAuthStateChanged(function(user) {
 
     // Median App-ის სინქრონიზაცია OneSignal-თან
     syncMedianOneSignal(user.uid);
+    initProfileViewsHeader(user.uid);
 
     // Web OneSignal-ის სინქრონიზაცია
     try {
@@ -7937,6 +7938,94 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   highlightCurrentTheme();
 });
+
+
+
+    // აქ იწყება ვინ ნახა პროფილის ლოგიკა
+    // 1. პროფილის ნახვების და ბეიჯის ინიციალიზაცია
+function initProfileViewsHeader(userId) {
+  if (!userId) return;
+
+  db.collection('profile_views')
+    .where('profile_user_id', '==', userId)
+    .onSnapshot(function(snapshot) {
+      var countEl = document.getElementById('views-header-count');
+      if (snapshot.empty) {
+        if (countEl) countEl.style.display = 'none';
+        return;
+      }
+
+      var viewsList = [];
+      snapshot.forEach(function(doc) {
+        var v = doc.data();
+        if (v.viewer_id && v.viewer_id !== userId) {
+          viewsList.push(v);
+        }
+      });
+
+      if (viewsList.length === 0) {
+        if (countEl) countEl.style.display = 'none';
+        return;
+      }
+
+      // უახლესი ნახვების დალაგება
+      viewsList.sort(function(a, b) {
+        var timeA = a.viewed_at && a.viewed_at.toMillis ? a.viewed_at.toMillis() : (a.viewed_at ? new Date(a.viewed_at).getTime() : 0);
+        var timeB = b.viewed_at && b.viewed_at.toMillis ? b.viewed_at.toMillis() : (b.viewed_at ? new Date(b.viewed_at).getTime() : 0);
+        return timeB - timeA;
+      });
+
+      // ბოლო მნახველის ავატარის ჩასმა წრეში
+      var latestViewerId = viewsList[0].viewer_id;
+      db.collection('profiles').doc(latestViewerId).get().then(function(docSnap) {
+        if (docSnap.exists) {
+          var pData = docSnap.data();
+          var imgEl = document.getElementById('views-header-avatar-img');
+          if (imgEl && pData.avatar_url) {
+            imgEl.src = pData.avatar_url;
+          }
+        }
+      });
+
+      // ტიკტოკის ლოგიკა: დათვლა ბოლო ნახვის შემდეგ
+      var lastCheck = parseInt(localStorage.getItem('eb_last_views_check') || '0', 10);
+      var unreadCount = 0;
+
+      viewsList.forEach(function(v) {
+        var vTime = v.viewed_at && v.viewed_at.toMillis ? v.viewed_at.toMillis() : (v.viewed_at ? new Date(v.viewed_at).getTime() : 0);
+        if (vTime > lastCheck) {
+          unreadCount++;
+        }
+      });
+
+      // ციფრის გამოჩენა ავატარის გვერდით
+      if (countEl) {
+        if (unreadCount > 0) {
+          countEl.innerText = unreadCount > 99 ? '99+' : unreadCount;
+          countEl.style.display = 'inline-block';
+        } else {
+          countEl.style.display = 'none';
+        }
+      }
+    }, function(err) {
+      console.error("Views listener error:", err);
+    });
+}
+
+// 2. ღილაკზე დაჭერა (ციფრის გაქრობა და გვერდზე გადასვლა)
+function openProfileViewsFromHeader() {
+  // ინახავს დაჭერის დროს, რის გამოც ციფრი ქრება
+  localStorage.setItem('eb_last_views_check', Date.now().toString());
+
+  var countEl = document.getElementById('views-header-count');
+  if (countEl) countEl.style.display = 'none';
+
+  var dotEl = document.getElementById('views-unread-dot');
+  if (dotEl) dotEl.style.display = 'none';
+
+  // გადასვლა პროფილის ნახვების სიაზე
+  window.location.href = 'profile-views.html';
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
