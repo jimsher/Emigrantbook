@@ -388,7 +388,22 @@
     lottoSub: "Sponsorisé • Diffusion en direct",
     lottoTitle: "TIRAGE DU LOTO EN DIRECT",
     lottoJackpot: "JACKPOT",
-    lottoJoinBtn: "Participer au tirage"
+    lottoJoinBtn: "Participer au tirage",
+
+    backHome: "← Emigrantbook",
+    headerTitle: "🕒 Centre d'activité",
+    mainTitle: "Votre activité",
+    mainSub: "Suivez vos statistiques en temps réel",
+    timeTitle: "Temps total passé sur le site",
+    unitDays: "Jours",
+    unitHours: "Heures",
+    unitMinutes: "Mins",
+    unitSeconds: "Secs",
+    statsHeader: "Statistiques d'interaction",
+    statLikes: "Publications aimées",
+    statComments: "Commentaires écrits",
+    statStories: "Stories ajoutées",
+    statPosts: "Publications publiées"
   },
   de: {
     authSubtitle: "Melden Sie sich an", authSubtitleReg: "Neues Konto erstellen",
