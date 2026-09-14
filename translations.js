@@ -304,7 +304,22 @@
     lottoSub: "Спонсорский • Прямой эфир",
     lottoTitle: "LIVE РОЗЫГРЫШ ЛОТО",
     lottoJackpot: "ДЖЕКПОТ",
-    lottoJoinBtn: "Принять участие в розыгрыше"
+    lottoJoinBtn: "Принять участие в розыгрыше",
+
+    backHome: "← Emigrantbook",
+    headerTitle: "🕒 Центр активности",
+    mainTitle: "Ваша активность",
+    mainSub: "Отслеживайте свою статистику в реальном времени",
+    timeTitle: "Всего времени на сайте",
+    unitDays: "Дней",
+    unitHours: "Часов",
+    unitMinutes: "Мин",
+    unitSeconds: "Сек",
+    statsHeader: "Статистика взаимодействий",
+    statLikes: "Понравившиеся посты",
+    statComments: "Написано комментариев",
+    statStories: "Загружено историй",
+    statPosts: "Опубликовано постов"
   },
   fr: {
     authSubtitle: "Connectez-vous à votre profil", authSubtitleReg: "Créer un nouveau compte",
