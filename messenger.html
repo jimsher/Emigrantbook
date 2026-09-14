@@ -2570,12 +2570,14 @@ textarea,
 
       threadProfileUnsubscribe = db.collection('profiles').doc(targetUid).onSnapshot(function(docSnap) {
         const statusEl = document.getElementById('active-thread-status');
-        var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
-        if (docSnap.exists && docSnap.data().status === 'online') {
-          statusEl.innerText = t.activeNow;
-          statusEl.style.color = "#2ed573";
+        if (!statusEl) return;
+        if (docSnap.exists) {
+          var statusInfo = formatUserStatusText(docSnap.data());
+          statusEl.innerText = statusInfo.text;
+          statusEl.style.color = statusInfo.color;
         } else {
-          statusEl.innerText = t.offline;
+          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+          statusEl.innerText = t.lastSeen + " -";
           statusEl.style.color = "#8e8e93";
         }
       });
