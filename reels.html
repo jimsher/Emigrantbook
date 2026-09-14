@@ -733,6 +733,15 @@
     let cachedProfiles = {};
     let activeCommentPostId = null;
 
+    // უსასრულო სქროლის ცვლადები
+    let lastVisibleReelDoc = null;
+    let isLoadingMoreReels = false;
+    let hasMoreReels = true;
+    let allLoadedPosts = [];
+    let isScrollAttached = false;
+    let reelsIntersectionObserver = null;
+    let userUnmuted = false;
+
     auth.onAuthStateChanged(user => {
       currentUser = user;
       if (user) {
@@ -777,169 +786,223 @@
         });
     }
 
-    function loadRealReelsFromFirestore() {
+    /**
+     * ==========================================
+     *  🚀 მხოლოდ ვიდეოების ამოღება + 10-10 პაგინაცია
+     *  ეს სისტემა იმუშავებს 1,000, 10,000 და 100,000 ვიდეოზეც!
+     * ==========================================
+     */
+    function loadRealReelsFromFirestore(isNextPage = false) {
+      if (isNextPage && (isLoadingMoreReels || !hasMoreReels)) return;
+      isLoadingMoreReels = true;
+
       const container = document.getElementById('reelsContainer');
 
-      db.collection('posts')
-        .orderBy('created_at', 'desc')
-        .limit(40)
-        .get()
-        .then(snapshot => {
-          const videoPosts = [];
-          const userIds = [];
+      let query = db.collection('posts')
+        .where('media_type', '==', 'video')
+        .orderBy('created_at', 'desc');
 
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const isVideo = data.media_type === 'video' || (data.media_url && (data.media_url.includes('.mp4') || data.media_url.includes('video') || data.media_url.includes('emigrantbook-videos')));
-            
-            if (isVideo && data.media_url) {
-              const postObj = {
-                id: doc.id,
-                user_id: data.user_id,
-                author_name: data.author_name || "მომხმარებელი",
-                content: data.content || "",
-                media_url: data.media_url,
-                likes_count: data.likes_count || 0,
-                comments_count: data.comments_count || 0
-              };
-              videoPosts.push(postObj);
-              if (data.user_id) userIds.push(data.user_id);
-            }
-          });
+      if (isNextPage && lastVisibleReelDoc) {
+        query = query.startAfter(lastVisibleReelDoc);
+      }
 
-          if (videoPosts.length === 0) {
+      query.limit(10).get().then(snapshot => {
+        if (snapshot.empty) {
+          hasMoreReels = false;
+          isLoadingMoreReels = false;
+          if (!isNextPage && allLoadedPosts.length === 0) {
             container.innerHTML = `
               <div style="width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#aaaaaa; gap:10px;">
                 <span style="font-size:36px;">🎬</span>
                 <span>ჯერ ვიდეოები არ არის დამატებული.</span>
               </div>
             `;
-            return;
           }
+          return;
+        }
 
-          fetchMultipleProfilesCached(userIds, () => {
-            renderReelsUI(videoPosts);
-          });
-        })
-        .catch(err => {
-          console.error("Reels load error:", err);
-          container.innerHTML = `<div style="width:100%; height:100vh; display:flex; align-items:center; justify-content:center; color:#ff4d4f;">შეცდომა ვიდეოების ჩატვირთვისას</div>`;
+        lastVisibleReelDoc = snapshot.docs[snapshot.docs.length - 1];
+        if (snapshot.docs.length < 10) {
+          hasMoreReels = false;
+        }
+
+        const newVideoPosts = [];
+        const userIds = [];
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.media_url) {
+            newVideoPosts.push({
+              id: doc.id,
+              user_id: data.user_id,
+              author_name: data.author_name || "მომხმარებელი",
+              content: data.content || "",
+              media_url: data.media_url,
+              likes_count: data.likes_count || 0,
+              comments_count: data.comments_count || 0
+            });
+            if (data.user_id) userIds.push(data.user_id);
+          }
         });
+
+        fetchMultipleProfilesCached(userIds, () => {
+          if (!isNextPage) {
+            allLoadedPosts = newVideoPosts;
+            renderInitialReels(allLoadedPosts);
+            if (!isScrollAttached) {
+              attachReelsInfiniteScroll();
+              isScrollAttached = true;
+            }
+          } else {
+            const startIndex = allLoadedPosts.length;
+            allLoadedPosts = allLoadedPosts.concat(newVideoPosts);
+            appendNextReels(newVideoPosts, startIndex);
+          }
+          isLoadingMoreReels = false;
+        });
+      }).catch(err => {
+        isLoadingMoreReels = false;
+        console.error("Reels query error:", err);
+      });
     }
 
-    function renderReelsUI(posts) {
-      const container = document.getElementById('reelsContainer');
+    function createReelCardHTML(post, index) {
+      const profile = cachedProfiles[post.user_id] || {};
+      const authorName = profile.full_name || post.author_name || "Emigrant";
+      const authorAvatar = profile.avatar_url || DEFAULT_AVATAR;
 
-      container.innerHTML = posts.map((post, index) => {
-        const profile = cachedProfiles[post.user_id] || {};
-        const authorName = profile.full_name || post.author_name || "Emigrant";
-        const authorAvatar = profile.avatar_url || DEFAULT_AVATAR;
+      const initialSrc = index <= 1 ? `src="${post.media_url}"` : '';
+      const initialPreload = index === 0 ? 'preload="auto"' : (index === 1 ? 'preload="metadata"' : 'preload="none"');
 
-        // 🚀 TikTok ოპტიმიზაცია: პირველი 2 ვიდეო მომენტალურად იტვირთება, დანარჩენი კი ინახება data-src-ში
-        const initialSrc = index <= 1 ? `src="${post.media_url}"` : '';
-        const initialPreload = index === 0 ? 'preload="auto"' : (index === 1 ? 'preload="metadata"' : 'preload="none"');
+      return `
+        <section class="reel-card" data-post-id="${post.id}" data-author-id="${post.user_id}" data-index="${index}">
+          <div class="video-wrapper">
+            <video class="reel-video" data-src="${post.media_url}" ${initialSrc} poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" ${initialPreload} muted></video>
+            
+            <div class="play-state-icon">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
 
-        return `
-          <section class="reel-card" data-post-id="${post.id}" data-author-id="${post.user_id}" data-index="${index}">
-            <div class="video-wrapper">
-              <video class="reel-video" data-src="${post.media_url}" ${initialSrc} poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" loop playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" ${initialPreload} muted></video>
-              
-              <div class="play-state-icon">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <aside class="reel-actions">
+            <div class="action-btn like-btn" id="like-btn-${post.id}" onclick="toggleReelLike('${post.id}', this, event)">
+              <div class="action-icon-wrap">
+                <svg class="action-svg" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
               </div>
+              <span class="action-count likes-count" id="likes-count-${post.id}">${formatCount(post.likes_count)}</span>
             </div>
 
-            <!-- მარჯვენა მოქმედების ღილაკები -->
-            <aside class="reel-actions">
-              <div class="action-btn like-btn" id="like-btn-${post.id}" onclick="toggleReelLike('${post.id}', this, event)">
-                <div class="action-icon-wrap">
-                  <svg class="action-svg" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                </div>
-                <span class="action-count likes-count" id="likes-count-${post.id}">${formatCount(post.likes_count)}</span>
+            <div class="action-btn" onclick="openReelsComments('${post.id}')">
+              <div class="action-icon-wrap">
+                <img src="icons/message-circle-more.svg" alt="კომენტარი" class="action-icon">
               </div>
+              <span class="action-count comments-count" id="comments-count-${post.id}">${formatCount(post.comments_count)}</span>
+            </div>
 
-              <div class="action-btn" onclick="openReelsComments('${post.id}')">
-                <div class="action-icon-wrap">
-                  <img src="icons/message-circle-more.svg" alt="კომენტარი" class="action-icon">
-                </div>
-                <span class="action-count comments-count" id="comments-count-${post.id}">${formatCount(post.comments_count)}</span>
+            <div class="action-btn" onclick="shareReel('${post.id}')">
+              <div class="action-icon-wrap">
+                <img src="icons/undo-2.svg" alt="გაზიარება" class="action-icon flip-icon">
               </div>
+              <span class="action-count">გაზიარება</span>
+            </div>
 
-              <div class="action-btn" onclick="shareReel('${post.id}')">
-                <div class="action-icon-wrap">
-                  <img src="icons/undo-2.svg" alt="გაზიარება" class="action-icon flip-icon">
-                </div>
-                <span class="action-count">გაზიარება</span>
+            <div class="action-btn" onclick="toggleBookmark(this)">
+              <div class="action-icon-wrap">
+                <img src="icons/bookmark.svg" alt="შენახვა" class="action-icon">
               </div>
+              <span class="action-count">შენახვა</span>
+            </div>
+          </aside>
 
-              <div class="action-btn" onclick="toggleBookmark(this)">
-                <div class="action-icon-wrap">
-                  <img src="icons/bookmark.svg" alt="შენახვა" class="action-icon">
-                </div>
-                <span class="action-count">შენახვა</span>
+          <footer class="reel-details">
+            <div class="author-row">
+              <div class="author-avatar-wrap" onclick="goToUserProfile('${post.user_id}')">
+                <img src="${authorAvatar}" alt="ავტორი" class="author-avatar">
               </div>
-            </aside>
+              <span class="author-name" onclick="goToUserProfile('${post.user_id}')">${authorName}</span>
+              ${currentUser && post.user_id === currentUser.uid ? '' : `<button class="follow-btn" id="follow-btn-${post.user_id}" onclick="handleFollowToggle('${post.user_id}', this, event)">გამოწერა</button>`}
+            </div>
+            ${post.content ? `<p class="reel-caption">${post.content}</p>` : ''}
+          </footer>
+        </section>
+      `;
+    }
 
-            <!-- ქვედა ავტორის ინფორმაცია -->
-            <footer class="reel-details">
-              <div class="author-row">
-                <div class="author-avatar-wrap" onclick="goToUserProfile('${post.user_id}')">
-                  <img src="${authorAvatar}" alt="ავტორი" class="author-avatar">
-                </div>
-                <span class="author-name" onclick="goToUserProfile('${post.user_id}')">${authorName}</span>
-                ${currentUser && post.user_id === currentUser.uid ? '' : `<button class="follow-btn" id="follow-btn-${post.user_id}" onclick="handleFollowToggle('${post.user_id}', this, event)">გამოწერა</button>`}
-              </div>
-              ${post.content ? `<p class="reel-caption">${post.content}</p>` : ''}
-            </footer>
-          </section>
-        `;
-      }).join('');
-
+    function renderInitialReels(posts) {
+      const container = document.getElementById('reelsContainer');
+      container.innerHTML = posts.map((post, idx) => createReelCardHTML(post, idx)).join('');
       initVideoPlayback();
       syncUserLikesAndFollows(posts);
     }
 
+    function appendNextReels(posts, startIndex) {
+      const container = document.getElementById('reelsContainer');
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = posts.map((post, idx) => createReelCardHTML(post, startIndex + idx)).join('');
+
+      while (tempDiv.firstChild) {
+        const newCard = tempDiv.firstChild;
+        container.appendChild(newCard);
+        if (reelsIntersectionObserver) {
+          reelsIntersectionObserver.observe(newCard);
+        }
+        bindCardEvents(newCard);
+      }
+
+      syncUserLikesAndFollows(posts);
+    }
+
+    function attachReelsInfiniteScroll() {
+      const container = document.getElementById('reelsContainer');
+      container.addEventListener('scroll', () => {
+        const scrollPosition = container.scrollTop + container.clientHeight;
+        const threshold = container.scrollHeight - (container.clientHeight * 2);
+
+        if (scrollPosition >= threshold) {
+          loadRealReelsFromFirestore(true);
+        }
+      }, { passive: true });
+    }
+
     /**
      * ==========================================
-     *  🚀 TikTok Sliding Window ძრავი
-     *  მხოლოდ მიმდინარე ვიდეო უკრავს, მომდევნო წინასწარ იბუფერება,
-     *  ხოლო შორეული ვიდეოები იცლება მეხსიერებიდან.
+     *  🚀 მცურავი ბუფერი & ვიდეო ფლეიერი
      * ==========================================
      */
+    function updateSlidingBuffer(activeIndex) {
+      const cards = document.querySelectorAll('.reel-card');
+      cards.forEach((card, idx) => {
+        const video = card.querySelector('.reel-video');
+        if (!video) return;
+        const realSrc = video.getAttribute('data-src');
+
+        if (idx >= activeIndex - 1 && idx <= activeIndex + 2) {
+          if (!video.src || video.src === "" || video.src.endsWith("#empty")) {
+            video.src = realSrc;
+            video.preload = (idx === activeIndex) ? "auto" : "metadata";
+          }
+        } else {
+          if (video.src && video.src !== "") {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+          }
+        }
+      });
+    }
+
     function initVideoPlayback() {
       const container = document.getElementById('reelsContainer');
       const cards = document.querySelectorAll('.reel-card');
       const progressBar = document.getElementById('globalProgressBar');
-      let currentActiveIndex = 0;
-      let userUnmuted = false; // იმახსოვრებს ხმის ჩართვას
 
-      // მცურავი ბუფერის მართვა
-      function updateSlidingBuffer(activeIndex) {
-        cards.forEach((card, idx) => {
-          const video = card.querySelector('.reel-video');
-          if (!video) return;
-          const realSrc = video.getAttribute('data-src');
-
-          // აქტიურიდან +/- 2 ვიდეოს ფარგლებში
-          if (idx >= activeIndex - 1 && idx <= activeIndex + 2) {
-            if (!video.src || video.src === "" || video.src.endsWith("#empty")) {
-              video.src = realSrc;
-              video.preload = (idx === activeIndex) ? "auto" : "metadata";
-            }
-          } else {
-            // მეხსიერებიდან სრული დაცლა GPU-სა და RAM-ის განსატვირთად
-            if (video.src && video.src !== "") {
-              video.pause();
-              video.removeAttribute('src');
-              video.load();
-            }
-          }
-        });
+      if (reelsIntersectionObserver) {
+        reelsIntersectionObserver.disconnect();
       }
 
-      const observer = new IntersectionObserver((entries) => {
+      reelsIntersectionObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           const card = entry.target;
           const video = card.querySelector('.reel-video');
@@ -949,14 +1012,12 @@
           if (!video) return;
 
           if (entry.isIntersecting) {
-            currentActiveIndex = cardIndex;
             updateSlidingBuffer(cardIndex);
 
             if (!video.src || video.src === "") {
               video.src = video.getAttribute('data-src');
             }
 
-            // თუ მომხმარებელმა ერთხელ უკვე ჩართო ხმა, შემდეგი ვიდეოებიც ხმით უკრავს
             video.muted = !userUnmuted;
 
             const playPromise = video.play();
@@ -964,7 +1025,6 @@
               playPromise.then(() => {
                 if (playIcon) playIcon.classList.remove('visible');
               }).catch(() => {
-                // ბრაუზერის პოლიტიკა: თუ ხმით არ ჩაირთო, ჩართოს უხმოდ
                 video.muted = true;
                 video.play().catch(() => {});
               });
@@ -983,52 +1043,55 @@
         });
       }, { root: container, threshold: 0.65 });
 
-      cards.forEach(card => observer.observe(card));
-
-      // პირველივე ვიდეოს ბუფერის მომზადება
-      updateSlidingBuffer(0);
-
-      // Single Tap -> Play/Pause & Unmute | Double Tap -> Like
       cards.forEach(card => {
-        const wrapper = card.querySelector('.video-wrapper');
-        const video = card.querySelector('.reel-video');
-        const playIcon = card.querySelector('.play-state-icon');
-        let lastTapTime = 0;
+        reelsIntersectionObserver.observe(card);
+        bindCardEvents(card);
+      });
 
-        wrapper.addEventListener('click', (e) => {
-          const currentTime = new Date().getTime();
-          const tapLength = currentTime - lastTapTime;
+      updateSlidingBuffer(0);
+    }
 
-          if (tapLength < 300 && tapLength > 0) {
-            e.preventDefault();
-            createHeartAnimation(wrapper, e.clientX, e.clientY);
-            const likeBtn = card.querySelector('.like-btn');
-            const postId = card.getAttribute('data-post-id');
-            if (!likeBtn.classList.contains('liked')) {
-              toggleReelLike(postId, likeBtn, null, true);
-            }
-          } else {
-            setTimeout(() => {
-              const now = new Date().getTime();
-              if (now - lastTapTime >= 280) {
-                // პირველივე შეხებაზე ხმის ავტომატური გააქტიურება
-                if (video.muted) {
-                  video.muted = false;
-                  userUnmuted = true;
-                }
+    function bindCardEvents(card) {
+      const wrapper = card.querySelector('.video-wrapper');
+      const video = card.querySelector('.reel-video');
+      const playIcon = card.querySelector('.play-state-icon');
+      let lastTapTime = 0;
 
-                if (video.paused) {
-                  video.play();
-                  playIcon.classList.remove('visible');
-                } else {
-                  video.pause();
-                  playIcon.classList.add('visible');
-                }
-              }
-            }, 280);
+      if (wrapper.dataset.bound === "true") return;
+      wrapper.dataset.bound = "true";
+
+      wrapper.addEventListener('click', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+
+        if (tapLength < 300 && tapLength > 0) {
+          e.preventDefault();
+          createHeartAnimation(wrapper, e.clientX, e.clientY);
+          const likeBtn = card.querySelector('.like-btn');
+          const postId = card.getAttribute('data-post-id');
+          if (!likeBtn.classList.contains('liked')) {
+            toggleReelLike(postId, likeBtn, null, true);
           }
-          lastTapTime = currentTime;
-        });
+        } else {
+          setTimeout(() => {
+            const now = new Date().getTime();
+            if (now - lastTapTime >= 280) {
+              if (video.muted) {
+                video.muted = false;
+                userUnmuted = true;
+              }
+
+              if (video.paused) {
+                video.play();
+                playIcon.classList.remove('visible');
+              } else {
+                video.pause();
+                playIcon.classList.add('visible');
+              }
+            }
+          }, 280);
+        }
+        lastTapTime = currentTime;
       });
     }
 
