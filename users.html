@@ -257,6 +257,17 @@
       .user-card { border-radius: 0; border-left: none; border-right: none; }
     }
 
+    body {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+body.lang-loaded {
+  visibility: visible;
+  opacity: 1;
+}
+
     /* ==========================================================================
        ☀️ EMIGRANTBOOK USERS DIRECTORY — LIGHT MODE (Facebook Clean Theme)
        ========================================================================== */
@@ -516,24 +527,28 @@
     };
 
     function applyLanguage() {
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
-      document.documentElement.lang = currentLang;
-      var titleEl = document.getElementById('lbl-page-title');
-      if (titleEl) titleEl.innerText = t.pageTitle;
-      var searchEl = document.getElementById('user-search-input');
-      if (searchEl) searchEl.placeholder = t.searchPlaceholder;
-      var loadEl = document.getElementById('lbl-loading');
-      if (loadEl) loadEl.innerText = t.loading;
-    }
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
+  document.documentElement.lang = currentLang;
+  var titleEl = document.getElementById('lbl-page-title');
+  if (titleEl) titleEl.innerText = t.pageTitle;
+  var searchEl = document.getElementById('user-search-input');
+  if (searchEl) searchEl.placeholder = t.searchPlaceholder;
+  var loadEl = document.getElementById('lbl-loading');
+  if (loadEl) loadEl.innerText = t.loading;
 
-    // თუ სხვა ჩანართში ან გვერდზე ენა შეიცვალა, აქაც ავტომატურად განახლდეს
-    window.addEventListener('storage', function(e) {
-      if (e.key === 'emigrantbook_lang' || e.key === 'eb_lang' || e.key === 'lang') {
-        currentLang = e.newValue || 'ka';
-        applyLanguage();
-        renderUsersList();
-      }
-    });
+  // 👇 მხოლოდ ეს ერთი ხაზი ემატება, რომ ციმციმი გაქრეს და გვერდი პირდაპირ ნათარგმნი გამოჩნდეს:
+  document.body.classList.add('lang-loaded');
+}
+
+// შენი ორიგინალი storage ივენთი - ხელუხლებლად:
+window.addEventListener('storage', function(e) {
+  if (e.key === 'emigrantbook_lang' || e.key === 'eb_lang' || e.key === 'lang') {
+    currentLang = e.newValue || 'ka';
+    applyLanguage();
+    renderUsersList();
+  }
+});
+    
 
     function isUserOnline(profileData) {
       if (!profileData || profileData.is_online !== true || !profileData.last_seen) return false;
