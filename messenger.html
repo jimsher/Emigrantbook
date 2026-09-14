@@ -2170,6 +2170,49 @@ textarea,
 
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
+    // მომხმარებლის ონლაინ/ბოლოს ნანახი დროის ფორმატირება
+    function formatUserStatusText(uData) {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+      if (!uData) return { text: t.lastSeen + " -", color: "#8e8e93" };
+
+      var isOnline = (uData.status === 'online' || uData.is_online === true);
+      var rawDate = uData.lastSeen || uData.last_seen;
+
+      if (rawDate) {
+        var date = rawDate.toDate ? rawDate.toDate() : new Date(rawDate);
+        var diffMinutes = (new Date() - date) / (1000 * 60);
+
+        if (isOnline || diffMinutes < 2) {
+          return { text: t.activeNow, color: "#2ed573" };
+        }
+
+        var diffSecs = Math.floor((new Date() - date) / 1000);
+        var diffMins = Math.floor(diffSecs / 60);
+        var diffHours = Math.floor(diffMins / 60);
+        var diffDays = Math.floor(diffHours / 24);
+
+        var timeStr = "";
+        if (diffMins < 1) {
+          timeStr = t.justNow;
+        } else if (diffMins < 60) {
+          timeStr = diffMins + " " + t.minsAgo;
+        } else if (diffHours < 24) {
+          timeStr = diffHours + " " + t.hoursAgo;
+        } else if (diffDays < 7) {
+          timeStr = diffDays + " " + t.daysAgo;
+        } else {
+          timeStr = date.toLocaleDateString(currentLang === 'ka' ? 'ka-GE' : currentLang, { month: 'short', day: 'numeric' });
+        }
+        return { text: t.lastSeen + " " + timeStr, color: "#8e8e93" };
+      }
+
+      if (isOnline) {
+        return { text: t.activeNow, color: "#2ed573" };
+      }
+
+      return { text: t.lastSeen + " -", color: "#8e8e93" };
+    }
+
     function applyTranslations() {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       document.getElementById('lbl-chats-title').innerText = t.chats;
