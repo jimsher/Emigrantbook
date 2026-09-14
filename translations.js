@@ -472,7 +472,22 @@
     lottoSub: "Gesponsert • Live-Stream",
     lottoTitle: "LIVE LOTTO-ZIEHUNG",
     lottoJackpot: "JACKPOT",
-    lottoJoinBtn: "An der Verlosung teilnehmen"
+    lottoJoinBtn: "An der Verlosung teilnehmen",
+
+    backHome: "← Emigrantbook",
+    headerTitle: "🕒 Aktivitätszentrum",
+    mainTitle: "Deine Aktivität",
+    mainSub: "Verfolge deine Statistiken in Echtzeit",
+    timeTitle: "Gesamtzeit auf der Website",
+    unitDays: "Tage",
+    unitHours: "Stunden",
+    unitMinutes: "Min",
+    unitSeconds: "Sek",
+    statsHeader: "Interaktionsstatistiken",
+    statLikes: "Gefällt-mir-Beiträge",
+    statComments: "Geschriebene Kommentare",
+    statStories: "Hochgeladene Storys",
+    statPosts: "Veröffentlichte Beiträge"
   },
   el: {
     authSubtitle: "Συνδεθείτε στο προφίλ σας", authSubtitleReg: "Δημιουργήστε νέο λογαριασμό",
