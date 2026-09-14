@@ -82,7 +82,23 @@
     statLikes: "Liked Posts",
     statComments: "Comments Written",
     statStories: "Stories Uploaded",
-    statPosts: "Posts Published"
+    statPosts: "Posts Published",
+
+    pageTitle: "Site Users",
+    searchPlaceholder: "Search by name or surname...",
+    loading: "Loading users...",
+    empty: "No users found",
+    addFriend: "Add Friend",
+    cancelReq: "Cancel",
+    acceptReq: "Accept",
+    unfriend: "Unfriend",
+    onlineNow: "● Active now",
+    lastSeen: "Last seen:",
+    justNow: "Just now",
+    minsAgo: "m ago",
+    hoursAgo: "h ago",
+    daysAgo: "d ago",
+    unfriendConfirm: "Are you sure you want to unfriend?"
   },
   it: {
     authSubtitle: "Accedi al tuo profilo", authSubtitleReg: "Crea un nuovo account",
@@ -250,7 +266,23 @@
     statLikes: "მოწონებული პოსტები",
     statComments: "დაწერილი კომენტარები",
     statStories: "ატვირთული სთორები",
-    statPosts: "გამოქვეყნებული პოსტები"
+    statPosts: "გამოქვეყნებული პოსტები",
+
+    pageTitle: "საიტის მომხმარებლები",
+    searchPlaceholder: "ძებნა სახელით ან გვარით...",
+    loading: "მომხმარებლები იტვირთება...",
+    empty: "მომხმარებლები ვერ მოიძებნა",
+    addFriend: "დამეგობრება",
+    cancelReq: "გაუქმება",
+    acceptReq: "მიღება",
+    unfriend: "წაშლა",
+    onlineNow: "● აქტიურია ახლა",
+    lastSeen: "ბოლოს იყო:",
+    justNow: "ახლახანს",
+    minsAgo: "წთ-ის წინ",
+    hoursAgo: "სთ-ის წინ",
+    daysAgo: "დღის წინ",
+    unfriendConfirm: "ნამდვილად გსურთ მეგობრობის გაუქმება?"
   },
   ru: {
     authSubtitle: "Войдите в свой профиль", authSubtitleReg: "Создать новый аккаунт",
@@ -590,3 +622,117 @@
   }
 };                                     
     // აქ მთავრდება
+
+
+
+
+
+
+
+
+
+var TRANSLATIONS = {
+      
+      en: {
+        pageTitle: "Site Users",
+        searchPlaceholder: "Search by name or surname...",
+        loading: "Loading users...",
+        empty: "No users found",
+        addFriend: "Add Friend",
+        cancelReq: "Cancel",
+        acceptReq: "Accept",
+        unfriend: "Unfriend",
+        onlineNow: "● Active now",
+        lastSeen: "Last seen:",
+        justNow: "Just now",
+        minsAgo: "m ago",
+        hoursAgo: "h ago",
+        daysAgo: "d ago",
+        unfriendConfirm: "Are you sure you want to unfriend?"
+      },
+      el: {
+        pageTitle: "Χρήστες Ιστότοπου",
+        searchPlaceholder: "Αναζήτηση με όνομα ή επώνυμο...",
+        loading: "Φόρτωση χρηστών...",
+        empty: "Δεν βρέθηκαν χρήστες",
+        addFriend: "Προσθήκη φίλου",
+        cancelReq: "Ακύρωση",
+        acceptReq: "Αποδοχή",
+        unfriend: "Διαγραφή",
+        onlineNow: "● Ενεργός τώρα",
+        lastSeen: "Τελευταία σύνδεση:",
+        justNow: "Μόλις τώρα",
+        minsAgo: "λεπτά πριν",
+        hoursAgo: "ώρες πριν",
+        daysAgo: "ημέρες πριν",
+        unfriendConfirm: "Είστε βέβαιοι ότι θέλετε να καταργήσετε τη φιλία;"
+      },
+      ru: {
+        pageTitle: "Пользователи сайта",
+        searchPlaceholder: "Поиск по имени или фамилии...",
+        loading: "Загрузка пользователей...",
+        empty: "Пользователи не найдены",
+        addFriend: "Добавить в друзья",
+        cancelReq: "Отмена",
+        acceptReq: "Принять",
+        unfriend: "Удалить",
+        onlineNow: "● В сети",
+        lastSeen: "Был(а) в сети:",
+        justNow: "Только что",
+        minsAgo: "мин. назад",
+        hoursAgo: "ч. назад",
+        daysAgo: "дн. назад",
+        unfriendConfirm: "Вы действительно хотите удалить из друзей?"
+      },
+      fr: {
+        pageTitle: "Utilisateurs du site",
+        searchPlaceholder: "Rechercher par nom ou prénom...",
+        loading: "Chargement des utilisateurs...",
+        empty: "Aucun utilisateur trouvé",
+        addFriend: "Ajouter",
+        cancelReq: "Annuler",
+        acceptReq: "Accepter",
+        unfriend: "Supprimer",
+        onlineNow: "● En ligne",
+        lastSeen: "Vu:",
+        justNow: "À l'instant",
+        minsAgo: "min",
+        hoursAgo: "h",
+        daysAgo: "j",
+        unfriendConfirm: "Voulez-vous vraiment supprimer cet ami ?"
+      },
+      de: {
+        pageTitle: "Website-Benutzer",
+        searchPlaceholder: "Nach Name oder Nachname suchen...",
+        loading: "Benutzer werden geladen...",
+        empty: "Keine Benutzer gefunden",
+        addFriend: "Freund hinzufügen",
+        cancelReq: "Abbrechen",
+        acceptReq: "Annehmen",
+        unfriend: "Entfernen",
+        onlineNow: "● Jetzt online",
+        lastSeen: "Zuletzt online:",
+        justNow: "Gerade eben",
+        minsAgo: "Min. her",
+        hoursAgo: "Std. her",
+        daysAgo: "Tage her",
+        unfriendConfirm: "Möchten Sie diesen Freund wirklich entfernen?"
+      },
+      it: {
+        pageTitle: "Utenti del sito",
+        searchPlaceholder: "Cerca per nome o cognome...",
+        loading: "Caricamento utenti...",
+        empty: "Nessun utente trovato",
+        addFriend: "Aggiungi amico",
+        cancelReq: "Annulla",
+        acceptReq: "Accetta",
+        unfriend: "Rimuovi",
+        onlineNow: "● Online ora",
+        lastSeen: "Ultimo accesso:",
+        justNow: "Adesso",
+        minsAgo: "min fa",
+        hoursAgo: "ore fa",
+        daysAgo: "giorni fa",
+        unfriendConfirm: "Sei sicuro di voler rimuovere dagli amici?"
+      }
+    };
