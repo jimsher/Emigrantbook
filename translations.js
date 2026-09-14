@@ -571,7 +571,22 @@
     lottoSub: "Χορηγούμενο • Ζωντανή μετάδοση",
     lottoTitle: "LIVE ΚΛΗΡΩΣΗ ΛΟΤΤΟ",
     lottoJackpot: "ΤΖΑΚΠΟΤ",
-    lottoJoinBtn: "Συμμετοχή στην κλήρωση"
+    lottoJoinBtn: "Συμμετοχή στην κλήρωση",
+
+    backHome: "← Emigrantbook",
+    headerTitle: "🕒 Κέντρο δραστηριότητας",
+    mainTitle: "Η δραστηριότητά σου",
+    mainSub: "Παρακολουθήστε τα στατιστικά σας σε πραγματικό χρόνο",
+    timeTitle: "Συνολικός χρόνος στον ιστότοπο",
+    unitDays: "Ημέρες",
+    unitHours: "Ώρες",
+    unitMinutes: "Λεπτά",
+    unitSeconds: "Δευτ",
+    statsHeader: "Στατιστικά αλληλεπιδράσεων",
+    statLikes: "Αναρτήσεις που σας άρεσαν",
+    statComments: "Σχόλια που γράφτηκαν",
+    statStories: "Ιστορίες που ανέβηκαν",
+    statPosts: "Δημοσιευμένες αναρτήσεις",
   }
 };                                     
     // აქ მთავრდება
