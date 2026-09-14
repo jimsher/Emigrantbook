@@ -204,6 +204,17 @@
       }
     }
 
+    body {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+body.lang-loaded {
+  visibility: visible;
+  opacity: 1;
+}
+
 
     /* ==========================================================================
    ☀️ EMIGRANTBOOK ACTIVITY CENTER — LIGHT MODE (Facebook Clean Theme)
@@ -395,22 +406,25 @@ body.light-mode .stat-box .lbl {
     // აქ მთავრდებოდა
 
     function applyLanguage() {
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
-      document.getElementById('lbl-back-home').innerText = t.backHome;
-      document.getElementById('lbl-header-title').innerText = t.headerTitle;
-      document.getElementById('lbl-main-title').innerText = t.mainTitle;
-      document.getElementById('lbl-main-sub').innerText = t.mainSub;
-      document.getElementById('lbl-time-title').innerText = t.timeTitle;
-      document.getElementById('lbl-unit-days').innerText = t.unitDays;
-      document.getElementById('lbl-unit-hours').innerText = t.unitHours;
-      document.getElementById('lbl-unit-minutes').innerText = t.unitMinutes;
-      document.getElementById('lbl-unit-seconds').innerText = t.unitSeconds;
-      document.getElementById('lbl-stats-header').innerText = t.statsHeader;
-      document.getElementById('lbl-stat-likes').innerText = t.statLikes;
-      document.getElementById('lbl-stat-comments').innerText = t.statComments;
-      document.getElementById('lbl-stat-stories').innerText = t.statStories;
-      document.getElementById('lbl-stat-posts').innerText = t.statPosts;
-    }
+  var t = TRANSLATIONS[currentLang] || TRANSLATIONS.ka;
+  document.getElementById('lbl-back-home').innerText = t.backHome;
+  document.getElementById('lbl-header-title').innerText = t.headerTitle;
+  document.getElementById('lbl-main-title').innerText = t.mainTitle;
+  document.getElementById('lbl-main-sub').innerText = t.mainSub;
+  document.getElementById('lbl-time-title').innerText = t.timeTitle;
+  document.getElementById('lbl-unit-days').innerText = t.unitDays;
+  document.getElementById('lbl-unit-hours').innerText = t.unitHours;
+  document.getElementById('lbl-unit-minutes').innerText = t.unitMinutes;
+  document.getElementById('lbl-unit-seconds').innerText = t.unitSeconds;
+  document.getElementById('lbl-stats-header').innerText = t.statsHeader;
+  document.getElementById('lbl-stat-likes').innerText = t.statLikes;
+  document.getElementById('lbl-stat-comments').innerText = t.statComments;
+  document.getElementById('lbl-stat-stories').innerText = t.statStories;
+  document.getElementById('lbl-stat-posts').innerText = t.statPosts;
+
+  // 👇 აი ეს ხაზი გამოაჩენს გვერდს მხოლოდ მას შემდეგ, რაც ტექსტები შეიცვლება:
+  document.body.classList.add('lang-loaded');
+}
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
