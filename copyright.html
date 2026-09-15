@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ინტელექტუალური საკუთრება | Emigrantbook</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #f0f2f5;
+      color: #050505;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ზედა ფიქსირებული ჰედერი */
+    .ip-header {
+      position: sticky;
+      top: 0;
+      background-color: #ffffff;
+      border-bottom: 1px solid #dadde1;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #1877f2;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 50%;
+    }
+
+    .back-btn:active {
+      background-color: #e4e6eb;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #050505;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-logo {
+      font-size: 17px;
+      font-weight: 800;
+      color: #1877f2;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+
+    /* მთავარი კონტეინერი */
+    .ip-container {
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ჩამოსაშლელი მენიუს ბლოკი (Dropdown) */
+    .dropdown-wrapper {
+      position: relative;
+      width: 100%;
+      z-index: 50;
+    }
+
+    .dropdown-btn {
+      width: 100%;
+      background-color: #ffffff;
+      border: 1px solid #dadde1;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #050505;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .dropdown-btn svg {
+      transition: transform 0.2s ease;
+      color: #65676b;
+    }
+
+    .dropdown-btn.open svg {
+      transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border: 1px solid #dadde1;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .dropdown-menu.visible {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dropdown-item {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #050505;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .dropdown-item:active, .dropdown-item.active {
+      background-color: #e7f3ff;
+      color: #1877f2;
+      font-weight: 700;
+    }
+
+    /* დიდი მუქი ბანერი */
+    .hero-banner {
+      background: linear-gradient(135deg, #0d233a 0%, #183b5e 100%);
+      border-radius: 24px;
+      padding: 40px 24px;
+      display: flex;
+      align-items: flex-end;
+      min-height: 180px;
+      box-shadow: 0 4px 14px rgba(13, 35, 58, 0.15);
+    }
+
+    .hero-banner h1 {
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+    }
+
+    .meta-dates {
+      font-size: 12.5px;
+      color: #65676b;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 4px;
+    }
+
+    /* საინფორმაციო ბლოკი */
+    .notice-box {
+      background-color: #e7f3ff;
+      border: 1px solid #cbe4fc;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13.5px;
+      color: #0c4a6e;
+      line-height: 1.5;
+    }
+
+    /* სუფთა თეთრი ბარათები */
+    .content-card {
+      background-color: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #dadde1;
+      padding: 20px 18px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-margin-top: 70px;
+    }
+
+    .content-card h2 {
+      font-size: 17px;
+      font-weight: 800;
+      color: #050505;
+      border-bottom: 2px solid #e7f3ff;
+      padding-bottom: 8px;
+    }
+
+    .content-card h3 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1877f2;
+      margin-top: 6px;
+    }
+
+    .content-card p {
+      font-size: 13.8px;
+      color: #333333;
+    }
+
+    .rule-item-box {
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      padding: 12px 14px;
+      border-left: 3.5px solid #1877f2;
+      font-size: 13.5px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .rule-item-box strong {
+      color: #050505;
+      font-size: 14px;
+    }
+
+    .rule-item-box span {
+      color: #555555;
+    }
+
+    .ip-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ip-list li {
+      position: relative;
+      padding-left: 18px;
+      font-size: 13.5px;
+      color: #4b4f56;
+    }
+
+    .ip-list li::before {
+      content: '•';
+      position: absolute;
+      left: 4px;
+      color: #1877f2;
+      font-size: 18px;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ზედა ჰედერი -->
+  <header class="ip-header">
+    <div class="header-left">
+      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='terms-and-policies.html'" aria-label="უკან">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <span class="header-title">ინტელექტუალური საკუთრება</span>
+    </div>
+    <a href="index.html" class="header-logo">Emigrantbook</a>
+  </header>
+
+  <main class="ip-container">
+
+    <!-- ჩამოსაშლელი მენიუ (როგორც სქრინზეა) -->
+    <div class="dropdown-wrapper">
+      <button class="dropdown-btn" id="dropdownBtn" onclick="toggleDropdown()">
+        <span id="dropdownCurrentLabel">საავტორო უფლებები</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-item active" onclick="selectSection('sec-copyright', 'საავტორო უფლებები')">საავტორო უფლებები</div>
+        <div class="dropdown-item" onclick="selectSection('sec-trademark', 'სასაქონლო ნიშანი')">სასაქონლო ნიშანი</div>
+        <div class="dropdown-item" onclick="selectSection('sec-general', 'ზოგადი შენიშვნა')">ზოგადი შენიშვნა</div>
+      </div>
+    </div>
+
+    <!-- დიდი ბანერი -->
+    <div class="hero-banner">
+      <h1>ინტელექტუალური<br>საკუთრება</h1>
+    </div>
+
+    <div class="meta-dates">
+      <span>გამოცემის თარიღი: 27 მარტი, 2025</span>
+      <span>ძალაში შესვლის თარიღი: 26 აპრილი, 2025</span>
+    </div>
+
+    <!-- შესავალი -->
+    <div class="notice-box">
+      <strong>Emigrantbook</strong> პატივს სცემს სხვათა ინტელექტუალური საკუთრების უფლებებს და მკაცრად მოითხოვს მომხმარებლის შეთანხმებისა და საზოგადოების წესების დაცვას. დაუშვებელია ისეთი კონტენტის განთავსება, რომელიც არღვევს მესამე პირების საავტორო ან სასაქონლო ნიშნის უფლებებს.
+    </div>
+
+    <!-- 1. საავტორო უფლებები -->
+    <section class="content-card" id="sec-copyright">
+      <h2>საავტორო უფლებები (Copyright)</h2>
+      <p>საავტორო უფლება იცავს ორიგინალურ ნაწარმოებებს (მუსიკა, ვიდეოები, ტექსტი, ფოტოები). ის იცავს იდეის ორიგინალურ გამოხატულებას (მაგალითად, ვიდეოს შექმნის ან გადაღების უნიკალურ გზას), თუმცა არ იცავს თავად იდეას ან ფაქტს.</p>
+
+      <div class="rule-item-box">
+        <strong>საავტორო უფლებების დარღვევა</strong>
+        <span>სხვისი დაცული მასალის უნებართვო ან უკანონო გამოყენება წარმოადგენს Emigrantbook-ის წესების უხეშ დარღვევას.</span>
+      </div>
+
+      <div class="rule-item-box">
+        <strong>კეთილსინდისიერი გამოყენება (გამონაკლისები)</strong>
+        <span>ყველა უნებართვო გამოყენება არ ითვლება დარღვევად. საერთაშორისო პრაქტიკით დასაშვებია მასალის გამოყენება ციტირებისთვის, კრიტიკისთვის, ანალიზისთვის, პაროდიისა და კარიკატურისთვის, თუ ეს არ აყენებს უსაფუძვლო ზიანს ავტორს.</span>
+      </div>
+
+      <div class="rule-item-box">
+        <strong>კონტენტის წაშლა და ანგარიშის შეზღუდვა</strong>
+        <span>დარღვევით ატვირთული ვიდეოები და პოსტები დაუყოვნებლივ წაიშლება. მომხმარებელს, რომელიც სისტემატურად არღვევს საავტორო უფლებებს, სამუდამოდ გაუუქმდება ანგარიში.</span>
+      </div>
+
+      <h3>ინფორმაცია უფლებათა მფლობელებისთვის</h3>
+      <p>თუ მიგაჩნიათ, რომ თქვენი ნამუშევარი უნებართვოდ განთავსდა Emigrantbook-ზე, შეგიძლიათ მოგვმართოთ საჩივრით (DMCA / EU საავტორო დირექტივის შესაბამისად). საჩივარში აუცილებელია მიუთითოთ ზუსტი ბმული და თქვენი უფლებამოსილების დამადასტურებელი დეტალები.</p>
+
+      <h3>აპელაცია მომხმარებლებისთვის</h3>
+      <p>თუ თქვენი ვიდეო ან პოსტი წაიშალა საავტორო საჩივრის გამო, მაგრამ დარწმუნებული ხართ, რომ გაქვთ მისი გამოყენების უფლება (ან საქმე გვაქვს შეცდომასთან), შეგიძლიათ გამოგზავნოთ აპელაცია საპასუხო არგუმენტებით.</p>
+    </section>
+
+    <!-- 2. სასაქონლო ნიშანი -->
+    <section class="content-card" id="sec-trademark">
+      <h2>სასაქონლო ნიშანი (Trademark)</h2>
+      <p>სასაქონლო ნიშანი არის სიტყვა, სიმბოლო, ლოგო ან ლოზუნგი, რომელიც განასხვავებს კონკრეტული ბრენდის საქონელსა და მომსახურებას სხვებისგან.</p>
+
+      <div class="rule-item-box">
+        <strong>უფლებების დარღვევა</strong>
+        <span>აკრძალულია სხვისი სასაქონლო ნიშნის ან იდენტური ლოგოს ისეთი გამოყენება, რამაც შეიძლება შეცდომაში შეიყვანოს მომხმარებლები და შექმნას მცდარი შთაბეჭდილება, თითქოს თქვენ ოფიციალურად წარმოადგენთ ამ ბრენდს.</span>
+      </div>
+
+      <div class="rule-item-box">
+        <strong>კონტრაფაქცია (ყალბი პროდუქცია)</strong>
+        <span>მკაცრად აკრძალულია ყალბი (ფალსიფიცირებული) ბრენდული ნივთების რეკლამირება, ყიდვა, გაყიდვა ან პოპულარიზაცია Emigrantbook-ის მარკეტპლეისსა თუ პოსტებში.</span>
+      </div>
+
+      <div class="rule-item-box">
+        <strong>ფან-გვერდები და მიმოხილვები</strong>
+        <span>ნებადართულია ბრენდის პროდუქტზე ობიექტური მიმოხილვის დაწერა ან ფან-გვერდის შექმნა იმ პირობით, რომ გარკვევით იქნება მითითებული, რომ გვერდი არაოფიციალურია.</span>
+      </div>
+    </section>
+
+    <!-- 3. ზოგადი შენიშვნა -->
+    <section class="content-card" id="sec-general">
+      <h2>ზოგადი შენიშვნა</h2>
+      <p>როგორც Emigrantbook-ის მომხმარებელი, თქვენ სრულად ხართ პასუხისმგებელი თქვენ მიერ გამოქვეყნებულ მასალაზე. თუ გაქვთ ეჭვი საავტორო უფლებებთან დაკავშირებით, გირჩევთ კონსულტაცია გაიაროთ იურისტთან მასალის ატვირთვამდე.</p>
+      <div class="rule-item-box">
+        <strong>მხარდაჭერა და დავები</strong>
+        <span>Emigrantbook უზრუნველყოფს საჩივრებისა და აპელაციების გამჭვირვალე მექანიზმს. ნებისმიერი საავტორო პრეტენზიის შემთხვევაში შეგიძლიათ დაგვიკავშირდეთ პლატფორმის უკუკავშირის მეშვეობით.</span>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      const btn = document.getElementById('dropdownBtn');
+      menu.classList.toggle('visible');
+      btn.classList.toggle('open');
+    }
+
+    function selectSection(sectionId, label) {
+      document.getElementById('dropdownCurrentLabel').innerText = label;
+      toggleDropdown();
+
+      // აქტიური კლასის მონიშვნა
+      const items = document.querySelectorAll('.dropdown-item');
+      items.forEach(item => {
+        item.classList.toggle('active', item.innerText === label);
+      });
+
+      // შეუფერხებელი გადასვლა სექციაზე
+      const target = document.getElementById(sectionId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // მენიუს დახურვა ეკრანზე სხვა ადგილას დაჭერისას
+    document.addEventListener('click', function(event) {
+      const wrapper = document.querySelector('.dropdown-wrapper');
+      if (!wrapper.contains(event.target)) {
+        document.getElementById('dropdownMenu').classList.remove('visible');
+        document.getElementById('dropdownBtn').classList.remove('open');
+      }
+    });
+  </script>
+
+</body>
+</html>
