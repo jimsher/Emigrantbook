@@ -1,4 +1,4 @@
-const CACHE_NAME = 'emigrantbook-cache-v5';
+const CACHE_NAME = 'emigrantbook-cache-v6';
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
@@ -44,7 +44,6 @@ messaging.onBackgroundMessage(function(payload) {
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
     const targetUrl = data.url || (data.data && data.data.url) || '/';
 
-    // მომხმარებლის ავატარი (თუ არ მოვიდა, ნაგულისხმევად გამოიყენებს საიტის ლოგოს)
     const userAvatar = notification.icon || data.avatar || data.senderAvatar || data.image || '/logo2.png';
 
     const options = {
@@ -82,7 +81,6 @@ self.addEventListener('push', function(event) {
     const targetUrl = data.url || (data.data && data.data.url) || '/';
     const tag = data.tag || (data.type ? `eb-${data.type}` : 'eb-general');
 
-    // მომხმარებლის ავატარი (თუ არ მოვიდა, ნაგულისხმევად გამოიყენებს საიტის ლოგოს)
     const userAvatar = notification.icon || data.avatar || data.senderAvatar || data.image || '/logo2.png';
 
     const options = {
@@ -98,7 +96,7 @@ self.addEventListener('push', function(event) {
     event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 3. ნოტიფიკაციაზე დაჭერა და ბეიჯის გასუფთავება
+// 3. ნოტიფიკაციაზე დაჭერა — აპლიკაციის შიგნით გახსნა
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
 
@@ -108,16 +106,24 @@ self.addEventListener('notificationclick', function(event) {
         self.clearAppBadge().catch(() => {});
     }
 
-    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+    const rawUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
+    const fullTargetUrl = new URL(rawUrl, self.location.origin).href;
 
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
+            // თუ აპლიკაცია უკვე გახსნილია, გადავიდეს საჭირო გვერდზე და ამოწიოს ეკრანზე
             for (let client of windowClients) {
-                if (client.url.includes(targetUrl) && 'focus' in client) {
+                if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+                    if ('navigate' in client) {
+                        client.navigate(fullTargetUrl);
+                    }
                     return client.focus();
                 }
             }
-            if (clients.openWindow) return clients.openWindow(targetUrl);
+            // თუ აპლიკაცია მთლიანად დახურულია, გახსნას სრული URL
+            if (clients.openWindow) {
+                return clients.openWindow(fullTargetUrl);
+            }
         })
     );
 });
