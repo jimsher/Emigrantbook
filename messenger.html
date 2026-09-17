@@ -2947,26 +2947,37 @@ textarea,
     }
 
     function handleInputTyping() {
-      var input = document.getElementById('message-input-field');
-      var btn = document.getElementById('send-action-btn');
-      if (!input || !btn) return;
+  var input = document.getElementById('message-input-field');
+  var btn = document.getElementById('send-action-btn');
+  if (!input || !btn) return;
 
-      if (input.value.trim().length > 0) {
-        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
-        btn.dataset.mode = "send";
+  var hasText = input.value.trim().length > 0;
+  if (hasText) {
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+    btn.dataset.mode = "send";
 
-        sendTypingStatus(true);
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-          sendTypingStatus(false);
-        }, 2000);
-      } else {
-        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>`;
-        btn.dataset.mode = "like";
-
-        sendTypingStatus(false);
-      }
+    // მხოლოდ ერთხელ წერს ბაზაში წერის დაწყებისას, და არა ყოველ ასოზე!
+    if (!isMyTypingActive) {
+      isMyTypingActive = true;
+      sendTypingStatus(true);
     }
+
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+      isMyTypingActive = false;
+      sendTypingStatus(false);
+    }, 2500);
+  } else {
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>`;
+    btn.dataset.mode = "like";
+
+    if (isMyTypingActive) {
+      isMyTypingActive = false;
+      clearTimeout(typingTimer);
+      sendTypingStatus(false);
+    }
+  }
+}
 
     function toggleEmojiPicker() {
       var picker = document.getElementById('emoji-picker-popup');
