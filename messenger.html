@@ -2663,6 +2663,15 @@ textarea,
         .onSnapshot(function(snapshot) {
           
           snapshot.docChanges().forEach(change => {
+            // 1. მხოლოდ ახლად შემოსულ მესიჯს ნიშნავს წაკითხულად (მთელ ბაზას აღარ გადაუვლის!)
+            if (change.type === "added") {
+              const msgData = change.doc.data();
+              if (msgData.senderId !== myUid && msgData.read === false) {
+                change.doc.ref.update({ read: true });
+              }
+            }
+
+            // 2. შენი ორიგინალი ხმის დაკვრის ლოგიკა
             if (change.type === "modified") {
               const msgData = change.doc.data();
               if (msgData.senderId === myUid && msgData.read === true) {
@@ -2675,11 +2684,9 @@ textarea,
           let lastMsgDate = null;
           let lastSeenOutgoingMsgId = null;
 
+          // აქ მხოლოდ ბოლო წაკითხული მესიჯის ID-ს იმახსოვრებს (ბაზაში აღარაფერს წერს)
           snapshot.forEach(docSnap => {
             const msgData = docSnap.data();
-            if (msgData.senderId !== myUid && msgData.read === false) {
-              docSnap.ref.update({ read: true });
-            }
             if (msgData.senderId === myUid && msgData.read === true) {
               lastSeenOutgoingMsgId = docSnap.id;
             }
