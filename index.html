@@ -6892,6 +6892,8 @@ function checkNewProfileVisitors() {
 
   db.collection('profile_views')
     .where('profile_user_id', '==', currentUser.uid)
+    .orderBy('viewed_at', 'desc')
+    .limit(1)
     .get()
     .then(function(snapshot) {
       if (snapshot.empty) return;
