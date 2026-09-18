@@ -3210,7 +3210,7 @@ textarea,
       const notifTarget = document.getElementById('notifications-list-target');
       if (!notifTarget) return;
 
-      db.collection('notifications').get().then(snapshot => {
+      db.collection('notifications').where('receiver_id', '==', currentUid).limit(20).get().then(snapshot => {
         if (!snapshot || snapshot.empty) {
           var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
           notifTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noNotifs}</p>`;
