@@ -3073,72 +3073,91 @@ auth.onAuthStateChanged(function(user) {
 }
 
     function subscribeToMessagesRealtime() {
-  if (!currentUser) return;
+      if (!currentUser) return;
 
-  messengerUnsubscribeGroup.forEach(function(unsub) {
-    if (typeof unsub === 'function') unsub();
-  });
-  messengerUnsubscribeGroup = [];
+      // 1 წუთიანი ქეში: თუ წუთის განმავლობაში უკვე შემოწმდა, ბაზას აღარ აწუხებს
+      var cachedUnread = sessionStorage.getItem('eb_cached_msg_unread_' + currentUser.uid);
+      var lastCheck = Number(sessionStorage.getItem('eb_msg_unread_time_' + currentUser.uid) || 0);
 
-  Promise.all([
-    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
-    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
-  ]).then(function(results) {
-    let friendIds = [];
-    results[0].forEach(function(docSnap) { friendIds.push(docSnap.data().receiver_id); });
-    results[1].forEach(function(docSnap) { friendIds.push(docSnap.data().sender_id); });
+      if (cachedUnread !== null && (Date.now() - lastCheck < 60000)) {
+        var badge = document.getElementById('messenger-badge');
+        if (badge) {
+          var count = Number(cachedUnread);
+          badge.innerText = count;
+          badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+        return;
+      }
 
-    if (friendIds.length === 0) {
-      var badge = document.getElementById('messenger-badge');
-      if (badge) badge.style.display = 'none';
-      return;
-    }
+      messengerUnsubscribeGroup.forEach(function(unsub) {
+        if (typeof unsub === 'function') unsub();
+      });
+      messengerUnsubscribeGroup = [];
 
-    let unreadChatsMap = {};
-    let processed = 0;
+      Promise.all([
+        db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').limit(15).get(),
+        db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').limit(15).get()
+      ]).then(function(results) {
+        let friendIds = [];
+        results[0].forEach(function(docSnap) { friendIds.push(docSnap.data().receiver_id); });
+        results[1].forEach(function(docSnap) { friendIds.push(docSnap.data().sender_id); });
 
-    friendIds.forEach(function(fId) {
-      let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
-      
-      db.collection('chats').doc(chatId).collection('messages')
-        .where('read', '==', false)
-        .limit(1)
-        .get()
-        .then(function(msgsSnap) {
-          processed++;
-          let hasUnread = false;
-          msgsSnap.forEach(function(msgDoc) {
-            if (msgDoc.data().senderId !== currentUser.uid) {
-              hasUnread = true;
-            }
-          });
+        if (friendIds.length === 0) {
+          var badge = document.getElementById('messenger-badge');
+          if (badge) badge.style.display = 'none';
+          return;
+        }
 
-          if (hasUnread) {
-            unreadChatsMap[fId] = true;
-          } else {
-            delete unreadChatsMap[fId];
-          }
+        let unreadChatsMap = {};
+        let processed = 0;
+        let targetCheckFriends = friendIds.slice(0, 10); // ამოწმებს მხოლოდ ბოლო 10 მეგობარს
 
-          if (processed === friendIds.length) {
-            let totalUnreadChats = Object.keys(unreadChatsMap).length;
-            var badge = document.getElementById('messenger-badge');
-            if (badge) {
-              if (totalUnreadChats > 0) {
-                badge.innerText = totalUnreadChats;
-                badge.style.display = 'flex';
+        targetCheckFriends.forEach(function(fId) {
+          let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
+          
+          db.collection('chats').doc(chatId).collection('messages')
+            .where('read', '==', false)
+            .limit(1)
+            .get()
+            .then(function(msgsSnap) {
+              processed++;
+              let hasUnread = false;
+              msgsSnap.forEach(function(msgDoc) {
+                if (msgDoc.data().senderId !== currentUser.uid) {
+                  hasUnread = true;
+                }
+              });
+
+              if (hasUnread) {
+                unreadChatsMap[fId] = true;
               } else {
-                badge.style.display = 'none';
+                delete unreadChatsMap[fId];
               }
-            }
-          }
-        }).catch(function(err) {
-          console.error("Messages get error:", err);
+
+              if (processed === targetCheckFriends.length) {
+                let totalUnreadChats = Object.keys(unreadChatsMap).length;
+                sessionStorage.setItem('eb_cached_msg_unread_' + currentUser.uid, totalUnreadChats.toString());
+                sessionStorage.setItem('eb_msg_unread_time_' + currentUser.uid, Date.now().toString());
+
+                var badge = document.getElementById('messenger-badge');
+                if (badge) {
+                  if (totalUnreadChats > 0) {
+                    badge.innerText = totalUnreadChats;
+                    badge.style.display = 'flex';
+                  } else {
+                    badge.style.display = 'none';
+                  }
+                }
+              }
+            }).catch(function(err) {
+              console.error("Messages get error:", err);
+            });
         });
-    });
-  }).catch(function(err) {
-    console.error("Friend requests get error:", err);
-  });
-}
+      }).catch(function(err) {
+        console.error("Friend requests get error:", err);
+      });
+    }
+          
 
     function subscribeToGlobalNotifications() {
       db.collection('posts')
