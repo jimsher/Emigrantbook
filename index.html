@@ -3681,25 +3681,31 @@ auth.onAuthStateChanged(function(user) {
     }
 
     function renderCommentsCountOnly(post) {
-  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
   var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${post.id}"]`);
   
+  // 1. თუ პოსტს უკვე აქვს შენახული რაოდენობა, ეგრევე გამოიტანოს ბაზის შეწუხების გარეშე
   if (typeof post.comments_count === 'number') {
-    countLabels.forEach(function(lbl) { lbl.innerText = post.comments_count + " " + t.commentsCount; });
+    countLabels.forEach(function(lbl) { 
+      lbl.innerText = post.comments_count + " " + t.commentsCount; 
+    });
     return;
   }
   
-  // თუ ბაზაში არ ეწერა, ითვლის post_comments-დან და ავტომატურად ინახავს პოსტის დოკუმენტშიც
-  db.collection('post_comments')
-    .where('post_id', '==', post.id)
-    .get()
-    .then(function(snapshot) {
-      var count = snapshot.size;
-      countLabels.forEach(function(lbl) { lbl.innerText = count + " " + t.commentsCount; }); 
-      
-      // ინახავს დათვლილ ციფრს პოსტის დოკუმენტში, რომ შემდეგ რეფრეშზე ეგრევე გამოჩნდეს
-      db.collection('posts').doc(post.id).update({ comments_count: count }).catch(function(){});
+  // 2. თუ პოსტზე მასივია მიბმული
+  if (Array.isArray(post.post_comments)) {
+    var arrCount = post.post_comments.length;
+    countLabels.forEach(function(lbl) { 
+      lbl.innerText = arrCount + " " + t.commentsCount; 
     });
+    return;
+  }
+
+  // 3. თუ საერთოდ არაფერი წერია, დროებით ეწეროს 0 (ან ძველი მნიშვნელობა) და აღარ გაუშვას მძიმე .get() მოთხოვნა
+  var fallbackCount = Number(post.comments_count) || 0;
+  countLabels.forEach(function(lbl) { 
+    lbl.innerText = fallbackCount + " " + t.commentsCount; 
+  });
 }
 
   //აქ იწყება სრული კომენტარების ვერსია
