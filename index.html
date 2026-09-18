@@ -7556,6 +7556,9 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
   var container = document.getElementById(containerId);
   if (!container) return;
 
+  var t = (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (TRANSLATIONS ? TRANSLATIONS['en'] : {});
+  var mutualFriendsWord = t.mutualFriends || "საერთო მეგობარი";
+
   getMyFriendIds(function(myFriendsSet) {
     if (myFriendsSet.size === 0) {
       if (timeAgoStr) {
@@ -7591,7 +7594,7 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
           avatarsHtml += `<img src="${av}" class="mutual-avatar-mini" alt="mutual">`;
         });
 
-        var textLabel = mutualCount + " საერთო მეგობარი";
+        var textLabel = mutualCount + " " + mutualFriendsWord;
         if (timeAgoStr) {
           textLabel += " · " + timeAgoStr;
         }
