@@ -4040,77 +4040,7 @@ auth.onAuthStateChanged(function(user) {
     } 
    // აქ მთავრდება             
 
-    function likeComment(commentId, currentLikes) {
-      var key = currentUser.uid + '_liked_comment_' + commentId;
-      var hasLiked = JSON.parse(localStorage.getItem(key)) || false;
-      var newLikes = hasLiked ? (currentLikes > 0 ? currentLikes - 1 : 0) : currentLikes + 1;
-      
-      localStorage.setItem(key, !hasLiked);
-
-      db.collection('post_comments').doc(commentId)
-        .update({ likes_count: newLikes })
-        .then(function() {
-          loadCommentsIntoModal(activePostForComments);
-        });
-    }
-
-    function submitCommentFromModal(postId) {
-  var input = document.getElementById('modal-comment-input-field');
-  if (!input) return;
-  var text = input.value.trim();
-  if (!text) return;
-
-  var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.email || "User");
-  var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : null;
-
-  var insertObj = {
-    post_id: postId,
-    user_id: currentUser.uid,
-    author_name: authorName,
-    avatar_url: avatarUrl,
-    content: text,
-    likes_count: 0,
-    created_at: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  if (activeCommentReplyId) {
-    insertObj.parent_id = activeCommentReplyId;
-  }
-
-  db.collection('post_comments').add(insertObj).then(function() {
-    input.value = "";
-    cancelReplyMode();
-    loadCommentsIntoModal(postId);
-    
-    // 1. ბაზაში პოსტის დოკუმენტში უმატებს +1-ს comments_count-ს
-    db.collection('posts').doc(postId).update({
-      comments_count: firebase.firestore.FieldValue.increment(1)
-    }).catch(function(e) { console.error("Update error:", e); });
-
-    // 2. ეკრანზეც მომენტალურად ანახლებს ციფრს
-    db.collection('post_comments').where('post_id', '==', postId).get().then(function(snapshot) {
-      var count = snapshot.size;
-      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-      var countLabels = document.querySelectorAll(`.comment-count-label[data-post-id="${postId}"]`);
-      countLabels.forEach(function(lbl) {
-        lbl.innerText = count + " " + t.commentsCount;
-      });
-    });
-    
-    var customGal = document.getElementById('custom-gallery-modal');
-    if(customGal && customGal.style.display === "flex") {
-      setTimeout(function() {
-        db.collection('post_comments').where('post_id', '==', postId).get().then(function(snapshot) {
-          var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-          var galLbl = document.getElementById('gallery-comments-counter-label');
-          if (galLbl) galLbl.innerText = snapshot.size + " " + t.commentsCount;
-        });
-      }, 300);
-    }
-  }).catch(function(err) {
-    alert("Error sending comment: " + err.message);
-  });
-}
+  
 
     function closeCommentsModal() {
       var sheetModal = document.getElementById('comments-sheet-modal');
