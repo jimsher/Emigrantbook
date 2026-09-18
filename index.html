@@ -4405,32 +4405,37 @@ auth.onAuthStateChanged(function(user) {
     }      
     // აქ მთავრდება ორივე ერთად
 
-    
     function checkFriendshipPair(uid1, uid2, callback) {
-      db.collection('friend_requests')
-        .where('sender_id', '==', uid1)
-        .where('receiver_id', '==', uid2)
-        .limit(1)
-        .get()
-        .then(function(snap1) {
-          if (!snap1.empty && snap1.docs[0].data().status === 'accepted') {
-            callback(true);
-            return;
-          }
-          db.collection('friend_requests')
-            .where('sender_id', '==', uid2)
-            .where('receiver_id', '==', uid1)
-            .limit(1)
-            .get()
-            .then(function(snap2) {
-              if (!snap2.empty && snap2.docs[0].data().status === 'accepted') {
-                callback(true);
-              } else {
-                callback(false);
-              }
-            });
-        }).catch(function() { callback(false); });
+  Promise.all([
+    db.collection('friend_requests')
+      .where('sender_id', '==', uid1)
+      .where('receiver_id', '==', uid2)
+      .limit(1)
+      .get(),
+    db.collection('friend_requests')
+      .where('sender_id', '==', uid2)
+      .where('receiver_id', '==', uid1)
+      .limit(1)
+      .get()
+  ]).then(function(results) {
+    var snap1 = results[0];
+    var snap2 = results[1];
+
+    if (!snap1.empty && snap1.docs[0].data().status === 'accepted') {
+      callback(true);
+      return;
     }
+    if (!snap2.empty && snap2.docs[0].data().status === 'accepted') {
+      callback(true);
+      return;
+    }
+    callback(false);
+  }).catch(function(err) {
+    console.warn("Friendship check error:", err);
+    callback(false);
+  });
+}
+    
 
     function switchProfileTab(tabName) {
       exitPhotoSelectionMode();
