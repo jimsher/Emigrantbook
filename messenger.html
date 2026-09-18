@@ -2662,8 +2662,9 @@ textarea,
       if (unsubscribeMessages) unsubscribeMessages();
 
       unsubscribeMessages = db.collection('chats').doc(chatId).collection('messages')
-        .orderBy('createdAt', 'asc')
-        .onSnapshot(function(snapshot) {
+  .orderBy('createdAt', 'asc')
+  .limitToLast(40)
+  .onSnapshot(...)
           
           snapshot.docChanges().forEach(change => {
             // 1. მხოლოდ ახლად შემოსულ მესიჯს ნიშნავს წაკითხულად (მთელ ბაზას აღარ გადაუვლის!)
