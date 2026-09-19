@@ -2245,7 +2245,6 @@ textarea,
     var currentSelectedMsgId = null;
     var chatLastMsgUnsubscribes = {};
     var validChatsList = [];
-    
 
     function switchTab(tabName) {
       currentActiveTab = tabName;
@@ -2455,7 +2454,7 @@ textarea,
       });
     }
 
-     function renderActiveChats(users, currentUid, listTarget) {
+    function renderActiveChats(users, currentUid, listTarget) {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
       if (!users || users.length === 0) {
@@ -2466,7 +2465,6 @@ textarea,
       users.forEach(user => {
         const chatId = getChatId(currentUid, user.uid);
 
-        // თუ ამ ჩატზე უკვე გვაქვს აქტიური მსმენელი, ახალს აღარ ვამატებთ!
         if (chatLastMsgUnsubscribes[chatId]) {
           let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
           if (existingIdx > -1) {
@@ -2478,7 +2476,6 @@ textarea,
           return;
         }
 
-        // თითო ჩატზე მსმენელი ირთვება მხოლოდ 1-ხელ!
         chatLastMsgUnsubscribes[chatId] = db.collection('chats').doc(chatId).collection('messages')
           .orderBy('createdAt', 'desc').limit(1)
           .onSnapshot(function(snapshot) {
@@ -2579,20 +2576,6 @@ textarea,
       const currentUid = auth.currentUser.uid;
       const chatId = getChatId(currentUid, targetUid);
 
-      db.collection('chats').doc(chatId).collection('messages')
-        .where('senderId', '==', targetUid)
-        .where('read', '==', false)
-        .limit(10)
-        .get().then(snapshot => {
-          if (!snapshot.empty) {
-            let batch = db.batch();
-            snapshot.forEach(docSnap => {
-              batch.update(docSnap.ref, { read: true });
-            });
-            batch.commit().catch(e => console.log(e));
-          }
-        });
-
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
 
       threadProfileUnsubscribe = db.collection('profiles').doc(targetUid).onSnapshot(function(docSnap) {
@@ -2678,19 +2661,17 @@ textarea,
 
       unsubscribeMessages = db.collection('chats').doc(chatId).collection('messages')
         .orderBy('createdAt', 'asc')
-        .limitToLast(40)
+        .limitToLast(30)
         .onSnapshot(function(snapshot) {
           
+          let unreadDocs = [];
           snapshot.docChanges().forEach(change => {
-            // 1. მხოლოდ ახლად შემოსულ მესიჯს ნიშნავს წაკითხულად (მთელ ბაზას აღარ გადაუვლის!)
             if (change.type === "added") {
               const msgData = change.doc.data();
               if (msgData.senderId !== myUid && msgData.read === false) {
-                change.doc.ref.update({ read: true });
+                unreadDocs.push(change.doc.ref);
               }
             }
-
-            // 2. შენი ორიგინალი ხმის დაკვრის ლოგიკა
             if (change.type === "modified") {
               const msgData = change.doc.data();
               if (msgData.senderId === myUid && msgData.read === true) {
@@ -2699,11 +2680,16 @@ textarea,
             }
           });
 
+          if (unreadDocs.length > 0) {
+            let batch = db.batch();
+            unreadDocs.forEach(ref => batch.update(ref, { read: true }));
+            batch.commit().catch(e => console.log("Batch read error:", e));
+          }
+
           msgBlock.innerHTML = "";
           let lastMsgDate = null;
           let lastSeenOutgoingMsgId = null;
 
-          // აქ მხოლოდ ბოლო წაკითხული მესიჯის ID-ს იმახსოვრებს (ბაზაში აღარაფერს წერს)
           snapshot.forEach(docSnap => {
             const msgData = docSnap.data();
             if (msgData.senderId === myUid && msgData.read === true) {
@@ -2733,7 +2719,6 @@ textarea,
             const msgRow = document.createElement('div');
             msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
-            // 1. ზარების ბარათი
             // 1. ზარების ბარათი
             if (msg.type === 'missed_call' || msg.type === 'finished_call') {
               let titleText = msg.type === 'missed_call' ? 'გამოტოვებული ვიდეო ზარი' : 'ვიდეო ზარი';
@@ -2981,37 +2966,36 @@ textarea,
     }
 
     function handleInputTyping() {
-  var input = document.getElementById('message-input-field');
-  var btn = document.getElementById('send-action-btn');
-  if (!input || !btn) return;
+      var input = document.getElementById('message-input-field');
+      var btn = document.getElementById('send-action-btn');
+      if (!input || !btn) return;
 
-  var hasText = input.value.trim().length > 0;
-  if (hasText) {
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
-    btn.dataset.mode = "send";
+      var hasText = input.value.trim().length > 0;
+      if (hasText) {
+        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+        btn.dataset.mode = "send";
 
-    // მხოლოდ ერთხელ წერს ბაზაში წერის დაწყებისას, და არა ყოველ ასოზე!
-    if (!isMyTypingActive) {
-      isMyTypingActive = true;
-      sendTypingStatus(true);
+        if (!isMyTypingActive) {
+          isMyTypingActive = true;
+          sendTypingStatus(true);
+        }
+
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+          isMyTypingActive = false;
+          sendTypingStatus(false);
+        }, 2500);
+      } else {
+        btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>`;
+        btn.dataset.mode = "like";
+
+        if (isMyTypingActive) {
+          isMyTypingActive = false;
+          clearTimeout(typingTimer);
+          sendTypingStatus(false);
+        }
+      }
     }
-
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => {
-      isMyTypingActive = false;
-      sendTypingStatus(false);
-    }, 2500);
-  } else {
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.58 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>`;
-    btn.dataset.mode = "like";
-
-    if (isMyTypingActive) {
-      isMyTypingActive = false;
-      clearTimeout(typingTimer);
-      sendTypingStatus(false);
-    }
-  }
-}
 
     function toggleEmojiPicker() {
       var picker = document.getElementById('emoji-picker-popup');
@@ -3111,38 +3095,42 @@ textarea,
     }
 
     function listenToStories() {
-      db.collection('stories').onSnapshot(snapshot => {
-        if (!snapshot) return;
+      const nowMs = Date.now();
+      const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
-        const nowMs = Date.now();
-        const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-        let userStoriesMap = {};
+      db.collection('stories')
+        .limit(20)
+        .get()
+        .then(snapshot => {
+          if (!snapshot || snapshot.empty) return;
 
-        snapshot.forEach(docSnap => {
-          let story = docSnap.data();
-          let authorUid = story.uid || story.userId || story.user_id || story.authorId;
-          let storyImg = story.imageUrl || story.url || story.mediaUrl || story.media_url || story.image || story.fileUrl;
+          let userStoriesMap = {};
 
-          if (!authorUid || !storyImg) return;
+          snapshot.forEach(docSnap => {
+            let story = docSnap.data();
+            let authorUid = story.uid || story.userId || story.user_id || story.authorId;
+            let storyImg = story.imageUrl || story.url || story.mediaUrl || story.media_url || story.image || story.fileUrl;
 
-          let storyTime = story.createdAt || story.created_at || story.timestamp;
-          let storyMs = storyTime && storyTime.seconds ? storyTime.seconds * 1000 : nowMs;
-          if (nowMs - storyMs > twentyFourHoursMs) return;
+            if (!authorUid || !storyImg) return;
 
-          if (!userStoriesMap[authorUid] || storyMs > userStoriesMap[authorUid].storyMs) {
-            userStoriesMap[authorUid] = {
-              uid: authorUid,
-              imageUrl: storyImg,
-              storyMs: storyMs
-            };
-          }
+            let storyTime = story.createdAt || story.created_at || story.timestamp;
+            let storyMs = storyTime && storyTime.seconds ? storyTime.seconds * 1000 : nowMs;
+            if (nowMs - storyMs > twentyFourHoursMs) return;
+
+            if (!userStoriesMap[authorUid] || storyMs > userStoriesMap[authorUid].storyMs) {
+              userStoriesMap[authorUid] = {
+                uid: authorUid,
+                imageUrl: storyImg,
+                storyMs: storyMs
+              };
+            }
+          });
+
+          const activeStoryUsers = Object.values(userStoriesMap).sort((a, b) => b.storyMs - a.storyMs);
+          renderStoriesUI(activeStoryUsers);
+        }).catch(err => {
+          console.error("Stories fetch error:", err);
         });
-
-        const activeStoryUsers = Object.values(userStoriesMap).sort((a, b) => b.storyMs - a.storyMs);
-        renderStoriesUI(activeStoryUsers);
-      }, err => {
-        console.error("Stories snapshot error:", err);
-      });
     }
 
     function renderStoriesUI(storyUsers) {
@@ -3801,8 +3789,7 @@ textarea,
       }
     }
 
-    // აქ იწყება ახალი ფოტო ხმოვანის ფუნქციები
-   // ==========================================================================
+    // ==========================================================================
     // ☁️ CLOUDFLARE R2 ინტეგრაცია (messenger_photos / messenger_audio)
     // ==========================================================================
     function getR2Client() {
@@ -3873,7 +3860,6 @@ textarea,
       var uploadedUrls = [];
       var completed = 0;
 
-      // ფაილის ველის გასუფთავება
       event.target.value = "";
 
       files.forEach(function(file) {
@@ -3928,7 +3914,6 @@ textarea,
 
         mediaRecorder.start();
 
-        // UI-ს ჩვენება
         var bar = document.getElementById('voice-recording-bar');
         if (bar) bar.style.display = 'flex';
         recSeconds = 0;
@@ -3976,7 +3961,6 @@ textarea,
         var myUid = auth.currentUser.uid;
         var chatId = getChatId(myUid, currentActiveChatUid);
 
-        // ატვირთვა R2-ზე (messenger_audio პაპკაში)
         uploadFileToR2(audioBlob, 'messenger_audio', '.webm', 'audio/webm', function(audioUrl) {
           if (!audioUrl) return;
 
@@ -4026,12 +4010,10 @@ textarea,
     function renderMessengerPhotoCollage(photos) {
       if (!photos || photos.length === 0) return "";
 
-      // 1 ფოტო
       if (photos.length === 1) {
         return `<img src="${photos[0]}" class="msg-photo-single" onclick="window.open('${photos[0]}', '_blank')">`;
       }
 
-      // 2 ფოტო
       if (photos.length === 2) {
         return `
           <div class="msg-photo-grid-2">
@@ -4041,7 +4023,6 @@ textarea,
         `;
       }
 
-      // 🌟 3 ფოტო (ზუსტად Messenger-ის სტილი შენი სქრინშოტიდან)
       if (photos.length === 3) {
         return `
           <div class="msg-photo-cluster-3">
@@ -4052,7 +4033,6 @@ textarea,
         `;
       }
 
-      // 4 და მეტი ფოტო (კუბიკები, მე-4-ზე +N overlay)
       var showCount = 4;
       var remaining = photos.length - showCount;
       var html = '<div class="msg-photo-grid-multi">';
@@ -4069,7 +4049,7 @@ textarea,
 
       html += '</div>';
       return html;
-    } 
+    }
   </script>
 </body>
 </html>
