@@ -3066,15 +3066,50 @@ textarea,
       hideEmojiPicker();
 
       const myUid = auth.currentUser.uid;
-      const chatId = getChatId(myUid, currentActiveChatUid);
+      const targetUid = currentActiveChatUid;
+      const chatId = getChatId(myUid, targetUid);
 
-      db.collection('chats').doc(chatId).collection('messages').add({
-        senderId: myUid,
-        text: sendText,
-        read: false,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        sendModernPush(currentActiveChatUid, sendText);
+      // ვამოწმებთ მეგობრობას მინიმალური რესურსით (.limit(1))
+      Promise.all([
+        db.collection('friend_requests')
+          .where('sender_id', '==', myUid)
+          .where('receiver_id', '==', targetUid)
+          .where('status', '==', 'accepted')
+          .limit(1)
+          .get(),
+        db.collection('friend_requests')
+          .where('sender_id', '==', targetUid)
+          .where('receiver_id', '==', myUid)
+          .where('status', '==', 'accepted')
+          .limit(1)
+          .get()
+      ]).then(results => {
+        const isFriend = (!results[0].empty || !results[1].empty);
+
+        if (isFriend) {
+          // თუ მეგობარია -> შენი ორიგინალი ლოგიკით იწერება პირდაპირ ჩათში
+          db.collection('chats').doc(chatId).collection('messages').add({
+            senderId: myUid,
+            text: sendText,
+            read: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            sendModernPush(targetUid, sendText);
+          }).catch(err => console.error("Chat send error:", err));
+        } else {
+          // თუ მეგობარი არ არის -> იგზავნება შეტყობინების მოთხოვნებში
+          db.collection('message_requests').add({
+            senderId: myUid,
+            receiverId: targetUid,
+            text: sendText,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(() => {
+            sendModernPush(targetUid, "📩 შეტყობინების მოთხოვნა: " + sendText);
+          }).catch(err => console.error("Request send error:", err));
+        }
+      }).catch(err => {
+        console.error("Friendship check error:", err);
       });
     }
 
