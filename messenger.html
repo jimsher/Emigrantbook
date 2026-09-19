@@ -3087,7 +3087,7 @@ textarea,
         const isFriend = (!results[0].empty || !results[1].empty);
 
         if (isFriend) {
-          // თუ მეგობარია -> შენი ორიგინალი ლოგიკით იწერება პირდაპირ ჩათში
+          // თუ მეგობარია -> ჩვეულებრივად იწერება ჩათში
           db.collection('chats').doc(chatId).collection('messages').add({
             senderId: myUid,
             text: sendText,
@@ -3097,7 +3097,7 @@ textarea,
             sendModernPush(targetUid, sendText);
           }).catch(err => console.error("Chat send error:", err));
         } else {
-          // თუ მეგობარი არ არის -> იგზავნება შეტყობინების მოთხოვნებში
+          // თუ მეგობარი არ არის -> იგზავნება message_requests-ში
           db.collection('message_requests').add({
             senderId: myUid,
             receiverId: targetUid,
@@ -3106,6 +3106,26 @@ textarea,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           }).then(() => {
             sendModernPush(targetUid, "📩 შეტყობინების მოთხოვნა: " + sendText);
+
+            // გამგზავნის ეკრანზე მესიჯის დაუყოვნებლივ გამოჩენა
+            const msgBlock = document.getElementById('dynamic-messages-block');
+            if (msgBlock) {
+              const isEmojiOnly = isOnlyEmoji(sendText);
+              const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
+              
+              const msgRow = document.createElement('div');
+              msgRow.className = "message-row outgoing";
+              msgRow.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px;">
+                  <div class="${bubbleClass}">${sendText}</div>
+                  <span style="font-size: 10.5px; color: #8e8e93; padding-right: 4px;">შეტყობინების მოთხოვნა გაგზავნილია</span>
+                </div>
+              `;
+              msgBlock.appendChild(msgRow);
+
+              const target = document.getElementById('messages-target');
+              if (target) target.scrollTop = target.scrollHeight;
+            }
           }).catch(err => console.error("Request send error:", err));
         }
       }).catch(err => {
