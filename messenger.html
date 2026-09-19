@@ -2455,63 +2455,63 @@ textarea,
       });
     }
 
-    function renderActiveChats(users, currentUid, listTarget) {
-  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+     function renderActiveChats(users, currentUid, listTarget) {
+      var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
-  if (!users || users.length === 0) {
-    listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
-    return;
-  }
-
-  users.forEach(user => {
-    const chatId = getChatId(currentUid, user.uid);
-
-    // თუ ამ ჩატზე უკვე გვაქვს აქტიური მსმენელი, ახალს აღარ ვამატებთ!
-    if (chatLastMsgUnsubscribes[chatId]) {
-      let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
-      if (existingIdx > -1) {
-        validChatsList[existingIdx].name = user.name;
-        validChatsList[existingIdx].photo = user.photo;
-        validChatsList[existingIdx].presence = user.presence;
-        redrawSortedChatsList(validChatsList, currentUid, listTarget);
+      if (!users || users.length === 0) {
+        listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
+        return;
       }
-      return;
-    }
 
-    // თითო ჩატზე მსმენელი ირთვება მხოლოდ 1-ხელ!
-    chatLastMsgUnsubscribes[chatId] = db.collection('chats').doc(chatId).collection('messages')
-      .orderBy('createdAt', 'desc').limit(1)
-      .onSnapshot(function(snapshot) {
-        if (!snapshot.empty) {
-          const lastMsgDoc = snapshot.docs[0].data();
-          let msgText = lastMsgDoc.text || "📷 Photo";
-          if (lastMsgDoc.type === 'missed_call') msgText = "📞 გამოტოვებული ვიდეო ზარი";
-          else if (lastMsgDoc.type === 'finished_call') msgText = `📞 ვიდეო ზარი (${lastMsgDoc.duration || "0 წმ"})`;
+      users.forEach(user => {
+        const chatId = getChatId(currentUid, user.uid);
 
-          let timeMs = lastMsgDoc.createdAt && lastMsgDoc.createdAt.seconds ? lastMsgDoc.createdAt.seconds * 1000 : Date.now();
-          let timeStr = lastMsgDoc.createdAt ? new Date(timeMs).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-
-          const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
-
-          user.lastMsgText = msgText;
-          user.lastMsgTimeMs = timeMs;
-          user.lastMsgTimeStr = timeStr;
-          user.isUnread = isUnread;
-
+        // თუ ამ ჩატზე უკვე გვაქვს აქტიური მსმენელი, ახალს აღარ ვამატებთ!
+        if (chatLastMsgUnsubscribes[chatId]) {
           let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
           if (existingIdx > -1) {
-            validChatsList[existingIdx] = Object.assign({}, validChatsList[existingIdx], user);
-          } else {
-            validChatsList.push(Object.assign({}, user));
+            validChatsList[existingIdx].name = user.name;
+            validChatsList[existingIdx].photo = user.photo;
+            validChatsList[existingIdx].presence = user.presence;
+            redrawSortedChatsList(validChatsList, currentUid, listTarget);
           }
-        } else {
-          validChatsList = validChatsList.filter(u => u.uid !== user.uid);
+          return;
         }
 
-        redrawSortedChatsList(validChatsList, currentUid, listTarget);
-      }, err => console.log("Chat last msg listen error:", err));
-  });
-}
+        // თითო ჩატზე მსმენელი ირთვება მხოლოდ 1-ხელ!
+        chatLastMsgUnsubscribes[chatId] = db.collection('chats').doc(chatId).collection('messages')
+          .orderBy('createdAt', 'desc').limit(1)
+          .onSnapshot(function(snapshot) {
+            if (!snapshot.empty) {
+              const lastMsgDoc = snapshot.docs[0].data();
+              let msgText = lastMsgDoc.text || "📷 Photo";
+              if (lastMsgDoc.type === 'missed_call') msgText = "📞 გამოტოვებული ვიდეო ზარი";
+              else if (lastMsgDoc.type === 'finished_call') msgText = `📞 ვიდეო ზარი (${lastMsgDoc.duration || "0 წმ"})`;
+
+              let timeMs = lastMsgDoc.createdAt && lastMsgDoc.createdAt.seconds ? lastMsgDoc.createdAt.seconds * 1000 : Date.now();
+              let timeStr = lastMsgDoc.createdAt ? new Date(timeMs).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+
+              const isUnread = (lastMsgDoc.senderId !== currentUid) && (lastMsgDoc.read === false);
+
+              user.lastMsgText = msgText;
+              user.lastMsgTimeMs = timeMs;
+              user.lastMsgTimeStr = timeStr;
+              user.isUnread = isUnread;
+
+              let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
+              if (existingIdx > -1) {
+                validChatsList[existingIdx] = Object.assign({}, validChatsList[existingIdx], user);
+              } else {
+                validChatsList.push(Object.assign({}, user));
+              }
+            } else {
+              validChatsList = validChatsList.filter(u => u.uid !== user.uid);
+            }
+
+            redrawSortedChatsList(validChatsList, currentUid, listTarget);
+          }, err => console.log("Chat last msg listen error:", err));
+      });
+    }
 
     function redrawSortedChatsList(validUsers, currentUid, listTarget) {
       let sortedUsers = [...validUsers].sort((a, b) => (b.lastMsgTimeMs || 0) - (a.lastMsgTimeMs || 0));
