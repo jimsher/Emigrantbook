@@ -14,14 +14,14 @@
   <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
 
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+      });
     });
-  });
-</script>
+  </script>
 
   <style>
     * {
@@ -45,20 +45,15 @@
       position: relative;
     }
 
-    /* Ambient EmigrantBook Theme Background Gradient */
     .bg-gradient {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: radial-gradient(circle at 10% 10%, rgba(20, 80, 70, 0.25) 0%, transparent 40%),
                   radial-gradient(circle at 90% 10%, rgba(120, 20, 50, 0.25) 0%, transparent 40%);
       pointer-events: none;
       z-index: 0;
     }
 
-    /* მობილურის ეკრანის კონტეინერი */
     .messenger-wrapper {
       width: 100%;
       max-width: 480px;
@@ -74,9 +69,6 @@
       border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* ----------------------------------------------------
-        1. მთავარი ჩატების სიის ეკრანი (CHATS SCREEN)
-    ------------------------------------------------------- */
     #chats-screen {
       display: flex;
       flex-direction: column;
@@ -124,6 +116,7 @@
       justify-content: center;
       cursor: pointer;
       transition: background 0.2s;
+      position: relative;
     }
     .header-btn:active {
       background: rgba(255, 255, 255, 0.18);
@@ -134,7 +127,6 @@
       fill: #ffffff;
     }
 
-    /* საძიებო ზოლი */
     .search-container {
       padding: 5px 16px 12px 16px;
     }
@@ -164,7 +156,6 @@
       color: #8e8e93;
     }
 
-    /* აქტიური სიუჟეტების ზოლი (STORIES) */
     .stories-row {
       display: flex;
       gap: 14px;
@@ -240,7 +231,6 @@
       width: 100%;
     }
 
-    /* ჩატების სია */
     .chats-scroll-area {
       flex: 1;
       overflow-y: auto;
@@ -299,7 +289,6 @@
       text-overflow: ellipsis;
       flex: 1;
     }
-    
     .chat-row-item.unread .chat-row-last-msg {
       color: #ffffff;
       font-weight: 700;
@@ -321,9 +310,6 @@
       box-shadow: 0 0 8px rgba(46, 213, 115, 0.6);
     }
 
-    /* ----------------------------------------------------
-        1.5. სტორიების სრული გვერდი (STORIES SCREEN)
-    ------------------------------------------------------- */
     #stories-screen {
       display: none;
       flex-direction: column;
@@ -358,13 +344,11 @@
       padding: 16px;
       padding-bottom: 10px;
     }
-
     .stories-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
     }
-
     .story-card {
       position: relative;
       height: 220px;
@@ -379,13 +363,11 @@
     .story-card:active {
       transform: scale(0.97);
     }
-
     .story-card-bg {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     .story-card-overlay {
       position: absolute;
       inset: 0;
@@ -395,7 +377,6 @@
       justify-content: space-between;
       padding: 12px;
     }
-
     .story-card-avatar-holder {
       width: 42px;
       height: 42px;
@@ -413,7 +394,6 @@
       object-fit: cover;
       border: 2px solid #0d0d11;
     }
-
     .story-card-name {
       font-size: 14px;
       font-weight: 700;
@@ -423,7 +403,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .story-card-create {
       background: rgba(255, 255, 255, 0.04);
       border: 2px dashed rgba(46, 213, 115, 0.4);
@@ -448,9 +427,6 @@
       box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4);
     }
 
-    /* ----------------------------------------------------
-        1.8. შეტყობინებების ეკრანი (NOTIFICATIONS SCREEN)
-    ------------------------------------------------------- */
     #notifications-screen {
       display: none;
       flex-direction: column;
@@ -460,7 +436,6 @@
       position: relative;
       overflow: hidden;
     }
-
     .notifications-header-top {
       padding: 15px 16px;
       display: flex;
@@ -478,13 +453,11 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-
     .notifications-scroll-area {
       flex: 1;
       overflow-y: auto;
       padding-bottom: 10px;
     }
-
     .notif-item {
       display: flex;
       align-items: center;
@@ -526,12 +499,9 @@
       color: #888888;
     }
 
-    /* ქვედა ნავბარი - STICKY FIXED BOTTOM */
     .footer-nav {
       position: sticky;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       width: 100%;
       height: 65px;
       flex-shrink: 0;
@@ -581,9 +551,6 @@
       display: none;
     }
 
-    /* ----------------------------------------------------
-        2. შიდა ჩატის ეკრანი (CHAT THREAD SCREEN)
-    ------------------------------------------------------- */
     #thread-screen {
       display: none;
       flex-direction: column;
@@ -662,7 +629,6 @@
       cursor: pointer;
     }
 
-    /* შეტყობინებების ველი */
     .messages-container {
       height: calc(100% - 120px);
       overflow-y: auto;
@@ -672,7 +638,6 @@
       flex-direction: column;
       gap: 10px;
     }
-    
     .chat-start-profile {
       display: flex;
       flex-direction: column;
@@ -726,7 +691,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* შეტყობინების ბუშტები */
     .message-row {
       display: flex;
       align-items: flex-end;
@@ -768,7 +732,6 @@
       border-bottom-right-radius: 4px;
     }
 
-    /* SEEN READ INDICATOR AVATAR (MESSENGER STYLE) */
     .seen-indicator-row {
       display: flex;
       justify-content: flex-end;
@@ -791,7 +754,6 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
-    /* Messenger 3 Dots Realtime Typing Indicator CSS */
     .typing-indicator-row {
       display: none;
       align-items: flex-end;
@@ -833,7 +795,6 @@
       }
     }
 
-    /* Messenger Call Bubble Style */
     .msg-bubble.call-card-bubble {
       background: rgba(255, 255, 255, 0.08) !important;
       color: #ffffff !important;
@@ -894,7 +855,6 @@
       background: rgba(255, 255, 255, 0.22);
     }
 
-    /* მხოლოდ სმაილების დიდი ზომა */
     .msg-bubble.big-emoji {
       font-size: 38px !important;
       background: transparent !important;
@@ -903,12 +863,9 @@
       box-shadow: none !important;
     }
 
-    /* ქვედა ინფუთის პანელი */
     .thread-footer {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       height: 60px;
       padding: 8px 12px;
       background: rgba(13, 13, 17, 0.95);
@@ -987,7 +944,6 @@
       fill: #000000;
     }
 
-    /* EMOJI PICKER POPUP */
     .emoji-picker-container {
       display: none;
       position: absolute;
@@ -1017,7 +973,6 @@
       transform: scale(1.15);
     }
 
-    /* DELETE MESSAGE MODAL */
     .delete-modal-overlay {
       display: none;
       position: fixed;
@@ -1027,11 +982,6 @@
       z-index: 4000;
       align-items: center;
       justify-content: center;
-      animation: fadeInDeleteModal 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    @keyframes fadeInDeleteModal {
-      from { opacity: 0; transform: scale(0.92); }
-      to { opacity: 1; transform: scale(1); }
     }
     .delete-modal-content {
       background: rgba(22, 22, 30, 0.95);
@@ -1065,11 +1015,6 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .delete-option-btn:active {
-      transform: scale(0.97);
-      background: rgba(255, 255, 255, 0.15);
     }
     .delete-option-btn.danger {
       color: #ff4757;
@@ -1080,12 +1025,8 @@
       color: #8e8e93;
       background: transparent;
       border: none;
-      margin-top: 2px;
     }
 
-    /* ----------------------------------------------------
-        3. FACEBOOK STYLE TOP FLOATING INCOMING CALL BANNER
-    ------------------------------------------------------- */
     #incoming-call-modal {
       display: none;
       position: fixed;
@@ -1103,14 +1044,7 @@
       box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8);
       align-items: center;
       justify-content: space-between;
-      animation: slideDownCall 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-
-    @keyframes slideDownCall {
-      from { transform: translate(-50%, -100px); opacity: 0; }
-      to { transform: translate(-50%, 0); opacity: 1; }
-    }
-
     .incoming-banner-left {
       display: flex;
       align-items: center;
@@ -1165,17 +1099,11 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      transition: transform 0.15s;
     }
-    .call-btn:active { transform: scale(0.9); }
-    .call-btn svg { width: 20px; height: 20px; fill: #fff; }
     .reject-btn { background: #ff4757; }
     .accept-btn { background: #2ed573; }
+    .call-btn svg { width: 20px; height: 20px; fill: #fff; }
 
-    /* ----------------------------------------------------
-        FULLSCREEN MESSENGER VIDEO CALL SCREEN
-    ------------------------------------------------------- */
     #video-call-screen {
       display: none;
       position: fixed;
@@ -1184,18 +1112,6 @@
       z-index: 2000;
       overflow: hidden;
     }
-
-    /* ნატივ აპლიკაციაში (Median/WebView) ვიდეო პლეიერის დამალვა */
-    video::-webkit-media-controls,
-    video::-webkit-media-controls-enclosure,
-    video::-webkit-media-controls-panel,
-    video::-webkit-media-controls-play-button,
-    video::-webkit-media-controls-start-playback-button {
-      display: none !important;
-      -webkit-appearance: none !important;
-      opacity: 0 !important;
-    }
-
     #remote-video {
       width: 100%;
       height: 100%;
@@ -1206,453 +1122,90 @@
       display: none;
       background: #000000;
     }
-
     #local-video {
       position: absolute;
       object-fit: cover;
       z-index: 2;
       transform: scaleX(-1);
-      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     }
-
-    /* 1. DIALING რეჟიმი (დარეკვისას მე ვჩანვარ მთელ ეკრანზე) */
-    #video-call-screen.dialing #remote-video {
-      display: none !important;
-    }
+    #video-call-screen.dialing #remote-video { display: none !important; }
     #video-call-screen.dialing #local-video {
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      border-radius: 0 !important;
-      border: none !important;
-      box-shadow: none !important;
-      z-index: 1 !important;
+      top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; border: none !important; z-index: 1 !important;
     }
     #video-call-screen.dialing .video-call-top-bar {
-      position: absolute;
-      top: 14%;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      z-index: 10;
-      text-align: center;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.85);
-      width: 90%;
-      pointer-events: none;
+      position: absolute; top: 14%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 10; text-align: center; width: 90%;
     }
     #video-call-screen.dialing .video-call-avatar {
-      display: block !important;
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 6px 25px rgba(0,0,0,0.6);
-      margin-bottom: 4px;
+      display: block !important; width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255, 255, 255, 0.8);
     }
-    #video-call-screen.dialing #video-call-user-name {
-      font-size: 24px;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.3px;
-    }
-    #video-call-screen.dialing #video-call-status {
-      font-size: 15px;
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 500;
-    }
+    #video-call-screen.dialing #video-call-user-name { font-size: 24px; font-weight: 700; color: #ffffff; }
+    #video-call-screen.dialing #video-call-status { font-size: 15px; color: rgba(255, 255, 255, 0.9); }
 
-    /* 2. CONNECTED რეჟიმი (პასუხის შემდეგ: თანამოსაუბრე მთელ ეკრანზე, მე პატარა ჩარჩოში) */
-    #video-call-screen.connected #remote-video {
-      display: block !important;
-      z-index: 1 !important;
-    }
+    #video-call-screen.connected #remote-video { display: block !important; z-index: 1 !important; }
     #video-call-screen.connected #local-video {
-      top: 20px !important;
-      right: 20px !important;
-      width: 100px !important;
-      height: 145px !important;
-      border-radius: 14px !important;
-      border: 2px solid rgba(255, 255, 255, 0.35) !important;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
-      z-index: 10 !important;
+      top: 20px !important; right: 20px !important; width: 100px !important; height: 145px !important; border-radius: 14px !important; border: 2px solid rgba(255, 255, 255, 0.35) !important; z-index: 10 !important;
     }
     #video-call-screen.connected .video-call-top-bar {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      transform: none;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-      z-index: 10;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
-      width: auto;
+      position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; z-index: 10;
     }
-    #video-call-screen.connected .video-call-avatar {
-      display: none !important;
-    }
-    #video-call-screen.connected #video-call-user-name {
-      font-weight: 700;
-      font-size: 17px;
-      color: #ffffff;
-    }
-    #video-call-screen.connected #video-call-status {
-      font-size: 13px;
-      color: #2ed573;
-      font-weight: 600;
-    }
+    #video-call-screen.connected .video-call-avatar { display: none !important; }
+    #video-call-screen.connected #video-call-user-name { font-weight: 700; font-size: 17px; color: #ffffff; }
+    #video-call-screen.connected #video-call-status { font-size: 13px; color: #2ed573; font-weight: 600; }
 
     .video-call-bottom-bar {
-      position: absolute;
-      bottom: max(30px, env(safe-area-inset-bottom, 30px));
-      left: 0; right: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 25px;
-      z-index: 10;
+      position: absolute; bottom: max(30px, env(safe-area-inset-bottom, 30px)); left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 25px; z-index: 10;
     }
     .call-action-icon-btn {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
+      width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .call-action-icon-btn:active { transform: scale(0.92); }
     .call-action-icon-btn svg { width: 22px; height: 22px; fill: #fff; }
     .end-call-btn { background: #ff4757; width: 60px; height: 60px; }
 
-    /* ----------------------------------------------------
-        4. STORY FULLSCREEN VIEWER MODAL
-    ------------------------------------------------------- */
     #story-viewer-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #000000;
-      z-index: 1000;
-      flex-direction: column;
-      justify-content: space-between;
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000000; z-index: 1000; flex-direction: column; justify-content: space-between;
     }
     .story-progress-bar-container {
-      display: flex;
-      gap: 4px;
-      padding: 10px 12px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10;
+      display: flex; gap: 4px; padding: 10px 12px; position: absolute; top: 0; left: 0; right: 0; z-index: 10;
     }
-    .story-progress-bar {
-      height: 3px;
-      background: rgba(255, 255, 255, 0.3);
-      flex: 1;
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .story-progress-fill {
-      height: 100%;
-      background: #ffffff;
-      width: 0%;
-    }
+    .story-progress-bar { height: 3px; background: rgba(255, 255, 255, 0.3); flex: 1; border-radius: 2px; overflow: hidden; }
+    .story-progress-fill { height: 100%; background: #ffffff; width: 0%; }
     .story-viewer-header {
-      position: absolute;
-      top: 20px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 10;
+      position: absolute; top: 20px; left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; z-index: 10;
     }
-    .story-author-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .story-author-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.5);
-    }
-    .story-author-name {
-      font-weight: 700;
-      font-size: 14px;
-      color: #fff;
-    }
-    .story-close-btn {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .story-image-content {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+    .story-author-info { display: flex; align-items: center; gap: 10px; }
+    .story-author-avatar { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); }
+    .story-author-name { font-weight: 700; font-size: 14px; color: #fff; }
+    .story-close-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+    .story-image-content { width: 100%; height: 100%; object-fit: contain; }
+
+    input, textarea, [contenteditable="true"] {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      pointer-events: auto !important;
     }
 
-    /* საწერი ველების სრული განბლოკვა კლავიატურისთვის */
-input, 
-textarea, 
-[contenteditable="true"],
-.create-post-input,
-.comments-input,
-.fb-live-input,
-#story-comment-field {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-}
+    .msg-photo-single { max-width: 260px; max-height: 320px; border-radius: 16px; object-fit: cover; display: block; cursor: pointer; }
+    .msg-photo-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; max-width: 260px; }
+    .msg-photo-grid-2 img { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; cursor: pointer; }
+    .msg-photo-cluster-3 { position: relative; width: 260px; height: 320px; }
+    .msg-cluster-img { position: absolute; object-fit: cover; border-radius: 16px; border: 2px solid #0d0d11; cursor: pointer; }
+    .msg-cluster-img:nth-child(1) { top: 0; right: 0; width: 155px; height: 160px; z-index: 1; }
+    .msg-cluster-img:nth-child(2) { top: 80px; left: 0; width: 150px; height: 150px; z-index: 2; }
+    .msg-cluster-img:nth-child(3) { bottom: 0; right: 20px; width: 140px; height: 135px; z-index: 3; }
+    .msg-photo-grid-multi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; max-width: 260px; }
+    .msg-grid-item { position: relative; width: 100%; height: 110px; border-radius: 12px; overflow: hidden; }
+    .msg-grid-item img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; }
+    .msg-more-overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); color: #ffffff; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-    /* 📱 სთორის მინიატურის ბარათი */
-.story-reply-container {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 240px;
-}
-.outgoing .story-reply-container {
-  align-items: flex-end;
-}
-.incoming .story-reply-container {
-  align-items: flex-start;
-}
-.story-reply-header-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11.5px;
-  color: #8e8e93;
-  margin-bottom: 2px;
-  padding: 0 2px;
-}
-.story-reply-header-label svg {
-  width: 13px;
-  height: 13px;
-  fill: #8e8e93;
-}
-.story-reply-media-box {
-  width: 220px;
-  height: 310px;
-  border-radius: 18px;
-  overflow: hidden;
-  background: #18191a;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-.story-reply-media-box img,
-.story-reply-media-box video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover !important;
-  display: block;
-}
-.story-reply-expired-box {
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  font-size: 12px;
-  color: #8e8e93;
-  font-style: italic;
-}
-
-
-  /* ==========================================================================
-   📸 MESSENGER MULTI-PHOTO COLLAGE & 🎙️ VOICE MESSAGES
-   ========================================================================== */
-
-/* 1 ფოტო */
-.msg-photo-single {
-  max-width: 260px;
-  max-height: 320px;
-  border-radius: 16px;
-  object-fit: cover;
-  display: block;
-  cursor: pointer;
-}
-
-/* 2 ფოტო */
-.msg-photo-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  max-width: 260px;
-}
-.msg-photo-grid-2 img {
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-/* 🌟 3 ფოტო: ზუსტად Messenger-ის ასიმეტრიული გადაფარვა სქრინშოტიდან */
-.msg-photo-cluster-3 {
-  position: relative;
-  width: 260px;
-  height: 320px;
-}
-.msg-cluster-img {
-  position: absolute;
-  object-fit: cover;
-  border-radius: 16px;
-  border: 2px solid #0d0d11;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  cursor: pointer;
-}
-.msg-cluster-img:nth-child(1) {
-  top: 0; right: 0; width: 155px; height: 160px; z-index: 1;
-}
-.msg-cluster-img:nth-child(2) {
-  top: 80px; left: 0; width: 150px; height: 150px; z-index: 2;
-}
-.msg-cluster-img:nth-child(3) {
-  bottom: 0; right: 20px; width: 140px; height: 135px; z-index: 3;
-}
-
-/* 4 და მეტი ფოტო (კუბიკების ბადე) */
-.msg-photo-grid-multi {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  max-width: 260px;
-}
-.msg-grid-item {
-  position: relative;
-  width: 100%;
-  height: 110px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-.msg-grid-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  cursor: pointer;
-}
-.msg-more-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  color: #ffffff;
-  font-size: 22px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* 🎙️ მიკროფონის ღილაკი და ჩაწერის ზოლი */
-.chat-mic-btn {
-  background: none;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 4px;
-  color: #2ed573;
-}
-.chat-mic-btn svg {
-  width: 22px;
-  height: 22px;
-  fill: currentColor;
-}
-.chat-mic-btn.recording {
-  color: #ff4757;
-  animation: micPulse 1s infinite alternate;
-}
-@keyframes micPulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.25); }
-}
-
-/* ჩაწერის აქტიური პანელი */
-#voice-recording-bar {
-  display: none;
-  position: absolute;
-  inset: 0;
-  background: #0d0d11;
-  padding: 0 16px;
-  align-items: center;
-  justify-content: space-between;
-  z-index: 150;
-}
-.voice-rec-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ff4757;
-  animation: recBlink 1s infinite;
-}
-@keyframes recBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* 🎵 ხმოვანი შეტყობინების ბაბლი ჩატში */
-.voice-msg-bubble {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  min-width: 170px;
-}
-.voice-play-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: #2ed573;
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-.voice-wave-line {
-  flex: 1;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-}
-.voice-wave-progress {
-  width: 0%;
-  height: 100%;
-  background: #2ed573;
-}
-.voice-duration {
-  font-size: 11px;
-  color: #aaa;
-  flex-shrink: 0;
-}  
+    .chat-mic-btn { background: none; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 4px; color: #2ed573; }
+    .chat-mic-btn svg { width: 22px; height: 22px; fill: currentColor; }
+    #voice-recording-bar { display: none; position: absolute; inset: 0; background: #0d0d11; padding: 0 16px; align-items: center; justify-content: space-between; z-index: 150; }
+    .voice-rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4757; }
+    .voice-msg-bubble { display: flex; align-items: center; gap: 10px; padding: 8px 14px; min-width: 170px; }
+    .voice-play-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: #2ed573; color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
+    .voice-wave-line { flex: 1; height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; position: relative; overflow: hidden; }
+    .voice-wave-progress { width: 0%; height: 100%; background: #2ed573; }
+    .voice-duration { font-size: 11px; color: #aaa; }
   </style>
 </head>
 <body>
@@ -1661,17 +1214,17 @@ textarea,
 
   <div class="messenger-wrapper">
 
+    <!-- 1. მთავარი ჩატების სიის ეკრანი -->
     <div id="chats-screen">
       <div class="chats-top-fixed">
         <div class="chats-header">
           <h1 id="lbl-chats-title">ჩატები</h1>
           <div class="header-actions">
-
-            <button class="header-btn" onclick="openRequestsScreen()" style="position: relative;" title="შეტყობინების მოთხოვნები">
-            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-            <span id="requests-badge" style="display: none; position: absolute; top: -3px; right: -3px; background: #ff4757; color: #fff; font-size: 10px; font-weight: 800; min-width: 17px; height: 17px; border-radius: 9px; align-items: center; justify-content: center; padding: 0 4px; border: 1.5px solid #0d0d11;">0</span>
+            <!-- შეტყობინების მოთხოვნების ღილაკი და ბეიჯი -->
+            <button class="header-btn" onclick="openRequestsScreen()" title="შეტყობინების მოთხოვნები">
+              <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              <span id="requests-badge" style="display: none; position: absolute; top: -3px; right: -3px; background: #ff4757; color: #fff; font-size: 10px; font-weight: 800; min-width: 17px; height: 17px; border-radius: 9px; align-items: center; justify-content: center; padding: 0 4px; border: 1.5px solid #0d0d11;">0</span>
             </button>
-            
             <button class="header-btn" onclick="alert('ახალი ჩატის დაწყება')">
               <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
             </button>
@@ -1701,6 +1254,7 @@ textarea,
       </div>
     </div>
 
+    <!-- 1.5. სტორიების გვერდი -->
     <div id="stories-screen">
       <div class="stories-header-top">
         <h1 id="lbl-stories-page-title">სტორიები</h1>
@@ -1721,6 +1275,7 @@ textarea,
       </div>
     </div>
 
+    <!-- 1.8. შეტყობინებების ეკრანი -->
     <div id="notifications-screen">
       <div class="notifications-header-top">
         <h1 id="lbl-notifs-page-title">შეტყობინებები</h1>
@@ -1731,22 +1286,23 @@ textarea,
       </div>
     </div>
 
-    <!-- შეტყობინების მოთხოვნების ეკრანი -->
+    <!-- 1.9. შეტყობინების მოთხოვნების სრულეკრანიანი გვერდი -->
     <div id="requests-screen" style="display: none; flex-direction: column; flex: 1; min-height: 0; width: 100%; position: relative; overflow: hidden; background: #0d0d11; z-index: 60;">
-  <div style="padding: 15px 16px; display: flex; align-items: center; gap: 12px; background: rgba(13, 13, 17, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0;">
-    <button class="back-btn" onclick="closeRequestsScreen()">
-      <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #2ed573;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-    </button>
-    <h1 style="font-size: 20px; font-weight: 800; color: #ffffff;">შეტყობინების მოთხოვნები</h1>
-  </div>
+      <div style="padding: 15px 16px; display: flex; align-items: center; gap: 12px; background: rgba(13, 13, 17, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0;">
+        <button class="back-btn" onclick="closeRequestsScreen()">
+          <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #2ed573;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <h1 style="font-size: 20px; font-weight: 800; color: #ffffff;">შეტყობინების მოთხოვნები</h1>
+      </div>
 
-  <div class="chats-scroll-area" id="requests-list-target">
-    <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
-  </div>
-</div>
+      <div class="chats-scroll-area" id="requests-list-target">
+        <p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>
+      </div>
+    </div>
 
     <input type="file" id="story-file-input" accept="image/*" style="display:none;" onchange="uploadStoryFile(event)">
 
+    <!-- ქვედა ნავბარი -->
     <div class="footer-nav" id="main-footer-nav">
       <button class="nav-tab active" id="nav-tab-chats" onclick="switchTab('chats')">
         <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -1768,6 +1324,7 @@ textarea,
       </button>
     </div>
 
+    <!-- 2. შიდა ჩატის ეკრანი -->
     <div id="thread-screen">
       <div class="thread-header">
         <div class="thread-header-left" onclick="closeChat()">
@@ -1794,14 +1351,12 @@ textarea,
           <span class="chat-start-name" id="chat-start-big-name"></span>
           <span class="chat-start-sub" id="lbl-friends-sub">მეგობრები EmigrantBook-ზე</span>
           <button class="view-profile-btn" onclick="alert('პროფილის ნახვა')" id="lbl-view-profile">პროფილის ნახვა</button>
-          
           <div class="encryption-notice" id="lbl-encryption">
             🔒 შეტყობინებები დაცულია ბოლოდან ბოლომდე შიფრაციით.
           </div>
         </div>
 
         <div class="chat-date-separator" id="chat-date-lbl">დღეს</div>
-
         <div id="dynamic-messages-block" style="display:flex; flex-direction:column; gap:8px;"></div>
 
         <div id="typing-indicator-row" class="typing-indicator-row">
@@ -1819,7 +1374,6 @@ textarea,
 
         <div class="footer-left-actions">
           <svg viewBox="0 0 24 24" onclick="document.getElementById('chat-photo-input').click()"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          
           <button type="button" class="chat-mic-btn" id="mic-btn-main" onclick="toggleVoiceRecording()">
             <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.31 6-6.72h-1.7z"/></svg>
           </button>
@@ -1866,76 +1420,78 @@ textarea,
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- მოდალები -->
+    <div id="delete-msg-modal" class="delete-modal-overlay" onclick="closeDeleteModal(event)">
+      <div class="delete-modal-content" onclick="event.stopPropagation()">
+        <h3>შეტყობინების წაშლა</h3>
+        <p>ვისთვის გსურთ ამ შეტყობინების წაშლა?</p>
+        <button class="delete-option-btn danger" id="btn-delete-everyone" onclick="executeDeleteForEveryone()">ყველასთან წაშლა</button>
+        <button class="delete-option-btn" id="btn-delete-me" onclick="executeDeleteForMe()">ჩემთან წაშლა</button>
+        <button class="delete-option-btn cancel" onclick="closeDeleteModal()">გაუქმება</button>
+      </div>
+    </div>
+
+    <div id="incoming-call-modal">
+      <div class="incoming-banner-left">
+        <div class="call-avatar-pulse">
+          <img id="incoming-caller-avatar" src="" alt="Caller">
+        </div>
+        <div class="incoming-banner-info">
+          <h2 id="incoming-caller-name">...</h2>
+          <p>შემომავალი ვიდეო ზარი...</p>
+        </div>
+      </div>
+      <div class="incoming-call-actions">
+        <button class="call-btn reject-btn" onclick="rejectIncomingCall()">
+          <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.22 7.46 6 12 6s8.66 2.22 11.71 5.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+        </button>
+        <button class="call-btn accept-btn" onclick="acceptIncomingCall()">
+          <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="video-call-screen">
+      <video id="remote-video" autoplay playsinline webkit-playsinline x5-playsinline poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+      <video id="local-video" autoplay playsinline webkit-playsinline x5-playsinline muted poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
       
-  
-
-  <div id="delete-msg-modal" class="delete-modal-overlay" onclick="closeDeleteModal(event)">
-    <div class="delete-modal-content" onclick="event.stopPropagation()">
-      <h3>შეტყობინების წაშლა</h3>
-      <p>ვისთვის გსურთ ამ შეტყობინების წაშლა?</p>
-      <button class="delete-option-btn danger" id="btn-delete-everyone" onclick="executeDeleteForEveryone()">ყველასთან წაშლა</button>
-      <button class="delete-option-btn" id="btn-delete-me" onclick="executeDeleteForMe()">ჩემთან წაშლა</button>
-      <button class="delete-option-btn cancel" onclick="closeDeleteModal()">გაუქმება</button>
-    </div>
-  </div>
-
-  <div id="incoming-call-modal">
-    <div class="incoming-banner-left">
-      <div class="call-avatar-pulse">
-        <img id="incoming-caller-avatar" src="" alt="Caller">
+      <div class="video-call-top-bar" id="video-call-top-bar">
+        <img id="video-call-user-avatar" class="video-call-avatar" src="" alt="Avatar" style="display:none;">
+        <span id="video-call-user-name">...</span>
+        <span id="video-call-status">ზარი ირეკება...</span>
       </div>
-      <div class="incoming-banner-info">
-        <h2 id="incoming-caller-name">...</h2>
-        <p>შემომავალი ვიდეო ზარი...</p>
+
+      <div class="video-call-bottom-bar">
+        <button class="call-action-icon-btn" id="btn-toggle-mic" onclick="toggleMuteMic()">
+          <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg>
+        </button>
+        <button class="call-action-icon-btn end-call-btn" onclick="endCall()">
+          <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.22 7.46 6 12 6s8.66 2.22 11.71 5.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+        </button>
+        <button class="call-action-icon-btn" id="btn-toggle-cam" onclick="toggleCamVideo()">
+          <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+        </button>
       </div>
     </div>
-    <div class="incoming-call-actions">
-      <button class="call-btn reject-btn" onclick="rejectIncomingCall()">
-        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.22 7.46 6 12 6s8.66 2.22 11.71 5.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
-      </button>
-      <button class="call-btn accept-btn" onclick="acceptIncomingCall()">
-        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-      </button>
-    </div>
-  </div>
 
-  <div id="video-call-screen">
-    <video id="remote-video" autoplay playsinline webkit-playsinline x5-playsinline poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
-    <video id="local-video" autoplay playsinline webkit-playsinline x5-playsinline muted poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
-    
-    <div class="video-call-top-bar" id="video-call-top-bar">
-      <img id="video-call-user-avatar" class="video-call-avatar" src="" alt="Avatar" style="display:none;">
-      <span id="video-call-user-name">...</span>
-      <span id="video-call-status">ზარი ირეკება...</span>
-    </div>
-
-    <div class="video-call-bottom-bar">
-      <button class="call-action-icon-btn" id="btn-toggle-mic" onclick="toggleMuteMic()">
-        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/></svg>
-      </button>
-      <button class="call-action-icon-btn end-call-btn" onclick="endCall()">
-        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.22 7.46 6 12 6s8.66 2.22 11.71 5.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
-      </button>
-      <button class="call-action-icon-btn" id="btn-toggle-cam" onclick="toggleCamVideo()">
-        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <div id="story-viewer-modal">
-    <div class="story-progress-bar-container">
-      <div class="story-progress-bar">
-        <div class="story-progress-fill" id="story-progress-fill"></div>
+    <div id="story-viewer-modal">
+      <div class="story-progress-bar-container">
+        <div class="story-progress-bar">
+          <div class="story-progress-fill" id="story-progress-fill"></div>
+        </div>
       </div>
-    </div>
-    <div class="story-viewer-header">
-      <div class="story-author-info">
-        <img id="story-viewer-avatar" class="story-author-avatar" src="">
-        <span id="story-viewer-name" class="story-author-name"></span>
+      <div class="story-viewer-header">
+        <div class="story-author-info">
+          <img id="story-viewer-avatar" class="story-author-avatar" src="">
+          <span id="story-viewer-name" class="story-author-name"></span>
+        </div>
+        <button class="story-close-btn" onclick="closeStoryViewer()">✕</button>
       </div>
-      <button class="story-close-btn" onclick="closeStoryViewer()">✕</button>
+      <img id="story-viewer-img" class="story-image-content" src="">
     </div>
-    <img id="story-viewer-img" class="story-image-content" src="">
+
   </div>
 
   <script>
@@ -1954,29 +1510,25 @@ textarea,
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    // --- აუდიო ფაილების კონფიგურაცია ზარებისთვის ---
     const outgoingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20%20gamavali.mp3");
     const incomingAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/762870916f88e11678b41c9547a62ae4b15f8d64/Video%20zari%20Shemavali.mp3");
-
-    // --- აუდიო ფაილი კლავიატურის ბეჭდვისთვის ---
     const klaviaturaAudio = new Audio("klaviatura.MP3");
     klaviaturaAudio.loop = true;
     klaviaturaAudio.volume = 0.8;
 
-    // --- აუდიო ფაილი შეტყობინების წაკითხვისთვის ---
     const seenAudio = new Audio("https://raw.githubusercontent.com/jimsher/Emigrantbook/main/seen.mp3");
     seenAudio.volume = 0.9;
     seenAudio.load();
 
     function playSeenSound() {
       seenAudio.currentTime = 0;
-      seenAudio.play().catch(e => console.log("Seen sound play error:", e));
+      seenAudio.play().catch(e => console.log("Seen sound error:", e));
     }
 
     function playKlaviaturaSound() {
       if (klaviaturaAudio.paused) {
         klaviaturaAudio.currentTime = 0;
-        klaviaturaAudio.play().catch(e => console.log("Keyboard sound autoplay restriction:", e));
+        klaviaturaAudio.play().catch(e => console.log("Keyboard sound error:", e));
       }
     }
 
@@ -1993,13 +1545,13 @@ textarea,
     function playOutgoingRingtone() {
       stopCallSounds();
       outgoingAudio.currentTime = 0;
-      outgoingAudio.play().catch(e => console.log("Outgoing audio play error:", e));
+      outgoingAudio.play().catch(e => console.log("Outgoing audio error:", e));
     }
 
     function playIncomingRingtone() {
       stopCallSounds();
       incomingAudio.currentTime = 0;
-      incomingAudio.play().catch(e => console.log("Incoming audio play error:", e));
+      incomingAudio.play().catch(e => console.log("Incoming audio error:", e));
     }
 
     function stopCallSounds() {
@@ -2009,188 +1561,74 @@ textarea,
       incomingAudio.currentTime = 0;
     }
 
-    // ენების ლექსიკონი
-    // ენების სრული ლექსიკონი
     var TRANSLATIONS = {
       ka: {
-        chats: "ჩატები",
-        storiesPageTitle: "სტორიები",
-        search: "ძებნა...",
-        createStory: "სტორის დამატება",
-        loading: "იტვირთება...",
-        noChats: "ჩატები არ არის.",
-        noNotifs: "შეტყობინებები არ არის.",
-        navChats: "ჩატები",
-        navStories: "სტორიები",
-        navNotifs: "შეტყობინებები",
-        navMenu: "მენიუ",
-        friendsSub: "მეგობრები EmigrantBook-ზე",
-        viewProfile: "პროფილის ნახვა",
+        chats: "ჩატები", storiesPageTitle: "სტორიები", search: "ძებნა...", createStory: "სტორის დამატება",
+        loading: "იტვირთება...", noChats: "ჩატები არ არის.", noNotifs: "შეტყობინებები არ არის.",
+        navChats: "ჩატები", navStories: "სტორიები", navNotifs: "შეტყობინებები", navMenu: "მენიუ",
+        friendsSub: "მეგობრები EmigrantBook-ზე", viewProfile: "პროფილის ნახვა",
         encryption: "🔒 შეტყობინებები დაცულია ბოლოდან ბოლომდე შიფრაციით.",
-        msgPlaceholder: "შეტყობინება...",
-        activeNow: "აქტიურია ახლა",
-        lastSeen: "ბოლოს იყო:",
-        justNow: "ახლახანს",
-        minsAgo: "წთ-ის წინ",
-        hoursAgo: "სთ-ის წინ",
-        daysAgo: "დღის წინ",
-        calling: "ზარი ირეკება..."
+        msgPlaceholder: "შეტყობინება...", activeNow: "აქტიურია ახლა", lastSeen: "ბოლოს იყო:",
+        justNow: "ახლახანს", minsAgo: "წთ-ის წინ", hoursAgo: "სთ-ის წინ", daysAgo: "დღის წინ", calling: "ზარი ირეკება..."
       },
       en: {
-        chats: "Chats",
-        storiesPageTitle: "Stories",
-        search: "Search...",
-        createStory: "Add Story",
-        loading: "Loading...",
-        noChats: "No chats available.",
-        noNotifs: "No notifications.",
-        navChats: "Chats",
-        navStories: "Stories",
-        navNotifs: "Notifications",
-        navMenu: "Menu",
-        friendsSub: "Friends on EmigrantBook",
-        viewProfile: "View Profile",
+        chats: "Chats", storiesPageTitle: "Stories", search: "Search...", createStory: "Add Story",
+        loading: "Loading...", noChats: "No chats available.", noNotifs: "No notifications.",
+        navChats: "Chats", navStories: "Stories", navNotifs: "Notifications", navMenu: "Menu",
+        friendsSub: "Friends on EmigrantBook", viewProfile: "View Profile",
         encryption: "🔒 Messages and calls are end-to-end encrypted.",
-        msgPlaceholder: "Message...",
-        activeNow: "Active now",
-        lastSeen: "Last seen:",
-        justNow: "Just now",
-        minsAgo: "m ago",
-        hoursAgo: "h ago",
-        daysAgo: "d ago",
-        calling: "Calling..."
+        msgPlaceholder: "Message...", activeNow: "Active now", lastSeen: "Last seen:",
+        justNow: "Just now", minsAgo: "m ago", hoursAgo: "h ago", daysAgo: "d ago", calling: "Calling..."
       },
       el: {
-        chats: "Συνομιλίες",
-        storiesPageTitle: "Ιστορίες",
-        search: "Αναζήτηση...",
-        createStory: "Προσθήκη ιστορίας",
-        loading: "Φόρτωση...",
-        noChats: "Δεν υπάρχουν συνομιλίες.",
-        noNotifs: "Δεν υπάρχουν ειδοποιήσεις.",
-        navChats: "Συνομιλίες",
-        navStories: "Ιστορίες",
-        navNotifs: "Ειδοποιήσεις",
-        navMenu: "Μενού",
-        friendsSub: "Φίλοι στο EmigrantBook",
-        viewProfile: "Προβολή προφίλ",
+        chats: "Συνομιλίες", storiesPageTitle: "Ιστορίες", search: "Αναζήτηση...", createStory: "Προσθήκη ιστορίας",
+        loading: "Φόρτωση...", noChats: "Δεν υπάρχουν συνομιλίες.", noNotifs: "Δεν υπάρχουν ειδοποιήσεις.",
+        navChats: "Συνομιλίες", navStories: "Ιστορίες", navNotifs: "Ειδοποιήσεις", navMenu: "Μενού",
+        friendsSub: "Φίλοι στο EmigrantBook", viewProfile: "Προβολή προφίλ",
         encryption: "🔒 Τα μηνύματα είναι κρυπτογραφημένα από άκρο σε άκρο.",
-        msgPlaceholder: "Μήνυμα...",
-        activeNow: "Ενεργός/ή τώρα",
-        lastSeen: "Τελευταία σύνδεση:",
-        justNow: "Μόλις τώρα",
-        minsAgo: "λεπτά πριν",
-        hoursAgo: "ώρες πριν",
-        daysAgo: "ημέρες πριν",
-        calling: "Κλήση..."
+        msgPlaceholder: "Μήνυμα...", activeNow: "Ενεργός/ή τώρα", lastSeen: "Τελευταία σύνδεση:",
+        justNow: "Μόλις τώρα", minsAgo: "λεπτά πριν", hoursAgo: "ώρες πριν", daysAgo: "ημέρες πριν", calling: "Κλήση..."
       },
       it: {
-        chats: "Chat",
-        storiesPageTitle: "Storie",
-        search: "Cerca...",
-        createStory: "Aggiungi storia",
-        loading: "Caricamento...",
-        noChats: "Nessuna chat presente.",
-        noNotifs: "Nessuna notifica.",
-        navChats: "Chat",
-        navStories: "Storie",
-        navNotifs: "Notifiche",
-        navMenu: "Menu",
-        friendsSub: "Amici su EmigrantBook",
-        viewProfile: "Visualizza profilo",
+        chats: "Chat", storiesPageTitle: "Storie", search: "Cerca...", createStory: "Aggiungi storia",
+        loading: "Caricamento...", noChats: "Nessuna chat presente.", noNotifs: "Nessuna notifica.",
+        navChats: "Chat", navStories: "Storie", navNotifs: "Notifiche", navMenu: "Menu",
+        friendsSub: "Amici su EmigrantBook", viewProfile: "Visualizza profilo",
         encryption: "🔒 I messaggi sono protetti con crittografia end-to-end.",
-        msgPlaceholder: "Messaggio...",
-        activeNow: "Attivo/a ora",
-        lastSeen: "Ultimo accesso:",
-        justNow: "Adesso",
-        minsAgo: "min fa",
-        hoursAgo: "ore fa",
-        daysAgo: "giorni fa",
-        calling: "Chiamata in corso..."
+        msgPlaceholder: "Messaggio...", activeNow: "Attivo/a ora", lastSeen: "Ultimo accesso:",
+        justNow: "Adesso", minsAgo: "min fa", hoursAgo: "ore fa", daysAgo: "giorni fa", calling: "Chiamata in corso..."
       },
       ru: {
-        chats: "Чаты",
-        storiesPageTitle: "Истории",
-        search: "Поиск...",
-        createStory: "Создать историю",
-        loading: "Загрузка...",
-        noChats: "Нет чатов.",
-        noNotifs: "Нет уведомлений.",
-        navChats: "Чаты",
-        navStories: "Истории",
-        navNotifs: "Уведомления",
-        navMenu: "Меню",
-        friendsSub: "Друзья на EmigrantBook",
-        viewProfile: "Смотреть профиль",
+        chats: "Чаты", storiesPageTitle: "Истории", search: "Поиск...", createStory: "Создать историю",
+        loading: "Загрузка...", noChats: "Нет чатов.", noNotifs: "Нет уведомлений.",
+        navChats: "Чаты", navStories: "Истории", navNotifs: "Уведомления", navMenu: "Меню",
+        friendsSub: "Друзья на EmigrantBook", viewProfile: "Смотреть профиль",
         encryption: "🔒 Сообщения защищены сквозным шифрованием.",
-        msgPlaceholder: "Сообщение...",
-        activeNow: "В сети",
-        lastSeen: "Был(а) в сети:",
-        justNow: "Только что",
-        minsAgo: "мин. назад",
-        hoursAgo: "ч. назад",
-        daysAgo: "дн. назад",
-        calling: "Идет вызов..."
+        msgPlaceholder: "Сообщение...", activeNow: "В сети", lastSeen: "Был(а) в сети:",
+        justNow: "Только что", minsAgo: "мин. назад", hoursAgo: "ч. назад", daysAgo: "дн. назад", calling: "Идет вызов..."
       },
       de: {
-        chats: "Chats",
-        storiesPageTitle: "Storys",
-        search: "Suchen...",
-        createStory: "Story hinzufügen",
-        loading: "Wird geladen...",
-        noChats: "Keine Chats vorhanden.",
-        noNotifs: "Keine Benachrichtigungen.",
-        navChats: "Chats",
-        navStories: "Storys",
-        navNotifs: "Benachrichtigungen",
-        navMenu: "Menü",
-        friendsSub: "Freunde auf EmigrantBook",
-        viewProfile: "Profil anzeigen",
+        chats: "Chats", storiesPageTitle: "Storys", search: "Suchen...", createStory: "Story hinzufügen",
+        loading: "Wird geladen...", noChats: "Keine Chats vorhanden.", noNotifs: "Keine Benachrichtigungen.",
+        navChats: "Chats", navStories: "Storys", navNotifs: "Benachrichtigungen", navMenu: "Menü",
+        friendsSub: "Freunde auf EmigrantBook", viewProfile: "Profil anzeigen",
         encryption: "🔒 Nachrichten sind Ende-zu-Ende-verschlüsselt.",
-        msgPlaceholder: "Nachricht...",
-        activeNow: "Jetzt online",
-        lastSeen: "Zuletzt online:",
-        justNow: "Gerade eben",
-        minsAgo: "Min. her",
-        hoursAgo: "Std. her",
-        daysAgo: "Tage her",
-        calling: "Wird angerufen..."
+        msgPlaceholder: "Nachricht...", activeNow: "Jetzt online", lastSeen: "Zuletzt online:",
+        justNow: "Gerade eben", minsAgo: "Min. her", hoursAgo: "Std. her", daysAgo: "Tage her", calling: "Wird angerufen..."
       },
       fr: {
-        chats: "Discussions",
-        storiesPageTitle: "Stories",
-        search: "Rechercher...",
-        createStory: "Ajouter une story",
-        loading: "Chargement...",
-        noChats: "Aucune discussion.",
-        noNotifs: "Aucune notification.",
-        navChats: "Discussions",
-        navStories: "Stories",
-        navNotifs: "Notifications",
-        navMenu: "Menu",
-        friendsSub: "Amis sur EmigrantBook",
-        viewProfile: "Voir le profil",
+        chats: "Discussions", storiesPageTitle: "Stories", search: "Rechercher...", createStory: "Ajouter une story",
+        loading: "Chargement...", noChats: "Aucune discussion.", noNotifs: "Aucune notification.",
+        navChats: "Discussions", navStories: "Stories", navNotifs: "Notifications", navMenu: "Menu",
+        friendsSub: "Amis sur EmigrantBook", viewProfile: "Voir le profil",
         encryption: "🔒 Messages chiffrés de bout en bout.",
-        msgPlaceholder: "Message...",
-        activeNow: "En ligne",
-        lastSeen: "Vu :",
-        justNow: "À l'instant",
-        minsAgo: "min",
-        hoursAgo: "h",
-        daysAgo: "j",
-        calling: "Appel en cours..."
+        msgPlaceholder: "Message...", activeNow: "En ligne", lastSeen: "Vu :",
+        justNow: "À l'instant", minsAgo: "min", hoursAgo: "h", daysAgo: "j", calling: "Appel en cours..."
       }
     };
 
-    var currentLang = localStorage.getItem('emigrantbook_lang') || 
-                      localStorage.getItem('eb_lang') || 
-                      localStorage.getItem('lang') || 
-                      'ka';
-   // აქ მთავრდება         
-
     var currentLang = localStorage.getItem('emigrantbook_lang') || 'ka';
 
-    // მომხმარებლის ონლაინ/ბოლოს ნანახი დროის ფორმატირება
     function formatUserStatusText(uData) {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
       if (!uData) return { text: t.lastSeen + " -", color: "#8e8e93" };
@@ -2263,7 +1701,6 @@ textarea,
     var isMyTypingActive = false;
     var unsubscribeTyping = null;
     var currentSelectedMsgId = null;
-    var chatLastMsgUnsubscribes = {};
     var validChatsList = [];
 
     function switchTab(tabName) {
@@ -2271,6 +1708,7 @@ textarea,
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('stories-screen').style.display = 'none';
       if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
+      if(document.getElementById('requests-screen')) document.getElementById('requests-screen').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'none';
 
       document.getElementById('nav-tab-chats').classList.remove('active');
@@ -2366,7 +1804,6 @@ textarea,
       if (user) {
         setUserOnlineStatus(user.uid, true);
 
-        // 1. OneSignal Web ინტეგრაცია და Login
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
           try {
@@ -2375,11 +1812,10 @@ textarea,
               await OneSignal.Notifications.requestPermission();
             }
           } catch (err) {
-            console.error("OneSignal login/permission error:", err);
+            console.error("OneSignal login error:", err);
           }
         });
 
-        // 2. Median Android / iOS აპლიკაციაში User ID-ის მიბმა
         try {
           if (window.median && window.median.onesignal && window.median.onesignal.externalUserId) {
             window.median.onesignal.externalUserId.set({ externalId: user.uid });
@@ -2421,13 +1857,15 @@ textarea,
         window.location.href = "index.html";
       }
     });
-    
+
+    // 1. ჩათების სია: ერთჯერადი კითხვა (0 დაუხურავი Listener!)
     function fetchFirestoreChatList(currentUid) {
       const listTarget = document.getElementById('chats-list-target');
       
       db.collection('friend_requests')
         .where('status', '==', 'accepted')
-        .onSnapshot(function(snapshot) {
+        .get()
+        .then(function(snapshot) {
           if (!snapshot || snapshot.empty) {
             var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
             listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
@@ -2443,6 +1881,9 @@ textarea,
 
           let friendIds = Array.from(friendIdsSet);
           loadFriendsProfiles(friendIds, currentUid, listTarget);
+        }).catch(err => {
+          console.error("Chat list fetch error:", err);
+          listTarget.innerHTML = '';
         });
     }
 
@@ -2475,6 +1916,7 @@ textarea,
       });
     }
 
+    // 2. ბოლო მესიჯების ერთჯერადი ამოღება (0 ფონური Listener!)
     function renderActiveChats(users, currentUid, listTarget) {
       var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
 
@@ -2483,23 +1925,12 @@ textarea,
         return;
       }
 
-      users.forEach(user => {
+      let fetchPromises = users.map(user => {
         const chatId = getChatId(currentUid, user.uid);
-
-        if (chatLastMsgUnsubscribes[chatId]) {
-          let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
-          if (existingIdx > -1) {
-            validChatsList[existingIdx].name = user.name;
-            validChatsList[existingIdx].photo = user.photo;
-            validChatsList[existingIdx].presence = user.presence;
-            redrawSortedChatsList(validChatsList, currentUid, listTarget);
-          }
-          return;
-        }
-
-        chatLastMsgUnsubscribes[chatId] = db.collection('chats').doc(chatId).collection('messages')
+        return db.collection('chats').doc(chatId).collection('messages')
           .orderBy('createdAt', 'desc').limit(1)
-          .onSnapshot(function(snapshot) {
+          .get()
+          .then(snapshot => {
             if (!snapshot.empty) {
               const lastMsgDoc = snapshot.docs[0].data();
               let msgText = lastMsgDoc.text || "📷 Photo";
@@ -2515,19 +1946,15 @@ textarea,
               user.lastMsgTimeMs = timeMs;
               user.lastMsgTimeStr = timeStr;
               user.isUnread = isUnread;
-
-              let existingIdx = validChatsList.findIndex(u => u.uid === user.uid);
-              if (existingIdx > -1) {
-                validChatsList[existingIdx] = Object.assign({}, validChatsList[existingIdx], user);
-              } else {
-                validChatsList.push(Object.assign({}, user));
-              }
-            } else {
-              validChatsList = validChatsList.filter(u => u.uid !== user.uid);
+              return user;
             }
+            return null;
+          }).catch(() => null);
+      });
 
-            redrawSortedChatsList(validChatsList, currentUid, listTarget);
-          }, err => console.log("Chat last msg listen error:", err));
+      Promise.all(fetchPromises).then(results => {
+        validChatsList = results.filter(u => u !== null);
+        redrawSortedChatsList(validChatsList, currentUid, listTarget);
       });
     }
 
@@ -2543,12 +1970,8 @@ textarea,
       }
 
       sortedUsers.forEach(user => {
-        let existingRow = document.getElementById('chat-row-' + user.uid);
-        if (!existingRow) {
-          existingRow = document.createElement('div');
-          existingRow.id = 'chat-row-' + user.uid;
-        }
-
+        let existingRow = document.createElement('div');
+        existingRow.id = 'chat-row-' + user.uid;
         existingRow.className = 'chat-row-item' + (user.isUnread ? ' unread' : '');
 
         const isOnline = user.presence === 'online';
@@ -2582,6 +2005,7 @@ textarea,
       document.getElementById('chats-screen').style.display = 'none';
       document.getElementById('stories-screen').style.display = 'none';
       if(document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
+      if(document.getElementById('requests-screen')) document.getElementById('requests-screen').style.display = 'none';
       document.getElementById('main-footer-nav').style.display = 'none';
       document.getElementById('thread-screen').style.display = 'flex';
 
@@ -2667,13 +2091,13 @@ textarea,
 
       element.addEventListener('mousedown', startPress);
       element.addEventListener('touchstart', startPress, { passive: true });
-
       element.addEventListener('mouseup', cancelPress);
       element.addEventListener('mouseleave', cancelPress);
       element.addEventListener('touchend', cancelPress);
       element.addEventListener('touchmove', cancelPress);
     }
 
+    // 3. აქტიური ჩათის მოსმენა: ოპტიმიზებული batch-ით
     function listenToFirestoreMessages(chatId, targetAvatar) {
       const msgBlock = document.getElementById('dynamic-messages-block');
       const myUid = auth.currentUser.uid;
@@ -2704,7 +2128,7 @@ textarea,
           if (unreadDocs.length > 0) {
             let batch = db.batch();
             unreadDocs.forEach(ref => batch.update(ref, { read: true }));
-            batch.commit().catch(e => console.log("Batch read error:", e));
+            batch.commit().catch(e => console.log("Batch error:", e));
           }
 
           msgBlock.innerHTML = "";
@@ -2740,7 +2164,6 @@ textarea,
             const msgRow = document.createElement('div');
             msgRow.className = "message-row " + (isMine ? "outgoing" : "incoming");
 
-            // 1. ზარების ბარათი
             if (msg.type === 'missed_call' || msg.type === 'finished_call') {
               let titleText = msg.type === 'missed_call' ? 'გამოტოვებული ვიდეო ზარი' : 'ვიდეო ზარი';
               let durationText = msg.type === 'finished_call' ? (msg.duration || '0 წმ') : new Date(msgDateObj).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -2761,7 +2184,6 @@ textarea,
               `;
               msgRow.innerHTML = cardHtml;
 
-            // 2. Facebook Messenger-ის ზუსტი სთორის პასუხი
             } else if (msg.type === 'story_reply') {
               const isEmojiOnly = isOnlyEmoji(msg.text);
               const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
@@ -2816,7 +2238,6 @@ textarea,
                 `;
               }
 
-            // 3. 📸 ფოტოების კოლაჟი (R2 - messenger_photos)
             } else if (msg.type === 'photos' && msg.photos) {
               const collageContent = (typeof renderMessengerPhotoCollage === 'function') 
                 ? renderMessengerPhotoCollage(msg.photos) 
@@ -2831,7 +2252,6 @@ textarea,
                 `;
               }
 
-            // 4. 🎙️ ხმოვანი შეტყობინება (R2 - messenger_audio)
             } else if (msg.type === 'voice' && msg.audioUrl) {
               const voiceHtml = `
                 <div class="msg-bubble voice-msg-bubble">
@@ -2852,7 +2272,6 @@ textarea,
                 `;
               }
 
-            // 5. ჩვეულებრივი ტექსტი / სმაილები
             } else {
               const isEmojiOnly = isOnlyEmoji(msg.text);
               const bubbleClass = "msg-bubble" + (isEmojiOnly ? " big-emoji" : "");
@@ -2910,13 +2329,8 @@ textarea,
       const chatId = getChatId(myUid, currentActiveChatUid);
 
       db.collection('chats').doc(chatId).collection('messages').doc(currentSelectedMsgId).delete()
-        .then(() => {
-          closeDeleteModal();
-        })
-        .catch(err => {
-          console.error("Delete for everyone error:", err);
-          closeDeleteModal();
-        });
+        .then(() => closeDeleteModal())
+        .catch(err => closeDeleteModal());
     }
 
     function executeDeleteForMe() {
@@ -2926,12 +2340,7 @@ textarea,
 
       db.collection('chats').doc(chatId).collection('messages').doc(currentSelectedMsgId).update({
         deletedFor: firebase.firestore.FieldValue.arrayUnion(myUid)
-      }).then(() => {
-        closeDeleteModal();
-      }).catch(err => {
-        console.error("Delete for me error:", err);
-        closeDeleteModal();
-      });
+      }).then(() => closeDeleteModal()).catch(err => closeDeleteModal());
     }
 
     function sendTypingStatus(isTyping) {
@@ -2942,7 +2351,7 @@ textarea,
       db.collection('chats').doc(chatId).collection('typing').doc(myUid).set({
         isTyping: isTyping,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(err => console.log("Typing state send error:", err));
+      }).catch(err => console.log("Typing state error:", err));
     }
 
     function listenToTypingStatus(chatId, targetUid) {
@@ -2967,7 +2376,7 @@ textarea,
             if (typingRow) typingRow.style.display = 'none';
             stopKlaviaturaSound();
           }
-        }, err => console.log("Typing state listen error:", err));
+        }, err => console.log("Typing state error:", err));
     }
 
     function closeChat() {
@@ -2986,6 +2395,7 @@ textarea,
       if (event.key === 'Enter') sendLikeOrMessage();
     }
 
+    // 4. Debounced ტაიპინგი: ბაზას არ წვავს ყოველ ასოზე!
     function handleInputTyping() {
       var input = document.getElementById('message-input-field');
       var btn = document.getElementById('send-action-btn');
@@ -3021,11 +2431,7 @@ textarea,
     function toggleEmojiPicker() {
       var picker = document.getElementById('emoji-picker-popup');
       if (!picker) return;
-      if (picker.style.display === 'grid') {
-        picker.style.display = 'none';
-      } else {
-        picker.style.display = 'grid';
-      }
+      picker.style.display = (picker.style.display === 'grid') ? 'none' : 'grid';
     }
 
     function hideEmojiPicker() {
@@ -3041,6 +2447,7 @@ textarea,
       handleInputTyping();
     }
 
+    // 5. მესიჯის გაგზავნა: მეგობართან ჩათში, უცხოსთან მოთხოვნაში
     function sendLikeOrMessage() {
       var input = document.getElementById('message-input-field');
       var text = input.value.trim();
@@ -3069,25 +2476,13 @@ textarea,
       const targetUid = currentActiveChatUid;
       const chatId = getChatId(myUid, targetUid);
 
-      // ვამოწმებთ მეგობრობას მინიმალური რესურსით (.limit(1))
       Promise.all([
-        db.collection('friend_requests')
-          .where('sender_id', '==', myUid)
-          .where('receiver_id', '==', targetUid)
-          .where('status', '==', 'accepted')
-          .limit(1)
-          .get(),
-        db.collection('friend_requests')
-          .where('sender_id', '==', targetUid)
-          .where('receiver_id', '==', myUid)
-          .where('status', '==', 'accepted')
-          .limit(1)
-          .get()
+        db.collection('friend_requests').where('sender_id', '==', myUid).where('receiver_id', '==', targetUid).where('status', '==', 'accepted').limit(1).get(),
+        db.collection('friend_requests').where('sender_id', '==', targetUid).where('receiver_id', '==', myUid).where('status', '==', 'accepted').limit(1).get()
       ]).then(results => {
         const isFriend = (!results[0].empty || !results[1].empty);
 
         if (isFriend) {
-          // თუ მეგობარია -> ჩვეულებრივად იწერება ჩათში
           db.collection('chats').doc(chatId).collection('messages').add({
             senderId: myUid,
             text: sendText,
@@ -3097,7 +2492,6 @@ textarea,
             sendModernPush(targetUid, sendText);
           }).catch(err => console.error("Chat send error:", err));
         } else {
-          // თუ მეგობარი არ არის -> იგზავნება message_requests-ში
           db.collection('message_requests').add({
             senderId: myUid,
             receiverId: targetUid,
@@ -3107,7 +2501,6 @@ textarea,
           }).then(() => {
             sendModernPush(targetUid, "📩 შეტყობინების მოთხოვნა: " + sendText);
 
-            // გამგზავნის ეკრანზე მესიჯის დაუყოვნებლივ გამოჩენა
             const msgBlock = document.getElementById('dynamic-messages-block');
             if (msgBlock) {
               const isEmojiOnly = isOnlyEmoji(sendText);
@@ -3128,11 +2521,146 @@ textarea,
             }
           }).catch(err => console.error("Request send error:", err));
         }
-      }).catch(err => {
-        console.error("Friendship check error:", err);
+      }).catch(err => console.error("Friendship check error:", err));
+    }
+
+    // 6. შეტყობინების მოთხოვნების მართვა
+    function checkMessageRequestsBadge(myUid) {
+      if (!myUid) return;
+      db.collection('message_requests')
+        .where('receiverId', '==', myUid)
+        .where('status', '==', 'pending')
+        .limit(10)
+        .get()
+        .then(snapshot => {
+          const badge = document.getElementById('requests-badge');
+          if (!badge) return;
+          const count = snapshot.size;
+          if (count > 0) {
+            badge.innerText = count > 9 ? '9+' : count;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }).catch(err => console.warn("Requests badge error:", err));
+    }
+
+    function openRequestsScreen() {
+      document.getElementById('chats-screen').style.display = 'none';
+      document.getElementById('stories-screen').style.display = 'none';
+      if (document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
+      document.getElementById('main-footer-nav').style.display = 'none';
+      document.getElementById('requests-screen').style.display = 'flex';
+
+      loadMessageRequestsList();
+    }
+
+    function closeRequestsScreen() {
+      document.getElementById('requests-screen').style.display = 'none';
+      document.getElementById('main-footer-nav').style.display = 'flex';
+      switchTab(currentActiveTab);
+    }
+
+    function loadMessageRequestsList() {
+      if (!auth.currentUser) return;
+      const myUid = auth.currentUser.uid;
+      const listTarget = document.getElementById('requests-list-target');
+      listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>`;
+
+      db.collection('message_requests')
+        .where('receiverId', '==', myUid)
+        .where('status', '==', 'pending')
+        .limit(20)
+        .get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            listTarget.innerHTML = `<p style="padding:30px; color:#8e8e93; text-align:center;">ახალი მოთხოვნები არ არის.</p>`;
+            return;
+          }
+
+          let requests = [];
+          let senderIds = [];
+          snapshot.forEach(docSnap => {
+            let rData = docSnap.data();
+            rData.docId = docSnap.id;
+            requests.push(rData);
+            senderIds.push(rData.senderId);
+          });
+
+          let profilePromises = senderIds.map(sId => db.collection('profiles').doc(sId).get());
+          Promise.all(profilePromises).then(pSnaps => {
+            let profilesMap = {};
+            pSnaps.forEach(pDoc => {
+              if (pDoc.exists) {
+                let pData = pDoc.data();
+                profilesMap[pDoc.id] = {
+                  name: extractName(pData, pDoc.id),
+                  photo: extractPhotoUrl(pData)
+                };
+              }
+            });
+
+            listTarget.innerHTML = "";
+            requests.forEach(req => {
+              let prof = profilesMap[req.senderId] || { name: "მომხმარებელი", photo: "" };
+              let imgSrc = prof.photo ? prof.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(prof.name)}&background=2ed573&color=fff`;
+
+              let row = document.createElement('div');
+              row.style.cssText = "display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);";
+              row.id = "req-card-" + req.docId;
+
+              row.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <img src="${imgSrc}" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 700; font-size: 15px; color: #fff;">${prof.name}</div>
+                    <div style="font-size: 13px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${req.text || "გამოგიგზავნათ შეტყობინება"}</div>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 4px; padding-left: 58px;">
+                  <button onclick="acceptMessageRequest('${req.docId}', '${req.senderId}', '${encodeURIComponent(prof.name)}', '${encodeURIComponent(prof.photo)}', '${encodeURIComponent(req.text || '')}')" style="flex: 1; background: #2ed573; color: #000; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">მიღება</button>
+                  <button onclick="deleteMessageRequest('${req.docId}')" style="flex: 1; background: rgba(255,255,255,0.08); color: #ff4757; border: 1px solid rgba(255,71,87,0.3); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">წაშლა</button>
+                </div>
+              `;
+              listTarget.appendChild(row);
+            });
+          });
+        }).catch(err => {
+          console.error("Requests load error:", err);
+          listTarget.innerHTML = `<p style="padding:20px; color:#ff4757; text-align:center;">შეცდომა ჩატვირთვისას.</p>`;
+        });
+    }
+
+    function acceptMessageRequest(docId, senderId, senderNameEnc, senderPhotoEnc, firstMsgEnc) {
+      const myUid = auth.currentUser.uid;
+      const chatId = getChatId(myUid, senderId);
+      const senderName = decodeURIComponent(senderNameEnc);
+      const senderPhoto = decodeURIComponent(senderPhotoEnc);
+      const firstMsg = decodeURIComponent(firstMsgEnc);
+
+      db.collection('chats').doc(chatId).collection('messages').add({
+        senderId: senderId,
+        text: firstMsg || "გამარჯობა",
+        read: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        db.collection('message_requests').doc(docId).delete().then(() => {
+          closeRequestsScreen();
+          openChat(senderName, senderPhoto, senderId);
+          checkMessageRequestsBadge(myUid);
+        });
+      }).catch(err => alert("შეცდომა: " + err.message));
+    }
+
+    function deleteMessageRequest(docId) {
+      db.collection('message_requests').doc(docId).delete().then(() => {
+        const card = document.getElementById("req-card-" + docId);
+        if (card) card.remove();
+        if (auth.currentUser) checkMessageRequestsBadge(auth.currentUser.uid);
       });
     }
 
+    // 7. სთორების ოპტიმიზებული კითხვა
     function triggerStoryUpload() {
       document.getElementById('story-file-input').click();
     }
@@ -3328,9 +2856,7 @@ textarea,
 
         notifList.sort((a, b) => b.timeMs - a.timeMs);
         renderNotificationsUI(notifList, notifTarget);
-      }).catch(err => {
-        console.error("Notification fetch error:", err);
-      });
+      }).catch(err => console.error("Notification fetch error:", err));
     }
 
     function renderNotificationsUI(notifList, notifTarget) {
@@ -3350,13 +2876,10 @@ textarea,
       notifList.forEach(notif => {
         let itemDiv = document.createElement('div');
         itemDiv.className = 'notif-item' + (!notif.read ? ' unread' : '');
-        
         let timeStr = new Date(notif.timeMs).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         itemDiv.onclick = function() {
-          if (!notif.read) {
-            notif.docRef.update({ read: true });
-          }
+          if (!notif.read) notif.docRef.update({ read: true });
           if (notif.senderId) {
             db.collection('profiles').doc(notif.senderId).get().then(pSnap => {
               if (pSnap.exists) {
@@ -3395,6 +2918,7 @@ textarea,
       });
     }
 
+    // 8. WebRTC ზარების ლოგიკა
     const rtcServers = {
       iceServers: [
         { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
@@ -3409,12 +2933,12 @@ textarea,
     let callerCandidatesUnsubscribe = null;
     let calleeCandidatesUnsubscribe = null;
     let activeIncomingCallData = null;
+    let incomingCallUnsubscribe = null;
     
     let callStartTime = null;
     let callTimerInterval = null;
     let callConnectedFlag = false;
 
-    // ზარის UI რეჟიმების მართვა (Messenger Style)
     function setCallDialingUI() {
       const callScreen = document.getElementById('video-call-screen');
       if (callScreen) {
@@ -3437,7 +2961,12 @@ textarea,
     }
 
     function listenForIncomingCalls(myUid) {
-      db.collection('calls')
+      if (incomingCallUnsubscribe) {
+        incomingCallUnsubscribe();
+        incomingCallUnsubscribe = null;
+      }
+
+      incomingCallUnsubscribe = db.collection('calls')
         .where('receiverUid', '==', myUid)
         .where('status', '==', 'dialing')
         .onSnapshot(snapshot => {
@@ -3475,7 +3004,6 @@ textarea,
       callConnectedFlag = false;
       document.getElementById('video-call-screen').style.display = 'block';
       setCallDialingUI();
-
       playOutgoingRingtone();
 
       db.collection('profiles').doc(targetUid).get().then(pSnap => {
@@ -3494,7 +3022,7 @@ textarea,
         const localVid = document.getElementById('local-video');
         localVid.muted = true;
         localVid.srcObject = localStream;
-        localVid.play().catch(e => console.log("Local video play error:", e));
+        localVid.play().catch(e => console.log("Local video error:", e));
 
         const remoteVid = document.getElementById('remote-video');
         remoteVid.srcObject = null;
@@ -3512,7 +3040,7 @@ textarea,
           });
           remoteVid.removeAttribute('src');
           remoteVid.srcObject = remoteStream;
-          remoteVid.play().catch(e => console.log("Remote video play error:", e));
+          remoteVid.play().catch(e => console.log("Remote video error:", e));
         };
 
         const callDocRef = db.collection('calls').doc();
@@ -3522,23 +3050,16 @@ textarea,
         const calleeCandidatesCollection = callDocRef.collection('calleeCandidates');
 
         peerConnection.onicecandidate = (event) => {
-          if (event.candidate) {
-            callerCandidatesCollection.add(event.candidate.toJSON());
-          }
+          if (event.candidate) callerCandidatesCollection.add(event.candidate.toJSON());
         };
 
         const offerDescription = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offerDescription);
 
-        const offer = {
-          sdp: offerDescription.sdp,
-          type: offerDescription.type
-        };
-
         await callDocRef.set({
           callerUid: myUid,
           receiverUid: targetUid,
-          offer: offer,
+          offer: { sdp: offerDescription.sdp, type: offerDescription.type },
           status: 'dialing',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -3548,8 +3069,7 @@ textarea,
           if (!data) return;
 
           if (data.status === 'connected' && peerConnection && !peerConnection.currentRemoteDescription && data.answer) {
-            const answerDescription = new RTCSessionDescription(data.answer);
-            peerConnection.setRemoteDescription(answerDescription);
+            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             callConnectedFlag = true;
             callStartTime = Date.now();
             startCallTimer();
@@ -3565,14 +3085,13 @@ textarea,
         calleeCandidatesUnsubscribe = calleeCandidatesCollection.onSnapshot(snapshot => {
           snapshot.docChanges().forEach(change => {
             if (change.type === 'added') {
-              const candidate = new RTCIceCandidate(change.doc.data());
-              peerConnection.addIceCandidate(candidate);
+              peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
             }
           });
         });
 
       } catch (err) {
-        console.error("Video call start error:", err);
+        console.error("Video call error:", err);
         alert("კამერის ან მიკროფონის ჩართვა ვერ მოხერხდა.");
         endCallLocally();
       }
@@ -3606,7 +3125,7 @@ textarea,
         const localVid = document.getElementById('local-video');
         localVid.muted = true;
         localVid.srcObject = localStream;
-        localVid.play().catch(e => console.log("Local video play error:", e));
+        localVid.play().catch(e => console.log("Local video error:", e));
 
         const remoteVid = document.getElementById('remote-video');
         remoteVid.removeAttribute('src');
@@ -3624,7 +3143,7 @@ textarea,
           });
           remoteVid.removeAttribute('src');
           remoteVid.srcObject = remoteStream;
-          remoteVid.play().catch(e => console.log("Remote video play error:", e));
+          remoteVid.play().catch(e => console.log("Remote video error:", e));
         };
 
         const callDocRef = db.collection('calls').doc(currentCallId);
@@ -3632,20 +3151,12 @@ textarea,
         const calleeCandidatesCollection = callDocRef.collection('calleeCandidates');
 
         peerConnection.onicecandidate = (event) => {
-          if (event.candidate) {
-            calleeCandidatesCollection.add(event.candidate.toJSON());
-          }
+          if (event.candidate) calleeCandidatesCollection.add(event.candidate.toJSON());
         };
 
         await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
-
         const answerDescription = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answerDescription);
-
-        const answer = {
-          type: answerDescription.type,
-          sdp: answerDescription.sdp
-        };
 
         callConnectedFlag = true;
         callStartTime = Date.now();
@@ -3653,15 +3164,14 @@ textarea,
         setCallConnectedUI();
 
         await callDocRef.update({
-          answer: answer,
+          answer: { type: answerDescription.type, sdp: answerDescription.sdp },
           status: 'connected'
         });
 
         callerCandidatesUnsubscribe = callerCandidatesCollection.onSnapshot(snapshot => {
           snapshot.docChanges().forEach(change => {
             if (change.type === 'added') {
-              const candidate = new RTCIceCandidate(change.doc.data());
-              peerConnection.addIceCandidate(candidate);
+              peerConnection.addIceCandidate(new RTCIceCandidate(change.doc.data()));
             }
           });
         });
@@ -3694,9 +3204,7 @@ textarea,
     function rejectIncomingCall() {
       stopCallSounds();
       if (activeIncomingCallData) {
-        db.collection('calls').doc(activeIncomingCallData.callId).update({
-          status: 'rejected'
-        });
+        db.collection('calls').doc(activeIncomingCallData.callId).update({ status: 'rejected' });
       }
       document.getElementById('incoming-call-modal').style.display = 'none';
       activeIncomingCallData = null;
@@ -3705,9 +3213,7 @@ textarea,
     function endCall() {
       stopCallSounds();
       if (currentCallId) {
-        db.collection('calls').doc(currentCallId).update({
-          status: 'ended'
-        });
+        db.collection('calls').doc(currentCallId).update({ status: 'ended' });
       }
       handleCallFinished('ended');
     }
@@ -3766,22 +3272,11 @@ textarea,
         remoteVid.removeAttribute('src');
       }
       const localVid = document.getElementById('local-video');
-      if (localVid) {
-        localVid.srcObject = null;
-      }
+      if (localVid) localVid.srcObject = null;
 
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-        localStream = null;
-      }
-      if (remoteStream) {
-        remoteStream.getTracks().forEach(track => track.stop());
-        remoteStream = null;
-      }
-      if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-      }
+      if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+      if (remoteStream) { remoteStream.getTracks().forEach(track => track.stop()); remoteStream = null; }
+      if (peerConnection) { peerConnection.close(); peerConnection = null; }
       if (callDocUnsubscribe) { callDocUnsubscribe(); callDocUnsubscribe = null; }
       if (callerCandidatesUnsubscribe) { callerCandidatesUnsubscribe(); callerCandidatesUnsubscribe = null; }
       if (calleeCandidatesUnsubscribe) { calleeCandidatesUnsubscribe(); calleeCandidatesUnsubscribe = null; }
@@ -3815,7 +3310,7 @@ textarea,
 
     applyTranslations();
 
-    // OneSignal Push Dispatcher — შეტყობინების გაგზავნა მხოლოდ კონკრეტულ ადრესატთან
+    // 9. OneSignal Push
     async function sendModernPush(recipientUid, messageText) {
       if (!auth.currentUser || !recipientUid) return;
 
@@ -3854,9 +3349,7 @@ textarea,
 
         fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         }).catch(e => console.error("Push send error:", e));
 
@@ -3865,9 +3358,7 @@ textarea,
       }
     }
 
-    // ==========================================================================
-    // ☁️ CLOUDFLARE R2 ინტეგრაცია (messenger_photos / messenger_audio)
-    // ==========================================================================
+    // 10. R2 მედია
     function getR2Client() {
       return new AWS.S3({
         endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
@@ -3903,7 +3394,6 @@ textarea,
       });
     }
 
-    // 📸 ფოტოების ოპტიმიზაცია Canvas-ით და R2-ზე ატვირთვა
     function compressImageForChat(file, done) {
       var reader = new FileReader();
       reader.readAsDataURL(file);
@@ -3960,7 +3450,6 @@ textarea,
       });
     }
 
-    // 🎙️ ხმის ჩაწერის ლოგიკა (MediaRecorder)
     var mediaRecorder = null;
     var audioChunks = [];
     var recTimerInterval = null;
@@ -4056,7 +3545,6 @@ textarea,
       mediaRecorder.stop();
     }
 
-    // 🎵 ხმოვანი შეტყობინების დაკვრა/გაჩერება
     var currentPlayingAudio = null;
     var currentPlayingBtn = null;
 
@@ -4082,7 +3570,6 @@ textarea,
       };
     }
 
-    // 🖼️ კოლაჟის აგება ფოტოების რაოდენობის მიხედვით
     function renderMessengerPhotoCollage(photos) {
       if (!photos || photos.length === 0) return "";
 
@@ -4125,155 +3612,7 @@ textarea,
 
       html += '</div>';
       return html;
-    }
-
-
-
-    // მესენჯერი რექვესტები
-    // --- შეტყობინების მოთხოვნების (Message Requests) ოპტიმიზებული ლოგიკა ---
-
-// 1. ბეიჯის შემოწმება ერთჯერადი მსუბუქი კითხვით (0 მუდმივი listener)
-function checkMessageRequestsBadge(myUid) {
-  if (!myUid) return;
-  db.collection('message_requests')
-    .where('receiverId', '==', myUid)
-    .where('status', '==', 'pending')
-    .limit(10)
-    .get()
-    .then(snapshot => {
-      const badge = document.getElementById('requests-badge');
-      if (!badge) return;
-      const count = snapshot.size;
-      if (count > 0) {
-        badge.innerText = count > 9 ? '9+' : count;
-        badge.style.display = 'flex';
-      } else {
-        badge.style.display = 'none';
-      }
-    }).catch(err => console.warn("Requests badge check warning:", err));
-}
-
-// 2. სრულეკრანიანი გვერდის გახსნა
-function openRequestsScreen() {
-  document.getElementById('chats-screen').style.display = 'none';
-  document.getElementById('stories-screen').style.display = 'none';
-  if (document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
-  document.getElementById('main-footer-nav').style.display = 'none';
-  document.getElementById('requests-screen').style.display = 'flex';
-
-  loadMessageRequestsList();
-}
-
-function closeRequestsScreen() {
-  document.getElementById('requests-screen').style.display = 'none';
-  document.getElementById('main-footer-nav').style.display = 'flex';
-  switchTab(currentActiveTab);
-}
-
-// 3. მოთხოვნების სიის ჩატვირთვა
-function loadMessageRequestsList() {
-  if (!auth.currentUser) return;
-  const myUid = auth.currentUser.uid;
-  const listTarget = document.getElementById('requests-list-target');
-  listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>`;
-
-  db.collection('message_requests')
-    .where('receiverId', '==', myUid)
-    .where('status', '==', 'pending')
-    .limit(20)
-    .get()
-    .then(snapshot => {
-      if (snapshot.empty) {
-        listTarget.innerHTML = `<p style="padding:30px; color:#8e8e93; text-align:center;">ახალი მოთხოვნები არ არის.</p>`;
-        return;
-      }
-
-      let requests = [];
-      let senderIds = [];
-      snapshot.forEach(docSnap => {
-        let rData = docSnap.data();
-        rData.docId = docSnap.id;
-        requests.push(rData);
-        senderIds.push(rData.senderId);
-      });
-
-      // პროფილების ერთჯერადი წამოღება
-      let profilePromises = senderIds.map(sId => db.collection('profiles').doc(sId).get());
-      Promise.all(profilePromises).then(pSnaps => {
-        let profilesMap = {};
-        pSnaps.forEach(pDoc => {
-          if (pDoc.exists) {
-            let pData = pDoc.data();
-            profilesMap[pDoc.id] = {
-              name: extractName(pData, pDoc.id),
-              photo: extractPhotoUrl(pData)
-            };
-          }
-        });
-
-        listTarget.innerHTML = "";
-        requests.forEach(req => {
-          let prof = profilesMap[req.senderId] || { name: "მომხმარებელი", photo: "" };
-          let imgSrc = prof.photo ? prof.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(prof.name)}&background=2ed573&color=fff`;
-
-          let row = document.createElement('div');
-          row.style.cssText = "display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);";
-          row.id = "req-card-" + req.docId;
-
-          row.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <img src="${imgSrc}" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
-              <div style="flex: 1; min-width: 0;">
-                <div style="font-weight: 700; font-size: 15px; color: #fff;">${prof.name}</div>
-                <div style="font-size: 13px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${req.text || "გამოგიგზავნათ შეტყობინება"}</div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 4px; padding-left: 58px;">
-              <button onclick="acceptMessageRequest('${req.docId}', '${req.senderId}', '${encodeURIComponent(prof.name)}', '${encodeURIComponent(prof.photo)}', '${encodeURIComponent(req.text || '')}')" style="flex: 1; background: #2ed573; color: #000; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">მიღება</button>
-              <button onclick="deleteMessageRequest('${req.docId}')" style="flex: 1; background: rgba(255,255,255,0.08); color: #ff4757; border: 1px solid rgba(255,71,87,0.3); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">წაშლა</button>
-            </div>
-          `;
-          listTarget.appendChild(row);
-        });
-      });
-    }).catch(err => {
-      console.error("Requests load error:", err);
-      listTarget.innerHTML = `<p style="padding:20px; color:#ff4757; text-align:center;">შეცდომა ჩატვირთვისას.</p>`;
-    });
-}
-
-// 4. მოთხოვნის მიღება (გადადის რეალურ ჩათში)
-function acceptMessageRequest(docId, senderId, senderNameEnc, senderPhotoEnc, firstMsgEnc) {
-  const myUid = auth.currentUser.uid;
-  const chatId = getChatId(myUid, senderId);
-  const senderName = decodeURIComponent(senderNameEnc);
-  const senderPhoto = decodeURIComponent(senderPhotoEnc);
-  const firstMsg = decodeURIComponent(firstMsgEnc);
-
-  // გადადის რეალურ მესიჯებში
-  db.collection('chats').doc(chatId).collection('messages').add({
-    senderId: senderId,
-    text: firstMsg || "გამარჯობა",
-    read: false,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    // იშლება მოთხოვნებიდან
-    db.collection('message_requests').doc(docId).delete().then(() => {
-      closeRequestsScreen();
-      openChat(senderName, senderPhoto, senderId);
-      checkMessageRequestsBadge(myUid);
-    });
-  }).catch(err => alert("შეცდომა: " + err.message));
-}
-
-// 5. მოთხოვნის წაშლა
-function deleteMessageRequest(docId) {
-  db.collection('message_requests').doc(docId).delete().then(() => {
-    const card = document.getElementById("req-card-" + docId);
-    if (card) card.remove();
-    if (auth.currentUser) checkMessageRequestsBadge(auth.currentUser.uid);
-  });
-}
+    } 
   </script>
 </body>
 </html>
