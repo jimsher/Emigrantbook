@@ -2427,21 +2427,31 @@ textarea,
     }
 
     function loadFriendsProfiles(friendIds, currentUid, listTarget) {
-      let friendsProfilesMap = {};
+      if (!friendIds || friendIds.length === 0) {
+        var t = TRANSLATIONS[currentLang] || TRANSLATIONS['ka'];
+        listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">${t.noChats}</p>`;
+        return;
+      }
 
-      friendIds.forEach(fId => {
-        db.collection('profiles').doc(fId).onSnapshot(function(docSnap) {
+      let promises = friendIds.map(fId => db.collection('profiles').doc(fId).get());
+
+      Promise.all(promises).then(snapshots => {
+        let users = [];
+        snapshots.forEach(docSnap => {
           if (docSnap.exists) {
             let uData = docSnap.data();
-            friendsProfilesMap[fId] = {
+            let fId = docSnap.id;
+            users.push({
               uid: fId,
               name: extractName(uData, fId),
               photo: extractPhotoUrl(uData),
               presence: uData.status || 'offline'
-            };
+            });
           }
-          renderActiveChats(Object.values(friendsProfilesMap), currentUid, listTarget);
         });
+        renderActiveChats(users, currentUid, listTarget);
+      }).catch(err => {
+        console.error("Load friends profiles error:", err);
       });
     }
 
