@@ -4056,6 +4056,154 @@ textarea,
       html += '</div>';
       return html;
     }
+
+
+
+    // მესენჯერი რექვესტები
+    // --- შეტყობინების მოთხოვნების (Message Requests) ოპტიმიზებული ლოგიკა ---
+
+// 1. ბეიჯის შემოწმება ერთჯერადი მსუბუქი კითხვით (0 მუდმივი listener)
+function checkMessageRequestsBadge(myUid) {
+  if (!myUid) return;
+  db.collection('message_requests')
+    .where('receiverId', '==', myUid)
+    .where('status', '==', 'pending')
+    .limit(10)
+    .get()
+    .then(snapshot => {
+      const badge = document.getElementById('requests-badge');
+      if (!badge) return;
+      const count = snapshot.size;
+      if (count > 0) {
+        badge.innerText = count > 9 ? '9+' : count;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }).catch(err => console.warn("Requests badge check warning:", err));
+}
+
+// 2. სრულეკრანიანი გვერდის გახსნა
+function openRequestsScreen() {
+  document.getElementById('chats-screen').style.display = 'none';
+  document.getElementById('stories-screen').style.display = 'none';
+  if (document.getElementById('notifications-screen')) document.getElementById('notifications-screen').style.display = 'none';
+  document.getElementById('main-footer-nav').style.display = 'none';
+  document.getElementById('requests-screen').style.display = 'flex';
+
+  loadMessageRequestsList();
+}
+
+function closeRequestsScreen() {
+  document.getElementById('requests-screen').style.display = 'none';
+  document.getElementById('main-footer-nav').style.display = 'flex';
+  switchTab(currentActiveTab);
+}
+
+// 3. მოთხოვნების სიის ჩატვირთვა
+function loadMessageRequestsList() {
+  if (!auth.currentUser) return;
+  const myUid = auth.currentUser.uid;
+  const listTarget = document.getElementById('requests-list-target');
+  listTarget.innerHTML = `<p style="padding:20px; color:#8e8e93; text-align:center;">იტვირთება...</p>`;
+
+  db.collection('message_requests')
+    .where('receiverId', '==', myUid)
+    .where('status', '==', 'pending')
+    .limit(20)
+    .get()
+    .then(snapshot => {
+      if (snapshot.empty) {
+        listTarget.innerHTML = `<p style="padding:30px; color:#8e8e93; text-align:center;">ახალი მოთხოვნები არ არის.</p>`;
+        return;
+      }
+
+      let requests = [];
+      let senderIds = [];
+      snapshot.forEach(docSnap => {
+        let rData = docSnap.data();
+        rData.docId = docSnap.id;
+        requests.push(rData);
+        senderIds.push(rData.senderId);
+      });
+
+      // პროფილების ერთჯერადი წამოღება
+      let profilePromises = senderIds.map(sId => db.collection('profiles').doc(sId).get());
+      Promise.all(profilePromises).then(pSnaps => {
+        let profilesMap = {};
+        pSnaps.forEach(pDoc => {
+          if (pDoc.exists) {
+            let pData = pDoc.data();
+            profilesMap[pDoc.id] = {
+              name: extractName(pData, pDoc.id),
+              photo: extractPhotoUrl(pData)
+            };
+          }
+        });
+
+        listTarget.innerHTML = "";
+        requests.forEach(req => {
+          let prof = profilesMap[req.senderId] || { name: "მომხმარებელი", photo: "" };
+          let imgSrc = prof.photo ? prof.photo : `https://ui-avatars.com/api/?name=${encodeURIComponent(prof.name)}&background=2ed573&color=fff`;
+
+          let row = document.createElement('div');
+          row.style.cssText = "display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);";
+          row.id = "req-card-" + req.docId;
+
+          row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="${imgSrc}" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 700; font-size: 15px; color: #fff;">${prof.name}</div>
+                <div style="font-size: 13px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${req.text || "გამოგიგზავნათ შეტყობინება"}</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 4px; padding-left: 58px;">
+              <button onclick="acceptMessageRequest('${req.docId}', '${req.senderId}', '${encodeURIComponent(prof.name)}', '${encodeURIComponent(prof.photo)}', '${encodeURIComponent(req.text || '')}')" style="flex: 1; background: #2ed573; color: #000; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">მიღება</button>
+              <button onclick="deleteMessageRequest('${req.docId}')" style="flex: 1; background: rgba(255,255,255,0.08); color: #ff4757; border: 1px solid rgba(255,71,87,0.3); padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">წაშლა</button>
+            </div>
+          `;
+          listTarget.appendChild(row);
+        });
+      });
+    }).catch(err => {
+      console.error("Requests load error:", err);
+      listTarget.innerHTML = `<p style="padding:20px; color:#ff4757; text-align:center;">შეცდომა ჩატვირთვისას.</p>`;
+    });
+}
+
+// 4. მოთხოვნის მიღება (გადადის რეალურ ჩათში)
+function acceptMessageRequest(docId, senderId, senderNameEnc, senderPhotoEnc, firstMsgEnc) {
+  const myUid = auth.currentUser.uid;
+  const chatId = getChatId(myUid, senderId);
+  const senderName = decodeURIComponent(senderNameEnc);
+  const senderPhoto = decodeURIComponent(senderPhotoEnc);
+  const firstMsg = decodeURIComponent(firstMsgEnc);
+
+  // გადადის რეალურ მესიჯებში
+  db.collection('chats').doc(chatId).collection('messages').add({
+    senderId: senderId,
+    text: firstMsg || "გამარჯობა",
+    read: false,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    // იშლება მოთხოვნებიდან
+    db.collection('message_requests').doc(docId).delete().then(() => {
+      closeRequestsScreen();
+      openChat(senderName, senderPhoto, senderId);
+      checkMessageRequestsBadge(myUid);
+    });
+  }).catch(err => alert("შეცდომა: " + err.message));
+}
+
+// 5. მოთხოვნის წაშლა
+function deleteMessageRequest(docId) {
+  db.collection('message_requests').doc(docId).delete().then(() => {
+    const card = document.getElementById("req-card-" + docId);
+    if (card) card.remove();
+    if (auth.currentUser) checkMessageRequestsBadge(auth.currentUser.uid);
+  });
+}
   </script>
 </body>
 </html>
