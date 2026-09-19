@@ -2582,10 +2582,15 @@ textarea,
       db.collection('chats').doc(chatId).collection('messages')
         .where('senderId', '==', targetUid)
         .where('read', '==', false)
+        .limit(10)
         .get().then(snapshot => {
-          snapshot.forEach(docSnap => {
-            docSnap.ref.update({ read: true });
-          });
+          if (!snapshot.empty) {
+            let batch = db.batch();
+            snapshot.forEach(docSnap => {
+              batch.update(docSnap.ref, { read: true });
+            });
+            batch.commit().catch(e => console.log(e));
+          }
         });
 
       if (threadProfileUnsubscribe) threadProfileUnsubscribe();
