@@ -7653,32 +7653,37 @@ function loadFriendSuggestions(excludedIds) {
       blockedSet.forEach(function(bId) { allExcludedSet.add(bId); });
     }
 
-    // ვიღებთ მხოლოდ აქტიურ და მომლოდინე მეგობრობის სტატუსებს (არ ვკითხულობთ ძველ უარყოფილებს)
     Promise.all([
-      db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', 'in', ['accepted', 'pending']).get(),
-      db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', 'in', ['accepted', 'pending']).get()
+      db.collection('friend_requests').where('sender_id', '==', currentUser.uid).get(),
+      db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).get()
     ]).then(function(results) {
       results[0].forEach(function(docSnap) {
         var req = docSnap.data();
-        allExcludedSet.add(req.receiver_id);
+        if (req.status === 'accepted' || req.status === 'pending') {
+          allExcludedSet.add(req.receiver_id);
+        }
       });
 
       results[1].forEach(function(docSnap) {
         var req = docSnap.data();
-        allExcludedSet.add(req.sender_id);
+        if (req.status === 'accepted' || req.status === 'pending') {
+          allExcludedSet.add(req.sender_id);
+        }
       });
 
-      // ოპტიმიზებული ლიმიტი რესურსების დასაზოგად
       db.collection('profiles')
         .limit(25)
         .get()
         .then(function(snapshot) {
           var html = "";
+          var suggestionUserIds = [];
+
           snapshot.forEach(function(docSnap) {
             var userId = docSnap.id;
             var p = docSnap.data();
 
             if (!allExcludedSet.has(userId)) {
+              suggestionUserIds.push(userId);
               var name = p.full_name || "User";
               var avatar = p.avatar_url || DEFAULT_AVATAR_URL;
 
@@ -7689,7 +7694,8 @@ function loadFriendSuggestions(excludedIds) {
                     <div class="friend-req-name-row">
                       <span class="friend-req-name" onclick="viewUserProfile('${userId}')">${name}</span>
                     </div>
-                    <div class="friend-req-buttons" style="margin-top: 6px;">
+                    <div class="friend-req-meta" id="sug-meta-${userId}"></div>
+                    <div class="friend-req-buttons">
                       <button class="btn-confirm-req" onclick="sendFriendReqFromPage('${userId}', this, event)">${t.addFriend || 'მეგობრის დამატება'}</button>
                       <button class="btn-delete-req" onclick="this.closest('.friend-req-card').remove();">ამოშლა</button>
                     </div>
@@ -7700,6 +7706,11 @@ function loadFriendSuggestions(excludedIds) {
           });
 
           sugContainer.innerHTML = html || `<div style="text-align: center; color: #8a8f9d; padding: 20px;">${t.noSuggestions || t.noReqs || 'შეთავაზებები არ არის'}</div>`;
+
+          // პატარა ავატარების და საერთო მეგობრების დაბრუნება
+          suggestionUserIds.forEach(function(uId) {
+            loadMutualFriendsUI(uId, 'sug-meta-' + uId, null);
+          });
         }).catch(function(err) {
           console.warn("Suggestions error:", err);
           sugContainer.innerHTML = '';
@@ -7708,7 +7719,7 @@ function loadFriendSuggestions(excludedIds) {
       console.warn("Error checking relations for suggestions:", err);
     });
   });
-}            
+}
 // აქ მთავრდება
 
 function acceptFriendReqFromPage(reqId, senderId, event) {
