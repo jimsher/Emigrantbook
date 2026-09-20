@@ -3076,18 +3076,15 @@ auth.onAuthStateChanged(function(user) {
     function subscribeToMessagesRealtime() {
   if (!currentUser) return;
 
+  // ვწმენდთ ძველ ლაივ მოსმენებს, რომ არ გაირეპლიკოს
   messengerUnsubscribeGroup.forEach(function(unsub) {
     if (typeof unsub === 'function') unsub();
   });
   messengerUnsubscribeGroup = [];
 
-  Promise.all([
-    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
-    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
-  ]).then(function(results) {
-    let friendIds = [];
-    results[0].forEach(function(docSnap) { friendIds.push(docSnap.data().receiver_id); });
-    results[1].forEach(function(docSnap) { friendIds.push(docSnap.data().sender_id); });
+  // მეგობრების სიას ვიღებთ ქეშირებულად ან ერთხელ
+  getMyFriendIds(function(friendIdsSet) {
+    var friendIds = Array.from(friendIdsSet);
 
     if (friendIds.length === 0) {
       var badge = document.getElementById('messenger-badge');
@@ -3098,16 +3095,18 @@ auth.onAuthStateChanged(function(user) {
     let unreadChatsMap = {};
     let processed = 0;
 
+    // ვზღუდავთ ერთდროულ ბაზის დარტყმებს, რომ ბრაუზერი და ფაირბეისი არ გაიჭედოს
     friendIds.forEach(function(fId) {
       let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
       
-      db.collection('chats').doc(chatId).collection('messages')
+      // ვიყენებთ ლიმიტს და ვკითხულობთ ოპტიმიზებულად
+      var unsubMsg = db.collection('chats').doc(chatId).collection('messages')
         .where('read', '==', false)
-        .limit(1)
-        .get()
-        .then(function(msgsSnap) {
+        .limit(5)
+        .onSnapshot(function(msgsSnap) {
           processed++;
           let unreadCountFromFriend = 0;
+          
           msgsSnap.forEach(function(msgDoc) {
             if (msgDoc.data().senderId !== currentUser.uid) {
               unreadCountFromFriend++;
@@ -3120,26 +3119,24 @@ auth.onAuthStateChanged(function(user) {
             delete unreadChatsMap[fId];
           }
 
-          if (processed === friendIds.length) {
-            let totalUnreadChats = Object.keys(unreadChatsMap).length;
-            var badge = document.getElementById('messenger-badge');
-            if (badge) {
-              if (totalUnreadChats > 0) {
-                badge.innerText = totalUnreadChats;
-                badge.style.display = 'flex';
-              } else {
-                badge.style.display = 'none';
-              }
+          let totalUnreadChats = Object.keys(unreadChatsMap).length;
+          var badge = document.getElementById('messenger-badge');
+          if (badge) {
+            if (totalUnreadChats > 0) {
+              badge.innerText = totalUnreadChats;
+              badge.style.display = 'flex';
+            } else {
+              badge.style.display = 'none';
             }
           }
-        }).catch(function(err) {
-          console.error("Messages get error:", err);
+        }, function(err) {
+          console.error("Messages snapshot error:", err);
         });
+
+      messengerUnsubscribeGroup.push(unsubMsg);
     });
-  }).catch(function(err) {
-    console.error("Friend requests get error:", err);
   });
-}            
+}             
           
 
     function subscribeToGlobalNotifications() {
