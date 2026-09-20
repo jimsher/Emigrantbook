@@ -3076,15 +3076,18 @@ auth.onAuthStateChanged(function(user) {
     function subscribeToMessagesRealtime() {
   if (!currentUser) return;
 
-  // ვწმენდთ ძველ ლაივ მოსმენებს, რომ არ გაირეპლიკოს
   messengerUnsubscribeGroup.forEach(function(unsub) {
     if (typeof unsub === 'function') unsub();
   });
   messengerUnsubscribeGroup = [];
 
-  // მეგობრების სიას ვიღებთ ქეშირებულად ან ერთხელ
-  getMyFriendIds(function(friendIdsSet) {
-    var friendIds = Array.from(friendIdsSet);
+  Promise.all([
+    db.collection('friend_requests').where('sender_id', '==', currentUser.uid).where('status', '==', 'accepted').get(),
+    db.collection('friend_requests').where('receiver_id', '==', currentUser.uid).where('status', '==', 'accepted').get()
+  ]).then(function(results) {
+    let friendIds = [];
+    results[0].forEach(function(docSnap) { friendIds.push(docSnap.data().receiver_id); });
+    results[1].forEach(function(docSnap) { friendIds.push(docSnap.data().sender_id); });
 
     if (friendIds.length === 0) {
       var badge = document.getElementById('messenger-badge');
@@ -3095,18 +3098,16 @@ auth.onAuthStateChanged(function(user) {
     let unreadChatsMap = {};
     let processed = 0;
 
-    // ვზღუდავთ ერთდროულ ბაზის დარტყმებს, რომ ბრაუზერი და ფაირბეისი არ გაიჭედოს
     friendIds.forEach(function(fId) {
       let chatId = currentUser.uid < fId ? currentUser.uid + '_' + fId : fId + '_' + currentUser.uid;
       
-      // ვიყენებთ ლიმიტს და ვკითხულობთ ოპტიმიზებულად
-      var unsubMsg = db.collection('chats').doc(chatId).collection('messages')
+      db.collection('chats').doc(chatId).collection('messages')
         .where('read', '==', false)
-        .limit(5)
-        .onSnapshot(function(msgsSnap) {
+        .limit(1)
+        .get()
+        .then(function(msgsSnap) {
           processed++;
           let unreadCountFromFriend = 0;
-          
           msgsSnap.forEach(function(msgDoc) {
             if (msgDoc.data().senderId !== currentUser.uid) {
               unreadCountFromFriend++;
@@ -3119,24 +3120,26 @@ auth.onAuthStateChanged(function(user) {
             delete unreadChatsMap[fId];
           }
 
-          let totalUnreadChats = Object.keys(unreadChatsMap).length;
-          var badge = document.getElementById('messenger-badge');
-          if (badge) {
-            if (totalUnreadChats > 0) {
-              badge.innerText = totalUnreadChats;
-              badge.style.display = 'flex';
-            } else {
-              badge.style.display = 'none';
+          if (processed === friendIds.length) {
+            let totalUnreadChats = Object.keys(unreadChatsMap).length;
+            var badge = document.getElementById('messenger-badge');
+            if (badge) {
+              if (totalUnreadChats > 0) {
+                badge.innerText = totalUnreadChats;
+                badge.style.display = 'flex';
+              } else {
+                badge.style.display = 'none';
+              }
             }
           }
-        }, function(err) {
-          console.error("Messages snapshot error:", err);
+        }).catch(function(err) {
+          console.error("Messages get error:", err);
         });
-
-      messengerUnsubscribeGroup.push(unsubMsg);
     });
+  }).catch(function(err) {
+    console.error("Friend requests get error:", err);
   });
-}             
+}            
           
 
     function subscribeToGlobalNotifications() {
@@ -5539,7 +5542,7 @@ function smartRankPosts(postsList) {
 }
 
 // ლოად პოსტი აქ იწყება
- var lastVisiblePostDoc = null;
+var lastVisiblePostDoc = null;
 var isLoadingMorePosts = false;
 var hasMorePosts = true;
 var isFeedScrollAttached = false;
@@ -5630,11 +5633,7 @@ function loadPosts(isNextPage) {
 
             if (shouldShow) {
               postsWall.innerHTML += createPostCardHtml(postData);
-              
-              // აქ აღარ ვატყუებთ ბაზას ცალკე მოთხოვნებით — კომენტარების რაოდენობა მოაქვს პოსტის მონაცემებიდანვე
-              if (typeof renderCommentsCountOnly === 'function') {
-                renderCommentsCountOnly(postData);
-              }
+              renderCommentsCountOnly(postData);
               
               if (postData.media_type === 'video') {
                 startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
@@ -5668,7 +5667,7 @@ function loadPosts(isNextPage) {
       console.error("Error fetching friends:", err);
     });
   });
-}         
+}
 // და აქ მთავრდება 
 // და აქ მთავრდება
     
@@ -5803,8 +5802,7 @@ async function startInlineAgoraStream(liveId) {
       });
     }
 
-               
-  function startFloatingAvatarsAnimation(postId, containerId) {
+    function startFloatingAvatarsAnimation(postId, containerId) {
       var container = document.getElementById(containerId);
       if (!container) return;
 
@@ -5854,7 +5852,49 @@ async function startInlineAgoraStream(liveId) {
         spawn();
         activeFloatingIntervals[postId] = setInterval(spawn, 3000);
       });
-    }  
+    }
+
+   function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
+  if (!urlsString) return "";
+  
+  if (mediaType === 'video') {
+    return `
+      <div class="video-container-rel">
+        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="none" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
+        <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
+      </div>
+    `;
+  }
+
+  var urls = urlsString.includes(",") ? urlsString.split(",").map(function(u){ return u.trim(); }) : [urlsString.trim()];
+
+  if (urls.length === 1) {
+    return '<img class="post-media" src="' + urls[0] + '" loading="lazy" decoding="async" alt="Media" onclick="openCollagePostGallery(\'' + postId + '\', 0)">';
+  }
+
+  var total = urls.length;
+  var showLimit = Math.min(total, 6);
+  var gridClass = "collage-" + showLimit;
+
+  var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
+  for (var i = 0; i < showLimit; i++) {
+    var url = urls[i];
+    var isLastCell = (i === showLimit - 1);
+    var moreCount = total - showLimit;
+
+    if (isLastCell && moreCount > 0) {
+      html += '<div class="collage-overlay" onclick="openCollagePostGallery(\'' + postId + '\', ' + i + ')">';
+      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
+      html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
+      html += '</div>';
+    } else {
+      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async" onclick="openCollagePostGallery(\'' + postId + '\', ' + i + ')">';
+    }
+  }
+  html += '</div></div>';
+  return html;
+}
+    
 
 function openCollagePostGallery(postId, clickedIndex) {
   db.collection('posts').doc(postId).get().then(function(docSnap) {
@@ -7428,25 +7468,19 @@ function getMyFriendIds(callback) {
 }
 
 // 4. მეორე მომხმარებლის მეგობრების სია
-// 1. მეგობრების სიის ქეშირება (ინახავს სესიის განმავლობაში, რომ ბაზას მეორედ არ მიაკითხოს)
 var cachedTargetFriendsMap = {};
-
 function getTargetUserFriendIds(targetUserId, callback) {
-  // თუ ეს მომხმარებელი უკვე ნანახია ამ სესიაში, ბაზაში საერთოდ არ ვდივართ (0 Read!)
   if (cachedTargetFriendsMap[targetUserId]) {
     callback(cachedTargetFriendsMap[targetUserId]);
     return;
   }
-
   Promise.all([
     db.collection('friend_requests').where('sender_id', '==', targetUserId).where('status', '==', 'accepted').get(),
     db.collection('friend_requests').where('receiver_id', '==', targetUserId).where('status', '==', 'accepted').get()
   ]).then(function(results) {
     var friends = [];
-    results[0].forEach(function(d) { friends.push(d.data().receiver_id); });
-    results[1].forEach(function(d) { friends.push(d.data().sender_id); });
-    
-    // ვინახავთ მეხსიერებაში
+    results[0].forEach(d => friends.push(d.data().receiver_id));
+    results[1].forEach(d => friends.push(d.data().sender_id));
     cachedTargetFriendsMap[targetUserId] = friends;
     callback(friends);
   }).catch(function(err) {
@@ -7454,7 +7488,6 @@ function getTargetUserFriendIds(targetUserId, callback) {
     callback([]);
   });
 }
-
 
 // 5. საერთო მეგობრების რეალური გამოთვლა და ავატარების გამოჩენა
 function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
@@ -7466,7 +7499,7 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
   var mutualFriendsWord = t.mutualFriends || "საერთო მეგობარი";
 
   getMyFriendIds(function(myFriendsSet) {
-    if (!myFriendsSet || myFriendsSet.size === 0) {
+    if (myFriendsSet.size === 0) {
       if (timeAgoStr) {
         container.innerHTML = `<span class="friend-req-time">${timeAgoStr}</span>`;
       } else {
