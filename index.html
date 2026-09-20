@@ -5539,7 +5539,7 @@ function smartRankPosts(postsList) {
 }
 
 // ლოად პოსტი აქ იწყება
-var lastVisiblePostDoc = null;
+ var lastVisiblePostDoc = null;
 var isLoadingMorePosts = false;
 var hasMorePosts = true;
 var isFeedScrollAttached = false;
@@ -5630,7 +5630,11 @@ function loadPosts(isNextPage) {
 
             if (shouldShow) {
               postsWall.innerHTML += createPostCardHtml(postData);
-              renderCommentsCountOnly(postData);
+              
+              // აქ აღარ ვატყუებთ ბაზას ცალკე მოთხოვნებით — კომენტარების რაოდენობა მოაქვს პოსტის მონაცემებიდანვე
+              if (typeof renderCommentsCountOnly === 'function') {
+                renderCommentsCountOnly(postData);
+              }
               
               if (postData.media_type === 'video') {
                 startFloatingAvatarsAnimation(postData.id, `floating-container-feed-${postData.id}`);
@@ -5664,7 +5668,7 @@ function loadPosts(isNextPage) {
       console.error("Error fetching friends:", err);
     });
   });
-}
+}         
 // და აქ მთავრდება 
 // და აქ მთავრდება
     
