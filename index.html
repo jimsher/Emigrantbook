@@ -5803,97 +5803,77 @@ async function startInlineAgoraStream(liveId) {
       });
     }
 
-    function startFloatingAvatarsAnimation(postId, containerId) {
-      var container = document.getElementById(containerId);
-      if (!container) return;
+               
+var cachedPostLikes = {}; // ლოკალური ქეში ლაიქებისთვის
 
-      if (activeFloatingIntervals[postId]) {
-        clearInterval(activeFloatingIntervals[postId]);
-        delete activeFloatingIntervals[postId];
-        container.innerHTML = "";
-      }
+function startFloatingAvatarsAnimation(postId, containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
 
-      db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
-        if (snapshot.empty) return;
+  if (activeFloatingIntervals[postId]) {
+    clearInterval(activeFloatingIntervals[postId]);
+    delete activeFloatingIntervals[postId];
+    container.innerHTML = "";
+  }
 
-        var likersList = [];
-        snapshot.forEach(function(doc) {
-          likersList.push(Object.assign({ id: doc.id }, doc.data()));
-        });
-
-        if (likersList.length === 0) return;
-        var index = 0;
-        
-        function spawn() {
-          var targetElem = document.getElementById(containerId);
-          if (!targetElem) {
-            if (activeFloatingIntervals[postId]) {
-              clearInterval(activeFloatingIntervals[postId]);
-              delete activeFloatingIntervals[postId];
-            }
-            return;
-          }
-          
-          var person = likersList[index];
-          var name = person.full_name || "User";
-          var isOnline = isUserOnline(person);
-          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-          var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
-          
-          var bubble = document.createElement('div');
-          bubble.className = "tiktok-floating-avatar-item";
-          bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
-          
-          targetElem.appendChild(bubble);
-          setTimeout(function() { if (bubble && bubble.parentNode) bubble.remove(); }, 6000);
-          index = (index + 1) % likersList.length;
+  // დამხმარე ფუნქცია, რომელიც რანავს ანიმაციას
+  var runAnimation = function(likersList) {
+    if (!likersList || likersList.length === 0) return;
+    var index = 0;
+    
+    function spawn() {
+      var targetElem = document.getElementById(containerId);
+      if (!targetElem) {
+        if (activeFloatingIntervals[postId]) {
+          clearInterval(activeFloatingIntervals[postId]);
+          delete activeFloatingIntervals[postId];
         }
-
-        container.innerHTML = "";
-        spawn();
-        activeFloatingIntervals[postId] = setInterval(spawn, 3000);
-      });
+        return;
+      }
+      
+      var person = likersList[index];
+      var name = person.full_name || "User";
+      var isOnline = isUserOnline(person);
+      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+      var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
+      
+      var bubble = document.createElement('div');
+      bubble.className = "tiktok-floating-avatar-item";
+      bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
+      
+      targetElem.appendChild(bubble);
+      setTimeout(function() { if (bubble && bubble.parentNode) bubble.remove(); }, 6000);
+      index = (index + 1) % likersList.length;
     }
 
-   function buildCollageHtml(urlsString, postId, likesCount, mediaType) {
-  if (!urlsString) return "";
-  
-  if (mediaType === 'video') {
-    return `
-      <div class="video-container-rel">
-        <video class="post-media" src="${urlsString}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" preload="none" playsinline webkit-playsinline loop onclick="toggleVideoPlay(this)"></video>
-        <div class="tiktok-floating-avatars-container" id="floating-container-feed-${postId}"></div>
-      </div>
-    `;
+    container.innerHTML = "";
+    spawn();
+    activeFloatingIntervals[postId] = setInterval(spawn, 3000);
+  };
+
+  // 1. თუ უკვე ქეშირებულია მეხსიერებაში, ბაზაში საერთოდ არ ვდივართ (0 Read!)
+  if (cachedPostLikes[postId]) {
+    runAnimation(cachedPostLikes[postId]);
+    return;
   }
 
-  var urls = urlsString.includes(",") ? urlsString.split(",").map(function(u){ return u.trim(); }) : [urlsString.trim()];
+  // 2. თუ არა, მოაქვს ბაზიდან მხოლოდ ერთხელ
+  db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
+    if (snapshot.empty) return;
 
-  if (urls.length === 1) {
-    return '<img class="post-media" src="' + urls[0] + '" loading="lazy" decoding="async" alt="Media" onclick="openCollagePostGallery(\'' + postId + '\', 0)">';
-  }
+    var likersList = [];
+    snapshot.forEach(function(doc) {
+      likersList.push(Object.assign({ id: doc.id }, doc.data()));
+    });
 
-  var total = urls.length;
-  var showLimit = Math.min(total, 6);
-  var gridClass = "collage-" + showLimit;
+    if (likersList.length === 0) return;
 
-  var html = '<div class="collage-container"><div class="collage-grid ' + gridClass + '">';
-  for (var i = 0; i < showLimit; i++) {
-    var url = urls[i];
-    var isLastCell = (i === showLimit - 1);
-    var moreCount = total - showLimit;
-
-    if (isLastCell && moreCount > 0) {
-      html += '<div class="collage-overlay" onclick="openCollagePostGallery(\'' + postId + '\', ' + i + ')">';
-      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async">';
-      html += '<div class="collage-overlay-text">+' + (moreCount + 1) + '</div>';
-      html += '</div>';
-    } else {
-      html += '<img class="collage-item" src="' + url + '" loading="lazy" decoding="async" onclick="openCollagePostGallery(\'' + postId + '\', ' + i + ')">';
-    }
-  }
-  html += '</div></div>';
-  return html;
+    // ვინახავთ ქეშში
+    cachedPostLikes[postId] = likersList;
+    runAnimation(likersList);
+  }).catch(function(err) {
+    console.error("Error fetching post likes for animation:", err);
+  });
 }
     
 
