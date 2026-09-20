@@ -5804,78 +5804,57 @@ async function startInlineAgoraStream(liveId) {
     }
 
                
-var cachedPostLikes = {}; // ლოკალური ქეში ლაიქებისთვის
+  function startFloatingAvatarsAnimation(postId, containerId) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
 
-function startFloatingAvatarsAnimation(postId, containerId) {
-  var container = document.getElementById(containerId);
-  if (!container) return;
-
-  if (activeFloatingIntervals[postId]) {
-    clearInterval(activeFloatingIntervals[postId]);
-    delete activeFloatingIntervals[postId];
-    container.innerHTML = "";
-  }
-
-  // დამხმარე ფუნქცია, რომელიც რანავს ანიმაციას
-  var runAnimation = function(likersList) {
-    if (!likersList || likersList.length === 0) return;
-    var index = 0;
-    
-    function spawn() {
-      var targetElem = document.getElementById(containerId);
-      if (!targetElem) {
-        if (activeFloatingIntervals[postId]) {
-          clearInterval(activeFloatingIntervals[postId]);
-          delete activeFloatingIntervals[postId];
-        }
-        return;
+      if (activeFloatingIntervals[postId]) {
+        clearInterval(activeFloatingIntervals[postId]);
+        delete activeFloatingIntervals[postId];
+        container.innerHTML = "";
       }
-      
-      var person = likersList[index];
-      var name = person.full_name || "User";
-      var isOnline = isUserOnline(person);
-      var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
-      var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
-      
-      var bubble = document.createElement('div');
-      bubble.className = "tiktok-floating-avatar-item";
-      bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
-      
-      targetElem.appendChild(bubble);
-      setTimeout(function() { if (bubble && bubble.parentNode) bubble.remove(); }, 6000);
-      index = (index + 1) % likersList.length;
-    }
 
-    container.innerHTML = "";
-    spawn();
-    activeFloatingIntervals[postId] = setInterval(spawn, 3000);
-  };
+      db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
+        if (snapshot.empty) return;
 
-  // 1. თუ უკვე ქეშირებულია მეხსიერებაში, ბაზაში საერთოდ არ ვდივართ (0 Read!)
-  if (cachedPostLikes[postId]) {
-    runAnimation(cachedPostLikes[postId]);
-    return;
-  }
+        var likersList = [];
+        snapshot.forEach(function(doc) {
+          likersList.push(Object.assign({ id: doc.id }, doc.data()));
+        });
 
-  // 2. თუ არა, მოაქვს ბაზიდან მხოლოდ ერთხელ
-  db.collection('posts').doc(postId).collection('post_likes').limit(10).get().then(function(snapshot) {
-    if (snapshot.empty) return;
+        if (likersList.length === 0) return;
+        var index = 0;
+        
+        function spawn() {
+          var targetElem = document.getElementById(containerId);
+          if (!targetElem) {
+            if (activeFloatingIntervals[postId]) {
+              clearInterval(activeFloatingIntervals[postId]);
+              delete activeFloatingIntervals[postId];
+            }
+            return;
+          }
+          
+          var person = likersList[index];
+          var name = person.full_name || "User";
+          var isOnline = isUserOnline(person);
+          var dotHtml = isOnline ? `<div class="online-status-dot-sm"></div>` : ``;
+          var avatarContent = person.avatar_url ? `<div class="avatar-has-online"><img src="${person.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">${dotHtml}</div>` : `<div class="avatar-has-online" style="display:flex; align-items:center; justify-content:center;">${name.charAt(0).toUpperCase()}${dotHtml}</div>`;
+          
+          var bubble = document.createElement('div');
+          bubble.className = "tiktok-floating-avatar-item";
+          bubble.innerHTML = `${avatarContent} <div class="tiktok-floating-avatar-heart">❤️</div>`;
+          
+          targetElem.appendChild(bubble);
+          setTimeout(function() { if (bubble && bubble.parentNode) bubble.remove(); }, 6000);
+          index = (index + 1) % likersList.length;
+        }
 
-    var likersList = [];
-    snapshot.forEach(function(doc) {
-      likersList.push(Object.assign({ id: doc.id }, doc.data()));
-    });
-
-    if (likersList.length === 0) return;
-
-    // ვინახავთ ქეშში
-    cachedPostLikes[postId] = likersList;
-    runAnimation(likersList);
-  }).catch(function(err) {
-    console.error("Error fetching post likes for animation:", err);
-  });
-}
-    
+        container.innerHTML = "";
+        spawn();
+        activeFloatingIntervals[postId] = setInterval(spawn, 3000);
+      });
+    }  
 
 function openCollagePostGallery(postId, clickedIndex) {
   db.collection('posts').doc(postId).get().then(function(docSnap) {
