@@ -7468,19 +7468,25 @@ function getMyFriendIds(callback) {
 }
 
 // 4. მეორე მომხმარებლის მეგობრების სია
+// 1. მეგობრების სიის ქეშირება (ინახავს სესიის განმავლობაში, რომ ბაზას მეორედ არ მიაკითხოს)
 var cachedTargetFriendsMap = {};
+
 function getTargetUserFriendIds(targetUserId, callback) {
+  // თუ ეს მომხმარებელი უკვე ნანახია ამ სესიაში, ბაზაში საერთოდ არ ვდივართ (0 Read!)
   if (cachedTargetFriendsMap[targetUserId]) {
     callback(cachedTargetFriendsMap[targetUserId]);
     return;
   }
+
   Promise.all([
     db.collection('friend_requests').where('sender_id', '==', targetUserId).where('status', '==', 'accepted').get(),
     db.collection('friend_requests').where('receiver_id', '==', targetUserId).where('status', '==', 'accepted').get()
   ]).then(function(results) {
     var friends = [];
-    results[0].forEach(d => friends.push(d.data().receiver_id));
-    results[1].forEach(d => friends.push(d.data().sender_id));
+    results[0].forEach(function(d) { friends.push(d.data().receiver_id); });
+    results[1].forEach(function(d) { friends.push(d.data().sender_id); });
+    
+    // ვინახავთ მეხსიერებაში
     cachedTargetFriendsMap[targetUserId] = friends;
     callback(friends);
   }).catch(function(err) {
@@ -7499,7 +7505,7 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
   var mutualFriendsWord = t.mutualFriends || "საერთო მეგობარი";
 
   getMyFriendIds(function(myFriendsSet) {
-    if (myFriendsSet.size === 0) {
+    if (!myFriendsSet || myFriendsSet.size === 0) {
       if (timeAgoStr) {
         container.innerHTML = `<span class="friend-req-time">${timeAgoStr}</span>`;
       } else {
