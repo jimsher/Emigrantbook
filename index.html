@@ -7499,7 +7499,7 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
   var mutualFriendsWord = t.mutualFriends || "საერთო მეგობარი";
 
   getMyFriendIds(function(myFriendsSet) {
-    if (myFriendsSet.size === 0) {
+    if (!myFriendsSet || myFriendsSet.size === 0) {
       if (timeAgoStr) {
         container.innerHTML = `<span class="friend-req-time">${timeAgoStr}</span>`;
       } else {
@@ -7525,7 +7525,11 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
       }
 
       var previewIds = mutualIds.slice(0, 2);
-      fetchMultipleProfilesCached(previewIds, function() {
+      
+      // ვამოწმებთ უკვე გვაქვს თუ არა ეს 2 პროფილი ქეშში, რომ ბაზას ხელახლა არ დაარტყას
+      var allInCache = previewIds.every(function(pid) { return cachedProfiles[pid] && cachedProfiles[pid].full_name; });
+
+      var renderAvatars = function() {
         var avatarsHtml = '';
         previewIds.forEach(function(pid) {
           var p = cachedProfiles[pid] || {};
@@ -7542,7 +7546,13 @@ function loadMutualFriendsUI(targetUserId, containerId, timeAgoStr) {
           <div class="mutual-avatars-cluster">${avatarsHtml}</div>
           <span class="mutual-friends-text">${textLabel}</span>
         `;
-      });
+      };
+
+      if (allInCache) {
+        renderAvatars();
+      } else {
+        fetchMultipleProfilesCached(previewIds, renderAvatars);
+      }
     });
   });
 }
