@@ -49,7 +49,13 @@
       padding: 14px 16px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .back-btn {
@@ -72,18 +78,37 @@
     }
 
     .header-title-box h1 {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 800;
       color: #ffffff;
       line-height: 1.2;
     }
 
     .header-title-box p {
-      font-size: 11.5px;
+      font-size: 11px;
       color: #8a8f9d;
     }
 
-    /* მთავარი სტატისტიკის ბარათი (Hero Card) */
+    .sync-btn {
+      background: rgba(220, 174, 54, 0.12);
+      border: 1px solid rgba(220, 174, 54, 0.35);
+      color: #dcae36;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .sync-btn:active {
+      background: rgba(220, 174, 54, 0.25);
+    }
+
+    /* შემაჯამებელი ბარათი */
     .hero-summary-card {
       margin: 16px;
       padding: 20px;
@@ -120,7 +145,7 @@
       background: rgba(255, 255, 255, 0.1);
     }
 
-    /* საძიებო ზოლი */
+    /* ძებნის ველი */
     .search-box-container {
       padding: 0 16px 12px 16px;
     }
@@ -236,7 +261,6 @@
       background: linear-gradient(90deg, #dcae36, #ffd700);
     }
 
-    /* საწყისი ჩატვირთვის ინდიკატორი */
     .loading-box {
       text-align: center;
       padding: 40px;
@@ -250,11 +274,16 @@
   <div class="stats-wrapper">
     <!-- ზედა ჰედერი -->
     <div class="stats-header">
-      <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-      <div class="header-title-box">
-        <h1>ემიგრანტების გეოგრაფია</h1>
-        <p>რეგისტრირებული წევრები ქვეყნების მიხედვით</p>
+      <div class="header-left">
+        <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+        <div class="header-title-box">
+          <h1>ემიგრანტების გეოგრაფია</h1>
+          <p>რეგისტრირებული წევრები ქვეყნების მიხედვით</p>
+        </div>
       </div>
+      <button class="sync-btn" id="sync-data-btn" onclick="syncAllRealUsersFromDatabase()">
+        <span>🔄</span> <span>გადათვლა</span>
+      </button>
     </div>
 
     <!-- შემაჯამებელი ბარათი -->
@@ -277,7 +306,7 @@
 
     <!-- ქვეყნების სია -->
     <div class="countries-list" id="countries-target-list">
-      <div class="loading-box">იტვირთება სტატისტიკა...</div>
+      <div class="loading-box">იტვირთება რეალური სტატისტიკა...</div>
     </div>
   </div>
 
@@ -294,7 +323,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // დროშების რუკა საერთო ქვეყნებისთვის
+    // დროშების სრული რუკა (ქართული და ინგლისური სახელებით)
     const countryFlags = {
       "Georgia": "🇬🇪", "საქართველო": "🇬🇪",
       "Italy": "🇮🇹", "იტალია": "🇮🇹",
@@ -303,7 +332,7 @@
       "United States": "🇺🇸", "აშშ": "🇺🇸", "USA": "🇺🇸",
       "Spain": "🇪🇸", "ესპანეთი": "🇪🇸",
       "France": "🇫🇷", "საფრანგეთი": "🇫🇷",
-      "United Kingdom": "🇬🇧", "ინგლისი": "🇬🇧",
+      "United Kingdom": "🇬🇧", "ინგლისი": "🇬🇧", "დიდი ბრიტანეთი": "🇬🇧",
       "Turkey": "🇹🇷", "თურქეთი": "🇹🇷",
       "Poland": "🇵🇱", "პოლონეთი": "🇵🇱",
       "Cyprus": "🇨🇾", "კვიპროსი": "🇨🇾",
@@ -313,7 +342,12 @@
       "Netherlands": "🇳🇱", "ნიდერლანდები": "🇳🇱",
       "Canada": "🇨🇦", "კანადა": "🇨🇦",
       "Ukraine": "🇺🇦", "უკრაინა": "🇺🇦",
-      "Russia": "🇷🇺", "რუსეთი": "🇷🇺"
+      "Russia": "🇷🇺", "რუსეთი": "🇷🇺",
+      "Portugal": "🇵🇹", "პორტუგალია": "🇵🇹",
+      "Sweden": "🇸🇪", "შვედეთი": "🇸🇪",
+      "Switzerland": "🇨🇭", "შვეიცარია": "🇨🇭",
+      "Ireland": "🇮🇪", "ირლანდია": "🇮🇪",
+      "Czech Republic": "🇨🇿", "ჩეხეთი": "🇨🇿"
     };
 
     function getFlag(countryName) {
@@ -323,12 +357,12 @@
 
     let globalCountriesArray = [];
 
-    // ⚡ ოპტიმიზებული კითხვა: იკითხება მხოლოდ 1 დოკუმენტი (ზუსტად 1 READ)
+    // 1. ოპტიმიზებული კითხვა (ხარჯავს ზუსტად 1 Read-ს)
     function loadCountryStatsOptimized() {
       db.collection('system_stats').doc('countries').get().then(docSnap => {
         if (!docSnap.exists) {
-          // თუ დოკუმენტი ჯერ არ შექმნილა, ერთჯერადად ვაინიციალიზებთ
-          initializeStatsDocumentOnce();
+          // თუ დოკუმენტი ცარიელია, ავტომატურად გაუშვას რეალური სინქრონიზაცია
+          syncAllRealUsersFromDatabase();
           return;
         }
 
@@ -336,7 +370,6 @@
         const countriesMap = data.countries || {};
         let totalCount = data.total_users || 0;
 
-        // გარდაქმნა მასივად და დალაგება კლებადობით
         globalCountriesArray = Object.keys(countriesMap).map(cName => {
           return {
             name: cName,
@@ -344,9 +377,14 @@
           };
         }).sort((a, b) => b.count - a.count);
 
-        // თუ totalCount დოკუმენტში არ ეწერა, ჯამს ვითვლით
         if (!totalCount) {
           totalCount = globalCountriesArray.reduce((acc, curr) => acc + curr.count, 0);
+        }
+
+        // თუ მხოლოდ 1 წერია (ძველი სატესტო დოკუმენტი), ავტომატურად გადაითვალოს
+        if (totalCount <= 1 && globalCountriesArray.length <= 1) {
+          syncAllRealUsersFromDatabase();
+          return;
         }
 
         document.getElementById('total-users-val').innerText = totalCount;
@@ -359,12 +397,84 @@
       });
     }
 
+    // 2. რეალური გადათვლის ფუნქცია: შედის profiles-ში და ყველა რეალურ ადამიანს ითვლის
+    function syncAllRealUsersFromDatabase() {
+      const btn = document.getElementById('sync-data-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span>⏳</span> <span>ითვლის...</span>`;
+      }
+
+      document.getElementById('countries-target-list').innerHTML = `<div class="loading-box">მიმდინარეობს რეალური მომხმარებლების გადათვლა...</div>`;
+
+      db.collection('profiles').get().then(snap => {
+        let counts = {};
+        let total = 0;
+
+        snap.forEach(doc => {
+          let p = doc.data();
+          // იღებს ქვეყანას პროფილიდან ან IP-იდან
+          let c = p.country || p.real_ip_country || "საქართველო";
+          c = c.trim();
+          
+          if (c && c.length > 1) {
+            // სახელების ერთიან ფორმატში მოყვანა
+            if (c.toLowerCase() === "georgia") c = "საქართველო";
+            if (c.toLowerCase() === "italy") c = "იტალია";
+            if (c.toLowerCase() === "greece") c = "საბერძნეთი";
+            if (c.toLowerCase() === "germany") c = "გერმანია";
+            if (c.toLowerCase() === "spain") c = "ესპანეთი";
+
+            counts[c] = (counts[c] || 0) + 1;
+            total++;
+          }
+        });
+
+        // აახლებს აგრეგირებულ დოკუმენტს რეალური ციფრებით
+        return db.collection('system_stats').doc('countries').set({
+          total_users: total,
+          countries: counts,
+          updated_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>🔄</span> <span>გადათვლა</span>`;
+        }
+        // ხელახლა კითხვა უკვე სწორი ციფრებით
+        db.collection('system_stats').doc('countries').get().then(docSnap => {
+          const data = docSnap.data();
+          const countriesMap = data.countries || {};
+          const totalCount = data.total_users || 0;
+
+          globalCountriesArray = Object.keys(countriesMap).map(cName => {
+            return {
+              name: cName,
+              count: Number(countriesMap[cName]) || 0
+            };
+          }).sort((a, b) => b.count - a.count);
+
+          document.getElementById('total-users-val').innerText = totalCount;
+          document.getElementById('total-countries-val').innerText = globalCountriesArray.length;
+
+          renderCountriesUI(globalCountriesArray, totalCount);
+        });
+      }).catch(err => {
+        console.error("Sync error:", err);
+        alert("გადათვლის შეცდომა: " + err.message);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<span>🔄</span> <span>გადათვლა</span>`;
+        }
+      });
+    }
+
     function renderCountriesUI(list, totalCount) {
       const container = document.getElementById('countries-target-list');
       if (!container) return;
 
       if (list.length === 0) {
-        container.innerHTML = `<div class="loading-box">მონაცემები ჯერ არ არის.</div>`;
+        container.innerHTML = `<div class="loading-box">მონაცემები ვერ მოიძებნა.</div>`;
         return;
       }
 
@@ -387,7 +497,7 @@
               </div>
             </div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${Math.max(percentage, 3)}%;"></div>
+              <div class="progress-bar-fill" style="width: ${Math.max(percentage, 4)}%;"></div>
             </div>
           </div>
         `;
@@ -396,25 +506,11 @@
       container.innerHTML = html;
     }
 
-    // ძებნის ლოგიკა (მუშაობს კლიენტის მეხსიერებაში, ბაზაში მოთხოვნის გაგზავნის გარეშე)
     function filterCountriesList() {
       const query = document.getElementById('country-search').value.toLowerCase().trim();
       const filtered = globalCountriesArray.filter(c => c.name.toLowerCase().includes(query));
       const totalCount = Number(document.getElementById('total-users-val').innerText) || 1;
       renderCountriesUI(filtered, totalCount);
-    }
-
-    // პირველი ერთჯერადი შექმნა, თუ ბაზაში ჯერ არ არსებობს
-    function initializeStatsDocumentOnce() {
-      db.collection('system_stats').doc('countries').set({
-        total_users: 1,
-        countries: {
-          "Georgia": 1
-        },
-        updated_at: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        loadCountryStatsOptimized();
-      });
     }
 
     // გაშვება
