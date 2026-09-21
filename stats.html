@@ -36,7 +36,7 @@
       padding-bottom: 40px;
     }
 
-    /* სადა Facebook ჰედერი */
+    /* ჰედერი */
     .stats-header {
       position: sticky;
       top: 0;
@@ -103,7 +103,7 @@
       background: #d8dadf;
     }
 
-    /* შემაჯამებელი სადა ბლოკი */
+    /* შემაჯამებელი სადა ბარათი */
     .hero-summary-card {
       margin: 12px 16px;
       padding: 14px 16px;
@@ -136,7 +136,7 @@
       background: #dadde1;
     }
 
-    /* საძიებო ველი */
+    /* ძებნის ველი */
     .search-box-container {
       padding: 0 16px 10px 16px;
     }
@@ -183,7 +183,7 @@
     .country-info-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .country-flag {
@@ -288,45 +288,57 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 🌍 ჭკვიანი დეტექტორი: ამოიცნობს ნებისმიერი ფორმით ჩაწერილ ქვეყანას და ანიჭებს რეალურ დროშას
-    function detectCountryAndFlag(rawInput) {
-      if (!rawInput) return { name: "საქართველო", flag: "🇬🇪" };
-      const str = String(rawInput).toLowerCase().trim();
+    // 🌍 ქვეყნების სრული ბაზა რეალური დროშებით (მრავალენოვანი ამოცნობა)
+    const COUNTRIES_DB = [
+      { name: "საქართველო", flag: "🇬🇪", keys: ["georgia", "საქართველო", "грузия", "ge", "tbilisi", "kutaisi", "batumi", "rustavi"] },
+      { name: "უკრაინა", flag: "🇺🇦", keys: ["ukraine", "უკრაინა", "украина", "ua", "kyiv", "kiev", "odessa", "lviv", "kharkiv"] },
+      { name: "იტალია", flag: "🇮🇹", keys: ["italy", "იტალია", "италия", "it", "italia", "rome", "roma", "milan", "milano", "bari", "naples", "napoli", "florence", "firenze"] },
+      { name: "საბერძნეთი", flag: "🇬🇷", keys: ["greece", "საბერძნეთი", "греция", "gr", "el", "hellas", "athens", "ათენი", "thessaloniki", "სალონიკი"] },
+      { name: "გერმანია", flag: "🇩🇪", keys: ["germany", "გერმანია", "германия", "de", "deutschland", "berlin", "munich", "münchen", "frankfurt", "hamburg", "köln", "cologne"] },
+      { name: "აშშ", flag: "🇺🇸", keys: ["united states", "აშშ", "ამერიკა", "сша", "usa", "us", "america", "new york", "california", "florida", "los angeles", "chicago"] },
+      { name: "ესპანეთი", flag: "🇪🇸", keys: ["spain", "ესპანეთი", "испания", "es", "españa", "madrid", "barcelona", "valencia", "sevilla"] },
+      { name: "საფრანგეთი", flag: "🇫🇷", keys: ["france", "საფრანგეთი", "франция", "fr", "paris", "marseille", "lyon", "nice"] },
+      { name: "დიდი ბრიტანეთი", flag: "🇬🇧", keys: ["united kingdom", "დიდი ბრიტანეთი", "ინგლისი", "великобритания", "англия", "uk", "gb", "england", "london", "manchester"] },
+      { name: "პოლონეთი", flag: "🇵🇱", keys: ["poland", "პოლონეთი", "польша", "pl", "polska", "warsaw", "warszawa", "krakow", "kraków", "wroclaw"] },
+      { name: "თურქეთი", flag: "🇹🇷", keys: ["turkey", "თურქეთი", "турция", "tr", "türkiye", "istanbul", "ankara", "antalya", "trabzon"] },
+      { name: "კვიპროსი", flag: "🇨🇾", keys: ["cyprus", "კვიპროსი", "кипр", "cy", "nicosia", "limassol", "larnaca", "paphos"] },
+      { name: "ისრაელი", flag: "🇮🇱", keys: ["israel", "ისრაელი", "израиль", "il", "tel aviv", "jerusalem", "haifa"] },
+      { name: "ავსტრია", flag: "🇦🇹", keys: ["austria", "ავსტრია", "австрия", "at", "österreich", "vienna", "wien", "graz", "salzburg"] },
+      { name: "ბელგია", flag: "🇧🇪", keys: ["belgium", "ბელგია", "бельгия", "be", "belgique", "brussels", "bruxelles", "antwerp"] },
+      { name: "ნიდერლანდები", flag: "🇳🇱", keys: ["netherlands", "ნიდერლანდები", "ჰოლანდია", "нидерланды", "голландия", "nl", "holland", "amsterdam", "rotterdam", "hague"] },
+      { name: "კანადა", flag: "🇨🇦", keys: ["canada", "კანადა", "канада", "ca", "toronto", "montreal", "vancouver", "calgary", "ottawa"] },
+      { name: "რუსეთი", flag: "🇷🇺", keys: ["russia", "რუსეთი", "россия", "ru", "moscow", "москва", "saint petersburg", "петербург"] },
+      { name: "პორტუგალია", flag: "🇵🇹", keys: ["portugal", "პორტუგალია", "португалия", "pt", "lisbon", "lisboa", "porto"] },
+      { name: "შვედეთი", flag: "🇸🇪", keys: ["sweden", "შვედეთი", "швеция", "se", "sverige", "stockholm", "gothenburg"] },
+      { name: "შვეიცარია", flag: "🇨🇭", keys: ["switzerland", "შვეიცარია", "შვეიცარი", "швейцария", "ch", "schweiz", "suisse", "zurich", "zürich", "geneva"] },
+      { name: "ირლანდია", flag: "🇮🇪", keys: ["ireland", "ირლანდია", "ирландия", "ie", "dublin"] },
+      { name: "ჩეხეთი", flag: "🇨🇿", keys: ["czech republic", "czechia", "ჩეხეთი", "чехия", "cz", "prague", "praha"] },
+      { name: "აზერბაიჯანი", flag: "🇦🇿", keys: ["azerbaijan", "აზერბაიჯანი", "азербайджан", "az", "baku"] },
+      { name: "სომხეთი", flag: "🇦🇲", keys: ["armenia", "სომხეთი", "არმენია", "армения", "am", "yerevan"] },
+      { name: "უნგრეთი", flag: "🇭🇺", keys: ["hungary", "უნგრეთი", "венгрия", "hu", "budapest"] },
+      { name: "ნორვეგია", flag: "🇳🇴", keys: ["norway", "ნორვეგია", "норвегия", "no", "norge", "oslo"] },
+      { name: "დანია", flag: "🇩🇰", keys: ["denmark", "დანია", "дания", "dk", "danmark", "copenhagen"] },
+      { name: "ფინეთი", flag: "🇫🇮", keys: ["finland", "ფინეთი", "финляндия", "fi", "suomi", "helsinki"] },
+      { name: "ბულგარეთი", flag: "🇧🇬", keys: ["bulgaria", "ბულგარეთი", "болгария", "bg", "sofia"] },
+      { name: "რუმინეთი", flag: "🇷🇴", keys: ["romania", "რუმინეთი", "румыния", "ro", "bucharest"] },
+      { name: "ბელარუსი", flag: "🇧🇾", keys: ["belarus", "ბელარუსი", "беларусь", "белоруссия", "by", "minsk"] },
+      { name: "ყაზახეთი", flag: "🇰🇿", keys: ["kazakhstan", "ყაზახეთი", "казахстан", "kz", "astana", "almaty"] },
+      { name: "მოლდოვა", flag: "🇲🇩", keys: ["moldova", "მოლდოვა", "молдова", "молдавия", "md", "chisinau"] }
+    ];
 
-      if (str.includes("georg") || str.includes("საქართველ") || str.includes("tbilisi") || str.includes("თბილის") || str.includes("ქუთაის") || str.includes("ბათუმ")) return { name: "საქართველო", flag: "🇬🇪" };
-      if (str.includes("ital") || str.includes("იტალი") || str.includes("roma") || str.includes("rome") || str.includes("milan") || str.includes("bari") || str.includes("napol") || str.includes("firenze")) return { name: "იტალია", flag: "🇮🇹" };
-      if (str.includes("gree") || str.includes("საბერძნ") || str.includes("athen") || str.includes("ათენ") || str.includes("thessaloniki") || str.includes("hellas")) return { name: "საბერძნეთი", flag: "🇬🇷" };
-      if (str.includes("germ") || str.includes("გერმანი") || str.includes("deutsch") || str.includes("berlin") || str.includes("munich") || str.includes("frankfurt")) return { name: "გერმანია", flag: "🇩🇪" };
-      if (str.includes("unit") || str.includes("states") || str.includes("აშშ") || str.includes("ამერიკ") || str.includes("usa") || str.includes("new york") || str.includes("california")) return { name: "აშშ", flag: "🇺🇸" };
-      if (str.includes("spain") || str.includes("ესპან") || str.includes("españ") || str.includes("madrid") || str.includes("barcelona")) return { name: "ესპანეთი", flag: "🇪🇸" };
-      if (str.includes("franc") || str.includes("საფრანგ") || str.includes("paris") || str.includes("პარიზ")) return { name: "საფრანგეთი", flag: "🇫🇷" };
-      if (str.includes("kingd") || str.includes("ბრიტან") || str.includes("ინგლის") || str.includes("england") || str.includes("london") || str.includes("ლონდონ")) return { name: "დიდი ბრიტანეთი", flag: "🇬🇧" };
-      if (str.includes("turk") || str.includes("თურქ") || str.includes("türk") || str.includes("istanbul") || str.includes("სტამბოლ")) return { name: "თურქეთი", flag: "🇹🇷" };
-      if (str.includes("pol") || str.includes("პოლონ") || str.includes("warsaw") || str.includes("ვარშავ")) return { name: "პოლონეთი", flag: "🇵🇱" };
-      if (str.includes("cyp") || str.includes("კვიპროს") || str.includes("nicosia") || str.includes("limassol")) return { name: "კვიპროსი", flag: "🇨🇾" };
-      if (str.includes("isra") || str.includes("ისრაელ") || str.includes("tel aviv") || str.includes("თელ-ავივ") || str.includes("jerusalem")) return { name: "ისრაელი", flag: "🇮🇱" };
-      if (str.includes("austr") || str.includes("ავსტრი") || str.includes("vienna") || str.includes("ვენა")) return { name: "ავსტრია", flag: "🇦🇹" };
-      if (str.includes("belg") || str.includes("ბელგი") || str.includes("brussel") || str.includes("ბრიუსელ")) return { name: "ბელგია", flag: "🇧🇪" };
-      if (str.includes("neth") || str.includes("holl") || str.includes("ნიდერლანდ") || str.includes("ჰოლანდი") || str.includes("amsterdam")) return { name: "ნიდერლანდები", flag: "🇳🇱" };
-      if (str.includes("canad") || str.includes("კანად") || str.includes("toronto")) return { name: "კანადა", flag: "🇨🇦" };
-      if (str.includes("ukrai") || str.includes("უკრაინ") || str.includes("kyiv") || str.includes("კიევ")) return { name: "უკრაინა", flag: "🇺🇦" };
-      if (str.includes("russ") || str.includes("რუსეთ") || str.includes("moscow") || str.includes("მოსკოვ")) return { name: "რუსეთი", flag: "🇷🇺" };
-      if (str.includes("portug") || str.includes("პორტუგალ") || str.includes("lisbon")) return { name: "პორტუგალია", flag: "🇵🇹" };
-      if (str.includes("swed") || str.includes("შვედ") || str.includes("stockholm")) return { name: "შვედეთი", flag: "🇸🇪" };
-      if (str.includes("switz") || str.includes("შვეიცარ") || str.includes("schweiz") || str.includes("zurich")) return { name: "შვეიცარია", flag: "🇨🇭" };
-      if (str.includes("irel") || str.includes("ირლანდ") || str.includes("dublin")) return { name: "ირლანდია", flag: "🇮🇪" };
-      if (str.includes("czech") || str.includes("ჩეხ") || str.includes("prague") || str.includes("პრაღა")) return { name: "ჩეხეთი", flag: "🇨🇿" };
-      if (str.includes("azer") || str.includes("აზერბაიჯ") || str.includes("baku")) return { name: "აზერბაიჯანი", flag: "🇦🇿" };
-      if (str.includes("armen") || str.includes("სომხ") || str.includes("yerevan")) return { name: "სომხეთი", flag: "🇦🇲" };
-      if (str.includes("hung") || str.includes("უნგრეთ") || str.includes("budapest")) return { name: "უნგრეთი", flag: "🇭🇺" };
-      if (str.includes("norw") || str.includes("ნორვეგ") || str.includes("oslo")) return { name: "ნორვეგია", flag: "🇳🇴" };
-      if (str.includes("denm") || str.includes("დანი") || str.includes("copenhagen")) return { name: "დანია", flag: "🇩🇰" };
-      if (str.includes("finl") || str.includes("ფინეთ") || str.includes("helsinki")) return { name: "ფინეთი", flag: "🇫🇮" };
-      if (str.includes("bulg") || str.includes("ბულგარ") || str.includes("sofia")) return { name: "ბულგარეთი", flag: "🇧🇬" };
-      if (str.includes("romani") || str.includes("რუმინეთ") || str.includes("bucharest")) return { name: "რუმინეთი", flag: "🇷🇴" };
+    function detectCountry(input) {
+      if (!input || typeof input !== 'string') return null;
+      const clean = input.toLowerCase().trim();
+      if (!clean) return null;
 
-      // თუ სრულიად უცხო სახელია, იტოვებს თავის სახელს და სვამს საქართველოს დროშას (ნაცვლად თეთრი დროშისა)
-      return { name: rawInput.trim(), flag: "🇬🇪" };
+      for (let item of COUNTRIES_DB) {
+        for (let key of item.keys) {
+          if (clean === key || clean.includes(key)) {
+            return item;
+          }
+        }
+      }
+      return null;
     }
 
     let globalCountriesArray = [];
@@ -344,10 +356,10 @@
         let totalCount = data.total_users || 0;
 
         globalCountriesArray = Object.keys(countriesMap).map(cName => {
-          const info = detectCountryAndFlag(cName);
+          const matched = detectCountry(cName);
           return {
-            name: info.name,
-            flag: info.flag,
+            name: matched ? matched.name : cName,
+            flag: matched ? matched.flag : "🌍",
             count: Number(countriesMap[cName]) || 0
           };
         }).sort((a, b) => b.count - a.count);
@@ -356,7 +368,7 @@
           totalCount = globalCountriesArray.reduce((acc, curr) => acc + curr.count, 0);
         }
 
-        // თუ ბაზაში მხოლოდ 1 მომხმარებელია, გადაითვალოს რეალური პროფილებიდან
+        // თუ ბაზაში მხოლოდ 1 მომხმარებელი ეწერა, თავიდან გადაითვალოს
         if (totalCount <= 1 && globalCountriesArray.length <= 1) {
           syncAllRealUsersFromDatabase();
           return;
@@ -388,10 +400,11 @@
 
         snap.forEach(doc => {
           let p = doc.data();
-          let rawCountry = p.country || p.real_ip_country || p.real_ip_address || "საქართველო";
-          let detected = detectCountryAndFlag(rawCountry);
+          let raw = p.country || p.real_ip_country || p.real_ip_address || "";
+          let detected = detectCountry(raw);
+          let finalName = detected ? detected.name : (raw.trim() || "საქართველო");
 
-          counts[detected.name] = (counts[detected.name] || 0) + 1;
+          counts[finalName] = (counts[finalName] || 0) + 1;
           total++;
         });
 
@@ -412,10 +425,10 @@
           const totalCount = data.total_users || 0;
 
           globalCountriesArray = Object.keys(countriesMap).map(cName => {
-            const info = detectCountryAndFlag(cName);
+            const matched = detectCountry(cName);
             return {
-              name: info.name,
-              flag: info.flag,
+              name: matched ? matched.name : cName,
+              flag: matched ? matched.flag : "🌍",
               count: Number(countriesMap[cName]) || 0
             };
           }).sort((a, b) => b.count - a.count);
