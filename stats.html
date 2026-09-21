@@ -36,7 +36,7 @@
       padding-bottom: 40px;
     }
 
-    /* ჰედერი */
+    /* სადა Facebook ჰედერი */
     .stats-header {
       position: sticky;
       top: 0;
@@ -288,31 +288,31 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 🌍 ქვეყნების სრული ბაზა რეალური დროშებით (მრავალენოვანი ამოცნობა)
+    // 🌍 ქვეყნების სრული ბაზა რეალური დროშებით
     const COUNTRIES_DB = [
-      { name: "საქართველო", flag: "🇬🇪", keys: ["georgia", "საქართველო", "грузия", "ge", "tbilisi", "kutaisi", "batumi", "rustavi"] },
-      { name: "უკრაინა", flag: "🇺🇦", keys: ["ukraine", "უკრაინა", "украина", "ua", "kyiv", "kiev", "odessa", "lviv", "kharkiv"] },
-      { name: "იტალია", flag: "🇮🇹", keys: ["italy", "იტალია", "италия", "it", "italia", "rome", "roma", "milan", "milano", "bari", "naples", "napoli", "florence", "firenze"] },
-      { name: "საბერძნეთი", flag: "🇬🇷", keys: ["greece", "საბერძნეთი", "греция", "gr", "el", "hellas", "athens", "ათენი", "thessaloniki", "სალონიკი"] },
-      { name: "გერმანია", flag: "🇩🇪", keys: ["germany", "გერმანია", "германия", "de", "deutschland", "berlin", "munich", "münchen", "frankfurt", "hamburg", "köln", "cologne"] },
+      { name: "საქართველო", flag: "🇬🇪", keys: ["georgia", "საქართველო", "грузия", "ge", "geo", "tbilisi", "kutaisi", "batumi", "rustavi"] },
+      { name: "უკრაინა", flag: "🇺🇦", keys: ["ukraine", "უკრაინა", "украина", "ua", "ukr", "kyiv", "kiev", "odessa", "lviv", "kharkiv"] },
+      { name: "იტალია", flag: "🇮🇹", keys: ["italy", "იტალია", "италия", "it", "ita", "italia", "rome", "roma", "milan", "milano", "bari", "naples", "napoli", "florence", "firenze"] },
+      { name: "საბერძნეთი", flag: "🇬🇷", keys: ["greece", "საბერძნეთი", "греция", "gr", "gre", "el", "hellas", "athens", "ათენი", "thessaloniki", "სალონიკი"] },
+      { name: "გერმანია", flag: "🇩🇪", keys: ["germany", "გერმანია", "германия", "de", "deu", "ger", "deutschland", "berlin", "munich", "münchen", "frankfurt", "hamburg", "köln", "cologne"] },
       { name: "აშშ", flag: "🇺🇸", keys: ["united states", "აშშ", "ამერიკა", "сша", "usa", "us", "america", "new york", "california", "florida", "los angeles", "chicago"] },
-      { name: "ესპანეთი", flag: "🇪🇸", keys: ["spain", "ესპანეთი", "испания", "es", "españa", "madrid", "barcelona", "valencia", "sevilla"] },
-      { name: "საფრანგეთი", flag: "🇫🇷", keys: ["france", "საფრანგეთი", "франция", "fr", "paris", "marseille", "lyon", "nice"] },
-      { name: "დიდი ბრიტანეთი", flag: "🇬🇧", keys: ["united kingdom", "დიდი ბრიტანეთი", "ინგლისი", "великобритания", "англия", "uk", "gb", "england", "london", "manchester"] },
-      { name: "პოლონეთი", flag: "🇵🇱", keys: ["poland", "პოლონეთი", "польша", "pl", "polska", "warsaw", "warszawa", "krakow", "kraków", "wroclaw"] },
-      { name: "თურქეთი", flag: "🇹🇷", keys: ["turkey", "თურქეთი", "турция", "tr", "türkiye", "istanbul", "ankara", "antalya", "trabzon"] },
-      { name: "კვიპროსი", flag: "🇨🇾", keys: ["cyprus", "კვიპროსი", "кипр", "cy", "nicosia", "limassol", "larnaca", "paphos"] },
-      { name: "ისრაელი", flag: "🇮🇱", keys: ["israel", "ისრაელი", "израиль", "il", "tel aviv", "jerusalem", "haifa"] },
-      { name: "ავსტრია", flag: "🇦🇹", keys: ["austria", "ავსტრია", "австрия", "at", "österreich", "vienna", "wien", "graz", "salzburg"] },
-      { name: "ბელგია", flag: "🇧🇪", keys: ["belgium", "ბელგია", "бельгия", "be", "belgique", "brussels", "bruxelles", "antwerp"] },
-      { name: "ნიდერლანდები", flag: "🇳🇱", keys: ["netherlands", "ნიდერლანდები", "ჰოლანდია", "нидерланды", "голландия", "nl", "holland", "amsterdam", "rotterdam", "hague"] },
-      { name: "კანადა", flag: "🇨🇦", keys: ["canada", "კანადა", "канада", "ca", "toronto", "montreal", "vancouver", "calgary", "ottawa"] },
-      { name: "რუსეთი", flag: "🇷🇺", keys: ["russia", "რუსეთი", "россия", "ru", "moscow", "москва", "saint petersburg", "петербург"] },
-      { name: "პორტუგალია", flag: "🇵🇹", keys: ["portugal", "პორტუგალია", "португалия", "pt", "lisbon", "lisboa", "porto"] },
-      { name: "შვედეთი", flag: "🇸🇪", keys: ["sweden", "შვედეთი", "швеция", "se", "sverige", "stockholm", "gothenburg"] },
-      { name: "შვეიცარია", flag: "🇨🇭", keys: ["switzerland", "შვეიცარია", "შვეიცარი", "швейцария", "ch", "schweiz", "suisse", "zurich", "zürich", "geneva"] },
-      { name: "ირლანდია", flag: "🇮🇪", keys: ["ireland", "ირლანდია", "ирландия", "ie", "dublin"] },
-      { name: "ჩეხეთი", flag: "🇨🇿", keys: ["czech republic", "czechia", "ჩეხეთი", "чехия", "cz", "prague", "praha"] },
+      { name: "ესპანეთი", flag: "🇪🇸", keys: ["spain", "ესპანეთი", "испания", "es", "esp", "spn", "españa", "madrid", "barcelona", "valencia", "sevilla"] },
+      { name: "საფრანგეთი", flag: "🇫🇷", keys: ["france", "საფრანგეთი", "франция", "fr", "fra", "paris", "marseille", "lyon", "nice"] },
+      { name: "დიდი ბრიტანეთი", flag: "🇬🇧", keys: ["united kingdom", "დიდი ბრიტანეთი", "ინგლისი", "великобритания", "англия", "uk", "gb", "gbr", "england", "london", "manchester"] },
+      { name: "პოლონეთი", flag: "🇵🇱", keys: ["poland", "პოლონეთი", "польша", "pl", "pol", "polska", "warsaw", "warszawa", "krakow", "kraków", "wroclaw"] },
+      { name: "თურქეთი", flag: "🇹🇷", keys: ["turkey", "თურქეთი", "турция", "tr", "tur", "türkiye", "istanbul", "ankara", "antalya", "trabzon"] },
+      { name: "კვიპროსი", flag: "🇨🇾", keys: ["cyprus", "კვიპროსი", "кипр", "cy", "cyp", "nicosia", "limassol", "larnaca", "paphos"] },
+      { name: "ისრაელი", flag: "🇮🇱", keys: ["israel", "ისრაელი", "израиль", "il", "isr", "tel aviv", "jerusalem", "haifa"] },
+      { name: "ავსტრია", flag: "🇦🇹", keys: ["austria", "ავსტრია", "австрия", "at", "aut", "österreich", "vienna", "wien", "graz", "salzburg"] },
+      { name: "ბელგია", flag: "🇧🇪", keys: ["belgium", "ბელგია", "бельгия", "be", "bel", "belgique", "brussels", "bruxelles", "antwerp"] },
+      { name: "ნიდერლანდები", flag: "🇳🇱", keys: ["netherlands", "ნიდერლანდები", "ჰოლანდია", "нидерланды", "голландия", "nl", "nld", "holland", "amsterdam", "rotterdam", "hague"] },
+      { name: "კანადა", flag: "🇨🇦", keys: ["canada", "კანადა", "канада", "ca", "can", "toronto", "montreal", "vancouver", "calgary", "ottawa"] },
+      { name: "რუსეთი", flag: "🇷🇺", keys: ["russia", "რუსეთი", "россия", "ru", "rus", "moscow", "москва", "saint petersburg", "петербург"] },
+      { name: "პორტუგალია", flag: "🇵🇹", keys: ["portugal", "პორტუგალია", "португалия", "pt", "prt", "lisbon", "lisboa", "porto"] },
+      { name: "შვედეთი", flag: "🇸🇪", keys: ["sweden", "შვედეთი", "швеция", "se", "swe", "sverige", "stockholm", "gothenburg"] },
+      { name: "შვეიცარია", flag: "🇨🇭", keys: ["switzerland", "შვეიცარია", "შვეიცარი", "швейцария", "ch", "che", "schweiz", "suisse", "zurich", "zürich", "geneva"] },
+      { name: "ირლანდია", flag: "🇮🇪", keys: ["ireland", "ირლანდია", "ирландия", "ie", "irl", "dublin"] },
+      { name: "ჩეხეთი", flag: "🇨🇿", keys: ["czech republic", "czechia", "ჩეხეთი", "чехия", "cz", "cze", "prague", "praha"] },
       { name: "აზერბაიჯანი", flag: "🇦🇿", keys: ["azerbaijan", "აზერბაიჯანი", "азербайджан", "az", "baku"] },
       { name: "სომხეთი", flag: "🇦🇲", keys: ["armenia", "სომხეთი", "არმენია", "армения", "am", "yerevan"] },
       { name: "უნგრეთი", flag: "🇭🇺", keys: ["hungary", "უნგრეთი", "венгрия", "hu", "budapest"] },
@@ -329,7 +329,7 @@
     function detectCountry(input) {
       if (!input || typeof input !== 'string') return null;
       const clean = input.toLowerCase().trim();
-      if (!clean) return null;
+      if (!clean || clean === '...' || clean.length < 2) return null;
 
       for (let item of COUNTRIES_DB) {
         for (let key of item.keys) {
@@ -343,7 +343,7 @@
 
     let globalCountriesArray = [];
 
-    // 1. ოპტიმიზებული კითხვა (ზუსტად 1 Read)
+    // 1. ოპტიმიზებული კითხვა (ზუსტად 1 Read) — სრული გაერთიანებით
     function loadCountryStatsOptimized() {
       db.collection('system_stats').doc('countries').get().then(docSnap => {
         if (!docSnap.exists) {
@@ -353,26 +353,32 @@
 
         const data = docSnap.data();
         const countriesMap = data.countries || {};
-        let totalCount = data.total_users || 0;
+        
+        // 🌟 აერთიანებს დუბლიკატებს (იტალია + Italy -> იტალია)
+        let mergedMap = {};
+        let flagMap = {};
 
-        globalCountriesArray = Object.keys(countriesMap).map(cName => {
-          const matched = detectCountry(cName);
+        Object.keys(countriesMap).forEach(cName => {
+          let count = Number(countriesMap[cName]) || 0;
+          if (count <= 0) return;
+
+          let matched = detectCountry(cName);
+          if (!matched) return; // წაშლის '...'-ს და უცხო ნაგავს
+
+          let finalName = matched.name;
+          mergedMap[finalName] = (mergedMap[finalName] || 0) + count;
+          flagMap[finalName] = matched.flag;
+        });
+
+        globalCountriesArray = Object.keys(mergedMap).map(name => {
           return {
-            name: matched ? matched.name : cName,
-            flag: matched ? matched.flag : "🌍",
-            count: Number(countriesMap[cName]) || 0
+            name: name,
+            flag: flagMap[name],
+            count: mergedMap[name]
           };
         }).sort((a, b) => b.count - a.count);
 
-        if (!totalCount) {
-          totalCount = globalCountriesArray.reduce((acc, curr) => acc + curr.count, 0);
-        }
-
-        // თუ ბაზაში მხოლოდ 1 მომხმარებელი ეწერა, თავიდან გადაითვალოს
-        if (totalCount <= 1 && globalCountriesArray.length <= 1) {
-          syncAllRealUsersFromDatabase();
-          return;
-        }
+        let totalCount = globalCountriesArray.reduce((acc, curr) => acc + curr.count, 0);
 
         document.getElementById('total-users-val').innerText = totalCount;
         document.getElementById('total-countries-val').innerText = globalCountriesArray.length;
@@ -384,7 +390,7 @@
       });
     }
 
-    // 2. რეალური გადათვლა Profiles კოლექციიდან
+    // 2. რეალური გადათვლა — ასუფთავებს ბაზას და აჯამებს ერთიანად
     function syncAllRealUsersFromDatabase() {
       const btn = document.getElementById('sync-data-btn');
       if (btn) {
@@ -395,22 +401,25 @@
       document.getElementById('countries-target-list').innerHTML = `<div class="loading-box">მიმდინარეობს რეალური მომხმარებლების გადათვლა...</div>`;
 
       db.collection('profiles').get().then(snap => {
-        let counts = {};
+        let mergedCounts = {};
         let total = 0;
 
         snap.forEach(doc => {
           let p = doc.data();
           let raw = p.country || p.real_ip_country || p.real_ip_address || "";
           let detected = detectCountry(raw);
-          let finalName = detected ? detected.name : (raw.trim() || "საქართველო");
 
-          counts[finalName] = (counts[finalName] || 0) + 1;
-          total++;
+          // თუ ქვეყანა ამოიცნო, აერთიანებს ერთიან სახელში
+          if (detected) {
+            mergedCounts[detected.name] = (mergedCounts[detected.name] || 0) + 1;
+            total++;
+          }
         });
 
+        // ბაზაში ინახება მხოლოდ სუფთა, გაერთიანებული სახელები
         return db.collection('system_stats').doc('countries').set({
           total_users: total,
-          countries: counts,
+          countries: mergedCounts,
           updated_at: firebase.firestore.FieldValue.serverTimestamp()
         });
       }).then(() => {
@@ -418,26 +427,7 @@
           btn.disabled = false;
           btn.innerHTML = `<span>🔄</span> <span>გადათვლა</span>`;
         }
-
-        db.collection('system_stats').doc('countries').get().then(docSnap => {
-          const data = docSnap.data();
-          const countriesMap = data.countries || {};
-          const totalCount = data.total_users || 0;
-
-          globalCountriesArray = Object.keys(countriesMap).map(cName => {
-            const matched = detectCountry(cName);
-            return {
-              name: matched ? matched.name : cName,
-              flag: matched ? matched.flag : "🌍",
-              count: Number(countriesMap[cName]) || 0
-            };
-          }).sort((a, b) => b.count - a.count);
-
-          document.getElementById('total-users-val').innerText = totalCount;
-          document.getElementById('total-countries-val').innerText = globalCountriesArray.length;
-
-          renderCountriesUI(globalCountriesArray, totalCount);
-        });
+        loadCountryStatsOptimized();
       }).catch(err => {
         console.error("Sync error:", err);
         alert("გადათვლის შეცდომა: " + err.message);
