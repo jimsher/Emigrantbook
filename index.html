@@ -2833,6 +2833,19 @@ auth.onAuthStateChanged(function(user) {
               last_seen: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true }).then(function() {
               localStorage.setItem('last_ip_check_date', todayStr);
+
+              // 🌍 ემიგრანტების სტატისტიკის განახლება (ზუსტად 1-ხელ ითვლის მომხმარებელს)
+              var isCounted = localStorage.getItem('eb_country_counted_' + user.uid);
+              if (!isCounted && realCountry) {
+                db.collection('system_stats').doc('countries').set({
+                  total_users: firebase.firestore.FieldValue.increment(1),
+                  [`countries.${realCountry}`]: firebase.firestore.FieldValue.increment(1)
+                }, { merge: true }).then(function() {
+                  localStorage.setItem('eb_country_counted_' + user.uid, 'true');
+                }).catch(function(err) {
+                  console.warn("Country stats update error:", err);
+                });
+              }
             });
           }
         })
