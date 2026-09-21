@@ -36,7 +36,7 @@
       padding-bottom: 40px;
     }
 
-    /* ჰედერი */
+    /* სადა Facebook ჰედერი */
     .stats-header {
       position: sticky;
       top: 0;
@@ -288,82 +288,62 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 🌐 IP-ის მიერ დაბრუნებული ქვეყნების მკაცრი რუკა
-    const IP_COUNTRIES_MAP = {
-      "georgia": { name: "საქართველო", flag: "🇬🇪" },
-      "ge": { name: "საქართველო", flag: "🇬🇪" },
-      "italy": { name: "იტალია", flag: "🇮🇹" },
-      "it": { name: "იტალია", flag: "🇮🇹" },
-      "greece": { name: "საბერძნეთი", flag: "🇬🇷" },
-      "gr": { name: "საბერძნეთი", flag: "🇬🇷" },
-      "germany": { name: "გერმანია", flag: "🇩🇪" },
-      "de": { name: "გერმანია", flag: "🇩🇪" },
-      "united states": { name: "აშშ", flag: "🇺🇸" },
-      "usa": { name: "აშშ", flag: "🇺🇸" },
-      "us": { name: "აშშ", flag: "🇺🇸" },
-      "spain": { name: "ესპანეთი", flag: "🇪🇸" },
-      "es": { name: "ესპანეთი", flag: "🇪🇸" },
-      "spn": { name: "ესპანეთი", flag: "🇪🇸" },
-      "ukraine": { name: "უკრაინა", flag: "🇺🇦" },
-      "ua": { name: "უკრაინა", flag: "🇺🇦" },
-      "switzerland": { name: "შვეიცარია", flag: "🇨🇭" },
-      "ch": { name: "შვეიცარია", flag: "🇨🇭" },
-      "portugal": { name: "პორტუგალია", flag: "🇵🇹" },
-      "pt": { name: "პორტუგალია", flag: "🇵🇹" },
-      "france": { name: "საფრანგეთი", flag: "🇫🇷" },
-      "fr": { name: "საფრანგეთი", flag: "🇫🇷" },
-      "united kingdom": { name: "დიდი ბრიტანეთი", flag: "🇬🇧" },
-      "uk": { name: "დიდი ბრიტანეთი", flag: "🇬🇧" },
-      "gb": { name: "დიდი ბრიტანეთი", flag: "🇬🇧" },
-      "poland": { name: "პოლონეთი", flag: "🇵🇱" },
-      "pl": { name: "პოლონეთი", flag: "🇵🇱" },
-      "turkey": { name: "თურქეთი", flag: "🇹🇷" },
-      "tr": { name: "თურქეთი", flag: "🇹🇷" },
-      "cyprus": { name: "კვიპროსი", flag: "🇨🇾" },
-      "cy": { name: "კვიპროსი", flag: "🇨🇾" },
-      "israel": { name: "ისრაელი", flag: "🇮🇱" },
-      "il": { name: "ისრაელი", flag: "🇮🇱" },
-      "austria": { name: "ავსტრია", flag: "🇦🇹" },
-      "at": { name: "ავსტრია", flag: "🇦🇹" },
-      "belgium": { name: "ბელგია", flag: "🇧🇪" },
-      "be": { name: "ბელგია", flag: "🇧🇪" },
-      "netherlands": { name: "ნიდერლანდები", flag: "🇳🇱" },
-      "nl": { name: "ნიდერლანდები", flag: "🇳🇱" },
-      "canada": { name: "კანადა", flag: "🇨🇦" },
-      "ca": { name: "კანადა", flag: "🇨🇦" },
-      "russia": { name: "რუსეთი", flag: "🇷🇺" },
-      "ru": { name: "რუსეთი", flag: "🇷🇺" },
-      "sweden": { name: "შვედეთი", flag: "🇸🇪" },
-      "se": { name: "შვედეთი", flag: "🇸🇪" },
-      "ireland": { name: "ირლანდია", flag: "🇮🇪" },
-      "ie": { name: "ირლანდია", flag: "🇮🇪" },
-      "czech republic": { name: "ჩეხეთი", flag: "🇨🇿" },
-      "czechia": { name: "ჩეხეთი", flag: "🇨🇿" },
-      "cz": { name: "ჩეხეთი", flag: "🇨🇿" }
-    };
+    // 🌍 ქვეყნების სრული ბაზა რეალური დროშებით
+    const COUNTRIES_DB = [
+      { name: "საქართველო", flag: "🇬🇪", keys: ["georgia", "საქართველო", "грузия", "ge", "geo", "tbilisi", "kutaisi", "batumi", "rustavi"] },
+      { name: "უკრაინა", flag: "🇺🇦", keys: ["ukraine", "უკრაინა", "украина", "ua", "ukr", "kyiv", "kiev", "odessa", "lviv", "kharkiv"] },
+      { name: "იტალია", flag: "🇮🇹", keys: ["italy", "იტალია", "италия", "it", "ita", "italia", "rome", "roma", "milan", "milano", "bari", "naples", "napoli", "florence", "firenze"] },
+      { name: "საბერძნეთი", flag: "🇬🇷", keys: ["greece", "საბერძნეთი", "греция", "gr", "gre", "el", "hellas", "athens", "ათენი", "thessaloniki", "სალონიკი"] },
+      { name: "გერმანია", flag: "🇩🇪", keys: ["germany", "გერმანია", "германия", "de", "deu", "ger", "deutschland", "berlin", "munich", "münchen", "frankfurt", "hamburg", "köln", "cologne"] },
+      { name: "აშშ", flag: "🇺🇸", keys: ["united states", "აშშ", "ამერიკა", "сша", "usa", "us", "america", "new york", "california", "florida", "los angeles", "chicago"] },
+      { name: "ესპანეთი", flag: "🇪🇸", keys: ["spain", "ესპანეთი", "испания", "es", "esp", "spn", "españa", "madrid", "barcelona", "valencia", "sevilla"] },
+      { name: "საფრანგეთი", flag: "🇫🇷", keys: ["france", "საფრანგეთი", "франция", "fr", "fra", "paris", "marseille", "lyon", "nice"] },
+      { name: "დიდი ბრიტანეთი", flag: "🇬🇧", keys: ["united kingdom", "დიდი ბრიტანეთი", "ინგლისი", "великобритания", "англия", "uk", "gb", "gbr", "england", "london", "manchester"] },
+      { name: "პოლონეთი", flag: "🇵🇱", keys: ["poland", "პოლონეთი", "польша", "pl", "pol", "polska", "warsaw", "warszawa", "krakow", "kraków", "wroclaw"] },
+      { name: "თურქეთი", flag: "🇹🇷", keys: ["turkey", "თურქეთი", "турция", "tr", "tur", "türkiye", "istanbul", "ankara", "antalya", "trabzon"] },
+      { name: "კვიპროსი", flag: "🇨🇾", keys: ["cyprus", "კვიპროსი", "кипр", "cy", "cyp", "nicosia", "limassol", "larnaca", "paphos"] },
+      { name: "ისრაელი", flag: "🇮🇱", keys: ["israel", "ისრაელი", "израиль", "il", "isr", "tel aviv", "jerusalem", "haifa"] },
+      { name: "ავსტრია", flag: "🇦🇹", keys: ["austria", "ავსტრია", "австрия", "at", "aut", "österreich", "vienna", "wien", "graz", "salzburg"] },
+      { name: "ბელგია", flag: "🇧🇪", keys: ["belgium", "ბელგია", "бельгия", "be", "bel", "belgique", "brussels", "bruxelles", "antwerp"] },
+      { name: "ნიდერლანდები", flag: "🇳🇱", keys: ["netherlands", "ნიდერლანდები", "ჰოლანდია", "нидерланды", "голландия", "nl", "nld", "holland", "amsterdam", "rotterdam", "hague"] },
+      { name: "კანადა", flag: "🇨🇦", keys: ["canada", "კანადა", "канада", "ca", "can", "toronto", "montreal", "vancouver", "calgary", "ottawa"] },
+      { name: "რუსეთი", flag: "🇷🇺", keys: ["russia", "რუსეთი", "россия", "ru", "rus", "moscow", "москва", "saint petersburg", "петербург"] },
+      { name: "პორტუგალია", flag: "🇵🇹", keys: ["portugal", "პორტუგალია", "португалия", "pt", "prt", "lisbon", "lisboa", "porto"] },
+      { name: "შვედეთი", flag: "🇸🇪", keys: ["sweden", "შვედეთი", "швеция", "se", "swe", "sverige", "stockholm", "gothenburg"] },
+      { name: "შვეიცარია", flag: "🇨🇭", keys: ["switzerland", "შვეიცარია", "შვეიცარი", "швейцария", "ch", "che", "schweiz", "suisse", "zurich", "zürich", "geneva"] },
+      { name: "ირლანდია", flag: "🇮🇪", keys: ["ireland", "ირლანდია", "ирландия", "ie", "irl", "dublin"] },
+      { name: "ჩეხეთი", flag: "🇨🇿", keys: ["czech republic", "czechia", "ჩეხეთი", "чехия", "cz", "cze", "prague", "praha"] },
+      { name: "აზერბაიჯანი", flag: "🇦🇿", keys: ["azerbaijan", "აზერბაიჯანი", "азербайджан", "az", "baku"] },
+      { name: "სომხეთი", flag: "🇦🇲", keys: ["armenia", "სომხეთი", "არმენია", "армения", "am", "yerevan"] },
+      { name: "უნგრეთი", flag: "🇭🇺", keys: ["hungary", "უნგრეთი", "венгрия", "hu", "budapest"] },
+      { name: "ნორვეგია", flag: "🇳🇴", keys: ["norway", "ნორვეგია", "норвегия", "no", "norge", "oslo"] },
+      { name: "დანია", flag: "🇩🇰", keys: ["denmark", "დანია", "дания", "dk", "danmark", "copenhagen"] },
+      { name: "ფინეთი", flag: "🇫🇮", keys: ["finland", "ფინეთი", "финляндия", "fi", "suomi", "helsinki"] },
+      { name: "ბულგარეთი", flag: "🇧🇬", keys: ["bulgaria", "ბულგარეთი", "болгария", "bg", "sofia"] },
+      { name: "რუმინეთი", flag: "🇷🇴", keys: ["romania", "რუმინეთი", "румыния", "ro", "bucharest"] },
+      { name: "ბელარუსი", flag: "🇧🇾", keys: ["belarus", "ბელარუსი", "беларусь", "белоруссия", "by", "minsk"] },
+      { name: "ყაზახეთი", flag: "🇰🇿", keys: ["kazakhstan", "ყაზახეთი", "казахстан", "kz", "astana", "almaty"] },
+      { name: "მოლდოვა", flag: "🇲🇩", keys: ["moldova", "მოლდოვა", "молдова", "молдавия", "md", "chisinau"] }
+    ];
 
-    function resolveIpCountry(ipVal) {
-      if (!ipVal || typeof ipVal !== 'string') return null;
-      let clean = ipVal.toLowerCase().trim();
-      
-      // თუ პირდაპირ წერია რუკაში
-      if (IP_COUNTRIES_MAP[clean]) {
-        return IP_COUNTRIES_MAP[clean];
-      }
+    function detectCountry(input) {
+      if (!input || typeof input !== 'string') return null;
+      const clean = input.toLowerCase().trim();
+      if (!clean || clean === '...' || clean.length < 2) return null;
 
-      // თუ ქალაქიცაა მიწერილი (მაგ. "Rome, Italy")
-      for (let key in IP_COUNTRIES_MAP) {
-        if (clean.endsWith(key) || clean.includes(key)) {
-          return IP_COUNTRIES_MAP[key];
+      for (let item of COUNTRIES_DB) {
+        for (let key of item.keys) {
+          if (clean === key || clean.includes(key)) {
+            return item;
+          }
         }
       }
-
       return null;
     }
 
     let globalCountriesArray = [];
 
-    // 1. ოპტიმიზებული კითხვა (ზუსტად 1 Read)
+    // 1. ოპტიმიზებული კითხვა (ზუსტად 1 Read) — სრული გაერთიანებით
     function loadCountryStatsOptimized() {
       db.collection('system_stats').doc('countries').get().then(docSnap => {
         if (!docSnap.exists) {
@@ -374,31 +354,30 @@
         const data = docSnap.data();
         const countriesMap = data.countries || {};
         
-        // ვაჯამებთ და ვანიჭებთ დროშებს
-        let mergedList = [];
+        // 🌟 აერთიანებს დუბლიკატებს (იტალია + Italy -> იტალია)
+        let mergedMap = {};
+        let flagMap = {};
 
         Object.keys(countriesMap).forEach(cName => {
           let count = Number(countriesMap[cName]) || 0;
           if (count <= 0) return;
 
-          let info = resolveIpCountry(cName);
-          let finalName = info ? info.name : cName;
-          let finalFlag = info ? info.flag : "🇬🇪";
+          let matched = detectCountry(cName);
+          if (!matched) return; // წაშლის '...'-ს და უცხო ნაგავს
 
-          // ვამოწმებთ უკვე არის თუ არა სიაში, რომ გავაერთიანოთ
-          let existing = mergedList.find(x => x.name === finalName);
-          if (existing) {
-            existing.count += count;
-          } else {
-            mergedList.push({
-              name: finalName,
-              flag: finalFlag,
-              count: count
-            });
-          }
+          let finalName = matched.name;
+          mergedMap[finalName] = (mergedMap[finalName] || 0) + count;
+          flagMap[finalName] = matched.flag;
         });
 
-        globalCountriesArray = mergedList.sort((a, b) => b.count - a.count);
+        globalCountriesArray = Object.keys(mergedMap).map(name => {
+          return {
+            name: name,
+            flag: flagMap[name],
+            count: mergedMap[name]
+          };
+        }).sort((a, b) => b.count - a.count);
+
         let totalCount = globalCountriesArray.reduce((acc, curr) => acc + curr.count, 0);
 
         document.getElementById('total-users-val').innerText = totalCount;
@@ -411,7 +390,7 @@
       });
     }
 
-    // 2. რეალური გადათვლა — ითვლის მხოლოდ IP-ის მონაცემებს (real_ip_country)
+    // 2. რეალური გადათვლა — ასუფთავებს ბაზას და აჯამებს ერთიანად
     function syncAllRealUsersFromDatabase() {
       const btn = document.getElementById('sync-data-btn');
       if (btn) {
@@ -419,30 +398,28 @@
         btn.innerHTML = `<span>⏳</span> <span>ითვლის...</span>`;
       }
 
-      document.getElementById('countries-target-list').innerHTML = `<div class="loading-box">მიმდინარეობს რეალური IP-ების გადათვლა...</div>`;
+      document.getElementById('countries-target-list').innerHTML = `<div class="loading-box">მიმდინარეობს რეალური მომხმარებლების გადათვლა...</div>`;
 
       db.collection('profiles').get().then(snap => {
-        let cleanCounts = {};
+        let mergedCounts = {};
         let total = 0;
 
         snap.forEach(doc => {
           let p = doc.data();
-          
-          // ვკითხულობთ მხოლოდ IP-ის მიერ დაფიქსირებულ ქვეყანას
-          let rawIp = p.real_ip_country || p.real_ip_address || "";
-          let detected = resolveIpCountry(rawIp);
+          let raw = p.country || p.real_ip_country || p.real_ip_address || "";
+          let detected = detectCountry(raw);
 
-          // თუ მომხმარებელს IP-ი საერთოდ არ აქვს ჯერ დაფიქსირებული, ჩაითვალოს საქართველო
-          let finalName = detected ? detected.name : "საქართველო";
-
-          cleanCounts[finalName] = (cleanCounts[finalName] || 0) + 1;
-          total++;
+          // თუ ქვეყანა ამოიცნო, აერთიანებს ერთიან სახელში
+          if (detected) {
+            mergedCounts[detected.name] = (mergedCounts[detected.name] || 0) + 1;
+            total++;
+          }
         });
 
-        // ბაზაში ვინახავთ მხოლოდ გაერთიანებულ, გასუფთავებულ სახელებს
+        // ბაზაში ინახება მხოლოდ სუფთა, გაერთიანებული სახელები
         return db.collection('system_stats').doc('countries').set({
           total_users: total,
-          countries: cleanCounts,
+          countries: mergedCounts,
           updated_at: firebase.firestore.FieldValue.serverTimestamp()
         });
       }).then(() => {
