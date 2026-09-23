@@ -2046,11 +2046,12 @@ body.light-mode .dialog-btn-single {
     }
 
     // 2. პოსტების და სტატისტიკის ჩატვირთვა
+    // 2. პოსტების და სტატისტიკის ჩატვირთვა (დროის ზუსტი კონტროლით)
     function loadUserPostsAndStats() {
       var t = getT();
       db.collection('posts')
         .where('user_id', '==', currentUser.uid)
-        .limit(10)
+        .limit(20)
         .get()
         .then(function(snap) {
           userPostsCache = [];
@@ -2066,9 +2067,23 @@ body.light-mode .dialog-btn-single {
             return;
           }
 
+          var now = Date.now();
+
           snap.forEach(function(docSnap) {
             var p = docSnap.data();
             p.id = docSnap.id;
+
+            // ⏱️ ვადის ზუსტი შემოწმება
+            var expireTime = p.boost_expires ? (p.boost_expires.toMillis ? p.boost_expires.toMillis() : new Date(p.boost_expires).getTime()) : 0;
+            p.is_boost_active = p.is_boosted && (expireTime > now);
+
+            if (p.is_boost_active) {
+              var remainingHours = Math.max(0, Math.floor((expireTime - now) / (1000 * 60 * 60)));
+              var remDays = Math.floor(remainingHours / 24);
+              var remHrs = remainingHours % 24;
+              p.remaining_time_text = remDays > 0 ? (remDays + " დღე " + remHrs + " სთ") : (remHrs + " სთ");
+            }
+
             userPostsCache.push(p);
 
             var likes = p.likes_count || (p.likes ? (Array.isArray(p.likes) ? p.likes.length : Object.keys(p.likes).length) : 0);
@@ -2080,7 +2095,8 @@ body.light-mode .dialog-btn-single {
           if (userPostsCache.length > 0) {
             var firstP = userPostsCache[0];
             document.getElementById('boost-post-select').value = firstP.id;
-            document.getElementById('label-boost-post').innerText = (firstP.is_boosted ? "⚡ [Boosted] " : "") + (firstP.content || firstP.text || "Media Post").replace(/<[^>]*>?/gm, '').substring(0, 45) + "...";
+            var statusPrefix = firstP.is_boost_active ? `⚡ [დარჩენილია: ${firstP.remaining_time_text}] ` : "";
+            document.getElementById('label-boost-post').innerText = statusPrefix + (firstP.content || firstP.text || "Media Post").replace(/<[^>]*>?/gm, '').substring(0, 40) + "...";
           }
 
           document.getElementById('stat-total-likes').innerText = totalLikes;
@@ -2091,7 +2107,7 @@ body.light-mode .dialog-btn-single {
         });
     }
 
-    // 3. პოსტის დაბუსტვა
+    // 3. პოსტის დაბუსტვა (ვადის და დაწინაურების გარანტიით)
     function submitPostBoost() {
       var t = getT();
       var postId = document.getElementById('boost-post-select').value;
@@ -2121,8 +2137,9 @@ body.light-mode .dialog-btn-single {
       btn.innerText = t.publishing;
 
       var newBal = currentBal - price;
+      // ⏱️ დღეების ზუსტი გადაყვანა მილიწამებში
       var days = price === 5 ? 1 : (price === 12 ? 3 : 7);
-      var expiresDate = new Date(Date.now() + (days * 86400000));
+      var expiresDate = new Date(Date.now() + (days * 24 * 60 * 60 * 1000));
 
       var batch = db.batch();
       var profileRef = db.collection('profiles').doc(currentUser.uid);
@@ -2132,14 +2149,18 @@ body.light-mode .dialog-btn-single {
       batch.update(postRef, {
         is_boosted: true,
         boost_country: country,
-        boost_expires: firebase.firestore.Timestamp.fromDate(expiresDate)
+        boost_expires: firebase.firestore.Timestamp.fromDate(expiresDate),
+        boost_days: days,
+        boost_started_at: firebase.firestore.FieldValue.serverTimestamp(),
+        // 🚀 მთავარ არხში ეგრევე პირველ ადგილზე ამოსასვლელად:
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       batch.commit().then(function() {
         if (userProfile) userProfile.balance = newBal;
         sessionStorage.removeItem('eb_studio_profile_' + currentUser.uid);
         updateBalanceUI();
-        showStudioAlert(t.boostSuccess + days + t.daysUnit, t.boostTitle, "🚀");
+        showStudioAlert(t.boostSuccess + days + " " + (days === 1 ? t.dayUnit : t.daysUnitShort) + "!", t.boostTitle, "🚀");
         btn.disabled = false;
         btn.innerHTML = '<img src="icons/wand-sparkles.svg" style="width:16px;height:16px;" alt="Boost"> ' + t.activateBoost;
         loadUserPostsAndStats();
@@ -2149,6 +2170,7 @@ body.light-mode .dialog-btn-single {
         btn.innerHTML = '<img src="icons/wand-sparkles.svg" style="width:16px;height:16px;" alt="Boost"> ' + t.activateBoost;
       });
     }
+
 
     // 4. სერვისის გამოქვეყნება ფასიანი ვადით და ბალანსის ჩამოჭრით
     function publishService() {
