@@ -5647,12 +5647,22 @@ function smartRankPosts(postsList) {
   return postsList.map(function(post) {
     var score = 0;
 
-    // 1. ინტერაქციები: ლაიქი (+2), კომენტარი (+3)
+    // 🚀 1. დაბუსტვის და ვადის შემოწმება (პირველი ადგილი ფიდში)
+    var isBoostActive = false;
+    if (post.is_boosted) {
+      var expireTime = post.boost_expires ? (post.boost_expires.toMillis ? post.boost_expires.toMillis() : new Date(post.boost_expires).getTime()) : 0;
+      if (expireTime > now) {
+        isBoostActive = true;
+        score += 50000; // გარანტირებული #1 ადგილი თავში!
+      }
+    }
+
+    // 2. ინტერაქციები: ლაიქი (+2), კომენტარი (+3)
     var likes = post.likes_count || 0;
     var comments = post.comments_count || 0;
     score += (likes * 2) + (comments * 3);
 
-    // 2. სიახლე (დროის მიხედვით)
+    // 3. სიახლე (დროის მიხედვით)
     var postTime = post.created_at ? (post.created_at.toDate ? post.created_at.toDate().getTime() : new Date(post.created_at).getTime()) : now;
     var diffHours = (now - postTime) / (1000 * 60 * 60);
 
@@ -5664,12 +5674,12 @@ function smartRankPosts(postsList) {
       score += 5;  // 1 დღემდე
     }
 
-    // 3. ნანახი პოსტების დაწევა (70%-ით უმცირდება ქულა და ვარდება ქვემოთ)
-    if (seenPosts.includes(post.id)) {
+    // 4. ნანახი პოსტების დაწევა (დაბუსტულ პოსტს არ აგდებს ქვემოთ!)
+    if (!isBoostActive && seenPosts.includes(post.id)) {
       score = score * 0.3;
     }
 
-    // 4. შემთხვევითი მუხტი (ყოველ რეფრეშზე რომ იცვლებოდეს თანაბარქულიანი პოსტები)
+    // 5. შემთხვევითი მუხტი
     score += Math.random() * 6;
 
     return { postData: post, rankingScore: score };
