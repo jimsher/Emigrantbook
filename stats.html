@@ -36,7 +36,6 @@
       padding-bottom: 40px;
     }
 
-    /* Facebook სტილის სადა ჰედერი */
     .stats-header {
       position: sticky;
       top: 0;
@@ -103,7 +102,6 @@
       background: #d8dadf;
     }
 
-    /* შემაჯამებელი ბარათი */
     .hero-summary-card {
       margin: 12px 16px;
       padding: 14px 16px;
@@ -136,7 +134,6 @@
       background: #dadde1;
     }
 
-    /* ძებნის ველი */
     .search-box-container {
       padding: 0 16px 10px 16px;
     }
@@ -156,7 +153,6 @@
       border-color: #1877f2;
     }
 
-    /* ქვეყნების სია */
     .countries-list {
       padding: 0 16px;
       display: flex;
@@ -248,7 +244,7 @@
           <p>რეგისტრირებული წევრები ქვეყნების მიხედვით</p>
         </div>
       </div>
-      <button class="sync-btn" id="sync-data-btn" onclick="loadRealStatsFromProfiles()">
+      <button class="sync-btn" id="sync-data-btn" onclick="syncAllRealUsersFromDatabase()">
         <span>🔄</span> <span>გადათვლა</span>
       </button>
     </div>
@@ -287,7 +283,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 🌍 ქვეყნების სრული და დაცული ლექსიკონი (ზუსტი სახელები და დროშები)
     const COUNTRY_MAP = {
       "georgia": { name: "საქართველო", flag: "🇬🇪" },
       "ge": { name: "საქართველო", flag: "🇬🇪" },
@@ -492,25 +487,21 @@
       "მოლდოვა": { name: "მოლდოვა", flag: "🇲🇩" }
     };
 
-    // 🎯 ზუსტი ამოცნობა (არ ურევს მოკლე ასოებს და არ აზიანებს ქვეყნებს)
     function detectCountry(input) {
       if (!input || typeof input !== 'string') return null;
       var clean = input.toLowerCase().trim();
       if (!clean || clean === '...' || clean === 'უცნობი' || clean === 'არ ფიქსირდება') return null;
 
-      // 1. ზუსტი შედარება
       if (COUNTRY_MAP[clean]) {
         return COUNTRY_MAP[clean];
       }
 
-      // 2. ფრაზაში ძებნა მხოლოდ 3 სიმბოლოზე გრძელ სიტყვებზე (რომ 'it' არ შეეშალოს United States-ში)
       for (var key in COUNTRY_MAP) {
         if (key.length > 3 && clean.includes(key)) {
           return COUNTRY_MAP[key];
         }
       }
 
-      // 3. თუ საერთოდ უცხო ქვეყანაა, არ ვკარგავთ - თავისი სახელით გამოგვაქვს
       var capName = input.trim();
       capName = capName.charAt(0).toUpperCase() + capName.slice(1);
       return { name: capName, flag: "🌍" };
@@ -518,79 +509,79 @@
 
     let globalCountriesArray = [];
 
-    // 📊 რეალური მონაცემების პირდაპირი წაკითხვა PROFILES კოლექციიდან (როგორც admin.html-ში)
-    function loadRealStatsFromProfiles() {
+    // 🌟 1. მთავარი ფუნქცია — იყენებს ზუსტად 1 READ-ს!
+    function loadCountryStatsOptimized() {
+      db.collection('system_stats').doc('countries').get().then(function(docSnap) {
+        if (!docSnap.exists || !docSnap.data().countries) {
+          // თუ საერთოდ არ არსებობს დოკუმენტი, მხოლოდ პირველად გადაითვლის
+          syncAllRealUsersFromDatabase();
+          return;
+        }
+
+        var data = docSnap.data();
+        var countriesMap = data.countries || {};
+
+        globalCountriesArray = Object.keys(countriesMap).map(function(cName) {
+          var matched = detectCountry(cName);
+          return {
+            name: cName,
+            flag: matched ? matched.flag : "🌍",
+            count: Number(countriesMap[cName]) || 0
+          };
+        }).sort(function(a, b) {
+          return b.count - a.count;
+        });
+
+        var totalCount = data.total_users || globalCountriesArray.reduce((acc, curr) => acc + curr.count, 0);
+
+        document.getElementById('total-users-val').innerText = totalCount;
+        document.getElementById('total-countries-val').innerText = globalCountriesArray.length;
+
+        renderCountriesUI(globalCountriesArray, totalCount);
+      }).catch(function(err) {
+        console.error("Stats load error:", err);
+        syncAllRealUsersFromDatabase();
+      });
+    }
+
+    // 🌟 2. გადათვლა — ეშვება მხოლოდ ღილაკზე დაჭერისას!
+    function syncAllRealUsersFromDatabase() {
       const btn = document.getElementById('sync-data-btn');
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = `<span>⏳</span> <span>ითვლის...</span>`;
       }
 
-      const listTarget = document.getElementById('countries-target-list');
-      if (listTarget) {
-        listTarget.innerHTML = `<div class="loading-box">იტვირთება რეალური მომხმარებლები ბაზიდან...</div>`;
-      }
+      document.getElementById('countries-target-list').innerHTML = `<div class="loading-box">მიმდინარეობს რეალური მომხმარებლების გადათვლა...</div>`;
 
-      db.collection('profiles').get().then(function(snapshot) {
-        if (snapshot.empty) {
-          if (listTarget) listTarget.innerHTML = `<div class="loading-box">მომხმარებლები ვერ მოიძებნა.</div>`;
-          document.getElementById('total-users-val').innerText = "0";
-          document.getElementById('total-countries-val').innerText = "0";
-          if (btn) { btn.disabled = false; btn.innerHTML = `<span>🔄</span> <span>გადათვლა</span>`; }
-          return;
-        }
-
+      db.collection('profiles').get().then(function(snap) {
         let mergedCounts = {};
-        let flagMap = {};
-        let totalUsersCount = snapshot.size;
+        let total = snap.size;
 
-        snapshot.forEach(function(doc) {
+        snap.forEach(function(doc) {
           var p = doc.data();
+          var raw = p.real_ip_country || p.country || p.real_ip_address || "";
+          var detected = detectCountry(raw);
+          var finalName = detected ? detected.name : "სხვა / დაუდგენელი";
 
-          // 🌟 ზუსტად ისე, როგორც admin.html-შია: ჯერ real_ip_country, შემდეგ მისამართი, შემდეგ country
-          var rawCountry = p.real_ip_country || p.country || p.real_ip_address || "";
-          var detected = detectCountry(rawCountry);
-
-          var finalCountryName = detected ? detected.name : "სხვა / დაუდგენელი";
-          var finalFlag = detected ? detected.flag : "🌍";
-
-          mergedCounts[finalCountryName] = (mergedCounts[finalCountryName] || 0) + 1;
-          flagMap[finalCountryName] = finalFlag;
+          mergedCounts[finalName] = (mergedCounts[finalName] || 0) + 1;
         });
 
-        // მასივად გარდაქმნა და დალაგება რაოდენობის მიხედვით
-        globalCountriesArray = Object.keys(mergedCounts).map(function(cName) {
-          return {
-            name: cName,
-            flag: flagMap[cName] || "🌍",
-            count: mergedCounts[cName]
-          };
-        }).sort(function(a, b) {
-          return b.count - a.count;
-        });
-
-        // ქვეყნების რეალური რაოდენობა (უცნობის გამოკლებით, თუ ცალკეა)
-        var realCountriesCount = globalCountriesArray.filter(c => c.name !== "სხვა / დაუდგენელი").length;
-
-        document.getElementById('total-users-val').innerText = totalUsersCount;
-        document.getElementById('total-countries-val').innerText = realCountriesCount;
-
-        renderCountriesUI(globalCountriesArray, totalUsersCount);
-
-        // ბაზაშიც ვინახავთ განახლებულ სუფთა მონაცემს
-        db.collection('system_stats').doc('countries').set({
-          total_users: totalUsersCount,
+        // ინახავს ერთ დოკუმენტში, რომ მომავალში ყველა ჩატვირთვამ მხოლოდ 1 Read დახარჯოს!
+        return db.collection('system_stats').doc('countries').set({
+          total_users: total,
           countries: mergedCounts,
           updated_at: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(function(){});
-
+        });
+      }).then(function() {
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = `<span>🔄</span> <span>გადათვლა</span>`;
         }
+        loadCountryStatsOptimized();
       }).catch(function(err) {
-        console.error("Profiles stats error:", err);
-        if (listTarget) listTarget.innerHTML = `<div class="loading-box" style="color:#e41e3f;">შეცდომა ჩატვირთვისას: ${err.message}</div>`;
+        console.error("Sync error:", err);
+        alert("გადათვლის შეცდომა: " + err.message);
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = `<span>🔄</span> <span>გადათვლა</span>`;
@@ -608,7 +599,7 @@
       }
 
       let html = "";
-      list.forEach(function(item) {
+      list.forEach((item) => {
         const percentage = totalCount > 0 ? Math.round((item.count / totalCount) * 100) : 0;
 
         html += `
@@ -640,8 +631,8 @@
       renderCountriesUI(filtered, totalCount);
     }
 
-    // გვერდის გახსნისთანავე ითვლის ბაზიდან რეალურად
-    loadRealStatsFromProfiles();
+    // საიტის გახსნისას: ზუსტად 1 Read!
+    loadCountryStatsOptimized();
   </script>
 </body>
 </html>
