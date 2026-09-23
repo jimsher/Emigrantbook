@@ -6396,40 +6396,87 @@ function createPost() {
     }
 
     function likePost(postId, isTiktokView) {
-      if (!currentUser) return;
-      var postRef = db.collection('posts').doc(postId);
-      var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
+  if (!currentUser) return;
+  var postRef = db.collection('posts').doc(postId);
+  var likeRef = postRef.collection('post_likes').doc(currentUser.uid);
 
-      likeRef.get().then(function(doc) {
-        if (doc.exists) {
-          likeRef.delete().then(function() {
-            updatePostLikesCount(postId, -1);
-            likedPosts = likedPosts.filter(id => id !== postId);
-            toggleLikeUI(postId, false);
-          }).catch(function(err) {
-            console.error("Unlike error:", err);
-          });
-        } else {
-          var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
-          var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
-
-          likeRef.set({
-            user_id: currentUser.uid,
-            full_name: authorName,
-            avatar_url: avatarUrl,
-            created_at: firebase.firestore.FieldValue.serverTimestamp()
-          }).then(function() {
-            updatePostLikesCount(postId, 1);
-            if (!likedPosts.includes(postId)) likedPosts.push(postId);
-            toggleLikeUI(postId, true);
-          }).catch(function(err) {
-            console.error("Like set error:", err);
-          });
-        }
+  likeRef.get().then(function(doc) {
+    if (doc.exists) {
+      likeRef.delete().then(function() {
+        updatePostLikesCount(postId, -1);
+        likedPosts = likedPosts.filter(id => id !== postId);
+        toggleLikeUI(postId, false);
       }).catch(function(err) {
-        console.error("Like check error:", err);
+        console.error("Unlike error:", err);
+      });
+    } else {
+      var authorName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || "User");
+      var avatarUrl = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : (currentUser.photoURL || null);
+
+      likeRef.set({
+        user_id: currentUser.uid,
+        full_name: authorName,
+        avatar_url: avatarUrl,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function() {
+        updatePostLikesCount(postId, 1);
+        if (!likedPosts.includes(postId)) likedPosts.push(postId);
+        toggleLikeUI(postId, true);
+
+        // 🔔 პუშის გაგზავნა პოსტის ავტორთან
+        postRef.get().then(function(pDoc) {
+          if (pDoc.exists) {
+            var postData = pDoc.data();
+            if (postData.user_id && postData.user_id !== currentUser.uid) {
+              var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
+              var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
+
+              var pushPayload = {
+                app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+                target_channel: "push",
+                include_aliases: {
+                  external_id: [String(postData.user_id).trim()]
+                },
+                headings: { ka: myName, en: myName, it: myName, ru: myName },
+                contents: { 
+                  ka: "მოეწონა თქვენი პოსტი ❤️", 
+                  en: "Liked your post ❤️", 
+                  it: "Ha messo 'Mi piace' al tuo post ❤️", 
+                  ru: "Понравилась ваша публикация ❤️" 
+                },
+                url: "https://emigrantbook.com/index.html",
+                large_icon: myAvatar,
+                chrome_web_icon: myAvatar,
+                chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+                collapse_id: Date.now().toString(),
+                web_push_topic: Date.now().toString(),
+                priority: 10,
+                android_visibility: 1,
+                ios_badgeType: "Increase",
+                ios_badgeCount: 1,
+                android_badge_type: "Increase",
+                android_badge_count: 1
+              };
+
+              fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(pushPayload)
+              }).catch(function(err) {
+                console.warn("Like push error:", err);
+              });
+            }
+          }
+        });
+
+      }).catch(function(err) {
+        console.error("Like set error:", err);
       });
     }
+  }).catch(function(err) {
+    console.error("Like check error:", err);
+  });
+}
 
     function updatePostLikesCount(postId, change) {
       var postRef = db.collection('posts').doc(postId);
