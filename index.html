@@ -4055,10 +4055,72 @@ auth.onAuthStateChanged(function(user) {
             lbl.innerText = count + " " + (t.commentsCount || "კომენტარი");
           });
         });
+
+        // 🔔 პუშის გაგზავნა პოსტის/ვიდეოს/ფოტოს ავტორთან (მხოლოდ ადრესატთან)
+        db.collection('posts').doc(postId).get().then(function(pDoc) {
+          if (pDoc.exists) {
+            var postData = pDoc.data();
+            var rawAuthorId = postData.user_id || postData.userId || postData.author_id || "";
+            var targetAuthorId = String(rawAuthorId).trim();
+
+            // 🛑 რკინისებური დაცვა:
+            // 1. targetAuthorId არ უნდა იყოს ცარიელი
+            // 2. არ უნდა იყოს 'undefined', 'null' ან 'all'
+            // 3. უნდა იყოს ნამდვილი Firebase UID (მინიმუმ 15 სიმბოლო)
+            // 4. არ უნდა იყოს საკუთარი თავი (საკუთარ პოსტზე დაკომენტარებისას პუში არ მოვა)
+            var isValidUid = targetAuthorId.length >= 15 && 
+                             targetAuthorId !== "undefined" && 
+                             targetAuthorId !== "null" && 
+                             targetAuthorId !== "all";
+
+            if (isValidUid && targetAuthorId !== currentUser.uid) {
+              var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
+              var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
+
+              var pushPayload = {
+                app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+                target_channel: "push",
+                include_aliases: {
+                  external_id: [targetAuthorId]
+                },
+                headings: { ka: myName, en: myName, it: myName, ru: myName },
+                contents: { 
+                  ka: "დააკომენტარა თქვენს პოსტზე 💬", 
+                  en: "Commented on your post 💬", 
+                  it: "Ha commentato il tuo post 💬", 
+                  ru: "Прокомментировал(а) вашу публикацию 💬" 
+                },
+                url: "https://emigrantbook.com/index.html",
+                large_icon: myAvatar,
+                chrome_web_icon: myAvatar,
+                chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+                collapse_id: Date.now().toString(),
+                web_push_topic: Date.now().toString(),
+                priority: 10,
+                android_visibility: 1,
+                ios_badgeType: "Increase",
+                ios_badgeCount: 1,
+                android_badge_type: "Increase",
+                android_badge_count: 1
+              };
+
+              fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(pushPayload)
+              }).catch(function(err) {
+                console.warn("Comment push error:", err);
+              });
+            }
+          }
+        }).catch(function(err) {
+          console.warn("Post fetch error for comment push:", err);
+        });
+
       }).catch(function(err) {
         alert("კომენტარის გაგზავნის შეცდომა: " + err.message);
       });
-    } 
+    }
    // აქ მთავრდება             
 
   
