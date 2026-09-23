@@ -6423,11 +6423,26 @@ function createPost() {
         if (!likedPosts.includes(postId)) likedPosts.push(postId);
         toggleLikeUI(postId, true);
 
-        // 🔔 პუშის გაგზავნა პოსტის ავტორთან
+        // 🔔 პუშის გაგზავნა მხოლოდ და მხოლოდ პოსტის რეალურ ავტორთან
         postRef.get().then(function(pDoc) {
           if (pDoc.exists) {
             var postData = pDoc.data();
-            if (postData.user_id && postData.user_id !== currentUser.uid) {
+            
+            // ვიღებთ ავტორის ID-ს ნებისმიერი შესაძლო ველიდან
+            var rawAuthorId = postData.user_id || postData.userId || postData.author_id || "";
+            var targetAuthorId = String(rawAuthorId).trim();
+
+            // 🛑 რკინისებური დაცვა: 
+            // 1. targetAuthorId არ უნდა იყოს ცარიელი
+            // 2. არ უნდა იყოს 'undefined', 'null' ან 'all'
+            // 3. უნდა იყოს ნამდვილი Firebase UID (მინიმუმ 15 სიმბოლო)
+            // 4. არ უნდა იყოს გამგზავნი (ანუ საკუთარი თავი)
+            var isValidUid = targetAuthorId.length >= 15 && 
+                             targetAuthorId !== "undefined" && 
+                             targetAuthorId !== "null" && 
+                             targetAuthorId !== "all";
+
+            if (isValidUid && targetAuthorId !== currentUser.uid) {
               var myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მომხმარებელი");
               var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
 
@@ -6435,7 +6450,7 @@ function createPost() {
                 app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
                 target_channel: "push",
                 include_aliases: {
-                  external_id: [String(postData.user_id).trim()]
+                  external_id: [targetAuthorId]
                 },
                 headings: { ka: myName, en: myName, it: myName, ru: myName },
                 contents: { 
@@ -6465,6 +6480,8 @@ function createPost() {
               }).catch(function(err) {
                 console.warn("Like push error:", err);
               });
+            } else {
+              console.log("Push skipped: Invalid author ID or own post:", targetAuthorId);
             }
           }
         });
