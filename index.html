@@ -7920,6 +7920,50 @@ document.addEventListener('DOMContentLoaded', function() {
   highlightCurrentTheme();
 });
 
+
+
+
+    // დამეგოვრების პუშ ნოთიფიკაცია
+// 🔔 მესინჯერის 100%-ით მუშა პუშ-ფუნქცია (Cloudflare Worker)
+async function sendModernPush(recipientUid, messageText, customUrl) {
+  if (!currentUser || !recipientUid) return;
+
+  try {
+    let senderName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || currentUser.email || 'EmigrantBook');
+    let senderPhoto = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : 'https://emigrantbook.com/icons/icon-192x192.png';
+
+    const payload = {
+      app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+      target_channel: "push",
+      include_aliases: {
+        external_id: [String(recipientUid).trim()]
+      },
+      headings: { ka: senderName, en: senderName, it: senderName, ru: senderName },
+      contents: { ka: messageText, en: messageText, it: messageText, ru: messageText },
+      url: customUrl || `https://emigrantbook.com/index.html`,
+      large_icon: senderPhoto,
+      chrome_web_icon: senderPhoto,
+      chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+      collapse_id: Date.now().toString(),
+      web_push_topic: Date.now().toString(),
+      priority: 10,
+      android_visibility: 1,
+      ios_badgeType: "Increase",
+      ios_badgeCount: 1,
+      android_badge_type: "Increase",
+      android_badge_count: 1
+    };
+
+    fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(e => console.error("Push send error:", e));
+
+  } catch (err) {
+    console.error("Push error:", err);
+  }
+}
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
