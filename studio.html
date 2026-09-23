@@ -1909,10 +1909,31 @@ body.light-mode .dialog-btn-single {
           showStudioAlert(t.noPostsYet, t.choosePost, "📝");
           return;
         }
-        var postOpts = userPostsCache.map(p => ({
-          val: p.id,
-          label: (p.is_boosted ? "⚡ [Boosted] " : "") + (p.content || p.text || "Media Post").replace(/<[^>]*>?/gm, '').substring(0, 45) + "..."
-        }));
+
+        var now = Date.now();
+        var postOpts = userPostsCache.map(function(p) {
+          var boostTag = "";
+
+          // ⏱️ ვამოწმებთ აქტიურ ბუსტს და ვითვლით დარჩენილ დროს
+          var expireTime = p.boost_expires ? (p.boost_expires.toMillis ? p.boost_expires.toMillis() : new Date(p.boost_expires).getTime()) : 0;
+          if (p.is_boosted && expireTime > now) {
+            var remainingHours = Math.max(0, Math.floor((expireTime - now) / (1000 * 60 * 60)));
+            var remDays = Math.floor(remainingHours / 24);
+            var remHrs = remainingHours % 24;
+            var timeStr = remDays > 0 ? (remDays + " დღე " + remHrs + " სთ") : (remHrs + " სთ");
+            boostTag = "⚡ [დარჩენილია: " + timeStr + "] ";
+          } else if (p.is_boost_active && p.remaining_time_text) {
+            boostTag = "⚡ [დარჩენილია: " + p.remaining_time_text + "] ";
+          }
+
+          var cleanContent = (p.content || p.text || "Media Post").replace(/<[^>]*>?/gm, '').substring(0, 35);
+
+          return {
+            val: p.id,
+            label: boostTag + cleanContent + "..."
+          };
+        });
+
         config = {
           title: t.choosePost,
           targetInput: 'boost-post-select',
