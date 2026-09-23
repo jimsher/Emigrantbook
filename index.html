@@ -6369,7 +6369,7 @@ function createPost() {
 }
     
 
-    function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
+   function savePostToDatabase(authorName, text, mediaUrl, mediaType, publishBtn) {
       db.collection('posts').add({
         user_id: currentUser.uid,
         author_name: authorName || "User",
@@ -6388,12 +6388,86 @@ function createPost() {
         if (mediaInput) mediaInput.value = "";
         if (nameDiv) nameDiv.style.display = "none";
         loadPosts();
+
+        // 🔔 პუშის გაგზავნა მხოლოდ და მხოლოდ მეგობრებთან
+        notifyFriendsAboutNewPost(authorName, mediaType, mediaUrl);
       }).catch(function(error) {
         if (publishBtn) publishBtn.disabled = false;
         applyLanguageDOM();
         alert("Error: " + error.message);
       });
     }
+
+    // 🔔 დამხმარე ფუნქცია: პოსტის, ფოტოს ან ვიდეოს გამოქვეყნებისას პუში მხოლოდ მეგობრებთან
+    function notifyFriendsAboutNewPost(authorName, mediaType, mediaUrl) {
+      if (!currentUser || typeof getMyFriendIds !== 'function') return;
+
+      getMyFriendIds(function(friendIdsSet) {
+        if (!friendIdsSet || friendIdsSet.size === 0) return;
+
+        // ფილტრი: მხოლოდ ვალიდური ID-ები საკუთარი თავის გარეშე
+        var friendIds = Array.from(friendIdsSet).filter(function(id) {
+          return id && id !== currentUser.uid && String(id).trim().length >= 15;
+        });
+
+        if (friendIds.length === 0) return;
+
+        var myName = authorName || ((userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "მეგობარი"));
+        var myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : "https://emigrantbook.com/icons/icon-192x192.png";
+
+        var notifKa = "გამოაქვეყნა ახალი პოსტი 📝";
+        var notifEn = "Shared a new post 📝";
+        var notifIt = "Ha pubblicato un nuovo post 📝";
+        var notifRu = "Опубликовал(а) новую запись 📝";
+
+        if (mediaType === 'video') {
+          notifKa = "გამოაქვეყნა ახალი ვიდეო 🎥";
+          notifEn = "Uploaded a new video 🎥";
+          notifIt = "Ha caricato un nuovo video 🎥";
+          notifRu = "Опубликовал(а) новое видео 🎥";
+        } else if (mediaUrl) {
+          notifKa = "გამოაქვეყნა ახალი ფოტო 📸";
+          notifEn = "Uploaded a new photo 📸";
+          notifIt = "Ha caricato una nuova foto 📸";
+          notifRu = "Опубликовал(а) новое фото 📸";
+        }
+
+        var pushPayload = {
+          app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+          target_channel: "push",
+          include_aliases: {
+            external_id: friendIds
+          },
+          headings: { ka: myName, en: myName, it: myName, ru: myName },
+          contents: { 
+            ka: notifKa, 
+            en: notifEn, 
+            it: notifIt, 
+            ru: notifRu 
+          },
+          url: "https://emigrantbook.com/index.html",
+          large_icon: myAvatar,
+          chrome_web_icon: myAvatar,
+          chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+          collapse_id: Date.now().toString(),
+          web_push_topic: Date.now().toString(),
+          priority: 10,
+          android_visibility: 1,
+          ios_badgeType: "Increase",
+          ios_badgeCount: 1,
+          android_badge_type: "Increase",
+          android_badge_count: 1
+        };
+
+        fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pushPayload)
+        }).catch(function(err) {
+          console.warn("New post push error:", err);
+        });
+      });
+    } 
 
     function likePost(postId, isTiktokView) {
   if (!currentUser) return;
