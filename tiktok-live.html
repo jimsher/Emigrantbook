@@ -230,7 +230,7 @@
             font-size: 11px;
         }
 
-        /* 4. რეალური სტუმრების ჩარჩოები (Guest Video Slots) */
+        /* 4. რეალური სტუმრების ჩარჩოები (Co-Host Slots) */
         .tt-guest-rail {
             position: fixed;
             right: 10px;
@@ -270,9 +270,10 @@
             padding: 4px;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
 
-        /* რეალური ვიდეო ნაკადი სტუმრის ჩარჩოში */
+        /* რეალური ვიდეო ნაკადი სტუმრისთვის */
         .tt-guest-video-stream {
             position: absolute;
             top: 0;
@@ -288,6 +289,7 @@
             width: 100% !important;
             height: 100% !important;
             object-fit: cover !important;
+            transform: scaleX(-1) !important;
         }
 
         .tt-guest-overlay-content {
@@ -339,14 +341,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            pointer-events: auto;
-            cursor: pointer;
         }
 
         /* 5. TikTok ცოცხალი ჩათი */
         #ttChatFeed {
             position: fixed;
-            bottom: calc(max(10px, env(safe-area-inset-bottom)) + 54px);
+            bottom: calc(max(10px, env(safe-area-inset-bottom)) + 58px);
             left: 10px;
             width: 72%;
             max-width: 320px;
@@ -411,7 +411,7 @@
             color: #ffffff;
         }
 
-        /* 6. ქვედა პანელი (Row Bottom Footer) - ყოველთვის ფიქსირებული */
+        /* 6. ქვედა პანელი (ყველასთვის ხელმისაწვდომი) */
         .tt-footer-bar {
             position: fixed;
             bottom: max(10px, env(safe-area-inset-bottom, 10px));
@@ -472,16 +472,12 @@
 
         .tt-footer-circle-btn:active { transform: scale(0.9); }
 
-        .tt-dual-guest-icon {
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 1px;
+        .tt-heart-footer-btn {
+            background: linear-gradient(135deg, #fe2c55, #ff007f);
+            border: none;
+            color: white;
+            box-shadow: 0 2px 10px rgba(254, 44, 85, 0.4);
         }
-
-        .tt-rose-icon-wrap { font-size: 20px; }
-        .tt-gift-box-icon { font-size: 18px; color: #fe2c55; }
-        .tt-share-icon { font-size: 16px; color: #ffffff; }
 
         .tt-badge-dot {
             position: absolute;
@@ -504,7 +500,7 @@
             color: #fff;
         }
 
-        /* 7. ეკრანზე მცურავი ნეონის გულები */
+        /* 7. მცურავი გულები */
         #ttHeartsLayer {
             position: fixed;
             bottom: 60px;
@@ -531,7 +527,7 @@
             100% { transform: translateY(-360px) scale(0.8) rotate(18deg); opacity: 0; }
         }
 
-        /* 8. მოდალები: საჩუქრების სია და სტუმრების მართვა */
+        /* 8. მოდალები */
         .tt-modal-sheet-overlay {
             display: none;
             position: fixed;
@@ -591,9 +587,9 @@
             background: #fe2c55;
             color: #fff;
             border: none;
-            padding: 6px 12px;
+            padding: 7px 14px;
             border-radius: 14px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
         }
@@ -618,9 +614,9 @@
     <!-- ზედა რიგი 1 (Host & Viewers) -->
     <div class="tt-header-row-1">
         <div class="tt-host-capsule">
-            <img id="hostAvatar" class="tt-host-avatar" src="https://ui-avatars.com/api/?name=Lasha&background=333&color=fff">
+            <img id="hostAvatar" class="tt-host-avatar" src="https://ui-avatars.com/api/?name=Host&background=333&color=fff">
             <div class="tt-host-meta">
-                <span class="tt-host-name" id="hostDisplayName">ლაშა...</span>
+                <span class="tt-host-name" id="hostDisplayName">Host</span>
                 <span class="tt-host-likes">
                     <i class="fas fa-heart" style="color: #fe2c55; font-size: 9px;"></i>
                     <span id="likesCountBadge">5.4K</span>
@@ -660,7 +656,7 @@
 
     <!-- მარჯვენა სტუმრების რეალური ჩარჩოები -->
     <div class="tt-guest-rail">
-        <div class="tt-request-guest-tag" id="coHostRequestBtn" onclick="requestCoHost()">მოთხოვნა</div>
+        <div class="tt-request-guest-tag" id="coHostRequestBtn" onclick="handleCoHostButtonClick()">მოთხოვნა</div>
 
         <!-- სტუმარი 1 -->
         <div class="tt-guest-card" id="guestSlotCard_1" onclick="handleGuestSlotClick(1)">
@@ -670,7 +666,7 @@
                     <i class="far fa-circle-dot" style="font-size: 9px;"></i> <span id="guestDiamonds_1">18</span>
                 </div>
                 <div class="tt-guest-avatar-wrap" id="guestAvatarWrap_1">
-                    <img id="guestAvatarImg_1" src="https://ui-avatars.com/api/?name=Guest+1&background=25f4ee&color=000">
+                    <img id="guestAvatarImg_1" src="https://ui-avatars.com/api/?name=G1&background=25f4ee&color=000">
                 </div>
                 <div class="tt-guest-action-pill" id="guestLabel_1">
                     <span id="guestName_1">სტუმარი 1</span>
@@ -687,7 +683,7 @@
                     <i class="far fa-circle-dot" style="font-size: 9px;"></i> <span id="guestDiamonds_2">6</span>
                 </div>
                 <div class="tt-guest-avatar-wrap" id="guestAvatarWrap_2">
-                    <img id="guestAvatarImg_2" src="https://ui-avatars.com/api/?name=Guest+2&background=fe2c55&color=fff">
+                    <img id="guestAvatarImg_2" src="https://ui-avatars.com/api/?name=G2&background=fe2c55&color=fff">
                 </div>
                 <div class="tt-guest-action-pill" id="guestLabel_2">
                     <span id="guestName_2">სტუმარი 2</span>
@@ -703,7 +699,7 @@
     <!-- ცოცხალი ჩათი -->
     <div id="ttChatFeed"></div>
 
-    <!-- ქვედა პანელი (სქრინის იდენტური და ყოველთვის ფიქსირებული) -->
+    <!-- ქვედა პანელი (100%-ით ყველასთვის ხელმისაწვდომი) -->
     <div class="tt-footer-bar" onclick="event.stopPropagation()">
         <!-- ინფუთი -->
         <div class="tt-input-capsule">
@@ -712,8 +708,8 @@
         </div>
 
         <!-- Co-host / Multi-guest ღილაკი -->
-        <div class="tt-footer-circle-btn" onclick="openCoHostMenu()" title="თანამასპინძლები">
-            <div class="tt-dual-guest-icon">
+        <div class="tt-footer-circle-btn" onclick="handleCoHostButtonClick()" title="თანამასპინძლები">
+            <div style="font-size: 16px; display: flex; align-items: center; gap: 1px;">
                 <i class="fas fa-user" style="color: #fe2c55; font-size: 13px;"></i>
                 <i class="fas fa-user" style="color: #25f4ee; font-size: 13px; margin-left: -3px;"></i>
             </div>
@@ -722,22 +718,27 @@
 
         <!-- 🌹 Rose ღილაკი -->
         <div class="tt-footer-circle-btn" onclick="sendRoseGift()" title="ვარდის გაგზავნა">
-            <span class="tt-rose-icon-wrap">🌹</span>
+            <span style="font-size: 20px;">🌹</span>
         </div>
 
         <!-- 🎁 Gift Box ღილაკი -->
         <div class="tt-footer-circle-btn" onclick="openGiftsSheet()" title="საჩუქრები">
-            <i class="fas fa-gift tt-gift-box-icon"></i>
+            <i class="fas fa-gift" style="font-size: 18px; color: #fe2c55;"></i>
+        </div>
+
+        <!-- 💖 Heart ღილაკი -->
+        <div class="tt-footer-circle-btn tt-heart-footer-btn" onclick="triggerLikeAction()" title="მოწონება">
+            <i class="fas fa-heart" style="font-size: 17px;"></i>
         </div>
 
         <!-- ↗ Share ღილაკი მთვლელით -->
         <div class="tt-footer-circle-btn" onclick="shareLiveLink()" title="გაზიარება">
-            <i class="fas fa-share tt-share-icon"></i>
+            <i class="fas fa-share" style="font-size: 16px; color: #ffffff;"></i>
             <span class="tt-share-badge" id="shareCounter">67</span>
         </div>
     </div>
 
-    <!-- 🎁 საჩუქრების სია მოდალი -->
+    <!-- 🎁 საჩუქრების მოდალი -->
     <div id="giftsSheetModal" class="tt-modal-sheet-overlay" onclick="closeGiftsSheet()">
         <div class="tt-modal-sheet" onclick="event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -769,16 +770,14 @@
         </div>
     </div>
 
-    <!-- 👥 სტუმრების / თანამასპინძლების მართვის მოდალი -->
+    <!-- 👥 სტუმრების / Co-Host მართვის მოდალი -->
     <div id="coHostSheetModal" class="tt-modal-sheet-overlay" onclick="closeCoHostMenu()">
         <div class="tt-modal-sheet" onclick="event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-weight: 700; font-size: 15px;" id="coHostModalTitle">თანამასპინძლები და სტუმრები</span>
+                <span style="font-weight: 700; font-size: 15px;">თანამასპინძლები და სტუმრები</span>
                 <span style="font-size: 20px; cursor: pointer;" onclick="closeCoHostMenu()">&times;</span>
             </div>
-            <div id="coHostModalContent" style="overflow-y: auto; max-height: 50vh;">
-                <!-- დინამიური სია -->
-            </div>
+            <div id="coHostModalContent" style="overflow-y: auto; max-height: 50vh;"></div>
         </div>
     </div>
 
@@ -813,7 +812,7 @@
         let availableCameras = [];
 
         let myName = "მომხმარებელი";
-        let myPhoto = "https://ui-avatars.com/api/?name=User&background=fe2c55&color=fff";
+        let myPhoto = "";
 
         let liveDocUnsub = null;
         let chatUnsub = null;
@@ -822,7 +821,7 @@
         let activeGuestsList = [];
         let pendingRequestsList = [];
 
-        // მომხმარებლის პროფილის სრული ამოღება
+        // პროფილის ამოღება
         async function fetchProfile(user) {
             if (!user) return;
             myName = user.displayName || user.email?.split('@')[0] || "მომხმარებელი";
@@ -836,11 +835,15 @@
                     myPhoto = d.avatar_url || d.avatar || d.photo || d.profile_pic || myPhoto;
                 }
             } catch (e) {
-                console.warn("Profile fetch warning:", e);
+                console.warn("Profile fetch error:", e);
+            }
+
+            if (!myPhoto) {
+                myPhoto = `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=fe2c55&color=fff`;
             }
         }
 
-        // გვერდის გახსნისთანავე ეთერში შესვლა / დაწყება
+        // გვერდის გახსნისთანავე ავტომატური დაწყება / შესვლა
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 await fetchProfile(user);
@@ -848,7 +851,6 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const joinId = urlParams.get('join');
 
-                // Agora Event Listener წინასწარ უნდა დაერთოს
                 attachAgoraStreamListener();
 
                 if (joinId) {
@@ -862,17 +864,15 @@
             }
         });
 
-        // Agora ნაკადების მოსმენა (ჰოსტიცა და სტუმრებიც)
+        // Agora ნაკადების მოსმენა (ჰოსტის და სტუმრების ვიდეოები)
         function attachAgoraStreamListener() {
             liveClient.on("user-published", async (user, mediaType) => {
                 await liveClient.subscribe(user, mediaType);
 
                 if (mediaType === "video") {
-                    // თუ შემოსული ვიდეო თავად ჰოსტისაა
                     if (user.uid === hostUid || (!hostUid && !isHost)) {
                         user.videoTrack.play("remote-live-video");
                     } else {
-                        // თუ სტუმრის ვიდეოა -> ვსვამთ შესაბამის ჩარჩოში
                         const slot = getGuestSlotByUid(user.uid);
                         playGuestVideo(slot, user.videoTrack);
                     }
@@ -960,11 +960,13 @@
             const data = docSnap.data();
             hostUid = data.host_id;
 
-            // თუ თავად ჰოსტი შემოვიდა join ლინკით
             if (hostUid === auth.currentUser.uid) {
                 isHost = true;
                 document.getElementById('followBtn').style.display = 'none';
                 document.getElementById('coHostRequestBtn').style.display = 'none';
+            } else {
+                document.getElementById('followBtn').style.display = 'flex';
+                document.getElementById('coHostRequestBtn').style.display = 'block';
             }
 
             document.getElementById('hostDisplayName').innerText = data.host_name || "Host";
@@ -976,9 +978,9 @@
 
                 db.collection('lives').doc(docId).update({
                     viewers: firebase.firestore.FieldValue.arrayUnion({ uid: auth.currentUser.uid, name: myName, photo: myPhoto })
-                });
+                }).catch(() => {});
 
-                // სისტემური შეტყობინება ჩათში
+                // სისტემური შემოსვლა ჩათში
                 db.collection('lives').doc(docId).collection('comments').add({
                     is_system: true,
                     text: `${myName} ახლა ჩვენთანაა`,
@@ -988,28 +990,26 @@
                 syncRealtimeData(docId);
             } catch (e) {
                 console.error("Join Error:", e);
+                syncRealtimeData(docId);
             }
         }
 
         // 3. რეალურ დროში სინქრონიზაცია (მაყურებლები, სტუმრები, ჩათი, ლაიქები)
         function syncRealtimeData(docId) {
+            if (liveDocUnsub) liveDocUnsub();
             liveDocUnsub = db.collection('lives').doc(docId).onSnapshot(doc => {
                 if (doc.exists) {
                     const d = doc.data();
 
-                    // მაყურებლები
                     const vCount = (d.viewers || []).length;
                     document.getElementById('viewerCountBadge').innerText = vCount > 1 ? vCount : "880";
 
-                    // ლაიქები და გაზიარება
                     document.getElementById('likesCountBadge').innerText = formatCount(d.likes_count || 5400);
                     document.getElementById('shareCounter').innerText = d.shares_count || 67;
 
-                    // სტუმრების სინქრონიზაცია
                     activeGuestsList = d.active_guests || [];
                     renderActiveGuestsUI(activeGuestsList);
 
-                    // შემოწმება: ხომ არ ამოიყვანა ჰოსტმა მიმდინარე იუზერი?
                     checkIfBecameGuest(activeGuestsList);
 
                     if (d.status === "ended" && !isHost) {
@@ -1019,7 +1019,8 @@
                 }
             });
 
-            // ჩათის მოსმენა
+            // ჩათი
+            if (chatUnsub) chatUnsub();
             chatUnsub = db.collection('lives').doc(docId).collection('comments').orderBy('ts', 'asc').onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {
@@ -1037,7 +1038,7 @@
                             const userImg = m.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || 'U')}&background=fe2c55&color=fff`;
 
                             row.innerHTML = `
-                                <img class="tt-chat-user-ava" src="${userImg}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=U&background=fe2c55&color=fff';">
+                                <img class="tt-chat-user-ava" src="${userImg}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(m.name || 'U')}&background=fe2c55&color=fff';">
                                 <div class="tt-chat-text-wrap">
                                     <span class="tt-chat-author-name">${m.name || 'User'}</span>
                                     <span class="tt-chat-content">${m.text || ''}</span>
@@ -1050,7 +1051,7 @@
                 });
             });
 
-            // გულების ანიმაციის მოსმენა
+            // გულების ანიმაცია
             db.collection('lives').doc(docId).collection('reactions').orderBy('ts', 'desc').limit(4).onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") spawnNeonHeart();
@@ -1058,8 +1059,23 @@
             });
         }
 
-        // 4. სტუმრების ამოყვანის ლოგიკა (REAL CO-HOST)
-        // ა) მაყურებელი აგზავნის ეთერში ასვლის მოთხოვნას
+        // 4. სტუმრების რეალური ამოყვანის სისტემა (REAL CO-HOST)
+        function handleCoHostButtonClick() {
+            if (isHost) {
+                openCoHostMenu();
+            } else {
+                requestCoHost();
+            }
+        }
+
+        function handleGuestSlotClick(slot) {
+            if (isHost) {
+                openCoHostMenu();
+            } else {
+                requestCoHost();
+            }
+        }
+
         async function requestCoHost() {
             if (!currentLiveDocId) return;
             try {
@@ -1070,14 +1086,14 @@
                     status: 'pending',
                     ts: Date.now()
                 });
-                alert("მოთხოვნა გაიგზავნა! დაელოდეთ ჰოსტის დათანხმებას.");
+                alert("მოთხოვნა გაიგზავნა! ჰოსტის დათანხმებისთანავე ჩაერთვებით ეთერში.");
             } catch (e) {
                 console.error("Co-host request error:", e);
             }
         }
 
-        // ბ) ჰოსტი უსმენს მოთხოვნებს
         function listenToGuestRequests(docId) {
+            if (requestsUnsub) requestsUnsub();
             requestsUnsub = db.collection('lives').doc(docId).collection('guest_requests')
                 .where('status', '==', 'pending')
                 .onSnapshot(snap => {
@@ -1093,14 +1109,12 @@
                 });
         }
 
-        // გ) ჰოსტი ხსნის სტუმრების მართვის მენიუს
         function openCoHostMenu() {
             const modal = document.getElementById('coHostSheetModal');
             const content = document.getElementById('coHostModalContent');
             content.innerHTML = "";
 
             if (!isHost) {
-                // მაყურებლისთვის: მოთხოვნის გაგზავნა
                 content.innerHTML = `
                     <div style="padding: 15px 0; text-align: center;">
                         <p style="margin-bottom: 12px; font-size: 14px; color: #ccc;">გსურთ ჩაერთოთ პირდაპირ ეთერში თანამასპინძლად?</p>
@@ -1108,11 +1122,9 @@
                     </div>
                 `;
             } else {
-                // ჰოსტისთვის: მოთხოვნების სია და აქტიური სტუმრები
                 let html = "";
-
                 if (activeGuestsList.length > 0) {
-                    html += `<div style="font-size: 12px; color: #888; margin-bottom: 6px;">აქტიური სტუმრები:</div>`;
+                    html += `<div style="font-size: 12px; color: #888; margin-bottom: 6px;">აქტიური სტუმრები ეთერში:</div>`;
                     activeGuestsList.forEach(g => {
                         html += `
                             <div class="tt-request-user-row">
@@ -1153,7 +1165,7 @@
             document.getElementById('coHostSheetModal').style.display = 'none';
         }
 
-        // დ) ჰოსტი ათანხმებს სტუმარს
+        // ჰოსტის მიერ სტუმრის დათანხმება
         async function acceptGuestToStream(uid, name, photo) {
             if (activeGuestsList.length >= 2) {
                 alert("მაქსიმუმ 2 სტუმრის ამოყვანაა შესაძლებელი!");
@@ -1162,7 +1174,6 @@
 
             const takenSlots = activeGuestsList.map(g => g.slot);
             const freeSlot = !takenSlots.includes(1) ? 1 : 2;
-
             const newGuestObj = { uid, name, photo, slot: freeSlot };
 
             await db.collection('lives').doc(currentLiveDocId).update({
@@ -1176,7 +1187,7 @@
             closeCoHostMenu();
         }
 
-        // ე) ჰოსტი ჩამოიყვანს სტუმარს
+        // ჰოსტის მიერ სტუმრის ჩამოყვანა
         async function removeGuestFromStream(uid) {
             const guestToRemove = activeGuestsList.find(g => g.uid === uid);
             if (!guestToRemove) return;
@@ -1188,7 +1199,7 @@
             closeCoHostMenu();
         }
 
-        // ვ) როდესაც მაყურებელს ამოიყვანს ჰოსტი, ის ავტომატურად ერთვება კამერით
+        // როდესაც მაყურებელს ამოიყვანს ჰოსტი -> რთავს კამერას და მიკროფონს
         async function checkIfBecameGuest(guests) {
             const currentUid = auth.currentUser.uid;
             const amIGuest = guests.find(g => g.uid === currentUid);
@@ -1199,16 +1210,14 @@
 
                 alert("გილოცავთ! თქვენ ამოგიყვანეს პირდაპირ ეთერში!");
 
-                // Agora Role-ის შეცვლა მაყურებლიდან ჰოსტზე
                 await liveClient.setClientRole("host");
-                guestLocalTracks.video = await AgoraRTC.createCameraVideoTrack({ encoderConfig: "240p_1" });
+                guestLocalTracks.video = await AgoraRTC.createCameraVideoTrack({ encoderConfig: "240p_1", optimizationMode: "motion" });
                 guestLocalTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
 
                 await liveClient.publish([guestLocalTracks.audio, guestLocalTracks.video]);
                 playGuestVideo(myGuestSlot, guestLocalTracks.video);
 
             } else if (!amIGuest && isCurrentGuest) {
-                // თუ ჰოსტმა ჩამოიყვანა
                 isCurrentGuest = false;
                 if (guestLocalTracks.video) { guestLocalTracks.video.stop(); guestLocalTracks.video.close(); }
                 if (guestLocalTracks.audio) { guestLocalTracks.audio.stop(); guestLocalTracks.audio.close(); }
@@ -1219,16 +1228,16 @@
             }
         }
 
-        // ზ) სტუმრის ჩარჩოების ვიზუალური განახლება
         function renderActiveGuestsUI(guests) {
-            // გასუფთავება
             clearGuestSlot(1);
             clearGuestSlot(2);
 
             guests.forEach(g => {
                 const slot = g.slot;
-                document.getElementById(`guestName_${slot}`).innerText = g.name;
-                document.getElementById(`guestAvatarImg_${slot}`).src = g.photo;
+                const nameEl = document.getElementById(`guestName_${slot}`);
+                const imgEl = document.getElementById(`guestAvatarImg_${slot}`);
+                if (nameEl) nameEl.innerText = g.name;
+                if (imgEl) imgEl.src = g.photo;
             });
         }
 
@@ -1259,14 +1268,6 @@
             return g ? g.slot : 1;
         }
 
-        function handleGuestSlotClick(slot) {
-            if (isHost) {
-                openCoHostMenu();
-            } else {
-                requestCoHost();
-            }
-        }
-
         // 5. კომენტარები, ვარდები, საჩუქრები და ლაიქები
         async function sendLiveComment() {
             const inp = document.getElementById('chatMsgInput');
@@ -1284,7 +1285,6 @@
             }).catch(e => console.error("Comment send error:", e));
         }
 
-        // 🌹 Rose გაგზავნა
         function sendRoseGift() {
             sendCustomGift("ვარდი 🌹", "🌹");
         }
@@ -1295,7 +1295,6 @@
 
             const userAva = myPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=fe2c55&color=fff`;
 
-            // ჩათში გამოჩენა
             db.collection('lives').doc(currentLiveDocId).collection('comments').add({
                 name: myName,
                 photo: userAva,
@@ -1303,12 +1302,10 @@
                 ts: Date.now()
             }).catch(() => {});
 
-            // ლაიქების გაზრდა
             db.collection('lives').doc(currentLiveDocId).update({
                 likes_count: firebase.firestore.FieldValue.increment(10)
             }).catch(() => {});
 
-            // გულების ფეიერვერკი
             for (let i = 0; i < 6; i++) {
                 setTimeout(() => spawnNeonHeart(), i * 120);
             }
@@ -1322,25 +1319,7 @@
             document.getElementById('giftsSheetModal').style.display = 'none';
         }
 
-        // გაზიარება
-        function shareLiveLink() {
-            const url = window.location.origin + window.location.pathname + '?join=' + currentLiveDocId;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(url);
-                alert("ლაივის ბმული დაკოპირდა!");
-            } else {
-                prompt("დააკოპირეთ ბმული:", url);
-            }
-
-            if (currentLiveDocId) {
-                db.collection('lives').doc(currentLiveDocId).update({
-                    shares_count: firebase.firestore.FieldValue.increment(1)
-                }).catch(() => {});
-            }
-        }
-
-        // ეკრანზე თითის დაჭერით ლაიქი (Tap-to-Like)
-        function handleTapScreen(e) {
+        function triggerLikeAction() {
             spawnNeonHeart();
             if (!currentLiveDocId) return;
 
@@ -1351,6 +1330,10 @@
             db.collection('lives').doc(currentLiveDocId).collection('reactions').add({
                 ts: Date.now()
             }).catch(() => {});
+        }
+
+        function handleTapScreen(e) {
+            triggerLikeAction();
         }
 
         function spawnNeonHeart() {
@@ -1367,13 +1350,28 @@
             setTimeout(() => heart.remove(), 2200);
         }
 
+        function shareLiveLink() {
+            const url = window.location.origin + window.location.pathname + '?join=' + currentLiveDocId;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url);
+                alert("ლაივის ბმული დაკოპირდა!");
+            } else {
+                prompt("დააკოპირეთ ბმული:", url);
+            }
+
+            if (currentLiveDocId) {
+                db.collection('lives').doc(currentLiveDocId).update({
+                    shares_count: firebase.firestore.FieldValue.increment(1)
+                }).catch(() => {});
+            }
+        }
+
         function followHost() {
             const btn = document.getElementById('followBtn');
             btn.innerText = "გამოწერილია";
             btn.style.background = "rgba(255,255,255,0.25)";
         }
 
-        // კამერის შებრუნება
         async function switchCamera() {
             const targetTrack = isCurrentGuest ? guestLocalTracks.video : localTracks.video;
             if (!targetTrack) return;
@@ -1401,7 +1399,6 @@
             return num;
         }
 
-        // გასვლა / დასრულება
         async function exitLive() {
             if (liveDocUnsub) liveDocUnsub();
             if (chatUnsub) chatUnsub();
