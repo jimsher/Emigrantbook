@@ -6035,31 +6035,37 @@ function loadPosts(isNextPage) {
 // აქტიური ლაივების მოსმენა Feed-ისთვის
 // 🔴 TikTok-ის სტილის პირდაპირი ეთერის პლეიერი მთავარ გვერდზე
 // აქტიური ლაივების მოსმენა Feed-ისთვის
+// აქტიური ლაივების მოსმენა Feed-ისთვის
 // 🔴 TikTok-ისა და Facebook-ის დამოუკიდებელი ლაივები მთავარ გვერდზე
 var inlineAgoraClients = {};
 
 function subscribeActiveLivesForFeed() {
-  var t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+  var t = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS[currentLang]) ? TRANSLATIONS[currentLang] : (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS['en'] ? TRANSLATIONS['en'] : {});
 
   db.collection('lives')
     .where('status', '==', 'active')
     .onSnapshot(function(snapshot) {
+      // 1. კონტეინერის უსაფრთხო მოძებნა და განთავსება postsWall-ის გარეთ
       var liveContainer = document.getElementById('active-lives-feed-zone');
-      if (!liveContainer) {
-        var postsWall = document.getElementById('posts-wall');
-        if (postsWall) {
+      var postsWall = document.getElementById('posts-wall');
+
+      if (postsWall && postsWall.parentNode) {
+        if (!liveContainer) {
           liveContainer = document.createElement('div');
           liveContainer.id = 'active-lives-feed-zone';
-          // ჩასმა პირდაპირ posts-wall-ის თავში (შიგნით), რომ პოსტების კონტეინერის ზომა დაიჭიროს
-          postsWall.insertBefore(liveContainer, postsWall.firstChild);
+          // ✅ ვსვამთ postsWall-ის გარეთ (მის წინ), რომ პოსტების ჩატვირთვამ აღარასდროს წაშალოს!
+          postsWall.parentNode.insertBefore(liveContainer, postsWall);
+        } else if (liveContainer.parentNode === postsWall) {
+          // ✅ თუ ძველი კოდით postsWall-ის შიგნით იყო ჩამჯდარი, გამოგვაქვს გარეთ!
+          postsWall.parentNode.insertBefore(liveContainer, postsWall);
         }
       }
 
       if (!liveContainer) return;
 
+      // თუ აქტიური ლაივები აღარ არის
       if (!snapshot || snapshot.empty) {
         liveContainer.innerHTML = "";
-        // ძველი კლიენტების გათიშვა
         Object.keys(inlineAgoraClients).forEach(function(id) {
           try { inlineAgoraClients[id].leave(); } catch(e){}
         });
@@ -6067,15 +6073,25 @@ function subscribeActiveLivesForFeed() {
         return;
       }
 
-      liveContainer.innerHTML = "";
+      var currentActiveIds = [];
 
       snapshot.forEach(function(docSnap) {
         var liveData = docSnap.data();
         var liveId = docSnap.id;
-        var hostPhoto = liveData.host_photo || DEFAULT_AVATAR_URL;
+        currentActiveIds.push(liveId);
+
+        var hostPhoto = liveData.host_photo || (typeof DEFAULT_AVATAR_URL !== "undefined" ? DEFAULT_AVATAR_URL : "https://ui-avatars.com/api/?name=User&background=fe2c55&color=fff");
         var hostName = liveData.host_name || (t.userUnit || "User");
         var liveTitle = liveData.title || (t.liveStreamDefault || "Live Video");
         var viewersCount = (liveData.viewers && liveData.viewers.length) ? liveData.viewers.length : 1;
+
+        // ✅ თუ ბარათი უკვე დგას ეკრანზე, ხელახლა აღარ ვშლით (რომ ვიდეო არ გაითიშოს და არ გაქრეს)
+        var existingCard = document.getElementById("live-card-" + liveId);
+        if (existingCard) {
+          var nameEl = existingCard.querySelector('.tt-host-real-name');
+          if (nameEl) nameEl.innerText = hostName;
+          return;
+        }
 
         var liveCardHtml = "";
 
@@ -6083,7 +6099,9 @@ function subscribeActiveLivesForFeed() {
         // 🎵 1. თუ არის TIKTOK LIVE (სწორი ჩარჩო, გაწელვის გარეშე)
         // ========================================================
         if (liveData.type === 'tiktok') {
-          liveCardHtml = `
+          var ttWrapper = document.createElement('div');
+          ttWrapper.id = "live-card-" + liveId;
+          ttWrapper.innerHTML = `
             <div class="tt-feed-full-card" onclick="window.location.href='tiktok-live.html?join=${liveId}'">
               <!-- Agora ცოცხალი ვიდეო ნაკადი -->
               <div id="inline-agora-video-${liveId}" class="tt-feed-video-player"></div>
@@ -6124,12 +6142,16 @@ function subscribeActiveLivesForFeed() {
               </div>
             </div>
           `;
+          liveContainer.appendChild(ttWrapper);
+          startInlineAgoraStream(liveId);
         } 
         // ========================================================
         // 🔵 2. თუ არის FACEBOOK LIVE (ორიგინალი ძველი ბარათი)
         // ========================================================
         else {
-          liveCardHtml = `
+          var fbWrapper = document.createElement('div');
+          fbWrapper.id = "live-card-" + liveId;
+          fbWrapper.innerHTML = `
             <div class="live-tiktok-card">
               <div class="live-tiktok-header">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -6161,19 +6183,26 @@ function subscribeActiveLivesForFeed() {
               </div>
             </div>
           `;
+          liveContainer.appendChild(fbWrapper);
+          startInlineAgoraStream(liveId);
         }
+      });
 
-        liveContainer.innerHTML += liveCardHtml;
-
-        // Agora RTC ვიდეოს დაკავშირება
-        startInlineAgoraStream(liveId);
+      // დასრულებული ლაივების გაწმენდა
+      Object.keys(inlineAgoraClients).forEach(function(id) {
+        if (!currentActiveIds.includes(id)) {
+          try { inlineAgoraClients[id].leave(); } catch(e){}
+          delete inlineAgoraClients[id];
+          var oldCard = document.getElementById("live-card-" + id);
+          if (oldCard) oldCard.remove();
+        }
       });
     }, function(err) {
       console.error("Active lives error:", err);
     });
 }
 
-// Agora-ს ვიდეოს გაშვება ფიდში (Muted რეჟიმში)
+// Agora-ს ვიდეოს გაშვება ფიდში (Muted რეჟიმში, უსაფრთხო UID-ით)
 async function startInlineAgoraStream(liveId) {
   if (typeof AgoraRTC === "undefined") return;
   
@@ -6185,11 +6214,12 @@ async function startInlineAgoraStream(liveId) {
   inlineAgoraClients[liveId] = client;
 
   var appId = "258897e8fb5f4dd089b761eca6568b24";
-  var myUid = (currentUser ? currentUser.uid : "viewer_" + Math.floor(Math.random() * 10000));
+  // ✅ შემთხვევითი უნიკალური ID, რომ ჰოსტთან ან მაყურებელთან არასდროს მოხდეს კონფლიქტი
+  var randomUid = Math.floor(Math.random() * 899999 + 100000);
 
   try {
     await client.setClientRole("audience");
-    await client.join(appId, liveId, null, myUid);
+    await client.join(appId, liveId, null, randomUid);
 
     client.on("user-published", async function(user, mediaType) {
       await client.subscribe(user, mediaType);
@@ -6205,7 +6235,7 @@ async function startInlineAgoraStream(liveId) {
   } catch (err) {
     console.warn("Inline Agora Stream join warning:", err);
   }
-}
+}                    
 // აქ მთავრდება
 
     function checkMyLikeState(postId) {
