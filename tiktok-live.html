@@ -142,6 +142,7 @@
             gap: 6px;
         }
 
+        /* ✅ წითლად მოხაზული ბეიჯი - დაწკაპუნებადი */
         .tt-top-viewer-badge {
             background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(16px);
@@ -150,6 +151,13 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .tt-top-viewer-badge:active {
+            transform: scale(0.95);
+            background: rgba(0, 0, 0, 0.65);
         }
 
         .tt-rank-crown-circle {
@@ -499,7 +507,7 @@
             color: #fff;
         }
 
-        /* 7. მცურავი სუფთა წითელი გულები (სადა და ლამაზი) */
+        /* 7. მცურავი სუფთა წითელი გულები */
         #ttHeartsLayer {
             position: fixed;
             bottom: 60px;
@@ -515,28 +523,16 @@
             position: absolute;
             bottom: 0;
             font-size: 26px;
-            color: #fe2c55 !important; /* მხოლოდ წითელი */
+            color: #fe2c55 !important;
             animation: ttFlyUpAnim 1.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
             filter: drop-shadow(0 2px 6px rgba(254, 44, 85, 0.6));
         }
 
         @keyframes ttFlyUpAnim {
-            0% {
-                transform: translateY(0) scale(0.65);
-                opacity: 1;
-            }
-            30% {
-                transform: translateY(-80px) scale(1.15) rotate(10deg);
-                opacity: 0.95;
-            }
-            70% {
-                transform: translateY(-200px) scale(1.05) rotate(-10deg);
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateY(-330px) scale(0.85) rotate(6deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) scale(0.65); opacity: 1; }
+            30% { transform: translateY(-80px) scale(1.15) rotate(10deg); opacity: 0.95; }
+            70% { transform: translateY(-200px) scale(1.05) rotate(-10deg); opacity: 0.8; }
+            100% { transform: translateY(-330px) scale(0.85) rotate(6deg); opacity: 0; }
         }
 
         /* 8. მოდალები */
@@ -566,6 +562,71 @@
             max-height: 70vh;
             border-top: 1px solid rgba(255, 255, 255, 0.12);
         }
+
+        /* 🤍 9. TIKTOK-ის სუფთა თეთრი სადა მაყურებელთა მოდალი (BOTTOM SHEET) */
+        .tt-white-viewers-sheet {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            color: #161823;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 12px 18px max(16px, env(safe-area-inset-bottom)) 18px;
+            display: flex;
+            flex-direction: column;
+            max-height: 68vh;
+            animation: ttSlideUpSheet 0.26s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes ttSlideUpSheet {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .tt-sheet-drag-handle {
+            width: 38px;
+            height: 4px;
+            background: #e2e4ea;
+            border-radius: 2px;
+            margin: 0 auto 12px auto;
+        }
+
+        .tt-white-sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f2f3f5;
+        }
+
+        .tt-white-sheet-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #161823;
+        }
+
+        .tt-white-sheet-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #8a8b91;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tt-viewers-list-scroll {
+            overflow-y: auto;
+            max-height: 52vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 6px;
+        }
+
+        .tt-viewers-list-scroll::-webkit-scrollbar { display: none; }
 
         .tt-gift-grid {
             display: grid;
@@ -638,8 +699,9 @@
         </div>
 
         <div class="tt-top-right-bar">
-            <div class="tt-top-viewer-badge">
-                <div class="tt-rank-crown-circle">2</div>
+            <!-- 🔴 წითლად მოხაზული ბეიჯი (მაყურებლების მოდალის გამომძახებელი) -->
+            <div class="tt-top-viewer-badge" onclick="openViewersListModal()" title="მაყურებლების სია">
+                <div class="tt-rank-crown-circle" id="crownRankBadge">2</div>
                 <span class="tt-viewers-num" id="viewerCountBadge">1</span>
             </div>
             <button class="tt-top-icon-btn" onclick="switchCamera()"><i class="fas fa-camera-rotate" style="font-size: 13px;"></i></button>
@@ -750,6 +812,23 @@
         </div>
     </div>
 
+    <!-- 🤍 10. TIKTOK-ის სუფთა თეთრი მაყურებელთა მოდალი (BOTTOM SHEET) -->
+    <div id="viewersSheetOverlay" class="tt-modal-sheet-overlay" onclick="closeViewersListModal()">
+        <div class="tt-white-viewers-sheet" onclick="event.stopPropagation()">
+            <!-- ნაცრისფერი პატარა სახელური -->
+            <div class="tt-sheet-drag-handle"></div>
+
+            <!-- ჰედერი -->
+            <div class="tt-white-sheet-header">
+                <span class="tt-white-sheet-title">მაყურებლები (<span id="modalViewersCount">0</span>)</span>
+                <button class="tt-white-sheet-close" onclick="closeViewersListModal()">&times;</button>
+            </div>
+
+            <!-- მაყურებელთა სია (ავატარით და სახელით) -->
+            <div id="viewersListContainer" class="tt-viewers-list-scroll"></div>
+        </div>
+    </div>
+
     <!-- 🎁 საჩუქრების მოდალი -->
     <div id="giftsSheetModal" class="tt-modal-sheet-overlay" onclick="closeGiftsSheet()">
         <div class="tt-modal-sheet" onclick="event.stopPropagation()">
@@ -832,6 +911,7 @@
 
         let activeGuestsList = [];
         let pendingRequestsList = [];
+        let currentViewers = []; // ✅ მაყურებელთა სია
 
         async function fetchProfile(user) {
             if (!user) return;
@@ -911,13 +991,13 @@
             });
         }
 
-        // 🚀 ლაივის დაწყება (HOST) - რეალური მთვლელი 0-დან
+        // 🚀 ლაივის დაწყება (HOST)
         async function startLiveInstantly() {
             isHost = true;
             hostUid = auth.currentUser.uid;
             document.getElementById('hostDisplayName').innerText = myName;
             document.getElementById('hostAvatar').src = myPhoto;
-            document.getElementById('likesCountBadge').innerText = "0"; // რეალური 0
+            document.getElementById('likesCountBadge').innerText = "0";
             document.getElementById('followBtn').style.display = 'none';
             document.getElementById('coHostRequestBtn').style.display = 'none';
 
@@ -928,7 +1008,7 @@
                     host_photo: myPhoto,
                     status: "active",
                     type: "tiktok",
-                    likes_count: 0, // რეალური 0
+                    likes_count: 0,
                     shares_count: 0,
                     active_guests: [],
                     created_at: firebase.firestore.FieldValue.serverTimestamp(),
@@ -983,7 +1063,6 @@
             document.getElementById('hostDisplayName').innerText = data.host_name || "Host";
             document.getElementById('hostAvatar').src = data.host_photo || myPhoto;
 
-            // რეალური მთვლელი ბაზიდან
             const currentLikes = (data.likes_count !== undefined && data.likes_count !== null) ? data.likes_count : 0;
             document.getElementById('likesCountBadge').innerText = formatCount(currentLikes);
 
@@ -991,6 +1070,7 @@
                 await liveClient.setClientRole("audience");
                 await liveClient.join(AGORA_APP_ID, docId, null, auth.currentUser.uid);
 
+                // ✅ მაყურებლის ჩაწერა ბაზაში თავისი ავატარით
                 db.collection('lives').doc(docId).update({
                     viewers: firebase.firestore.FieldValue.arrayUnion({ uid: auth.currentUser.uid, name: myName, photo: myPhoto })
                 }).catch(() => {});
@@ -1008,18 +1088,27 @@
             }
         }
 
-        // 3. რეალურ დროში სინქრონიზაცია (რეალური ლაიქების მთვლელი)
+        // 3. რეალურ დროში სინქრონიზაცია
         function syncRealtimeData(docId) {
             if (liveDocUnsub) liveDocUnsub();
             liveDocUnsub = db.collection('lives').doc(docId).onSnapshot(doc => {
                 if (doc.exists) {
                     const d = doc.data();
 
-                    // მაყურებლები
-                    const vCount = (d.viewers || []).length;
+                    // ✅ მაყურებელთა სია და რაოდენობა
+                    currentViewers = d.viewers || [];
+                    const vCount = currentViewers.length;
                     document.getElementById('viewerCountBadge').innerText = vCount > 0 ? vCount : "1";
+                    
+                    const modalCountEl = document.getElementById('modalViewersCount');
+                    if (modalCountEl) modalCountEl.innerText = vCount;
 
-                    // ✅ რეალური ლაიქების მთვლელი (არანაირი 5.4K მაკეტი)
+                    // თუ მაყურებელთა თეთრი მოდალი ღიაა, განახლდეს რეალურ დროში
+                    const overlay = document.getElementById('viewersSheetOverlay');
+                    if (overlay && overlay.style.display === 'flex') {
+                        renderViewersList(currentViewers);
+                    }
+
                     const realLikes = (d.likes_count !== undefined && d.likes_count !== null) ? d.likes_count : 0;
                     document.getElementById('likesCountBadge').innerText = formatCount(realLikes);
 
@@ -1069,13 +1158,12 @@
                 });
             });
 
-            // ✅ გულების ანიმაციის მოსმენა (სხვისი გამოგზავნილი გულები)
+            // გულების ანიმაცია
             db.collection('lives').doc(docId).collection('reactions').orderBy('ts', 'desc').limit(4).onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {
                         const rData = change.doc.data();
                         const myUid = auth.currentUser ? auth.currentUser.uid : null;
-                        // თუ საკუთარი გამოგზავნილია, ლოკალურად უკვე გამოვიდა და აღარ გავამეოროთ!
                         if (rData && rData.sender_uid && myUid && rData.sender_uid === myUid) {
                             return;
                         }
@@ -1085,7 +1173,51 @@
             });
         }
 
-        // 4. სტუმრების რეალური ამოყვანის სისტემა (REAL CO-HOST)
+        // 🤍 4. მაყურებელთა თეთრი სადა მოდალის ფუნქციები
+        function openViewersListModal() {
+            renderViewersList(currentViewers);
+            document.getElementById('viewersSheetOverlay').style.display = 'flex';
+        }
+
+        function closeViewersListModal() {
+            document.getElementById('viewersSheetOverlay').style.display = 'none';
+        }
+
+        function renderViewersList(viewers) {
+            const listEl = document.getElementById('viewersListContainer');
+            const countEl = document.getElementById('modalViewersCount');
+            if (!listEl) return;
+
+            const list = viewers || [];
+            if (countEl) countEl.innerText = list.length;
+            listEl.innerHTML = "";
+
+            if (list.length === 0) {
+                listEl.innerHTML = `<div style="text-align: center; color: #8a8b91; font-size: 13.5px; padding: 30px 0;">მაყურებლები ჯერ არ არიან</div>`;
+                return;
+            }
+
+            list.forEach(v => {
+                const vName = v.name || "მომხმარებელი";
+                const vPhoto = v.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(vName)}&background=fe2c55&color=fff`;
+
+                const row = document.createElement('div');
+                row.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f4f5f8;";
+                row.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${vPhoto}" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(vName)}&background=fe2c55&color=fff';" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1.5px solid #edf0f5;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 14px; font-weight: 600; color: #161823;">${vName}</span>
+                            <span style="font-size: 11.5px; color: #8a8b91;">უყურებს პირდაპირ ეთერს</span>
+                        </div>
+                    </div>
+                    <span style="font-size: 11px; font-weight: 700; color: #fe2c55; background: rgba(254, 44, 85, 0.08); padding: 4px 10px; border-radius: 12px; letter-spacing: 0.3px;">LIVE</span>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        // 5. Co-Host სტუმრების სისტემა
         function handleCoHostButtonClick() {
             if (isHost) {
                 openCoHostMenu();
@@ -1291,7 +1423,7 @@
             return g ? g.slot : 1;
         }
 
-        // 5. კომენტარები, ვარდები, საჩუქრები და ლაიქები
+        // 6. კომენტარები, ვარდები, საჩუქრები და ლაიქები
         async function sendLiveComment() {
             const inp = document.getElementById('chatMsgInput');
             const text = inp.value.trim();
@@ -1342,18 +1474,15 @@
             document.getElementById('giftsSheetModal').style.display = 'none';
         }
 
-        // ✅ მოწონების/გულის გაგზავნის ლოგიკა (ზუსტად თითო გული ლოკალურად)
         function triggerLikeAction() {
-            spawnNeonHeart(); // გამოდის ზუსტად 1 გული
+            spawnNeonHeart();
 
             if (!currentLiveDocId) return;
 
-            // ბაზაში რეალური გაზრდა +1-ით
             db.collection('lives').doc(currentLiveDocId).update({
                 likes_count: firebase.firestore.FieldValue.increment(1)
             }).catch(() => {});
 
-            // რეაქცია სხვებისთვის (საკუთარ ID-სთან ერთად)
             db.collection('lives').doc(currentLiveDocId).collection('reactions').add({
                 sender_uid: auth.currentUser ? auth.currentUser.uid : 'anon',
                 ts: Date.now()
@@ -1361,14 +1490,12 @@
         }
 
         function handleTapScreen(e) {
-            // თუ დააწკაპუნა ღილაკზე, ინფუთზე ან მოდალზე, გული არ ამოაგდოს
-            if (e && e.target && e.target.closest('button, input, .tt-footer-bar, .tt-header-row-1, .tt-header-row-2, .tt-guest-rail, .tt-modal-sheet, .tt-modal-sheet-overlay')) {
+            if (e && e.target && e.target.closest('button, input, .tt-footer-bar, .tt-header-row-1, .tt-header-row-2, .tt-guest-rail, .tt-modal-sheet, .tt-modal-sheet-overlay, .tt-white-viewers-sheet')) {
                 return;
             }
             triggerLikeAction();
         }
 
-        // ✅ მხოლოდ სუფთა წითელი გულის შექმნა
         function spawnNeonHeart() {
             const container = document.getElementById('ttHeartsLayer');
             if (!container) return;
@@ -1440,6 +1567,11 @@
 
             if (isHost && currentLiveDocId) {
                 db.collection('lives').doc(currentLiveDocId).update({ status: "ended" }).catch(() => {});
+            } else if (!isHost && currentLiveDocId && auth.currentUser) {
+                // ✅ მაყურებლის გამოსვლისას მაყურებელთა სიიდან ამოშლა
+                db.collection('lives').doc(currentLiveDocId).update({
+                    viewers: firebase.firestore.FieldValue.arrayRemove({ uid: auth.currentUser.uid, name: myName, photo: myPhoto })
+                }).catch(() => {});
             }
 
             if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); }
