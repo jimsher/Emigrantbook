@@ -1,1 +1,917 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>TikTok LIVE | EmigrantBook</title>
 
+    <!-- FontAwesome & Agora RTC SDK -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+    <!-- Cloudflare R2 AWS SDK -->
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1692.0.min.js"></script>
+
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        html, body {
+            background-color: #000000;
+            color: #ffffff;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* ---------------- TIKTOK PRE-LIVE SETUP ---------------- */
+        #ttPreLiveScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .camera-full-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: #000;
+        }
+
+        #localCameraPreview, #remote-live-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #localCameraPreview video, #remote-live-video video {
+            transform: scaleX(-1) !important;
+            -webkit-transform: scaleX(-1) !important;
+            object-fit: cover !important;
+        }
+
+        #localCameraPreview.no-mirror video, #remote-live-video.no-mirror video {
+            transform: none !important;
+            -webkit-transform: none !important;
+        }
+
+        .tt-pre-header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: max(14px, env(safe-area-inset-top)) 16px 10px 16px;
+        }
+
+        .tt-circle-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .tt-pre-sidebar {
+            position: absolute;
+            right: 16px;
+            top: 18%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .tt-side-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .tt-side-item i {
+            font-size: 22px;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
+        }
+
+        .tt-side-item span {
+            font-size: 11px;
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+        }
+
+        .tt-pre-bottom {
+            position: relative;
+            z-index: 10;
+            padding: 20px 20px max(24px, env(safe-area-inset-bottom)) 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+        }
+
+        .tt-title-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tt-title-card img {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .tt-title-card input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            user-select: text !important;
+        }
+
+        .tt-go-live-btn {
+            width: 100%;
+            background: #fe2c55;
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(254, 44, 85, 0.5);
+        }
+
+        .tt-go-live-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ---------------- TIKTOK ACTIVE LIVE SCREEN ---------------- */
+        #ttLiveScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 2000;
+            flex-direction: column;
+        }
+
+        /* ზედა ჰედერი */
+        .tt-live-top-bar {
+            position: absolute;
+            top: max(12px, env(safe-area-inset-top));
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .tt-host-badge {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+            padding: 4px 10px 4px 4px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .tt-host-badge img {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .tt-host-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tt-host-name {
+            font-size: 13px;
+            font-weight: 700;
+            max-width: 110px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tt-host-likes {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tt-follow-btn {
+            background: #fe2c55;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: 2px;
+        }
+
+        .tt-top-right-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tt-viewers-pill {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(10px);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tt-close-btn {
+            background: rgba(0, 0, 0, 0.45);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* ტიკტოკის ჩათის ლენტი */
+        #ttChatFeed {
+            position: absolute;
+            bottom: 74px;
+            left: 12px;
+            width: 72%;
+            max-width: 320px;
+            max-height: 230px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 100;
+            mask-image: linear-gradient(to top, rgba(0,0,0,1) 75%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 75%, transparent 100%);
+        }
+
+        #ttChatFeed::-webkit-scrollbar { display: none; }
+
+        .tt-chat-bubble {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(6px);
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            line-height: 1.35;
+            color: #ffffff;
+            width: fit-content;
+            max-width: 100%;
+            word-break: break-word;
+            animation: fadeInChat 0.2s ease-out;
+        }
+
+        @keyframes fadeInChat {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tt-user-name {
+            color: rgba(255, 255, 255, 0.65);
+            font-weight: 700;
+            margin-right: 5px;
+        }
+
+        /* ქვედა საკონტროლო ზოლი */
+        .tt-live-footer {
+            position: absolute;
+            bottom: max(12px, env(safe-area-inset-bottom));
+            left: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .tt-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .tt-comment-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 13.5px;
+            outline: none;
+            user-select: text !important;
+        }
+
+        .tt-comment-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tt-footer-icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .tt-heart-btn {
+            background: linear-gradient(135deg, #ff0050, #ff4071);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 0, 80, 0.4);
+        }
+
+        .tt-heart-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* მცურავი გულების კონტეინერი და ანიმაცია */
+        #heartsBox {
+            position: absolute;
+            bottom: 70px;
+            right: 15px;
+            width: 80px;
+            height: 320px;
+            pointer-events: none;
+            z-index: 90;
+            overflow: hidden;
+        }
+
+        .floating-heart {
+            position: absolute;
+            bottom: 0;
+            font-size: 26px;
+            animation: floatUpAnim 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 1;
+        }
+
+        @keyframes floatUpAnim {
+            0% {
+                transform: translateY(0) scale(0.7) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.9;
+                transform: translateY(-140px) scale(1.2) rotate(15deg);
+            }
+            100% {
+                transform: translateY(-280px) scale(1.4) rotate(-20deg);
+                opacity: 0;
+            }
+        }
+
+        /* R2 ატვირთვის ინდიკატორი */
+        #uploadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. TIKTOK PRE-LIVE SETUP ეკრანი -->
+    <div id="ttPreLiveScreen">
+        <div class="camera-full-box">
+            <div id="localCameraPreview"></div>
+        </div>
+
+        <div class="tt-pre-header">
+            <div class="tt-circle-btn" onclick="exitLive()"><i class="fas fa-xmark"></i></div>
+            <div class="tt-circle-btn" onclick="switchCamera()"><i class="fas fa-camera-rotate"></i></div>
+        </div>
+
+        <div class="tt-pre-sidebar">
+            <div class="tt-side-item" onclick="switchCamera()">
+                <i class="fas fa-camera-rotate"></i>
+                <span>შებრუნება</span>
+            </div>
+            <div class="tt-side-item" onclick="toggleMute()">
+                <i class="fas fa-microphone" id="preMicIcon"></i>
+                <span id="preMicLabel">მიკროფონი</span>
+            </div>
+            <div class="tt-side-item" onclick="alert('მალე დაემატება')">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>ეფექტები</span>
+            </div>
+        </div>
+
+        <div class="tt-pre-bottom">
+            <div class="tt-title-card">
+                <img id="mySetupAvatar" src="https://ui-avatars.com/api/?name=User&background=fe2c55&color=fff">
+                <input type="text" id="liveTopicInput" placeholder="დაამატეთ ლაივის სათაური...">
+            </div>
+            <button class="tt-go-live-btn" onclick="startTikTokLive()">GO LIVE</button>
+        </div>
+    </div>
+
+    <!-- 2. TIKTOK LIVE BROADCAST ეკრანი -->
+    <div id="ttLiveScreen">
+        <div class="camera-full-box">
+            <div id="remote-live-video"></div>
+        </div>
+
+        <!-- ზედა პანელი -->
+        <div class="tt-live-top-bar">
+            <div class="tt-host-badge">
+                <img id="hostAvatar" src="https://ui-avatars.com/api/?name=Host&background=fe2c55&color=fff">
+                <div class="tt-host-meta">
+                    <span class="tt-host-name" id="hostDisplayName">Host</span>
+                    <span class="tt-host-likes"><span id="likesCounter">0</span> ლაიქი</span>
+                </div>
+                <button class="tt-follow-btn" id="followHostBtn" onclick="followHost()">+ Follow</button>
+            </div>
+
+            <div class="tt-top-right-group">
+                <div class="tt-viewers-pill">
+                    <i class="fas fa-user"></i>
+                    <span id="viewerCount">0</span>
+                </div>
+                <button class="tt-close-btn" onclick="exitLive()"><i class="fas fa-xmark"></i></button>
+            </div>
+        </div>
+
+        <!-- მცურავი გულების კონტეინერი -->
+        <div id="heartsBox"></div>
+
+        <!-- კომენტარების ლენტი -->
+        <div id="ttChatFeed"></div>
+
+        <!-- ქვედა მართვა -->
+        <div class="tt-live-footer">
+            <div class="tt-input-wrap">
+                <input type="text" id="chatInput" class="tt-comment-input" placeholder="დაამატეთ კომენტარი..." onkeypress="if(event.key==='Enter') sendComment()">
+            </div>
+            <div class="tt-footer-icon-btn" onclick="switchCamera()"><i class="fas fa-camera-rotate"></i></div>
+            <div class="tt-footer-icon-btn" onclick="alert('საჩუქრები მალე დაემატება!')"><i class="fas fa-gift" style="color: #ffd700;"></i></div>
+            <div class="tt-footer-icon-btn tt-heart-btn" onclick="sendHeart()"><i class="fas fa-heart"></i></div>
+        </div>
+    </div>
+
+    <!-- ატვირთვის ინდიკატორი -->
+    <div id="uploadingOverlay">
+        <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 12px; color: #fe2c55;"></i>
+        <div>ინახება ლაივის ჩანაწერი...</div>
+    </div>
+
+    <script>
+        // 1. FIREBASE ინიციალიზაცია
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6FGTJch13HCEGXeKEGDxGMEcqg3GPeb4",
+            authDomain: "emigrantbook-4b7bd.firebaseapp.com",
+            projectId: "emigrantbook-4b7bd",
+            storageBucket: "emigrantbook-4b7bd.firebasestorage.app",
+            messagingSenderId: "109907338554",
+            appId: "1:109907338554:web:fde6c296d9ff56f6305c03"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // 2. აგორას კონფიგურაცია
+        const AGORA_APP_ID = "258897e8fb5f4dd089b761eca6568b24";
+        let liveClient = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+        let localTracks = { video: null, audio: null };
+
+        let currentLiveDocId = null;
+        let isHost = false;
+        let isMuted = false;
+        let currentCamIdx = 0;
+        let availableCameras = [];
+
+        let myName = "მომხმარებელი";
+        let myPhoto = "https://ui-avatars.com/api/?name=User&background=fe2c55&color=fff";
+        let liveDocUnsub = null;
+        let chatUnsub = null;
+
+        // ჩაწერა
+        let mediaRecorder = null;
+        let recordedChunks = [];
+
+        // მომხმარებლის პროფილის წამოღება
+        async function loadProfile(uid) {
+            try {
+                const snap = await db.collection('profiles').doc(uid).get();
+                if (snap.exists) {
+                    const data = snap.data();
+                    myName = data.full_name || data.fullName || data.name || "მომხმარებელი";
+                    myPhoto = data.avatar_url || data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(myName)}&background=fe2c55&color=fff`;
+                }
+            } catch (e) {
+                console.error("Profile load err:", e);
+            }
+            document.getElementById('mySetupAvatar').src = myPhoto;
+        }
+
+        // ავტორიზაცია და რეჟიმის გარკვევა (ჰოსტი თუ მაყურებელი)
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await loadProfile(user.uid);
+                const params = new URLSearchParams(window.location.search);
+                const joinId = params.get('join');
+                if (joinId) {
+                    joinTikTokLive(joinId);
+                } else {
+                    initCamera();
+                }
+            } else {
+                alert("გთხოვთ გაიაროთ ავტორიზაცია!");
+                window.location.href = "index.html";
+            }
+        });
+
+        // კამერის გაშვება Setup-ზე
+        async function initCamera() {
+            try {
+                availableCameras = await AgoraRTC.getCameras();
+                localTracks.video = await AgoraRTC.createCameraVideoTrack({
+                    encoderConfig: "720p_1",
+                    optimizationMode: "motion"
+                });
+                localTracks.video.play("localCameraPreview", { mirror: true });
+            } catch (err) {
+                console.error("კამერის ინიციალიზაცია ჩაიშალა:", err);
+            }
+        }
+
+        // კამერის შებრუნება (Flip)
+        async function switchCamera() {
+            if (!localTracks.video || availableCameras.length < 2) return;
+            try {
+                currentCamIdx = (currentCamIdx + 1) % availableCameras.length;
+                await localTracks.video.setDevice(availableCameras[currentCamIdx].deviceId);
+            } catch (e) {
+                console.error("Switch cam error:", e);
+            }
+        }
+
+        // მიკროფონის მუთი
+        function toggleMute() {
+            isMuted = !isMuted;
+            if (localTracks.audio) localTracks.audio.setEnabled(!isMuted);
+            document.getElementById('preMicIcon').className = isMuted ? "fas fa-microphone-slash" : "fas fa-microphone";
+            document.getElementById('preMicLabel').innerText = isMuted ? "დადუმებული" : "მიკროფონი";
+        }
+
+        // 🚀 TikTok Live-ის დაწყება (HOST)
+        async function startTikTokLive() {
+            const title = document.getElementById('liveTopicInput').value.trim() || "TikTok LIVE";
+            isHost = true;
+
+            document.getElementById('ttPreLiveScreen').style.display = 'none';
+            document.getElementById('ttLiveScreen').style.display = 'flex';
+            document.getElementById('hostDisplayName').innerText = myName;
+            document.getElementById('hostAvatar').src = myPhoto;
+            document.getElementById('followHostBtn').style.display = 'none';
+
+            try {
+                // Firestore დოკუმენტის შექმნა
+                const liveDoc = await db.collection('lives').add({
+                    host_id: auth.currentUser.uid,
+                    host_name: myName,
+                    host_photo: myPhoto,
+                    title: title,
+                    status: "active",
+                    type: "tiktok",
+                    likes_count: 0,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                    viewers: []
+                });
+
+                currentLiveDocId = liveDoc.id;
+
+                await liveClient.setClientRole("host");
+                await liveClient.join(AGORA_APP_ID, currentLiveDocId, null, auth.currentUser.uid);
+
+                if (!localTracks.audio) {
+                    localTracks.audio = await AgoraRTC.createMicrophoneAudioTrack();
+                    if (isMuted) localTracks.audio.setEnabled(false);
+                }
+
+                localTracks.video.play("remote-live-video");
+                await liveClient.publish([localTracks.audio, localTracks.video]);
+
+                startRecording();
+                attachLiveListeners(currentLiveDocId);
+            } catch (err) {
+                console.error("Live start error:", err);
+                alert("ლაივის დაწყება ვერ მოხერხდა: " + err.message);
+            }
+        }
+
+        // 🔗 TikTok Live-ში შესვლა (AUDIENCE)
+        async function joinTikTokLive(docId) {
+            currentLiveDocId = docId;
+            isHost = false;
+
+            document.getElementById('ttPreLiveScreen').style.display = 'none';
+            document.getElementById('ttLiveScreen').style.display = 'flex';
+
+            const docSnap = await db.collection('lives').doc(docId).get();
+            if (!docSnap.exists) {
+                alert("ლაივი არ არსებობს ან დასრულდა");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const data = docSnap.data();
+            document.getElementById('hostDisplayName').innerText = data.host_name;
+            document.getElementById('hostAvatar').src = data.host_photo;
+            document.getElementById('likesCounter').innerText = data.likes_count || 0;
+
+            try {
+                await liveClient.setClientRole("audience");
+                await liveClient.join(AGORA_APP_ID, docId, null, auth.currentUser.uid);
+
+                // მაყურებლის დამატება
+                db.collection('lives').doc(docId).update({
+                    viewers: firebase.firestore.FieldValue.arrayUnion({
+                        uid: auth.currentUser.uid,
+                        name: myName,
+                        photo: myPhoto
+                    })
+                });
+
+                liveClient.on("user-published", async (user, mediaType) => {
+                    await liveClient.subscribe(user, mediaType);
+                    if (mediaType === "video") user.videoTrack.play("remote-live-video");
+                    if (mediaType === "audio") user.audioTrack.play();
+                });
+
+                liveClient.on("user-left", () => {
+                    alert("სტრიმი დასრულდა");
+                    exitLive();
+                });
+
+                attachLiveListeners(docId);
+            } catch (e) {
+                console.error("Join live error:", e);
+            }
+        }
+
+        // Firestore Realtime ცვლილებები (მაყურებლები, ჩათი, ლაიქები)
+        function attachLiveListeners(docId) {
+            // ლაივის მეტა მონაცემები
+            liveDocUnsub = db.collection('lives').doc(docId).onSnapshot(doc => {
+                if (doc.exists) {
+                    const d = doc.data();
+                    document.getElementById('viewerCount').innerText = (d.viewers || []).length;
+                    document.getElementById('likesCounter').innerText = d.likes_count || 0;
+                    if (d.status === "ended" && !isHost) {
+                        alert("ლაივი დასრულდა");
+                        exitLive();
+                    }
+                }
+            });
+
+            // კომენტარები
+            chatUnsub = db.collection('lives').doc(docId).collection('comments').orderBy('ts', 'asc').onSnapshot(snap => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const m = change.doc.data();
+                        const feed = document.getElementById('ttChatFeed');
+                        const b = document.createElement('div');
+                        b.className = "tt-chat-bubble";
+                        b.innerHTML = `<span class="tt-user-name">${m.name}:</span>${m.text}`;
+                        feed.appendChild(b);
+                        feed.scrollTop = feed.scrollHeight;
+                    }
+                });
+            });
+
+            // რეაქციების/გულების მოსმენა (Realtime)
+            db.collection('lives').doc(docId).collection('reactions').orderBy('ts', 'desc').limit(5).onSnapshot(snap => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        triggerFloatingHeart();
+                    }
+                });
+            });
+        }
+
+        // კომენტარის გაგზავნა
+        async function sendComment() {
+            const input = document.getElementById('chatInput');
+            const val = input.value.trim();
+            if (!val || !currentLiveDocId) return;
+            input.value = "";
+
+            try {
+                await db.collection('lives').doc(currentLiveDocId).collection('comments').add({
+                    name: myName,
+                    text: val,
+                    ts: Date.now()
+                });
+            } catch (e) {
+                console.error("Comment error:", e);
+            }
+        }
+
+        // ❤️ მცურავი გულების გაგზავნა
+        async function sendHeart() {
+            triggerFloatingHeart();
+            if (!currentLiveDocId) return;
+
+            db.collection('lives').doc(currentLiveDocId).update({
+                likes_count: firebase.firestore.FieldValue.increment(1)
+            }).catch(() => {});
+
+            db.collection('lives').doc(currentLiveDocId).collection('reactions').add({
+                type: "heart",
+                ts: Date.now()
+            }).catch(() => {});
+        }
+
+        function triggerFloatingHeart() {
+            const box = document.getElementById('heartsBox');
+            const heart = document.createElement('div');
+            heart.className = 'floating-heart';
+
+            const colors = ['#fe2c55', '#25f4ee', '#ff007f', '#ffd700', '#ffffff'];
+            heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+            heart.style.left = Math.floor(Math.random() * 45) + 'px';
+            heart.innerHTML = '<i class="fas fa-heart"></i>';
+
+            box.appendChild(heart);
+            setTimeout(() => heart.remove(), 2200);
+        }
+
+        function followHost() {
+            const btn = document.getElementById('followHostBtn');
+            btn.innerText = "Following";
+            btn.style.background = "rgba(255,255,255,0.3)";
+        }
+
+        // ჩაწერის მექანიზმი
+        function startRecording() {
+            recordedChunks = [];
+            try {
+                const tracks = [];
+                if (localTracks.video) tracks.push(localTracks.video.getMediaStreamTrack());
+                if (localTracks.audio) tracks.push(localTracks.audio.getMediaStreamTrack());
+
+                const stream = new MediaStream(tracks);
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+                };
+                mediaRecorder.start(1000);
+            } catch (e) {
+                console.warn("MediaRecorder warning:", e);
+            }
+        }
+
+        // R2-ში შენახვა
+        function uploadToR2(blob) {
+            return new Promise((resolve, reject) => {
+                const r2 = new AWS.S3({
+                    endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+                    accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+                    secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+                    signatureVersion: 'v4',
+                    region: 'auto'
+                });
+
+                const key = 'videos/' + Date.now() + '_tiktok_live.mp4';
+                r2.upload({
+                    Bucket: 'emigrantbook-videos',
+                    Key: key,
+                    Body: blob,
+                    ContentType: blob.type || 'video/mp4'
+                }, (err) => {
+                    if (err) reject(err);
+                    else resolve("https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + key);
+                });
+            });
+        }
+
+        // გასვლა / დასრულება
+        async function exitLive() {
+            if (liveDocUnsub) liveDocUnsub();
+            if (chatUnsub) chatUnsub();
+
+            if (isHost && currentLiveDocId) {
+                db.collection('lives').doc(currentLiveDocId).update({ status: "ended" }).catch(() => {});
+                
+                if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                    await new Promise(r => {
+                        mediaRecorder.onstop = r;
+                        try { mediaRecorder.stop(); } catch(e){ r(); }
+                    });
+
+                    if (recordedChunks.length > 0 && confirm("გსურთ ლაივის პოსტად განთავსება?")) {
+                        document.getElementById('uploadingOverlay').style.display = 'flex';
+                        try {
+                            const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+                            const url = await uploadToR2(blob);
+                            await db.collection('posts').add({
+                                user_id: auth.currentUser.uid,
+                                author_name: myName,
+                                author_avatar: myPhoto,
+                                content: "🎵 TikTok LIVE ჩანაწერი",
+                                media_url: url,
+                                media_type: "video",
+                                is_live_replay: true,
+                                created_at: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        } catch (e) {
+                            alert("ატვირთვა ვერ მოხერხდა: " + e.message);
+                        }
+                    }
+                }
+            }
+
+            if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); }
+            if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); }
+            try { await liveClient.leave(); } catch (e) {}
+
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
