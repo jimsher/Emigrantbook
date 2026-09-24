@@ -6037,7 +6037,8 @@ function subscribeActiveLivesForFeed() {
         if (postsWall) {
           liveContainer = document.createElement('div');
           liveContainer.id = 'active-lives-feed-zone';
-          postsWall.parentNode.insertBefore(liveContainer, postsWall);
+          // ჩასმა პირდაპირ posts-wall-ის თავში (შიგნით), რომ პოსტების კონტეინერის ზომა დაიჭიროს
+          postsWall.insertBefore(liveContainer, postsWall.firstChild);
         }
       }
 
@@ -6066,7 +6067,7 @@ function subscribeActiveLivesForFeed() {
         var liveCardHtml = "";
 
         // ========================================================
-        // 🎵 1. თუ არის TIKTOK LIVE (ზუსტი სქრინის რეპლიკა)
+        // 🎵 1. თუ არის TIKTOK LIVE (სწორი ჩარჩო, გაწელვის გარეშე)
         // ========================================================
         if (liveData.type === 'tiktok') {
           liveCardHtml = `
