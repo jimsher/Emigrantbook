@@ -6021,6 +6021,8 @@ function loadPosts(isNextPage) {
     
 // აქტიური ლაივების მოსმენა Feed-ისთვის
 // 🔴 TikTok-ის სტილის პირდაპირი ეთერის პლეიერი მთავარ გვერდზე
+// აქტიური ლაივების მოსმენა Feed-ისთვის
+// 🔴 TikTok-ისა და Facebook-ის დამოუკიდებელი ლაივები მთავარ გვერდზე
 var inlineAgoraClients = {};
 
 function subscribeActiveLivesForFeed() {
@@ -6061,38 +6063,92 @@ function subscribeActiveLivesForFeed() {
         var liveTitle = liveData.title || (t.liveStreamDefault || "Live Video");
         var viewersCount = (liveData.viewers && liveData.viewers.length) ? liveData.viewers.length : 1;
 
-        var liveCardHtml = `
-          <div class="live-tiktok-card">
-            <div class="live-tiktok-header">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${hostPhoto}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #e41e3f;">
-                <div>
-                  <div style="font-weight:700; color:#fff; font-size:14px;">${hostName}</div>
-                  <div style="font-size:11.5px; color:#aaa;">${t.lottoSub || "პირდაპირი ეთერი"}</div>
+        var liveCardHtml = "";
+
+        // ========================================================
+        // 🎵 1. თუ არის TIKTOK LIVE (ზუსტი სქრინის რეპლიკა)
+        // ========================================================
+        if (liveData.type === 'tiktok') {
+          liveCardHtml = `
+            <div class="tt-feed-full-card" onclick="window.location.href='tiktok-live.html?join=${liveId}'">
+              <!-- Agora ცოცხალი ვიდეო ნაკადი -->
+              <div id="inline-agora-video-${liveId}" class="tt-feed-video-player"></div>
+              <div class="tt-feed-gradient-overlay"></div>
+
+              <!-- ზედა ნავიგაცია -->
+              <div class="tt-feed-top-bar">
+                <div class="tt-feed-live-tv-badge">
+                  <svg viewBox="0 0 24 24" class="tt-tv-svg"><path d="M21 6h-7.58l1.79-1.79L14 3l-3 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 14H3V8h18v12z"/></svg>
+                  <span>LIVE</span>
+                </div>
+                <div class="tt-feed-middle-tabs">
+                  <span class="tt-tab-item">გამომწერები</span>
+                  <span class="tt-tab-item active">რეკომენდაციები</span>
+                </div>
+                <div class="tt-feed-search-icon">
+                  <i class="fas fa-magnifying-glass"></i>
                 </div>
               </div>
-              <span class="live-pulse-badge">LIVE</span>
+
+              <!-- ქვედა ინფორმაცია -->
+              <div class="tt-feed-bottom-box">
+                <!-- ეკვალაიზერიანი ღილაკი: "დააჭირეთ საყურებლად" -->
+                <div class="tt-watch-live-btn-pill">
+                  <div class="tt-eq-bars">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <span>დააჭირეთ საყურებლად</span>
+                </div>
+
+                <!-- ვარდისფერი ბეიჯი: "პირდაპირ ეთერშია" -->
+                <div class="tt-live-now-badge">პირდაპირ ეთერშია</div>
+
+                <!-- ჰოსტის რეალური სახელი -->
+                <div class="tt-host-real-name">${hostName}</div>
+              </div>
             </div>
-
-            <div class="live-tiktok-video-box" onclick="window.location.href='live.html?join=${liveId}'">
-              <div id="inline-agora-video-${liveId}" class="live-agora-stream-player"></div>
-
-              <div class="live-tiktok-overlay">
-                <div class="live-tiktok-top-pills">
-                  <div class="live-viewers-pill">
-                    <svg viewBox="0 0 24 24" style="width:13px; height:13px; fill:#fff;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                    <span>${viewersCount}</span>
+          `;
+        } 
+        // ========================================================
+        // 🔵 2. თუ არის FACEBOOK LIVE (ორიგინალი ძველი ბარათი)
+        // ========================================================
+        else {
+          liveCardHtml = `
+            <div class="live-tiktok-card">
+              <div class="live-tiktok-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="${hostPhoto}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid #e41e3f;">
+                  <div>
+                    <div style="font-weight:700; color:#fff; font-size:14px;">${hostName}</div>
+                    <div style="font-size:11.5px; color:#aaa;">${t.lottoSub || "პირდაპირი ეთერი"}</div>
                   </div>
                 </div>
+                <span class="live-pulse-badge">LIVE</span>
+              </div>
 
-                <div class="live-tiktok-bottom-info">
-                  <div class="live-stream-headline">${liveTitle}</div>
-                  <div class="live-enter-btn-bubble">უყურე ეთერს ➔</div>
+              <div class="live-tiktok-video-box" onclick="window.location.href='live.html?join=${liveId}'">
+                <div id="inline-agora-video-${liveId}" class="live-agora-stream-player"></div>
+
+                <div class="live-tiktok-overlay">
+                  <div class="live-tiktok-top-pills">
+                    <div class="live-viewers-pill">
+                      <svg viewBox="0 0 24 24" style="width:13px; height:13px; fill:#fff;"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                      <span>${viewersCount}</span>
+                    </div>
+                  </div>
+
+                  <div class="live-tiktok-bottom-info">
+                    <div class="live-stream-headline">${liveTitle}</div>
+                    <div class="live-enter-btn-bubble">უყურე ეთერს ➔</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        `;
+          `;
+        }
+
         liveContainer.innerHTML += liveCardHtml;
 
         // Agora RTC ვიდეოს დაკავშირება
@@ -6103,7 +6159,7 @@ function subscribeActiveLivesForFeed() {
     });
 }
 
-// Agora-ს ვიდეოს გაშვება ფიდში (Muted რეჟიმში, რათა ბრაუზერმა არ დაბლოკოს)
+// Agora-ს ვიდეოს გაშვება ფიდში (Muted რეჟიმში)
 async function startInlineAgoraStream(liveId) {
   if (typeof AgoraRTC === "undefined") return;
   
@@ -6131,7 +6187,6 @@ async function startInlineAgoraStream(liveId) {
           user.videoTrack.play(containerId, { fit: "cover" });
         }
       }
-      // აუდიო რჩება დადუმებული, რათა ფიდში სქროლვას ხელი არ შეუშალოს
     });
   } catch (err) {
     console.warn("Inline Agora Stream join warning:", err);
