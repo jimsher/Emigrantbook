@@ -273,7 +273,6 @@
             cursor: pointer;
         }
 
-        /* რეალური ვიდეო ნაკადი სტუმრისთვის */
         .tt-guest-video-stream {
             position: absolute;
             top: 0;
@@ -411,7 +410,7 @@
             color: #ffffff;
         }
 
-        /* 6. ქვედა პანელი (ყველასთვის ხელმისაწვდომი) */
+        /* 6. ქვედა პანელი */
         .tt-footer-bar {
             position: fixed;
             bottom: max(10px, env(safe-area-inset-bottom, 10px));
@@ -473,7 +472,7 @@
         .tt-footer-circle-btn:active { transform: scale(0.9); }
 
         .tt-heart-footer-btn {
-            background: linear-gradient(135deg, #fe2c55, #ff007f);
+            background: #fe2c55;
             border: none;
             color: white;
             box-shadow: 0 2px 10px rgba(254, 44, 85, 0.4);
@@ -500,7 +499,7 @@
             color: #fff;
         }
 
-        /* 7. მცურავი გულები */
+        /* 7. მცურავი სუფთა წითელი გულები (სადა და ლამაზი) */
         #ttHeartsLayer {
             position: fixed;
             bottom: 60px;
@@ -515,16 +514,29 @@
         .tt-neon-heart {
             position: absolute;
             bottom: 0;
-            font-size: 28px;
-            animation: ttFlyUpAnim 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6));
+            font-size: 26px;
+            color: #fe2c55 !important; /* მხოლოდ წითელი */
+            animation: ttFlyUpAnim 1.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+            filter: drop-shadow(0 2px 6px rgba(254, 44, 85, 0.6));
         }
 
         @keyframes ttFlyUpAnim {
-            0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 1; }
-            40% { transform: translateY(-110px) scale(1.2) rotate(15deg); opacity: 0.95; }
-            75% { transform: translateY(-230px) scale(1.1) rotate(-12deg); opacity: 0.75; }
-            100% { transform: translateY(-360px) scale(0.8) rotate(18deg); opacity: 0; }
+            0% {
+                transform: translateY(0) scale(0.65);
+                opacity: 1;
+            }
+            30% {
+                transform: translateY(-80px) scale(1.15) rotate(10deg);
+                opacity: 0.95;
+            }
+            70% {
+                transform: translateY(-200px) scale(1.05) rotate(-10deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-330px) scale(0.85) rotate(6deg);
+                opacity: 0;
+            }
         }
 
         /* 8. მოდალები */
@@ -619,7 +631,7 @@
                 <span class="tt-host-name" id="hostDisplayName">Host</span>
                 <span class="tt-host-likes">
                     <i class="fas fa-heart" style="color: #fe2c55; font-size: 9px;"></i>
-                    <span id="likesCountBadge">5.4K</span>
+                    <span id="likesCountBadge">0</span>
                 </span>
             </div>
             <button class="tt-follow-btn" id="followBtn" onclick="followHost()">+ გამოწერა</button>
@@ -628,7 +640,7 @@
         <div class="tt-top-right-bar">
             <div class="tt-top-viewer-badge">
                 <div class="tt-rank-crown-circle">2</div>
-                <span class="tt-viewers-num" id="viewerCountBadge">880</span>
+                <span class="tt-viewers-num" id="viewerCountBadge">1</span>
             </div>
             <button class="tt-top-icon-btn" onclick="switchCamera()"><i class="fas fa-camera-rotate" style="font-size: 13px;"></i></button>
             <button class="tt-top-icon-btn" onclick="exitLive()"><i class="fas fa-xmark"></i></button>
@@ -699,7 +711,7 @@
     <!-- ცოცხალი ჩათი -->
     <div id="ttChatFeed"></div>
 
-    <!-- ქვედა პანელი (100%-ით ყველასთვის ხელმისაწვდომი) -->
+    <!-- ქვედა პანელი -->
     <div class="tt-footer-bar" onclick="event.stopPropagation()">
         <!-- ინფუთი -->
         <div class="tt-input-capsule">
@@ -734,7 +746,7 @@
         <!-- ↗ Share ღილაკი მთვლელით -->
         <div class="tt-footer-circle-btn" onclick="shareLiveLink()" title="გაზიარება">
             <i class="fas fa-share" style="font-size: 16px; color: #ffffff;"></i>
-            <span class="tt-share-badge" id="shareCounter">67</span>
+            <span class="tt-share-badge" id="shareCounter">0</span>
         </div>
     </div>
 
@@ -770,7 +782,7 @@
         </div>
     </div>
 
-    <!-- 👥 სტუმრების / Co-Host მართვის მოდალი -->
+    <!-- 👥 Co-Host მართვის მოდალი -->
     <div id="coHostSheetModal" class="tt-modal-sheet-overlay" onclick="closeCoHostMenu()">
         <div class="tt-modal-sheet" onclick="event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -821,7 +833,6 @@
         let activeGuestsList = [];
         let pendingRequestsList = [];
 
-        // პროფილის ამოღება
         async function fetchProfile(user) {
             if (!user) return;
             myName = user.displayName || user.email?.split('@')[0] || "მომხმარებელი";
@@ -864,7 +875,6 @@
             }
         });
 
-        // Agora ნაკადების მოსმენა (ჰოსტის და სტუმრების ვიდეოები)
         function attachAgoraStreamListener() {
             liveClient.on("user-published", async (user, mediaType) => {
                 await liveClient.subscribe(user, mediaType);
@@ -901,12 +911,13 @@
             });
         }
 
-        // 🚀 ლაივის დაწყება (HOST)
+        // 🚀 ლაივის დაწყება (HOST) - რეალური მთვლელი 0-დან
         async function startLiveInstantly() {
             isHost = true;
             hostUid = auth.currentUser.uid;
             document.getElementById('hostDisplayName').innerText = myName;
             document.getElementById('hostAvatar').src = myPhoto;
+            document.getElementById('likesCountBadge').innerText = "0"; // რეალური 0
             document.getElementById('followBtn').style.display = 'none';
             document.getElementById('coHostRequestBtn').style.display = 'none';
 
@@ -917,8 +928,8 @@
                     host_photo: myPhoto,
                     status: "active",
                     type: "tiktok",
-                    likes_count: 5400,
-                    shares_count: 67,
+                    likes_count: 0, // რეალური 0
+                    shares_count: 0,
                     active_guests: [],
                     created_at: firebase.firestore.FieldValue.serverTimestamp(),
                     viewers: [{ uid: auth.currentUser.uid, name: myName, photo: myPhoto }]
@@ -972,6 +983,10 @@
             document.getElementById('hostDisplayName').innerText = data.host_name || "Host";
             document.getElementById('hostAvatar').src = data.host_photo || myPhoto;
 
+            // რეალური მთვლელი ბაზიდან
+            const currentLikes = (data.likes_count !== undefined && data.likes_count !== null) ? data.likes_count : 0;
+            document.getElementById('likesCountBadge').innerText = formatCount(currentLikes);
+
             try {
                 await liveClient.setClientRole("audience");
                 await liveClient.join(AGORA_APP_ID, docId, null, auth.currentUser.uid);
@@ -980,7 +995,6 @@
                     viewers: firebase.firestore.FieldValue.arrayUnion({ uid: auth.currentUser.uid, name: myName, photo: myPhoto })
                 }).catch(() => {});
 
-                // სისტემური შემოსვლა ჩათში
                 db.collection('lives').doc(docId).collection('comments').add({
                     is_system: true,
                     text: `${myName} ახლა ჩვენთანაა`,
@@ -994,18 +1008,22 @@
             }
         }
 
-        // 3. რეალურ დროში სინქრონიზაცია (მაყურებლები, სტუმრები, ჩათი, ლაიქები)
+        // 3. რეალურ დროში სინქრონიზაცია (რეალური ლაიქების მთვლელი)
         function syncRealtimeData(docId) {
             if (liveDocUnsub) liveDocUnsub();
             liveDocUnsub = db.collection('lives').doc(docId).onSnapshot(doc => {
                 if (doc.exists) {
                     const d = doc.data();
 
+                    // მაყურებლები
                     const vCount = (d.viewers || []).length;
-                    document.getElementById('viewerCountBadge').innerText = vCount > 1 ? vCount : "880";
+                    document.getElementById('viewerCountBadge').innerText = vCount > 0 ? vCount : "1";
 
-                    document.getElementById('likesCountBadge').innerText = formatCount(d.likes_count || 5400);
-                    document.getElementById('shareCounter').innerText = d.shares_count || 67;
+                    // ✅ რეალური ლაიქების მთვლელი (არანაირი 5.4K მაკეტი)
+                    const realLikes = (d.likes_count !== undefined && d.likes_count !== null) ? d.likes_count : 0;
+                    document.getElementById('likesCountBadge').innerText = formatCount(realLikes);
+
+                    document.getElementById('shareCounter').innerText = d.shares_count || 0;
 
                     activeGuestsList = d.active_guests || [];
                     renderActiveGuestsUI(activeGuestsList);
@@ -1051,10 +1069,18 @@
                 });
             });
 
-            // გულების ანიმაცია
+            // ✅ გულების ანიმაციის მოსმენა (სხვისი გამოგზავნილი გულები)
             db.collection('lives').doc(docId).collection('reactions').orderBy('ts', 'desc').limit(4).onSnapshot(snap => {
                 snap.docChanges().forEach(change => {
-                    if (change.type === "added") spawnNeonHeart();
+                    if (change.type === "added") {
+                        const rData = change.doc.data();
+                        const myUid = auth.currentUser ? auth.currentUser.uid : null;
+                        // თუ საკუთარი გამოგზავნილია, ლოკალურად უკვე გამოვიდა და აღარ გავამეოროთ!
+                        if (rData && rData.sender_uid && myUid && rData.sender_uid === myUid) {
+                            return;
+                        }
+                        spawnNeonHeart();
+                    }
                 });
             });
         }
@@ -1165,7 +1191,6 @@
             document.getElementById('coHostSheetModal').style.display = 'none';
         }
 
-        // ჰოსტის მიერ სტუმრის დათანხმება
         async function acceptGuestToStream(uid, name, photo) {
             if (activeGuestsList.length >= 2) {
                 alert("მაქსიმუმ 2 სტუმრის ამოყვანაა შესაძლებელი!");
@@ -1187,7 +1212,6 @@
             closeCoHostMenu();
         }
 
-        // ჰოსტის მიერ სტუმრის ჩამოყვანა
         async function removeGuestFromStream(uid) {
             const guestToRemove = activeGuestsList.find(g => g.uid === uid);
             if (!guestToRemove) return;
@@ -1199,7 +1223,6 @@
             closeCoHostMenu();
         }
 
-        // როდესაც მაყურებელს ამოიყვანს ჰოსტი -> რთავს კამერას და მიკროფონს
         async function checkIfBecameGuest(guests) {
             const currentUid = auth.currentUser.uid;
             const amIGuest = guests.find(g => g.uid === currentUid);
@@ -1306,8 +1329,8 @@
                 likes_count: firebase.firestore.FieldValue.increment(10)
             }).catch(() => {});
 
-            for (let i = 0; i < 6; i++) {
-                setTimeout(() => spawnNeonHeart(), i * 120);
+            for (let i = 0; i < 4; i++) {
+                setTimeout(() => spawnNeonHeart(), i * 140);
             }
         }
 
@@ -1319,35 +1342,44 @@
             document.getElementById('giftsSheetModal').style.display = 'none';
         }
 
+        // ✅ მოწონების/გულის გაგზავნის ლოგიკა (ზუსტად თითო გული ლოკალურად)
         function triggerLikeAction() {
-            spawnNeonHeart();
+            spawnNeonHeart(); // გამოდის ზუსტად 1 გული
+
             if (!currentLiveDocId) return;
 
+            // ბაზაში რეალური გაზრდა +1-ით
             db.collection('lives').doc(currentLiveDocId).update({
                 likes_count: firebase.firestore.FieldValue.increment(1)
             }).catch(() => {});
 
+            // რეაქცია სხვებისთვის (საკუთარ ID-სთან ერთად)
             db.collection('lives').doc(currentLiveDocId).collection('reactions').add({
+                sender_uid: auth.currentUser ? auth.currentUser.uid : 'anon',
                 ts: Date.now()
             }).catch(() => {});
         }
 
         function handleTapScreen(e) {
+            // თუ დააწკაპუნა ღილაკზე, ინფუთზე ან მოდალზე, გული არ ამოაგდოს
+            if (e && e.target && e.target.closest('button, input, .tt-footer-bar, .tt-header-row-1, .tt-header-row-2, .tt-guest-rail, .tt-modal-sheet, .tt-modal-sheet-overlay')) {
+                return;
+            }
             triggerLikeAction();
         }
 
+        // ✅ მხოლოდ სუფთა წითელი გულის შექმნა
         function spawnNeonHeart() {
             const container = document.getElementById('ttHeartsLayer');
+            if (!container) return;
+
             const heart = document.createElement('div');
             heart.className = 'tt-neon-heart';
-
-            const colors = ['#fe2c55', '#25f4ee', '#ffe600', '#ff007f', '#00f5d4'];
-            heart.style.color = colors[Math.floor(Math.random() * colors.length)];
-            heart.style.left = Math.floor(Math.random() * 45) + 'px';
+            heart.style.left = Math.floor(Math.random() * 40 + 10) + 'px';
             heart.innerHTML = '<i class="fas fa-heart"></i>';
 
             container.appendChild(heart);
-            setTimeout(() => heart.remove(), 2200);
+            setTimeout(() => heart.remove(), 1900);
         }
 
         function shareLiveLink() {
@@ -1395,8 +1427,10 @@
         }
 
         function formatCount(num) {
+            num = Number(num) || 0;
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num;
+            return String(num);
         }
 
         async function exitLive() {
