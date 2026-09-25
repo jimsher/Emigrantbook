@@ -1098,6 +1098,7 @@
                 });
 
                 currentLiveDocId = liveDoc.id;
+                sendLivePushNotification(myName, myPhoto, currentLiveDocId);
 
                 await liveClient.setClientRole("host");
                 await liveClient.join(AGORA_APP_ID, currentLiveDocId, null, auth.currentUser.uid);
@@ -1713,6 +1714,52 @@
             if (guestLocalTracks.video) { guestLocalTracks.video.stop(); guestLocalTracks.video.close(); }
             if (guestLocalTracks.audio) { guestLocalTracks.audio.stop(); guestLocalTracks.audio.close(); }
         });
+
+
+
+
+
+        // 🔴 TikTok LIVE პუშ ნოთიფიკაცია (Cloudflare Worker + OneSignal)
+async function sendLivePushNotification(hostName, hostPhoto, liveId) {
+    try {
+        const liveUrl = window.location.origin + window.location.pathname + '?join=' + liveId;
+
+        const payload = {
+            app_id: "71dffd4a-dbb6-4d8e-950d-8c61a651e5b2",
+            target_channel: "push",
+            included_segments: ["Total Subscriptions", "Subscribed Users"],
+            headings: {
+                ka: "🔴 LIVE ეთერი!",
+                en: "🔴 LIVE Stream!",
+                it: "🔴 Diretta LIVE!",
+                ru: "🔴 Прямой эфир!"
+            },
+            contents: {
+                ka: `${hostName} დაიწყო პირდაპირი ეთერი (LIVE)! შემოდით ➔`,
+                en: `${hostName} is now LIVE! Join the stream ➔`,
+                it: `${hostName} ha avviato una diretta LIVE! Entra ➔`,
+                ru: `${hostName} начал прямой эфир! Заходите ➔`
+            },
+            url: liveUrl,
+            large_icon: hostPhoto || "https://emigrantbook.com/logo2.png",
+            chrome_web_icon: hostPhoto || "https://emigrantbook.com/logo2.png",
+            chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
+            priority: 10,
+            android_visibility: 1
+        };
+
+        fetch("https://dry-tree-6777.emigrantbook.workers.dev", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            console.log("TikTok LIVE Push sent successfully!");
+        }).catch(e => console.warn("Push error:", e));
+
+    } catch (err) {
+        console.warn("Push dispatch error:", err);
+    }
+}
     </script>
 </body>
 </html>
