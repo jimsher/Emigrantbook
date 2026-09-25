@@ -3365,6 +3365,7 @@
 
    // აქ იწყება
     // 📞 ვიდეო ზარის სპეციალური მაღალი პრიორიტეტის პუში
+    // 📞 ვიდეო ზარის მაღალი პრიორიტეტის პუში ზარის არხით
     async function sendVideoCallPush(recipientUid) {
       if (!auth.currentUser || !recipientUid) return;
 
@@ -3386,26 +3387,34 @@
             external_id: [String(recipientUid).trim()]
           },
           headings: { 
-            ka: senderName, 
-            en: senderName, 
-            it: senderName, 
-            ru: senderName 
+            ka: "📞 " + senderName, 
+            en: "📞 " + senderName, 
+            it: "📞 " + senderName, 
+            ru: "📞 " + senderName 
           },
           contents: { 
-            ka: "შემომავალი ვიდეო ზარი... 📞", 
-            en: "Incoming video call... 📞", 
-            it: "Chiamata video in arrivo... 📞", 
-            ru: "Входящий видеозвонок... 📞" 
+            ka: "გირეკავთ ვიდეო ზარით... შეეხეთ პასუხისთვის 📲", 
+            en: "Incoming video call... Tap to answer 📲", 
+            it: "Chiamata video in arrivo... Tocca per rispondere 📲", 
+            ru: "Входящий видеозвонок... Нажмите для ответа 📲" 
           },
-          url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}`,
+          url: `https://emigrantbook.com/messenger.html?uid=${auth.currentUser.uid}&call_action=answer`,
           large_icon: senderPhoto,
           chrome_web_icon: senderPhoto,
           chrome_web_badge: "https://emigrantbook.com/icons/icon-192x192.png",
-          collapse_id: "call_" + auth.currentUser.uid,
-          web_push_topic: "call_" + auth.currentUser.uid,
+          
+          // 🔥 შენი ახალი Urgent ზარის არხის ID:
+          android_channel_id: "bb9c7fc2-58d3-4443-b1f7-9fd6543ec00d",
           priority: 10,
           ttl: 40,
           android_visibility: 1,
+          
+          buttons: [
+            { id: "answer-call", text: "🟢 უპასუხე", icon: "https://emigrantbook.com/icons/icon-192x192.png" },
+            { id: "decline-call", text: "🔴 უარყოფა" }
+          ],
+          collapse_id: "call_" + auth.currentUser.uid,
+          web_push_topic: "call_" + auth.currentUser.uid,
           ios_badgeType: "Increase",
           ios_badgeCount: 1,
           android_badge_type: "Increase",
