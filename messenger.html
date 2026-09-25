@@ -2996,6 +2996,7 @@
         });
     }
 
+    // აქ იწყება
     async function startVideoCall() {
       if (!currentActiveChatUid || !auth.currentUser) return;
       const myUid = auth.currentUser.uid;
@@ -3064,6 +3065,9 @@
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        // 📞 ზარის პუშ-შეტყობინების მომენტალურად გაგზავნა ჩაკეტილ ტელეფონზე!
+        sendVideoCallPush(targetUid);
+
         callDocUnsubscribe = callDocRef.onSnapshot(snapshot => {
           const data = snapshot ? snapshot.data() : null;
           if (!data) return;
@@ -3096,6 +3100,7 @@
         endCallLocally();
       }
     }
+    // აქ მთავრდება
 
     async function acceptIncomingCall() {
       if (!activeIncomingCallData || !auth.currentUser) return;
