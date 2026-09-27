@@ -451,7 +451,7 @@ function renderProgressBarsUI() {
 }
 
 // კონკრეტული სთორის ჩვენება
-// კონკრეტული სთორის ჩვენება (გასწორებული ვერსია)
+ // კონკრეტული სთორის ჩვენება (დაბრუნებული Base64 poster-ით და ორიგინალი HTML-ით)
 function displayActiveStoryItem(username, avatarUrl) {
   var story = activeUserStoryGroup[activeStoryIndex];
   if (!story) {
@@ -510,47 +510,27 @@ function displayActiveStoryItem(username, avatarUrl) {
     `;
 
     if (story.media_type === 'video') {
-      // 1. ვიდეო ელემენტის შექმნა preload="auto" და playsinline ატრიბუტებით
-      mediaContainer.innerHTML = tapZones + `
-        <video id="active-story-video" 
-               src="${story.media_url}" 
-               preload="auto" 
-               playsinline 
-               webkit-playsinline 
-               style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};">
-        </video>
-      `;
+      // 100% ორიგინალი HTML Base64 poster-ით, autoplay-ით და preload-ით
+      mediaContainer.innerHTML = tapZones + `<video id="active-story-video" src="${story.media_url}" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" autoplay playsinline webkit-playsinline preload="auto" style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};"></video>`;
 
       var activeVid = document.getElementById('active-story-video');
 
       if (activeVid) {
-        // 2. ველოდებით ვიდეოს მეტამონაცემების ჩატვირთვას (ხანგრძლივობის გაგებას)
-        activeVid.onloadedmetadata = function() {
-          var durationMs = (activeVid.duration && !isNaN(activeVid.duration)) ? (activeVid.duration * 1000) : 10000;
+        activeVid.muted = false;
 
-          // 3. ვიდეოს გაშვების მცდელობა
-          activeVid.play().then(function() {
-            startStoryProgressBar(durationMs, username, avatarUrl);
-          }).catch(function(err) {
-            console.warn("Autoplay blocked with sound, falling back to muted play:", err);
-            activeVid.muted = true;
-            activeVid.play().then(function() {
-              startStoryProgressBar(durationMs, username, avatarUrl);
-            });
-          });
+        // ტაიმერი იწყება მაშინ, როცა ვიდეო თავის რეალურ ხანგრძლივობას გაიგებს
+        activeVid.onloadedmetadata = function() {
+          var durationMs = (activeVid.duration && !isNaN(activeVid.duration)) ? (activeVid.duration * 1000) : 12000;
+          startStoryProgressBar(durationMs, username, avatarUrl);
         };
 
-        // თუ ვიდეოს ჩატვირთვა ვერ მოხერხდა (Error fallback)
         activeVid.onerror = function() {
-          console.error("Video load error");
-          startStoryProgressBar(5000, username, avatarUrl);
+          startStoryProgressBar(6000, username, avatarUrl);
         };
       }
     } else {
-      // ფოტოს შემთხვევა
       mediaContainer.innerHTML = tapZones + `<img src="${story.media_url}" alt="Story Image" style="width:100%; height:100%; object-fit:cover !important; filter: ${story.filter || 'none'};">`;
 
-      // 🎵 მუსიკის გაშვება ფოტოსთვის
       if (story.music_url) {
         storyAudioPlayer.src = story.music_url;
         storyAudioPlayer.currentTime = 0;
@@ -560,7 +540,7 @@ function displayActiveStoryItem(username, avatarUrl) {
       startStoryProgressBar(6000, username, avatarUrl);
     }
   }
-}
+}           
 
 function startStoryProgressBar(durationMs, username, avatarUrl) {
   clearInterval(storyProgressInterval);
