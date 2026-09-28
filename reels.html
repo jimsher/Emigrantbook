@@ -1046,36 +1046,68 @@
       setTimeout(() => heart.remove(), 800);
     }
 
-    function syncUserLikesAndFollows(posts) {
-      if (!currentUser) return;
+    // მეგობრობის ანუ გამოწერა
+    function setAuthorFollowButtonState(authorId, statusText, isFollowing) {
+  const buttons = document.querySelectorAll(`.follow-btn-${authorId}`);
+  buttons.forEach(btn => {
+    btn.textContent = statusText;
+    if (isFollowing) {
+      btn.classList.add('following');
+    } else {
+      btn.classList.remove('following');
+    }
+  });
+}
 
-      posts.forEach(post => {
-        db.collection('posts').doc(post.id).collection('post_likes').doc(currentUser.uid).get().then(doc => {
-          if (doc.exists) {
-            const btn = document.getElementById(`like-btn-${post.id}`);
-            if (btn) btn.classList.add('liked');
-          }
-        });
+function syncUserLikesAndFollows(posts) {
+  if (!currentUser) return;
+  const checkedAuthors = new Set();
 
-        if (post.user_id && post.user_id !== currentUser.uid) {
-          db.collection('friend_requests')
-            .where('sender_id', '==', currentUser.uid)
-            .where('receiver_id', '==', post.user_id)
-            .limit(1)
-            .get()
-            .then(snap => {
-              if (!snap.empty) {
-                const reqData = snap.docs[0].data();
-                const followBtn = document.getElementById(`follow-btn-${post.user_id}`);
-                if (followBtn) {
-                  followBtn.classList.add('following');
-                  followBtn.textContent = reqData.status === 'accepted' ? 'მეგობარი' : 'გაგზავნილია';
-                }
-              }
-            });
+  posts.forEach(post => {
+    // მოწონების შემოწმება
+    db.collection('posts').doc(post.id).collection('post_likes').doc(currentUser.uid).get().then(doc => {
+      if (doc.exists) {
+        const btn = document.getElementById(`like-btn-${post.id}`);
+        if (btn) btn.classList.add('liked');
+      }
+    });
+
+    // მეგობრობის ორმხრივი შემოწმება
+    if (post.user_id && post.user_id !== currentUser.uid && !checkedAuthors.has(post.user_id)) {
+      checkedAuthors.add(post.user_id);
+      const authorId = post.user_id;
+
+      const qSent = db.collection('friend_requests')
+        .where('sender_id', '==', currentUser.uid)
+        .where('receiver_id', '==', authorId)
+        .limit(1)
+        .get();
+
+      const qReceived = db.collection('friend_requests')
+        .where('sender_id', '==', authorId)
+        .where('receiver_id', '==', currentUser.uid)
+        .limit(1)
+        .get();
+
+      Promise.all([qSent, qReceived]).then(([sentSnap, recSnap]) => {
+        let foundStatus = null;
+        if (!sentSnap.empty) {
+          const reqData = sentSnap.docs[0].data();
+          foundStatus = reqData.status === 'accepted' ? 'მეგობარი' : 'გაგზავნილია';
+        } else if (!recSnap.empty) {
+          const reqData = recSnap.docs[0].data();
+          foundStatus = reqData.status === 'accepted' ? 'მეგობარი' : 'მოთხოვნა';
+        }
+
+        if (foundStatus) {
+          setAuthorFollowButtonState(authorId, foundStatus, true);
+        } else {
+          setAuthorFollowButtonState(authorId, 'გამოწერა', false);
         }
       });
     }
+  });
+}
 
     function toggleReelLike(postId, btnElem, event, forceLike = false) {
       if (event) event.stopPropagation();
@@ -1115,33 +1147,53 @@
     }
 
     function handleFollowToggle(authorId, btnElem, event) {
-      if (event) event.stopPropagation();
-      if (!currentUser) {
-        alert("გთხოვთ გაიაროთ ავტორიზაცია.");
-        return;
-      }
+  if (event) event.stopPropagation();
+  if (!currentUser) {
+    alert("გთხოვთ გაიაროთ ავტორიზაცია.");
+    return;
+  }
 
-      if (btnElem.classList.contains('following')) {
-        btnElem.classList.remove('following');
-        btnElem.textContent = 'გამოწერა';
-        db.collection('friend_requests')
-          .where('sender_id', '==', currentUser.uid)
-          .where('receiver_id', '==', authorId)
-          .get()
-          .then(snap => {
-            snap.forEach(d => d.ref.delete());
+  const currentText = btnElem.textContent.trim();
+
+  if (btnElem.classList.contains('following') || currentText === 'მეგობარი' || currentText === 'გაგზავნილია') {
+    setAuthorFollowButtonState(authorId, 'გამოწერა', false);
+
+    const deleteSent = db.collection('friend_requests')
+      .where('sender_id', '==', currentUser.uid)
+      .where('receiver_id', '==', authorId)
+      .get();
+
+    const deleteReceived = db.collection('friend_requests')
+      .where('sender_id', '==', authorId)
+      .where('receiver_id', '==', currentUser.uid)
+      .get();
+
+    Promise.all([deleteSent, deleteReceived]).then(([sSnap, rSnap]) => {
+      const batch = db.batch();
+      sSnap.forEach(doc => batch.delete(doc.ref));
+      rSnap.forEach(doc => batch.delete(doc.ref));
+      return batch.commit();
+    });
+  } else {
+    setAuthorFollowButtonState(authorId, 'გაგზავნილია', true);
+
+    db.collection('friend_requests')
+      .where('sender_id', '==', currentUser.uid)
+      .where('receiver_id', '==', authorId)
+      .limit(1)
+      .get()
+      .then(snap => {
+        if (snap.empty) {
+          db.collection('friend_requests').add({
+            sender_id: currentUser.uid,
+            receiver_id: authorId,
+            status: 'pending',
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
           });
-      } else {
-        btnElem.classList.add('following');
-        btnElem.textContent = 'გაგზავნილია';
-        db.collection('friend_requests').add({
-          sender_id: currentUser.uid,
-          receiver_id: authorId,
-          status: 'pending',
-          created_at: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-    }
+        }
+      });
+  }
+}
 
     function toggleBookmark(btnElem) {
       btnElem.classList.toggle('bookmarked');
