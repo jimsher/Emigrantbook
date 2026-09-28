@@ -8716,6 +8716,50 @@ async function sendModernPush(recipientUid, messageText, customUrl) {
     console.error("Push error:", err);
   }
 }
+
+
+
+  // ახალი Facebook მენიუს გახსნა/დახურვა
+function toggleFbNewDrawer(event) {
+  if (event) event.stopPropagation();
+  const drawer = document.getElementById('fbNewDrawer');
+  const overlay = document.getElementById('fbDrawerOverlay');
+  if (!drawer || !overlay) return;
+
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    drawer.classList.remove('open');
+    overlay.style.display = 'none';
+  } else {
+    // ავატარისა და სახელის ავტომატური განახლება
+    if (currentUser) {
+      const myName = (userProfile && userProfile.full_name) ? userProfile.full_name : (currentUser.displayName || "Gabo JI");
+      const myAvatar = (userProfile && userProfile.avatar_url) ? userProfile.avatar_url : DEFAULT_AVATAR_URL;
+
+      const nameEl = document.getElementById('fbDrawerUserName');
+      const imgEl = document.getElementById('fbDrawerAvatarImg');
+      if (nameEl) nameEl.innerText = myName;
+      if (imgEl) imgEl.src = myAvatar;
+    }
+
+    drawer.classList.add('open');
+    overlay.style.display = 'block';
+  }
+}
+
+// ჩამოსაშლელი ქვედა სექციები
+function toggleAccordion(id) {
+  const body = document.getElementById(id);
+  if (!body) return;
+  body.style.display = (body.style.display === 'flex') ? 'none' : 'flex';
+}
+
+// მეტის ჩვენების ღილაკი
+function toggleFbMoreItems(btn) {
+  btn.style.display = 'none';
+  // აქ შეგიძლია ჩაამატო მეტი ელემენტი, თუ დაგჭირდება
+}
+  
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
