@@ -915,6 +915,13 @@
                 </div>
                 <span class="action-count">შენახვა</span>
               </div>
+
+              <div class="action-btn sound-btn" onclick="toggleReelSound(this, event)">
+                <div class="action-icon-wrap">
+                  <img src="icons/volume-x.svg" alt="ხმა" class="action-icon sound-icon">
+                </div>
+                <span class="action-count sound-text">ხმა</span>
+              </div>
             </aside>
 
             <!-- ქვედა ავტორის ინფორმაცია -->
@@ -1373,7 +1380,7 @@ function syncUserLikesAndFollows(posts) {
 
 
 // ხმის ფუნწცია დინამიკი
-    let isGlobalReelsMuted = true;
+   let isGlobalReelsMuted = true;
 
 function toggleReelSound(btnElement, event) {
   if (event) event.stopPropagation();
@@ -1384,16 +1391,18 @@ function toggleReelSound(btnElement, event) {
 
   isGlobalReelsMuted = !isGlobalReelsMuted;
 
-  // ვცვლით ყველა ვიდეოს სტატუსს და ყველა ხმის ღილაკის ხატულას
+  // ყველა ვიდეოზე ვცვლით ხმის სტატუსს
   document.querySelectorAll('.reel-video').forEach(v => {
     v.muted = isGlobalReelsMuted;
   });
 
+  // ყველა ხმის ღილაკზე ვცვლით ხატულას
   const iconSrc = isGlobalReelsMuted ? 'icons/volume-x.svg' : 'icons/volume-2.svg';
-  document.querySelectorAll('.reel-sound-btn .sound-icon').forEach(img => {
+  document.querySelectorAll('.sound-btn .sound-icon').forEach(img => {
     img.src = iconSrc;
   });
 }
+ 
 
   </script>
 </body>
