@@ -1374,6 +1374,31 @@ function syncUserLikesAndFollows(posts) {
       sessionStorage.setItem('target_screen', screenName);
       window.location.href = 'index.html';
     }
+
+
+// ხმის ფუნწცია დინამიკი
+    let isGlobalReelsMuted = true;
+
+function toggleReelSound(btnElement, event) {
+  if (event) event.stopPropagation();
+
+  const card = btnElement.closest('.reel-card');
+  const video = card.querySelector('.reel-video');
+  if (!video) return;
+
+  isGlobalReelsMuted = !isGlobalReelsMuted;
+
+  // ვცვლით ყველა ვიდეოს სტატუსს და ყველა ხმის ღილაკის ხატულას
+  document.querySelectorAll('.reel-video').forEach(v => {
+    v.muted = isGlobalReelsMuted;
+  });
+
+  const iconSrc = isGlobalReelsMuted ? 'icons/volume-x.svg' : 'icons/volume-2.svg';
+  document.querySelectorAll('.reel-sound-btn .sound-icon').forEach(img => {
+    img.src = iconSrc;
+  });
+}
+
   </script>
 </body>
 </html>
