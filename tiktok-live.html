@@ -1070,6 +1070,7 @@
         }
 
         // 🚀 ლაივის დაწყება (HOST)
+                // 🚀 ლაივის დაწყება (HOST) - ძველი ლაივების ავტომატური დახურვით
         async function startLiveInstantly() {
             isHost = true;
             hostUid = auth.currentUser.uid;
@@ -1084,6 +1085,24 @@
             document.getElementById('ttHeaderRow2').style.display = 'flex';
 
             try {
+                // 🛑 1. რკინის წესი: ვხურავთ ამ მომხმარებლის ყველა ძველ "ჩამოკიდებულ" ლაივს
+                const oldLivesSnap = await db.collection('lives')
+                    .where('host_id', '==', hostUid)
+                    .where('status', '==', 'active')
+                    .get();
+
+                if (!oldLivesSnap.empty) {
+                    const batch = db.batch();
+                    oldLivesSnap.forEach(docSnap => {
+                        batch.update(docSnap.ref, {
+                            status: "ended",
+                            ended_at: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    await batch.commit();
+                }
+
+                // 2. მხოლოდ ძველების გასუფთავების შემდეგ ვხსნით ახალ ერთადერთ ლაივს
                 const liveDoc = await db.collection('lives').add({
                     host_id: auth.currentUser.uid,
                     host_name: myName,
@@ -1118,6 +1137,7 @@
                 window.location.href = "index.html";
             }
         }
+
 
         // 🔗 მაყურებლის შესვლა (AUDIENCE)
         async function joinAsAudience(docId) {
