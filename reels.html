@@ -1402,6 +1402,14 @@ function toggleReelSound(btnElement, event) {
     img.src = iconSrc;
   });
 }
+
+// როცა ნებისმიერი Reels ვიდეო იწყებს დაკვრას (სქროლის შემდეგ), ავტომატურად ვიღებთ ხმის სტატუსს
+document.addEventListener('play', function(e) {
+  if (e.target && e.target.classList.contains('reel-video')) {
+    e.target.muted = isGlobalReelsMuted;
+  }
+}, true);
+    
  
 
   </script>
