@@ -1705,6 +1705,7 @@
             return String(num);
         }
 
+        
         async function exitLive() {
             if (liveDocUnsub) liveDocUnsub();
             if (chatUnsub) chatUnsub();
@@ -1728,12 +1729,24 @@
             window.location.href = "index.html";
         }
 
-        window.addEventListener('beforeunload', () => {
+        function cleanupAndEndLive() {
             if (localTracks.video) { localTracks.video.stop(); localTracks.video.close(); }
             if (localTracks.audio) { localTracks.audio.stop(); localTracks.audio.close(); }
             if (guestLocalTracks.video) { guestLocalTracks.video.stop(); guestLocalTracks.video.close(); }
             if (guestLocalTracks.audio) { guestLocalTracks.audio.stop(); guestLocalTracks.audio.close(); }
-        });
+
+            if (isHost && currentLiveDocId) {
+                db.collection('lives').doc(currentLiveDocId).update({ status: "ended" }).catch(() => {});
+            } else if (!isHost && currentLiveDocId && auth.currentUser) {
+                db.collection('lives').doc(currentLiveDocId).update({
+                    viewers: firebase.firestore.FieldValue.arrayRemove({ uid: auth.currentUser.uid, name: myName, photo: myPhoto })
+                }).catch(() => {});
+            }
+            try { liveClient.leave(); } catch (e) {}
+        }
+
+        window.addEventListener('pagehide', cleanupAndEndLive);
+        window.addEventListener('beforeunload', cleanupAndEndLive);
 
 
 
