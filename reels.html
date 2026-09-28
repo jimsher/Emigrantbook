@@ -1501,6 +1501,123 @@ document.addEventListener('play', function(e) {
 }, true);
     
  
+    // 1. Cloudflare R2-ში ვიდეოს ატვირთვა პროგრესით
+    function uploadReelToR2(file, onProgress, onComplete) {
+      var r2S3 = new AWS.S3({
+        endpoint: 'https://b06701b6405e891a274a6d40ae52c940.r2.cloudflarestorage.com',
+        accessKeyId: 'fca43a92ab1d3b3e7c89912f8d525977',
+        secretAccessKey: 'd051531e40a19cfaedade242eac6b6d506dad44be370224ba2e5c3ea298f1ad6',
+        signatureVersion: 'v4',
+        region: 'auto',
+        s3ForcePathStyle: true
+      });
+
+      var fileExt = file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i) ? file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i)[0] : '.mp4';
+      var fileKey = 'videos/' + Date.now() + '_' + Math.random().toString(36).substring(2, 7) + fileExt;
+
+      var params = {
+        Bucket: 'emigrantbook-videos',
+        Key: fileKey,
+        Body: file,
+        ContentType: file.type || 'video/mp4',
+        CacheControl: 'public, max-age=31536000, immutable'
+      };
+
+      var uploader = r2S3.upload(params);
+
+      uploader.on('httpUploadProgress', function(evt) {
+        if (evt.total && typeof onProgress === 'function') {
+          var percent = Math.round((evt.loaded / evt.total) * 100);
+          onProgress(percent);
+        }
+      });
+
+      uploader.send(function(err, data) {
+        if (err) {
+          console.error("R2 Upload Error:", err);
+          onComplete(null, err);
+        } else {
+          var publicUrl = "https://pub-d077cb13f6ec46cebeca95f2f25b9a08.r2.dev/" + fileKey;
+          onComplete(publicUrl, null);
+        }
+      });
+    }
+
+    // 2. ვიდეოს არჩევისა და Firestore-ში შენახვის ლოგიკა
+    function handleReelsDirectUpload(event) {
+      var fileInput = event.target;
+      var file = fileInput.files[0];
+      if (!file) return;
+
+      if (!currentUser) {
+        alert("გთხოვთ გაიაროთ ავტორიზაცია ვიდეოს ასატვირთად.");
+        fileInput.value = "";
+        return;
+      }
+
+      // შემოწმება: მხოლოდ ვიდეო ფაილი
+      var isVideo = file.type.startsWith('video/') || (file.name && file.name.match(/\.(mp4|mov|avi|mkv|webm)$/i));
+      if (!isVideo) {
+        alert("გთხოვთ აირჩიოთ მხოლოდ ვიდეო ფაილი!");
+        fileInput.value = "";
+        return;
+      }
+
+      // ზომის ლიმიტი (100MB)
+      if (file.size > 100 * 1024 * 1024) {
+        alert("ვიდეოს ზომა აჭარბებს 100MB-ს. გთხოვთ აირჩიოთ უფრო პატარა ვიდეო.");
+        fileInput.value = "";
+        return;
+      }
+
+      var caption = prompt("შეიყვანეთ ვიდეოს აღწერა (სურვილისამებრ):") || "";
+
+      var overlay = document.getElementById('reelsUploadOverlay');
+      var statusText = document.getElementById('reelsUploadStatusText');
+      overlay.style.display = 'flex';
+      statusText.innerText = "ვიდეო იტვირთება (0%)...";
+
+      // ატვირთვა Cloudflare R2-ში
+      uploadReelToR2(
+        file,
+        function(percent) {
+          statusText.innerText = "ვიდეო იტვირთება (" + percent + "%)...";
+        },
+        function(publicUrl, error) {
+          if (error || !publicUrl) {
+            overlay.style.display = 'none';
+            fileInput.value = "";
+            alert("ატვირთვის შეცდომა: " + (error ? error.message : "უცნობი შეცდომა"));
+            return;
+          }
+
+          statusText.innerText = "ფირებში ემატება...";
+
+          var myName = currentUserProfile ? currentUserProfile.full_name : (currentUser.displayName || currentUser.email || "Emigrant");
+
+          // შენახვა Firestore-ის posts კოლექციაში
+          db.collection('posts').add({
+            user_id: currentUser.uid,
+            author_name: myName,
+            content: caption,
+            media_url: publicUrl,
+            media_type: 'video',
+            likes_count: 0,
+            comments_count: 0,
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+          }).then(function() {
+            overlay.style.display = 'none';
+            fileInput.value = "";
+            alert("ვიდეო წარმატებით აიტვირთა ფირებში!");
+            loadRealReelsFromFirestore(); // სია თავიდან ჩაიტვირთება და ახალი ვიდეო პირველივე გამოჩნდება
+          }).catch(function(err) {
+            overlay.style.display = 'none';
+            fileInput.value = "";
+            alert("ბაზაში შენახვის შეცდომა: " + err.message);
+          });
+        }
+      );
+    }
 
   </script>
     <!-- ატვირთვის პროგრესის ფანჯარა -->
