@@ -3715,3 +3715,313 @@ div:has(> a[href*="live-wheel"]) {
   width: calc(100% - 46px) !important;
   margin-top: 6px !important;
 }
+
+
+
+
+/* ახალი ბურგერ მენიუს სტილი */
+/* ☰ ჰედერში 3 ხაზის ღილაკი */
+.fb-main-burger-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4.5px;
+  z-index: 101;
+}
+
+.fb-main-burger-btn span {
+  width: 22px;
+  height: 2.2px;
+  background-color: #050505;
+  border-radius: 2px;
+  display: block;
+}
+
+body:not(.light-mode) .fb-main-burger-btn span {
+  background-color: #ffffff;
+}
+
+/* დაბურული ფონი */
+.fb-drawer-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000000;
+  backdrop-filter: blur(2px);
+}
+
+/* 📱 Facebook Drawer - გამოდის მარცხნიდან მარჯვნივ */
+.fb-new-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 84%;
+  max-width: 360px;
+  height: 100vh;
+  height: 100dvh;
+  background: #f0f2f5;
+  z-index: 2000001;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px 40px 14px;
+  box-sizing: border-box;
+}
+
+.fb-new-drawer.open {
+  transform: translateX(0);
+}
+
+/* 1. მომხმარებლის ბარათი */
+.fb-drawer-profile-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.fb-drawer-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fb-drawer-avatar-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e4e6eb;
+}
+
+.fb-drawer-avatar-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fb-drawer-user-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #050505;
+}
+
+.fb-drawer-switch-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fb-drawer-switch-arrow {
+  font-size: 11px;
+  color: #65676b;
+}
+
+.fb-drawer-badge-red {
+  background: #e41e3f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* 2. გვერდის შექმნის ღილაკი */
+.fb-drawer-action-btn {
+  background: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #050505;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+.fb-drawer-action-icon {
+  width: 28px;
+  height: 28px;
+  background: #e4e6eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* 3. მალსახმობები */
+.fb-drawer-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #050505;
+  margin: 4px 0 8px 4px;
+}
+
+.fb-drawer-shortcuts-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-bottom: 14px;
+  padding-bottom: 4px;
+}
+
+.fb-drawer-shortcuts-row::-webkit-scrollbar { display: none; }
+
+.fb-shortcut-card {
+  width: 90px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.fb-shortcut-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #ffffff;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.fb-shortcut-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #050505;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* 4. ვერტიკალური სია */
+.fb-drawer-menu-list {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 4px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 12px;
+}
+
+.fb-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #050505;
+  cursor: pointer;
+}
+
+.fb-drawer-item:active {
+  background: #f0f2f5;
+}
+
+.fb-drawer-item-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1877f2;
+}
+
+.fb-drawer-item-icon img {
+  width: 20px;
+  height: 20px;
+}
+
+/* 5. მეტის ჩვენება */
+.fb-drawer-more-btn {
+  width: 100%;
+  background: #e4e6eb;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #050505;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+/* 6. აკორდეონები */
+.fb-accordion-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fb-accordion-item {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.fb-acc-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #050505;
+}
+
+.fb-acc-icon { font-size: 18px; }
+.fb-acc-icon-img { width: 20px; height: 20px; }
+.fb-acc-arrow { font-size: 10px; color: #65676b; }
+
+.fb-accordion-body {
+  display: none;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: -2px;
+}
+
+.fb-accordion-body a {
+  padding: 10px 16px;
+  text-decoration: none;
+  color: #050505;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.fb-accordion-body a:hover { background: #f0f2f5; }
