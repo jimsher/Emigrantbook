@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>შექმნა | Emigrantbook</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #050505;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* ჰედერი */
+    .create-header {
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f2f5;
+      z-index: 10;
+    }
+
+    .create-close-btn {
+      background: none;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      color: #050505;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+    }
+
+    .create-header-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #050505;
+    }
+
+    .create-cancel-btn {
+      background: none;
+      border: none;
+      font-size: 15px;
+      color: #1877f2;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* მთავარი სივრცე */
+    .create-content {
+      flex: 1;
+      padding: 24px 16px;
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .create-main-title {
+      font-size: 23px;
+      font-weight: 800;
+      line-height: 1.3;
+      color: #050505;
+      margin-bottom: 24px;
+      letter-spacing: -0.3px;
+    }
+
+    /* არჩევანის ბარათები */
+    .option-card {
+      position: relative;
+      border: 1.5px solid #dadde1;
+      border-radius: 12px;
+      padding: 18px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background: #ffffff;
+    }
+
+    .option-card.selected {
+      border-color: #1877f2;
+      box-shadow: 0 0 0 1px #1877f2;
+    }
+
+    .option-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #e4e6eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .option-icon-box img {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+    }
+
+    .option-text-box {
+      flex: 1;
+      padding-right: 28px;
+    }
+
+    .option-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #050505;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .option-desc {
+      font-size: 13.5px;
+      color: #65676b;
+      line-height: 1.4;
+    }
+
+    /* რადიო ღილაკი მარჯვნივ */
+    .option-radio {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #ccd0d5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .option-card.selected .option-radio {
+      border-color: #1877f2;
+    }
+
+    .option-radio::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1877f2;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.2s ease;
+    }
+
+    .option-card.selected .option-radio::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ქვედა ღილაკები */
+    .create-footer {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    .btn-next {
+      width: 100%;
+      background: #1877f2;
+      color: #ffffff;
+      border: none;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 15.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      text-align: center;
+    }
+
+    .btn-next:active {
+      background: #166fe5;
+    }
+
+    .btn-compare {
+      width: 100%;
+      background: #e4e6eb;
+      color: #050505;
+      border: none;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 15.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      text-align: center;
+    }
+
+    .btn-compare:active {
+      background: #d8dadf;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ზედა ჰედერი -->
+  <header class="create-header">
+    <button class="create-close-btn" onclick="window.location.href='index.html'" aria-label="დახურვა">✕</button>
+    <span class="create-header-title">შექმნა</span>
+    <button class="create-cancel-btn" onclick="window.location.href='index.html'">გაუქმება</button>
+  </header>
+
+  <!-- შუა კონტენტი -->
+  <main class="create-content">
+    <h1 class="create-main-title">რომელი ალტერნატივა არის თქვენთვის საუკეთესო?</h1>
+
+    <!-- ვარიანტი 1: ახალი გვერდის შექმნა (ნაგულისხმევად არჩეული) -->
+    <div class="option-card selected" id="card-new-page" onclick="selectOption('new-page')">
+      <div class="option-icon-box">
+        <img src="icons/flag.svg" class="post-action-icon" alt="გვერდი">
+      </div>
+      <div class="option-text-box">
+        <div class="option-title">ახალი გვერდის შექმნა</div>
+        <div class="option-desc">დაიწყეთ თავიდან, ახალი სახელით, განცალკევებული აუდიტორიითა და პროფესიონალური ხელსაწყოებით.</div>
+      </div>
+      <div class="option-radio"></div>
+    </div>
+
+    <!-- ვარიანტი 2: არსებული პროფილი -->
+    <div class="option-card" id="card-profile" onclick="selectOption('profile')">
+      <div class="option-icon-box">
+        <img src="icons/circle-user-round.svg" class="post-action-icon" alt="პროფილი">
+      </div>
+      <div class="option-text-box">
+        <div class="option-title">გამოიყენეთ თქვენი არსებული პროფილი</div>
+        <div class="option-desc">ჩართეთ პროფესიონალური რეჟიმი, რათა დაამატოთ ხელსაწყოები თქვენს მთავარ პროფილს და განაგრძოთ თქვენი ამჟამინდელი აუდიტორიის გამოყენება.</div>
+      </div>
+      <div class="option-radio"></div>
+    </div>
+  </main>
+
+  <!-- ქვედა ღილაკები -->
+  <footer class="create-footer">
+    <button class="btn-next" onclick="handleNextStep()">შემდეგი</button>
+    <button class="btn-compare" onclick="alert('შედარების ფუნქცია მალე დაემატება')">ვარიანტების შედარება</button>
+  </footer>
+
+  <script>
+    let currentSelectedOption = 'new-page';
+
+    function selectOption(opt) {
+      currentSelectedOption = opt;
+      const cardNewPage = document.getElementById('card-new-page');
+      const cardProfile = document.getElementById('card-profile');
+
+      if (opt === 'new-page') {
+        cardNewPage.classList.add('selected');
+        cardProfile.classList.remove('selected');
+      } else {
+        cardProfile.classList.add('selected');
+        cardNewPage.classList.remove('selected');
+      }
+    }
+
+    function handleNextStep() {
+      if (currentSelectedOption === 'new-page') {
+        const pageTitle = prompt("შეიყვანეთ თქვენი ახალი გვერდის სახელი:");
+        if (pageTitle && pageTitle.trim()) {
+          alert(`გვერდი "${pageTitle.trim()}" მზადების პროცესშია!`);
+          window.location.href = "index.html";
+        }
+      } else {
+        alert("თქვენს პროფილზე პროფესიონალური ხელსაწყოები გააქტიურებულია!");
+        window.location.href = "index.html";
+      }
+    }
+  </script>
+</body>
+</html>
