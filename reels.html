@@ -1328,9 +1328,37 @@ function syncUserLikesAndFollows(posts) {
   }
 }
 
-    function toggleBookmark(btnElem) {
-      btnElem.classList.toggle('bookmarked');
-    }
+    function toggleBookmark(postId, btnElem, event) {
+  if (event) event.stopPropagation();
+  if (!currentUser) {
+    alert("გთხოვთ გაიაროთ ავტორიზაცია.");
+    return;
+  }
+
+  const isSaved = btnElem.classList.contains('bookmarked');
+
+  if (isSaved) {
+    btnElem.classList.remove('bookmarked');
+    db.collection('saved_posts')
+      .where('user_id', '==', currentUser.uid)
+      .where('post_id', '==', postId)
+      .get()
+      .then(snapshot => {
+        const batch = db.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        return batch.commit();
+      });
+  } else {
+    btnElem.classList.add('bookmarked');
+    db.collection('saved_posts').add({
+      user_id: currentUser.uid,
+      post_id: postId,
+      type: 'reel',
+      saved_at: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+}
+
 
     function shareReel(postId) {
       const url = `https://emigrantbook.com?post=${postId}`;
