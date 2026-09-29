@@ -8889,119 +8889,199 @@ function toggleFbMoreItems(btn) {
 }
 
 
+
+    
 // საძიებო ველის მთავარ საიტზე ჰედერში
+ let searchHistory = JSON.parse(localStorage.getItem('fb_search_history') || '[]');
+let activeSheetItemIndex = null;
+
 function openSearchOverlay() {
-  const overlay = document.getElementById('globalSearchOverlay');
-  overlay.style.display = 'flex';
-  const input = document.getElementById('globalSearchInput');
-  input.value = '';
-  input.focus();
-  document.getElementById('globalSearchResults').innerHTML = '<div class="search-hint-text">ჩაწერეთ სახელი მოსაძებნად...</div>';
+  document.getElementById('globalSearchOverlay').style.display = 'flex';
+  const inp = document.getElementById('globalSearchInput');
+  inp.value = '';
+  inp.focus();
+  renderSearchHistory();
 }
 
 function closeSearchOverlay() {
   document.getElementById('globalSearchOverlay').style.display = 'none';
 }
 
-async function handleGlobalSearch(query) {
+// საძიებო ისტორიის რენდერი (როცა ინპუტი ცარიელია)
+function renderSearchHistory() {
   const container = document.getElementById('globalSearchResults');
-  const cleanQuery = query.trim().toLowerCase();
+  const subhead = document.getElementById('recentSearchSubhead');
+  subhead.style.display = 'flex';
 
-  if (!cleanQuery) {
-    container.innerHTML = '<div class="search-hint-text">ჩაწერეთ სახელი მოსაძებნად...</div>';
+  if (searchHistory.length === 0) {
+    container.innerHTML = '<div style="text-align:center; padding:30px; color:#65676b; font-size:14px;">ბოლოდროინდელი ძიებები არ არის</div>';
     return;
   }
 
-  container.innerHTML = '<div class="search-hint-text">იძებნება...</div>';
+  container.innerHTML = '';
+  searchHistory.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'fb-search-item';
+
+    const isGroupOrPage = item.type === 'page' || item.type === 'group';
+    const subText = isGroupOrPage 
+      ? '<span class="fb-blue-dot">•</span> 9-ზე მეტი ახალი' 
+      : (item.subtitle || 'მომხმარებელი');
+
+    const avaHtml = item.avatar 
+      ? `<img src="${item.avatar}" class="fb-search-ava" onerror="this.src='icons/circle-user-round.svg'">`
+      : `<div class="fb-search-clock-circle">
+           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+         </div>`;
+
+    row.innerHTML = `
+      <div class="fb-search-item-left" onclick="navigateFromHistory(${index})">
+        ${avaHtml}
+        <div class="fb-search-meta">
+          <div class="fb-search-title">${item.title}</div>
+          <div class="fb-search-subtitle">${subText}</div>
+        </div>
+      </div>
+      <button class="fb-search-dots-btn" onclick="openSearchSheet(event, ${index})">•••</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// რეალური დროის ძიება (ინპუტზე წერისას)
+async function handleGlobalSearch(query) {
+  const cleanQuery = query.trim().toLowerCase();
+  const subhead = document.getElementById('recentSearchSubhead');
+
+  if (!cleanQuery) {
+    renderSearchHistory();
+    return;
+  }
+
+  subhead.style.display = 'none';
+  const container = document.getElementById('globalSearchResults');
+  container.innerHTML = '<div style="text-align:center; padding:20px; color:#65676b;">იძებნება...</div>';
 
   try {
-    // 1. გვერდების ძიება 'pages' კოლექციაში
     const pagesSnap = await db.collection('pages').get();
-    const matchedPages = [];
-
-    pagesSnap.forEach(doc => {
-      const data = doc.data();
-      const pName = (data.page_name || '').toLowerCase();
-      if (pName.includes(cleanQuery)) {
-        matchedPages.push({ id: doc.id, ...data });
-      }
-    });
-
-    // 2. პროფილების ძიება 'profiles' კოლექციაში
     const profilesSnap = await db.collection('profiles').get();
-    const matchedProfiles = [];
 
-    profilesSnap.forEach(doc => {
-      const data = doc.data();
-      const uName = (data.full_name || data.display_name || '').toLowerCase();
-      if (uName.includes(cleanQuery)) {
-        matchedProfiles.push({ id: doc.id, ...data });
+    const matches = [];
+
+    pagesSnap.forEach(d => {
+      const p = d.data();
+      if ((p.page_name || '').toLowerCase().includes(cleanQuery)) {
+        matches.push({ id: d.id, title: p.page_name, avatar: p.avatar_url, type: 'page', subtitle: p.category || 'გვერდი' });
       }
     });
 
-    if (matchedPages.length === 0 && matchedProfiles.length === 0) {
-      container.innerHTML = '<div class="search-hint-text">შედეგი ვერ მოიძებნა.</div>';
+    profilesSnap.forEach(d => {
+      const u = d.data();
+      const name = u.full_name || u.display_name || u.name || '';
+      if (name.toLowerCase().includes(cleanQuery)) {
+        matches.push({ id: d.id, title: name, avatar: u.avatar_url || u.photo_url, type: 'user', subtitle: 'მომხმარებელი' });
+      }
+    });
+
+    if (matches.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:30px; color:#65676b;">შედეგი ვერ მოიძებნა</div>';
       return;
     }
 
     container.innerHTML = '';
-
-    // გვერდების გამოტანა შედეგებში
-    matchedPages.forEach(p => {
+    matches.forEach(m => {
       const row = document.createElement('div');
-      row.className = 'search-result-row';
-      row.onclick = () => {
-        closeSearchOverlay();
-        window.location.href = `page-view.html?id=${p.id}`;
-      };
+      row.className = 'fb-search-item';
+      row.onclick = () => saveToHistoryAndNavigate(m);
       row.innerHTML = `
-        <img src="${p.avatar_url || 'icons/flag.svg'}" class="search-result-avatar" alt="გვერდი">
-        <div>
-          <div class="search-result-name">${p.page_name}</div>
-          <div class="search-result-sub">გვერდი • ${p.category || 'ზოგადი'}</div>
+        <div class="fb-search-item-left">
+          <img src="${m.avatar || (m.type === 'page' ? 'icons/flag.svg' : 'icons/circle-user-round.svg')}" class="fb-search-ava" onerror="this.src='icons/circle-user-round.svg'">
+          <div class="fb-search-meta">
+            <div class="fb-search-title">${m.title}</div>
+            <div class="fb-search-subtitle">${m.subtitle}</div>
+          </div>
         </div>
       `;
       container.appendChild(row);
     });
 
-    // ხალხის/პროფილების გამოტანა შედეგებში
-    matchedProfiles.forEach(u => {
-      const row = document.createElement('div');
-      row.className = 'search-result-row';
-      row.onclick = () => {
-        closeSearchOverlay();
-        if (typeof openUserProfile === "function") {
-          openUserProfile(u.id);
-        } else if (typeof viewProfile === "function") {
-          viewProfile(u.id);
-        } else if (typeof showUserProfile === "function") {
-          showUserProfile(u.id);
-        } else if (typeof loadProfileData === "function") {
-          loadProfileData(u.id);
-          if (typeof showScreen === "function") showScreen('profile');
-        } else if (typeof showMyProfile === "function") {
-          showMyProfile();
-        } else if (typeof showScreen === "function") {
-          showScreen('profile');
-        }
-      };
-      row.innerHTML = `
-        <img src="${u.avatar_url || 'icons/circle-user-round.svg'}" class="search-result-avatar" onerror="this.src='icons/circle-user-round.svg'" alt="პროფილი">
-        <div>
-          <div class="search-result-name">${u.full_name || u.display_name || 'მომხმარებელი'}</div>
-          <div class="search-result-sub">მომხმარებელი</div>
-        </div>
-      `;
-      container.appendChild(row);
-    });
-
-  } catch (err) {
-    console.error("Search error:", err);
-    container.innerHTML = '<div class="search-hint-text">ძიებისას მოხდა შეცდომა.</div>';
+  } catch (e) {
+    console.error(e);
   }
 }
 
-  
+// ისტორიაში შენახვა და გადასვლა
+function saveToHistoryAndNavigate(item) {
+  searchHistory = searchHistory.filter(h => h.id !== item.id && h.title !== item.title);
+  searchHistory.unshift(item);
+  localStorage.setItem('fb_search_history', JSON.stringify(searchHistory.slice(0, 15)));
+
+  closeSearchOverlay();
+  if (item.type === 'page') {
+    window.location.href = `page-view.html?id=${item.id}`;
+  } else {
+    if (typeof openUserProfile === "function") openUserProfile(item.id);
+    else if (typeof showScreen === "function") showScreen('profile');
+  }
+}
+
+function navigateFromHistory(index) {
+  const item = searchHistory[index];
+  if (item) saveToHistoryAndNavigate(item);
+}
+
+// ქვედა ბანერის (Action Sheet) გახსნა/დახურვა
+function openSearchSheet(event, index) {
+  event.stopPropagation();
+  activeSheetItemIndex = index;
+  const item = searchHistory[index];
+  if (!item) return;
+
+  document.getElementById('sheetTargetName').innerText = item.title;
+  const avaBox = document.getElementById('sheetTargetAva');
+  if (item.avatar) {
+    avaBox.innerHTML = `<img src="${item.avatar}" onerror="this.src='icons/circle-user-round.svg'">`;
+  } else {
+    avaBox.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#050505" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`;
+  }
+
+  document.getElementById('searchActionSheet').style.display = 'flex';
+}
+
+function closeSearchSheet() {
+  document.getElementById('searchActionSheet').style.display = 'none';
+  activeSheetItemIndex = null;
+}
+
+// წაშლა
+function deleteHistoryItem() {
+  if (activeSheetItemIndex !== null) {
+    searchHistory.splice(activeSheetItemIndex, 1);
+    localStorage.setItem('fb_search_history', JSON.stringify(searchHistory));
+    renderSearchHistory();
+  }
+  closeSearchSheet();
+}
+
+// ჩამაგრება
+function pinHistoryItem() {
+  if (activeSheetItemIndex !== null) {
+    const pinned = searchHistory.splice(activeSheetItemIndex, 1)[0];
+    searchHistory.unshift(pinned);
+    localStorage.setItem('fb_search_history', JSON.stringify(searchHistory));
+    renderSearchHistory();
+  }
+  closeSearchSheet();
+}
+
+function clearAllSearchHistory() {
+  if (confirm("გსურთ მთელი ისტორიის გასუფთავება?")) {
+    searchHistory = [];
+    localStorage.removeItem('fb_search_history');
+    renderSearchHistory();
+  }
+}
+   
   </script>
 
   <!-- ზარის ფანჯარის დიზაინი -->
